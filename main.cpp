@@ -24,32 +24,6 @@ int main() {
         return 1;
     }
 
-    fmt::print(
-        "heap size: {} bytes, {} qwords\n",
-        terp.heap_size(),
-        terp.heap_size_in_qwords());
-
-    const auto& regs = terp.register_file();
-    auto stack_top = regs.sp;
-    fmt::print("regs.sp = ${:08x}\n", regs.sp);
-
-    terp.push(0x08);
-    terp.push(0x04);
-    terp.push(0x02);
-
-    fmt::print(
-        "regs.sp = ${:08x}, number of entries: {}\n",
-        regs.sp,
-        (stack_top - regs.sp) / sizeof(uint64_t));
-
-    auto t1 = terp.pop();
-    auto t2 = terp.pop();
-    auto t3 = terp.pop();
-
-    fmt::print("t1 = ${:08x}\n", t1);
-    fmt::print("t2 = ${:08x}\n", t2);
-    fmt::print("t2 = ${:08x}\n", t3);
-
     size_t inst_size = 0;
     uint64_t location_counter = 0;
 
@@ -57,6 +31,45 @@ int main() {
     nop.op = basecode::op_codes::nop;
     nop.operands_count = 0;
     inst_size = terp.encode_instruction(r, location_counter, nop);
+    if (inst_size == 0) {
+        print_results(r);
+        return 1;
+    }
+    location_counter += inst_size;
+
+    basecode::instruction_t push_value1;
+    push_value1.op = basecode::op_codes::push;
+    push_value1.size = basecode::op_sizes::byte;
+    push_value1.operands_count = 1;
+    push_value1.operands[0].value = 0x08;
+    push_value1.operands[0].type = basecode::operand_types::constant;
+    inst_size = terp.encode_instruction(r, location_counter, push_value1);
+    if (inst_size == 0) {
+        print_results(r);
+        return 1;
+    }
+    location_counter += inst_size;
+
+    basecode::instruction_t push_value2;
+    push_value2.op = basecode::op_codes::push;
+    push_value2.size = basecode::op_sizes::byte;
+    push_value2.operands_count = 1;
+    push_value2.operands[0].value = 0x04;
+    push_value2.operands[0].type = basecode::operand_types::constant;
+    inst_size = terp.encode_instruction(r, location_counter, push_value2);
+    if (inst_size == 0) {
+        print_results(r);
+        return 1;
+    }
+    location_counter += inst_size;
+
+    basecode::instruction_t push_value3;
+    push_value3.op = basecode::op_codes::push;
+    push_value3.size = basecode::op_sizes::byte;
+    push_value3.operands_count = 1;
+    push_value3.operands[0].value = 0x02;
+    push_value3.operands[0].type = basecode::operand_types::constant;
+    inst_size = terp.encode_instruction(r, location_counter, push_value3);
     if (inst_size == 0) {
         print_results(r);
         return 1;
@@ -110,9 +123,57 @@ int main() {
     }
     location_counter += inst_size;
 
+    basecode::instruction_t pop_value1;
+    pop_value1.op = basecode::op_codes::pop;
+    pop_value1.size = basecode::op_sizes::byte;
+    pop_value1.operands_count = 1;
+    pop_value1.operands[0].index = 5;
+    pop_value1.operands[0].type = basecode::operand_types::register_integer;
+    inst_size = terp.encode_instruction(r, location_counter, pop_value1);
+    if (inst_size == 0) {
+        print_results(r);
+        return 1;
+    }
+    location_counter += inst_size;
+
+    basecode::instruction_t pop_value2;
+    pop_value2.op = basecode::op_codes::pop;
+    pop_value2.size = basecode::op_sizes::byte;
+    pop_value2.operands_count = 1;
+    pop_value2.operands[0].index = 6;
+    pop_value2.operands[0].type = basecode::operand_types::register_integer;
+    inst_size = terp.encode_instruction(r, location_counter, pop_value2);
+    if (inst_size == 0) {
+        print_results(r);
+        return 1;
+    }
+    location_counter += inst_size;
+
+    basecode::instruction_t pop_value3;
+    pop_value3.op = basecode::op_codes::pop;
+    pop_value3.size = basecode::op_sizes::byte;
+    pop_value3.operands_count = 1;
+    pop_value3.operands[0].index = 7;
+    pop_value3.operands[0].type = basecode::operand_types::register_integer;
+    inst_size = terp.encode_instruction(r, location_counter, pop_value3);
+    if (inst_size == 0) {
+        print_results(r);
+        return 1;
+    }
+    location_counter += inst_size;
+
+    basecode::instruction_t exit;
+    exit.op = basecode::op_codes::exit;
+    inst_size = terp.encode_instruction(r, location_counter, exit);
+    if (inst_size == 0) {
+        print_results(r);
+        return 1;
+    }
+    location_counter += inst_size;
+
     terp.dump_heap(0);
 
-    for (size_t steps = 0; steps < 4; steps++) {
+    while (!terp.has_exited()) {
         if (!terp.step(r)) {
             print_results(r);
             return 1;

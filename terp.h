@@ -199,7 +199,8 @@ namespace basecode {
         ret,
         jmp,
         meta,
-        debug
+        debug,
+        exit
     };
 
     enum class op_sizes : uint8_t {
@@ -246,11 +247,15 @@ namespace basecode {
 
         virtual ~terp();
 
+        void reset();
+
         uint64_t pop();
 
         void dump_state();
 
         bool step(result& r);
+
+        bool has_exited() const;
 
         size_t encode_instruction(
             result& r,
@@ -301,6 +306,7 @@ namespace basecode {
         size_t align(uint64_t value, size_t size) const;
 
     private:
+        bool _exited = false;
         uint32_t _heap_size = 0;
         uint64_t* _heap = nullptr;
         register_file_t _registers {};
