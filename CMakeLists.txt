@@ -63,7 +63,8 @@ add_executable(
         main.cpp
         result.h
         result_message.h
-        terp.cpp terp.h)
+        terp.cpp terp.h
+        hex_formatter.cpp hex_formatter.h)
 
 target_link_libraries(
     bootstrap

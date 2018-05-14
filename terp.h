@@ -157,8 +157,8 @@ namespace basecode {
         uint64_t sr;
     };
 
-    enum class opcodes : uint16_t {
-        nop = 0,
+    enum class op_codes : uint16_t {
+        nop = 1,
         load,
         store,
         move,
@@ -202,8 +202,16 @@ namespace basecode {
         debug
     };
 
+    enum class op_sizes : uint8_t {
+        none,
+        byte,
+        word,
+        dword,
+        qword
+    };
+
     enum class operand_types : uint8_t {
-        register_integer,
+        register_integer = 1,
         register_floating_point,
         register_sp,
         register_pc,
@@ -213,14 +221,15 @@ namespace basecode {
     };
 
     struct operand_encoding_t {
-        operand_types type;
-        uint8_t index;
-        uint64_t value;
+        operand_types type = operand_types::register_integer;
+        uint8_t index = 0;
+        uint64_t value = 0;
     };
 
     struct instruction_t {
-        opcodes op;
-        uint8_t operands_count;
+        op_codes op = op_codes::nop;
+        op_sizes size = op_sizes::none;
+        uint8_t operands_count = 0;
         operand_encoding_t operands[4];
     };
 
@@ -239,6 +248,15 @@ namespace basecode {
 
         uint64_t pop();
 
+        void dump_state();
+
+        bool step(result& r);
+
+        size_t encode_instruction(
+            result& r,
+            uint64_t address,
+            instruction_t instruction);
+
         size_t heap_size() const;
 
         void push(uint64_t value);
@@ -248,6 +266,39 @@ namespace basecode {
         size_t heap_size_in_qwords() const;
 
         const register_file_t& register_file() const;
+
+        void dump_heap(uint64_t address, size_t size = 256);
+
+    protected:
+        size_t decode_instruction(
+            result& r,
+            instruction_t& instruction);
+
+        bool set_target_operand_value(
+            result& r,
+            const instruction_t& instruction,
+            uint8_t operand_index,
+            uint64_t value);
+
+        bool set_target_operand_value(
+            result& r,
+            const instruction_t& instruction,
+            uint8_t operand_index,
+            double value);
+
+        bool get_operand_value(
+            result& r,
+            const instruction_t& instruction,
+            uint8_t operand_index,
+            uint64_t& value) const;
+
+        bool get_operand_value(
+            result& r,
+            const instruction_t& instruction,
+            uint8_t operand_index,
+            double& value) const;
+
+        size_t align(uint64_t value, size_t size) const;
 
     private:
         uint32_t _heap_size = 0;
