@@ -44,8 +44,8 @@ namespace basecode {
 
     protected: // core
         void error(
-                const std::string& code,
-                const std::string& message);
+            const std::string& code,
+            const std::string& message);
 
         char* set_token();
 
@@ -60,8 +60,8 @@ namespace basecode {
         char* current_token();
 
         void register_operator(
-                const std::string& key,
-                const operator_t& op);
+            const std::string& key,
+            const operator_t& op);
 
         bool is_failed() const {
             return _result.is_failed();
@@ -118,20 +118,20 @@ namespace basecode {
         bool match_literal(const std::string& literal);
 
         std::vector<operator_t*> find_matching_operators(
-                std::vector<operator_t*> candidates,
-                char token,
-                size_t index);
+            std::vector<operator_t*> candidates,
+            char token,
+            size_t index);
 
     private:
         const std::vector<std::function<ast_node_shared_ptr ()>> _terminals = {
-                [&] () {return parse_number();},
-                [&] () {return parse_comment();},
-                [&] () {return parse_null_literal();},
-                [&] () {return parse_boolean_literal();},
-                [&] () {return parse_identifier();},
-                [&] () {return parse_string_literal();},
-                [&] () {return parse_character_literal();},
-                [&] () {return parse_uninitialized();},
+            [&] () {return parse_number();},
+            [&] () {return parse_comment();},
+            [&] () {return parse_null_literal();},
+            [&] () {return parse_boolean_literal();},
+            [&] () {return parse_identifier();},
+            [&] () {return parse_string_literal();},
+            [&] () {return parse_character_literal();},
+            [&] () {return parse_uninitialized();},
         };
 
         static operator_dict _operators;

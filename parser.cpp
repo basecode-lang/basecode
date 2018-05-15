@@ -295,8 +295,8 @@ namespace basecode {
             if (i == static_cast<int32_t>(_line - 1)) {
                 stream << fmt::format("{:04d}: ", i + 1)
                        << _input.source_lines[i] << "\n"
-                       << std::setw(_column + 8)
-                       << "^ " << message;
+                       << std::setw(_column + 3) << "|\n"
+                       << std::setw(_column + 6) << "+--> " << message << "\n";
             } else {
                 stream << fmt::format("{:04d}: ", i + 1)
                        << _input.source_lines[i];

@@ -4,18 +4,17 @@
 #include <fmt/format.h>
 #include "terp.h"
 #include "hex_formatter.h"
-#include "instruction_emitter.h"
 #include "alpha_compiler.h"
+#include "instruction_emitter.h"
 
 static constexpr size_t heap_size = (1024 * 1024) * 32;
 
 using test_function_callable = std::function<bool (basecode::result&, basecode::terp&)>;
 
 static void print_results(basecode::result& r) {
-    fmt::print("result success: {}\n", !r.is_failed());
     for (const auto& msg : r.messages()) {
         fmt::print(
-            "\t|{}|{}{}\n",
+            "|{}|{}{}\n",
             msg.code(),
             msg.is_error() ? "ERROR: " : " ",
             msg.message());
