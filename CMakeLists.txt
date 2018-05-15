@@ -64,7 +64,13 @@ add_executable(
         result.h
         terp.cpp terp.h
         result_message.h
+        parser_types.h
+        parser.cpp parser.h
+        evaluator.cpp evaluator.h
+        alpha_parser.cpp alpha_parser.h
+        symbol_table.cpp symbol_table.h
         hex_formatter.cpp hex_formatter.h
+        alpha_compiler.cpp alpha_compiler.h
         instruction_emitter.cpp instruction_emitter.h)
 
 target_link_libraries(

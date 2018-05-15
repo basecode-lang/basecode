@@ -5,6 +5,9 @@
 #include "terp.h"
 #include "hex_formatter.h"
 #include "instruction_emitter.h"
+#include "alpha_compiler.h"
+
+static constexpr size_t heap_size = (1024 * 1024) * 32;
 
 using test_function_callable = std::function<bool (basecode::result&, basecode::terp&)>;
 
@@ -139,10 +142,10 @@ static int time_test_function(
     return rc;
 }
 
-int main() {
+static int terp_tests() {
     std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
 
-    basecode::terp terp((1024 * 1024) * 32);
+    basecode::terp terp(heap_size);
     basecode::result r;
     if (!terp.initialize(r)) {
         fmt::print("terp initialize failed.\n");
@@ -158,4 +161,40 @@ int main() {
     time_test_function(r, terp, "test_fibonacci", test_fibonacci);
 
     return 0;
+}
+
+static int compiler_tests() {
+    basecode::alpha_compiler compiler(heap_size);
+    basecode::result r;
+    if (!compiler.initialize(r)) {
+        print_results(r);
+        return 1;
+    }
+
+    std::string source("// this is a test comment\n"
+                       "// fibonacci sequence in basecode-alpha\n"
+                       "\n"
+                       "foo := $ff * 2;\n"
+                       "\n"
+                       "fib := fn(n:u64):u64 {\n"
+                       "    if n == 0 || n == 1\n"
+                       "        n;\n"
+                       "    else\n"
+                       "        fib((n - 1) + fib(n - 2));\n"
+                       "}\n"
+                       "\n"
+                       "main := fn():u64 {\n"
+                       "    fib(100);\n"
+                       "}");
+    if (!compiler.compile(r, basecode::parser_input_t(source))) {
+        print_results(r);
+        return 1;
+    }
+
+    return 0;
+}
+
+int main() {
+    return compiler_tests();
+    //return terp_tests();
 }

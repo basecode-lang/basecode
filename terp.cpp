@@ -337,6 +337,13 @@ namespace basecode {
                 break;
             }
             case op_codes::xor_op: {
+                uint64_t lhs_value, rhs_value;
+                if (!get_operand_value(r, inst, 1, lhs_value))
+                    return false;
+                if (!get_operand_value(r, inst, 2, rhs_value))
+                    return false;
+                if (!set_target_operand_value(r, inst, 0, lhs_value ^ rhs_value))
+                    return false;
                 break;
             }
             case op_codes::not_op: {
@@ -354,7 +361,8 @@ namespace basecode {
                     return false;
                 if (!get_operand_value(r, inst, 2, bit_number))
                     return false;
-                if (!set_target_operand_value(r, inst, 0, value | (2^bit_number)))
+                uint64_t masked_value = static_cast<uint64_t>(1 << bit_number);
+                if (!set_target_operand_value(r, inst, 0, value | masked_value))
                     return false;
                 break;
             }
@@ -364,7 +372,8 @@ namespace basecode {
                     return false;
                 if (!get_operand_value(r, inst, 2, bit_number))
                     return false;
-                if (!set_target_operand_value(r, inst, 0, value & ~(2^bit_number)))
+                uint64_t masked_value = static_cast<uint64_t>(~(1 << bit_number));
+                if (!set_target_operand_value(r, inst, 0, value & masked_value))
                     return false;
                 break;
             }
