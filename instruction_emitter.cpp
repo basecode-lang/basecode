@@ -317,6 +317,21 @@ namespace basecode {
         _instructions.push_back(push_op);
     }
 
+    void instruction_emitter::compare_int_register_to_register(
+            op_sizes size,
+            uint8_t lhs_index,
+            uint8_t rhs_index) {
+        basecode::instruction_t cmp_op;
+        cmp_op.op = basecode::op_codes::cmp;
+        cmp_op.size = size;
+        cmp_op.operands_count = 2;
+        cmp_op.operands[0].type = basecode::operand_types::register_integer;
+        cmp_op.operands[0].index = lhs_index;
+        cmp_op.operands[1].type = basecode::operand_types::register_integer;
+        cmp_op.operands[1].index = rhs_index;
+        _instructions.push_back(cmp_op);
+    }
+
     void instruction_emitter::compare_int_register_to_constant(
             op_sizes size,
             uint8_t index,

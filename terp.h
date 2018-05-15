@@ -175,7 +175,7 @@ namespace basecode {
         uint64_t sr;
     };
 
-    enum class op_codes : uint16_t {
+    enum class op_codes : uint8_t {
         nop = 1,
         load,
         store,
@@ -210,13 +210,10 @@ namespace basecode {
         tbnz,
         bne,
         beq,
-        bae,
-        ba,
-        ble,
+        bg,
         bl,
-        bo,
-        bcc,
-        bcs,
+        bge,
+        ble,
         jsr,
         rts,
         jmp,
@@ -262,6 +259,8 @@ namespace basecode {
     };
 
     struct instruction_t {
+        static const size_t base_size = 4;
+
         size_t align(uint64_t value, size_t size) const {
             auto offset = value % size;
             return offset ? value + (size - offset) : value;
@@ -276,15 +275,13 @@ namespace basecode {
                 return 0;
             }
 
-            uint16_t* op_ptr = reinterpret_cast<uint16_t*>(heap + address + 1);
-            op = static_cast<op_codes>(*op_ptr);
-
             uint8_t* encoding_ptr = heap + address;
             uint8_t encoding_size = *encoding_ptr;
-            size = static_cast<op_sizes>(static_cast<uint8_t>(*(encoding_ptr + 3)));
-            operands_count = static_cast<uint8_t>(*(encoding_ptr + 4));
+            op = static_cast<op_codes>(*(encoding_ptr + 1));
+            size = static_cast<op_sizes>(static_cast<uint8_t>(*(encoding_ptr + 2)));
+            operands_count = static_cast<uint8_t>(*(encoding_ptr + 3));
 
-            size_t offset = 5;
+            size_t offset = base_size;
             for (size_t i = 0; i < operands_count; i++) {
                 operands[i].type = static_cast<operand_types>(*(encoding_ptr + offset));
                 ++offset;
@@ -293,17 +290,6 @@ namespace basecode {
                 ++offset;
 
                 switch (operands[i].type) {
-                    case operand_types::register_sp:
-                    case operand_types::register_pc:
-                    case operand_types::register_flags:
-                    case operand_types::register_status:
-                    case operand_types::register_integer:
-                    case operand_types::increment_register_pre:
-                    case operand_types::decrement_register_pre:
-                    case operand_types::increment_register_post:
-                    case operand_types::decrement_register_post:
-                    case operand_types::register_floating_point:
-                        break;
                     case operand_types::increment_constant_pre:
                     case operand_types::decrement_constant_pre:
                     case operand_types::increment_constant_post:
@@ -318,6 +304,9 @@ namespace basecode {
                         double* constant_value_ptr = reinterpret_cast<double*>(encoding_ptr + offset);
                         operands[i].value.d64 = *constant_value_ptr;
                         offset += sizeof(double);
+                        break;
+                    }
+                    default: {
                         break;
                     }
                 }
@@ -335,16 +324,14 @@ namespace basecode {
                 return 0;
             }
 
-            uint8_t encoding_size = 5;
-
-            auto op_ptr = reinterpret_cast<uint16_t*>(heap + address + 1);
-            *op_ptr = static_cast<uint16_t>(op);
+            uint8_t encoding_size = base_size;
+            size_t offset = base_size;
 
             auto encoding_ptr = heap + address;
-            *(encoding_ptr + 3) = static_cast<uint8_t>(size);
-            *(encoding_ptr + 4) = operands_count;
+            *(encoding_ptr + 1) = static_cast<uint8_t>(op);
+            *(encoding_ptr + 2) = static_cast<uint8_t>(size);
+            *(encoding_ptr + 3) = operands_count;
 
-            size_t offset = 5;
             for (size_t i = 0; i < operands_count; i++) {
                 *(encoding_ptr + offset) = static_cast<uint8_t>(operands[i].type);
                 ++offset;
@@ -355,17 +342,6 @@ namespace basecode {
                 ++encoding_size;
 
                 switch (operands[i].type) {
-                    case operand_types::register_sp:
-                    case operand_types::register_pc:
-                    case operand_types::register_flags:
-                    case operand_types::register_status:
-                    case operand_types::register_integer:
-                    case operand_types::increment_register_pre:
-                    case operand_types::decrement_register_pre:
-                    case operand_types::register_floating_point:
-                    case operand_types::increment_register_post:
-                    case operand_types::decrement_register_post:
-                        break;
                     case operand_types::increment_constant_pre:
                     case operand_types::increment_constant_post:
                     case operand_types::decrement_constant_pre:
@@ -384,19 +360,20 @@ namespace basecode {
                         encoding_size += sizeof(double);
                         break;
                     }
+                    default: {
+                        break;
+                    }
                 }
             }
 
-            if (encoding_size < 8)
-                encoding_size = 8;
-
             encoding_size = static_cast<uint8_t>(align(encoding_size, sizeof(uint64_t)));
             *encoding_ptr = encoding_size;
+
             return encoding_size;
         }
 
         size_t encoding_size() const {
-            size_t size = 5;
+            size_t size = base_size;
 
             for (size_t i = 0; i < operands_count; i++) {
                 size += 2;
@@ -417,9 +394,6 @@ namespace basecode {
                         break;
                 }
             }
-
-            if (size < 8)
-                size = 8;
 
             size = static_cast<uint8_t>(align(size, sizeof(uint64_t)));
 
@@ -502,6 +476,16 @@ namespace basecode {
             uint8_t operand_index,
             double& value) const;
 
+        inline uint8_t op_size_in_bytes(op_sizes size) const {
+            switch (size) {
+                case op_sizes::none:  return 0;
+                case op_sizes::byte:  return 1;
+                case op_sizes::word:  return 2;
+                case op_sizes::dword: return 4;
+                case op_sizes::qword: return 8;
+            }
+        }
+
     private:
         inline uint8_t* byte_ptr(uint64_t address) const {
             return _heap + address;
@@ -555,13 +539,10 @@ namespace basecode {
             {op_codes::tbnz,   "TBNZ"},
             {op_codes::bne,    "BNE"},
             {op_codes::beq,    "BEQ"},
-            {op_codes::bae,    "BAE"},
-            {op_codes::ba,     "BA"},
-            {op_codes::ble,    "BLE"},
+            {op_codes::bg,     "BG"},
+            {op_codes::bge,    "BGE"},
             {op_codes::bl,     "BL"},
-            {op_codes::bo,     "BO"},
-            {op_codes::bcc,    "BCC"},
-            {op_codes::bcs,    "BCS"},
+            {op_codes::ble,    "BLE"},
             {op_codes::jsr,    "JSR"},
             {op_codes::rts,    "RTS"},
             {op_codes::jmp,    "JMP"},

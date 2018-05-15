@@ -12,9 +12,9 @@ static void print_results(basecode::result& r) {
     fmt::print("result success: {}\n", !r.is_failed());
     for (const auto& msg : r.messages()) {
         fmt::print(
-            "\t{} code: {}| message: {}\n",
-            msg.is_error() ? "ERROR" : "",
+            "\t|{}|{}{}\n",
             msg.code(),
+            msg.is_error() ? "ERROR: " : " ",
             msg.message());
     }
 }
@@ -55,6 +55,13 @@ static bool test_square(basecode::result& r, basecode::terp& terp) {
         return false;
 
     auto result = run_terp(r, terp);
+    if (terp.register_file().i[5] != 81) {
+        r.add_message("T001", "I5 should contain 81.", true);
+    }
+
+    if (terp.register_file().i[6] != 25) {
+        r.add_message("T001", "I6 should contain 25.", true);
+    }
 
     return result;
 }
@@ -102,6 +109,8 @@ static bool test_fibonacci(basecode::result& r, basecode::terp& terp) {
     main_emitter.encode(r, terp);
 
     auto result = run_terp(r, terp);
+    //terp.dump_state(2);
+
     if (terp.register_file().i[0] != 1) {
         r.add_message("T001", "fn_fibonacci should end with 1 or 0.", true);
     }
@@ -117,6 +126,7 @@ static int time_test_function(
     std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
     terp.reset();
     auto rc = test_function(r, terp);
+    //fmt::print("\nASSEMBLY LISTING:\n{}\n", terp.disassemble(r, 0));
     std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
 
