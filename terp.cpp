@@ -34,11 +34,19 @@ namespace basecode {
         return value;
     }
 
-    void terp::dump_state() {
-        fmt::print("Basecode Interpreter State ----------------------------------\n");
+    void terp::dump_state(uint8_t count) {
+        fmt::print("\n-------------------------------------------------------------\n");
+        fmt::print(
+            "PC =${:08x} | SP =${:08x} | FR =${:08x} | SR =${:08x}\n",
+            _registers.pc,
+            _registers.sp,
+            _registers.fr,
+            _registers.sr);
+
+        fmt::print("-------------------------------------------------------------\n");
 
         uint8_t index = 0;
-        for (size_t y = 0; y < 16; y++) {
+        for (size_t y = 0; y < count; y++) {
             fmt::print(
                 "I{:02}=${:08x} | I{:02}=${:08x} | I{:02}=${:08x} | I{:02}=${:08x}\n",
                 index,
@@ -55,7 +63,7 @@ namespace basecode {
         fmt::print("-------------------------------------------------------------\n");
 
         index = 0;
-        for (size_t y = 0; y < 16; y++) {
+        for (size_t y = 0; y < count; y++) {
             fmt::print(
                 "F{:02}=${:08x} | F{:02}=${:08x} | F{:02}=${:08x} | F{:02}=${:08x}\n",
                 index,
@@ -69,19 +77,12 @@ namespace basecode {
             index += 4;
         }
 
-        fmt::print("-------------------------------------------------------------\n");
-
-        fmt::print(
-            "PC =${:08x} | SP =${:08x} | FR =${:08x} | SR =${:08x}\n\n",
-            _registers.pc,
-            _registers.sp,
-            _registers.fr,
-            _registers.sr);
+        fmt::print("\n");
     }
 
     bool terp::step(result& r) {
         instruction_t inst;
-        auto inst_size = decode_instruction(r, _registers.pc, inst);
+        auto inst_size = inst.decode(r, _heap, _registers.pc);
         if (inst_size == 0)
             return false;
 
@@ -249,24 +250,85 @@ namespace basecode {
                 break;
             }
             case op_codes::cmp: {
+                uint64_t lhs_value, rhs_value;
+                if (!get_operand_value(r, inst, 0, lhs_value))
+                    return false;
+                if (!get_operand_value(r, inst, 1, rhs_value))
+                    return false;
+                uint64_t result = lhs_value - rhs_value;
+                _registers.flags(register_file_t::flags_t::zero, result == 0);
+                _registers.flags(register_file_t::flags_t::overflow, rhs_value > lhs_value);
                 break;
             }
             case op_codes::bz: {
+                _registers.flags(register_file_t::flags_t::zero, false);
+
+                uint64_t value, address;
+                if (!get_operand_value(r, inst, 0, value))
+                    return false;
+                if (!get_operand_value(r, inst, 1, address))
+                    return false;
+                if (value == 0)
+                    _registers.pc = address;
                 break;
             }
             case op_codes::bnz: {
+                _registers.flags(register_file_t::flags_t::zero, false);
+
+                uint64_t value, address;
+                if (!get_operand_value(r, inst, 0, value))
+                    return false;
+                if (!get_operand_value(r, inst, 1, address))
+                    return false;
+                if (value != 0)
+                    _registers.pc = address;
                 break;
             }
             case op_codes::tbz: {
+                _registers.flags(register_file_t::flags_t::zero, false);
+
+                uint64_t value, mask, address;
+                if (!get_operand_value(r, inst, 0, value))
+                    return false;
+                if (!get_operand_value(r, inst, 1, mask))
+                    return false;
+                if (!get_operand_value(r, inst, 2, address))
+                    return false;
+                if ((value & mask) == 0)
+                    _registers.pc = address;
                 break;
             }
             case op_codes::tbnz: {
+                _registers.flags(register_file_t::flags_t::zero, false);
+
+                uint64_t value, mask, address;
+                if (!get_operand_value(r, inst, 0, value))
+                    return false;
+                if (!get_operand_value(r, inst, 1, mask))
+                    return false;
+                if (!get_operand_value(r, inst, 2, address))
+                    return false;
+                if ((value & mask) != 0)
+                    _registers.pc = address;
                 break;
             }
             case op_codes::bne: {
+                uint64_t address;
+                if (!get_operand_value(r, inst, 0, address))
+                    return false;
+                if (_registers.flags(register_file_t::flags_t::zero) == 0) {
+                    _registers.pc = address;
+                }
                 break;
             }
             case op_codes::beq: {
+                uint64_t address;
+                if (!get_operand_value(r, inst, 0, address))
+                    return false;
+                if (_registers.flags(register_file_t::flags_t::zero) != 0) {
+                    _registers.flags(register_file_t::flags_t::zero, false);
+                    _registers.pc = address;
+                }
                 break;
             }
             case op_codes::bae: {
@@ -323,134 +385,6 @@ namespace basecode {
         }
 
         return !r.is_failed();
-    }
-
-    size_t terp::encode_instruction(
-            result& r,
-            uint64_t address,
-            instruction_t instruction) {
-        if (address % 8 != 0) {
-            r.add_message("B003", "Instructions must be encoded on 8-byte boundaries.", true);
-            return 0;
-        }
-
-        uint8_t size = 5;
-
-        auto op_ptr = word_ptr(address + 1);
-        *op_ptr = static_cast<uint16_t>(instruction.op);
-
-        auto encoding_ptr = byte_ptr(address);
-        *(encoding_ptr + 3) = static_cast<uint8_t>(instruction.size);
-        *(encoding_ptr + 4) = instruction.operands_count;
-
-        size_t offset = 5;
-        for (size_t i = 0; i < instruction.operands_count; i++) {
-            *(encoding_ptr + offset) = static_cast<uint8_t>(instruction.operands[i].type);
-            ++offset;
-            ++size;
-
-            *(encoding_ptr + offset) = instruction.operands[i].index;
-            ++offset;
-            ++size;
-
-            switch (instruction.operands[i].type) {
-                case operand_types::register_sp:
-                case operand_types::register_pc:
-                case operand_types::register_flags:
-                case operand_types::register_status:
-                case operand_types::register_integer:
-                case operand_types::increment_register_pre:
-                case operand_types::decrement_register_pre:
-                case operand_types::register_floating_point:
-                case operand_types::increment_register_post:
-                case operand_types::decrement_register_post:
-                    break;
-                case operand_types::increment_constant_pre:
-                case operand_types::increment_constant_post:
-                case operand_types::decrement_constant_pre:
-                case operand_types::decrement_constant_post:
-                case operand_types::constant_integer: {
-                    uint64_t* constant_value_ptr = reinterpret_cast<uint64_t*>(encoding_ptr + offset);
-                    *constant_value_ptr = instruction.operands[i].value.u64;
-                    offset += sizeof(uint64_t);
-                    size += sizeof(uint64_t);
-                    break;
-                }
-                case operand_types::constant_float: {
-                    double* constant_value_ptr = reinterpret_cast<double*>(encoding_ptr + offset);
-                    *constant_value_ptr = instruction.operands[i].value.d64;
-                    offset += sizeof(double);
-                    size += sizeof(double);
-                    break;
-                }
-            }
-        }
-
-        if (size < 8)
-            size = 8;
-
-        size = static_cast<uint8_t>(align(size, sizeof(uint64_t)));
-        *encoding_ptr = size;
-        return size;
-    }
-
-    size_t terp::decode_instruction(
-            result& r,
-            uint64_t address,
-            instruction_t& instruction) {
-        if (address % 8 != 0) {
-            r.add_message("B003", "Instructions must be decoded on 8-byte boundaries.", true);
-            return 0;
-        }
-
-        uint16_t* op_ptr = word_ptr(address + 1);
-        instruction.op = static_cast<op_codes>(*op_ptr);
-
-        uint8_t* encoding_ptr = byte_ptr(address);
-        uint8_t size = *encoding_ptr;
-        instruction.size = static_cast<op_sizes>(static_cast<uint8_t>(*(encoding_ptr + 3)));
-        instruction.operands_count = static_cast<uint8_t>(*(encoding_ptr + 4));
-
-        size_t offset = 5;
-        for (size_t i = 0; i < instruction.operands_count; i++) {
-            instruction.operands[i].type = static_cast<operand_types>(*(encoding_ptr + offset));
-            ++offset;
-
-            instruction.operands[i].index = *(encoding_ptr + offset);
-            ++offset;
-
-            switch (instruction.operands[i].type) {
-                case operand_types::register_sp:
-                case operand_types::register_pc:
-                case operand_types::register_flags:
-                case operand_types::register_status:
-                case operand_types::register_integer:
-                case operand_types::increment_register_pre:
-                case operand_types::decrement_register_pre:
-                case operand_types::increment_register_post:
-                case operand_types::decrement_register_post:
-                case operand_types::register_floating_point:
-                    break;
-                case operand_types::increment_constant_pre:
-                case operand_types::decrement_constant_pre:
-                case operand_types::increment_constant_post:
-                case operand_types::decrement_constant_post:
-                case operand_types::constant_integer: {
-                    uint64_t* constant_value_ptr = reinterpret_cast<uint64_t*>(encoding_ptr + offset);
-                    instruction.operands[i].value.u64 = *constant_value_ptr;
-                    offset += sizeof(uint64_t);
-                    break;
-                }
-                case operand_types::constant_float: {
-                    double* constant_value_ptr = reinterpret_cast<double*>(encoding_ptr + offset);
-                    instruction.operands[i].value.d64 = *constant_value_ptr;
-                    offset += sizeof(double);
-                    break;
-                }
-            }
-        }
-
-        return size;
     }
 
     bool terp::has_exited() const {
@@ -573,16 +507,11 @@ namespace basecode {
         fmt::print("{}\n", program_memory);
     }
 
-    size_t terp::align(uint64_t value, size_t size) const {
-        auto offset = value % size;
-        return offset ? value + (size - offset) : value;
-    }
-
     std::string terp::disassemble(result& r, uint64_t address) {
         std::stringstream stream;
         while (true) {
             instruction_t inst;
-            auto inst_size = decode_instruction(r, address, inst);
+            auto inst_size = inst.decode(r, _heap, address);
             if (inst_size == 0)
                 break;
 

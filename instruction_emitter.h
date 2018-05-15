@@ -24,6 +24,15 @@ namespace basecode {
 
         uint64_t start_address() const;
 
+        void branch_if_equal(uint64_t address);
+
+        void branch_if_not_equal(uint64_t address);
+
+        void compare_int_register_to_constant(
+            op_sizes size,
+            uint8_t index,
+            uint64_t value);
+
         void add_int_register_to_register(
             op_sizes size,
             uint8_t target_index,
@@ -72,6 +81,12 @@ namespace basecode {
             uint8_t target_index,
             uint8_t lhs_index,
             uint8_t rhs_index);
+
+        void subtract_int_constant_from_register(
+            op_sizes size,
+            uint8_t target_index,
+            uint8_t lhs_index,
+            uint64_t rhs_value);
 
         void jump_direct(uint64_t address);
 

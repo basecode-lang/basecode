@@ -1,82 +1,10 @@
-// bootstrapping
+fib := fn(n:u64):u64 {
+    if n == 0 || n == 1
+        n;
+    else
+        fib((n - 1) + fib(n - 2));
+}
 
-//
-// Basecode Alpha (meaning the first iteration)
-// --------------------------------------------------
-//
-// - statically typed
-// - functions are going to be 1st class
-// - namespaces
-// - *probably* package manager
-// - c-like syntax with some pascal flavor
-// - consistent primitive types:
-//      s4           u4
-//      s8           u8
-//      s16          u16
-//      s32          u32
-//      s64          u64
-//      s128         u128
-//
-//      f32
-//      f64
-//
-//      string (len prefixed)
-//
-//      smart arrays (with size/iterator)
-//
-//      pointers
-//
-//      control over allocation model
-//
-// - "preprocessor" but based on recursively running Basecode within Basecode
-//
-// - flow control: if/else if/else/something switch-like
-//
-// - while loops/for loops
-//
-// - labelled jumps
-//
-// - structs
-//
-// - enums
-//
-// - attributes
-//
-// - support for dynamic/shared library invocation
-//
-// - *MAYBE* static linking....maybe
-//
-// - include/import
-//
-// ---------------------------------------------------------------------------
-//
-//
-// names := string:[];
-//
-// adder := fn(a:u16, b:u16):u16 {
-//    for i in s..e {
-//
-//    }
-//
-//    for name in names {
-//
-//    }
-//
-//    a + b;
-// }
-//
-//
-// std::foo::bar::adder := fn(a:u32, b:u32):u32 {
-//    a + b;
-//
-//    -- or --
-//
-//    return a + b;
-// }
-//
-
-
-
-//
-// Basecode Omega
-//
+main := fn():u64 {
+    fib(100);
+}
