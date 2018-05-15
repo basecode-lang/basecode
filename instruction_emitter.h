@@ -1,8 +1,8 @@
 #pragma once
 
 #include <cstdint>
-#include "result.h"
 #include "terp.h"
+#include "result.h"
 
 namespace basecode {
 
@@ -10,67 +10,96 @@ namespace basecode {
 
     class instruction_emitter {
     public:
-        explicit instruction_emitter(terp* t);
+        explicit instruction_emitter(uint64_t address);
 
-        bool rts(result& r);
+        void rts();
 
-        bool nop(result& r);
+        void nop();
 
-        bool exit(result& r);
+        void exit();
 
-        uint64_t location_counter() const;
+        size_t size() const;
 
-        bool add_int_register_to_register(
-            result& r,
+        uint64_t end_address() const;
+
+        uint64_t start_address() const;
+
+        void add_int_register_to_register(
             op_sizes size,
             uint8_t target_index,
             uint8_t lhs_index,
             uint8_t rhs_index);
 
-        bool move_int_constant_to_register(
-            result& r,
+        void load_with_offset_to_register(
+            uint8_t source_index,
+            uint8_t target_index,
+            uint64_t offset);
+
+        void move_int_constant_to_register(
             op_sizes size,
             uint64_t value,
             uint8_t index);
 
-        bool load_stack_offset_to_register(
-            result& r,
+        bool encode(result& r, terp& terp);
+
+        void load_stack_offset_to_register(
             uint8_t target_index,
             uint64_t offset);
 
-        bool store_register_to_stack_offset(
-            result& r,
+        void store_register_to_stack_offset(
             uint8_t source_index,
             uint64_t offset);
 
-        bool multiply_int_register_to_register(
-            result& r,
+        void store_with_offset_from_register(
+            uint8_t source_index,
+            uint8_t target_index,
+            uint64_t offset);
+
+        void divide_int_register_to_register(
             op_sizes size,
             uint8_t target_index,
             uint8_t lhs_index,
             uint8_t rhs_index);
 
-        void location_counter(uint64_t value);
+        void multiply_int_register_to_register(
+            op_sizes size,
+            uint8_t target_index,
+            uint8_t lhs_index,
+            uint8_t rhs_index);
 
-        bool jump_direct(result& r, uint64_t address);
+        void subtract_int_register_to_register(
+            op_sizes size,
+            uint8_t target_index,
+            uint8_t lhs_index,
+            uint8_t rhs_index);
 
-        bool push_float_constant(result& r, double value);
+        void jump_direct(uint64_t address);
 
-        bool pop_float_register(result& r, uint8_t index);
+        void push_float_constant(double value);
 
-        bool jump_subroutine_indirect(result& r, uint8_t index);
+        void pop_float_register(uint8_t index);
 
-        bool jump_subroutine_direct(result& r, uint64_t address);
+        void dec(op_sizes size, uint8_t index);
 
-        bool pop_int_register(result& r, op_sizes size, uint8_t index);
+        void inc(op_sizes size, uint8_t index);
 
-        bool push_int_register(result& r, op_sizes size, uint8_t index);
+        void jump_subroutine_indirect(uint8_t index);
 
-        bool push_int_constant(result& r, op_sizes size, uint64_t value);
+        void jump_subroutine_direct(uint64_t address);
+
+        inline instruction_t& operator[](size_t index) {
+            return _instructions[index];
+        };
+
+        void pop_int_register(op_sizes size, uint8_t index);
+
+        void push_int_register(op_sizes size, uint8_t index);
+
+        void push_int_constant(op_sizes size, uint64_t value);
 
     private:
-        terp* _terp = nullptr;
-        uint64_t _location_counter = 0;
+        uint64_t _start_address = 0;
+        std::vector<instruction_t> _instructions {};
     };
 
 };

@@ -1,3 +1,5 @@
+#include <sstream>
+#include <iomanip>
 #include <fmt/format.h>
 #include "terp.h"
 #include "hex_formatter.h"
@@ -26,27 +28,51 @@ namespace basecode {
         _exited = false;
     }
 
+    uint64_t terp::pop() {
+        uint64_t value = *qword_ptr(_registers.sp);
+        _registers.sp += sizeof(uint64_t);
+        return value;
+    }
+
     void terp::dump_state() {
-        fmt::print("Basecode Interpreter State ------------------------------\n");
+        fmt::print("Basecode Interpreter State ----------------------------------\n");
+
+        uint8_t index = 0;
+        for (size_t y = 0; y < 16; y++) {
+            fmt::print(
+                "I{:02}=${:08x} | I{:02}=${:08x} | I{:02}=${:08x} | I{:02}=${:08x}\n",
+                index,
+                _registers.i[index],
+                index + 1,
+                _registers.i[index + 1],
+                index + 2,
+                _registers.i[index + 2],
+                index + 3,
+                _registers.i[index + 3]);
+            index += 4;
+        }
+
+        fmt::print("-------------------------------------------------------------\n");
+
+        index = 0;
+        for (size_t y = 0; y < 16; y++) {
+            fmt::print(
+                "F{:02}=${:08x} | F{:02}=${:08x} | F{:02}=${:08x} | F{:02}=${:08x}\n",
+                index,
+                static_cast<uint64_t>(_registers.f[index]),
+                index + 1,
+                static_cast<uint64_t>(_registers.f[index + 1]),
+                index + 2,
+                static_cast<uint64_t>(_registers.f[index + 2]),
+                index + 3,
+                static_cast<uint64_t>(_registers.f[index + 3]));
+            index += 4;
+        }
+
+        fmt::print("-------------------------------------------------------------\n");
 
         fmt::print(
-            "I0=${:08x} | I1=${:08x} | I2=${:08x} | I3=${:08x}\n",
-            _registers.i[0],
-            _registers.i[1],
-            _registers.i[2],
-            _registers.i[3]);
-
-        fmt::print(
-            "I4=${:08x} | I5=${:08x} | I6=${:08x} | I7=${:08x}\n",
-            _registers.i[4],
-            _registers.i[5],
-            _registers.i[6],
-            _registers.i[7]);
-
-        fmt::print("---------------------------------------------------------\n");
-
-        fmt::print(
-            "PC=${:08x} | SP=${:08x} | FR=${:08x} | SR=${:08x}\n\n",
+            "PC =${:08x} | SP =${:08x} | FR =${:08x} | SR =${:08x}\n\n",
             _registers.pc,
             _registers.sp,
             _registers.fr,
@@ -55,17 +81,17 @@ namespace basecode {
 
     bool terp::step(result& r) {
         instruction_t inst;
-        auto inst_size = decode_instruction(r, inst);
+        auto inst_size = decode_instruction(r, _registers.pc, inst);
         if (inst_size == 0)
             return false;
 
+        _registers.pc += inst_size;
+
         switch (inst.op) {
             case op_codes::nop: {
-                fmt::print("nop\n");
                 break;
             }
             case op_codes::load: {
-                fmt::print("load\n");
                 uint64_t address;
                 if (!get_operand_value(r, inst, 1, address))
                     return false;
@@ -81,7 +107,6 @@ namespace basecode {
                 break;
             }
             case op_codes::store: {
-                fmt::print("store\n");
                 uint64_t value;
                 if (!get_operand_value(r, inst, 0, value))
                     return false;
@@ -99,8 +124,13 @@ namespace basecode {
                 *qword_ptr(address) = value;
                 break;
             }
+            case op_codes::copy: {
+                break;
+            }
+            case op_codes::fill: {
+                break;
+            }
             case op_codes::move: {
-                fmt::print("move\n");
                 uint64_t source_value;
                 if (!get_operand_value(r, inst, 0, source_value))
                     return false;
@@ -109,7 +139,6 @@ namespace basecode {
                 break;
             }
             case op_codes::push: {
-                fmt::print("push\n");
                 uint64_t source_value;
                 if (!get_operand_value(r, inst, 0, source_value))
                     return false;
@@ -117,14 +146,20 @@ namespace basecode {
                 break;
             }
             case op_codes::pop: {
-                fmt::print("pop\n");
                 uint64_t value = pop();
                 if (!set_target_operand_value(r, inst, 0, value))
                     return false;
                 break;
             }
+            case op_codes::inc: {
+                _registers.i[inst.operands[0].index]++;
+                break;
+            }
+            case op_codes::dec: {
+                _registers.i[inst.operands[0].index]--;
+                break;
+            }
             case op_codes::add: {
-                fmt::print("add\n");
                 uint64_t lhs_value, rhs_value;
                 if (!get_operand_value(r, inst, 1, lhs_value))
                     return false;
@@ -135,7 +170,6 @@ namespace basecode {
                 break;
             }
             case op_codes::sub: {
-                fmt::print("sub\n");
                 uint64_t lhs_value, rhs_value;
                 if (!get_operand_value(r, inst, 1, lhs_value))
                     return false;
@@ -146,7 +180,6 @@ namespace basecode {
                 break;
             }
             case op_codes::mul: {
-                fmt::print("mul\n");
                 uint64_t lhs_value, rhs_value;
                 if (!get_operand_value(r, inst, 1, lhs_value))
                     return false;
@@ -157,7 +190,6 @@ namespace basecode {
                 break;
             }
             case op_codes::div: {
-                fmt::print("div\n");
                 uint64_t lhs_value, rhs_value;
                 if (!get_operand_value(r, inst, 1, lhs_value))
                     return false;
@@ -171,7 +203,6 @@ namespace basecode {
                 break;
             }
             case op_codes::mod: {
-                fmt::print("mod\n");
                 uint64_t lhs_value, rhs_value;
                 if (!get_operand_value(r, inst, 1, lhs_value))
                     return false;
@@ -260,7 +291,6 @@ namespace basecode {
                 break;
             }
             case op_codes::jsr: {
-                fmt::print("jsr\n");
                 push(_registers.pc);
                 uint64_t address;
                 if (!get_operand_value(r, inst, 0, address))
@@ -269,13 +299,11 @@ namespace basecode {
                 break;
             }
             case op_codes::rts: {
-                fmt::print("rts\n");
                 uint64_t address = pop();
                 _registers.pc = address;
                 break;
             }
             case op_codes::jmp: {
-                fmt::print("jmp\n");
                 uint64_t address;
                 if (!get_operand_value(r, inst, 0, address))
                     return false;
@@ -289,7 +317,6 @@ namespace basecode {
                 break;
             }
             case op_codes::exit: {
-                fmt::print("exit\n");
                 _exited = true;
                 break;
             }
@@ -307,7 +334,7 @@ namespace basecode {
             return 0;
         }
 
-        uint8_t size = 4;
+        uint8_t size = 5;
 
         auto op_ptr = word_ptr(address + 1);
         *op_ptr = static_cast<uint16_t>(instruction.op);
@@ -359,30 +386,27 @@ namespace basecode {
             }
         }
 
-        if (instruction.operands_count > 0)
-            ++size;
-
         if (size < 8)
             size = 8;
 
         size = static_cast<uint8_t>(align(size, sizeof(uint64_t)));
         *encoding_ptr = size;
-
         return size;
     }
 
     size_t terp::decode_instruction(
             result& r,
+            uint64_t address,
             instruction_t& instruction) {
-        if (_registers.pc % 8 != 0) {
+        if (address % 8 != 0) {
             r.add_message("B003", "Instructions must be decoded on 8-byte boundaries.", true);
             return 0;
         }
 
-        uint16_t* op_ptr = word_ptr(_registers.pc + 1);
+        uint16_t* op_ptr = word_ptr(address + 1);
         instruction.op = static_cast<op_codes>(*op_ptr);
 
-        uint8_t* encoding_ptr = byte_ptr(_registers.pc);
+        uint8_t* encoding_ptr = byte_ptr(address);
         uint8_t size = *encoding_ptr;
         instruction.size = static_cast<op_sizes>(static_cast<uint8_t>(*(encoding_ptr + 3)));
         instruction.operands_count = static_cast<uint8_t>(*(encoding_ptr + 4));
@@ -426,8 +450,6 @@ namespace basecode {
             }
         }
 
-        _registers.pc += size;
-
         return size;
     }
 
@@ -439,22 +461,105 @@ namespace basecode {
         return _heap_size;
     }
 
+    void terp::push(uint64_t value) {
+        _registers.sp -= sizeof(uint64_t);
+        *qword_ptr(_registers.sp) = value;
+        return;
+    }
+
     bool terp::initialize(result& r) {
         _heap = new uint8_t[_heap_size];
         reset();
         return !r.is_failed();
     }
 
-    uint64_t terp::pop() {
-        uint64_t value = *qword_ptr(_registers.sp);
-        _registers.sp += sizeof(uint64_t);
-        return value;
-    }
+    std::string terp::disassemble(const instruction_t& inst) const {
+        std::stringstream stream;
 
-    void terp::push(uint64_t value) {
-        _registers.sp -= sizeof(uint64_t);
-        *qword_ptr(_registers.sp) = value;
-        return;
+        auto it = s_op_code_names.find(inst.op);
+        if (it != s_op_code_names.end()) {
+            std::stringstream mnemonic;
+
+            mnemonic <<  it->second;
+            switch (inst.size) {
+                case op_sizes::byte:
+                    mnemonic << ".B";
+                    break;
+                case op_sizes::word:
+                    mnemonic << ".W";
+                    break;
+                case op_sizes::dword:
+                    mnemonic << ".DW";
+                    break;
+                case op_sizes::qword:
+                    mnemonic << ".QW";
+                    break;
+                default: {
+                    break;
+                }
+            }
+
+            stream << std::left << std::setw(10) << mnemonic.str();
+
+            for (size_t i = 0; i < inst.operands_count; i++) {
+                if (i > 0 && i < inst.operands_count) {
+                    stream << ", ";
+                }
+                switch (inst.operands[i].type) {
+                    case operand_types::register_integer:
+                        stream << "I" << std::to_string(inst.operands[i].index);
+                        break;
+                    case operand_types::register_floating_point:
+                        stream << "F" << std::to_string(inst.operands[i].index);
+                        break;
+                    case operand_types::register_sp:
+                        stream << "SP";
+                        break;
+                    case operand_types::register_pc:
+                        stream << "PC";
+                        break;
+                    case operand_types::register_flags:
+                        stream << "FR";
+                        break;
+                    case operand_types::register_status:
+                        stream << "SR";
+                        break;
+                    case operand_types::constant_integer:
+                        stream << fmt::format("#${:08X}", inst.operands[i].value.u64);
+                        break;
+                    case operand_types::constant_float:
+                        stream << fmt::format("#${:08X}", inst.operands[i].value.d64);
+                        break;
+                    case operand_types::increment_constant_pre:
+                        stream << "++" << std::to_string(inst.operands[i].value.u64);
+                        break;
+                    case operand_types::increment_constant_post:
+                        stream << std::to_string(inst.operands[i].value.u64) << "++";
+                        break;
+                    case operand_types::increment_register_pre:
+                        stream << "++" << "I" << std::to_string(inst.operands[i].index);
+                        break;
+                    case operand_types::increment_register_post:
+                        stream << "I" << std::to_string(inst.operands[i].index) << "++";
+                        break;
+                    case operand_types::decrement_constant_pre:
+                        stream << "--" << std::to_string(inst.operands[i].value.u64);
+                        break;
+                    case operand_types::decrement_constant_post:
+                        stream << std::to_string(inst.operands[i].value.u64) << "--";
+                        break;
+                    case operand_types::decrement_register_pre:
+                        stream << "--" << "I" << std::to_string(inst.operands[i].index);
+                        break;
+                    case operand_types::decrement_register_post:
+                        stream << "I" << std::to_string(inst.operands[i].index) << "--";
+                        break;
+                }
+            }
+        } else {
+            stream << "UNKNOWN";
+        }
+        return stream.str();
     }
 
     const register_file_t& terp::register_file() const {
@@ -471,6 +576,25 @@ namespace basecode {
     size_t terp::align(uint64_t value, size_t size) const {
         auto offset = value % size;
         return offset ? value + (size - offset) : value;
+    }
+
+    std::string terp::disassemble(result& r, uint64_t address) {
+        std::stringstream stream;
+        while (true) {
+            instruction_t inst;
+            auto inst_size = decode_instruction(r, address, inst);
+            if (inst_size == 0)
+                break;
+
+            stream << fmt::format("${:08X}: ", address)
+                   << disassemble(inst) << "\n";
+
+            if (inst.op == op_codes::exit)
+                break;
+
+            address += inst_size;
+        }
+        return stream.str();
     }
 
     bool terp::get_operand_value(

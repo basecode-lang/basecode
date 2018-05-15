@@ -1,7 +1,8 @@
 #pragma once
 
-#include <cstdint>
+#include <map>
 #include <string>
+#include <cstdint>
 #include "result.h"
 
 namespace basecode {
@@ -161,9 +162,13 @@ namespace basecode {
         nop = 1,
         load,
         store,
+        copy,
+        fill,
         move,
         push,
         pop,
+        inc,
+        dec,
         add,
         sub,
         mul,
@@ -240,6 +245,46 @@ namespace basecode {
     };
 
     struct instruction_t {
+        size_t align(uint64_t value, size_t size) const {
+            auto offset = value % size;
+            return offset ? value + (size - offset) : value;
+        }
+
+        size_t encoding_size() const {
+            size_t size = 5;
+
+            for (size_t i = 0; i < operands_count; i++) {
+                size += 2;
+                switch (operands[i].type) {
+                    case operand_types::increment_constant_pre:
+                    case operand_types::increment_constant_post:
+                    case operand_types::decrement_constant_pre:
+                    case operand_types::decrement_constant_post:
+                    case operand_types::constant_integer: {
+                        size += sizeof(uint64_t);
+                        break;
+                    }
+                    case operand_types::constant_float: {
+                        size += sizeof(double);
+                        break;
+                    }
+                    default:
+                        break;
+                }
+            }
+
+            if (size < 8)
+                size = 8;
+
+            size = static_cast<uint8_t>(align(size, sizeof(uint64_t)));
+
+            return size;
+        }
+
+        void patch_branch_address(uint64_t address) {
+            operands[0].value.u64 = address;
+        }
+
         op_codes op = op_codes::nop;
         op_sizes size = op_sizes::none;
         uint8_t operands_count = 0;
@@ -284,9 +329,14 @@ namespace basecode {
 
         void dump_heap(uint64_t offset, size_t size = 256);
 
+        std::string disassemble(result& r, uint64_t address);
+
+        std::string disassemble(const instruction_t& inst) const;
+
     protected:
         size_t decode_instruction(
             result& r,
+            uint64_t address,
             instruction_t& instruction);
 
         bool set_target_operand_value(
@@ -333,6 +383,56 @@ namespace basecode {
         }
 
     private:
+        inline static std::map<op_codes, std::string> s_op_code_names = {
+            {op_codes::nop,    "NOP"},
+            {op_codes::load,   "LOAD"},
+            {op_codes::store,  "STORE"},
+            {op_codes::copy,   "COPY"},
+            {op_codes::fill,   "FILL"},
+            {op_codes::move,   "MOVE"},
+            {op_codes::push,   "PUSH"},
+            {op_codes::pop,    "POP"},
+            {op_codes::inc,    "INC"},
+            {op_codes::dec,    "DEC"},
+            {op_codes::add,    "ADD"},
+            {op_codes::sub,    "SUB"},
+            {op_codes::mul,    "MUL"},
+            {op_codes::div,    "DIV"},
+            {op_codes::mod,    "MOD"},
+            {op_codes::neg,    "NEG"},
+            {op_codes::shr,    "SHR"},
+            {op_codes::shl,    "SHL"},
+            {op_codes::ror,    "ROR"},
+            {op_codes::rol,    "ROL"},
+            {op_codes::and_op, "AND"},
+            {op_codes::or_op,  "OR"},
+            {op_codes::xor_op, "XOR"},
+            {op_codes::not_op, "NOT"},
+            {op_codes::bis,    "BIS"},
+            {op_codes::bic,    "BIC"},
+            {op_codes::test,   "TEST"},
+            {op_codes::cmp,    "CMP"},
+            {op_codes::bz,     "BZ"},
+            {op_codes::bnz,    "BNZ"},
+            {op_codes::tbz,    "TBZ"},
+            {op_codes::tbnz,   "TBNZ"},
+            {op_codes::bne,    "BNE"},
+            {op_codes::beq,    "BEQ"},
+            {op_codes::bae,    "BAE"},
+            {op_codes::ba,     "BA"},
+            {op_codes::ble,    "BLE"},
+            {op_codes::bl,     "BL"},
+            {op_codes::bo,     "BO"},
+            {op_codes::bcc,    "BCC"},
+            {op_codes::bcs,    "BCS"},
+            {op_codes::jsr,    "JSR"},
+            {op_codes::rts,    "RTS"},
+            {op_codes::jmp,    "JMP"},
+            {op_codes::meta,   "META"},
+            {op_codes::debug,  "DEBUG"},
+            {op_codes::exit,   "EXIT"},
+        };
+
         bool _exited = false;
         size_t _heap_size = 0;
         uint8_t* _heap = nullptr;
