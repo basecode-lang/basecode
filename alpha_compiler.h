@@ -4,7 +4,6 @@
 #include "terp.h"
 #include "alpha_parser.h"
 #include "symbol_table.h"
-#include "evaluator.h"
 
 namespace basecode {
 
@@ -31,7 +30,6 @@ namespace basecode {
     private:
         terp _terp;
         uint64_t _address;
-        evaluator _evaluator;
         alpha_parser _parser {};
         basecode::symbol_table _symbol_table {};
     };

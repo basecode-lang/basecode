@@ -15,11 +15,7 @@ namespace basecode {
     public:
         parser() = default;
 
-        basecode::symbol_table* symbol_table();
-
         const basecode::result& result() const;
-
-        void symbol_table(basecode::symbol_table* value);
 
         ast_node_shared_ptr parse_expression(const parser_input_t& input);
 
@@ -30,15 +26,15 @@ namespace basecode {
 
         bool has_operator();
 
-        operator_t* pop_operator();
-
-        operator_t* peek_operator();
+//        operator_t* pop_operator();
+//
+//        operator_t* peek_operator();
 
         ast_node_shared_ptr pop_operand();
 
         ast_node_shared_ptr peek_operand();
 
-        void push_operator(operator_t* op);
+//        void push_operator(operator_t* op);
 
         void push_operand(const ast_node_shared_ptr& node);
 
@@ -58,11 +54,6 @@ namespace basecode {
         void increment_line();
 
         char* current_token();
-
-        void register_operator(
-            const std::string& key,
-            const operator_t& op);
-
         bool is_failed() const {
             return _result.is_failed();
         }
@@ -85,10 +76,10 @@ namespace basecode {
 
         void reset(const parser_input_t& input);
 
-        ast_node_shared_ptr create_ast_node(ast_node_t::tokens type);
+//        ast_node_shared_ptr create_ast_node(ast_node_t::tokens type);
 
     protected: // parsers
-        operator_t* parse_operator();
+//        operator_t* parse_operator();
 
         ast_node_shared_ptr parse_number();
 
@@ -113,14 +104,14 @@ namespace basecode {
         ast_node_shared_ptr parse_semicolon_literal();
 
     private:
-        bool operator_stack_has(operator_t* op);
+//        bool operator_stack_has(operator_t* op);
 
         bool match_literal(const std::string& literal);
 
-        std::vector<operator_t*> find_matching_operators(
-            std::vector<operator_t*> candidates,
-            char token,
-            size_t index);
+//        std::vector<operator_t*> find_matching_operators(
+//            std::vector<operator_t*> candidates,
+//            char token,
+//            size_t index);
 
     private:
         const std::vector<std::function<ast_node_shared_ptr ()>> _terminals = {
@@ -134,7 +125,7 @@ namespace basecode {
             [&] () {return parse_uninitialized();},
         };
 
-        static operator_dict _operators;
+//        static operator_dict _operators;
 
         size_t _index {};
         uint32_t _line {};
@@ -142,10 +133,9 @@ namespace basecode {
         char* _token = nullptr;
         parser_input_t _input {};
         basecode::result _result;
-        std::vector<operator_t*> _operator_stack;
+//        std::vector<operator_t*> _operator_stack;
         std::stack<scanner_pos_t> _position_stack;
         std::stack<ast_node_shared_ptr> _operand_stack;
-        basecode::symbol_table* _symbol_table = nullptr;
     };
 
 };

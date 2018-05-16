@@ -5,6 +5,8 @@
 
 namespace basecode {
 
+    using symbol_dict = std::map<std::string, ast_node_shared_ptr>;
+
     class symbol_table {
     public:
         symbol_table() = default;

@@ -1,10 +1,470 @@
-fib := fn(n:u64):u64 {
-    if n == 0 || n == 1
-        n;
-    else
-        fib((n - 1) + fib(n - 2));
-}
+//
+// tokens:
+//
+// single line comment: //
+// string interpolation: {characters} "{" {expression} "}" {characters}
+// string literal: "value" (\ is escape character)
+// char literal: 'a'
+// boolean literal: true|false
+// number literal (_ can be anywhere in number):
+//      decimal: 12354 | -123454
+//      hex: $ffee
+//      octal: @777
+//      binary: %0000_1111
+//      floating point: 1234.556688
+// identifier: [_a-zA-Z] {[_a-zA-Z0-9]}
+// label: identifier':'
+// namespace: "ns"
+// scope operator: "::"
+// basic block: { }
+// lambda: "|" {parameter list} "|" {basic block}
+// type expression: ":" {type name} ["<" {type expression} "," ... ">"]
+// for: "for" {identifier} "," {identifier} "in" {identifier} {basic block}
+// if: "if" {expression} {basic block}
+// else if: "else if" {expression} {basic block}
+// else: "else" {basic block}
+// with: "with" {expression} {basic block}
+// switch block: {expression} ":" {basic block} ...
+// switch: "switch" {expression} {switch block}
+// continue: "continue"
+// break: "break"
+// goto: "goto"
+// read_only: "read_only" {variable declaration} | {parameter declaration}
+// cast: "cast" "<" {type expression} ">" "(" {expression} ")"
+// return: "return" {expression}
+// null literal: "null"
+// true literal: "true"
+// false literal: "false"
+// none literal: "none"
+// empty literal: "empty"
+// defer: "defer" {expression}
+// spread operator: "..."
+// function expression: "fn" "(" {identifier:[{type name}|"{" {type_name} "," ... "}"], ... } ")" {basic block}
+// function call: {identifier} "(" {parameter list} ")" ";"
+// type operator: "type(...)"
+// address_of operator: "address_of(...)"
+// scoped operator: "scoped(...)"
+// generic parameters: "<{type expression}, ...>"
+// extend block: {variable declaration} | {assignment}
+// extend statement: extend {type_name} ["<" {type parameter}, ... ">"] "(" {parameter list} ")" {extend_block}
+// type_name: one of { type names }
+// variable declaration: {identifier}[:{type expression}]
+// attribute: @{identifier}
+// assignment: {identifier} ":=" {expression}
+// expression: unary op | binary op | function call | if | switch | with | fn expression | extend
+// parameter list: {identifier | string literal | number literal | boolean literal | fn expression }, ...}
+//
+//
+//-----------------------------------------------------------
+//
+//
+// single line comments
+//
+//
 
-main := fn():u64 {
-    fib(100);
-}
+// Lua table:
+//
+// local foo = {
+//      items = {},
+//      add = function(self, v) { self.items[#self.items] = v }
+// }
+//
+// foo:add("bar");
+//
+
+// attribute usages
+@import "stuff.bc";
+
+// possibly allow for a default, e.g. "main" if not specified
+@entry_point start;
+
+ns std::types {
+
+    extend string[]() {
+        add := fn(self:string[], value:string):type(self) {
+            self.items[self.length] = value;
+            self;
+        };
+    };
+
+};
+
+// namespaces are separated by :: for each scope
+ns alpha::examples {
+
+    ns private {
+        don_t_you_call_me_dammit := fn():none {
+        };
+    };
+
+    // types
+    byte_type:type := type(u8);
+
+    // type aliases
+    word:type := alias type(u32);
+
+    // type has:
+    //      .name:string
+    //      .abstract ?
+    //      .size (in bytes)
+    //      .min
+    //      .max
+    //      .default_value
+    //      .debug_format_fn
+    //      .format_fn
+    //      .attributes
+    //
+    //  other stuff?
+    //
+
+    // special constants:
+    //      true:   truth
+    //      false:  lies
+    //      null:   for assignment to pointer types
+    //      empty:  for assignment to any type
+    //      none:   for no type
+
+    // any type
+    // some kind of tagged union-ish thingy
+    //
+    something:any := "string";
+
+    // boolean
+    this_is_true:bool := true;
+    this_is_false:bool := false;
+
+    // integers
+    //
+    unsigned_nybble:u4 := $0f;
+
+    unsigned_byte:u8 := $7f;
+    signed_byte:s8 := -99;
+
+    octal_word:u16 := @777;
+    unsigned_word:u16 := $c000;
+    signed_word:s16 := -32765;
+    
+    unsigned_dword:u32 := $69_7f_3f_ff;
+    signed_dword:s32 := -5_000_000;
+
+    unsigned_qword:u64 := %0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000;
+    signed_qword:s64 := %FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFE0;
+
+    // fully initialized dynamic array, e.g. acts like vector
+    unsigned_byte_array:u8[];
+
+    // inline initialized array, still dynamic
+    unsigned_byte_array_init:u8[] := { $24, $1f, $ff, 127, %0000_1010 };
+    // or inferred
+    inferred_unsigned_byte_array_init := { $24, $1f, $ff, 127, %0000_1010 };
+
+    // fixed sized array
+    unsigned_byte_array_fixed:u8[16];
+
+    // floating point
+    e:f32 := 2.71828;
+    pi:f64 := 3.14159;
+
+    // pointers
+    byte_ptr:*u8 := address_of(unsigned_byte);
+
+    // interned_string
+    my_constant_string:interned_string := "foo!";
+
+    // strings
+    //  - internally, length prefixed
+    //  - my_dynamic_string.length
+    //
+    my_dynamic_string:string := "hello world";
+
+    // dynamic array of strings
+    arrays_of_strings:string[] := { "one", "two", "three" };
+
+    // maps/associative array
+    name_to_number:map<type(string), type(u8)> := {
+        "one" := 1,
+        "two" := 2,
+        "three" := 3,       // trailing comma is OK
+    };
+
+    //
+    // value_type is defaulted to any but can be overridden
+    //
+    linked_list_node := extend type<VT := type(any)>() {
+        prev:*linked_list_node := null;
+        next:*linked_list_node := null;
+        // default() would be another built-in function that uses type metadata to
+        //              return a valid default value for the specified type
+        value:VT := default(value_type);
+    };
+
+    //
+    // type instantiation
+    //
+    root_node:linked_list_node<type(string)> := {
+        prev := null,
+        next := null,
+        value := "test",
+    };
+
+    //
+    // functions
+    //
+    another_fn:fn := fib;
+
+    //
+    // you can do this but it isn't necessary
+    // this would most likely be needed for interfacing with external
+    // libraries written in C or C++
+    //
+    another_fn_ptr:*fn := address_of(fib);
+
+    //
+    // what are the implications of doing this?
+    // having type hierarchy ends up with some kind of specialization
+    //  mechanism during compilation
+    //
+    //  type
+    //
+    //  u8/s8
+    //  u16/s16         "integer" group
+    //  u32/s32
+    //  u64/s64
+    //
+    //  f32             "float" group
+    //  f64
+    //
+    //  string          "string" group
+    //  interned_string
+    //
+
+    fib_u32_ptr:*fn := address_of(fib<u32>);
+
+    //
+    // function expression
+    //
+    fib := fn(n:{u16,u32,u64}):type(n) {
+        if n == 0 || n == 1
+            n;
+        else
+            fib((n - 1) + fib(n - 2));
+    };
+
+    //
+    // this is an example of a function that has no return value
+    // this can be a hint for the compiler around managing the stack
+    //
+    // the ... is spread operator
+    log := fn(fmt:string, params:any...):none {
+        for _, param in params {
+
+        }
+
+        // no return statement or expression is expected because
+        // the return type is none
+    }
+
+    //
+    // attribute is an existing type we're extending
+    //
+    jeff_attribute := extend attribute() {
+        the_word:string := empty;
+    };
+
+    @attribute type(jeff_attribute)
+    jeff_attribute_fn := fn(the_word:string):jeff_attribute {
+        { the_word };
+    };
+
+    //
+    // how would the run attribute work?
+    //
+    // fn -vs- closure
+    //
+    // fn wraps any function and can be invoked but doesn't represent
+    // any specific invocation binding.
+    //
+    // closure represents a specific fn call binding, e.g. the parameters being passed, etc.
+    //  a closure?
+    //
+    @attribute type(run_attribute)
+    run_attribute_fn := fn(action:closure):run_attribute, any {
+        result := action();
+        { {}, result };
+    }
+
+    //
+    // running code at compile time
+    //
+    // the _ can be used to discard values we don't care about
+    //
+    _, fib_result := @run fn() { fib(1000) };
+
+    //
+    // import vs compile attributes?
+    //
+    // @import accepts a filename
+    // @compile accepts a string/stream
+    //
+    _, compile_result:fn := @compile "2 * 2";
+    super_duper_dynamic_result := compile_result();
+
+    filter_pred_fn := extend fn(item:string):bool {
+        count:u32 := 0;
+    };
+    filter := fn(
+            read_only list:string[],
+            read_only pred:filter_pred_fn):string[] {
+        results:string[];
+        for _, item in list {
+            if pred(item) {
+                pred.count += 1;
+                results.add(item);
+            }
+        }
+        results;
+    };
+
+    //
+    // function expression
+    //
+    @jeff_attribute "NARF!"
+    start := fn():u64 {
+        // infers an fn
+        two_filter_fn := fn(item:string):bool {
+            item == "two";
+        };
+
+        // name == "fn"
+        context.log("type(two_filter_fn) == {}", type(two_filter_fn).name);
+
+        // don't assume implicit casting of fn parameters
+        // should the compiler refuse the fn because it isn't the correct type, require cast
+        filtered_list := filter(
+            array_of_string,
+            cast<filter_pred_fn>(two_filter_fn));
+
+        context.log("two_filter_fn.count = {}", two_filter_fn.count);
+
+        //
+        // lambda syntax
+        //
+        square_fn := |x:{u8, u16}| x * x;
+        sixty_four_squared := square_fn(64);
+
+        //
+        // support multiple return values!
+        //
+
+        //
+        // heap
+        //
+        // compiler/terp will grab a huge hunk of RAM via new/malloc
+        //
+        // terp/basecode compiler will alloc from areas
+        //
+
+        //
+        // context
+        // could live on TLS
+        //      - accessible in every function
+        //      - any function can add/change state on the context
+        //
+        // scoped() function would clone(?) value passed and rollback at end of block
+        // clone() might work in this scenario too?
+        //
+
+        // changes to context are temporary
+        with scoped(context) {
+            allocator := my_special_allocator;
+
+            bitmap_data:*u8 := alloc(32 * 32);
+            defer free(bitmap_data);
+        };
+
+        // changes to context last beyond the with block
+        with context {
+            allocator := the_slab;
+        };
+
+        //
+        // I don't really like this syntax
+        //
+        read_only max_name_count:u32 := 100;
+
+        // explicit type annotation
+        names:string[max_name_count];
+
+        // type inference: array of string
+        words := { "five", "ball", "bat" };
+
+        // type inference: map of string to type
+        types := { "any" := type(any), "fn" := type(fn) };
+
+        // for loop of a collection-like thing
+        for index, name in names {
+            // string interpolation
+            name := "name_{index} := {index * 2}";
+        }
+
+        // for loop over a range
+        for index in range(0, 100) {
+            // do something with index
+        }
+
+        // custom type decl w/type parameter
+        second_node:linked_list_node<type(string)>;
+        with second_node {
+            prev := root_node;
+            value := "second";
+        }
+
+        // explicit casting
+        larger_int:u32 := $c00000;
+        smaller_int := cast<u8>(larger_int);
+
+        // if expression
+        //
+        foo := if unsigned_byte == $7f {
+            unsigned_byte -= 1;
+        } else if unsigned_byte < $7f {
+            unsigned_byte += 1;
+        } else {
+            unsigned_byte += 2;
+        }
+
+        // no break necessary
+        // no fall through
+        //
+        // switch expression
+        //
+        bar := switch signed_byte {
+            -2: {
+                "two";
+            }
+
+            -4: {
+                "four";
+            }
+
+            -8: {
+                "eight";
+            }
+        };
+
+        // these work
+        fib(8);
+        fib(127)
+        fib(65535)
+        fib($c00000);
+
+        // this won't work
+        fib(2.5);
+
+        // deferred things happen here
+
+        // "return" keyword is optional
+        return 0;
+    };
+
+};

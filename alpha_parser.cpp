@@ -47,24 +47,25 @@ namespace basecode {
     ast_node_shared_ptr alpha_parser::parse_statement() {
         consume_white_space();
 
-        auto statement_node = create_ast_node(ast_node_t::tokens::statement);
+//        auto statement_node = create_ast_node(ast_node_t::tokens::statement);
+//
+//        auto identifier_node = parse_identifier();
+//        if (identifier_node != nullptr) {
+//            auto assignment_node = parse_assignment();
+//            if (assignment_node != nullptr) {
+//                assignment_node->lhs = identifier_node;
+//                statement_node->children.push_back(assignment_node);
+//            }
+//        }
+//
+//        auto semicolon_literal = parse_semicolon_literal();
+//        if (semicolon_literal == nullptr) {
+//            error("A977", "statement must be terminated with a semi-colon.");
+//            return nullptr;
+//        }
 
-        auto identifier_node = parse_identifier();
-        if (identifier_node != nullptr) {
-            auto assignment_node = parse_assignment();
-            if (assignment_node != nullptr) {
-                assignment_node->lhs = identifier_node;
-                statement_node->children.push_back(assignment_node);
-            }
-        }
-
-        auto semicolon_literal = parse_semicolon_literal();
-        if (semicolon_literal == nullptr) {
-            error("A977", "statement must be terminated with a semi-colon.");
-            return nullptr;
-        }
-
-        return statement_node;
+//        return statement_node;
+        return nullptr;
     }
 
     ast_node_shared_ptr alpha_parser::current_scope() const {
@@ -78,10 +79,10 @@ namespace basecode {
         if (input.empty())
             return nullptr;
 
-        auto program_node = create_ast_node(ast_node_t::tokens::program);
-        push_scope(program_node);
-        reset(input);
-        parse_program();
+//        auto program_node = create_ast_node(ast_node_t::tokens::program);
+//        push_scope(program_node);
+//        reset(input);
+//        parse_program();
 
         return current_scope();
     }

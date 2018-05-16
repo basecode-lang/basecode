@@ -2,8 +2,7 @@
 
 namespace basecode {
 
-    alpha_compiler::alpha_compiler(size_t heap_size): _terp(heap_size),
-                                                      _evaluator(this) {
+    alpha_compiler::alpha_compiler(size_t heap_size): _terp(heap_size) {
     }
 
     alpha_compiler::~alpha_compiler() {
@@ -34,9 +33,9 @@ namespace basecode {
         if (program_node == nullptr)
             return !r.is_failed();
 
-        if (!_evaluator.evaluate_program(r, program_node)) {
-
-        }
+//        if (!_evaluator.evaluate_program(r, program_node)) {
+//
+//        }
 
         return !r.is_failed();
     }

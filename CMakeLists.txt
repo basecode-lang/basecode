@@ -62,11 +62,12 @@ add_executable(
         bootstrap
         main.cpp
         result.h
+        ast.cpp ast.h
+        parser_types.h
         terp.cpp terp.h
         result_message.h
-        parser_types.h
+        token.cpp token.h
         parser.cpp parser.h
-        evaluator.cpp evaluator.h
         alpha_parser.cpp alpha_parser.h
         symbol_table.cpp symbol_table.h
         hex_formatter.cpp hex_formatter.h
