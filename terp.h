@@ -7,148 +7,6 @@
 
 namespace basecode {
 
-    // basecode interpreter, which consumes base IR
-    //
-    //
-    // register-based machine
-    // with a generic stack
-    //
-    // register file:
-    //
-    // general purpose: data or address
-    // I0-I63: integer registers 64-bit
-    //
-    // data only:
-    // F0-F63: floating point registers (double precision)
-    //
-    // stack pointer: sp (like an IXX register)
-    // program counter: pc (can be read, but not changed)
-    // flags: fr (definitely read; maybe write)
-    // status: sr (definitely read; maybe write)
-    //
-    //
-    // instructions:
-    //
-    // memory access
-    // --------------
-    //
-    // load{.b|.w|.dw|.qw}
-    //                  ^ default
-    // .b  = 8-bit
-    // .w  = 16-bit
-    // .dw = 32-bit
-    // .qw = 64-bit
-    //
-    // non-used bits are zero-extended
-    //
-    // store{.b|.w|.dw|.qw}
-    //
-    // non-used bits are zero-extended
-    //
-    // addressing modes (loads & stores):
-    //      {target-register}, [{source-register}]
-    //          "      "     , [{source-register}, offset constant]
-    //          "      "     , [{source-register}, {offset-register}]
-    //          "      "     , {source-register}, post increment constant++
-    //          "      "     , {source-register}, post increment register++
-    //          "      "     , {source-register}, ++pre increment constant
-    //          "      "     , {source-register}, ++pre increment register
-    //          "      "     , {source-register}, post decrement constant--
-    //          "      "     , {source-register}, post decrement register--
-    //          "      "     , {source-register}, --pre decrement constant
-    //          "      "     , {source-register}, --pre decrement register
-    //
-    // copy {source-register}, {target-register}, {length constant}
-    // copy {source-register}, {target-register}, {length-register}
-    //
-    // fill {constant}, {target-register}, {length constant}
-    // fill {constant}, {target-register}, {length-register}
-    //
-    // fill {source-register}, {target-register}, {length constant}
-    // fill {source-register}, {target-register}, {length register}
-    //
-    // register/constant
-    // -------------------
-    //
-    // move{.b|.w|.dw|.qw}  {source constant}, {target register}
-    //                      {source register}, {target register}
-    //
-    // move.b #$06, I3
-    // move I3, I16
-    //
-    // stack
-    // --------
-    //
-    //  push{.b|.w|.dw|.qw}
-    //  pop{.b|.w|.dw|.qw}
-    //
-    //  sp register behaves like IXX register.
-    //
-    // ALU
-    // -----
-    //
-    //  size applicable to all: {.b|.w|.dw|.qw}
-    //
-    // add
-    // addc
-    //
-    // sub
-    // subc
-    //
-    // mul
-    // div
-    // mod
-    // neg
-    //
-    // shr
-    // shl
-    // ror
-    // rol
-    //
-    // and
-    // or
-    // xor
-    //
-    // not
-    // bis (bit set)
-    // bic (bit clear)
-    // test
-    //
-    // cmp (compare register to register, or register to constant)
-    //
-    // branch/conditional execution
-    // ----------------------------------
-    //
-    // bz   (branch if zero)
-    // bnz  (branch if not-zero)
-    //
-    // tbz  (test & branch if not set)
-    // tbnz (test & branch if set)
-    //
-    // bne
-    // beq
-    // bae
-    // ba
-    // ble
-    // bl
-    // bo
-    // bcc
-    // bcs
-    //
-    // jsr  - equivalent to call (encode tail flag?)
-    //          push current PC + sizeof(instruction)
-    //          jmp to address
-    //
-    // ret  - jump to address on stack
-    //
-    // jmp
-    //      - absolute constant: jmp #$ffffffff0
-    //      - indirect register: jmp [I4]
-    //      - direct: jmp I4
-    //
-    // nop
-    //
-
     struct register_file_t {
         enum flags_t : uint64_t {
             zero     = 0b0000000000000000000000000000000000000000000000000000000000000001,
@@ -186,6 +44,7 @@ namespace basecode {
         move,
         push,
         pop,
+        dup,
         inc,
         dec,
         add,
@@ -220,8 +79,8 @@ namespace basecode {
         rts,
         jmp,
         swi,
+        trap,
         meta,
-        debug,
         exit
     };
 
@@ -422,6 +281,13 @@ namespace basecode {
 
     class terp {
     public:
+        using trap_callable = std::function<void (terp*)>;
+
+        static constexpr size_t interrupt_vector_table_start = 0;
+        static constexpr size_t interrupt_vector_table_size = 16;
+        static constexpr size_t interrupt_vector_table_end = sizeof(uint64_t) * interrupt_vector_table_size;
+        static constexpr size_t program_start = interrupt_vector_table_end;
+
         explicit terp(size_t heap_size);
 
         virtual ~terp();
@@ -431,6 +297,8 @@ namespace basecode {
         uint64_t pop();
 
         bool step(result& r);
+
+        uint64_t peek() const;
 
         bool has_exited() const;
 
@@ -444,7 +312,11 @@ namespace basecode {
 
         bool initialize(result& r);
 
+        void remove_trap(uint8_t index);
+
         void dump_state(uint8_t count = 16);
+
+        void swi(uint8_t index, uint64_t address);
 
         const register_file_t& register_file() const;
 
@@ -453,6 +325,8 @@ namespace basecode {
         std::string disassemble(result& r, uint64_t address);
 
         std::string disassemble(const instruction_t& inst) const;
+
+        void register_trap(uint8_t index, const trap_callable& callable);
 
     protected:
         bool set_target_operand_value(
@@ -516,6 +390,7 @@ namespace basecode {
             {op_codes::move,   "MOVE"},
             {op_codes::push,   "PUSH"},
             {op_codes::pop,    "POP"},
+            {op_codes::dup,    "DUP"},
             {op_codes::inc,    "INC"},
             {op_codes::dec,    "DEC"},
             {op_codes::add,    "ADD"},
@@ -550,8 +425,8 @@ namespace basecode {
             {op_codes::rts,    "RTS"},
             {op_codes::jmp,    "JMP"},
             {op_codes::swi,    "SWI"},
+            {op_codes::trap,   "TRAP"},
             {op_codes::meta,   "META"},
-            {op_codes::debug,  "DEBUG"},
             {op_codes::exit,   "EXIT"},
         };
 
@@ -559,6 +434,7 @@ namespace basecode {
         size_t _heap_size = 0;
         uint8_t* _heap = nullptr;
         register_file_t _registers {};
+        std::map<uint8_t, trap_callable> _traps {};
     };
 
 };

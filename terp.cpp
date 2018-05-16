@@ -27,7 +27,7 @@ namespace basecode {
     }
 
     void terp::reset() {
-        _registers.pc = 0;
+        _registers.pc = program_start;
         _registers.fr = 0;
         _registers.sr = 0;
         _registers.sp = _heap_size;
@@ -43,6 +43,11 @@ namespace basecode {
     uint64_t terp::pop() {
         uint64_t value = *qword_ptr(_registers.sp);
         _registers.sp += sizeof(uint64_t);
+        return value;
+    }
+
+    uint64_t terp::peek() const {
+        uint64_t value = *qword_ptr(_registers.sp);
         return value;
     }
 
@@ -202,6 +207,10 @@ namespace basecode {
                 uint64_t value = pop();
                 if (!set_target_operand_value(r, inst, 0, value))
                     return false;
+                break;
+            }
+            case op_codes::dup: {
+                push(peek());
                 break;
             }
             case op_codes::inc: {
@@ -492,12 +501,28 @@ namespace basecode {
                 break;
             }
             case op_codes::swi: {
+                uint64_t index;
+                if (!get_operand_value(r, inst, 0, index))
+                    return false;
+                size_t swi_offset = sizeof(uint64_t) * index;
+                uint64_t swi_address = *qword_ptr(swi_offset);
+                if (swi_address != 0) {
+                    // XXX: what state should we save and restore here?
+                    push(_registers.pc);
+                    _registers.pc = swi_address;
+                }
                 break;
+            }
+            case op_codes::trap: {
+                uint64_t index;
+                if (!get_operand_value(r, inst, 0, index))
+                    return false;
+                auto it = _traps.find(static_cast<uint8_t>(index));
+                if (it == _traps.end())
+                    break;
+                it->second(this);
             }
             case op_codes::meta: {
-                break;
-            }
-            case op_codes::debug: {
                 break;
             }
             case op_codes::exit: {
@@ -527,6 +552,15 @@ namespace basecode {
         _heap = new uint8_t[_heap_size];
         reset();
         return !r.is_failed();
+    }
+
+    void terp::remove_trap(uint8_t index) {
+        _traps.erase(index);
+    }
+
+    void terp::swi(uint8_t index, uint64_t address) {
+        size_t swi_address = sizeof(uint64_t) * index;
+        *qword_ptr(swi_address) = address;
     }
 
     std::string terp::disassemble(const instruction_t& inst) const {
@@ -845,6 +879,10 @@ namespace basecode {
         }
 
         return false;
+    }
+
+    void terp::register_trap(uint8_t index, const terp::trap_callable& callable) {
+        _traps.insert(std::make_pair(index, callable));
     }
 
 };

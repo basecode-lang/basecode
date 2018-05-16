@@ -13,6 +13,12 @@ namespace basecode {
         _instructions.push_back(no_op);
     }
 
+    void instruction_emitter::dup() {
+        basecode::instruction_t dup_op;
+        dup_op.op = basecode::op_codes::dup;
+        _instructions.push_back(dup_op);
+    }
+
     void instruction_emitter::rts() {
         basecode::instruction_t rts_op;
         rts_op.op = basecode::op_codes::rts;
@@ -30,6 +36,24 @@ namespace basecode {
         for (const auto& inst : _instructions)
             size += inst.encoding_size();
         return size;
+    }
+
+    void instruction_emitter::swi(uint8_t index) {
+        basecode::instruction_t swi_op;
+        swi_op.op = basecode::op_codes::swi;
+        swi_op.operands_count = 1;
+        swi_op.operands[0].type = basecode::operand_types::constant_integer;
+        swi_op.operands[0].value.u64 = index;
+        _instructions.push_back(swi_op);
+    }
+
+    void instruction_emitter::trap(uint8_t index) {
+        basecode::instruction_t trap_op;
+        trap_op.op = basecode::op_codes::trap;
+        trap_op.operands_count = 1;
+        trap_op.operands[0].type = basecode::operand_types::constant_integer;
+        trap_op.operands[0].value.u64 = index;
+        _instructions.push_back(trap_op);
     }
 
     uint64_t instruction_emitter::end_address() const {

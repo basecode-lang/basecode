@@ -14,11 +14,17 @@ namespace basecode {
 
         void rts();
 
+        void dup();
+
         void nop();
 
         void exit();
 
         size_t size() const;
+
+        void swi(uint8_t index);
+
+        void trap(uint8_t index);
 
         uint64_t end_address() const;
 
