@@ -19,13 +19,13 @@ namespace basecode {
 
         bool initialize(result& r);
 
+        bool compile(result& r, std::istream& input);
+
         inline basecode::symbol_table* symbol_table() {
             return &_symbol_table;
         }
 
-        bool compile(result& r, const parser_input_t& input);
-
-        bool compile_stream(result& r, const parser_input_t& input);
+        bool compile_stream(result& r, std::istream& input);
 
     private:
         terp _terp;

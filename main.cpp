@@ -2,6 +2,7 @@
 #include <iostream>
 #include <functional>
 #include <fmt/format.h>
+#include <sstream>
 #include "terp.h"
 #include "hex_formatter.h"
 #include "alpha_compiler.h"
@@ -179,22 +180,26 @@ static int compiler_tests() {
         return 1;
     }
 
-    std::string source("// this is a test comment\n"
-                       "// fibonacci sequence in basecode-alpha\n"
-                       "\n"
-                       "foo := $ff * 2;\n"
-                       "\n"
-                       "fib := fn(n:u64):u64 {\n"
-                       "    if n == 0 || n == 1\n"
-                       "        n;\n"
-                       "    else\n"
-                       "        fib((n - 1) + fib(n - 2));\n"
-                       "}\n"
-                       "\n"
-                       "main := fn():u64 {\n"
-                       "    fib(100);\n"
-                       "}");
-    if (!compiler.compile(r, basecode::parser_input_t(source))) {
+    std::stringstream source(
+        "// this is a test comment\n"
+        "// fibonacci sequence in basecode-alpha\n"
+        "\n"
+        "@entry_point main;\n"
+        "\n"
+        "foo := $ff * 2;\n"
+        "\n"
+        "fib := fn(n:u64):u64 {\n"
+        "    if n == 0 || n == 1 {\n"
+        "        n;\n"
+        "    } else {\n"
+        "        fib((n - 1) + fib(n - 2));\n"
+        "    };\n"
+        "};\n"
+        "\n"
+        "main := fn():u64 {\n"
+        "    fib(100);\n"
+        "};");
+    if (!compiler.compile(r, source)) {
         print_results(r);
         return 1;
     }
@@ -204,8 +209,9 @@ static int compiler_tests() {
 
 int main() {
     int result = 0;
-    //result = compiler_tests();
-    //if (result != 0) return result;
+
+    result = compiler_tests();
+    if (result != 0) return result;
 
     result = terp_tests();
     return result;

@@ -72,7 +72,7 @@ add_executable(
         symbol_table.cpp symbol_table.h
         hex_formatter.cpp hex_formatter.h
         alpha_compiler.cpp alpha_compiler.h
-        instruction_emitter.cpp instruction_emitter.h)
+        instruction_emitter.cpp instruction_emitter.h lexer.cpp lexer.h)
 
 target_link_libraries(
     bootstrap

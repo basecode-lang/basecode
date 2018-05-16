@@ -3,8 +3,8 @@
 namespace basecode {
 
     void symbol_table::put(
-        const std::string& name,
-        const ast_node_shared_ptr& value) {
+            const std::string& name,
+            const ast_node_shared_ptr& value) {
         _symbols[name] = value;
     }
 

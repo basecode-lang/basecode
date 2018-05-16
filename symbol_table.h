@@ -1,7 +1,7 @@
 #pragma once
 
 #include "result.h"
-#include "parser_types.h"
+#include "ast.h"
 
 namespace basecode {
 
@@ -17,14 +17,6 @@ namespace basecode {
 
         void clear();
 
-        bool missing_is_error() const {
-            return _missing_is_error;
-        }
-
-        void missing_is_error(bool flag) {
-            _missing_is_error = flag;
-        }
-
         void remove(const std::string& name);
 
         std::vector<std::string> identifiers() {
@@ -39,7 +31,6 @@ namespace basecode {
 
     private:
         symbol_dict _symbols;
-        bool _missing_is_error = true;
     };
 
 };
