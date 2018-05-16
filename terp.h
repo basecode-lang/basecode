@@ -154,6 +154,8 @@ namespace basecode {
             zero     = 0b0000000000000000000000000000000000000000000000000000000000000001,
             carry    = 0b0000000000000000000000000000000000000000000000000000000000000010,
             overflow = 0b0000000000000000000000000000000000000000000000000000000000000100,
+            negative = 0b0000000000000000000000000000000000000000000000000000000000001000,
+            extended = 0b0000000000000000000000000000000000000000000000000000000000010000,
         };
 
         bool flags(flags_t f) const {
@@ -217,6 +219,7 @@ namespace basecode {
         jsr,
         rts,
         jmp,
+        swi,
         meta,
         debug,
         exit
@@ -546,6 +549,7 @@ namespace basecode {
             {op_codes::jsr,    "JSR"},
             {op_codes::rts,    "RTS"},
             {op_codes::jmp,    "JMP"},
+            {op_codes::swi,    "SWI"},
             {op_codes::meta,   "META"},
             {op_codes::debug,  "DEBUG"},
             {op_codes::exit,   "EXIT"},

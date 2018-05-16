@@ -398,8 +398,6 @@ namespace basecode {
                 break;
             }
             case op_codes::bz: {
-                _registers.flags(register_file_t::flags_t::zero, false);
-
                 uint64_t value, address;
                 if (!get_operand_value(r, inst, 0, value))
                     return false;
@@ -410,8 +408,6 @@ namespace basecode {
                 break;
             }
             case op_codes::bnz: {
-                _registers.flags(register_file_t::flags_t::zero, false);
-
                 uint64_t value, address;
                 if (!get_operand_value(r, inst, 0, value))
                     return false;
@@ -422,8 +418,6 @@ namespace basecode {
                 break;
             }
             case op_codes::tbz: {
-                _registers.flags(register_file_t::flags_t::zero, false);
-
                 uint64_t value, mask, address;
                 if (!get_operand_value(r, inst, 0, value))
                     return false;
@@ -436,8 +430,6 @@ namespace basecode {
                 break;
             }
             case op_codes::tbnz: {
-                _registers.flags(register_file_t::flags_t::zero, false);
-
                 uint64_t value, mask, address;
                 if (!get_operand_value(r, inst, 0, value))
                     return false;
@@ -463,7 +455,6 @@ namespace basecode {
                 if (!get_operand_value(r, inst, 0, address))
                     return false;
                 if (_registers.flags(register_file_t::flags_t::zero) != 0) {
-                    _registers.flags(register_file_t::flags_t::zero, false);
                     _registers.pc = address;
                 }
                 break;
@@ -481,8 +472,6 @@ namespace basecode {
                 break;
             }
             case op_codes::jsr: {
-                _registers.flags(register_file_t::flags_t::zero, false);
-
                 push(_registers.pc);
                 uint64_t address;
                 if (!get_operand_value(r, inst, 0, address))
@@ -496,12 +485,13 @@ namespace basecode {
                 break;
             }
             case op_codes::jmp: {
-                _registers.flags(register_file_t::flags_t::zero, false);
-
                 uint64_t address;
                 if (!get_operand_value(r, inst, 0, address))
                     return false;
                 _registers.pc = address;
+                break;
+            }
+            case op_codes::swi: {
                 break;
             }
             case op_codes::meta: {
@@ -748,25 +738,6 @@ namespace basecode {
             }
         }
 
-        // XXX: need to implement zero extend
-        switch (instruction.size) {
-            case op_sizes::byte:
-                break;
-            case op_sizes::word:
-                break;
-            case op_sizes::dword:
-                break;
-            case op_sizes::qword:
-                break;
-            default: {
-                r.add_message(
-                    "B005",
-                    "unsupported size of 'none' for operand.",
-                    true);
-                return false;
-            }
-        }
-
         return true;
     }
 
@@ -782,10 +753,12 @@ namespace basecode {
             case operand_types::decrement_register_post:
             case operand_types::register_integer: {
                 _registers.i[instruction.operands[operand_index].index] = value;
+                _registers.flags(register_file_t::flags_t::zero, value == 0);
                 return true;
             }
             case operand_types::register_floating_point: {
                 _registers.f[instruction.operands[operand_index].index] = value;
+                _registers.flags(register_file_t::flags_t::zero, value == 0);
                 break;
             }
             case operand_types::register_sp: {
@@ -832,7 +805,9 @@ namespace basecode {
             case operand_types::increment_register_post:
             case operand_types::decrement_register_post:
             case operand_types::register_integer: {
-                _registers.i[instruction.operands[operand_index].index] = static_cast<uint64_t>(value);
+                uint64_t integer_value = static_cast<uint64_t>(value);
+                _registers.i[instruction.operands[operand_index].index] = integer_value;
+                _registers.flags(register_file_t::flags_t::zero, integer_value == 0);
                 break;
             }
             case operand_types::register_floating_point: {

@@ -31,6 +31,7 @@ namespace basecode {
             uint8_t rhs_index);
 
         void load_with_offset_to_register(
+            op_sizes size,
             uint8_t source_index,
             uint8_t target_index,
             uint64_t offset);
@@ -43,14 +44,17 @@ namespace basecode {
         bool encode(result& r, terp& terp);
 
         void load_stack_offset_to_register(
+            op_sizes size,
             uint8_t target_index,
             uint64_t offset);
 
         void store_register_to_stack_offset(
+            op_sizes size,
             uint8_t source_index,
             uint64_t offset);
 
         void store_with_offset_from_register(
+            op_sizes size,
             uint8_t source_index,
             uint8_t target_index,
             uint64_t offset);

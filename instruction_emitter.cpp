@@ -41,12 +41,13 @@ namespace basecode {
     }
 
     void instruction_emitter::load_with_offset_to_register(
+            op_sizes size,
             uint8_t source_index,
             uint8_t target_index,
             uint64_t offset) {
         basecode::instruction_t load_op;
         load_op.op = basecode::op_codes::load;
-        load_op.size = basecode::op_sizes::qword;
+        load_op.size = size;
         load_op.operands_count = 3;
         load_op.operands[0].type = basecode::operand_types::register_integer;
         load_op.operands[0].index = target_index;
@@ -76,11 +77,12 @@ namespace basecode {
     }
 
     void instruction_emitter::load_stack_offset_to_register(
+            op_sizes size,
             uint8_t target_index,
             uint64_t offset) {
         basecode::instruction_t load_op;
         load_op.op = basecode::op_codes::load;
-        load_op.size = basecode::op_sizes::qword;
+        load_op.size = size;
         load_op.operands_count = 3;
         load_op.operands[0].type = basecode::operand_types::register_integer;
         load_op.operands[0].index = target_index;
@@ -92,11 +94,12 @@ namespace basecode {
     }
 
     void instruction_emitter::store_register_to_stack_offset(
+            op_sizes size,
             uint8_t source_index,
             uint64_t offset) {
         basecode::instruction_t store_op;
         store_op.op = basecode::op_codes::store;
-        store_op.size = basecode::op_sizes::qword;
+        store_op.size = size;
         store_op.operands_count = 3;
         store_op.operands[0].type = basecode::operand_types::register_integer;
         store_op.operands[0].index = source_index;
@@ -136,12 +139,13 @@ namespace basecode {
     }
 
     void instruction_emitter::store_with_offset_from_register(
+            op_sizes size,
             uint8_t source_index,
             uint8_t target_index,
             uint64_t offset) {
         basecode::instruction_t store_op;
         store_op.op = basecode::op_codes::store;
-        store_op.size = basecode::op_sizes::qword;
+        store_op.size = size;
         store_op.operands_count = 3;
         store_op.operands[0].type = basecode::operand_types::register_integer;
         store_op.operands[0].index = source_index;
@@ -224,7 +228,6 @@ namespace basecode {
     void instruction_emitter::jump_direct(uint64_t address) {
         basecode::instruction_t jmp_op;
         jmp_op.op = basecode::op_codes::jmp;
-        jmp_op.size = basecode::op_sizes::qword;
         jmp_op.operands_count = 1;
         jmp_op.operands[0].type = basecode::operand_types::constant_integer;
         jmp_op.operands[0].value.u64 = address;
@@ -270,7 +273,6 @@ namespace basecode {
     void instruction_emitter::jump_subroutine_indirect(uint8_t index) {
         basecode::instruction_t jsr_op;
         jsr_op.op = basecode::op_codes::jsr;
-        jsr_op.size = basecode::op_sizes::qword;
         jsr_op.operands_count = 1;
         jsr_op.operands[0].type = basecode::operand_types::register_integer;
         jsr_op.operands[0].index = index;
@@ -280,7 +282,6 @@ namespace basecode {
     void instruction_emitter::jump_subroutine_direct(uint64_t address) {
         basecode::instruction_t jsr_op;
         jsr_op.op = basecode::op_codes::jsr;
-        jsr_op.size = basecode::op_sizes::qword;
         jsr_op.operands_count = 1;
         jsr_op.operands[0].type = basecode::operand_types::constant_integer;
         jsr_op.operands[0].value.u64 = address;
@@ -350,7 +351,6 @@ namespace basecode {
     void instruction_emitter::branch_if_equal(uint64_t address) {
         basecode::instruction_t branch_op;
         branch_op.op = basecode::op_codes::beq;
-        branch_op.size = basecode::op_sizes::qword;
         branch_op.operands_count = 1;
         branch_op.operands[0].type = basecode::operand_types::constant_integer;
         branch_op.operands[0].value.u64 = address;
@@ -360,7 +360,6 @@ namespace basecode {
     void instruction_emitter::branch_if_not_equal(uint64_t address) {
         basecode::instruction_t branch_op;
         branch_op.op = basecode::op_codes::bne;
-        branch_op.size = basecode::op_sizes::qword;
         branch_op.operands_count = 1;
         branch_op.operands[0].type = basecode::operand_types::constant_integer;
         branch_op.operands[0].value.u64 = address;

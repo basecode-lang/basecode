@@ -34,9 +34,9 @@ static bool test_square(basecode::result& r, basecode::terp& terp) {
     bootstrap_emitter.jump_direct(0);
 
     basecode::instruction_emitter fn_square_emitter(bootstrap_emitter.end_address());
-    fn_square_emitter.load_stack_offset_to_register(0, 8);
+    fn_square_emitter.load_stack_offset_to_register(basecode::op_sizes::dword, 0, 8);
     fn_square_emitter.multiply_int_register_to_register(basecode::op_sizes::dword, 0, 0, 0);
-    fn_square_emitter.store_register_to_stack_offset(0, 8);
+    fn_square_emitter.store_register_to_stack_offset(basecode::op_sizes::dword, 0, 8);
     fn_square_emitter.rts();
 
     basecode::instruction_emitter main_emitter(fn_square_emitter.end_address());
@@ -73,7 +73,7 @@ static bool test_fibonacci(basecode::result& r, basecode::terp& terp) {
     bootstrap_emitter.jump_direct(0);
 
     basecode::instruction_emitter fn_fibonacci(bootstrap_emitter.end_address());
-    fn_fibonacci.load_stack_offset_to_register(0, 8);
+    fn_fibonacci.load_stack_offset_to_register(basecode::op_sizes::dword, 0, 8);
     fn_fibonacci.compare_int_register_to_constant(basecode::op_sizes::dword, 0, 0);
     fn_fibonacci.branch_if_equal(0);
     fn_fibonacci.compare_int_register_to_constant(basecode::op_sizes::dword, 0, 1);
@@ -96,7 +96,7 @@ static bool test_fibonacci(basecode::result& r, basecode::terp& terp) {
     fn_fibonacci.push_int_register(basecode::op_sizes::dword, 1);
     fn_fibonacci.jump_subroutine_direct(fn_fibonacci.start_address());
     fn_fibonacci.pop_int_register(basecode::op_sizes::dword, 1);
-    fn_fibonacci.store_register_to_stack_offset(1, 8);
+    fn_fibonacci.store_register_to_stack_offset(basecode::op_sizes::dword, 1, 8);
     fn_fibonacci.rts();
 
     basecode::instruction_emitter main_emitter(fn_fibonacci.end_address());
@@ -128,7 +128,7 @@ static int time_test_function(
     std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
     terp.reset();
     auto rc = test_function(r, terp);
-    //fmt::print("\nASSEMBLY LISTING:\n{}\n", terp.disassemble(r, 0));
+    fmt::print("\nASSEMBLY LISTING:\n{}\n", terp.disassemble(r, 0));
     std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
 
@@ -194,6 +194,10 @@ static int compiler_tests() {
 }
 
 int main() {
-    return compiler_tests();
-    //return terp_tests();
+    int result = 0;
+    //result = compiler_tests();
+    //if (result != 0) return result;
+
+    result = terp_tests();
+    return result;
 }
