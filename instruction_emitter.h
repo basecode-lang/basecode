@@ -34,93 +34,91 @@ namespace basecode {
 
         void jump_subroutine_pc_relative(
             op_sizes size,
-            operand_types offset_type,
+            operand_encoding_t::flags offset_type,
             uint64_t offset);
 
         void add_int_register_to_register(
             op_sizes size,
-            uint8_t target_index,
-            uint8_t lhs_index,
-            uint8_t rhs_index);
+            i_registers_t target_index,
+            i_registers_t lhs_index,
+            i_registers_t rhs_index);
 
         void load_with_offset_to_register(
             op_sizes size,
-            uint8_t source_index,
-            uint8_t target_index,
+            i_registers_t source_index,
+            i_registers_t target_index,
             uint64_t offset);
 
         void move_int_constant_to_register(
             op_sizes size,
             uint64_t value,
-            uint8_t index);
+            i_registers_t index);
 
         bool encode(result& r, terp& terp);
 
         void load_stack_offset_to_register(
             op_sizes size,
-            uint8_t target_index,
+            i_registers_t target_index,
             uint64_t offset);
 
         void store_register_to_stack_offset(
             op_sizes size,
-            uint8_t source_index,
+            i_registers_t source_index,
             uint64_t offset);
 
         void store_with_offset_from_register(
             op_sizes size,
-            uint8_t source_index,
-            uint8_t target_index,
+            i_registers_t source_index,
+            i_registers_t target_index,
             uint64_t offset);
 
         void divide_int_register_to_register(
             op_sizes size,
-            uint8_t target_index,
-            uint8_t lhs_index,
-            uint8_t rhs_index);
+            i_registers_t target_index,
+            i_registers_t lhs_index,
+            i_registers_t rhs_index);
 
         void multiply_int_register_to_register(
             op_sizes size,
-            uint8_t target_index,
-            uint8_t lhs_index,
-            uint8_t rhs_index);
-
-        void subtract_int_register_to_register(
-            op_sizes size,
-            uint8_t target_index,
-            uint8_t lhs_index,
-            uint8_t rhs_index);
-
-        void subtract_int_constant_from_register(
-            op_sizes size,
-            uint8_t target_index,
-            uint8_t lhs_index,
-            uint64_t rhs_value);
+            i_registers_t target_index,
+            i_registers_t lhs_index,
+            i_registers_t rhs_index);
 
         void jump_direct(uint64_t address);
 
-        void push_float_constant(double value);
-
-        void pop_float_register(uint8_t index);
-
-        void dec(op_sizes size, uint8_t index);
-
-        void inc(op_sizes size, uint8_t index);
-
         void compare_int_register_to_constant(
             op_sizes size,
-            uint8_t index,
+            i_registers_t index,
             uint64_t value);
 
         void compare_int_register_to_register(
             op_sizes size,
-            uint8_t lhs_index,
-            uint8_t rhs_index);
+            i_registers_t lhs_index,
+            i_registers_t rhs_index);
+
+        void push_float_constant(double value);
 
         void branch_if_equal(uint64_t address);
 
+        void subtract_int_register_to_register(
+            op_sizes size,
+            i_registers_t target_index,
+            i_registers_t lhs_index,
+            i_registers_t rhs_index);
+
+        void subtract_int_constant_from_register(
+            op_sizes size,
+            i_registers_t target_index,
+            i_registers_t lhs_index,
+            uint64_t rhs_value);
+
         void branch_if_not_equal(uint64_t address);
 
-        void jump_subroutine_indirect(uint8_t index);
+        void pop_float_register(i_registers_t index);
+
+        void dec(op_sizes size, i_registers_t index);
+
+        void inc(op_sizes size, i_registers_t index);
 
         void jump_subroutine_direct(uint64_t address);
 
@@ -128,11 +126,13 @@ namespace basecode {
             return _instructions[index];
         };
 
-        void pop_int_register(op_sizes size, uint8_t index);
-
-        void push_int_register(op_sizes size, uint8_t index);
+        void jump_subroutine_indirect(i_registers_t index);
 
         void push_int_constant(op_sizes size, uint64_t value);
+
+        void pop_int_register(op_sizes size, i_registers_t index);
+
+        void push_int_register(op_sizes size, i_registers_t index);
 
     private:
         uint64_t _start_address = 0;

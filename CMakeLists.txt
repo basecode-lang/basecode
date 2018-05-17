@@ -60,6 +60,7 @@ add_custom_command(
 
 add_executable(
         bootstrap
+        bytes.h
         main.cpp
         result.h
         ast.cpp ast.h

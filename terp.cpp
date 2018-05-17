@@ -3,6 +3,7 @@
 #include <fmt/format.h>
 #include "terp.h"
 #include "hex_formatter.h"
+#include "bytes.h"
 
 namespace basecode {
 
@@ -24,54 +25,37 @@ namespace basecode {
         size_t encoding_size = base_size;
 
         for (size_t i = 0; i < operands_count; i++) {
-            encoding_size += 2;
-            switch (operands[i].type) {
-                case operand_types::constant_integer:
-                case operand_types::increment_constant_pre:
-                case operand_types::increment_constant_post:
-                case operand_types::decrement_constant_pre:
-                case operand_types::decrement_constant_post:
-                case operand_types::constant_offset_positive:
-                case operand_types::constant_offset_negative: {
-                    switch (size) {
-                        case op_sizes::none:
-                            break;
-                        case op_sizes::byte:
-                            encoding_size += sizeof(uint8_t);
-                            break;
-                        case op_sizes::word:
-                            encoding_size += sizeof(uint16_t);
-                            break;
-                        case op_sizes::dword:
+            encoding_size += 1;
+
+            if ((operands[i].is_reg())) {
+                encoding_size += sizeof(uint8_t);
+            } else {
+                switch (size) {
+                    case op_sizes::none:
+                        break;
+                    case op_sizes::byte:
+                        encoding_size += sizeof(uint8_t);
+                        break;
+                    case op_sizes::word:
+                        encoding_size += sizeof(uint16_t);
+                        break;
+                    case op_sizes::dword:
+                        if (operands[i].is_integer())
                             encoding_size += sizeof(uint32_t);
-                            break;
-                        case op_sizes::qword:
-                            encoding_size += sizeof(uint64_t);
-                            break;
-                    }
-                    break;
-                }
-                case operand_types::constant_float: {
-                    switch (size) {
-                        case op_sizes::none:
-                        case op_sizes::byte:
-                        case op_sizes::word:
-                            break;
-                        case op_sizes::dword:
+                        else
                             encoding_size += sizeof(float);
-                            break;
-                        case op_sizes::qword:
+                        break;
+                    case op_sizes::qword:
+                        if (operands[i].is_integer())
+                            encoding_size += sizeof(uint64_t);
+                        else
                             encoding_size += sizeof(double);
-                            break;
-                    }
-                    break;
+                        break;
                 }
-                default:
-                    break;
             }
         }
 
-        encoding_size = align(encoding_size, sizeof(uint64_t));
+        encoding_size = align(encoding_size, alignment);
 
         return encoding_size;
     }
@@ -82,10 +66,12 @@ namespace basecode {
     }
 
     size_t instruction_t::decode(result& r, uint8_t* heap, uint64_t address) {
-        if (address % 8 != 0) {
+        if (address % alignment != 0) {
             r.add_message(
                 "B003",
-                fmt::format("instructions must be decoded on 8-byte boundaries: address = ${:016X}", address),
+                fmt::format("instruction alignment violation: alignment = {} bytes, address = ${:016X}",
+                            alignment,
+                            address),
                 true);
             return 0;
         }
@@ -93,87 +79,70 @@ namespace basecode {
         uint8_t* encoding_ptr = heap + address;
         uint8_t encoding_size = *encoding_ptr;
         op = static_cast<op_codes>(*(encoding_ptr + 1));
-        size = static_cast<op_sizes>(static_cast<uint8_t>(*(encoding_ptr + 2)));
-        operands_count = static_cast<uint8_t>(*(encoding_ptr + 3));
+        uint8_t op_size_and_operands_count = static_cast<uint8_t>(*(encoding_ptr + 2));
+        size = static_cast<op_sizes>(get_upper_nybble(op_size_and_operands_count));
+        operands_count = get_lower_nybble(op_size_and_operands_count);
 
         size_t offset = base_size;
         for (size_t i = 0; i < operands_count; i++) {
-            operands[i].type = static_cast<operand_types>(*(encoding_ptr + offset));
+            operands[i].type = static_cast<operand_encoding_t::flags_t>(*(encoding_ptr + offset));
             ++offset;
 
-            operands[i].index = *(encoding_ptr + offset);
-            ++offset;
-
-            switch (operands[i].type) {
-                case operand_types::constant_integer:
-                case operand_types::constant_offset_negative:
-                case operand_types::constant_offset_positive:
-                case operand_types::increment_constant_pre:
-                case operand_types::decrement_constant_pre:
-                case operand_types::increment_constant_post:
-                case operand_types::decrement_constant_post: {
-                    switch (size) {
-                        case op_sizes::byte: {
-                            uint8_t* constant_value_ptr = encoding_ptr + offset;
-                            operands[i].value.u64 = *constant_value_ptr;
-                            offset += sizeof(uint8_t);
-                            break;
-                        }
-                        case op_sizes::word: {
-                            uint16_t* constant_value_ptr = reinterpret_cast<uint16_t*>(encoding_ptr + offset);
-                            operands[i].value.u64 = *constant_value_ptr;
-                            offset += sizeof(uint16_t);
-                            break;
-                        }
-                        case op_sizes::dword: {
+            if ((operands[i].is_reg())) {
+                operands[i].value.r8 = *(encoding_ptr + offset);
+                ++offset;
+            } else {
+                switch (size) {
+                    case op_sizes::byte: {
+                        uint8_t* constant_value_ptr = encoding_ptr + offset;
+                        operands[i].value.u64 = *constant_value_ptr;
+                        offset += sizeof(uint8_t);
+                        break;
+                    }
+                    case op_sizes::word: {
+                        uint16_t* constant_value_ptr = reinterpret_cast<uint16_t*>(encoding_ptr + offset);
+                        operands[i].value.u64 = *constant_value_ptr;
+                        offset += sizeof(uint16_t);
+                        break;
+                    }
+                    case op_sizes::dword: {
+                        if (operands[i].is_integer()) {
                             uint32_t* constant_value_ptr = reinterpret_cast<uint32_t*>(encoding_ptr + offset);
                             operands[i].value.u64 = *constant_value_ptr;
                             offset += sizeof(uint32_t);
-                            break;
+                        } else {
+                            float* constant_value_ptr = reinterpret_cast<float*>(encoding_ptr + offset);
+                            operands[i].value.d64 = *constant_value_ptr;
+                            offset += sizeof(float);
                         }
-                        case op_sizes::qword: {
+                        break;
+                    }
+                    case op_sizes::qword: {
+                        if (operands[i].is_integer()) {
                             uint64_t* constant_value_ptr = reinterpret_cast<uint64_t*>(encoding_ptr + offset);
                             operands[i].value.u64 = *constant_value_ptr;
                             offset += sizeof(uint64_t);
-                            break;
+                        } else {
+                            double* constant_value_ptr = reinterpret_cast<double*>(encoding_ptr + offset);
+                            operands[i].value.d64 = *constant_value_ptr;
+                            offset += sizeof(double);
                         }
-                        case op_sizes::none: {
+                        break;
+                    }
+                    case op_sizes::none: {
+                        if (operands[i].is_integer()) {
                             r.add_message(
                                 "B010",
                                 "constant integers cannot have a size of 'none'.",
                                 true);
-                            break;
-                        }
-                    }
-                    break;
-                }
-                case operand_types::constant_float: {
-                    switch (size) {
-                        case op_sizes::dword: {
-                            float* constant_value_ptr = reinterpret_cast<float*>(encoding_ptr + offset);
-                            operands[i].value.d64 = *constant_value_ptr;
-                            offset += sizeof(float);
-                            break;
-                        }
-                        case op_sizes::qword: {
-                            double* constant_value_ptr = reinterpret_cast<double*>(encoding_ptr + offset);
-                            operands[i].value.d64 = *constant_value_ptr;
-                            offset += sizeof(double);
-                            break;
-                        }
-                        case op_sizes::none:
-                        case op_sizes::byte:
-                        case op_sizes::word:
+                        } else {
                             r.add_message(
                                 "B010",
                                 "constant floats cannot have a size of 'none', 'byte', or 'word'.",
                                 true);
-                            break;
+                        }
+                        break;
                     }
-                    break;
-                }
-                default: {
-                    break;
                 }
             }
         }
@@ -182,10 +151,12 @@ namespace basecode {
     }
 
     size_t instruction_t::encode(result& r, uint8_t* heap, uint64_t address) {
-        if (address % 8 != 0) {
+        if (address % alignment != 0) {
             r.add_message(
                 "B003",
-                fmt::format("instructions must be encoded on 8-byte boundaries: address = ${:016X}", address),
+                fmt::format("instruction alignment violation: alignment = {} bytes, address = ${:016X}",
+                            alignment,
+                            address),
                 true);
             return 0;
         }
@@ -195,104 +166,94 @@ namespace basecode {
 
         auto encoding_ptr = heap + address;
         *(encoding_ptr + 1) = static_cast<uint8_t>(op);
-        *(encoding_ptr + 2) = static_cast<uint8_t>(size);
-        *(encoding_ptr + 3) = operands_count;
+
+        uint8_t size_type_and_operand_count = 0;
+        size_type_and_operand_count = set_upper_nybble(
+            size_type_and_operand_count,
+            static_cast<uint8_t>(size));
+        size_type_and_operand_count = set_lower_nybble(
+            size_type_and_operand_count,
+            operands_count);
+        *(encoding_ptr + 2) = size_type_and_operand_count;
 
         for (size_t i = 0; i < operands_count; i++) {
             *(encoding_ptr + offset) = static_cast<uint8_t>(operands[i].type);
             ++offset;
+            ++encoding_size;
 
-            *(encoding_ptr + offset) = operands[i].index;
-            ++offset;
-
-            encoding_size += 2;
-
-            switch (operands[i].type) {
-                case operand_types::constant_integer:
-                case operand_types::constant_offset_negative:
-                case operand_types::constant_offset_positive:
-                case operand_types::increment_constant_pre:
-                case operand_types::increment_constant_post:
-                case operand_types::decrement_constant_pre:
-                case operand_types::decrement_constant_post: {
-                    switch (size) {
-                        case op_sizes::byte: {
-                            uint8_t* constant_value_ptr = encoding_ptr + offset;
-                            *constant_value_ptr = static_cast<uint8_t>(operands[i].value.u64);
-                            offset += sizeof(uint8_t);
-                            encoding_size += sizeof(uint8_t);
-                            break;
-                        }
-                        case op_sizes::word: {
-                            uint16_t* constant_value_ptr = reinterpret_cast<uint16_t*>(encoding_ptr + offset);
-                            *constant_value_ptr = static_cast<uint16_t>(operands[i].value.u64);
-                            offset += sizeof(uint16_t);
-                            encoding_size += sizeof(uint16_t);
-                            break;
-                        }
-                        case op_sizes::dword: {
+            if (operands[i].is_reg()) {
+                *(encoding_ptr + offset) = operands[i].value.r8;
+                ++offset;
+                ++encoding_size;
+            } else {
+                switch (size) {
+                    case op_sizes::byte: {
+                        uint8_t* constant_value_ptr = encoding_ptr + offset;
+                        *constant_value_ptr = static_cast<uint8_t>(operands[i].value.u64);
+                        offset += sizeof(uint8_t);
+                        encoding_size += sizeof(uint8_t);
+                        break;
+                    }
+                    case op_sizes::word: {
+                        uint16_t* constant_value_ptr = reinterpret_cast<uint16_t*>(encoding_ptr + offset);
+                        *constant_value_ptr = static_cast<uint16_t>(operands[i].value.u64);
+                        offset += sizeof(uint16_t);
+                        encoding_size += sizeof(uint16_t);
+                        break;
+                    }
+                    case op_sizes::dword: {
+                        if (operands[i].is_integer()) {
                             uint32_t* constant_value_ptr = reinterpret_cast<uint32_t*>(encoding_ptr + offset);
                             *constant_value_ptr = static_cast<uint32_t>(operands[i].value.u64);
                             offset += sizeof(uint32_t);
                             encoding_size += sizeof(uint32_t);
-                            break;
-                        }
-                        case op_sizes::qword: {
-                            uint64_t* constant_value_ptr = reinterpret_cast<uint64_t*>(encoding_ptr + offset);
-                            *constant_value_ptr = operands[i].value.u64;
-                            offset += sizeof(uint64_t);
-                            encoding_size += sizeof(uint64_t);
-                            break;
-                        }
-                        case op_sizes::none:
-                            r.add_message(
-                                "B009",
-                                "constant integers cannot have a size of 'none'.",
-                                true);
-                            break;
-                    }
-                    break;
-                }
-                case operand_types::constant_float: {
-                    switch (size) {
-                        case op_sizes::dword: {
+                        } else {
                             float* constant_value_ptr = reinterpret_cast<float*>(encoding_ptr + offset);
                             *constant_value_ptr = static_cast<float>(operands[i].value.d64);
                             offset += sizeof(float);
                             encoding_size += sizeof(float);
-                            break;
                         }
-                        case op_sizes::qword: {
+                        break;
+                    }
+                    case op_sizes::qword: {
+                        if (operands[i].is_integer()) {
+                            uint64_t* constant_value_ptr = reinterpret_cast<uint64_t*>(encoding_ptr + offset);
+                            *constant_value_ptr = operands[i].value.u64;
+                            offset += sizeof(uint64_t);
+                            encoding_size += sizeof(uint64_t);
+                        } else {
                             double* constant_value_ptr = reinterpret_cast<double*>(encoding_ptr + offset);
                             *constant_value_ptr = operands[i].value.d64;
                             offset += sizeof(double);
                             encoding_size += sizeof(double);
-                            break;
                         }
-                        case op_sizes::byte:
-                        case op_sizes::word:
-                        case op_sizes::none:
+                        break;
+                    }
+                    case op_sizes::none:
+                        if (operands[i].is_integer()) {
+                            r.add_message(
+                                "B009",
+                                "constant integers cannot have a size of 'none'.",
+                                true);
+                        } else {
                             r.add_message(
                                 "B009",
                                 "constant floats cannot have a size of 'none', 'byte', or 'word'.",
                                 true);
-                            break;
-                    }
-                }
-                default: {
-                    break;
+                        }
+                        break;
                 }
             }
         }
 
-        encoding_size = static_cast<uint8_t>(align(encoding_size, sizeof(uint64_t)));
+        encoding_size = static_cast<uint8_t>(align(encoding_size, alignment));
         *encoding_ptr = encoding_size;
 
         return encoding_size;
     }
 
     void instruction_t::patch_branch_address(uint64_t address, uint8_t index) {
-        operands[index].value.u64 = align(address, sizeof(uint64_t));
+        operands[index].value.u64 = align(address, alignment);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -528,11 +489,11 @@ namespace basecode {
                 break;
             }
             case op_codes::inc: {
-                _registers.i[inst.operands[0].index]++;
+                _registers.i[inst.operands[0].value.r8]++;
                 break;
             }
             case op_codes::dec: {
-                _registers.i[inst.operands[0].index]--;
+                _registers.i[inst.operands[0].value.r8]--;
                 break;
             }
             case op_codes::add: {
@@ -807,15 +768,10 @@ namespace basecode {
                     if (!get_operand_value(r, inst, 1, offset))
                         return false;
 
-                    switch (inst.operands[1].type) {
-                        case operand_types::constant_offset_positive:
-                            address += offset + inst_size;
-                            break;
-                        case operand_types::constant_offset_negative:
-                            address -= offset + inst_size;
-                            break;
-                        default:
-                            break;
+                    if (inst.operands[1].is_negative()) {
+                        address -= offset + inst_size;
+                    } else {
+                        address += offset + inst_size;
                     }
                 }
 
@@ -936,60 +892,66 @@ namespace basecode {
                 if (i > 0 && i < inst.operands_count) {
                     operands_stream << ", ";
                 }
-                switch (inst.operands[i].type) {
-                    case operand_types::register_integer:
-                        operands_stream << "I" << std::to_string(inst.operands[i].index);
-                        break;
-                    case operand_types::register_floating_point:
-                        operands_stream << "F" << std::to_string(inst.operands[i].index);
-                        break;
-                    case operand_types::register_sp:
-                        operands_stream << "SP";
-                        break;
-                    case operand_types::register_pc:
-                        operands_stream << "PC";
-                        break;
-                    case operand_types::register_flags:
-                        operands_stream << "FR";
-                        break;
-                    case operand_types::register_status:
-                        operands_stream << "SR";
-                        break;
-                    case operand_types::constant_integer:
-                    case operand_types::constant_offset_positive:
-                        operands_stream << fmt::format(format_spec, inst.operands[i].value.u64);
-                        break;
-                    case operand_types::constant_float:
-                        operands_stream << fmt::format(format_spec, inst.operands[i].value.d64);
-                        break;
-                    case operand_types::constant_offset_negative:
-                        format_spec = "-" + format_spec;
-                        operands_stream << fmt::format(format_spec, inst.operands[i].value.u64);
-                        break;
-                    case operand_types::increment_constant_pre:
-                        operands_stream << "++" << std::to_string(inst.operands[i].value.u64);
-                        break;
-                    case operand_types::increment_constant_post:
-                        operands_stream << std::to_string(inst.operands[i].value.u64) << "++";
-                        break;
-                    case operand_types::increment_register_pre:
-                        operands_stream << "++" << "I" << std::to_string(inst.operands[i].index);
-                        break;
-                    case operand_types::increment_register_post:
-                        operands_stream << "I" << std::to_string(inst.operands[i].index) << "++";
-                        break;
-                    case operand_types::decrement_constant_pre:
-                        operands_stream << "--" << std::to_string(inst.operands[i].value.u64);
-                        break;
-                    case operand_types::decrement_constant_post:
-                        operands_stream << std::to_string(inst.operands[i].value.u64) << "--";
-                        break;
-                    case operand_types::decrement_register_pre:
-                        operands_stream << "--" << "I" << std::to_string(inst.operands[i].index);
-                        break;
-                    case operand_types::decrement_register_post:
-                        operands_stream << "I" << std::to_string(inst.operands[i].index) << "--";
-                        break;
+
+                const auto& operand = inst.operands[i];
+                std::string prefix, postfix;
+
+                if (operand.is_negative()) {
+                    if (operand.is_prefix())
+                        prefix = "--";
+                    else
+                        prefix = "-";
+
+                    if (operand.is_postfix())
+                        postfix = "--";
+                } else {
+                    if (operand.is_prefix())
+                        prefix = "++";
+
+                    if (operand.is_postfix())
+                        postfix = "++";
+                }
+
+                if (operand.is_reg()) {
+                    if (operand.is_integer()) {
+                        switch (operand.value.r8) {
+                            case i_registers_t::sp: {
+                                operands_stream << prefix << "SP" << postfix;
+                                break;
+                            }
+                            case i_registers_t::pc: {
+                                operands_stream << prefix << "PC" << postfix;
+                                break;
+                            }
+                            case i_registers_t::fr: {
+                                operands_stream << "FR";
+                                break;
+                            }
+                            case i_registers_t::sr: {
+                                operands_stream << "SR";
+                                break;
+                            }
+                            default: {
+                                operands_stream << prefix
+                                                << "I"
+                                                << std::to_string(operand.value.r8)
+                                                << postfix;
+                                break;
+                            }
+                        }
+                    } else {
+                        operands_stream << "F" << std::to_string(operand.value.r8);
+                    }
+                } else {
+                    if (operand.is_integer()) {
+                        operands_stream << prefix
+                                        << fmt::format(format_spec, operand.value.u64)
+                                        << postfix;
+                    } else {
+                        operands_stream << prefix
+                                        << fmt::format(format_spec, operand.value.d64)
+                                        << postfix;
+                    }
                 }
             }
 
@@ -1036,39 +998,19 @@ namespace basecode {
             const instruction_t& instruction,
             uint8_t operand_index,
             double& value) const {
-        switch (instruction.operands[operand_index].type) {
-            case operand_types::increment_register_pre:
-            case operand_types::decrement_register_pre:
-            case operand_types::increment_register_post:
-            case operand_types::decrement_register_post:
-            case operand_types::register_floating_point: {
-                value = _registers.f[instruction.operands[operand_index].index];
-                break;
+        auto& operand = instruction.operands[operand_index];
+
+        if (operand.is_reg()) {
+            if (operand.is_integer()) {
+                value = _registers.i[operand.value.r8];
+            } else {
+                value = _registers.f[operand.value.r8];
             }
-            case operand_types::register_sp:
-            case operand_types::register_pc:
-            case operand_types::register_flags:
-            case operand_types::register_status:
-            case operand_types::register_integer: {
-                r.add_message(
-                    "B005",
-                    "integer registers cannot be used for floating point operands.",
-                    true);
-                break;
-            }
-            case operand_types::constant_integer:
-            case operand_types::increment_constant_pre:
-            case operand_types::decrement_constant_pre:
-            case operand_types::increment_constant_post:
-            case operand_types::decrement_constant_post:
-            case operand_types::constant_offset_negative:
-            case operand_types::constant_offset_positive: {
-                value = instruction.operands[operand_index].value.u64;
-                break;
-            }
-            case operand_types::constant_float: {
-                value = instruction.operands[operand_index].value.d64;
-                break;
+        } else {
+            if (operand.is_integer()) {
+                value = operand.value.u64;
+            } else {
+                value = operand.value.d64;
             }
         }
 
@@ -1080,48 +1022,41 @@ namespace basecode {
             const instruction_t& instruction,
             uint8_t operand_index,
             uint64_t& value) const {
-        switch (instruction.operands[operand_index].type) {
-            case operand_types::increment_register_pre:
-            case operand_types::decrement_register_pre:
-            case operand_types::increment_register_post:
-            case operand_types::decrement_register_post:
-            case operand_types::register_integer: {
-                value = _registers.i[instruction.operands[operand_index].index];
-                break;
+        auto& operand = instruction.operands[operand_index];
+
+        if (operand.is_reg()) {
+            if (operand.is_integer()) {
+                auto reg = static_cast<i_registers_t>(operand.value.r8);
+                switch (reg) {
+                    case i_registers_t::pc: {
+                        value = _registers.pc;
+                        break;
+                    }
+                    case i_registers_t::sp: {
+                        value = _registers.sp;
+                        break;
+                    }
+                    case i_registers_t::fr: {
+                        value = _registers.fr;
+                        break;
+                    }
+                    case i_registers_t::sr: {
+                        value = _registers.sr;
+                        break;
+                    }
+                    default: {
+                        value = _registers.i[reg];
+                        break;
+                    }
+                }
+            } else {
+                value = static_cast<uint64_t>(_registers.f[operand.value.r8]);
             }
-            case operand_types::register_floating_point: {
-                value = static_cast<uint64_t>(_registers.f[instruction.operands[operand_index].index]);
-                break;
-            }
-            case operand_types::register_sp: {
-                value = _registers.sp;
-                break;
-            }
-            case operand_types::register_pc: {
-                value = _registers.pc;
-                break;
-            }
-            case operand_types::register_flags: {
-                value = _registers.fr;
-                break;
-            }
-            case operand_types::register_status: {
-                value = _registers.sr;
-                break;
-            }
-            case operand_types::constant_integer:
-            case operand_types::increment_constant_pre:
-            case operand_types::decrement_constant_pre:
-            case operand_types::increment_constant_post:
-            case operand_types::decrement_constant_post:
-            case operand_types::constant_offset_positive:
-            case operand_types::constant_offset_negative: {
-                value = instruction.operands[operand_index].value.u64;
-                break;
-            }
-            case operand_types::constant_float: {
-                value = static_cast<uint64_t>(instruction.operands[operand_index].value.d64);
-                break;
+        } else {
+            if (operand.is_integer()) {
+                value = operand.value.u64;
+            } else {
+                value = static_cast<uint64_t>(operand.value.d64);
             }
         }
 
@@ -1133,54 +1068,47 @@ namespace basecode {
             const instruction_t& instruction,
             uint8_t operand_index,
             uint64_t value) {
-        switch (instruction.operands[operand_index].type) {
-            case operand_types::increment_register_pre:
-            case operand_types::decrement_register_pre:
-            case operand_types::increment_register_post:
-            case operand_types::decrement_register_post:
-            case operand_types::register_integer: {
-                _registers.i[instruction.operands[operand_index].index] = value;
+        auto& operand = instruction.operands[operand_index];
+
+        if (operand.is_reg()) {
+            if (operand.is_integer()) {
+                auto reg = static_cast<i_registers_t>(operand.value.r8);
+                switch (reg) {
+                    case i_registers_t::pc: {
+                        _registers.pc = value;
+                        break;
+                    }
+                    case i_registers_t::sp: {
+                        _registers.sp = value;
+                        break;
+                    }
+                    case i_registers_t::fr: {
+                        _registers.fr = value;
+                        break;
+                    }
+                    case i_registers_t::sr: {
+                        _registers.sr = value;
+                        break;
+                    }
+                    default: {
+                        _registers.i[reg] = value;
+                        _registers.flags(register_file_t::flags_t::zero, value == 0);
+                        break;
+                    }
+                }
+            } else {
+                _registers.f[operand.value.r8] = value;
                 _registers.flags(register_file_t::flags_t::zero, value == 0);
-                return true;
             }
-            case operand_types::register_floating_point: {
-                _registers.f[instruction.operands[operand_index].index] = value;
-                _registers.flags(register_file_t::flags_t::zero, value == 0);
-                break;
-            }
-            case operand_types::register_sp: {
-                _registers.sp = value;
-                break;
-            }
-            case operand_types::register_pc: {
-                _registers.pc = value;
-                break;
-            }
-            case operand_types::register_flags: {
-                _registers.fr = value;
-                break;
-            }
-            case operand_types::register_status: {
-                _registers.sr = value;
-                break;
-            }
-            case operand_types::constant_float:
-            case operand_types::constant_integer:
-            case operand_types::constant_offset_negative:
-            case operand_types::constant_offset_positive:
-            case operand_types::increment_constant_pre:
-            case operand_types::decrement_constant_pre:
-            case operand_types::increment_constant_post:
-            case operand_types::decrement_constant_post: {
-                r.add_message(
-                    "B006",
-                    "constant cannot be a target operand type.",
-                    true);
-                break;
-            }
+        } else {
+            r.add_message(
+                "B006",
+                "constant cannot be a target operand type.",
+                true);
+            return false;
         }
 
-        return false;
+        return true;
     }
 
     bool terp::set_target_operand_value(
@@ -1188,54 +1116,47 @@ namespace basecode {
             const instruction_t& instruction,
             uint8_t operand_index,
             double value) {
-        switch (instruction.operands[operand_index].type) {
-            case operand_types::increment_register_pre:
-            case operand_types::decrement_register_pre:
-            case operand_types::increment_register_post:
-            case operand_types::decrement_register_post:
-            case operand_types::register_integer: {
-                uint64_t integer_value = static_cast<uint64_t>(value);
-                _registers.i[instruction.operands[operand_index].index] = integer_value;
-                _registers.flags(register_file_t::flags_t::zero, integer_value == 0);
-                break;
+        auto& operand = instruction.operands[operand_index];
+
+        if (operand.is_reg()) {
+            if (operand.is_integer()) {
+                auto integer_value = static_cast<uint64_t>(value);
+                auto reg = static_cast<i_registers_t>(operand.value.r8);
+                switch (reg) {
+                    case i_registers_t::pc: {
+                        _registers.pc = integer_value;
+                        break;
+                    }
+                    case i_registers_t::sp: {
+                        _registers.sp = integer_value;
+                        break;
+                    }
+                    case i_registers_t::fr: {
+                        _registers.fr = integer_value;
+                        break;
+                    }
+                    case i_registers_t::sr: {
+                        _registers.sr = integer_value;
+                        break;
+                    }
+                    default: {
+                        _registers.i[reg] = integer_value;
+                        _registers.flags(register_file_t::flags_t::zero, value == 0);
+                        break;
+                    }
+                }
+            } else {
+                _registers.f[operand.value.r8] = value;
             }
-            case operand_types::register_floating_point: {
-                _registers.f[instruction.operands[operand_index].index] = value;
-                break;
-            }
-            case operand_types::register_sp: {
-                _registers.sp = static_cast<uint64_t>(value);
-                break;
-            }
-            case operand_types::register_pc: {
-                _registers.pc = static_cast<uint64_t>(value);
-                break;
-            }
-            case operand_types::register_flags: {
-                _registers.fr = static_cast<uint64_t>(value);
-                break;
-            }
-            case operand_types::register_status: {
-                _registers.sr = static_cast<uint64_t>(value);
-                break;
-            }
-            case operand_types::constant_float:
-            case operand_types::constant_integer:
-            case operand_types::constant_offset_positive:
-            case operand_types::constant_offset_negative:
-            case operand_types::increment_constant_pre:
-            case operand_types::increment_constant_post:
-            case operand_types::decrement_constant_pre:
-            case operand_types::decrement_constant_post: {
-                r.add_message(
-                    "B006",
-                    "constant cannot be a target operand type.",
-                    true);
-                break;
-            }
+        } else {
+            r.add_message(
+                "B006",
+                "constant cannot be a target operand type.",
+                true);
+            return false;
         }
 
-        return false;
+        return true;
     }
 
     void terp::register_trap(uint8_t index, const terp::trap_callable& callable) {

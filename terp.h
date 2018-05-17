@@ -7,6 +7,157 @@
 
 namespace basecode {
 
+    enum i_registers_t : uint8_t {
+        i0,
+        i1,
+        i2,
+        i3,
+        i4,
+        i5,
+        i6,
+        i7,
+        i8,
+        i9,
+
+        i10,
+        i11,
+        i12,
+        i13,
+        i14,
+        i15,
+        i16,
+        i17,
+        i18,
+        i19,
+
+        i20,
+        i21,
+        i22,
+        i23,
+        i24,
+        i25,
+        i26,
+        i27,
+        i28,
+        i29,
+
+        i30,
+        i31,
+        i32,
+        i33,
+        i34,
+        i35,
+        i36,
+        i37,
+        i38,
+        i39,
+
+        i40,
+        i41,
+        i42,
+        i43,
+        i44,
+        i45,
+        i46,
+        i47,
+        i48,
+        i49,
+
+        i50,
+        i51,
+        i52,
+        i53,
+        i54,
+        i55,
+        i56,
+        i57,
+        i58,
+        i59,
+
+        i60,
+        i61,
+        i62,
+        i63,
+
+        pc,
+        sp,
+        fr,
+        sr
+    };
+
+    enum f_registers_t : uint8_t {
+        f0,
+        f1,
+        f2,
+        f3,
+        f4,
+        f5,
+        f6,
+        f7,
+        f8,
+        f9,
+
+        f10,
+        f11,
+        f12,
+        f13,
+        f14,
+        f15,
+        f16,
+        f17,
+        f18,
+        f19,
+
+        f20,
+        f21,
+        f22,
+        f23,
+        f24,
+        f25,
+        f26,
+        f27,
+        f28,
+        f29,
+
+        f30,
+        f31,
+        f32,
+        f33,
+        f34,
+        f35,
+        f36,
+        f37,
+        f38,
+        f39,
+
+        f40,
+        f41,
+        f42,
+        f43,
+        f44,
+        f45,
+        f46,
+        f47,
+        f48,
+        f49,
+
+        f50,
+        f51,
+        f52,
+        f53,
+        f54,
+        f55,
+        f56,
+        f57,
+        f58,
+        f59,
+
+        f60,
+        f61,
+        f62,
+        f63,
+    };
+
     struct register_file_t {
         enum flags_t : uint64_t {
             zero     = 0b0000000000000000000000000000000000000000000000000000000000000001,
@@ -84,19 +235,6 @@ namespace basecode {
         exit
     };
 
-    // consider refactoring op_sizes and operand_types
-    //  into flags.  it probably still needs to be a 16-bit field
-    //  to fit everything.
-    //
-    // byte     = 0b0000_0001
-    // word     = 0b0000_0010
-    // dword    = 0b0000_0100
-    // qword    = 0b0000_1000
-    // register = 0b0001_0000
-    // negative = 0b0010_0000
-    // inc      = 0b0100_0000
-    // dec      = 0b1000_0000
-
     enum class op_sizes : uint8_t {
         none,
         byte,
@@ -105,38 +243,50 @@ namespace basecode {
         qword
     };
 
-    enum class operand_types : uint8_t {
-        register_integer = 1,
-        register_floating_point,
-        register_sp,
-        register_pc,
-        register_flags,
-        register_status,
-        constant_integer,
-        constant_float,
-        constant_offset_positive,
-        constant_offset_negative,
-        increment_constant_pre,
-        increment_constant_post,
-        increment_register_pre,
-        increment_register_post,
-        decrement_constant_pre,
-        decrement_constant_post,
-        decrement_register_pre,
-        decrement_register_post
-    };
-
     struct operand_encoding_t {
-        operand_types type = operand_types::register_integer;
-        uint8_t index = 0;
+        using flags_t = uint8_t;
+
+        enum flags : uint8_t {
+            none     = 0b00000000,
+            constant = 0b00000000,
+            reg      = 0b00000001,
+            integer  = 0b00000010,
+            negative = 0b00000100,
+            prefix   = 0b00001000,
+            postfix  = 0b00010000,
+        };
+
+        inline bool is_reg() const {
+            return (type & flags::reg) != 0;
+        }
+
+        inline bool is_prefix() const {
+            return (type & flags::prefix) != 0;
+        }
+
+        inline bool is_postfix() const {
+            return (type & flags::postfix) != 0;
+        }
+
+        inline bool is_integer() const {
+            return (type & flags::integer) != 0;
+        }
+
+        inline bool is_negative() const {
+            return (type & flags::negative) != 0;
+        }
+
+        flags_t type = flags::reg | flags::integer;
         union {
+            uint8_t r8;
             uint64_t u64;
             double d64;
         } value;
     };
 
     struct instruction_t {
-        static const size_t base_size = 4;
+        static constexpr size_t base_size = 3;
+        static constexpr size_t alignment = 4;
 
         size_t decode(
             result& r,
