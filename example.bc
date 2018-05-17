@@ -143,18 +143,19 @@ ns alpha::examples {
     octal_word:u16 := @777;
     unsigned_word:u16 := $c000;
     signed_word:s16 := -32765;
-    
+
     unsigned_dword:u32 := $69_7f_3f_ff;
     signed_dword:s32 := -5_000_000;
 
     unsigned_qword:u64 := %0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000_0000;
-    signed_qword:s64 := %FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFFF_FFE0;
+    signed_qword:s64 := %1111_1111_1111_1111_1111_1111_1111_1111_1111_1111_1111_1111_1111_1111_1111_1110;
 
     // fully initialized dynamic array, e.g. acts like vector
     unsigned_byte_array:u8[];
 
     // inline initialized array, still dynamic
     unsigned_byte_array_init:u8[] := { $24, $1f, $ff, 127, %0000_1010 };
+
     // or inferred
     inferred_unsigned_byte_array_init := { $24, $1f, $ff, 127, %0000_1010 };
 

@@ -186,7 +186,14 @@ static int compiler_tests() {
         "\n"
         "@entry_point main;\n"
         "\n"
-        "foo := $ff * 2;\n"
+        "truth:bool := true;\n"
+        "lies:bool := false;\n"
+        "char:u8 := 'A';\n"
+        "name:string := \"this is a test string literal\";\n"
+        "name_ptr:*u8 := address_of(name);\n"
+        "name_ptr := null;\n"
+        "\n"
+        "foo:u16 := $ff * 2;\n"
         "\n"
         "fib := fn(n:u64):u64 {\n"
         "    if n == 0 || n == 1 {\n"
@@ -199,10 +206,17 @@ static int compiler_tests() {
         "main := fn():u64 {\n"
         "    fib(100);\n"
         "};");
+
+    std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
+
     if (!compiler.compile(r, source)) {
         print_results(r);
         return 1;
     }
+
+    std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+    fmt::print("compile time (in us): {}\n\n", duration);
 
     return 0;
 }
@@ -213,6 +227,6 @@ int main() {
     result = compiler_tests();
     if (result != 0) return result;
 
-    result = terp_tests();
+    //result = terp_tests();
     return result;
 }
