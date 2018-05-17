@@ -227,9 +227,9 @@ static int compiler_tests() {
 int main() {
     int result = 0;
 
-    result = compiler_tests();
-    if (result != 0) return result;
+//    result = compiler_tests();
+//    if (result != 0) return result;
 
-    //result = terp_tests();
+    result = terp_tests();
     return result;
 }

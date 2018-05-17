@@ -18,7 +18,42 @@ namespace basecode {
         return (n >> c) | (n << ((-c) & mask));
     }
 
-    terp::terp(size_t heap_size) : _heap_size(heap_size) {
+    ///////////////////////////////////////////////////////////////////////////
+
+    instruction_cache::instruction_cache(terp* terp) : _terp(terp) {
+    }
+
+    void instruction_cache::reset() {
+        _cache.clear();
+    }
+
+    size_t instruction_cache::fetch_at(
+            result& r,
+            uint64_t address,
+            instruction_t& inst) {
+        auto it = _cache.find(address);
+        if (it == _cache.end()) {
+            auto size = inst.decode(r, _terp->heap(), address);
+            if (size == 0)
+                return 0;
+            _cache.insert(std::make_pair(
+                address,
+                icache_entry_t{.size = size, .inst = inst}));
+            return size;
+        } else {
+            inst = it->second.inst;
+            return it->second.size;
+        }
+    }
+
+    size_t instruction_cache::fetch(result& r, instruction_t& inst) {
+        return fetch_at(r, _terp->register_file().pc, inst);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    terp::terp(size_t heap_size) : _heap_size(heap_size),
+                                   _icache(this) {
     }
 
     terp::~terp() {
@@ -36,6 +71,8 @@ namespace basecode {
             _registers.i[i] = 0;
             _registers.f[i] = 0.0;
         }
+
+        _icache.reset();
 
         _exited = false;
     }
@@ -99,7 +136,7 @@ namespace basecode {
 
     bool terp::step(result& r) {
         instruction_t inst;
-        auto inst_size = inst.decode(r, _heap, _registers.pc);
+        auto inst_size = _icache.fetch(r, inst);
         if (inst_size == 0)
             return false;
 
@@ -667,7 +704,7 @@ namespace basecode {
         std::stringstream stream;
         while (true) {
             instruction_t inst;
-            auto inst_size = inst.decode(r, _heap, address);
+            auto inst_size = _icache.fetch_at(r, address, inst);
             if (inst_size == 0)
                 break;
 

@@ -279,6 +279,31 @@ namespace basecode {
         std::string source_file;
     };
 
+    struct icache_entry_t {
+        size_t size;
+        instruction_t inst;
+    };
+
+    class terp;
+
+    class instruction_cache {
+    public:
+        explicit instruction_cache(terp* terp);
+
+        void reset();
+
+        size_t fetch_at(
+            result& r,
+            uint64_t address,
+            instruction_t& inst);
+
+        size_t fetch(result& r, instruction_t& inst);
+
+    private:
+        terp* _terp = nullptr;
+        std::map<uint64_t, icache_entry_t> _cache {};
+    };
+
     class terp {
     public:
         using trap_callable = std::function<void (terp*)>;
@@ -433,6 +458,7 @@ namespace basecode {
         bool _exited = false;
         size_t _heap_size = 0;
         uint8_t* _heap = nullptr;
+        instruction_cache _icache;
         register_file_t _registers {};
         std::map<uint8_t, trap_callable> _traps {};
     };
