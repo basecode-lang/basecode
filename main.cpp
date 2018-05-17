@@ -93,11 +93,17 @@ static bool test_fibonacci(basecode::result& r, basecode::terp& terp) {
     fn_fibonacci.subtract_int_constant_from_register(basecode::op_sizes::dword, 1, 0, 1);
     fn_fibonacci.subtract_int_constant_from_register(basecode::op_sizes::dword, 2, 0, 2);
     fn_fibonacci.push_int_register(basecode::op_sizes::dword, 2);
-    fn_fibonacci.jump_subroutine_direct(fn_fibonacci.start_address());
+    fn_fibonacci.jump_subroutine_pc_relative(
+        basecode::op_sizes::byte,
+        basecode::operand_types::constant_offset_negative,
+        fn_fibonacci.end_address() - fn_fibonacci.start_address());
     fn_fibonacci.pop_int_register(basecode::op_sizes::dword, 2);
     fn_fibonacci.add_int_register_to_register(basecode::op_sizes::dword, 1, 1, 2);
     fn_fibonacci.push_int_register(basecode::op_sizes::dword, 1);
-    fn_fibonacci.jump_subroutine_direct(fn_fibonacci.start_address());
+    fn_fibonacci.jump_subroutine_pc_relative(
+        basecode::op_sizes::byte,
+        basecode::operand_types::constant_offset_negative,
+        fn_fibonacci.end_address() - fn_fibonacci.start_address());
     fn_fibonacci.pop_int_register(basecode::op_sizes::dword, 1);
     fn_fibonacci.store_register_to_stack_offset(basecode::op_sizes::dword, 1, 8);
     fn_fibonacci.rts();
@@ -115,6 +121,7 @@ static bool test_fibonacci(basecode::result& r, basecode::terp& terp) {
     fn_fibonacci.encode(r, terp);
     main_emitter.encode(r, terp);
 
+    fmt::print("\nASSEMBLY LISTING:\n{}\n", terp.disassemble(r, terp.program_start));
     auto result = run_terp(r, terp);
     //terp.dump_state(2);
 
@@ -131,9 +138,10 @@ static int time_test_function(
         const std::string& title,
         const test_function_callable& test_function) {
     std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
+
     terp.reset();
     auto rc = test_function(r, terp);
-    fmt::print("\nASSEMBLY LISTING:\n{}\n", terp.disassemble(r, terp.program_start));
+
     std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
 
@@ -166,7 +174,7 @@ static int terp_tests() {
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
     fmt::print("terp startup time (in microseconds): {}\n\n", duration);
 
-    time_test_function(r, terp, "test_square", test_square);
+    //time_test_function(r, terp, "test_square", test_square);
     time_test_function(r, terp, "test_fibonacci", test_fibonacci);
 
     return 0;

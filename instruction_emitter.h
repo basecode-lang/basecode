@@ -22,6 +22,8 @@ namespace basecode {
 
         size_t size() const;
 
+        size_t index() const;
+
         void swi(uint8_t index);
 
         void trap(uint8_t index);
@@ -29,6 +31,11 @@ namespace basecode {
         uint64_t end_address() const;
 
         uint64_t start_address() const;
+
+        void jump_subroutine_pc_relative(
+            op_sizes size,
+            operand_types offset_type,
+            uint64_t offset);
 
         void add_int_register_to_register(
             op_sizes size,

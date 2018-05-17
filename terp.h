@@ -84,6 +84,19 @@ namespace basecode {
         exit
     };
 
+    // consider refactoring op_sizes and operand_types
+    //  into flags.  it probably still needs to be a 16-bit field
+    //  to fit everything.
+    //
+    // byte     = 0b0000_0001
+    // word     = 0b0000_0010
+    // dword    = 0b0000_0100
+    // qword    = 0b0000_1000
+    // register = 0b0001_0000
+    // negative = 0b0010_0000
+    // inc      = 0b0100_0000
+    // dec      = 0b1000_0000
+
     enum class op_sizes : uint8_t {
         none,
         byte,
@@ -101,6 +114,8 @@ namespace basecode {
         register_status,
         constant_integer,
         constant_float,
+        constant_offset_positive,
+        constant_offset_negative,
         increment_constant_pre,
         increment_constant_post,
         increment_register_pre,
@@ -123,148 +138,21 @@ namespace basecode {
     struct instruction_t {
         static const size_t base_size = 4;
 
-        size_t align(uint64_t value, size_t size) const {
-            auto offset = value % size;
-            return offset ? value + (size - offset) : value;
-        }
-
         size_t decode(
-                result& r,
-                uint8_t* heap,
-                uint64_t address) {
-            if (address % 8 != 0) {
-                r.add_message("B003", "Instructions must be decoded on 8-byte boundaries.", true);
-                return 0;
-            }
-
-            uint8_t* encoding_ptr = heap + address;
-            uint8_t encoding_size = *encoding_ptr;
-            op = static_cast<op_codes>(*(encoding_ptr + 1));
-            size = static_cast<op_sizes>(static_cast<uint8_t>(*(encoding_ptr + 2)));
-            operands_count = static_cast<uint8_t>(*(encoding_ptr + 3));
-
-            size_t offset = base_size;
-            for (size_t i = 0; i < operands_count; i++) {
-                operands[i].type = static_cast<operand_types>(*(encoding_ptr + offset));
-                ++offset;
-
-                operands[i].index = *(encoding_ptr + offset);
-                ++offset;
-
-                switch (operands[i].type) {
-                    case operand_types::increment_constant_pre:
-                    case operand_types::decrement_constant_pre:
-                    case operand_types::increment_constant_post:
-                    case operand_types::decrement_constant_post:
-                    case operand_types::constant_integer: {
-                        uint64_t* constant_value_ptr = reinterpret_cast<uint64_t*>(encoding_ptr + offset);
-                        operands[i].value.u64 = *constant_value_ptr;
-                        offset += sizeof(uint64_t);
-                        break;
-                    }
-                    case operand_types::constant_float: {
-                        double* constant_value_ptr = reinterpret_cast<double*>(encoding_ptr + offset);
-                        operands[i].value.d64 = *constant_value_ptr;
-                        offset += sizeof(double);
-                        break;
-                    }
-                    default: {
-                        break;
-                    }
-                }
-            }
-
-            return encoding_size;
-        }
+            result& r,
+            uint8_t* heap,
+            uint64_t address);
 
         size_t encode(
-                result& r,
-                uint8_t* heap,
-                uint64_t address) {
-            if (address % 8 != 0) {
-                r.add_message("B003", "Instructions must be encoded on 8-byte boundaries.", true);
-                return 0;
-            }
+            result& r,
+            uint8_t* heap,
+            uint64_t address);
 
-            uint8_t encoding_size = base_size;
-            size_t offset = base_size;
+        size_t encoding_size() const;
 
-            auto encoding_ptr = heap + address;
-            *(encoding_ptr + 1) = static_cast<uint8_t>(op);
-            *(encoding_ptr + 2) = static_cast<uint8_t>(size);
-            *(encoding_ptr + 3) = operands_count;
+        size_t align(uint64_t value, size_t size) const;
 
-            for (size_t i = 0; i < operands_count; i++) {
-                *(encoding_ptr + offset) = static_cast<uint8_t>(operands[i].type);
-                ++offset;
-                ++encoding_size;
-
-                *(encoding_ptr + offset) = operands[i].index;
-                ++offset;
-                ++encoding_size;
-
-                switch (operands[i].type) {
-                    case operand_types::increment_constant_pre:
-                    case operand_types::increment_constant_post:
-                    case operand_types::decrement_constant_pre:
-                    case operand_types::decrement_constant_post:
-                    case operand_types::constant_integer: {
-                        uint64_t* constant_value_ptr = reinterpret_cast<uint64_t*>(encoding_ptr + offset);
-                        *constant_value_ptr = operands[i].value.u64;
-                        offset += sizeof(uint64_t);
-                        encoding_size += sizeof(uint64_t);
-                        break;
-                    }
-                    case operand_types::constant_float: {
-                        double* constant_value_ptr = reinterpret_cast<double*>(encoding_ptr + offset);
-                        *constant_value_ptr = operands[i].value.d64;
-                        offset += sizeof(double);
-                        encoding_size += sizeof(double);
-                        break;
-                    }
-                    default: {
-                        break;
-                    }
-                }
-            }
-
-            encoding_size = static_cast<uint8_t>(align(encoding_size, sizeof(uint64_t)));
-            *encoding_ptr = encoding_size;
-
-            return encoding_size;
-        }
-
-        size_t encoding_size() const {
-            size_t size = base_size;
-
-            for (size_t i = 0; i < operands_count; i++) {
-                size += 2;
-                switch (operands[i].type) {
-                    case operand_types::increment_constant_pre:
-                    case operand_types::increment_constant_post:
-                    case operand_types::decrement_constant_pre:
-                    case operand_types::decrement_constant_post:
-                    case operand_types::constant_integer: {
-                        size += sizeof(uint64_t);
-                        break;
-                    }
-                    case operand_types::constant_float: {
-                        size += sizeof(double);
-                        break;
-                    }
-                    default:
-                        break;
-                }
-            }
-
-            size = static_cast<uint8_t>(align(size, sizeof(uint64_t)));
-
-            return size;
-        }
-
-        void patch_branch_address(uint64_t address) {
-            operands[0].value.u64 = align(address, sizeof(uint64_t));
-        }
+        void patch_branch_address(uint64_t address, uint8_t index = 0);
 
         op_codes op = op_codes::nop;
         op_sizes size = op_sizes::none;
