@@ -4,8 +4,8 @@
 #include <fmt/format.h>
 #include <sstream>
 #include "terp.h"
+#include "compiler.h"
 #include "hex_formatter.h"
-#include "alpha_compiler.h"
 #include "instruction_emitter.h"
 
 static constexpr size_t heap_size = (1024 * 1024) * 32;
@@ -173,7 +173,7 @@ static int terp_tests() {
 }
 
 static int compiler_tests() {
-    basecode::alpha_compiler compiler(heap_size);
+    basecode::compiler compiler(heap_size);
     basecode::result r;
     if (!compiler.initialize(r)) {
         print_results(r);
@@ -192,6 +192,9 @@ static int compiler_tests() {
         "name:string := \"this is a test string literal\";\n"
         "name_ptr:*u8 := address_of(name);\n"
         "name_ptr := null;\n"
+        "dx:u32 := 467;\n"
+        "vx:f64 := 3.145;\n"
+        "vy:f64 := 1.112233;\n"
         "\n"
         "foo:u16 := $ff * 2;\n"
         "\n"

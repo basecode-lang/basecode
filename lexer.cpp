@@ -24,7 +24,8 @@ namespace basecode {
         // caret
         {'^', std::bind(&lexer::caret, std::placeholders::_1, std::placeholders::_2)},
 
-        // bang
+        // not equals, bang
+        {'!', std::bind(&lexer::not_equals_operator, std::placeholders::_1, std::placeholders::_2)},
         {'!', std::bind(&lexer::bang, std::placeholders::_1, std::placeholders::_2)},
 
         // question
@@ -47,9 +48,8 @@ namespace basecode {
         // asterisk
         {'*', std::bind(&lexer::asterisk, std::placeholders::_1, std::placeholders::_2)},
 
-        // equals, not equals
+        // equals
         {'=', std::bind(&lexer::equals_operator, std::placeholders::_1, std::placeholders::_2)},
-        {'!', std::bind(&lexer::not_equals_operator, std::placeholders::_1, std::placeholders::_2)},
 
         // less than equal, less than
         {'<', std::bind(&lexer::less_than_equal_operator, std::placeholders::_1, std::placeholders::_2)},
@@ -180,12 +180,6 @@ namespace basecode {
         {'7', std::bind(&lexer::number_literal, std::placeholders::_1, std::placeholders::_2)},
         {'8', std::bind(&lexer::number_literal, std::placeholders::_1, std::placeholders::_2)},
         {'9', std::bind(&lexer::number_literal, std::placeholders::_1, std::placeholders::_2)},
-        {'a', std::bind(&lexer::number_literal, std::placeholders::_1, std::placeholders::_2)},
-        {'b', std::bind(&lexer::number_literal, std::placeholders::_1, std::placeholders::_2)},
-        {'c', std::bind(&lexer::number_literal, std::placeholders::_1, std::placeholders::_2)},
-        {'d', std::bind(&lexer::number_literal, std::placeholders::_1, std::placeholders::_2)},
-        {'e', std::bind(&lexer::number_literal, std::placeholders::_1, std::placeholders::_2)},
-        {'f', std::bind(&lexer::number_literal, std::placeholders::_1, std::placeholders::_2)},
     };
 
     lexer::lexer(std::istream& source) : _source(source) {
@@ -243,8 +237,10 @@ namespace basecode {
 
         auto case_range = s_cases.equal_range(ch);
         for (auto it = case_range.first; it != case_range.second; ++it) {
+            token.radix = 10;
             token.line = _line;
             token.column = _column;
+            token.number_type = number_types_t::none;
             if (it->second(this, token))
                 return true;
             restore_position();
@@ -716,6 +712,7 @@ namespace basecode {
     bool lexer::number_literal(token_t& token) {
         std::stringstream stream;
         token.type = token_types_t::number_literal;
+        token.number_type = number_types_t::integer;
 
         auto ch = read();
         if (ch == '$') {
@@ -750,10 +747,13 @@ namespace basecode {
                 stream << ch;
             }
         } else {
-            const std::string valid = "0123456789_";
+            const std::string valid = "0123456789_.";
             while (valid.find_first_of(ch) != std::string::npos) {
-                if (ch != '_')
+                if (ch != '_') {
+                    if (ch == '.')
+                        token.number_type = number_types_t::floating_point;
                     stream << ch;
+                }
                 ch = read();
             }
         }
@@ -945,6 +945,7 @@ namespace basecode {
                 return false;
             ch = read(false);
         }
+        rewind_one_char();
         return true;
     }
 

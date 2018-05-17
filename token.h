@@ -140,6 +140,12 @@ namespace basecode {
         inconvertible
     };
 
+    enum class number_types_t {
+        none,
+        integer,
+        floating_point,
+    };
+
     struct token_t {
         bool as_bool() const;
 
@@ -158,6 +164,7 @@ namespace basecode {
         uint8_t radix = 10;
         uint32_t line = 0;
         uint32_t column = 0;
+        number_types_t number_type = number_types_t::none;
     };
 };
 

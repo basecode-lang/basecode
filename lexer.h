@@ -149,6 +149,8 @@ namespace basecode {
 
         char read(bool skip_whitespace = true);
 
+        bool match_literal(const std::string& literal);
+
     private:
         static std::multimap<char, lexer_case_callable> s_cases;
 
@@ -158,8 +160,6 @@ namespace basecode {
         std::istream& _source;
         std::istream::pos_type _mark;
         std::set<std::istream::pos_type> _line_breaks {};
-
-        bool match_literal(const std::string& literal);
     };
 
 };

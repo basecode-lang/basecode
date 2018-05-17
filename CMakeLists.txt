@@ -63,16 +63,15 @@ add_executable(
         main.cpp
         result.h
         ast.cpp ast.h
-        parser_types.h
         terp.cpp terp.h
         result_message.h
+        lexer.cpp lexer.h
         token.cpp token.h
         parser.cpp parser.h
-        alpha_parser.cpp alpha_parser.h
+        compiler.cpp compiler.h
         symbol_table.cpp symbol_table.h
         hex_formatter.cpp hex_formatter.h
-        alpha_compiler.cpp alpha_compiler.h
-        instruction_emitter.cpp instruction_emitter.h lexer.cpp lexer.h)
+        instruction_emitter.cpp instruction_emitter.h)
 
 target_link_libraries(
     bootstrap

@@ -1,11 +1,12 @@
 #pragma once
 
 #include <map>
+#include <stack>
 #include <memory>
 #include <vector>
-#include <variant>
 #include <string>
 #include <cerrno>
+#include <variant>
 #include <functional>
 #include "token.h"
 
@@ -52,6 +53,13 @@ namespace basecode {
 
         virtual ~ast_builder();
 
+        ast_node_shared_ptr pop_scope();
+
+        ast_node_shared_ptr current_scope() const;
+
+        ast_node_shared_ptr push_scope(const ast_node_shared_ptr& node);
+
     private:
+        std::stack<ast_node_shared_ptr> _scope_stack {};
     };
 }
