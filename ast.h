@@ -20,19 +20,27 @@ namespace basecode {
     enum class ast_node_types_t {
         program,
         statement,
+        variable,
         assignment,
-        if_statement,
-        elseif_statement,
-        else_statement,
+        expression,
+        line_comment,
+        block_comment,
+        if_expression,
+        map_constructor,
+        array_constructor,
+        elseif_expression,
+        else_expression,
         for_statement,
         while_statement,
         continue_statement,
+        alias_statement,
+        extend_statement,
         break_statement,
-        switch_statement,
-        with_statement,
+        switch_expression,
+        with_expression,
         namespace_statement,
         function_call,
-        function_statement,
+        function_expression,
         basic_block,
         unary_operator,
         binary_operator,
@@ -55,9 +63,13 @@ namespace basecode {
 
         ast_node_shared_ptr pop_scope();
 
-        ast_node_shared_ptr current_scope() const;
+        ast_node_t* current_scope() const;
 
-        ast_node_shared_ptr push_scope(const ast_node_shared_ptr& node);
+        ast_node_shared_ptr program_node();
+
+        void push_scope(const ast_node_shared_ptr& node);
+
+        ast_node_shared_ptr line_comment_node(const token_t& token);
 
     private:
         std::stack<ast_node_shared_ptr> _scope_stack {};

@@ -30,7 +30,6 @@ namespace basecode {
     private:
         terp _terp;
         uint64_t _address;
-        parser _parser {};
         basecode::symbol_table _symbol_table {};
     };
 
