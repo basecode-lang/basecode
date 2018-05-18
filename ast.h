@@ -19,40 +19,40 @@ namespace basecode {
 
     enum class ast_node_types_t {
         program,
+        fn_call,
         statement,
         attribute,
         assignment,
         expression,
+        basic_block,
         line_comment,
-        block_comment,
         null_literal,
+        for_statement,
+        block_comment,
+        argument_list,
+        fn_expression,
+        if_expression,
         number_literal,
         string_literal,
-        character_literal,
-        boolean_literal,
-        if_expression,
-        map_constructor,
-        array_constructor,
-        elseif_expression,
-        else_expression,
-        for_statement,
-        while_statement,
-        continue_statement,
-        alias_statement,
-        extend_statement,
-        break_statement,
-        switch_expression,
-        with_expression,
-        type_identifier,
-        pointer_type_identifier,
-        variable_reference,
-        variable_declaration,
-        namespace_statement,
-        function_call,
-        function_expression,
-        basic_block,
         unary_operator,
         binary_operator,
+        boolean_literal,
+        map_constructor,
+        else_expression,
+        while_statement,
+        alias_statement,
+        break_statement,
+        with_expression,
+        type_identifier,
+        extend_statement,
+        character_literal,
+        array_constructor,
+        elseif_expression,
+        switch_expression,
+        continue_statement,
+        variable_reference,
+        namespace_statement,
+        variable_declaration,
     };
 
     // foo := 5 + 5;
@@ -114,11 +114,22 @@ namespace basecode {
 
         ast_node_shared_ptr program_node();
 
+        ast_node_shared_ptr fn_call_node();
+
         ast_node_shared_ptr statement_node();
 
         ast_node_shared_ptr assignment_node();
 
+        ast_node_shared_ptr expression_node();
+
         ast_node_shared_ptr basic_block_node();
+
+        ast_node_shared_ptr binary_operator_node(
+            const ast_node_shared_ptr& lhs,
+            const token_t& token,
+            const ast_node_shared_ptr& rhs);
+
+        ast_node_shared_ptr argument_list_node();
 
         void push_scope(const ast_node_shared_ptr& node);
 
@@ -133,6 +144,8 @@ namespace basecode {
         ast_node_shared_ptr number_literal_node(const token_t& token);
 
         ast_node_shared_ptr string_literal_node(const token_t& token);
+
+        ast_node_shared_ptr unary_operator_node(const token_t& token);
 
         ast_node_shared_ptr type_identifier_node(const token_t& token);
 

@@ -5,6 +5,41 @@
 
 namespace basecode {
 
+    ///////////////////////////////////////////////////////////////////////////
+
+    ast_node_shared_ptr group_prefix_parser::parse(
+            result& r,
+            parser* parser,
+            token_t& token) {
+        auto expression_node = parser->ast_builder()->expression_node();
+        expression_node->lhs = parser->parse_expression(r, 0);
+        token_t right_paren_token;
+        right_paren_token.type = token_types_t::right_paren;
+        if (!parser->expect(r, right_paren_token))
+            return nullptr;
+        return expression_node;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    unary_operator_prefix_parser::unary_operator_prefix_parser(
+        precedence_t precedence) : _precedence(precedence) {
+
+    }
+
+    ast_node_shared_ptr unary_operator_prefix_parser::parse(
+            result& r,
+            parser* parser,
+            token_t& token) {
+        auto unary_operator_node = parser->ast_builder()->unary_operator_node(token);
+        unary_operator_node->rhs = parser->parse_expression(
+            r,
+            static_cast<uint8_t>(_precedence));
+        return unary_operator_node;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
     ast_node_shared_ptr null_literal_prefix_parser::parse(
             result& r,
             parser* parser,
@@ -77,6 +112,36 @@ namespace basecode {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    ast_node_shared_ptr fn_call_infix_parser::parse(
+            result& r,
+            parser* parser,
+            const ast_node_shared_ptr& lhs,
+            token_t& token) {
+        auto fn_call_node = parser->ast_builder()->fn_call_node();
+        fn_call_node->lhs = lhs;
+
+        if (!parser->peek(token_types_t::right_paren)) {
+            while (true) {
+                fn_call_node->rhs->children.push_back(parser->parse_expression(r, 0));
+                if (!parser->peek(token_types_t::comma))
+                    break;
+                parser->consume();
+            }
+            token_t right_paren_token;
+            right_paren_token.type = token_types_t::right_paren;
+            if (!parser->expect(r, right_paren_token))
+                return nullptr;
+        }
+
+        return fn_call_node;
+    }
+
+    precedence_t fn_call_infix_parser::precedence() const {
+        return precedence_t::call;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
     ast_node_shared_ptr variable_reference_infix_parser::parse(
             result& r,
             parser* parser,
@@ -138,6 +203,31 @@ namespace basecode {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    binary_operator_infix_parser::binary_operator_infix_parser(
+            precedence_t precedence,
+            bool is_right_associative) : _precedence(precedence),
+                                         _is_right_associative(is_right_associative) {
+    }
+
+    ast_node_shared_ptr binary_operator_infix_parser::parse(
+            result& r,
+            parser* parser,
+            const ast_node_shared_ptr& lhs,
+            token_t& token) {
+        auto associative_precedence = static_cast<uint8_t>(
+            static_cast<uint8_t>(_precedence) - (_is_right_associative ? 1 : 0));
+        return parser->ast_builder()->binary_operator_node(
+            lhs,
+            token,
+            parser->parse_expression(r, associative_precedence));
+    }
+
+    precedence_t binary_operator_infix_parser::precedence() const {
+        return _precedence;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
     ast_node_shared_ptr assignment_infix_parser::parse(
             result& r,
             parser* parser,
@@ -145,7 +235,9 @@ namespace basecode {
             token_t& token) {
         auto assignment_node = parser->ast_builder()->assignment_node();
         assignment_node->lhs = lhs;
-        assignment_node->rhs = parser->parse_expression(r, 0);
+        assignment_node->rhs = parser->parse_expression(
+            r,
+            static_cast<uint8_t>(precedence_t::assignment) - 1);
         return assignment_node;
     }
 

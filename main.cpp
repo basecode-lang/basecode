@@ -261,7 +261,7 @@ static int compiler_tests() {
         "vy:f64 := 1.112233;\n"
         "name_ptr:*u8 := address_of(name);\n"
         "\n"
-        "foo:u16 := $ff * 2;\n"
+        "foo:u16 := $ff * (($7f * 2) | %1000_0000_0000_0000);\n"
         "\n"
         "fib := fn(n:u64):u64 {\n"
         "    if n == 0 || n == 1 {\n"

@@ -41,9 +41,22 @@ namespace basecode {
         }
     }
 
+    ast_node_shared_ptr ast_builder::fn_call_node() {
+        auto node = std::make_shared<ast_node_t>();
+        node->type = ast_node_types_t::fn_call;
+        node->rhs = argument_list_node();
+        return node;
+    }
+
     ast_node_shared_ptr ast_builder::statement_node() {
         auto node = std::make_shared<ast_node_t>();
         node->type = ast_node_types_t::statement;
+        return node;
+    }
+
+    ast_node_shared_ptr ast_builder::expression_node() {
+        auto node = std::make_shared<ast_node_t>();
+        node->type = ast_node_types_t::expression;
         return node;
     }
 
@@ -57,6 +70,24 @@ namespace basecode {
         auto node = std::make_shared<ast_node_t>();
         node->type = ast_node_types_t::basic_block;
         push_scope(node);
+        return node;
+    }
+
+    ast_node_shared_ptr ast_builder::binary_operator_node(
+            const ast_node_shared_ptr& lhs,
+            const token_t& token,
+            const ast_node_shared_ptr& rhs) {
+        auto node = std::make_shared<ast_node_t>();
+        node->token = token;
+        node->type = ast_node_types_t::binary_operator;
+        node->lhs = lhs;
+        node->rhs = rhs;
+        return node;
+    }
+
+    ast_node_shared_ptr ast_builder::argument_list_node() {
+        auto node = std::make_shared<ast_node_t>();
+        node->type = ast_node_types_t::argument_list;
         return node;
     }
 
@@ -89,6 +120,13 @@ namespace basecode {
         auto node = std::make_shared<ast_node_t>();
         node->token = token;
         node->type = ast_node_types_t::block_comment;
+        return node;
+    }
+
+    ast_node_shared_ptr ast_builder::unary_operator_node(const token_t& token) {
+        auto node = std::make_shared<ast_node_t>();
+        node->token = token;
+        node->type = ast_node_types_t::unary_operator;
         return node;
     }
 
@@ -140,5 +178,6 @@ namespace basecode {
         node->type = ast_node_types_t::variable_declaration;
         return node;
     }
+
 
 };

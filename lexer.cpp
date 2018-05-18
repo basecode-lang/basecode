@@ -41,7 +41,8 @@ namespace basecode {
         {':', std::bind(&lexer::scope_operator, std::placeholders::_1, std::placeholders::_2)},
         {':', std::bind(&lexer::colon, std::placeholders::_1, std::placeholders::_2)},
 
-        // percent
+        // percent/number literal
+        {'%', std::bind(&lexer::number_literal, std::placeholders::_1, std::placeholders::_2)},
         {'%', std::bind(&lexer::percent, std::placeholders::_1, std::placeholders::_2)},
 
         // asterisk
