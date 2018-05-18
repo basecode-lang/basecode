@@ -6,6 +6,11 @@ namespace basecode {
         return value == "true";
     }
 
+    bool token_t::is_comment() const {
+        return type == token_types_t::line_comment
+               || type == token_types_t::block_comment;
+    }
+
     bool token_t::is_boolean() const {
         return type == token_types_t::true_literal
                || type == token_types_t::false_literal;

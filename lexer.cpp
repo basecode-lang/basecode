@@ -1,5 +1,4 @@
 #include <sstream>
-#include <regex>
 #include "lexer.h"
 
 namespace basecode {
@@ -611,6 +610,7 @@ namespace basecode {
             if (ch == '/') {
                 token.type = token_types_t::line_comment;
                 token.value = read_until('\n');
+                rewind_one_char();
                 return true;
             }
         }
