@@ -205,6 +205,13 @@ namespace basecode {
 
         virtual ~parser();
 
+        void error(
+            result& r,
+            const std::string& code,
+            const std::string& message,
+            uint32_t line,
+            uint32_t column);
+
         bool consume();
 
         bool consume(token_t& token);
@@ -269,6 +276,7 @@ namespace basecode {
             {token_types_t::assignment,    &s_assignment_infix_parser},
         };
 
+        std::istream& _source;
         basecode::lexer _lexer;
         std::vector<token_t> _tokens {};
         basecode::ast_builder _ast_builder;

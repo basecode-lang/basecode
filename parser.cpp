@@ -106,10 +106,12 @@ namespace basecode {
         token_t type_identifier;
         type_identifier.type = token_types_t::identifier;
         if (!parser->expect(r, type_identifier)) {
-            r.add_message(
+            parser->error(
+                r,
                 "B027",
                 "type name expected for variable declaration.",
-                true);
+                token.line,
+                token.column);
             return nullptr;
         }
 
@@ -178,10 +180,51 @@ namespace basecode {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    parser::parser(std::istream& source) : _lexer(source) {
+    parser::parser(std::istream& source) : _source(source),
+                                           _lexer(source) {
     }
 
     parser::~parser() {
+    }
+
+    void parser::error(
+            result& r,
+            const std::string& code,
+            const std::string& message,
+            uint32_t line,
+            uint32_t column) {
+        std::vector<std::string> source_lines {};
+        _source.seekg(0, std::istream::seekdir::beg);
+        while (!_source.eof()) {
+            std::string source_line;
+            std::getline(_source, source_line);
+            source_lines.push_back(source_line);
+        }
+
+        std::stringstream stream;
+        stream << "\n";
+        auto start_line = std::max<int32_t>(0, static_cast<int32_t>(line) - 4);
+        auto stop_line = std::min<int32_t>(
+            static_cast<int32_t>(source_lines.size()),
+            line + 4);
+        auto message_indicator = "^ " + message;
+        for (int32_t i = start_line; i < stop_line; i++) {
+            if (i == static_cast<int32_t>(line)) {
+                stream << fmt::format("{:04d}: ", i + 1)
+                       << source_lines[i] << "\n"
+                       << fmt::format("{0:>{1}}",
+                                      message_indicator,
+                                      message_indicator.length() + (column - 9));
+            } else {
+                stream << fmt::format("{:04d}: ", i + 1)
+                       << source_lines[i];
+            }
+
+            if (i < static_cast<int32_t>(stop_line - 1))
+                stream << "\n";
+        }
+
+        r.add_message(code, stream.str(), true);
     }
 
     bool parser::consume() {
@@ -243,10 +286,12 @@ namespace basecode {
         auto expected_type = token.type;
         token = _tokens.front();
         if (token.type != expected_type) {
-            r.add_message(
+            error(
+                r,
                 "B016",
                 fmt::format("expected token '{}' but found '{}'.", expected_name, token.name()),
-                true);
+                token.line,
+                token.column);
             return false;
         }
 
@@ -278,10 +323,12 @@ namespace basecode {
     ast_node_shared_ptr parser::parse_statement(result& r) {
         auto expression = parse_expression(r, 0);
         if (expression == nullptr) {
-            r.add_message(
-                "B031",
+            error(
+                r,
+                "B013",
                 "unexpected end of input",
-                true);
+                0,
+                0);
             return nullptr;
         }
         if (expression->type == ast_node_types_t::line_comment
@@ -315,10 +362,12 @@ namespace basecode {
 
         auto prefix_parser = prefix_parser_for(token.type);
         if (prefix_parser == nullptr) {
-            r.add_message(
+            error(
+                r,
                 "B021",
                 fmt::format("prefix parser for token '{}' not found.", token.name()),
-                true);
+                token.line,
+                token.column);
             return nullptr;
         }
 
@@ -334,10 +383,12 @@ namespace basecode {
 
             auto infix_parser = infix_parser_for(token.type);
             if (infix_parser == nullptr) {
-                r.add_message(
+                error(
+                    r,
                     "B021",
                     fmt::format("infix parser for token '{}' not found.", token.name()),
-                    true);
+                    token.line,
+                    token.column);
                 break;
             }
             lhs = infix_parser->parse(r, this, lhs, token);
