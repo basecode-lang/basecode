@@ -22,7 +22,8 @@ namespace basecode {
         parser alpha_parser(input);
         auto program_node = alpha_parser.parse(r);
         if (program_node != nullptr) {
-
+            ast_formatter formatter(program_node);
+            formatter.format();
         }
         return !r.is_failed();
     }

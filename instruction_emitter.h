@@ -20,6 +20,8 @@ namespace basecode {
 
         void exit();
 
+        void clear();
+
         size_t size() const;
 
         size_t index() const;
@@ -27,6 +29,8 @@ namespace basecode {
         void swi(uint8_t index);
 
         void trap(uint8_t index);
+
+        void reserve(size_t count);
 
         uint64_t end_address() const;
 

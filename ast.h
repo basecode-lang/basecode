@@ -57,24 +57,46 @@ namespace basecode {
         variable_declaration,
     };
 
-    // foo := 5 + 5;
-    //
-    //  program_node (root)
-    //          |
-    //          |
-    //          | statement_node
-    //          +---> lhs := variable (token = "foo")
-    //                         |
-    //                rhs := expression (token is unknown)
-    //                         |
-    //                         +--children
-    //                              |
-    //                           (0)+--> binary_operator (token = "+")
-    //                                      lhs := number_literal (token = "5")
-    //
-    //                                      rhs := number_literal (token = "5")
-    //
-
+    static inline std::unordered_map<ast_node_types_t, std::string> s_node_type_names = {
+        {ast_node_types_t::program, "program"},
+        {ast_node_types_t::fn_call, "fn_call"},
+        {ast_node_types_t::statement, "statement"},
+        {ast_node_types_t::attribute, "attribute"},
+        {ast_node_types_t::assignment, "assignment"},
+        {ast_node_types_t::expression, "expression"},
+        {ast_node_types_t::basic_block, "basic_block"},
+        {ast_node_types_t::line_comment, "line_comment"},
+        {ast_node_types_t::none_literal, "none_literal"},
+        {ast_node_types_t::null_literal, "null_literal"},
+        {ast_node_types_t::empty_literal, "empty_literal"},
+        {ast_node_types_t::for_statement, "for_statement"},
+        {ast_node_types_t::block_comment, "block_comment"},
+        {ast_node_types_t::argument_list, "argument_list"},
+        {ast_node_types_t::fn_expression, "fn_expression"},
+        {ast_node_types_t::if_expression, "if_expression"},
+        {ast_node_types_t::number_literal, "number_literal"},
+        {ast_node_types_t::string_literal, "string_literal"},
+        {ast_node_types_t::unary_operator, "unary_operator"},
+        {ast_node_types_t::binary_operator, "binary_operator"},
+        {ast_node_types_t::boolean_literal, "boolean_literal"},
+        {ast_node_types_t::map_constructor, "map_constructor"},
+        {ast_node_types_t::else_expression, "else_expression"},
+        {ast_node_types_t::while_statement, "while_statement"},
+        {ast_node_types_t::alias_statement, "alias_statement"},
+        {ast_node_types_t::break_statement, "break_statement"},
+        {ast_node_types_t::with_expression, "with_expression"},
+        {ast_node_types_t::type_identifier, "type_identifier"},
+        {ast_node_types_t::extend_statement, "extend_statement"},
+        {ast_node_types_t::character_literal, "character_literal"},
+        {ast_node_types_t::array_constructor, "array_constructor"},
+        {ast_node_types_t::elseif_expression, "elseif_expression"},
+        {ast_node_types_t::switch_expression, "switch_statement"},
+        {ast_node_types_t::continue_statement, "continue_statement"},
+        {ast_node_types_t::variable_reference, "variable_reference"},
+        {ast_node_types_t::namespace_statement, "namespace_statement"},
+        {ast_node_types_t::variable_declaration, "variable_declaration"},
+    };
+    
     struct ast_node_t {
         using flags_value_t = uint8_t;
         enum flags_t : uint8_t {
@@ -91,6 +113,13 @@ namespace basecode {
             return ((flags & flags_t::pointer) != 0);
         }
 
+        inline std::string name() const {
+            auto it = s_node_type_names.find(type);
+            if (it == s_node_type_names.end())
+                return "unknown";
+            return it->second;
+        }
+
         token_t token;
         ast_node_types_t type;
         ast_node_list children;
@@ -98,6 +127,21 @@ namespace basecode {
         ast_node_shared_ptr rhs = nullptr;
         flags_value_t flags = flags_t::none;
         ast_node_shared_ptr parent = nullptr;
+    };
+
+    class ast_formatter {
+    public:
+        explicit ast_formatter(const ast_node_shared_ptr& root);
+
+        void format();
+
+    private:
+        void format_node(
+            const ast_node_shared_ptr& node,
+            uint32_t level);
+
+    private:
+        ast_node_shared_ptr _root;
     };
 
     class ast_builder {

@@ -1,8 +1,9 @@
 #pragma once
 
-#include <istream>
-#include <vector>
 #include <set>
+#include <map>
+#include <vector>
+#include <istream>
 #include "token.h"
 
 namespace basecode {

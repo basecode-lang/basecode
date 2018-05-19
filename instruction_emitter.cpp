@@ -31,6 +31,10 @@ namespace basecode {
         _instructions.push_back(exit_op);
     }
 
+    void instruction_emitter::clear() {
+        _instructions.clear();
+    }
+
     size_t instruction_emitter::size() const {
         size_t size = 0;
         for (const auto& inst : _instructions)
@@ -60,6 +64,10 @@ namespace basecode {
         trap_op.operands[0].type = basecode::operand_encoding_t::flags::integer;
         trap_op.operands[0].value.u64 = index;
         _instructions.push_back(trap_op);
+    }
+
+    void instruction_emitter::reserve(size_t count) {
+        _instructions.reserve(count);
     }
 
     uint64_t instruction_emitter::end_address() const {

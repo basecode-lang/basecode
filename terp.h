@@ -3,6 +3,7 @@
 #include <map>
 #include <string>
 #include <cstdint>
+#include <unordered_map>
 #include "result.h"
 
 namespace basecode {
@@ -339,7 +340,7 @@ namespace basecode {
 
     private:
         terp* _terp = nullptr;
-        std::map<uint64_t, icache_entry_t> _cache {};
+        std::unordered_map<uint64_t, icache_entry_t> _cache {};
     };
 
     class terp {
@@ -498,7 +499,7 @@ namespace basecode {
         uint8_t* _heap = nullptr;
         instruction_cache _icache;
         register_file_t _registers {};
-        std::map<uint8_t, trap_callable> _traps {};
+        std::unordered_map<uint8_t, trap_callable> _traps {};
     };
 
 };

@@ -3,7 +3,7 @@
 #include <string>
 #include <cerrno>
 #include <climits>
-#include <map>
+#include <unordered_map>
 
 namespace basecode {
 
@@ -70,7 +70,7 @@ namespace basecode {
         end_of_file
     };
 
-    static inline std::map<token_types_t, std::string> s_type_to_name = {
+    static inline std::unordered_map<token_types_t, std::string> s_type_to_name = {
         {token_types_t::unknown,                "unknown"},
         {token_types_t::left_square_bracket,    "left_square_bracket"},
         {token_types_t::right_square_bracket,   "right_square_bracket"},

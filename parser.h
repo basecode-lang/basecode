@@ -4,6 +4,7 @@
 #include <stack>
 #include <string>
 #include <fmt/format.h>
+#include <unordered_map>
 #include "ast.h"
 #include "lexer.h"
 #include "result.h"
@@ -381,7 +382,7 @@ namespace basecode {
         static inline unary_operator_prefix_parser s_not_prefix_parser {precedence_t::prefix};
         static inline unary_operator_prefix_parser s_binary_not_prefix_parser {precedence_t::prefix};
 
-        static inline std::map<token_types_t, prefix_parser*> s_prefix_parsers = {
+        static inline std::unordered_map<token_types_t, prefix_parser*> s_prefix_parsers = {
             {token_types_t::if_literal,          &s_if_prefix_parser},
             {token_types_t::bang,                &s_not_prefix_parser},
             {token_types_t::left_paren,          &s_group_prefix_parser},
@@ -418,7 +419,7 @@ namespace basecode {
         static inline binary_operator_infix_parser s_exponent_binary_op_parser {precedence_t::exponent, true};
         static inline binary_operator_infix_parser s_relational_binary_op_parser {precedence_t::relational, false};
 
-        static inline std::map<token_types_t, infix_parser*> s_infix_parsers = {
+        static inline std::unordered_map<token_types_t, infix_parser*> s_infix_parsers = {
             {token_types_t::left_paren,         &s_fn_call_infix_parser},
             {token_types_t::minus,              &s_sum_binary_op_parser},
             {token_types_t::plus,               &s_sum_binary_op_parser},
