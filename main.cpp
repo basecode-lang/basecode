@@ -9,6 +9,7 @@
 #include "instruction_emitter.h"
 
 static constexpr size_t heap_size = (1024 * 1024) * 32;
+static constexpr size_t stack_size = (1024 * 1024) * 8;
 
 using test_function_callable = std::function<bool (basecode::result&, basecode::terp&)>;
 
@@ -213,7 +214,7 @@ static int time_test_function(
 static int terp_tests() {
     std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
 
-    basecode::terp terp(heap_size);
+    basecode::terp terp(heap_size, stack_size);
     terp.register_trap(1, [](basecode::terp* terp) {
         auto value = terp->pop();
         fmt::print("[trap 1] ${:016X}\n", value);
@@ -237,31 +238,144 @@ static int terp_tests() {
 }
 
 static int compiler_tests() {
-    basecode::compiler compiler(heap_size);
+    basecode::compiler compiler(heap_size, stack_size);
     basecode::result r;
     if (!compiler.initialize(r)) {
         print_results(r);
         return 1;
     }
 
+    //
+    // basecode heap (as seen by the terp)
+    //
+    // +-----------------------------+ +--> top of heap (address: $2000000)
+    // |                             | |
+    // | stack (unbounded)           | | stack grows down, e.g. SUB SP, SP, 8 "allocates" 8 bytes on stack
+    // |                             | *
+    // +-----------------------------+
+    // |                             |
+    // |                             |
+    // | free space                  | * --> how does alloc() and free() work in this space?
+    // | arenas                      | |
+    // |                             | +--------> context available to all functions
+    // |                             |          | .allocator can be assigned callable
+    // +-----------------------------+
+    // |                             | * byte code top address
+    // |                             |
+    // |                             | *
+    // //~~~~~~~~~~~~~~~~~~~~~~~~~~~// | generate stack sizing code for variables,
+    // |                             | | function declarations, etc.
+    // |                             | *
+    // |                             |
+    // |                             | * internal support functions
+    // |                             | | some swi vectors will point at these
+    // //~~~~~~~~~~~~~~~~~~~~~~~~~~~// |
+    // |                             | | program code & data grows "up" in heap
+    // |                             | * address: $90 start of free memory
+    // |                             | |
+    // |                             | |                   - reserved space
+    // |                             | |                   - free space start address
+    // |                             | |                   - stack top max address
+    // |                             | |                   - program start address
+    // |                             | | address: $80 -- start of heap metadata
+    // |                             | | address: $0  -- start of swi vector table
+    // +-----------------------------+ +--> bottom of heap (address: $0)
+    //
+    //
+    // step 1. parse source to ast
+    //
+    // step 2. expand @import or @compile attributes by parsing to ast
+    //
+    // step 3. fold constants/type inference
+    //
+    // step 4. bytecode generation
+    //
+    // step 5. @run expansion
+    //
+    // short_string {
+    //      capacity:u16 := 64;
+    //      length:u16 := 0;
+    //      data:*u8 := alloc(capacity);
+    // } size_of(type(short_string)) == 12;
+    //
+    // string {
+    //      capacity:u32 := 64;
+    //      length:u32 := 0;
+    //      data:*u8 := alloc(capacity);
+    // } size_of(type(string)) == 64;
+    //
+    // array {
+    //      capacity:u32 := 64;
+    //      length:u32 := 0;
+    //      element_type:type := type(any);
+    //      data:*u8 := alloc(capacity * size_of(element));
+    // } size_of(type(array)) == 72;
+    //
+    // callable_parameter {
+    //      name:short_string;
+    //      type:type;
+    //      default:any := empty;
+    //      spread:bool := false;
+    // } size_of(type(callable_parameter)) == 32;
+    //
+    // callable {
+    //      params:callable_parameter[];
+    //      returns:callable_parameter[];
+    //      address:*u8 := null;
+    // } size_of(type(callable)) == 153;
+    //
     std::stringstream source(
         "// this is a test comment\n"
         "// fibonacci sequence in basecode-alpha\n"
         "\n"
         "@entry_point main;\n"
         "\n"
+//        "// string is a special case....\n"
+//        "name:string := \"this is a test string literal\";\n"
+//        "// pure copy of primitive structure fields\n"
+//        "name_copy:string := name;\n"
+//        "// move name into name_moved_copy\n"
+//        "name_moved_copy:string := move(name);\n"
+//        "// deep copy of string data\n"
+//        "name_deep_copy:string := deep_copy(name);\n"
+        "\n"
         "// this is a comment right before a variable assignment\n"
         "truth:bool := true;\n"
         "lies:bool := false;\n"
         "char:u8 := 'A';\n"
-        "name:string := \"this is a test string literal\";\n"
-        "name_ptr := null;\n"
         "dx:u32 := 467;\n"
+        "dx1:u32 := dx;\n"
         "vx:f64 := 3.145;\n"
         "vy:f64 := 1.112233;\n"
-        "name_ptr:*u8 := address_of(name);\n"
+//        "name_ptr:*u8 := address_of(name);\n"
+//        "name_ptr := null;\n"
         "\n"
         "foo:u16 := $ff * (($7f * 2) | %1000_0000_0000_0000);\n"
+        "\n"
+        // compile_time_thingy lives on the stack as aggregate callable
+//        "compile_time_thingy := fn(a:u32, b:u32):u32 {\n"
+        //  LOAD.DW     I0, SP, 12
+        //  LOAD.DW     I1, SP, 8
+        //  MUL.DW      I0, I0, I1
+        //  STORE.DW    I0, SP, 16
+        //  RTS
+//        "   a * b;\n"
+//        "};\n"
+//        "\n"
+        //
+        //  SUB.QW      SP, SP, 12
+        //  STORE.DW    6, SP, 4
+        //  STORE.DW    6, SP, 8
+        //  JSR         #$compile_time_thingy
+        //  LOAD.DW     I0, SP, 16
+        //  ADD.QW      SP, SP, 12
+        //
+//        "product_example:u32 := @run compile_time_thingy(6, 6);\n"
+//        "\n"
+//        "source:string := \"some_calc_value := fn():u16 { ($ff - $7f) * 2 == $fe; };\";\n"
+//        "@import source;\n"
+//        "\n"
+//        "the_result_from_string:u16 := @run some_calc_value();\n"
         "\n"
         "fib := fn(n:u64):u64 {\n"
         "    if n == 0 || n == 1 {\n"

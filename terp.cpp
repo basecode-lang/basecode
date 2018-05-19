@@ -290,8 +290,9 @@ namespace basecode {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    terp::terp(size_t heap_size) : _heap_size(heap_size),
-                                   _icache(this) {
+    terp::terp(size_t heap_size, size_t stack_size) : _heap_size(heap_size),
+                                                      _stack_size(stack_size),
+                                                      _icache(this) {
     }
 
     terp::~terp() {
@@ -833,6 +834,10 @@ namespace basecode {
         return _heap_size;
     }
 
+    size_t terp::stack_size() const {
+        return _stack_size;
+    }
+
     void terp::push(uint64_t value) {
         _registers.sp -= sizeof(uint64_t);
         *qword_ptr(_registers.sp) = value;
@@ -849,9 +854,43 @@ namespace basecode {
         _traps.erase(index);
     }
 
+    std::vector<uint64_t> terp::jump_to_subroutine(
+            result& r,
+            uint64_t address) {
+        std::vector<uint64_t> return_values;
+
+        auto return_address = _registers.pc;
+        push(return_address);
+        _registers.pc = address;
+
+        while (!has_exited()) {
+            // XXX: need to introduce a terp_step_result_t
+            auto result = step(r);
+            // XXX: did an RTS just execute?
+            //      does _registers.pc == return_address?  if so, we're done
+            if (!result) {
+                break;
+            }
+        }
+
+        // XXX: how do we handle multiple return values?
+        // XXX: pull return values from the stack
+        return return_values;
+    }
+
     void terp::swi(uint8_t index, uint64_t address) {
-        size_t swi_address = sizeof(uint64_t) * index;
+        size_t swi_address = interrupt_vector_table_start + (sizeof(uint64_t) * index);
         *qword_ptr(swi_address) = address;
+    }
+
+    uint64_t terp::heap_vector(uint8_t index) const {
+        size_t heap_vector_address = heap_vector_table_start + (sizeof(uint64_t) * index);
+        return *qword_ptr(heap_vector_address);
+    }
+
+    void terp::heap_vector(uint8_t index, uint64_t address) {
+        size_t heap_vector_address = heap_vector_table_start + (sizeof(uint64_t) * index);
+        *qword_ptr(heap_vector_address) = address;
     }
 
     std::string terp::disassemble(const instruction_t& inst) const {

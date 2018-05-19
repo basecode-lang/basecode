@@ -1,3 +1,35 @@
+// strings are magicks
+
+// arrays might be:
+//
+// struct {
+//   capacity:u32 := 0;
+//   length:u32 := 0;
+//   element_type:type := type(u8);
+//   data:*any := alloc(....);
+// }
+//
+
+// struct {
+//   capacity:u32 := average_string_size;
+//   length:u32 := 0;
+//   data:*u8 := alloc(average_string_size);
+// }
+
+foos:string;
+
+// string constructor example:
+//
+// MOVE.DW   I0, 0
+// SUB.B     SP, SP, 12
+// STORE.DW  I0, SP
+// STORE.DW  I0, SP, 4
+// PUSH.DW   #$average_string_size
+// JSR.QW    #$alloc
+// STORE.DW  SP, SP, 8
+//
+
+
 //
 // tokens:
 //

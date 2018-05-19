@@ -68,6 +68,7 @@ add_executable(
         result_message.h
         lexer.cpp lexer.h
         token.cpp token.h
+        scope.cpp scope.h
         parser.cpp parser.h
         compiler.cpp compiler.h
         symbol_table.cpp symbol_table.h

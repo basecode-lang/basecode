@@ -3,10 +3,30 @@
 
 namespace basecode {
 
-    compiler::compiler(size_t heap_size): _terp(heap_size) {
+    compiler::compiler(
+            size_t heap_size,
+            size_t stack_size): _terp(heap_size, stack_size),
+                                _global_scope(nullptr, nullptr) {
     }
 
     compiler::~compiler() {
+    }
+
+    void compiler::build_scope_tree(
+            result& r,
+            basecode::scope* scope,
+            const ast_node_shared_ptr& node) {
+        if (scope == nullptr || node == nullptr)
+            return;
+
+        for (auto& child_node : node->children) {
+            if (child_node->type == ast_node_types_t::basic_block) {
+                auto child_scope = scope->add_child_scope(child_node);
+                build_scope_tree(r, child_scope, child_node);
+            } else {
+                // XXX: need to recurse down lhs and rhs nodes
+            }
+        }
     }
 
     bool compiler::initialize(result& r) {
@@ -24,6 +44,8 @@ namespace basecode {
         if (program_node != nullptr) {
             ast_formatter formatter(program_node);
             formatter.format();
+
+            build_scope_tree(r, &_global_scope, program_node);
         }
         return !r.is_failed();
     }

@@ -349,10 +349,19 @@ namespace basecode {
 
         static constexpr size_t interrupt_vector_table_start = 0;
         static constexpr size_t interrupt_vector_table_size = 16;
-        static constexpr size_t interrupt_vector_table_end = sizeof(uint64_t) * interrupt_vector_table_size;
-        static constexpr size_t program_start = interrupt_vector_table_end;
+        static constexpr size_t interrupt_vector_table_end = interrupt_vector_table_start +
+            (sizeof(uint64_t) * interrupt_vector_table_size);
 
-        explicit terp(size_t heap_size);
+        static constexpr size_t heap_vector_table_start = interrupt_vector_table_end;
+        static constexpr size_t heap_vector_table_size = 8;
+        static constexpr size_t heap_vector_table_end = heap_vector_table_start
+            + (sizeof(uint16_t) * heap_vector_table_size);
+
+        static constexpr size_t program_start = heap_vector_table_end;
+
+        terp(
+            size_t heap_size,
+            size_t stack_size);
 
         virtual ~terp();
 
@@ -376,13 +385,23 @@ namespace basecode {
 
         bool initialize(result& r);
 
+        size_t stack_size() const;
+
         void remove_trap(uint8_t index);
 
         void dump_state(uint8_t count = 16);
 
+        std::vector<uint64_t> jump_to_subroutine(
+            result& r,
+            uint64_t address);
+
+        uint64_t heap_vector(uint8_t index) const;
+
         void swi(uint8_t index, uint64_t address);
 
         const register_file_t& register_file() const;
+
+        void heap_vector(uint8_t index, uint64_t address);
 
         void dump_heap(uint64_t offset, size_t size = 256);
 
@@ -496,6 +515,7 @@ namespace basecode {
 
         bool _exited = false;
         size_t _heap_size = 0;
+        size_t _stack_size = 0;
         uint8_t* _heap = nullptr;
         instruction_cache _icache;
         register_file_t _registers {};

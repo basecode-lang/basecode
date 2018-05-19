@@ -248,11 +248,12 @@ namespace basecode {
                     break;
                 parser->consume();
             }
-            token_t right_paren_token;
-            right_paren_token.type = token_types_t::right_paren;
-            if (!parser->expect(r, right_paren_token))
-                return nullptr;
         }
+
+        token_t right_paren_token;
+        right_paren_token.type = token_types_t::right_paren;
+        if (!parser->expect(r, right_paren_token))
+            return nullptr;
 
         return fn_call_node;
     }
