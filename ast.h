@@ -26,7 +26,9 @@ namespace basecode {
         expression,
         basic_block,
         line_comment,
+        none_literal,
         null_literal,
+        empty_literal,
         for_statement,
         block_comment,
         argument_list,
@@ -104,6 +106,10 @@ namespace basecode {
 
         virtual ~ast_builder();
 
+        ast_node_shared_ptr if_node();
+
+        ast_node_shared_ptr else_node();
+
         ast_node_shared_ptr end_scope();
 
         ast_node_shared_ptr pop_scope();
@@ -115,6 +121,10 @@ namespace basecode {
         ast_node_shared_ptr program_node();
 
         ast_node_shared_ptr fn_call_node();
+
+        ast_node_shared_ptr fn_decl_node();
+
+        ast_node_shared_ptr else_if_node();
 
         ast_node_shared_ptr statement_node();
 
@@ -133,13 +143,21 @@ namespace basecode {
 
         void push_scope(const ast_node_shared_ptr& node);
 
+        ast_node_shared_ptr break_node(const token_t& token);
+
+        ast_node_shared_ptr continue_node(const token_t& token);
+
         ast_node_shared_ptr attribute_node(const token_t& token);
+
+        ast_node_shared_ptr none_literal_node(const token_t& token);
 
         ast_node_shared_ptr null_literal_node(const token_t& token);
 
         ast_node_shared_ptr line_comment_node(const token_t& token);
 
         ast_node_shared_ptr block_comment_node(const token_t& token);
+
+        ast_node_shared_ptr empty_literal_node(const token_t& token);
 
         ast_node_shared_ptr number_literal_node(const token_t& token);
 

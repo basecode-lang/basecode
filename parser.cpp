@@ -7,6 +7,118 @@ namespace basecode {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    ast_node_shared_ptr if_prefix_parser::parse(
+            result& r,
+            parser* parser,
+            token_t& token) {
+        auto if_node = parser->ast_builder()->if_node();
+        if_node->lhs = parser->parse_expression(r, 0);
+        if_node->children.push_back(parser->parse_expression(r, 0));
+
+        auto current_branch = if_node;
+        while (true) {
+            if (!parser->peek(token_types_t::else_if_literal))
+                break;
+            parser->consume();
+            current_branch->rhs = parser->ast_builder()->else_if_node();
+            current_branch->rhs->lhs = parser->parse_expression(r, 0);
+            current_branch->rhs->children.push_back(parser->parse_expression(r, 0));
+            current_branch = current_branch->rhs;
+        }
+
+        if (parser->peek(token_types_t::else_literal)) {
+            parser->consume();
+            current_branch->rhs = parser->ast_builder()->else_node();
+            current_branch->rhs->children.push_back(parser->parse_expression(r, 0));
+        }
+
+        return if_node;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    ast_node_shared_ptr type_decl_prefix_parser::parse(
+            result& r,
+            parser* parser,
+            token_t& token) {
+        auto is_pointer = false;
+        if (parser->peek(token_types_t::asterisk)) {
+            parser->consume();
+            is_pointer = true;
+        }
+
+        token_t type_identifier;
+        type_identifier.type = token_types_t::identifier;
+        if (!parser->expect(r, type_identifier)) {
+            parser->error(
+                r,
+                "B027",
+                "type expected.",
+                token.line,
+                token.column);
+            return nullptr;
+        }
+
+        auto type_node = parser->ast_builder()->type_identifier_node(type_identifier);
+
+        auto is_array = false;
+        if (parser->peek(token_types_t::left_square_bracket)) {
+            is_array = true;
+            type_node->rhs = parser->parse_expression(r, 0);;
+        }
+
+        if (is_pointer)
+            type_node->flags |= ast_node_t::flags_t::pointer;
+        else if (is_array)
+            type_node->flags |= ast_node_t::flags_t::array;
+
+        return type_node;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    ast_node_shared_ptr basic_block_prefix_parser::parse(
+            result& r,
+            parser* parser,
+            token_t& token) {
+        return parser->parse_scope(r);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    ast_node_shared_ptr fn_decl_prefix_parser::parse(
+            result& r,
+            parser* parser,
+            token_t& token) {
+        auto fn_decl_node = parser->ast_builder()->fn_decl_node();
+
+        token_t left_paren_token;
+        left_paren_token.type = token_types_t::left_paren;
+        if (!parser->expect(r, left_paren_token))
+            return nullptr;
+
+        if (!parser->peek(token_types_t::right_paren)) {
+            while (true) {
+                fn_decl_node->rhs->children.push_back(parser->parse_expression(r, 0));
+                if (!parser->peek(token_types_t::comma))
+                    break;
+                parser->consume();
+            }
+        }
+
+        token_t right_paren_token;
+        right_paren_token.type = token_types_t::right_paren;
+        if (!parser->expect(r, right_paren_token))
+            return nullptr;
+
+        fn_decl_node->lhs = parser->parse_expression(r, 0);
+        fn_decl_node->children.push_back(parser->parse_expression(r, 0));
+
+        return fn_decl_node;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
     ast_node_shared_ptr group_prefix_parser::parse(
             result& r,
             parser* parser,
@@ -40,11 +152,29 @@ namespace basecode {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    ast_node_shared_ptr null_literal_prefix_parser::parse(
+    ast_node_shared_ptr symbol_literal_prefix_parser::parse(
             result& r,
             parser* parser,
             token_t& token) {
-        return parser->ast_builder()->null_literal_node(token);
+        switch (token.type) {
+            case token_types_t::break_literal:
+                return parser->ast_builder()->break_node(token);
+            case token_types_t::continue_literal:
+                return parser->ast_builder()->continue_node(token);
+            case token_types_t::none_literal:
+                return parser->ast_builder()->none_literal_node(token);
+            case token_types_t::empty_literal:
+                return parser->ast_builder()->empty_literal_node(token);
+            case token_types_t::null_literal:
+                return parser->ast_builder()->null_literal_node(token);
+            case token_types_t::true_literal:
+            case token_types_t::false_literal:
+                return parser->ast_builder()->boolean_literal_node(token);
+            default:
+                return nullptr;
+        }
+
+        return nullptr;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -76,15 +206,6 @@ namespace basecode {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    ast_node_shared_ptr boolean_literal_prefix_parser::parse(
-            result& r,
-            parser* parser,
-            token_t& token) {
-        return parser->ast_builder()->boolean_literal_node(token);
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-
     ast_node_shared_ptr line_comment_prefix_parser::parse(
             result& r,
             parser* parser,
@@ -103,7 +224,7 @@ namespace basecode {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    ast_node_shared_ptr variable_declaration_prefix_parser::parse(
+    ast_node_shared_ptr variable_decl_prefix_parser::parse(
             result& r,
             parser* parser,
             token_t& token) {
@@ -157,7 +278,7 @@ namespace basecode {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    ast_node_shared_ptr type_identifier_infix_parser::parse(
+    ast_node_shared_ptr type_decl_infix_parser::parse(
             result& r,
             parser* parser,
             const ast_node_shared_ptr& lhs,
@@ -197,7 +318,7 @@ namespace basecode {
         return lhs;
     }
 
-    precedence_t type_identifier_infix_parser::precedence() const {
+    precedence_t type_decl_infix_parser::precedence() const {
         return precedence_t::type;
     }
 
@@ -304,9 +425,9 @@ namespace basecode {
             if (i == static_cast<int32_t>(line)) {
                 stream << fmt::format("{:04d}: ", i + 1)
                        << source_lines[i] << "\n"
-                       << fmt::format("{0:>{1}}",
-                                      message_indicator,
-                                      message_indicator.length() + (column - 9));
+                       << fmt::format("{}{}",
+                                      std::string(column + 6, ' '),
+                                      message_indicator);
             } else {
                 stream << fmt::format("{:04d}: ", i + 1)
                        << source_lines[i];
@@ -396,6 +517,11 @@ namespace basecode {
         auto scope = _ast_builder.begin_scope();
 
         while (true) {
+            if (peek(token_types_t::right_curly_brace)) {
+                consume();
+                break;
+            }
+
             auto node = parse_statement(r);
             if (node == nullptr)
                 break;
@@ -414,22 +540,19 @@ namespace basecode {
 
     ast_node_shared_ptr parser::parse_statement(result& r) {
         auto expression = parse_expression(r, 0);
-        if (expression == nullptr) {
-            error(
-                r,
-                "B013",
-                "unexpected end of input",
-                0,
-                0);
+        if (expression == nullptr)
             return nullptr;
-        }
+
         if (expression->type == ast_node_types_t::line_comment
-        ||  expression->type == ast_node_types_t::block_comment) {
+        ||  expression->type == ast_node_types_t::block_comment
+        ||  expression->type == ast_node_types_t::basic_block) {
             return expression;
         }
+
         auto statement_node = _ast_builder.statement_node();
         // XXX:  lhs should be used or any labels
         statement_node->rhs = expression;
+
         return statement_node;
     }
 
