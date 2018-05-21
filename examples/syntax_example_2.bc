@@ -1,0 +1,17 @@
+//
+// fibonacci recursive function
+//
+
+@entry_point main;
+
+fib := fn(n:u64):u64 {
+    if n == 0 || n == 1 {
+        return n;
+    } else {
+        return fib((n - 1) + fib(n - 2));
+    };
+};
+
+main := fn():u64 {
+    return fib(1000);
+};
