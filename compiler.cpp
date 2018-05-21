@@ -43,7 +43,7 @@ namespace basecode {
         auto program_node = alpha_parser.parse(r);
         if (program_node != nullptr) {
             ast_formatter formatter(program_node);
-            formatter.format();
+            formatter.format_graph_viz();
 
             build_scope_tree(r, &_global_scope, program_node);
         }
