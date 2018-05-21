@@ -32,6 +32,11 @@ namespace basecode {
             const std::string& file_name,
             const std::string& symbol_name);
 
+        void jump_pc_relative(
+            op_sizes size,
+            operand_encoding_t::flags offset_type,
+            uint64_t offset);
+
         void swap_int_register(
             op_sizes size,
             i_registers_t target_index,
@@ -46,6 +51,11 @@ namespace basecode {
         uint64_t end_address() const;
 
         uint64_t start_address() const;
+
+        void branch_pc_relative_if_equal(
+            op_sizes size,
+            operand_encoding_t::flags offset_type,
+            uint64_t offset);
 
         void jump_subroutine_pc_relative(
             op_sizes size,
@@ -68,6 +78,8 @@ namespace basecode {
             op_sizes size,
             uint64_t value,
             i_registers_t index);
+
+        void jump_direct(uint64_t address);
 
         bool encode(result& r, terp& terp);
 
@@ -93,13 +105,10 @@ namespace basecode {
             i_registers_t lhs_index,
             i_registers_t rhs_index);
 
-        void multiply_int_register_to_register(
+        void branch_pc_relative_if_not_equal(
             op_sizes size,
-            i_registers_t target_index,
-            i_registers_t lhs_index,
-            i_registers_t rhs_index);
-
-        void jump_direct(uint64_t address);
+            operand_encoding_t::flags offset_type,
+            uint64_t offset);
 
         void compare_int_register_to_constant(
             op_sizes size,
@@ -114,6 +123,12 @@ namespace basecode {
         void push_float_constant(double value);
 
         void branch_if_equal(uint64_t address);
+
+        void multiply_int_register_to_register(
+            op_sizes size,
+            i_registers_t target_index,
+            i_registers_t lhs_index,
+            i_registers_t rhs_index);
 
         void subtract_int_register_to_register(
             op_sizes size,

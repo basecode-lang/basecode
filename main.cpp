@@ -1,8 +1,8 @@
 #include <chrono>
+#include <sstream>
 #include <iostream>
 #include <functional>
 #include <fmt/format.h>
-#include <sstream>
 #include "terp.h"
 #include "compiler.h"
 #include "hex_formatter.h"
@@ -73,7 +73,10 @@ static bool test_branches(basecode::result& r, basecode::terp& terp) {
 
 static bool test_square(basecode::result& r, basecode::terp& terp) {
     basecode::instruction_emitter bootstrap_emitter(terp.program_start);
-    bootstrap_emitter.jump_direct(0);
+    bootstrap_emitter.jump_pc_relative(
+        basecode::op_sizes::byte,
+        basecode::operand_encoding_t::flags::none,
+        0);
 
     basecode::instruction_emitter fn_square_emitter(bootstrap_emitter.end_address());
     fn_square_emitter.load_stack_offset_to_register(
@@ -95,20 +98,28 @@ static bool test_square(basecode::result& r, basecode::terp& terp) {
     main_emitter.push_int_constant(
         basecode::op_sizes::dword,
         9);
-    main_emitter.jump_subroutine_direct(fn_square_emitter.start_address());
+    main_emitter.jump_subroutine_pc_relative(
+        basecode::op_sizes::byte,
+        basecode::operand_encoding_t::negative,
+        main_emitter.end_address() - fn_square_emitter.start_address());
     main_emitter.pop_int_register(
         basecode::op_sizes::dword,
         basecode::i_registers_t::i5);
     main_emitter.push_int_constant(
         basecode::op_sizes::dword,
         5);
-    main_emitter.jump_subroutine_direct(fn_square_emitter.start_address());
+    main_emitter.jump_subroutine_pc_relative(
+        basecode::op_sizes::byte,
+        basecode::operand_encoding_t::negative,
+        main_emitter.end_address() - fn_square_emitter.start_address());
     main_emitter.pop_int_register(
         basecode::op_sizes::dword,
         basecode::i_registers_t::i6);
     main_emitter.exit();
 
-    bootstrap_emitter[0].patch_branch_address(main_emitter.start_address());
+    bootstrap_emitter[0].patch_branch_address(
+        main_emitter.start_address() - terp.program_start,
+        1);
     bootstrap_emitter.encode(r, terp);
     fn_square_emitter.encode(r, terp);
     main_emitter.encode(r, terp);
@@ -132,35 +143,55 @@ static bool test_square(basecode::result& r, basecode::terp& terp) {
 
 static bool test_fibonacci(basecode::result& r, basecode::terp& terp) {
     basecode::instruction_emitter bootstrap_emitter(terp.program_start);
-    bootstrap_emitter.jump_direct(0);
+    bootstrap_emitter.jump_pc_relative(
+        basecode::op_sizes::byte,
+        basecode::operand_encoding_t::flags::none,
+        0);
 
     basecode::instruction_emitter fn_fibonacci(bootstrap_emitter.end_address());
     fn_fibonacci.load_stack_offset_to_register(
         basecode::op_sizes::dword,
         basecode::i_registers_t::i0,
         8);
+
     fn_fibonacci.push_int_register(
         basecode::op_sizes::dword,
         basecode::i_registers_t::i0);
     fn_fibonacci.trap(1);
+
     fn_fibonacci.compare_int_register_to_constant(
         basecode::op_sizes::dword,
         basecode::i_registers_t::i0,
         0);
-    fn_fibonacci.branch_if_equal(0);
+    auto first_branch_address = fn_fibonacci.end_address();
+    fn_fibonacci.branch_pc_relative_if_equal(
+        basecode::op_sizes::byte,
+        basecode::operand_encoding_t::none,
+        0);
+
     fn_fibonacci.compare_int_register_to_constant(
         basecode::op_sizes::dword,
         basecode::i_registers_t::i0,
         1);
-    fn_fibonacci.branch_if_equal(0);
-    fn_fibonacci.jump_direct(0);
+    auto second_branch_address = fn_fibonacci.end_address();
+    fn_fibonacci.branch_pc_relative_if_equal(
+        basecode::op_sizes::byte,
+        basecode::operand_encoding_t::none,
+        0);
+
+    auto jump_over_rts_address = fn_fibonacci.end_address();
+    fn_fibonacci.jump_pc_relative(
+        basecode::op_sizes::byte,
+        basecode::operand_encoding_t::none,
+        0);
+
     auto label_exit_fib = fn_fibonacci.end_address();
-    fn_fibonacci[4].patch_branch_address(label_exit_fib);
-    fn_fibonacci[6].patch_branch_address(label_exit_fib);
+    fn_fibonacci[4].patch_branch_address(label_exit_fib - first_branch_address, 1);
+    fn_fibonacci[6].patch_branch_address(label_exit_fib - second_branch_address, 1);
     fn_fibonacci.rts();
 
     auto label_next_fib = fn_fibonacci.end_address();
-    fn_fibonacci[7].patch_branch_address(label_next_fib);
+    fn_fibonacci[7].patch_branch_address(label_next_fib - jump_over_rts_address, 1);
 
     fn_fibonacci.subtract_int_constant_from_register(
         basecode::op_sizes::dword,
@@ -205,7 +236,10 @@ static bool test_fibonacci(basecode::result& r, basecode::terp& terp) {
 
     basecode::instruction_emitter main_emitter(fn_fibonacci.end_address());
     main_emitter.push_int_constant(basecode::op_sizes::dword, 100);
-    main_emitter.jump_subroutine_direct(fn_fibonacci.start_address());
+    main_emitter.jump_subroutine_pc_relative(
+        basecode::op_sizes::byte,
+        basecode::operand_encoding_t::negative,
+        main_emitter.end_address() - fn_fibonacci.start_address());
     main_emitter.dup();
     main_emitter.pop_int_register(
         basecode::op_sizes::dword,
@@ -213,7 +247,9 @@ static bool test_fibonacci(basecode::result& r, basecode::terp& terp) {
     main_emitter.trap(1);
     main_emitter.exit();
 
-    bootstrap_emitter[0].patch_branch_address(main_emitter.start_address());
+    bootstrap_emitter[0].patch_branch_address(
+        main_emitter.start_address() - terp.program_start,
+        1);
     bootstrap_emitter.encode(r, terp);
     fn_fibonacci.encode(r, terp);
     main_emitter.encode(r, terp);
@@ -230,11 +266,12 @@ static bool test_fibonacci(basecode::result& r, basecode::terp& terp) {
 }
 
 static int time_test_function(
-        basecode::result& r,
         basecode::terp& terp,
         const std::string& title,
         const test_function_callable& test_function) {
     std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
+
+    basecode::result r;
 
     terp.reset();
     auto rc = test_function(r, terp);
@@ -271,9 +308,9 @@ static int terp_tests() {
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
     fmt::print("terp startup time (in microseconds): {}\n\n", duration);
 
-    time_test_function(r, terp, "test_branches", test_branches);
-    time_test_function(r, terp, "test_square", test_square);
-    time_test_function(r, terp, "test_fibonacci", test_fibonacci);
+    time_test_function(terp, "test_branches", test_branches);
+    time_test_function(terp, "test_square", test_square);
+    time_test_function(terp, "test_fibonacci", test_fibonacci);
 
     return 0;
 }
@@ -448,8 +485,8 @@ int main() {
     int result = 0;
 
     result = compiler_tests();
-//    if (result != 0) return result;
+    if (result != 0) return result;
 
-//    result = terp_tests();
+    result = terp_tests();
     return result;
 }

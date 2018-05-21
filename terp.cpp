@@ -1068,8 +1068,13 @@ namespace basecode {
             }
             case op_codes::bne: {
                 uint64_t address;
-
-                if (!get_operand_value(r, inst, 0, address))
+                auto result = get_constant_address_or_pc_with_offset(
+                    r,
+                    inst,
+                    0,
+                    inst_size,
+                    address);
+                if (!result)
                     return false;
 
                 if (!_registers.flags(register_file_t::flags_t::zero)) {
@@ -1080,8 +1085,13 @@ namespace basecode {
             }
             case op_codes::beq: {
                 uint64_t address;
-
-                if (!get_operand_value(r, inst, 0, address))
+                auto result = get_constant_address_or_pc_with_offset(
+                    r,
+                    inst,
+                    0,
+                    inst_size,
+                    address);
+                if (!result)
                     return false;
 
                 if (_registers.flags(register_file_t::flags_t::zero)) {
@@ -1092,8 +1102,13 @@ namespace basecode {
             }
             case op_codes::bg: {
                 uint64_t address;
-
-                if (!get_operand_value(r, inst, 0, address))
+                auto result = get_constant_address_or_pc_with_offset(
+                    r,
+                    inst,
+                    0,
+                    inst_size,
+                    address);
+                if (!result)
                     return false;
 
                 if (!_registers.flags(register_file_t::flags_t::carry)
@@ -1105,8 +1120,13 @@ namespace basecode {
             }
             case op_codes::bge: {
                 uint64_t address;
-
-                if (!get_operand_value(r, inst, 0, address))
+                auto result = get_constant_address_or_pc_with_offset(
+                    r,
+                    inst,
+                    0,
+                    inst_size,
+                    address);
+                if (!result)
                     return false;
 
                 if (!_registers.flags(register_file_t::flags_t::carry)) {
@@ -1116,8 +1136,13 @@ namespace basecode {
             }
             case op_codes::bl: {
                 uint64_t address;
-
-                if (!get_operand_value(r, inst, 0, address))
+                auto result = get_constant_address_or_pc_with_offset(
+                    r,
+                    inst,
+                    0,
+                    inst_size,
+                    address);
+                if (!result)
                     return false;
 
                 if (_registers.flags(register_file_t::flags_t::carry)
@@ -1128,8 +1153,13 @@ namespace basecode {
             }
             case op_codes::ble: {
                 uint64_t address;
-
-                if (!get_operand_value(r, inst, 0, address))
+                auto result = get_constant_address_or_pc_with_offset(
+                    r,
+                    inst,
+                    0,
+                    inst_size,
+                    address);
+                if (!result)
                     return false;
 
                 if (_registers.flags(register_file_t::flags_t::carry)) {
@@ -1141,21 +1171,14 @@ namespace basecode {
                 push(_registers.pc);
 
                 uint64_t address;
-                if (!get_operand_value(r, inst, 0, address))
+                auto result = get_constant_address_or_pc_with_offset(
+                    r,
+                    inst,
+                    0,
+                    inst_size,
+                    address);
+                if (!result)
                     return false;
-
-                if (inst.operands_count == 2) {
-                    uint64_t offset;
-
-                    if (!get_operand_value(r, inst, 1, offset))
-                        return false;
-
-                    if (inst.operands[1].is_negative()) {
-                        address -= offset + inst_size;
-                    } else {
-                        address += offset + inst_size;
-                    }
-                }
 
                 _registers.pc = address;
                 break;
@@ -1168,7 +1191,13 @@ namespace basecode {
             case op_codes::jmp: {
                 uint64_t address;
 
-                if (!get_operand_value(r, inst, 0, address))
+                auto result = get_constant_address_or_pc_with_offset(
+                    r,
+                    inst,
+                    0,
+                    inst_size,
+                    address);
+                if (!result)
                     return false;
 
                 _registers.pc = address;
@@ -1629,6 +1658,32 @@ namespace basecode {
                 "constant cannot be a target operand type.",
                 true);
             return false;
+        }
+
+        return true;
+    }
+
+    bool terp::get_constant_address_or_pc_with_offset(
+            result& r,
+            const instruction_t& inst,
+            uint8_t operand_index,
+            uint64_t inst_size,
+            uint64_t& address) {
+        if (!get_operand_value(r, inst, operand_index, address))
+            return false;
+
+        if (inst.operands_count >= 2) {
+            uint64_t offset;
+
+            uint8_t offset_index = static_cast<uint8_t>(operand_index + 1);
+            if (!get_operand_value(r, inst, offset_index, offset))
+                return false;
+
+            if (inst.operands[offset_index].is_negative()) {
+                address -= offset + inst_size;
+            } else {
+                address += offset - inst_size;
+            }
         }
 
         return true;

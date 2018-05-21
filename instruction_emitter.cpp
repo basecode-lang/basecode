@@ -66,6 +66,25 @@ namespace basecode {
         return _instructions.size() - 1;
     }
 
+    void instruction_emitter::jump_pc_relative(
+            op_sizes size,
+            operand_encoding_t::flags offset_type,
+            uint64_t offset) {
+        basecode::instruction_t jmp_op;
+        jmp_op.op = basecode::op_codes::jmp;
+        jmp_op.size = size;
+        jmp_op.operands_count = 2;
+        jmp_op.operands[0].type =
+            basecode::operand_encoding_t::flags::integer
+            | basecode::operand_encoding_t::flags::reg;
+        jmp_op.operands[0].value.r8 = i_registers_t::pc;
+        jmp_op.operands[1].type =
+            offset_type
+            | basecode::operand_encoding_t::flags::integer;
+        jmp_op.operands[1].value.u64 = offset;
+        _instructions.push_back(jmp_op);
+    }
+
     void instruction_emitter::swap_int_register(
             op_sizes size,
             i_registers_t target_index,
@@ -115,6 +134,23 @@ namespace basecode {
 
     uint64_t instruction_emitter::start_address() const {
         return _start_address;
+    }
+
+    void instruction_emitter::jump_subroutine_pc_relative(
+            op_sizes size,
+            basecode::operand_encoding_t::flags offset_type,
+            uint64_t offset) {
+        basecode::instruction_t jsr_op;
+        jsr_op.op = basecode::op_codes::jsr;
+        jsr_op.size = size;
+        jsr_op.operands_count = 2;
+        jsr_op.operands[0].type =
+            basecode::operand_encoding_t::flags::integer
+            | basecode::operand_encoding_t::flags::reg;
+        jsr_op.operands[0].value.r8 = i_registers_t::pc;
+        jsr_op.operands[1].type = offset_type | basecode::operand_encoding_t::flags::integer;
+        jsr_op.operands[1].value.u64 = offset;
+        _instructions.push_back(jsr_op);
     }
 
     void instruction_emitter::load_with_offset_to_register(
@@ -361,6 +397,25 @@ namespace basecode {
         _instructions.push_back(move_op);
     }
 
+    void instruction_emitter::branch_pc_relative_if_equal(
+            op_sizes size,
+            operand_encoding_t::flags offset_type,
+            uint64_t offset) {
+        basecode::instruction_t branch_op;
+        branch_op.op = basecode::op_codes::beq;
+        branch_op.size = size;
+        branch_op.operands_count = 2;
+        branch_op.operands[0].type =
+            basecode::operand_encoding_t::flags::integer
+            | basecode::operand_encoding_t::flags::reg;
+        branch_op.operands[0].value.r8 = i_registers_t::pc;
+        branch_op.operands[1].type =
+            offset_type
+            | basecode::operand_encoding_t::flags::integer;
+        branch_op.operands[1].value.u64 = offset;
+        _instructions.push_back(branch_op);
+    }
+
     void instruction_emitter::jump_direct(uint64_t address) {
         basecode::instruction_t jmp_op;
         jmp_op.op = basecode::op_codes::jmp;
@@ -373,104 +428,23 @@ namespace basecode {
         _instructions.push_back(jmp_op);
     }
 
-    void instruction_emitter::pop_float_register(i_registers_t index) {
-        basecode::instruction_t pop_op;
-        pop_op.op = basecode::op_codes::pop;
-        pop_op.operands_count = 1;
-        pop_op.operands[0].type = basecode::operand_encoding_t::flags::reg;
-        pop_op.operands[0].value.r8 = index;
-        _instructions.push_back(pop_op);
-    }
-
-    void instruction_emitter::push_float_constant(double value) {
-        basecode::instruction_t push_op;
-        push_op.op = basecode::op_codes::push;
-        push_op.operands_count = 1;
-        push_op.operands[0].type = basecode::operand_encoding_t::flags::constant;
-        push_op.operands[0].value.d64 = value;
-        _instructions.push_back(push_op);
-    }
-
-    void instruction_emitter::dec(op_sizes size, i_registers_t index) {
-        basecode::instruction_t dec_op;
-        dec_op.op = basecode::op_codes::dec;
-        dec_op.operands_count = 1;
-        dec_op.operands[0].type =
+    void instruction_emitter::branch_pc_relative_if_not_equal(
+            op_sizes size,
+            operand_encoding_t::flags offset_type,
+            uint64_t offset) {
+        basecode::instruction_t branch_op;
+        branch_op.op = basecode::op_codes::bne;
+        branch_op.size = size;
+        branch_op.operands_count = 2;
+        branch_op.operands[0].type =
             basecode::operand_encoding_t::flags::integer
             | basecode::operand_encoding_t::flags::reg;
-        dec_op.operands[0].value.r8 = index;
-        _instructions.push_back(dec_op);
-    }
-
-    void instruction_emitter::inc(op_sizes size, i_registers_t index) {
-        basecode::instruction_t inc_op;
-        inc_op.op = basecode::op_codes::inc;
-        inc_op.operands_count = 1;
-        inc_op.operands[0].type =
-            basecode::operand_encoding_t::flags::integer
-            | basecode::operand_encoding_t::flags::reg;
-        inc_op.operands[0].value.r8 = index;
-        _instructions.push_back(inc_op);
-    }
-
-    void instruction_emitter::jump_subroutine_indirect(i_registers_t index) {
-        basecode::instruction_t jsr_op;
-        jsr_op.op = basecode::op_codes::jsr;
-        jsr_op.size = basecode::op_sizes::qword;
-        jsr_op.operands_count = 1;
-        jsr_op.operands[0].type =
-            basecode::operand_encoding_t::flags::integer
-            | basecode::operand_encoding_t::flags::reg;
-        jsr_op.operands[0].value.r8 = index;
-        _instructions.push_back(jsr_op);
-    }
-
-    void instruction_emitter::jump_subroutine_direct(uint64_t address) {
-        basecode::instruction_t jsr_op;
-        jsr_op.op = basecode::op_codes::jsr;
-        jsr_op.size = basecode::op_sizes::qword;
-        jsr_op.operands_count = 1;
-        jsr_op.operands[0].type =
-            basecode::operand_encoding_t::flags::integer
-            | basecode::operand_encoding_t::flags::constant;
-        jsr_op.operands[0].value.u64 = address;
-        _instructions.push_back(jsr_op);
-    }
-
-    void instruction_emitter::pop_int_register(op_sizes size, i_registers_t index) {
-        basecode::instruction_t pop_op;
-        pop_op.op = basecode::op_codes::pop;
-        pop_op.size = size;
-        pop_op.operands_count = 1;
-        pop_op.operands[0].type =
-            basecode::operand_encoding_t::flags::integer
-            | basecode::operand_encoding_t::flags::reg;
-        pop_op.operands[0].value.r8 = index;
-        _instructions.push_back(pop_op);
-    }
-
-    void instruction_emitter::push_int_register(op_sizes size, i_registers_t index) {
-        basecode::instruction_t push_op;
-        push_op.op = basecode::op_codes::push;
-        push_op.size = size;
-        push_op.operands_count = 1;
-        push_op.operands[0].type =
-            basecode::operand_encoding_t::flags::integer
-            | basecode::operand_encoding_t::flags::reg;
-        push_op.operands[0].value.r8 = index;
-        _instructions.push_back(push_op);
-    }
-
-    void instruction_emitter::push_int_constant(op_sizes size, uint64_t value) {
-        basecode::instruction_t push_op;
-        push_op.op = basecode::op_codes::push;
-        push_op.size = size;
-        push_op.operands_count = 1;
-        push_op.operands[0].type =
-            basecode::operand_encoding_t::flags::integer
-            | basecode::operand_encoding_t::flags::constant;
-        push_op.operands[0].value.u64 = value;
-        _instructions.push_back(push_op);
+        branch_op.operands[0].value.r8 = i_registers_t::pc;
+        branch_op.operands[1].type =
+            offset_type
+            | basecode::operand_encoding_t::flags::integer;
+        branch_op.operands[1].value.u64 = offset;
+        _instructions.push_back(branch_op);
     }
 
     void instruction_emitter::compare_int_register_to_register(
@@ -523,6 +497,15 @@ namespace basecode {
         _instructions.push_back(branch_op);
     }
 
+    void instruction_emitter::push_float_constant(double value) {
+        basecode::instruction_t push_op;
+        push_op.op = basecode::op_codes::push;
+        push_op.operands_count = 1;
+        push_op.operands[0].type = basecode::operand_encoding_t::flags::constant;
+        push_op.operands[0].value.d64 = value;
+        _instructions.push_back(push_op);
+    }
+
     void instruction_emitter::branch_if_not_equal(uint64_t address) {
         basecode::instruction_t branch_op;
         branch_op.op = basecode::op_codes::bne;
@@ -533,23 +516,6 @@ namespace basecode {
             | basecode::operand_encoding_t::flags::constant;
         branch_op.operands[0].value.u64 = address;
         _instructions.push_back(branch_op);
-    }
-
-    void instruction_emitter::jump_subroutine_pc_relative(
-            op_sizes size,
-            basecode::operand_encoding_t::flags offset_type,
-            uint64_t offset) {
-        basecode::instruction_t jsr_op;
-        jsr_op.op = basecode::op_codes::jsr;
-        jsr_op.size = size;
-        jsr_op.operands_count = 2;
-        jsr_op.operands[0].type =
-            basecode::operand_encoding_t::flags::integer
-            | basecode::operand_encoding_t::flags::reg;
-        jsr_op.operands[0].value.r8 = i_registers_t::pc;
-        jsr_op.operands[1].type = offset_type | basecode::operand_encoding_t::flags::integer;
-        jsr_op.operands[1].value.u64 = offset;
-        _instructions.push_back(jsr_op);
     }
 
     void instruction_emitter::branch_if_lesser(uint64_t address) {
@@ -576,6 +542,49 @@ namespace basecode {
         _instructions.push_back(branch_op);
     }
 
+    void instruction_emitter::pop_float_register(i_registers_t index) {
+        basecode::instruction_t pop_op;
+        pop_op.op = basecode::op_codes::pop;
+        pop_op.operands_count = 1;
+        pop_op.operands[0].type = basecode::operand_encoding_t::flags::reg;
+        pop_op.operands[0].value.r8 = index;
+        _instructions.push_back(pop_op);
+    }
+
+    void instruction_emitter::dec(op_sizes size, i_registers_t index) {
+        basecode::instruction_t dec_op;
+        dec_op.op = basecode::op_codes::dec;
+        dec_op.operands_count = 1;
+        dec_op.operands[0].type =
+            basecode::operand_encoding_t::flags::integer
+            | basecode::operand_encoding_t::flags::reg;
+        dec_op.operands[0].value.r8 = index;
+        _instructions.push_back(dec_op);
+    }
+
+    void instruction_emitter::inc(op_sizes size, i_registers_t index) {
+        basecode::instruction_t inc_op;
+        inc_op.op = basecode::op_codes::inc;
+        inc_op.operands_count = 1;
+        inc_op.operands[0].type =
+            basecode::operand_encoding_t::flags::integer
+            | basecode::operand_encoding_t::flags::reg;
+        inc_op.operands[0].value.r8 = index;
+        _instructions.push_back(inc_op);
+    }
+
+    void instruction_emitter::jump_subroutine_direct(uint64_t address) {
+        basecode::instruction_t jsr_op;
+        jsr_op.op = basecode::op_codes::jsr;
+        jsr_op.size = basecode::op_sizes::qword;
+        jsr_op.operands_count = 1;
+        jsr_op.operands[0].type =
+            basecode::operand_encoding_t::flags::integer
+            | basecode::operand_encoding_t::flags::constant;
+        jsr_op.operands[0].value.u64 = address;
+        _instructions.push_back(jsr_op);
+    }
+
     void instruction_emitter::branch_if_lesser_or_equal(uint64_t address) {
         basecode::instruction_t branch_op;
         branch_op.op = basecode::op_codes::ble;
@@ -598,6 +607,54 @@ namespace basecode {
             | basecode::operand_encoding_t::flags::constant;
         branch_op.operands[0].value.u64 = address;
         _instructions.push_back(branch_op);
+    }
+
+    void instruction_emitter::jump_subroutine_indirect(i_registers_t index) {
+        basecode::instruction_t jsr_op;
+        jsr_op.op = basecode::op_codes::jsr;
+        jsr_op.size = basecode::op_sizes::qword;
+        jsr_op.operands_count = 1;
+        jsr_op.operands[0].type =
+            basecode::operand_encoding_t::flags::integer
+            | basecode::operand_encoding_t::flags::reg;
+        jsr_op.operands[0].value.r8 = index;
+        _instructions.push_back(jsr_op);
+    }
+
+    void instruction_emitter::push_int_constant(op_sizes size, uint64_t value) {
+        basecode::instruction_t push_op;
+        push_op.op = basecode::op_codes::push;
+        push_op.size = size;
+        push_op.operands_count = 1;
+        push_op.operands[0].type =
+            basecode::operand_encoding_t::flags::integer
+            | basecode::operand_encoding_t::flags::constant;
+        push_op.operands[0].value.u64 = value;
+        _instructions.push_back(push_op);
+    }
+
+    void instruction_emitter::pop_int_register(op_sizes size, i_registers_t index) {
+        basecode::instruction_t pop_op;
+        pop_op.op = basecode::op_codes::pop;
+        pop_op.size = size;
+        pop_op.operands_count = 1;
+        pop_op.operands[0].type =
+            basecode::operand_encoding_t::flags::integer
+            | basecode::operand_encoding_t::flags::reg;
+        pop_op.operands[0].value.r8 = index;
+        _instructions.push_back(pop_op);
+    }
+
+    void instruction_emitter::push_int_register(op_sizes size, i_registers_t index) {
+        basecode::instruction_t push_op;
+        push_op.op = basecode::op_codes::push;
+        push_op.size = size;
+        push_op.operands_count = 1;
+        push_op.operands[0].type =
+            basecode::operand_encoding_t::flags::integer
+            | basecode::operand_encoding_t::flags::reg;
+        push_op.operands[0].value.r8 = index;
+        _instructions.push_back(push_op);
     }
 
 };

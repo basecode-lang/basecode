@@ -62,7 +62,7 @@ namespace basecode {
     void ast_formatter::format_graph_viz() {
         fmt::print("digraph {{\n");
         //fmt::print("rankdir=LR\n");
-        fmt::print("splines=\"line\";\n");
+        fmt::print("\tsplines=\"line\";\n");
         format_graph_viz_node(_root);
         fmt::print("}}\n");
     }
@@ -127,7 +127,7 @@ namespace basecode {
         }
 
         fmt::print(
-            "{}[shape={},label=\"<f0> lhs|<f1> {}{}|<f2> rhs\"{}];\n",
+            "\t{}[shape={},label=\"<f0> lhs|<f1> {}{}|<f2> rhs\"{}];\n",
             node_vertex_name,
             shape,
             node->name(),
@@ -136,7 +136,7 @@ namespace basecode {
         if (node->lhs != nullptr) {
             format_graph_viz_node(node->lhs);
             fmt::print(
-                "{}:f0 -> {}:f1;\n",
+                "\t{}:f0 -> {}:f1;\n",
                 node_vertex_name,
                 get_vertex_name(node->lhs));
         }
@@ -144,7 +144,7 @@ namespace basecode {
         if (node->rhs != nullptr) {
             format_graph_viz_node(node->rhs);
             fmt::print(
-                "{}:f2 -> {}:f1;\n",
+                "\t{}:f2 -> {}:f1;\n",
                 node_vertex_name,
                 get_vertex_name(node->rhs));
         }
@@ -162,7 +162,7 @@ namespace basecode {
             index = 0;
             for (const auto& edge : edges)
                 fmt::print(
-                    "{}:f1 -> {}:f1 [label=\"[{:02}]\"];\n",
+                    "\t{}:f1 -> {}:f1 [label=\"[{:02}]\"];\n",
                     node_vertex_name,
                     edge,
                     index++);
