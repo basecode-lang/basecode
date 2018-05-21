@@ -110,6 +110,10 @@ namespace basecode {
             i_registers_t lhs_index,
             i_registers_t rhs_index);
 
+        void branch_if_lesser(uint64_t address);
+
+        void branch_if_greater(uint64_t address);
+
         void subtract_int_constant_from_register(
             op_sizes size,
             i_registers_t target_index,
@@ -129,6 +133,10 @@ namespace basecode {
         inline instruction_t& operator[](size_t index) {
             return _instructions[index];
         };
+
+        void branch_if_lesser_or_equal(uint64_t address);
+
+        void branch_if_greater_or_equal(uint64_t address);
 
         void jump_subroutine_indirect(i_registers_t index);
 

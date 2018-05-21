@@ -462,6 +462,12 @@ namespace basecode {
         }
 
     private:
+        bool has_overflow(
+            uint64_t lhs,
+            uint64_t rhs,
+            uint64_t result,
+            op_sizes size);
+
         uint64_t set_zoned_value(
             uint64_t source,
             uint64_t value,

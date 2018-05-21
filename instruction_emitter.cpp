@@ -513,4 +513,52 @@ namespace basecode {
         _instructions.push_back(jsr_op);
     }
 
+    void instruction_emitter::branch_if_lesser(uint64_t address) {
+        basecode::instruction_t branch_op;
+        branch_op.op = basecode::op_codes::bl;
+        branch_op.size = basecode::op_sizes::qword;
+        branch_op.operands_count = 1;
+        branch_op.operands[0].type =
+            basecode::operand_encoding_t::flags::integer
+            | basecode::operand_encoding_t::flags::constant;
+        branch_op.operands[0].value.u64 = address;
+        _instructions.push_back(branch_op);
+    }
+
+    void instruction_emitter::branch_if_greater(uint64_t address) {
+        basecode::instruction_t branch_op;
+        branch_op.op = basecode::op_codes::bg;
+        branch_op.size = basecode::op_sizes::qword;
+        branch_op.operands_count = 1;
+        branch_op.operands[0].type =
+            basecode::operand_encoding_t::flags::integer
+            | basecode::operand_encoding_t::flags::constant;
+        branch_op.operands[0].value.u64 = address;
+        _instructions.push_back(branch_op);
+    }
+
+    void instruction_emitter::branch_if_lesser_or_equal(uint64_t address) {
+        basecode::instruction_t branch_op;
+        branch_op.op = basecode::op_codes::ble;
+        branch_op.size = basecode::op_sizes::qword;
+        branch_op.operands_count = 1;
+        branch_op.operands[0].type =
+            basecode::operand_encoding_t::flags::integer
+            | basecode::operand_encoding_t::flags::constant;
+        branch_op.operands[0].value.u64 = address;
+        _instructions.push_back(branch_op);
+    }
+
+    void instruction_emitter::branch_if_greater_or_equal(uint64_t address) {
+        basecode::instruction_t branch_op;
+        branch_op.op = basecode::op_codes::bge;
+        branch_op.size = basecode::op_sizes::qword;
+        branch_op.operands_count = 1;
+        branch_op.operands[0].type =
+            basecode::operand_encoding_t::flags::integer
+            | basecode::operand_encoding_t::flags::constant;
+        branch_op.operands[0].value.u64 = address;
+        _instructions.push_back(branch_op);
+    }
+
 };

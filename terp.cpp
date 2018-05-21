@@ -560,12 +560,16 @@ namespace basecode {
             case op_codes::inc: {
                 uint8_t reg = inst.operands[0].value.r8;
 
-                uint64_t value = _registers.i[reg] + 1;
+                uint64_t lhs_value = _registers.i[reg];
+                uint64_t rhs_value = 1;
+                uint64_t value = lhs_value + rhs_value;
                 if (set_target_operand_value(r, inst, reg, value))
                     return false;
 
+                _registers.flags(
+                    register_file_t::flags_t::overflow,
+                    has_overflow(lhs_value, rhs_value, value, inst.size));
                 _registers.flags(register_file_t::flags_t::zero, value == 0);
-                _registers.flags(register_file_t::flags_t::overflow, false);
                 _registers.flags(register_file_t::flags_t::subtract, false);
                 _registers.flags(register_file_t::flags_t::carry, has_carry(value, inst.size));
                 _registers.flags(register_file_t::flags_t::negative, is_negative(value, inst.size));
@@ -575,12 +579,16 @@ namespace basecode {
             case op_codes::dec: {
                 uint8_t reg = inst.operands[0].value.r8;
 
-                uint64_t value = _registers.i[reg] - 1;
+                uint64_t lhs_value = _registers.i[reg];
+                uint64_t rhs_value = 1;
+                uint64_t value = lhs_value - rhs_value;
                 if (set_target_operand_value(r, inst, reg, value))
                     return false;
 
+                _registers.flags(
+                    register_file_t::flags_t::overflow,
+                    has_overflow(lhs_value, rhs_value, value, inst.size));
                 _registers.flags(register_file_t::flags_t::subtract, true);
-                _registers.flags(register_file_t::flags_t::overflow, false);
                 _registers.flags(register_file_t::flags_t::zero, value == 0);
                 _registers.flags(register_file_t::flags_t::carry, has_carry(value, inst.size));
                 _registers.flags(register_file_t::flags_t::negative, is_negative(value, inst.size));
@@ -599,8 +607,10 @@ namespace basecode {
                 if (!set_target_operand_value(r, inst, 0, sum_result))
                     return false;
 
+                _registers.flags(
+                    register_file_t::flags_t::overflow,
+                    has_overflow(lhs_value, rhs_value, sum_result, inst.size));
                 _registers.flags(register_file_t::flags_t::subtract, false);
-                _registers.flags(register_file_t::flags_t::overflow, false);
                 _registers.flags(register_file_t::flags_t::zero, sum_result == 0);
                 _registers.flags(register_file_t::flags_t::carry, has_carry(sum_result, inst.size));
                 _registers.flags(register_file_t::flags_t::negative, is_negative(sum_result, inst.size));
@@ -620,10 +630,12 @@ namespace basecode {
                 if (!set_target_operand_value(r, inst, 0, subtraction_result))
                     return false;
 
+                _registers.flags(
+                    register_file_t::flags_t::overflow,
+                    has_overflow(lhs_value, rhs_value, subtraction_result, inst.size));
                 _registers.flags(register_file_t::flags_t::subtract, true);
                 _registers.flags(register_file_t::flags_t::carry, rhs_value > lhs_value);
                 _registers.flags(register_file_t::flags_t::zero, subtraction_result == 0);
-                _registers.flags(register_file_t::flags_t::overflow, rhs_value > lhs_value);
                 _registers.flags(register_file_t::flags_t::negative, is_negative(subtraction_result, inst.size));
                 break;
             }
@@ -640,9 +652,11 @@ namespace basecode {
                 if (!set_target_operand_value(r, inst, 0, product_result))
                     return false;
 
+                _registers.flags(
+                    register_file_t::flags_t::overflow,
+                    has_overflow(lhs_value, rhs_value, product_result, inst.size));
                 _registers.flags(register_file_t::flags_t::carry, false);
                 _registers.flags(register_file_t::flags_t::subtract, false);
-                _registers.flags(register_file_t::flags_t::overflow, false);
                 _registers.flags(register_file_t::flags_t::zero, product_result == 0);
                 _registers.flags(register_file_t::flags_t::negative, is_negative(product_result, inst.size));
                 break;
@@ -663,9 +677,11 @@ namespace basecode {
                 if (!set_target_operand_value(r, inst, 0, result))
                     return false;
 
+                _registers.flags(
+                    register_file_t::flags_t::overflow,
+                    has_overflow(lhs_value, rhs_value, result, inst.size));
                 _registers.flags(register_file_t::flags_t::carry, false);
                 _registers.flags(register_file_t::flags_t::subtract, false);
-                _registers.flags(register_file_t::flags_t::overflow, false);
                 _registers.flags(register_file_t::flags_t::zero, result == 0);
                 _registers.flags(register_file_t::flags_t::negative, is_negative(result, inst.size));
 
@@ -684,6 +700,9 @@ namespace basecode {
                 if (!set_target_operand_value(r, inst, 0, result))
                     return false;
 
+                _registers.flags(
+                    register_file_t::flags_t::overflow,
+                    has_overflow(lhs_value, rhs_value, result, inst.size));
                 _registers.flags(register_file_t::flags_t::carry, false);
                 _registers.flags(register_file_t::flags_t::subtract, false);
                 _registers.flags(register_file_t::flags_t::overflow, false);
@@ -949,9 +968,11 @@ namespace basecode {
 
                 uint64_t result = lhs_value - rhs_value;
 
+                _registers.flags(
+                    register_file_t::flags_t::overflow,
+                    has_overflow(lhs_value, rhs_value, result, inst.size));
+                _registers.flags(register_file_t::flags_t::subtract, true);
                 _registers.flags(register_file_t::flags_t::zero, result == 0);
-                _registers.flags(register_file_t::flags_t::subtract, false);
-                _registers.flags(register_file_t::flags_t::overflow, rhs_value > lhs_value);
                 _registers.flags(register_file_t::flags_t::carry, has_carry(result, inst.size));
                 _registers.flags(register_file_t::flags_t::negative, is_negative(result, inst.size));
 
@@ -1051,7 +1072,7 @@ namespace basecode {
                 if (!get_operand_value(r, inst, 0, address))
                     return false;
 
-                if (_registers.flags(register_file_t::flags_t::zero) == 0) {
+                if (!_registers.flags(register_file_t::flags_t::zero)) {
                     _registers.pc = address;
                 }
 
@@ -1059,23 +1080,61 @@ namespace basecode {
             }
             case op_codes::beq: {
                 uint64_t address;
+
                 if (!get_operand_value(r, inst, 0, address))
                     return false;
-                if (_registers.flags(register_file_t::flags_t::zero) != 0) {
+
+                if (_registers.flags(register_file_t::flags_t::zero)) {
+                    _registers.pc = address;
+                }
+
+                break;
+            }
+            case op_codes::bg: {
+                uint64_t address;
+
+                if (!get_operand_value(r, inst, 0, address))
+                    return false;
+
+                if (!_registers.flags(register_file_t::flags_t::carry)
+                &&  !_registers.flags(register_file_t::flags_t::zero)) {
+                    _registers.pc = address;
+                }
+
+                break;
+            }
+            case op_codes::bge: {
+                uint64_t address;
+
+                if (!get_operand_value(r, inst, 0, address))
+                    return false;
+
+                if (!_registers.flags(register_file_t::flags_t::carry)) {
                     _registers.pc = address;
                 }
                 break;
             }
-            case op_codes::bg: {
-                break;
-            }
-            case op_codes::bge: {
-                break;
-            }
             case op_codes::bl: {
+                uint64_t address;
+
+                if (!get_operand_value(r, inst, 0, address))
+                    return false;
+
+                if (_registers.flags(register_file_t::flags_t::carry)
+                ||  _registers.flags(register_file_t::flags_t::zero)) {
+                    _registers.pc = address;
+                }
                 break;
             }
             case op_codes::ble: {
+                uint64_t address;
+
+                if (!get_operand_value(r, inst, 0, address))
+                    return false;
+
+                if (_registers.flags(register_file_t::flags_t::carry)) {
+                    _registers.pc = address;
+                }
                 break;
             }
             case op_codes::jsr: {
@@ -1587,6 +1646,22 @@ namespace basecode {
                 break;
         }
         return result;
+    }
+
+    bool terp::has_overflow(uint64_t lhs, uint64_t rhs, uint64_t result, op_sizes size) {
+        switch (size) {
+            case op_sizes::byte:
+                return ((~(lhs ^ rhs)) & (lhs ^ result) & mask_byte_negative) != 0;
+            case op_sizes::word:
+                return ((~(lhs ^ rhs)) & (lhs ^ result) & mask_word_negative) != 0;
+            case op_sizes::dword:
+                return ((~(lhs ^ rhs)) & (lhs ^ result) & mask_dword_negative) != 0;
+            case op_sizes::qword:
+            default: {
+                return ((~(lhs ^ rhs)) & (lhs ^ result) & mask_qword_negative) != 0;
+            }
+        }
+        return false;
     }
 
 };

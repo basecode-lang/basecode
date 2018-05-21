@@ -31,6 +31,46 @@ static bool run_terp(basecode::result& r, basecode::terp& terp) {
     return true;
 }
 
+static bool test_branches(basecode::result& r, basecode::terp& terp) {
+    basecode::instruction_emitter main_emitter(terp.program_start);
+    main_emitter.move_int_constant_to_register(basecode::op_sizes::byte, 10, basecode::i_registers_t::i0);
+    main_emitter.move_int_constant_to_register(basecode::op_sizes::byte, 5, basecode::i_registers_t::i1);
+    main_emitter.compare_int_register_to_register(
+        basecode::op_sizes::byte,
+        basecode::i_registers_t::i0,
+        basecode::i_registers_t::i1);
+    main_emitter.branch_if_greater(0);
+    main_emitter.push_int_constant(basecode::op_sizes::byte, 1);
+    main_emitter.trap(1);
+
+    main_emitter[3].patch_branch_address(main_emitter.end_address());
+    main_emitter.compare_int_register_to_register(
+        basecode::op_sizes::byte,
+        basecode::i_registers_t::i1,
+        basecode::i_registers_t::i0);
+    main_emitter.branch_if_lesser(0);
+    main_emitter.push_int_constant(basecode::op_sizes::byte, 2);
+    main_emitter.trap(1);
+
+    main_emitter[7].patch_branch_address(main_emitter.end_address());
+    main_emitter.push_int_constant(basecode::op_sizes::byte, 10);
+    main_emitter.dup();
+    main_emitter.trap(1);
+    main_emitter.pop_int_register(basecode::op_sizes::byte, basecode::i_registers_t::i0);
+
+    main_emitter.exit();
+    main_emitter.encode(r, terp);
+
+    fmt::print("\nASSEMBLY LISTING:\n{}\n", terp.disassemble(r, terp.program_start));
+
+    auto result = run_terp(r, terp);
+    if (terp.register_file().i[0] != 10) {
+        r.add_message("T001", "I0 should contain 10.", true);
+    }
+
+    return result;
+}
+
 static bool test_square(basecode::result& r, basecode::terp& terp) {
     basecode::instruction_emitter bootstrap_emitter(terp.program_start);
     bootstrap_emitter.jump_direct(0);
@@ -231,6 +271,7 @@ static int terp_tests() {
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
     fmt::print("terp startup time (in microseconds): {}\n\n", duration);
 
+    time_test_function(r, terp, "test_branches", test_branches);
     time_test_function(r, terp, "test_square", test_square);
     time_test_function(r, terp, "test_fibonacci", test_fibonacci);
 
