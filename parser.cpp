@@ -7,6 +7,62 @@ namespace basecode {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    ast_node_shared_ptr struct_prefix_parser::parse(
+            result& r,
+            parser* parser,
+            token_t& token) {
+        return parser->ast_builder()->struct_node(token);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    ast_node_shared_ptr enum_prefix_parser::parse(
+            result& r,
+            parser* parser,
+            token_t& token) {
+        return parser->ast_builder()->enum_node(token);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    ast_node_shared_ptr for_in_prefix_parser::parse(
+            result& r,
+            parser* parser,
+            token_t& token) {
+        auto for_node = parser->ast_builder()->for_in_node();
+        for_node->lhs = parser->parse_expression(r, 0);
+
+        token_t in_token;
+        in_token.type = token_types_t::in_literal;
+        if (!parser->expect(r, in_token))
+            return nullptr;
+
+        for_node->rhs = parser->parse_expression(r, 0);
+        for_node->children.push_back(parser->parse_expression(r, 0));
+
+        return for_node;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    ast_node_shared_ptr return_prefix_parser::parse(
+            result& r,
+            parser* parser,
+            token_t& token) {
+        auto return_node = parser->ast_builder()->return_node();
+
+        while (true) {
+            return_node->rhs->children.push_back(parser->parse_expression(r, 0));
+            if (!parser->peek(token_types_t::comma))
+                break;
+            parser->consume();
+        }
+
+        return return_node;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
     ast_node_shared_ptr if_prefix_parser::parse(
             result& r,
             parser* parser,
@@ -37,7 +93,7 @@ namespace basecode {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    ast_node_shared_ptr type_decl_prefix_parser::parse(
+    ast_node_shared_ptr type_identifier_prefix_parser::parse(
             result& r,
             parser* parser,
             token_t& token) {
@@ -224,11 +280,11 @@ namespace basecode {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    ast_node_shared_ptr variable_decl_prefix_parser::parse(
+    ast_node_shared_ptr symbol_reference_prefix_parser::parse(
             result& r,
             parser* parser,
             token_t& token) {
-        return parser->ast_builder()->variable_declaration_node(token);
+        return parser->ast_builder()->symbol_reference_node(token);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -264,22 +320,22 @@ namespace basecode {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    ast_node_shared_ptr variable_reference_infix_parser::parse(
+    ast_node_shared_ptr symbol_reference_infix_parser::parse(
             result& r,
             parser* parser,
             const ast_node_shared_ptr& lhs,
             token_t& token) {
-        lhs->rhs = parser->ast_builder()->variable_reference_node(token);
+        lhs->rhs = parser->ast_builder()->symbol_reference_node(token);
         return lhs;
     }
 
-    precedence_t variable_reference_infix_parser::precedence() const {
+    precedence_t symbol_reference_infix_parser::precedence() const {
         return precedence_t::variable;
     }
 
     ///////////////////////////////////////////////////////////////////////////
 
-    ast_node_shared_ptr type_decl_infix_parser::parse(
+    ast_node_shared_ptr type_identifier_infix_parser::parse(
             result& r,
             parser* parser,
             const ast_node_shared_ptr& lhs,
@@ -319,7 +375,7 @@ namespace basecode {
         return lhs;
     }
 
-    precedence_t type_decl_infix_parser::precedence() const {
+    precedence_t type_identifier_infix_parser::precedence() const {
         return precedence_t::type;
     }
 
@@ -365,6 +421,15 @@ namespace basecode {
 
     precedence_t assignment_infix_parser::precedence() const {
         return precedence_t::assignment;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    ast_node_shared_ptr directive_prefix_parser::parse(
+            result& r,
+            parser* parser,
+            token_t& token) {
+        return parser->ast_builder()->directive_node(token);
     }
 
     ///////////////////////////////////////////////////////////////////////////

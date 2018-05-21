@@ -22,6 +22,7 @@ namespace basecode {
         fn_call,
         statement,
         attribute,
+        directive,
         assignment,
         expression,
         basic_block,
@@ -29,7 +30,6 @@ namespace basecode {
         none_literal,
         null_literal,
         empty_literal,
-        for_statement,
         block_comment,
         argument_list,
         fn_expression,
@@ -46,15 +46,18 @@ namespace basecode {
         break_statement,
         with_expression,
         type_identifier,
+        enum_expression,
+        symbol_reference,
+        return_statement,
         extend_statement,
+        for_in_statement,
         character_literal,
         array_constructor,
         elseif_expression,
         switch_expression,
+        struct_expression,
         continue_statement,
-        variable_reference,
         namespace_statement,
-        variable_declaration,
     };
 
     static inline std::unordered_map<ast_node_types_t, std::string> s_node_type_names = {
@@ -62,6 +65,7 @@ namespace basecode {
         {ast_node_types_t::fn_call, "fn_call"},
         {ast_node_types_t::statement, "statement"},
         {ast_node_types_t::attribute, "attribute"},
+        {ast_node_types_t::directive, "directive"},
         {ast_node_types_t::assignment, "assignment"},
         {ast_node_types_t::expression, "expression"},
         {ast_node_types_t::basic_block, "basic_block"},
@@ -69,7 +73,6 @@ namespace basecode {
         {ast_node_types_t::none_literal, "none_literal"},
         {ast_node_types_t::null_literal, "null_literal"},
         {ast_node_types_t::empty_literal, "empty_literal"},
-        {ast_node_types_t::for_statement, "for_statement"},
         {ast_node_types_t::block_comment, "block_comment"},
         {ast_node_types_t::argument_list, "argument_list"},
         {ast_node_types_t::fn_expression, "fn_expression"},
@@ -77,6 +80,7 @@ namespace basecode {
         {ast_node_types_t::number_literal, "number_literal"},
         {ast_node_types_t::string_literal, "string_literal"},
         {ast_node_types_t::unary_operator, "unary_operator"},
+        {ast_node_types_t::enum_expression, "enum_expression"},
         {ast_node_types_t::binary_operator, "binary_operator"},
         {ast_node_types_t::boolean_literal, "boolean_literal"},
         {ast_node_types_t::map_constructor, "map_constructor"},
@@ -86,15 +90,17 @@ namespace basecode {
         {ast_node_types_t::break_statement, "break_statement"},
         {ast_node_types_t::with_expression, "with_expression"},
         {ast_node_types_t::type_identifier, "type_identifier"},
+        {ast_node_types_t::return_statement, "return_statement"},
+        {ast_node_types_t::symbol_reference, "symbol_reference"},
         {ast_node_types_t::extend_statement, "extend_statement"},
+        {ast_node_types_t::for_in_statement, "for_in_statement"},
+        {ast_node_types_t::switch_expression, "switch_statement"},
+        {ast_node_types_t::struct_expression, "struct_expression"},
         {ast_node_types_t::character_literal, "character_literal"},
         {ast_node_types_t::array_constructor, "array_constructor"},
         {ast_node_types_t::elseif_expression, "elseif_expression"},
-        {ast_node_types_t::switch_expression, "switch_statement"},
         {ast_node_types_t::continue_statement, "continue_statement"},
-        {ast_node_types_t::variable_reference, "variable_reference"},
         {ast_node_types_t::namespace_statement, "namespace_statement"},
-        {ast_node_types_t::variable_declaration, "variable_declaration"},
     };
     
     struct ast_node_t {
@@ -162,6 +168,10 @@ namespace basecode {
 
         ast_node_t* current_scope() const;
 
+        ast_node_shared_ptr return_node();
+
+        ast_node_shared_ptr for_in_node();
+
         ast_node_shared_ptr program_node();
 
         ast_node_shared_ptr fn_call_node();
@@ -187,9 +197,15 @@ namespace basecode {
 
         void push_scope(const ast_node_shared_ptr& node);
 
+        ast_node_shared_ptr enum_node(const token_t& token);
+
         ast_node_shared_ptr break_node(const token_t& token);
 
+        ast_node_shared_ptr struct_node(const token_t& token);
+
         ast_node_shared_ptr continue_node(const token_t& token);
+
+        ast_node_shared_ptr directive_node(const token_t& token);
 
         ast_node_shared_ptr attribute_node(const token_t& token);
 
@@ -213,11 +229,9 @@ namespace basecode {
 
         ast_node_shared_ptr boolean_literal_node(const token_t& token);
 
+        ast_node_shared_ptr symbol_reference_node(const token_t& token);
+
         ast_node_shared_ptr character_literal_node(const token_t& token);
-
-        ast_node_shared_ptr variable_reference_node(const token_t& token);
-
-        ast_node_shared_ptr variable_declaration_node(const token_t& token);
 
     private:
         std::stack<ast_node_shared_ptr> _scope_stack {};

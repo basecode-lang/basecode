@@ -420,14 +420,14 @@ static int compiler_tests() {
         "\n"
         "fib := fn(n:u64):u64 {\n"
         "    if n == 0 || n == 1 {\n"
-        "        n;\n"
+        "        return n;\n"
         "    } else {\n"
-        "        fib((n - 1) + fib(n - 2));\n"
+        "        return fib((n - 1) + fib(n - 2));\n"
         "    };\n"
         "};\n"
         "\n"
         "main := fn():u64 {\n"
-        "    fib(100);\n"
+        "    return fib(100);\n"
         "};");
 
     std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();

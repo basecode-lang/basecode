@@ -7,6 +7,9 @@ namespace basecode {
         // attribute
         {'@', std::bind(&lexer::attribute, std::placeholders::_1, std::placeholders::_2)},
 
+        // directive
+        {'#', std::bind(&lexer::directive, std::placeholders::_1, std::placeholders::_2)},
+
         // add
         {'+', std::bind(&lexer::plus, std::placeholders::_1, std::placeholders::_2)},
 
@@ -88,6 +91,9 @@ namespace basecode {
         // string literal
         {'"', std::bind(&lexer::string_literal, std::placeholders::_1, std::placeholders::_2)},
 
+        // return literal
+        {'r', std::bind(&lexer::return_literal, std::placeholders::_1, std::placeholders::_2)},
+
         // true/false literals
         {'t', std::bind(&lexer::true_literal, std::placeholders::_1, std::placeholders::_2)},
         {'f', std::bind(&lexer::false_literal, std::placeholders::_1, std::placeholders::_2)},
@@ -97,6 +103,9 @@ namespace basecode {
         {'n', std::bind(&lexer::none_literal, std::placeholders::_1, std::placeholders::_2)},
         {'n', std::bind(&lexer::ns_literal, std::placeholders::_1, std::placeholders::_2)},
         {'e', std::bind(&lexer::empty_literal, std::placeholders::_1, std::placeholders::_2)},
+
+        // enum literal
+        {'e', std::bind(&lexer::enum_literal, std::placeholders::_1, std::placeholders::_2)},
 
         // if/else if/else literals
         {'i', std::bind(&lexer::if_literal, std::placeholders::_1, std::placeholders::_2)},
@@ -132,6 +141,9 @@ namespace basecode {
 
         // read_only literal
         {'r', std::bind(&lexer::read_only_literal, std::placeholders::_1, std::placeholders::_2)},
+
+        // struct literal
+        {'s', std::bind(&lexer::struct_literal, std::placeholders::_1, std::placeholders::_2)},
 
         // while literal
         {'w', std::bind(&lexer::while_literal, std::placeholders::_1, std::placeholders::_2)},
@@ -290,6 +302,15 @@ namespace basecode {
         }
     }
 
+    bool lexer::enum_literal(token_t& token) {
+        if (match_literal("enum")) {
+            token.type = token_types_t::enum_literal;
+            token.value = "enum";
+            return true;
+        }
+        return false;
+    }
+
     bool lexer::alias_literal(token_t& token) {
         if (match_literal("alias")) {
             token.type = token_types_t::alias_literal;
@@ -312,6 +333,15 @@ namespace basecode {
         if (match_literal("while")) {
             token.type = token_types_t::while_literal;
             token.value = "while";
+            return true;
+        }
+        return false;
+    }
+
+    bool lexer::struct_literal(token_t& token) {
+        if (match_literal("struct")) {
+            token.type = token_types_t::struct_literal;
+            token.value = "struct";
             return true;
         }
         return false;
@@ -495,6 +525,18 @@ namespace basecode {
             if (token.value.empty())
                 return false;
             token.type = token_types_t::attribute;
+            return true;
+        }
+        return false;
+    }
+
+    bool lexer::directive(token_t& token) {
+        auto ch = read();
+        if (ch == '#') {
+            token.value = read_identifier();
+            if (token.value.empty())
+                return false;
+            token.type = token_types_t::directive;
             return true;
         }
         return false;
@@ -777,6 +819,15 @@ namespace basecode {
                 token.value = "::";
                 return true;
             }
+        }
+        return false;
+    }
+
+    bool lexer::return_literal(token_t& token) {
+        if (match_literal("return")) {
+            token.type = token_types_t::return_literal;
+            token.value = "return";
+            return true;
         }
         return false;
     }

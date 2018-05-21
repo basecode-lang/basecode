@@ -45,6 +45,8 @@ namespace basecode {
 
         bool attribute(token_t& token);
 
+        bool directive(token_t& token);
+
         bool fn_literal(token_t& token);
 
         bool in_literal(token_t& token);
@@ -62,6 +64,8 @@ namespace basecode {
         bool for_literal(token_t& token);
 
         bool right_paren(token_t& token);
+
+        bool enum_literal(token_t& token);
 
         bool else_literal(token_t& token);
 
@@ -88,6 +92,10 @@ namespace basecode {
         bool empty_literal(token_t& token);
 
         bool alias_literal(token_t& token);
+
+        bool struct_literal(token_t& token);
+
+        bool return_literal(token_t& token);
 
         bool number_literal(token_t& token);
 

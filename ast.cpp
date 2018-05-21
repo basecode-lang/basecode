@@ -86,6 +86,13 @@ namespace basecode {
         return top;
     }
 
+    ast_node_shared_ptr ast_builder::return_node() {
+        auto node = std::make_shared<ast_node_t>();
+        node->type = ast_node_types_t::return_statement;
+        node->rhs = argument_list_node();
+        return node;
+    }
+
     ast_node_t* ast_builder::current_scope() const {
         if (_scope_stack.empty())
             return nullptr;
@@ -115,6 +122,12 @@ namespace basecode {
         } else {
             return basic_block_node();
         }
+    }
+
+    ast_node_shared_ptr ast_builder::for_in_node() {
+        auto node = std::make_shared<ast_node_t>();
+        node->type = ast_node_types_t::for_in_statement;
+        return node;
     }
 
     ast_node_shared_ptr ast_builder::fn_call_node() {
@@ -178,6 +191,13 @@ namespace basecode {
         _scope_stack.push(node);
     }
 
+    ast_node_shared_ptr ast_builder::enum_node(const token_t& token) {
+        auto node = std::make_shared<ast_node_t>();
+        node->token = token;
+        node->type = ast_node_types_t::enum_expression;
+        return node;
+    }
+
     ast_node_shared_ptr ast_builder::break_node(const token_t& token) {
         auto node = std::make_shared<ast_node_t>();
         node->token = token;
@@ -185,10 +205,24 @@ namespace basecode {
         return node;
     }
 
+    ast_node_shared_ptr ast_builder::struct_node(const token_t& token) {
+        auto node = std::make_shared<ast_node_t>();
+        node->token = token;
+        node->type = ast_node_types_t::struct_expression;
+        return node;
+    }
+
     ast_node_shared_ptr ast_builder::continue_node(const token_t& token) {
         auto node = std::make_shared<ast_node_t>();
         node->token = token;
         node->type = ast_node_types_t::continue_statement;
+        return node;
+    }
+
+    ast_node_shared_ptr ast_builder::directive_node(const token_t& token) {
+        auto node = std::make_shared<ast_node_t>();
+        node->token = token;
+        node->type = ast_node_types_t::directive;
         return node;
     }
 
@@ -269,24 +303,17 @@ namespace basecode {
         return node;
     }
 
+    ast_node_shared_ptr ast_builder::symbol_reference_node(const token_t& token) {
+        auto node = std::make_shared<ast_node_t>();
+        node->token = token;
+        node->type = ast_node_types_t::symbol_reference;
+        return node;
+    }
+
     ast_node_shared_ptr ast_builder::character_literal_node(const token_t& token) {
         auto node = std::make_shared<ast_node_t>();
         node->token = token;
         node->type = ast_node_types_t::character_literal;
-        return node;
-    }
-
-    ast_node_shared_ptr ast_builder::variable_reference_node(const token_t& token) {
-        auto node = std::make_shared<ast_node_t>();
-        node->token = token;
-        node->type = ast_node_types_t::variable_reference;
-        return node;
-    }
-
-    ast_node_shared_ptr ast_builder::variable_declaration_node(const token_t& token) {
-        auto node = std::make_shared<ast_node_t>();
-        node->token = token;
-        node->type = ast_node_types_t::variable_declaration;
         return node;
     }
 
