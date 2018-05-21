@@ -1190,6 +1190,45 @@ namespace basecode {
 
                 break;
             }
+            case op_codes::swap: {
+                uint64_t value;
+
+                if (!get_operand_value(r, inst, 1, value))
+                    return false;
+
+                uint64_t result = 0;
+                switch (inst.size) {
+                    case op_sizes::byte: {
+                        uint8_t byte_value = static_cast<uint8_t>(value);
+                        uint8_t upper_nybble = get_upper_nybble(byte_value);
+                        uint8_t lower_nybble = get_lower_nybble(byte_value);
+                        byte_value = set_upper_nybble(byte_value, lower_nybble);
+                        result = set_lower_nybble(byte_value, upper_nybble);
+                        break;
+                    }
+                    case op_sizes::word:
+                        result = endian_swap_word(static_cast<uint16_t>(value));
+                        break;
+                    case op_sizes::dword:
+                        result = endian_swap_dword(static_cast<uint32_t>(value));
+                        break;
+                    case op_sizes::qword:
+                    default:
+                        result = endian_swap_qword(value);
+                        break;
+                }
+
+                if (!set_target_operand_value(r, inst, 0, result))
+                    return false;
+
+                _registers.flags(register_file_t::flags_t::carry, false);
+                _registers.flags(register_file_t::flags_t::subtract, false);
+                _registers.flags(register_file_t::flags_t::overflow, false);
+                _registers.flags(register_file_t::flags_t::zero, result == 0);
+                _registers.flags(register_file_t::flags_t::negative, is_negative(result, inst.size));
+
+                break;
+            }
             case op_codes::trap: {
                 uint64_t index;
 
@@ -1205,6 +1244,11 @@ namespace basecode {
                 break;
             }
             case op_codes::meta: {
+                uint64_t meta_data_size;
+
+                if (!get_operand_value(r, inst, 0, meta_data_size))
+                    return false;
+
                 break;
             }
             case op_codes::exit: {
@@ -1281,6 +1325,10 @@ namespace basecode {
     void terp::heap_vector(uint8_t index, uint64_t address) {
         size_t heap_vector_address = heap_vector_table_start + (sizeof(uint64_t) * index);
         *qword_ptr(heap_vector_address) = address;
+    }
+
+    const meta_information_t& terp::meta_information() const {
+        return _meta_information;
     }
 
     std::string terp::disassemble(const instruction_t& inst) const {

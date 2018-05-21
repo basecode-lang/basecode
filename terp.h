@@ -232,6 +232,7 @@ namespace basecode {
         rts,
         jmp,
         swi,
+        swap,
         trap,
         meta,
         exit
@@ -312,7 +313,7 @@ namespace basecode {
         operand_encoding_t operands[4];
     };
 
-    struct debug_information_t {
+    struct meta_information_t {
         uint32_t line_number;
         uint16_t column_number;
         std::string symbol;
@@ -419,6 +420,8 @@ namespace basecode {
         void heap_vector(uint8_t index, uint64_t address);
 
         void dump_heap(uint64_t offset, size_t size = 256);
+
+        const meta_information_t& meta_information() const;
 
         std::string disassemble(result& r, uint64_t address);
 
@@ -549,6 +552,7 @@ namespace basecode {
         uint8_t* _heap = nullptr;
         instruction_cache _icache;
         register_file_t _registers {};
+        meta_information_t _meta_information {};
         std::unordered_map<uint8_t, trap_callable> _traps {};
     };
 

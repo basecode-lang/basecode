@@ -1,7 +1,81 @@
+NOTES
+------------------------
+- use elfio for read/writing obj/executable files
+
+- dyncall library in C
+- how are FFI prototypes done?
+- what does a module look like?  how do we import other namespaces?
+    @foreign ["name"] attribute on function prototype?
+
+- are the compiler directives bootstrapped using the @directive attribute so
+  therefore all implemented in Basecode?
+
+- should alloc and free be a part of the interpreter?
+    --
+      default arena-based allocate within the heap
+
+    * alloc
+    * free
+    --
+
 Basecode Bootstrap Tasks
 ------------------------
+- implement block comments /* */ in the lexer/parser
 
+- implement namespaces in the parser
 
+- implement enumerations in lexer/parser
+
+- implement defer in parser (executed in reverse order)
+
+- implement object/pointer dereference with . operator
+
+- implement with in parser
+
+- fix precedence of @attribute in parser
+
+- what is the type of a function?
+
+- require return statement
+    * multiple return values
+
+- need to bootstrap support functionality into the heap:
+    * compiler directives
+        #eval
+
+        #assert
+            number_argument
+            argument_types
+            argument_values
+            filename
+            line_number
+
+            returns bool
+
+        #check
+
+    * attributes
+        @directive name {func};
+        @entry_point {func};
+
+    * char (for character literals)
+    * address_of
+    * type_of
+    * size_of
+    * deep_copy
+    * transaction
+
+    --
+      does this just return an array of integers?
+      is this an AST "function" that gets expanded in place?
+
+    * range
+    --
+
+    * string support
+    * array support
+
+- simplify syntax and type system
 
 DONE
 ----

@@ -26,6 +26,17 @@ namespace basecode {
 
         size_t index() const;
 
+        void meta(
+            uint32_t line,
+            uint16_t column,
+            const std::string& file_name,
+            const std::string& symbol_name);
+
+        void swap_int_register(
+            op_sizes size,
+            i_registers_t target_index,
+            i_registers_t source_index);
+
         void swi(uint8_t index);
 
         void trap(uint8_t index);
@@ -149,6 +160,7 @@ namespace basecode {
     private:
         uint64_t _start_address = 0;
         std::vector<instruction_t> _instructions {};
+        std::vector<meta_information_t> _meta_information_list {};
     };
 
 };

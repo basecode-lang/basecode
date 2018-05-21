@@ -7,6 +7,26 @@ namespace basecode {
             uint64_t address) : _start_address(address) {
     }
 
+    void instruction_emitter::meta(
+            uint32_t line,
+            uint16_t column,
+            const std::string& file_name,
+            const std::string& symbol_name) {
+        basecode::instruction_t meta_op;
+        meta_op.op = basecode::op_codes::meta;
+        meta_op.size = basecode::op_sizes::word;
+        meta_op.operands_count = 1;
+        meta_op.operands[0].type = basecode::operand_encoding_t::flags::integer;
+        meta_op.operands[0].value.u64 = 6 + file_name.length() + symbol_name.length();
+        _meta_information_list.push_back(meta_information_t{
+            .line_number = line,
+            .symbol = symbol_name,
+            .column_number = column,
+            .source_file = file_name,
+        });
+        _instructions.push_back(meta_op);
+    }
+
     void instruction_emitter::nop() {
         basecode::instruction_t no_op;
         no_op.op = basecode::op_codes::nop;
@@ -44,6 +64,25 @@ namespace basecode {
 
     size_t instruction_emitter::index() const {
         return _instructions.size() - 1;
+    }
+
+    void instruction_emitter::swap_int_register(
+            op_sizes size,
+            i_registers_t target_index,
+            i_registers_t source_index) {
+        basecode::instruction_t swap_op;
+        swap_op.op = basecode::op_codes::swap;
+        swap_op.size = size;
+        swap_op.operands_count = 2;
+        swap_op.operands[0].type =
+            basecode::operand_encoding_t::flags::integer
+            | basecode::operand_encoding_t::flags::reg;
+        swap_op.operands[0].value.r8 = target_index;
+        swap_op.operands[1].type =
+            basecode::operand_encoding_t::flags::integer
+            | basecode::operand_encoding_t::flags::reg;
+        swap_op.operands[1].value.r8 = source_index;
+        _instructions.push_back(swap_op);
     }
 
     void instruction_emitter::swi(uint8_t index) {
