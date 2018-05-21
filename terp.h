@@ -166,6 +166,7 @@ namespace basecode {
             overflow = 0b0000000000000000000000000000000000000000000000000000000000000100,
             negative = 0b0000000000000000000000000000000000000000000000000000000000001000,
             extended = 0b0000000000000000000000000000000000000000000000000000000000010000,
+            subtract = 0b0000000000000000000000000000000000000000000000000000000000100000,
         };
 
         bool flags(flags_t f) const {
@@ -347,6 +348,20 @@ namespace basecode {
     public:
         using trap_callable = std::function<void (terp*)>;
 
+        static constexpr uint64_t mask_byte        = 0b0000000000000000000000000000000000000000000000000000000011111111;
+        static constexpr uint64_t mask_byte_clear  = ~mask_byte;
+
+        static constexpr uint64_t mask_word        = 0b0000000000000000000000000000000000000000000000001111111111111111;
+        static constexpr uint64_t mask_word_clear  = ~mask_word;
+
+        static constexpr uint64_t mask_dword       = 0b0000000000000000000000000000000011111111111111111111111111111111;
+        static constexpr uint64_t mask_dword_clear = ~mask_dword;
+
+        static constexpr uint64_t mask_byte_negative  = 0b0000000000000000000000000000000000000000000000000000000010000000;
+        static constexpr uint64_t mask_word_negative  = 0b0000000000000000000000000000000000000000000000001000000000000000;
+        static constexpr uint64_t mask_dword_negative = 0b0000000000000000000000000000000010000000000000000000000000000000;
+        static constexpr uint64_t mask_qword_negative = 0b1000000000000000000000000000000000000000000000000000000000000000;
+
         static constexpr size_t interrupt_vector_table_start = 0;
         static constexpr size_t interrupt_vector_table_size = 16;
         static constexpr size_t interrupt_vector_table_end = interrupt_vector_table_start +
@@ -412,29 +427,29 @@ namespace basecode {
         void register_trap(uint8_t index, const trap_callable& callable);
 
     protected:
-        bool set_target_operand_value(
-            result& r,
-            const instruction_t& instruction,
-            uint8_t operand_index,
-            uint64_t value);
-
-        bool set_target_operand_value(
-            result& r,
-            const instruction_t& instruction,
-            uint8_t operand_index,
-            double value);
-
         bool get_operand_value(
             result& r,
-            const instruction_t& instruction,
+            const instruction_t& inst,
             uint8_t operand_index,
             uint64_t& value) const;
 
         bool get_operand_value(
             result& r,
-            const instruction_t& instruction,
+            const instruction_t& inst,
             uint8_t operand_index,
             double& value) const;
+
+        bool set_target_operand_value(
+            result& r,
+            const instruction_t& inst,
+            uint8_t operand_index,
+            uint64_t value);
+
+        bool set_target_operand_value(
+            result& r,
+            const instruction_t& inst,
+            uint8_t operand_index,
+            double value);
 
         inline uint8_t op_size_in_bytes(op_sizes size) const {
             switch (size) {
@@ -447,6 +462,15 @@ namespace basecode {
         }
 
     private:
+        uint64_t set_zoned_value(
+            uint64_t source,
+            uint64_t value,
+            op_sizes size);
+
+        bool has_carry(uint64_t value, op_sizes size);
+
+        bool is_negative(uint64_t value, op_sizes size);
+
         inline uint8_t* byte_ptr(uint64_t address) const {
             return _heap + address;
         }

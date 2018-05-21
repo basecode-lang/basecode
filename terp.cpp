@@ -387,17 +387,26 @@ namespace basecode {
             }
             case op_codes::load: {
                 uint64_t address;
+
                 if (!get_operand_value(r, inst, 1, address))
                     return false;
+
                 if (inst.operands_count > 2) {
                     uint64_t offset;
                     if (!get_operand_value(r, inst, 2, offset))
                         return false;
                     address += offset;
                 }
+
                 uint64_t value = *qword_ptr(address);
                 if (!set_target_operand_value(r, inst, 0, value))
                     return false;
+
+                _registers.flags(register_file_t::flags_t::carry, false);
+                _registers.flags(register_file_t::flags_t::subtract, false);
+                _registers.flags(register_file_t::flags_t::overflow, false);
+                _registers.flags(register_file_t::flags_t::zero, value == 0);
+                _registers.flags(register_file_t::flags_t::negative, is_negative(value, inst.size));
                 break;
             }
             case op_codes::store: {
@@ -408,6 +417,7 @@ namespace basecode {
                 uint64_t address;
                 if (!get_operand_value(r, inst, 1, address))
                     return false;
+
                 if (inst.operands_count > 2) {
                     uint64_t offset;
                     if (!get_operand_value(r, inst, 2, offset))
@@ -416,21 +426,38 @@ namespace basecode {
                 }
 
                 *qword_ptr(address) = value;
+
+                _registers.flags(register_file_t::flags_t::carry, false);
+                _registers.flags(register_file_t::flags_t::subtract, false);
+                _registers.flags(register_file_t::flags_t::overflow, false);
+                _registers.flags(register_file_t::flags_t::zero, value == 0);
+                _registers.flags(register_file_t::flags_t::negative, is_negative(value, inst.size));
                 break;
             }
             case op_codes::copy: {
                 uint64_t source_address, target_address;
+
                 if (!get_operand_value(r, inst, 0, source_address))
                     return false;
+
                 if (!get_operand_value(r, inst, 1, target_address))
                     return false;
+
                 uint64_t length;
                 if (!get_operand_value(r, inst, 2, length))
                     return false;
+
                 memcpy(
                     _heap + target_address,
                     _heap + source_address,
                     length * op_size_in_bytes(inst.size));
+
+                _registers.flags(register_file_t::flags_t::zero, false);
+                _registers.flags(register_file_t::flags_t::carry, false);
+                _registers.flags(register_file_t::flags_t::overflow, false);
+                _registers.flags(register_file_t::flags_t::subtract, false);
+                _registers.flags(register_file_t::flags_t::negative, false);
+
                 break;
             }
             case op_codes::fill: {
@@ -462,277 +489,572 @@ namespace basecode {
                         // XXX: this is an error
                         break;
                 }
+
+                _registers.flags(register_file_t::flags_t::zero, false);
+                _registers.flags(register_file_t::flags_t::carry, false);
+                _registers.flags(register_file_t::flags_t::overflow, false);
+                _registers.flags(register_file_t::flags_t::subtract, false);
+                _registers.flags(register_file_t::flags_t::negative, false);
+
                 break;
             }
             case op_codes::move: {
                 uint64_t source_value;
+
                 if (!get_operand_value(r, inst, 0, source_value))
                     return false;
+
                 if (!set_target_operand_value(r, inst, 1, source_value))
                     return false;
+
+                _registers.flags(register_file_t::flags_t::carry, false);
+                _registers.flags(register_file_t::flags_t::overflow, false);
+                _registers.flags(register_file_t::flags_t::subtract, false);
+                _registers.flags(register_file_t::flags_t::zero, source_value == 0);
+                _registers.flags(register_file_t::flags_t::negative, is_negative(source_value, inst.size));
+
                 break;
             }
             case op_codes::push: {
                 uint64_t source_value;
+
                 if (!get_operand_value(r, inst, 0, source_value))
                     return false;
+
                 push(source_value);
+
+                _registers.flags(register_file_t::flags_t::carry, false);
+                _registers.flags(register_file_t::flags_t::overflow, false);
+                _registers.flags(register_file_t::flags_t::subtract, false);
+                _registers.flags(register_file_t::flags_t::zero, source_value == 0);
+                _registers.flags(register_file_t::flags_t::negative, is_negative(source_value, inst.size));
+
                 break;
             }
             case op_codes::pop: {
                 uint64_t value = pop();
+
                 if (!set_target_operand_value(r, inst, 0, value))
                     return false;
+
+                _registers.flags(register_file_t::flags_t::zero, value == 0);
+                _registers.flags(register_file_t::flags_t::overflow, false);
+                _registers.flags(register_file_t::flags_t::carry, false);
+                _registers.flags(register_file_t::flags_t::subtract, false);
+                _registers.flags(register_file_t::flags_t::negative, is_negative(value, inst.size));
+
                 break;
             }
             case op_codes::dup: {
-                push(peek());
+                uint64_t value = peek();
+                push(value);
+
+                _registers.flags(register_file_t::flags_t::carry, false);
+                _registers.flags(register_file_t::flags_t::overflow, false);
+                _registers.flags(register_file_t::flags_t::subtract, false);
+                _registers.flags(register_file_t::flags_t::zero, value == 0);
+                _registers.flags(register_file_t::flags_t::negative, is_negative(value, inst.size));
+
                 break;
             }
             case op_codes::inc: {
-                _registers.i[inst.operands[0].value.r8]++;
+                uint8_t reg = inst.operands[0].value.r8;
+
+                uint64_t value = _registers.i[reg] + 1;
+                if (set_target_operand_value(r, inst, reg, value))
+                    return false;
+
+                _registers.flags(register_file_t::flags_t::zero, value == 0);
+                _registers.flags(register_file_t::flags_t::overflow, false);
+                _registers.flags(register_file_t::flags_t::subtract, false);
+                _registers.flags(register_file_t::flags_t::carry, has_carry(value, inst.size));
+                _registers.flags(register_file_t::flags_t::negative, is_negative(value, inst.size));
+
                 break;
             }
             case op_codes::dec: {
-                _registers.i[inst.operands[0].value.r8]--;
+                uint8_t reg = inst.operands[0].value.r8;
+
+                uint64_t value = _registers.i[reg] - 1;
+                if (set_target_operand_value(r, inst, reg, value))
+                    return false;
+
+                _registers.flags(register_file_t::flags_t::subtract, true);
+                _registers.flags(register_file_t::flags_t::overflow, false);
+                _registers.flags(register_file_t::flags_t::zero, value == 0);
+                _registers.flags(register_file_t::flags_t::carry, has_carry(value, inst.size));
+                _registers.flags(register_file_t::flags_t::negative, is_negative(value, inst.size));
                 break;
             }
             case op_codes::add: {
                 uint64_t lhs_value, rhs_value;
+
                 if (!get_operand_value(r, inst, 1, lhs_value))
                     return false;
+
                 if (!get_operand_value(r, inst, 2, rhs_value))
                     return false;
-                if (!set_target_operand_value(r, inst, 0, lhs_value + rhs_value))
+
+                uint64_t sum_result = lhs_value + rhs_value;
+                if (!set_target_operand_value(r, inst, 0, sum_result))
                     return false;
+
+                _registers.flags(register_file_t::flags_t::subtract, false);
+                _registers.flags(register_file_t::flags_t::overflow, false);
+                _registers.flags(register_file_t::flags_t::zero, sum_result == 0);
+                _registers.flags(register_file_t::flags_t::carry, has_carry(sum_result, inst.size));
+                _registers.flags(register_file_t::flags_t::negative, is_negative(sum_result, inst.size));
+
                 break;
             }
             case op_codes::sub: {
                 uint64_t lhs_value, rhs_value;
+
                 if (!get_operand_value(r, inst, 1, lhs_value))
                     return false;
+
                 if (!get_operand_value(r, inst, 2, rhs_value))
                     return false;
-                if (!set_target_operand_value(r, inst, 0, lhs_value - rhs_value))
+
+                uint64_t subtraction_result = lhs_value - rhs_value;
+                if (!set_target_operand_value(r, inst, 0, subtraction_result))
                     return false;
+
+                _registers.flags(register_file_t::flags_t::subtract, true);
+                _registers.flags(register_file_t::flags_t::carry, rhs_value > lhs_value);
+                _registers.flags(register_file_t::flags_t::zero, subtraction_result == 0);
+                _registers.flags(register_file_t::flags_t::overflow, rhs_value > lhs_value);
+                _registers.flags(register_file_t::flags_t::negative, is_negative(subtraction_result, inst.size));
                 break;
             }
             case op_codes::mul: {
                 uint64_t lhs_value, rhs_value;
+
                 if (!get_operand_value(r, inst, 1, lhs_value))
                     return false;
+
                 if (!get_operand_value(r, inst, 2, rhs_value))
                     return false;
-                if (!set_target_operand_value(r, inst, 0, lhs_value * rhs_value))
+
+                uint64_t product_result = lhs_value * rhs_value;
+                if (!set_target_operand_value(r, inst, 0, product_result))
                     return false;
+
+                _registers.flags(register_file_t::flags_t::carry, false);
+                _registers.flags(register_file_t::flags_t::subtract, false);
+                _registers.flags(register_file_t::flags_t::overflow, false);
+                _registers.flags(register_file_t::flags_t::zero, product_result == 0);
+                _registers.flags(register_file_t::flags_t::negative, is_negative(product_result, inst.size));
                 break;
             }
             case op_codes::div: {
                 uint64_t lhs_value, rhs_value;
+
                 if (!get_operand_value(r, inst, 1, lhs_value))
                     return false;
+
                 if (!get_operand_value(r, inst, 2, rhs_value))
                     return false;
+
                 uint64_t result = 0;
                 if (rhs_value != 0)
                     result = lhs_value / rhs_value;
+
                 if (!set_target_operand_value(r, inst, 0, result))
                     return false;
+
+                _registers.flags(register_file_t::flags_t::carry, false);
+                _registers.flags(register_file_t::flags_t::subtract, false);
+                _registers.flags(register_file_t::flags_t::overflow, false);
+                _registers.flags(register_file_t::flags_t::zero, result == 0);
+                _registers.flags(register_file_t::flags_t::negative, is_negative(result, inst.size));
+
                 break;
             }
             case op_codes::mod: {
                 uint64_t lhs_value, rhs_value;
+
                 if (!get_operand_value(r, inst, 1, lhs_value))
                     return false;
+
                 if (!get_operand_value(r, inst, 2, rhs_value))
                     return false;
-                if (!set_target_operand_value(r, inst, 0, lhs_value % rhs_value))
+
+                uint64_t result = lhs_value % rhs_value;
+                if (!set_target_operand_value(r, inst, 0, result))
                     return false;
+
+                _registers.flags(register_file_t::flags_t::carry, false);
+                _registers.flags(register_file_t::flags_t::subtract, false);
+                _registers.flags(register_file_t::flags_t::overflow, false);
+                _registers.flags(register_file_t::flags_t::zero, result == 0);
+                _registers.flags(register_file_t::flags_t::negative, is_negative(result, inst.size));
+
                 break;
             }
             case op_codes::neg: {
                 uint64_t value;
+
                 if (!get_operand_value(r, inst, 1, value))
                     return false;
+
                 int64_t negated_result = -static_cast<int64_t>(value);
-                if (!set_target_operand_value(r, inst, 0, static_cast<uint64_t>(negated_result)))
+                uint64_t result = static_cast<uint64_t>(negated_result);
+                if (!set_target_operand_value(r, inst, 0, result))
                     return false;
+
+                _registers.flags(register_file_t::flags_t::carry, false);
+                _registers.flags(register_file_t::flags_t::subtract, false);
+                _registers.flags(register_file_t::flags_t::overflow, false);
+                _registers.flags(register_file_t::flags_t::zero, result == 0);
+                _registers.flags(register_file_t::flags_t::negative, is_negative(result, inst.size));
+
                 break;
             }
             case op_codes::shr: {
                 uint64_t lhs_value, rhs_value;
+
                 if (!get_operand_value(r, inst, 1, lhs_value))
                     return false;
+
                 if (!get_operand_value(r, inst, 2, rhs_value))
                     return false;
-                if (!set_target_operand_value(r, inst, 0, lhs_value >> rhs_value))
+
+                uint64_t result = lhs_value >> rhs_value;
+                if (!set_target_operand_value(r, inst, 0, result))
                     return false;
+
+                _registers.flags(register_file_t::flags_t::carry, false);
+                _registers.flags(register_file_t::flags_t::subtract, false);
+                _registers.flags(register_file_t::flags_t::overflow, false);
+                _registers.flags(register_file_t::flags_t::zero, result == 0);
+                _registers.flags(register_file_t::flags_t::negative, is_negative(result, inst.size));
                 break;
             }
             case op_codes::shl: {
                 uint64_t lhs_value, rhs_value;
+
                 if (!get_operand_value(r, inst, 1, lhs_value))
                     return false;
+
                 if (!get_operand_value(r, inst, 2, rhs_value))
                     return false;
-                if (!set_target_operand_value(r, inst, 0, lhs_value << rhs_value))
+
+                uint64_t result = lhs_value << rhs_value;
+                if (!set_target_operand_value(r, inst, 0, result))
                     return false;
+
+                _registers.flags(register_file_t::flags_t::carry, false);
+                _registers.flags(register_file_t::flags_t::subtract, false);
+                _registers.flags(register_file_t::flags_t::overflow, false);
+                _registers.flags(register_file_t::flags_t::zero, result == 0);
+                _registers.flags(register_file_t::flags_t::negative, is_negative(result, inst.size));
+
                 break;
             }
             case op_codes::ror: {
                 uint64_t lhs_value, rhs_value;
+
                 if (!get_operand_value(r, inst, 1, lhs_value))
                     return false;
+
                 if (!get_operand_value(r, inst, 2, rhs_value))
                     return false;
+
                 uint64_t right_rotated_value = rotr(lhs_value, static_cast<uint8_t>(rhs_value));
                 if (!set_target_operand_value(r, inst, 0, right_rotated_value))
                     return false;
+
+                _registers.flags(register_file_t::flags_t::carry, false);
+                _registers.flags(register_file_t::flags_t::subtract, false);
+                _registers.flags(register_file_t::flags_t::overflow, false);
+                _registers.flags(register_file_t::flags_t::zero, right_rotated_value == 0);
+                _registers.flags(register_file_t::flags_t::negative, is_negative(right_rotated_value, inst.size));
+
                 break;
             }
             case op_codes::rol: {
                 uint64_t lhs_value, rhs_value;
+
                 if (!get_operand_value(r, inst, 1, lhs_value))
                     return false;
+
                 if (!get_operand_value(r, inst, 2, rhs_value))
                     return false;
+
                 uint64_t left_rotated_value = rotl(lhs_value, static_cast<uint8_t>(rhs_value));
                 if (!set_target_operand_value(r, inst, 0, left_rotated_value))
                     return false;
+
+                _registers.flags(register_file_t::flags_t::carry, false);
+                _registers.flags(register_file_t::flags_t::subtract, false);
+                _registers.flags(register_file_t::flags_t::overflow, false);
+                _registers.flags(register_file_t::flags_t::zero, left_rotated_value == 0);
+                _registers.flags(register_file_t::flags_t::negative, is_negative(left_rotated_value, inst.size));
+
                 break;
             }
             case op_codes::and_op: {
                 uint64_t lhs_value, rhs_value;
+
                 if (!get_operand_value(r, inst, 1, lhs_value))
                     return false;
+
                 if (!get_operand_value(r, inst, 2, rhs_value))
                     return false;
-                if (!set_target_operand_value(r, inst, 0, lhs_value & rhs_value))
+
+                uint64_t result = lhs_value & rhs_value;
+                if (!set_target_operand_value(r, inst, 0, result))
                     return false;
+
+                _registers.flags(register_file_t::flags_t::carry, false);
+                _registers.flags(register_file_t::flags_t::subtract, false);
+                _registers.flags(register_file_t::flags_t::overflow, false);
+                _registers.flags(register_file_t::flags_t::zero, result == 0);
+                _registers.flags(register_file_t::flags_t::negative, is_negative(result, inst.size));
+
                 break;
             }
             case op_codes::or_op: {
                 uint64_t lhs_value, rhs_value;
+
                 if (!get_operand_value(r, inst, 1, lhs_value))
                     return false;
+
                 if (!get_operand_value(r, inst, 2, rhs_value))
                     return false;
-                if (!set_target_operand_value(r, inst, 0, lhs_value | rhs_value))
+
+                uint64_t result = lhs_value | rhs_value;
+                if (!set_target_operand_value(r, inst, 0, result))
                     return false;
+
+                _registers.flags(register_file_t::flags_t::carry, false);
+                _registers.flags(register_file_t::flags_t::subtract, false);
+                _registers.flags(register_file_t::flags_t::overflow, false);
+                _registers.flags(register_file_t::flags_t::zero, result == 0);
+                _registers.flags(register_file_t::flags_t::negative, is_negative(result, inst.size));
+
                 break;
             }
             case op_codes::xor_op: {
                 uint64_t lhs_value, rhs_value;
+
                 if (!get_operand_value(r, inst, 1, lhs_value))
                     return false;
+
                 if (!get_operand_value(r, inst, 2, rhs_value))
                     return false;
-                if (!set_target_operand_value(r, inst, 0, lhs_value ^ rhs_value))
+
+                uint64_t result = lhs_value ^ rhs_value;
+                if (!set_target_operand_value(r, inst, 0, result))
                     return false;
+
+                _registers.flags(register_file_t::flags_t::carry, false);
+                _registers.flags(register_file_t::flags_t::subtract, false);
+                _registers.flags(register_file_t::flags_t::overflow, false);
+                _registers.flags(register_file_t::flags_t::zero, result == 0);
+                _registers.flags(register_file_t::flags_t::negative, is_negative(result, inst.size));
+
                 break;
             }
             case op_codes::not_op: {
                 uint64_t value;
+
                 if (!get_operand_value(r, inst, 1, value))
                     return false;
+
                 uint64_t not_result = ~value;
                 if (!set_target_operand_value(r, inst, 0, not_result))
                     return false;
+
+                _registers.flags(register_file_t::flags_t::carry, false);
+                _registers.flags(register_file_t::flags_t::subtract, false);
+                _registers.flags(register_file_t::flags_t::overflow, false);
+                _registers.flags(register_file_t::flags_t::zero, not_result == 0);
+                _registers.flags(register_file_t::flags_t::negative, is_negative(not_result, inst.size));
+
                 break;
             }
             case op_codes::bis: {
                 uint64_t value, bit_number;
+
                 if (!get_operand_value(r, inst, 1, value))
                     return false;
+
                 if (!get_operand_value(r, inst, 2, bit_number))
                     return false;
+
                 uint64_t masked_value = static_cast<uint64_t>(1 << bit_number);
-                if (!set_target_operand_value(r, inst, 0, value | masked_value))
+                uint64_t result = value | masked_value;
+                if (!set_target_operand_value(r, inst, 0, result))
                     return false;
+
+                _registers.flags(register_file_t::flags_t::zero, false);
+                _registers.flags(register_file_t::flags_t::carry, false);
+                _registers.flags(register_file_t::flags_t::subtract, false);
+                _registers.flags(register_file_t::flags_t::overflow, false);
+                _registers.flags(register_file_t::flags_t::negative, is_negative(result, inst.size));
+
                 break;
             }
             case op_codes::bic: {
                 uint64_t value, bit_number;
+
                 if (!get_operand_value(r, inst, 1, value))
                     return false;
+
                 if (!get_operand_value(r, inst, 2, bit_number))
                     return false;
+
                 uint64_t masked_value = static_cast<uint64_t>(~(1 << bit_number));
-                if (!set_target_operand_value(r, inst, 0, value & masked_value))
+                uint64_t result = value & masked_value;
+                if (!set_target_operand_value(r, inst, 0, result))
                     return false;
+
+                _registers.flags(register_file_t::flags_t::zero, true);
+                _registers.flags(register_file_t::flags_t::carry, false);
+                _registers.flags(register_file_t::flags_t::subtract, false);
+                _registers.flags(register_file_t::flags_t::overflow, false);
+                _registers.flags(register_file_t::flags_t::negative, is_negative(result, inst.size));
+
                 break;
             }
             case op_codes::test: {
                 uint64_t value, mask;
+
                 if (!get_operand_value(r, inst, 0, value))
                     return false;
+
                 if (!get_operand_value(r, inst, 1, mask))
                     return false;
-                _registers.flags(register_file_t::flags_t::zero, (value & mask) != 0);
+
+                uint64_t result = value & mask;
+
+                _registers.flags(register_file_t::flags_t::carry, false);
+                _registers.flags(register_file_t::flags_t::subtract, false);
+                _registers.flags(register_file_t::flags_t::overflow, false);
+                _registers.flags(register_file_t::flags_t::zero, result == 0);
+                _registers.flags(register_file_t::flags_t::negative, is_negative(result, inst.size));
+
                 break;
             }
             case op_codes::cmp: {
                 uint64_t lhs_value, rhs_value;
+
                 if (!get_operand_value(r, inst, 0, lhs_value))
                     return false;
+
                 if (!get_operand_value(r, inst, 1, rhs_value))
                     return false;
+
                 uint64_t result = lhs_value - rhs_value;
+
                 _registers.flags(register_file_t::flags_t::zero, result == 0);
+                _registers.flags(register_file_t::flags_t::subtract, false);
                 _registers.flags(register_file_t::flags_t::overflow, rhs_value > lhs_value);
+                _registers.flags(register_file_t::flags_t::carry, has_carry(result, inst.size));
+                _registers.flags(register_file_t::flags_t::negative, is_negative(result, inst.size));
+
                 break;
             }
             case op_codes::bz: {
                 uint64_t value, address;
+
                 if (!get_operand_value(r, inst, 0, value))
                     return false;
+
                 if (!get_operand_value(r, inst, 1, address))
                     return false;
+
                 if (value == 0)
                     _registers.pc = address;
+
+                _registers.flags(register_file_t::flags_t::zero, value == 0);
+                _registers.flags(register_file_t::flags_t::subtract, false);
+                _registers.flags(register_file_t::flags_t::overflow, false);
+                _registers.flags(register_file_t::flags_t::carry, has_carry(value, inst.size));
+                _registers.flags(register_file_t::flags_t::negative, is_negative(value, inst.size));
+
                 break;
             }
             case op_codes::bnz: {
                 uint64_t value, address;
+
                 if (!get_operand_value(r, inst, 0, value))
                     return false;
+
                 if (!get_operand_value(r, inst, 1, address))
                     return false;
+
                 if (value != 0)
                     _registers.pc = address;
+
+                _registers.flags(register_file_t::flags_t::zero, value == 0);
+                _registers.flags(register_file_t::flags_t::subtract, false);
+                _registers.flags(register_file_t::flags_t::overflow, false);
+                _registers.flags(register_file_t::flags_t::carry, has_carry(value, inst.size));
+                _registers.flags(register_file_t::flags_t::negative, is_negative(value, inst.size));
+
                 break;
             }
             case op_codes::tbz: {
                 uint64_t value, mask, address;
+
                 if (!get_operand_value(r, inst, 0, value))
                     return false;
+
                 if (!get_operand_value(r, inst, 1, mask))
                     return false;
+
                 if (!get_operand_value(r, inst, 2, address))
                     return false;
-                if ((value & mask) == 0)
+
+                uint64_t result = value & mask;
+                if (result == 0)
                     _registers.pc = address;
+
+                _registers.flags(register_file_t::flags_t::carry, false);
+                _registers.flags(register_file_t::flags_t::subtract, false);
+                _registers.flags(register_file_t::flags_t::overflow, false);
+                _registers.flags(register_file_t::flags_t::zero, result == 0);
+                _registers.flags(register_file_t::flags_t::negative, is_negative(result, inst.size));
+
                 break;
             }
             case op_codes::tbnz: {
                 uint64_t value, mask, address;
+
                 if (!get_operand_value(r, inst, 0, value))
                     return false;
+
                 if (!get_operand_value(r, inst, 1, mask))
                     return false;
+
                 if (!get_operand_value(r, inst, 2, address))
                     return false;
-                if ((value & mask) != 0)
+
+                uint64_t result = value & mask;
+                if (result != 0)
                     _registers.pc = address;
+
+                _registers.flags(register_file_t::flags_t::carry, false);
+                _registers.flags(register_file_t::flags_t::subtract, false);
+                _registers.flags(register_file_t::flags_t::overflow, false);
+                _registers.flags(register_file_t::flags_t::zero, result == 0);
+                _registers.flags(register_file_t::flags_t::negative, is_negative(result, inst.size));
+
                 break;
             }
             case op_codes::bne: {
                 uint64_t address;
+
                 if (!get_operand_value(r, inst, 0, address))
                     return false;
+
                 if (_registers.flags(register_file_t::flags_t::zero) == 0) {
                     _registers.pc = address;
                 }
+
                 break;
             }
             case op_codes::beq: {
@@ -786,15 +1108,19 @@ namespace basecode {
             }
             case op_codes::jmp: {
                 uint64_t address;
+
                 if (!get_operand_value(r, inst, 0, address))
                     return false;
+
                 _registers.pc = address;
                 break;
             }
             case op_codes::swi: {
                 uint64_t index;
+
                 if (!get_operand_value(r, inst, 0, index))
                     return false;
+
                 size_t swi_offset = sizeof(uint64_t) * index;
                 uint64_t swi_address = *qword_ptr(swi_offset);
                 if (swi_address != 0) {
@@ -802,16 +1128,21 @@ namespace basecode {
                     push(_registers.pc);
                     _registers.pc = swi_address;
                 }
+
                 break;
             }
             case op_codes::trap: {
                 uint64_t index;
+
                 if (!get_operand_value(r, inst, 0, index))
                     return false;
+
                 auto it = _traps.find(static_cast<uint8_t>(index));
                 if (it == _traps.end())
                     break;
+
                 it->second(this);
+
                 break;
             }
             case op_codes::meta: {
@@ -1034,10 +1365,10 @@ namespace basecode {
 
     bool terp::get_operand_value(
             result& r,
-            const instruction_t& instruction,
+            const instruction_t& inst,
             uint8_t operand_index,
             double& value) const {
-        auto& operand = instruction.operands[operand_index];
+        auto& operand = inst.operands[operand_index];
 
         if (operand.is_reg()) {
             if (operand.is_integer()) {
@@ -1058,10 +1389,10 @@ namespace basecode {
 
     bool terp::get_operand_value(
             result& r,
-            const instruction_t& instruction,
+            const instruction_t& inst,
             uint8_t operand_index,
             uint64_t& value) const {
-        auto& operand = instruction.operands[operand_index];
+        auto& operand = inst.operands[operand_index];
 
         if (operand.is_reg()) {
             if (operand.is_integer()) {
@@ -1104,41 +1435,40 @@ namespace basecode {
 
     bool terp::set_target_operand_value(
             result& r,
-            const instruction_t& instruction,
+            const instruction_t& inst,
             uint8_t operand_index,
             uint64_t value) {
-        auto& operand = instruction.operands[operand_index];
+        auto& operand = inst.operands[operand_index];
 
         if (operand.is_reg()) {
             if (operand.is_integer()) {
                 auto reg = static_cast<i_registers_t>(operand.value.r8);
                 switch (reg) {
                     case i_registers_t::pc: {
-                        _registers.pc = value;
+                        _registers.pc = set_zoned_value(_registers.pc, value, inst.size);
                         break;
                     }
                     case i_registers_t::sp: {
-                        _registers.sp = value;
+                        _registers.sp = set_zoned_value(_registers.sp, value, inst.size);
                         break;
                     }
                     case i_registers_t::fr: {
-                        _registers.fr = value;
+                        _registers.fr = set_zoned_value(_registers.fr, value, inst.size);
                         break;
                     }
                     case i_registers_t::sr: {
-                        _registers.sr = value;
+                        _registers.sr = set_zoned_value(_registers.sr, value, inst.size);
                         break;
                     }
                     default: {
-                        _registers.i[reg] = value;
-                        _registers.flags(register_file_t::flags_t::zero, value == 0);
+                        _registers.i[reg] = set_zoned_value(_registers.i[reg], value, inst.size);
                         break;
                     }
                 }
             } else {
                 _registers.f[operand.value.r8] = value;
-                _registers.flags(register_file_t::flags_t::zero, value == 0);
             }
+
         } else {
             r.add_message(
                 "B006",
@@ -1152,10 +1482,10 @@ namespace basecode {
 
     bool terp::set_target_operand_value(
             result& r,
-            const instruction_t& instruction,
+            const instruction_t& inst,
             uint8_t operand_index,
             double value) {
-        auto& operand = instruction.operands[operand_index];
+        auto& operand = inst.operands[operand_index];
 
         if (operand.is_reg()) {
             if (operand.is_integer()) {
@@ -1163,24 +1493,23 @@ namespace basecode {
                 auto reg = static_cast<i_registers_t>(operand.value.r8);
                 switch (reg) {
                     case i_registers_t::pc: {
-                        _registers.pc = integer_value;
+                        _registers.pc = set_zoned_value(_registers.pc, integer_value, inst.size);
                         break;
                     }
                     case i_registers_t::sp: {
-                        _registers.sp = integer_value;
+                        _registers.sp = set_zoned_value(_registers.sp, integer_value, inst.size);
                         break;
                     }
                     case i_registers_t::fr: {
-                        _registers.fr = integer_value;
+                        _registers.fr = set_zoned_value(_registers.fr, integer_value, inst.size);
                         break;
                     }
                     case i_registers_t::sr: {
-                        _registers.sr = integer_value;
+                        _registers.sr = set_zoned_value(_registers.sr, integer_value, inst.size);
                         break;
                     }
                     default: {
-                        _registers.i[reg] = integer_value;
-                        _registers.flags(register_file_t::flags_t::zero, value == 0);
+                        _registers.i[reg] = set_zoned_value(_registers.i[reg], integer_value, inst.size);;
                         break;
                     }
                 }
@@ -1198,8 +1527,66 @@ namespace basecode {
         return true;
     }
 
+    bool terp::has_carry(uint64_t value, op_sizes size) {
+        switch (size) {
+            case op_sizes::byte:
+                return value > UINT8_MAX;
+            case op_sizes::word:
+                return value > UINT16_MAX;
+            case op_sizes::dword:
+                return value > UINT32_MAX;
+            case op_sizes::qword:
+            default:
+                return value > UINT64_MAX;
+        }
+    }
+
+    bool terp::is_negative(uint64_t value, op_sizes size) {
+        switch (size) {
+            case op_sizes::byte: {
+                return (value & mask_byte_negative) != 0;
+            }
+            case op_sizes::word: {
+                return (value & mask_word_negative) != 0;
+            }
+            case op_sizes::dword: {
+                return (value & mask_dword_negative) != 0;
+            }
+            case op_sizes::qword:
+            default:
+                return (value & mask_qword_negative) != 0;
+        }
+        return false;
+    }
+
     void terp::register_trap(uint8_t index, const terp::trap_callable& callable) {
         _traps.insert(std::make_pair(index, callable));
+    }
+
+    uint64_t terp::set_zoned_value(uint64_t source, uint64_t value, op_sizes size) {
+        uint64_t result = source;
+        switch (size) {
+            case op_sizes::byte: {
+                result &= mask_byte_clear;
+                result |= (value & mask_byte);
+                break;
+            }
+            case op_sizes::word: {
+                result &= mask_word_clear;
+                result |= (value & mask_word);
+                break;
+            }
+            case op_sizes::dword: {
+                result &= mask_dword_clear;
+                result |= (value & mask_dword);
+                break;
+            }
+            case op_sizes::qword:
+            default:
+                result = value;
+                break;
+        }
+        return result;
     }
 
 };
