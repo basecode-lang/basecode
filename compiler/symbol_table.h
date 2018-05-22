@@ -1,14 +1,14 @@
 #pragma once
 
 #include <set>
-#include "ast.h"
-#include "result.h"
+#include <parser/ast.h>
+#include <common/result.h>
 
-namespace basecode {
+namespace basecode::compiler {
 
     struct symbol_table_entry_t {
         uint64_t address = 0;
-        ast_node_shared_ptr node = nullptr;
+        syntax::ast_node_shared_ptr node = nullptr;
     };
 
     struct symbol_lookup_result_t {

@@ -5,7 +5,7 @@
 #include <climits>
 #include <unordered_map>
 
-namespace basecode {
+namespace basecode::syntax {
 
     enum class token_types_t {
         unknown,

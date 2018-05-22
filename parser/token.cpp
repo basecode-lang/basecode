@@ -1,6 +1,6 @@
 #include "token.h"
 
-namespace basecode {
+namespace basecode::syntax {
 
     bool token_t::as_bool() const {
         return value == "true";

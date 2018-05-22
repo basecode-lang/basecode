@@ -2,7 +2,7 @@
 #include <fmt/format.h>
 #include "ast.h"
 
-namespace basecode {
+namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 

@@ -10,7 +10,7 @@
 #include <functional>
 #include "token.h"
 
-namespace basecode {
+namespace basecode::syntax {
 
     struct ast_node_t;
 

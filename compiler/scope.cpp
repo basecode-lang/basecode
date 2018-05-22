@@ -1,11 +1,11 @@
 #include "scope.h"
 
-namespace basecode {
+namespace basecode::compiler {
 
     scope::scope(
-        basecode::scope* parent,
-        const ast_node_shared_ptr& node) : _parent(parent),
-                                           _node(node) {
+        compiler::scope* parent,
+        const syntax::ast_node_shared_ptr& node) : _parent(parent),
+                                                   _node(node) {
     }
 
     void scope::clear() {
@@ -17,7 +17,7 @@ namespace basecode {
         return _address;
     }
 
-    basecode::scope* scope::parent() {
+    compiler::scope* scope::parent() {
         return _parent;
     }
 
@@ -25,7 +25,7 @@ namespace basecode {
         _address = value;
     }
 
-    ast_node_shared_ptr scope::ast_node() {
+    syntax::ast_node_shared_ptr scope::ast_node() {
         return _node;
     }
 
@@ -33,8 +33,8 @@ namespace basecode {
         return _children;
     }
 
-    basecode::scope* scope::add_child_scope(const ast_node_shared_ptr& node) {
-        auto scope = std::make_unique<basecode::scope>(this, node);
+    compiler::scope* scope::add_child_scope(const syntax::ast_node_shared_ptr& node) {
+        auto scope = std::make_unique<compiler::scope>(this, node);
         _children.push_back(std::move(scope));
         return scope.get();
     }

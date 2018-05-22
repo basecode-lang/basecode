@@ -2,11 +2,11 @@
 #include <iomanip>
 #include <climits>
 #include <fmt/format.h>
+#include <common/bytes.h>
+#include <common/hex_formatter.h>
 #include "terp.h"
-#include "hex_formatter.h"
-#include "bytes.h"
 
-namespace basecode {
+namespace basecode::vm {
 
     static inline uint64_t rotl(uint64_t n, uint8_t c) {
         const unsigned int mask = (CHAR_BIT * sizeof(n) - 1);
@@ -66,7 +66,7 @@ namespace basecode {
         return offset ? value + (size - offset) : value;
     }
 
-    size_t instruction_t::decode(result& r, uint8_t* heap, uint64_t address) {
+    size_t instruction_t::decode(common::result& r, uint8_t* heap, uint64_t address) {
         if (address % alignment != 0) {
             r.add_message(
                 "B003",
@@ -81,8 +81,8 @@ namespace basecode {
         uint8_t encoding_size = *encoding_ptr;
         op = static_cast<op_codes>(*(encoding_ptr + 1));
         uint8_t op_size_and_operands_count = static_cast<uint8_t>(*(encoding_ptr + 2));
-        size = static_cast<op_sizes>(get_upper_nybble(op_size_and_operands_count));
-        operands_count = get_lower_nybble(op_size_and_operands_count);
+        size = static_cast<op_sizes>(common::get_upper_nybble(op_size_and_operands_count));
+        operands_count = common::get_lower_nybble(op_size_and_operands_count);
 
         size_t offset = base_size;
         for (size_t i = 0; i < operands_count; i++) {
@@ -151,7 +151,7 @@ namespace basecode {
         return encoding_size;
     }
 
-    size_t instruction_t::encode(result& r, uint8_t* heap, uint64_t address) {
+    size_t instruction_t::encode(common::result& r, uint8_t* heap, uint64_t address) {
         if (address % alignment != 0) {
             r.add_message(
                 "B003",
@@ -169,10 +169,10 @@ namespace basecode {
         *(encoding_ptr + 1) = static_cast<uint8_t>(op);
 
         uint8_t size_type_and_operand_count = 0;
-        size_type_and_operand_count = set_upper_nybble(
+        size_type_and_operand_count = common::set_upper_nybble(
             size_type_and_operand_count,
             static_cast<uint8_t>(size));
-        size_type_and_operand_count = set_lower_nybble(
+        size_type_and_operand_count = common::set_lower_nybble(
             size_type_and_operand_count,
             operands_count);
         *(encoding_ptr + 2) = size_type_and_operand_count;
@@ -267,7 +267,7 @@ namespace basecode {
     }
 
     size_t instruction_cache::fetch_at(
-            result& r,
+            common::result& r,
             uint64_t address,
             instruction_t& inst) {
         auto it = _cache.find(address);
@@ -285,7 +285,7 @@ namespace basecode {
         }
     }
 
-    size_t instruction_cache::fetch(result& r, instruction_t& inst) {
+    size_t instruction_cache::fetch(common::result& r, instruction_t& inst) {
         return fetch_at(r, _terp->register_file().pc, inst);
     }
 
@@ -374,7 +374,7 @@ namespace basecode {
         fmt::print("\n");
     }
 
-    bool terp::step(result& r) {
+    bool terp::step(common::result& r) {
         instruction_t inst;
         auto inst_size = _icache.fetch(r, inst);
         if (inst_size == 0)
@@ -1230,21 +1230,21 @@ namespace basecode {
                 switch (inst.size) {
                     case op_sizes::byte: {
                         uint8_t byte_value = static_cast<uint8_t>(value);
-                        uint8_t upper_nybble = get_upper_nybble(byte_value);
-                        uint8_t lower_nybble = get_lower_nybble(byte_value);
-                        byte_value = set_upper_nybble(byte_value, lower_nybble);
-                        result = set_lower_nybble(byte_value, upper_nybble);
+                        uint8_t upper_nybble = common::get_upper_nybble(byte_value);
+                        uint8_t lower_nybble = common::get_lower_nybble(byte_value);
+                        byte_value = common::set_upper_nybble(byte_value, lower_nybble);
+                        result = common::set_lower_nybble(byte_value, upper_nybble);
                         break;
                     }
                     case op_sizes::word:
-                        result = endian_swap_word(static_cast<uint16_t>(value));
+                        result = common::endian_swap_word(static_cast<uint16_t>(value));
                         break;
                     case op_sizes::dword:
-                        result = endian_swap_dword(static_cast<uint32_t>(value));
+                        result = common::endian_swap_dword(static_cast<uint32_t>(value));
                         break;
                     case op_sizes::qword:
                     default:
-                        result = endian_swap_qword(value);
+                        result = common::endian_swap_qword(value);
                         break;
                 }
 
@@ -1308,7 +1308,7 @@ namespace basecode {
         return;
     }
 
-    bool terp::initialize(result& r) {
+    bool terp::initialize(common::result& r) {
         _heap = new uint8_t[_heap_size];
         reset();
         return !r.is_failed();
@@ -1319,7 +1319,7 @@ namespace basecode {
     }
 
     std::vector<uint64_t> terp::jump_to_subroutine(
-            result& r,
+            common::result& r,
             uint64_t address) {
         std::vector<uint64_t> return_values;
 
@@ -1474,13 +1474,13 @@ namespace basecode {
     }
 
     void terp::dump_heap(uint64_t offset, size_t size) {
-        auto program_memory = basecode::hex_formatter::dump_to_string(
+        auto program_memory = common::hex_formatter::dump_to_string(
             reinterpret_cast<const void*>(_heap + offset),
             size);
         fmt::print("{}\n", program_memory);
     }
 
-    std::string terp::disassemble(result& r, uint64_t address) {
+    std::string terp::disassemble(common::result& r, uint64_t address) {
         std::stringstream stream;
         while (true) {
             instruction_t inst;
@@ -1501,7 +1501,7 @@ namespace basecode {
     }
 
     bool terp::get_operand_value(
-            result& r,
+            common::result& r,
             const instruction_t& inst,
             uint8_t operand_index,
             double& value) const {
@@ -1525,7 +1525,7 @@ namespace basecode {
     }
 
     bool terp::get_operand_value(
-            result& r,
+            common::result& r,
             const instruction_t& inst,
             uint8_t operand_index,
             uint64_t& value) const {
@@ -1571,7 +1571,7 @@ namespace basecode {
     }
 
     bool terp::set_target_operand_value(
-            result& r,
+            common::result& r,
             const instruction_t& inst,
             uint8_t operand_index,
             uint64_t value) {
@@ -1618,7 +1618,7 @@ namespace basecode {
     }
 
     bool terp::set_target_operand_value(
-            result& r,
+            common::result& r,
             const instruction_t& inst,
             uint8_t operand_index,
             double value) {
@@ -1665,7 +1665,7 @@ namespace basecode {
     }
 
     bool terp::get_constant_address_or_pc_with_offset(
-            result& r,
+            common::result& r,
             const instruction_t& inst,
             uint8_t operand_index,
             uint64_t inst_size,

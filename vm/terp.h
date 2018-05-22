@@ -5,9 +5,9 @@
 #include <cstdint>
 #include <functional>
 #include <unordered_map>
-#include "result.h"
+#include <common/result.h>
 
-namespace basecode {
+namespace basecode::vm {
 
     enum i_registers_t : uint8_t {
         i0,
@@ -293,12 +293,12 @@ namespace basecode {
         static constexpr size_t alignment = 4;
 
         size_t decode(
-            result& r,
+            common::result& r,
             uint8_t* heap,
             uint64_t address);
 
         size_t encode(
-            result& r,
+            common::result& r,
             uint8_t* heap,
             uint64_t address);
 
@@ -335,11 +335,11 @@ namespace basecode {
         void reset();
 
         size_t fetch_at(
-            result& r,
+            common::result& r,
             uint64_t address,
             instruction_t& inst);
 
-        size_t fetch(result& r, instruction_t& inst);
+        size_t fetch(common::result& r, instruction_t& inst);
 
     private:
         terp* _terp = nullptr;
@@ -386,7 +386,7 @@ namespace basecode {
 
         uint64_t pop();
 
-        bool step(result& r);
+        bool step(common::result& r);
 
         uint64_t peek() const;
 
@@ -400,7 +400,7 @@ namespace basecode {
 
         void push(uint64_t value);
 
-        bool initialize(result& r);
+        bool initialize(common::result& r);
 
         size_t stack_size() const;
 
@@ -409,7 +409,7 @@ namespace basecode {
         void dump_state(uint8_t count = 16);
 
         std::vector<uint64_t> jump_to_subroutine(
-            result& r,
+            common::result& r,
             uint64_t address);
 
         uint64_t heap_vector(uint8_t index) const;
@@ -424,7 +424,7 @@ namespace basecode {
 
         const meta_information_t& meta_information() const;
 
-        std::string disassemble(result& r, uint64_t address);
+        std::string disassemble(common::result& r, uint64_t address);
 
         std::string disassemble(const instruction_t& inst) const;
 
@@ -432,31 +432,31 @@ namespace basecode {
 
     protected:
         bool get_operand_value(
-            result& r,
+            common::result& r,
             const instruction_t& inst,
             uint8_t operand_index,
             uint64_t& value) const;
 
         bool get_operand_value(
-            result& r,
+            common::result& r,
             const instruction_t& inst,
             uint8_t operand_index,
             double& value) const;
 
         bool set_target_operand_value(
-            result& r,
+            common::result& r,
             const instruction_t& inst,
             uint8_t operand_index,
             uint64_t value);
 
         bool set_target_operand_value(
-            result& r,
+            common::result& r,
             const instruction_t& inst,
             uint8_t operand_index,
             double value);
 
         bool get_constant_address_or_pc_with_offset(
-            result& r,
+            common::result& r,
             const instruction_t& inst,
             uint8_t operand_index,
             uint64_t inst_size,

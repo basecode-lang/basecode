@@ -5,7 +5,7 @@
 #include <utility>
 #include "result_message.h"
 
-namespace basecode {
+namespace basecode::common {
 
     class result {
     public:

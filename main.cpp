@@ -1,19 +1,20 @@
 #include <chrono>
 #include <sstream>
 #include <iostream>
+#include <vm/terp.h>
 #include <functional>
 #include <fmt/format.h>
-#include "terp.h"
-#include "compiler.h"
-#include "hex_formatter.h"
-#include "instruction_emitter.h"
+#include <dyncall/dyncall.h>
+#include <common/hex_formatter.h>
+#include <vm/instruction_emitter.h>
+#include <compiler/bytecode_emitter.h>
 
 static constexpr size_t heap_size = (1024 * 1024) * 32;
 static constexpr size_t stack_size = (1024 * 1024) * 8;
 
-using test_function_callable = std::function<bool (basecode::result&, basecode::terp&)>;
+using test_function_callable = std::function<bool (basecode::common::result&, basecode::vm::terp&)>;
 
-static void print_results(basecode::result& r) {
+static void print_results(basecode::common::result& r) {
     for (const auto& msg : r.messages()) {
         fmt::print(
             "|{}|{}{}\n",
@@ -23,7 +24,7 @@ static void print_results(basecode::result& r) {
     }
 }
 
-static bool run_terp(basecode::result& r, basecode::terp& terp) {
+static bool run_terp(basecode::common::result& r, basecode::vm::terp& terp) {
     while (!terp.has_exited())
         if (!terp.step(r))
             return false;
@@ -31,32 +32,40 @@ static bool run_terp(basecode::result& r, basecode::terp& terp) {
     return true;
 }
 
-static bool test_branches(basecode::result& r, basecode::terp& terp) {
-    basecode::instruction_emitter main_emitter(terp.program_start);
-    main_emitter.move_int_constant_to_register(basecode::op_sizes::byte, 10, basecode::i_registers_t::i0);
-    main_emitter.move_int_constant_to_register(basecode::op_sizes::byte, 5, basecode::i_registers_t::i1);
+static bool test_branches(basecode::common::result& r, basecode::vm::terp& terp) {
+    basecode::vm::instruction_emitter main_emitter(terp.program_start);
+    main_emitter.move_int_constant_to_register(
+        basecode::vm::op_sizes::byte,
+        10,
+        basecode::vm::i_registers_t::i0);
+    main_emitter.move_int_constant_to_register(
+        basecode::vm::op_sizes::byte,
+        5,
+        basecode::vm::i_registers_t::i1);
     main_emitter.compare_int_register_to_register(
-        basecode::op_sizes::byte,
-        basecode::i_registers_t::i0,
-        basecode::i_registers_t::i1);
+        basecode::vm::op_sizes::byte,
+        basecode::vm::i_registers_t::i0,
+        basecode::vm::i_registers_t::i1);
     main_emitter.branch_if_greater(0);
-    main_emitter.push_int_constant(basecode::op_sizes::byte, 1);
+    main_emitter.push_int_constant(basecode::vm::op_sizes::byte, 1);
     main_emitter.trap(1);
 
     main_emitter[3].patch_branch_address(main_emitter.end_address());
     main_emitter.compare_int_register_to_register(
-        basecode::op_sizes::byte,
-        basecode::i_registers_t::i1,
-        basecode::i_registers_t::i0);
+        basecode::vm::op_sizes::byte,
+        basecode::vm::i_registers_t::i1,
+        basecode::vm::i_registers_t::i0);
     main_emitter.branch_if_lesser(0);
-    main_emitter.push_int_constant(basecode::op_sizes::byte, 2);
+    main_emitter.push_int_constant(basecode::vm::op_sizes::byte, 2);
     main_emitter.trap(1);
 
     main_emitter[7].patch_branch_address(main_emitter.end_address());
-    main_emitter.push_int_constant(basecode::op_sizes::byte, 10);
+    main_emitter.push_int_constant(basecode::vm::op_sizes::byte, 10);
     main_emitter.dup();
     main_emitter.trap(1);
-    main_emitter.pop_int_register(basecode::op_sizes::byte, basecode::i_registers_t::i0);
+    main_emitter.pop_int_register(
+        basecode::vm::op_sizes::byte,
+        basecode::vm::i_registers_t::i0);
 
     main_emitter.exit();
     main_emitter.encode(r, terp);
@@ -71,50 +80,50 @@ static bool test_branches(basecode::result& r, basecode::terp& terp) {
     return result;
 }
 
-static bool test_square(basecode::result& r, basecode::terp& terp) {
-    basecode::instruction_emitter bootstrap_emitter(terp.program_start);
+static bool test_square(basecode::common::result& r, basecode::vm::terp& terp) {
+    basecode::vm::instruction_emitter bootstrap_emitter(terp.program_start);
     bootstrap_emitter.jump_pc_relative(
-        basecode::op_sizes::byte,
-        basecode::operand_encoding_t::flags::none,
+        basecode::vm::op_sizes::byte,
+        basecode::vm::operand_encoding_t::flags::none,
         0);
 
-    basecode::instruction_emitter fn_square_emitter(bootstrap_emitter.end_address());
+    basecode::vm::instruction_emitter fn_square_emitter(bootstrap_emitter.end_address());
     fn_square_emitter.load_stack_offset_to_register(
-        basecode::op_sizes::dword,
-        basecode::i_registers_t::i0,
+        basecode::vm::op_sizes::dword,
+        basecode::vm::i_registers_t::i0,
         8);
     fn_square_emitter.multiply_int_register_to_register(
-        basecode::op_sizes::dword,
-        basecode::i_registers_t::i0,
-        basecode::i_registers_t::i0,
-        basecode::i_registers_t::i0);
+        basecode::vm::op_sizes::dword,
+        basecode::vm::i_registers_t::i0,
+        basecode::vm::i_registers_t::i0,
+        basecode::vm::i_registers_t::i0);
     fn_square_emitter.store_register_to_stack_offset(
-        basecode::op_sizes::dword,
-        basecode::i_registers_t::i0,
+        basecode::vm::op_sizes::dword,
+        basecode::vm::i_registers_t::i0,
         8);
     fn_square_emitter.rts();
 
-    basecode::instruction_emitter main_emitter(fn_square_emitter.end_address());
+    basecode::vm::instruction_emitter main_emitter(fn_square_emitter.end_address());
     main_emitter.push_int_constant(
-        basecode::op_sizes::dword,
+        basecode::vm::op_sizes::dword,
         9);
     main_emitter.jump_subroutine_pc_relative(
-        basecode::op_sizes::byte,
-        basecode::operand_encoding_t::negative,
+        basecode::vm::op_sizes::byte,
+        basecode::vm::operand_encoding_t::negative,
         main_emitter.end_address() - fn_square_emitter.start_address());
     main_emitter.pop_int_register(
-        basecode::op_sizes::dword,
-        basecode::i_registers_t::i5);
+        basecode::vm::op_sizes::dword,
+        basecode::vm::i_registers_t::i5);
     main_emitter.push_int_constant(
-        basecode::op_sizes::dword,
+        basecode::vm::op_sizes::dword,
         5);
     main_emitter.jump_subroutine_pc_relative(
-        basecode::op_sizes::byte,
-        basecode::operand_encoding_t::negative,
+        basecode::vm::op_sizes::byte,
+        basecode::vm::operand_encoding_t::negative,
         main_emitter.end_address() - fn_square_emitter.start_address());
     main_emitter.pop_int_register(
-        basecode::op_sizes::dword,
-        basecode::i_registers_t::i6);
+        basecode::vm::op_sizes::dword,
+        basecode::vm::i_registers_t::i6);
     main_emitter.exit();
 
     bootstrap_emitter[0].patch_branch_address(
@@ -141,48 +150,48 @@ static bool test_square(basecode::result& r, basecode::terp& terp) {
     return result;
 }
 
-static bool test_fibonacci(basecode::result& r, basecode::terp& terp) {
-    basecode::instruction_emitter bootstrap_emitter(terp.program_start);
+static bool test_fibonacci(basecode::common::result& r, basecode::vm::terp& terp) {
+    basecode::vm::instruction_emitter bootstrap_emitter(terp.program_start);
     bootstrap_emitter.jump_pc_relative(
-        basecode::op_sizes::byte,
-        basecode::operand_encoding_t::flags::none,
+        basecode::vm::op_sizes::byte,
+        basecode::vm::operand_encoding_t::flags::none,
         0);
 
-    basecode::instruction_emitter fn_fibonacci(bootstrap_emitter.end_address());
+    basecode::vm::instruction_emitter fn_fibonacci(bootstrap_emitter.end_address());
     fn_fibonacci.load_stack_offset_to_register(
-        basecode::op_sizes::dword,
-        basecode::i_registers_t::i0,
+        basecode::vm::op_sizes::dword,
+        basecode::vm::i_registers_t::i0,
         8);
 
     fn_fibonacci.push_int_register(
-        basecode::op_sizes::dword,
-        basecode::i_registers_t::i0);
+        basecode::vm::op_sizes::dword,
+        basecode::vm::i_registers_t::i0);
     fn_fibonacci.trap(1);
 
     fn_fibonacci.compare_int_register_to_constant(
-        basecode::op_sizes::dword,
-        basecode::i_registers_t::i0,
+        basecode::vm::op_sizes::dword,
+        basecode::vm::i_registers_t::i0,
         0);
     auto first_branch_address = fn_fibonacci.end_address();
     fn_fibonacci.branch_pc_relative_if_equal(
-        basecode::op_sizes::byte,
-        basecode::operand_encoding_t::none,
+        basecode::vm::op_sizes::byte,
+        basecode::vm::operand_encoding_t::none,
         0);
 
     fn_fibonacci.compare_int_register_to_constant(
-        basecode::op_sizes::dword,
-        basecode::i_registers_t::i0,
+        basecode::vm::op_sizes::dword,
+        basecode::vm::i_registers_t::i0,
         1);
     auto second_branch_address = fn_fibonacci.end_address();
     fn_fibonacci.branch_pc_relative_if_equal(
-        basecode::op_sizes::byte,
-        basecode::operand_encoding_t::none,
+        basecode::vm::op_sizes::byte,
+        basecode::vm::operand_encoding_t::none,
         0);
 
     auto jump_over_rts_address = fn_fibonacci.end_address();
     fn_fibonacci.jump_pc_relative(
-        basecode::op_sizes::byte,
-        basecode::operand_encoding_t::none,
+        basecode::vm::op_sizes::byte,
+        basecode::vm::operand_encoding_t::none,
         0);
 
     auto label_exit_fib = fn_fibonacci.end_address();
@@ -194,56 +203,56 @@ static bool test_fibonacci(basecode::result& r, basecode::terp& terp) {
     fn_fibonacci[7].patch_branch_address(label_next_fib - jump_over_rts_address, 1);
 
     fn_fibonacci.subtract_int_constant_from_register(
-        basecode::op_sizes::dword,
-        basecode::i_registers_t::i1,
-        basecode::i_registers_t::i0,
+        basecode::vm::op_sizes::dword,
+        basecode::vm::i_registers_t::i1,
+        basecode::vm::i_registers_t::i0,
         1);
     fn_fibonacci.subtract_int_constant_from_register(
-        basecode::op_sizes::dword,
-        basecode::i_registers_t::i2,
-        basecode::i_registers_t::i0,
+        basecode::vm::op_sizes::dword,
+        basecode::vm::i_registers_t::i2,
+        basecode::vm::i_registers_t::i0,
         2);
     fn_fibonacci.push_int_register(
-        basecode::op_sizes::dword,
-        basecode::i_registers_t::i2);
+        basecode::vm::op_sizes::dword,
+        basecode::vm::i_registers_t::i2);
     fn_fibonacci.jump_subroutine_pc_relative(
-        basecode::op_sizes::byte,
-        basecode::operand_encoding_t::negative,
+        basecode::vm::op_sizes::byte,
+        basecode::vm::operand_encoding_t::negative,
         fn_fibonacci.end_address() - fn_fibonacci.start_address());
     fn_fibonacci.pop_int_register(
-        basecode::op_sizes::dword,
-        basecode::i_registers_t::i2);
+        basecode::vm::op_sizes::dword,
+        basecode::vm::i_registers_t::i2);
     fn_fibonacci.add_int_register_to_register(
-        basecode::op_sizes::dword,
-        basecode::i_registers_t::i1,
-        basecode::i_registers_t::i1,
-        basecode::i_registers_t::i2);
+        basecode::vm::op_sizes::dword,
+        basecode::vm::i_registers_t::i1,
+        basecode::vm::i_registers_t::i1,
+        basecode::vm::i_registers_t::i2);
     fn_fibonacci.push_int_register(
-        basecode::op_sizes::dword,
-        basecode::i_registers_t::i1);
+        basecode::vm::op_sizes::dword,
+        basecode::vm::i_registers_t::i1);
     fn_fibonacci.jump_subroutine_pc_relative(
-        basecode::op_sizes::byte,
-        basecode::operand_encoding_t::negative,
+        basecode::vm::op_sizes::byte,
+        basecode::vm::operand_encoding_t::negative,
         fn_fibonacci.end_address() - fn_fibonacci.start_address());
     fn_fibonacci.pop_int_register(
-        basecode::op_sizes::dword,
-        basecode::i_registers_t::i1);
+        basecode::vm::op_sizes::dword,
+        basecode::vm::i_registers_t::i1);
     fn_fibonacci.store_register_to_stack_offset(
-        basecode::op_sizes::dword,
-        basecode::i_registers_t::i1,
+        basecode::vm::op_sizes::dword,
+        basecode::vm::i_registers_t::i1,
         8);
     fn_fibonacci.rts();
 
-    basecode::instruction_emitter main_emitter(fn_fibonacci.end_address());
-    main_emitter.push_int_constant(basecode::op_sizes::dword, 100);
+    basecode::vm::instruction_emitter main_emitter(fn_fibonacci.end_address());
+    main_emitter.push_int_constant(basecode::vm::op_sizes::dword, 100);
     main_emitter.jump_subroutine_pc_relative(
-        basecode::op_sizes::byte,
-        basecode::operand_encoding_t::negative,
+        basecode::vm::op_sizes::byte,
+        basecode::vm::operand_encoding_t::negative,
         main_emitter.end_address() - fn_fibonacci.start_address());
     main_emitter.dup();
     main_emitter.pop_int_register(
-        basecode::op_sizes::dword,
-        basecode::i_registers_t::i0);
+        basecode::vm::op_sizes::dword,
+        basecode::vm::i_registers_t::i0);
     main_emitter.trap(1);
     main_emitter.exit();
 
@@ -266,12 +275,12 @@ static bool test_fibonacci(basecode::result& r, basecode::terp& terp) {
 }
 
 static int time_test_function(
-        basecode::terp& terp,
+        basecode::vm::terp& terp,
         const std::string& title,
         const test_function_callable& test_function) {
     std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
 
-    basecode::result r;
+    basecode::common::result r;
 
     terp.reset();
     auto rc = test_function(r, terp);
@@ -291,13 +300,13 @@ static int time_test_function(
 static int terp_tests() {
     std::chrono::high_resolution_clock::time_point start = std::chrono::high_resolution_clock::now();
 
-    basecode::terp terp(heap_size, stack_size);
-    terp.register_trap(1, [](basecode::terp* terp) {
+    basecode::vm::terp terp(heap_size, stack_size);
+    terp.register_trap(1, [](basecode::vm::terp* terp) {
         auto value = terp->pop();
         fmt::print("[trap 1] ${:016X}\n", value);
     });
 
-    basecode::result r;
+    basecode::common::result r;
     if (!terp.initialize(r)) {
         fmt::print("terp initialize failed.\n");
         print_results(r);
@@ -316,92 +325,13 @@ static int terp_tests() {
 }
 
 static int compiler_tests() {
-    basecode::compiler compiler(heap_size, stack_size);
-    basecode::result r;
+    basecode::compiler::bytecode_emitter compiler(heap_size, stack_size);
+    basecode::common::result r;
     if (!compiler.initialize(r)) {
         print_results(r);
         return 1;
     }
 
-    //
-    // basecode heap (as seen by the terp)
-    //
-    // +-----------------------------+ +--> top of heap (address: $2000000)
-    // |                             | |
-    // | stack (unbounded)           | | stack grows down, e.g. SUB SP, SP, 8 "allocates" 8 bytes on stack
-    // |                             | *
-    // +-----------------------------+
-    // |                             |
-    // |                             |
-    // | free space                  | * --> how does alloc() and free() work in this space?
-    // | arenas                      | |
-    // |                             | +--------> context available to all functions
-    // |                             |          | .allocator can be assigned callable
-    // +-----------------------------+
-    // |                             | * byte code top address
-    // |                             |
-    // |                             | *
-    // //~~~~~~~~~~~~~~~~~~~~~~~~~~~// | generate stack sizing code for variables,
-    // |                             | | function declarations, etc.
-    // |                             | *
-    // |                             |
-    // |                             | * internal support functions
-    // |                             | | some swi vectors will point at these
-    // //~~~~~~~~~~~~~~~~~~~~~~~~~~~// |
-    // |                             | | program code & data grows "up" in heap
-    // |                             | * address: $90 start of free memory
-    // |                             | |
-    // |                             | |                   - reserved space
-    // |                             | |                   - free space start address
-    // |                             | |                   - stack top max address
-    // |                             | |                   - program start address
-    // |                             | | address: $80 -- start of heap metadata
-    // |                             | | address: $0  -- start of swi vector table
-    // +-----------------------------+ +--> bottom of heap (address: $0)
-    //
-    //
-    // step 1. parse source to ast
-    //
-    // step 2. expand @import or @compile attributes by parsing to ast
-    //
-    // step 3. fold constants/type inference
-    //
-    // step 4. bytecode generation
-    //
-    // step 5. @run expansion
-    //
-    // short_string {
-    //      capacity:u16 := 64;
-    //      length:u16 := 0;
-    //      data:*u8 := alloc(capacity);
-    // } size_of(type(short_string)) == 12;
-    //
-    // string {
-    //      capacity:u32 := 64;
-    //      length:u32 := 0;
-    //      data:*u8 := alloc(capacity);
-    // } size_of(type(string)) == 64;
-    //
-    // array {
-    //      capacity:u32 := 64;
-    //      length:u32 := 0;
-    //      element_type:type := type(any);
-    //      data:*u8 := alloc(capacity * size_of(element));
-    // } size_of(type(array)) == 72;
-    //
-    // callable_parameter {
-    //      name:short_string;
-    //      type:type;
-    //      default:any := empty;
-    //      spread:bool := false;
-    // } size_of(type(callable_parameter)) == 32;
-    //
-    // callable {
-    //      params:callable_parameter[];
-    //      returns:callable_parameter[];
-    //      address:*u8 := null;
-    // } size_of(type(callable)) == 153;
-    //
     std::stringstream source(
         "// this is a test comment\n"
         "// fibonacci sequence in basecode-alpha\n"
@@ -481,7 +411,25 @@ static int compiler_tests() {
     return 0;
 }
 
+double square(double x) {
+    return x * x;
+}
+
 int main() {
+    // test linkage of dyncall library
+    double r;
+
+    DCCallVM* vm = dcNewCallVM(4096);
+    dcMode(vm, DC_CALL_C_DEFAULT);
+    dcReset(vm);
+    dcArgDouble(vm, 4.2373);
+    r = dcCallDouble(vm, (DCpointer) &square);
+    dcFree(vm);
+
+    std::cout << "r = " << r << std::endl;
+    ////
+    //
+
     int result = 0;
 
     result = compiler_tests();

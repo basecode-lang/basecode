@@ -7,7 +7,7 @@
 #include <functional>
 #include "token.h"
 
-namespace basecode {
+namespace basecode::syntax {
 
     class lexer {
     public:

@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-namespace basecode {
+namespace basecode::common {
 
     inline bool is_platform_little_endian() {
         int n = 1;

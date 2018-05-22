@@ -3,7 +3,7 @@
 #include <vector>
 #include <string>
 
-namespace basecode {
+namespace basecode::common {
 
     class result_message {
     public:

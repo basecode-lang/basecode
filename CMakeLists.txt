@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.11)
 project(bootstrap)
+include_directories(${PROJECT_SOURCE_DIR})
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -33,11 +34,6 @@ set(CONAN_DISABLE_CHECK_COMPILER true)
 include(conanbuildinfo.cmake)
 conan_basic_setup()
 
-include_directories(
-    #${PROJECT_BINARY_DIR}
-    ${PROJECT_SOURCE_DIR}
-)
-
 # all_unit_tests target
 get_property(test_targets GLOBAL PROPERTY UNIT_TEST_TARGETS)
 message(STATUS "UNIT_TEST_TARGETS=${test_targets}")
@@ -51,21 +47,26 @@ add_custom_command(
 
 # actual executable target
 add_executable(
-    bootstrap
-    bytes.h
-    main.cpp
-    result.h
-    ast.cpp ast.h
-    terp.cpp terp.h
-    result_message.h
-    lexer.cpp lexer.h
-    token.cpp token.h
-    scope.cpp scope.h
-    parser.cpp parser.h
-    compiler.cpp compiler.h
-    symbol_table.cpp symbol_table.h
-    hex_formatter.cpp hex_formatter.h
-    instruction_emitter.cpp instruction_emitter.h)
+        bootstrap
+
+        main.cpp
+
+        common/bytes.h
+        common/result.h
+        common/result_message.h
+        common/hex_formatter.cpp common/hex_formatter.h
+
+        parser/ast.cpp parser/ast.h
+        parser/lexer.cpp parser/lexer.h
+        parser/token.cpp parser/token.h
+        parser/parser.cpp parser/parser.h
+
+        vm/terp.cpp vm/terp.h
+        vm/instruction_emitter.cpp vm/instruction_emitter.h
+
+        compiler/scope.cpp compiler/scope.h
+        compiler/bytecode_emitter.cpp compiler/bytecode_emitter.h
+        compiler/symbol_table.cpp compiler/symbol_table.h)
 target_link_libraries(bootstrap ${CONAN_LIBS})
 
 # custom post bulid steps

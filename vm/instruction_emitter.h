@@ -1,10 +1,10 @@
 #pragma once
 
 #include <cstdint>
+#include <common/result.h>
 #include "terp.h"
-#include "result.h"
 
-namespace basecode {
+namespace basecode::vm {
 
     class terp;
 
@@ -81,7 +81,7 @@ namespace basecode {
 
         void jump_direct(uint64_t address);
 
-        bool encode(result& r, terp& terp);
+        bool encode(common::result& r, terp& terp);
 
         void load_stack_offset_to_register(
             op_sizes size,

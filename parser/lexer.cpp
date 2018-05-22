@@ -1,7 +1,7 @@
 #include <sstream>
 #include "lexer.h"
 
-namespace basecode {
+namespace basecode::syntax {
 
     std::multimap<char, lexer::lexer_case_callable> lexer::s_cases = {
         // attribute

@@ -2,7 +2,7 @@
 #include <fmt/format.h>
 #include "hex_formatter.h"
 
-namespace basecode {
+namespace basecode::common {
 
     std::string hex_formatter::dump_to_string(
             const void* data,

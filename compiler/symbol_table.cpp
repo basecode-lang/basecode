@@ -1,6 +1,6 @@
 #include "symbol_table.h"
 
-namespace basecode {
+namespace basecode::compiler {
 
     void symbol_table::put(
             const std::string& name,

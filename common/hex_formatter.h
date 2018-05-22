@@ -1,6 +1,6 @@
 #pragma once
 
-namespace basecode {
+namespace basecode::common {
 
     class hex_formatter {
     public:

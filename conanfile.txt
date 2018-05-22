@@ -1,5 +1,7 @@
 [build_requires]
 fmt/4.1.0@bincrafters/stable
+Catch/1.12.1@bincrafters/stable
+dyncall/1.0@basecode-lang/bootstrap-compiler
 
 [generators]
 cmake
