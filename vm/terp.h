@@ -1,11 +1,16 @@
 #pragma once
 
 #include <map>
+#include <set>
 #include <string>
 #include <cstdint>
 #include <functional>
+#include <filesystem>
+#include <fmt/format.h>
 #include <unordered_map>
 #include <common/result.h>
+#include <dyncall/dyncall.h>
+#include <dynload/dynload.h>
 
 namespace basecode::vm {
 
@@ -326,6 +331,44 @@ namespace basecode::vm {
         instruction_t inst;
     };
 
+    using symbol_address_map = std::unordered_map<std::string, void*>;
+
+    struct shared_library_t {
+        shared_library_t() {
+        }
+
+        ~shared_library_t() {
+            if (_library != nullptr)
+                dlFreeLibrary(_library);
+        }
+
+        bool initialize(
+                common::result& r,
+                const std::filesystem::path& path);
+
+        bool initialize(common::result& r);
+
+        inline const std::filesystem::path& path() const {
+            return _path;
+        }
+
+        inline const symbol_address_map& symbols() const {
+            return _symbols;
+        }
+
+        bool exports_symbol(const std::string& symbol_name);
+
+        void* get_symbol_address(const std::string& symbol_name);
+
+    private:
+        void load_symbols(const char* path);
+
+    private:
+        DLLib* _library = nullptr;
+        std::filesystem::path _path {};
+        symbol_address_map _symbols {};
+    };
+
     class terp;
 
     class instruction_cache {
@@ -386,8 +429,6 @@ namespace basecode::vm {
 
         uint64_t pop();
 
-        bool step(common::result& r);
-
         uint64_t peek() const;
 
         bool has_exited() const;
@@ -398,13 +439,21 @@ namespace basecode::vm {
 
         size_t heap_size() const;
 
-        void push(uint64_t value);
+        bool load_shared_library(
+            common::result& r,
+            const std::filesystem::path& path);
 
-        bool initialize(common::result& r);
+        void push(uint64_t value);
 
         size_t stack_size() const;
 
+        bool step(common::result& r);
+
+        void dump_shared_libraries();
+
         void remove_trap(uint8_t index);
+
+        bool initialize(common::result& r);
 
         void dump_state(uint8_t count = 16);
 
@@ -424,9 +473,9 @@ namespace basecode::vm {
 
         const meta_information_t& meta_information() const;
 
-        std::string disassemble(common::result& r, uint64_t address);
-
         std::string disassemble(const instruction_t& inst) const;
+
+        std::string disassemble(common::result& r, uint64_t address);
 
         void register_trap(uint8_t index, const trap_callable& callable);
 
@@ -559,9 +608,11 @@ namespace basecode::vm {
         size_t _stack_size = 0;
         uint8_t* _heap = nullptr;
         instruction_cache _icache;
+        DCCallVM* _call_vm = nullptr;
         register_file_t _registers {};
         meta_information_t _meta_information {};
         std::unordered_map<uint8_t, trap_callable> _traps {};
+        std::unordered_map<std::string, shared_library_t> _shared_libraries {};
     };
 
 };

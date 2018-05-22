@@ -22,6 +22,75 @@ namespace basecode::vm {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    bool shared_library_t::initialize(
+            common::result& r,
+            const std::filesystem::path& path) {
+        if (!std::filesystem::exists(path)) {
+            r.add_message(
+                "B061",
+                fmt::format("shared library image file not found: {}.", path.string()),
+                true);
+            return false;
+        }
+        auto path_c_str = path.string().c_str();
+        _library = dlLoadLibrary(path_c_str);
+        if (_library == nullptr) {
+            r.add_message(
+                "B062",
+                fmt::format("unable to load library image file: {}.", path.string()),
+                true);
+            return false;
+        }
+        load_symbols(path_c_str);
+        return true;
+    }
+
+    bool shared_library_t::initialize(common::result& r) {
+        _library = dlLoadLibrary(nullptr);
+        if (_library == nullptr) {
+            r.add_message(
+                "B062",
+                fmt::format("unable to load library image for self."),
+                true);
+            return false;
+        }
+        char library_path[PATH_MAX];
+        dlGetLibraryPath(_library, library_path, PATH_MAX);
+        load_symbols(library_path);
+        _path = library_path;
+        return true;
+    }
+
+    void shared_library_t::load_symbols(const char* path) {
+        _symbols.clear();
+        auto symbol_ptr = dlSymsInit(path);
+        if (symbol_ptr != nullptr) {
+            int count = dlSymsCount(symbol_ptr);
+            for (int i = 0; i < count; i++) {
+                const char* symbol_name = dlSymsName(symbol_ptr, i);
+                if (symbol_name != nullptr)
+                    _symbols.insert(std::make_pair(symbol_name, nullptr));
+            }
+            dlSymsCleanup(symbol_ptr);
+        }
+    }
+
+    bool shared_library_t::exports_symbol(const std::string& symbol_name) {
+        return _symbols.count(symbol_name) > 0;
+    }
+
+    void* shared_library_t::get_symbol_address(const std::string& symbol_name) {
+        auto it = _symbols.find(symbol_name);
+        if (it == _symbols.end())
+            return nullptr;
+        if (it->second == nullptr) {
+            it->second = dlFindSymbol(_library, symbol_name.c_str());
+        }
+        return it->second;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
     size_t instruction_t::encoding_size() const {
         size_t encoding_size = base_size;
 
@@ -297,11 +366,18 @@ namespace basecode::vm {
     }
 
     terp::~terp() {
+        if (_call_vm != nullptr) {
+            dcFree(_call_vm);
+            _call_vm = nullptr;
+        }
+
         delete _heap;
         _heap = nullptr;
     }
 
     void terp::reset() {
+        dcReset(_call_vm);
+
         _registers.pc = program_start;
         _registers.fr = 0;
         _registers.sr = 0;
@@ -326,6 +402,23 @@ namespace basecode::vm {
     uint64_t terp::peek() const {
         uint64_t value = *qword_ptr(_registers.sp);
         return value;
+    }
+
+    void terp::dump_shared_libraries() {
+        fmt::print("{:32}{:64}{:17}\n", "Image Name", "Symbol Name", "Address");
+        fmt::print("{}\n", std::string(180, '-'));
+        for (const auto& kvp : _shared_libraries) {
+            auto index = 0;
+            for (const auto& entry : kvp.second.symbols()) {
+                fmt::print(
+                    "{:32}{:64}${:016X}\n",
+                    index == 0 ? kvp.first.substr(0, std::min<size_t>(32, kvp.first.length())) : "",
+                    entry.first.substr(0, std::min<size_t>(64, entry.first.length())),
+                    reinterpret_cast<uint64_t>(entry.second));
+                ++index;
+            }
+        }
+        fmt::print("\n");
     }
 
     void terp::dump_state(uint8_t count) {
@@ -1309,8 +1402,20 @@ namespace basecode::vm {
     }
 
     bool terp::initialize(common::result& r) {
+        if (_heap != nullptr)
+            return true;
+
+        _call_vm = dcNewCallVM(4096);
+
+        _shared_libraries.clear();
+        shared_library_t self_image;
+        if (!self_image.initialize(r))
+            return false;
+        _shared_libraries.insert(std::make_pair(self_image.path(), self_image));
+
         _heap = new uint8_t[_heap_size];
         reset();
+
         return !r.is_failed();
     }
 
@@ -1766,6 +1871,14 @@ namespace basecode::vm {
             }
         }
         return false;
+    }
+
+    bool terp::load_shared_library(common::result& r, const std::filesystem::path& path) {
+        shared_library_t shared_library {};
+        if (!shared_library.initialize(r, path))
+            return false;
+        _shared_libraries.insert(std::make_pair(path.string(), shared_library));
+        return true;
     }
 
 };

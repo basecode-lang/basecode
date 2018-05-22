@@ -1,6 +1,5 @@
 cmake_minimum_required(VERSION 3.11)
 project(bootstrap)
-include_directories(${PROJECT_SOURCE_DIR})
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -9,7 +8,7 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
     set(CMAKE_CXX_FLAGS "-Wall -Wno-unused-private-field -Wno-unknown-pragmas -Wno-inconsistent-missing-override" CACHE STRING "compile flags" FORCE)
     message(STATUS "Using clang flags: ${CMAKE_CXX_FLAGS}")
 elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
-    set(CMAKE_CXX_FLAGS "-Wall" CACHE STRING "compile flags" FORCE)
+    set(CMAKE_CXX_FLAGS "-lstdc++fs -Wall" CACHE STRING "compile flags" FORCE)
     message(STATUS "Using gcc flags: ${CMAKE_CXX_FLAGS}")
 else ()
     message(STATUS "Unknown compiler: ${CMAKE_CXX_COMPILER_ID}")
@@ -46,6 +45,8 @@ add_custom_command(
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
 
 # actual executable target
+include_directories(${PROJECT_SOURCE_DIR})
+
 add_executable(
         bootstrap
 

@@ -312,6 +312,7 @@ static int terp_tests() {
         print_results(r);
         return 1;
     }
+    terp.dump_shared_libraries();
 
     std::chrono::high_resolution_clock::time_point end = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
@@ -411,25 +412,7 @@ static int compiler_tests() {
     return 0;
 }
 
-double square(double x) {
-    return x * x;
-}
-
 int main() {
-    // test linkage of dyncall library
-    double r;
-
-    DCCallVM* vm = dcNewCallVM(4096);
-    dcMode(vm, DC_CALL_C_DEFAULT);
-    dcReset(vm);
-    dcArgDouble(vm, 4.2373);
-    r = dcCallDouble(vm, (DCpointer) &square);
-    dcFree(vm);
-
-    std::cout << "r = " << r << std::endl;
-    ////
-    //
-
     int result = 0;
 
     result = compiler_tests();
