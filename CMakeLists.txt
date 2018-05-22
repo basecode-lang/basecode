@@ -14,15 +14,8 @@ else ()
     message(STATUS "Unknown compiler: ${CMAKE_CXX_COMPILER_ID}")
 endif()
 
-# rpath setup
-SET(CMAKE_SKIP_BUILD_RPATH FALSE)
-SET(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
-SET(CMAKE_INSTALL_RPATH "/usr/local/lib")
-SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-
-enable_testing()
-
 # enhance unit test discovery
+enable_testing()
 set_property(GLOBAL PROPERTY UNIT_TEST_TARGETS "")
 
 macro(add_unit_test target test_name args)
@@ -30,21 +23,19 @@ macro(add_unit_test target test_name args)
     add_test(NAME ${test_name} COMMAND ${CMAKE_CURRENT_BINARY_DIR}/${target} ${args})
 endmacro(add_unit_test)
 
-# project cmake modules
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake")
-
 # dummy target used for file copies
 add_custom_target(dummy-target ALL DEPENDS custom-output)
 add_custom_command(OUTPUT custom-output COMMAND ${CMAKE_COMMAND} -E echo DEPENDS always-rebuild)
 add_custom_command(OUTPUT always-rebuild COMMAND ${CMAKE_COMMAND} -E echo)
 
-# 3rd party dependencies
-find_package(FMT REQUIRED)
+# conan configuration
+set(CONAN_DISABLE_CHECK_COMPILER true)
+include(conanbuildinfo.cmake)
+conan_basic_setup()
 
 include_directories(
-    ${PROJECT_BINARY_DIR}
+    #${PROJECT_BINARY_DIR}
     ${PROJECT_SOURCE_DIR}
-    ${FMT_INCLUDE_DIRS}
 )
 
 # all_unit_tests target
@@ -58,31 +49,30 @@ add_custom_command(
     COMMAND ctest -C $<CONFIGURATION> --output-on-failure
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
 
+# actual executable target
 add_executable(
-        bootstrap
-        bytes.h
-        main.cpp
-        result.h
-        ast.cpp ast.h
-        terp.cpp terp.h
-        result_message.h
-        lexer.cpp lexer.h
-        token.cpp token.h
-        scope.cpp scope.h
-        parser.cpp parser.h
-        compiler.cpp compiler.h
-        symbol_table.cpp symbol_table.h
-        hex_formatter.cpp hex_formatter.h
-        instruction_emitter.cpp instruction_emitter.h)
-
-target_link_libraries(
     bootstrap
-    fmt::fmt
-)
+    bytes.h
+    main.cpp
+    result.h
+    ast.cpp ast.h
+    terp.cpp terp.h
+    result_message.h
+    lexer.cpp lexer.h
+    token.cpp token.h
+    scope.cpp scope.h
+    parser.cpp parser.h
+    compiler.cpp compiler.h
+    symbol_table.cpp symbol_table.h
+    hex_formatter.cpp hex_formatter.h
+    instruction_emitter.cpp instruction_emitter.h)
+target_link_libraries(bootstrap ${CONAN_LIBS})
 
+# custom post bulid steps
 add_custom_target(bootstrap-configured DEPENDS dummy-target bootstrap)
 add_dependencies(bootstrap-configured all-unit-tests)
 add_custom_command(
     TARGET bootstrap-configured
-    COMMAND ${CMAKE_COMMAND} -E echo "placeholder"
+    COMMAND ${CMAKE_COMMAND} -E echo "copy_directory: ${PROJECT_SOURCE_DIR}/examples"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_SOURCE_DIR}/examples ${PROJECT_BINARY_DIR}/examples
 )

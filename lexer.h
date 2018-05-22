@@ -4,6 +4,7 @@
 #include <map>
 #include <vector>
 #include <istream>
+#include <functional>
 #include "token.h"
 
 namespace basecode {

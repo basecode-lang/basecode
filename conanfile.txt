@@ -1,0 +1,11 @@
+[build_requires]
+fmt/4.1.0@bincrafters/stable
+
+[generators]
+cmake
+
+[options]
+fmt:shared=True
+
+[imports]
+lib, *.dylib* -> ./build/debug/bin

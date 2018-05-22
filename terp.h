@@ -3,6 +3,7 @@
 #include <map>
 #include <string>
 #include <cstdint>
+#include <functional>
 #include <unordered_map>
 #include "result.h"
 
@@ -463,11 +464,11 @@ namespace basecode {
 
         inline uint8_t op_size_in_bytes(op_sizes size) const {
             switch (size) {
-                case op_sizes::none:  return 0;
                 case op_sizes::byte:  return 1;
                 case op_sizes::word:  return 2;
                 case op_sizes::dword: return 4;
                 case op_sizes::qword: return 8;
+                default:              return 0;
             }
         }
 

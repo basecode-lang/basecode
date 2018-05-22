@@ -1,5 +1,6 @@
 #include <sstream>
 #include <iomanip>
+#include <climits>
 #include <fmt/format.h>
 #include "terp.h"
 #include "hex_formatter.h"

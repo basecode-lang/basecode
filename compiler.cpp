@@ -50,4 +50,9 @@ namespace basecode {
         return !r.is_failed();
     }
 
+    bool compiler::compile_file(result& r, const std::filesystem::path& path) {
+
+        return !r.is_failed();
+    }
+
 }

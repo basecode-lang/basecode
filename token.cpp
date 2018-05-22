@@ -32,15 +32,13 @@ namespace basecode {
         char* end;
         errno = 0;
         out = strtoll(s, &end, radix);
-        if ((errno == ERANGE && out == LONG_MAX) || out > UINT_MAX) {
+        if ((errno == ERANGE && out == LONG_MAX)
+        ||   out > UINT_MAX)
             return conversion_result::overflow;
-        }
-        if ((errno == ERANGE && out == LONG_MIN)) {
+        if ((errno == ERANGE && out == LONG_MIN))
             return conversion_result::underflow;
-        }
-        if (*s == '\0' || *end != '\0') {
+        if (*s == '\0' || *end != '\0')
             return conversion_result::inconvertible;
-        }
         return conversion_result::success;
     }
 
@@ -49,15 +47,11 @@ namespace basecode {
         char* end;
         errno = 0;
         out = strtoul(s, &end, radix);
-        if ((errno == ERANGE && out == LONG_MAX) || out > UINT_MAX) {
+        if ((errno == ERANGE && out == ULONG_MAX)
+        ||   out > UINT_MAX)
             return conversion_result::overflow;
-        }
-        if ((errno == ERANGE && out == LONG_MIN)) {
-            return conversion_result::underflow;
-        }
-        if (*s == '\0' || *end != '\0') {
+        if (*s == '\0' || *end != '\0')
             return conversion_result::inconvertible;
-        }
         return conversion_result::success;
     }
 

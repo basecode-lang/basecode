@@ -20,8 +20,8 @@ namespace basecode {
         meta_op.operands[0].value.u64 = 6 + file_name.length() + symbol_name.length();
         _meta_information_list.push_back(meta_information_t{
             .line_number = line,
-            .symbol = symbol_name,
             .column_number = column,
+            .symbol = symbol_name,
             .source_file = file_name,
         });
         _instructions.push_back(meta_op);

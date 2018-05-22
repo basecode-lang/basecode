@@ -1,6 +1,8 @@
 #pragma once
 
+#include <string>
 #include <cstdint>
+#include <filesystem>
 #include "terp.h"
 #include "scope.h"
 #include "parser.h"
@@ -20,6 +22,8 @@ namespace basecode {
         bool compile(result& r, std::istream& input);
 
         bool compile_stream(result& r, std::istream& input);
+
+        bool compile_file(result& r, const std::filesystem::path& path);
 
     private:
         void build_scope_tree(

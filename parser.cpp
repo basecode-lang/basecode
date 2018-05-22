@@ -473,7 +473,11 @@ namespace basecode {
             uint32_t line,
             uint32_t column) {
         std::vector<std::string> source_lines {};
+#ifdef __clang__
         _source.seekg(0, std::istream::seekdir::beg);
+#else
+        _source.seekg(0, std::istream::seekdir::_S_beg);
+#endif
         while (!_source.eof()) {
             std::string source_line;
             std::getline(_source, source_line);
