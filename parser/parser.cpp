@@ -473,15 +473,11 @@ namespace basecode::syntax {
             const std::string& message,
             uint32_t line,
             uint32_t column) {
+        _source.seekg(0, std::ios_base::beg);
+
         std::vector<std::string> source_lines {};
-#ifdef __clang__
-        _source.seekg(0, std::istream::seekdir::beg);
-#else
-        _source.seekg(0, std::istream::seekdir::_S_beg);
-#endif
-        while (!_source.eof()) {
-            std::string source_line;
-            std::getline(_source, source_line);
+        std::string source_line;
+        while (std::getline(_source, source_line)) {
             source_lines.push_back(source_line);
         }
 
@@ -508,7 +504,11 @@ namespace basecode::syntax {
                 stream << "\n";
         }
 
-        r.add_message(code, stream.str(), true);
+        r.add_message(
+            code,
+            fmt::format("Syntax error at: {}, {}", line, column),
+            stream.str(),
+            true);
     }
 
     bool parser::consume() {

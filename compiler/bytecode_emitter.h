@@ -89,21 +89,28 @@
 
 namespace basecode::compiler {
 
+    struct bytecode_emitter_options_t {
+        bool verbose = false;
+        size_t heap_size = 0;
+        size_t stack_size = 0;
+        std::filesystem::path ast_graph_file_name {};
+    };
+
     class bytecode_emitter {
     public:
-        bytecode_emitter(
-            size_t heap_size,
-            size_t stack_size);
+        explicit bytecode_emitter(const bytecode_emitter_options_t& options);
 
         virtual ~bytecode_emitter();
+
+        bool compile_files(
+            common::result& r,
+            const std::vector<std::filesystem::path>& source_files);
 
         bool initialize(common::result& r);
 
         bool compile(common::result& r, std::istream& input);
 
         bool compile_stream(common::result& r, std::istream& input);
-
-        bool compile_file(common::result& r, const std::filesystem::path& path);
 
     private:
         void build_scope_tree(
@@ -114,6 +121,7 @@ namespace basecode::compiler {
     private:
         vm::terp _terp;
         scope _global_scope;
+        bytecode_emitter_options_t _options {};
     };
 
 };

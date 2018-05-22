@@ -55,6 +55,7 @@ add_executable(
         common/bytes.h
         common/result.h
         common/result_message.h
+        common/ya_getopt.c common/ya_getopt.h
         common/hex_formatter.cpp common/hex_formatter.h
 
         parser/ast.cpp parser/ast.h

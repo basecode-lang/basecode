@@ -195,11 +195,7 @@ namespace basecode::syntax {
     };
 
     lexer::lexer(std::istream& source) : _source(source) {
-#ifdef __clang__
-        _source.seekg(0, std::istream::seekdir::beg);
-#else
-        _source.seekg(0, std::istream::seekdir::_S_beg);
-#endif
+        _source.seekg(0, std::ios_base::beg);
     }
 
     char lexer::peek() {
@@ -229,7 +225,7 @@ namespace basecode::syntax {
     }
 
     void lexer::rewind_one_char() {
-        _source.seekg(-1, std::istream::cur);
+        _source.seekg(-1, std::ios_base::cur);
         if (_column > 0)
             _column--;
     }

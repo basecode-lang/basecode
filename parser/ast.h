@@ -138,7 +138,9 @@ namespace basecode::syntax {
 
     class ast_formatter {
     public:
-        explicit ast_formatter(const ast_node_shared_ptr& root);
+        ast_formatter(
+            const ast_node_shared_ptr& root,
+            FILE* file);
 
         void format_text();
 
@@ -154,6 +156,7 @@ namespace basecode::syntax {
         std::string get_vertex_name(const ast_node_shared_ptr& node) const;
 
     private:
+        FILE* _file = nullptr;
         ast_node_shared_ptr _root;
     };
 
