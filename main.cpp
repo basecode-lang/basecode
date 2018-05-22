@@ -127,15 +127,15 @@ int main(int argc, char** argv) {
         } else {
             if (!compiler.compile_files(r, source_files)) {
                 rc = 1;
+            } else {
+                high_resolution_clock::time_point end = high_resolution_clock::now();
+                auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+                fmt::print("Total compilation time (in μs): {}\n", duration);
             }
         }
     }
 
     print_results(r);
-
-    high_resolution_clock::time_point end = high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
-    fmt::print("Total compilation time (in μs): {}\n", duration);
 
     return rc;
 }

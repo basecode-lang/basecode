@@ -66,7 +66,7 @@ namespace basecode::syntax {
     void ast_formatter::format_graph_viz() {
         fmt::print(_file, "digraph {{\n");
         //fmt::print("rankdir=LR\n");
-        fmt::print(_file, "\tsplines=\"line\";\n");
+        //fmt::print(_file, "\tsplines=\"line\";\n");
         format_graph_viz_node(_root);
         fmt::print(_file, "}}\n");
     }
@@ -122,15 +122,22 @@ namespace basecode::syntax {
                 style = ", fillcolor=yellow, style=\"filled\"";
                 break;
             default:
-                if (!node->token.value.empty()) {
-                    details = fmt::format(
-                        "|{{ token: '{}' | radix: {} | is_pointer: {} | is_array: {} }}",
-                        node->token.value,
-                        node->token.radix,
-                        node->is_pointer(),
-                        node->is_array());
-                }
                 break;
+        }
+
+        if (!node->token.value.empty() && details.empty()) {
+            std::string value = node->token.value;
+            if (value == "|")
+                value = "&#124;";
+            else if (value == "||")
+                value = "&#124;&#124;";
+            details = fmt::format(
+                "|{{ token: '{}' | radix: {} | ptr: {} | array: {} | spread: {} }}",
+                value,
+                node->token.radix,
+                node->is_pointer(),
+                node->is_array(),
+                node->is_spread());
         }
 
         fmt::print(
@@ -348,6 +355,14 @@ namespace basecode::syntax {
         return node;
     }
 
+    ast_node_shared_ptr ast_builder::qualified_symbol_reference_node() {
+        auto node = std::make_shared<ast_node_t>();
+        node->id = ++_id;
+        node->lhs = argument_list_node();
+        node->type = ast_node_types_t::qualified_symbol_reference;
+        return node;
+    }
+
     ast_node_shared_ptr ast_builder::struct_node(const token_t& token) {
         auto node = std::make_shared<ast_node_t>();
         node->id = ++_id;
@@ -361,6 +376,15 @@ namespace basecode::syntax {
         node->id = ++_id;
         node->token = token;
         node->type = ast_node_types_t::continue_statement;
+        return node;
+    }
+
+    ast_node_shared_ptr ast_builder::namespace_node(const token_t& token) {
+        auto node = std::make_shared<ast_node_t>();
+        node->id = ++_id;
+        node->token = token;
+        node->lhs = argument_list_node();
+        node->type = ast_node_types_t::namespace_statement;
         return node;
     }
 
@@ -460,19 +484,19 @@ namespace basecode::syntax {
         return node;
     }
 
-    ast_node_shared_ptr ast_builder::symbol_reference_node(const token_t& token) {
-        auto node = std::make_shared<ast_node_t>();
-        node->id = ++_id;
-        node->token = token;
-        node->type = ast_node_types_t::symbol_reference;
-        return node;
-    }
-
     ast_node_shared_ptr ast_builder::character_literal_node(const token_t& token) {
         auto node = std::make_shared<ast_node_t>();
         node->id = ++_id;
         node->token = token;
         node->type = ast_node_types_t::character_literal;
+        return node;
+    }
+
+    ast_node_shared_ptr ast_builder::symbol_reference_node(const token_t& token) {
+        auto node = std::make_shared<ast_node_t>();
+        node->id = ++_id;
+        node->token = token;
+        node->type = ast_node_types_t::symbol_reference;
         return node;
     }
 

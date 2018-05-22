@@ -2,16 +2,33 @@
 // fibonacci recursive function
 //
 
-@entry_point main;
+// N.B. this is how we define 'external' function prototypes
+#foreign print := fn(format:string, values:...any):none;
 
-fib := fn(n:u64):u64 {
-    if n == 0 || n == 1 {
-        return n;
-    } else {
-        return fib((n - 1) + fib(n - 2));
+@entry_point alpha::compiler::examples::main;
+
+ns alpha::compiler::config {
+
+    ns fibonacci {
+        length_of_sequence := 1000;
     };
+
 };
 
-main := fn():u64 {
-    return fib(1000);
+ns alpha::compiler::examples {
+
+    fib := fn(n:u64):u64 {
+        if n == 0 || n == 1 {
+            return n;
+        } else {
+            value := fib((n - 1) + fib(n - 2));
+            print(value);
+            return value;
+        };
+    };
+
+    main := fn():u64 {
+        return fib(alpha::compiler::config::fibonacci::length_of_sequence);
+    };
+
 };

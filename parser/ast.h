@@ -58,6 +58,7 @@ namespace basecode::syntax {
         struct_expression,
         continue_statement,
         namespace_statement,
+        qualified_symbol_reference,
     };
 
     static inline std::unordered_map<ast_node_types_t, std::string> s_node_type_names = {
@@ -101,6 +102,7 @@ namespace basecode::syntax {
         {ast_node_types_t::elseif_expression, "elseif_expression"},
         {ast_node_types_t::continue_statement, "continue_statement"},
         {ast_node_types_t::namespace_statement, "namespace_statement"},
+        {ast_node_types_t::qualified_symbol_reference, "qualified_symbol_reference"},
     };
     
     struct ast_node_t {
@@ -109,6 +111,7 @@ namespace basecode::syntax {
             none    = 0b00000000,
             pointer = 0b00000001,
             array   = 0b00000010,
+            spread  = 0b00000100,
         };
 
         inline bool is_array() const {
@@ -117,6 +120,10 @@ namespace basecode::syntax {
 
         inline bool is_pointer() const {
             return ((flags & flags_t::pointer) != 0);
+        }
+
+        inline bool is_spread() const {
+            return ((flags & flags_t::spread) != 0);
         }
 
         inline std::string name() const {
@@ -211,6 +218,8 @@ namespace basecode::syntax {
 
         ast_node_shared_ptr break_node(const token_t& token);
 
+        ast_node_shared_ptr qualified_symbol_reference_node();
+
         ast_node_shared_ptr struct_node(const token_t& token);
 
         ast_node_shared_ptr continue_node(const token_t& token);
@@ -218,6 +227,8 @@ namespace basecode::syntax {
         ast_node_shared_ptr directive_node(const token_t& token);
 
         ast_node_shared_ptr attribute_node(const token_t& token);
+
+        ast_node_shared_ptr namespace_node(const token_t& token);
 
         ast_node_shared_ptr none_literal_node(const token_t& token);
 

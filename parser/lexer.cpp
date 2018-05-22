@@ -237,10 +237,11 @@ namespace basecode::syntax {
     bool lexer::next(token_t& token) {
         if (_source.eof()) {
             _has_next = false;
+            token.value = "";
             token.line = _line;
             token.column = _column;
             token.type = token_types_t::end_of_file;
-            return false;
+            return true;
         }
 
         const auto ch = static_cast<char>(tolower(read()));
@@ -259,12 +260,13 @@ namespace basecode::syntax {
         }
 
         token.type = token_types_t::end_of_file;
+        token.value = "";
         token.line = _line;
         token.column = _column;
 
         _has_next = false;
 
-        return false;
+        return true;
     }
 
     char lexer::read(bool skip_whitespace) {
@@ -304,63 +306,91 @@ namespace basecode::syntax {
 
     bool lexer::enum_literal(token_t& token) {
         if (match_literal("enum")) {
-            token.type = token_types_t::enum_literal;
-            token.value = "enum";
-            return true;
+            auto ch = read(false);
+            if (!isalnum(ch)) {
+                rewind_one_char();
+                token.type = token_types_t::enum_literal;
+                token.value = "enum";
+                return true;
+            }
         }
         return false;
     }
 
     bool lexer::alias_literal(token_t& token) {
         if (match_literal("alias")) {
-            token.type = token_types_t::alias_literal;
-            token.value = "alias";
-            return true;
+            auto ch = read(false);
+            if (!isalnum(ch)) {
+                rewind_one_char();
+                token.type = token_types_t::alias_literal;
+                token.value = "alias";
+                return true;
+            }
         }
         return false;
     }
 
     bool lexer::break_literal(token_t& token) {
         if (match_literal("break")) {
-            token.type = token_types_t::break_literal;
-            token.value = "break";
-            return true;
+            auto ch = read(false);
+            if (!isalnum(ch)) {
+                rewind_one_char();
+                token.type = token_types_t::break_literal;
+                token.value = "break";
+                return true;
+            }
         }
         return false;
     }
 
     bool lexer::while_literal(token_t& token) {
         if (match_literal("while")) {
-            token.type = token_types_t::while_literal;
-            token.value = "while";
-            return true;
+            auto ch = read(false);
+            if (!isalnum(ch)) {
+                rewind_one_char();
+                token.type = token_types_t::while_literal;
+                token.value = "while";
+                return true;
+            }
         }
         return false;
     }
 
     bool lexer::struct_literal(token_t& token) {
         if (match_literal("struct")) {
-            token.type = token_types_t::struct_literal;
-            token.value = "struct";
-            return true;
+            auto ch = read(false);
+            if (!isalnum(ch)) {
+                rewind_one_char();
+                token.type = token_types_t::struct_literal;
+                token.value = "struct";
+                return true;
+            }
         }
         return false;
     }
 
     bool lexer::extend_literal(token_t& token) {
         if (match_literal("extend")) {
-            token.type = token_types_t::extend_literal;
-            token.value = "extend";
-            return true;
+            auto ch = read(false);
+            if (!isalnum(ch)) {
+                rewind_one_char();
+                token.type = token_types_t::extend_literal;
+                token.value = "extend";
+                return true;
+            }
         }
         return false;
     }
 
     bool lexer::continue_literal(token_t& token) {
         if (match_literal("continue")) {
-            token.type = token_types_t::continue_literal;
-            token.value = "continue";
-            return true;
+            auto ch = read(false);
+            if (!isalnum(ch)) {
+                rewind_one_char();
+                token.type = token_types_t::continue_literal;
+                token.value = "continue";
+                return true;
+            }
         }
         return false;
     }
@@ -599,10 +629,10 @@ namespace basecode::syntax {
     }
 
     bool lexer::fn_literal(token_t& token) {
-        auto ch = read();
-        if (ch == 'f') {
-            ch = read();
-            if (ch == 'n') {
+        if (match_literal("fn")) {
+            auto ch = read(false);
+            if (!isalnum(ch)) {
+                rewind_one_char();
                 token.type = token_types_t::fn_literal;
                 token.value = "fn";
                 return true;
@@ -612,10 +642,10 @@ namespace basecode::syntax {
     }
 
     bool lexer::ns_literal(token_t& token) {
-        auto ch = read();
-        if (ch == 'n') {
-            ch = read();
-            if (ch == 's') {
+        if (match_literal("ns")) {
+            auto ch = read(false);
+            if (!isalnum(ch)) {
+                rewind_one_char();
                 token.type = token_types_t::namespace_literal;
                 token.value = "ns";
                 return true;
@@ -625,10 +655,10 @@ namespace basecode::syntax {
     }
 
     bool lexer::if_literal(token_t& token) {
-        auto ch = read();
-        if (ch == 'i') {
-            ch = read();
-            if (ch == 'f') {
+        if (match_literal("if")) {
+            auto ch = read(false);
+            if (!isalnum(ch)) {
+                rewind_one_char();
                 token.type = token_types_t::if_literal;
                 token.value = "if";
                 return true;
@@ -639,9 +669,13 @@ namespace basecode::syntax {
 
     bool lexer::else_literal(token_t& token) {
         if (match_literal("else")) {
-            token.type = token_types_t::else_literal;
-            token.value = "else";
-            return true;
+            auto ch = read(false);
+            if (!isalnum(ch)) {
+                rewind_one_char();
+                token.type = token_types_t::else_literal;
+                token.value = "else";
+                return true;
+            }
         }
         return false;
     }
@@ -662,45 +696,65 @@ namespace basecode::syntax {
 
     bool lexer::for_literal(token_t& token) {
         if (match_literal("for")) {
-            token.type = token_types_t::for_literal;
-            token.value = "for";
-            return true;
+            auto ch = read(false);
+            if (isspace(ch)) {
+                rewind_one_char();
+                token.type = token_types_t::for_literal;
+                token.value = "for";
+                return true;
+            }
         }
         return false;
     }
 
     bool lexer::null_literal(token_t& token) {
         if (match_literal("null")) {
-            token.type = token_types_t::null_literal;
-            token.value = "null";
-            return true;
+            auto ch = read(false);
+            if (!isalnum(ch)) {
+                rewind_one_char();
+                token.type = token_types_t::null_literal;
+                token.value = "null";
+                return true;
+            }
         }
         return false;
     }
 
     bool lexer::none_literal(token_t& token) {
         if (match_literal("none")) {
-            token.type = token_types_t::none_literal;
-            token.value = "none";
-            return true;
+            auto ch = read(false);
+            if (!isalnum(ch)) {
+                rewind_one_char();
+                token.type = token_types_t::none_literal;
+                token.value = "none";
+                return true;
+            }
         }
         return false;
     }
 
     bool lexer::cast_literal(token_t& token) {
         if (match_literal("cast")) {
-            token.type = token_types_t::cast_literal;
-            token.value = "cast";
-            return true;
+            auto ch = read(false);
+            if (!isalnum(ch)) {
+                rewind_one_char();
+                token.type = token_types_t::cast_literal;
+                token.value = "cast";
+                return true;
+            }
         }
         return false;
     }
 
     bool lexer::true_literal(token_t& token) {
         if (match_literal("true")) {
-            token.type = token_types_t::true_literal;
-            token.value = "true";
-            return true;
+            auto ch = read(false);
+            if (!isalnum(ch)) {
+                rewind_one_char();
+                token.type = token_types_t::true_literal;
+                token.value = "true";
+                return true;
+            }
         }
         return false;
     }
@@ -727,27 +781,39 @@ namespace basecode::syntax {
 
     bool lexer::false_literal(token_t& token) {
         if (match_literal("false")) {
-            token.type = token_types_t::false_literal;
-            token.value = "false";
-            return true;
+            auto ch = read(false);
+            if (!isalnum(ch)) {
+                rewind_one_char();
+                token.type = token_types_t::false_literal;
+                token.value = "false";
+                return true;
+            }
         }
         return false;
     }
 
     bool lexer::defer_literal(token_t& token) {
         if (match_literal("defer")) {
-            token.type = token_types_t::defer_literal;
-            token.value = "defer";
-            return true;
+            auto ch = read(false);
+            if (!isalnum(ch)) {
+                rewind_one_char();
+                token.type = token_types_t::defer_literal;
+                token.value = "defer";
+                return true;
+            }
         }
         return false;
     }
 
     bool lexer::empty_literal(token_t& token) {
         if (match_literal("empty")) {
-            token.type = token_types_t::empty_literal;
-            token.value = "empty";
-            return true;
+            auto ch = read(false);
+            if (!isalnum(ch)) {
+                rewind_one_char();
+                token.type = token_types_t::empty_literal;
+                token.value = "empty";
+                return true;
+            }
         }
         return false;
     }
@@ -811,10 +877,10 @@ namespace basecode::syntax {
     }
 
     bool lexer::scope_operator(token_t& token) {
-        auto ch = read();
-        if (ch == ':') {
-            ch = read();
-            if (ch == ':') {
+        if (match_literal("::")) {
+            auto ch = read(false);
+            if (isalpha(ch) || ch == '_') {
+                rewind_one_char();
                 token.type = token_types_t::scope_operator;
                 token.value = "::";
                 return true;
@@ -825,9 +891,13 @@ namespace basecode::syntax {
 
     bool lexer::return_literal(token_t& token) {
         if (match_literal("return")) {
-            token.type = token_types_t::return_literal;
-            token.value = "return";
-            return true;
+            auto ch = read(false);
+            if (!isalnum(ch)) {
+                rewind_one_char();
+                token.type = token_types_t::return_literal;
+                token.value = "return";
+                return true;
+            }
         }
         return false;
     }
@@ -857,9 +927,13 @@ namespace basecode::syntax {
 
     bool lexer::else_if_literal(token_t& token) {
         if (match_literal("else if")) {
-            token.type = token_types_t::else_if_literal;
-            token.value = "else if";
-            return true;
+            auto ch = read(false);
+            if (!isalnum(ch)) {
+                rewind_one_char();
+                token.type = token_types_t::else_if_literal;
+                token.value = "else if";
+                return true;
+            }
         }
         return false;
     }
@@ -880,9 +954,13 @@ namespace basecode::syntax {
 
     bool lexer::read_only_literal(token_t& token) {
         if (match_literal("read_only")) {
-            token.type = token_types_t::read_only_literal;
-            token.value = "read_only";
-            return true;
+            auto ch = read(false);
+            if (!isalnum(ch)) {
+                rewind_one_char();
+                token.type = token_types_t::read_only_literal;
+                token.value = "read_only";
+                return true;
+            }
         }
         return false;
     }

@@ -139,6 +139,18 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    class namespace_prefix_parser : public prefix_parser {
+    public:
+        namespace_prefix_parser() = default;
+
+        ast_node_shared_ptr parse(
+            common::result& r,
+            parser* parser,
+            token_t& token) override;
+    };
+
+    ///////////////////////////////////////////////////////////////////////////
+
     class struct_prefix_parser : public prefix_parser {
     public:
         struct_prefix_parser() = default;
@@ -262,9 +274,9 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    class symbol_literal_prefix_parser : public prefix_parser {
+    class keyword_literal_prefix_parser : public prefix_parser {
     public:
-        symbol_literal_prefix_parser() = default;
+        keyword_literal_prefix_parser() = default;
 
         ast_node_shared_ptr parse(
             common::result& r,
@@ -431,6 +443,7 @@ namespace basecode::syntax {
         static inline for_in_prefix_parser s_for_in_prefix_parser {};
         static inline return_prefix_parser s_return_prefix_parser {};
         static inline fn_decl_prefix_parser s_fn_decl_prefix_parser {};
+        static inline namespace_prefix_parser s_namespace_prefix_parser {};
         static inline attribute_prefix_parser s_attribute_prefix_parser {};
         static inline directive_prefix_parser s_directive_prefix_parser {};
         static inline basic_block_prefix_parser s_basic_block_prefix_parser {};
@@ -439,7 +452,7 @@ namespace basecode::syntax {
         static inline block_comment_prefix_parser s_block_comment_prefix_parser {};
         static inline string_literal_prefix_parser s_string_literal_prefix_parser {};
         static inline number_literal_prefix_parser s_number_literal_prefix_parser {};
-        static inline symbol_literal_prefix_parser s_symbol_literal_prefix_parser {};
+        static inline keyword_literal_prefix_parser s_keyword_literal_prefix_parser {};
         static inline type_identifier_prefix_parser s_type_identifier_prefix_parser {};
         static inline array_subscript_prefix_parser s_array_subscript_prefix_parser {};
         static inline symbol_reference_prefix_parser s_symbol_reference_prefix_parser {};
@@ -457,6 +470,7 @@ namespace basecode::syntax {
             {token_types_t::minus,               &s_negate_prefix_parser},
             {token_types_t::return_literal,      &s_return_prefix_parser},
             {token_types_t::fn_literal,          &s_fn_decl_prefix_parser},
+            {token_types_t::namespace_literal,   &s_namespace_prefix_parser},
             {token_types_t::attribute,           &s_attribute_prefix_parser},
             {token_types_t::directive,           &s_directive_prefix_parser},
             {token_types_t::tilde,               &s_binary_not_prefix_parser},
@@ -464,15 +478,15 @@ namespace basecode::syntax {
             {token_types_t::character_literal,   &s_char_literal_prefix_parser},
             {token_types_t::line_comment,        &s_line_comment_prefix_parser},
             {token_types_t::block_comment,       &s_block_comment_prefix_parser},
-            {token_types_t::none_literal,        &s_symbol_literal_prefix_parser},
-            {token_types_t::null_literal,        &s_symbol_literal_prefix_parser},
-            {token_types_t::break_literal,       &s_symbol_literal_prefix_parser},
-            {token_types_t::continue_literal,    &s_symbol_literal_prefix_parser},
-            {token_types_t::empty_literal,       &s_symbol_literal_prefix_parser},
             {token_types_t::string_literal,      &s_string_literal_prefix_parser},
             {token_types_t::number_literal,      &s_number_literal_prefix_parser},
-            {token_types_t::true_literal,        &s_symbol_literal_prefix_parser},
-            {token_types_t::false_literal,       &s_symbol_literal_prefix_parser},
+            {token_types_t::none_literal,        &s_keyword_literal_prefix_parser},
+            {token_types_t::null_literal,        &s_keyword_literal_prefix_parser},
+            {token_types_t::break_literal,       &s_keyword_literal_prefix_parser},
+            {token_types_t::continue_literal,    &s_keyword_literal_prefix_parser},
+            {token_types_t::empty_literal,       &s_keyword_literal_prefix_parser},
+            {token_types_t::true_literal,        &s_keyword_literal_prefix_parser},
+            {token_types_t::false_literal,       &s_keyword_literal_prefix_parser},
             {token_types_t::left_square_bracket, &s_array_subscript_prefix_parser},
             {token_types_t::colon,               &s_type_identifier_prefix_parser},
             {token_types_t::identifier,          &s_symbol_reference_prefix_parser},
