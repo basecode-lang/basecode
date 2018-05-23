@@ -7,7 +7,16 @@
 #foreign sqrt := fn(value:f64):f64;
 #foreign printf := fn(fmt:string, values:...any):none;
 
-ns alpha::compiler::examples {
+alpha::compiler::examples := ns {
+    something::nested := ns {
+        types := enum {
+            burt := 1;
+            ernie;
+            maria;
+            grover;
+        };
+    };
+
     vector2 := struct {
         x:f64 := 0;
         y:f64 := 0;
@@ -40,6 +49,17 @@ ns alpha::compiler::examples {
         vec1 := vector2::new(5, 5);
         printf("vec1_length := %f\n", vec1_length := vec1.length());
         printf("vec1_normalized := %f\n", vec1_normalized := vec1.normalize());
+
+        vec2_list:[] vector2;
+        test_ptr:*u8 := null;
+        fixed_list:[100] string;
+
+        max_list_length := fn():u32 {
+            return 500;
+        };
+
+        computed_list:[max_list_length()] vector2;
+
         return 0;
     };
 };

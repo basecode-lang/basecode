@@ -51,6 +51,7 @@ namespace basecode::syntax {
         return_statement,
         extend_statement,
         for_in_statement,
+        union_expression,
         character_literal,
         array_constructor,
         elseif_expression,
@@ -58,6 +59,7 @@ namespace basecode::syntax {
         struct_expression,
         continue_statement,
         namespace_statement,
+        subscript_expression,
         qualified_symbol_reference,
     };
 
@@ -91,6 +93,7 @@ namespace basecode::syntax {
         {ast_node_types_t::break_statement, "break_statement"},
         {ast_node_types_t::with_expression, "with_expression"},
         {ast_node_types_t::type_identifier, "type_identifier"},
+        {ast_node_types_t::union_expression, "union_expression"},
         {ast_node_types_t::return_statement, "return_statement"},
         {ast_node_types_t::symbol_reference, "symbol_reference"},
         {ast_node_types_t::extend_statement, "extend_statement"},
@@ -102,6 +105,7 @@ namespace basecode::syntax {
         {ast_node_types_t::elseif_expression, "elseif_expression"},
         {ast_node_types_t::continue_statement, "continue_statement"},
         {ast_node_types_t::namespace_statement, "namespace_statement"},
+        {ast_node_types_t::subscript_expression, "subscript_expression"},
         {ast_node_types_t::qualified_symbol_reference, "qualified_symbol_reference"},
     };
     
@@ -199,6 +203,8 @@ namespace basecode::syntax {
 
         ast_node_shared_ptr statement_node();
 
+        ast_node_shared_ptr subscript_node();
+
         ast_node_shared_ptr assignment_node();
 
         ast_node_shared_ptr expression_node();
@@ -217,6 +223,8 @@ namespace basecode::syntax {
         ast_node_shared_ptr enum_node(const token_t& token);
 
         ast_node_shared_ptr break_node(const token_t& token);
+
+        ast_node_shared_ptr union_node(const token_t& token);
 
         ast_node_shared_ptr qualified_symbol_reference_node();
 
@@ -253,6 +261,12 @@ namespace basecode::syntax {
         ast_node_shared_ptr symbol_reference_node(const token_t& token);
 
         ast_node_shared_ptr character_literal_node(const token_t& token);
+
+    private:
+        void configure_node(
+            const ast_node_shared_ptr& node,
+            const token_t& token,
+            ast_node_types_t type);
 
     private:
         uint32_t _id = 0;

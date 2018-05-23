@@ -137,8 +137,8 @@ namespace basecode::syntax {
         // alias literal
         {'a', std::bind(&lexer::alias_literal, std::placeholders::_1, std::placeholders::_2)},
 
-        // extend literal
-        {'e', std::bind(&lexer::extend_literal, std::placeholders::_1, std::placeholders::_2)},
+        // union literal
+        {'u', std::bind(&lexer::union_literal, std::placeholders::_1, std::placeholders::_2)},
 
         // read_only literal
         {'r', std::bind(&lexer::read_only_literal, std::placeholders::_1, std::placeholders::_2)},
@@ -370,13 +370,13 @@ namespace basecode::syntax {
         return false;
     }
 
-    bool lexer::extend_literal(token_t& token) {
-        if (match_literal("extend")) {
+    bool lexer::union_literal(token_t& token) {
+        if (match_literal("union")) {
             auto ch = read(false);
             if (!isalnum(ch)) {
                 rewind_one_char();
-                token.type = token_types_t::extend_literal;
-                token.value = "extend";
+                token.type = token_types_t::union_literal;
+                token.value = "union";
                 return true;
             }
         }
