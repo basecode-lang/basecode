@@ -118,6 +118,10 @@ namespace basecode::compiler {
             compiler::scope* scope,
             const syntax::ast_node_shared_ptr& node);
 
+        void apply_constant_folding(
+            common::result& r,
+            const syntax::ast_node_shared_ptr& node);
+
     private:
         vm::terp _terp;
         scope _global_scope;

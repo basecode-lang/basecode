@@ -1,6 +1,7 @@
 #include <fstream>
 #include <parser/lexer.h>
 #include "bytecode_emitter.h"
+#include "constant_expression_evaluator.h"
 
 namespace basecode::compiler {
 
@@ -51,20 +52,15 @@ namespace basecode::compiler {
         }
     }
 
+    void bytecode_emitter::apply_constant_folding(
+            common::result& r,
+            const syntax::ast_node_shared_ptr& node) {
+        constant_expression_evaluator evaluator(&_global_scope);
+        auto result_node = evaluator.evaluate(r, node);
+    }
+
     bool bytecode_emitter::initialize(common::result& r) {
-        if(!_terp.initialize(r))
-            return false;
-
-//        _terp.heap_free_space_begin(0x400);
-//        uint64_t first_address = _terp.alloc(256);
-//        uint64_t second_address = _terp.alloc(48);
-//        uint64_t third_address = _terp.alloc(2177);
-//
-//        _terp.free(second_address);
-//        _terp.free(first_address);
-//        _terp.free(third_address);
-
-        return true;
+        return _terp.initialize(r);
     }
 
     bool bytecode_emitter::compile(common::result& r, std::istream& input) {
@@ -91,6 +87,7 @@ namespace basecode::compiler {
             }
 
             build_scope_tree(r, &_global_scope, program_node);
+            apply_constant_folding(r, program_node);
         }
         return !r.is_failed();
     }

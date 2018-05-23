@@ -67,8 +67,9 @@ add_executable(
         vm/instruction_emitter.cpp vm/instruction_emitter.h
 
         compiler/scope.cpp compiler/scope.h
+        compiler/symbol_table.cpp compiler/symbol_table.h
         compiler/bytecode_emitter.cpp compiler/bytecode_emitter.h
-        compiler/symbol_table.cpp compiler/symbol_table.h)
+        compiler/constant_expression_evaluator.cpp compiler/constant_expression_evaluator.h)
 target_link_libraries(bootstrap ${CONAN_LIBS})
 
 # custom post bulid steps
