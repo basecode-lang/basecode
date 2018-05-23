@@ -196,6 +196,9 @@ namespace basecode::vm {
 
     enum class op_codes : uint8_t {
         nop = 1,
+        alloc,
+        free,
+        size,
         load,
         store,
         copy,
@@ -240,6 +243,7 @@ namespace basecode::vm {
         swi,
         swap,
         trap,
+        ffi,
         meta,
         exit
     };
@@ -413,7 +417,7 @@ namespace basecode::vm {
             (sizeof(uint64_t) * interrupt_vector_table_size);
 
         static constexpr size_t heap_vector_table_start = interrupt_vector_table_end;
-        static constexpr size_t heap_vector_table_size = 8;
+        static constexpr size_t heap_vector_table_size = 16;
         static constexpr size_t heap_vector_table_end = heap_vector_table_start
             + (sizeof(uint16_t) * heap_vector_table_size);
 
@@ -556,6 +560,9 @@ namespace basecode::vm {
     private:
         inline static std::map<op_codes, std::string> s_op_code_names = {
             {op_codes::nop,    "NOP"},
+            {op_codes::alloc,  "ALLOC"},
+            {op_codes::free,   "FREE"},
+            {op_codes::size,   "SIZE"},
             {op_codes::load,   "LOAD"},
             {op_codes::store,  "STORE"},
             {op_codes::copy,   "COPY"},
@@ -599,6 +606,7 @@ namespace basecode::vm {
             {op_codes::jmp,    "JMP"},
             {op_codes::swi,    "SWI"},
             {op_codes::trap,   "TRAP"},
+            {op_codes::ffi,    "FFI"},
             {op_codes::meta,   "META"},
             {op_codes::exit,   "EXIT"},
         };

@@ -479,6 +479,71 @@ namespace basecode::vm {
             case op_codes::nop: {
                 break;
             }
+            case op_codes::alloc: {
+                // operand 0: I{x} register that will accept the new pointer value
+                // operand 1: constant integer | I{x} register that holds the size * op_size
+                //
+                // if memory allocation fails, then trap #$ff is executed, if it's registered
+                //
+
+                // How alloc works:
+                //
+                // The heap vector table has 16 qword pointers into the VM heap.
+                //
+                // 0: pointer to the top of the stack
+                // 1: pointer to the bottom of the stack, based on the stack_size value
+                //    passed into the vm::terp
+                // 2: pointer to the start of program space
+                // 3: pointer to the end of bootstrap code/beginning of free space
+                //
+                //
+                // When the compiler is done filling from program_start (2) with bootstrap/kernel
+                // code, it must call terp::free_space_begin.  this will set heap vector 3 and also
+                // initialize the free space list.
+                //
+                // The alloc instruction will access the free space list, which is a linked list
+                // that's subdivided by the allocated regions in the free space of the VM heap.
+                //
+                // It will use operand 1 and compute a size in bytes.  It will then search for
+                // a region large enough in the free space list and then subdivide it by splitting
+                // that node in the tree.
+                //
+                // The pointer to the beginning of the newly allocated memory is stored in operand 0,
+                // which must be an I{x} register.
+                //
+                // The program can then make use of the memory at this location any way it sees fit.
+                //
+                // The standard flags are set based on the target register (as if it were a MOVE)
+                break;
+            }
+            case op_codes::free: {
+                // 0: pointer to the block to free, must be an I{x} register
+                //
+                // If the register contains 0 or an invalid pointer, nothing happens.
+                //
+                // If the pointer is valid, then two steps happen:
+                //  1. adjacent blocks in the free space list are merged, if possible
+                //  2. the resulting merged block(s) are marked as free.
+                //
+                // NOTHING is done to the actual heap; only the internal tracking structure is
+                // updated.
+                //
+                // The zero flag is set if the memory is freed; otherwise it is cleared
+                break;
+            }
+            case op_codes::size: {
+                // 0: target register to hold the size
+                // 1: register that holds the pointer to the block of memory in the heap
+                //
+                // Both operands must be I{x} registers.
+                //
+                // If the pointer held in operand 1 is invalid, 0 is loaded into operand 0.
+                // If the pointer held in operand 1 is valid, then the free space list
+                //  is consulted and the size of the allocated block is loaded into operand 0.
+                //
+                // The standard flags are set based on the target register (as if it were a MOVE)
+                break;
+            }
             case op_codes::load: {
                 uint64_t address;
 
@@ -1366,6 +1431,62 @@ namespace basecode::vm {
 
                 break;
             }
+            case op_codes::ffi: {
+                // operand 0: I{x} register holding pointer to function
+                //              this comes from the shared libraries symbols
+                //
+                // operand 1: constant integer | I{x} register with return type
+                //
+                // operand 2: constant integer | I{x} register with number of arguments on stack
+                //
+                // Notes:
+                //
+                // The compiler will know the prototype of the foreign function it's going to call.
+                //
+                // Example:
+                //
+                // #foreign printf := fn(fmt:string, values:...any):none;
+                //
+                // and usage:
+                //
+                //  printf("Something crazy: %d\n", 256);
+                //
+                // From this, we can produce an FFI call like this:
+                //
+                // printf_string:
+                //          db  "Something crazy: %d\n", 0
+                //
+                // PUSH.W   #$100
+                // PUSH.DW  #printf_string
+                // MOVE.QW  I0, #printf
+                // FFI.B    I0, VOID_TYPE, 2
+                // ; Nothing to pop from the stack because it's a void return type
+                //
+                // -------------------------------------------------------
+                //
+                // Another example:
+                //
+                // #foreign square := fn(value:f64):f64;
+                //
+                // and usage:
+                //
+                // printf("%f", square(14.35722));
+                //
+                // printf_string:
+                //          db "%f", 0
+                //
+                // PUSH.QW   #$402cb6e58a32f449     ; hex representation of 14.35722
+                // MOVE.QW   I0, #square
+                // FFI.B     I0, DOUBLE_TYPE, 1
+                // DUP
+                // POP.QW    F0
+                // PUSH.QW   #printf_string
+                // MOVE.QW   I0, #printf
+                // FFI.B     I0, VOID_TYPE, 2
+                //
+                //
+                break;
+            }
             case op_codes::meta: {
                 uint64_t meta_data_size;
 
@@ -1824,7 +1945,6 @@ namespace basecode::vm {
             default:
                 return (value & mask_qword_negative) != 0;
         }
-        return false;
     }
 
     void terp::register_trap(uint8_t index, const terp::trap_callable& callable) {
@@ -1870,7 +1990,6 @@ namespace basecode::vm {
                 return ((~(lhs ^ rhs)) & (lhs ^ result) & mask_qword_negative) != 0;
             }
         }
-        return false;
     }
 
     bool terp::load_shared_library(common::result& r, const std::filesystem::path& path) {
