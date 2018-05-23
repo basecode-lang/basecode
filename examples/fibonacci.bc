@@ -17,7 +17,7 @@ ns alpha::compiler::config {
 
 ns alpha::compiler::examples {
 
-    fib := fn(n:u64):u64 {
+    fib := fn(n:u64 := 10):u64 {
         if n == 0 || n == 1 {
             return n;
         } else {
@@ -27,7 +27,8 @@ ns alpha::compiler::examples {
         };
     };
 
-    main := fn():u64 {
+    main := fn():u32 {
+        // XXX: this will need a cast<>() but the parser doesn't do that quite yet
         return fib(alpha::compiler::config::fibonacci::length_of_sequence);
     };
 

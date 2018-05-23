@@ -1,0 +1,45 @@
+//
+// vector2 tests
+//
+
+@entry_point main;
+
+#foreign sqrt := fn(value:f64):f64;
+#foreign printf := fn(fmt:string, values:...any):none;
+
+ns alpha::compiler::examples {
+    vector2 := struct {
+        x:f64 := 0;
+        y:f64 := 0;
+
+        new := fn(x:f64, y:f64):vector2 {
+            vec:vector2;
+            vec.x := x;
+            vec.y := y;
+            return vec;
+        };
+
+        length := fn(self:*vector2):f64 {
+            return sqrt(self.x * self.x + self.y * self.y);
+        };
+
+        normalize := fn(self:*vector2):vector2 {
+            vec:vector2;
+
+            length := self.length();
+            if length != 0 {
+                vec.x := self.x / length;
+                vec.y := self.y / length;
+            };
+
+            return vec;
+        };
+    };
+
+    main := fn():u32 {
+        vec1 := vector2::new(5, 5);
+        printf("vec1_length := %f\n", vec1_length := vec1.length());
+        printf("vec1_normalized := %f\n", vec1_normalized := vec1.normalize());
+        return 0;
+    };
+};

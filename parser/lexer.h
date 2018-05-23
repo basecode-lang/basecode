@@ -36,6 +36,8 @@ namespace basecode::syntax {
 
         bool colon(token_t& token);
 
+        bool period(token_t& token);
+
         bool spread(token_t& token);
 
         bool percent(token_t& token);

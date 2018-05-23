@@ -33,7 +33,8 @@ namespace basecode::syntax {
         // question
         {'?', std::bind(&lexer::question, std::placeholders::_1, std::placeholders::_2)},
 
-        // spread
+        // period/spread
+        {'.', std::bind(&lexer::period, std::placeholders::_1, std::placeholders::_2)},
         {'.', std::bind(&lexer::spread, std::placeholders::_1, std::placeholders::_2)},
 
         // tilde
@@ -505,6 +506,20 @@ namespace basecode::syntax {
             token.type = token_types_t::slash;
             token.value = "/";
             return true;
+        }
+        return false;
+    }
+
+    bool lexer::period(token_t& token) {
+        auto ch = read();
+        if (ch == '.') {
+            ch = read();
+            if (ch != '.') {
+                rewind_one_char();
+                token.type = token_types_t::period;
+                token.value = ".";
+                return true;
+            }
         }
         return false;
     }

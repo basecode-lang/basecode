@@ -38,7 +38,9 @@ namespace basecode::syntax {
             common::result& r,
             parser* parser,
             token_t& token) {
-        return parser->ast_builder()->struct_node(token);
+        auto struct_node = parser->ast_builder()->struct_node(token);
+        struct_node->rhs = parser->parse_expression(r, 0);
+        return struct_node;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -334,7 +336,8 @@ namespace basecode::syntax {
         while (true) {
             auto symbol_node = parser->ast_builder()->symbol_reference_node(token);
             symbol_reference_node->lhs->children.push_back(symbol_node);
-            if (!parser->peek(token_types_t::scope_operator))
+            if (!parser->peek(token_types_t::scope_operator)
+            &&  !parser->peek(token_types_t::period))
                 break;
             parser->consume();
             if (!parser->expect(r, token))
@@ -387,7 +390,8 @@ namespace basecode::syntax {
         while (true) {
             auto symbol_node = parser->ast_builder()->symbol_reference_node(token);
             symbol_reference_node->lhs->children.push_back(symbol_node);
-            if (!parser->peek(token_types_t::scope_operator))
+            if (!parser->peek(token_types_t::scope_operator)
+            &&  !parser->peek(token_types_t::period))
                 break;
             parser->consume();
             if (!parser->expect(r, token))
