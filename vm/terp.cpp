@@ -486,6 +486,7 @@ namespace basecode::vm {
                 if (!get_operand_value(r, inst, 1, size))
                     return false;
 
+                size *= op_size_in_bytes(inst.size);
                 uint64_t address = alloc(size);
                 if (!set_target_operand_value(r, inst, 0, address))
                     return false;
