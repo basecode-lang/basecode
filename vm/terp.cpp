@@ -79,7 +79,7 @@ namespace basecode::vm {
         return _symbols.count(symbol_name) > 0;
     }
 
-    void* shared_library_t::get_symbol_address(const std::string& symbol_name) {
+    void* shared_library_t::symbol_address(const std::string& symbol_name) {
         auto it = _symbols.find(symbol_name);
         if (it == _symbols.end())
             return nullptr;
@@ -371,17 +371,17 @@ namespace basecode::vm {
             _call_vm = nullptr;
         }
 
+        free_heap_block_list();
+
         delete _heap;
         _heap = nullptr;
     }
 
     void terp::reset() {
-        dcReset(_call_vm);
-
-        _registers.pc = program_start;
+        _registers.pc = heap_vector(heap_vectors_t::program_start);
+        _registers.sp = heap_vector(heap_vectors_t::top_of_stack);
         _registers.fr = 0;
         _registers.sr = 0;
-        _registers.sp = _heap_size;
 
         for (size_t i = 0; i < 64; i++) {
             _registers.i[i] = 0;
@@ -389,6 +389,8 @@ namespace basecode::vm {
         }
 
         _icache.reset();
+        dcReset(_call_vm);
+        free_heap_block_list();
 
         _exited = false;
     }
@@ -480,68 +482,52 @@ namespace basecode::vm {
                 break;
             }
             case op_codes::alloc: {
-                // operand 0: I{x} register that will accept the new pointer value
-                // operand 1: constant integer | I{x} register that holds the size * op_size
-                //
-                // if memory allocation fails, then trap #$ff is executed, if it's registered
-                //
+                uint64_t size;
+                if (!get_operand_value(r, inst, 1, size))
+                    return false;
 
-                // How alloc works:
-                //
-                // The heap vector table has 16 qword pointers into the VM heap.
-                //
-                // 0: pointer to the top of the stack
-                // 1: pointer to the bottom of the stack, based on the stack_size value
-                //    passed into the vm::terp
-                // 2: pointer to the start of program space
-                // 3: pointer to the end of bootstrap code/beginning of free space
-                //
-                //
-                // When the compiler is done filling from program_start (2) with bootstrap/kernel
-                // code, it must call terp::free_space_begin.  this will set heap vector 3 and also
-                // initialize the free space list.
-                //
-                // The alloc instruction will access the free space list, which is a linked list
-                // that's subdivided by the allocated regions in the free space of the VM heap.
-                //
-                // It will use operand 1 and compute a size in bytes.  It will then search for
-                // a region large enough in the free space list and then subdivide it by splitting
-                // that node in the tree.
-                //
-                // The pointer to the beginning of the newly allocated memory is stored in operand 0,
-                // which must be an I{x} register.
-                //
-                // The program can then make use of the memory at this location any way it sees fit.
-                //
-                // The standard flags are set based on the target register (as if it were a MOVE)
+                uint64_t address = alloc(size);
+                if (!set_target_operand_value(r, inst, 0, address))
+                    return false;
+
+                _registers.flags(register_file_t::flags_t::carry, false);
+                _registers.flags(register_file_t::flags_t::subtract, false);
+                _registers.flags(register_file_t::flags_t::overflow, false);
+                _registers.flags(register_file_t::flags_t::zero, address == 0);
+                _registers.flags(register_file_t::flags_t::negative, is_negative(address, inst.size));
+
                 break;
             }
             case op_codes::free: {
-                // 0: pointer to the block to free, must be an I{x} register
-                //
-                // If the register contains 0 or an invalid pointer, nothing happens.
-                //
-                // If the pointer is valid, then two steps happen:
-                //  1. adjacent blocks in the free space list are merged, if possible
-                //  2. the resulting merged block(s) are marked as free.
-                //
-                // NOTHING is done to the actual heap; only the internal tracking structure is
-                // updated.
-                //
-                // The zero flag is set if the memory is freed; otherwise it is cleared
+                uint64_t address;
+                if (!get_operand_value(r, inst, 0, address))
+                    return false;
+
+                auto freed_size = free(address);
+
+                _registers.flags(register_file_t::flags_t::carry, false);
+                _registers.flags(register_file_t::flags_t::subtract, false);
+                _registers.flags(register_file_t::flags_t::overflow, false);
+                _registers.flags(register_file_t::flags_t::negative, false);
+                _registers.flags(register_file_t::flags_t::zero, freed_size != 0);
+
                 break;
             }
             case op_codes::size: {
-                // 0: target register to hold the size
-                // 1: register that holds the pointer to the block of memory in the heap
-                //
-                // Both operands must be I{x} registers.
-                //
-                // If the pointer held in operand 1 is invalid, 0 is loaded into operand 0.
-                // If the pointer held in operand 1 is valid, then the free space list
-                //  is consulted and the size of the allocated block is loaded into operand 0.
-                //
-                // The standard flags are set based on the target register (as if it were a MOVE)
+                uint64_t address;
+                if (!get_operand_value(r, inst, 1, address))
+                    return false;
+
+                uint64_t block_size = size(address);
+                if (!set_target_operand_value(r, inst, 0, block_size))
+                    return false;
+
+                _registers.flags(register_file_t::flags_t::carry, false);
+                _registers.flags(register_file_t::flags_t::subtract, false);
+                _registers.flags(register_file_t::flags_t::overflow, false);
+                _registers.flags(register_file_t::flags_t::zero, block_size == 0);
+                _registers.flags(register_file_t::flags_t::negative, is_negative(block_size, inst.size));
+
                 break;
             }
             case op_codes::load: {
@@ -1423,11 +1409,7 @@ namespace basecode::vm {
                 if (!get_operand_value(r, inst, 0, index))
                     return false;
 
-                auto it = _traps.find(static_cast<uint8_t>(index));
-                if (it == _traps.end())
-                    break;
-
-                it->second(this);
+                execute_trap(static_cast<uint8_t>(index));
 
                 break;
             }
@@ -1522,6 +1504,157 @@ namespace basecode::vm {
         return;
     }
 
+    void terp::free_heap_block_list() {
+        _address_blocks.clear();
+
+        if (_head_heap_block == nullptr)
+            return;
+
+        auto current_block = _head_heap_block;
+        while (current_block != nullptr) {
+            auto next_block = current_block->next;
+            delete current_block;
+            current_block = next_block;
+        }
+
+        _head_heap_block = nullptr;
+    }
+
+    uint64_t terp::alloc(uint64_t size) {
+        uint64_t size_delta = size;
+        heap_block_t* best_sized_block = nullptr;
+        auto current_block = _head_heap_block;
+
+        while (current_block != nullptr) {
+            if (current_block->is_free()) {
+                if (current_block->size == size) {
+                    current_block->mark_allocated();
+                    return current_block->address;
+                } else if (current_block->size > size) {
+                    auto local_size_delta = current_block->size - size;
+                    if (best_sized_block == nullptr
+                    ||  local_size_delta < size_delta) {
+                        size_delta = local_size_delta;
+                        best_sized_block = current_block;
+                    }
+                }
+            }
+            current_block = current_block->next;
+        }
+
+        if (best_sized_block != nullptr) {
+            // if the block is over-sized by 64 bytes or less, just use it as-is
+            if (size_delta <= 64) {
+                best_sized_block->mark_allocated();
+                return best_sized_block->address;
+            } else {
+                // otherwise, we need to split the block in two
+                auto new_block = new heap_block_t;
+                new_block->size = size;
+                new_block->mark_allocated();
+                new_block->prev = best_sized_block->prev;
+                if (new_block->prev != nullptr)
+                    new_block->prev->next = new_block;
+                new_block->next = best_sized_block;
+                new_block->address = best_sized_block->address;
+
+                best_sized_block->prev = new_block;
+                best_sized_block->address += size;
+                best_sized_block->size -= size;
+
+                if (new_block->prev == nullptr)
+                    _head_heap_block = new_block;
+
+                _address_blocks[new_block->address] = new_block;
+                _address_blocks[best_sized_block->address] = best_sized_block;
+
+                return best_sized_block->prev->address;
+            }
+        }
+
+        return 0;
+    }
+
+    uint64_t terp::free(uint64_t address) {
+        auto it = _address_blocks.find(address);
+        if (it == _address_blocks.end())
+            return 0;
+
+        heap_block_t* freed_block = it->second;
+        auto freed_size = freed_block->size;
+        freed_block->clear_allocated();
+
+        // coalesce free blocks
+        // first, we walk down the prev chain until we find a non-free block
+        // then, we walk down the next chain until we find a non-free block
+        // because blocks are known to be adjacent to each other in the heap,
+        //          we then coalesce these blocks into one
+
+        std::vector<heap_block_t*> delete_list {};
+        uint64_t new_size = 0;
+
+        auto first_free_block = freed_block;
+        while (true) {
+            auto prev = first_free_block->prev;
+            if (prev == nullptr || !prev->is_free())
+                break;
+            first_free_block = prev;
+        }
+
+        auto last_free_block = freed_block;
+        while (true) {
+            auto next = last_free_block->next;
+            if (next == nullptr || !next->is_free())
+                break;
+            last_free_block = next;
+        }
+
+        auto current_node = first_free_block;
+        while (true) {
+            delete_list.emplace_back(current_node);
+            new_size += current_node->size;
+
+            if (current_node == last_free_block)
+                break;
+
+            current_node = current_node->next;
+        }
+
+        if (first_free_block != last_free_block) {
+            auto new_block = new heap_block_t;
+            new_block->size = new_size;
+
+            new_block->next = last_free_block->next;
+            if (new_block->next != nullptr)
+                new_block->next->prev = new_block;
+
+            new_block->prev = first_free_block->prev;
+            if (new_block->prev != nullptr)
+                new_block->prev->next = new_block;
+
+            new_block->address = first_free_block->address;
+
+            for (auto block : delete_list) {
+                _address_blocks.erase(block->address);
+                delete block;
+            }
+
+            if (new_block->prev == nullptr)
+                _head_heap_block = new_block;
+
+            _address_blocks[new_block->address] = new_block;
+        }
+
+        return freed_size;
+    }
+
+    uint64_t terp::size(uint64_t address) {
+        auto it = _address_blocks.find(address);
+        if (it == _address_blocks.end())
+            return 0;
+        return it->second->size;
+    }
+
     bool terp::initialize(common::result& r) {
         if (_heap != nullptr)
             return true;
@@ -1535,6 +1668,11 @@ namespace basecode::vm {
         _shared_libraries.insert(std::make_pair(self_image.path(), self_image));
 
         _heap = new uint8_t[_heap_size];
+
+        heap_vector(heap_vectors_t::top_of_stack, _heap_size);
+        heap_vector(heap_vectors_t::bottom_of_stack, _heap_size - _stack_size);
+        heap_vector(heap_vectors_t::program_start, program_start);
+
         reset();
 
         return !r.is_failed();
@@ -1542,6 +1680,13 @@ namespace basecode::vm {
 
     void terp::remove_trap(uint8_t index) {
         _traps.erase(index);
+    }
+
+    void terp::execute_trap(uint8_t index) {
+        auto it = _traps.find(index);
+        if (it == _traps.end())
+            return;
+        it->second(this);
     }
 
     std::vector<uint64_t> terp::jump_to_subroutine(
@@ -1573,14 +1718,29 @@ namespace basecode::vm {
         *qword_ptr(swi_address) = address;
     }
 
-    uint64_t terp::heap_vector(uint8_t index) const {
-        size_t heap_vector_address = heap_vector_table_start + (sizeof(uint64_t) * index);
-        return *qword_ptr(heap_vector_address);
+    const register_file_t& terp::register_file() const {
+        return _registers;
     }
 
-    void terp::heap_vector(uint8_t index, uint64_t address) {
-        size_t heap_vector_address = heap_vector_table_start + (sizeof(uint64_t) * index);
-        *qword_ptr(heap_vector_address) = address;
+    void terp::dump_heap(uint64_t offset, size_t size) {
+        auto program_memory = common::hex_formatter::dump_to_string(
+            reinterpret_cast<const void*>(_heap + offset),
+            size);
+        fmt::print("{}\n", program_memory);
+    }
+
+    void terp::heap_free_space_begin(uint64_t address) {
+        heap_vector(heap_vectors_t::free_space_start, address);
+        _head_heap_block = new heap_block_t;
+        _head_heap_block->address = address;
+        _head_heap_block->size = heap_vector(heap_vectors_t::bottom_of_stack) - address;
+        _address_blocks.insert(std::make_pair(_head_heap_block->address, _head_heap_block));
+    }
+
+    uint64_t terp::heap_vector(heap_vectors_t vector) const {
+        size_t heap_vector_address = heap_vector_table_start
+            + (sizeof(uint64_t) * static_cast<uint8_t>(vector));
+        return *qword_ptr(heap_vector_address);
     }
 
     const meta_information_t& terp::meta_information() const {
@@ -1695,15 +1855,10 @@ namespace basecode::vm {
         return stream.str();
     }
 
-    const register_file_t& terp::register_file() const {
-        return _registers;
-    }
-
-    void terp::dump_heap(uint64_t offset, size_t size) {
-        auto program_memory = common::hex_formatter::dump_to_string(
-            reinterpret_cast<const void*>(_heap + offset),
-            size);
-        fmt::print("{}\n", program_memory);
+    void terp::heap_vector(heap_vectors_t vector, uint64_t address) {
+        size_t heap_vector_address = heap_vector_table_start
+            + (sizeof(uint64_t) * static_cast<uint8_t>(vector));
+        *qword_ptr(heap_vector_address) = address;
     }
 
     std::string terp::disassemble(common::result& r, uint64_t address) {

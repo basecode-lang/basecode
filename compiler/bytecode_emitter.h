@@ -125,4 +125,3 @@ namespace basecode::compiler {
     };
 
 };
-

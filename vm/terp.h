@@ -1,8 +1,12 @@
 #pragma once
 
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "OCUnusedGlobalDeclarationInspection"
+
 #include <map>
 #include <set>
 #include <string>
+#include <memory>
 #include <cstdint>
 #include <functional>
 #include <filesystem>
@@ -92,6 +96,8 @@ namespace basecode::vm {
         sr
     };
 
+    ///////////////////////////////////////////////////////////////////////////
+
     enum f_registers_t : uint8_t {
         f0,
         f1,
@@ -165,6 +171,8 @@ namespace basecode::vm {
         f63,
     };
 
+    ///////////////////////////////////////////////////////////////////////////
+
     struct register_file_t {
         enum flags_t : uint64_t {
             zero     = 0b0000000000000000000000000000000000000000000000000000000000000001,
@@ -193,6 +201,8 @@ namespace basecode::vm {
         uint64_t fr;
         uint64_t sr;
     };
+
+    ///////////////////////////////////////////////////////////////////////////
 
     enum class op_codes : uint8_t {
         nop = 1,
@@ -248,6 +258,8 @@ namespace basecode::vm {
         exit
     };
 
+    ///////////////////////////////////////////////////////////////////////////
+
     enum class op_sizes : uint8_t {
         none,
         byte,
@@ -255,6 +267,8 @@ namespace basecode::vm {
         dword,
         qword
     };
+
+    ///////////////////////////////////////////////////////////////////////////
 
     struct operand_encoding_t {
         using flags_t = uint8_t;
@@ -297,6 +311,8 @@ namespace basecode::vm {
         } value;
     };
 
+    ///////////////////////////////////////////////////////////////////////////
+
     struct instruction_t {
         static constexpr size_t base_size = 3;
         static constexpr size_t alignment = 4;
@@ -330,10 +346,50 @@ namespace basecode::vm {
         std::string source_file;
     };
 
-    struct icache_entry_t {
-        size_t size;
-        instruction_t inst;
+    ///////////////////////////////////////////////////////////////////////////
+
+    // 0: pointer to the top of the stack
+    // 1: pointer to the bottom of the stack, based on the stack_size value
+    //    passed into the vm::terp
+    // 2: pointer to the start of program space
+    // 3: pointer to the end of bootstrap code/beginning of free space
+    enum class heap_vectors_t : uint8_t {
+        top_of_stack = 0,
+        bottom_of_stack,
+        program_start,
+        free_space_start,
     };
+
+    struct heap_block_t {
+        enum flags_t : uint8_t {
+            none       = 0b00000000,
+            allocated  = 0b00000001,
+        };
+
+        inline void mark_allocated() {
+            flags |= flags_t::allocated;
+        }
+
+        inline void clear_allocated() {
+            flags &= ~flags_t::allocated;
+        }
+
+        inline bool is_free() const {
+            return (flags & flags_t::allocated) == 0;
+        }
+
+        inline bool is_allocated() const {
+            return (flags & flags_t::allocated) != 0;
+        }
+
+        uint64_t size = 0;
+        uint64_t address = 0;
+        heap_block_t* prev = nullptr;
+        heap_block_t* next = nullptr;
+        uint8_t flags = flags_t::none;
+    };
+
+    ///////////////////////////////////////////////////////////////////////////
 
     using symbol_address_map = std::unordered_map<std::string, void*>;
 
@@ -362,7 +418,7 @@ namespace basecode::vm {
 
         bool exports_symbol(const std::string& symbol_name);
 
-        void* get_symbol_address(const std::string& symbol_name);
+        void* symbol_address(const std::string& symbol_name);
 
     private:
         void load_symbols(const char* path);
@@ -373,7 +429,14 @@ namespace basecode::vm {
         symbol_address_map _symbols {};
     };
 
+    ///////////////////////////////////////////////////////////////////////////
+
     class terp;
+
+    struct icache_entry_t {
+        size_t size;
+        instruction_t inst;
+    };
 
     class instruction_cache {
     public:
@@ -392,6 +455,8 @@ namespace basecode::vm {
         terp* _terp = nullptr;
         std::unordered_map<uint64_t, icache_entry_t> _cache {};
     };
+
+    ///////////////////////////////////////////////////////////////////////////
 
     class terp {
     public:
@@ -455,6 +520,12 @@ namespace basecode::vm {
 
         void dump_shared_libraries();
 
+        uint64_t alloc(uint64_t size);
+
+        uint64_t free(uint64_t address);
+
+        uint64_t size(uint64_t address);
+
         void remove_trap(uint8_t index);
 
         bool initialize(common::result& r);
@@ -465,13 +536,13 @@ namespace basecode::vm {
             common::result& r,
             uint64_t address);
 
-        uint64_t heap_vector(uint8_t index) const;
-
         void swi(uint8_t index, uint64_t address);
 
         const register_file_t& register_file() const;
 
-        void heap_vector(uint8_t index, uint64_t address);
+        void heap_free_space_begin(uint64_t address);
+
+        uint64_t heap_vector(heap_vectors_t vector) const;
 
         void dump_heap(uint64_t offset, size_t size = 256);
 
@@ -479,11 +550,24 @@ namespace basecode::vm {
 
         std::string disassemble(const instruction_t& inst) const;
 
+        void heap_vector(heap_vectors_t vector, uint64_t address);
+
         std::string disassemble(common::result& r, uint64_t address);
 
         void register_trap(uint8_t index, const trap_callable& callable);
 
-    protected:
+    private:
+        bool has_overflow(
+            uint64_t lhs,
+            uint64_t rhs,
+            uint64_t result,
+            op_sizes size);
+
+        uint64_t set_zoned_value(
+            uint64_t source,
+            uint64_t value,
+            op_sizes size);
+
         bool get_operand_value(
             common::result& r,
             const instruction_t& inst,
@@ -495,6 +579,8 @@ namespace basecode::vm {
             const instruction_t& inst,
             uint8_t operand_index,
             double& value) const;
+
+        void free_heap_block_list();
 
         bool set_target_operand_value(
             common::result& r,
@@ -508,34 +594,14 @@ namespace basecode::vm {
             uint8_t operand_index,
             double value);
 
+        void execute_trap(uint8_t index);
+
         bool get_constant_address_or_pc_with_offset(
             common::result& r,
             const instruction_t& inst,
             uint8_t operand_index,
             uint64_t inst_size,
             uint64_t& address);
-
-        inline uint8_t op_size_in_bytes(op_sizes size) const {
-            switch (size) {
-                case op_sizes::byte:  return 1;
-                case op_sizes::word:  return 2;
-                case op_sizes::dword: return 4;
-                case op_sizes::qword: return 8;
-                default:              return 0;
-            }
-        }
-
-    private:
-        bool has_overflow(
-            uint64_t lhs,
-            uint64_t rhs,
-            uint64_t result,
-            op_sizes size);
-
-        uint64_t set_zoned_value(
-            uint64_t source,
-            uint64_t value,
-            op_sizes size);
 
         bool has_carry(uint64_t value, op_sizes size);
 
@@ -555,6 +621,16 @@ namespace basecode::vm {
 
         inline uint32_t* dword_ptr(uint64_t address) const {
             return reinterpret_cast<uint32_t*>(_heap + address);
+        }
+
+        inline uint8_t op_size_in_bytes(op_sizes size) const {
+            switch (size) {
+                case op_sizes::byte:  return 1;
+                case op_sizes::word:  return 2;
+                case op_sizes::dword: return 4;
+                case op_sizes::qword: return 8;
+                default:              return 0;
+            }
         }
 
     private:
@@ -619,8 +695,12 @@ namespace basecode::vm {
         DCCallVM* _call_vm = nullptr;
         register_file_t _registers {};
         meta_information_t _meta_information {};
+        heap_block_t* _head_heap_block = nullptr;
         std::unordered_map<uint8_t, trap_callable> _traps {};
+        std::unordered_map<uint64_t, heap_block_t*> _address_blocks {};
         std::unordered_map<std::string, shared_library_t> _shared_libraries {};
     };
 
 };
+
+#pragma clang diagnostic pop

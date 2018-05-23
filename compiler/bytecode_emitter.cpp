@@ -52,7 +52,19 @@ namespace basecode::compiler {
     }
 
     bool bytecode_emitter::initialize(common::result& r) {
-        return _terp.initialize(r);
+        if(!_terp.initialize(r))
+            return false;
+
+//        _terp.heap_free_space_begin(0x400);
+//        uint64_t first_address = _terp.alloc(256);
+//        uint64_t second_address = _terp.alloc(48);
+//        uint64_t third_address = _terp.alloc(2177);
+//
+//        _terp.free(second_address);
+//        _terp.free(first_address);
+//        _terp.free(third_address);
+
+        return true;
     }
 
     bool bytecode_emitter::compile(common::result& r, std::istream& input) {
