@@ -26,6 +26,8 @@
 #include <common/result.h>
 #include <dyncall/dyncall.h>
 #include <dynload/dynload.h>
+#include <dyncall/dyncall_struct.h>
+#include <dyncall/dyncall_signature.h>
 
 namespace basecode::vm {
 
@@ -360,22 +362,23 @@ namespace basecode::vm {
     ///////////////////////////////////////////////////////////////////////////
 
     enum class ffi_calling_mode_t : uint16_t {
-        c_default               = 0b0000100000000000,
-        c_ellipsis              = 0b0001000000000000,
-        c_ellipsis_varargs      = 0b0010000000000000,
+        c_default = 1,
+        c_ellipsis,
+        c_ellipsis_varargs,
     };
 
-    enum class ffi_return_types_t : uint16_t {
-        void_type               = 0b0000000000000001,
-        bool_type               = 0b0000000000000010,
-        char_type               = 0b0000000000000100,
-        short_type              = 0b0000000000001000,
-        int_type                = 0b0000000000010000,
-        long_type               = 0b0000000000100000,
-        long_long_type          = 0b0000000001000000,
-        float_type              = 0b0000000010000000,
-        double_type             = 0b0000000100000000,
-        pointer_type            = 0b0000001000000000,
+    enum class ffi_types_t : uint16_t {
+        void_type = 1,
+        bool_type,
+        char_type,
+        short_type,
+        int_type,
+        long_type,
+        long_long_type,
+        float_type,
+        double_type,
+        pointer_type,
+        struct_type,
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -454,6 +457,71 @@ namespace basecode::vm {
         DLLib* _library = nullptr;
         std::filesystem::path _path {};
         symbol_address_map _symbols {};
+    };
+
+    struct function_value_t {
+        std::string name;
+        ffi_types_t type;
+        std::vector<function_value_t> fields {};
+
+        DCstruct* to_dc_struct() {
+            auto dc_struct = dcNewStruct(fields.size(), DEFAULT_ALIGNMENT);
+            add_struct_fields(dc_struct);
+            dcCloseStruct(dc_struct);
+            return dc_struct;
+        }
+
+        void add_struct_fields(DCstruct* dc_struct) {
+            for (auto& value : fields) {
+                switch (value.type) {
+                    case ffi_types_t::void_type:
+                        break;
+                    case ffi_types_t::bool_type:
+                        dcStructField(dc_struct, DC_SIGCHAR_BOOL, DEFAULT_ALIGNMENT, 1);
+                        break;
+                    case ffi_types_t::char_type:
+                        dcStructField(dc_struct, DC_SIGCHAR_CHAR, DEFAULT_ALIGNMENT, 1);
+                        break;
+                    case ffi_types_t::short_type:
+                        dcStructField(dc_struct, DC_SIGCHAR_SHORT, DEFAULT_ALIGNMENT, 1);
+                        break;
+                    case ffi_types_t::int_type:
+                        dcStructField(dc_struct, DC_SIGCHAR_INT, DEFAULT_ALIGNMENT, 1);
+                        break;
+                    case ffi_types_t::long_type:
+                        dcStructField(dc_struct, DC_SIGCHAR_LONG, DEFAULT_ALIGNMENT, 1);
+                        break;
+                    case ffi_types_t::long_long_type:
+                        dcStructField(dc_struct, DC_SIGCHAR_LONGLONG, DEFAULT_ALIGNMENT, 1);
+                        break;
+                    case ffi_types_t::float_type:
+                        dcStructField(dc_struct, DC_SIGCHAR_FLOAT, DEFAULT_ALIGNMENT, 1);
+                        break;
+                    case ffi_types_t::double_type:
+                        dcStructField(dc_struct, DC_SIGCHAR_DOUBLE, DEFAULT_ALIGNMENT, 1);
+                        break;
+                    case ffi_types_t::pointer_type:
+                        dcStructField(dc_struct, DC_SIGCHAR_POINTER, DEFAULT_ALIGNMENT, 1);
+                        break;
+                    case ffi_types_t::struct_type: {
+                        dcStructField(dc_struct, DC_SIGCHAR_STRUCT, DEFAULT_ALIGNMENT, 1);
+                        dcSubStruct(dc_struct, value.fields.size(), DEFAULT_ALIGNMENT, 1);
+                        value.add_struct_fields(dc_struct);
+                        dcCloseStruct(dc_struct);
+                        break;
+                    }
+                }
+            }
+        }
+    };
+
+    struct function_signature_t {
+        std::string symbol {};
+        void* func_ptr = nullptr;
+        function_value_t return_value {};
+        shared_library_t* library = nullptr;
+        std::vector<function_value_t> arguments {};
+        ffi_calling_mode_t calling_mode = ffi_calling_mode_t::c_default;
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -535,10 +603,6 @@ namespace basecode::vm {
 
         size_t heap_size() const;
 
-        bool load_shared_library(
-            common::result& r,
-            const std::filesystem::path& path);
-
         void push(uint64_t value);
 
         size_t stack_size() const;
@@ -549,6 +613,10 @@ namespace basecode::vm {
 
         uint64_t alloc(uint64_t size);
 
+        bool register_foreign_function(
+            common::result& r,
+            function_signature_t& signature);
+
         uint64_t free(uint64_t address);
 
         uint64_t size(uint64_t address);
@@ -558,6 +626,10 @@ namespace basecode::vm {
         bool initialize(common::result& r);
 
         void dump_state(uint8_t count = 16);
+
+        shared_library_t* load_shared_library(
+            common::result& r,
+            const std::filesystem::path& path);
 
         std::vector<uint64_t> jump_to_subroutine(
             common::result& r,
@@ -582,6 +654,8 @@ namespace basecode::vm {
         std::string disassemble(common::result& r, uint64_t address);
 
         void register_trap(uint8_t index, const trap_callable& callable);
+
+        shared_library_t* shared_library(const std::filesystem::path& path);
 
     private:
         bool has_overflow(
@@ -725,6 +799,7 @@ namespace basecode::vm {
         heap_block_t* _head_heap_block = nullptr;
         std::unordered_map<uint8_t, trap_callable> _traps {};
         std::unordered_map<uint64_t, heap_block_t*> _address_blocks {};
+        std::unordered_map<void*, function_signature_t> _foreign_functions {};
         std::unordered_map<std::string, shared_library_t> _shared_libraries {};
     };
 

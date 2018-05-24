@@ -417,6 +417,32 @@ namespace basecode::vm {
         return value;
     }
 
+    bool terp::register_foreign_function(
+            common::result& r,
+            function_signature_t& signature) {
+        if (signature.func_ptr != nullptr) {
+            auto it = _foreign_functions.find(signature.func_ptr);
+            if (it != _foreign_functions.end())
+                return true;
+        }
+
+        if (signature.library == nullptr) {
+            // XXX: add an error message
+            return false;
+        }
+
+        auto func_ptr = signature.library->symbol_address(signature.symbol);
+        if (func_ptr == nullptr) {
+            // XXX: add an error message
+            return false;
+        }
+
+        signature.func_ptr = func_ptr;
+        _foreign_functions.insert(std::make_pair(func_ptr, signature));
+
+        return false;
+    }
+
     void terp::dump_shared_libraries() {
         fmt::print("{:32}{:64}{:17}\n", "Image Name", "Symbol Name", "Address");
         fmt::print("{}\n", std::string(180, '-'));
@@ -1426,73 +1452,18 @@ namespace basecode::vm {
                 break;
             }
             case op_codes::ffi: {
-                // operand 0: I{x} register holding pointer to function
-                //              this comes from the shared libraries symbols
-                //
-                // operand 1: constant integer | I{x} register with 32-bit: top 16-bit calling mode | bottom 16-bit return type
-                //
-                // operand 2: constant integer | I{x} register with number of arguments on stack
-                //
-                // Notes:
-                //
-                // The compiler will know the prototype of the foreign function it's going to call.
-                //
-                // Example:
-                //
-                // #foreign printf := fn(fmt:string, values:...any):none;
-                //
-                // and usage:
-                //
-                //  printf("Something crazy: %d\n", 256);
-                //
-                // From this, we can produce an FFI call like this:
-                //
-                // printf_string:
-                //          db  "Something crazy: %d\n", 0
-                //
-                // PUSH.W   #$100
-                // PUSH.DW  #printf_string
-                // MOVE.QW  I0, #printf
-                // FFI.B    I0, VOID_TYPE, 2
-                // ; Nothing to pop from the stack because it's a void return type
-                //
-                // -------------------------------------------------------
-                //
-                // Another example:
-                //
-                // #foreign square := fn(value:f64):f64;
-                //
-                // and usage:
-                //
-                // printf("%f", square(14.35722));
-                //
-                // printf_string:
-                //          db "%f", 0
-                //
-                // PUSH.QW   #$402cb6e58a32f449     ; hex representation of 14.35722
-                // MOVE.QW   I0, #square
-                // FFI.B     I0, DOUBLE_TYPE, 1
-                // DUP
-                // POP.QW    F0
-                // PUSH.QW   #printf_string
-                // MOVE.QW   I0, #printf
-                // FFI.B     I0, VOID_TYPE, 2
-                //
-                //
-                uint64_t address, flags, number_arguments;
+                uint64_t address;
                 if (!get_operand_value(r, inst, 0, address))
                     return false;
 
-                if (!get_operand_value(r, inst, 1, flags))
-                    return false;
+                auto it = _foreign_functions.find(reinterpret_cast<void*>(address));
+                if (it == _foreign_functions.end()) {
+                    // XXX: silent failure?
+                    break;
+                }
+                auto func_signature = &it->second;
 
-                if (!get_operand_value(r, inst, 2, number_arguments))
-                    return false;
-
-                auto calling_mode = static_cast<ffi_calling_mode_t>(flags & 0b00000000000000001111110000000000);
-                auto return_type  = static_cast<ffi_return_types_t>(flags & 0b00000000000000000000001111111111);
-
-                switch (calling_mode) {
+                switch (func_signature->calling_mode) {
                     case ffi_calling_mode_t::c_default:
                         dcMode(_call_vm, DC_CALL_C_DEFAULT);
                         break;
@@ -1506,79 +1477,134 @@ namespace basecode::vm {
 
                 dcReset(_call_vm);
 
-                // XXX: how are we going to know the types here?
-                for (size_t i = 0; i < number_arguments; i++) {
+                std::vector<DCstruct*> structs_to_free {};
 
+                for (auto& argument : func_signature->arguments) {
+                    switch (argument.type) {
+                        case ffi_types_t::void_type:
+                            break;
+                        case ffi_types_t::bool_type:
+                            dcArgBool(_call_vm, static_cast<DCbool>(pop()));
+                            break;
+                        case ffi_types_t::char_type:
+                            dcArgChar(_call_vm, static_cast<DCchar>(pop()));
+                            break;
+                        case ffi_types_t::short_type:
+                            dcArgShort(_call_vm, static_cast<DCshort>(pop()));
+                            break;
+                        case ffi_types_t::int_type:
+                            dcArgInt(_call_vm, static_cast<DCint>(pop()));
+                            break;
+                        case ffi_types_t::long_type:
+                            dcArgLong(_call_vm, static_cast<DClong>(pop()));
+                            break;
+                        case ffi_types_t::long_long_type:
+                            dcArgLongLong(_call_vm, static_cast<DClonglong>(pop()));
+                            break;
+                        case ffi_types_t::float_type:
+                            dcArgFloat(_call_vm, static_cast<DCfloat>(pop()));
+                            break;
+                        case ffi_types_t::double_type:
+                            dcArgDouble(_call_vm, static_cast<DCdouble>(pop()));
+                            break;
+                        case ffi_types_t::pointer_type:
+                            dcArgPointer(_call_vm, reinterpret_cast<DCpointer>(pop()));
+                            break;
+                        case ffi_types_t::struct_type: {
+                            auto dc_struct = argument.to_dc_struct();
+                            structs_to_free.emplace_back(dc_struct);
+                            dcArgStruct(_call_vm, dc_struct, reinterpret_cast<DCpointer>(pop()));
+                            break;
+                        }
+                    }
                 }
 
-                switch (return_type) {
-                    case ffi_return_types_t::void_type:
+                switch (func_signature->return_value.type) {
+                    case ffi_types_t::void_type:
                         dcCallVoid(_call_vm, reinterpret_cast<DCpointer>(address));
                         break;
-                    case ffi_return_types_t::bool_type: {
+                    case ffi_types_t::bool_type: {
                         auto value = static_cast<uint64_t>(dcCallBool(
                             _call_vm,
                             reinterpret_cast<DCpointer>(address)));
                         push(value);
                         break;
                     }
-                    case ffi_return_types_t::char_type: {
+                    case ffi_types_t::char_type: {
                         auto value = static_cast<uint64_t>(dcCallChar(
                             _call_vm,
                             reinterpret_cast<DCpointer>(address)));
                         push(value);
                         break;
                     }
-                    case ffi_return_types_t::short_type: {
+                    case ffi_types_t::short_type: {
                         auto value = static_cast<uint64_t>(dcCallShort(
                             _call_vm,
                             reinterpret_cast<DCpointer>(address)));
                         push(value);
                         break;
                     }
-                    case ffi_return_types_t::int_type: {
+                    case ffi_types_t::int_type: {
                         auto value = static_cast<uint64_t>(dcCallInt(
                             _call_vm,
                             reinterpret_cast<DCpointer>(address)));
                         push(value);
                         break;
                     }
-                    case ffi_return_types_t::long_type: {
+                    case ffi_types_t::long_type: {
                         auto value = static_cast<uint64_t>(dcCallLong(
                             _call_vm,
                             reinterpret_cast<DCpointer>(address)));
                         push(value);
                         break;
                     }
-                    case ffi_return_types_t::long_long_type: {
+                    case ffi_types_t::long_long_type: {
                         auto value = static_cast<uint64_t>(dcCallLongLong(
                             _call_vm,
                             reinterpret_cast<DCpointer>(address)));
                         push(value);
                         break;
                     }
-                    case ffi_return_types_t::float_type: {
+                    case ffi_types_t::float_type: {
                         auto value = static_cast<uint64_t>(dcCallFloat(
                             _call_vm,
                             reinterpret_cast<DCpointer>(address)));
                         push(value);
                         break;
                     }
-                    case ffi_return_types_t::double_type: {
+                    case ffi_types_t::double_type: {
                         auto value = static_cast<uint64_t>(dcCallDouble(
                             _call_vm,
                             reinterpret_cast<DCpointer>(address)));
                         push(value);
                         break;
                     }
-                    case ffi_return_types_t::pointer_type: {
+                    case ffi_types_t::pointer_type: {
                         auto value = reinterpret_cast<uint64_t>(dcCallPointer(
                             _call_vm,
                             reinterpret_cast<DCpointer>(address)));
                         push(value);
                         break;
                     }
+                    case ffi_types_t::struct_type: {
+                        DCpointer return_value;
+
+                        auto dc_struct = func_signature->return_value.to_dc_struct();
+                        structs_to_free.emplace_back(dc_struct);
+
+                        dcCallStruct(
+                            _call_vm,
+                            reinterpret_cast<DCpointer>(address),
+                            dc_struct,
+                            &return_value);
+
+                        push(reinterpret_cast<uint64_t>(return_value));
+                        break;
+                    }
                 }
+
+                for (auto dc_struct : structs_to_free)
+                    dcFreeStruct(dc_struct);
 
                 break;
             }
@@ -1800,6 +1826,24 @@ namespace basecode::vm {
         if (it == _traps.end())
             return;
         it->second(this);
+    }
+
+    shared_library_t* terp::load_shared_library(
+            common::result& r,
+            const std::filesystem::path& path) {
+        auto it = _shared_libraries.find(path.string());
+        if (it != _shared_libraries.end())
+            return &it->second;
+
+        shared_library_t shared_library {};
+        if (!shared_library.initialize(r, path))
+            return nullptr;
+
+        auto pair = _shared_libraries.insert(std::make_pair(
+            path.string(),
+            shared_library));
+
+        return &(*pair.first).second;
     }
 
     std::vector<uint64_t> terp::jump_to_subroutine(
@@ -2215,6 +2259,13 @@ namespace basecode::vm {
         }
     }
 
+    shared_library_t* terp::shared_library(const std::filesystem::path& path) {
+        auto it = _shared_libraries.find(path.string());
+        if (it == _shared_libraries.end())
+            return nullptr;
+        return &it->second;
+    }
+
     void terp::register_trap(uint8_t index, const terp::trap_callable& callable) {
         _traps.insert(std::make_pair(index, callable));
     }
@@ -2258,14 +2309,6 @@ namespace basecode::vm {
                 return ((~(lhs ^ rhs)) & (lhs ^ result) & mask_qword_negative) != 0;
             }
         }
-    }
-
-    bool terp::load_shared_library(common::result& r, const std::filesystem::path& path) {
-        shared_library_t shared_library {};
-        if (!shared_library.initialize(r, path))
-            return false;
-        _shared_libraries.insert(std::make_pair(path.string(), shared_library));
-        return true;
     }
 
 };

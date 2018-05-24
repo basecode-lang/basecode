@@ -11,8 +11,28 @@
 
 @entry_point main;
 
-#foreign sqrt := fn(value:f64):f64;
-#foreign printf := fn(fmt:string, values:...any):none;
+#foreign
+    @library "fmt";
+    @calling_convention c_default;
+    format := fn (fmt:string, values: ...any):none;
+
+// attribute should consume multiple arguments within a single statement
+// AND
+//
+// comments should be allowed anywhere, need an infix comment parser
+//                             ^
+//                             | parser isn't supported to see this as the any keyword
+
+#foreign {
+    @library "fmt"
+    @alias "format"
+    @calling_convention win_x86_fast;
+    format_win_x86_fast := fn (fmt:string, values: ...any):none;
+
+    sqrt := fn(value:f64):f64;
+    printf := fn(fmt:string, values:...any):none;
+};
+
 
 alpha::compiler::examples := ns {
     something::nested := ns {

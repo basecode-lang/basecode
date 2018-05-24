@@ -2,37 +2,18 @@ NOTES
 ------------------------
 - use elfio for read/writing obj/executable files
 
-- dyncall library in C
-- how are FFI prototypes done?
-- what does a module look like?  how do we import other namespaces?
-    @foreign ["name"] attribute on function prototype?
-
 - are the compiler directives bootstrapped using the @directive attribute so
   therefore all implemented in Basecode?
 
-- should alloc and free be a part of the interpreter?
-    --
-      default arena-based allocate within the heap
-
-    * alloc
-    * free
-    --
-
 Basecode Bootstrap Tasks
 ------------------------
+- add unload_shared_library to terp
+
 - implement block comments /* */ in the lexer/parser
-
-- implement namespaces in the parser
-
-- implement enumerations in lexer/parser
 
 - implement defer in parser (executed in reverse order)
 
-- implement object/pointer dereference with . operator
-
 - implement with in parser
-
-- fix precedence of @attribute in parser
 
 - what is the type of a function?
 
@@ -79,3 +60,7 @@ Basecode Bootstrap Tasks
 
 DONE
 ----
+- implement namespaces in the parser
+- implement enumerations in lexer/parser
+- implement object/pointer dereference with . operator
+- fix precedence of @attribute in parser
