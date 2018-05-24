@@ -460,62 +460,28 @@ namespace basecode::vm {
     };
 
     struct function_value_t {
+        ~function_value_t();
+
+        DCstruct* struct_meta_info();
+
+        void push(DCCallVM* vm, uint64_t value);
+
         std::string name;
         ffi_types_t type;
         std::vector<function_value_t> fields {};
 
-        DCstruct* to_dc_struct() {
-            auto dc_struct = dcNewStruct(fields.size(), DEFAULT_ALIGNMENT);
-            add_struct_fields(dc_struct);
-            dcCloseStruct(dc_struct);
-            return dc_struct;
-        }
+    private:
+        void add_struct_fields(DCstruct* s);
 
-        void add_struct_fields(DCstruct* dc_struct) {
-            for (auto& value : fields) {
-                switch (value.type) {
-                    case ffi_types_t::void_type:
-                        break;
-                    case ffi_types_t::bool_type:
-                        dcStructField(dc_struct, DC_SIGCHAR_BOOL, DEFAULT_ALIGNMENT, 1);
-                        break;
-                    case ffi_types_t::char_type:
-                        dcStructField(dc_struct, DC_SIGCHAR_CHAR, DEFAULT_ALIGNMENT, 1);
-                        break;
-                    case ffi_types_t::short_type:
-                        dcStructField(dc_struct, DC_SIGCHAR_SHORT, DEFAULT_ALIGNMENT, 1);
-                        break;
-                    case ffi_types_t::int_type:
-                        dcStructField(dc_struct, DC_SIGCHAR_INT, DEFAULT_ALIGNMENT, 1);
-                        break;
-                    case ffi_types_t::long_type:
-                        dcStructField(dc_struct, DC_SIGCHAR_LONG, DEFAULT_ALIGNMENT, 1);
-                        break;
-                    case ffi_types_t::long_long_type:
-                        dcStructField(dc_struct, DC_SIGCHAR_LONGLONG, DEFAULT_ALIGNMENT, 1);
-                        break;
-                    case ffi_types_t::float_type:
-                        dcStructField(dc_struct, DC_SIGCHAR_FLOAT, DEFAULT_ALIGNMENT, 1);
-                        break;
-                    case ffi_types_t::double_type:
-                        dcStructField(dc_struct, DC_SIGCHAR_DOUBLE, DEFAULT_ALIGNMENT, 1);
-                        break;
-                    case ffi_types_t::pointer_type:
-                        dcStructField(dc_struct, DC_SIGCHAR_POINTER, DEFAULT_ALIGNMENT, 1);
-                        break;
-                    case ffi_types_t::struct_type: {
-                        dcStructField(dc_struct, DC_SIGCHAR_STRUCT, DEFAULT_ALIGNMENT, 1);
-                        dcSubStruct(dc_struct, value.fields.size(), DEFAULT_ALIGNMENT, 1);
-                        value.add_struct_fields(dc_struct);
-                        dcCloseStruct(dc_struct);
-                        break;
-                    }
-                }
-            }
-        }
+    private:
+        DCstruct* _struct_meta_data = nullptr;
     };
 
     struct function_signature_t {
+        void apply_calling_convention(DCCallVM* vm);
+
+        uint64_t call(DCCallVM* vm, uint64_t address);
+
         std::string symbol {};
         void* func_ptr = nullptr;
         function_value_t return_value {};
@@ -582,6 +548,9 @@ namespace basecode::vm {
             + (sizeof(uint16_t) * heap_vector_table_size);
 
         static constexpr size_t program_start = heap_vector_table_end;
+
+        static constexpr uint8_t trap_out_of_memory = 0xff;
+        static constexpr uint8_t trap_invalid_ffi_call = 0xfe;
 
         terp(
             size_t heap_size,

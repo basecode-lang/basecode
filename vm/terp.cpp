@@ -33,6 +33,203 @@ namespace basecode::vm {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    function_value_t::~function_value_t() {
+        if (_struct_meta_data != nullptr)
+            delete _struct_meta_data;
+    }
+
+    DCstruct* function_value_t::struct_meta_info() {
+        if (_struct_meta_data != nullptr)
+            return _struct_meta_data;
+
+        _struct_meta_data = dcNewStruct(
+            fields.size(),
+            DEFAULT_ALIGNMENT);
+        add_struct_fields(_struct_meta_data);
+        dcCloseStruct(_struct_meta_data);
+
+        return _struct_meta_data;
+    }
+
+    void function_value_t::push(DCCallVM* vm, uint64_t value) {
+        switch (type) {
+            case ffi_types_t::void_type:
+                break;
+            case ffi_types_t::bool_type:
+                dcArgBool(vm, static_cast<DCbool>(value));
+                break;
+            case ffi_types_t::char_type:
+                dcArgChar(vm, static_cast<DCchar>(value));
+                break;
+            case ffi_types_t::short_type:
+                dcArgShort(vm, static_cast<DCshort>(value));
+                break;
+            case ffi_types_t::int_type:
+                dcArgInt(vm, static_cast<DCint>(value));
+                break;
+            case ffi_types_t::long_type:
+                dcArgLong(vm, static_cast<DClong>(value));
+                break;
+            case ffi_types_t::long_long_type:
+                dcArgLongLong(vm, static_cast<DClonglong>(value));
+                break;
+            case ffi_types_t::float_type:
+                dcArgFloat(vm, static_cast<DCfloat>(value));
+                break;
+            case ffi_types_t::double_type:
+                dcArgDouble(vm, static_cast<DCdouble>(value));
+                break;
+            case ffi_types_t::pointer_type:
+                dcArgPointer(vm, reinterpret_cast<DCpointer>(value));
+                break;
+            case ffi_types_t::struct_type: {
+                auto dc_struct = struct_meta_info();
+                dcArgStruct(
+                    vm,
+                    dc_struct,
+                    reinterpret_cast<DCpointer>(value));
+                break;
+            }
+        }
+    }
+
+    void function_value_t::add_struct_fields(DCstruct* s) {
+        for (auto& value : fields) {
+            switch (value.type) {
+                case ffi_types_t::void_type:
+                    break;
+                case ffi_types_t::bool_type:
+                    dcStructField(s, DC_SIGCHAR_BOOL, DEFAULT_ALIGNMENT, 1);
+                    break;
+                case ffi_types_t::char_type:
+                    dcStructField(s, DC_SIGCHAR_CHAR, DEFAULT_ALIGNMENT, 1);
+                    break;
+                case ffi_types_t::short_type:
+                    dcStructField(s, DC_SIGCHAR_SHORT, DEFAULT_ALIGNMENT, 1);
+                    break;
+                case ffi_types_t::int_type:
+                    dcStructField(s, DC_SIGCHAR_INT, DEFAULT_ALIGNMENT, 1);
+                    break;
+                case ffi_types_t::long_type:
+                    dcStructField(s, DC_SIGCHAR_LONG, DEFAULT_ALIGNMENT, 1);
+                    break;
+                case ffi_types_t::long_long_type:
+                    dcStructField(s, DC_SIGCHAR_LONGLONG, DEFAULT_ALIGNMENT, 1);
+                    break;
+                case ffi_types_t::float_type:
+                    dcStructField(s, DC_SIGCHAR_FLOAT, DEFAULT_ALIGNMENT, 1);
+                    break;
+                case ffi_types_t::double_type:
+                    dcStructField(s, DC_SIGCHAR_DOUBLE, DEFAULT_ALIGNMENT, 1);
+                    break;
+                case ffi_types_t::pointer_type:
+                    dcStructField(s, DC_SIGCHAR_POINTER, DEFAULT_ALIGNMENT, 1);
+                    break;
+                case ffi_types_t::struct_type: {
+                    dcStructField(s, DC_SIGCHAR_STRUCT, DEFAULT_ALIGNMENT, 1);
+                    dcSubStruct(s, value.fields.size(), DEFAULT_ALIGNMENT, 1);
+                    value.add_struct_fields(s);
+                    dcCloseStruct(s);
+                    break;
+                }
+            }
+        }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    void function_signature_t::apply_calling_convention(DCCallVM* vm) {
+        switch (calling_mode) {
+            case ffi_calling_mode_t::c_default:
+                dcMode(vm, DC_CALL_C_DEFAULT);
+                break;
+            case ffi_calling_mode_t::c_ellipsis:
+                dcMode(vm, DC_CALL_C_ELLIPSIS);
+                break;
+            case ffi_calling_mode_t::c_ellipsis_varargs:
+                dcMode(vm, DC_CALL_C_ELLIPSIS_VARARGS);
+                break;
+        }
+    }
+
+    uint64_t function_signature_t::call(DCCallVM* vm, uint64_t address) {
+        switch (return_value.type) {
+            case ffi_types_t::void_type:
+                dcCallVoid(vm, reinterpret_cast<DCpointer>(address));
+                break;
+            case ffi_types_t::bool_type: {
+                auto value = static_cast<uint64_t>(dcCallBool(
+                    vm,
+                    reinterpret_cast<DCpointer>(address)));
+                return value;
+            }
+            case ffi_types_t::char_type: {
+                auto value = static_cast<uint64_t>(dcCallChar(
+                    vm,
+                    reinterpret_cast<DCpointer>(address)));
+                return value;
+            }
+            case ffi_types_t::short_type: {
+                auto value = static_cast<uint64_t>(dcCallShort(
+                    vm,
+                    reinterpret_cast<DCpointer>(address)));
+                return value;
+            }
+            case ffi_types_t::int_type: {
+                auto value = static_cast<uint64_t>(dcCallInt(
+                    vm,
+                    reinterpret_cast<DCpointer>(address)));
+                return value;
+            }
+            case ffi_types_t::long_type: {
+                auto value = static_cast<uint64_t>(dcCallLong(
+                    vm,
+                    reinterpret_cast<DCpointer>(address)));
+                return value;
+            }
+            case ffi_types_t::long_long_type: {
+                auto value = static_cast<uint64_t>(dcCallLongLong(
+                    vm,
+                    reinterpret_cast<DCpointer>(address)));
+                return value;
+            }
+            case ffi_types_t::float_type: {
+                auto value = static_cast<uint64_t>(dcCallFloat(
+                    vm,
+                    reinterpret_cast<DCpointer>(address)));
+                return value;
+            }
+            case ffi_types_t::double_type: {
+                auto value = static_cast<uint64_t>(dcCallDouble(
+                    vm,
+                    reinterpret_cast<DCpointer>(address)));
+                return value;
+            }
+            case ffi_types_t::pointer_type: {
+                auto value = reinterpret_cast<uint64_t>(dcCallPointer(
+                    vm,
+                    reinterpret_cast<DCpointer>(address)));
+                return value;
+            }
+            case ffi_types_t::struct_type: {
+                auto dc_struct = return_value.struct_meta_info();
+
+                DCpointer output_value;
+                dcCallStruct(
+                    vm,
+                    reinterpret_cast<DCpointer>(address),
+                    dc_struct,
+                    &output_value);
+
+                return reinterpret_cast<uint64_t>(output_value);
+            }
+        }
+
+        return 0;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
     bool shared_library_t::initialize(
             common::result& r,
             const std::filesystem::path& path) {
@@ -525,6 +722,11 @@ namespace basecode::vm {
 
                 size *= op_size_in_bytes(inst.size);
                 uint64_t address = alloc(size);
+                if (address == 0) {
+                    execute_trap(trap_out_of_memory);
+                    return false;
+                }
+
                 if (!set_target_operand_value(r, inst, 0, address))
                     return false;
 
@@ -1458,153 +1660,21 @@ namespace basecode::vm {
 
                 auto it = _foreign_functions.find(reinterpret_cast<void*>(address));
                 if (it == _foreign_functions.end()) {
-                    // XXX: silent failure?
+                    execute_trap(trap_invalid_ffi_call);
                     break;
                 }
+
                 auto func_signature = &it->second;
-
-                switch (func_signature->calling_mode) {
-                    case ffi_calling_mode_t::c_default:
-                        dcMode(_call_vm, DC_CALL_C_DEFAULT);
-                        break;
-                    case ffi_calling_mode_t::c_ellipsis:
-                        dcMode(_call_vm, DC_CALL_C_ELLIPSIS);
-                        break;
-                    case ffi_calling_mode_t::c_ellipsis_varargs:
-                        dcMode(_call_vm, DC_CALL_C_ELLIPSIS_VARARGS);
-                        break;
-                }
-
+                func_signature->apply_calling_convention(_call_vm);
                 dcReset(_call_vm);
 
-                std::vector<DCstruct*> structs_to_free {};
-
                 for (auto& argument : func_signature->arguments) {
-                    switch (argument.type) {
-                        case ffi_types_t::void_type:
-                            break;
-                        case ffi_types_t::bool_type:
-                            dcArgBool(_call_vm, static_cast<DCbool>(pop()));
-                            break;
-                        case ffi_types_t::char_type:
-                            dcArgChar(_call_vm, static_cast<DCchar>(pop()));
-                            break;
-                        case ffi_types_t::short_type:
-                            dcArgShort(_call_vm, static_cast<DCshort>(pop()));
-                            break;
-                        case ffi_types_t::int_type:
-                            dcArgInt(_call_vm, static_cast<DCint>(pop()));
-                            break;
-                        case ffi_types_t::long_type:
-                            dcArgLong(_call_vm, static_cast<DClong>(pop()));
-                            break;
-                        case ffi_types_t::long_long_type:
-                            dcArgLongLong(_call_vm, static_cast<DClonglong>(pop()));
-                            break;
-                        case ffi_types_t::float_type:
-                            dcArgFloat(_call_vm, static_cast<DCfloat>(pop()));
-                            break;
-                        case ffi_types_t::double_type:
-                            dcArgDouble(_call_vm, static_cast<DCdouble>(pop()));
-                            break;
-                        case ffi_types_t::pointer_type:
-                            dcArgPointer(_call_vm, reinterpret_cast<DCpointer>(pop()));
-                            break;
-                        case ffi_types_t::struct_type: {
-                            auto dc_struct = argument.to_dc_struct();
-                            structs_to_free.emplace_back(dc_struct);
-                            dcArgStruct(_call_vm, dc_struct, reinterpret_cast<DCpointer>(pop()));
-                            break;
-                        }
-                    }
+                    argument.push(_call_vm, pop());
                 }
 
-                switch (func_signature->return_value.type) {
-                    case ffi_types_t::void_type:
-                        dcCallVoid(_call_vm, reinterpret_cast<DCpointer>(address));
-                        break;
-                    case ffi_types_t::bool_type: {
-                        auto value = static_cast<uint64_t>(dcCallBool(
-                            _call_vm,
-                            reinterpret_cast<DCpointer>(address)));
-                        push(value);
-                        break;
-                    }
-                    case ffi_types_t::char_type: {
-                        auto value = static_cast<uint64_t>(dcCallChar(
-                            _call_vm,
-                            reinterpret_cast<DCpointer>(address)));
-                        push(value);
-                        break;
-                    }
-                    case ffi_types_t::short_type: {
-                        auto value = static_cast<uint64_t>(dcCallShort(
-                            _call_vm,
-                            reinterpret_cast<DCpointer>(address)));
-                        push(value);
-                        break;
-                    }
-                    case ffi_types_t::int_type: {
-                        auto value = static_cast<uint64_t>(dcCallInt(
-                            _call_vm,
-                            reinterpret_cast<DCpointer>(address)));
-                        push(value);
-                        break;
-                    }
-                    case ffi_types_t::long_type: {
-                        auto value = static_cast<uint64_t>(dcCallLong(
-                            _call_vm,
-                            reinterpret_cast<DCpointer>(address)));
-                        push(value);
-                        break;
-                    }
-                    case ffi_types_t::long_long_type: {
-                        auto value = static_cast<uint64_t>(dcCallLongLong(
-                            _call_vm,
-                            reinterpret_cast<DCpointer>(address)));
-                        push(value);
-                        break;
-                    }
-                    case ffi_types_t::float_type: {
-                        auto value = static_cast<uint64_t>(dcCallFloat(
-                            _call_vm,
-                            reinterpret_cast<DCpointer>(address)));
-                        push(value);
-                        break;
-                    }
-                    case ffi_types_t::double_type: {
-                        auto value = static_cast<uint64_t>(dcCallDouble(
-                            _call_vm,
-                            reinterpret_cast<DCpointer>(address)));
-                        push(value);
-                        break;
-                    }
-                    case ffi_types_t::pointer_type: {
-                        auto value = reinterpret_cast<uint64_t>(dcCallPointer(
-                            _call_vm,
-                            reinterpret_cast<DCpointer>(address)));
-                        push(value);
-                        break;
-                    }
-                    case ffi_types_t::struct_type: {
-                        DCpointer return_value;
-
-                        auto dc_struct = func_signature->return_value.to_dc_struct();
-                        structs_to_free.emplace_back(dc_struct);
-
-                        dcCallStruct(
-                            _call_vm,
-                            reinterpret_cast<DCpointer>(address),
-                            dc_struct,
-                            &return_value);
-
-                        push(reinterpret_cast<uint64_t>(return_value));
-                        break;
-                    }
-                }
-
-                for (auto dc_struct : structs_to_free)
-                    dcFreeStruct(dc_struct);
+                uint64_t result_value = func_signature->call(_call_vm, address);
+                if (func_signature->return_value.type != ffi_types_t::void_type)
+                    push(result_value);
 
                 break;
             }

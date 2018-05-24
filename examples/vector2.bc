@@ -24,8 +24,8 @@
 //                             | parser isn't supported to see this as the any keyword
 
 #foreign {
-    @library "fmt"
-    @alias "format"
+    @library "fmt";
+    @alias "format";
     @calling_convention win_x86_fast;
     format_win_x86_fast := fn (fmt:string, values: ...any):none;
 
