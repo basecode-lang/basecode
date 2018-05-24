@@ -359,11 +359,27 @@ namespace basecode::vm {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    // 0: pointer to the top of the stack
-    // 1: pointer to the bottom of the stack, based on the stack_size value
-    //    passed into the vm::terp
-    // 2: pointer to the start of program space
-    // 3: pointer to the end of bootstrap code/beginning of free space
+    enum class ffi_calling_mode_t : uint16_t {
+        c_default               = 0b0000100000000000,
+        c_ellipsis              = 0b0001000000000000,
+        c_ellipsis_varargs      = 0b0010000000000000,
+    };
+
+    enum class ffi_return_types_t : uint16_t {
+        void_type               = 0b0000000000000001,
+        bool_type               = 0b0000000000000010,
+        char_type               = 0b0000000000000100,
+        short_type              = 0b0000000000001000,
+        int_type                = 0b0000000000010000,
+        long_type               = 0b0000000000100000,
+        long_long_type          = 0b0000000001000000,
+        float_type              = 0b0000000010000000,
+        double_type             = 0b0000000100000000,
+        pointer_type            = 0b0000001000000000,
+    };
+
+    ///////////////////////////////////////////////////////////////////////////
+
     enum class heap_vectors_t : uint8_t {
         top_of_stack = 0,
         bottom_of_stack,

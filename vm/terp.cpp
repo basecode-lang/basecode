@@ -1429,7 +1429,7 @@ namespace basecode::vm {
                 // operand 0: I{x} register holding pointer to function
                 //              this comes from the shared libraries symbols
                 //
-                // operand 1: constant integer | I{x} register with return type
+                // operand 1: constant integer | I{x} register with 32-bit: top 16-bit calling mode | bottom 16-bit return type
                 //
                 // operand 2: constant integer | I{x} register with number of arguments on stack
                 //
@@ -1479,6 +1479,107 @@ namespace basecode::vm {
                 // FFI.B     I0, VOID_TYPE, 2
                 //
                 //
+                uint64_t address, flags, number_arguments;
+                if (!get_operand_value(r, inst, 0, address))
+                    return false;
+
+                if (!get_operand_value(r, inst, 1, flags))
+                    return false;
+
+                if (!get_operand_value(r, inst, 2, number_arguments))
+                    return false;
+
+                auto calling_mode = static_cast<ffi_calling_mode_t>(flags & 0b00000000000000001111110000000000);
+                auto return_type  = static_cast<ffi_return_types_t>(flags & 0b00000000000000000000001111111111);
+
+                switch (calling_mode) {
+                    case ffi_calling_mode_t::c_default:
+                        dcMode(_call_vm, DC_CALL_C_DEFAULT);
+                        break;
+                    case ffi_calling_mode_t::c_ellipsis:
+                        dcMode(_call_vm, DC_CALL_C_ELLIPSIS);
+                        break;
+                    case ffi_calling_mode_t::c_ellipsis_varargs:
+                        dcMode(_call_vm, DC_CALL_C_ELLIPSIS_VARARGS);
+                        break;
+                }
+
+                dcReset(_call_vm);
+
+                // XXX: how are we going to know the types here?
+                for (size_t i = 0; i < number_arguments; i++) {
+
+                }
+
+                switch (return_type) {
+                    case ffi_return_types_t::void_type:
+                        dcCallVoid(_call_vm, reinterpret_cast<DCpointer>(address));
+                        break;
+                    case ffi_return_types_t::bool_type: {
+                        auto value = static_cast<uint64_t>(dcCallBool(
+                            _call_vm,
+                            reinterpret_cast<DCpointer>(address)));
+                        push(value);
+                        break;
+                    }
+                    case ffi_return_types_t::char_type: {
+                        auto value = static_cast<uint64_t>(dcCallChar(
+                            _call_vm,
+                            reinterpret_cast<DCpointer>(address)));
+                        push(value);
+                        break;
+                    }
+                    case ffi_return_types_t::short_type: {
+                        auto value = static_cast<uint64_t>(dcCallShort(
+                            _call_vm,
+                            reinterpret_cast<DCpointer>(address)));
+                        push(value);
+                        break;
+                    }
+                    case ffi_return_types_t::int_type: {
+                        auto value = static_cast<uint64_t>(dcCallInt(
+                            _call_vm,
+                            reinterpret_cast<DCpointer>(address)));
+                        push(value);
+                        break;
+                    }
+                    case ffi_return_types_t::long_type: {
+                        auto value = static_cast<uint64_t>(dcCallLong(
+                            _call_vm,
+                            reinterpret_cast<DCpointer>(address)));
+                        push(value);
+                        break;
+                    }
+                    case ffi_return_types_t::long_long_type: {
+                        auto value = static_cast<uint64_t>(dcCallLongLong(
+                            _call_vm,
+                            reinterpret_cast<DCpointer>(address)));
+                        push(value);
+                        break;
+                    }
+                    case ffi_return_types_t::float_type: {
+                        auto value = static_cast<uint64_t>(dcCallFloat(
+                            _call_vm,
+                            reinterpret_cast<DCpointer>(address)));
+                        push(value);
+                        break;
+                    }
+                    case ffi_return_types_t::double_type: {
+                        auto value = static_cast<uint64_t>(dcCallDouble(
+                            _call_vm,
+                            reinterpret_cast<DCpointer>(address)));
+                        push(value);
+                        break;
+                    }
+                    case ffi_return_types_t::pointer_type: {
+                        auto value = reinterpret_cast<uint64_t>(dcCallPointer(
+                            _call_vm,
+                            reinterpret_cast<DCpointer>(address)));
+                        push(value);
+                        break;
+                    }
+                }
+
                 break;
             }
             case op_codes::meta: {
