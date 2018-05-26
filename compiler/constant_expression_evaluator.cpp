@@ -21,7 +21,42 @@ namespace basecode::compiler {
     constant_expression_evaluator::~constant_expression_evaluator() {
     }
 
-    syntax::ast_node_shared_ptr constant_expression_evaluator::evaluate(
+    bool constant_expression_evaluator::is_subtree_constant(
+            const syntax::ast_node_shared_ptr& node) {
+        if (node == nullptr)
+            return false;
+
+        switch (node->type) {
+            case syntax::ast_node_types_t::expression: {
+                return is_subtree_constant(node->lhs);
+            }
+            case syntax::ast_node_types_t::assignment: {
+                return is_subtree_constant(node->rhs);
+            }
+            case syntax::ast_node_types_t::unary_operator: {
+                return is_subtree_constant(node->rhs);
+            }
+            case syntax::ast_node_types_t::binary_operator: {
+                return is_subtree_constant(node->lhs)
+                       && is_subtree_constant(node->rhs);
+            }
+            case syntax::ast_node_types_t::basic_block:
+            case syntax::ast_node_types_t::line_comment:
+            case syntax::ast_node_types_t::none_literal:
+            case syntax::ast_node_types_t::null_literal:
+            case syntax::ast_node_types_t::block_comment:
+            case syntax::ast_node_types_t::empty_literal:
+            case syntax::ast_node_types_t::number_literal:
+            case syntax::ast_node_types_t::string_literal:
+            case syntax::ast_node_types_t::boolean_literal:
+            case syntax::ast_node_types_t::character_literal:
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    syntax::ast_node_shared_ptr constant_expression_evaluator::fold_literal_expressions(
             common::result& r,
             const syntax::ast_node_shared_ptr& node) {
         if (node == nullptr)
@@ -29,23 +64,23 @@ namespace basecode::compiler {
 
         switch (node->type) {
             case syntax::ast_node_types_t::expression: {
-                node->lhs = evaluate(r, node->lhs);
+                node->lhs = fold_literal_expressions(r, node->lhs);
                 break;
             }
             case syntax::ast_node_types_t::statement: {
-                node->rhs = evaluate(r, node->rhs);
+                node->rhs = fold_literal_expressions(r, node->rhs);
                 break;
             }
             case syntax::ast_node_types_t::assignment: {
                 if (is_subtree_constant(node->rhs)) {
-                    auto folded_expression = evaluate(r, node->rhs);
+                    auto folded_expression = fold_literal_expressions(r, node->rhs);
                 } else {
                     return node;
                 }
                 break;
             }
             case syntax::ast_node_types_t::unary_operator: {
-                auto folded_rhs = evaluate(r, node->rhs);
+                auto folded_rhs = fold_literal_expressions(r, node->rhs);
 
                 uint64_t rhs_value;
                 if (folded_rhs->token.is_boolean()) {
@@ -82,8 +117,8 @@ namespace basecode::compiler {
                 break;
             }
             case syntax::ast_node_types_t::binary_operator: {
-                auto folded_lhs = evaluate(r, node->lhs);
-                auto folded_rhs = evaluate(r, node->rhs);
+                auto folded_lhs = fold_literal_expressions(r, node->lhs);
+                auto folded_rhs = fold_literal_expressions(r, node->rhs);
 
                 switch (node->token.type) {
                     case syntax::token_types_t::pipe:
@@ -191,7 +226,7 @@ namespace basecode::compiler {
                     ||  block_child->type == syntax::ast_node_types_t::block_comment) {
                         it = node->children.erase(it);
                     } else {
-                        block_child = evaluate(r, block_child);
+                        block_child = fold_literal_expressions(r, block_child);
                         ++it;
                     }
                 }
@@ -206,39 +241,16 @@ namespace basecode::compiler {
         return node;
     }
 
-    bool constant_expression_evaluator::is_subtree_constant(
+    syntax::ast_node_shared_ptr constant_expression_evaluator::fold_constant_symbols_and_expressions(
+            common::result& r,
             const syntax::ast_node_shared_ptr& node) {
-        if (node == nullptr)
-            return false;
+        return nullptr;
+    }
 
-        switch (node->type) {
-            case syntax::ast_node_types_t::expression: {
-                return is_subtree_constant(node->lhs);
-            }
-            case syntax::ast_node_types_t::assignment: {
-                return is_subtree_constant(node->rhs);
-            }
-            case syntax::ast_node_types_t::unary_operator: {
-                return is_subtree_constant(node->rhs);
-            }
-            case syntax::ast_node_types_t::binary_operator: {
-                return is_subtree_constant(node->lhs)
-                       && is_subtree_constant(node->rhs);
-            }
-            case syntax::ast_node_types_t::basic_block:
-            case syntax::ast_node_types_t::line_comment:
-            case syntax::ast_node_types_t::none_literal:
-            case syntax::ast_node_types_t::null_literal:
-            case syntax::ast_node_types_t::block_comment:
-            case syntax::ast_node_types_t::empty_literal:
-            case syntax::ast_node_types_t::number_literal:
-            case syntax::ast_node_types_t::string_literal:
-            case syntax::ast_node_types_t::boolean_literal:
-            case syntax::ast_node_types_t::character_literal:
-                return true;
-            default:
-                return false;
-        }
+    syntax::ast_node_shared_ptr constant_expression_evaluator::fold_constant_functions_and_call_sites(
+            common::result& r,
+            const syntax::ast_node_shared_ptr& node) {
+        return nullptr;
     }
 
 };

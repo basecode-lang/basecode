@@ -23,7 +23,15 @@ namespace basecode::compiler {
 
         virtual ~constant_expression_evaluator();
 
-        syntax::ast_node_shared_ptr evaluate(
+        syntax::ast_node_shared_ptr fold_literal_expressions(
+            common::result& r,
+            const syntax::ast_node_shared_ptr& node);
+
+        syntax::ast_node_shared_ptr fold_constant_symbols_and_expressions(
+            common::result& r,
+            const syntax::ast_node_shared_ptr& node);
+
+        syntax::ast_node_shared_ptr fold_constant_functions_and_call_sites(
             common::result& r,
             const syntax::ast_node_shared_ptr& node);
 

@@ -63,7 +63,7 @@ namespace basecode::compiler {
             common::result& r,
             const syntax::ast_node_shared_ptr& node) {
         constant_expression_evaluator evaluator(&_global_scope);
-        auto result_node = evaluator.evaluate(r, node);
+        auto result_node = evaluator.fold_literal_expressions(r, node);
     }
 
     bool bytecode_emitter::initialize(common::result& r) {
