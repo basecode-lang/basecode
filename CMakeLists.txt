@@ -64,6 +64,7 @@ add_executable(
         parser/parser.cpp parser/parser.h
 
         vm/terp.cpp vm/terp.h
+        vm/assembler.cpp vm/assembler.h
         vm/instruction_emitter.cpp vm/instruction_emitter.h
 
         compiler/scope.cpp compiler/scope.h

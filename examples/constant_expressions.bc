@@ -1,0 +1,11 @@
+example1 := (2 * 2 + ($ff * 2 / $80));
+
+example2 := (2 * 2 + ($ff * 2 / $80)) | %1111_0000_1111_0000;
+
+equals_example := $fffe == $fffe;
+
+twos_complement_value := -126;
+
+binary_negated_value := ~256;
+
+logically_negated_value := !true;

@@ -18,15 +18,15 @@
 
 @entry_point alpha::compiler::examples::main;
 
-ns alpha::compiler::config {
+alpha::compiler::config := ns {
 
-    ns fibonacci {
-        length_of_sequence := 1000;
+    fibonacci := ns {
+        length_of_sequence:u32 := 1000;
     };
 
 };
 
-ns alpha::compiler::examples {
+alpha::compiler::examples := ns {
 
     fib := fn(n:u64 := 10):u64 {
         if n == 0 || n == 1 {

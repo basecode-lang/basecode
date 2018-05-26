@@ -148,6 +148,14 @@ namespace basecode::syntax {
             return it->second;
         }
 
+        inline bool operator != (const ast_node_t& other) const {
+            return this->token.value != other.token.value;
+        }
+
+        inline bool operator == (const ast_node_t& other) const {
+            return this->token.value == other.token.value;
+        }
+
         uint32_t id;
         token_t token;
         ast_node_types_t type;

@@ -28,6 +28,9 @@ namespace basecode::compiler {
             const syntax::ast_node_shared_ptr& node);
 
     private:
+        bool is_subtree_constant(const syntax::ast_node_shared_ptr& node);
+
+    private:
         compiler::scope* _scope;
     };
 

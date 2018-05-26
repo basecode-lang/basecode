@@ -189,5 +189,16 @@ namespace basecode::syntax {
         uint32_t column = 0;
         number_types_t number_type = number_types_t::none;
     };
+
+    static inline token_t s_true_literal = {
+        .type = token_types_t::true_literal,
+        .value = "true"
+    };
+
+    static inline token_t s_false_literal = {
+        .type = token_types_t::false_literal,
+        .value = "false"
+    };
+
 };
 

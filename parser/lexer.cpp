@@ -263,11 +263,12 @@ namespace basecode::syntax {
         auto case_range = s_cases.equal_range(ch);
         for (auto it = case_range.first; it != case_range.second; ++it) {
             token.radix = 10;
-            token.line = _line;
-            token.column = _column;
             token.number_type = number_types_t::none;
-            if (it->second(this, token))
+            if (it->second(this, token)) {
+                token.line = _line;
+                token.column = _column;
                 return true;
+            }
             restore_position();
         }
 
@@ -777,8 +778,7 @@ namespace basecode::syntax {
             auto ch = read(false);
             if (!isalnum(ch)) {
                 rewind_one_char();
-                token.type = token_types_t::true_literal;
-                token.value = "true";
+                token = s_true_literal;
                 return true;
             }
         }

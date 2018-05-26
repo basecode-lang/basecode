@@ -54,12 +54,8 @@ namespace basecode::compiler {
             return;
 
         for (auto& child_node : node->children) {
-            if (child_node->type == syntax::ast_node_types_t::basic_block) {
-                auto child_scope = scope->add_child_scope(child_node);
-                build_scope_tree(r, child_scope, child_node);
-            } else {
-                // XXX: need to recurse down lhs and rhs nodes
-            }
+            auto child_scope = scope->add_child_scope(child_node);
+            build_scope_tree(r, child_scope, child_node);
         }
     }
 
@@ -83,6 +79,9 @@ namespace basecode::compiler {
         syntax::parser alpha_parser(input);
         auto program_node = alpha_parser.parse(r);
         if (program_node != nullptr && !r.is_failed()) {
+            build_scope_tree(r, &_global_scope, program_node);
+            apply_constant_folding(r, program_node);
+
             if (_options.verbose) {
                 auto close_required = false;
                 FILE* ast_output_file = stdout;
@@ -96,9 +95,6 @@ namespace basecode::compiler {
                 if (close_required)
                     fclose(ast_output_file);
             }
-
-            build_scope_tree(r, &_global_scope, program_node);
-            apply_constant_folding(r, program_node);
         }
         return !r.is_failed();
     }
