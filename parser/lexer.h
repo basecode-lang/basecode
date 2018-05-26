@@ -129,7 +129,7 @@ namespace basecode::syntax {
 
         bool continue_literal(token_t& token);
 
-        bool read_only_literal(token_t& token);
+        bool constant_literal(token_t& token);
 
         bool right_curly_brace(token_t& token);
 

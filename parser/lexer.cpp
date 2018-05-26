@@ -114,45 +114,42 @@ namespace basecode::syntax {
         {'n', std::bind(&lexer::null_literal, std::placeholders::_1, std::placeholders::_2)},
         {'n', std::bind(&lexer::none_literal, std::placeholders::_1, std::placeholders::_2)},
         {'n', std::bind(&lexer::ns_literal, std::placeholders::_1, std::placeholders::_2)},
-        {'e', std::bind(&lexer::empty_literal, std::placeholders::_1, std::placeholders::_2)},
+
+        // if literal
+        // in literal
+        {'i', std::bind(&lexer::if_literal, std::placeholders::_1, std::placeholders::_2)},
+        {'i', std::bind(&lexer::in_literal, std::placeholders::_1, std::placeholders::_2)},
 
         // enum literal
-        {'e', std::bind(&lexer::enum_literal, std::placeholders::_1, std::placeholders::_2)},
-
-        // if/else if/else literals
-        {'i', std::bind(&lexer::if_literal, std::placeholders::_1, std::placeholders::_2)},
+        // else if/else literals
+        {'e', std::bind(&lexer::empty_literal, std::placeholders::_1, std::placeholders::_2)},
         {'e', std::bind(&lexer::else_if_literal, std::placeholders::_1, std::placeholders::_2)},
+        {'e', std::bind(&lexer::enum_literal, std::placeholders::_1, std::placeholders::_2)},
         {'e', std::bind(&lexer::else_literal, std::placeholders::_1, std::placeholders::_2)},
 
         // fn literal
-        {'f', std::bind(&lexer::fn_literal, std::placeholders::_1, std::placeholders::_2)},
-
-        // in literal
-        {'i', std::bind(&lexer::in_literal, std::placeholders::_1, std::placeholders::_2)},
-
         // for literal
         {'f', std::bind(&lexer::for_literal, std::placeholders::_1, std::placeholders::_2)},
+        {'f', std::bind(&lexer::fn_literal, std::placeholders::_1, std::placeholders::_2)},
 
         // break literal
         {'b', std::bind(&lexer::break_literal, std::placeholders::_1, std::placeholders::_2)},
-
-        // cast literal
-        {'c', std::bind(&lexer::cast_literal, std::placeholders::_1, std::placeholders::_2)},
 
         // defer literal
         {'d', std::bind(&lexer::defer_literal, std::placeholders::_1, std::placeholders::_2)},
 
         // continue literal
+        // constant literal
+        // cast literal
         {'c', std::bind(&lexer::continue_literal, std::placeholders::_1, std::placeholders::_2)},
+        {'c', std::bind(&lexer::constant_literal, std::placeholders::_1, std::placeholders::_2)},
+        {'c', std::bind(&lexer::cast_literal, std::placeholders::_1, std::placeholders::_2)},
 
         // alias literal
         {'a', std::bind(&lexer::alias_literal, std::placeholders::_1, std::placeholders::_2)},
 
         // union literal
         {'u', std::bind(&lexer::union_literal, std::placeholders::_1, std::placeholders::_2)},
-
-        // read_only literal
-        {'r', std::bind(&lexer::read_only_literal, std::placeholders::_1, std::placeholders::_2)},
 
         // struct literal
         {'s', std::bind(&lexer::struct_literal, std::placeholders::_1, std::placeholders::_2)},
@@ -322,8 +319,7 @@ namespace basecode::syntax {
             auto ch = read(false);
             if (!isalnum(ch)) {
                 rewind_one_char();
-                token.type = token_types_t::enum_literal;
-                token.value = "enum";
+                token = s_enum_literal;
                 return true;
             }
         }
@@ -335,8 +331,7 @@ namespace basecode::syntax {
             auto ch = read(false);
             if (!isalnum(ch)) {
                 rewind_one_char();
-                token.type = token_types_t::alias_literal;
-                token.value = "alias";
+                token = s_alias_literal;
                 return true;
             }
         }
@@ -348,8 +343,7 @@ namespace basecode::syntax {
             auto ch = read(false);
             if (!isalnum(ch)) {
                 rewind_one_char();
-                token.type = token_types_t::break_literal;
-                token.value = "break";
+                token = s_break_literal;
                 return true;
             }
         }
@@ -361,8 +355,7 @@ namespace basecode::syntax {
             auto ch = read(false);
             if (!isalnum(ch)) {
                 rewind_one_char();
-                token.type = token_types_t::while_literal;
-                token.value = "while";
+                token = s_while_literal;
                 return true;
             }
         }
@@ -374,8 +367,7 @@ namespace basecode::syntax {
             auto ch = read(false);
             if (!isalnum(ch)) {
                 rewind_one_char();
-                token.type = token_types_t::struct_literal;
-                token.value = "struct";
+                token = s_struct_literal;
                 return true;
             }
         }
@@ -387,8 +379,7 @@ namespace basecode::syntax {
             auto ch = read(false);
             if (!isalnum(ch)) {
                 rewind_one_char();
-                token.type = token_types_t::union_literal;
-                token.value = "union";
+                token = s_union_literal;
                 return true;
             }
         }
@@ -400,8 +391,7 @@ namespace basecode::syntax {
             auto ch = read(false);
             if (!isalnum(ch)) {
                 rewind_one_char();
-                token.type = token_types_t::continue_literal;
-                token.value = "continue";
+                token = s_continue_literal;
                 return true;
             }
         }
@@ -411,8 +401,7 @@ namespace basecode::syntax {
     bool lexer::left_curly_brace(token_t& token) {
         auto ch = read();
         if (ch == '{') {
-            token.type = token_types_t::left_curly_brace;
-            token.value = "{";
+            token = s_left_curly_brace_literal;
             return true;
         }
         return false;
@@ -421,8 +410,7 @@ namespace basecode::syntax {
     bool lexer::right_curly_brace(token_t& token) {
         auto ch = read();
         if (ch == '}') {
-            token.type = token_types_t::right_curly_brace;
-            token.value = "}";
+            token = s_right_curly_brace_literal;
             return true;
         }
         return false;
@@ -445,8 +433,7 @@ namespace basecode::syntax {
     bool lexer::plus(token_t& token) {
         auto ch = read();
         if (ch == '+') {
-            token.type = token_types_t::plus;
-            token.value = "+";
+            token = s_plus_literal;
             return true;
         }
         return false;
@@ -455,8 +442,7 @@ namespace basecode::syntax {
     bool lexer::bang(token_t& token) {
         auto ch = read();
         if (ch == '!') {
-            token.type = token_types_t::bang;
-            token.value = "!";
+            token = s_bang_literal;
             return true;
         }
         return false;
@@ -465,8 +451,7 @@ namespace basecode::syntax {
     bool lexer::caret(token_t& token) {
         auto ch = read();
         if (ch == '^') {
-            token.type = token_types_t::caret;
-            token.value = "^";
+            token = s_caret_literal;
             return true;
         }
         return false;
@@ -475,8 +460,7 @@ namespace basecode::syntax {
     bool lexer::tilde(token_t& token) {
         auto ch = read();
         if (ch == '~') {
-            token.type = token_types_t::tilde;
-            token.value = "~";
+            token = s_tilde_literal;
             return true;
         }
         return false;
@@ -485,8 +469,7 @@ namespace basecode::syntax {
     bool lexer::colon(token_t& token) {
         auto ch = read();
         if (ch == ':') {
-            token.type = token_types_t::colon;
-            token.value = ":";
+            token = s_colon_literal;
             return true;
         }
         return false;
@@ -495,8 +478,7 @@ namespace basecode::syntax {
     bool lexer::minus(token_t& token) {
         auto ch = read();
         if (ch == '-') {
-            token.type = token_types_t::minus;
-            token.value = "-";
+            token = s_minus_literal;
             return true;
         }
         return false;
@@ -505,8 +487,7 @@ namespace basecode::syntax {
     bool lexer::comma(token_t& token) {
         auto ch = read();
         if (ch == ',') {
-            token.type = token_types_t::comma;
-            token.value = ",";
+            token = s_comma_literal;
             return true;
         }
         return false;
@@ -515,8 +496,7 @@ namespace basecode::syntax {
     bool lexer::slash(token_t& token) {
         auto ch = read();
         if (ch == '/') {
-            token.type = token_types_t::slash;
-            token.value = "/";
+            token = s_slash_literal;
             return true;
         }
         return false;
@@ -528,8 +508,7 @@ namespace basecode::syntax {
             ch = read();
             if (ch != '.') {
                 rewind_one_char();
-                token.type = token_types_t::period;
-                token.value = ".";
+                token = s_period_literal;
                 return true;
             }
         }
@@ -538,8 +517,7 @@ namespace basecode::syntax {
 
     bool lexer::spread(token_t& token) {
         if (match_literal("...")) {
-            token.type = token_types_t::spread_operator;
-            token.value = "...";
+            token = s_spread_operator_literal;
             return true;
         }
         return false;
@@ -548,8 +526,7 @@ namespace basecode::syntax {
     bool lexer::percent(token_t& token) {
         auto ch = read();
         if (ch == '%') {
-            token.type = token_types_t::percent;
-            token.value = "%";
+            token = s_percent_literal;
             return true;
         }
         return false;
@@ -558,8 +535,7 @@ namespace basecode::syntax {
     bool lexer::question(token_t& token) {
         auto ch = read();
         if (ch == '?') {
-            token.type = token_types_t::question;
-            token.value = "?";
+            token = s_question_literal;
             return true;
         }
         return false;
@@ -568,8 +544,7 @@ namespace basecode::syntax {
     bool lexer::asterisk(token_t& token) {
         auto ch = read();
         if (ch == '*') {
-            token.type = token_types_t::asterisk;
-            token.value = "*";
+            token = s_asterisk_literal;
             return true;
         }
         return false;
@@ -614,8 +589,7 @@ namespace basecode::syntax {
         if (ch == ':') {
             ch = read();
             if (ch == '=') {
-                token.type = token_types_t::assignment;
-                token.value = ":=";
+                token = s_assignment_literal;
                 return true;
             }
         }
@@ -625,8 +599,7 @@ namespace basecode::syntax {
     bool lexer::left_paren(token_t& token) {
         auto ch = read();
         if (ch == '(') {
-            token.type = token_types_t::left_paren;
-            token.value = "(";
+            token = s_left_paren_literal;
             return true;
         }
         return false;
@@ -637,8 +610,7 @@ namespace basecode::syntax {
         if (ch == 'i') {
             ch = read();
             if (ch == 'n') {
-                token.type = token_types_t::in_literal;
-                token.value = "in";
+                token = s_in_literal;
                 return true;
             }
         }
@@ -648,8 +620,7 @@ namespace basecode::syntax {
     bool lexer::right_paren(token_t& token) {
         auto ch = read();
         if (ch == ')') {
-            token.type = token_types_t::right_paren;
-            token.value = ")";
+            token = s_right_paren_literal;
             return true;
         }
         return false;
@@ -660,8 +631,7 @@ namespace basecode::syntax {
             auto ch = read(false);
             if (!isalnum(ch)) {
                 rewind_one_char();
-                token.type = token_types_t::fn_literal;
-                token.value = "fn";
+                token = s_fn_literal;
                 return true;
             }
         }
@@ -673,8 +643,7 @@ namespace basecode::syntax {
             auto ch = read(false);
             if (!isalnum(ch)) {
                 rewind_one_char();
-                token.type = token_types_t::namespace_literal;
-                token.value = "ns";
+                token = s_namespace_literal;
                 return true;
             }
         }
@@ -686,8 +655,7 @@ namespace basecode::syntax {
             auto ch = read(false);
             if (!isalnum(ch)) {
                 rewind_one_char();
-                token.type = token_types_t::if_literal;
-                token.value = "if";
+                token = s_if_literal;
                 return true;
             }
         }
@@ -699,8 +667,7 @@ namespace basecode::syntax {
             auto ch = read(false);
             if (!isalnum(ch)) {
                 rewind_one_char();
-                token.type = token_types_t::else_literal;
-                token.value = "else";
+                token = s_else_literal;
                 return true;
             }
         }
@@ -726,8 +693,7 @@ namespace basecode::syntax {
             auto ch = read(false);
             if (isspace(ch)) {
                 rewind_one_char();
-                token.type = token_types_t::for_literal;
-                token.value = "for";
+                token = s_for_literal;
                 return true;
             }
         }
@@ -739,8 +705,7 @@ namespace basecode::syntax {
             auto ch = read(false);
             if (!isalnum(ch)) {
                 rewind_one_char();
-                token.type = token_types_t::null_literal;
-                token.value = "null";
+                token = s_null_literal;
                 return true;
             }
         }
@@ -752,8 +717,7 @@ namespace basecode::syntax {
             auto ch = read(false);
             if (!isalnum(ch)) {
                 rewind_one_char();
-                token.type = token_types_t::none_literal;
-                token.value = "none";
+                token = s_none_literal;
                 return true;
             }
         }
@@ -765,8 +729,7 @@ namespace basecode::syntax {
             auto ch = read(false);
             if (!isalnum(ch)) {
                 rewind_one_char();
-                token.type = token_types_t::cast_literal;
-                token.value = "cast";
+                token = s_cast_literal;
                 return true;
             }
         }
@@ -788,8 +751,7 @@ namespace basecode::syntax {
     bool lexer::pipe_literal(token_t& token) {
         auto ch = read();
         if (ch == '|') {
-            token.type = token_types_t::pipe;
-            token.value = "|";
+            token = s_pipe_literal;
             return true;
         }
         return false;
@@ -810,8 +772,7 @@ namespace basecode::syntax {
             auto ch = read(false);
             if (!isalnum(ch)) {
                 rewind_one_char();
-                token.type = token_types_t::false_literal;
-                token.value = "false";
+                token = s_false_literal;
                 return true;
             }
         }
@@ -823,8 +784,7 @@ namespace basecode::syntax {
             auto ch = read(false);
             if (!isalnum(ch)) {
                 rewind_one_char();
-                token.type = token_types_t::defer_literal;
-                token.value = "defer";
+                token = s_defer_literal;
                 return true;
             }
         }
@@ -836,8 +796,7 @@ namespace basecode::syntax {
             auto ch = read(false);
             if (!isalnum(ch)) {
                 rewind_one_char();
-                token.type = token_types_t::empty_literal;
-                token.value = "empty";
+                token = s_empty_literal;
                 return true;
             }
         }
@@ -920,8 +879,7 @@ namespace basecode::syntax {
             auto ch = read(false);
             if (!isalnum(ch)) {
                 rewind_one_char();
-                token.type = token_types_t::return_literal;
-                token.value = "return";
+                token = s_return_literal;
                 return true;
             }
         }
@@ -931,8 +889,7 @@ namespace basecode::syntax {
     bool lexer::line_terminator(token_t& token) {
         auto ch = read();
         if (ch == ';') {
-            token.type = token_types_t::semi_colon;
-            token.value = ";";
+            token = s_semi_colon_literal;
             return true;
         }
         return false;
@@ -943,8 +900,7 @@ namespace basecode::syntax {
         if (ch == '=') {
             ch = read();
             if (ch == '=') {
-                token.type = token_types_t::equals;
-                token.value = "==";
+                token = s_equals_literal;
                 return true;
             }
         }
@@ -956,8 +912,7 @@ namespace basecode::syntax {
             auto ch = read(false);
             if (!isalnum(ch)) {
                 rewind_one_char();
-                token.type = token_types_t::else_if_literal;
-                token.value = "else if";
+                token = s_else_if_literal;
                 return true;
             }
         }
@@ -978,13 +933,12 @@ namespace basecode::syntax {
         return false;
     }
 
-    bool lexer::read_only_literal(token_t& token) {
-        if (match_literal("read_only")) {
+    bool lexer::constant_literal(token_t& token) {
+        if (match_literal("constant")) {
             auto ch = read(false);
             if (!isalnum(ch)) {
                 rewind_one_char();
-                token.type = token_types_t::read_only_literal;
-                token.value = "read_only";
+                token = s_constant_literal;
                 return true;
             }
         }
@@ -994,8 +948,7 @@ namespace basecode::syntax {
     bool lexer::ampersand_literal(token_t& token) {
         auto ch = read();
         if (ch == '&') {
-            token.type = token_types_t::ampersand;
-            token.value = "&";
+            token = s_ampersand_literal;
             return true;
         }
         return false;
@@ -1004,8 +957,7 @@ namespace basecode::syntax {
     bool lexer::less_than_operator(token_t& token) {
         auto ch = read();
         if (ch == '<') {
-            token.type = token_types_t::less_than;
-            token.value = "<";
+            token = s_less_than_literal;
             return true;
         }
         return false;
@@ -1016,8 +968,7 @@ namespace basecode::syntax {
         if (ch == '|') {
             ch = read();
             if (ch == '|') {
-                token.type = token_types_t::logical_or;
-                token.value = "||";
+                token = s_logical_or_literal;
                 return true;
             }
         }
@@ -1029,8 +980,7 @@ namespace basecode::syntax {
         if (ch == '&') {
             ch = read();
             if (ch == '&') {
-                token.type = token_types_t::logical_and;
-                token.value = "&&";
+                token = s_logical_and_literal;
                 return true;
             }
         }
@@ -1042,8 +992,7 @@ namespace basecode::syntax {
         if (ch == '!') {
             ch = read();
             if (ch == '=') {
-                token.type = token_types_t::not_equals;
-                token.value = "!=";
+                token = s_not_equals_literal;
                 return true;
             }
         }
@@ -1053,8 +1002,7 @@ namespace basecode::syntax {
     bool lexer::left_square_bracket(token_t& token) {
         auto ch = read();
         if (ch == '[') {
-            token.type = token_types_t::left_square_bracket;
-            token.value = "[";
+            token = s_left_square_bracket_literal;
             return true;
         }
         return false;
@@ -1063,8 +1011,7 @@ namespace basecode::syntax {
     bool lexer::right_square_bracket(token_t& token) {
         auto ch = read();
         if (ch == ']') {
-            token.type = token_types_t::right_square_bracket;
-            token.value = "]";
+            token = s_right_square_bracket_literal;
             return true;
         }
         return false;
@@ -1073,8 +1020,7 @@ namespace basecode::syntax {
     bool lexer::greater_than_operator(token_t& token) {
         auto ch = read();
         if (ch == '>') {
-            token.type = token_types_t::greater_than;
-            token.value = ">";
+            token = s_greater_than_literal;
             return true;
         }
         return false;
@@ -1085,8 +1031,7 @@ namespace basecode::syntax {
         if (ch == '<') {
             ch = read();
             if (ch == '=') {
-                token.type = token_types_t::less_than_equal;
-                token.value = "<=";
+                token = s_less_than_equal_literal;
                 return true;
             }
         }
@@ -1110,8 +1055,7 @@ namespace basecode::syntax {
         if (ch == '>') {
             ch = read();
             if (ch == '=') {
-                token.type = token_types_t::greater_than_equal;
-                token.value = ">=";
+                token = s_greater_than_equal_literal;
                 return true;
             }
         }
