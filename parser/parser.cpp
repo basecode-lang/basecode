@@ -19,6 +19,19 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    ast_node_shared_ptr constant_prefix_parser::parse(
+            common::result& r,
+            parser* parser,
+            token_t& token) {
+        auto constant_node = parser->ast_builder()->constant_node(token);
+        constant_node->rhs = parser->parse_expression(
+            r,
+            static_cast<uint8_t>(precedence_t::assignment));
+        return constant_node;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
     ast_node_shared_ptr union_prefix_parser::parse(
             common::result& r,
             parser* parser,

@@ -21,7 +21,7 @@
 alpha::compiler::config := ns {
 
     fibonacci := ns {
-        length_of_sequence:u32 := 1000;
+        constant length_of_sequence:u32 := 1000;
     };
 
 };
@@ -39,8 +39,9 @@ alpha::compiler::examples := ns {
     };
 
     main := fn():u32 {
-        // XXX: this will need a cast<>() but the parser doesn't do that quite yet
-        return fib(alpha::compiler::config::fibonacci::length_of_sequence);
+        final_fib_value:u32 := fib(
+            alpha::compiler::config::fibonacci::length_of_sequence);
+        return final_fib_value;
     };
 
 };

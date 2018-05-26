@@ -1,3 +1,6 @@
+constant pi = 3.14;
+constant max_byte = $ff;
+
 example1 := (2 * 2 + ($ff * 2 / $80));
 
 example2 := (2 * 2 + ($ff * 2 / $80)) | %1111_0000_1111_0000;
