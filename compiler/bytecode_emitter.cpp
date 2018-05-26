@@ -11,6 +11,7 @@
 
 #include <fstream>
 #include <parser/lexer.h>
+#include <parser/ast_formatter.h>
 #include "bytecode_emitter.h"
 #include "constant_expression_evaluator.h"
 
@@ -89,6 +90,7 @@ namespace basecode::compiler {
                     ast_output_file = fopen(_options.ast_graph_file_name.c_str(), "wt");
                     close_required = true;
                 }
+
                 syntax::ast_formatter formatter(program_node, ast_output_file);
                 formatter.format_graph_viz();
 

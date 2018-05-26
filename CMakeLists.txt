@@ -62,6 +62,7 @@ add_executable(
         parser/lexer.cpp parser/lexer.h
         parser/token.cpp parser/token.h
         parser/parser.cpp parser/parser.h
+        parser/ast_formatter.cpp parser/ast_formatter.h
 
         vm/terp.cpp vm/terp.h
         vm/assembler.cpp vm/assembler.h
