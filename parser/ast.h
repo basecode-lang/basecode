@@ -63,6 +63,7 @@ namespace basecode::syntax {
         extend_statement,
         for_in_statement,
         union_expression,
+        defer_expression,
         character_literal,
         array_constructor,
         elseif_expression,
@@ -105,6 +106,7 @@ namespace basecode::syntax {
         {ast_node_types_t::break_statement, "break_statement"},
         {ast_node_types_t::with_expression, "with_expression"},
         {ast_node_types_t::type_identifier, "type_identifier"},
+        {ast_node_types_t::defer_expression, "defer_expression"},
         {ast_node_types_t::union_expression, "union_expression"},
         {ast_node_types_t::return_statement, "return_statement"},
         {ast_node_types_t::symbol_reference, "symbol_reference"},
@@ -217,11 +219,15 @@ namespace basecode::syntax {
 
         void push_scope(const ast_node_shared_ptr& node);
 
+        ast_node_shared_ptr with_node(const token_t& token);
+
         ast_node_shared_ptr enum_node(const token_t& token);
 
         ast_node_shared_ptr break_node(const token_t& token);
 
         ast_node_shared_ptr union_node(const token_t& token);
+
+        ast_node_shared_ptr defer_node(const token_t& token);
 
         ast_node_shared_ptr qualified_symbol_reference_node();
 

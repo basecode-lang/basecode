@@ -51,6 +51,7 @@ namespace basecode::syntax {
         right_paren,
         for_literal,
         end_of_file,
+        with_literal,
         greater_than,
         none_literal,
         line_comment,
@@ -116,11 +117,12 @@ namespace basecode::syntax {
         {token_types_t::in_literal,             "in_literal"},
         {token_types_t::if_literal,             "if_literal"},
         {token_types_t::for_literal,            "for_literal"},
+        {token_types_t::end_of_file,            "end_of_file"},
         {token_types_t::right_paren,            "right_paren"},
         {token_types_t::logical_and,            "logical_and"},
         {token_types_t::null_literal,           "null_literal"},
         {token_types_t::none_literal,           "none_literal"},
-        {token_types_t::end_of_file,            "end_of_file"},
+        {token_types_t::with_literal,           "with_literal"},
         {token_types_t::cast_literal,           "cast_literal"},
         {token_types_t::else_literal,           "else_literal"},
         {token_types_t::line_comment,           "line_comment"},
@@ -253,6 +255,11 @@ namespace basecode::syntax {
     static inline token_t s_none_literal = {
         .type = token_types_t::none_literal,
         .value = "none"
+    };
+
+    static inline token_t s_with_literal = {
+        .type = token_types_t::with_literal,
+        .value = "with"
     };
 
     static inline token_t s_true_literal = {

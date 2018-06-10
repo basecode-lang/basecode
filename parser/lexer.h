@@ -95,6 +95,8 @@ namespace basecode::syntax {
 
         bool true_literal(token_t& token);
 
+        bool with_literal(token_t& token);
+
         bool false_literal(token_t& token);
 
         bool defer_literal(token_t& token);

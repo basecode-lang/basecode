@@ -11,10 +11,6 @@ Basecode Bootstrap Tasks
 
 - implement block comments /* */ in the lexer/parser
 
-- implement defer in parser (executed in reverse order)
-
-- implement with in parser
-
 - what is the type of a function?
 
 - require return statement
@@ -64,3 +60,5 @@ DONE
 - implement enumerations in lexer/parser
 - implement object/pointer dereference with . operator
 - fix precedence of @attribute in parser
+- implement defer in parser (executed in reverse order)
+- implement with in parser

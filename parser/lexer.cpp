@@ -156,6 +156,7 @@ namespace basecode::syntax {
 
         // while literal
         {'w', std::bind(&lexer::while_literal, std::placeholders::_1, std::placeholders::_2)},
+        {'w', std::bind(&lexer::with_literal, std::placeholders::_1, std::placeholders::_2)},
 
         // identifier
         {'_', std::bind(&lexer::identifier, std::placeholders::_1, std::placeholders::_2)},
@@ -730,6 +731,18 @@ namespace basecode::syntax {
             if (!isalnum(ch)) {
                 rewind_one_char();
                 token = s_cast_literal;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    bool lexer::with_literal(token_t& token) {
+        if (match_literal("with")) {
+            auto ch = read(false);
+            if (!isalnum(ch)) {
+                rewind_one_char();
+                token = s_true_literal;
                 return true;
             }
         }

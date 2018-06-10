@@ -39,8 +39,10 @@ alpha::compiler::examples := ns {
     };
 
     main := fn():u32 {
-        final_fib_value:u32 := fib(
-            alpha::compiler::config::fibonacci::length_of_sequence);
+        defer {
+            final_fib_value:u32 := fib(
+                alpha::compiler::config::fibonacci::length_of_sequence);
+        };
         return final_fib_value;
     };
 
