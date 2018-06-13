@@ -7,6 +7,48 @@ NOTES
 
 Basecode Bootstrap Tasks
 ------------------------
+- does binary_operator/unary_operator need element* or just expression*
+
+- base types should be statically defined in program
+
+- determine the best way to create new elements
+    * maybe follow a similar pattern to ast_builder
+
+- if/else if/else
+
+- switch
+
+- with
+
+- defer
+
+- for
+
+- while
+
+- alias
+
+- break/continue
+
+- return
+
+- union/struct/enum (probably OK with just type)
+
+- comment
+
+- boolean_literal
+
+- array_literal
+
+- remove scope, symbol_table, constant_expression_evaluator, type_inference_engine
+
+- type needs to include parameters
+    * e.g. addr<u8>
+
+- procedure subclass for type
+
+=================================================================
+
 - add unload_shared_library to terp
 
 - implement block comments /* */ in the lexer/parser
@@ -16,44 +58,6 @@ Basecode Bootstrap Tasks
 - require return statement
     * multiple return values
 
-- need to bootstrap support functionality into the heap:
-    * compiler directives
-        #eval
-
-        #assert
-            number_argument
-            argument_types
-            argument_values
-            filename
-            line_number
-
-            returns bool
-
-        #check
-
-    * attributes
-        @directive name {func};
-        @entry_point {func};
-
-    * char (for character literals)
-    * address_of
-    * type_of
-    * size_of
-    * deep_copy
-    * transaction
-
-    --
-      does this just return an array of integers?
-      is this an AST "function" that gets expanded in place?
-
-    * range
-    --
-
-    * string support
-    * array support
-
-- simplify syntax and type system
-
 DONE
 ----
 - implement namespaces in the parser
@@ -62,3 +66,4 @@ DONE
 - fix precedence of @attribute in parser
 - implement defer in parser (executed in reverse order)
 - implement with in parser
+- ast to internal model

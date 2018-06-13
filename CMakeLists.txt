@@ -55,6 +55,7 @@ add_executable(
         common/bytes.h
         common/result.h
         common/result_message.h
+        common/id_pool.cpp common/id_pool.h
         common/ya_getopt.c common/ya_getopt.h
         common/hex_formatter.cpp common/hex_formatter.h
 
@@ -68,10 +69,28 @@ add_executable(
         vm/assembler.cpp vm/assembler.h
         vm/instruction_emitter.cpp vm/instruction_emitter.h
 
+        compiler/elements/element_types.h
         compiler/scope.cpp compiler/scope.h
         compiler/symbol_table.cpp compiler/symbol_table.h
+        compiler/elements/type.cpp compiler/elements/type.h
+        compiler/elements/field.cpp compiler/elements/field.h
+        compiler/elements/block.cpp compiler/elements/block.h
         compiler/bytecode_emitter.cpp compiler/bytecode_emitter.h
+        compiler/elements/element.cpp compiler/elements/element.h
+        compiler/elements/program.cpp compiler/elements/program.h
+        compiler/elements/attribute.cpp compiler/elements/attribute.h
+        compiler/elements/directive.cpp compiler/elements/directive.h
+        compiler/elements/identifier.cpp compiler/elements/identifier.h
+        compiler/elements/expression.cpp compiler/elements/expression.h
+        compiler/elements/initializer.cpp compiler/elements/initializer.h
         compiler/type_inference_engine.cpp compiler/type_inference_engine.h
+        compiler/elements/operator_base.cpp compiler/elements/operator_base.h
+        compiler/elements/float_literal.cpp compiler/elements/float_literal.h
+        compiler/elements/string_literal.cpp compiler/elements/string_literal.h
+        compiler/elements/unary_operator.cpp compiler/elements/unary_operator.h
+        compiler/elements/integer_literal.cpp compiler/elements/integer_literal.h
+        compiler/elements/binary_operator.cpp compiler/elements/binary_operator.h
+        compiler/elements/namespace_element.cpp compiler/elements/namespace_element.h
         compiler/constant_expression_evaluator.cpp compiler/constant_expression_evaluator.h)
 target_link_libraries(bootstrap ${CONAN_LIBS})
 

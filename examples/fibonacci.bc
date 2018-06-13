@@ -14,7 +14,9 @@
 //
 
 // N.B. this is how we define 'external' function prototypes
-#foreign print := fn(format:string, values:...any):none;
+#foreign
+    @alias "printf"
+    print := fn(format:string, values:...any):none;
 
 @entry_point alpha::compiler::examples::main;
 
