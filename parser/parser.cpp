@@ -10,6 +10,7 @@
 // ----------------------------------------------------------------------------
 
 #include <regex>
+#include <string>
 #include <iomanip>
 #include <sstream>
 #include <iostream>
@@ -171,16 +172,10 @@ namespace basecode::syntax {
             parser* parser,
             token_t& token) {
         auto is_spread = false;
-        auto is_pointer = false;
-        ast_node_shared_ptr array_decl_node = nullptr;
-
-        if (parser->peek(token_types_t::asterisk)) {
-            parser->consume();
-            is_pointer = true;
-        }
+        ast_node_shared_ptr array_node = nullptr;
 
         if (parser->peek(token_types_t::left_square_bracket)) {
-            array_decl_node = parser->parse_expression(
+            array_node = parser->parse_expression(
                 r,
                 static_cast<uint8_t>(precedence_t::variable));
         }
@@ -193,28 +188,22 @@ namespace basecode::syntax {
         token_t type_identifier;
         type_identifier.type = token_types_t::identifier;
 
-        if (parser->peek(token_types_t::none_literal)) {
-            type_identifier.value = "none";
-            parser->consume();
-        } else {
-            if (!parser->expect(r, type_identifier)) {
-                parser->error(
-                    r,
-                    "B027",
-                    "type expected.",
-                    token.line,
-                    token.column);
-                return nullptr;
-            }
+        if (!parser->expect(r, type_identifier)) {
+            parser->error(
+                r,
+                "B027",
+                "type expected.",
+                token.line,
+                token.column);
+            return nullptr;
         }
 
-        auto type_node = parser->ast_builder()->type_identifier_node(type_identifier);
+        auto type_node = parser
+            ->ast_builder()
+            ->type_identifier_node(type_identifier);
 
-        if (is_pointer)
-            type_node->flags |= ast_node_t::flags_t::pointer;
-
-        if (array_decl_node != nullptr) {
-            type_node->rhs = array_decl_node;
+        if (array_node != nullptr) {
+            type_node->rhs = array_node;
             type_node->flags |= ast_node_t::flags_t::array;
         }
 
@@ -235,11 +224,11 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    ast_node_shared_ptr fn_decl_prefix_parser::parse(
+    ast_node_shared_ptr proc_expression_prefix_parser::parse(
             common::result& r,
             parser* parser,
             token_t& token) {
-        auto fn_decl_node = parser->ast_builder()->fn_decl_node();
+        auto proc_node = parser->ast_builder()->proc_expression_node();
 
         token_t left_paren_token;
         left_paren_token.type = token_types_t::left_paren;
@@ -248,7 +237,7 @@ namespace basecode::syntax {
 
         if (!parser->peek(token_types_t::right_paren)) {
             while (true) {
-                fn_decl_node->rhs->children.push_back(parser->parse_expression(r, 0));
+                proc_node->rhs->children.push_back(parser->parse_expression(r, 0));
                 if (!parser->peek(token_types_t::comma))
                     break;
                 parser->consume();
@@ -260,12 +249,22 @@ namespace basecode::syntax {
         if (!parser->expect(r, right_paren_token))
             return nullptr;
 
-        fn_decl_node->lhs = parser->parse_expression(r, 0);
+        if (parser->peek(token_types_t::colon)) {
+            parser->consume();
+            while (true) {
+                proc_node->lhs = parser->parse_expression(
+                    r,
+                    static_cast<uint8_t>(precedence_t::type));
+                if (!parser->peek(token_types_t::comma))
+                    break;
+                parser->consume();
+            }
+        }
 
         if (!parser->peek(token_types_t::semi_colon))
-            fn_decl_node->children.push_back(parser->parse_expression(r, 0));
+            proc_node->children.push_back(parser->parse_expression(r, 0));
 
-        return fn_decl_node;
+        return proc_node;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -312,10 +311,6 @@ namespace basecode::syntax {
                 return parser->ast_builder()->break_node(token);
             case token_types_t::continue_literal:
                 return parser->ast_builder()->continue_node(token);
-            case token_types_t::none_literal:
-                return parser->ast_builder()->none_literal_node(token);
-            case token_types_t::empty_literal:
-                return parser->ast_builder()->empty_literal_node(token);
             case token_types_t::null_literal:
                 return parser->ast_builder()->null_literal_node(token);
             case token_types_t::true_literal:
@@ -377,35 +372,51 @@ namespace basecode::syntax {
             common::result& r,
             parser* parser,
             token_t& token) {
-        auto symbol_reference_node = parser->ast_builder()->qualified_symbol_reference_node();
+        auto argument_list_node = parser
+            ->ast_builder()
+            ->argument_list_node();
+
+        auto symbol_reference_node = parser
+            ->ast_builder()
+            ->qualified_symbol_reference_node();
 
         while (true) {
-            auto symbol_node = parser->ast_builder()->symbol_reference_node(token);
+            auto symbol_node = parser
+                ->ast_builder()
+                ->symbol_reference_node(token);
             symbol_reference_node->lhs->children.push_back(symbol_node);
             if (!parser->peek(token_types_t::scope_operator)
-            &&  !parser->peek(token_types_t::period))
+            &&  !parser->peek(token_types_t::period)) {
+                if (parser->peek(token_types_t::comma)) {
+                    argument_list_node->children.push_back(symbol_reference_node);
+                    goto next_symbol;
+                }
                 break;
+            }
+        next_symbol:
             parser->consume();
             if (!parser->expect(r, token))
                 return nullptr;
         }
 
-        return symbol_reference_node;
+        return argument_list_node->children.empty() ?
+            symbol_reference_node :
+            argument_list_node;
     }
 
     ///////////////////////////////////////////////////////////////////////////
 
-    ast_node_shared_ptr fn_call_infix_parser::parse(
+    ast_node_shared_ptr proc_call_infix_parser::parse(
             common::result& r,
             parser* parser,
             const ast_node_shared_ptr& lhs,
             token_t& token) {
-        auto fn_call_node = parser->ast_builder()->fn_call_node();
-        fn_call_node->lhs = lhs;
+        auto proc_call_node = parser->ast_builder()->proc_call_node();
+        proc_call_node->lhs = lhs;
 
         if (!parser->peek(token_types_t::right_paren)) {
             while (true) {
-                fn_call_node->rhs->children.push_back(parser->parse_expression(r, 0));
+                proc_call_node->rhs->children.push_back(parser->parse_expression(r, 0));
                 if (!parser->peek(token_types_t::comma))
                     break;
                 parser->consume();
@@ -417,10 +428,10 @@ namespace basecode::syntax {
         if (!parser->expect(r, right_paren_token))
             return nullptr;
 
-        return fn_call_node;
+        return proc_call_node;
     }
 
-    precedence_t fn_call_infix_parser::precedence() const {
+    precedence_t proc_call_infix_parser::precedence() const {
         return precedence_t::call;
     }
 
@@ -461,16 +472,10 @@ namespace basecode::syntax {
             const ast_node_shared_ptr& lhs,
             token_t& token) {
         auto is_spread = false;
-        auto is_pointer = false;
-        ast_node_shared_ptr array_decl_node = nullptr;
-
-        if (parser->peek(token_types_t::asterisk)) {
-            parser->consume();
-            is_pointer = true;
-        }
+        ast_node_shared_ptr array_node = nullptr;
 
         if (parser->peek(token_types_t::left_square_bracket)) {
-            array_decl_node = parser->parse_expression(
+            array_node = parser->parse_expression(
                 r,
                 static_cast<uint8_t>(precedence_t::variable));
         }
@@ -483,28 +488,22 @@ namespace basecode::syntax {
         token_t type_identifier;
         type_identifier.type = token_types_t::identifier;
 
-        if (parser->peek(token_types_t::none_literal)) {
-            type_identifier.value = "none";
-            parser->consume();
-        } else {
-            if (!parser->expect(r, type_identifier)) {
-                parser->error(
-                    r,
-                    "B027",
-                    "type name expected for variable declaration.",
-                    token.line,
-                    token.column);
-                return nullptr;
-            }
+        if (!parser->expect(r, type_identifier)) {
+            parser->error(
+                r,
+                "B027",
+                "type name expected for variable declaration.",
+                token.line,
+                token.column);
+            return nullptr;
         }
 
-        lhs->rhs = parser->ast_builder()->type_identifier_node(type_identifier);
+        lhs->rhs = parser
+            ->ast_builder()
+            ->type_identifier_node(type_identifier);
 
-        if (is_pointer)
-            lhs->rhs->flags |= ast_node_t::flags_t::pointer;
-
-        if (array_decl_node != nullptr) {
-            lhs->rhs->rhs = array_decl_node;
+        if (array_node != nullptr) {
+            lhs->rhs->rhs = array_node;
             lhs->rhs->flags |= ast_node_t::flags_t::array;
         }
 
@@ -634,7 +633,7 @@ namespace basecode::syntax {
             line + 4);
         auto message_indicator = "^ " + message;
         for (int32_t i = start_line; i < stop_line; i++) {
-            if (i == static_cast<int32_t>(line)) {
+            if (i == static_cast<int32_t>(line + 1)) {
                 stream << fmt::format("{:04d}: ", i + 1)
                        << source_lines[i] << "\n"
                        << fmt::format("{}{}",

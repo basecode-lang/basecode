@@ -13,13 +13,11 @@
 #include <parser/lexer.h>
 #include <parser/ast_formatter.h>
 #include "bytecode_emitter.h"
-#include "constant_expression_evaluator.h"
 
 namespace basecode::compiler {
 
     bytecode_emitter::bytecode_emitter(
         const bytecode_emitter_options_t& options): _terp(options.heap_size, options.stack_size),
-                                                    _global_scope(nullptr, nullptr),
                                                     _options(options) {
     }
 
@@ -47,26 +45,6 @@ namespace basecode::compiler {
         return !r.is_failed();
     }
 
-    void bytecode_emitter::build_scope_tree(
-            common::result& r,
-            compiler::scope* scope,
-            const syntax::ast_node_shared_ptr& node) {
-        if (scope == nullptr || node == nullptr)
-            return;
-
-        for (auto& child_node : node->children) {
-            auto child_scope = scope->add_child_scope(child_node);
-            build_scope_tree(r, child_scope, child_node);
-        }
-    }
-
-    void bytecode_emitter::apply_constant_folding(
-            common::result& r,
-            const syntax::ast_node_shared_ptr& node) {
-        constant_expression_evaluator evaluator(&_global_scope);
-        auto result_node = evaluator.fold_literal_expressions(r, node);
-    }
-
     bool bytecode_emitter::initialize(common::result& r) {
         return _terp.initialize(r);
     }
@@ -80,9 +58,6 @@ namespace basecode::compiler {
         syntax::parser alpha_parser(input);
         auto program_node = alpha_parser.parse(r);
         if (program_node != nullptr && !r.is_failed()) {
-            build_scope_tree(r, &_global_scope, program_node);
-            apply_constant_folding(r, program_node);
-
             if (_options.verbose) {
                 auto close_required = false;
                 FILE* ast_output_file = stdout;

@@ -30,7 +30,7 @@ namespace basecode::syntax {
 
     enum class ast_node_types_t {
         program,
-        fn_call,
+        proc_call,
         statement,
         attribute,
         directive,
@@ -38,16 +38,14 @@ namespace basecode::syntax {
         expression,
         basic_block,
         line_comment,
-        none_literal,
         null_literal,
-        empty_literal,
         block_comment,
         argument_list,
-        fn_expression,
         if_expression,
         number_literal,
         string_literal,
         unary_operator,
+        proc_expression,
         binary_operator,
         boolean_literal,
         map_constructor,
@@ -78,7 +76,7 @@ namespace basecode::syntax {
 
     static inline std::unordered_map<ast_node_types_t, std::string> s_node_type_names = {
         {ast_node_types_t::program, "program"},
-        {ast_node_types_t::fn_call, "fn_call"},
+        {ast_node_types_t::proc_call, "proc_call"},
         {ast_node_types_t::statement, "statement"},
         {ast_node_types_t::attribute, "attribute"},
         {ast_node_types_t::directive, "directive"},
@@ -86,16 +84,14 @@ namespace basecode::syntax {
         {ast_node_types_t::expression, "expression"},
         {ast_node_types_t::basic_block, "basic_block"},
         {ast_node_types_t::line_comment, "line_comment"},
-        {ast_node_types_t::none_literal, "none_literal"},
         {ast_node_types_t::null_literal, "null_literal"},
-        {ast_node_types_t::empty_literal, "empty_literal"},
         {ast_node_types_t::block_comment, "block_comment"},
         {ast_node_types_t::argument_list, "argument_list"},
-        {ast_node_types_t::fn_expression, "fn_expression"},
         {ast_node_types_t::if_expression, "if_expression"},
         {ast_node_types_t::number_literal, "number_literal"},
         {ast_node_types_t::string_literal, "string_literal"},
         {ast_node_types_t::unary_operator, "unary_operator"},
+        {ast_node_types_t::proc_expression, "proc_expression"},
         {ast_node_types_t::enum_expression, "enum_expression"},
         {ast_node_types_t::binary_operator, "binary_operator"},
         {ast_node_types_t::boolean_literal, "boolean_literal"},
@@ -137,12 +133,12 @@ namespace basecode::syntax {
             return ((flags & flags_t::array) != 0);
         }
 
-        inline bool is_pointer() const {
-            return ((flags & flags_t::pointer) != 0);
-        }
-
         inline bool is_spread() const {
             return ((flags & flags_t::spread) != 0);
+        }
+
+        inline bool is_pointer() const {
+            return ((flags & flags_t::pointer) != 0);
         }
 
         inline std::string name() const {
@@ -194,11 +190,9 @@ namespace basecode::syntax {
 
         ast_node_shared_ptr program_node();
 
-        ast_node_shared_ptr fn_call_node();
-
-        ast_node_shared_ptr fn_decl_node();
-
         ast_node_shared_ptr else_if_node();
+
+        ast_node_shared_ptr proc_call_node();
 
         ast_node_shared_ptr statement_node();
 
@@ -216,6 +210,8 @@ namespace basecode::syntax {
             const ast_node_shared_ptr& rhs);
 
         ast_node_shared_ptr argument_list_node();
+
+        ast_node_shared_ptr proc_expression_node();
 
         void push_scope(const ast_node_shared_ptr& node);
 
@@ -243,15 +239,11 @@ namespace basecode::syntax {
 
         ast_node_shared_ptr namespace_node(const token_t& token);
 
-        ast_node_shared_ptr none_literal_node(const token_t& token);
-
         ast_node_shared_ptr null_literal_node(const token_t& token);
 
         ast_node_shared_ptr line_comment_node(const token_t& token);
 
         ast_node_shared_ptr block_comment_node(const token_t& token);
-
-        ast_node_shared_ptr empty_literal_node(const token_t& token);
 
         ast_node_shared_ptr number_literal_node(const token_t& token);
 

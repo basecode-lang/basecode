@@ -61,7 +61,7 @@ namespace basecode::syntax {
 
         bool directive(token_t& token);
 
-        bool fn_literal(token_t& token);
+        bool proc_literal(token_t& token);
 
         bool in_literal(token_t& token);
 
@@ -89,8 +89,6 @@ namespace basecode::syntax {
 
         bool null_literal(token_t& token);
 
-        bool none_literal(token_t& token);
-
         bool cast_literal(token_t& token);
 
         bool true_literal(token_t& token);
@@ -104,8 +102,6 @@ namespace basecode::syntax {
         bool break_literal(token_t& token);
 
         bool while_literal(token_t& token);
-
-        bool empty_literal(token_t& token);
 
         bool alias_literal(token_t& token);
 

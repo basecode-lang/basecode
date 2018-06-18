@@ -46,14 +46,13 @@ namespace basecode::syntax {
         identifier,
         assignment,
         logical_or,
-        fn_literal,
         logical_and,
         right_paren,
         for_literal,
         end_of_file,
+        proc_literal,
         with_literal,
         greater_than,
-        none_literal,
         line_comment,
         true_literal,
         enum_literal,
@@ -62,7 +61,6 @@ namespace basecode::syntax {
         cast_literal,
         block_comment, //
         false_literal,
-        empty_literal,
         alias_literal,
         break_literal,
         while_literal,
@@ -107,7 +105,6 @@ namespace basecode::syntax {
         {token_types_t::ampersand,              "ampersand"},
         {token_types_t::attribute,              "attribute"},
         {token_types_t::directive,              "directive"},
-        {token_types_t::fn_literal,             "fn_literal"},
         {token_types_t::identifier,             "identifier"},
         {token_types_t::not_equals,             "not_equals"},
         {token_types_t::assignment,             "assignment"},
@@ -120,8 +117,8 @@ namespace basecode::syntax {
         {token_types_t::end_of_file,            "end_of_file"},
         {token_types_t::right_paren,            "right_paren"},
         {token_types_t::logical_and,            "logical_and"},
+        {token_types_t::proc_literal,           "proc_literal"},
         {token_types_t::null_literal,           "null_literal"},
-        {token_types_t::none_literal,           "none_literal"},
         {token_types_t::with_literal,           "with_literal"},
         {token_types_t::cast_literal,           "cast_literal"},
         {token_types_t::else_literal,           "else_literal"},
@@ -129,7 +126,6 @@ namespace basecode::syntax {
         {token_types_t::greater_than,           "greater_than"},
         {token_types_t::enum_literal,           "enum_literal"},
         {token_types_t::true_literal,           "true_literal"},
-        {token_types_t::empty_literal,          "empty_literal"},
         {token_types_t::block_comment,          "block_comment"},
         {token_types_t::false_literal,          "false_literal"},
         {token_types_t::alias_literal,          "alias_literal"},
@@ -192,9 +188,9 @@ namespace basecode::syntax {
         number_types_t number_type = number_types_t::none;
     };
 
-    static inline token_t s_fn_literal = {
-        .type = token_types_t::fn_literal,
-        .value = "fn"
+    static inline token_t s_proc_literal = {
+        .type = token_types_t::proc_literal,
+        .value = "proc"
     };
 
     static inline token_t s_if_literal = {
@@ -252,11 +248,6 @@ namespace basecode::syntax {
         .value = "null"
     };
 
-    static inline token_t s_none_literal = {
-        .type = token_types_t::none_literal,
-        .value = "none"
-    };
-
     static inline token_t s_with_literal = {
         .type = token_types_t::with_literal,
         .value = "with"
@@ -305,11 +296,6 @@ namespace basecode::syntax {
     static inline token_t s_alias_literal = {
         .type = token_types_t::alias_literal,
         .value = "alias"
-    };
-
-    static inline token_t s_empty_literal = {
-        .type = token_types_t::empty_literal,
-        .value = "empty"
     };
 
     static inline token_t s_union_literal = {

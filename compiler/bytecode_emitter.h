@@ -16,7 +16,6 @@
 #include <vm/terp.h>
 #include <filesystem>
 #include <parser/parser.h>
-#include "scope.h"
 
 //
 // basecode heap (as seen by the terp)
@@ -124,18 +123,7 @@ namespace basecode::compiler {
         bool compile_stream(common::result& r, std::istream& input);
 
     private:
-        void build_scope_tree(
-            common::result& r,
-            compiler::scope* scope,
-            const syntax::ast_node_shared_ptr& node);
-
-        void apply_constant_folding(
-            common::result& r,
-            const syntax::ast_node_shared_ptr& node);
-
-    private:
         vm::terp _terp;
-        scope _global_scope;
         bytecode_emitter_options_t _options {};
     };
 

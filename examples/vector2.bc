@@ -14,7 +14,7 @@
 #foreign
     @library "fmt";
     @calling_convention c_default;
-    format := fn (fmt:string, values: ...any):none;
+    format := proc(fmt:string, values: ...any);
 
 // attribute should consume multiple arguments within a single statement
 // AND
@@ -27,10 +27,10 @@
     @library "fmt";
     @alias "format";
     @calling_convention win_x86_fast;
-    format_win_x86_fast := fn (fmt:string, values: ...any):none;
+    format_win_x86_fast := proc(fmt:string, values: ...any);
 
-    sqrt := fn(value:f64):f64;
-    printf := fn(fmt:string, values:...any):none;
+    sqrt := proc(value:f64):f64;
+    printf := proc(fmt:string, values:...any);
 };
 
 
@@ -48,18 +48,18 @@ alpha::compiler::examples := ns {
         x:f64 := 0;
         y:f64 := 0;
 
-        new := fn(x:f64, y:f64):vector2 {
+        new := proc(x:f64, y:f64):vector2 {
             vec:vector2;
             vec.x := x;
             vec.y := y;
             return vec;
         };
 
-        length := fn(self:*vector2):f64 {
+        length := proc(self:vector2):f64 {
             return sqrt(self.x * self.x + self.y * self.y);
         };
 
-        normalize := fn(self:*vector2):vector2 {
+        normalize := proc(self:*vector2):vector2 {
             vec:vector2;
 
             length := self.length();
@@ -72,16 +72,15 @@ alpha::compiler::examples := ns {
         };
     };
 
-    main := fn():u32 {
+    main := proc():u32 {
         vec1 := vector2::new(5, 5);
         printf("vec1_length := %f\n", vec1_length := vec1.length());
         printf("vec1_normalized := %f\n", vec1_normalized := vec1.normalize());
 
         vec2_list:[] vector2;
-        test_ptr:*u8 := null;
         fixed_list:[100] string;
 
-        max_list_length := fn():u32 {
+        max_list_length := proc():u32 {
             return 500;
         };
 

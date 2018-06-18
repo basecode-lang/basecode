@@ -7,6 +7,8 @@ NOTES
 
 Basecode Bootstrap Tasks
 ------------------------
+- type needs to include type parameters
+
 - does binary_operator/unary_operator need element* or just expression*
 
 - base types should be statically defined in program
@@ -20,6 +22,10 @@ Basecode Bootstrap Tasks
 
 - with
 
+- transaction, commit, rollback
+
+- view
+
 - defer
 
 - for
@@ -32,18 +38,13 @@ Basecode Bootstrap Tasks
 
 - return
 
-- union/struct/enum (probably OK with just type)
+- union/struct/enum
 
 - comment
 
 - boolean_literal
 
 - array_literal
-
-- remove scope, symbol_table, constant_expression_evaluator, type_inference_engine
-
-- type needs to include parameters
-    * e.g. addr<u8>
 
 - procedure subclass for type
 
@@ -53,10 +54,10 @@ Basecode Bootstrap Tasks
 
 - implement block comments /* */ in the lexer/parser
 
-- what is the type of a function?
-
 - require return statement
     * multiple return values
+
+=================================================================
 
 DONE
 ----
@@ -67,3 +68,5 @@ DONE
 - implement defer in parser (executed in reverse order)
 - implement with in parser
 - ast to internal model
+- what is the type of a function?
+- remove scope, symbol_table, constant_expression_evaluator, type_inference_engine

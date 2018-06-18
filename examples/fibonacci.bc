@@ -30,7 +30,11 @@ alpha::compiler::config := ns {
 
 alpha::compiler::examples := ns {
 
-    fib := fn(n:u64 := 10):u64 {
+    multi_return := proc():u64, address {
+        return alloc(64);
+    };
+
+    fib := proc(n:u64 := 10):u64 {
         if n == 0 || n == 1 {
             return n;
         } else {
@@ -40,11 +44,10 @@ alpha::compiler::examples := ns {
         };
     };
 
-    main := fn():u32 {
-        defer {
-            final_fib_value:u32 := fib(
-                alpha::compiler::config::fibonacci::length_of_sequence);
-        };
+    main := proc():u32 {
+        buf_size, buf := multi_return();
+
+        final_fib_value:u32 := fib(alpha::compiler::config::fibonacci::length_of_sequence);
         return final_fib_value;
     };
 

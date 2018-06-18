@@ -112,10 +112,10 @@ namespace basecode::syntax {
             case basecode::syntax::ast_node_types_t::statement:
                 style = ", fillcolor=cornflowerblue, style=\"filled\"";
                 break;
-            case basecode::syntax::ast_node_types_t::fn_expression:
+            case basecode::syntax::ast_node_types_t::proc_expression:
                 style = ", fillcolor=cyan, style=\"filled\"";
                 break;
-            case basecode::syntax::ast_node_types_t::fn_call:
+            case basecode::syntax::ast_node_types_t::proc_call:
                 style = ", fillcolor=darkorchid1, style=\"filled\"";
                 break;
             case basecode::syntax::ast_node_types_t::basic_block:
