@@ -13,8 +13,10 @@
 
 namespace basecode::compiler {
 
-    integer_literal::integer_literal(uint64_t value) : _value(value) {
-
+    integer_literal::integer_literal(
+            element* parent,
+            uint64_t value) : element(parent),
+                              _value(value) {
     }
 
     integer_literal::~integer_literal() {

@@ -14,9 +14,11 @@
 namespace basecode::compiler {
 
     field::field(
+        element* parent,
         const std::string& name,
         compiler::type* type,
-        compiler::initializer* initializer): _name(name),
+        compiler::initializer* initializer): element(parent),
+                                             _name(name),
                                              _type(type),
                                              _initializer(initializer) {
     }

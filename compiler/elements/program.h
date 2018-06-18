@@ -13,9 +13,9 @@
 
 #include <parser/ast.h>
 #include "block.h"
-#include "numeric_type.h"
 #include "any_type.h"
 #include "string_type.h"
+#include "numeric_type.h"
 
 namespace basecode::compiler {
 
@@ -32,33 +32,34 @@ namespace basecode::compiler {
         element* find_element(id_t id);
 
     private:
-        void initialize_core_types();
+        block* make_new_block();
 
-        void evaluate(
+        any_type* make_any_type();
+
+        string_type* make_string_type();
+
+        numeric_type* make_numeric_type(
+            const std::string& name,
+            int64_t min,
+            uint64_t max);
+
+    private:
+        element* evaluate(
             common::result& r,
             const syntax::ast_node_shared_ptr& node);
+
+        block* pop_scope();
+
+        void initialize_core_types();
+
+        block* current_scope() const;
+
+        void push_scope(block* block);
 
         bool is_subtree_constant(const syntax::ast_node_shared_ptr& node);
 
     private:
-        static inline any_type s_any_type {};
-        static inline string_type s_string_type {};
-        static inline numeric_type s_bool_type {"bool", 0, 1};
-        static inline numeric_type s_address_type {"address", 0, UINTPTR_MAX};
-
-        static inline numeric_type s_u8_type  {"u8",  0, UINT8_MAX};
-        static inline numeric_type s_u16_type {"u16", 0, UINT16_MAX};
-        static inline numeric_type s_u32_type {"u32", 0, UINT32_MAX};
-        static inline numeric_type s_u64_type {"u64", 0, UINT64_MAX};
-
-        static inline numeric_type s_s8_type  {"s8",  INT8_MIN,  INT8_MAX};
-        static inline numeric_type s_s16_type {"s16", INT16_MIN, INT16_MAX};
-        static inline numeric_type s_s32_type {"s32", INT32_MIN, INT32_MAX};
-        static inline numeric_type s_s64_type {"s64", INT64_MIN, INT64_MAX};
-
-        static inline numeric_type s_f32_type {"f32", 0, UINT32_MAX};
-        static inline numeric_type s_f64_type {"f64", 0, UINT64_MAX};
-
+        std::stack<block*> _scope_stack {};
         std::unordered_map<id_t, element*> _elements {};
     };
 

@@ -12,32 +12,33 @@
 #pragma once
 
 #include <cstdint>
-#include <common/id_pool.h>
 #include <common/result.h>
+#include <common/id_pool.h>
 #include "element_types.h"
 
 namespace basecode::compiler {
 
     class element {
     public:
-        element();
+        explicit element(element* parent);
 
         virtual ~element();
 
         id_t id() const;
 
+        element* parent();
+
+        attribute_map_t& attributes();
+
         bool fold(common::result& result);
-
-        bool remove_attribute(const std::string& name);
-
-        attribute* find_attribute(const std::string& name);
 
     protected:
         virtual bool on_fold(common::result& result);
 
     private:
         id_t _id;
-        attribute_map_t _attributes {};
+        element* _parent = nullptr;
+        attribute_map_t _attributes;
     };
 
 };

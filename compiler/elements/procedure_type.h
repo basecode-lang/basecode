@@ -18,7 +18,9 @@ namespace basecode::compiler {
 
     class procedure_type : public type {
     public:
-        explicit procedure_type(const std::string& name);
+        procedure_type(
+            element* parent,
+            const std::string& name);
 
         ~procedure_type() override;
 
@@ -35,8 +37,8 @@ namespace basecode::compiler {
         }
 
     private:
-        field_map_t _returns {};
-        field_map_t _parameters {};
+        field_map_t _returns;
+        field_map_t _parameters;
         type_map_t _type_parameters {};
     };
 

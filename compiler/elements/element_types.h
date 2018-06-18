@@ -15,6 +15,7 @@
 #include <vector>
 #include <string>
 #include <memory>
+#include <unordered_map>
 
 namespace basecode::compiler {
 
@@ -42,7 +43,26 @@ namespace basecode::compiler {
     class namespace_element;
 
     using element_list_t = std::vector<element*>;
-
-    using attribute_map_t = std::map<std::string, attribute*>;
     using directive_map_t = std::map<std::string, directive*>;
+
+    struct attribute_map_t {
+        attribute_map_t(element* parent);
+
+        ~attribute_map_t();
+
+        inline size_t size() const {
+            return _attrs.size();
+        }
+
+        bool remove(const std::string& name);
+
+        compiler::attribute* find(const std::string& name);
+
+        attribute* add(const std::string& name, element* expr);
+
+    private:
+        element* _parent = nullptr;
+        std::unordered_map<std::string, attribute*> _attrs {};
+    };
+
 };

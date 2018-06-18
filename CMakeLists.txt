@@ -95,7 +95,7 @@ add_executable(
         compiler/elements/integer_literal.cpp compiler/elements/integer_literal.h
         compiler/elements/binary_operator.cpp compiler/elements/binary_operator.h
         compiler/elements/boolean_literal.cpp compiler/elements/boolean_literal.h
-        compiler/elements/namespace_element.cpp compiler/elements/namespace_element.h)
+        compiler/elements/namespace_element.cpp compiler/elements/namespace_element.h compiler/elements/element_types.cpp)
 target_link_libraries(bootstrap ${CONAN_LIBS})
 
 # custom post bulid steps

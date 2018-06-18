@@ -14,7 +14,9 @@
 
 namespace basecode::compiler {
 
-    element::element() : _id(common::id_pool::instance()->allocate()) {
+    element::element(element* parent) : _id(common::id_pool::instance()->allocate()),
+                                        _parent(parent),
+                                        _attributes(this) {
     }
 
     element::~element() {
@@ -24,23 +26,20 @@ namespace basecode::compiler {
         return _id;
     }
 
+    element* element::parent() {
+        return _parent;
+    }
+
+    attribute_map_t& element::attributes() {
+        return _attributes;
+    }
+
     bool element::fold(common::result& result) {
         return on_fold(result);
     }
 
     bool element::on_fold(common::result& result) {
         return true;
-    }
-
-    bool element::remove_attribute(const std::string& name) {
-        return _attributes.erase(name) > 0;
-    }
-
-    attribute* element::find_attribute(const std::string& name) {
-        auto it = _attributes.find(name);
-        if (it != _attributes.end())
-            return it->second;
-        return nullptr;
     }
 
 };

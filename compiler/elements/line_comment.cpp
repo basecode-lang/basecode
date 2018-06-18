@@ -13,7 +13,10 @@
 
 namespace basecode::compiler {
 
-    line_comment::line_comment(const std::string& value) : _value(value) {
+    line_comment::line_comment(
+            element* parent,
+            const std::string& value) : element(parent),
+                                        _value(value) {
     }
 
 };

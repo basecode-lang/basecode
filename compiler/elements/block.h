@@ -14,7 +14,6 @@
 #include "type.h"
 #include "element.h"
 #include "identifier.h"
-#include "element_types.h"
 
 namespace basecode::compiler {
 
@@ -23,8 +22,6 @@ namespace basecode::compiler {
         explicit block(block* parent);
 
         ~block() override;
-
-        block* parent() const;
 
         type_map_t& types() {
             return _types;
@@ -38,7 +35,6 @@ namespace basecode::compiler {
 
     private:
         type_map_t _types {};
-        block* _parent = nullptr;
         element_list_t _children {};
         identifier_map_t _identifiers {};
     };

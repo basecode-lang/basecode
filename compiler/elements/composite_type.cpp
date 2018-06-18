@@ -14,7 +14,10 @@
 
 namespace basecode::compiler {
 
-    composite_type::composite_type(const std::string& name) : type(name) {
+    composite_type::composite_type(
+        element* parent,
+        const std::string& name) : type(parent, name),
+                                   _fields(this) {
     }
 
     composite_type::~composite_type() {

@@ -13,7 +13,10 @@
 
 namespace basecode::compiler {
 
-    float_literal::float_literal(double value) : _value(value) {
+    float_literal::float_literal(
+            element* parent,
+            double value) : element(parent),
+                            _value(value) {
     }
 
     float_literal::~float_literal() {

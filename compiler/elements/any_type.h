@@ -17,7 +17,7 @@ namespace basecode::compiler {
 
     class any_type : public type {
     public:
-        any_type();
+        explicit any_type(element* parent);
 
     private:
     };

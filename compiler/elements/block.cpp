@@ -13,14 +13,10 @@
 
 namespace basecode::compiler {
 
-    block::block(block* parent) : _parent(parent) {
+    block::block(block* parent) : element(parent) {
     }
 
     block::~block() {
-    }
-
-    block* block::parent() const {
-        return _parent;
     }
 
     element_list_t& block::children() {

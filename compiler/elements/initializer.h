@@ -17,7 +17,9 @@ namespace basecode::compiler {
 
     class initializer : public expression {
     public:
-        explicit initializer(binary_operator* assignment);
+        initializer(
+            element* parent,
+            binary_operator* assignment);
 
         ~initializer() override;
 

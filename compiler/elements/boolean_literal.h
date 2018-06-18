@@ -18,6 +18,7 @@ namespace basecode::compiler {
     class boolean_literal : public type {
     public:
         boolean_literal(
+            element* parent,
             const std::string& name,
             bool value);
 

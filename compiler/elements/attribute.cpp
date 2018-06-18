@@ -14,12 +14,18 @@
 namespace basecode::compiler {
 
     attribute::attribute(
-        const std::string& name,
-        expression* rhs) : _name(name),
-                           _rhs(rhs) {
+            element* parent,
+            const std::string& name,
+            element* expr) : element(parent),
+                             _name(name),
+                             _expr(expr) {
     }
 
     attribute::~attribute() {
+    }
+
+    element* attribute::expression() {
+        return _expr;
     }
 
 };

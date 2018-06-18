@@ -12,22 +12,25 @@
 #pragma once
 
 #include <string>
+#include <unordered_map>
 #include "element.h"
-#include "expression.h"
 
 namespace basecode::compiler {
 
     class attribute : public element {
     public:
         attribute(
+            element* parent,
             const std::string& name,
-            expression* rhs);
+            element* expr);
 
         ~attribute() override;
 
+        element* expression();
+
     private:
         std::string _name;
-        expression* _rhs = nullptr;
+        element* _expr = nullptr;
     };
 
 };

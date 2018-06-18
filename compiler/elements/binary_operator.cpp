@@ -14,12 +14,12 @@
 namespace basecode::compiler {
 
     binary_operator::binary_operator(
+        element* parent,
         operator_type_t type,
         expression* lhs,
-        expression* rhs) : operator_base(type),
-                        _lhs(lhs),
-                        _rhs(rhs) {
-
+        expression* rhs) : operator_base(parent, type),
+                           _lhs(lhs),
+                           _rhs(rhs) {
     }
 
     binary_operator::~binary_operator() {

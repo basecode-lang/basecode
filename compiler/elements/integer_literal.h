@@ -17,7 +17,9 @@ namespace basecode::compiler {
 
     class integer_literal : public element {
     public:
-        explicit integer_literal(uint64_t value);
+        integer_literal(
+            element* parent,
+            uint64_t value);
 
         ~integer_literal() override;
 

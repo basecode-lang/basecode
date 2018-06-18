@@ -11,15 +11,15 @@
 
 #pragma once
 
-#include <common/result.h>
 #include "element.h"
-#include "element_types.h"
 
 namespace basecode::compiler {
 
     class expression : public element {
     public:
-        explicit expression(element* root);
+        expression(
+            element* parent,
+            element* root);
 
         ~expression() override;
 

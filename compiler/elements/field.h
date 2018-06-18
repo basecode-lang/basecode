@@ -24,6 +24,7 @@ namespace basecode::compiler {
     class field : public element {
     public:
         field(
+            element* parent,
             const std::string& name,
             compiler::type* type,
             compiler::initializer* initializer);
@@ -50,6 +51,9 @@ namespace basecode::compiler {
     };
 
     struct field_map_t {
+        field_map_t(element* parent) : _parent(parent) {
+        }
+
         ~field_map_t() {
             for (auto field : _fields)
                 delete field.second;
@@ -60,7 +64,11 @@ namespace basecode::compiler {
                 const std::string& name,
                 compiler::type* type,
                 compiler::initializer* initializer) {
-            auto field = new compiler::field(name, type, initializer);
+            auto field = new compiler::field(
+                _parent,
+                name,
+                type,
+                initializer);
             field->type(type);
             _fields.insert(std::make_pair(name, field));
         }
@@ -81,6 +89,7 @@ namespace basecode::compiler {
         }
 
     private:
+        element* _parent = nullptr;
         std::unordered_map<std::string, field*> _fields {};
     };
 

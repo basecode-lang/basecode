@@ -18,8 +18,8 @@ namespace basecode::compiler {
     class directive : public block {
     public:
         directive(
-            const std::string& name,
-            block* parent);
+            block* parent,
+            const std::string& name);
 
         std::string name() const;
 

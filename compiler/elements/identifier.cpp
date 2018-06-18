@@ -14,8 +14,10 @@
 namespace basecode::compiler {
 
     identifier::identifier(
+            element* parent,
             const std::string& name,
-            const compiler::initializer& initializer) : _name(name),
+            const compiler::initializer& initializer) : element(parent),
+                                                        _name(name),
                                                         _initializer(initializer) {
     }
 

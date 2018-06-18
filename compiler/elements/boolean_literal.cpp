@@ -14,8 +14,9 @@
 namespace basecode::compiler {
 
     boolean_literal::boolean_literal(
+            element* parent,
             const std::string& name,
-            bool value) : type(name),
+            bool value) : type(parent, name),
                           _value(value) {
     }
 

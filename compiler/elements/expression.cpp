@@ -13,7 +13,10 @@
 
 namespace basecode::compiler {
 
-    expression::expression(element* root) : _root(root) {
+    expression::expression(
+            element* parent,
+            element* root) : element(parent),
+                             _root(root) {
     }
 
     expression::~expression() {

@@ -13,7 +13,10 @@
 
 namespace basecode::compiler {
 
-    operator_base::operator_base(operator_type_t type) : _type(type) {
+    operator_base::operator_base(
+            element* parent,
+            operator_type_t type) : element(parent),
+                                    _type(type) {
     }
 
     operator_base::~operator_base() {

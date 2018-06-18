@@ -20,6 +20,7 @@ namespace basecode::compiler {
     class identifier : public element {
     public:
         identifier(
+            element* parent,
             const std::string& name,
             const compiler::initializer& initializer);
 

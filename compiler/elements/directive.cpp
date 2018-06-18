@@ -14,9 +14,9 @@
 namespace basecode::compiler {
 
     directive::directive(
-        const std::string& name,
-        block* parent) : block(parent),
-                         _name(name) {
+        block* parent,
+        const std::string& name) : block(parent),
+                                   _name(name) {
     }
 
     std::string directive::name() const {

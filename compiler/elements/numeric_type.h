@@ -18,6 +18,7 @@ namespace basecode::compiler {
     class numeric_type : public type {
     public:
         numeric_type(
+            element* parent,
             const std::string& name,
             int64_t min,
             uint64_t max);

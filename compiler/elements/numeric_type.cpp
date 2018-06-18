@@ -14,9 +14,10 @@
 namespace basecode::compiler {
 
     numeric_type::numeric_type(
+            element* parent,
             const std::string& name,
             int64_t min,
-            uint64_t max) : type(name),
+            uint64_t max) : type(parent, name),
                             _min(min),
                             _max(max) {
     }

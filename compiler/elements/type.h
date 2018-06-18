@@ -14,15 +14,14 @@
 #include <string>
 #include <unordered_map>
 #include "element.h"
-#include "element_types.h"
 
 namespace basecode::compiler {
 
     class type : public element {
     public:
-        explicit type(const std::string& name);
-
-        ~type() override;
+        type(
+            element* parent,
+            const std::string& name);
 
         inline std::string name() const {
             return _name;

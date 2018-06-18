@@ -15,8 +15,9 @@
 namespace basecode::compiler {
 
     array_type::array_type(
+            element* parent,
             const std::string& name,
-            compiler::type* element_type) : type(name),
+            compiler::type* element_type) : type(parent, name),
                                             _element_type(element_type) {
     }
 

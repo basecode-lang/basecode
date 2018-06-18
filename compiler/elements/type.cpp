@@ -14,10 +14,10 @@
 
 namespace basecode::compiler {
 
-    type::type(const std::string& name) : _name(name) {
-    }
-
-    type::~type() {
+    type::type(
+        element* parent,
+        const std::string& name) : element(parent),
+                                   _name(name) {
     }
 
 };

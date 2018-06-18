@@ -17,7 +17,9 @@ namespace basecode::compiler {
 
     class line_comment : public element {
     public:
-        explicit line_comment(const std::string& value);
+        line_comment(
+            element* parent,
+            const std::string& value);
 
         std::string value() const {
             return _value;

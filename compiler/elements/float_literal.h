@@ -17,7 +17,9 @@ namespace basecode::compiler {
 
     class float_literal : public element {
     public:
-        explicit float_literal(double value);
+        float_literal(
+            element* parent,
+            double value);
 
         ~float_literal() override;
 

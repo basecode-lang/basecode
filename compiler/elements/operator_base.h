@@ -48,7 +48,9 @@ namespace basecode::compiler {
 
     class operator_base : public element {
     public:
-        explicit operator_base(operator_type_t type);
+        operator_base(
+            element* parent,
+            operator_type_t type);
 
         ~operator_base() override;
 

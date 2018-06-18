@@ -18,6 +18,7 @@ namespace basecode::compiler {
     class array_type : public type {
     public:
         array_type(
+            element* parent,
             const std::string& name,
             compiler::type* element_type);
 
