@@ -11,20 +11,20 @@
 
 #pragma once
 
-#include "block.h"
+#include "element.h"
 
 namespace basecode::compiler {
 
-    class directive : public block {
+    class line_comment : public element {
     public:
-        directive(
-            const std::string& name,
-            block* parent);
+        explicit line_comment(const std::string& value);
 
-        std::string name() const;
+        std::string value() const {
+            return _value;
+        }
 
     private:
-        std::string _name;
+        std::string _value;
     };
 
 };

@@ -7,12 +7,6 @@ NOTES
 
 Basecode Bootstrap Tasks
 ------------------------
-- type needs to include type parameters
-
-- does binary_operator/unary_operator need element* or just expression*
-
-- base types should be statically defined in program
-
 - determine the best way to create new elements
     * maybe follow a similar pattern to ast_builder
 
@@ -23,6 +17,8 @@ Basecode Bootstrap Tasks
 - with
 
 - transaction, commit, rollback
+
+- cast
 
 - view
 
@@ -46,16 +42,11 @@ Basecode Bootstrap Tasks
 
 - array_literal
 
-- procedure subclass for type
-
 =================================================================
 
 - add unload_shared_library to terp
 
 - implement block comments /* */ in the lexer/parser
-
-- require return statement
-    * multiple return values
 
 =================================================================
 
@@ -71,3 +62,9 @@ DONE
 - what is the type of a function?
 - remove scope, symbol_table, constant_expression_evaluator, type_inference_engine
 - boolean_literal
+- procedure subclass for type
+- type needs to include type parameters
+- require return statement
+    * multiple return values
+- does binary_operator/unary_operator need element* or just expression*
+- base types should be statically defined in program

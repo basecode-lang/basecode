@@ -15,8 +15,8 @@ namespace basecode::compiler {
 
     binary_operator::binary_operator(
         operator_type_t type,
-        element* lhs,
-        element* rhs) : operator_base(type),
+        expression* lhs,
+        expression* rhs) : operator_base(type),
                         _lhs(lhs),
                         _rhs(rhs) {
 
@@ -25,11 +25,11 @@ namespace basecode::compiler {
     binary_operator::~binary_operator() {
     }
 
-    element* binary_operator::lhs() {
+    expression* binary_operator::lhs() {
         return _lhs;
     }
 
-    element* binary_operator::rhs() {
+    expression* binary_operator::rhs() {
         return _rhs;
     }
 

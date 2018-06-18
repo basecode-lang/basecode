@@ -36,20 +36,9 @@ namespace basecode::compiler {
         return _attributes.erase(name) > 0;
     }
 
-    bool element::remove_directive(const std::string& name) {
-        return _directives.erase(name) > 0;
-    }
-
     attribute* element::find_attribute(const std::string& name) {
         auto it = _attributes.find(name);
         if (it != _attributes.end())
-            return it->second;
-        return nullptr;
-    }
-
-    directive* element::find_directive(const std::string& name) {
-        auto it = _directives.find(name);
-        if (it != _directives.end())
             return it->second;
         return nullptr;
     }

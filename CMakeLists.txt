@@ -76,6 +76,7 @@ add_executable(
         compiler/bytecode_emitter.cpp compiler/bytecode_emitter.h
         compiler/elements/element.cpp compiler/elements/element.h
         compiler/elements/program.cpp compiler/elements/program.h
+        compiler/elements/any_type.cpp compiler/elements/any_type.h
         compiler/elements/attribute.cpp compiler/elements/attribute.h
         compiler/elements/directive.cpp compiler/elements/directive.h
         compiler/elements/identifier.cpp compiler/elements/identifier.h
@@ -83,6 +84,7 @@ add_executable(
         compiler/elements/array_type.cpp compiler/elements/array_type.h
         compiler/elements/initializer.cpp compiler/elements/initializer.h
         compiler/elements/string_type.cpp compiler/elements/string_type.h
+        compiler/elements/line_comment.cpp compiler/elements/line_comment.h
         compiler/elements/numeric_type.cpp compiler/elements/numeric_type.h
         compiler/elements/operator_base.cpp compiler/elements/operator_base.h
         compiler/elements/float_literal.cpp compiler/elements/float_literal.h
@@ -92,7 +94,8 @@ add_executable(
         compiler/elements/unary_operator.cpp compiler/elements/unary_operator.h
         compiler/elements/integer_literal.cpp compiler/elements/integer_literal.h
         compiler/elements/binary_operator.cpp compiler/elements/binary_operator.h
-        compiler/elements/namespace_element.cpp compiler/elements/namespace_element.h compiler/elements/boolean_literal.cpp compiler/elements/boolean_literal.h)
+        compiler/elements/boolean_literal.cpp compiler/elements/boolean_literal.h
+        compiler/elements/namespace_element.cpp compiler/elements/namespace_element.h)
 target_link_libraries(bootstrap ${CONAN_LIBS})
 
 # custom post bulid steps

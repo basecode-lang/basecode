@@ -17,9 +17,12 @@ namespace basecode::compiler {
 
     class numeric_type : public type {
     public:
-        explicit numeric_type(const std::string& name);
+        numeric_type(
+            const std::string& name,
+            int64_t min,
+            uint64_t max);
 
-        inline uint64_t min() const {
+        inline int64_t min() const {
             return _min;
         }
 
@@ -28,7 +31,7 @@ namespace basecode::compiler {
         }
 
     private:
-        uint64_t _min;
+        int64_t _min;
         uint64_t _max;
     };
 

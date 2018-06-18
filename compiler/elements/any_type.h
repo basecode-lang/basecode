@@ -11,20 +11,15 @@
 
 #pragma once
 
-#include "block.h"
+#include "type.h"
 
 namespace basecode::compiler {
 
-    class directive : public block {
+    class any_type : public type {
     public:
-        directive(
-            const std::string& name,
-            block* parent);
-
-        std::string name() const;
+        any_type();
 
     private:
-        std::string _name;
     };
 
 };

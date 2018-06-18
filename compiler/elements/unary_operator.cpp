@@ -14,15 +14,15 @@
 namespace basecode::compiler {
 
     unary_operator::unary_operator(
-        operator_type_t type,
-        element* rhs) : operator_base(type),
-                        _rhs(rhs) {
+            operator_type_t type,
+            expression* rhs) : operator_base(type),
+                               _rhs(rhs) {
     }
 
     unary_operator::~unary_operator() {
     }
 
-    element* unary_operator::rhs() {
+    expression* unary_operator::rhs() {
         return _rhs;
     }
 

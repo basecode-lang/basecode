@@ -9,23 +9,11 @@
 //
 // ----------------------------------------------------------------------------
 
-#pragma once
-
-#include "block.h"
+#include "line_comment.h"
 
 namespace basecode::compiler {
 
-    class directive : public block {
-    public:
-        directive(
-            const std::string& name,
-            block* parent);
-
-        std::string name() const;
-
-    private:
-        std::string _name;
-    };
+    line_comment::line_comment(const std::string& value) : _value(value) {
+    }
 
 };
-

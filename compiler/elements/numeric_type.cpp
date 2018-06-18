@@ -13,7 +13,12 @@
 
 namespace basecode::compiler {
 
-    numeric_type::numeric_type(const std::string& name) : type(name) {
+    numeric_type::numeric_type(
+            const std::string& name,
+            int64_t min,
+            uint64_t max) : type(name),
+                            _min(min),
+                            _max(max) {
     }
 
 };

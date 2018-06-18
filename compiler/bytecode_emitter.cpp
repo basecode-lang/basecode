@@ -12,6 +12,7 @@
 #include <fstream>
 #include <parser/lexer.h>
 #include <parser/ast_formatter.h>
+#include <compiler/elements/program.h>
 #include "bytecode_emitter.h"
 
 namespace basecode::compiler {
@@ -71,6 +72,11 @@ namespace basecode::compiler {
 
                 if (close_required)
                     fclose(ast_output_file);
+            }
+
+            compiler::program program {};
+            if (!program.initialize(r, program_node)) {
+                // XXX: probably something to do here?
             }
         }
         return !r.is_failed();

@@ -28,11 +28,7 @@ namespace basecode::compiler {
 
         bool fold(common::result& result);
 
-        bool remove_directive(const std::string& name);
-
         bool remove_attribute(const std::string& name);
-
-        directive* find_directive(const std::string& name);
 
         attribute* find_attribute(const std::string& name);
 
@@ -41,7 +37,6 @@ namespace basecode::compiler {
 
     private:
         id_t _id;
-        directive_map_t _directives {};
         attribute_map_t _attributes {};
     };
 
