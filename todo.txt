@@ -42,7 +42,7 @@ Basecode Bootstrap Tasks
 
 - comment
 
-- boolean_literal
+- string_literal
 
 - array_literal
 
@@ -70,3 +70,4 @@ DONE
 - ast to internal model
 - what is the type of a function?
 - remove scope, symbol_table, constant_expression_evaluator, type_inference_engine
+- boolean_literal

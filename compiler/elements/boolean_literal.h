@@ -9,22 +9,25 @@
 //
 // ----------------------------------------------------------------------------
 
-#include "block.h"
+#pragma once
+
+#include "type.h"
 
 namespace basecode::compiler {
 
-    block::block(block* parent) : _parent(parent) {
-    }
+    class boolean_literal : public type {
+    public:
+        boolean_literal(
+            const std::string& name,
+            bool value);
 
-    block::~block() {
-    }
+        bool value() const {
+            return _value;
+        }
 
-    block* block::parent() const {
-        return _parent;
-    }
-
-    element_list_t& block::children() {
-        return _children;
-    }
+    private:
+        bool _value = false;
+    };
 
 };
+

@@ -9,22 +9,14 @@
 //
 // ----------------------------------------------------------------------------
 
-#include "block.h"
+#include "boolean_literal.h"
 
 namespace basecode::compiler {
 
-    block::block(block* parent) : _parent(parent) {
-    }
-
-    block::~block() {
-    }
-
-    block* block::parent() const {
-        return _parent;
-    }
-
-    element_list_t& block::children() {
-        return _children;
+    boolean_literal::boolean_literal(
+            const std::string& name,
+            bool value) : type(name),
+                          _value(value) {
     }
 
 };

@@ -9,22 +9,18 @@
 //
 // ----------------------------------------------------------------------------
 
-#include "block.h"
+#pragma once
+
+#include "type.h"
 
 namespace basecode::compiler {
 
-    block::block(block* parent) : _parent(parent) {
-    }
+    class string_type : public type {
+    public:
+        string_type();
 
-    block::~block() {
-    }
-
-    block* block::parent() const {
-        return _parent;
-    }
-
-    element_list_t& block::children() {
-        return _children;
-    }
+    private:
+    };
 
 };
+

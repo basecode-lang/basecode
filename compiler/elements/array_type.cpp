@@ -9,22 +9,15 @@
 //
 // ----------------------------------------------------------------------------
 
-#include "block.h"
+
+#include "array_type.h"
 
 namespace basecode::compiler {
 
-    block::block(block* parent) : _parent(parent) {
-    }
-
-    block::~block() {
-    }
-
-    block* block::parent() const {
-        return _parent;
-    }
-
-    element_list_t& block::children() {
-        return _children;
+    array_type::array_type(
+            const std::string& name,
+            compiler::type* element_type) : type(name),
+                                            _element_type(element_type) {
     }
 
 };

@@ -9,15 +9,31 @@
 //
 // ----------------------------------------------------------------------------
 
+#pragma once
+
 #include "type.h"
 #include "field.h"
 
 namespace basecode::compiler {
 
-    type::type(const std::string& name) : _name(name) {
-    }
+    class composite_type : public type {
+    public:
+        explicit composite_type(const std::string& name);
 
-    type::~type() {
-    }
+        ~composite_type() override;
+
+        field_map_t& fields() {
+            return _fields;
+        }
+
+        type_map_t& type_parameters() {
+            return _type_parameters;
+        }
+
+    private:
+        field_map_t _fields {};
+        type_map_t _type_parameters {};
+    };
 
 };
+

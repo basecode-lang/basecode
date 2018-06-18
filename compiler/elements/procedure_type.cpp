@@ -9,22 +9,15 @@
 //
 // ----------------------------------------------------------------------------
 
-#include "block.h"
+#include "procedure_type.h"
+#include "field.h"
 
 namespace basecode::compiler {
 
-    block::block(block* parent) : _parent(parent) {
+    procedure_type::procedure_type(const std::string& name) : type(name) {
     }
 
-    block::~block() {
-    }
-
-    block* block::parent() const {
-        return _parent;
-    }
-
-    element_list_t& block::children() {
-        return _children;
+    procedure_type::~procedure_type() {
     }
 
 };

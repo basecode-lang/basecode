@@ -20,6 +20,54 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    static ast_node_shared_ptr create_type_identifier_node(
+            common::result& r,
+            parser* parser,
+            token_t& token) {
+        auto is_spread = false;
+        ast_node_shared_ptr array_node = nullptr;
+
+        if (parser->peek(token_types_t::left_square_bracket)) {
+            array_node = parser->parse_expression(
+                r,
+                static_cast<uint8_t>(precedence_t::variable));
+        }
+
+        if (parser->peek(token_types_t::spread_operator)) {
+            parser->consume();
+            is_spread = true;
+        }
+
+        token_t type_identifier;
+        type_identifier.type = token_types_t::identifier;
+
+        if (!parser->expect(r, type_identifier)) {
+            parser->error(
+                r,
+                "B027",
+                "type expected.",
+                token.line,
+                token.column);
+            return nullptr;
+        }
+
+        auto type_node = parser
+            ->ast_builder()
+            ->type_identifier_node(type_identifier);
+
+        if (array_node != nullptr) {
+            type_node->rhs = array_node;
+            type_node->flags |= ast_node_t::flags_t::array;
+        }
+
+        if (is_spread)
+            type_node->flags |= ast_node_t::flags_t::spread;
+
+        return type_node;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
     ast_node_shared_ptr constant_prefix_parser::parse(
             common::result& r,
             parser* parser,
@@ -171,46 +219,7 @@ namespace basecode::syntax {
             common::result& r,
             parser* parser,
             token_t& token) {
-        auto is_spread = false;
-        ast_node_shared_ptr array_node = nullptr;
-
-        if (parser->peek(token_types_t::left_square_bracket)) {
-            array_node = parser->parse_expression(
-                r,
-                static_cast<uint8_t>(precedence_t::variable));
-        }
-
-        if (parser->peek(token_types_t::spread_operator)) {
-            parser->consume();
-            is_spread = true;
-        }
-
-        token_t type_identifier;
-        type_identifier.type = token_types_t::identifier;
-
-        if (!parser->expect(r, type_identifier)) {
-            parser->error(
-                r,
-                "B027",
-                "type expected.",
-                token.line,
-                token.column);
-            return nullptr;
-        }
-
-        auto type_node = parser
-            ->ast_builder()
-            ->type_identifier_node(type_identifier);
-
-        if (array_node != nullptr) {
-            type_node->rhs = array_node;
-            type_node->flags |= ast_node_t::flags_t::array;
-        }
-
-        if (is_spread)
-            type_node->flags |= ast_node_t::flags_t::spread;
-
-        return type_node;
+        return create_type_identifier_node(r, parser, token);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -471,45 +480,7 @@ namespace basecode::syntax {
             parser* parser,
             const ast_node_shared_ptr& lhs,
             token_t& token) {
-        auto is_spread = false;
-        ast_node_shared_ptr array_node = nullptr;
-
-        if (parser->peek(token_types_t::left_square_bracket)) {
-            array_node = parser->parse_expression(
-                r,
-                static_cast<uint8_t>(precedence_t::variable));
-        }
-
-        if (parser->peek(token_types_t::spread_operator)) {
-            parser->consume();
-            is_spread = true;
-        }
-
-        token_t type_identifier;
-        type_identifier.type = token_types_t::identifier;
-
-        if (!parser->expect(r, type_identifier)) {
-            parser->error(
-                r,
-                "B027",
-                "type name expected for variable declaration.",
-                token.line,
-                token.column);
-            return nullptr;
-        }
-
-        lhs->rhs = parser
-            ->ast_builder()
-            ->type_identifier_node(type_identifier);
-
-        if (array_node != nullptr) {
-            lhs->rhs->rhs = array_node;
-            lhs->rhs->flags |= ast_node_t::flags_t::array;
-        }
-
-        if (is_spread)
-            lhs->rhs->flags |= ast_node_t::flags_t::spread;
-
+        lhs->rhs = create_type_identifier_node(r, parser, token);
         return lhs;
     }
 

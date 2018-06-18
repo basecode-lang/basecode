@@ -80,14 +80,19 @@ add_executable(
         compiler/elements/directive.cpp compiler/elements/directive.h
         compiler/elements/identifier.cpp compiler/elements/identifier.h
         compiler/elements/expression.cpp compiler/elements/expression.h
+        compiler/elements/array_type.cpp compiler/elements/array_type.h
         compiler/elements/initializer.cpp compiler/elements/initializer.h
+        compiler/elements/string_type.cpp compiler/elements/string_type.h
+        compiler/elements/numeric_type.cpp compiler/elements/numeric_type.h
         compiler/elements/operator_base.cpp compiler/elements/operator_base.h
         compiler/elements/float_literal.cpp compiler/elements/float_literal.h
+        compiler/elements/composite_type.cpp compiler/elements/composite_type.h
+        compiler/elements/procedure_type.cpp compiler/elements/procedure_type.h
         compiler/elements/string_literal.cpp compiler/elements/string_literal.h
         compiler/elements/unary_operator.cpp compiler/elements/unary_operator.h
         compiler/elements/integer_literal.cpp compiler/elements/integer_literal.h
         compiler/elements/binary_operator.cpp compiler/elements/binary_operator.h
-        compiler/elements/namespace_element.cpp compiler/elements/namespace_element.h)
+        compiler/elements/namespace_element.cpp compiler/elements/namespace_element.h compiler/elements/boolean_literal.cpp compiler/elements/boolean_literal.h)
 target_link_libraries(bootstrap ${CONAN_LIBS})
 
 # custom post bulid steps

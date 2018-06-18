@@ -9,22 +9,11 @@
 //
 // ----------------------------------------------------------------------------
 
-#include "block.h"
+#include "string_type.h"
 
 namespace basecode::compiler {
 
-    block::block(block* parent) : _parent(parent) {
-    }
-
-    block::~block() {
-    }
-
-    block* block::parent() const {
-        return _parent;
-    }
-
-    element_list_t& block::children() {
-        return _children;
+    string_type::string_type() : type("string") {
     }
 
 };

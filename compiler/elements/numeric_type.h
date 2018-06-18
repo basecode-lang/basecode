@@ -9,22 +9,28 @@
 //
 // ----------------------------------------------------------------------------
 
-#include "block.h"
+#pragma once
+
+#include "type.h"
 
 namespace basecode::compiler {
 
-    block::block(block* parent) : _parent(parent) {
-    }
+    class numeric_type : public type {
+    public:
+        explicit numeric_type(const std::string& name);
 
-    block::~block() {
-    }
+        inline uint64_t min() const {
+            return _min;
+        }
 
-    block* block::parent() const {
-        return _parent;
-    }
+        inline uint64_t max() const {
+            return _max;
+        }
 
-    element_list_t& block::children() {
-        return _children;
-    }
+    private:
+        uint64_t _min;
+        uint64_t _max;
+    };
 
 };
+

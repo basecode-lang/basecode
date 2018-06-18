@@ -11,7 +11,9 @@
 
 #pragma once
 
+#include "type.h"
 #include "element.h"
+#include "identifier.h"
 #include "element_types.h"
 
 namespace basecode::compiler {
@@ -24,23 +26,15 @@ namespace basecode::compiler {
 
         block* parent() const;
 
+        type_map_t& types() {
+            return _types;
+        }
+
         element_list_t& children();
 
-        inline size_t type_count() const {
-            return _types.size();
+        identifier_map_t& identifiers() {
+            return _identifiers;
         }
-
-        inline size_t identifier_count() const {
-            return _identifiers.size();
-        }
-
-        bool remove_type(const std::string& name);
-
-        bool remove_identifier(const std::string& name);
-
-        compiler::type* find_type(const std::string& name);
-
-        compiler::identifier* find_identifier(const std::string& name);
 
     private:
         type_map_t _types {};
