@@ -17,8 +17,8 @@ namespace basecode::compiler {
     procedure_type::procedure_type(
         element* parent,
         const std::string& name) : type(parent, name),
-                                   _parameters(this),
-                                   _returns(this) {
+                                   _returns(this),
+                                   _parameters(this) {
     }
 
     procedure_type::~procedure_type() {

@@ -69,6 +69,9 @@ namespace basecode::compiler {
 
                 break;
             }
+            case syntax::ast_node_types_t::statement: {
+                return evaluate(r, node->rhs);
+            }
             case syntax::ast_node_types_t::expression: {
                 break;
             }

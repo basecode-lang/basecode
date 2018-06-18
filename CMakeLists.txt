@@ -69,7 +69,6 @@ add_executable(
         vm/assembler.cpp vm/assembler.h
         vm/instruction_emitter.cpp vm/instruction_emitter.h
 
-        compiler/elements/element_types.h
         compiler/elements/type.cpp compiler/elements/type.h
         compiler/elements/field.cpp compiler/elements/field.h
         compiler/elements/block.cpp compiler/elements/block.h
@@ -88,6 +87,7 @@ add_executable(
         compiler/elements/numeric_type.cpp compiler/elements/numeric_type.h
         compiler/elements/operator_base.cpp compiler/elements/operator_base.h
         compiler/elements/float_literal.cpp compiler/elements/float_literal.h
+        compiler/elements/element_types.cpp compiler/elements/element_types.h
         compiler/elements/composite_type.cpp compiler/elements/composite_type.h
         compiler/elements/procedure_type.cpp compiler/elements/procedure_type.h
         compiler/elements/string_literal.cpp compiler/elements/string_literal.h
@@ -95,7 +95,7 @@ add_executable(
         compiler/elements/integer_literal.cpp compiler/elements/integer_literal.h
         compiler/elements/binary_operator.cpp compiler/elements/binary_operator.h
         compiler/elements/boolean_literal.cpp compiler/elements/boolean_literal.h
-        compiler/elements/namespace_element.cpp compiler/elements/namespace_element.h compiler/elements/element_types.cpp)
+        compiler/elements/namespace_element.cpp compiler/elements/namespace_element.h)
 target_link_libraries(bootstrap ${CONAN_LIBS})
 
 # custom post bulid steps
