@@ -15,22 +15,23 @@
  /* this is a nested block comment /* oh, snap! */ */
 */
 
-// N.B. this is how we define 'external' function prototypes
-#foreign
-    @alias "printf"
-    print := proc(format:string, values:...any);
+#test ;
 
-@entry_point alpha::compiler::examples::main;
+// N.B. this is how we define 'external' function prototypes
+#foreign {
+    print := proc(format:string, values:...any) @alias "printf";
+};
 
 alpha::compiler::config := ns {
-
+    // I bet this will cause massive pukeage
     test := enum {
+        // I bet this will cause massive pukeage
         one;
-        two;
+        two;     // I bet this will cause massive pukeage
         three;
     };
 
-    fibonacci := ns {
+    fibonacci := ns {     // I bet this will cause massive pukeage
         constant length_of_sequence:u32 := 1000;
     };
 
@@ -39,10 +40,11 @@ alpha::compiler::config := ns {
 alpha::compiler::examples := ns {
 
     multi_return := proc():u64, address {
-        return alloc(64);
+        /* something inside of a proc */
+        return alloc(/* this is leading */ /* and a second */ 64 /* foo, bar, baz, bing */);
     };
 
-    fib := proc(n:u64 := 10):u64 {
+    fib := proc(/* before */ n:u64 := 10 /*after*/):u64 {
         if n == 0 || n == 1 {
             return n;
         } else {
@@ -57,6 +59,6 @@ alpha::compiler::examples := ns {
 
         final_fib_value:u32 := fib(alpha::compiler::config::fibonacci::length_of_sequence);
         return final_fib_value;
-    };
+    } @entry_point;
 
 };

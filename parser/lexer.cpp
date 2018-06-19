@@ -295,21 +295,22 @@ namespace basecode::syntax {
     }
 
     std::string lexer::read_identifier() {
-        auto ch = read();
+        auto ch = read(false);
         if (ch != '_' && !isalpha(ch)) {
             return "";
         }
-        _column++;
         std::stringstream stream;
         stream << ch;
         while (true) {
-            ch = static_cast<char>(_source.get());
-            _column++;
-            if (ch == '_' || isalnum(ch)) {
-                stream << ch;
-            } else {
+            ch = read(false);
+            if (ch == ';') {
                 return stream.str();
             }
+            if (ch == '_' || isalnum(ch)) {
+                stream << ch;
+                continue;
+            }
+            return stream.str();
         }
     }
 
@@ -553,6 +554,7 @@ namespace basecode::syntax {
         auto ch = read();
         if (ch == '@') {
             token.value = read_identifier();
+            rewind_one_char();
             if (token.value.empty())
                 return false;
             token.type = token_types_t::attribute;

@@ -31,6 +31,7 @@ namespace basecode::syntax {
         relational,
         bitwise,
         exponent,
+        block_comment,
         prefix,
         postfix,
         type,
@@ -126,6 +127,21 @@ namespace basecode::syntax {
     class assignment_infix_parser : public infix_parser {
     public:
         assignment_infix_parser() = default;
+
+        ast_node_shared_ptr parse(
+            common::result& r,
+            parser* parser,
+            const ast_node_shared_ptr& lhs,
+            token_t& token) override;
+
+        precedence_t precedence() const override;
+    };
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    class block_comment_infix_parser : public infix_parser {
+    public:
+        block_comment_infix_parser() = default;
 
         ast_node_shared_ptr parse(
             common::result& r,
@@ -561,6 +577,7 @@ namespace basecode::syntax {
 
         static inline proc_call_infix_parser s_proc_call_infix_parser {};
         static inline assignment_infix_parser s_assignment_infix_parser {};
+        static inline block_comment_infix_parser s_block_comment_infix_parser {};
         static inline type_identifier_infix_parser s_type_identifier_infix_parser {};
         static inline symbol_reference_infix_parser s_symbol_reference_infix_parser {};
         static inline binary_operator_infix_parser s_sum_binary_op_parser {precedence_t::sum, false};
@@ -583,6 +600,7 @@ namespace basecode::syntax {
             {token_types_t::logical_and,        &s_logical_binary_op_parser},
             {token_types_t::logical_or,         &s_logical_binary_op_parser},
             {token_types_t::caret,              &s_exponent_binary_op_parser},
+            {token_types_t::block_comment,      &s_block_comment_infix_parser},
             {token_types_t::equals,             &s_relational_binary_op_parser},
             {token_types_t::not_equals,         &s_relational_binary_op_parser},
             {token_types_t::less_than,          &s_relational_binary_op_parser},

@@ -246,7 +246,13 @@ namespace basecode::syntax {
 
         if (!parser->peek(token_types_t::right_paren)) {
             while (true) {
-                proc_node->rhs->children.push_back(parser->parse_expression(r, 0));
+                auto param_expr = parser->parse_expression(r, 0);
+                if (param_expr->type == ast_node_types_t::block_comment) {
+                    proc_node->children.push_back(param_expr);
+                    continue;
+                } else {
+                    proc_node->rhs->children.push_back(param_expr);
+                }
                 if (!parser->peek(token_types_t::comma))
                     break;
                 parser->consume();
@@ -415,6 +421,24 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    ast_node_shared_ptr block_comment_infix_parser::parse(
+            common::result& r,
+            parser* parser,
+            const ast_node_shared_ptr& lhs,
+            token_t& token) {
+        auto block_comment_node = parser
+            ->ast_builder()
+            ->block_comment_node(token);
+        lhs->children.push_back(block_comment_node);
+        return lhs;
+    }
+
+    precedence_t block_comment_infix_parser::precedence() const {
+        return precedence_t::block_comment;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
     ast_node_shared_ptr proc_call_infix_parser::parse(
             common::result& r,
             parser* parser,
@@ -425,7 +449,13 @@ namespace basecode::syntax {
 
         if (!parser->peek(token_types_t::right_paren)) {
             while (true) {
-                proc_call_node->rhs->children.push_back(parser->parse_expression(r, 0));
+                auto param_expr = parser->parse_expression(r, 0);
+                if (param_expr->type == ast_node_types_t::block_comment) {
+                    proc_call_node->children.push_back(param_expr);
+                    continue;
+                } else {
+                    proc_call_node->rhs->children.push_back(param_expr);
+                }
                 if (!parser->peek(token_types_t::comma))
                     break;
                 parser->consume();
@@ -539,6 +569,9 @@ namespace basecode::syntax {
             parser* parser,
             token_t& token) {
         auto directive_node = parser->ast_builder()->directive_node(token);
+        if (parser->peek(token_types_t::semi_colon)) {
+            return directive_node;
+        }
         directive_node->lhs = parser->parse_expression(r, 0);
         return directive_node;
     }
@@ -550,6 +583,9 @@ namespace basecode::syntax {
             parser* parser,
             token_t& token) {
         auto attribute_node = parser->ast_builder()->attribute_node(token);
+        if (parser->peek(token_types_t::semi_colon)) {
+            return attribute_node;
+        }
         attribute_node->lhs = parser->parse_expression(r, 0);
         return attribute_node;
     }
@@ -721,6 +757,11 @@ namespace basecode::syntax {
             }
         }
 
+        if (peek(token_types_t::attribute)) {
+            auto attribute_node = parse_expression(r, 0);
+            scope->children.push_back(attribute_node);
+        }
+
         return _ast_builder.end_scope();
     }
 
@@ -736,7 +777,6 @@ namespace basecode::syntax {
         }
 
         auto statement_node = _ast_builder.statement_node();
-        // XXX:  lhs should be used or any labels
         statement_node->rhs = expression;
 
         return statement_node;
@@ -783,7 +823,7 @@ namespace basecode::syntax {
             return nullptr;
         }
 
-        if (token.is_comment())
+        if (token.is_line_comment() || token.is_block_comment())
             return lhs;
 
         while (precedence < current_infix_precedence()) {

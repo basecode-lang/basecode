@@ -17,11 +17,6 @@ namespace basecode::syntax {
         return value == "true";
     }
 
-    bool token_t::is_comment() const {
-        return type == token_types_t::line_comment
-               || type == token_types_t::block_comment;
-    }
-
     bool token_t::is_boolean() const {
         return type == token_types_t::true_literal
                || type == token_types_t::false_literal;
@@ -36,6 +31,14 @@ namespace basecode::syntax {
         if (it == s_type_to_name.end())
             return "unknown";
         return it->second;
+    }
+
+    bool token_t::is_line_comment() const {
+        return type == token_types_t::line_comment;
+    }
+
+    bool token_t::is_block_comment() const {
+        return type == token_types_t::block_comment;
     }
 
     conversion_result token_t::parse(int64_t& out) const {
