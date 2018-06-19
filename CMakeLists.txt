@@ -85,6 +85,7 @@ add_executable(
         compiler/elements/string_type.cpp compiler/elements/string_type.h
         compiler/elements/line_comment.cpp compiler/elements/line_comment.h
         compiler/elements/numeric_type.cpp compiler/elements/numeric_type.h
+        compiler/elements/block_comment.cpp compiler/elements/block_comment.h
         compiler/elements/operator_base.cpp compiler/elements/operator_base.h
         compiler/elements/float_literal.cpp compiler/elements/float_literal.h
         compiler/elements/element_types.cpp compiler/elements/element_types.h

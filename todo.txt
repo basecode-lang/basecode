@@ -36,8 +36,6 @@ Basecode Bootstrap Tasks
 
 - union/struct/enum
 
-- comment
-
 - string_literal
 
 - array_literal
@@ -45,8 +43,6 @@ Basecode Bootstrap Tasks
 =================================================================
 
 - add unload_shared_library to terp
-
-- implement block comments /* */ in the lexer/parser
 
 =================================================================
 
@@ -68,3 +64,5 @@ DONE
     * multiple return values
 - does binary_operator/unary_operator need element* or just expression*
 - base types should be statically defined in program
+- comment
+- implement block comments /* */ in the lexer/parser

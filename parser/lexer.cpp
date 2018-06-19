@@ -27,7 +27,8 @@ namespace basecode::syntax {
         // minus, negate
         {'-', std::bind(&lexer::minus, std::placeholders::_1, std::placeholders::_2)},
 
-        // line comment, slash
+        // block comment, line comment, slash
+        {'/', std::bind(&lexer::block_comment, std::placeholders::_1, std::placeholders::_2)},
         {'/', std::bind(&lexer::line_comment, std::placeholders::_1, std::placeholders::_2)},
         {'/', std::bind(&lexer::slash, std::placeholders::_1, std::placeholders::_2)},
 
@@ -246,10 +247,9 @@ namespace basecode::syntax {
     bool lexer::next(token_t& token) {
         if (_source.eof()) {
             _has_next = false;
-            token.value = "";
+            token = s_end_of_file;
             token.line = _line;
             token.column = _column;
-            token.type = token_types_t::end_of_file;
             return true;
         }
 
@@ -269,8 +269,7 @@ namespace basecode::syntax {
             restore_position();
         }
 
-        token.type = token_types_t::end_of_file;
-        token.value = "";
+        token = s_end_of_file;
         token.line = _line;
         token.column = _column;
 
@@ -959,6 +958,51 @@ namespace basecode::syntax {
                 token = s_logical_or_literal;
                 return true;
             }
+        }
+        return false;
+    }
+
+    bool lexer::block_comment(token_t& token) {
+        if (match_literal("/*")) {
+            auto block_count = 1;
+            token = s_block_comment;
+
+            std::stringstream stream;
+            while (true) {
+                if (_source.eof()) {
+                    token = s_end_of_file;
+                    token.line = _line;
+                    token.column = _column;
+                    return true;
+                }
+
+                auto ch = read(false);
+                if (ch == '/') {
+                    ch = read(false);
+                    if (ch == '*') {
+                        block_count++;
+                        continue;
+                    } else {
+                        rewind_one_char();
+                        ch = read(false);
+                    }
+                } else if (ch == '*') {
+                    ch = read(false);
+                    if (ch == '/') {
+                        block_count--;
+                        if (block_count == 0)
+                            break;
+                        continue;
+                    } else {
+                        rewind_one_char();
+                        ch = read(false);
+                    }
+                }
+                stream << ch;
+            }
+
+            token.value = stream.str();
+            return true;
         }
         return false;
     }

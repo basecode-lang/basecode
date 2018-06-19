@@ -20,6 +20,7 @@
 #include "string_type.h"
 #include "numeric_type.h"
 #include "line_comment.h"
+#include "block_comment.h"
 #include "unary_operator.h"
 #include "composite_type.h"
 #include "procedure_type.h"
@@ -96,7 +97,10 @@ namespace basecode::compiler {
                 return comment;
             }
             case syntax::ast_node_types_t::block_comment: {
-                break;
+                auto scope = current_scope();
+                auto comment = make_block_comment(node->token.value);
+                scope->children().push_back(comment);
+                return comment;
             }
             case syntax::ast_node_types_t::unary_operator: {
                 break;
@@ -340,6 +344,12 @@ namespace basecode::compiler {
 
     line_comment* program::make_line_comment(const std::string& value) {
         auto comment = new compiler::line_comment(current_scope(), value);
+        _elements.insert(std::make_pair(comment->id(), comment));
+        return comment;
+    }
+
+    block_comment* program::make_block_comment(const std::string& value) {
+        auto comment = new compiler::block_comment(current_scope(), value);
         _elements.insert(std::make_pair(comment->id(), comment));
         return comment;
     }

@@ -61,6 +61,8 @@ namespace basecode::compiler {
 
         line_comment* make_line_comment(const std::string& value);
 
+        block_comment* make_block_comment(const std::string& value);
+
     private:
         element* evaluate(
             common::result& r,

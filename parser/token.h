@@ -59,13 +59,13 @@ namespace basecode::syntax {
         null_literal,
         else_literal,
         cast_literal,
-        block_comment, //
         false_literal,
         alias_literal,
         break_literal,
         while_literal,
         defer_literal,
         union_literal,
+        block_comment,
         struct_literal,
         number_literal,
         scope_operator,
@@ -126,13 +126,13 @@ namespace basecode::syntax {
         {token_types_t::greater_than,           "greater_than"},
         {token_types_t::enum_literal,           "enum_literal"},
         {token_types_t::true_literal,           "true_literal"},
-        {token_types_t::block_comment,          "block_comment"},
         {token_types_t::false_literal,          "false_literal"},
         {token_types_t::alias_literal,          "alias_literal"},
         {token_types_t::break_literal,          "break_literal"},
         {token_types_t::while_literal,          "while_literal"},
         {token_types_t::defer_literal,          "defer_literal"},
         {token_types_t::union_literal,          "union_literal"},
+        {token_types_t::block_comment,          "block_comment"},
         {token_types_t::struct_literal,         "struct_literal"},
         {token_types_t::return_literal,         "return_literal"},
         {token_types_t::number_literal,         "number_literal"},
@@ -186,6 +186,16 @@ namespace basecode::syntax {
         uint32_t line = 0;
         uint32_t column = 0;
         number_types_t number_type = number_types_t::none;
+    };
+
+    static inline token_t s_end_of_file = {
+        .type = token_types_t::end_of_file,
+        .value = ""
+    };
+
+    static inline token_t s_block_comment = {
+        .type = token_types_t::block_comment,
+        .value = "/*"
     };
 
     static inline token_t s_proc_literal = {

@@ -61,8 +61,6 @@ namespace basecode::syntax {
 
         bool directive(token_t& token);
 
-        bool proc_literal(token_t& token);
-
         bool in_literal(token_t& token);
 
         bool if_literal(token_t& token);
@@ -79,6 +77,8 @@ namespace basecode::syntax {
 
         bool right_paren(token_t& token);
 
+        bool proc_literal(token_t& token);
+
         bool enum_literal(token_t& token);
 
         bool else_literal(token_t& token);
@@ -94,6 +94,8 @@ namespace basecode::syntax {
         bool true_literal(token_t& token);
 
         bool with_literal(token_t& token);
+
+        bool block_comment(token_t& token);
 
         bool false_literal(token_t& token);
 
