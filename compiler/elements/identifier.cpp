@@ -16,12 +16,16 @@ namespace basecode::compiler {
     identifier::identifier(
             element* parent,
             const std::string& name,
-            const compiler::initializer& initializer) : element(parent),
-                                                        _name(name),
-                                                        _initializer(initializer) {
+            compiler::initializer* initializer) : element(parent),
+                                                  _name(name),
+                                                  _initializer(initializer) {
     }
 
     identifier::~identifier() {
+    }
+
+    bool identifier::constant() const {
+        return _constant;
     }
 
     compiler::type* identifier::type() {
@@ -32,12 +36,8 @@ namespace basecode::compiler {
         return _name;
     }
 
-    bool identifier::is_constant() const {
-        return _constant;
-    }
-
-    const compiler::initializer& identifier::initializer() const {
-        return _initializer;
+    void identifier::constant(bool value) {
+        _constant = value;
     }
 
     bool identifier::inferred_type() const {
@@ -46,6 +46,14 @@ namespace basecode::compiler {
 
     void identifier::type(compiler::type* t) {
         _type = t;
+    }
+
+    void identifier::inferred_type(bool value) {
+        _inferred_type = value;
+    }
+
+    compiler::initializer* identifier::initializer() {
+        return _initializer;
     }
 
 };

@@ -16,14 +16,7 @@ namespace basecode::compiler {
 
     initializer::initializer(
         element* parent,
-        binary_operator* assignment) : expression(parent, dynamic_cast<element*>(assignment)) {
-    }
-
-    initializer::~initializer() {
-    }
-
-    binary_operator* initializer::assignment() {
-        return _assignment;
+        element* expr) : expression(parent, expr) {
     }
 
 };

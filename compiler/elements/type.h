@@ -23,37 +23,12 @@ namespace basecode::compiler {
             element* parent,
             const std::string& name);
 
-        inline std::string name() const {
-            return _name;
-        }
+        std::string name() const;
+
+        void name(const std::string& value);
 
     private:
         std::string _name;
     };
 
-    struct type_map_t {
-        void add(
-                const std::string& name,
-                compiler::type* type) {
-            _types.insert(std::make_pair(name, type));
-        }
-
-        size_t size() const {
-            return _types.size();
-        }
-
-        bool remove(const std::string& name) {
-            return _types.erase(name) > 0;
-        }
-
-        compiler::type* find(const std::string& name) {
-            auto it = _types.find(name);
-            if (it != _types.end())
-                return it->second;
-            return nullptr;
-        }
-
-    private:
-        std::unordered_map<std::string, type*> _types {};
-    };
 };

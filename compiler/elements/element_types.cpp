@@ -9,17 +9,17 @@
 //
 // ----------------------------------------------------------------------------
 
+#include "type.h"
+#include "field.h"
 #include "attribute.h"
+#include "identifier.h"
 
 namespace basecode::compiler {
 
-    attribute_map_t::attribute_map_t(element* parent) : _parent(parent) {
-    }
+    ///////////////////////////////////////////////////////////////////////////
 
-    attribute_map_t::~attribute_map_t() {
-        for (auto attr : _attrs)
-            delete attr.second;
-        _attrs.clear();
+    void attribute_map_t::add(attribute* value) {
+        _attrs.insert(std::make_pair(value->name(), value));
     }
 
     bool attribute_map_t::remove(const std::string& name) {
@@ -33,10 +33,55 @@ namespace basecode::compiler {
         return nullptr;
     }
 
-    attribute* attribute_map_t::add(const std::string& name, element* expr) {
-        auto attr = new compiler::attribute(_parent, name, expr);
-        _attrs.insert(std::make_pair(name, attr));
-        return attr;
+    ///////////////////////////////////////////////////////////////////////////
+
+    void field_map_t::add(field* value) {
+        _fields.insert(std::make_pair(value->name(), value));
+    }
+
+    bool field_map_t::remove(const std::string& name) {
+        return _fields.erase(name) > 0;
+    }
+
+    compiler::field* field_map_t::find(const std::string& name) {
+        auto it = _fields.find(name);
+        if (it != _fields.end())
+            return it->second;
+        return nullptr;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    void identifier_map_t::add(identifier* value) {
+        _identifiers.insert(std::make_pair(value->name(), value));
+    }
+
+    bool identifier_map_t::remove(const std::string& name) {
+        return _identifiers.erase(name) > 0;
+    }
+
+    identifier* identifier_map_t::find(const std::string& name) {
+        auto it = _identifiers.find(name);
+        if (it != _identifiers.end())
+            return it->second;
+        return nullptr;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    void type_map_t::add(compiler::type* type) {
+        _types.insert(std::make_pair(type->name(), type));
+    }
+
+    bool type_map_t::remove(const std::string& name) {
+        return _types.erase(name) > 0;
+    }
+
+    compiler::type* type_map_t::find(const std::string& name) {
+        auto it = _types.find(name);
+        if (it != _types.end())
+            return it->second;
+        return nullptr;
     }
 
 };

@@ -16,13 +16,18 @@
 
 namespace basecode::compiler {
 
+    enum class composite_types_t {
+        enum_type,
+        union_type,
+        struct_type,
+    };
+
     class composite_type : public type {
     public:
         composite_type(
             element* parent,
+            composite_types_t type,
             const std::string& name);
-
-        ~composite_type() override;
 
         field_map_t& fields() {
             return _fields;
@@ -32,8 +37,13 @@ namespace basecode::compiler {
             return _type_parameters;
         }
 
+        composite_types_t type() const {
+            return _type;
+        }
+
     private:
-        field_map_t _fields;
+        field_map_t _fields {};
+        composite_types_t _type;
         type_map_t _type_parameters {};
     };
 

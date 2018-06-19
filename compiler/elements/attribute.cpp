@@ -28,4 +28,8 @@ namespace basecode::compiler {
         return _expr;
     }
 
+    std::string attribute::name() const {
+        return _name;
+    }
+
 };

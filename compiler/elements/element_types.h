@@ -24,6 +24,7 @@ namespace basecode::compiler {
     class block;
     class element;
     class program;
+    class any_type;
     class directive;
     class attribute;
     class identifier;
@@ -31,7 +32,9 @@ namespace basecode::compiler {
     class array_type;
     class initializer;
     class string_type;
+    class line_comment;
     class numeric_type;
+    class block_comment;
     class float_literal;
     class operator_base;
     class procedure_type;
@@ -45,24 +48,73 @@ namespace basecode::compiler {
     using element_list_t = std::vector<element*>;
     using directive_map_t = std::map<std::string, directive*>;
 
+    ///////////////////////////////////////////////////////////////////////////
+
     struct attribute_map_t {
-        attribute_map_t(element* parent);
-
-        ~attribute_map_t();
-
         inline size_t size() const {
             return _attrs.size();
         }
+
+        void add(attribute* value);
 
         bool remove(const std::string& name);
 
         compiler::attribute* find(const std::string& name);
 
-        attribute* add(const std::string& name, element* expr);
-
     private:
-        element* _parent = nullptr;
         std::unordered_map<std::string, attribute*> _attrs {};
     };
 
+    ///////////////////////////////////////////////////////////////////////////
+
+    struct field_map_t {
+        void add(field* value);
+
+        inline size_t size() const {
+            return _fields.size();
+        }
+
+        bool remove(const std::string& name);
+
+        compiler::field* find(const std::string& name);
+
+    private:
+        std::unordered_map<std::string, field*> _fields {};
+    };
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    struct identifier_map_t {
+        void add(identifier* value);
+
+        size_t size() const {
+            return _identifiers.size();
+        }
+
+        bool remove(const std::string& name);
+
+        identifier* find(const std::string& name);
+
+        // XXX: add ability to get range of identifiers for overloads
+
+    private:
+        std::unordered_multimap<std::string, identifier*> _identifiers {};
+    };
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    struct type_map_t {
+        size_t size() const {
+            return _types.size();
+        }
+
+        void add(compiler::type* type);
+
+        bool remove(const std::string& name);
+
+        compiler::type* find(const std::string& name);
+
+    private:
+        std::unordered_map<std::string, type*> _types {};
+    };
 };

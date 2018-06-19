@@ -22,6 +22,12 @@
 
 alpha::compiler::config := ns {
 
+    test := enum {
+        one;
+        two;
+        three;
+    };
+
     fibonacci := ns {
         constant length_of_sequence:u32 := 1000;
     };

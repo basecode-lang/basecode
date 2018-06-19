@@ -229,15 +229,13 @@ namespace basecode::syntax {
 
     ast_node_shared_ptr ast_builder::constant_node(const token_t& token) {
         auto node = std::make_shared<ast_node_t>();
-        configure_node(node, token, ast_node_types_t::constant_statement);
-        node->lhs = argument_list_node();
+        configure_node(node, token, ast_node_types_t::constant_expression);
         return node;
     }
 
     ast_node_shared_ptr ast_builder::namespace_node(const token_t& token) {
         auto node = std::make_shared<ast_node_t>();
-        configure_node(node, token, ast_node_types_t::namespace_statement);
-        node->lhs = argument_list_node();
+        configure_node(node, token, ast_node_types_t::namespace_expression);
         return node;
     }
 

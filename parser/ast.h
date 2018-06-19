@@ -68,8 +68,8 @@ namespace basecode::syntax {
         switch_expression,
         struct_expression,
         continue_statement,
-        constant_statement,
-        namespace_statement,
+        constant_expression,
+        namespace_expression,
         subscript_expression,
         qualified_symbol_reference,
     };
@@ -114,8 +114,8 @@ namespace basecode::syntax {
         {ast_node_types_t::array_constructor, "array_constructor"},
         {ast_node_types_t::elseif_expression, "elseif_expression"},
         {ast_node_types_t::continue_statement, "continue_statement"},
-        {ast_node_types_t::constant_statement, "constant_statement"},
-        {ast_node_types_t::namespace_statement, "namespace_statement"},
+        {ast_node_types_t::constant_expression, "constant_expression"},
+        {ast_node_types_t::namespace_expression, "namespace_expression"},
         {ast_node_types_t::subscript_expression, "subscript_expression"},
         {ast_node_types_t::qualified_symbol_reference, "qualified_symbol_reference"},
     };

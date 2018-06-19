@@ -19,14 +19,7 @@ namespace basecode::compiler {
     public:
         initializer(
             element* parent,
-            binary_operator* assignment);
-
-        ~initializer() override;
-
-        binary_operator* assignment();
-
-    private:
-        binary_operator* _assignment = nullptr;
+            element* expr);
     };
 
 };

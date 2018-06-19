@@ -16,20 +16,20 @@ namespace basecode::compiler {
     binary_operator::binary_operator(
         element* parent,
         operator_type_t type,
-        expression* lhs,
-        expression* rhs) : operator_base(parent, type),
-                           _lhs(lhs),
-                           _rhs(rhs) {
+        element* lhs,
+        element* rhs) : operator_base(parent, type),
+                        _lhs(lhs),
+                        _rhs(rhs) {
     }
 
     binary_operator::~binary_operator() {
     }
 
-    expression* binary_operator::lhs() {
+    element* binary_operator::lhs() {
         return _lhs;
     }
 
-    expression* binary_operator::rhs() {
+    element* binary_operator::rhs() {
         return _rhs;
     }
 

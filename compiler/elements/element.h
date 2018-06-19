@@ -38,7 +38,7 @@ namespace basecode::compiler {
     private:
         id_t _id;
         element* _parent = nullptr;
-        attribute_map_t _attributes;
+        attribute_map_t _attributes {};
     };
 
 };

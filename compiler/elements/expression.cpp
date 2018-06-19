@@ -19,7 +19,8 @@ namespace basecode::compiler {
                              _root(root) {
     }
 
-    expression::~expression() {
+    element* expression::root() {
+        return _root;
     }
 
 };

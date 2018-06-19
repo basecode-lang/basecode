@@ -13,9 +13,6 @@
 
 #include <parser/ast.h>
 #include "block.h"
-#include "any_type.h"
-#include "string_type.h"
-#include "numeric_type.h"
 
 namespace basecode::compiler {
 
@@ -32,9 +29,24 @@ namespace basecode::compiler {
         element* find_element(id_t id);
 
     private:
+        field* make_field(
+            const std::string& name,
+            compiler::type* type,
+            compiler::initializer* initializer);
+
         block* make_new_block();
 
         any_type* make_any_type();
+
+        attribute* make_attribute(
+            const std::string& name,
+            element* expr);
+
+        composite_type* make_enum();
+
+        composite_type* make_union();
+
+        composite_type* make_struct();
 
         string_type* make_string_type();
 
@@ -42,6 +54,12 @@ namespace basecode::compiler {
             const std::string& name,
             int64_t min,
             uint64_t max);
+
+        identifier* make_identifier(element* expr);
+
+        directive* make_directive(const std::string& name);
+
+        line_comment* make_line_comment(const std::string& value);
 
     private:
         element* evaluate(

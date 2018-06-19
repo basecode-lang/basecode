@@ -20,4 +20,12 @@ namespace basecode::compiler {
                                    _name(name) {
     }
 
+    std::string type::name() const {
+        return _name;
+    }
+
+    void type::name(const std::string& value) {
+        _name = value;
+    }
+
 };

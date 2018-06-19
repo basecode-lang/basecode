@@ -21,10 +21,10 @@ namespace basecode::compiler {
             element* parent,
             element* root);
 
-        ~expression() override;
+        element* root();
 
     private:
-        element* _root;
+        element* _root = nullptr;
     };
 
 };

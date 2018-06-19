@@ -15,8 +15,7 @@
 namespace basecode::compiler {
 
     element::element(element* parent) : _id(common::id_pool::instance()->allocate()),
-                                        _parent(parent),
-                                        _attributes(this) {
+                                        _parent(parent) {
     }
 
     element::~element() {

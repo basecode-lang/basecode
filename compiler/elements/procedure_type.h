@@ -22,8 +22,6 @@ namespace basecode::compiler {
             element* parent,
             const std::string& name);
 
-        ~procedure_type() override;
-
         field_map_t& returns() {
             return _returns;
         }
@@ -37,8 +35,8 @@ namespace basecode::compiler {
         }
 
     private:
-        field_map_t _returns;
-        field_map_t _parameters;
+        field_map_t _returns {};
+        field_map_t _parameters {};
         type_map_t _type_parameters {};
     };
 

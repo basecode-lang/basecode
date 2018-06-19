@@ -21,18 +21,18 @@ namespace basecode::compiler {
         binary_operator(
             element* parent,
             operator_type_t type,
-            expression* lhs,
-            expression* rhs);
+            element* lhs,
+            element* rhs);
 
         ~binary_operator() override;
 
-        expression* lhs();
+        element* lhs();
 
-        expression* rhs();
+        element* rhs();
 
     private:
-        expression* _lhs = nullptr;
-        expression* _rhs = nullptr;
+        element* _lhs = nullptr;
+        element* _rhs = nullptr;
     };
 
 };

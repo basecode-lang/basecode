@@ -21,14 +21,14 @@ namespace basecode::compiler {
         explicit unary_operator(
             element* parent,
             operator_type_t type,
-            expression* rhs);
+            element* rhs);
 
         ~unary_operator() override;
 
-        expression* rhs();
+        element* rhs();
 
     private:
-        expression* _rhs = nullptr;
+        element* _rhs = nullptr;
     };
 
 };
