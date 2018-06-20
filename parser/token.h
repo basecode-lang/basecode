@@ -29,6 +29,7 @@ namespace basecode::syntax {
         tilde,
         colon,
         comma,
+        label,
         equals,
         period,
         percent,
@@ -91,6 +92,7 @@ namespace basecode::syntax {
         {token_types_t::bang,                   "bang"},
         {token_types_t::pipe,                   "pipe"},
         {token_types_t::minus,                  "minus"},
+        {token_types_t::label,                  "label"},
         {token_types_t::slash,                  "slash"},
         {token_types_t::caret,                  "caret"},
         {token_types_t::tilde,                  "tilde"},
@@ -167,6 +169,8 @@ namespace basecode::syntax {
 
     struct token_t {
         bool as_bool() const;
+
+        bool is_label() const;
 
         bool is_boolean() const;
 

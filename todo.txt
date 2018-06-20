@@ -7,8 +7,12 @@ NOTES
 
 Basecode Bootstrap Tasks
 ------------------------
-- determine the best way to create new elements
-    * maybe follow a similar pattern to ast_builder
+- labels
+
+- how complex should type parameters become in alpha?
+    * we need some kind of constraint system
+
+- alias
 
 - if/else if/else
 
@@ -24,19 +28,19 @@ Basecode Bootstrap Tasks
 
 - defer
 
-- for
+- for (range)
 
 - while
-
-- alias
 
 - break/continue
 
 - return
 
-- union/struct/enum
+- union
 
-- string_literal
+- struct
+
+- enum
 
 - array_literal
 
@@ -66,3 +70,6 @@ DONE
 - base types should be statically defined in program
 - comment
 - implement block comments /* */ in the lexer/parser
+- determine the best way to create new elements
+    * maybe follow a similar pattern to ast_builder
+- string_literal

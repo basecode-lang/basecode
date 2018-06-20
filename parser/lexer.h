@@ -47,6 +47,8 @@ namespace basecode::syntax {
 
         bool colon(token_t& token);
 
+        bool label(token_t& token);
+
         bool period(token_t& token);
 
         bool spread(token_t& token);

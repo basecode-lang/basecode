@@ -1,3 +1,13 @@
+first := struct<T> {
+    name: string;
+    value: T;
+};
+
+second := struct<K, V> {
+    key: K;
+    value: V;
+};
+
 constant pi = 3.14;
 constant max_byte = $ff;
 

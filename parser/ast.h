@@ -29,6 +29,7 @@ namespace basecode::syntax {
     using ast_node_list = std::vector<ast_node_shared_ptr>;
 
     enum class ast_node_types_t {
+        label,
         program,
         proc_call,
         statement,
@@ -36,6 +37,7 @@ namespace basecode::syntax {
         directive,
         assignment,
         expression,
+        label_list,
         basic_block,
         line_comment,
         null_literal,
@@ -75,6 +77,7 @@ namespace basecode::syntax {
     };
 
     static inline std::unordered_map<ast_node_types_t, std::string> s_node_type_names = {
+        {ast_node_types_t::label, "label"},
         {ast_node_types_t::program, "program"},
         {ast_node_types_t::proc_call, "proc_call"},
         {ast_node_types_t::statement, "statement"},
@@ -82,6 +85,7 @@ namespace basecode::syntax {
         {ast_node_types_t::directive, "directive"},
         {ast_node_types_t::assignment, "assignment"},
         {ast_node_types_t::expression, "expression"},
+        {ast_node_types_t::label_list, "label_list"},
         {ast_node_types_t::basic_block, "basic_block"},
         {ast_node_types_t::line_comment, "line_comment"},
         {ast_node_types_t::null_literal, "null_literal"},
@@ -209,11 +213,15 @@ namespace basecode::syntax {
             const token_t& token,
             const ast_node_shared_ptr& rhs);
 
+        ast_node_shared_ptr label_list_node();
+
         ast_node_shared_ptr argument_list_node();
 
         ast_node_shared_ptr proc_expression_node();
 
         void push_scope(const ast_node_shared_ptr& node);
+
+        ast_node_shared_ptr label_node(token_t& token);
 
         ast_node_shared_ptr with_node(const token_t& token);
 

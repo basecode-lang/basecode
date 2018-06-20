@@ -17,6 +17,10 @@ namespace basecode::syntax {
         return value == "true";
     }
 
+    bool token_t::is_label() const {
+        return type == token_types_t::label;
+    }
+
     bool token_t::is_boolean() const {
         return type == token_types_t::true_literal
                || type == token_types_t::false_literal;

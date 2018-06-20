@@ -98,7 +98,8 @@ namespace basecode::syntax {
         // line terminator
         {';', std::bind(&lexer::line_terminator, std::placeholders::_1, std::placeholders::_2)},
 
-        // character literal
+        // label/character literal
+        {'\'', std::bind(&lexer::label, std::placeholders::_1, std::placeholders::_2)},
         {'\'', std::bind(&lexer::character_literal, std::placeholders::_1, std::placeholders::_2)},
 
         // string literal
@@ -419,10 +420,7 @@ namespace basecode::syntax {
     std::string lexer::read_until(char target_ch) {
         std::stringstream stream;
         while (true) {
-            auto ch = static_cast<char>(_source.get());
-            _column++;
-            if (ch == '\n')
-                increment_line();
+            auto ch = read(false);
             if (ch == target_ch)
                 break;
             stream << ch;
@@ -502,6 +500,24 @@ namespace basecode::syntax {
         return false;
     }
 
+    bool lexer::label(token_t& token) {
+        auto ch = read();
+        if (ch == '\'') {
+            auto identifier = read_identifier();
+            if (identifier.empty()) {
+                return false;
+            }
+            rewind_one_char();
+            ch = read(false);
+            if (ch == ':') {
+                token.type = token_types_t::label;
+                token.value = identifier;
+                return true;
+            }
+        }
+        return false;
+    }
+
     bool lexer::period(token_t& token) {
         auto ch = read();
         if (ch == '.') {
@@ -577,11 +593,15 @@ namespace basecode::syntax {
 
     bool lexer::identifier(token_t& token) {
         auto name = read_identifier();
+
         if (name.empty())
             return false;
-        token.type = token_types_t::identifier;
-        token.value = name;
+
         rewind_one_char();
+
+        token.value = name;
+        token.type = token_types_t::identifier;
+
         return true;
     }
 
