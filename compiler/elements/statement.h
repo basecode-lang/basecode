@@ -15,18 +15,19 @@
 
 namespace basecode::compiler {
 
-    class block_comment : public element {
+    class statement : public element {
     public:
-        block_comment(
+        statement(
             element* parent,
-            const std::string& value);
+            element* expr);
 
-        std::string value() const {
-            return _value;
-        }
+        element* expr();
+
+        label_list_t& labels();
 
     private:
-        std::string _value;
+        label_list_t _labels {};
+        compiler::element* _expr = nullptr;
     };
 
 };

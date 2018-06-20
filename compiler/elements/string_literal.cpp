@@ -15,11 +15,8 @@ namespace basecode::compiler {
 
     string_literal::string_literal(
             element* parent,
-            const std::string& value) : element(parent),
+            const std::string& value) : element(parent, element_type_t::string_literal),
                                         _value(value) {
-    }
-
-    string_literal::~string_literal() {
     }
 
 }

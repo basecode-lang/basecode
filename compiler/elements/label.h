@@ -9,14 +9,23 @@
 //
 // ----------------------------------------------------------------------------
 
-#include "line_comment.h"
+#pragma once
+
+#include "element.h"
 
 namespace basecode::compiler {
 
-    line_comment::line_comment(
+    class label : public element {
+    public:
+        label(
             element* parent,
-            const std::string& value) : element(parent),
-                                        _value(value) {
-    }
+            const std::string& name);
+
+        std::string name() const;
+
+    private:
+        std::string _name;
+    };
 
 };
+

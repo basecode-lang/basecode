@@ -13,14 +13,25 @@
 
 namespace basecode::compiler {
 
-    block::block(block* parent) : element(parent) {
+    block::block(
+        block* parent,
+        element_type_t type) : element(parent, type) {
     }
 
-    block::~block() {
+    type_map_t& block::types() {
+        return _types;
     }
 
-    element_list_t& block::children() {
-        return _children;
+    comment_list_t& block::comments() {
+        return _comments;
+    }
+
+    statement_list_t& block::statements() {
+        return _statements;
+    }
+
+    identifier_map_t& block::identifiers() {
+        return _identifiers;
     }
 
 };

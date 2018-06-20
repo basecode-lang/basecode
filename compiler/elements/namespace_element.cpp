@@ -15,11 +15,8 @@ namespace basecode::compiler {
 
     namespace_element::namespace_element(
         block* parent,
-        const std::string& name) : block(parent),
+        const std::string& name) : block(parent, element_type_t::namespace_e),
                                    _name(name) {
-    }
-
-    namespace_element::~namespace_element() {
     }
 
     std::string namespace_element::name() const {

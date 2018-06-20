@@ -15,16 +15,13 @@
 
 namespace basecode::compiler {
 
-    class boolean_literal : public type {
+    class boolean_literal : public element {
     public:
         boolean_literal(
             element* parent,
-            const std::string& name,
             bool value);
 
-        bool value() const {
-            return _value;
-        }
+        bool value() const;
 
     private:
         bool _value = false;

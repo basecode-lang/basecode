@@ -16,7 +16,19 @@ namespace basecode::compiler {
 
     procedure_type::procedure_type(
         element* parent,
-        const std::string& name) : type(parent, name) {
+        const std::string& name) : compiler::type(parent, element_type_t::proc_type, name) {
+    }
+
+    field_map_t& procedure_type::returns() {
+        return _returns;
+    }
+
+    field_map_t& procedure_type::parameters() {
+        return _parameters;
+    }
+
+    type_map_t& procedure_type::type_parameters() {
+        return _type_parameters;
     }
 
 };

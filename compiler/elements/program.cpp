@@ -11,16 +11,17 @@
 
 #include <fmt/format.h>
 #include "type.h"
+#include "label.h"
+#include "comment.h"
 #include "program.h"
 #include "any_type.h"
 #include "attribute.h"
 #include "directive.h"
+#include "statement.h"
 #include "identifier.h"
 #include "initializer.h"
 #include "string_type.h"
 #include "numeric_type.h"
-#include "line_comment.h"
-#include "block_comment.h"
 #include "unary_operator.h"
 #include "composite_type.h"
 #include "procedure_type.h"
@@ -28,7 +29,7 @@
 
 namespace basecode::compiler {
 
-    program::program() : block(nullptr) {
+    program::program() : block(nullptr, element_type_t::program) {
     }
 
     program::~program() {
@@ -45,19 +46,14 @@ namespace basecode::compiler {
 
         switch (node->type) {
             case syntax::ast_node_types_t::attribute: {
-                auto scope = current_scope();
-                auto attr = make_attribute(
+                return make_attribute(
                     node->token.value,
                     evaluate(r, node->rhs));
-                scope->attributes().add(attr);
-                return attr;
             }
             case syntax::ast_node_types_t::directive: {
-                auto scope = current_scope();
-                auto directive_element = make_directive(node->token.value);
-                scope->children().push_back(directive_element);
-                evaluate(r, node->lhs);
-                return directive_element;
+                return make_directive(
+                    node->token.value,
+                    evaluate(r, node->lhs));
             }
             case syntax::ast_node_types_t::program:
             case syntax::ast_node_types_t::basic_block: {
@@ -70,16 +66,44 @@ namespace basecode::compiler {
                 for (auto it = node->children.begin();
                      it != node->children.end();
                      ++it) {
-                    evaluate(r, *it);
+                    auto expr = evaluate(r, *it);
+                    switch (expr->element_type()) {
+                        case element_type_t::comment:
+                            // XXX: this will need to be revisited
+                            current_scope()
+                                ->comments()
+                                    .push_back(dynamic_cast<comment*>(expr));
+                            break;
+                        case element_type_t::attribute:
+                            current_scope()
+                                ->attributes()
+                                    .add(dynamic_cast<attribute*>(expr));
+                            break;
+                        case element_type_t::statement: {
+                            current_scope()
+                                ->statements()
+                                    .push_back(dynamic_cast<statement*>(expr));
+                            break;
+                        }
+                        default:
+                            break;
+                    }
                 }
 
-                pop_scope();
-
-                break;
+                return pop_scope();
             }
-            case syntax::ast_node_types_t::statement:
-            case syntax::ast_node_types_t::namespace_expression: {
-                return evaluate(r, node->rhs);
+            case syntax::ast_node_types_t::statement: {
+                label_list_t labels {};
+
+                if (node->lhs != nullptr) {
+                    for (const auto& label : node->lhs->children) {
+                        labels.push_back(make_label(label->token.value));
+                    }
+                }
+
+                return make_statement(
+                    labels,
+                    evaluate(r, node->rhs));
             }
             case syntax::ast_node_types_t::expression: {
                 break;
@@ -91,16 +115,14 @@ namespace basecode::compiler {
                 break;
             }
             case syntax::ast_node_types_t::line_comment: {
-                auto scope = current_scope();
-                auto comment = make_line_comment(node->token.value);
-                scope->children().push_back(comment);
-                return comment;
+                return make_comment(
+                    comment_type_t::line,
+                    node->token.value);
             }
             case syntax::ast_node_types_t::block_comment: {
-                auto scope = current_scope();
-                auto comment = make_block_comment(node->token.value);
-                scope->children().push_back(comment);
-                return comment;
+                return make_comment(
+                    comment_type_t::block,
+                    node->token.value);
             }
             case syntax::ast_node_types_t::unary_operator: {
                 break;
@@ -155,7 +177,10 @@ namespace basecode::compiler {
                 auto assignment = dynamic_cast<binary_operator*>(evaluate(r, node->rhs));
                 auto variable = dynamic_cast<identifier*>(assignment->lhs());
                 variable->constant(true);
-                break;
+                return assignment;
+            }
+            case syntax::ast_node_types_t::namespace_expression: {
+                return evaluate(r, node->rhs);
             }
             case syntax::ast_node_types_t::qualified_symbol_reference: {
                 break;
@@ -271,6 +296,22 @@ namespace basecode::compiler {
         scope_types.add(make_numeric_type("address", 0,         UINTPTR_MAX));
     }
 
+    comment* program::make_comment(
+            comment_type_t type,
+            const std::string& value) {
+        auto comment = new compiler::comment(current_scope(), type, value);
+        _elements.insert(std::make_pair(comment->id(), comment));
+        return comment;
+    }
+
+    directive* program::make_directive(
+            const std::string& name,
+            element* expr) {
+        auto directive1 = new compiler::directive(current_scope(), name, expr);
+        _elements.insert(std::make_pair(directive1->id(), directive1));
+        return directive1;
+    }
+
     attribute* program::make_attribute(
             const std::string& name,
             element* expr) {
@@ -336,22 +377,18 @@ namespace basecode::compiler {
         return nullptr;
     }
 
-    directive* program::make_directive(const std::string& name) {
-        auto directive1 = new compiler::directive(current_scope(), name);
-        _elements.insert(std::make_pair(directive1->id(), directive1));
-        return directive1;
+    label* program::make_label(const std::string& name) {
+        auto label = new compiler::label(current_scope(), name);
+        _elements.insert(std::make_pair(label->id(), label));
+        return label;
     }
 
-    line_comment* program::make_line_comment(const std::string& value) {
-        auto comment = new compiler::line_comment(current_scope(), value);
-        _elements.insert(std::make_pair(comment->id(), comment));
-        return comment;
-    }
-
-    block_comment* program::make_block_comment(const std::string& value) {
-        auto comment = new compiler::block_comment(current_scope(), value);
-        _elements.insert(std::make_pair(comment->id(), comment));
-        return comment;
+    statement* program::make_statement(label_list_t labels, element* expr) {
+        auto statement = new compiler::statement(current_scope(), expr);
+        for (auto label : labels)
+            statement->labels().push_back(label);
+        _elements.insert(std::make_pair(statement->id(), statement));
+        return statement;
     }
 
 };

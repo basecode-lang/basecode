@@ -22,8 +22,6 @@ namespace basecode::compiler {
             block* parent,
             const std::string& name);
 
-        ~namespace_element() override;
-
         std::string name() const;
 
     private:

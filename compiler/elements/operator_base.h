@@ -50,14 +50,13 @@ namespace basecode::compiler {
     public:
         operator_base(
             element* parent,
-            operator_type_t type);
+            element_type_t element_type,
+            operator_type_t operator_type);
 
-        ~operator_base() override;
-
-        operator_type_t type() const;
+        operator_type_t operator_type() const;
 
     private:
-        operator_type_t _type;
+        operator_type_t _operator_type;
     };
 
 };

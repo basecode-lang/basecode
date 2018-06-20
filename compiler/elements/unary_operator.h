@@ -23,8 +23,6 @@ namespace basecode::compiler {
             operator_type_t type,
             element* rhs);
 
-        ~unary_operator() override;
-
         element* rhs();
 
     private:

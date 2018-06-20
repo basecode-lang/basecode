@@ -9,18 +9,24 @@
 //
 // ----------------------------------------------------------------------------
 
-#include "integer_literal.h"
+#include "comment.h"
 
 namespace basecode::compiler {
 
-    integer_literal::integer_literal(
+    comment::comment(
             element* parent,
-            uint64_t value) : element(parent, element_type_t::integer_literal),
-                              _value(value) {
+            comment_type_t type,
+            const std::string& value) : element(parent, element_type_t::comment),
+                                        _value(value),
+                                        _type(type) {
     }
 
-    uint64_t integer_literal::value() const {
+    std::string comment::value() const {
         return _value;
+    }
+
+    comment_type_t comment::type() const {
+        return _type;
     }
 
 };

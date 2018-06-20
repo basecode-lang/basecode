@@ -20,6 +20,11 @@
 // N.B. this is how we define 'external' function prototypes
 #foreign print := proc(format:string, values:...any) @alias "printf";
 
+#fun {
+    foo:u8 := 128;
+    print("help!");
+};
+
 alpha::compiler::config := ns {
     // I bet this will cause massive pukeage
     test := enum {

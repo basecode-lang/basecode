@@ -17,7 +17,7 @@ namespace basecode::compiler {
         element* parent,
         const std::string& name,
         compiler::type* type,
-        compiler::initializer* initializer): element(parent),
+        compiler::initializer* initializer): element(parent, element_type_t::field),
                                              _name(name),
                                              _type(type),
                                              _initializer(initializer) {

@@ -20,7 +20,9 @@ namespace basecode::compiler {
 
     class element {
     public:
-        explicit element(element* parent);
+        element(
+            element* parent,
+            element_type_t type);
 
         virtual ~element();
 
@@ -32,6 +34,8 @@ namespace basecode::compiler {
 
         bool fold(common::result& result);
 
+        element_type_t element_type() const;
+
     protected:
         virtual bool on_fold(common::result& result);
 
@@ -39,6 +43,7 @@ namespace basecode::compiler {
         id_t _id;
         element* _parent = nullptr;
         attribute_map_t _attributes {};
+        element_type_t _element_type = element_type_t::element;
     };
 
 };

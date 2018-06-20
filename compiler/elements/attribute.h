@@ -24,8 +24,6 @@ namespace basecode::compiler {
             const std::string& name,
             element* expr);
 
-        ~attribute() override;
-
         element* expression();
 
         std::string name() const;

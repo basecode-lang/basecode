@@ -21,6 +21,7 @@ namespace basecode::compiler {
     public:
         type(
             element* parent,
+            element_type_t type,
             const std::string& name);
 
         std::string name() const;

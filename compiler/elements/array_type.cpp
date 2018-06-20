@@ -17,8 +17,20 @@ namespace basecode::compiler {
     array_type::array_type(
             element* parent,
             const std::string& name,
-            compiler::type* element_type) : type(parent, name),
-                                            _element_type(element_type) {
+            compiler::type* entry_type) : compiler::type(parent, element_type_t::array_type, name),
+                                          _entry_type(entry_type) {
+    }
+
+    uint64_t array_type::size() const {
+        return _size;
+    }
+
+    void array_type::size(uint64_t value) {
+        _size = value;
+    }
+
+    compiler::type* array_type::entry_type() {
+        return _entry_type;
     }
 
 };

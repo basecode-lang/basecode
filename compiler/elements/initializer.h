@@ -15,11 +15,16 @@
 
 namespace basecode::compiler {
 
-    class initializer : public expression {
+    class initializer : public element {
     public:
         initializer(
             element* parent,
             element* expr);
+
+        element* expression();
+
+    private:
+        element* _expr = nullptr;
     };
 
 };

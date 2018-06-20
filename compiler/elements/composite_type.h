@@ -29,17 +29,11 @@ namespace basecode::compiler {
             composite_types_t type,
             const std::string& name);
 
-        field_map_t& fields() {
-            return _fields;
-        }
+        field_map_t& fields();
 
-        type_map_t& type_parameters() {
-            return _type_parameters;
-        }
+        type_map_t& type_parameters();
 
-        composite_types_t type() const {
-            return _type;
-        }
+        composite_types_t type() const;
 
     private:
         field_map_t _fields {};

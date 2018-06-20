@@ -9,18 +9,18 @@
 //
 // ----------------------------------------------------------------------------
 
-#include "integer_literal.h"
+#include "label.h"
 
 namespace basecode::compiler {
 
-    integer_literal::integer_literal(
+    label::label(
             element* parent,
-            uint64_t value) : element(parent, element_type_t::integer_literal),
-                              _value(value) {
+            const std::string& name) : element(parent, element_type_t::label),
+                                       _name(name) {
     }
 
-    uint64_t integer_literal::value() const {
-        return _value;
+    std::string label::name() const {
+        return _name;
     }
 
 };

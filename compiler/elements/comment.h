@@ -9,14 +9,27 @@
 //
 // ----------------------------------------------------------------------------
 
-#include "block_comment.h"
+#pragma once
+
+#include "element.h"
 
 namespace basecode::compiler {
 
-    block_comment::block_comment(
-        element* parent,
-        const std::string& value) : element(parent),
-                                    _value(value) {
-    }
+    class comment : public element {
+    public:
+        comment(
+            element* parent,
+            comment_type_t type,
+            const std::string& value);
+
+        std::string value() const;
+
+        comment_type_t type() const;
+
+    private:
+        std::string _value;
+        comment_type_t _type;
+    };
 
 };
+

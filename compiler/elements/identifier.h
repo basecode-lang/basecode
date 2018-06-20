@@ -24,8 +24,6 @@ namespace basecode::compiler {
             const std::string& name,
             compiler::initializer* initializer);
 
-        ~identifier() override;
-
         bool constant() const;
 
         compiler::type* type();
@@ -51,4 +49,3 @@ namespace basecode::compiler {
     };
 
 };
-

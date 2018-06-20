@@ -21,8 +21,6 @@ namespace basecode::compiler {
             element* parent,
             const std::string& value);
 
-        ~string_literal() override;
-
         inline std::string value() const {
             return _value;
         }

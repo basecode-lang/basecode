@@ -23,13 +23,9 @@ namespace basecode::compiler {
             int64_t min,
             uint64_t max);
 
-        inline int64_t min() const {
-            return _min;
-        }
+        int64_t min() const;
 
-        inline uint64_t max() const {
-            return _max;
-        }
+        uint64_t max() const;
 
     private:
         int64_t _min;

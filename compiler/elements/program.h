@@ -36,6 +36,18 @@ namespace basecode::compiler {
 
         block* make_new_block();
 
+        comment* make_comment(
+            comment_type_t type,
+            const std::string& value);
+
+        directive* make_directive(
+            const std::string& name,
+            element* expr);
+
+        statement* make_statement(
+            label_list_t labels,
+            element* expr);
+
         any_type* make_any_type();
 
         attribute* make_attribute(
@@ -57,11 +69,7 @@ namespace basecode::compiler {
 
         identifier* make_identifier(element* expr);
 
-        directive* make_directive(const std::string& name);
-
-        line_comment* make_line_comment(const std::string& value);
-
-        block_comment* make_block_comment(const std::string& value);
+        label* make_label(const std::string& name);
 
     private:
         element* evaluate(

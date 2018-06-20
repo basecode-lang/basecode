@@ -16,12 +16,9 @@ namespace basecode::compiler {
     attribute::attribute(
             element* parent,
             const std::string& name,
-            element* expr) : element(parent),
+            element* expr) : element(parent, element_type_t::attribute),
                              _name(name),
                              _expr(expr) {
-    }
-
-    attribute::~attribute() {
     }
 
     element* attribute::expression() {

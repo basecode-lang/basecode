@@ -72,20 +72,21 @@ add_executable(
         compiler/elements/type.cpp compiler/elements/type.h
         compiler/elements/field.cpp compiler/elements/field.h
         compiler/elements/block.cpp compiler/elements/block.h
+        compiler/elements/label.cpp compiler/elements/label.h
+        compiler/elements/comment.cpp compiler/elements/comment.h
         compiler/bytecode_emitter.cpp compiler/bytecode_emitter.h
         compiler/elements/element.cpp compiler/elements/element.h
         compiler/elements/program.cpp compiler/elements/program.h
         compiler/elements/any_type.cpp compiler/elements/any_type.h
         compiler/elements/attribute.cpp compiler/elements/attribute.h
         compiler/elements/directive.cpp compiler/elements/directive.h
+        compiler/elements/statement.cpp compiler/elements/statement.h
         compiler/elements/identifier.cpp compiler/elements/identifier.h
         compiler/elements/expression.cpp compiler/elements/expression.h
         compiler/elements/array_type.cpp compiler/elements/array_type.h
         compiler/elements/initializer.cpp compiler/elements/initializer.h
         compiler/elements/string_type.cpp compiler/elements/string_type.h
-        compiler/elements/line_comment.cpp compiler/elements/line_comment.h
         compiler/elements/numeric_type.cpp compiler/elements/numeric_type.h
-        compiler/elements/block_comment.cpp compiler/elements/block_comment.h
         compiler/elements/operator_base.cpp compiler/elements/operator_base.h
         compiler/elements/float_literal.cpp compiler/elements/float_literal.h
         compiler/elements/element_types.cpp compiler/elements/element_types.h

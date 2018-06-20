@@ -15,9 +15,12 @@ namespace basecode::compiler {
 
     boolean_literal::boolean_literal(
             element* parent,
-            const std::string& name,
-            bool value) : type(parent, name),
+            bool value) : element(parent, element_type_t::boolean_literal),
                           _value(value) {
+    }
+
+    bool boolean_literal::value() const {
+        return _value;
     }
 
 };

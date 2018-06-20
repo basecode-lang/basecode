@@ -21,11 +21,7 @@ namespace basecode::compiler {
             element* parent,
             double value);
 
-        ~float_literal() override;
-
-        inline double value() const {
-            return _value;
-        }
+        double value() const;
 
     private:
         double _value;

@@ -21,11 +21,7 @@ namespace basecode::compiler {
             element* parent,
             uint64_t value);
 
-        ~integer_literal() override;
-
-        inline uint64_t value() const {
-            return _value;
-        }
+        uint64_t value() const;
 
     private:
         uint64_t _value;

@@ -15,15 +15,13 @@ namespace basecode::compiler {
 
     operator_base::operator_base(
             element* parent,
-            operator_type_t type) : element(parent),
-                                    _type(type) {
+            element_type_t element_type,
+            operator_type_t operator_type) : element(parent, element_type),
+                                             _operator_type(operator_type) {
     }
 
-    operator_base::~operator_base() {
-    }
-
-    operator_type_t operator_base::type() const {
-        return _type;
+    operator_type_t operator_base::operator_type() const {
+        return _operator_type;
     }
 
 };

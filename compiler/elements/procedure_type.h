@@ -22,17 +22,11 @@ namespace basecode::compiler {
             element* parent,
             const std::string& name);
 
-        field_map_t& returns() {
-            return _returns;
-        }
+        field_map_t& returns();
 
-        field_map_t& parameters() {
-            return _parameters;
-        }
+        field_map_t& parameters();
 
-        type_map_t& type_parameters() {
-            return _type_parameters;
-        }
+        type_map_t& type_parameters();
 
     private:
         field_map_t _returns {};

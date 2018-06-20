@@ -13,7 +13,10 @@
 
 namespace basecode::compiler {
 
-    string_type::string_type(element* parent) : type(parent, "string") {
+    string_type::string_type(
+        element* parent) : compiler::type(parent,
+                                          element_type_t::string_type,
+                                          "string") {
     }
 
 };

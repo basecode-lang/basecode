@@ -16,7 +16,8 @@ namespace basecode::compiler {
 
     type::type(
         element* parent,
-        const std::string& name) : element(parent),
+        element_type_t type,
+        const std::string& name) : element(parent, type),
                                    _name(name) {
     }
 

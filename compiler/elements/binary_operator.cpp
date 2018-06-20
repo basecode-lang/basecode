@@ -17,12 +17,9 @@ namespace basecode::compiler {
         element* parent,
         operator_type_t type,
         element* lhs,
-        element* rhs) : operator_base(parent, type),
+        element* rhs) : operator_base(parent, element_type_t::binary_operator, type),
                         _lhs(lhs),
                         _rhs(rhs) {
-    }
-
-    binary_operator::~binary_operator() {
     }
 
     element* binary_operator::lhs() {

@@ -87,7 +87,7 @@ namespace basecode::syntax {
         {ast_node_types_t::expression, "expression"},
         {ast_node_types_t::label_list, "label_list"},
         {ast_node_types_t::basic_block, "basic_block"},
-        {ast_node_types_t::line_comment, "line_comment"},
+        {ast_node_types_t::line_comment, "comment"},
         {ast_node_types_t::null_literal, "null_literal"},
         {ast_node_types_t::block_comment, "block_comment"},
         {ast_node_types_t::argument_list, "argument_list"},

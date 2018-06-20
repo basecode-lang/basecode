@@ -9,25 +9,22 @@
 //
 // ----------------------------------------------------------------------------
 
-#pragma once
-
-#include "element.h"
+#include "statement.h"
 
 namespace basecode::compiler {
 
-    class line_comment : public element {
-    public:
-        line_comment(
+    statement::statement(
             element* parent,
-            const std::string& value);
+            element* expr) : element(parent, element_type_t::statement),
+                             _expr(expr) {
+    }
 
-        std::string value() const {
-            return _value;
-        }
+    element* statement::expr() {
+        return _expr;
+    }
 
-    private:
-        std::string _value;
-    };
+    label_list_t& statement::labels() {
+        return _labels;
+    }
 
 };
-

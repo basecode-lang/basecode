@@ -24,8 +24,6 @@ namespace basecode::compiler {
             element* lhs,
             element* rhs);
 
-        ~binary_operator() override;
-
         element* lhs();
 
         element* rhs();

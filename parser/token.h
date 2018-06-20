@@ -124,7 +124,7 @@ namespace basecode::syntax {
         {token_types_t::with_literal,           "with_literal"},
         {token_types_t::cast_literal,           "cast_literal"},
         {token_types_t::else_literal,           "else_literal"},
-        {token_types_t::line_comment,           "line_comment"},
+        {token_types_t::line_comment,           "comment"},
         {token_types_t::greater_than,           "greater_than"},
         {token_types_t::enum_literal,           "enum_literal"},
         {token_types_t::true_literal,           "true_literal"},

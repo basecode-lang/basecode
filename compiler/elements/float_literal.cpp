@@ -15,11 +15,12 @@ namespace basecode::compiler {
 
     float_literal::float_literal(
             element* parent,
-            double value) : element(parent),
+            double value) : element(parent, element_type_t::float_literal),
                             _value(value) {
     }
 
-    float_literal::~float_literal() {
+    double float_literal::value() const {
+        return _value;
     }
 
 };

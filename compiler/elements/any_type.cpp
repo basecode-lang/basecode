@@ -13,7 +13,10 @@
 
 namespace basecode::compiler {
 
-    any_type::any_type(element* parent) : type(parent, "any") {
+    any_type::any_type(
+        element* parent) : compiler::type(parent,
+                                          element_type_t::any_type,
+                                          "any") {
     }
 
 };

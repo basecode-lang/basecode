@@ -14,8 +14,11 @@
 
 namespace basecode::compiler {
 
-    element::element(element* parent) : _id(common::id_pool::instance()->allocate()),
-                                        _parent(parent) {
+    element::element(
+            element* parent,
+            element_type_t type) : _id(common::id_pool::instance()->allocate()),
+                                   _parent(parent),
+                                   _element_type(type) {
     }
 
     element::~element() {
@@ -35,6 +38,10 @@ namespace basecode::compiler {
 
     bool element::fold(common::result& result) {
         return on_fold(result);
+    }
+
+    element_type_t element::element_type() const {
+        return _element_type;
     }
 
     bool element::on_fold(common::result& result) {

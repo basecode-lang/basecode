@@ -19,23 +19,22 @@ namespace basecode::compiler {
 
     class block : public element {
     public:
-        explicit block(block* parent);
+        block(
+            block* parent,
+            element_type_t type = element_type_t::block);
 
-        ~block() override;
+        type_map_t& types();
 
-        type_map_t& types() {
-            return _types;
-        }
+        comment_list_t& comments();
 
-        element_list_t& children();
+        statement_list_t& statements();
 
-        identifier_map_t& identifiers() {
-            return _identifiers;
-        }
+        identifier_map_t& identifiers();
 
     private:
         type_map_t _types {};
-        element_list_t _children {};
+        comment_list_t _comments {};
+        statement_list_t _statements {};
         identifier_map_t _identifiers {};
     };
 
