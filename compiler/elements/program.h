@@ -56,6 +56,10 @@ namespace basecode::compiler {
 
         composite_type* make_enum();
 
+        identifier* make_identifier(
+            const std::string& name,
+            initializer* expr);
+
         composite_type* make_union();
 
         composite_type* make_struct();
@@ -67,7 +71,16 @@ namespace basecode::compiler {
             int64_t min,
             uint64_t max);
 
-        identifier* make_identifier(element* expr);
+        unary_operator* make_unary_operator(
+            operator_type_t type,
+            element* rhs);
+
+        binary_operator* make_binary_operator(
+            operator_type_t type,
+            element* lhs,
+            element* rhs);
+
+        expression* make_expression(element* expr);
 
         label* make_label(const std::string& name);
 

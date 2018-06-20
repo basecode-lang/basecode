@@ -7,8 +7,6 @@ NOTES
 
 Basecode Bootstrap Tasks
 ------------------------
-- labels
-
 - how complex should type parameters become in alpha?
     * we need some kind of constraint system
 
@@ -73,3 +71,4 @@ DONE
 - determine the best way to create new elements
     * maybe follow a similar pattern to ast_builder
 - string_literal
+- labels

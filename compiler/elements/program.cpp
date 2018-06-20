@@ -106,13 +106,13 @@ namespace basecode::compiler {
                     evaluate(r, node->rhs));
             }
             case syntax::ast_node_types_t::expression: {
-                break;
+                return make_expression(evaluate(r, node->lhs));
             }
             case syntax::ast_node_types_t::assignment: {
-                // binary_operator returned from here
-//                auto list_of_identifiers = evaluate(r, node->lhs);
-//                auto list_of_expressions = evaluate(r, node->rhs);
-                break;
+                return make_binary_operator(
+                    operator_type_t::assignment,
+                    evaluate(r, node->lhs),
+                    evaluate(r, node->rhs));
             }
             case syntax::ast_node_types_t::line_comment: {
                 return make_comment(
@@ -125,10 +125,21 @@ namespace basecode::compiler {
                     node->token.value);
             }
             case syntax::ast_node_types_t::unary_operator: {
-                break;
+                auto it = s_unary_operators.find(node->token.type);
+                if (it == s_unary_operators.end())
+                    return nullptr;
+                return make_unary_operator(
+                    it->second,
+                    evaluate(r, node->rhs));
             }
             case syntax::ast_node_types_t::binary_operator: {
-                break;
+                auto it = s_binary_operators.find(node->token.type);
+                if (it == s_binary_operators.end())
+                    return nullptr;
+                return make_binary_operator(
+                    it->second,
+                    evaluate(r, node->lhs),
+                    evaluate(r, node->rhs));
             }
             case syntax::ast_node_types_t::proc_expression: {
                 break;
@@ -173,11 +184,10 @@ namespace basecode::compiler {
                 return type;
             }
             case syntax::ast_node_types_t::constant_expression: {
-                // XXX: highly doubt this correct
-                auto assignment = dynamic_cast<binary_operator*>(evaluate(r, node->rhs));
-                auto variable = dynamic_cast<identifier*>(assignment->lhs());
-                variable->constant(true);
-                return assignment;
+                auto identifier = dynamic_cast<compiler::identifier*>(evaluate(r, node->rhs));
+                if (identifier != nullptr)
+                    identifier->constant(true);
+                return identifier;
             }
             case syntax::ast_node_types_t::namespace_expression: {
                 return evaluate(r, node->rhs);
@@ -320,6 +330,14 @@ namespace basecode::compiler {
         return attr;
     }
 
+    identifier* program::make_identifier(
+            const std::string& name,
+            initializer* expr) {
+        auto identifier = new compiler::identifier(current_scope(), name, expr);
+        _elements.insert(std::make_pair(identifier->id(), identifier));
+        return identifier;
+    }
+
     composite_type* program::make_enum() {
         auto type = new composite_type(
             current_scope(),
@@ -373,8 +391,27 @@ namespace basecode::compiler {
         return type;
     }
 
-    identifier* program::make_identifier(element* expr) {
-        return nullptr;
+    unary_operator* program::make_unary_operator(
+            operator_type_t type,
+            element* rhs) {
+        auto unary_operator = new compiler::unary_operator(current_scope(), type, rhs);
+        _elements.insert(std::make_pair(unary_operator->id(), unary_operator));
+        return unary_operator;
+    }
+
+    binary_operator* program::make_binary_operator(
+            operator_type_t type,
+            element* lhs,
+            element* rhs) {
+        auto binary_operator = new compiler::binary_operator(current_scope(), type, lhs, rhs);
+        _elements.insert(std::make_pair(binary_operator->id(), binary_operator));
+        return binary_operator;
+    }
+
+    expression* program::make_expression(element* expr) {
+        auto expression = new compiler::expression(current_scope(), expr);
+        _elements.insert(std::make_pair(expression->id(), expression));
+        return expression;
     }
 
     label* program::make_label(const std::string& name) {

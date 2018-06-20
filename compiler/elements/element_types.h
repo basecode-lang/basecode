@@ -16,6 +16,7 @@
 #include <string>
 #include <memory>
 #include <unordered_map>
+#include <parser/token.h>
 
 namespace basecode::compiler {
 
@@ -90,6 +91,59 @@ namespace basecode::compiler {
     enum class comment_type_t {
         line = 1,
         block
+    };
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    enum class operator_type_t {
+        unknown,
+
+        // unary
+        negate,
+        binary_not,
+        logical_not,
+
+        // binary
+        add,
+        subtract,
+        multiply,
+        divide,
+        modulo,
+        equals,
+        not_equals,
+        greater_than,
+        less_than,
+        greater_than_or_equal,
+        less_than_or_equal,
+        logical_or,
+        logical_and,
+        binary_or,
+        binary_and,
+        binary_xor,
+        shift_right,
+        shift_left,
+        rotate_right,
+        rotate_left,
+        exponent,
+        assignment
+    };
+
+    static inline std::unordered_map<syntax::token_types_t, operator_type_t> s_unary_operators = {
+        {syntax::token_types_t::minus, operator_type_t::negate},
+        {syntax::token_types_t::tilde, operator_type_t::binary_not},
+        {syntax::token_types_t::bang,  operator_type_t::logical_not}
+    };
+
+    static inline std::unordered_map<syntax::token_types_t, operator_type_t> s_binary_operators = {
+        {syntax::token_types_t::equals,     operator_type_t::equals},
+        {syntax::token_types_t::minus,      operator_type_t::subtract},
+        {syntax::token_types_t::plus,       operator_type_t::add},
+        {syntax::token_types_t::asterisk,   operator_type_t::multiply},
+        {syntax::token_types_t::slash,      operator_type_t::divide},
+        {syntax::token_types_t::percent,    operator_type_t::modulo},
+        {syntax::token_types_t::not_equals, operator_type_t::not_equals},
+        {syntax::token_types_t::assignment, operator_type_t::assignment},
+        {syntax::token_types_t::logical_or, operator_type_t::logical_or}
     };
 
     ///////////////////////////////////////////////////////////////////////////
