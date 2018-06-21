@@ -42,6 +42,8 @@ alpha::compiler::config := ns {
 
 alpha::compiler::examples := ns {
 
+    alias id := u64;
+
     multi_return := proc():u64, address {
         /* something inside of a proc */
         return alloc(/* this is leading */ /* and a second */ 64 /* foo, bar, baz, bing */);

@@ -66,6 +66,8 @@ namespace basecode::compiler {
 
         string_type* make_string_type();
 
+        alias* make_alias(element* expr);
+
         numeric_type* make_numeric_type(
             const std::string& name,
             int64_t min,

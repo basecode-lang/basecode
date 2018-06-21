@@ -75,6 +75,16 @@ namespace basecode::syntax {
 
         bool ns_literal(token_t& token);
 
+        bool xor_literal(token_t& token);
+
+        bool shl_literal(token_t& token);
+
+        bool shr_literal(token_t& token);
+
+        bool rol_literal(token_t& token);
+
+        bool ror_literal(token_t& token);
+
         bool for_literal(token_t& token);
 
         bool right_paren(token_t& token);

@@ -10,8 +10,6 @@ Basecode Bootstrap Tasks
 - how complex should type parameters become in alpha?
     * we need some kind of constraint system
 
-- alias
-
 - if/else if/else
 
 - switch
@@ -72,3 +70,4 @@ DONE
     * maybe follow a similar pattern to ast_builder
 - string_literal
 - labels
+- alias

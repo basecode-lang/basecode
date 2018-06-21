@@ -24,6 +24,7 @@ namespace basecode::compiler {
     class field;
     class block;
     class label;
+    class alias;
     class element;
     class program;
     class comment;
@@ -135,15 +136,29 @@ namespace basecode::compiler {
     };
 
     static inline std::unordered_map<syntax::token_types_t, operator_type_t> s_binary_operators = {
-        {syntax::token_types_t::equals,     operator_type_t::equals},
-        {syntax::token_types_t::minus,      operator_type_t::subtract},
-        {syntax::token_types_t::plus,       operator_type_t::add},
-        {syntax::token_types_t::asterisk,   operator_type_t::multiply},
-        {syntax::token_types_t::slash,      operator_type_t::divide},
-        {syntax::token_types_t::percent,    operator_type_t::modulo},
-        {syntax::token_types_t::not_equals, operator_type_t::not_equals},
-        {syntax::token_types_t::assignment, operator_type_t::assignment},
-        {syntax::token_types_t::logical_or, operator_type_t::logical_or}
+        {syntax::token_types_t::plus,               operator_type_t::add},
+        {syntax::token_types_t::minus,              operator_type_t::subtract},
+        {syntax::token_types_t::asterisk,           operator_type_t::multiply},
+        {syntax::token_types_t::slash,              operator_type_t::divide},
+        {syntax::token_types_t::percent,            operator_type_t::modulo},
+        {syntax::token_types_t::equals,             operator_type_t::equals},
+        {syntax::token_types_t::not_equals,         operator_type_t::not_equals},
+        {syntax::token_types_t::greater_than,       operator_type_t::greater_than},
+        {syntax::token_types_t::less_than,          operator_type_t::less_than},
+        {syntax::token_types_t::greater_than_equal, operator_type_t::greater_than_or_equal},
+        {syntax::token_types_t::less_than_equal,    operator_type_t::less_than_or_equal},
+        {syntax::token_types_t::not_equals,         operator_type_t::not_equals},
+        {syntax::token_types_t::logical_or,         operator_type_t::logical_or},
+        {syntax::token_types_t::logical_and,        operator_type_t::logical_and},
+        {syntax::token_types_t::pipe,               operator_type_t::binary_or},
+        {syntax::token_types_t::ampersand,          operator_type_t::binary_and},
+        {syntax::token_types_t::xor_literal,        operator_type_t::binary_xor},
+        {syntax::token_types_t::shl_literal,        operator_type_t::shift_left},
+        {syntax::token_types_t::shr_literal,        operator_type_t::shift_right},
+        {syntax::token_types_t::rol_literal,        operator_type_t::rotate_left},
+        {syntax::token_types_t::ror_literal,        operator_type_t::rotate_right},
+        {syntax::token_types_t::caret,              operator_type_t::exponent},
+        {syntax::token_types_t::assignment,         operator_type_t::assignment},
     };
 
     ///////////////////////////////////////////////////////////////////////////

@@ -331,15 +331,27 @@ namespace basecode::syntax {
             parser* parser,
             token_t& token) {
         switch (token.type) {
-            case token_types_t::break_literal:
+            case token_types_t::alias_literal: {
+                auto alias_node = parser->ast_builder()->alias_node(token);
+                alias_node->lhs = parser->expect_expression(
+                    r,
+                    ast_node_types_t::assignment,
+                    0);
+                return alias_node;
+            }
+            case token_types_t::break_literal: {
                 return parser->ast_builder()->break_node(token);
-            case token_types_t::continue_literal:
+            }
+            case token_types_t::continue_literal: {
                 return parser->ast_builder()->continue_node(token);
-            case token_types_t::null_literal:
+            }
+            case token_types_t::null_literal: {
                 return parser->ast_builder()->null_literal_node(token);
+            }
             case token_types_t::true_literal:
-            case token_types_t::false_literal:
+            case token_types_t::false_literal: {
                 return parser->ast_builder()->boolean_literal_node(token);
+            }
             default:
                 return nullptr;
         }
@@ -718,6 +730,87 @@ namespace basecode::syntax {
         return &_ast_builder;
     }
 
+    ast_node_shared_ptr parser::parse_expression(
+            common::result& r,
+            uint8_t precedence) {
+        token_t token;
+        if (!consume(token))
+            return nullptr;
+
+        auto prefix_parser = prefix_parser_for(token.type);
+        if (prefix_parser == nullptr) {
+            error(
+                r,
+                "B021",
+                fmt::format("prefix parser for token '{}' not found.", token.name()),
+                token.line,
+                token.column);
+            return nullptr;
+        }
+
+        auto lhs = prefix_parser->parse(r, this, token);
+        if (lhs == nullptr) {
+            error(
+                r,
+                "B021",
+                "unexpected empty ast node.",
+                token.line,
+                token.column);
+            return nullptr;
+        }
+
+        if (token.is_line_comment()
+            ||  token.is_block_comment()
+            ||  token.is_label())
+            return lhs;
+
+        while (precedence < current_infix_precedence()) {
+            if (!consume(token)) {
+                break;
+            }
+
+            auto infix_parser = infix_parser_for(token.type);
+            if (infix_parser == nullptr) {
+                error(
+                    r,
+                    "B021",
+                    fmt::format("infix parser for token '{}' not found.", token.name()),
+                    token.line,
+                    token.column);
+                break;
+            }
+            lhs = infix_parser->parse(r, this, lhs, token);
+            if (lhs == nullptr || r.is_failed())
+                break;
+        }
+
+        return lhs;
+    }
+
+    ast_node_shared_ptr parser::expect_expression(
+            common::result& r,
+            ast_node_types_t expected_type,
+            uint8_t precedence) {
+        auto node = parse_expression(r, precedence);
+        if (node == nullptr)
+            return nullptr;
+
+        if (node->type != expected_type) {
+            error(
+                r,
+                "B031",
+                fmt::format(
+                    "unexpected '{}', wanted '{}'.",
+                    node->name(),
+                    ast_node_type_name(expected_type)),
+                node->token.line,
+                node->token.column);
+            return nullptr;
+        }
+
+        return node;
+    }
+
     ast_node_shared_ptr parser::parse(common::result& r) {
         return parse_scope(r);
     }
@@ -733,7 +826,10 @@ namespace basecode::syntax {
             error(
                 r,
                 "B016",
-                fmt::format("expected token '{}' but found '{}'.", expected_name, token.name()),
+                fmt::format(
+                    "expected token '{}' but found '{}'.",
+                    expected_name,
+                    token.name()),
                 token.line,
                 token.column);
             return false;
@@ -821,61 +917,6 @@ namespace basecode::syntax {
         if (it == s_prefix_parsers.end())
             return nullptr;
         return it->second;
-    }
-
-    ast_node_shared_ptr parser::parse_expression(common::result& r, uint8_t precedence) {
-        token_t token;
-        if (!consume(token))
-            return nullptr;
-
-        auto prefix_parser = prefix_parser_for(token.type);
-        if (prefix_parser == nullptr) {
-            error(
-                r,
-                "B021",
-                fmt::format("prefix parser for token '{}' not found.", token.name()),
-                token.line,
-                token.column);
-            return nullptr;
-        }
-
-        auto lhs = prefix_parser->parse(r, this, token);
-        if (lhs == nullptr) {
-            error(
-                r,
-                "B021",
-                "unexpected empty ast node.",
-                token.line,
-                token.column);
-            return nullptr;
-        }
-
-        if (token.is_line_comment()
-        ||  token.is_block_comment()
-        ||  token.is_label())
-            return lhs;
-
-        while (precedence < current_infix_precedence()) {
-            if (!consume(token)) {
-                break;
-            }
-
-            auto infix_parser = infix_parser_for(token.type);
-            if (infix_parser == nullptr) {
-                error(
-                    r,
-                    "B021",
-                    fmt::format("infix parser for token '{}' not found.", token.name()),
-                    token.line,
-                    token.column);
-                break;
-            }
-            lhs = infix_parser->parse(r, this, lhs, token);
-            if (lhs == nullptr || r.is_failed())
-                break;
-        }
-
-        return lhs;
     }
 
 }

@@ -12,6 +12,7 @@
 #include <fmt/format.h>
 #include "type.h"
 #include "label.h"
+#include "alias.h"
 #include "comment.h"
 #include "program.h"
 #include "any_type.h"
@@ -158,6 +159,9 @@ namespace basecode::compiler {
                 }
 
                 return type;
+            }
+            case syntax::ast_node_types_t::alias_expression: {
+                return make_alias(evaluate(r, node->lhs));
             }
             case syntax::ast_node_types_t::union_expression: {
                 auto scope = current_scope();
@@ -339,7 +343,7 @@ namespace basecode::compiler {
     }
 
     composite_type* program::make_enum() {
-        auto type = new composite_type(
+        auto type = new compiler::composite_type(
             current_scope(),
             composite_types_t::enum_type,
             fmt::format("__enum_{}__", common::id_pool::instance()->allocate()));
@@ -348,7 +352,7 @@ namespace basecode::compiler {
     }
 
     composite_type* program::make_union() {
-        auto type = new composite_type(
+        auto type = new compiler::composite_type(
             current_scope(),
             composite_types_t::union_type,
             fmt::format("__union_{}__", common::id_pool::instance()->allocate()));
@@ -357,7 +361,7 @@ namespace basecode::compiler {
     }
 
     composite_type* program::make_struct() {
-        auto type = new composite_type(
+        auto type = new compiler::composite_type(
             current_scope(),
             composite_types_t::struct_type,
             fmt::format("__struct_{}__", common::id_pool::instance()->allocate()));
@@ -380,15 +384,21 @@ namespace basecode::compiler {
             const std::string& name,
             int64_t min,
             uint64_t max) {
-        auto type = new numeric_type(current_scope(), name, min, max);
+        auto type = new compiler::numeric_type(current_scope(), name, min, max);
         _elements.insert(std::make_pair(type->id(), type));
         return type;
     }
 
     string_type* program::make_string_type() {
-        auto type = new string_type(current_scope());
+        auto type = new compiler::string_type(current_scope());
         _elements.insert(std::make_pair(type->id(), type));
         return type;
+    }
+
+    alias* program::make_alias(element* expr) {
+        auto alias_type = new compiler::alias(current_scope(), expr);
+        _elements.insert(std::make_pair(alias_type->id(), alias_type));
+        return alias_type;
     }
 
     unary_operator* program::make_unary_operator(

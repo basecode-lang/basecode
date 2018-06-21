@@ -51,6 +51,11 @@ namespace basecode::syntax {
         right_paren,
         for_literal,
         end_of_file,
+        xor_literal,
+        shl_literal,
+        shr_literal,
+        rol_literal,
+        ror_literal,
         proc_literal,
         with_literal,
         greater_than,
@@ -119,12 +124,17 @@ namespace basecode::syntax {
         {token_types_t::end_of_file,            "end_of_file"},
         {token_types_t::right_paren,            "right_paren"},
         {token_types_t::logical_and,            "logical_and"},
+        {token_types_t::xor_literal,            "xor_literal"},
+        {token_types_t::shl_literal,            "shl_literal"},
+        {token_types_t::shr_literal,            "shr_literal"},
+        {token_types_t::rol_literal,            "rol_literal"},
+        {token_types_t::ror_literal,            "ror_literal"},
         {token_types_t::proc_literal,           "proc_literal"},
         {token_types_t::null_literal,           "null_literal"},
         {token_types_t::with_literal,           "with_literal"},
         {token_types_t::cast_literal,           "cast_literal"},
         {token_types_t::else_literal,           "else_literal"},
-        {token_types_t::line_comment,           "comment"},
+        {token_types_t::line_comment,           "line_comment"},
         {token_types_t::greater_than,           "greater_than"},
         {token_types_t::enum_literal,           "enum_literal"},
         {token_types_t::true_literal,           "true_literal"},
@@ -222,6 +232,31 @@ namespace basecode::syntax {
     static inline token_t s_for_literal = {
         .type = token_types_t::for_literal,
         .value = "for"
+    };
+
+    static inline token_t s_xor_literal = {
+        .type = token_types_t::xor_literal,
+        .value = "xor"
+    };
+
+    static inline token_t s_shl_literal = {
+        .type = token_types_t::shl_literal,
+        .value = "shl"
+    };
+
+    static inline token_t s_shr_literal = {
+        .type = token_types_t::shr_literal,
+        .value = "shr"
+    };
+
+    static inline token_t s_rol_literal = {
+        .type = token_types_t::rol_literal,
+        .value = "rol"
+    };
+
+    static inline token_t s_ror_literal = {
+        .type = token_types_t::ror_literal,
+        .value = "ror"
     };
 
     static inline token_t s_else_literal = {

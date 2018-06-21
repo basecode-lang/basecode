@@ -508,6 +508,11 @@ namespace basecode::syntax {
             common::result& r,
             uint8_t precedence);
 
+        ast_node_shared_ptr expect_expression(
+            common::result& r,
+            ast_node_types_t expected_type,
+            uint8_t precedence);
+
         ast_node_shared_ptr parse(common::result& r);
 
         bool expect(common::result& r, token_t& token);
@@ -579,6 +584,7 @@ namespace basecode::syntax {
             {token_types_t::string_literal,      &s_string_literal_prefix_parser},
             {token_types_t::number_literal,      &s_number_literal_prefix_parser},
             {token_types_t::proc_literal,        &s_proc_expression_prefix_parser},
+            {token_types_t::alias_literal,       &s_keyword_literal_prefix_parser},
             {token_types_t::null_literal,        &s_keyword_literal_prefix_parser},
             {token_types_t::break_literal,       &s_keyword_literal_prefix_parser},
             {token_types_t::continue_literal,    &s_keyword_literal_prefix_parser},
@@ -611,6 +617,11 @@ namespace basecode::syntax {
             {token_types_t::percent,            &s_product_binary_op_parser},
             {token_types_t::ampersand,          &s_bitwise_binary_op_parser},
             {token_types_t::pipe,               &s_bitwise_binary_op_parser},
+            {token_types_t::xor_literal,        &s_bitwise_binary_op_parser},
+            {token_types_t::shl_literal,        &s_bitwise_binary_op_parser},
+            {token_types_t::shr_literal,        &s_bitwise_binary_op_parser},
+            {token_types_t::rol_literal,        &s_bitwise_binary_op_parser},
+            {token_types_t::ror_literal,        &s_bitwise_binary_op_parser},
             {token_types_t::logical_and,        &s_logical_binary_op_parser},
             {token_types_t::logical_or,         &s_logical_binary_op_parser},
             {token_types_t::caret,              &s_exponent_binary_op_parser},

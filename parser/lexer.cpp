@@ -152,12 +152,21 @@ namespace basecode::syntax {
         // union literal
         {'u', std::bind(&lexer::union_literal, std::placeholders::_1, std::placeholders::_2)},
 
-        // struct literal
+        // rol/ror literal
+        {'r', std::bind(&lexer::rol_literal, std::placeholders::_1, std::placeholders::_2)},
+        {'r', std::bind(&lexer::ror_literal, std::placeholders::_1, std::placeholders::_2)},
+
+        // struct/shl/shr literal
         {'s', std::bind(&lexer::struct_literal, std::placeholders::_1, std::placeholders::_2)},
+        {'s', std::bind(&lexer::shl_literal, std::placeholders::_1, std::placeholders::_2)},
+        {'s', std::bind(&lexer::shr_literal, std::placeholders::_1, std::placeholders::_2)},
 
         // while literal
         {'w', std::bind(&lexer::while_literal, std::placeholders::_1, std::placeholders::_2)},
         {'w', std::bind(&lexer::with_literal, std::placeholders::_1, std::placeholders::_2)},
+
+        // xor literal
+        {'x', std::bind(&lexer::xor_literal, std::placeholders::_1, std::placeholders::_2)},
 
         // identifier
         {'_', std::bind(&lexer::identifier, std::placeholders::_1, std::placeholders::_2)},
@@ -677,6 +686,66 @@ namespace basecode::syntax {
             if (!isalnum(ch)) {
                 rewind_one_char();
                 token = s_if_literal;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    bool lexer::xor_literal(token_t& token) {
+        if (match_literal("xor")) {
+            auto ch = read(false);
+            if (!isalnum(ch)) {
+                rewind_one_char();
+                token = s_xor_literal;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    bool lexer::shl_literal(token_t& token) {
+        if (match_literal("shl")) {
+            auto ch = read(false);
+            if (!isalnum(ch)) {
+                rewind_one_char();
+                token = s_shl_literal;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    bool lexer::shr_literal(token_t& token) {
+        if (match_literal("shr")) {
+            auto ch = read(false);
+            if (!isalnum(ch)) {
+                rewind_one_char();
+                token = s_shr_literal;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    bool lexer::rol_literal(token_t& token) {
+        if (match_literal("rol")) {
+            auto ch = read(false);
+            if (!isalnum(ch)) {
+                rewind_one_char();
+                token = s_rol_literal;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    bool lexer::ror_literal(token_t& token) {
+        if (match_literal("ror")) {
+            auto ch = read(false);
+            if (!isalnum(ch)) {
+                rewind_one_char();
+                token = s_ror_literal;
                 return true;
             }
         }
