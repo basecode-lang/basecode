@@ -11,6 +11,7 @@
 
 #include <fmt/format.h>
 #include "type.h"
+#include "cast.h"
 #include "label.h"
 #include "alias.h"
 #include "comment.h"
@@ -27,6 +28,7 @@
 #include "composite_type.h"
 #include "procedure_type.h"
 #include "binary_operator.h"
+#include "procedure_instance.h"
 
 namespace basecode::compiler {
 
@@ -143,7 +145,55 @@ namespace basecode::compiler {
                     evaluate(r, node->rhs));
             }
             case syntax::ast_node_types_t::proc_expression: {
-                break;
+                auto proc_type = make_procedure_type();
+                current_scope()->types().add(proc_type);
+
+                auto count = 0;
+                for (const auto& type_node : node->lhs->children) {
+                    switch (type_node->type) {
+                        case syntax::ast_node_types_t::qualified_symbol_reference: {
+                            // XXX: I am a horrible human being
+                            auto total_hack_fix_me = type_node->lhs->children[0];
+                            proc_type->returns().add(make_field(
+                                fmt::format("_{}", count++),
+                                find_type(total_hack_fix_me->token.value),
+                                nullptr));
+                            break;
+                        }
+                        default: {
+                            break;
+                        }
+                    }
+                }
+
+                for (const auto& type_node : node->rhs->children) {
+                    proc_type->parameters().add(make_field(
+                        type_node->token.value,
+                        find_type(type_node->lhs->token.value),
+                        type_node->rhs != nullptr ? make_initializer(evaluate(r, type_node->rhs)) : nullptr));
+                }
+
+                if (!node->children.empty()) {
+                    for (const auto& child_node : node->children) {
+                        switch (child_node->type) {
+                            case syntax::ast_node_types_t::attribute: {
+                                proc_type->attributes().add(make_attribute(
+                                    child_node->token.value,
+                                    evaluate(r, child_node->lhs)));
+                                break;
+                            }
+                            case syntax::ast_node_types_t::basic_block: {
+                                proc_type->instances().push_back(make_procedure_instance(
+                                    proc_type,
+                                    dynamic_cast<block*>(evaluate(r, child_node))));
+                            }
+                            default:
+                                break;
+                        }
+                    }
+                }
+
+                return proc_type;
             }
             case syntax::ast_node_types_t::enum_expression: {
                 auto scope = current_scope();
@@ -152,13 +202,23 @@ namespace basecode::compiler {
                 auto type = make_enum();
                 scope_types.add(type);
 
-                for (const auto& child : node->rhs->children) {
-                    auto field_element = evaluate(r, child);
-                    auto field = make_field("", nullptr, nullptr);
-                    type->fields().add(field);
-                }
+//                for (const auto& child : node->rhs->children) {
+//                    auto field_element = evaluate(r, child);
+//                    auto field = make_field("", nullptr, nullptr);
+//                    type->fields().add(field);
+//                }
 
                 return type;
+            }
+            case syntax::ast_node_types_t::cast_expression: {
+                auto type = find_type(node->lhs->token.value);
+                if (type == nullptr) {
+                    r.add_message(
+                        "P002",
+                        fmt::format("unknown type '{}'.", node->lhs->token.value),
+                        true);
+                }
+                return make_cast(type, evaluate(r, node->rhs));
             }
             case syntax::ast_node_types_t::alias_expression: {
                 return make_alias(evaluate(r, node->lhs));
@@ -170,8 +230,8 @@ namespace basecode::compiler {
                 auto type = make_union();
                 scope_types.add(type);
 
-                for (const auto& child : node->rhs->children) {
-                }
+//                for (const auto& child : node->rhs->children) {
+//                }
 
                 return type;
             }
@@ -182,8 +242,8 @@ namespace basecode::compiler {
                 auto type = make_struct();
                 scope_types.add(type);
 
-                for (const auto& child : node->rhs->children) {
-                }
+//                for (const auto& child : node->rhs->children) {
+//                }
 
                 return type;
             }
@@ -418,6 +478,37 @@ namespace basecode::compiler {
         return binary_operator;
     }
 
+    procedure_type* program::make_procedure_type() {
+        // XXX: the name of the proc isn't correct here but it works temporarily.
+        auto type = new compiler::procedure_type(
+            current_scope(),
+            fmt::format("__proc_{}__", common::id_pool::instance()->allocate()));
+        _elements.insert(std::make_pair(type->id(), type));
+        return type;
+    }
+
+    type* program::find_type(const std::string& name) {
+        auto scope = current_scope();
+        while (scope != nullptr) {
+            auto type = scope->types().find(name);
+            if (type != nullptr)
+                return type;
+            scope = dynamic_cast<block*>(scope->parent());
+        }
+        return nullptr;
+    }
+
+    procedure_instance* program::make_procedure_instance(
+            compiler::type* procedure_type,
+            compiler::block* scope) {
+        auto instance = new compiler::procedure_instance(
+            current_scope(),
+            procedure_type,
+            scope);
+        _elements.insert(std::make_pair(instance->id(), instance));
+        return instance;
+    }
+
     expression* program::make_expression(element* expr) {
         auto expression = new compiler::expression(current_scope(), expr);
         _elements.insert(std::make_pair(expression->id(), expression));
@@ -428,6 +519,18 @@ namespace basecode::compiler {
         auto label = new compiler::label(current_scope(), name);
         _elements.insert(std::make_pair(label->id(), label));
         return label;
+    }
+
+    initializer* program::make_initializer(element* expr) {
+        auto initializer = new compiler::initializer(current_scope(), expr);
+        _elements.insert(std::make_pair(initializer->id(), initializer));
+        return initializer;
+    }
+
+    cast* program::make_cast(compiler::type* type, element* expr) {
+        auto cast = new compiler::cast(current_scope(), type, expr);
+        _elements.insert(std::make_pair(cast->id(), cast));
+        return cast;
     }
 
     statement* program::make_statement(label_list_t labels, element* expr) {

@@ -11,30 +11,24 @@
 
 #pragma once
 
-#include "type.h"
-#include "field.h"
+#include "element.h"
 
 namespace basecode::compiler {
 
-    class procedure_type : public type {
+    class cast : public element {
     public:
-        procedure_type(
+        cast(
             element* parent,
-            const std::string& name);
+            compiler::type* type,
+            element* expr);
 
-        field_map_t& returns();
+        compiler::type* type();
 
-        field_map_t& parameters();
-
-        type_map_t& type_parameters();
-
-        procedure_instance_list_t& instances();
+        element* expression();
 
     private:
-        field_map_t _returns {};
-        field_map_t _parameters {};
-        type_map_t _type_parameters {};
-        procedure_instance_list_t _instances {};
+        element* _expression = nullptr;
+        compiler::type* _type = nullptr;
     };
 
 };

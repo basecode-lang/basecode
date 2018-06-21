@@ -31,4 +31,7 @@ namespace basecode::compiler {
         return _type_parameters;
     }
 
+    procedure_instance_list_t& procedure_type::instances() {
+        return _instances;
+    }
 };

@@ -7,18 +7,35 @@ NOTES
 
 Basecode Bootstrap Tasks
 ------------------------
-- how complex should type parameters become in alpha?
-    * we need some kind of constraint system
+
+deps to bytecode generation
+===========================
+- procedure expressions
 
 - if/else if/else
+
+- return
+
+- procedure calls
+
+- identifier/namespace handling
+
+- type inference
+
+- bytecode generation
+
+- bytecode-to-native:
+    x64 and ARM 64
+
+lower priority
+===========================
+- need to work out how proc types should work
 
 - switch
 
 - with
 
 - transaction, commit, rollback
-
-- cast
 
 - view
 
@@ -30,8 +47,6 @@ Basecode Bootstrap Tasks
 
 - break/continue
 
-- return
-
 - union
 
 - struct
@@ -39,6 +54,9 @@ Basecode Bootstrap Tasks
 - enum
 
 - array_literal
+
+- how complex should type parameters become in alpha?
+    * we need some kind of constraint system
 
 =================================================================
 
@@ -71,3 +89,4 @@ DONE
 - string_literal
 - labels
 - alias
+- cast

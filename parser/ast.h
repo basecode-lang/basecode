@@ -57,6 +57,7 @@ namespace basecode::syntax {
         with_expression,
         type_identifier,
         enum_expression,
+        cast_expression,
         alias_expression,
         symbol_reference,
         return_statement,
@@ -87,7 +88,7 @@ namespace basecode::syntax {
         {ast_node_types_t::expression, "expression"},
         {ast_node_types_t::label_list, "label_list"},
         {ast_node_types_t::basic_block, "basic_block"},
-        {ast_node_types_t::line_comment, "comment"},
+        {ast_node_types_t::line_comment, "line_comment"},
         {ast_node_types_t::null_literal, "null_literal"},
         {ast_node_types_t::block_comment, "block_comment"},
         {ast_node_types_t::argument_list, "argument_list"},
@@ -95,6 +96,7 @@ namespace basecode::syntax {
         {ast_node_types_t::number_literal, "number_literal"},
         {ast_node_types_t::string_literal, "string_literal"},
         {ast_node_types_t::unary_operator, "unary_operator"},
+        {ast_node_types_t::cast_expression, "cast_expression"},
         {ast_node_types_t::proc_expression, "proc_expression"},
         {ast_node_types_t::enum_expression, "enum_expression"},
         {ast_node_types_t::binary_operator, "binary_operator"},
@@ -224,6 +226,8 @@ namespace basecode::syntax {
         ast_node_shared_ptr proc_expression_node();
 
         void push_scope(const ast_node_shared_ptr& node);
+
+        ast_node_shared_ptr cast_node(token_t& token);
 
         ast_node_shared_ptr label_node(token_t& token);
 

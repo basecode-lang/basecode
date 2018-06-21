@@ -20,6 +20,7 @@
 
 namespace basecode::compiler {
 
+    class cast;
     class type;
     class field;
     class block;
@@ -47,18 +48,21 @@ namespace basecode::compiler {
     class integer_literal;
     class binary_operator;
     class namespace_element;
+    class procedure_instance;
 
     using label_list_t = std::vector<label*>;
     using element_list_t = std::vector<element*>;
     using comment_list_t = std::vector<comment*>;
     using statement_list_t = std::vector<statement*>;
     using directive_map_t = std::map<std::string, directive*>;
+    using procedure_instance_list_t = std::vector<procedure_instance*>;
 
     ///////////////////////////////////////////////////////////////////////////
 
     enum class element_type_t {
         element = 1,
         proc,
+        cast,
         label,
         block,
         field,
@@ -78,6 +82,7 @@ namespace basecode::compiler {
         namespace_e,
         initializer,
         numeric_type,
+        proc_instance,
         float_literal,
         string_literal,
         composite_type,

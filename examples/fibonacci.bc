@@ -9,47 +9,17 @@
 //
 // ----------------------------------------------------------------------------
 
-/*
- fibonacci recursive function
-
- /* this is a nested block comment /* oh, snap! */ */
-*/
-
-#test ;
-
 // N.B. this is how we define 'external' function prototypes
 #foreign print := proc(format:string, values:...any) @alias "printf";
 
-#fun {
-    foo:u8 := 128;
-    print("help!");
-};
-
 alpha::compiler::config := ns {
-    // I bet this will cause massive pukeage
-    test := enum {
-        // I bet this will cause massive pukeage
-        one;
-        two;     // I bet this will cause massive pukeage
-        three;
-    };
-
-    fibonacci := ns {     // I bet this will cause massive pukeage
+    fibonacci := ns {
         constant length_of_sequence:u32 := 1000;
     };
-
 };
 
 alpha::compiler::examples := ns {
-
-    alias id := u64;
-
-    multi_return := proc():u64, address {
-        /* something inside of a proc */
-        return alloc(/* this is leading */ /* and a second */ 64 /* foo, bar, baz, bing */);
-    };
-
-    fib := proc(/* before */ n:u64 := 10 /*after*/):u64 {
+    fib := proc(n:u64 := 10):u64 {
         if n == 0 || n == 1 {
             return n;
         } else {
@@ -60,14 +30,7 @@ alpha::compiler::examples := ns {
     };
 
     main := proc():u32 {
-        buf_size, buf := multi_return();
-
-    'somewhere_special:
-        final_fib_value:u32 := fib(alpha::compiler::config::fibonacci::length_of_sequence);
-
-    'is_it_really:
-    'the_end:
+        final_fib_value := cast<u32>(fib(alpha::compiler::config::fibonacci::length_of_sequence));
         return final_fib_value;
     } @entry_point;
-
 };

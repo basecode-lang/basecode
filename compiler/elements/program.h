@@ -29,6 +29,10 @@ namespace basecode::compiler {
         element* find_element(id_t id);
 
     private:
+        cast* make_cast(
+            compiler::type* type,
+            element* expr);
+
         field* make_field(
             const std::string& name,
             compiler::type* type,
@@ -82,9 +86,17 @@ namespace basecode::compiler {
             element* lhs,
             element* rhs);
 
+        procedure_type* make_procedure_type();
+
         expression* make_expression(element* expr);
 
         label* make_label(const std::string& name);
+
+        procedure_instance* make_procedure_instance(
+            compiler::type* procedure_type,
+            compiler::block* scope);
+
+        initializer* make_initializer(element* expr);
 
     private:
         element* evaluate(
@@ -98,6 +110,8 @@ namespace basecode::compiler {
         block* current_scope() const;
 
         void push_scope(block* block);
+
+        type* find_type(const std::string& name);
 
         bool is_subtree_constant(const syntax::ast_node_shared_ptr& node);
 
