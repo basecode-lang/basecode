@@ -19,6 +19,8 @@ alpha::compiler::config := ns {
 };
 
 alpha::compiler::examples := ns {
+    magick_number:u16 := 42;
+
     fib := proc(n:u64 := 10):u64 {
         if n == 0 || n == 1 {
             return n;

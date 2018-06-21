@@ -10,11 +10,11 @@ Basecode Bootstrap Tasks
 
 deps to bytecode generation
 ===========================
+- identifier/namespace handling
+
 - procedure expressions
 
 - procedure calls
-
-- identifier/namespace handling
 
 - type inference
 

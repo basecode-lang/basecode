@@ -33,6 +33,8 @@ namespace basecode::compiler {
             compiler::type* type,
             element* expr);
 
+        block* make_block();
+
         field* make_field(
             const std::string& name,
             compiler::type* type,
@@ -47,7 +49,7 @@ namespace basecode::compiler {
             comment_type_t type,
             const std::string& value);
 
-        block* make_new_block();
+        block* push_new_block();
 
         directive* make_directive(
             const std::string& name,
@@ -84,6 +86,10 @@ namespace basecode::compiler {
             int64_t min,
             uint64_t max);
 
+        procedure_call* make_procedure_call(
+            compiler::type* procedure_type,
+            element* expr);
+
         unary_operator* make_unary_operator(
             operator_type_t type,
             element* rhs);
@@ -104,6 +110,8 @@ namespace basecode::compiler {
             compiler::block* scope);
 
         initializer* make_initializer(element* expr);
+
+        namespace_element* make_namespace(element* expr);
 
     private:
         element* evaluate(

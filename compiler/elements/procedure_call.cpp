@@ -9,18 +9,24 @@
 //
 // ----------------------------------------------------------------------------
 
-#include "namespace_element.h"
+#include "procedure_call.h"
 
 namespace basecode::compiler {
 
-    namespace_element::namespace_element(
+    procedure_call::procedure_call(
         element* parent,
-        element* expr) : element(parent, element_type_t::namespace_e),
-                         _expression(expr) {
+        compiler::type* procedure_type,
+        element* expr) : element(parent, element_type_t::proc_call),
+                         _expression(expr),
+                         _procedure_type(procedure_type) {
     }
 
-    element* namespace_element::expression() {
+    element* procedure_call::expression() {
         return _expression;
+    }
+
+    compiler::type* procedure_call::procedure_type() {
+        return _procedure_type;
     }
 
 };

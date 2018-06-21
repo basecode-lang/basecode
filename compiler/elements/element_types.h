@@ -46,6 +46,7 @@ namespace basecode::compiler {
     class composite_type;
     class unary_operator;
     class return_element;
+    class procedure_call;
     class boolean_literal;
     class integer_literal;
     class binary_operator;
@@ -63,7 +64,6 @@ namespace basecode::compiler {
 
     enum class element_type_t {
         element = 1,
-        proc,
         cast,
         if_e,
         label,
@@ -78,6 +78,7 @@ namespace basecode::compiler {
         attribute,
         bool_type,
         statement,
+        proc_call,
         alias_type,
         array_type,
         identifier,

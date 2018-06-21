@@ -15,16 +15,20 @@
 
 namespace basecode::compiler {
 
-    class namespace_element : public element {
+    class procedure_call : public element {
     public:
-        namespace_element(
+        procedure_call(
             element* parent,
+            compiler::type* procedure_type,
             element* expr);
 
         element* expression();
 
+        compiler::type* procedure_type();
+
     private:
         element* _expression = nullptr;
+        compiler::type* _procedure_type = nullptr;
     };
 
 };

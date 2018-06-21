@@ -11,9 +11,7 @@
 
 #pragma once
 
-#include "type.h"
 #include "element.h"
-#include "initializer.h"
 
 namespace basecode::compiler {
 

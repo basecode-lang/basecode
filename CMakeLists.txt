@@ -98,6 +98,7 @@ add_executable(
         compiler/elements/string_literal.cpp compiler/elements/string_literal.h
         compiler/elements/unary_operator.cpp compiler/elements/unary_operator.h
         compiler/elements/return_element.cpp compiler/elements/return_element.h
+        compiler/elements/procedure_call.cpp compiler/elements/procedure_call.h
         compiler/elements/integer_literal.cpp compiler/elements/integer_literal.h
         compiler/elements/binary_operator.cpp compiler/elements/binary_operator.h
         compiler/elements/boolean_literal.cpp compiler/elements/boolean_literal.h

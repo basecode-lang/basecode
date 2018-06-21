@@ -20,6 +20,7 @@
 #include "attribute.h"
 #include "directive.h"
 #include "statement.h"
+#include "expression.h"
 #include "identifier.h"
 #include "if_element.h"
 #include "initializer.h"
@@ -29,7 +30,9 @@
 #include "composite_type.h"
 #include "procedure_type.h"
 #include "return_element.h"
+#include "procedure_call.h"
 #include "binary_operator.h"
+#include "namespace_element.h"
 #include "procedure_instance.h"
 
 namespace basecode::compiler {
@@ -62,7 +65,7 @@ namespace basecode::compiler {
             }
             case syntax::ast_node_types_t::program:
             case syntax::ast_node_types_t::basic_block: {
-                make_new_block();
+                push_new_block();
 
                 if (node->type == syntax::ast_node_types_t::program) {
                     initialize_core_types();
@@ -114,10 +117,60 @@ namespace basecode::compiler {
                 return make_expression(evaluate(r, node->lhs));
             }
             case syntax::ast_node_types_t::assignment: {
-                return make_binary_operator(
-                    operator_type_t::assignment,
-                    evaluate(r, node->lhs),
-                    evaluate(r, node->rhs));
+                auto scope = dynamic_cast<block*>(this);
+
+                auto is_constant = false;
+                std::string type_name;
+                syntax::ast_node_shared_ptr arg_list;
+
+                if (node->lhs->type == syntax::ast_node_types_t::constant_expression) {
+                    is_constant = true;
+                    arg_list = node->lhs->rhs->lhs;
+                    if (node->lhs->rhs->rhs != nullptr)
+                        type_name = node->lhs->rhs->rhs->token.value;
+                } else {
+                    arg_list = node->lhs->lhs;
+                    if (node->lhs->rhs != nullptr)
+                        type_name = node->lhs->rhs->token.value;
+                }
+
+                for (size_t i = 0; i < arg_list->children.size() - 1; i++) {
+                    const auto& symbol_node = arg_list->children[i];
+                    auto ident = scope->identifiers().find(symbol_node->token.value);
+                    if (ident == nullptr) {
+                        auto new_scope = make_block();
+                        auto ns_identifier = make_identifier(
+                            symbol_node->token.value,
+                            make_initializer(make_namespace(new_scope)));
+                        scope->identifiers().add(ns_identifier);
+                        scope = new_scope;
+                    } else {
+                        auto expr = ident->initializer()->expression();
+                        if (expr->element_type() == element_type_t::namespace_e) {
+                            auto ns = dynamic_cast<namespace_element*>(expr);
+                            scope = dynamic_cast<block*>(ns->expression());
+                        } else {
+                            // XXX: what should really be happening here
+                            //      if the scope isn't a namespace, is that an error?
+                            break;
+                        }
+                    }
+                }
+
+                const auto& final_symbol = arg_list->children.back();
+
+                auto new_identifier = make_identifier(
+                    final_symbol->token.value,
+                    make_initializer(evaluate(r, node->rhs)));
+
+                new_identifier->constant(is_constant);
+
+                if (!type_name.empty())
+                    new_identifier->type(find_type(type_name));
+
+                scope->identifiers().add(new_identifier);
+
+                return new_identifier;
             }
             case syntax::ast_node_types_t::line_comment: {
                 return make_comment(
@@ -155,6 +208,10 @@ namespace basecode::compiler {
                     it->second,
                     evaluate(r, node->lhs),
                     evaluate(r, node->rhs));
+            }
+            case syntax::ast_node_types_t::proc_call: {
+                // XXX: need to evaluate the parts
+                return make_procedure_call(nullptr, evaluate(r, node->rhs));
             }
             case syntax::ast_node_types_t::proc_expression: {
                 auto proc_type = make_procedure_type();
@@ -195,9 +252,11 @@ namespace basecode::compiler {
                                 break;
                             }
                             case syntax::ast_node_types_t::basic_block: {
+                                auto basic_block = dynamic_cast<block*>(evaluate(r, child_node));
+                                // XXX: add identifiers
                                 proc_type->instances().push_back(make_procedure_instance(
                                     proc_type,
-                                    dynamic_cast<block*>(evaluate(r, child_node))));
+                                    basic_block));
                             }
                             default:
                                 break;
@@ -273,10 +332,28 @@ namespace basecode::compiler {
                 return identifier;
             }
             case syntax::ast_node_types_t::namespace_expression: {
-                return evaluate(r, node->rhs);
+                return make_namespace(evaluate(r, node->rhs));
             }
             case syntax::ast_node_types_t::qualified_symbol_reference: {
-                break;
+                block* block_scope = nullptr;
+                if (node->lhs->children.size() == 1) {
+                    block_scope = current_scope();
+                } else {
+                    block_scope = this;
+                }
+                for (const auto& symbol_node : node->lhs->children) {
+                    auto ident = block_scope->identifiers().find(symbol_node->token.value);
+                    if (ident == nullptr || ident->initializer() == nullptr)
+                        return nullptr;
+                    auto expr = ident->initializer()->expression();
+                    if (expr->element_type() == element_type_t::namespace_e) {
+                        auto ns = dynamic_cast<namespace_element*>(expr);
+                        block_scope = dynamic_cast<block*>(ns->expression());
+                    } else {
+                        break;
+                    }
+                }
+                return block_scope;
             }
             default: {
                 break;
@@ -319,9 +396,14 @@ namespace basecode::compiler {
         return field;
     }
 
-    block* program::make_new_block() {
+    block* program::make_block() {
         auto type = new block(current_scope());
         _elements.insert(std::make_pair(type->id(), type));
+        return type;
+    }
+
+    block* program::push_new_block() {
+        auto type = make_block();
         push_scope(type);
         return type;
     }
@@ -499,6 +581,17 @@ namespace basecode::compiler {
         return alias_type;
     }
 
+    procedure_call* program::make_procedure_call(
+            compiler::type* procedure_type,
+            element* expr) {
+        auto proc_call = new compiler::procedure_call(
+            current_scope(),
+            procedure_type,
+            expr);
+        _elements.insert(std::make_pair(proc_call->id(), proc_call));
+        return proc_call;
+    }
+
     unary_operator* program::make_unary_operator(
             operator_type_t type,
             element* rhs) {
@@ -563,6 +656,12 @@ namespace basecode::compiler {
         auto initializer = new compiler::initializer(current_scope(), expr);
         _elements.insert(std::make_pair(initializer->id(), initializer));
         return initializer;
+    }
+
+    namespace_element* program::make_namespace(element* expr) {
+        auto ns = new compiler::namespace_element(current_scope(), expr);
+        _elements.insert(std::make_pair(ns->id(), ns));
+        return ns;
     }
 
     cast* program::make_cast(compiler::type* type, element* expr) {
