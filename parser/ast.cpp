@@ -58,18 +58,25 @@ namespace basecode::syntax {
         return pop_scope();
     }
 
+    ast_node_t* ast_builder::current_scope() const {
+        if (_scope_stack.empty())
+            return nullptr;
+        return _scope_stack.top().get();
+    }
+
+    ast_node_shared_ptr ast_builder::symbol_node() {
+        auto node = std::make_shared<ast_node_t>();
+        node->id = ++_id;
+        node->type = ast_node_types_t::symbol;
+        return node;
+    }
+
     ast_node_shared_ptr ast_builder::return_node() {
         auto node = std::make_shared<ast_node_t>();
         node->id = ++_id;
         node->type = ast_node_types_t::return_statement;
         node->rhs = argument_list_node();
         return node;
-    }
-
-    ast_node_t* ast_builder::current_scope() const {
-        if (_scope_stack.empty())
-            return nullptr;
-        return _scope_stack.top().get();
     }
 
     ast_node_shared_ptr ast_builder::else_if_node() {
@@ -106,15 +113,6 @@ namespace basecode::syntax {
         auto node = std::make_shared<ast_node_t>();
         node->id = ++_id;
         node->type = ast_node_types_t::proc_call;
-        node->rhs = argument_list_node();
-        return node;
-    }
-
-    ast_node_shared_ptr ast_builder::proc_expression_node() {
-        auto node = std::make_shared<ast_node_t>();
-        node->id = ++_id;
-        node->type = ast_node_types_t::proc_expression;
-        node->lhs = argument_list_node();
         node->rhs = argument_list_node();
         return node;
     }
@@ -180,27 +178,12 @@ namespace basecode::syntax {
         return node;
     }
 
-    void ast_builder::push_scope(const ast_node_shared_ptr& node) {
-        _scope_stack.push(node);
-    }
-
-    ast_node_shared_ptr ast_builder::enum_node(const token_t& token) {
-        auto node = std::make_shared<ast_node_t>();
-        configure_node(node, token, ast_node_types_t::enum_expression);
-        return node;
-    }
-
-    ast_node_shared_ptr ast_builder::break_node(const token_t& token) {
-        auto node = std::make_shared<ast_node_t>();
-        configure_node(node, token, ast_node_types_t::break_statement);
-        return node;
-    }
-
-    ast_node_shared_ptr ast_builder::qualified_symbol_reference_node() {
+    ast_node_shared_ptr ast_builder::proc_expression_node() {
         auto node = std::make_shared<ast_node_t>();
         node->id = ++_id;
-        node->lhs = argument_list_node();
-        node->type = ast_node_types_t::qualified_symbol_reference;
+        node->type = ast_node_types_t::proc_expression;
+        node->lhs = symbol_node();
+        node->rhs = argument_list_node();
         return node;
     }
 
@@ -222,9 +205,25 @@ namespace basecode::syntax {
         return node;
     }
 
+    void ast_builder::push_scope(const ast_node_shared_ptr& node) {
+        _scope_stack.push(node);
+    }
+
+    ast_node_shared_ptr ast_builder::enum_node(const token_t& token) {
+        auto node = std::make_shared<ast_node_t>();
+        configure_node(node, token, ast_node_types_t::enum_expression);
+        return node;
+    }
+
     ast_node_shared_ptr ast_builder::with_node(const token_t& token) {
         auto node = std::make_shared<ast_node_t>();
         configure_node(node, token, ast_node_types_t::with_expression);
+        return node;
+    }
+
+    ast_node_shared_ptr ast_builder::break_node(const token_t& token) {
+        auto node = std::make_shared<ast_node_t>();
+        configure_node(node, token, ast_node_types_t::break_statement);
         return node;
     }
 
@@ -273,6 +272,12 @@ namespace basecode::syntax {
     ast_node_shared_ptr ast_builder::attribute_node(const token_t& token) {
         auto node = std::make_shared<ast_node_t>();
         configure_node(node, token, ast_node_types_t::attribute);
+        return node;
+    }
+
+    ast_node_shared_ptr ast_builder::symbol_part_node(const token_t& token) {
+        auto node = std::make_shared<ast_node_t>();
+        configure_node(node, token, ast_node_types_t::symbol_part);
         return node;
     }
 
@@ -327,12 +332,6 @@ namespace basecode::syntax {
     ast_node_shared_ptr ast_builder::character_literal_node(const token_t& token) {
         auto node = std::make_shared<ast_node_t>();
         configure_node(node, token, ast_node_types_t::character_literal);
-        return node;
-    }
-
-    ast_node_shared_ptr ast_builder::symbol_reference_node(const token_t& token) {
-        auto node = std::make_shared<ast_node_t>();
-        configure_node(node, token, ast_node_types_t::symbol_reference);
         return node;
     }
 

@@ -164,7 +164,7 @@ namespace basecode::syntax {
         {token_types_t::right_square_bracket,   "right_square_bracket"},
     };
 
-    enum class conversion_result {
+    enum class conversion_result_t {
         success,
         overflow,
         underflow,
@@ -192,9 +192,11 @@ namespace basecode::syntax {
 
         bool is_block_comment() const;
 
-        conversion_result parse(int64_t& out) const;
+        conversion_result_t parse(double& out) const;
 
-        conversion_result parse(uint64_t& out) const;
+        conversion_result_t parse(int64_t& out) const;
+
+        conversion_result_t parse(uint64_t& out) const;
 
         token_types_t type = token_types_t::unknown;
         std::string value {};

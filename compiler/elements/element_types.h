@@ -47,6 +47,7 @@ namespace basecode::compiler {
     class unary_operator;
     class return_element;
     class procedure_call;
+    class string_literal;
     class boolean_literal;
     class integer_literal;
     class binary_operator;

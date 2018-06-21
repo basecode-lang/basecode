@@ -134,11 +134,11 @@ namespace basecode::syntax {
             common::result& r,
             parser* parser,
             token_t& token) {
-        auto constant_node = parser->ast_builder()->constant_node(token);
-        constant_node->rhs = parser->parse_expression(
+        auto symbol_node = parser->parse_expression(
             r,
             static_cast<uint8_t>(precedence_t::assignment));
-        return constant_node;
+        symbol_node->lhs = parser->ast_builder()->constant_node(token);
+        return symbol_node;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -329,9 +329,11 @@ namespace basecode::syntax {
         if (parser->peek(token_types_t::colon)) {
             parser->consume();
             while (true) {
-                proc_node->lhs->children.push_back(parser->parse_expression(
+                auto types = parser->parse_expression(
                     r,
-                    static_cast<uint8_t>(precedence_t::type)));
+                    static_cast<uint8_t>(precedence_t::type));
+                for (const auto& type : types->children)
+                    proc_node->lhs->children.push_back(type);
                 if (!parser->peek(token_types_t::comma))
                     break;
                 parser->consume();
@@ -461,36 +463,26 @@ namespace basecode::syntax {
             common::result& r,
             parser* parser,
             token_t& token) {
-        auto argument_list_node = parser
+        auto symbol_list_node = parser
             ->ast_builder()
-            ->argument_list_node();
-
-        auto symbol_reference_node = parser
-            ->ast_builder()
-            ->qualified_symbol_reference_node();
+            ->symbol_node();
 
         while (true) {
             auto symbol_node = parser
                 ->ast_builder()
-                ->symbol_reference_node(token);
-            symbol_reference_node->lhs->children.push_back(symbol_node);
+                ->symbol_part_node(token);
+            symbol_list_node->children.push_back(symbol_node);
             if (!parser->peek(token_types_t::scope_operator)
-            &&  !parser->peek(token_types_t::period)) {
-                if (parser->peek(token_types_t::comma)) {
-                    argument_list_node->children.push_back(symbol_reference_node);
-                    goto next_symbol;
-                }
+            &&  !parser->peek(token_types_t::period)
+            &&  !parser->peek(token_types_t::comma)) {
                 break;
             }
-        next_symbol:
             parser->consume();
             if (!parser->expect(r, token))
                 return nullptr;
         }
 
-        return argument_list_node->children.empty() ?
-            symbol_reference_node :
-            argument_list_node;
+        return symbol_list_node;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -570,11 +562,11 @@ namespace basecode::syntax {
             parser* parser,
             const ast_node_shared_ptr& lhs,
             token_t& token) {
-        auto symbol_reference_node = parser->ast_builder()->qualified_symbol_reference_node();
+        auto symbol_node = parser->ast_builder()->symbol_node();
 
         while (true) {
-            auto symbol_node = parser->ast_builder()->symbol_reference_node(token);
-            symbol_reference_node->lhs->children.push_back(symbol_node);
+            auto node = parser->ast_builder()->symbol_part_node(token);
+            symbol_node->children.push_back(node);
             if (!parser->peek(token_types_t::scope_operator)
             &&  !parser->peek(token_types_t::period))
                 break;
@@ -583,7 +575,7 @@ namespace basecode::syntax {
                 return nullptr;
         }
 
-        lhs->rhs = symbol_reference_node;
+        lhs->rhs = symbol_node;
 
         return lhs;
     }

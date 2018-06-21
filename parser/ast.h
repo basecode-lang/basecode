@@ -31,6 +31,7 @@ namespace basecode::syntax {
     enum class ast_node_types_t {
         label,
         program,
+        symbol,
         proc_call,
         statement,
         attribute,
@@ -39,6 +40,7 @@ namespace basecode::syntax {
         expression,
         label_list,
         basic_block,
+        symbol_part,
         line_comment,
         null_literal,
         block_comment,
@@ -74,11 +76,11 @@ namespace basecode::syntax {
         constant_expression,
         namespace_expression,
         subscript_expression,
-        qualified_symbol_reference,
     };
 
     static inline std::unordered_map<ast_node_types_t, std::string> s_node_type_names = {
         {ast_node_types_t::label, "label"},
+        {ast_node_types_t::symbol,  "symbol"},
         {ast_node_types_t::program, "program"},
         {ast_node_types_t::proc_call, "proc_call"},
         {ast_node_types_t::statement, "statement"},
@@ -88,6 +90,7 @@ namespace basecode::syntax {
         {ast_node_types_t::expression, "expression"},
         {ast_node_types_t::label_list, "label_list"},
         {ast_node_types_t::basic_block, "basic_block"},
+        {ast_node_types_t::symbol_part, "symbol_part"},
         {ast_node_types_t::line_comment, "line_comment"},
         {ast_node_types_t::null_literal, "null_literal"},
         {ast_node_types_t::block_comment, "block_comment"},
@@ -123,7 +126,6 @@ namespace basecode::syntax {
         {ast_node_types_t::constant_expression, "constant_expression"},
         {ast_node_types_t::namespace_expression, "namespace_expression"},
         {ast_node_types_t::subscript_expression, "subscript_expression"},
-        {ast_node_types_t::qualified_symbol_reference, "qualified_symbol_reference"},
     };
 
     static inline std::string ast_node_type_name(ast_node_types_t type) {
@@ -198,6 +200,8 @@ namespace basecode::syntax {
 
         ast_node_shared_ptr for_in_node();
 
+        ast_node_shared_ptr symbol_node();
+
         ast_node_shared_ptr program_node();
 
         ast_node_shared_ptr else_if_node();
@@ -212,26 +216,26 @@ namespace basecode::syntax {
 
         ast_node_shared_ptr expression_node();
 
+        ast_node_shared_ptr label_list_node();
+
         ast_node_shared_ptr basic_block_node();
+
+        ast_node_shared_ptr argument_list_node();
 
         ast_node_shared_ptr binary_operator_node(
             const ast_node_shared_ptr& lhs,
             const token_t& token,
             const ast_node_shared_ptr& rhs);
 
-        ast_node_shared_ptr label_list_node();
-
-        ast_node_shared_ptr argument_list_node();
-
         ast_node_shared_ptr proc_expression_node();
-
-        void push_scope(const ast_node_shared_ptr& node);
 
         ast_node_shared_ptr cast_node(token_t& token);
 
         ast_node_shared_ptr label_node(token_t& token);
 
         ast_node_shared_ptr alias_node(token_t& token);
+
+        void push_scope(const ast_node_shared_ptr& node);
 
         ast_node_shared_ptr with_node(const token_t& token);
 
@@ -242,8 +246,6 @@ namespace basecode::syntax {
         ast_node_shared_ptr union_node(const token_t& token);
 
         ast_node_shared_ptr defer_node(const token_t& token);
-
-        ast_node_shared_ptr qualified_symbol_reference_node();
 
         ast_node_shared_ptr struct_node(const token_t& token);
 
@@ -256,6 +258,8 @@ namespace basecode::syntax {
         ast_node_shared_ptr attribute_node(const token_t& token);
 
         ast_node_shared_ptr namespace_node(const token_t& token);
+
+        ast_node_shared_ptr symbol_part_node(const token_t& token);
 
         ast_node_shared_ptr null_literal_node(const token_t& token);
 
@@ -272,8 +276,6 @@ namespace basecode::syntax {
         ast_node_shared_ptr type_identifier_node(const token_t& token);
 
         ast_node_shared_ptr boolean_literal_node(const token_t& token);
-
-        ast_node_shared_ptr symbol_reference_node(const token_t& token);
 
         ast_node_shared_ptr character_literal_node(const token_t& token);
 

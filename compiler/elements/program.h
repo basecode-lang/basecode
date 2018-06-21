@@ -101,6 +101,10 @@ namespace basecode::compiler {
 
         procedure_type* make_procedure_type();
 
+        boolean_literal* make_bool(bool value);
+
+        float_literal* make_float(double value);
+
         expression* make_expression(element* expr);
 
         label* make_label(const std::string& name);
@@ -111,7 +115,11 @@ namespace basecode::compiler {
 
         initializer* make_initializer(element* expr);
 
+        integer_literal* make_integer(uint64_t value);
+
         namespace_element* make_namespace(element* expr);
+
+        string_literal* make_string(const std::string& value);
 
     private:
         element* evaluate(

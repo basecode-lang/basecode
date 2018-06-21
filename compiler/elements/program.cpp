@@ -26,12 +26,16 @@
 #include "initializer.h"
 #include "string_type.h"
 #include "numeric_type.h"
+#include "float_literal.h"
+#include "string_literal.h"
 #include "unary_operator.h"
 #include "composite_type.h"
 #include "procedure_type.h"
 #include "return_element.h"
 #include "procedure_call.h"
+#include "boolean_literal.h"
 #include "binary_operator.h"
+#include "integer_literal.h"
 #include "namespace_element.h"
 #include "procedure_instance.h"
 
@@ -53,6 +57,28 @@ namespace basecode::compiler {
             return nullptr;
 
         switch (node->type) {
+            case syntax::ast_node_types_t::symbol: {
+                auto block_scope = (block*)nullptr;
+                if (node->children.size() == 1) {
+                    block_scope = current_scope();
+                } else {
+                    block_scope = this;
+                }
+                auto ident = (identifier*)nullptr;
+                for (const auto& symbol_node : node->children) {
+                    ident = block_scope->identifiers().find(symbol_node->token.value);
+                    if (ident == nullptr || ident->initializer() == nullptr)
+                        return nullptr;
+                    auto expr = ident->initializer()->expression();
+                    if (expr->element_type() == element_type_t::namespace_e) {
+                        auto ns = dynamic_cast<namespace_element*>(expr);
+                        block_scope = dynamic_cast<block*>(ns->expression());
+                    } else {
+                        break;
+                    }
+                }
+                return ident;
+            }
             case syntax::ast_node_types_t::attribute: {
                 return make_attribute(
                     node->token.value,
@@ -117,58 +143,58 @@ namespace basecode::compiler {
                 return make_expression(evaluate(r, node->lhs));
             }
             case syntax::ast_node_types_t::assignment: {
-                auto scope = dynamic_cast<block*>(this);
-
-                auto is_constant = false;
                 std::string type_name;
-                syntax::ast_node_shared_ptr arg_list;
+                const auto& symbol = node->lhs;
+                if (node->lhs->rhs != nullptr)
+                    type_name = node->lhs->rhs->token.value;
 
-                if (node->lhs->type == syntax::ast_node_types_t::constant_expression) {
-                    is_constant = true;
-                    arg_list = node->lhs->rhs->lhs;
-                    if (node->lhs->rhs->rhs != nullptr)
-                        type_name = node->lhs->rhs->rhs->token.value;
+                auto scope = dynamic_cast<block*>(this);
+                if (symbol->children.size() == 1) {
+                    scope = current_scope();
                 } else {
-                    arg_list = node->lhs->lhs;
-                    if (node->lhs->rhs != nullptr)
-                        type_name = node->lhs->rhs->token.value;
-                }
-
-                for (size_t i = 0; i < arg_list->children.size() - 1; i++) {
-                    const auto& symbol_node = arg_list->children[i];
-                    auto ident = scope->identifiers().find(symbol_node->token.value);
-                    if (ident == nullptr) {
-                        auto new_scope = make_block();
-                        auto ns_identifier = make_identifier(
-                            symbol_node->token.value,
-                            make_initializer(make_namespace(new_scope)));
-                        scope->identifiers().add(ns_identifier);
-                        scope = new_scope;
-                    } else {
-                        auto expr = ident->initializer()->expression();
-                        if (expr->element_type() == element_type_t::namespace_e) {
-                            auto ns = dynamic_cast<namespace_element*>(expr);
-                            scope = dynamic_cast<block*>(ns->expression());
+                    for (size_t i = 0; i < symbol->children.size() - 1; i++) {
+                        const auto& symbol_node = symbol->children[i];
+                        auto ident = scope->identifiers().find(symbol_node->token.value);
+                        if (ident == nullptr) {
+                            auto new_scope = make_block();
+                            auto ns_identifier = make_identifier(
+                                symbol_node->token.value,
+                                make_initializer(make_namespace(new_scope)));
+                            scope->identifiers().add(ns_identifier);
+                            scope = new_scope;
                         } else {
-                            // XXX: what should really be happening here
-                            //      if the scope isn't a namespace, is that an error?
-                            break;
+                            auto expr = ident->initializer()->expression();
+                            if (expr->element_type() == element_type_t::namespace_e) {
+                                auto ns = dynamic_cast<namespace_element*>(expr);
+                                scope = dynamic_cast<block*>(ns->expression());
+                            } else {
+                                // XXX: what should really be happening here
+                                //      if the scope isn't a namespace, is that an error?
+                                break;
+                            }
                         }
                     }
                 }
 
-                const auto& final_symbol = arg_list->children.back();
+                push_scope(scope);
+
+                const auto& final_symbol = symbol->children.back();
 
                 auto new_identifier = make_identifier(
                     final_symbol->token.value,
                     make_initializer(evaluate(r, node->rhs)));
 
-                new_identifier->constant(is_constant);
+                if (symbol->lhs != nullptr
+                &&  symbol->lhs->type == syntax::ast_node_types_t::constant_expression) {
+                    new_identifier->constant(true);
+                }
 
                 if (!type_name.empty())
                     new_identifier->type(find_type(type_name));
 
                 scope->identifiers().add(new_identifier);
+
+                pop_scope();
 
                 return new_identifier;
             }
@@ -181,6 +207,31 @@ namespace basecode::compiler {
                 return make_comment(
                     comment_type_t::block,
                     node->token.value);
+            }
+            case syntax::ast_node_types_t::string_literal: {
+                return make_string(node->token.value);
+            }
+            case syntax::ast_node_types_t::number_literal: {
+                switch (node->token.number_type) {
+                    case syntax::number_types_t::integer: {
+                        uint64_t value;
+                        if (node->token.parse(value) == syntax::conversion_result_t::success)
+                            return make_integer(value);
+                        // XXX: need to handle conversion failures
+                    }
+                    case syntax::number_types_t::floating_point: {
+                        double value;
+                        if (node->token.parse(value) == syntax::conversion_result_t::success)
+                            return make_float(value);
+                        // XXX: need to handle conversion failures
+                    }
+                    default:
+                        break;
+                }
+                return nullptr;
+            }
+            case syntax::ast_node_types_t::boolean_literal: {
+                return make_bool(node->token.as_bool());
             }
             case syntax::ast_node_types_t::else_expression: {
                 return evaluate(r, node->children[0]);
@@ -220,12 +271,10 @@ namespace basecode::compiler {
                 auto count = 0;
                 for (const auto& type_node : node->lhs->children) {
                     switch (type_node->type) {
-                        case syntax::ast_node_types_t::qualified_symbol_reference: {
-                            // XXX: I am a horrible human being
-                            auto total_hack_fix_me = type_node->lhs->children[0];
+                        case syntax::ast_node_types_t::symbol_part: {
                             proc_type->returns().add(make_field(
                                 fmt::format("_{}", count++),
-                                find_type(total_hack_fix_me->token.value),
+                                find_type(type_node->token.value),
                                 nullptr));
                             break;
                         }
@@ -235,11 +284,35 @@ namespace basecode::compiler {
                     }
                 }
 
-                for (const auto& type_node : node->rhs->children) {
-                    proc_type->parameters().add(make_field(
-                        type_node->token.value,
-                        find_type(type_node->lhs->token.value),
-                        type_node->rhs != nullptr ? make_initializer(evaluate(r, type_node->rhs)) : nullptr));
+                for (const auto& param_node : node->rhs->children) {
+                    switch (param_node->type) {
+                        case syntax::ast_node_types_t::assignment: {
+                            compiler::type* param_type = nullptr;
+                            if (param_node->lhs->rhs != nullptr) {
+                                param_type = find_type(param_node->lhs->rhs->token.value);
+                            }
+                            auto field = make_field(
+                                param_node->lhs->children[0]->token.value,
+                                param_type,
+                                make_initializer(evaluate(r, param_node->rhs)));
+                            proc_type->parameters().add(field);
+                            break;
+                        }
+                        case syntax::ast_node_types_t::symbol: {
+                            compiler::initializer* init = nullptr;
+                            if (param_node->rhs != nullptr)
+                                init = make_initializer(evaluate(r, param_node->rhs));
+                            auto field = make_field(
+                                param_node->children[0]->token.value,
+                                find_type(param_node->rhs->token.value),
+                                init);
+                            proc_type->parameters().add(field);
+                            break;
+                        }
+                        default: {
+                            break;
+                        }
+                    }
                 }
 
                 if (!node->children.empty()) {
@@ -333,27 +406,6 @@ namespace basecode::compiler {
             }
             case syntax::ast_node_types_t::namespace_expression: {
                 return make_namespace(evaluate(r, node->rhs));
-            }
-            case syntax::ast_node_types_t::qualified_symbol_reference: {
-                block* block_scope = nullptr;
-                if (node->lhs->children.size() == 1) {
-                    block_scope = current_scope();
-                } else {
-                    block_scope = this;
-                }
-                for (const auto& symbol_node : node->lhs->children) {
-                    auto ident = block_scope->identifiers().find(symbol_node->token.value);
-                    if (ident == nullptr || ident->initializer() == nullptr)
-                        return nullptr;
-                    auto expr = ident->initializer()->expression();
-                    if (expr->element_type() == element_type_t::namespace_e) {
-                        auto ns = dynamic_cast<namespace_element*>(expr);
-                        block_scope = dynamic_cast<block*>(ns->expression());
-                    } else {
-                        break;
-                    }
-                }
-                return block_scope;
             }
             default: {
                 break;
@@ -618,6 +670,12 @@ namespace basecode::compiler {
         return type;
     }
 
+    boolean_literal* program::make_bool(bool value) {
+        auto boolean_literal = new compiler::boolean_literal(current_scope(), value);
+        _elements.insert(std::make_pair(boolean_literal->id(), boolean_literal));
+        return boolean_literal;
+    }
+
     type* program::find_type(const std::string& name) {
         auto scope = current_scope();
         while (scope != nullptr) {
@@ -627,6 +685,12 @@ namespace basecode::compiler {
             scope = dynamic_cast<block*>(scope->parent());
         }
         return nullptr;
+    }
+
+    float_literal* program::make_float(double value) {
+        auto literal = new compiler::float_literal(current_scope(), value);
+        _elements.insert(std::make_pair(literal->id(), literal));
+        return literal;
     }
 
     procedure_instance* program::make_procedure_instance(
@@ -658,6 +722,12 @@ namespace basecode::compiler {
         return initializer;
     }
 
+    integer_literal* program::make_integer(uint64_t value) {
+        auto literal = new compiler::integer_literal(current_scope(), value);
+        _elements.insert(std::make_pair(literal->id(), literal));
+        return literal;
+    }
+
     namespace_element* program::make_namespace(element* expr) {
         auto ns = new compiler::namespace_element(current_scope(), expr);
         _elements.insert(std::make_pair(ns->id(), ns));
@@ -668,6 +738,12 @@ namespace basecode::compiler {
         auto cast = new compiler::cast(current_scope(), type, expr);
         _elements.insert(std::make_pair(cast->id(), cast));
         return cast;
+    }
+
+    string_literal* program::make_string(const std::string& value) {
+        auto literal = new compiler::string_literal(current_scope(), value);
+        _elements.insert(std::make_pair(literal->id(), literal));
+        return literal;
     }
 
     statement* program::make_statement(label_list_t labels, element* expr) {

@@ -45,32 +45,44 @@ namespace basecode::syntax {
         return type == token_types_t::block_comment;
     }
 
-    conversion_result token_t::parse(int64_t& out) const {
+    conversion_result_t token_t::parse(double& out) const {
+        const char* s = value.c_str();
+        char* end;
+        errno = 0;
+        out = strtod(s, &end);
+        if (errno == ERANGE)
+            return conversion_result_t::overflow;
+        if (*s == '\0' || *end != '\0')
+            return conversion_result_t::inconvertible;
+        return conversion_result_t::success;
+    }
+
+    conversion_result_t token_t::parse(int64_t& out) const {
         const char* s = value.c_str();
         char* end;
         errno = 0;
         out = strtoll(s, &end, radix);
         if ((errno == ERANGE && out == LONG_MAX)
         ||   out > UINT_MAX)
-            return conversion_result::overflow;
+            return conversion_result_t::overflow;
         if ((errno == ERANGE && out == LONG_MIN))
-            return conversion_result::underflow;
+            return conversion_result_t::underflow;
         if (*s == '\0' || *end != '\0')
-            return conversion_result::inconvertible;
-        return conversion_result::success;
+            return conversion_result_t::inconvertible;
+        return conversion_result_t::success;
     }
 
-    conversion_result token_t::parse(uint64_t& out) const {
+    conversion_result_t token_t::parse(uint64_t& out) const {
         const char* s = value.c_str();
         char* end;
         errno = 0;
         out = strtoul(s, &end, radix);
         if ((errno == ERANGE && out == ULONG_MAX)
         ||   out > UINT_MAX)
-            return conversion_result::overflow;
+            return conversion_result_t::overflow;
         if (*s == '\0' || *end != '\0')
-            return conversion_result::inconvertible;
-        return conversion_result::success;
+            return conversion_result_t::inconvertible;
+        return conversion_result_t::success;
     }
 
 }
