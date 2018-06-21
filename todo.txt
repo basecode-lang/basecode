@@ -12,10 +12,6 @@ deps to bytecode generation
 ===========================
 - procedure expressions
 
-- if/else if/else
-
-- return
-
 - procedure calls
 
 - identifier/namespace handling
@@ -90,3 +86,5 @@ DONE
 - labels
 - alias
 - cast
+- return
+- if/else if/else

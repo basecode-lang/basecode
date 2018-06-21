@@ -36,6 +36,7 @@ namespace basecode::compiler {
     class identifier;
     class expression;
     class array_type;
+    class if_element;
     class initializer;
     class string_type;
     class numeric_type;
@@ -44,6 +45,7 @@ namespace basecode::compiler {
     class procedure_type;
     class composite_type;
     class unary_operator;
+    class return_element;
     class boolean_literal;
     class integer_literal;
     class binary_operator;
@@ -63,12 +65,14 @@ namespace basecode::compiler {
         element = 1,
         proc,
         cast,
+        if_e,
         label,
         block,
         field,
         comment,
         program,
         any_type,
+        return_e,
         proc_type,
         directive,
         attribute,

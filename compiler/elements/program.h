@@ -38,11 +38,16 @@ namespace basecode::compiler {
             compiler::type* type,
             compiler::initializer* initializer);
 
-        block* make_new_block();
+        if_element* make_if(
+            element* predicate,
+            element* true_branch,
+            element* false_branch);
 
         comment* make_comment(
             comment_type_t type,
             const std::string& value);
+
+        block* make_new_block();
 
         directive* make_directive(
             const std::string& name,
@@ -67,6 +72,8 @@ namespace basecode::compiler {
         composite_type* make_union();
 
         composite_type* make_struct();
+
+        return_element* make_return();
 
         string_type* make_string_type();
 

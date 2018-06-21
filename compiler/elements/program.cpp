@@ -21,12 +21,14 @@
 #include "directive.h"
 #include "statement.h"
 #include "identifier.h"
+#include "if_element.h"
 #include "initializer.h"
 #include "string_type.h"
 #include "numeric_type.h"
 #include "unary_operator.h"
 #include "composite_type.h"
 #include "procedure_type.h"
+#include "return_element.h"
 #include "binary_operator.h"
 #include "procedure_instance.h"
 
@@ -126,6 +128,16 @@ namespace basecode::compiler {
                 return make_comment(
                     comment_type_t::block,
                     node->token.value);
+            }
+            case syntax::ast_node_types_t::else_expression: {
+                return evaluate(r, node->children[0]);
+            }
+            case syntax::ast_node_types_t::if_expression:
+            case syntax::ast_node_types_t::elseif_expression: {
+                auto predicate = evaluate(r, node->lhs);
+                auto true_branch = evaluate(r, node->children[0]);
+                auto false_branch = evaluate(r, node->rhs);
+                return make_if(predicate, true_branch, false_branch);
             }
             case syntax::ast_node_types_t::unary_operator: {
                 auto it = s_unary_operators.find(node->token.type);
@@ -246,6 +258,13 @@ namespace basecode::compiler {
 //                }
 
                 return type;
+            }
+            case syntax::ast_node_types_t::return_statement: {
+                auto return_element = make_return();
+                for (const auto& arg_node : node->rhs->children) {
+                    return_element->expressions().push_back(evaluate(r, arg_node));
+                }
+                return return_element;
             }
             case syntax::ast_node_types_t::constant_expression: {
                 auto identifier = dynamic_cast<compiler::identifier*>(evaluate(r, node->rhs));
@@ -370,6 +389,19 @@ namespace basecode::compiler {
         scope_types.add(make_numeric_type("address", 0,         UINTPTR_MAX));
     }
 
+    if_element* program::make_if(
+            element* predicate,
+            element* true_branch,
+            element* false_branch) {
+        auto if_element = new compiler::if_element(
+            current_scope(),
+            predicate,
+            true_branch,
+            false_branch);
+        _elements.insert(std::make_pair(if_element->id(), if_element));
+        return if_element;
+    }
+
     comment* program::make_comment(
             comment_type_t type,
             const std::string& value) {
@@ -431,6 +463,12 @@ namespace basecode::compiler {
 
     void program::push_scope(block* block) {
         _scope_stack.push(block);
+    }
+
+    return_element* program::make_return() {
+        auto return_element = new compiler::return_element(current_scope());
+        _elements.insert(std::make_pair(return_element->id(), return_element));
+        return return_element;
     }
 
     element* program::find_element(id_t id) {

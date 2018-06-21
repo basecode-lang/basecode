@@ -83,6 +83,7 @@ add_executable(
         compiler/elements/attribute.cpp compiler/elements/attribute.h
         compiler/elements/directive.cpp compiler/elements/directive.h
         compiler/elements/statement.cpp compiler/elements/statement.h
+        compiler/elements/if_element.cpp compiler/elements/if_element.h
         compiler/elements/identifier.cpp compiler/elements/identifier.h
         compiler/elements/expression.cpp compiler/elements/expression.h
         compiler/elements/array_type.cpp compiler/elements/array_type.h
@@ -96,6 +97,7 @@ add_executable(
         compiler/elements/procedure_type.cpp compiler/elements/procedure_type.h
         compiler/elements/string_literal.cpp compiler/elements/string_literal.h
         compiler/elements/unary_operator.cpp compiler/elements/unary_operator.h
+        compiler/elements/return_element.cpp compiler/elements/return_element.h
         compiler/elements/integer_literal.cpp compiler/elements/integer_literal.h
         compiler/elements/binary_operator.cpp compiler/elements/binary_operator.h
         compiler/elements/boolean_literal.cpp compiler/elements/boolean_literal.h
