@@ -39,6 +39,13 @@ namespace basecode::syntax {
         return node;
     }
 
+    ast_node_shared_ptr ast_builder::pair_node() {
+        auto node = std::make_shared<ast_node_t>();
+        node->id = ++_id;
+        node->type = ast_node_types_t::pair;
+        return node;
+    }
+
     ast_node_shared_ptr ast_builder::else_node() {
         auto node = std::make_shared<ast_node_t>();
         node->id = ++_id;
@@ -109,6 +116,13 @@ namespace basecode::syntax {
         return node;
     }
 
+    ast_node_shared_ptr ast_builder::type_list_node() {
+        auto node = std::make_shared<ast_node_t>();
+        node->id = ++_id;
+        node->type = ast_node_types_t::type_list;
+        return node;
+    }
+
     ast_node_shared_ptr ast_builder::proc_call_node() {
         auto node = std::make_shared<ast_node_t>();
         node->id = ++_id;
@@ -142,6 +156,7 @@ namespace basecode::syntax {
         auto node = std::make_shared<ast_node_t>();
         node->id = ++_id;
         node->type = ast_node_types_t::assignment;
+        node->lhs = assignment_target_list_node();
         return node;
     }
 
@@ -178,12 +193,19 @@ namespace basecode::syntax {
         return node;
     }
 
+    ast_node_shared_ptr ast_builder::parameter_list_node() {
+        auto node = std::make_shared<ast_node_t>();
+        node->id = ++_id;
+        node->type = ast_node_types_t::parameter_list;
+        return node;
+    }
+
     ast_node_shared_ptr ast_builder::proc_expression_node() {
         auto node = std::make_shared<ast_node_t>();
         node->id = ++_id;
         node->type = ast_node_types_t::proc_expression;
-        node->lhs = symbol_node();
-        node->rhs = argument_list_node();
+        node->lhs = type_list_node();
+        node->rhs = parameter_list_node();
         return node;
     }
 
@@ -207,6 +229,13 @@ namespace basecode::syntax {
 
     void ast_builder::push_scope(const ast_node_shared_ptr& node) {
         _scope_stack.push(node);
+    }
+
+    ast_node_shared_ptr ast_builder::assignment_target_list_node() {
+        auto node = std::make_shared<ast_node_t>();
+        node->id = ++_id;
+        node->type = ast_node_types_t::assignment_target_list;
+        return node;
     }
 
     ast_node_shared_ptr ast_builder::enum_node(const token_t& token) {

@@ -20,6 +20,51 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    static void pairs_to_list(
+            const ast_node_shared_ptr& target,
+            const ast_node_shared_ptr& root) {
+        if (root->type != ast_node_types_t::pair) {
+            target->children.push_back(root);
+            return;
+        }
+
+        auto current_pair = root;
+        while (true) {
+            if (current_pair->lhs->type != ast_node_types_t::pair) {
+                target->children.push_back(current_pair->lhs);
+                target->children.push_back(current_pair->rhs);
+                break;
+            }
+            target->children.push_back(current_pair->rhs);
+            current_pair = current_pair->lhs;
+        }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    static ast_node_shared_ptr create_expression_node(
+            common::result& r,
+            parser* parser,
+            const ast_node_shared_ptr& lhs,
+            token_t& token) {
+        auto expression_node = parser->ast_builder()->expression_node();
+        expression_node->lhs = parser->parse_expression(r, 0);
+
+        token_t right_paren_token;
+        right_paren_token.type = token_types_t::right_paren;
+        if (!parser->expect(r, right_paren_token))
+            return nullptr;
+
+        if (lhs != nullptr
+        &&  lhs->type == ast_node_types_t::block_comment) {
+            expression_node->children.push_back(lhs);
+        }
+
+        return expression_node;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
     static ast_node_shared_ptr create_cast_node(
             common::result& r,
             parser* parser,
@@ -234,14 +279,7 @@ namespace basecode::syntax {
             parser* parser,
             token_t& token) {
         auto return_node = parser->ast_builder()->return_node();
-
-        while (true) {
-            return_node->rhs->children.push_back(parser->parse_expression(r, 0));
-            if (!parser->peek(token_types_t::comma))
-                break;
-            parser->consume();
-        }
-
+        pairs_to_list(return_node->rhs, parser->parse_expression(r, 0));
         return return_node;
     }
 
@@ -307,18 +345,7 @@ namespace basecode::syntax {
             return nullptr;
 
         if (!parser->peek(token_types_t::right_paren)) {
-            while (true) {
-                auto param_expr = parser->parse_expression(r, 0);
-                if (param_expr->type == ast_node_types_t::block_comment) {
-                    proc_node->children.push_back(param_expr);
-                    continue;
-                } else {
-                    proc_node->rhs->children.push_back(param_expr);
-                }
-                if (!parser->peek(token_types_t::comma))
-                    break;
-                parser->consume();
-            }
+            pairs_to_list(proc_node->rhs, parser->parse_expression(r, 0));
         }
 
         token_t right_paren_token;
@@ -328,16 +355,7 @@ namespace basecode::syntax {
 
         if (parser->peek(token_types_t::colon)) {
             parser->consume();
-            while (true) {
-                auto types = parser->parse_expression(
-                    r,
-                    static_cast<uint8_t>(precedence_t::type));
-                for (const auto& type : types->children)
-                    proc_node->lhs->children.push_back(type);
-                if (!parser->peek(token_types_t::comma))
-                    break;
-                parser->consume();
-            }
+            pairs_to_list(proc_node->lhs, parser->parse_expression(r, 0));
         }
 
         if (!parser->peek(token_types_t::semi_colon))
@@ -352,13 +370,7 @@ namespace basecode::syntax {
             common::result& r,
             parser* parser,
             token_t& token) {
-        auto expression_node = parser->ast_builder()->expression_node();
-        expression_node->lhs = parser->parse_expression(r, 0);
-        token_t right_paren_token;
-        right_paren_token.type = token_types_t::right_paren;
-        if (!parser->expect(r, right_paren_token))
-            return nullptr;
-        return expression_node;
+        return create_expression_node(r, parser, nullptr, token);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -473,8 +485,7 @@ namespace basecode::syntax {
                 ->symbol_part_node(token);
             symbol_list_node->children.push_back(symbol_node);
             if (!parser->peek(token_types_t::scope_operator)
-            &&  !parser->peek(token_types_t::period)
-            &&  !parser->peek(token_types_t::comma)) {
+            &&  !parser->peek(token_types_t::period)) {
                 break;
             }
             parser->consume();
@@ -483,6 +494,25 @@ namespace basecode::syntax {
         }
 
         return symbol_list_node;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    ast_node_shared_ptr comma_infix_parser::parse(
+            common::result& r,
+            parser* parser,
+            const ast_node_shared_ptr& lhs,
+            token_t& token) {
+        auto pair_node = parser->ast_builder()->pair_node();
+        pair_node->lhs = lhs;
+        pair_node->rhs = parser->parse_expression(
+            r,
+            static_cast<uint8_t>(precedence_t::comma));
+        return pair_node;
+    }
+
+    precedence_t comma_infix_parser::precedence() const {
+        return precedence_t::comma;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -525,30 +555,25 @@ namespace basecode::syntax {
             parser* parser,
             const ast_node_shared_ptr& lhs,
             token_t& token) {
-        auto proc_call_node = parser->ast_builder()->proc_call_node();
-        proc_call_node->lhs = lhs;
+        if (lhs->type == ast_node_types_t::symbol) {
+            auto proc_call_node = parser->ast_builder()->proc_call_node();
+            proc_call_node->lhs = lhs;
 
-        if (!parser->peek(token_types_t::right_paren)) {
-            while (true) {
-                auto param_expr = parser->parse_expression(r, 0);
-                if (param_expr->type == ast_node_types_t::block_comment) {
-                    proc_call_node->children.push_back(param_expr);
-                    continue;
-                } else {
-                    proc_call_node->rhs->children.push_back(param_expr);
-                }
-                if (!parser->peek(token_types_t::comma))
-                    break;
-                parser->consume();
+            if (!parser->peek(token_types_t::right_paren)) {
+                pairs_to_list(
+                    proc_call_node->rhs,
+                    parser->parse_expression(r, 0));
             }
+
+            token_t right_paren_token;
+            right_paren_token.type = token_types_t::right_paren;
+            if (!parser->expect(r, right_paren_token))
+                return nullptr;
+
+            return proc_call_node;
+        } else {
+            return create_expression_node(r, parser, lhs, token);
         }
-
-        token_t right_paren_token;
-        right_paren_token.type = token_types_t::right_paren;
-        if (!parser->expect(r, right_paren_token))
-            return nullptr;
-
-        return proc_call_node;
     }
 
     precedence_t proc_call_infix_parser::precedence() const {
@@ -573,6 +598,11 @@ namespace basecode::syntax {
             parser->consume();
             if (!parser->expect(r, token))
                 return nullptr;
+        }
+
+        if (lhs->type == ast_node_types_t::block_comment) {
+            symbol_node->children.push_back(lhs);
+            return symbol_node;
         }
 
         lhs->rhs = symbol_node;
@@ -632,7 +662,7 @@ namespace basecode::syntax {
             const ast_node_shared_ptr& lhs,
             token_t& token) {
         auto assignment_node = parser->ast_builder()->assignment_node();
-        assignment_node->lhs = lhs;
+        pairs_to_list(assignment_node->lhs, lhs);
         assignment_node->rhs = parser->parse_expression(
             r,
             static_cast<uint8_t>(precedence_t::assignment) - 1);
@@ -820,7 +850,6 @@ namespace basecode::syntax {
         }
 
         if (token.is_line_comment()
-        ||  token.is_block_comment()
         ||  token.is_label())
             return lhs;
 

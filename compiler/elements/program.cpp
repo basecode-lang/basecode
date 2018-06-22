@@ -271,10 +271,10 @@ namespace basecode::compiler {
                 auto count = 0;
                 for (const auto& type_node : node->lhs->children) {
                     switch (type_node->type) {
-                        case syntax::ast_node_types_t::symbol_part: {
+                        case syntax::ast_node_types_t::symbol: {
                             proc_type->returns().add(make_field(
                                 fmt::format("_{}", count++),
-                                find_type(type_node->token.value),
+                                find_type(type_node->children[0]->token.value),
                                 nullptr));
                             break;
                         }

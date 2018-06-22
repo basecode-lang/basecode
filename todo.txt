@@ -10,6 +10,8 @@ Basecode Bootstrap Tasks
 
 deps to bytecode generation
 ===========================
+- FIX: string, number, boolean literals aren't infix so pre-block comments don't work.
+
 - identifier/namespace handling
 
 - procedure expressions
@@ -88,3 +90,4 @@ DONE
 - cast
 - return
 - if/else if/else
+- FIX: comma token is being gobbled up during infix parsing

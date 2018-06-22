@@ -29,13 +29,15 @@ namespace basecode::syntax {
     using ast_node_list = std::vector<ast_node_shared_ptr>;
 
     enum class ast_node_types_t {
+        pair,
         label,
-        program,
         symbol,
+        program,
         proc_call,
         statement,
         attribute,
         directive,
+        type_list,
         assignment,
         expression,
         label_list,
@@ -46,6 +48,7 @@ namespace basecode::syntax {
         block_comment,
         argument_list,
         if_expression,
+        parameter_list,
         number_literal,
         string_literal,
         unary_operator,
@@ -76,12 +79,15 @@ namespace basecode::syntax {
         constant_expression,
         namespace_expression,
         subscript_expression,
+        assignment_target_list
     };
 
     static inline std::unordered_map<ast_node_types_t, std::string> s_node_type_names = {
+        {ast_node_types_t::pair, "pair"},
         {ast_node_types_t::label, "label"},
         {ast_node_types_t::symbol,  "symbol"},
         {ast_node_types_t::program, "program"},
+        {ast_node_types_t::type_list, "type_list"},
         {ast_node_types_t::proc_call, "proc_call"},
         {ast_node_types_t::statement, "statement"},
         {ast_node_types_t::attribute, "attribute"},
@@ -96,6 +102,7 @@ namespace basecode::syntax {
         {ast_node_types_t::block_comment, "block_comment"},
         {ast_node_types_t::argument_list, "argument_list"},
         {ast_node_types_t::if_expression, "if_expression"},
+        {ast_node_types_t::parameter_list, "parameter_list"},
         {ast_node_types_t::number_literal, "number_literal"},
         {ast_node_types_t::string_literal, "string_literal"},
         {ast_node_types_t::unary_operator, "unary_operator"},
@@ -126,6 +133,7 @@ namespace basecode::syntax {
         {ast_node_types_t::constant_expression, "constant_expression"},
         {ast_node_types_t::namespace_expression, "namespace_expression"},
         {ast_node_types_t::subscript_expression, "subscript_expression"},
+        {ast_node_types_t::assignment_target_list, "assignment_target_list"}
     };
 
     static inline std::string ast_node_type_name(ast_node_types_t type) {
@@ -186,6 +194,8 @@ namespace basecode::syntax {
 
         ast_node_shared_ptr if_node();
 
+        ast_node_shared_ptr pair_node();
+
         ast_node_shared_ptr else_node();
 
         ast_node_shared_ptr end_scope();
@@ -205,6 +215,8 @@ namespace basecode::syntax {
         ast_node_shared_ptr program_node();
 
         ast_node_shared_ptr else_if_node();
+
+        ast_node_shared_ptr type_list_node();
 
         ast_node_shared_ptr proc_call_node();
 
@@ -227,6 +239,8 @@ namespace basecode::syntax {
             const token_t& token,
             const ast_node_shared_ptr& rhs);
 
+        ast_node_shared_ptr parameter_list_node();
+
         ast_node_shared_ptr proc_expression_node();
 
         ast_node_shared_ptr cast_node(token_t& token);
@@ -236,6 +250,8 @@ namespace basecode::syntax {
         ast_node_shared_ptr alias_node(token_t& token);
 
         void push_scope(const ast_node_shared_ptr& node);
+
+        ast_node_shared_ptr assignment_target_list_node();
 
         ast_node_shared_ptr with_node(const token_t& token);
 
