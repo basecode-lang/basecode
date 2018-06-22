@@ -42,6 +42,37 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    static ast_node_shared_ptr create_symbol_node(
+            common::result& r,
+            parser* parser,
+            const ast_node_shared_ptr& lhs,
+            token_t& token) {
+        auto symbol_node = parser
+            ->ast_builder()
+            ->symbol_node();
+
+        while (true) {
+            auto symbol_part_node = parser
+                ->ast_builder()
+                ->symbol_part_node(token);
+            symbol_node->children.push_back(symbol_part_node);
+            if (!parser->peek(token_types_t::scope_operator))
+                break;
+            parser->consume();
+            if (!parser->expect(r, token))
+                return nullptr;
+        }
+
+        if (lhs != nullptr
+        &&  (lhs->token.is_block_comment() || lhs->token.is_line_comment())) {
+            symbol_node->children.push_back(lhs);
+        }
+
+        return symbol_node;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
     static ast_node_shared_ptr create_expression_node(
             common::result& r,
             parser* parser,
@@ -471,29 +502,11 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    ast_node_shared_ptr symbol_reference_prefix_parser::parse(
+    ast_node_shared_ptr symbol_prefix_parser::parse(
             common::result& r,
             parser* parser,
             token_t& token) {
-        auto symbol_list_node = parser
-            ->ast_builder()
-            ->symbol_node();
-
-        while (true) {
-            auto symbol_node = parser
-                ->ast_builder()
-                ->symbol_part_node(token);
-            symbol_list_node->children.push_back(symbol_node);
-            if (!parser->peek(token_types_t::scope_operator)
-            &&  !parser->peek(token_types_t::period)) {
-                break;
-            }
-            parser->consume();
-            if (!parser->expect(r, token))
-                return nullptr;
-        }
-
-        return symbol_list_node;
+        return create_symbol_node(r, parser, nullptr, token);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -582,35 +595,15 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    ast_node_shared_ptr symbol_reference_infix_parser::parse(
+    ast_node_shared_ptr symbol_infix_parser::parse(
             common::result& r,
             parser* parser,
             const ast_node_shared_ptr& lhs,
             token_t& token) {
-        auto symbol_node = parser->ast_builder()->symbol_node();
-
-        while (true) {
-            auto node = parser->ast_builder()->symbol_part_node(token);
-            symbol_node->children.push_back(node);
-            if (!parser->peek(token_types_t::scope_operator)
-            &&  !parser->peek(token_types_t::period))
-                break;
-            parser->consume();
-            if (!parser->expect(r, token))
-                return nullptr;
-        }
-
-        if (lhs->type == ast_node_types_t::block_comment) {
-            symbol_node->children.push_back(lhs);
-            return symbol_node;
-        }
-
-        lhs->rhs = symbol_node;
-
-        return lhs;
+        return create_symbol_node(r, parser, lhs, token);
     }
 
-    precedence_t symbol_reference_infix_parser::precedence() const {
+    precedence_t symbol_infix_parser::precedence() const {
         return precedence_t::variable;
     }
 

@@ -167,11 +167,13 @@ namespace basecode::syntax {
 
         fmt::print(
             _file,
-            "\t{}[shape={},label=\"<f0> lhs|<f1> {}{}|<f2> rhs\"{}];\n",
+            "\t{}[shape={},label=\"{}<f1> {}{}{}\"{}];\n",
             node_vertex_name,
             shape,
+            node->lhs != nullptr ? "<f0> lhs|" : "",
             node->name(),
             details,
+            node->rhs != nullptr ? "|<f2> rhs" : "",
             style);
         if (node->lhs != nullptr) {
             format_graph_viz_node(node->lhs);

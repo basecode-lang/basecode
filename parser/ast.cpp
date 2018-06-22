@@ -82,7 +82,7 @@ namespace basecode::syntax {
         auto node = std::make_shared<ast_node_t>();
         node->id = ++_id;
         node->type = ast_node_types_t::return_statement;
-        node->rhs = argument_list_node();
+        node->rhs = return_argument_list_node();
         return node;
     }
 
@@ -224,6 +224,13 @@ namespace basecode::syntax {
     ast_node_shared_ptr ast_builder::label_node(token_t& token) {
         auto node = std::make_shared<ast_node_t>();
         configure_node(node, token, ast_node_types_t::label);
+        return node;
+    }
+
+    ast_node_shared_ptr ast_builder::return_argument_list_node() {
+        auto node = std::make_shared<ast_node_t>();
+        node->id = ++_id;
+        node->type = ast_node_types_t::return_argument_list;
         return node;
     }
 

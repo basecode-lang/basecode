@@ -79,7 +79,8 @@ namespace basecode::syntax {
         constant_expression,
         namespace_expression,
         subscript_expression,
-        assignment_target_list
+        return_argument_list,
+        assignment_target_list,
     };
 
     static inline std::unordered_map<ast_node_types_t, std::string> s_node_type_names = {
@@ -133,6 +134,7 @@ namespace basecode::syntax {
         {ast_node_types_t::constant_expression, "constant_expression"},
         {ast_node_types_t::namespace_expression, "namespace_expression"},
         {ast_node_types_t::subscript_expression, "subscript_expression"},
+        {ast_node_types_t::return_argument_list, "return_argument_list"},
         {ast_node_types_t::assignment_target_list, "assignment_target_list"}
     };
 
@@ -248,6 +250,8 @@ namespace basecode::syntax {
         ast_node_shared_ptr label_node(token_t& token);
 
         ast_node_shared_ptr alias_node(token_t& token);
+
+        ast_node_shared_ptr return_argument_list_node();
 
         void push_scope(const ast_node_shared_ptr& node);
 
