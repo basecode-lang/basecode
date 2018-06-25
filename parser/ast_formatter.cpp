@@ -21,66 +21,16 @@ namespace basecode::syntax {
                           _root(root) {
     }
 
-    void ast_formatter::format_text() {
-        format_text_node(_root, 0);
-    }
-
-    void ast_formatter::format_text_node(
-            const ast_node_shared_ptr& node,
-            uint32_t level) {
-        if (node == nullptr) {
-            fmt::print(_file, "nullptr");
-            return;
-        }
-        fmt::print(
-            _file,
-            "[type: {} | token: {}]\n",
-            node->name(),
-            node->token.name());
-        fmt::print(_file, "{1:{0}}     value: '{2}'\n", level, "", node->token.value);
-        if (node->token.is_numeric()) {
-            fmt::print("_file, {1:{0}}     radix: {2}\n", level, "", node->token.radix);
-            switch (node->token.number_type) {
-                case basecode::syntax::number_types_t::none:
-                    fmt::print(_file, "{1:{0}}      type: none\n", level, "");
-                    break;
-                case basecode::syntax::number_types_t::integer:
-                    fmt::print(_file, "{1:{0}}      type: integer\n", level, "");
-                    break;
-                case basecode::syntax::number_types_t::floating_point:
-                    fmt::print(_file, "{1:{0}}      type: floating_point\n", level, "");
-                    break;
-            }
-        }
-        fmt::print(_file, "{1:{0}}is_pointer: {2}\n", level, "", node->is_pointer());
-        fmt::print(_file, "{1:{0}}  is_array: {2}\n", level, "", node->is_array());
-        fmt::print(_file, "{1:{0}}             --\n", level, "");
-        fmt::print(_file, "{1:{0}}       lhs: ", level, "");
-        format_text_node(node->lhs, level + 7);
-        fmt::print(_file, "\n");
-        fmt::print(_file, "{1:{0}}             --\n", level, "");
-        fmt::print(_file, "{1:{0}}       rhs: ", level, "");
-        format_text_node(node->rhs, level + 7);
-        fmt::print(_file, "\n");
-        fmt::print(_file, "{1:{0}}             --\n", level, "");
-
-        auto index = 0;
-        for (auto child : node->children) {
-            fmt::print(_file, "{1:{0}}      [{2:02}] ", level, "", index++);
-            format_text_node(child, level + 6);
-            fmt::print(_file, "\n");
-        }
-    }
-
-    void ast_formatter::format_graph_viz() {
+    void ast_formatter::format(const std::string& title) {
         fmt::print(_file, "digraph {{\n");
-        //fmt::print("rankdir=LR\n");
-        //fmt::print(_file, "\tsplines=\"line\";\n");
-        format_graph_viz_node(_root);
+        fmt::print(_file, "graph [ fontsize=22 ];\n");
+        fmt::print(_file, "labelloc=\"t\";\n");
+        fmt::print(_file, "label=\"{}\";\n", title);
+        format_node(_root);
         fmt::print(_file, "}}\n");
     }
 
-    void ast_formatter::format_graph_viz_node(const ast_node_shared_ptr& node) {
+    void ast_formatter::format_node(const ast_node_shared_ptr& node) {
         if (node == nullptr)
             return;
 
@@ -176,7 +126,7 @@ namespace basecode::syntax {
             node->rhs != nullptr ? "|<f2> rhs" : "",
             style);
         if (node->lhs != nullptr) {
-            format_graph_viz_node(node->lhs);
+            format_node(node->lhs);
             fmt::print(
                 _file,
                 "\t{}:f0 -> {}:f1;\n",
@@ -185,7 +135,7 @@ namespace basecode::syntax {
         }
 
         if (node->rhs != nullptr) {
-            format_graph_viz_node(node->rhs);
+            format_node(node->rhs);
             fmt::print(
                 _file,
                 "\t{}:f2 -> {}:f1;\n",
@@ -197,7 +147,7 @@ namespace basecode::syntax {
         std::set <std::string> edges{};
 
         for (auto child : node->children) {
-            format_graph_viz_node(child);
+            format_node(child);
             edges.insert(get_vertex_name(child));
             index++;
         }

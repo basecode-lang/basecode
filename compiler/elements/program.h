@@ -12,11 +12,12 @@
 #pragma once
 
 #include <parser/ast.h>
+#include <common/id_pool.h>
 #include "block.h"
 
 namespace basecode::compiler {
 
-    class program : public block {
+    class program : public element {
     public:
         program();
 
@@ -26,14 +27,16 @@ namespace basecode::compiler {
             common::result& r,
             const syntax::ast_node_shared_ptr& root);
 
-        element* find_element(id_t id);
+        compiler::block* block();
+
+        const element_map_t& elements() const;
+
+        element* find_element(common::id_t id);
 
     private:
         cast* make_cast(
             compiler::type* type,
             element* expr);
-
-        block* make_block();
 
         field* make_field(
             const std::string& name,
@@ -49,7 +52,7 @@ namespace basecode::compiler {
             comment_type_t type,
             const std::string& value);
 
-        block* push_new_block();
+        compiler::block* push_new_block();
 
         directive* make_directive(
             const std::string& name,
@@ -69,7 +72,8 @@ namespace basecode::compiler {
 
         identifier* make_identifier(
             const std::string& name,
-            initializer* expr);
+            initializer* expr,
+            compiler::block* block_scope = nullptr);
 
         composite_type* make_union();
 
@@ -121,26 +125,31 @@ namespace basecode::compiler {
 
         string_literal* make_string(const std::string& value);
 
+        compiler::block* make_block(compiler::block* parent_scope = nullptr);
+
     private:
         element* evaluate(
             common::result& r,
             const syntax::ast_node_shared_ptr& node);
 
-        block* pop_scope();
+        compiler::block* pop_scope();
 
         void initialize_core_types();
 
-        block* current_scope() const;
+        compiler::block* current_scope() const;
 
-        void push_scope(block* block);
+        void push_scope(compiler::block* block);
 
         type* find_type(const std::string& name);
 
         bool is_subtree_constant(const syntax::ast_node_shared_ptr& node);
 
+        compiler::identifier* find_identifier(const syntax::ast_node_shared_ptr& node);
+
     private:
-        std::stack<block*> _scope_stack {};
-        std::unordered_map<id_t, element*> _elements {};
+        element_map_t _elements {};
+        compiler::block* _block = nullptr;
+        std::stack<compiler::block*> _scope_stack {};
     };
 
 };

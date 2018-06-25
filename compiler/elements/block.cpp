@@ -22,6 +22,10 @@ namespace basecode::compiler {
         return _types;
     }
 
+    block_list_t& block::blocks() {
+        return _blocks;
+    }
+
     comment_list_t& block::comments() {
         return _comments;
     }

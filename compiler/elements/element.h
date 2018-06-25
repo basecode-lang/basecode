@@ -26,9 +26,9 @@ namespace basecode::compiler {
 
         virtual ~element();
 
-        id_t id() const;
-
         element* parent();
+
+        common::id_t id() const;
 
         attribute_map_t& attributes();
 
@@ -40,7 +40,7 @@ namespace basecode::compiler {
         virtual bool on_fold(common::result& result);
 
     private:
-        id_t _id;
+        common::id_t _id;
         element* _parent = nullptr;
         attribute_map_t _attributes {};
         element_type_t _element_type = element_type_t::element;

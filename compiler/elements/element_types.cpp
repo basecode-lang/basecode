@@ -13,6 +13,8 @@
 #include "field.h"
 #include "attribute.h"
 #include "identifier.h"
+#include "element_types.h"
+
 
 namespace basecode::compiler {
 
@@ -54,6 +56,14 @@ namespace basecode::compiler {
 
     void identifier_map_t::add(identifier* value) {
         _identifiers.insert(std::make_pair(value->name(), value));
+    }
+
+    identifier_list_t identifier_map_t::as_list() const {
+        identifier_list_t list {};
+        for (const auto& it : _identifiers) {
+            list.push_back(it.second);
+        }
+        return list;
     }
 
     bool identifier_map_t::remove(const std::string& name) {

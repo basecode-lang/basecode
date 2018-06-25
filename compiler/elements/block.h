@@ -25,6 +25,8 @@ namespace basecode::compiler {
 
         type_map_t& types();
 
+        block_list_t& blocks();
+
         comment_list_t& comments();
 
         statement_list_t& statements();
@@ -33,6 +35,7 @@ namespace basecode::compiler {
 
     private:
         type_map_t _types {};
+        block_list_t _blocks {};
         comment_list_t _comments {};
         statement_list_t _statements {};
         identifier_map_t _identifiers {};

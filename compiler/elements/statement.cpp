@@ -16,11 +16,11 @@ namespace basecode::compiler {
     statement::statement(
             element* parent,
             element* expr) : element(parent, element_type_t::statement),
-                             _expr(expr) {
+                             _expression(expr) {
     }
 
-    element* statement::expr() {
-        return _expr;
+    element* statement::expression() {
+        return _expression;
     }
 
     label_list_t& statement::labels() {

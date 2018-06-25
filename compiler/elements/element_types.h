@@ -55,10 +55,13 @@ namespace basecode::compiler {
     class procedure_instance;
 
     using label_list_t = std::vector<label*>;
+    using block_list_t = std::vector<block*>;
     using element_list_t = std::vector<element*>;
     using comment_list_t = std::vector<comment*>;
     using statement_list_t = std::vector<statement*>;
+    using identifier_list_t = std::vector<identifier*>;
     using directive_map_t = std::map<std::string, directive*>;
+    using element_map_t = std::unordered_map<common::id_t, element*>;
     using procedure_instance_list_t = std::vector<procedure_instance*>;
 
     ///////////////////////////////////////////////////////////////////////////
@@ -98,12 +101,63 @@ namespace basecode::compiler {
         binary_operator,
     };
 
+    static inline std::unordered_map<element_type_t, std::string> s_element_type_names = {
+        {element_type_t::element, "element"},
+        {element_type_t::cast, "cast"},
+        {element_type_t::if_e, "if"},
+        {element_type_t::label, "label"},
+        {element_type_t::block, "block"},
+        {element_type_t::field, "field"},
+        {element_type_t::comment, "comment"},
+        {element_type_t::program, "program"},
+        {element_type_t::any_type, "any_type"},
+        {element_type_t::return_e, "return"},
+        {element_type_t::proc_type, "proc_type"},
+        {element_type_t::directive, "directive"},
+        {element_type_t::attribute, "attribute"},
+        {element_type_t::bool_type, "bool_type"},
+        {element_type_t::statement, "statement"},
+        {element_type_t::proc_call, "proc_call"},
+        {element_type_t::alias_type, "alias_type"},
+        {element_type_t::array_type, "array_type"},
+        {element_type_t::identifier, "identifier"},
+        {element_type_t::expression, "expression"},
+        {element_type_t::string_type, "string_type"},
+        {element_type_t::namespace_e, "namespace"},
+        {element_type_t::initializer, "initializer"},
+        {element_type_t::numeric_type, "numeric_type"},
+        {element_type_t::proc_instance, "proc_instance"},
+        {element_type_t::float_literal, "float_literal"},
+        {element_type_t::string_literal, "string_literal"},
+        {element_type_t::composite_type, "composite_type"},
+        {element_type_t::unary_operator, "unary_operator"},
+        {element_type_t::boolean_literal, "boolean_literal"},
+        {element_type_t::integer_literal, "integer_literal"},
+        {element_type_t::binary_operator, "binary_operator"},
+    };
+
+    static inline std::string element_type_name(element_type_t type) {
+        auto it = s_element_type_names.find(type);
+        if (it == s_element_type_names.end()) {
+            return "";
+        }
+        return it->second;
+    }
+
     ///////////////////////////////////////////////////////////////////////////
 
     enum class comment_type_t {
         line = 1,
         block
     };
+
+    static inline std::string comment_type_name(comment_type_t type) {
+        switch (type) {
+            case comment_type_t::line:  return "line";
+            case comment_type_t::block: return "block";
+        }
+        return "unknown";
+    }
 
     ///////////////////////////////////////////////////////////////////////////
 
@@ -140,6 +194,42 @@ namespace basecode::compiler {
         assignment
     };
 
+    static inline std::unordered_map<operator_type_t, std::string> s_operator_type_names = {
+        {operator_type_t::unknown,               "unknown"},
+        {operator_type_t::negate,                "negate"},
+        {operator_type_t::binary_not,            "binary_not"},
+        {operator_type_t::logical_not,           "logical_not"},
+        {operator_type_t::add,                   "add"},
+        {operator_type_t::subtract,              "subtract"},
+        {operator_type_t::multiply,              "multiply"},
+        {operator_type_t::divide,                "divide"},
+        {operator_type_t::modulo,                "modulo"},
+        {operator_type_t::equals,                "equals"},
+        {operator_type_t::not_equals,            "not_equals"},
+        {operator_type_t::greater_than,          "greater_than"},
+        {operator_type_t::less_than,             "less_than"},
+        {operator_type_t::greater_than_or_equal, "greater_than_or_equal"},
+        {operator_type_t::less_than_or_equal,    "less_than_or_equal"},
+        {operator_type_t::logical_or,            "logical_or"},
+        {operator_type_t::logical_and,           "logical_and"},
+        {operator_type_t::binary_or,             "binary_or"},
+        {operator_type_t::binary_and,            "binary_and"},
+        {operator_type_t::binary_xor,            "binary_xor"},
+        {operator_type_t::shift_right,           "shift_right"},
+        {operator_type_t::shift_left,            "shift_left"},
+        {operator_type_t::rotate_right,          "rotate_right"},
+        {operator_type_t::rotate_left,           "rotate_left"},
+        {operator_type_t::exponent,              "exponent"},
+        {operator_type_t::assignment,            "assignment"}
+    };
+
+    static inline std::string operator_type_name(operator_type_t type) {
+        auto it = s_operator_type_names.find(type);
+        if (it == s_operator_type_names.end())
+            return "";
+        return it->second;
+    }
+    
     static inline std::unordered_map<syntax::token_types_t, operator_type_t> s_unary_operators = {
         {syntax::token_types_t::minus, operator_type_t::negate},
         {syntax::token_types_t::tilde, operator_type_t::binary_not},
@@ -215,11 +305,11 @@ namespace basecode::compiler {
             return _identifiers.size();
         }
 
+        identifier_list_t as_list() const;
+
         bool remove(const std::string& name);
 
         identifier* find(const std::string& name);
-
-        // XXX: add ability to get range of identifiers for overloads
 
     private:
         std::unordered_multimap<std::string, identifier*> _identifiers {};

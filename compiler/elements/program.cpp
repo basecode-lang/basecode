@@ -41,13 +41,17 @@
 
 namespace basecode::compiler {
 
-    program::program() : block(nullptr, element_type_t::program) {
+    program::program() : element(nullptr, element_type_t::program) {
     }
 
     program::~program() {
         for (auto element : _elements)
             delete element.second;
         _elements.clear();
+    }
+
+    compiler::block* program::block() {
+        return _block;
     }
 
     element* program::evaluate(
@@ -58,26 +62,7 @@ namespace basecode::compiler {
 
         switch (node->type) {
             case syntax::ast_node_types_t::symbol: {
-                auto block_scope = (block*)nullptr;
-                if (node->children.size() == 1) {
-                    block_scope = current_scope();
-                } else {
-                    block_scope = this;
-                }
-                auto ident = (identifier*)nullptr;
-                for (const auto& symbol_node : node->children) {
-                    ident = block_scope->identifiers().find(symbol_node->token.value);
-                    if (ident == nullptr || ident->initializer() == nullptr)
-                        return nullptr;
-                    auto expr = ident->initializer()->expression();
-                    if (expr->element_type() == element_type_t::namespace_e) {
-                        auto ns = dynamic_cast<namespace_element*>(expr);
-                        block_scope = dynamic_cast<block*>(ns->expression());
-                    } else {
-                        break;
-                    }
-                }
-                return ident;
+                return find_identifier(node);
             }
             case syntax::ast_node_types_t::attribute: {
                 return make_attribute(
@@ -91,10 +76,13 @@ namespace basecode::compiler {
             }
             case syntax::ast_node_types_t::program:
             case syntax::ast_node_types_t::basic_block: {
-                push_new_block();
+                auto scope_block = push_new_block();
 
                 if (node->type == syntax::ast_node_types_t::program) {
+                    _block = scope_block;
                     initialize_core_types();
+                } else {
+                    current_scope()->blocks().push_back(scope_block);
                 }
 
                 for (auto it = node->children.begin();
@@ -143,60 +131,64 @@ namespace basecode::compiler {
                 return make_expression(evaluate(r, node->lhs));
             }
             case syntax::ast_node_types_t::assignment: {
-                std::string type_name;
-                const auto& symbol = node->lhs;
-                if (node->lhs->rhs != nullptr)
-                    type_name = node->lhs->rhs->token.value;
+                const auto& assignment_target_list = node->lhs;
+                for (const auto& symbol : assignment_target_list->children) {
+                    std::string type_name;
+                    if (symbol->rhs != nullptr)
+                        type_name = symbol->rhs->token.value;
 
-                auto scope = dynamic_cast<block*>(this);
-                if (symbol->children.size() == 1) {
-                    scope = current_scope();
-                } else {
-                    for (size_t i = 0; i < symbol->children.size() - 1; i++) {
-                        const auto& symbol_node = symbol->children[i];
-                        auto ident = scope->identifiers().find(symbol_node->token.value);
-                        if (ident == nullptr) {
-                            auto new_scope = make_block();
-                            auto ns_identifier = make_identifier(
-                                symbol_node->token.value,
-                                make_initializer(make_namespace(new_scope)));
-                            scope->identifiers().add(ns_identifier);
-                            scope = new_scope;
-                        } else {
-                            auto expr = ident->initializer()->expression();
-                            if (expr->element_type() == element_type_t::namespace_e) {
-                                auto ns = dynamic_cast<namespace_element*>(expr);
-                                scope = dynamic_cast<block*>(ns->expression());
+                    auto scope = block();
+                    if (symbol->children.size() == 1) {
+                        scope = current_scope();
+                    } else {
+                        for (size_t i = 0; i < symbol->children.size() - 1; i++) {
+                            const auto& symbol_node = symbol->children[i];
+                            auto ident = scope->identifiers().find(symbol_node->token.value);
+                            if (ident == nullptr) {
+                                // XXX: need to add scope override to make_initializer and make_namespace!!!!
+                                auto new_scope = make_block(scope);
+                                auto ns_identifier = make_identifier(
+                                    symbol_node->token.value,
+                                    make_initializer(make_namespace(new_scope)),
+                                    new_scope);
+                                scope->identifiers().add(ns_identifier);
+                                scope = new_scope;
                             } else {
-                                // XXX: what should really be happening here
-                                //      if the scope isn't a namespace, is that an error?
-                                break;
+                                auto expr = ident->initializer()->expression();
+                                if (expr->element_type() == element_type_t::namespace_e) {
+                                    auto ns = dynamic_cast<namespace_element*>(expr);
+                                    scope = dynamic_cast<compiler::block*>(ns->expression());
+                                } else {
+                                    // XXX: what should really be happening here
+                                    //      if the scope isn't a namespace, is that an error?
+                                    break;
+                                }
                             }
                         }
                     }
+
+                    push_scope(scope);
+
+                    const auto& final_symbol = symbol->children.back();
+
+                    auto new_identifier = make_identifier(
+                        final_symbol->token.value,
+                        make_initializer(evaluate(r, node->rhs)));
+
+                    if (symbol->lhs != nullptr
+                    &&  symbol->lhs->type == syntax::ast_node_types_t::constant_expression) {
+                        new_identifier->constant(true);
+                    }
+
+                    if (!type_name.empty())
+                        new_identifier->type(find_type(type_name));
+
+                    scope->identifiers().add(new_identifier);
+
+                    pop_scope();
+
+                    return new_identifier;
                 }
-
-                push_scope(scope);
-
-                const auto& final_symbol = symbol->children.back();
-
-                auto new_identifier = make_identifier(
-                    final_symbol->token.value,
-                    make_initializer(evaluate(r, node->rhs)));
-
-                if (symbol->lhs != nullptr
-                &&  symbol->lhs->type == syntax::ast_node_types_t::constant_expression) {
-                    new_identifier->constant(true);
-                }
-
-                if (!type_name.empty())
-                    new_identifier->type(find_type(type_name));
-
-                scope->identifiers().add(new_identifier);
-
-                pop_scope();
-
-                return new_identifier;
             }
             case syntax::ast_node_types_t::line_comment: {
                 return make_comment(
@@ -325,7 +317,9 @@ namespace basecode::compiler {
                                 break;
                             }
                             case syntax::ast_node_types_t::basic_block: {
-                                auto basic_block = dynamic_cast<block*>(evaluate(r, child_node));
+                                auto basic_block = dynamic_cast<compiler::block*>(evaluate(
+                                    r,
+                                    child_node));
                                 // XXX: add identifiers
                                 proc_type->instances().push_back(make_procedure_instance(
                                     proc_type,
@@ -431,7 +425,7 @@ namespace basecode::compiler {
         return true;
     }
 
-    block* program::pop_scope() {
+    compiler::block* program::pop_scope() {
         if (_scope_stack.empty())
             return nullptr;
         auto top = _scope_stack.top();
@@ -448,13 +442,17 @@ namespace basecode::compiler {
         return field;
     }
 
-    block* program::make_block() {
-        auto type = new block(current_scope());
+    compiler::block* program::make_block(compiler::block* parent_scope) {
+        auto type = new compiler::block(parent_scope == nullptr ? current_scope() : parent_scope);
         _elements.insert(std::make_pair(type->id(), type));
         return type;
     }
 
-    block* program::push_new_block() {
+    const element_map_t& program::elements() const {
+        return _elements;
+    }
+
+    compiler::block* program::push_new_block() {
         auto type = make_block();
         push_scope(type);
         return type;
@@ -499,7 +497,7 @@ namespace basecode::compiler {
         return type;
     }
 
-    block* program::current_scope() const {
+    compiler::block* program::current_scope() const {
         if (_scope_stack.empty())
             return nullptr;
         return _scope_stack.top();
@@ -562,8 +560,12 @@ namespace basecode::compiler {
 
     identifier* program::make_identifier(
             const std::string& name,
-            initializer* expr) {
-        auto identifier = new compiler::identifier(current_scope(), name, expr);
+            initializer* expr,
+            compiler::block* block_scope) {
+        auto identifier = new compiler::identifier(
+            block_scope == nullptr ? current_scope() : block_scope,
+            name,
+            expr);
         _elements.insert(std::make_pair(identifier->id(), identifier));
         return identifier;
     }
@@ -595,7 +597,7 @@ namespace basecode::compiler {
         return type;
     }
 
-    void program::push_scope(block* block) {
+    void program::push_scope(compiler::block* block) {
         _scope_stack.push(block);
     }
 
@@ -605,7 +607,7 @@ namespace basecode::compiler {
         return return_element;
     }
 
-    element* program::find_element(id_t id) {
+    element* program::find_element(common::id_t id) {
         auto it = _elements.find(id);
         if (it != _elements.end())
             return it->second;
@@ -682,7 +684,7 @@ namespace basecode::compiler {
             auto type = scope->types().find(name);
             if (type != nullptr)
                 return type;
-            scope = dynamic_cast<block*>(scope->parent());
+            scope = dynamic_cast<compiler::block*>(scope->parent());
         }
         return nullptr;
     }
@@ -752,6 +754,29 @@ namespace basecode::compiler {
             statement->labels().push_back(label);
         _elements.insert(std::make_pair(statement->id(), statement));
         return statement;
+    }
+
+    compiler::identifier* program::find_identifier(const syntax::ast_node_shared_ptr& node) {
+        compiler::block* block_scope = nullptr;
+        if (node->children.size() == 1) {
+            block_scope = current_scope();
+        } else {
+            block_scope = block();
+        }
+        auto ident = (identifier*)nullptr;
+        for (const auto& symbol_node : node->children) {
+            ident = block_scope->identifiers().find(symbol_node->token.value);
+            if (ident == nullptr || ident->initializer() == nullptr)
+                return nullptr;
+            auto expr = ident->initializer()->expression();
+            if (expr->element_type() == element_type_t::namespace_e) {
+                auto ns = dynamic_cast<namespace_element*>(expr);
+                block_scope = dynamic_cast<compiler::block*>(ns->expression());
+            } else {
+                break;
+            }
+        }
+        return ident;
     }
 
 };

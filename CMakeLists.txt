@@ -103,7 +103,7 @@ add_executable(
         compiler/elements/binary_operator.cpp compiler/elements/binary_operator.h
         compiler/elements/boolean_literal.cpp compiler/elements/boolean_literal.h
         compiler/elements/namespace_element.cpp compiler/elements/namespace_element.h
-        compiler/elements/procedure_instance.cpp compiler/elements/procedure_instance.h)
+        compiler/elements/procedure_instance.cpp compiler/elements/procedure_instance.h compiler/code_dom_formatter.cpp compiler/code_dom_formatter.h)
 target_link_libraries(bootstrap ${CONAN_LIBS})
 
 # custom post bulid steps

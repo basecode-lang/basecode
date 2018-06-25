@@ -21,13 +21,13 @@ namespace basecode::compiler {
             element* parent,
             element* expr);
 
-        element* expr();
+        element* expression();
 
         label_list_t& labels();
 
     private:
         label_list_t _labels {};
-        compiler::element* _expr = nullptr;
+        compiler::element* _expression = nullptr;
     };
 
 };

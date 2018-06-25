@@ -10,10 +10,12 @@
 // ----------------------------------------------------------------------------
 
 #include <fstream>
+#include <fmt/ostream.h>
 #include <parser/lexer.h>
 #include <parser/ast_formatter.h>
 #include <compiler/elements/program.h>
 #include "bytecode_emitter.h"
+#include "code_dom_formatter.h"
 
 namespace basecode::compiler {
 
@@ -63,22 +65,48 @@ namespace basecode::compiler {
                 auto close_required = false;
                 FILE* ast_output_file = stdout;
                 if (!_options.ast_graph_file_name.empty()) {
-                    ast_output_file = fopen(_options.ast_graph_file_name.c_str(), "wt");
+                    ast_output_file = fopen(
+                        _options.ast_graph_file_name.c_str(),
+                        "wt");
                     close_required = true;
                 }
 
-                syntax::ast_formatter formatter(program_node, ast_output_file);
-                formatter.format_graph_viz();
+                syntax::ast_formatter formatter(
+                    program_node,
+                    ast_output_file);
+                formatter.format(fmt::format(
+                    "AST Graph: {}",
+                    _options.ast_graph_file_name.string()));
 
                 if (close_required)
                     fclose(ast_output_file);
             }
 
             compiler::program program {};
-            if (!program.initialize(r, program_node)) {
-                // XXX: probably something to do here?
+            if (program.initialize(r, program_node)) {
+                if (_options.verbose) {
+                    auto close_required = false;
+                    FILE* code_dom_output_file = stdout;
+                    if (!_options.code_dom_graph_file_name.empty()) {
+                        code_dom_output_file = fopen(
+                            _options.code_dom_graph_file_name.c_str(),
+                            "wt");
+                        close_required = true;
+                    }
+
+                    compiler::code_dom_formatter formatter(
+                        &program,
+                        code_dom_output_file);
+                    formatter.format(fmt::format(
+                        "Code DOM Graph: {}",
+                        _options.code_dom_graph_file_name.string()));
+
+                    if (close_required)
+                        fclose(code_dom_output_file);
+                }
             }
         }
+
         return !r.is_failed();
     }
 

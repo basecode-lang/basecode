@@ -24,12 +24,12 @@ namespace basecode::compiler {
     element::~element() {
     }
 
-    id_t element::id() const {
-        return _id;
-    }
-
     element* element::parent() {
         return _parent;
+    }
+
+    common::id_t element::id() const {
+        return _id;
     }
 
     attribute_map_t& element::attributes() {

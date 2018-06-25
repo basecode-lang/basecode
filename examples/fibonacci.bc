@@ -19,14 +19,6 @@ alpha::compiler::config := ns {
 };
 
 alpha::compiler::examples := ns {
-    magick_number:u16 := 42;
-
-    fuznucker := proc(/* before*/ a:u8 /*after*/, b:u8, c:u8, d:u8):/*baz */ u16 /* foo */, string {
-        return /*expr before */ (a * b) + (c * d) /* expr after */, "hello world" /* string after */;
-    };
-
-    /*prod*/ product /*prod_after*/, /*msg */ msg /*msg_after*/ := fuznucker(8, 8);
-
     fib := proc(n:u64 := 10):u64 {
         if n == 0 || n == 1 {
             return n;

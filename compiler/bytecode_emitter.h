@@ -104,6 +104,7 @@ namespace basecode::compiler {
         size_t heap_size = 0;
         size_t stack_size = 0;
         std::filesystem::path ast_graph_file_name {};
+        std::filesystem::path code_dom_graph_file_name {};
     };
 
     class bytecode_emitter {
