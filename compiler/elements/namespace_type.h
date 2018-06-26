@@ -15,22 +15,11 @@
 
 namespace basecode::compiler {
 
-    class array_type : public compiler::type {
+    class namespace_type : public compiler::type {
     public:
-        array_type(
-            element* parent,
-            const std::string& name,
-            compiler::type* entry_type);
-
-        uint64_t size() const;
-
-        void size(uint64_t value);
-
-        compiler::type* entry_type();
+        explicit namespace_type(element* parent);
 
     private:
-        uint64_t _size = 0;
-        compiler::type* _entry_type = nullptr;
     };
 
 };

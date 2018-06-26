@@ -13,8 +13,11 @@
 #include "elements/cast.h"
 #include "elements/alias.h"
 #include "elements/block.h"
+#include "elements/field.h"
+#include "elements/label.h"
 #include "elements/program.h"
 #include "elements/comment.h"
+#include "elements/any_type.h"
 #include "elements/attribute.h"
 #include "elements/directive.h"
 #include "elements/statement.h"
@@ -32,10 +35,12 @@
 #include "elements/composite_type.h"
 #include "elements/string_literal.h"
 #include "elements/unary_operator.h"
+#include "elements/namespace_type.h"
 #include "elements/integer_literal.h"
 #include "elements/boolean_literal.h"
 #include "elements/binary_operator.h"
 #include "elements/namespace_element.h"
+#include "elements/procedure_instance.h"
 #include "code_dom_formatter.h"
 
 namespace basecode::compiler {
@@ -99,8 +104,6 @@ namespace basecode::compiler {
                     details,
                     style);
             }
-            case element_type_t::element:
-                break;
             case element_type_t::cast: {
                 auto element = dynamic_cast<cast*>(node);
                 auto style = ", fillcolor=deeppink, style=\"filled\"";
@@ -122,18 +125,32 @@ namespace basecode::compiler {
                     node_vertex_name,
                     style);
             }
-            case element_type_t::label:
-                break;
+            case element_type_t::label: {
+                auto element = dynamic_cast<label*>(node);
+                auto style = ", fillcolor=lightblue, style=\"filled\"";
+                return fmt::format(
+                    "{}[shape=record,label=\"label|{}\"{}];",
+                    node_vertex_name,
+                    element->name(),
+                    style);
+            }
             case element_type_t::block: {
-                auto block_element = dynamic_cast<block*>(node);
                 auto style = ", fillcolor=floralwhite, style=\"filled\"";
                 return fmt::format(
                     "{}[shape=record,label=\"block\"{}];",
                     node_vertex_name,
                     style);
             }
-            case element_type_t::field:
-                break;
+            case element_type_t::field: {
+                auto element = dynamic_cast<field*>(node);
+                auto style = ", fillcolor=gainsboro, style=\"filled\"";
+                add_primary_edge(element, element->type());
+                return fmt::format(
+                    "{}[shape=record,label=\"field|{}\"{}];",
+                    node_vertex_name,
+                    element->name(),
+                    style);
+            }
             case element_type_t::program: {
                 auto program_element = dynamic_cast<program*>(node);
                 auto style = ", fillcolor=aliceblue, style=\"filled\"";
@@ -143,8 +160,15 @@ namespace basecode::compiler {
                     node_vertex_name,
                     style);
             }
-            case element_type_t::any_type:
-                break;
+            case element_type_t::any_type: {
+                auto element = dynamic_cast<any_type*>(node);
+                auto style = ", fillcolor=gainsboro, style=\"filled\"";
+                return fmt::format(
+                    "{}[shape=record,label=\"any_type|{}\"{}];",
+                    node_vertex_name,
+                    element->name(),
+                    style);
+            }
             case element_type_t::return_e: {
                 auto element = dynamic_cast<return_element*>(node);
                 auto style = ", fillcolor=brown1, style=\"filled\"";
@@ -158,6 +182,7 @@ namespace basecode::compiler {
             case element_type_t::proc_type: {
                 auto element = dynamic_cast<procedure_type*>(node);
                 auto style = ", fillcolor=gainsboro, style=\"filled\"";
+                add_primary_edge(element, element->scope());
                 return fmt::format(
                     "{}[shape=record,label=\"proc_type|{}\"{}];",
                     node_vertex_name,
@@ -188,6 +213,8 @@ namespace basecode::compiler {
                 auto statement_element = dynamic_cast<statement*>(node);
                 auto style = ", fillcolor=azure, style=\"filled\"";
                 add_primary_edge(statement_element, statement_element->expression());
+                for (auto lbl : statement_element->labels())
+                    add_primary_edge(statement_element, lbl);
                 return fmt::format(
                     "{}[shape=record,label=\"statement\"{}];",
                     node_vertex_name,
@@ -197,6 +224,7 @@ namespace basecode::compiler {
                 auto element = dynamic_cast<procedure_call*>(node);
                 auto style = ", fillcolor=darkorchid1, style=\"filled\"";
                 add_primary_edge(element, element->expression());
+                add_primary_edge(element, element->procedure_type());
                 return fmt::format(
                     "{}[shape=record,label=\"proc_call\"{}];",
                     node_vertex_name,
@@ -214,9 +242,15 @@ namespace basecode::compiler {
             case element_type_t::array_type: {
                 auto element = dynamic_cast<array_type*>(node);
                 auto style = ", fillcolor=gainsboro, style=\"filled\"";
+                std::string entry_type_name = "unknown";
+                if (element->entry_type() != nullptr)
+                    entry_type_name = element->entry_type()->name();
+                add_primary_edge(element, element->entry_type());
                 return fmt::format(
-                    "{}[shape=record,label=\"array_type\"{}];",
+                    "{}[shape=record,label=\"array_type|size: {}|type: {}\"{}];",
                     node_vertex_name,
+                    element->size(),
+                    entry_type_name,
                     style);
             }
             case element_type_t::identifier: {
@@ -285,7 +319,14 @@ namespace basecode::compiler {
                     style);
             }
             case element_type_t::proc_instance: {
-                break;
+                auto element = dynamic_cast<procedure_instance*>(node);
+                auto style = ", fillcolor=gainsboro, style=\"filled\"";
+                add_primary_edge(element, element->procedure_type());
+                add_primary_edge(element, element->scope());
+                return fmt::format(
+                    "{}[shape=record,label=\"proc_instance\"{}];",
+                    node_vertex_name,
+                    style);
             }
             case element_type_t::float_literal: {
                 auto element = dynamic_cast<float_literal*>(node);
@@ -353,6 +394,17 @@ namespace basecode::compiler {
                     operator_type_name(element->operator_type()),
                     style);
             }
+            case element_type_t::namespace_type: {
+                auto element = dynamic_cast<namespace_type*>(node);
+                auto style = ", fillcolor=gainsboro, style=\"filled\"";
+                return fmt::format(
+                    "{}[shape=record,label=\"namespace_type|{}\"{}];",
+                    node_vertex_name,
+                    element->name(),
+                    style);
+            }
+            default:
+                break;
         }
 
         return "";

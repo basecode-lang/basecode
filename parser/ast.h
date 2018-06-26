@@ -170,6 +170,11 @@ namespace basecode::syntax {
             return ast_node_type_name(type);
         }
 
+        bool has_type_identifier() const {
+            return rhs != nullptr
+                && rhs->type == syntax::ast_node_types_t::type_identifier;
+        }
+
         bool operator != (const ast_node_t& other) const {
             return this->token.value != other.token.value;
         }

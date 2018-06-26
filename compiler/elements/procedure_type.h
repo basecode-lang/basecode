@@ -20,9 +20,12 @@ namespace basecode::compiler {
     public:
         procedure_type(
             element* parent,
+            compiler::block* scope,
             const std::string& name);
 
         field_map_t& returns();
+
+        compiler::block* scope();
 
         field_map_t& parameters();
 
@@ -34,6 +37,7 @@ namespace basecode::compiler {
         field_map_t _returns {};
         field_map_t _parameters {};
         type_map_t _type_parameters {};
+        compiler::block* _scope = nullptr;
         procedure_instance_list_t _instances {};
     };
 

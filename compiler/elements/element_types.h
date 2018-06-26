@@ -48,6 +48,7 @@ namespace basecode::compiler {
     class return_element;
     class procedure_call;
     class string_literal;
+    class namespace_type;
     class boolean_literal;
     class integer_literal;
     class binary_operator;
@@ -96,6 +97,7 @@ namespace basecode::compiler {
         string_literal,
         composite_type,
         unary_operator,
+        namespace_type,
         boolean_literal,
         integer_literal,
         binary_operator,
@@ -128,6 +130,7 @@ namespace basecode::compiler {
         {element_type_t::numeric_type, "numeric_type"},
         {element_type_t::proc_instance, "proc_instance"},
         {element_type_t::float_literal, "float_literal"},
+        {element_type_t::namespace_type, "namespace_type"},
         {element_type_t::string_literal, "string_literal"},
         {element_type_t::composite_type, "composite_type"},
         {element_type_t::unary_operator, "unary_operator"},

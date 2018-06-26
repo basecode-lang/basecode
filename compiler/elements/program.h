@@ -81,6 +81,10 @@ namespace basecode::compiler {
 
         return_element* make_return();
 
+        initializer* make_initializer(
+            element* expr,
+            compiler::block* block_scope = nullptr);
+
         string_type* make_string_type();
 
         alias* make_alias(element* expr);
@@ -89,6 +93,10 @@ namespace basecode::compiler {
             const std::string& name,
             int64_t min,
             uint64_t max);
+
+        namespace_element* make_namespace(
+            element* expr,
+            compiler::block* block_scope = nullptr);
 
         procedure_call* make_procedure_call(
             compiler::type* procedure_type,
@@ -103,7 +111,7 @@ namespace basecode::compiler {
             element* lhs,
             element* rhs);
 
-        procedure_type* make_procedure_type();
+        namespace_type* make_namespace_type();
 
         boolean_literal* make_bool(bool value);
 
@@ -117,15 +125,22 @@ namespace basecode::compiler {
             compiler::type* procedure_type,
             compiler::block* scope);
 
-        initializer* make_initializer(element* expr);
-
         integer_literal* make_integer(uint64_t value);
 
-        namespace_element* make_namespace(element* expr);
+        compiler::identifier* add_identifier_to_scope(
+            common::result& r,
+            const syntax::ast_node_shared_ptr& symbol,
+            const syntax::ast_node_shared_ptr& rhs);
 
         string_literal* make_string(const std::string& value);
 
+        procedure_type* make_procedure_type(compiler::block* block_scope);
+
         compiler::block* make_block(compiler::block* parent_scope = nullptr);
+
+        array_type* make_array_type(compiler::type* entry_type, size_t size);
+
+        compiler::type* find_array_type(compiler::type* entry_type, size_t size);
 
     private:
         element* evaluate(

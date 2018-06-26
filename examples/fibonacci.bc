@@ -31,6 +31,7 @@ alpha::compiler::examples := ns {
 
     main := proc():u32 {
         final_fib_value := cast<u32>(fib(alpha::compiler::config::fibonacci::length_of_sequence));
+    'the_end:
         return final_fib_value;
     } @entry_point;
 };

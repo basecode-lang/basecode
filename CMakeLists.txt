@@ -83,6 +83,7 @@ add_executable(
         compiler/elements/attribute.cpp compiler/elements/attribute.h
         compiler/elements/directive.cpp compiler/elements/directive.h
         compiler/elements/statement.cpp compiler/elements/statement.h
+        compiler/code_dom_formatter.cpp compiler/code_dom_formatter.h
         compiler/elements/if_element.cpp compiler/elements/if_element.h
         compiler/elements/identifier.cpp compiler/elements/identifier.h
         compiler/elements/expression.cpp compiler/elements/expression.h
@@ -93,6 +94,7 @@ add_executable(
         compiler/elements/operator_base.cpp compiler/elements/operator_base.h
         compiler/elements/float_literal.cpp compiler/elements/float_literal.h
         compiler/elements/element_types.cpp compiler/elements/element_types.h
+        compiler/elements/namespace_type.cpp compiler/elements/namespace_type.h
         compiler/elements/composite_type.cpp compiler/elements/composite_type.h
         compiler/elements/procedure_type.cpp compiler/elements/procedure_type.h
         compiler/elements/string_literal.cpp compiler/elements/string_literal.h
@@ -103,7 +105,7 @@ add_executable(
         compiler/elements/binary_operator.cpp compiler/elements/binary_operator.h
         compiler/elements/boolean_literal.cpp compiler/elements/boolean_literal.h
         compiler/elements/namespace_element.cpp compiler/elements/namespace_element.h
-        compiler/elements/procedure_instance.cpp compiler/elements/procedure_instance.h compiler/code_dom_formatter.cpp compiler/code_dom_formatter.h)
+        compiler/elements/procedure_instance.cpp compiler/elements/procedure_instance.h)
 target_link_libraries(bootstrap ${CONAN_LIBS})
 
 # custom post bulid steps
