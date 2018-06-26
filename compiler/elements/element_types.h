@@ -57,6 +57,7 @@ namespace basecode::compiler {
 
     using label_list_t = std::vector<label*>;
     using block_list_t = std::vector<block*>;
+    using field_list_t = std::vector<field*>;
     using element_list_t = std::vector<element*>;
     using comment_list_t = std::vector<comment*>;
     using statement_list_t = std::vector<statement*>;
@@ -64,6 +65,27 @@ namespace basecode::compiler {
     using directive_map_t = std::map<std::string, directive*>;
     using element_map_t = std::unordered_map<common::id_t, element*>;
     using procedure_instance_list_t = std::vector<procedure_instance*>;
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    enum class composite_types_t {
+        enum_type,
+        union_type,
+        struct_type,
+    };
+
+    static inline std::unordered_map<composite_types_t, std::string> s_composite_type_names = {
+        {composite_types_t::enum_type, "enum_type"},
+        {composite_types_t::union_type, "union_type"},
+        {composite_types_t::struct_type, "struct_type"},
+    };
+
+    static inline std::string composite_type_name(composite_types_t type) {
+        auto it = s_composite_type_names.find(type);
+        if (it == s_composite_type_names.end())
+            return "unknown_composite_type";
+        return it->second;
+    }
 
     ///////////////////////////////////////////////////////////////////////////
 
@@ -287,6 +309,8 @@ namespace basecode::compiler {
     struct field_map_t {
         void add(field* value);
 
+        field_list_t as_list();
+
         inline size_t size() const {
             return _fields.size();
         }
@@ -302,6 +326,8 @@ namespace basecode::compiler {
     ///////////////////////////////////////////////////////////////////////////
 
     struct identifier_map_t {
+        void dump();
+
         void add(identifier* value);
 
         size_t size() const {

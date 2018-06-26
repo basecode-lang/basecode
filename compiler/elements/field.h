@@ -25,29 +25,12 @@ namespace basecode::compiler {
     public:
         field(
             element* parent,
-            const std::string& name,
-            compiler::type* type,
-            compiler::initializer* initializer);
+            compiler::identifier* identifier);
 
-        ~field() override;
-
-        compiler::type* type();
-
-        std::string name() const;
-
-        bool inferred_type() const;
-
-        void type(compiler::type* t);
-
-        compiler::initializer* initializer();
-
-        void initializer(compiler::initializer* v);
+        compiler::identifier* identifier();
 
     private:
-        std::string _name;
-        bool _inferred_type = false;
-        compiler::type* _type = nullptr;
-        compiler::initializer* _initializer = nullptr;
+        compiler::identifier* _identifier;
     };
 
 };

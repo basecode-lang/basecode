@@ -15,39 +15,12 @@ namespace basecode::compiler {
 
     field::field(
         element* parent,
-        const std::string& name,
-        compiler::type* type,
-        compiler::initializer* initializer): element(parent, element_type_t::field),
-                                             _name(name),
-                                             _type(type),
-                                             _initializer(initializer) {
+        compiler::identifier* identifier): element(parent, element_type_t::field),
+                                           _identifier(identifier) {
     }
 
-    field::~field() {
-    }
-
-    compiler::type* field::type() {
-        return _type;
-    }
-
-    std::string field::name() const {
-        return _name;
-    }
-
-    bool field::inferred_type() const {
-        return _inferred_type;
-    }
-
-    void field::type(compiler::type* t) {
-        _type = t;
-    }
-
-    compiler::initializer* field::initializer() {
-        return _initializer;
-    }
-
-    void field::initializer(compiler::initializer* v) {
-        _initializer = v;
+    compiler::identifier* field::identifier() {
+        return _identifier;
     }
 
 };

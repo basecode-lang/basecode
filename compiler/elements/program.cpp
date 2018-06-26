@@ -212,8 +212,13 @@ namespace basecode::compiler {
                     evaluate(r, node->rhs));
             }
             case syntax::ast_node_types_t::proc_call: {
-                // XXX: need to evaluate the parts
-                return make_procedure_call(nullptr, evaluate(r, node->rhs));
+                auto proc_identifier = find_identifier(node->lhs);
+                if (proc_identifier != nullptr) {
+                    return make_procedure_call(
+                        proc_identifier->type(),
+                        evaluate(r, node->rhs));
+                }
+                return nullptr;
             }
             case syntax::ast_node_types_t::proc_expression: {
                 auto block_scope = make_block();
@@ -226,10 +231,11 @@ namespace basecode::compiler {
                 for (const auto& type_node : node->lhs->children) {
                     switch (type_node->type) {
                         case syntax::ast_node_types_t::symbol: {
-                            proc_type->returns().add(make_field(
+                            auto return_identifier = make_identifier(
                                 fmt::format("_{}", count++),
-                                find_type(type_node->children[0]->token.value),
-                                nullptr));
+                                nullptr);
+                            return_identifier->type(find_type(type_node->children[0]->token.value));
+                            proc_type->returns().add(make_field(return_identifier));
                             break;
                         }
                         default: {
@@ -241,25 +247,22 @@ namespace basecode::compiler {
                 for (const auto& param_node : node->rhs->children) {
                     switch (param_node->type) {
                         case syntax::ast_node_types_t::assignment: {
-                            compiler::type* param_type = nullptr;
-                            if (param_node->lhs->rhs != nullptr) {
-                                param_type = find_type(param_node->lhs->rhs->token.value);
-                            }
-                            auto field = make_field(
-                                param_node->lhs->children[0]->token.value,
-                                param_type,
-                                make_initializer(evaluate(r, param_node->rhs)));
+                            // XXX: in the parameter list, multiple targets is an error
+                            const auto& symbol_node = param_node->lhs->children[0];
+                            auto param_identifier = add_identifier_to_scope(
+                                r,
+                                symbol_node,
+                                param_node->rhs);
+                            auto field = make_field(param_identifier);
                             proc_type->parameters().add(field);
                             break;
                         }
                         case syntax::ast_node_types_t::symbol: {
-                            compiler::initializer* init = nullptr;
-                            if (param_node->rhs != nullptr)
-                                init = make_initializer(evaluate(r, param_node->rhs));
-                            auto field = make_field(
-                                param_node->children[0]->token.value,
-                                find_type(param_node->rhs->token.value),
-                                init);
+                            auto param_identifier = add_identifier_to_scope(
+                                r,
+                                param_node,
+                                nullptr);
+                            auto field = make_field(param_identifier);
                             proc_type->parameters().add(field);
                             break;
                         }
@@ -269,48 +272,38 @@ namespace basecode::compiler {
                     }
                 }
 
-                if (!node->children.empty()) {
-                    for (const auto& child_node : node->children) {
-                        switch (child_node->type) {
-                            case syntax::ast_node_types_t::attribute: {
-                                proc_type->attributes().add(make_attribute(
-                                    child_node->token.value,
-                                    evaluate(r, child_node->lhs)));
-                                break;
-                            }
-                            case syntax::ast_node_types_t::basic_block: {
-                                auto basic_block = dynamic_cast<compiler::block*>(evaluate(
-                                    r,
-                                    child_node));
-                                // XXX: add identifiers
-                                proc_type->instances().push_back(make_procedure_instance(
-                                    proc_type,
-                                    basic_block));
-                            }
-                            default:
-                                break;
-                        }
-                    }
-                }
+//                if (!node->children.empty()) {
+//                    for (const auto& child_node : node->children) {
+//                        switch (child_node->type) {
+//                            case syntax::ast_node_types_t::attribute: {
+//                                proc_type->attributes().add(make_attribute(
+//                                    child_node->token.value,
+//                                    evaluate(r, child_node->lhs)));
+//                                break;
+//                            }
+//                            case syntax::ast_node_types_t::basic_block: {
+//                                auto basic_block = dynamic_cast<compiler::block*>(evaluate(
+//                                    r,
+//                                    child_node));
+//                                proc_type->instances().push_back(make_procedure_instance(
+//                                    proc_type,
+//                                    basic_block));
+//                            }
+//                            default:
+//                                break;
+//                        }
+//                    }
+//                }
 
                 pop_scope();
 
                 return proc_type;
             }
             case syntax::ast_node_types_t::enum_expression: {
-                auto scope = current_scope();
-                auto& scope_types = scope->types();
-
-                auto type = make_enum();
-                scope_types.add(type);
-
-//                for (const auto& child : node->rhs->children) {
-//                    auto field_element = evaluate(r, child);
-//                    auto field = make_field("", nullptr, nullptr);
-//                    type->fields().add(field);
-//                }
-
-                return type;
+                auto enum_type = make_enum();
+                current_scope()->types().add(enum_type);
+                add_enum_fields(r, enum_type, node->rhs);
+                return enum_type;
             }
             case syntax::ast_node_types_t::cast_expression: {
                 auto type = find_type(node->lhs->token.value);
@@ -326,28 +319,16 @@ namespace basecode::compiler {
                 return make_alias(evaluate(r, node->lhs));
             }
             case syntax::ast_node_types_t::union_expression: {
-                auto scope = current_scope();
-                auto& scope_types = scope->types();
-
-                auto type = make_union();
-                scope_types.add(type);
-
-//                for (const auto& child : node->rhs->children) {
-//                }
-
-                return type;
+                auto union_type = make_union_type();
+                current_scope()->types().add(union_type);
+                add_union_fields(r, union_type, node->rhs);
+                return union_type;
             }
             case syntax::ast_node_types_t::struct_expression: {
-                auto scope = current_scope();
-                auto& scope_types = scope->types();
-
-                auto type = make_struct();
-                scope_types.add(type);
-
-//                for (const auto& child : node->rhs->children) {
-//                }
-
-                return type;
+                auto struct_type = make_struct_type();
+                current_scope()->types().add(struct_type);
+                add_struct_fields(r, struct_type, node->rhs);
+                return struct_type;
             }
             case syntax::ast_node_types_t::return_statement: {
                 auto return_element = make_return();
@@ -397,11 +378,8 @@ namespace basecode::compiler {
         return top;
     }
 
-    field* program::make_field(
-            const std::string& name,
-            compiler::type* type,
-            compiler::initializer* initializer) {
-        auto field = new compiler::field(current_scope(), name, type, initializer);
+    field* program::make_field(compiler::identifier* identifier) {
+        auto field = new compiler::field(current_scope(), identifier);
         _elements.insert(std::make_pair(field->id(), field));
         return field;
     }
@@ -529,6 +507,35 @@ namespace basecode::compiler {
         return identifier;
     }
 
+    void program::add_procedure_instance(
+            common::result& r,
+            compiler::procedure_type* proc_type,
+            const syntax::ast_node_shared_ptr& node) {
+        if (node->children.empty())
+            return;
+
+        for (const auto& child_node : node->children) {
+            switch (child_node->type) {
+                case syntax::ast_node_types_t::attribute: {
+                    proc_type->attributes().add(make_attribute(
+                        child_node->token.value,
+                        evaluate(r, child_node->lhs)));
+                    break;
+                }
+                case syntax::ast_node_types_t::basic_block: {
+                    auto basic_block = dynamic_cast<compiler::block*>(evaluate(
+                        r,
+                        child_node));
+                    proc_type->instances().push_back(make_procedure_instance(
+                        proc_type,
+                        basic_block));
+                }
+                default:
+                    break;
+            }
+        }
+    }
+
     composite_type* program::make_enum() {
         auto type = new compiler::composite_type(
             current_scope(),
@@ -546,24 +553,6 @@ namespace basecode::compiler {
             expr);
         _elements.insert(std::make_pair(initializer->id(), initializer));
         return initializer;
-    }
-
-    composite_type* program::make_union() {
-        auto type = new compiler::composite_type(
-            current_scope(),
-            composite_types_t::union_type,
-            fmt::format("__union_{}__", common::id_pool::instance()->allocate()));
-        _elements.insert(std::make_pair(type->id(), type));
-        return type;
-    }
-
-    composite_type* program::make_struct() {
-        auto type = new compiler::composite_type(
-            current_scope(),
-            composite_types_t::struct_type,
-            fmt::format("__struct_{}__", common::id_pool::instance()->allocate()));
-        _elements.insert(std::make_pair(type->id(), type));
-        return type;
     }
 
     return_element* program::make_return() {
@@ -601,6 +590,24 @@ namespace basecode::compiler {
             expr);
         _elements.insert(std::make_pair(ns->id(), ns));
         return ns;
+    }
+
+    composite_type* program::make_union_type() {
+        auto type = new compiler::composite_type(
+            current_scope(),
+            composite_types_t::union_type,
+            fmt::format("__union_{}__", common::id_pool::instance()->allocate()));
+        _elements.insert(std::make_pair(type->id(), type));
+        return type;
+    }
+
+    composite_type* program::make_struct_type() {
+        auto type = new compiler::composite_type(
+            current_scope(),
+            composite_types_t::struct_type,
+            fmt::format("__struct_{}__", common::id_pool::instance()->allocate()));
+        _elements.insert(std::make_pair(type->id(), type));
+        return type;
     }
 
     procedure_call* program::make_procedure_call(
@@ -700,6 +707,207 @@ namespace basecode::compiler {
         return literal;
     }
 
+    compiler::identifier* program::add_identifier_to_scope(
+            common::result& r,
+            const syntax::ast_node_shared_ptr& symbol,
+            const syntax::ast_node_shared_ptr& rhs) {
+        auto namespace_type = find_type("namespace");
+
+        compiler::type* identifier_type = nullptr;
+        if (symbol->rhs != nullptr) {
+            auto type_name = symbol->rhs->token.value;
+            if (!type_name.empty()) {
+                identifier_type = find_type(type_name);
+
+                if (symbol->rhs->is_array()) {
+                    auto array_type = find_array_type(identifier_type, 0);
+                    if (array_type == nullptr)
+                        array_type = make_array_type(identifier_type, 0);
+                    identifier_type = array_type;
+                }
+            }
+        }
+
+        auto scope = symbol->is_qualified_symbol() ? block() : current_scope();
+
+        for (size_t i = 0; i < symbol->children.size() - 1; i++) {
+            const auto& symbol_node = symbol->children[i];
+            auto ident = scope->identifiers().find(symbol_node->token.value);
+            if (ident == nullptr) {
+                auto new_scope = make_block(scope);
+                auto ns_identifier = make_identifier(
+                    symbol_node->token.value,
+                    make_initializer(
+                        make_namespace(new_scope, new_scope),
+                        new_scope),
+                    new_scope);
+                ns_identifier->type(namespace_type);
+                ns_identifier->inferred_type(true);
+                scope->identifiers().add(ns_identifier);
+                scope = new_scope;
+            } else {
+                auto expr = ident->initializer()->expression();
+                if (expr->element_type() == element_type_t::namespace_e) {
+                    auto ns = dynamic_cast<namespace_element*>(expr);
+                    scope = dynamic_cast<compiler::block*>(ns->expression());
+                } else {
+                    // XXX: what should really be happening here
+                    //      if the scope isn't a namespace, is that an error?
+                    break;
+                }
+            }
+        }
+
+        push_scope(scope);
+
+        const auto& final_symbol = symbol->children.back();
+
+        auto init = (compiler::initializer*)nullptr;
+        if (rhs != nullptr) {
+            auto init_expression = evaluate(r, rhs);
+            if (init_expression != nullptr)
+                init = make_initializer(init_expression);
+        }
+
+        auto new_identifier = make_identifier(
+            final_symbol->token.value,
+            init);
+
+        if (identifier_type == nullptr && init != nullptr) {
+
+        }
+
+        new_identifier->type(identifier_type);
+
+        new_identifier->constant(symbol->is_constant_expression());
+        scope->identifiers().add(new_identifier);
+
+        // XXX: if identifier_type is a procedure, we need to call add_procedure_instances
+
+        pop_scope();
+
+        return new_identifier;
+    }
+
+    void program::add_enum_fields(
+            common::result& r,
+            compiler::composite_type* enum_type,
+            const syntax::ast_node_shared_ptr& block) {
+        // XXX: hard coded for now, need to add type parameter support to enum literal
+        auto u32_type = find_type("u32");
+        for (const auto& child : block->children) {
+            if (child->type != syntax::ast_node_types_t::statement) {
+                // XXX: this is an error!
+                break;
+            }
+            auto expr_node = child->rhs;
+            switch (expr_node->type) {
+                case syntax::ast_node_types_t::assignment: {
+                    compiler::type* field_type = nullptr;
+                    if (expr_node->lhs->rhs != nullptr) {
+                        field_type = find_type(expr_node->lhs->rhs->token.value);
+                    }
+                    auto field_identifier = make_identifier(
+                        expr_node->lhs->children[0]->token.value,
+                        make_initializer(evaluate(r, expr_node->rhs)));
+                    field_identifier->type(field_type);
+                    enum_type->fields().add(make_field(field_identifier));
+                    break;
+                }
+                case syntax::ast_node_types_t::symbol: {
+                    auto field_identifier = make_identifier(
+                        expr_node->children[0]->token.value,
+                        nullptr);
+                    field_identifier->type(u32_type);
+                    enum_type->fields().add(make_field(field_identifier));
+                    break;
+                }
+                default:
+                    break;
+            }
+        }
+    }
+
+    void program::add_struct_fields(
+            common::result& r,
+            compiler::composite_type* struct_type,
+            const syntax::ast_node_shared_ptr& block) {
+        for (const auto& child : block->children) {
+            if (child->type != syntax::ast_node_types_t::statement) {
+                // XXX: this is an error!
+                break;
+            }
+            auto expr_node = child->rhs;
+            switch (expr_node->type) {
+                case syntax::ast_node_types_t::assignment: {
+                    compiler::type* field_type = nullptr;
+                    if (expr_node->lhs->rhs != nullptr) {
+                        field_type = find_type(expr_node->lhs->rhs->token.value);
+                    }
+                    auto field_identifier = make_identifier(
+                        expr_node->lhs->children[0]->token.value,
+                        make_initializer(evaluate(r, expr_node->rhs)));
+                    field_identifier->type(field_type);
+                    struct_type->fields().add(make_field(field_identifier));
+                    break;
+                }
+                case syntax::ast_node_types_t::symbol: {
+                    compiler::type* field_type = nullptr;
+                    if (expr_node->rhs != nullptr)
+                        field_type = find_type(expr_node->rhs->token.value);
+                    auto field_identifier = make_identifier(
+                        expr_node->children[0]->token.value,
+                        nullptr);
+                    field_identifier->type(field_type);
+                    struct_type->fields().add(make_field(field_identifier));
+                    break;
+                }
+                default:
+                    break;
+            }
+        }
+    }
+
+    void program::add_union_fields(
+            common::result& r,
+            compiler::composite_type* union_type,
+            const syntax::ast_node_shared_ptr& block) {
+        for (const auto& child : block->children) {
+            if (child->type != syntax::ast_node_types_t::statement) {
+                // XXX: this is an error!
+                break;
+            }
+            auto expr_node = child->rhs;
+            switch (expr_node->type) {
+                case syntax::ast_node_types_t::assignment: {
+                    compiler::type* field_type = nullptr;
+                    if (expr_node->lhs->rhs != nullptr) {
+                        field_type = find_type(expr_node->lhs->rhs->token.value);
+                    }
+                    auto field_identifier = make_identifier(
+                        expr_node->lhs->children[0]->token.value,
+                        make_initializer(evaluate(r, expr_node->rhs)));
+                    field_identifier->type(field_type);
+                    union_type->fields().add(make_field(field_identifier));
+                    break;
+                }
+                case syntax::ast_node_types_t::symbol: {
+                    compiler::type* field_type = nullptr;
+                    if (expr_node->rhs != nullptr)
+                        field_type = find_type(expr_node->rhs->token.value);
+                    auto field_identifier = make_identifier(
+                        expr_node->children[0]->token.value,
+                        nullptr);
+                    field_identifier->type(field_type);
+                    union_type->fields().add(make_field(field_identifier));
+                    break;
+                }
+                default:
+                    break;
+            }
+        }
+    }
+
     array_type* program::make_array_type(compiler::type* entry_type, size_t size) {
         auto type = new compiler::array_type(
             current_scope(),
@@ -708,10 +916,6 @@ namespace basecode::compiler {
         type->size(size);
         _elements.insert(std::make_pair(type->id(), type));
         return type;
-    }
-
-    compiler::type* program::find_array_type(compiler::type* entry_type, size_t size) {
-        return find_type(fmt::format("__array_{}_{}__", entry_type->name(), size));
     }
 
     cast* program::make_cast(compiler::type* type, element* expr) {
@@ -750,105 +954,41 @@ namespace basecode::compiler {
         return type;
     }
 
-    compiler::identifier* program::find_identifier(const syntax::ast_node_shared_ptr& node) {
-        compiler::block* block_scope = nullptr;
-        if (node->children.size() == 1) {
-            block_scope = current_scope();
-        } else {
-            block_scope = block();
-        }
-        auto ident = (identifier*)nullptr;
-        for (const auto& symbol_node : node->children) {
-            ident = block_scope->identifiers().find(symbol_node->token.value);
-            if (ident == nullptr || ident->initializer() == nullptr)
-                return nullptr;
-            auto expr = ident->initializer()->expression();
-            if (expr->element_type() == element_type_t::namespace_e) {
-                auto ns = dynamic_cast<namespace_element*>(expr);
-                block_scope = dynamic_cast<compiler::block*>(ns->expression());
-            } else {
-                break;
-            }
-        }
-        return ident;
+    compiler::type* program::find_array_type(compiler::type* entry_type, size_t size) {
+        return find_type(fmt::format("__array_{}_{}__", entry_type->name(), size));
     }
 
-    compiler::identifier* program::add_identifier_to_scope(
-            common::result& r,
-            const syntax::ast_node_shared_ptr& symbol,
-            const syntax::ast_node_shared_ptr& rhs) {
-        auto namespace_type = find_type("namespace");
-
-        compiler::type* identifier_type = nullptr;
-        if (symbol->rhs != nullptr) {
-            auto type_name = symbol->rhs->token.value;
-            if (!type_name.empty()) {
-                identifier_type = find_type(type_name);
-
-                if (symbol->rhs->is_array()) {
-                    auto array_type = find_array_type(identifier_type, 0);
-                    if (array_type == nullptr)
-                        array_type = make_array_type(identifier_type, 0);
-                    identifier_type = array_type;
-                }
-            }
-        }
-
-        auto scope = block();
-        if (symbol->children.size() == 1) {
-            scope = current_scope();
-        } else {
-            for (size_t i = 0; i < symbol->children.size() - 1; i++) {
-                const auto& symbol_node = symbol->children[i];
-                auto ident = scope->identifiers().find(symbol_node->token.value);
-                if (ident == nullptr) {
-                    auto new_scope = make_block(scope);
-                    auto ns_identifier = make_identifier(
-                        symbol_node->token.value,
-                        make_initializer(
-                            make_namespace(new_scope, new_scope),
-                            new_scope),
-                        new_scope);
-                    ns_identifier->type(namespace_type);
-                    ns_identifier->inferred_type(true);
-                    scope->identifiers().add(ns_identifier);
-                    scope = new_scope;
+    compiler::identifier* program::find_identifier(const syntax::ast_node_shared_ptr& node) {
+        auto ident = (identifier*) nullptr;
+        if (node->is_qualified_symbol()) {
+            auto block_scope = block();
+            for (const auto& symbol_node : node->children) {
+                ident = block_scope->identifiers().find(symbol_node->token.value);
+                if (ident == nullptr || ident->initializer() == nullptr)
+                    return nullptr;
+                auto expr = ident->initializer()->expression();
+                if (expr->element_type() == element_type_t::namespace_e) {
+                    auto ns = dynamic_cast<namespace_element*>(expr);
+                    block_scope = dynamic_cast<compiler::block*>(ns->expression());
                 } else {
-                    auto expr = ident->initializer()->expression();
-                    if (expr->element_type() == element_type_t::namespace_e) {
-                        auto ns = dynamic_cast<namespace_element*>(expr);
-                        scope = dynamic_cast<compiler::block*>(ns->expression());
-                    } else {
-                        // XXX: what should really be happening here
-                        //      if the scope isn't a namespace, is that an error?
-                        break;
-                    }
+                    break;
                 }
             }
+        } else {
+            const auto& symbol_part = node->children[0];
+            auto block_scope = current_scope();
+            while (block_scope != nullptr) {
+                fmt::print("block_scope: {}\n", block_scope->id());
+                block_scope->identifiers().dump();
+                fmt::print("-----------------------------------------\n");
+                ident = block_scope->identifiers().find(symbol_part->token.value);
+                if (ident != nullptr)
+                    return ident;
+                block_scope = dynamic_cast<compiler::block*>(block_scope->parent());
+            }
+            return nullptr;
         }
-
-        push_scope(scope);
-
-        const auto& final_symbol = symbol->children.back();
-
-        compiler::initializer * init = nullptr;
-        if (rhs != nullptr) {
-            auto init_expression = evaluate(r, rhs);
-            if (init_expression != nullptr)
-                init = make_initializer(init_expression);
-        }
-
-        auto new_identifier = make_identifier(final_symbol->token.value, init);
-        new_identifier->type(identifier_type);
-        new_identifier->constant(
-               symbol->lhs != nullptr
-            && symbol->lhs->type == syntax::ast_node_types_t::constant_expression);
-
-        scope->identifiers().add(new_identifier);
-
-        pop_scope();
-
-        return new_identifier;
+        return ident;
     }
 
 };

@@ -144,11 +144,11 @@ namespace basecode::compiler {
             case element_type_t::field: {
                 auto element = dynamic_cast<field*>(node);
                 auto style = ", fillcolor=gainsboro, style=\"filled\"";
-                add_primary_edge(element, element->type());
+                add_primary_edge(element, element->identifier());
                 return fmt::format(
                     "{}[shape=record,label=\"field|{}\"{}];",
                     node_vertex_name,
-                    element->name(),
+                    element->identifier()->name(),
                     style);
             }
             case element_type_t::program: {
@@ -349,9 +349,12 @@ namespace basecode::compiler {
             case element_type_t::composite_type: {
                 auto element = dynamic_cast<composite_type*>(node);
                 auto style = ", fillcolor=gainsboro, style=\"filled\"";
+                for (auto fld : element->fields().as_list())
+                    add_primary_edge(element, fld);
                 return fmt::format(
-                    "{}[shape=record,label=\"composite_type|{}\"{}];",
+                    "{}[shape=record,label=\"composite_type|{}|{}\"{}];",
                     node_vertex_name,
+                    composite_type_name(element->type()),
                     element->name(),
                     style);
             }

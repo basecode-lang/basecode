@@ -170,9 +170,18 @@ namespace basecode::syntax {
             return ast_node_type_name(type);
         }
 
+        bool is_qualified_symbol() const {
+            return type == syntax::ast_node_types_t::symbol && children.size() > 1;
+        }
+
         bool has_type_identifier() const {
             return rhs != nullptr
                 && rhs->type == syntax::ast_node_types_t::type_identifier;
+        }
+
+        bool is_constant_expression() const {
+            return lhs != nullptr
+                   && lhs->type == syntax::ast_node_types_t::constant_expression;
         }
 
         bool operator != (const ast_node_t& other) const {

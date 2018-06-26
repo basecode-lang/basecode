@@ -16,12 +16,6 @@
 
 namespace basecode::compiler {
 
-    enum class composite_types_t {
-        enum_type,
-        union_type,
-        struct_type,
-    };
-
     class composite_type : public type {
     public:
         composite_type(

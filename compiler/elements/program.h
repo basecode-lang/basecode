@@ -38,11 +38,6 @@ namespace basecode::compiler {
             compiler::type* type,
             element* expr);
 
-        field* make_field(
-            const std::string& name,
-            compiler::type* type,
-            compiler::initializer* initializer);
-
         if_element* make_if(
             element* predicate,
             element* true_branch,
@@ -52,7 +47,20 @@ namespace basecode::compiler {
             comment_type_t type,
             const std::string& value);
 
-        compiler::block* push_new_block();
+        void add_enum_fields(
+            common::result& r,
+            compiler::composite_type* enum_type,
+            const syntax::ast_node_shared_ptr& block);
+
+        void add_struct_fields(
+            common::result& r,
+            compiler::composite_type* struct_type,
+            const syntax::ast_node_shared_ptr& block);
+
+        void add_union_fields(
+            common::result& r,
+            compiler::composite_type* union_type,
+            const syntax::ast_node_shared_ptr& block);
 
         directive* make_directive(
             const std::string& name,
@@ -75,10 +83,6 @@ namespace basecode::compiler {
             initializer* expr,
             compiler::block* block_scope = nullptr);
 
-        composite_type* make_union();
-
-        composite_type* make_struct();
-
         return_element* make_return();
 
         initializer* make_initializer(
@@ -93,6 +97,12 @@ namespace basecode::compiler {
             const std::string& name,
             int64_t min,
             uint64_t max);
+
+        compiler::block* push_new_block();
+
+        composite_type* make_union_type();
+
+        composite_type* make_struct_type();
 
         namespace_element* make_namespace(
             element* expr,
@@ -131,6 +141,13 @@ namespace basecode::compiler {
             common::result& r,
             const syntax::ast_node_shared_ptr& symbol,
             const syntax::ast_node_shared_ptr& rhs);
+
+        void add_procedure_instance(
+            common::result& r,
+            compiler::procedure_type* proc_type,
+            const syntax::ast_node_shared_ptr& node);
+
+        field* make_field(compiler::identifier* identifier);
 
         string_literal* make_string(const std::string& value);
 

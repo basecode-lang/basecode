@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <fmt/format.h>
 #include "type.h"
 #include "field.h"
 #include "attribute.h"
@@ -38,7 +39,15 @@ namespace basecode::compiler {
     ///////////////////////////////////////////////////////////////////////////
 
     void field_map_t::add(field* value) {
-        _fields.insert(std::make_pair(value->name(), value));
+        _fields.insert(std::make_pair(value->identifier()->name(), value));
+    }
+
+    field_list_t field_map_t::as_list() {
+        field_list_t list {};
+        for (const auto& it : _fields) {
+            list.push_back(it.second);
+        }
+        return list;
     }
 
     bool field_map_t::remove(const std::string& name) {
@@ -53,6 +62,12 @@ namespace basecode::compiler {
     }
 
     ///////////////////////////////////////////////////////////////////////////
+
+    void identifier_map_t::dump() {
+        for (const auto& it : _identifiers) {
+            fmt::print("{0} := id({1})\n", it.first, it.second->id());
+        }
+    }
 
     void identifier_map_t::add(identifier* value) {
         _identifiers.insert(std::make_pair(value->name(), value));
