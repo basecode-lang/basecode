@@ -26,6 +26,9 @@ namespace basecode::compiler {
 
         compiler::argument_list* arguments();
 
+    protected:
+        compiler::type* on_infer_type(const compiler::program* program) override;
+
     private:
         compiler::argument_list* _arguments = nullptr;
         compiler::identifier* _identifier = nullptr;

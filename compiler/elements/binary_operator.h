@@ -28,6 +28,9 @@ namespace basecode::compiler {
 
         element* rhs();
 
+    protected:
+        compiler::type* on_infer_type(const compiler::program* program) override;
+
     private:
         element* _lhs = nullptr;
         element* _rhs = nullptr;

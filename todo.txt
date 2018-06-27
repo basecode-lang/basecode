@@ -10,14 +10,6 @@ Basecode Bootstrap Tasks
 
 deps to bytecode generation
 ===========================
-- identifier/namespace handling
-
-- create parameter identifiers in block
-
-- review: procedure calls
-
-- type inference
-
 - bytecode generation
 
 - bytecode-to-native:
@@ -93,3 +85,8 @@ DONE
 - return
 - if/else if/else
 - FIX: comma token is being gobbled up during infix parsing
+- identifier/namespace handling
+- create parameter identifiers in block
+- review: procedure calls
+- type inference
+

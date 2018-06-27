@@ -29,4 +29,8 @@ namespace basecode::compiler {
         return _type;
     }
 
+    compiler::type* cast::on_infer_type(const compiler::program* program) {
+        return _type;
+    }
+
 };

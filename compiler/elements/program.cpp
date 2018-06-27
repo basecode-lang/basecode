@@ -661,17 +661,6 @@ namespace basecode::compiler {
         _scope_stack.push(block);
     }
 
-    type* program::find_type(const std::string& name) {
-        auto scope = current_scope();
-        while (scope != nullptr) {
-            auto type = scope->types().find(name);
-            if (type != nullptr)
-                return type;
-            scope = dynamic_cast<compiler::block*>(scope->parent());
-        }
-        return nullptr;
-    }
-
     float_literal* program::make_float(double value) {
         auto literal = new compiler::float_literal(current_scope(), value);
         _elements.insert(std::make_pair(literal->id(), literal));
@@ -705,6 +694,17 @@ namespace basecode::compiler {
         auto literal = new compiler::integer_literal(current_scope(), value);
         _elements.insert(std::make_pair(literal->id(), literal));
         return literal;
+    }
+
+    compiler::type* program::find_type(const std::string& name) const {
+        auto scope = current_scope();
+        while (scope != nullptr) {
+            auto type = scope->types().find(name);
+            if (type != nullptr)
+                return type;
+            scope = dynamic_cast<compiler::block*>(scope->parent());
+        }
+        return nullptr;
     }
 
     compiler::identifier* program::add_identifier_to_scope(
@@ -774,7 +774,10 @@ namespace basecode::compiler {
             init);
 
         if (identifier_type == nullptr && init != nullptr) {
-
+            identifier_type = init->expression()->infer_type(this);
+            // XXX: this is probably temporary because we may need multiple
+            //      type substitutions per identifier
+            new_identifier->inferred_type(identifier_type != nullptr);
         }
 
         new_identifier->type(identifier_type);

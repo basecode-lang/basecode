@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include "program.h"
 #include "integer_literal.h"
 
 namespace basecode::compiler {
@@ -21,6 +22,11 @@ namespace basecode::compiler {
 
     uint64_t integer_literal::value() const {
         return _value;
+    }
+
+    compiler::type* integer_literal::on_infer_type(const compiler::program* program) {
+        // XXX: i'm a bad person, i should do type narrowing here
+        return program->find_type("u32");
     }
 
 };

@@ -10,6 +10,7 @@
 // ----------------------------------------------------------------------------
 
 #include <common/id_pool.h>
+#include "type.h"
 #include "element.h"
 
 namespace basecode::compiler {
@@ -46,6 +47,27 @@ namespace basecode::compiler {
 
     bool element::on_fold(common::result& result) {
         return true;
+    }
+
+    compiler::type* element::infer_type(const compiler::program* program) {
+        switch (_element_type) {
+            case element_type_t::any_type:
+            case element_type_t::proc_type:
+            case element_type_t::bool_type:
+            case element_type_t::alias_type:
+            case element_type_t::array_type:
+            case element_type_t::string_type:
+            case element_type_t::numeric_type:
+            case element_type_t::composite_type:
+            case element_type_t::namespace_type:
+                return dynamic_cast<compiler::type*>(this);
+            default:
+                return on_infer_type(program);
+        }
+    }
+
+    compiler::type* element::on_infer_type(const compiler::program* program) {
+        return nullptr;
     }
 
 };

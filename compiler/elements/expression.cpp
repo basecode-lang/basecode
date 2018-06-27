@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include "program.h"
 #include "expression.h"
 
 namespace basecode::compiler {
@@ -21,6 +22,12 @@ namespace basecode::compiler {
 
     element* expression::root() {
         return _root;
+    }
+
+    compiler::type* expression::on_infer_type(const compiler::program* program) {
+        if (_root == nullptr)
+            return nullptr;
+        return _root->infer_type(program);
     }
 
 };

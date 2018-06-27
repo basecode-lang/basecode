@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include "program.h"
 #include "float_literal.h"
 
 namespace basecode::compiler {
@@ -21,6 +22,10 @@ namespace basecode::compiler {
 
     double float_literal::value() const {
         return _value;
+    }
+
+    compiler::type* float_literal::on_infer_type(const compiler::program* program) {
+        return program->find_type("f64");
     }
 
 };

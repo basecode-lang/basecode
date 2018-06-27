@@ -25,6 +25,9 @@ namespace basecode::compiler {
             return _value;
         }
 
+    protected:
+        compiler::type* on_infer_type(const compiler::program* program) override;
+
     private:
         std::string _value;
     };

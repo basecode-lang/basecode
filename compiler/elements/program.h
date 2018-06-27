@@ -33,6 +33,8 @@ namespace basecode::compiler {
 
         element* find_element(common::id_t id);
 
+        compiler::type* find_type(const std::string& name) const;
+
     private:
         cast* make_cast(
             compiler::type* type,
@@ -173,8 +175,6 @@ namespace basecode::compiler {
         compiler::block* current_scope() const;
 
         void push_scope(compiler::block* block);
-
-        type* find_type(const std::string& name);
 
         bool is_subtree_constant(const syntax::ast_node_shared_ptr& node);
 

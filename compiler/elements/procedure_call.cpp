@@ -9,6 +9,8 @@
 //
 // ----------------------------------------------------------------------------
 
+#include "program.h"
+#include "procedure_type.h"
 #include "procedure_call.h"
 
 namespace basecode::compiler {
@@ -27,6 +29,13 @@ namespace basecode::compiler {
 
     compiler::argument_list* procedure_call::arguments() {
         return _arguments;
+    }
+
+    // XXX: not handling multiple returns yet
+    compiler::type* procedure_call::on_infer_type(const compiler::program* program) {
+        auto proc_type = dynamic_cast<procedure_type*>(_identifier->type());
+        auto returns_list = proc_type->returns().as_list();
+        return returns_list.front()->identifier()->type();
     }
 
 };

@@ -36,8 +36,12 @@ namespace basecode::compiler {
 
         element_type_t element_type() const;
 
+        compiler::type* infer_type(const compiler::program* program);
+
     protected:
         virtual bool on_fold(common::result& result);
+
+        virtual compiler::type* on_infer_type(const compiler::program* program);
 
     private:
         common::id_t _id;

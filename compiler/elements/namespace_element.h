@@ -23,6 +23,9 @@ namespace basecode::compiler {
 
         element* expression();
 
+    protected:
+        compiler::type* on_infer_type(const compiler::program* program) override;
+
     private:
         element* _expression = nullptr;
     };

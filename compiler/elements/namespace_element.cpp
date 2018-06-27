@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include "program.h"
 #include "namespace_element.h"
 
 namespace basecode::compiler {
@@ -21,6 +22,10 @@ namespace basecode::compiler {
 
     element* namespace_element::expression() {
         return _expression;
+    }
+
+    compiler::type* namespace_element::on_infer_type(const compiler::program* program) {
+        return program->find_type("namespace");
     }
 
 };

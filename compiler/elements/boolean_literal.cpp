@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include "program.h"
 #include "boolean_literal.h"
 
 namespace basecode::compiler {
@@ -21,6 +22,10 @@ namespace basecode::compiler {
 
     bool boolean_literal::value() const {
         return _value;
+    }
+
+    compiler::type* boolean_literal::on_infer_type(const compiler::program* program) {
+        return program->find_type("bool");
     }
 
 };

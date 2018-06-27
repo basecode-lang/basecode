@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include "program.h"
 #include "unary_operator.h"
 
 namespace basecode::compiler {
@@ -22,6 +23,21 @@ namespace basecode::compiler {
 
     element* unary_operator::rhs() {
         return _rhs;
+    }
+
+    // XXX: this requires lots of future love
+    compiler::type* unary_operator::on_infer_type(const compiler::program* program) {
+        switch (operator_type()) {
+            case operator_type_t::negate:
+            case operator_type_t::binary_not: {
+                return program->find_type("u64");
+            }
+            case operator_type_t::logical_not: {
+                return program->find_type("bool");
+            }
+            default:
+                return nullptr;
+        }
     }
 
 };

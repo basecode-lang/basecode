@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include "program.h"
 #include "string_literal.h"
 
 namespace basecode::compiler {
@@ -17,6 +18,10 @@ namespace basecode::compiler {
             element* parent,
             const std::string& value) : element(parent, element_type_t::string_literal),
                                         _value(value) {
+    }
+
+    compiler::type* string_literal::on_infer_type(const compiler::program* program) {
+        return program->find_type("string");
     }
 
 }
