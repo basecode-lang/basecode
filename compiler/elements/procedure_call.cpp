@@ -14,19 +14,19 @@
 namespace basecode::compiler {
 
     procedure_call::procedure_call(
-        element* parent,
-        compiler::type* procedure_type,
-        element* expr) : element(parent, element_type_t::proc_call),
-                         _expression(expr),
-                         _procedure_type(procedure_type) {
+        compiler::element* parent,
+        compiler::identifier* identifier,
+        compiler::argument_list* args) : element(parent, element_type_t::proc_call),
+                                         _arguments(args),
+                                         _identifier(identifier) {
     }
 
-    element* procedure_call::expression() {
-        return _expression;
+    compiler::identifier* procedure_call::identifier() {
+        return _identifier;
     }
 
-    compiler::type* procedure_call::procedure_type() {
-        return _procedure_type;
+    compiler::argument_list* procedure_call::arguments() {
+        return _arguments;
     }
 
 };

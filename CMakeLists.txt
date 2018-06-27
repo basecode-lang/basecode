@@ -94,6 +94,7 @@ add_executable(
         compiler/elements/operator_base.cpp compiler/elements/operator_base.h
         compiler/elements/float_literal.cpp compiler/elements/float_literal.h
         compiler/elements/element_types.cpp compiler/elements/element_types.h
+        compiler/elements/argument_list.cpp compiler/elements/argument_list.h
         compiler/elements/namespace_type.cpp compiler/elements/namespace_type.h
         compiler/elements/composite_type.cpp compiler/elements/composite_type.h
         compiler/elements/procedure_type.cpp compiler/elements/procedure_type.h

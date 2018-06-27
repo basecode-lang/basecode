@@ -15,20 +15,20 @@
 
 namespace basecode::compiler {
 
-    class procedure_call : public element {
+    class argument_list : public element {
     public:
-        procedure_call(
-            compiler::element* parent,
-            compiler::identifier* identifier,
-            compiler::argument_list* args);
+        argument_list(element* parent);
 
-        compiler::identifier* identifier();
+        void add(element* item);
 
-        compiler::argument_list* arguments();
+        void remove(common::id_t id);
+
+        element* find(common::id_t id);
+
+        const element_list_t& elements() const;
 
     private:
-        compiler::argument_list* _arguments = nullptr;
-        compiler::identifier* _identifier = nullptr;
+        element_list_t _elements {};
     };
 
 };

@@ -109,12 +109,14 @@ namespace basecode::compiler {
             compiler::block* block_scope = nullptr);
 
         procedure_call* make_procedure_call(
-            compiler::type* procedure_type,
-            element* expr);
+            compiler::identifier* identifier,
+            compiler::argument_list* args);
 
         unary_operator* make_unary_operator(
             operator_type_t type,
             element* rhs);
+
+        argument_list* make_argument_list();
 
         binary_operator* make_binary_operator(
             operator_type_t type,

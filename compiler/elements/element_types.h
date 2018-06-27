@@ -42,6 +42,7 @@ namespace basecode::compiler {
     class numeric_type;
     class float_literal;
     class operator_base;
+    class argument_list;
     class procedure_type;
     class composite_type;
     class unary_operator;
@@ -114,6 +115,7 @@ namespace basecode::compiler {
         namespace_e,
         initializer,
         numeric_type,
+        argument_list,
         proc_instance,
         float_literal,
         string_literal,
@@ -152,6 +154,7 @@ namespace basecode::compiler {
         {element_type_t::numeric_type, "numeric_type"},
         {element_type_t::proc_instance, "proc_instance"},
         {element_type_t::float_literal, "float_literal"},
+        {element_type_t::argument_list, "argument_list"},
         {element_type_t::namespace_type, "namespace_type"},
         {element_type_t::string_literal, "string_literal"},
         {element_type_t::composite_type, "composite_type"},

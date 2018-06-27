@@ -29,6 +29,7 @@
 #include "elements/string_type.h"
 #include "elements/numeric_type.h"
 #include "elements/float_literal.h"
+#include "elements/argument_list.h"
 #include "elements/procedure_type.h"
 #include "elements/return_element.h"
 #include "elements/procedure_call.h"
@@ -220,14 +221,25 @@ namespace basecode::compiler {
                     node_vertex_name,
                     style);
             }
+            case element_type_t::argument_list: {
+                auto args = dynamic_cast<argument_list*>(node);
+                auto style = ", fillcolor=azure, style=\"filled\"";
+                for (auto arg_element : args->elements())
+                    add_primary_edge(args, arg_element);
+                return fmt::format(
+                    "{}[shape=record,label=\"argument_list\"{}];",
+                    node_vertex_name,
+                    style);
+            }
             case element_type_t::proc_call: {
                 auto element = dynamic_cast<procedure_call*>(node);
                 auto style = ", fillcolor=darkorchid1, style=\"filled\"";
-                add_primary_edge(element, element->expression());
-                add_primary_edge(element, element->procedure_type());
+                add_primary_edge(element, element->arguments());
+                add_primary_edge(element, element->identifier()->type());
                 return fmt::format(
-                    "{}[shape=record,label=\"proc_call\"{}];",
+                    "{}[shape=record,label=\"proc_call|{}\"{}];",
                     node_vertex_name,
+                    element->identifier()->name(),
                     style);
             }
             case element_type_t::alias_type: {

@@ -27,6 +27,7 @@
 #include "initializer.h"
 #include "string_type.h"
 #include "numeric_type.h"
+#include "argument_list.h"
 #include "float_literal.h"
 #include "string_literal.h"
 #include "unary_operator.h"
@@ -214,11 +215,23 @@ namespace basecode::compiler {
             case syntax::ast_node_types_t::proc_call: {
                 auto proc_identifier = find_identifier(node->lhs);
                 if (proc_identifier != nullptr) {
+                    auto args = (argument_list*)nullptr;
+                    auto expr = evaluate(r, node->rhs);
+                    if (expr != nullptr) {
+                        args = dynamic_cast<argument_list*>(expr);
+                    }
                     return make_procedure_call(
-                        proc_identifier->type(),
-                        evaluate(r, node->rhs));
+                        proc_identifier,
+                        args);
                 }
                 return nullptr;
+            }
+            case syntax::ast_node_types_t::argument_list: {
+                auto args = make_argument_list();
+                for (const auto& arg : node->children) {
+                    args->add(evaluate(r, arg));
+                }
+                return args;
             }
             case syntax::ast_node_types_t::proc_expression: {
                 auto block_scope = make_block();
@@ -271,29 +284,6 @@ namespace basecode::compiler {
                         }
                     }
                 }
-
-//                if (!node->children.empty()) {
-//                    for (const auto& child_node : node->children) {
-//                        switch (child_node->type) {
-//                            case syntax::ast_node_types_t::attribute: {
-//                                proc_type->attributes().add(make_attribute(
-//                                    child_node->token.value,
-//                                    evaluate(r, child_node->lhs)));
-//                                break;
-//                            }
-//                            case syntax::ast_node_types_t::basic_block: {
-//                                auto basic_block = dynamic_cast<compiler::block*>(evaluate(
-//                                    r,
-//                                    child_node));
-//                                proc_type->instances().push_back(make_procedure_instance(
-//                                    proc_type,
-//                                    basic_block));
-//                            }
-//                            default:
-//                                break;
-//                        }
-//                    }
-//                }
 
                 pop_scope();
 
@@ -514,6 +504,8 @@ namespace basecode::compiler {
         if (node->children.empty())
             return;
 
+        push_scope(proc_type->scope());
+
         for (const auto& child_node : node->children) {
             switch (child_node->type) {
                 case syntax::ast_node_types_t::attribute: {
@@ -534,6 +526,8 @@ namespace basecode::compiler {
                     break;
             }
         }
+
+        pop_scope();
     }
 
     composite_type* program::make_enum() {
@@ -611,14 +605,20 @@ namespace basecode::compiler {
     }
 
     procedure_call* program::make_procedure_call(
-            compiler::type* procedure_type,
-            element* expr) {
+            compiler::identifier* identifier,
+            compiler::argument_list* args) {
         auto proc_call = new compiler::procedure_call(
             current_scope(),
-            procedure_type,
-            expr);
+            identifier,
+            args);
         _elements.insert(std::make_pair(proc_call->id(), proc_call));
         return proc_call;
+    }
+
+    argument_list* program::make_argument_list() {
+        auto list = new compiler::argument_list(current_scope());
+        _elements.insert(std::make_pair(list->id(), list));
+        return list;
     }
 
     unary_operator* program::make_unary_operator(
@@ -782,7 +782,13 @@ namespace basecode::compiler {
         new_identifier->constant(symbol->is_constant_expression());
         scope->identifiers().add(new_identifier);
 
-        // XXX: if identifier_type is a procedure, we need to call add_procedure_instances
+        if (init != nullptr
+        &&  init->expression()->element_type() == element_type_t::proc_type) {
+            add_procedure_instance(
+                r,
+                dynamic_cast<procedure_type*>(init->expression()),
+                rhs);
+        }
 
         pop_scope();
 
