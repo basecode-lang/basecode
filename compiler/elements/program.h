@@ -13,13 +13,14 @@
 
 #include <parser/ast.h>
 #include <common/id_pool.h>
+#include <compiler/bytecode_emitter.h>
 #include "block.h"
 
 namespace basecode::compiler {
 
     class program : public element {
     public:
-        program();
+        explicit program(const bytecode_emitter_options_t& options);
 
         ~program() override;
 
@@ -28,6 +29,10 @@ namespace basecode::compiler {
             const syntax::ast_node_shared_ptr& root);
 
         compiler::block* block();
+
+        bool run(common::result& r);
+
+        bool emit(common::result& r);
 
         const element_map_t& elements() const;
 
@@ -172,6 +177,8 @@ namespace basecode::compiler {
 
         void initialize_core_types();
 
+        vm::instruction_emitter* emitter();
+
         compiler::block* current_scope() const;
 
         void push_scope(compiler::block* block);
@@ -181,8 +188,10 @@ namespace basecode::compiler {
         compiler::identifier* find_identifier(const syntax::ast_node_shared_ptr& node);
 
     private:
+        vm::terp _terp;
         element_map_t _elements {};
         compiler::block* _block = nullptr;
+        bytecode_emitter_options_t _options;
         std::stack<compiler::block*> _scope_stack {};
     };
 

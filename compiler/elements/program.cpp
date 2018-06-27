@@ -44,7 +44,10 @@
 
 namespace basecode::compiler {
 
-    program::program() : element(nullptr, element_type_t::program) {
+    program::program(
+        const bytecode_emitter_options_t& options) : element(nullptr, element_type_t::program),
+                                                     _terp(options.heap_size, options.stack_size),
+                                                     _options(options) {
     }
 
     program::~program() {
@@ -55,6 +58,17 @@ namespace basecode::compiler {
 
     compiler::block* program::block() {
         return _block;
+    }
+
+    bool program::run(common::result& r) {
+        while (!_terp.has_exited())
+            if (!_terp.step(r))
+                return false;
+        return true;
+    }
+
+    bool program::emit(common::result& r) {
+        return block()->emit(r);
     }
 
     element* program::evaluate(
@@ -215,7 +229,7 @@ namespace basecode::compiler {
             case syntax::ast_node_types_t::proc_call: {
                 auto proc_identifier = find_identifier(node->lhs);
                 if (proc_identifier != nullptr) {
-                    auto args = (argument_list*)nullptr;
+                    argument_list* args = nullptr;
                     auto expr = evaluate(r, node->rhs);
                     if (expr != nullptr) {
                         args = dynamic_cast<argument_list*>(expr);
@@ -351,6 +365,14 @@ namespace basecode::compiler {
             r.add_message(
                 "P001",
                 "The root AST node must be of type 'program'.",
+                true);
+            return false;
+        }
+
+        if (!_terp.initialize(r)) {
+            r.add_message(
+                "P002",
+                "Unable to initialize the interpreter.",
                 true);
             return false;
         }
@@ -595,6 +617,10 @@ namespace basecode::compiler {
         return type;
     }
 
+    vm::instruction_emitter* program::emitter() {
+        return block()->emitter();
+    }
+
     composite_type* program::make_struct_type() {
         auto type = new compiler::composite_type(
             current_scope(),
@@ -762,7 +788,7 @@ namespace basecode::compiler {
 
         const auto& final_symbol = symbol->children.back();
 
-        auto init = (compiler::initializer*)nullptr;
+        compiler::initializer* init = nullptr;
         if (rhs != nullptr) {
             auto init_expression = evaluate(r, rhs);
             if (init_expression != nullptr)
@@ -987,9 +1013,9 @@ namespace basecode::compiler {
             const auto& symbol_part = node->children[0];
             auto block_scope = current_scope();
             while (block_scope != nullptr) {
-                fmt::print("block_scope: {}\n", block_scope->id());
-                block_scope->identifiers().dump();
-                fmt::print("-----------------------------------------\n");
+//                fmt::print("block_scope: {}\n", block_scope->id());
+//                block_scope->identifiers().dump();
+//                fmt::print("-----------------------------------------\n");
                 ident = block_scope->identifiers().find(symbol_part->token.value);
                 if (ident != nullptr)
                     return ident;

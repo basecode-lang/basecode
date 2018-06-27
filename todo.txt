@@ -21,8 +21,6 @@ lower priority
 
 - FIX: string, number, boolean literals aren't infix so pre-block comments don't work.
 
-- need to work out how proc types should work
-
 - switch
 
 - with
@@ -44,6 +42,9 @@ lower priority
 - struct
 
 - enum
+
+- inline assembly
+    #assembly { };
 
 - array_literal
 
@@ -89,4 +90,4 @@ DONE
 - create parameter identifiers in block
 - review: procedure calls
 - type inference
-
+- need to work out how proc types should work

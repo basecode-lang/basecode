@@ -82,7 +82,7 @@ namespace basecode::compiler {
                     fclose(ast_output_file);
             }
 
-            compiler::program program {};
+            compiler::program program(_options);
             if (program.initialize(r, program_node)) {
                 if (_options.verbose) {
                     auto close_required = false;
