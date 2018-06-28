@@ -11,6 +11,24 @@ Basecode Bootstrap Tasks
 deps to bytecode generation
 ===========================
 - bytecode generation
+    type inference:
+        * add function on program that recursively attempts to finalize
+            type inference for identifiers after compile finishes.
+
+    ffi:
+        * directive (#foreign) should register procedure_type with vm::terp
+        * attribute for library module specific, e.g. @library "libfoo.so", etc.
+
+    data definitions:
+        * constants in a pseudo-constant section
+        * global variables in pseudo-bss/data sections
+        * local variables/parameters on stack
+
+    basic block:
+        * emit actual instructions for block behavior
+        * @entry_point attribute link up.
+            have a single JMP at program_start that is patched with
+            designated entry_point function.
 
 - bytecode-to-native:
     x64 and ARM 64
