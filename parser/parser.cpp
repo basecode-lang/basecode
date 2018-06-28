@@ -15,6 +15,7 @@
 #include <sstream>
 #include <iostream>
 #include "parser.h"
+#include "ast_formatter.h"
 
 namespace basecode::syntax {
 
@@ -769,6 +770,27 @@ namespace basecode::syntax {
     bool parser::consume() {
         token_t token;
         return consume(token);
+    }
+
+    void parser::write_ast_graph(
+            const std::filesystem::path& path,
+            const ast_node_shared_ptr& program_node) {
+        auto close_required = false;
+        FILE* ast_output_file = stdout;
+        if (!path.empty()) {
+            ast_output_file = fopen(
+                path.string().c_str(),
+                "wt");
+            close_required = true;
+        }
+
+        ast_formatter formatter(
+            program_node,
+            ast_output_file);
+        formatter.format(fmt::format("AST Graph: {}", path.string()));
+
+        if (close_required)
+            fclose(ast_output_file);
     }
 
     bool parser::consume(token_t& token) {

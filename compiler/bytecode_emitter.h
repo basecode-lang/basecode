@@ -16,6 +16,7 @@
 #include <vm/terp.h>
 #include <filesystem>
 #include <parser/parser.h>
+#include <compiler/elements/element_types.h>
 
 //
 // basecode heap (as seen by the terp)
@@ -53,49 +54,6 @@
 // |                             | | address: $0  -- start of swi vector table
 // +-----------------------------+ +--> bottom of heap (address: $0)
 //
-//
-// step 1. parse source to ast
-//
-// step 2. expand @import or @compile attributes by parsing to ast
-//
-// step 3. fold constants/type inference
-//
-// step 4. bytecode generation
-//
-// step 5. @run expansion
-//
-// short_string {
-//      capacity:u16 := 64;
-//      length:u16 := 0;
-//      data:*u8 := alloc(capacity);
-// } size_of(type(short_string)) == 12;
-//
-// string {
-//      capacity:u32 := 64;
-//      length:u32 := 0;
-//      data:*u8 := alloc(capacity);
-// } size_of(type(string)) == 64;
-//
-// array {
-//      capacity:u32 := 64;
-//      length:u32 := 0;
-//      element_type:type := type(any);
-//      data:*u8 := alloc(capacity * size_of(element));
-// } size_of(type(array)) == 72;
-//
-// callable_parameter {
-//      name:short_string;
-//      type:type;
-//      default:any := empty;
-//      spread:bool := false;
-// } size_of(type(callable_parameter)) == 32;
-//
-// callable {
-//      params:callable_parameter[];
-//      returns:callable_parameter[];
-//      address:*u8 := null;
-// } size_of(type(callable)) == 153;
-//
 
 namespace basecode::compiler {
 
@@ -122,6 +80,11 @@ namespace basecode::compiler {
         bool compile(common::result& r, std::istream& input);
 
         bool compile_stream(common::result& r, std::istream& input);
+
+    private:
+        void write_code_dom_graph(
+            const std::filesystem::path& path,
+            const compiler::program* program);
 
     private:
         vm::terp _terp;

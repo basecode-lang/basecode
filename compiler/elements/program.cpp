@@ -44,10 +44,8 @@
 
 namespace basecode::compiler {
 
-    program::program(
-        const bytecode_emitter_options_t& options) : element(nullptr, element_type_t::program),
-                                                     _terp(options.heap_size, options.stack_size),
-                                                     _options(options) {
+    program::program(vm::terp* terp) : element(nullptr, element_type_t::program),
+                                       _terp(terp) {
     }
 
     program::~program() {
@@ -61,8 +59,8 @@ namespace basecode::compiler {
     }
 
     bool program::run(common::result& r) {
-        while (!_terp.has_exited())
-            if (!_terp.step(r))
+        while (!_terp->has_exited())
+            if (!_terp->step(r))
                 return false;
         return true;
     }
@@ -358,21 +356,13 @@ namespace basecode::compiler {
         return nullptr;
     }
 
-    bool program::initialize(
+    bool program::compile(
             common::result& r,
             const syntax::ast_node_shared_ptr& root) {
         if (root->type != syntax::ast_node_types_t::program) {
             r.add_message(
                 "P001",
                 "The root AST node must be of type 'program'.",
-                true);
-            return false;
-        }
-
-        if (!_terp.initialize(r)) {
-            r.add_message(
-                "P002",
-                "Unable to initialize the interpreter.",
                 true);
             return false;
         }

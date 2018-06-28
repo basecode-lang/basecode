@@ -17,6 +17,7 @@
 #include <memory>
 #include <unordered_map>
 #include <parser/token.h>
+#include <common/id_pool.h>
 
 namespace basecode::compiler {
 

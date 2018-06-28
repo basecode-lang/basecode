@@ -14,6 +14,7 @@
 #include <map>
 #include <stack>
 #include <string>
+#include <filesystem>
 #include <fmt/format.h>
 #include <unordered_map>
 #include <common/result.h>
@@ -539,6 +540,10 @@ namespace basecode::syntax {
             uint32_t column);
 
         bool consume();
+
+        void write_ast_graph(
+            const std::filesystem::path& path,
+            const ast_node_shared_ptr& program_node);
 
         bool consume(token_t& token);
 

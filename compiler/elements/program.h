@@ -13,32 +13,32 @@
 
 #include <parser/ast.h>
 #include <common/id_pool.h>
-#include <compiler/bytecode_emitter.h>
 #include "block.h"
 
 namespace basecode::compiler {
 
     class program : public element {
     public:
-        explicit program(const bytecode_emitter_options_t& options);
+        explicit program(vm::terp* terp);
 
         ~program() override;
 
-        bool initialize(
+        bool compile(
             common::result& r,
             const syntax::ast_node_shared_ptr& root);
 
-        compiler::block* block();
-
         bool run(common::result& r);
-
-        bool emit(common::result& r);
 
         const element_map_t& elements() const;
 
         element* find_element(common::id_t id);
 
         compiler::type* find_type(const std::string& name) const;
+
+    protected:
+        friend class code_dom_formatter;
+
+        compiler::block* block();
 
     private:
         cast* make_cast(
@@ -69,6 +69,8 @@ namespace basecode::compiler {
             compiler::composite_type* union_type,
             const syntax::ast_node_shared_ptr& block);
 
+        any_type* make_any_type();
+
         directive* make_directive(
             const std::string& name,
             element* expr);
@@ -76,8 +78,6 @@ namespace basecode::compiler {
         statement* make_statement(
             label_list_t labels,
             element* expr);
-
-        any_type* make_any_type();
 
         attribute* make_attribute(
             const std::string& name,
@@ -98,12 +98,12 @@ namespace basecode::compiler {
 
         string_type* make_string_type();
 
-        alias* make_alias(element* expr);
-
         numeric_type* make_numeric_type(
             const std::string& name,
             int64_t min,
             uint64_t max);
+
+        alias* make_alias(element* expr);
 
         compiler::block* push_new_block();
 
@@ -173,6 +173,8 @@ namespace basecode::compiler {
             common::result& r,
             const syntax::ast_node_shared_ptr& node);
 
+        bool emit(common::result& r);
+
         compiler::block* pop_scope();
 
         void initialize_core_types();
@@ -188,10 +190,9 @@ namespace basecode::compiler {
         compiler::identifier* find_identifier(const syntax::ast_node_shared_ptr& node);
 
     private:
-        vm::terp _terp;
+        vm::terp* _terp = nullptr;
         element_map_t _elements {};
         compiler::block* _block = nullptr;
-        bytecode_emitter_options_t _options;
         std::stack<compiler::block*> _scope_stack {};
     };
 

@@ -47,7 +47,7 @@
 namespace basecode::compiler {
 
     code_dom_formatter::code_dom_formatter(
-            compiler::program* program_element,
+            const compiler::program* program_element,
             FILE* file) : _file(file),
                           _program(program_element) {
     }
@@ -435,7 +435,7 @@ namespace basecode::compiler {
         _nodes.clear();
         _edges.clear();
 
-        _nodes.insert(format_node(_program));
+        _nodes.insert(format_node(const_cast<compiler::program*>(_program)));
 
         for (const auto& pair : _program->elements()) {
             auto node_def = format_node(pair.second);

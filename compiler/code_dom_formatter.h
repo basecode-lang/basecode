@@ -20,7 +20,7 @@ namespace basecode::compiler {
     class code_dom_formatter {
     public:
         code_dom_formatter(
-            compiler::program* program_element,
+            const compiler::program* program_element,
             FILE* file);
 
         void format(const std::string& title);
@@ -44,7 +44,7 @@ namespace basecode::compiler {
         FILE* _file = nullptr;
         std::set<std::string> _edges {};
         std::set<std::string> _nodes {};
-        compiler::program* _program = nullptr;
+        const compiler::program* _program = nullptr;
     };
 
 };
