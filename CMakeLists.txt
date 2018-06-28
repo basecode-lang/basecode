@@ -91,6 +91,7 @@ add_executable(
         compiler/elements/initializer.cpp compiler/elements/initializer.h
         compiler/elements/string_type.cpp compiler/elements/string_type.h
         compiler/elements/numeric_type.cpp compiler/elements/numeric_type.h
+        compiler/elements/unknown_type.cpp compiler/elements/unknown_type.h
         compiler/elements/operator_base.cpp compiler/elements/operator_base.h
         compiler/elements/float_literal.cpp compiler/elements/float_literal.h
         compiler/elements/element_types.cpp compiler/elements/element_types.h

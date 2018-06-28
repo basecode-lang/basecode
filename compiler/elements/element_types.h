@@ -41,6 +41,7 @@ namespace basecode::compiler {
     class initializer;
     class string_type;
     class numeric_type;
+    class unknown_type;
     class float_literal;
     class operator_base;
     class argument_list;
@@ -115,6 +116,7 @@ namespace basecode::compiler {
         string_type,
         namespace_e,
         initializer,
+        unknown_type,
         numeric_type,
         argument_list,
         proc_instance,
@@ -126,6 +128,7 @@ namespace basecode::compiler {
         boolean_literal,
         integer_literal,
         binary_operator,
+        unknown_identifier,
     };
 
     static inline std::unordered_map<element_type_t, std::string> s_element_type_names = {
@@ -152,6 +155,7 @@ namespace basecode::compiler {
         {element_type_t::string_type, "string_type"},
         {element_type_t::namespace_e, "namespace"},
         {element_type_t::initializer, "initializer"},
+        {element_type_t::unknown_type, "unknown_type"},
         {element_type_t::numeric_type, "numeric_type"},
         {element_type_t::proc_instance, "proc_instance"},
         {element_type_t::float_literal, "float_literal"},
@@ -163,6 +167,7 @@ namespace basecode::compiler {
         {element_type_t::boolean_literal, "boolean_literal"},
         {element_type_t::integer_literal, "integer_literal"},
         {element_type_t::binary_operator, "binary_operator"},
+        {element_type_t::unknown_identifier, "unknown_identifier"},
     };
 
     static inline std::string element_type_name(element_type_t type) {

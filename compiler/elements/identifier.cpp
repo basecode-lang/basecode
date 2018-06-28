@@ -53,12 +53,4 @@ namespace basecode::compiler {
         return _initializer;
     }
 
-    std::string identifier::unknown_type_name() const {
-        return _unknown_type_name;
-    }
-
-    void identifier::unknown_type_name(const std::string& name) {
-        _unknown_type_name = name;
-    }
-
 };

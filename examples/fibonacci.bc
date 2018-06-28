@@ -23,8 +23,6 @@ alpha::compiler::examples := ns {
     max:u16 := 32767;
     name:string := "fibonacci test program";
 
-    point:vector3;
-
     fib := proc(n:u64 := 10):u64 {
         if n == 0 || n == 1 {
             return n;
@@ -40,10 +38,4 @@ alpha::compiler::examples := ns {
     'the_end:
         return final_fib_value;
     } @entry_point;
-
-    vector3 := struct {
-        x: f64 := 0;
-        y: f64 := 0;
-        z: f64 := 0;
-    };
 };
