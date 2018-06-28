@@ -24,6 +24,15 @@
 static constexpr size_t heap_size = (1024 * 1024) * 32;
 static constexpr size_t stack_size = (1024 * 1024) * 8;
 
+extern "C" {
+    void fmt_print(const char* fmt, ...) {
+        va_list ap;
+        va_start(ap, fmt);
+        printf(fmt, ap);
+        va_end(ap);
+    }
+};
+
 static void print_results(basecode::common::result& r) {
     auto has_messages = !r.messages().empty();
 

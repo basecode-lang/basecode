@@ -641,7 +641,7 @@ namespace basecode::vm {
     }
 
     void terp::dump_shared_libraries() {
-        fmt::print("{:32}{:64}{:17}\n", "Image Name", "Symbol Name", "Address");
+        fmt::print("\n{:32}{:64}{:17}\n", "Image Name", "Symbol Name", "Address");
         fmt::print("{}\n", std::string(180, '-'));
         for (const auto& kvp : _shared_libraries) {
             auto index = 0;
@@ -1871,10 +1871,11 @@ namespace basecode::vm {
         _call_vm = dcNewCallVM(4096);
 
         _shared_libraries.clear();
-        shared_library_t self_image;
-        if (!self_image.initialize(r))
-            return false;
-        _shared_libraries.insert(std::make_pair(self_image.path(), self_image));
+// XXX: dlLoadLibrary(nullptr) doesn't appear to work on os x
+//        shared_library_t self_image;
+//        if (!self_image.initialize(r))
+//            return false;
+//        _shared_libraries.insert(std::make_pair(self_image.path(), self_image));
 
         _heap = new uint8_t[_heap_size];
 

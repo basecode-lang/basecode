@@ -38,12 +38,17 @@ namespace basecode::compiler {
         compiler::type* find_type_for_identifier(const std::string& name);
 
     protected:
+        friend class directive;
         friend class code_dom_formatter;
+
+        vm::terp* terp();
 
         compiler::block* block();
 
     private:
         void initialize_core_types();
+
+        bool execute_directives(common::result& r);
 
         bool resolve_unknown_types(common::result& r);
 

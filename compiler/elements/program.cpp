@@ -361,13 +361,20 @@ namespace basecode::compiler {
 
         evaluate(r, root);
 
+        if (!execute_directives(r))
+            return false;
+
         if (!resolve_unknown_identifiers(r))
             return false;
 
         if (!resolve_unknown_types(r))
             return false;
 
-        return true;
+        return !r.is_failed();
+    }
+
+    vm::terp* program::terp() {
+        return _terp;
     }
 
     compiler::block* program::block() {
@@ -964,6 +971,25 @@ namespace basecode::compiler {
             fmt::format("__proc_{}__", common::id_pool::instance()->allocate()));
         _elements.insert(std::make_pair(type->id(), type));
         return type;
+    }
+
+    bool program::execute_directives(common::result& r) {
+        std::function<bool (compiler::block*)> recursive_execute =
+            [&](compiler::block* scope) -> bool {
+                for (auto stmt : scope->statements()) {
+                    if (stmt->expression()->element_type() == element_type_t::directive) {
+                        auto directive_element = dynamic_cast<compiler::directive*>(stmt->expression());
+                        if (!directive_element->execute(r, this))
+                            return false;
+                    }
+                }
+                for (auto block : scope->blocks()) {
+                    if (!recursive_execute(block))
+                        return false;
+                }
+                return true;
+            };
+        return recursive_execute(block());
     }
 
     bool program::resolve_unknown_types(common::result& r) {
