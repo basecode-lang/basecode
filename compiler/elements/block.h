@@ -11,7 +11,7 @@
 
 #pragma once
 
-#include <vm/instruction_emitter.h>
+#include <vm/assembler.h>
 #include "type.h"
 #include "element.h"
 #include "identifier.h"
@@ -24,22 +24,19 @@ namespace basecode::compiler {
             block* parent,
             element_type_t type = element_type_t::block);
 
+        bool emit(
+            common::result& r,
+            vm::assembler& assembler);
+
         type_map_t& types();
 
         block_list_t& blocks();
 
         comment_list_t& comments();
 
-        bool emit(common::result& r);
-
         statement_list_t& statements();
 
         identifier_map_t& identifiers();
-
-    protected:
-        friend class program;
-
-        vm::instruction_emitter* emitter();
 
     private:
         type_map_t _types {};
@@ -47,7 +44,6 @@ namespace basecode::compiler {
         comment_list_t _comments {};
         statement_list_t _statements {};
         identifier_map_t _identifiers {};
-        vm::instruction_emitter _emitter;
     };
 
 };

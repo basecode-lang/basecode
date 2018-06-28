@@ -21,7 +21,7 @@ namespace basecode::vm {
 
     class instruction_emitter {
     public:
-        explicit instruction_emitter(uint64_t address);
+        instruction_emitter();
 
         void rts();
 
@@ -33,15 +33,20 @@ namespace basecode::vm {
 
         void clear();
 
-        size_t size() const;
-
-        size_t index() const;
-
         void meta(
             uint32_t line,
             uint16_t column,
             const std::string& file_name,
             const std::string& symbol_name);
+
+        bool encode(
+            common::result& r,
+            terp& terp,
+            uint64_t address);
+
+        size_t size() const;
+
+        size_t index() const;
 
         void jump_pc_relative(
             op_sizes size,
@@ -58,10 +63,6 @@ namespace basecode::vm {
         void trap(uint8_t index);
 
         void reserve(size_t count);
-
-        uint64_t end_address() const;
-
-        uint64_t start_address() const;
 
         void branch_pc_relative_if_equal(
             op_sizes size,
@@ -91,8 +92,6 @@ namespace basecode::vm {
             i_registers_t index);
 
         void jump_direct(uint64_t address);
-
-        bool encode(common::result& r, terp& terp);
 
         void load_stack_offset_to_register(
             op_sizes size,
@@ -184,7 +183,6 @@ namespace basecode::vm {
         void push_int_register(op_sizes size, i_registers_t index);
 
     private:
-        uint64_t _start_address = 0;
         std::vector<instruction_t> _instructions {};
         std::vector<meta_information_t> _meta_information_list {};
     };

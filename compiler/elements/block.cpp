@@ -15,8 +15,13 @@ namespace basecode::compiler {
 
     block::block(
         block* parent,
-        element_type_t type) : element(parent, type),
-                               _emitter(0) {
+        element_type_t type) : element(parent, type) {
+    }
+
+    bool block::emit(
+            common::result& r,
+            vm::assembler& assembler) {
+        return false;
     }
 
     type_map_t& block::types() {
@@ -31,21 +36,12 @@ namespace basecode::compiler {
         return _comments;
     }
 
-    bool block::emit(common::result& r) {
-        _emitter.clear();
-        return false;
-    }
-
     statement_list_t& block::statements() {
         return _statements;
     }
 
     identifier_map_t& block::identifiers() {
         return _identifiers;
-    }
-
-    vm::instruction_emitter* block::emitter() {
-        return &_emitter;
     }
 
 };

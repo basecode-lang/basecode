@@ -38,10 +38,15 @@ namespace basecode::compiler {
 
         compiler::initializer* initializer();
 
+        std::string unknown_type_name() const;
+
+        void unknown_type_name(const std::string& name);
+
     private:
         std::string _name;
         bool _constant = false;
         bool _inferred_type = false;
+        std::string _unknown_type_name;
         compiler::type* _type = nullptr;
         compiler::initializer* _initializer;
     };

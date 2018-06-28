@@ -14,8 +14,7 @@
 
 namespace basecode::vm {
 
-    instruction_emitter::instruction_emitter(
-            uint64_t address) : _start_address(address) {
+    instruction_emitter::instruction_emitter() {
     }
 
     void instruction_emitter::meta(
@@ -54,6 +53,23 @@ namespace basecode::vm {
         instruction_t rts_op;
         rts_op.op = op_codes::rts;
         _instructions.push_back(rts_op);
+    }
+
+    bool instruction_emitter::encode(
+            common::result& r,
+            terp& terp,
+            uint64_t address) {
+        size_t offset = 0;
+        for (auto& inst : _instructions) {
+            auto inst_size = inst.encode(
+                r,
+                terp.heap(),
+                address + offset);
+            if (inst_size == 0)
+                return false;
+            offset += inst_size;
+        }
+        return true;
     }
 
     void instruction_emitter::exit() {
@@ -137,14 +153,6 @@ namespace basecode::vm {
 
     void instruction_emitter::reserve(size_t count) {
         _instructions.reserve(count);
-    }
-
-    uint64_t instruction_emitter::end_address() const {
-        return _start_address + size();
-    }
-
-    uint64_t instruction_emitter::start_address() const {
-        return _start_address;
     }
 
     void instruction_emitter::jump_subroutine_pc_relative(
@@ -280,17 +288,6 @@ namespace basecode::vm {
             | operand_encoding_t::flags::reg;
         div_op.operands[2].value.r8 = rhs_index;
         _instructions.push_back(div_op);
-    }
-
-    bool instruction_emitter::encode(common::result& r, terp& terp) {
-        size_t offset = 0;
-        for (auto& inst : _instructions) {
-            auto inst_size = inst.encode(r, terp.heap(), _start_address + offset);
-            if (inst_size == 0)
-                return false;
-            offset += inst_size;
-        }
-        return true;
     }
 
     void instruction_emitter::store_with_offset_from_register(

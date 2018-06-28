@@ -35,6 +35,8 @@ namespace basecode::compiler {
 
         compiler::type* find_type(const std::string& name) const;
 
+        compiler::type* find_type_for_identifier(const std::string& name);
+
     protected:
         friend class code_dom_formatter;
 
@@ -85,6 +87,11 @@ namespace basecode::compiler {
 
         composite_type* make_enum();
 
+        void add_procedure_instance(
+            common::result& r,
+            compiler::procedure_type* proc_type,
+            const syntax::ast_node_shared_ptr& node);
+
         identifier* make_identifier(
             const std::string& name,
             initializer* expr,
@@ -125,6 +132,8 @@ namespace basecode::compiler {
 
         argument_list* make_argument_list();
 
+        void resolve_pending_type_inference();
+
         binary_operator* make_binary_operator(
             operator_type_t type,
             element* lhs,
@@ -151,11 +160,6 @@ namespace basecode::compiler {
             const syntax::ast_node_shared_ptr& symbol,
             const syntax::ast_node_shared_ptr& rhs);
 
-        void add_procedure_instance(
-            common::result& r,
-            compiler::procedure_type* proc_type,
-            const syntax::ast_node_shared_ptr& node);
-
         field* make_field(compiler::identifier* identifier);
 
         string_literal* make_string(const std::string& value);
@@ -173,13 +177,9 @@ namespace basecode::compiler {
             common::result& r,
             const syntax::ast_node_shared_ptr& node);
 
-        bool emit(common::result& r);
-
         compiler::block* pop_scope();
 
         void initialize_core_types();
-
-        vm::instruction_emitter* emitter();
 
         compiler::block* current_scope() const;
 
@@ -190,10 +190,12 @@ namespace basecode::compiler {
         compiler::identifier* find_identifier(const syntax::ast_node_shared_ptr& node);
 
     private:
+        vm::assembler _assembler;
         vm::terp* _terp = nullptr;
         element_map_t _elements {};
         compiler::block* _block = nullptr;
         std::stack<compiler::block*> _scope_stack {};
+        identifier_list_t _identifiers_pending_type_inference {};
     };
 
 };

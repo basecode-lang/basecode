@@ -1,9 +1,5 @@
 NOTES
 ------------------------
-- use elfio for read/writing obj/executable files
-
-- are the compiler directives bootstrapped using the @directive attribute so
-  therefore all implemented in Basecode?
 
 Basecode Bootstrap Tasks
 ------------------------
@@ -31,7 +27,8 @@ deps to bytecode generation
             designated entry_point function.
 
 - bytecode-to-native:
-    x64 and ARM 64
+    * x64 and ARM 64
+    * use elfio for read/writing obj/executable files
 
 lower priority
 ===========================
@@ -109,3 +106,5 @@ DONE
 - review: procedure calls
 - type inference
 - need to work out how proc types should work
+- are the compiler directives bootstrapped using the @directive attribute so
+  therefore all implemented in Basecode?
