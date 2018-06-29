@@ -54,6 +54,8 @@ namespace basecode::compiler {
 
         bool execute_directives(common::result& r);
 
+        bool build_data_segments(common::result& r);
+
         bool resolve_unknown_types(common::result& r);
 
         bool resolve_unknown_identifiers(common::result& r);

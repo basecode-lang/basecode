@@ -358,6 +358,9 @@ namespace basecode::compiler {
         if (!resolve_unknown_types(r))
             return false;
 
+        if (!build_data_segments(r))
+            return false;
+
         return !r.is_failed();
     }
 
@@ -808,6 +811,14 @@ namespace basecode::compiler {
             }
         }
 
+        // XXX: the following code is not compiling properly
+        //
+        // count:u32;
+        //
+        // count := 1;
+        //
+        // the assignment here needs to become a binary_operator.
+        //
         const auto& final_symbol = symbol->children.back();
 
         compiler::initializer* init = nullptr;
@@ -987,6 +998,10 @@ namespace basecode::compiler {
         return recursive_execute(block());
     }
 
+    bool program::build_data_segments(common::result& r) {
+        return true;
+    }
+
     bool program::resolve_unknown_types(common::result& r) {
         auto it = _identifiers_with_unknown_types.begin();
         while (it != _identifiers_with_unknown_types.end()) {
@@ -1150,5 +1165,6 @@ namespace basecode::compiler {
             }
         }
     }
+
 
 };

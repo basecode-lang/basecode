@@ -12,6 +12,8 @@
 @library "libfmt.dylib";
 #foreign print := proc(format:string, values:...any) @alias "fmt_print";
 
+print("at the very top!");
+
 alpha::compiler::config := ns {
     fibonacci := ns {
         @ship_it "now!";
@@ -25,6 +27,9 @@ alpha::compiler::examples := ns {
     max:u16 := 32767;
     name:string := "fibonacci test program";
 
+    count := 1;
+    print("what the hell am i doing here?");
+
     @func_it 42;
     fib := proc(n:u64 := 10):u64 {
         @dont_fold_me_dude;
@@ -37,9 +42,11 @@ alpha::compiler::examples := ns {
         };
     };
 
-    main := proc():u32 {
+    this_doesn_t_need_to_be_main := proc():u32 {
         final_fib_value := cast<u32>(fib(alpha::compiler::config::fibonacci::length_of_sequence));
     'the_end:
         return final_fib_value;
     } @entry_point;
 };
+
+alpha::compiler::examples::this_doesn_t_need_to_be_main();

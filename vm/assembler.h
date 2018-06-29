@@ -36,23 +36,77 @@ namespace basecode::vm {
         return it->second;
     }
 
-    struct segment_t {
-        uint64_t size;
-        uint64_t address;
-        segment_type_t type;
+    enum class symbol_type_t {
+        u8,
+        u16,
+        u32,
+        u64,
+        f32,
+        f64,
+        bytes
     };
 
+    static inline size_t size_of_symbol_type(symbol_type_t type) {
+        switch (type) {
+            case symbol_type_t::u8:    return 1;
+            case symbol_type_t::u16:   return 2;
+            case symbol_type_t::u32:   return 4;
+            case symbol_type_t::u64:   return 8;
+            case symbol_type_t::f32:   return 4;
+            case symbol_type_t::f64:   return 8;
+            default:
+                return 8;
+        }
+    }
+
     struct symbol_t {
+        symbol_t(
+            const std::string& name,
+            symbol_type_t type,
+            uint64_t address,
+            size_t size = 0);
+
+        size_t size;
         uint64_t address;
         std::string name;
+        symbol_type_t type;
+
+        union {
+            double float_value;
+            uint64_t int_value;
+            void* byte_array_value;
+        } value;
+    };
+
+    struct segment_t {
+        segment_t(
+            const std::string& name,
+            segment_type_t type,
+            uint64_t address);
+
+        symbol_t* symbol(
+            const std::string& name,
+            symbol_type_t type,
+            size_t size = 0);
+
+        size_t size() const;
+
+        symbol_t* symbol(const std::string& name);
+
+        uint64_t address = 0;
+        uint64_t offset = 0;
+        std::string name;
         segment_type_t type;
+
+    private:
+        std::unordered_map<std::string, symbol_t> _symbols {};
     };
 
     class assembler {
     public:
         explicit assembler(vm::terp* terp);
 
-        void symbol(
+        void segment(
             const std::string& name,
             segment_type_t type,
             uint64_t address);
@@ -79,20 +133,15 @@ namespace basecode::vm {
 
         void location_counter(uint64_t value);
 
-        segment_t* segment(segment_type_t type);
-
-        symbol_t* symbol(const std::string& name);
+        segment_t* segment(const std::string& name);
 
         void define_string(const std::string& value);
-
-        void segment(segment_type_t type, uint64_t address);
 
     private:
         vm::terp* _terp = nullptr;
         instruction_emitter _emitter;
         uint64_t _location_counter = 0;
-        std::unordered_map<std::string, symbol_t> _symbols {};
-        std::unordered_map<segment_type_t, segment_t> _segments {};
+        std::unordered_map<std::string, segment_t> _segments {};
     };
 
 };

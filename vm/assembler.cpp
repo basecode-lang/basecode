@@ -13,27 +13,71 @@
 
 namespace basecode::vm {
 
-    assembler::assembler(vm::terp* terp) : _terp(terp) {
-        _location_counter = _terp->heap_vector(heap_vectors_t::program_start);
+    symbol_t::symbol_t(
+        const std::string& name,
+        symbol_type_t type,
+        uint64_t address,
+        size_t size) : size(size),
+                       address(address),
+                       name(name),
+                       type(type) {
     }
 
-    void assembler::symbol(
+    ///////////////////////////////////////////////////////////////////////////
+
+    segment_t::segment_t(
+        const std::string& name,
+        segment_type_t type,
+        uint64_t address) : address(address),
+                            name(name),
+                            type(type) {
+    }
+
+    symbol_t* segment_t::symbol(
             const std::string& name,
-            segment_type_t type,
-            uint64_t address) {
+            symbol_type_t type,
+            size_t size) {
+        auto type_size = size == 0 ? size_of_symbol_type(type) : size;
+
         _symbols.insert(std::make_pair(
             name,
-            symbol_t{
-                .address = address,
-                .name = name,
-                .type = type,
-            }));
+            symbol_t(name, type, address + offset, type_size)));
+
+        offset += type_size;
+
+        return symbol(name);
+    }
+
+    size_t segment_t::size() const {
+        return offset;
+    }
+
+    symbol_t* segment_t::symbol(const std::string& name) {
+        auto it = _symbols.find(name);
+        if (it == _symbols.end())
+            return nullptr;
+        return &it->second;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    assembler::assembler(vm::terp* terp) : _terp(terp) {
+        _location_counter = _terp->heap_vector(heap_vectors_t::program_start);
     }
 
     bool assembler::assemble(
             common::result& r,
             std::istream& source) {
         return false;
+    }
+
+    void assembler::segment(
+            const std::string& name,
+            segment_type_t type,
+            uint64_t address) {
+        _segments.insert(std::make_pair(
+            name,
+            segment_t(name, type, address)));
     }
 
     instruction_emitter& assembler::emitter() {
@@ -84,16 +128,9 @@ namespace basecode::vm {
         _location_counter = value;
     }
 
-    segment_t* assembler::segment(segment_type_t type) {
-        auto it = _segments.find(type);
+    segment_t* assembler::segment(const std::string& name) {
+        auto it = _segments.find(name);
         if (it == _segments.end())
-            return nullptr;
-        return &it->second;
-    }
-
-    symbol_t* assembler::symbol(const std::string& name) {
-        auto it = _symbols.find(name);
-        if (it == _symbols.end())
             return nullptr;
         return &it->second;
     }
@@ -103,16 +140,6 @@ namespace basecode::vm {
         for (auto c : value)
             *heap_address++ = static_cast<uint8_t>(c);
         _location_counter += value.length();
-    }
-
-    void assembler::segment(segment_type_t type, uint64_t address) {
-        _segments.insert(std::make_pair(
-            type,
-            segment_t{
-                .size = 0,
-                .address = address,
-                .type = type,
-            }));
     }
 
 };
