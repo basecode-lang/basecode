@@ -131,8 +131,20 @@ namespace basecode::compiler {
 
                 identifier_list_t list {};
                 for (const auto& symbol : assignment_target_list->children) {
-                    auto new_identifier = add_identifier_to_scope(r, symbol, node->rhs);
-                    list.push_back(new_identifier);
+                    auto existing_identifier = find_identifier(symbol);
+                    if (existing_identifier != nullptr) {
+                        return make_binary_operator(
+                            current_scope(),
+                            operator_type_t::assignment,
+                            existing_identifier,
+                            evaluate(r, node->rhs));
+                    } else {
+                        auto new_identifier = add_identifier_to_scope(
+                            r,
+                            symbol,
+                            node->rhs);
+                        list.push_back(new_identifier);
+                    }
                 }
 
                 // XXX: handle proper multi-assignment
@@ -811,14 +823,6 @@ namespace basecode::compiler {
             }
         }
 
-        // XXX: the following code is not compiling properly
-        //
-        // count:u32;
-        //
-        // count := 1;
-        //
-        // the assignment here needs to become a binary_operator.
-        //
         const auto& final_symbol = symbol->children.back();
 
         compiler::initializer* init = nullptr;
