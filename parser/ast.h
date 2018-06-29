@@ -32,7 +32,7 @@ namespace basecode::syntax {
         pair,
         label,
         symbol,
-        program,
+        module,
         proc_call,
         statement,
         attribute,
@@ -86,8 +86,8 @@ namespace basecode::syntax {
     static inline std::unordered_map<ast_node_types_t, std::string> s_node_type_names = {
         {ast_node_types_t::pair, "pair"},
         {ast_node_types_t::label, "label"},
+        {ast_node_types_t::module, "module"},
         {ast_node_types_t::symbol,  "symbol"},
-        {ast_node_types_t::program, "program"},
         {ast_node_types_t::type_list, "type_list"},
         {ast_node_types_t::proc_call, "proc_call"},
         {ast_node_types_t::statement, "statement"},
@@ -196,6 +196,7 @@ namespace basecode::syntax {
         token_t token;
         ast_node_types_t type;
         ast_node_list children;
+        ast_node_list pending_attributes {};
         ast_node_shared_ptr lhs = nullptr;
         ast_node_shared_ptr rhs = nullptr;
         flags_value_t flags = flags_t::none;
@@ -228,7 +229,7 @@ namespace basecode::syntax {
 
         ast_node_shared_ptr symbol_node();
 
-        ast_node_shared_ptr program_node();
+        ast_node_shared_ptr module_node();
 
         ast_node_shared_ptr else_if_node();
 

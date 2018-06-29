@@ -74,42 +74,33 @@ namespace basecode::compiler {
                 return make_attribute(
                     current_scope(),
                     node->token.value,
-                    evaluate(r, node->rhs));
-            }
-            case syntax::ast_node_types_t::directive: {
-                return make_directive(
-                    current_scope(),
-                    node->token.value,
                     evaluate(r, node->lhs));
             }
-            case syntax::ast_node_types_t::program:
-            case syntax::ast_node_types_t::basic_block: {
-                auto active_scope = current_scope();
-                auto scope_block = push_new_block();
-
-                if (node->type == syntax::ast_node_types_t::program) {
-                    _block = active_scope = scope_block;
-                    initialize_core_types();
+            case syntax::ast_node_types_t::directive: {
+                auto expression = evaluate(r, node->lhs);
+                auto directive_element = make_directive(
+                    current_scope(),
+                    node->token.value,
+                    expression);
+                apply_attributes(r, directive_element, node);
+                directive_element->evaluate(r, this);
+                return directive_element;
+            }
+            case syntax::ast_node_types_t::module: {
+                for (auto it = node->children.begin();
+                     it != node->children.end();
+                     ++it) {
+                    add_expression_to_scope(_block, evaluate(r, *it));
                 }
+                return _block;
+            }
+            case syntax::ast_node_types_t::basic_block: {
+                auto active_scope = push_new_block();
 
                 for (auto it = node->children.begin();
                      it != node->children.end();
                      ++it) {
-                    auto expr = evaluate(r, *it);
-                    switch (expr->element_type()) {
-                        case element_type_t::comment:
-                            active_scope->comments().push_back(dynamic_cast<comment*>(expr));
-                            break;
-                        case element_type_t::attribute:
-                            active_scope->attributes().add(dynamic_cast<attribute*>(expr));
-                            break;
-                        case element_type_t::statement: {
-                            active_scope->statements().push_back(dynamic_cast<statement*>(expr));
-                            break;
-                        }
-                        default:
-                            break;
-                    }
+                    add_expression_to_scope(active_scope, evaluate(r, *it));
                 }
 
                 return pop_scope();
@@ -351,15 +342,12 @@ namespace basecode::compiler {
     bool program::compile(
             common::result& r,
             const syntax::ast_node_shared_ptr& root) {
-        if (root->type != syntax::ast_node_types_t::program) {
-            r.add_message(
-                "P001",
-                "The root AST node must be of type 'program'.",
-                true);
-            return false;
-        }
+        _block = push_new_block();
 
-        evaluate(r, root);
+        initialize_core_types();
+
+        if (!compile_module(r, root))
+            return false;
 
         if (!execute_directives(r))
             return false;
@@ -375,6 +363,13 @@ namespace basecode::compiler {
 
     vm::terp* program::terp() {
         return _terp;
+    }
+
+    bool program::compile_module(
+            common::result& r,
+            const syntax::ast_node_shared_ptr& root) {
+        evaluate(r, root);
+        return !r.is_failed();
     }
 
     compiler::block* program::block() {
@@ -1123,6 +1118,37 @@ namespace basecode::compiler {
             return nullptr;
         }
         return var;
+    }
+
+    void program::add_expression_to_scope(compiler::block* scope, compiler::element* expr) {
+        switch (expr->element_type()) {
+            case element_type_t::comment:
+                scope->comments().push_back(dynamic_cast<comment*>(expr));
+                break;
+            case element_type_t::attribute:
+                scope->attributes().add(dynamic_cast<attribute*>(expr));
+                break;
+            case element_type_t::statement: {
+                scope->statements().push_back(dynamic_cast<statement*>(expr));
+                break;
+            }
+            default:
+                break;
+        }
+    }
+
+    void program::apply_attributes(
+            common::result& r,
+            compiler::element* element,
+            const syntax::ast_node_shared_ptr& node) {
+        for (auto it = node->children.begin();
+             it != node->children.end();
+             ++it) {
+            const auto& child_node = *it;
+            if (child_node->type == syntax::ast_node_types_t::attribute) {
+                element->attributes().add(dynamic_cast<attribute*>(evaluate(r, child_node)));
+            }
+        }
     }
 
 };

@@ -27,6 +27,10 @@ namespace basecode::compiler {
             const std::string& name,
             element* expression);
 
+        bool evaluate(
+            common::result& r,
+            compiler::program* program);
+
         bool execute(
             common::result& r,
             compiler::program* program);
@@ -36,17 +40,38 @@ namespace basecode::compiler {
         std::string name() const;
 
     private:
-        bool on_run(common::result& r, compiler::program* program);
+        // --------------------
+        // run directive
+        // --------------------
+        bool on_execute_run(common::result& r, compiler::program* program);
 
-        bool on_load(common::result& r, compiler::program* program);
+        bool on_evaluate_run(common::result& r, compiler::program* program);
 
-        bool on_foreign(common::result& r, compiler::program* program);
+        // --------------------
+        // load directive
+        // --------------------
+        bool on_execute_load(common::result& r, compiler::program* program);
+
+        bool on_evaluate_load(common::result& r, compiler::program* program);
+
+        // --------------------
+        // run directive
+        // --------------------
+        bool on_execute_foreign(common::result& r, compiler::program* program);
+
+        bool on_evaluate_foreign(common::result& r, compiler::program* program);
 
     private:
-        inline static std::unordered_map<std::string, directive_callable> s_directive_handlers = {
-            {"run",     std::bind(&directive::on_run,     std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-            {"load",    std::bind(&directive::on_load,    std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-            {"foreign", std::bind(&directive::on_foreign, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        static inline std::unordered_map<std::string, directive_callable> s_evaluate_handlers = {
+            {"run",     std::bind(&directive::on_evaluate_run,     std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+            {"load",    std::bind(&directive::on_evaluate_load,    std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+            {"foreign", std::bind(&directive::on_evaluate_foreign, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        };
+
+        static inline std::unordered_map<std::string, directive_callable> s_execute_handlers = {
+            {"run",     std::bind(&directive::on_execute_run,     std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+            {"load",    std::bind(&directive::on_execute_load,    std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+            {"foreign", std::bind(&directive::on_execute_foreign, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         };
 
         std::string _name;

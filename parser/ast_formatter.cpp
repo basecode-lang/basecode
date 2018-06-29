@@ -44,7 +44,7 @@ namespace basecode::syntax {
                 style = ", fillcolor=green, style=\"filled\"";
                 details = fmt::format("|{{ token: '{}' }}", node->token.value);
                 break;
-            case basecode::syntax::ast_node_types_t::program:
+            case basecode::syntax::ast_node_types_t::module:
                 style = ", fillcolor=cadetblue, style=\"filled\"";
                 break;
             case basecode::syntax::ast_node_types_t::binary_operator:

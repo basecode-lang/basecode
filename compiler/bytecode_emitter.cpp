@@ -80,20 +80,21 @@ namespace basecode::compiler {
 
     bool bytecode_emitter::compile_stream(common::result& r, std::istream& input) {
         syntax::parser alpha_parser(input);
-        auto program_node = alpha_parser.parse(r);
-        if (program_node != nullptr && !r.is_failed()) {
+        auto module_node = alpha_parser.parse(r);
+        if (module_node != nullptr && !r.is_failed()) {
             if (_options.verbose) {
                 alpha_parser.write_ast_graph(
                     _options.ast_graph_file_name,
-                    program_node);
+                    module_node);
             }
 
-            compiler::program program(&_terp);
-            if (program.compile(r, program_node)) {
-                if (_options.verbose)
+            compiler::program program_element(&_terp);
+            if (program_element.compile(r, module_node)) {
+                if (_options.verbose) {
                     write_code_dom_graph(
                         _options.code_dom_graph_file_name,
-                        &program);
+                        &program_element);
+                }
             }
         }
 

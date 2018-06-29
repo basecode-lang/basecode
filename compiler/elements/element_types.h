@@ -64,6 +64,7 @@ namespace basecode::compiler {
     using element_list_t = std::vector<element*>;
     using comment_list_t = std::vector<comment*>;
     using statement_list_t = std::vector<statement*>;
+    using attribute_list_t = std::vector<attribute*>;
     using identifier_list_t = std::vector<identifier*>;
     using directive_map_t = std::map<std::string, directive*>;
     using element_map_t = std::unordered_map<common::id_t, element*>;
@@ -304,6 +305,8 @@ namespace basecode::compiler {
         }
 
         void add(attribute* value);
+
+        attribute_list_t as_list() const;
 
         bool remove(const std::string& name);
 

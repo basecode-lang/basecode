@@ -93,17 +93,17 @@ namespace basecode::syntax {
         return node;
     }
 
-    ast_node_shared_ptr ast_builder::program_node() {
+    ast_node_shared_ptr ast_builder::module_node() {
         auto node = std::make_shared<ast_node_t>();
         node->id = ++_id;
-        node->type = ast_node_types_t::program;
+        node->type = ast_node_types_t::module;
         push_scope(node);
         return node;
     }
 
     ast_node_shared_ptr ast_builder::begin_scope() {
         if (_scope_stack.empty()) {
-            return program_node();
+            return module_node();
         } else {
             return basic_block_node();
         }

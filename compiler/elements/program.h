@@ -27,6 +27,10 @@ namespace basecode::compiler {
             common::result& r,
             const syntax::ast_node_shared_ptr& root);
 
+        bool compile_module(
+            common::result& r,
+            const syntax::ast_node_shared_ptr& root);
+
         bool run(common::result& r);
 
         const element_map_t& elements() const;
@@ -82,6 +86,11 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             comment_type_t type,
             const std::string& value);
+
+        void apply_attributes(
+            common::result& r,
+            compiler::element* element,
+            const syntax::ast_node_shared_ptr& node);
 
         void add_composite_type_fields(
             common::result& r,
@@ -209,6 +218,8 @@ namespace basecode::compiler {
         namespace_type* make_namespace_type(compiler::block* parent_scope);
 
         compiler::type* find_array_type(compiler::type* entry_type, size_t size);
+
+        void add_expression_to_scope(compiler::block* scope, compiler::element* expr);
 
     private:
         element* evaluate(

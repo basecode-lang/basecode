@@ -9,21 +9,25 @@
 //
 // ----------------------------------------------------------------------------
 
-// N.B. this is how we define 'external' function prototypes
+@library "libfmt.dylib";
 #foreign print := proc(format:string, values:...any) @alias "fmt_print";
 
 alpha::compiler::config := ns {
     fibonacci := ns {
+        @ship_it "now!";
         constant length_of_sequence := 1000;
     };
 };
 
+@foobar "baz";
 alpha::compiler::examples := ns {
     count:u32;
     max:u16 := 32767;
     name:string := "fibonacci test program";
 
+    @func_it 42;
     fib := proc(n:u64 := 10):u64 {
+        @dont_fold_me_dude;
         if n == 0 || n == 1 {
             return n;
         } else {

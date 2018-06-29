@@ -25,9 +25,13 @@ namespace basecode::compiler {
 
         field_map_t& returns();
 
+        bool is_foreign() const;
+
         compiler::block* scope();
 
         field_map_t& parameters();
+
+        void is_foreign(bool value);
 
         type_map_t& type_parameters();
 
@@ -35,6 +39,7 @@ namespace basecode::compiler {
 
     private:
         field_map_t _returns {};
+        bool _is_foreign = false;
         field_map_t _parameters {};
         type_map_t _type_parameters {};
         compiler::block* _scope = nullptr;

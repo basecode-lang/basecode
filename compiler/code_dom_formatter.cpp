@@ -185,9 +185,10 @@ namespace basecode::compiler {
                 auto style = ", fillcolor=gainsboro, style=\"filled\"";
                 add_primary_edge(element, element->scope());
                 return fmt::format(
-                    "{}[shape=record,label=\"proc_type|{}\"{}];",
+                    "{}[shape=record,label=\"proc_type|{}|foreign: {}\"{}];",
                     node_vertex_name,
                     element->name(),
+                    element->is_foreign(),
                     style);
             }
             case element_type_t::directive: {

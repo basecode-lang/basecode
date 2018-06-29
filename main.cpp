@@ -43,7 +43,7 @@ static void print_results(basecode::common::result& r) {
         fmt::print(
             "[{}] {}{}\n",
             msg.code(),
-            msg.is_error() ? "ERROR: " : " ",
+            msg.is_error() ? "ERROR: " : "WARNING: ",
             msg.message());
         if (!msg.details().empty()) {
             fmt::print("{}\n", msg.details());

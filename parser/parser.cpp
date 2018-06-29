@@ -964,6 +964,12 @@ namespace basecode::syntax {
                 if (!expect(r, line_terminator_token))
                     break;
             }
+
+            if (!scope->pending_attributes.empty()) {
+                for (const auto& attr_node : scope->pending_attributes)
+                    node->rhs->children.push_back(attr_node);
+                scope->pending_attributes.clear();
+            }
         }
 
         if (peek(token_types_t::attribute)) {
@@ -983,6 +989,15 @@ namespace basecode::syntax {
             if (expression == nullptr)
                 return nullptr;
 
+            if (expression->type == ast_node_types_t::attribute) {
+                _ast_builder.current_scope()->pending_attributes.push_back(expression);
+                token_t line_terminator_token;
+                line_terminator_token.type = token_types_t::semi_colon;
+                if (!expect(r, line_terminator_token))
+                    break;
+                continue;
+            }
+
             if (expression->type == ast_node_types_t::label) {
                 pending_labels.push_back(expression);
                 continue;
@@ -998,6 +1013,7 @@ namespace basecode::syntax {
         }
 
         auto statement_node = _ast_builder.statement_node();
+
         if (!pending_labels.empty()) {
             statement_node->lhs = _ast_builder.label_list_node();
             for (const auto& label_node : pending_labels)

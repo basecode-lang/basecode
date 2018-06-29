@@ -25,6 +25,14 @@ namespace basecode::compiler {
         _attrs.insert(std::make_pair(value->name(), value));
     }
 
+    attribute_list_t attribute_map_t::as_list() const {
+        attribute_list_t list {};
+        for (const auto& it : _attrs) {
+            list.push_back(it.second);
+        }
+        return list;
+    }
+
     bool attribute_map_t::remove(const std::string& name) {
         return _attrs.erase(name) > 0;
     }

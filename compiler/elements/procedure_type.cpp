@@ -23,6 +23,10 @@ namespace basecode::compiler {
                                    _scope(scope) {
     }
 
+    bool procedure_type::is_foreign() const {
+        return _is_foreign;
+    }
+
     field_map_t& procedure_type::returns() {
         return _returns;
     }
@@ -33,6 +37,10 @@ namespace basecode::compiler {
 
     field_map_t& procedure_type::parameters() {
         return _parameters;
+    }
+
+    void procedure_type::is_foreign(bool value) {
+        _is_foreign = value;
     }
 
     type_map_t& procedure_type::type_parameters() {

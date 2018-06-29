@@ -8,8 +8,9 @@ deps to bytecode generation
 ===========================
 - bytecode generation
     ffi:
-        * directive (#foreign) should register procedure_type with vm::terp
-        * attribute for library module specific, e.g. @library "libfoo.so", etc.
+        * refactor project structure:
+            1. core compiler should be shared library
+            2. bac command-line tool should be executable target
 
     data definitions:
         * constants in a pseudo-constant section
@@ -107,3 +108,6 @@ DONE
 - type inference:
     * add function on program that recursively attempts to finalize
         type inference for identifiers after compile finishes.
+- ffi:
+    * directive (#foreign) should register procedure_type with vm::terp
+    * attribute for library module specific, e.g. @library "libfoo.so", etc.
