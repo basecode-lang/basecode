@@ -233,15 +233,7 @@ namespace basecode::vm {
     bool shared_library_t::initialize(
             common::result& r,
             const std::filesystem::path& path) {
-        if (!std::filesystem::exists(path)) {
-            r.add_message(
-                "B061",
-                fmt::format("shared library image file not found: {}.", path.string()),
-                true);
-            return false;
-        }
-        auto path_c_str = path.string().c_str();
-        _library = dlLoadLibrary(path_c_str);
+        _library = dlLoadLibrary(path.c_str());
         if (_library == nullptr) {
             r.add_message(
                 "B062",
@@ -249,7 +241,7 @@ namespace basecode::vm {
                 true);
             return false;
         }
-        load_symbols(path_c_str);
+        get_library_path();
         return true;
     }
 
@@ -262,11 +254,17 @@ namespace basecode::vm {
                 true);
             return false;
         }
+        get_library_path();
+        return true;
+    }
+
+    void shared_library_t::get_library_path() {
+        if (_library == nullptr)
+            return;
+
         char library_path[PATH_MAX];
         dlGetLibraryPath(_library, library_path, PATH_MAX);
-        load_symbols(library_path);
         _path = library_path;
-        return true;
     }
 
     void shared_library_t::load_symbols(const char* path) {
@@ -289,11 +287,16 @@ namespace basecode::vm {
 
     void* shared_library_t::symbol_address(const std::string& symbol_name) {
         auto it = _symbols.find(symbol_name);
-        if (it == _symbols.end())
-            return nullptr;
+        if (it == _symbols.end()) {
+            auto func_ptr = dlFindSymbol(_library, symbol_name.c_str());
+            _symbols.insert(std::make_pair(symbol_name, func_ptr));
+            return func_ptr;
+        }
+
         if (it->second == nullptr) {
             it->second = dlFindSymbol(_library, symbol_name.c_str());
         }
+
         return it->second;
     }
 
@@ -637,7 +640,7 @@ namespace basecode::vm {
         signature.func_ptr = func_ptr;
         _foreign_functions.insert(std::make_pair(func_ptr, signature));
 
-        return false;
+        return true;
     }
 
     void terp::dump_shared_libraries() {
@@ -1871,7 +1874,6 @@ namespace basecode::vm {
         _call_vm = dcNewCallVM(4096);
 
         _shared_libraries.clear();
-// XXX: dlLoadLibrary(nullptr) doesn't appear to work on os x
 //        shared_library_t self_image;
 //        if (!self_image.initialize(r))
 //            return false;

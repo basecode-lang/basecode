@@ -83,16 +83,16 @@ namespace basecode::compiler {
     bool directive::on_execute_foreign(common::result& r, compiler::program* program) {
         auto terp = program->terp();
 
-        std::string library_name = "bootstrap";
+        std::string library_name = "libalpha-core.dylib";
         auto library_attribute = attributes().find("library");
         if (library_attribute != nullptr)
             library_name = dynamic_cast<compiler::string_literal*>(library_attribute->expression())->value();
 
-        auto library = terp->load_shared_library(r, library_name);
+        std::filesystem::path library_path(library_name);
+        auto library = terp->load_shared_library(r, library_path);
         if (library == nullptr) {
             return false;
         }
-//        terp->dump_shared_libraries();
 
         auto ffi_identifier = dynamic_cast<compiler::identifier*>(_expression);
         std::string symbol_name = ffi_identifier->name();

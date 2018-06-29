@@ -451,6 +451,8 @@ namespace basecode::vm {
         void* symbol_address(const std::string& symbol_name);
 
     private:
+        void get_library_path();
+
         void load_symbols(const char* path);
 
     private:

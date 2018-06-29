@@ -16,22 +16,13 @@
 #include <vm/terp.h>
 #include <functional>
 #include <fmt/format.h>
-#include <common/ya_getopt.h>
 #include <common/hex_formatter.h>
 #include <vm/instruction_emitter.h>
 #include <compiler/bytecode_emitter.h>
+#include "ya_getopt.h"
 
 static constexpr size_t heap_size = (1024 * 1024) * 32;
 static constexpr size_t stack_size = (1024 * 1024) * 8;
-
-extern "C" {
-    void fmt_print(const char* fmt, ...) {
-        va_list ap;
-        va_start(ap, fmt);
-        printf(fmt, ap);
-        va_end(ap);
-    }
-};
 
 static void print_results(basecode::common::result& r) {
     auto has_messages = !r.messages().empty();
@@ -55,11 +46,11 @@ static void print_results(basecode::common::result& r) {
 }
 
 static void usage() {
-    fmt::print("usage: bootstrap "
+    fmt::print("usage: bac "
                "[-?|--help] "
                "[-v|--verbose] "
-               "[-G{filename}|--ast={filename}] "
-               "[-H{filename}|--code_dom={filename}] "
+               "[-G{{filename}}|--ast={{filename}}] "
+               "[-H{{filename}}|--code_dom={{filename}}] "
                " file\n");
 }
 
@@ -85,7 +76,7 @@ int main(int argc, char** argv) {
         opt = ya_getopt_long(
             argc,
             argv,
-            "?:v:G:H:",
+            "?vG:H:",
             long_options,
             &option_index);
         if (opt == -1) {
