@@ -91,6 +91,10 @@ namespace basecode::compiler {
 
     std::string code_dom_formatter::format_node(element* node) {
         auto node_vertex_name = get_vertex_name(node);
+
+        for (auto attr : node->attributes().as_list())
+            add_primary_edge(node, attr);
+
         switch (node->element_type()) {
             case element_type_t::comment: {
                 auto comment_element = dynamic_cast<comment*>(node);
