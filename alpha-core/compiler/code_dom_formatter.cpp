@@ -15,6 +15,7 @@
 #include <compiler/elements/block.h>
 #include <compiler/elements/field.h>
 #include <compiler/elements/label.h>
+#include <compiler/elements/import.h>
 #include <compiler/elements/program.h>
 #include <compiler/elements/comment.h>
 #include <compiler/elements/any_type.h>
@@ -137,6 +138,15 @@ namespace basecode::compiler {
                     "{}[shape=record,label=\"label|{}\"{}];",
                     node_vertex_name,
                     element->name(),
+                    style);
+            }
+            case element_type_t::import_e: {
+                auto element = dynamic_cast<import*>(node);
+                auto style = ", fillcolor=cyan, style=\"filled\"";
+                add_primary_edge(element, element->expression());
+                return fmt::format(
+                    "{}[shape=record,label=\"import\"{}];",
+                    node_vertex_name,
                     style);
             }
             case element_type_t::block: {

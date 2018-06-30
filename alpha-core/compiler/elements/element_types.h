@@ -27,6 +27,7 @@ namespace basecode::compiler {
     class block;
     class label;
     class alias;
+    class import;
     class element;
     class program;
     class comment;
@@ -104,6 +105,7 @@ namespace basecode::compiler {
         program,
         any_type,
         return_e,
+        import_e,
         proc_type,
         directive,
         attribute,
@@ -143,6 +145,7 @@ namespace basecode::compiler {
         {element_type_t::program, "program"},
         {element_type_t::any_type, "any_type"},
         {element_type_t::return_e, "return"},
+        {element_type_t::import_e, "import"},
         {element_type_t::proc_type, "proc_type"},
         {element_type_t::directive, "directive"},
         {element_type_t::attribute, "attribute"},

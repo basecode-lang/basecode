@@ -636,6 +636,7 @@ namespace basecode::syntax {
             {token_types_t::string_literal,      &s_string_literal_prefix_parser},
             {token_types_t::number_literal,      &s_number_literal_prefix_parser},
             {token_types_t::proc_literal,        &s_proc_expression_prefix_parser},
+            {token_types_t::import_literal,      &s_keyword_literal_prefix_parser},
             {token_types_t::alias_literal,       &s_keyword_literal_prefix_parser},
             {token_types_t::null_literal,        &s_keyword_literal_prefix_parser},
             {token_types_t::break_literal,       &s_keyword_literal_prefix_parser},

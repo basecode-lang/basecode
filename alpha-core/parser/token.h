@@ -77,6 +77,7 @@ namespace basecode::syntax {
         scope_operator,
         string_literal,
         return_literal,
+        import_literal,
         less_than_equal,
         spread_operator,
         else_if_literal,
@@ -151,6 +152,7 @@ namespace basecode::syntax {
         {token_types_t::scope_operator,         "scope_operator"},
         {token_types_t::string_literal,         "string_literal"},
         {token_types_t::spread_operator,        "spread_operator"},
+        {token_types_t::import_literal,         "import_literal"},
         {token_types_t::less_than_equal,        "less_than_equal"},
         {token_types_t::else_if_literal,        "else_if_literal"},
         {token_types_t::left_curly_brace,       "left_curly_brace"},
@@ -364,6 +366,11 @@ namespace basecode::syntax {
     static inline token_t s_tilde_literal = {
         .type = token_types_t::tilde,
         .value = "~"
+    };
+
+    static inline token_t s_import_literal = {
+        .type = token_types_t::import_literal,
+        .value = "import"
     };
 
     static inline token_t s_period_literal = {

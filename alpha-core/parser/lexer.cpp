@@ -116,8 +116,10 @@ namespace basecode::syntax {
         {'n', std::bind(&lexer::null_literal, std::placeholders::_1, std::placeholders::_2)},
         {'n', std::bind(&lexer::ns_literal, std::placeholders::_1, std::placeholders::_2)},
 
+        // import literal
         // if literal
         // in literal
+        {'i', std::bind(&lexer::import_literal, std::placeholders::_1, std::placeholders::_2)},
         {'i', std::bind(&lexer::if_literal, std::placeholders::_1, std::placeholders::_2)},
         {'i', std::bind(&lexer::in_literal, std::placeholders::_1, std::placeholders::_2)},
 
@@ -937,6 +939,18 @@ namespace basecode::syntax {
         rewind_one_char();
 
         return true;
+    }
+
+    bool lexer::import_literal(token_t& token) {
+        if (match_literal("import")) {
+            auto ch = read(false);
+            if (!isalnum(ch)) {
+                rewind_one_char();
+                token = s_import_literal;
+                return true;
+            }
+        }
+        return false;
     }
 
     bool lexer::scope_operator(token_t& token) {

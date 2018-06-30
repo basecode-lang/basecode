@@ -438,6 +438,11 @@ namespace basecode::syntax {
                     0);
                 return alias_node;
             }
+            case token_types_t::import_literal: {
+                auto import_node = parser->ast_builder()->import_node(token);
+                import_node->lhs = parser->parse_expression(r, 0);
+                return import_node;
+            }
             case token_types_t::break_literal: {
                 return parser->ast_builder()->break_node(token);
             }

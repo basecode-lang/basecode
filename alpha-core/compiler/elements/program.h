@@ -84,6 +84,10 @@ namespace basecode::compiler {
             element* true_branch,
             element* false_branch);
 
+        import* make_import(
+            compiler::block* parent_scope,
+            element* expr);
+
         comment* make_comment(
             compiler::block* parent_scope,
             comment_type_t type,

@@ -14,6 +14,7 @@
 #include "cast.h"
 #include "label.h"
 #include "alias.h"
+#include "import.h"
 #include "comment.h"
 #include "program.h"
 #include "any_type.h"
@@ -333,6 +334,9 @@ namespace basecode::compiler {
                     return_element->expressions().push_back(evaluate(r, arg_node));
                 }
                 return return_element;
+            }
+            case syntax::ast_node_types_t::import_expression: {
+                return make_import(current_scope(), evaluate(r, node->lhs));
             }
             case syntax::ast_node_types_t::constant_expression: {
                 auto identifier = dynamic_cast<compiler::identifier*>(evaluate(r, node->rhs));
@@ -875,6 +879,20 @@ namespace basecode::compiler {
         return cast;
     }
 
+    void program::apply_attributes(
+            common::result& r,
+            compiler::element* element,
+            const syntax::ast_node_shared_ptr& node) {
+        for (auto it = node->children.begin();
+             it != node->children.end();
+             ++it) {
+            const auto& child_node = *it;
+            if (child_node->type == syntax::ast_node_types_t::attribute) {
+                element->attributes().add(dynamic_cast<attribute*>(evaluate(r, child_node)));
+            }
+        }
+    }
+
     statement* program::make_statement(
             compiler::block* parent_scope,
             label_list_t labels,
@@ -1099,6 +1117,12 @@ namespace basecode::compiler {
         return recursive_find(block());
     }
 
+    import* program::make_import(compiler::block* parent_scope, element* expr) {
+        auto import_element = new compiler::import(parent_scope, expr);
+        _elements.insert(std::make_pair(import_element->id(), import_element));
+        return import_element;
+    }
+
     namespace_type* program::make_namespace_type(compiler::block* parent_scope) {
         auto type = new compiler::namespace_type(parent_scope);
         _elements.insert(std::make_pair(type->id(), type));
@@ -1155,20 +1179,5 @@ namespace basecode::compiler {
                 break;
         }
     }
-
-    void program::apply_attributes(
-            common::result& r,
-            compiler::element* element,
-            const syntax::ast_node_shared_ptr& node) {
-        for (auto it = node->children.begin();
-             it != node->children.end();
-             ++it) {
-            const auto& child_node = *it;
-            if (child_node->type == syntax::ast_node_types_t::attribute) {
-                element->attributes().add(dynamic_cast<attribute*>(evaluate(r, child_node)));
-            }
-        }
-    }
-
 
 };

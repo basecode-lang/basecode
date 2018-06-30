@@ -7,11 +7,6 @@ Basecode Bootstrap Tasks
 deps to bytecode generation
 ===========================
 - bytecode generation
-    ffi:
-        * refactor project structure:
-            1. core compiler should be shared library
-            2. bac command-line tool should be executable target
-
     data definitions:
         * constants in a pseudo-constant section
         * global variables in pseudo-bss/data sections
@@ -19,6 +14,7 @@ deps to bytecode generation
     basic block:
         * emit actual instructions for block behavior
         * local variables/parameters on stack
+        * how do blocks link to one another in sequence?
         * @entry_point attribute link up.
             have a single JMP at program_start that is patched with
             designated entry_point function.
@@ -33,13 +29,17 @@ lower priority
 
 - FIX: string, number, boolean literals aren't infix so pre-block comments don't work.
 
+- namespace importing
+
+- type parameter constraints
+
+- multiple return/assignment
+
 - switch
 
 - with
 
 - transaction, commit, rollback
-
-- view
 
 - defer
 
@@ -60,8 +60,7 @@ lower priority
 
 - array_literal
 
-- how complex should type parameters become in alpha?
-    * we need some kind of constraint system
+- map_literal
 
 =================================================================
 
@@ -111,3 +110,6 @@ DONE
 - ffi:
     * directive (#foreign) should register procedure_type with vm::terp
     * attribute for library module specific, e.g. @library "libfoo.so", etc.
+    * refactor project structure:
+        1. core compiler should be shared library
+        2. bac command-line tool should be executable target

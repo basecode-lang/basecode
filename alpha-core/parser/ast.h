@@ -75,6 +75,7 @@ namespace basecode::syntax {
         elseif_expression,
         switch_expression,
         struct_expression,
+        import_expression,
         continue_statement,
         constant_expression,
         namespace_expression,
@@ -126,6 +127,7 @@ namespace basecode::syntax {
         {ast_node_types_t::extend_statement, "extend_statement"},
         {ast_node_types_t::for_in_statement, "for_in_statement"},
         {ast_node_types_t::switch_expression, "switch_statement"},
+        {ast_node_types_t::import_expression, "import_expression"},
         {ast_node_types_t::struct_expression, "struct_expression"},
         {ast_node_types_t::character_literal, "character_literal"},
         {ast_node_types_t::array_constructor, "array_constructor"},
@@ -283,6 +285,8 @@ namespace basecode::syntax {
         ast_node_shared_ptr defer_node(const token_t& token);
 
         ast_node_shared_ptr struct_node(const token_t& token);
+
+        ast_node_shared_ptr import_node(const token_t& token);
 
         ast_node_shared_ptr constant_node(const token_t& token);
 

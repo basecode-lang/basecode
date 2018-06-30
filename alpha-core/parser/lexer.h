@@ -131,6 +131,8 @@ namespace basecode::syntax {
 
         bool string_literal(token_t& token);
 
+        bool import_literal(token_t& token);
+
         bool line_terminator(token_t& token);
 
         bool equals_operator(token_t& token);
