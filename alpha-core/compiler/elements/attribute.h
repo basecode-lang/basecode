@@ -28,6 +28,8 @@ namespace basecode::compiler {
 
         std::string name() const;
 
+        std::string as_string() const;
+
     private:
         std::string _name;
         element* _expr = nullptr;

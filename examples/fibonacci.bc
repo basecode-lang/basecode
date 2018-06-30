@@ -50,5 +50,3 @@ alpha::compiler::examples := ns {
         return final_fib_value;
     } @entry_point;
 };
-
-alpha::compiler::examples::this_doesn_t_need_to_be_main();

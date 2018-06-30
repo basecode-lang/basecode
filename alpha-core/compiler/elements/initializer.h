@@ -23,6 +23,8 @@ namespace basecode::compiler {
 
         element* expression();
 
+        compiler::procedure_type* procedure_type();
+
     private:
         element* _expr = nullptr;
     };

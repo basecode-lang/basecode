@@ -97,6 +97,7 @@ namespace basecode::vm {
         uint64_t offset = 0;
         std::string name;
         segment_type_t type;
+        bool initialized = false;
 
     private:
         std::unordered_map<std::string, symbol_t> _symbols {};
@@ -106,14 +107,14 @@ namespace basecode::vm {
     public:
         explicit assembler(vm::terp* terp);
 
-        void segment(
-            const std::string& name,
-            segment_type_t type,
-            uint64_t address);
-
         bool assemble(
             common::result& r,
             std::istream& source);
+
+        segment_t* segment(
+            const std::string& name,
+            segment_type_t type,
+            uint64_t address);
 
         void define_data(float value);
 

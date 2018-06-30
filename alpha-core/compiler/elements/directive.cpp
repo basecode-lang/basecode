@@ -56,11 +56,15 @@ namespace basecode::compiler {
     //
     // run directive
 
-    bool directive::on_execute_run(common::result& r, compiler::program* program) {
+    bool directive::on_execute_run(
+            common::result& r,
+            compiler::program* program) {
         return true;
     }
 
-    bool directive::on_evaluate_run(common::result& r, compiler::program* program) {
+    bool directive::on_evaluate_run(
+            common::result& r,
+            compiler::program* program) {
         return true;
     }
 
@@ -68,11 +72,15 @@ namespace basecode::compiler {
     //
     // load directive
 
-    bool directive::on_execute_load(common::result& r, compiler::program* program) {
+    bool directive::on_execute_load(
+            common::result& r,
+            compiler::program* program) {
         return true;
     }
 
-    bool directive::on_evaluate_load(common::result& r, compiler::program* program) {
+    bool directive::on_evaluate_load(
+            common::result& r,
+            compiler::program* program) {
         return true;
     }
 
@@ -80,13 +88,18 @@ namespace basecode::compiler {
     //
     // foreign directive
 
-    bool directive::on_execute_foreign(common::result& r, compiler::program* program) {
+    bool directive::on_execute_foreign(
+            common::result& r,
+            compiler::program* program) {
         auto terp = program->terp();
 
+        // XXX: this should move to a cmake generated header file
         std::string library_name = "libalpha-core.dylib";
+        // XXX: -------------------------------------------------
+
         auto library_attribute = attributes().find("library");
         if (library_attribute != nullptr)
-            library_name = dynamic_cast<compiler::string_literal*>(library_attribute->expression())->value();
+            library_name = library_attribute->as_string();
 
         std::filesystem::path library_path(library_name);
         auto library = terp->load_shared_library(r, library_path);
@@ -98,7 +111,7 @@ namespace basecode::compiler {
         std::string symbol_name = ffi_identifier->name();
         auto alias_attribute = attributes().find("alias");
         if (alias_attribute != nullptr) {
-            symbol_name = dynamic_cast<compiler::string_literal*>(alias_attribute->expression())->value();
+            symbol_name = alias_attribute->as_string();
         }
 
         vm::function_signature_t signature {
@@ -117,16 +130,21 @@ namespace basecode::compiler {
         return !r.is_failed();
     }
 
-    bool directive::on_evaluate_foreign(common::result& r, compiler::program* program) {
+    bool directive::on_evaluate_foreign(
+            common::result& r,
+            compiler::program* program) {
         auto proc_identifier = dynamic_cast<compiler::identifier*>(_expression);
-        auto proc_type = dynamic_cast<compiler::procedure_type*>(proc_identifier->initializer()->expression());
-        auto attrs = proc_type->attributes().as_list();
-        for (auto attr : attrs) {
-            attributes().add(attr);
-            proc_type->attributes().remove(attr->name());
+        auto proc_type = proc_identifier->initializer()->procedure_type();
+        if (proc_type != nullptr) {
+            auto attrs = proc_type->attributes().as_list();
+            for (auto attr : attrs) {
+                attributes().add(attr);
+                proc_type->attributes().remove(attr->name());
+            }
+            proc_type->is_foreign(true);
+            return true;
         }
-        proc_type->is_foreign(true);
-        return true;
+        return false;
     }
 
 };

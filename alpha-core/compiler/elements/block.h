@@ -28,6 +28,10 @@ namespace basecode::compiler {
             common::result& r,
             vm::assembler& assembler);
 
+        bool define_data(
+            common::result& r,
+            vm::assembler& assembler);
+
         type_map_t& types();
 
         block_list_t& blocks();

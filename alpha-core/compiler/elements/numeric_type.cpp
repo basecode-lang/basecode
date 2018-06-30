@@ -30,4 +30,8 @@ namespace basecode::compiler {
         return _max;
     }
 
+    vm::symbol_type_t numeric_type::symbol_type() const {
+        return vm::symbol_type_t::u64;
+    }
+
 };

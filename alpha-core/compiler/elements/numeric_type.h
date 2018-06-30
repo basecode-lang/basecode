@@ -11,6 +11,7 @@
 
 #pragma once
 
+#include <vm/assembler.h>
 #include "type.h"
 
 namespace basecode::compiler {
@@ -26,6 +27,8 @@ namespace basecode::compiler {
         int64_t min() const;
 
         uint64_t max() const;
+
+        vm::symbol_type_t symbol_type() const;
 
     private:
         int64_t _min;

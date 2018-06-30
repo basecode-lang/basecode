@@ -131,7 +131,9 @@ namespace basecode::compiler {
         boolean_literal,
         integer_literal,
         binary_operator,
+        proc_type_block,
         unknown_identifier,
+        proc_instance_block,
     };
 
     static inline std::unordered_map<element_type_t, std::string> s_element_type_names = {
@@ -171,7 +173,9 @@ namespace basecode::compiler {
         {element_type_t::boolean_literal, "boolean_literal"},
         {element_type_t::integer_literal, "integer_literal"},
         {element_type_t::binary_operator, "binary_operator"},
+        {element_type_t::proc_type_block, "proc_type_block"},
         {element_type_t::unknown_identifier, "unknown_identifier"},
+        {element_type_t::proc_instance_block, "proc_instance_block"},
     };
 
     static inline std::string element_type_name(element_type_t type) {
@@ -345,6 +349,10 @@ namespace basecode::compiler {
 
         void add(identifier* value);
 
+        bool empty() const {
+            return _identifiers.empty();
+        }
+
         size_t size() const {
             return _identifiers.size();
         }
@@ -354,6 +362,10 @@ namespace basecode::compiler {
         bool remove(const std::string& name);
 
         identifier* find(const std::string& name);
+
+        identifier_list_t globals(bool initialized);
+
+        identifier_list_t constants(bool initialized);
 
     private:
         std::unordered_multimap<std::string, identifier*> _identifiers {};

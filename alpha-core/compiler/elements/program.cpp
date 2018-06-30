@@ -59,7 +59,8 @@ namespace basecode::compiler {
 
     element* program::evaluate(
             common::result& r,
-            const syntax::ast_node_shared_ptr& node) {
+            const syntax::ast_node_shared_ptr& node,
+            element_type_t default_block_type) {
         if (node == nullptr)
             return nullptr;
 
@@ -96,7 +97,7 @@ namespace basecode::compiler {
                 return _block;
             }
             case syntax::ast_node_types_t::basic_block: {
-                auto active_scope = push_new_block();
+                auto active_scope = push_new_block(default_block_type);
 
                 for (auto it = node->children.begin();
                      it != node->children.end();
@@ -244,7 +245,9 @@ namespace basecode::compiler {
             }
             case syntax::ast_node_types_t::proc_expression: {
                 auto active_scope = current_scope();
-                auto block_scope = make_block(active_scope);
+                auto block_scope = make_block(
+                    active_scope,
+                    element_type_t::proc_type_block);
                 auto proc_type = make_procedure_type(active_scope, block_scope);
                 active_scope->types().add(proc_type);
 
@@ -274,7 +277,8 @@ namespace basecode::compiler {
                             auto param_identifier = add_identifier_to_scope(
                                 r,
                                 symbol_node,
-                                param_node->rhs);
+                                param_node->rhs,
+                                block_scope);
                             auto field = make_field(block_scope, param_identifier);
                             proc_type->parameters().add(field);
                             break;
@@ -283,7 +287,8 @@ namespace basecode::compiler {
                             auto param_identifier = add_identifier_to_scope(
                                 r,
                                 param_node,
-                                nullptr);
+                                nullptr,
+                                block_scope);
                             auto field = make_field(block_scope, param_identifier);
                             proc_type->parameters().add(field);
                             break;
@@ -412,17 +417,6 @@ namespace basecode::compiler {
 
     const element_map_t& program::elements() const {
         return _elements;
-    }
-
-    compiler::block* program::push_new_block() {
-        auto parent_scope = current_scope();
-        auto scope_block = make_block(parent_scope);
-
-        if (parent_scope != nullptr)
-            parent_scope->blocks().push_back(scope_block);
-
-        push_scope(scope_block);
-        return scope_block;
     }
 
     bool program::is_subtree_constant(
@@ -562,7 +556,8 @@ namespace basecode::compiler {
                 case syntax::ast_node_types_t::basic_block: {
                     auto basic_block = dynamic_cast<compiler::block*>(evaluate(
                         r,
-                        child_node));
+                        child_node,
+                        element_type_t::proc_instance_block));
                     proc_type->instances().push_back(make_procedure_instance(
                         proc_type->scope(),
                         proc_type,
@@ -607,6 +602,17 @@ namespace basecode::compiler {
         auto type = new compiler::numeric_type(parent_scope, name, min, max);
         _elements.insert(std::make_pair(type->id(), type));
         return type;
+    }
+
+    compiler::block* program::push_new_block(element_type_t type) {
+        auto parent_scope = current_scope();
+        auto scope_block = make_block(parent_scope, type);
+
+        if (parent_scope != nullptr)
+            parent_scope->blocks().push_back(scope_block);
+
+        push_scope(scope_block);
+        return scope_block;
     }
 
     string_type* program::make_string_type(compiler::block* parent_scope) {
@@ -768,7 +774,8 @@ namespace basecode::compiler {
     compiler::identifier* program::add_identifier_to_scope(
             common::result& r,
             const syntax::ast_node_shared_ptr& symbol,
-            const syntax::ast_node_shared_ptr& rhs) {
+            const syntax::ast_node_shared_ptr& rhs,
+            compiler::block* parent_scope) {
         auto namespace_type = find_type("namespace");
 
         std::string type_name;
@@ -797,13 +804,15 @@ namespace basecode::compiler {
             }
         }
 
-        auto scope = symbol->is_qualified_symbol() ? block() : current_scope();
+        auto scope = symbol->is_qualified_symbol()
+            ? block()
+            : parent_scope != nullptr ? parent_scope : current_scope();
 
         for (size_t i = 0; i < symbol->children.size() - 1; i++) {
             const auto& symbol_node = symbol->children[i];
             auto var = scope->identifiers().find(symbol_node->token.value);
             if (var == nullptr) {
-                auto new_scope = make_block(scope);
+                auto new_scope = make_block(scope, element_type_t::block);
                 auto ns_identifier = make_identifier(
                     new_scope,
                     symbol_node->token.value,
@@ -925,6 +934,14 @@ namespace basecode::compiler {
         return type;
     }
 
+    compiler::block* program::make_block(
+            compiler::block* parent_scope,
+            element_type_t type) {
+        auto block_element = new compiler::block(parent_scope, type);
+        _elements.insert(std::make_pair(block_element->id(), block_element));
+        return block_element;
+    }
+
     void program::add_composite_type_fields(
             common::result& r,
             compiler::composite_type* type,
@@ -1021,7 +1038,19 @@ namespace basecode::compiler {
     }
 
     bool program::build_data_segments(common::result& r) {
-        return true;
+        std::function<bool (compiler::block*)> recursive_execute =
+            [&](compiler::block* scope) -> bool {
+                if (scope->element_type() == element_type_t::proc_type_block
+                ||  scope->element_type() == element_type_t::proc_instance_block)
+                    return true;
+                scope->define_data(r, _assembler);
+                for (auto block : scope->blocks()) {
+                    if (!recursive_execute(block))
+                        return false;
+                }
+                return true;
+            };
+        return recursive_execute(block());
     }
 
     bool program::resolve_unknown_types(common::result& r) {
@@ -1092,12 +1121,6 @@ namespace basecode::compiler {
             scope = dynamic_cast<compiler::block*>(scope->parent());
         }
         return nullptr;
-    }
-
-    compiler::block* program::make_block(compiler::block* parent_scope) {
-        auto type = new compiler::block(parent_scope);
-        _elements.insert(std::make_pair(type->id(), type));
-        return type;
     }
 
     compiler::type* program::find_type_for_identifier(const std::string& name) {

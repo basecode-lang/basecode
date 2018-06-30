@@ -156,6 +156,20 @@ namespace basecode::compiler {
                     node_vertex_name,
                     style);
             }
+            case element_type_t::proc_type_block: {
+                auto style = ", fillcolor=floralwhite, style=\"filled\"";
+                return fmt::format(
+                    "{}[shape=record,label=\"block|proc_type\"{}];",
+                    node_vertex_name,
+                    style);
+            }
+            case element_type_t::proc_instance_block: {
+                auto style = ", fillcolor=floralwhite, style=\"filled\"";
+                return fmt::format(
+                    "{}[shape=record,label=\"block|proc_instance\"{}];",
+                    node_vertex_name,
+                    style);
+            }
             case element_type_t::field: {
                 auto element = dynamic_cast<field*>(node);
                 auto style = ", fillcolor=gainsboro, style=\"filled\"";

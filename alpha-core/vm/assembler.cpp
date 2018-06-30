@@ -71,13 +71,14 @@ namespace basecode::vm {
         return false;
     }
 
-    void assembler::segment(
+    segment_t* assembler::segment(
             const std::string& name,
             segment_type_t type,
             uint64_t address) {
         _segments.insert(std::make_pair(
             name,
             segment_t(name, type, address)));
+        return segment(name);
     }
 
     instruction_emitter& assembler::emitter() {

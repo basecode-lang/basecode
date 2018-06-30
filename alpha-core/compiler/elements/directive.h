@@ -43,23 +43,35 @@ namespace basecode::compiler {
         // --------------------
         // run directive
         // --------------------
-        bool on_execute_run(common::result& r, compiler::program* program);
+        bool on_execute_run(
+            common::result& r,
+            compiler::program* program);
 
-        bool on_evaluate_run(common::result& r, compiler::program* program);
+        bool on_evaluate_run(
+            common::result& r,
+            compiler::program* program);
 
         // --------------------
         // load directive
         // --------------------
-        bool on_execute_load(common::result& r, compiler::program* program);
+        bool on_execute_load(
+            common::result& r,
+            compiler::program* program);
 
-        bool on_evaluate_load(common::result& r, compiler::program* program);
+        bool on_evaluate_load(
+            common::result& r,
+            compiler::program* program);
 
         // --------------------
         // run directive
         // --------------------
-        bool on_execute_foreign(common::result& r, compiler::program* program);
+        bool on_execute_foreign(
+            common::result& r,
+            compiler::program* program);
 
-        bool on_evaluate_foreign(common::result& r, compiler::program* program);
+        bool on_evaluate_foreign(
+            common::result& r,
+            compiler::program* program);
 
     private:
         static inline std::unordered_map<std::string, directive_callable> s_evaluate_handlers = {

@@ -126,6 +126,10 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             bool value);
 
+        compiler::block* make_block(
+            compiler::block* parent_scope,
+            element_type_t type);
+
         void add_procedure_instance(
             common::result& r,
             compiler::procedure_type* proc_type,
@@ -169,8 +173,6 @@ namespace basecode::compiler {
             int64_t min,
             uint64_t max);
 
-        compiler::block* push_new_block();
-
         namespace_element* make_namespace(
             compiler::block* parent_scope,
             element* expr);
@@ -203,11 +205,10 @@ namespace basecode::compiler {
         compiler::identifier* add_identifier_to_scope(
             common::result& r,
             const syntax::ast_node_shared_ptr& symbol,
-            const syntax::ast_node_shared_ptr& rhs);
+            const syntax::ast_node_shared_ptr& rhs,
+            compiler::block* parent_scope = nullptr);
 
         any_type* make_any_type(compiler::block* parent_scope);
-
-        compiler::block* make_block(compiler::block* parent_scope);
 
         return_element* make_return(compiler::block* parent_scope);
 
@@ -225,12 +226,15 @@ namespace basecode::compiler {
 
         compiler::type* find_array_type(compiler::type* entry_type, size_t size);
 
+        compiler::block* push_new_block(element_type_t type = element_type_t::block);
+
         void add_expression_to_scope(compiler::block* scope, compiler::element* expr);
 
     private:
         element* evaluate(
             common::result& r,
-            const syntax::ast_node_shared_ptr& node);
+            const syntax::ast_node_shared_ptr& node,
+            element_type_t default_block_type = element_type_t::block);
 
         compiler::block* pop_scope();
 
