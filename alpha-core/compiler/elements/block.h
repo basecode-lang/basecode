@@ -43,6 +43,12 @@ namespace basecode::compiler {
         identifier_map_t& identifiers();
 
     private:
+        void add_symbols(
+            common::result& r,
+            vm::segment_t* segment,
+            const identifier_list_t& list);
+
+    private:
         type_map_t _types {};
         block_list_t _blocks {};
         comment_list_t _comments {};

@@ -8,8 +8,11 @@ deps to bytecode generation
 ===========================
 - bytecode generation
     data definitions:
-        * constants in a pseudo-constant section
-        * global variables in pseudo-bss/data sections
+        * MOVE: as_string() to element and add as_integer(), as_float(), as_bool()
+        * MOVE: symbol_type() to element and add on_symbol_type() for sub-classes
+        * compiler::type needs a size and composite_type needs to compute size based on fields
+        * compiler::string_type, compiler::array_type need a way to define the composite structure
+                within the terp heap
 
     basic block:
         * emit actual instructions for block behavior
@@ -21,13 +24,19 @@ deps to bytecode generation
 
 - bytecode-to-native:
     * x64 and ARM 64
-    * use elfio for read/writing obj/executable files
+    * executable and shared libraries only
+    * use elfio or LEIF for read/writing obj/executable files
 
 lower priority
 ===========================
 - FIX: line comments within non-block contexts?
 
 - FIX: string, number, boolean literals aren't infix so pre-block comments don't work.
+
+- NOTE: should the compiler support assignment from all statements?
+    the_result := if x == 1 {
+        return x * 2;
+    };
 
 - namespace importing
 
