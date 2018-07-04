@@ -40,6 +40,8 @@ namespace basecode::compiler {
 
         std::string get_vertex_name(element* node) const;
 
+        std::string escape_quotes(const std::string& value);
+
     private:
         FILE* _file = nullptr;
         std::set<std::string> _edges {};

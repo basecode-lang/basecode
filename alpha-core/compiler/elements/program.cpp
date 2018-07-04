@@ -388,6 +388,23 @@ namespace basecode::compiler {
         if (!build_data_segments(r))
             return false;
 
+        fmt::print("\n");
+        auto segments = _assembler.segments();
+        for (auto segment : segments) {
+            fmt::print(
+                "segment: {}, type: {}\n",
+                segment->name,
+                segment_type_name(segment->type));
+            for (auto symbol : segment->symbols())
+                fmt::print(
+                    "\taddress: {:08x}, symbol: {}, type: {}, size: {}\n",
+                    symbol->address,
+                    symbol->name,
+                    symbol_type_name(symbol->type),
+                    symbol->size);
+            fmt::print("\n");
+        }
+
         return !r.is_failed();
     }
 

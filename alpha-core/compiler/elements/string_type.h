@@ -15,7 +15,7 @@
 
 namespace basecode::compiler {
 
-    class string_type : public type {
+    class string_type : public compiler::type {
     public:
         explicit string_type(element* parent);
 

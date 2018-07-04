@@ -21,6 +21,13 @@ namespace basecode::compiler {
     }
 
     bool string_type::on_initialize(common::result& r) {
+        // string_type := struct {
+        //      length:u32;
+        //      capacity:u32;
+        //      data:address;
+        // }; 16 bytes
+        
+        size_in_bytes(16);
         return true;
     }
 

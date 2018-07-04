@@ -52,6 +52,13 @@ namespace basecode::vm {
         return offset;
     }
 
+    symbol_list_t segment_t::symbols() const {
+        symbol_list_t list {};
+        for (const auto& it : _symbols)
+            list.push_back(const_cast<symbol_t*>(&it.second));
+        return list;
+    }
+
     symbol_t* segment_t::symbol(const std::string& name) {
         auto it = _symbols.find(name);
         if (it == _symbols.end())
@@ -101,6 +108,14 @@ namespace basecode::vm {
         auto heap_address =_terp->heap() + _location_counter;
         *heap_address = value;
         _location_counter += sizeof(uint8_t);
+    }
+
+    segment_list_t assembler::segments() const {
+        segment_list_t list {};
+        for (const auto& it : _segments) {
+            list.push_back(const_cast<segment_t*>(&it.second));
+        }
+        return list;
     }
 
     void assembler::define_data(uint16_t value) {

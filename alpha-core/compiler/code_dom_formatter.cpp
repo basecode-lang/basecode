@@ -103,7 +103,7 @@ namespace basecode::compiler {
                 auto details = fmt::format(
                     "comment|{{type: {} | value: '{}' }}",
                     comment_type_name(comment_element->type()),
-                    comment_element->value());
+                    escape_quotes(comment_element->value()));
                 return fmt::format(
                     "{}[shape=record,label=\"{}\"{}];",
                     node_vertex_name,
@@ -490,6 +490,18 @@ namespace basecode::compiler {
             "{}_{}",
             element_type_name(node->element_type()),
             node->id());
+    }
+
+    std::string code_dom_formatter::escape_quotes(const std::string& value) {
+        std::string buffer;
+        for (const auto& c : value) {
+            if (c == '\"') {
+                buffer += "\\\"";
+            } else {
+                buffer += c;
+            }
+        }
+        return buffer;
     }
 
 };

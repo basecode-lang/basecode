@@ -11,6 +11,7 @@
 
 #pragma once
 
+#include <vector>
 #include "instruction_emitter.h"
 
 namespace basecode::vm {
@@ -46,6 +47,24 @@ namespace basecode::vm {
         f64,
         bytes
     };
+
+    static inline std::unordered_map<symbol_type_t, std::string> s_symbol_type_names = {
+        {symbol_type_t::unknown, "unknown"},
+        {symbol_type_t::u8,      "u8"},
+        {symbol_type_t::u16,     "u16"},
+        {symbol_type_t::u32,     "u32"},
+        {symbol_type_t::u64,     "u64"},
+        {symbol_type_t::f32,     "f32"},
+        {symbol_type_t::f64,     "f64"},
+        {symbol_type_t::bytes,   "bytes"},
+    };
+
+    static inline std::string symbol_type_name(symbol_type_t type) {
+        auto it = s_symbol_type_names.find(type);
+        if (it == s_symbol_type_names.end())
+            return "unknown";
+        return it->second;
+    }
 
     static inline size_t size_of_symbol_type(symbol_type_t type) {
         switch (type) {
@@ -105,6 +124,8 @@ namespace basecode::vm {
         } value;
     };
 
+    using symbol_list_t = std::vector<symbol_t*>;
+
     struct segment_t {
         segment_t(
             const std::string& name,
@@ -118,6 +139,8 @@ namespace basecode::vm {
 
         size_t size() const;
 
+        symbol_list_t symbols() const;
+
         symbol_t* symbol(const std::string& name);
 
         uint64_t address = 0;
@@ -129,6 +152,8 @@ namespace basecode::vm {
     private:
         std::unordered_map<std::string, symbol_t> _symbols {};
     };
+
+    using segment_list_t = std::vector<segment_t*>;
 
     class assembler {
     public:
@@ -156,6 +181,8 @@ namespace basecode::vm {
         void define_data(uint32_t value);
 
         void define_data(uint64_t value);
+
+        segment_list_t segments() const;
 
         uint64_t location_counter() const;
 

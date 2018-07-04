@@ -73,6 +73,8 @@ namespace basecode::compiler {
                 assembler.location_counter());
             section->initialized = true;
             add_symbols(r, section, constant_init);
+
+            assembler.location_counter(assembler.location_counter() + section->offset);
         }
 
         auto constant_uninit = _identifiers.constants(false);
@@ -82,6 +84,8 @@ namespace basecode::compiler {
                 vm::segment_type_t::constant,
                 assembler.location_counter());
             add_symbols(r, section, constant_uninit);
+
+            assembler.location_counter(assembler.location_counter() + section->offset);
         }
 
         auto global_init = _identifiers.globals(true);
@@ -91,6 +95,8 @@ namespace basecode::compiler {
                 vm::segment_type_t::data,
                 assembler.location_counter());
             add_symbols(r, section, global_init);
+
+            assembler.location_counter(assembler.location_counter() + section->offset);
         }
 
         auto global_uninit = _identifiers.globals(false);
@@ -100,6 +106,8 @@ namespace basecode::compiler {
                 vm::segment_type_t::data,
                 assembler.location_counter());
             add_symbols(r, section, global_uninit);
+
+            assembler.location_counter(assembler.location_counter() + section->offset);
         }
 
         return !r.is_failed();

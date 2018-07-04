@@ -37,7 +37,7 @@ alpha::compiler::examples := ns {
             return n;
         } else {
             value := fib((n - 1) + fib(n - 2));
-            print(value);
+            print("%s\n", value);
             return value;
         };
     };

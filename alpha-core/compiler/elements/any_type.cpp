@@ -25,6 +25,10 @@ namespace basecode::compiler {
     }
 
     bool any_type::on_initialize(common::result& r) {
+        // any_type := struct {
+        //      type:u32;
+        //      data:address;
+        // };
         return true;
     }
 

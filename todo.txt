@@ -122,3 +122,4 @@ DONE
 - data definitions
     * compiler::type needs a size and composite_type needs to compute size based on fields
     * MOVE: as_string() to element and add as_integer(), as_float(), as_bool()
+- FIX: graph generator is not escaping quotes
