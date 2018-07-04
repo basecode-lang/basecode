@@ -98,10 +98,9 @@ namespace basecode::compiler {
             compiler::element* element,
             const syntax::ast_node_shared_ptr& node);
 
-        void add_composite_type_fields(
+        any_type* make_any_type(
             common::result& r,
-            compiler::composite_type* type,
-            const syntax::ast_node_shared_ptr& block);
+            compiler::block* parent_scope);
 
         directive* make_directive(
             compiler::block* parent_scope,
@@ -154,6 +153,10 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             element* expr);
 
+        void add_expression_to_scope(
+            compiler::block* scope,
+            compiler::element* expr);
+
         initializer* make_initializer(
             compiler::block* parent_scope,
             element* expr);
@@ -162,12 +165,33 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             uint64_t value);
 
+        string_type* make_string_type(
+            common::result& r,
+            compiler::block* parent_scope);
+
+        void add_composite_type_fields(
+            common::result& r,
+            compiler::composite_type* type,
+            const syntax::ast_node_shared_ptr& block);
+
+        composite_type* make_enum_type(
+            common::result& r,
+            compiler::block* parent_scope);
+
+        compiler::type* find_array_type(
+            compiler::type* entry_type,
+            size_t size);
+
         unknown_type* make_unknown_type(
             common::result& r,
             compiler::block* parent_scope,
             const std::string& name,
             bool is_array,
             size_t array_size);
+
+        composite_type* make_union_type(
+            common::result& r,
+            compiler::block* parent_scope);
 
         numeric_type* make_numeric_type(
             common::result& r,
@@ -176,9 +200,17 @@ namespace basecode::compiler {
             int64_t min,
             uint64_t max);
 
+        composite_type* make_struct_type(
+            common::result& r,
+            compiler::block* parent_scope);
+
         namespace_element* make_namespace(
             compiler::block* parent_scope,
             element* expr);
+
+        namespace_type* make_namespace_type(
+            common::result& r,
+            compiler::block* parent_scope);
 
         procedure_call* make_procedure_call(
             compiler::block* parent_scope,
@@ -213,39 +245,11 @@ namespace basecode::compiler {
 
         void add_type_to_scope(compiler::type* type);
 
-        any_type* make_any_type(
-            common::result& r,
-            compiler::block* parent_scope);
-
-        string_type* make_string_type(
-            common::result& r,
-            compiler::block* parent_scope);
-
-        composite_type* make_enum_type(
-            common::result& r,
-            compiler::block* parent_scope);
-
-        composite_type* make_union_type(
-            common::result& r,
-            compiler::block* parent_scope);
-
-        composite_type* make_struct_type(
-            common::result& r,
-            compiler::block* parent_scope);
-
-        namespace_type* make_namespace_type(
-            common::result& r,
-            compiler::block* parent_scope);
-
         return_element* make_return(compiler::block* parent_scope);
 
         argument_list* make_argument_list(compiler::block* parent_scope);
 
-        compiler::type* find_array_type(compiler::type* entry_type, size_t size);
-
         compiler::block* push_new_block(element_type_t type = element_type_t::block);
-
-        void add_expression_to_scope(compiler::block* scope, compiler::element* expr);
 
     private:
         element* evaluate(

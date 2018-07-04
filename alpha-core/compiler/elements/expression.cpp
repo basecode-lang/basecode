@@ -24,6 +24,12 @@ namespace basecode::compiler {
         return _root;
     }
 
+    bool expression::on_is_constant() const {
+        if (_root == nullptr)
+            return false;
+        return _root->is_constant();
+    }
+
     compiler::type* expression::on_infer_type(const compiler::program* program) {
         if (_root == nullptr)
             return nullptr;

@@ -30,11 +30,13 @@ namespace basecode::compiler {
 
         common::id_t id() const;
 
+        bool is_constant() const;
+
+        bool fold(common::result& r);
+
         attribute_map_t& attributes();
 
         bool as_bool(bool& value) const;
-
-        bool fold(common::result& result);
 
         bool as_float(double& value) const;
 
@@ -47,9 +49,11 @@ namespace basecode::compiler {
         compiler::type* infer_type(const compiler::program* program);
 
     protected:
-        virtual bool on_as_bool(bool& value) const;
+        virtual bool on_is_constant() const;
 
-        virtual bool on_fold(common::result& result);
+        virtual bool on_fold(common::result& r);
+
+        virtual bool on_as_bool(bool& value) const;
 
         virtual bool on_as_float(double& value) const;
 

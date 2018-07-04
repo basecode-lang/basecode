@@ -7,9 +7,12 @@ Basecode Bootstrap Tasks
 deps to bytecode generation
 ===========================
 - bytecode generation
+    use initializer to handle custom construction of values?
+
     data definitions:
-        * compiler::string_type, compiler::array_type need a way to define the composite structure
-                within the terp heap
+        * compiler::string_type, compiler::array_type, compiler::any_type should
+          inherit from compiler::composite_type and initialize should
+          set up their fields.
 
     basic block:
         * emit actual instructions for block behavior

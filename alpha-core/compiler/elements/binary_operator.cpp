@@ -31,6 +31,11 @@ namespace basecode::compiler {
         return _rhs;
     }
 
+    bool binary_operator::on_is_constant() const {
+        return (_lhs != nullptr && _lhs->is_constant())
+            && (_rhs != nullptr && _rhs->is_constant());
+    }
+
     // XXX: this needs lots of future love
     compiler::type* binary_operator::on_infer_type(const compiler::program* program) {
         switch (operator_type()) {

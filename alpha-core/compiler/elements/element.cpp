@@ -37,16 +37,28 @@ namespace basecode::compiler {
         return _id;
     }
 
+    bool element::is_constant() const {
+        return on_is_constant();
+    }
+
+    bool element::on_is_constant() const {
+        return false;
+    }
+
+    bool element::fold(common::result& r) {
+        return on_fold(r);
+    }
+
     attribute_map_t& element::attributes() {
         return _attributes;
     }
 
-    bool element::as_bool(bool& value) const {
-        return on_as_bool(value);
+    bool element::on_fold(common::result& r) {
+        return true;
     }
 
-    bool element::fold(common::result& result) {
-        return on_fold(result);
+    bool element::as_bool(bool& value) const {
+        return on_as_bool(value);
     }
 
     bool element::on_as_bool(bool& value) const {
@@ -59,10 +71,6 @@ namespace basecode::compiler {
 
     element_type_t element::element_type() const {
         return _element_type;
-    }
-
-    bool element::on_fold(common::result& result) {
-        return true;
     }
 
     bool element::on_as_float(double& value) const {

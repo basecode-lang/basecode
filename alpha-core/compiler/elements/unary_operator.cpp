@@ -25,6 +25,10 @@ namespace basecode::compiler {
         return _rhs;
     }
 
+    bool unary_operator::on_is_constant() const {
+        return _rhs != nullptr && _rhs->is_constant();
+    }
+
     // XXX: this requires lots of future love
     compiler::type* unary_operator::on_infer_type(const compiler::program* program) {
         switch (operator_type()) {
