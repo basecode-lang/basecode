@@ -32,14 +32,30 @@ namespace basecode::compiler {
 
         attribute_map_t& attributes();
 
+        bool as_bool(bool& value) const;
+
         bool fold(common::result& result);
 
+        bool as_float(double& value) const;
+
         element_type_t element_type() const;
+
+        bool as_integer(uint64_t& value) const;
+
+        bool as_string(std::string& value) const;
 
         compiler::type* infer_type(const compiler::program* program);
 
     protected:
+        virtual bool on_as_bool(bool& value) const;
+
         virtual bool on_fold(common::result& result);
+
+        virtual bool on_as_float(double& value) const;
+
+        virtual bool on_as_integer(uint64_t& value) const;
+
+        virtual bool on_as_string(std::string& value) const;
 
         virtual compiler::type* on_infer_type(const compiler::program* program);
 

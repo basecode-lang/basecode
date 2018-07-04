@@ -38,7 +38,10 @@ namespace basecode::compiler {
                     auto symbol = segment->symbol(
                         var->name(),
                         vm::integer_symbol_type_for_size(var->type()->size_in_bytes()));
-                    symbol->value.int_value = 0;
+                    uint64_t value;
+                    if (var->as_integer(value)) {
+                        symbol->value.int_value = value;
+                    }
                     break;
                 }
                 case element_type_t::array_type: {

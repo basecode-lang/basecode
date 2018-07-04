@@ -24,6 +24,8 @@ namespace basecode::compiler {
         bool value() const;
 
     protected:
+        bool on_as_bool(bool& value) const override;
+
         compiler::type* on_infer_type(const compiler::program* program) override;
 
     private:

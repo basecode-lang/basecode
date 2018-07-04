@@ -20,6 +20,11 @@ namespace basecode::compiler {
                                         _value(value) {
     }
 
+    bool string_literal::on_as_string(std::string& value) const {
+        value = _value;
+        return true;
+    }
+
     compiler::type* string_literal::on_infer_type(const compiler::program* program) {
         return program->find_type("string");
     }

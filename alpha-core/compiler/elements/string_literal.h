@@ -26,6 +26,8 @@ namespace basecode::compiler {
         }
 
     protected:
+        bool on_as_string(std::string& value) const override;
+
         compiler::type* on_infer_type(const compiler::program* program) override;
 
     private:

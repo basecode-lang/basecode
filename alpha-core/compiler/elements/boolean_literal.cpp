@@ -24,6 +24,11 @@ namespace basecode::compiler {
         return _value;
     }
 
+    bool boolean_literal::on_as_bool(bool& value) const {
+        value = _value;
+        return true;
+    }
+
     compiler::type* boolean_literal::on_infer_type(const compiler::program* program) {
         return program->find_type("bool");
     }

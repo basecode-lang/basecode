@@ -12,6 +12,10 @@
 #include <common/id_pool.h>
 #include "type.h"
 #include "element.h"
+#include "float_literal.h"
+#include "string_literal.h"
+#include "integer_literal.h"
+#include "boolean_literal.h"
 
 namespace basecode::compiler {
 
@@ -37,8 +41,20 @@ namespace basecode::compiler {
         return _attributes;
     }
 
+    bool element::as_bool(bool& value) const {
+        return on_as_bool(value);
+    }
+
     bool element::fold(common::result& result) {
         return on_fold(result);
+    }
+
+    bool element::on_as_bool(bool& value) const {
+        return false;
+    }
+
+    bool element::as_float(double& value) const {
+        return on_as_float(value);
     }
 
     element_type_t element::element_type() const {
@@ -47,6 +63,26 @@ namespace basecode::compiler {
 
     bool element::on_fold(common::result& result) {
         return true;
+    }
+
+    bool element::on_as_float(double& value) const {
+        return false;
+    }
+
+    bool element::as_integer(uint64_t& value) const {
+        return on_as_integer(value);
+    }
+
+    bool element::as_string(std::string& value) const {
+        return on_as_string(value);
+    }
+
+    bool element::on_as_integer(uint64_t& value) const {
+        return false;
+    }
+
+    bool element::on_as_string(std::string& value) const {
+        return false;
     }
 
     compiler::type* element::infer_type(const compiler::program* program) {

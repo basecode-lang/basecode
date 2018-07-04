@@ -10,10 +10,6 @@
 // ----------------------------------------------------------------------------
 
 #include "attribute.h"
-#include "float_literal.h"
-#include "string_literal.h"
-#include "integer_literal.h"
-#include "boolean_literal.h"
 
 namespace basecode::compiler {
 
@@ -33,20 +29,28 @@ namespace basecode::compiler {
         return _name;
     }
 
-    std::string attribute::as_string() const {
-        switch (_expr->element_type()) {
-            case element_type_t::float_literal:
-                return std::to_string(dynamic_cast<compiler::float_literal*>(_expr)->value());
-            case element_type_t::string_literal:
-                return dynamic_cast<compiler::string_literal*>(_expr)->value();
-            case element_type_t::boolean_literal:
-                return std::to_string(dynamic_cast<compiler::boolean_literal*>(_expr)->value());
-            case element_type_t::integer_literal:
-                return std::to_string(dynamic_cast<compiler::integer_literal*>(_expr)->value());
-            default:
-                break;
-        }
-        return "";
+    bool attribute::on_as_bool(bool& value) const {
+        if (_expr == nullptr)
+            return false;
+        return _expr->as_bool(value);
+    }
+
+    bool attribute::on_as_float(double& value) const {
+        if (_expr == nullptr)
+            return false;
+        return _expr->as_float(value);
+    }
+
+    bool attribute::on_as_integer(uint64_t& value) const {
+        if (_expr == nullptr)
+            return false;
+        return _expr->as_integer(value);
+    }
+
+    bool attribute::on_as_string(std::string& value) const {
+        if (_expr == nullptr)
+            return false;
+        return _expr->as_string(value);
     }
 
 };

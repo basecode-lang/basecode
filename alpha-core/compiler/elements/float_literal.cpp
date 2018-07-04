@@ -24,6 +24,11 @@ namespace basecode::compiler {
         return _value;
     }
 
+    bool float_literal::on_as_float(double& value) const {
+        value = _value;
+        return true;
+    }
+
     compiler::type* float_literal::on_infer_type(const compiler::program* program) {
         return program->find_type("f64");
     }

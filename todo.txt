@@ -8,7 +8,6 @@ deps to bytecode generation
 ===========================
 - bytecode generation
     data definitions:
-        * MOVE: as_string() to element and add as_integer(), as_float(), as_bool()
         * compiler::string_type, compiler::array_type need a way to define the composite structure
                 within the terp heap
 
@@ -122,3 +121,4 @@ DONE
         2. bac command-line tool should be executable target
 - data definitions
     * compiler::type needs a size and composite_type needs to compute size based on fields
+    * MOVE: as_string() to element and add as_integer(), as_float(), as_bool()

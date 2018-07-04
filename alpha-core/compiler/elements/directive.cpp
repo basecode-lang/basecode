@@ -98,8 +98,15 @@ namespace basecode::compiler {
         // XXX: -------------------------------------------------
 
         auto library_attribute = attributes().find("library");
-        if (library_attribute != nullptr)
-            library_name = library_attribute->as_string();
+        if (library_attribute != nullptr) {
+            if (!library_attribute->as_string(library_name)) {
+                r.add_message(
+                    "P004",
+                    "unable to convert library attribute's name.",
+                    true);
+                return false;
+            }
+        }
 
         std::filesystem::path library_path(library_name);
         auto library = terp->load_shared_library(r, library_path);
@@ -111,7 +118,13 @@ namespace basecode::compiler {
         std::string symbol_name = ffi_identifier->name();
         auto alias_attribute = attributes().find("alias");
         if (alias_attribute != nullptr) {
-            symbol_name = alias_attribute->as_string();
+            if (!alias_attribute->as_string(symbol_name)) {
+                r.add_message(
+                    "P004",
+                    "unable to convert alias attribute's name.",
+                    true);
+                return false;
+            }
         }
 
         vm::function_signature_t signature {

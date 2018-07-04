@@ -24,6 +24,8 @@ namespace basecode::compiler {
         double value() const;
 
     protected:
+        bool on_as_float(double& value) const override;
+
         compiler::type* on_infer_type(const compiler::program* program) override;
 
     private:

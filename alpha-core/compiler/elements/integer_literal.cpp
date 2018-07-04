@@ -24,6 +24,11 @@ namespace basecode::compiler {
         return _value;
     }
 
+    bool integer_literal::on_as_integer(uint64_t& value) const {
+        value = _value;
+        return true;
+    }
+
     compiler::type* integer_literal::on_infer_type(const compiler::program* program) {
         // XXX: i'm a bad person, i should do type narrowing here
         return program->find_type("u32");

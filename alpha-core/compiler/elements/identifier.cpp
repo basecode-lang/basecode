@@ -10,6 +10,7 @@
 // ----------------------------------------------------------------------------
 
 #include "identifier.h"
+#include "initializer.h"
 
 namespace basecode::compiler {
 
@@ -51,6 +52,30 @@ namespace basecode::compiler {
 
     compiler::initializer* identifier::initializer() {
         return _initializer;
+    }
+
+    bool identifier::on_as_bool(bool& value) const {
+        if (_initializer == nullptr)
+            return false;
+        return _initializer->as_bool(value);
+    }
+
+    bool identifier::on_as_float(double& value) const {
+        if (_initializer == nullptr)
+            return false;
+        return _initializer->as_float(value);
+    }
+
+    bool identifier::on_as_integer(uint64_t& value) const {
+        if (_initializer == nullptr)
+            return false;
+        return _initializer->as_integer(value);
+    }
+
+    bool identifier::on_as_string(std::string& value) const {
+        if (_initializer == nullptr)
+            return false;
+        return _initializer->as_string(value);
     }
 
 };
