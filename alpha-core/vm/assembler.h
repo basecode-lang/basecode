@@ -37,6 +37,7 @@ namespace basecode::vm {
     }
 
     enum class symbol_type_t {
+        unknown,
         u8,
         u16,
         u32,
@@ -55,7 +56,33 @@ namespace basecode::vm {
             case symbol_type_t::f32:   return 4;
             case symbol_type_t::f64:   return 8;
             default:
-                return 8;
+                return 0;
+        }
+    }
+
+    static inline symbol_type_t float_symbol_type_for_size(size_t size) {
+        switch (size) {
+            case 4:
+                return symbol_type_t::f32;
+            case 8:
+                return symbol_type_t::f64;
+            default:
+                return symbol_type_t::unknown;
+        }
+    }
+
+    static inline symbol_type_t integer_symbol_type_for_size(size_t size) {
+        switch (size) {
+            case 1:
+                return symbol_type_t::u8;
+            case 2:
+                return symbol_type_t::u16;
+            case 4:
+                return symbol_type_t::u32;
+            case 8:
+                return symbol_type_t::u64;
+            default:
+                return symbol_type_t::unknown;
         }
     }
 

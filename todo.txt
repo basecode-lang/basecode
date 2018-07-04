@@ -9,8 +9,6 @@ deps to bytecode generation
 - bytecode generation
     data definitions:
         * MOVE: as_string() to element and add as_integer(), as_float(), as_bool()
-        * MOVE: symbol_type() to element and add on_symbol_type() for sub-classes
-        * compiler::type needs a size and composite_type needs to compute size based on fields
         * compiler::string_type, compiler::array_type need a way to define the composite structure
                 within the terp heap
 
@@ -25,7 +23,7 @@ deps to bytecode generation
 - bytecode-to-native:
     * x64 and ARM 64
     * executable and shared libraries only
-    * use elfio or LEIF for read/writing obj/executable files
+    * use elfio for read/writing obj/executable files
 
 lower priority
 ===========================
@@ -122,3 +120,5 @@ DONE
     * refactor project structure:
         1. core compiler should be shared library
         2. bac command-line tool should be executable target
+- data definitions
+    * compiler::type needs a size and composite_type needs to compute size based on fields

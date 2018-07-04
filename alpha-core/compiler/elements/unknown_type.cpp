@@ -15,9 +15,10 @@ namespace basecode::compiler {
 
     unknown_type::unknown_type(
         element* parent,
-        const std::string& name) : compiler::type(parent,
-                                                  element_type_t::unknown_type,
-                                                  name) {
+        const std::string& name) : compiler::type(
+                                        parent,
+                                        element_type_t::unknown_type,
+                                        name) {
     }
 
     bool unknown_type::is_array() const {
@@ -34,6 +35,10 @@ namespace basecode::compiler {
 
     void unknown_type::array_size(size_t value) {
         _array_size = value;
+    }
+
+    bool unknown_type::on_initialize(common::result& r) {
+        return true;
     }
 
 };

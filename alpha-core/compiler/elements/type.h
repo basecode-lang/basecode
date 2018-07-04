@@ -26,10 +26,20 @@ namespace basecode::compiler {
 
         std::string name() const;
 
+        size_t size_in_bytes() const;
+
+        bool initialize(common::result& r);
+
         void name(const std::string& value);
+
+    protected:
+        void size_in_bytes(size_t value);
+
+        virtual bool on_initialize(common::result& r);
 
     private:
         std::string _name;
+        size_t _size_in_bytes {};
     };
 
 };

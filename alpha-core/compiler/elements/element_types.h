@@ -59,6 +59,7 @@ namespace basecode::compiler {
     class namespace_element;
     class procedure_instance;
 
+    using type_list_t = std::vector<type*>;
     using label_list_t = std::vector<label*>;
     using block_list_t = std::vector<block*>;
     using field_list_t = std::vector<field*>;

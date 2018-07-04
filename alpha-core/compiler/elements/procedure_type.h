@@ -37,6 +37,9 @@ namespace basecode::compiler {
 
         procedure_instance_list_t& instances();
 
+    protected:
+        bool on_initialize(common::result& r) override;
+
     private:
         field_map_t _returns {};
         bool _is_foreign = false;

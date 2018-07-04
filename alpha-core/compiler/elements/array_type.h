@@ -28,6 +28,9 @@ namespace basecode::compiler {
 
         compiler::type* entry_type();
 
+    protected:
+        bool on_initialize(common::result& r) override;
+
     private:
         uint64_t _size = 0;
         compiler::type* _entry_type = nullptr;

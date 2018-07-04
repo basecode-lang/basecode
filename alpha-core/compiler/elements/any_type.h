@@ -15,11 +15,19 @@
 
 namespace basecode::compiler {
 
-    class any_type : public type {
+    class any_type : public compiler::type {
     public:
-        explicit any_type(element* parent);
+        any_type(element* parent);
+
+        compiler::type* underlying_type();
+
+        void underlying_type(compiler::type* value);
+
+    protected:
+        bool on_initialize(common::result& r) override;
 
     private:
+        compiler::type* _underlying_type = nullptr;
     };
 
 };

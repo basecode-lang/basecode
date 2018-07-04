@@ -19,7 +19,8 @@ namespace basecode::compiler {
     public:
         explicit namespace_type(element* parent);
 
-    private:
+    protected:
+        bool on_initialize(common::result& r) override;
     };
 
 };

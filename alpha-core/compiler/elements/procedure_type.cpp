@@ -47,6 +47,10 @@ namespace basecode::compiler {
         return _type_parameters;
     }
 
+    bool procedure_type::on_initialize(common::result& r) {
+        return true;
+    }
+
     procedure_instance_list_t& procedure_type::instances() {
         return _instances;
     }

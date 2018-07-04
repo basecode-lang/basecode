@@ -14,9 +14,14 @@
 namespace basecode::compiler {
 
     string_type::string_type(
-        element* parent) : compiler::type(parent,
-                                          element_type_t::string_type,
-                                          "string") {
+        element* parent) : compiler::type(
+                                parent,
+                                element_type_t::string_type,
+                                "string") {
+    }
+
+    bool string_type::on_initialize(common::result& r) {
+        return true;
     }
 
 };

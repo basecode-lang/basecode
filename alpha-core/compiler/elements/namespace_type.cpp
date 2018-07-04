@@ -14,9 +14,14 @@
 namespace basecode::compiler {
 
     namespace_type::namespace_type(
-        element* parent) : compiler::type(parent,
-                                          element_type_t::namespace_type,
-                                          "namespace") {
+        element* parent) : compiler::type(
+                                parent,
+                                element_type_t::namespace_type,
+                                "namespace") {
+    }
+
+    bool namespace_type::on_initialize(common::result& r) {
+        return true;
     }
 
 };

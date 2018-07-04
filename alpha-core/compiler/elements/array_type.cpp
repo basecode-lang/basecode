@@ -9,7 +9,6 @@
 //
 // ----------------------------------------------------------------------------
 
-
 #include "array_type.h"
 
 namespace basecode::compiler {
@@ -17,7 +16,10 @@ namespace basecode::compiler {
     array_type::array_type(
             element* parent,
             const std::string& name,
-            compiler::type* entry_type) : compiler::type(parent, element_type_t::array_type, name),
+            compiler::type* entry_type) : compiler::type(
+                                                parent,
+                                                element_type_t::array_type,
+                                                name),
                                           _entry_type(entry_type) {
     }
 
@@ -31,6 +33,10 @@ namespace basecode::compiler {
 
     compiler::type* array_type::entry_type() {
         return _entry_type;
+    }
+
+    bool array_type::on_initialize(common::result& r) {
+        return true;
     }
 
 };

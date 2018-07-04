@@ -37,7 +37,7 @@ namespace basecode::compiler {
                 case element_type_t::numeric_type: {
                     auto symbol = segment->symbol(
                         var->name(),
-                        dynamic_cast<numeric_type*>(var->type())->symbol_type());
+                        vm::integer_symbol_type_for_size(var->type()->size_in_bytes()));
                     symbol->value.int_value = 0;
                     break;
                 }

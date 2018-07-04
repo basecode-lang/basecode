@@ -29,6 +29,9 @@ namespace basecode::compiler {
 
         composite_types_t type() const;
 
+    protected:
+        bool on_initialize(common::result& r) override;
+
     private:
         field_map_t _fields {};
         composite_types_t _type;
