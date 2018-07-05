@@ -11,6 +11,7 @@
 
 #pragma once
 
+#include <set>
 #include <map>
 #include <vector>
 #include <string>
@@ -60,6 +61,7 @@ namespace basecode::compiler {
     class namespace_element;
     class procedure_instance;
 
+    using string_set_t = std::set<std::string>;
     using type_list_t = std::vector<type*>;
     using label_list_t = std::vector<label*>;
     using block_list_t = std::vector<block*>;

@@ -1077,19 +1077,25 @@ namespace basecode::compiler {
     }
 
     bool program::build_data_segments(common::result& r) {
+        string_set_t interned_strings {};
+
         std::function<bool (compiler::block*)> recursive_execute =
             [&](compiler::block* scope) -> bool {
                 if (scope->element_type() == element_type_t::proc_type_block
                 ||  scope->element_type() == element_type_t::proc_instance_block)
                     return true;
-                scope->define_data(r, _assembler);
+                scope->define_data(r, interned_strings, _assembler);
                 for (auto block : scope->blocks()) {
                     if (!recursive_execute(block))
                         return false;
                 }
                 return true;
             };
-        return recursive_execute(block());
+        recursive_execute(block());
+
+        // take string literal struct-thingy and dump to segment
+
+        return true;
     }
 
     void program::add_type_to_scope(compiler::type* type) {

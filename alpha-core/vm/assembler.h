@@ -12,6 +12,7 @@
 #pragma once
 
 #include <vector>
+#include <common/id_pool.h>
 #include "instruction_emitter.h"
 
 namespace basecode::vm {
@@ -116,6 +117,7 @@ namespace basecode::vm {
         uint64_t address;
         std::string name;
         symbol_type_t type;
+        common::id_t pending_address_from_id = 0;
 
         union {
             double float_value;

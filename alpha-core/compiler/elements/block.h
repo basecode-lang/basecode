@@ -30,6 +30,7 @@ namespace basecode::compiler {
 
         bool define_data(
             common::result& r,
+            string_set_t& interned_strings,
             vm::assembler& assembler);
 
         type_map_t& types();

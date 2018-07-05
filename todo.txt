@@ -13,6 +13,8 @@ deps to bytecode generation
     use initializer to handle custom construction of values?
 
     data definitions:
+        * string interning
+        * encode constant parameters
 
     basic block:
         * emit actual instructions for block behavior
