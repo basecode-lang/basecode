@@ -192,6 +192,8 @@ namespace basecode::compiler {
             case element_type_t::any_type: {
                 auto element = dynamic_cast<any_type*>(node);
                 auto style = ", fillcolor=gainsboro, style=\"filled\"";
+                for (auto fld : element->fields().as_list())
+                    add_primary_edge(element, fld);
                 return fmt::format(
                     "{}[shape=record,label=\"any_type|{}\"{}];",
                     node_vertex_name,
@@ -287,6 +289,8 @@ namespace basecode::compiler {
                 if (element->entry_type() != nullptr)
                     entry_type_name = element->entry_type()->name();
                 add_primary_edge(element, element->entry_type());
+                for (auto fld : element->fields().as_list())
+                    add_primary_edge(element, fld);
                 return fmt::format(
                     "{}[shape=record,label=\"array_type|size: {}|type: {}\"{}];",
                     node_vertex_name,
@@ -326,6 +330,8 @@ namespace basecode::compiler {
             case element_type_t::string_type: {
                 auto element = dynamic_cast<string_type*>(node);
                 auto style = ", fillcolor=gainsboro, style=\"filled\"";
+                for (auto fld : element->fields().as_list())
+                    add_primary_edge(element, fld);
                 return fmt::format(
                     "{}[shape=record,label=\"string_type|{}\"{}];",
                     node_vertex_name,

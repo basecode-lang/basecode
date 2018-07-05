@@ -26,7 +26,7 @@ namespace basecode::compiler {
     }
 
     compiler::type* string_literal::on_infer_type(const compiler::program* program) {
-        return program->find_type("string");
+        return program->find_type_up("string");
     }
 
 }

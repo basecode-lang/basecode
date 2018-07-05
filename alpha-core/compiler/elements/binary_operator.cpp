@@ -54,7 +54,7 @@ namespace basecode::compiler {
             case operator_type_t::rotate_right: {
                 // XXX: this is SOOO not correct, but it gets us to the next step of
                 //      code generation.
-                return program->find_type("u64");
+                return program->find_type_up("u64");
             }
             case operator_type_t::equals:
             case operator_type_t::less_than:
@@ -64,7 +64,7 @@ namespace basecode::compiler {
             case operator_type_t::greater_than:
             case operator_type_t::less_than_or_equal:
             case operator_type_t::greater_than_or_equal: {
-                return program->find_type("bool");
+                return program->find_type_up("bool");
             }
             default:
                 return nullptr;

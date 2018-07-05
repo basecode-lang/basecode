@@ -11,16 +11,18 @@
 
 #pragma once
 
-#include "type.h"
+#include "composite_type.h"
 
 namespace basecode::compiler {
 
-    class string_type : public compiler::type {
+    class string_type : public compiler::composite_type {
     public:
         explicit string_type(element* parent);
 
     protected:
-        bool on_initialize(common::result& r) override;
+        bool on_initialize(
+            common::result& r,
+            compiler::program* program) override;
     };
 
 };

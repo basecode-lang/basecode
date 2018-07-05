@@ -31,7 +31,7 @@ namespace basecode::compiler {
 
     compiler::type* integer_literal::on_infer_type(const compiler::program* program) {
         // XXX: i'm a bad person, i should do type narrowing here
-        return program->find_type("u32");
+        return program->find_type_up("u32");
     }
 
 };

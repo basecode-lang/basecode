@@ -11,20 +11,22 @@
 
 #pragma once
 
-#include "type.h"
+#include "composite_type.h"
 
 namespace basecode::compiler {
 
-    class any_type : public compiler::type {
+    class any_type : public compiler::composite_type {
     public:
-        any_type(element* parent);
+        explicit any_type(element* parent);
 
         compiler::type* underlying_type();
 
         void underlying_type(compiler::type* value);
 
     protected:
-        bool on_initialize(common::result& r) override;
+        bool on_initialize(
+            common::result& r,
+            compiler::program* program) override;
 
     private:
         compiler::type* _underlying_type = nullptr;

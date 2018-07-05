@@ -20,7 +20,9 @@ namespace basecode::compiler {
                                 "namespace") {
     }
 
-    bool namespace_type::on_initialize(common::result& r) {
+    bool namespace_type::on_initialize(
+            common::result& r,
+            compiler::program* program) {
         return true;
     }
 

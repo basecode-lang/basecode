@@ -21,6 +21,12 @@ namespace basecode::compiler {
                                         name) {
     }
 
+    bool unknown_type::on_initialize(
+            common::result& r,
+            compiler::program* program) {
+        return true;
+    }
+
     bool unknown_type::is_array() const {
         return _is_array;
     }
@@ -35,10 +41,6 @@ namespace basecode::compiler {
 
     void unknown_type::array_size(size_t value) {
         _array_size = value;
-    }
-
-    bool unknown_type::on_initialize(common::result& r) {
-        return true;
     }
 
 };

@@ -259,7 +259,7 @@ namespace basecode::compiler {
                                 block_scope,
                                 fmt::format("_{}", count++),
                                 nullptr);
-                            return_identifier->type(find_type(type_node->children[0]->token.value));
+                            return_identifier->type(find_type_up(type_node->children[0]->token.value));
                             proc_type->returns().add(make_field(block_scope, return_identifier));
                             break;
                         }
@@ -304,14 +304,14 @@ namespace basecode::compiler {
             case syntax::ast_node_types_t::enum_expression: {
                 auto active_scope = current_scope();
                 auto enum_type = make_enum_type(r, active_scope);
-                if (enum_type != nullptr) {
-                    active_scope->types().add(enum_type);
-                    add_composite_type_fields(r, enum_type, node->rhs);
-                }
+                active_scope->types().add(enum_type);
+                add_composite_type_fields(r, enum_type, node->rhs);
+                if (!enum_type->initialize(r, this))
+                    return nullptr;
                 return enum_type;
             }
             case syntax::ast_node_types_t::cast_expression: {
-                auto type = find_type(node->lhs->token.value);
+                auto type = find_type_up(node->lhs->token.value);
                 if (type == nullptr) {
                     r.add_message(
                         "P002",
@@ -325,18 +325,18 @@ namespace basecode::compiler {
             }
             case syntax::ast_node_types_t::union_expression: {
                 auto union_type = make_union_type(r, current_scope());
-                if (union_type != nullptr) {
-                    current_scope()->types().add(union_type);
-                    add_composite_type_fields(r, union_type, node->rhs);
-                }
+                current_scope()->types().add(union_type);
+                add_composite_type_fields(r, union_type, node->rhs);
+                if (!union_type->initialize(r, this))
+                    return nullptr;
                 return union_type;
             }
             case syntax::ast_node_types_t::struct_expression: {
                 auto struct_type = make_struct_type(r, current_scope());
-                if (struct_type != nullptr) {
-                    current_scope()->types().add(struct_type);
-                    add_composite_type_fields(r, struct_type, node->rhs);
-                }
+                current_scope()->types().add(struct_type);
+                add_composite_type_fields(r, struct_type, node->rhs);
+                if (!struct_type->initialize(r, this))
+                    return nullptr;
                 return struct_type;
             }
             case syntax::ast_node_types_t::return_statement: {
@@ -479,7 +479,7 @@ namespace basecode::compiler {
             common::result& r,
             compiler::block* parent_scope) {
         auto type = new compiler::any_type(parent_scope);
-        if (!type->initialize(r))
+        if (!type->initialize(r, this))
             return nullptr;
 
         _elements.insert(std::make_pair(type->id(), type));
@@ -495,15 +495,11 @@ namespace basecode::compiler {
     void program::initialize_core_types(common::result& r) {
         auto parent_scope = current_scope();
 
-        add_type_to_scope(make_any_type(r, parent_scope));
-        add_type_to_scope(make_string_type(r, parent_scope));
+        compiler::numeric_type::make_types(r, parent_scope, this);
         add_type_to_scope(make_namespace_type(r, parent_scope));
 
-        auto numeric_types = compiler::numeric_type::make_types(r, parent_scope);
-        for (auto numeric_type : numeric_types) {
-            _elements.insert(std::make_pair(numeric_type->id(), numeric_type));
-            add_type_to_scope(numeric_type);
-        }
+        add_type_to_scope(make_any_type(r, parent_scope));
+        add_type_to_scope(make_string_type(r, parent_scope));
     }
 
     if_element* program::make_if(
@@ -598,8 +594,6 @@ namespace basecode::compiler {
             parent_scope,
             composite_types_t::enum_type,
             fmt::format("__enum_{}__", common::id_pool::instance()->allocate()));
-        if (!type->initialize(r))
-            return nullptr;
         _elements.insert(std::make_pair(type->id(), type));
         return type;
     }
@@ -627,7 +621,7 @@ namespace basecode::compiler {
             int64_t min,
             uint64_t max) {
         auto type = new compiler::numeric_type(parent_scope, name, min, max);
-        if (!type->initialize(r))
+        if (!type->initialize(r, this))
             return nullptr;
 
         _elements.insert(std::make_pair(type->id(), type));
@@ -649,7 +643,7 @@ namespace basecode::compiler {
             common::result& r,
             compiler::block* parent_scope) {
         auto type = new compiler::string_type(parent_scope);
-        if (!type->initialize(r))
+        if (!type->initialize(r, this))
             return nullptr;
 
         _elements.insert(std::make_pair(type->id(), type));
@@ -679,8 +673,6 @@ namespace basecode::compiler {
             parent_scope,
             composite_types_t::union_type,
             fmt::format("__union_{}__", common::id_pool::instance()->allocate()));
-        if (!type->initialize(r))
-            return nullptr;
         _elements.insert(std::make_pair(type->id(), type));
         return type;
     }
@@ -692,8 +684,6 @@ namespace basecode::compiler {
             parent_scope,
             composite_types_t::struct_type,
             fmt::format("__struct_{}__", common::id_pool::instance()->allocate()));
-        if (!type->initialize(r))
-            return nullptr;
         _elements.insert(std::make_pair(type->id(), type));
         return type;
     }
@@ -819,34 +809,9 @@ namespace basecode::compiler {
             const syntax::ast_node_shared_ptr& symbol,
             const syntax::ast_node_shared_ptr& rhs,
             compiler::block* parent_scope) {
-        auto namespace_type = find_type("namespace");
+        auto namespace_type = find_type_up("namespace");
 
-        std::string type_name;
-        bool is_array = false;
-        size_t array_size = 0;
-        compiler::type* identifier_type = nullptr;
-        if (symbol->rhs != nullptr) {
-            type_name = symbol->rhs->token.value;
-            is_array = symbol->rhs->is_array();
-            array_size = 0; // XXX: this needs to be fixed!
-
-            if (!type_name.empty()) {
-                identifier_type = find_type(type_name);
-                if (is_array) {
-                    auto array_type = find_array_type(
-                        identifier_type,
-                        array_size);
-                    if (array_type == nullptr) {
-                        array_type = make_array_type(
-                            r,
-                            current_scope(),
-                            identifier_type,
-                            array_size);
-                    }
-                    identifier_type = array_type;
-                }
-            }
-        }
+        auto type_find_result = find_identifier_type(r, symbol);
 
         auto scope = symbol->is_qualified_symbol()
             ? block()
@@ -894,20 +859,18 @@ namespace basecode::compiler {
             final_symbol->token.value,
             init);
 
-        if (identifier_type == nullptr && init != nullptr) {
-            identifier_type = init->expression()->infer_type(this);
-            new_identifier->inferred_type(identifier_type != nullptr);
+        if (type_find_result.type == nullptr && init != nullptr) {
+            type_find_result.type = init->expression()->infer_type(this);
+            new_identifier->inferred_type(type_find_result.type != nullptr);
         }
 
-        new_identifier->type(identifier_type);
-        if (identifier_type == nullptr) {
-            new_identifier->type(make_unknown_type(
+        new_identifier->type(type_find_result.type);
+        if (type_find_result.type == nullptr) {
+            new_identifier->type(make_unknown_type_from_find_result(
                 r,
                 scope,
-                type_name,
-                is_array,
-                array_size));
-            _identifiers_with_unknown_types.push_back(new_identifier);
+                new_identifier,
+                type_find_result));
         }
 
         new_identifier->constant(symbol->is_constant_expression());
@@ -975,7 +938,7 @@ namespace basecode::compiler {
             parent_scope,
             fmt::format("__array_{}_{}__", entry_type->name(), size),
             entry_type);
-        if (!type->initialize(r))
+        if (!type->initialize(r, this))
             return nullptr;
         type->size(size);
         _elements.insert(std::make_pair(type->id(), type));
@@ -994,7 +957,7 @@ namespace basecode::compiler {
             common::result& r,
             compiler::composite_type* type,
             const syntax::ast_node_shared_ptr& block) {
-        auto u32_type = find_type("u32");
+        auto u32_type = find_type_up("u32");
 
         for (const auto& child : block->children) {
             if (child->type != syntax::ast_node_types_t::statement) {
@@ -1004,32 +967,44 @@ namespace basecode::compiler {
             auto expr_node = child->rhs;
             switch (expr_node->type) {
                 case syntax::ast_node_types_t::assignment: {
-                    compiler::type* field_type = nullptr;
                     auto symbol_node = expr_node->lhs->children[0];
-                    if (symbol_node->rhs != nullptr) {
-                        field_type = find_type(symbol_node->rhs->token.value);
-                    }
+                    auto type_find_result = find_identifier_type(r, symbol_node);
+                    auto init = make_initializer(
+                        current_scope(),
+                        evaluate(r, expr_node->rhs));
                     auto field_identifier = make_identifier(
                         current_scope(),
                         symbol_node->children[0]->token.value,
-                        make_initializer(
-                            current_scope(),
-                            evaluate(r, expr_node->rhs)));
-                    field_identifier->type(field_type);
+                        init);
+                    if (type_find_result.type == nullptr) {
+                        type_find_result.type = init->expression()->infer_type(this);
+                        field_identifier->inferred_type(type_find_result.type != nullptr);
+                    }
+                    field_identifier->type(type_find_result.type);
                     type->fields().add(make_field(
                         current_scope(),
                         field_identifier));
                     break;
                 }
                 case syntax::ast_node_types_t::symbol: {
-                    compiler::type* field_type = nullptr;
-                    if (expr_node->rhs != nullptr)
-                        field_type = find_type(expr_node->rhs->token.value);
+                    auto type_find_result = find_identifier_type(r, expr_node);
                     auto field_identifier = make_identifier(
                         current_scope(),
                         expr_node->children[0]->token.value,
                         nullptr);
-                    field_identifier->type(field_type != nullptr ? field_type : u32_type);
+                    if (type_find_result.type == nullptr) {
+                        if (type->type() == composite_types_t::enum_type) {
+                            field_identifier->type(u32_type);
+                        } else {
+                            field_identifier->type(make_unknown_type_from_find_result(
+                                r,
+                                current_scope(),
+                                field_identifier,
+                                type_find_result));
+                        }
+                    } else {
+                        field_identifier->type(type_find_result.type);
+                    }
                     type->fields().add(make_field(
                         current_scope(),
                         field_identifier));
@@ -1050,7 +1025,7 @@ namespace basecode::compiler {
         auto type = new compiler::unknown_type(
             parent_scope,
             name);
-        if (!type->initialize(r))
+        if (!type->initialize(r, this))
             return nullptr;
         type->is_array(is_array);
         type->array_size(array_size);
@@ -1122,7 +1097,7 @@ namespace basecode::compiler {
             compiler::type* identifier_type = nullptr;
             if (var->initializer() == nullptr) {
                 auto unknown_type = dynamic_cast<compiler::unknown_type*>(var->type());
-                identifier_type = find_type_for_identifier(unknown_type->name());
+                identifier_type = find_type_down(unknown_type->name());
                 if (unknown_type->is_array()) {
                     auto array_type = find_array_type(
                         identifier_type,
@@ -1168,20 +1143,12 @@ namespace basecode::compiler {
         return true;
     }
 
-    compiler::type* program::find_type(const std::string& name) const {
-        auto scope = current_scope();
-        while (scope != nullptr) {
-            auto type = scope->types().find(name);
-            if (type != nullptr)
-                return type;
-            scope = dynamic_cast<compiler::block*>(scope->parent());
-        }
-        return nullptr;
-    }
-
-    compiler::type* program::find_type_for_identifier(const std::string& name) {
+    compiler::type* program::find_type_down(const std::string& name) {
         std::function<compiler::type* (compiler::block*)> recursive_find =
             [&](compiler::block* scope) -> compiler::type* {
+                auto matching_type = scope->types().find(name);
+                if (matching_type != nullptr)
+                    return matching_type;
                 auto type_identifier = scope->identifiers().find(name);
                 if (type_identifier != nullptr)
                     return type_identifier->type();
@@ -1196,25 +1163,85 @@ namespace basecode::compiler {
         return recursive_find(block());
     }
 
-    import* program::make_import(compiler::block* parent_scope, element* expr) {
-        auto import_element = new compiler::import(parent_scope, expr);
-        _elements.insert(std::make_pair(import_element->id(), import_element));
-        return import_element;
+    compiler::type* program::find_type_up(const std::string& name) const {
+        auto scope = current_scope();
+        while (scope != nullptr) {
+            auto type = scope->types().find(name);
+            if (type != nullptr)
+                return type;
+            auto type_identifier = scope->identifiers().find(name);
+            if (type_identifier != nullptr)
+                return type_identifier->type();
+            scope = dynamic_cast<compiler::block*>(scope->parent());
+        }
+        return nullptr;
     }
 
     namespace_type* program::make_namespace_type(
             common::result& r,
             compiler::block* parent_scope) {
         auto type = new compiler::namespace_type(parent_scope);
-        if (!type->initialize(r))
+        if (!type->initialize(r, this))
             return nullptr;
 
         _elements.insert(std::make_pair(type->id(), type));
         return type;
     }
 
+    type_find_result_t program::find_identifier_type(
+            common::result& r,
+            const syntax::ast_node_shared_ptr& symbol) {
+        type_find_result_t result {};
+
+        if (symbol->rhs != nullptr) {
+            result.type_name = symbol->rhs->token.value;
+            result.is_array = symbol->rhs->is_array();
+            result.array_size = 0; // XXX: this needs to be fixed!
+
+            if (!result.type_name.empty()) {
+                result.type = find_type_up(result.type_name);
+                if (result.is_array) {
+                    auto array_type = find_array_type(
+                        result.type,
+                        result.array_size);
+                    if (array_type == nullptr) {
+                        array_type = make_array_type(
+                            r,
+                            current_scope(),
+                            result.type,
+                            result.array_size);
+                    }
+                    result.type = array_type;
+                }
+            }
+        }
+
+        return result;
+    }
+
+    unknown_type* program::make_unknown_type_from_find_result(
+            common::result& r,
+            compiler::block* scope,
+            compiler::identifier* identifier,
+            const type_find_result_t& result) {
+        auto unknown_type = make_unknown_type(
+            r,
+            scope,
+            result.type_name,
+            result.is_array,
+            result.array_size);
+        _identifiers_with_unknown_types.push_back(identifier);
+        return unknown_type;
+    }
+
+    import* program::make_import(compiler::block* parent_scope, element* expr) {
+        auto import_element = new compiler::import(parent_scope, expr);
+        _elements.insert(std::make_pair(import_element->id(), import_element));
+        return import_element;
+    }
+
     compiler::type* program::find_array_type(compiler::type* entry_type, size_t size) {
-        return find_type(fmt::format("__array_{}_{}__", entry_type->name(), size));
+        return find_type_up(fmt::format("__array_{}_{}__", entry_type->name(), size));
     }
 
     compiler::identifier* program::find_identifier(const syntax::ast_node_shared_ptr& node) {

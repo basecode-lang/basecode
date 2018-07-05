@@ -16,7 +16,7 @@
 
 namespace basecode::compiler {
 
-    class procedure_type : public type {
+    class procedure_type : public compiler::type {
     public:
         procedure_type(
             element* parent,
@@ -38,7 +38,9 @@ namespace basecode::compiler {
         procedure_instance_list_t& instances();
 
     protected:
-        bool on_initialize(common::result& r) override;
+        bool on_initialize(
+            common::result& r,
+            compiler::program* program) override;
 
     private:
         field_map_t _returns {};

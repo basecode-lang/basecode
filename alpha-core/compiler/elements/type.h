@@ -28,14 +28,18 @@ namespace basecode::compiler {
 
         size_t size_in_bytes() const;
 
-        bool initialize(common::result& r);
+        bool initialize(
+            common::result& r,
+            compiler::program* program);
 
         void name(const std::string& value);
 
     protected:
-        void size_in_bytes(size_t value);
+        virtual bool on_initialize(
+            common::result& r,
+            compiler::program* program);
 
-        virtual bool on_initialize(common::result& r);
+        void size_in_bytes(size_t value);
 
     private:
         std::string _name;

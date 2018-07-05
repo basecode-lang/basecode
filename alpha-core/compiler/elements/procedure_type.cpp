@@ -23,6 +23,12 @@ namespace basecode::compiler {
                                    _scope(scope) {
     }
 
+    bool procedure_type::on_initialize(
+            common::result& r,
+            compiler::program* program) {
+        return true;
+    }
+
     bool procedure_type::is_foreign() const {
         return _is_foreign;
     }
@@ -45,10 +51,6 @@ namespace basecode::compiler {
 
     type_map_t& procedure_type::type_parameters() {
         return _type_parameters;
-    }
-
-    bool procedure_type::on_initialize(common::result& r) {
-        return true;
     }
 
     procedure_instance_list_t& procedure_type::instances() {

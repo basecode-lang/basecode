@@ -26,9 +26,10 @@ namespace basecode::compiler {
 
     class numeric_type : public compiler::type {
     public:
-        static type_list_t make_types(
+        static void make_types(
             common::result& r,
-            element* parent);
+            compiler::block* parent_scope,
+            compiler::program* program);
 
         numeric_type(
             element* parent,
@@ -56,7 +57,9 @@ namespace basecode::compiler {
             {"address", {0,         UINTPTR_MAX, 8}},
         };
 
-        bool on_initialize(common::result& r) override;
+        bool on_initialize(
+            common::result& r,
+            compiler::program* program) override;
 
     private:
         int64_t _min;

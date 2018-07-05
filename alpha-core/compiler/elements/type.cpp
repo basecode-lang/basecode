@@ -21,6 +21,18 @@ namespace basecode::compiler {
                                    _name(name) {
     }
 
+    bool type::initialize(
+            common::result& r,
+            compiler::program* program) {
+        return on_initialize(r, program);
+    }
+
+    bool type::on_initialize(
+            common::result& r,
+            compiler::program* program) {
+        return true;
+    }
+
     std::string type::name() const {
         return _name;
     }
@@ -33,16 +45,8 @@ namespace basecode::compiler {
         _size_in_bytes = value;
     }
 
-    bool type::initialize(common::result& r) {
-        return on_initialize(r);
-    }
-
     void type::name(const std::string& value) {
         _name = value;
-    }
-
-    bool type::on_initialize(common::result& r) {
-        return true;
     }
 
 };

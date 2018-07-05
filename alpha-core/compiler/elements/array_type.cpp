@@ -16,11 +16,18 @@ namespace basecode::compiler {
     array_type::array_type(
             element* parent,
             const std::string& name,
-            compiler::type* entry_type) : compiler::type(
+            compiler::type* entry_type) : compiler::composite_type(
                                                 parent,
-                                                element_type_t::array_type,
-                                                name),
+                                                composite_types_t::struct_type,
+                                                name,
+                                                element_type_t::array_type),
                                           _entry_type(entry_type) {
+    }
+
+    bool array_type::on_initialize(
+            common::result& r,
+            compiler::program* program) {
+        return true;
     }
 
     uint64_t array_type::size() const {
@@ -33,10 +40,6 @@ namespace basecode::compiler {
 
     compiler::type* array_type::entry_type() {
         return _entry_type;
-    }
-
-    bool array_type::on_initialize(common::result& r) {
-        return true;
     }
 
 };

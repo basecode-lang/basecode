@@ -17,6 +17,13 @@
 
 namespace basecode::compiler {
 
+    struct type_find_result_t {
+        std::string type_name {};
+        bool is_array = false;
+        size_t array_size = 0;
+        compiler::type* type = nullptr;
+    };
+
     class program : public element {
     public:
         explicit program(vm::terp* terp);
@@ -37,9 +44,9 @@ namespace basecode::compiler {
 
         element* find_element(common::id_t id);
 
-        compiler::type* find_type(const std::string& name) const;
+        compiler::type* find_type_down(const std::string& name);
 
-        compiler::type* find_type_for_identifier(const std::string& name);
+        compiler::type* find_type_up(const std::string& name) const;
 
     protected:
         friend class directive;
@@ -61,6 +68,11 @@ namespace basecode::compiler {
         bool resolve_unknown_identifiers(common::result& r);
 
     private:
+        friend class any_type;
+        friend class array_type;
+        friend class string_type;
+        friend class numeric_type;
+
         cast* make_cast(
             compiler::block* parent_scope,
             compiler::type* type,
@@ -245,6 +257,12 @@ namespace basecode::compiler {
 
         void add_type_to_scope(compiler::type* type);
 
+        unknown_type* make_unknown_type_from_find_result(
+            common::result& r,
+            compiler::block* scope,
+            compiler::identifier* identifier,
+            const type_find_result_t& result);
+
         return_element* make_return(compiler::block* parent_scope);
 
         argument_list* make_argument_list(compiler::block* parent_scope);
@@ -264,6 +282,10 @@ namespace basecode::compiler {
         compiler::block* current_scope() const;
 
         void push_scope(compiler::block* block);
+
+        type_find_result_t find_identifier_type(
+            common::result& r,
+            const syntax::ast_node_shared_ptr& symbol);
 
         bool is_subtree_constant(const syntax::ast_node_shared_ptr& node);
 

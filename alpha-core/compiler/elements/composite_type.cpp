@@ -9,19 +9,31 @@
 //
 // ----------------------------------------------------------------------------
 
-#include "composite_type.h"
 #include "field.h"
+#include "identifier.h"
+#include "composite_type.h"
 
 namespace basecode::compiler {
 
     composite_type::composite_type(
             element* parent,
             composite_types_t type,
-            const std::string& name) : compiler::type(
-                                            parent,
-                                            element_type_t::composite_type,
-                                            name),
-                                       _type(type) {
+            const std::string& name,
+            element_type_t element_type) : compiler::type(
+                                                parent,
+                                                element_type,
+                                                name),
+                                           _type(type) {
+    }
+
+    bool composite_type::on_initialize(
+            common::result& r,
+            compiler::program* program) {
+        size_t size = 0;
+        for (auto fld : _fields.as_list())
+            size += fld->identifier()->type()->size_in_bytes();
+        size_in_bytes(size);
+        return true;
     }
 
     field_map_t& composite_type::fields() {
@@ -34,10 +46,6 @@ namespace basecode::compiler {
 
     composite_types_t composite_type::type() const {
         return _type;
-    }
-
-    bool composite_type::on_initialize(common::result& r) {
-        return true;
     }
 
 };

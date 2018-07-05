@@ -9,24 +9,25 @@
 //
 // ----------------------------------------------------------------------------
 
+#include "program.h"
 #include "numeric_type.h"
 
 namespace basecode::compiler {
 
-    type_list_t numeric_type::make_types(
+    void numeric_type::make_types(
             common::result& r,
-            element* parent) {
-        type_list_t list {};
+            compiler::block* parent_scope,
+            compiler::program* program) {
         for (const auto& it : s_types_map) {
-            auto type = new numeric_type(
-                parent,
+            auto type = program->make_numeric_type(
+                r,
+                parent_scope,
                 it.first,
                 it.second.min,
                 it.second.max);
-            type->initialize(r);
-            list.push_back(type);
+            type->initialize(r, program);
+            program->add_type_to_scope(type);
         }
-        return list;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -51,7 +52,9 @@ namespace basecode::compiler {
         return _max;
     }
 
-    bool numeric_type::on_initialize(common::result& r) {
+    bool numeric_type::on_initialize(
+            common::result& r,
+            compiler::program* program) {
         auto it = s_types_map.find(name());
         if (it == s_types_map.end())
             return false;

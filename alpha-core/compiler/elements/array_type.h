@@ -11,11 +11,11 @@
 
 #pragma once
 
-#include "type.h"
+#include "composite_type.h"
 
 namespace basecode::compiler {
 
-    class array_type : public compiler::type {
+    class array_type : public compiler::composite_type {
     public:
         array_type(
             element* parent,
@@ -29,7 +29,9 @@ namespace basecode::compiler {
         compiler::type* entry_type();
 
     protected:
-        bool on_initialize(common::result& r) override;
+        bool on_initialize(
+            common::result& r,
+            compiler::program* program) override;
 
     private:
         uint64_t _size = 0;

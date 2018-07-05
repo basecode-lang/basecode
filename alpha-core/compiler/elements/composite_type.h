@@ -16,12 +16,13 @@
 
 namespace basecode::compiler {
 
-    class composite_type : public type {
+    class composite_type : public compiler::type {
     public:
         composite_type(
             element* parent,
             composite_types_t type,
-            const std::string& name);
+            const std::string& name,
+            element_type_t element_type = element_type_t::composite_type);
 
         field_map_t& fields();
 
@@ -30,7 +31,9 @@ namespace basecode::compiler {
         composite_types_t type() const;
 
     protected:
-        bool on_initialize(common::result& r) override;
+        bool on_initialize(
+            common::result& r,
+            compiler::program* program) override;
 
     private:
         field_map_t _fields {};

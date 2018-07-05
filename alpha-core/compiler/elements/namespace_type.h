@@ -20,7 +20,9 @@ namespace basecode::compiler {
         explicit namespace_type(element* parent);
 
     protected:
-        bool on_initialize(common::result& r) override;
+        bool on_initialize(
+            common::result& r,
+            compiler::program* program) override;
     };
 
 };
