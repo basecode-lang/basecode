@@ -21,6 +21,7 @@
 #include "attribute.h"
 #include "directive.h"
 #include "statement.h"
+#include "type_info.h"
 #include "expression.h"
 #include "identifier.h"
 #include "if_element.h"
@@ -486,6 +487,17 @@ namespace basecode::compiler {
         return type;
     }
 
+    type_info* program::make_type_info_type(
+            common::result& r,
+            compiler::block* parent_scope) {
+        auto type = new compiler::type_info(parent_scope);
+        if (!type->initialize(r, this))
+            return nullptr;
+
+        _elements.insert(std::make_pair(type->id(), type));
+        return type;
+    }
+
     compiler::block* program::current_scope() const {
         if (_scope_stack.empty())
             return nullptr;
@@ -497,9 +509,10 @@ namespace basecode::compiler {
 
         compiler::numeric_type::make_types(r, parent_scope, this);
         add_type_to_scope(make_namespace_type(r, parent_scope));
-
-        add_type_to_scope(make_any_type(r, parent_scope));
         add_type_to_scope(make_string_type(r, parent_scope));
+
+        add_type_to_scope(make_type_info_type(r, parent_scope));
+        add_type_to_scope(make_any_type(r, parent_scope));
     }
 
     if_element* program::make_if(

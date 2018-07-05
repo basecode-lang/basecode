@@ -35,6 +35,7 @@ namespace basecode::compiler {
     class directive;
     class attribute;
     class statement;
+    class type_info;
     class identifier;
     class expression;
     class array_type;
@@ -113,6 +114,7 @@ namespace basecode::compiler {
         bool_type,
         statement,
         proc_call,
+        type_info,
         alias_type,
         array_type,
         identifier,
@@ -155,6 +157,7 @@ namespace basecode::compiler {
         {element_type_t::bool_type, "bool_type"},
         {element_type_t::statement, "statement"},
         {element_type_t::proc_call, "proc_call"},
+        {element_type_t::type_info, "type_info"},
         {element_type_t::alias_type, "alias_type"},
         {element_type_t::array_type, "array_type"},
         {element_type_t::identifier, "identifier"},

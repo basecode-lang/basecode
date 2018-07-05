@@ -19,6 +19,7 @@
 #include <compiler/elements/program.h>
 #include <compiler/elements/comment.h>
 #include <compiler/elements/any_type.h>
+#include <compiler/elements/type_info.h>
 #include <compiler/elements/attribute.h>
 #include <compiler/elements/directive.h>
 #include <compiler/elements/statement.h>
@@ -196,6 +197,17 @@ namespace basecode::compiler {
                     add_primary_edge(element, fld);
                 return fmt::format(
                     "{}[shape=record,label=\"any_type|{}\"{}];",
+                    node_vertex_name,
+                    element->name(),
+                    style);
+            }
+            case element_type_t::type_info: {
+                auto element = dynamic_cast<type_info*>(node);
+                auto style = ", fillcolor=gainsboro, style=\"filled\"";
+                for (auto fld : element->fields().as_list())
+                    add_primary_edge(element, fld);
+                return fmt::format(
+                    "{}[shape=record,label=\"type_info|{}\"{}];",
                     node_vertex_name,
                     element->name(),
                     style);

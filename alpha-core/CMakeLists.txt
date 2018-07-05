@@ -53,6 +53,7 @@ add_library(
         compiler/elements/directive.cpp compiler/elements/directive.h
         compiler/elements/statement.cpp compiler/elements/statement.h
         compiler/code_dom_formatter.cpp compiler/code_dom_formatter.h
+        compiler/elements/type_info.cpp compiler/elements/type_info.h
         compiler/elements/if_element.cpp compiler/elements/if_element.h
         compiler/elements/identifier.cpp compiler/elements/identifier.h
         compiler/elements/expression.cpp compiler/elements/expression.h

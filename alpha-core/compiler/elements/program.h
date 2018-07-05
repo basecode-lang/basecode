@@ -69,6 +69,7 @@ namespace basecode::compiler {
 
     private:
         friend class any_type;
+        friend class type_info;
         friend class array_type;
         friend class string_type;
         friend class numeric_type;
@@ -111,6 +112,10 @@ namespace basecode::compiler {
             const syntax::ast_node_shared_ptr& node);
 
         any_type* make_any_type(
+            common::result& r,
+            compiler::block* parent_scope);
+
+        type_info* make_type_info_type(
             common::result& r,
             compiler::block* parent_scope);
 
