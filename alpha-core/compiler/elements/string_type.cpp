@@ -21,6 +21,37 @@ namespace basecode::compiler {
                                                     element_type_t::string_type) {
     }
 
+    // rodata_str_1:
+    //  .db "test string"
+    //
+    //
+
+    // bss_test_string:
+    //  .dw 11      ; length
+    //  .dw 256     ; capacity
+    //  .dq 0       ; initializer must set
+
+    //
+    //  (string struct address)
+    //  (constant data address)
+    // string_ctor:
+    //      LOAD.DW     I0, SP, -16
+    //      LOAD.DW     I1, SP, -8
+    //      LOAD.DW     I3, I0
+    //      LOAD.DW     I2, I0, 4
+    //      ALLOC.B     I2, I2
+    //      STORE.QW    I2, I0, 8
+    //      TBZ         I1, .done
+    //      COPY.B      I2, I1, I3
+    //  .done:
+    //      RTS
+    //
+    // ; example call
+    //  PUSH.QW     rodata_str_1
+    //  PUSH.QW     bss_test_string
+    //  JSR         string_ctor
+    //
+
     // string_type := struct {
     //      length:u32;
     //      capacity:u32;

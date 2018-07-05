@@ -10,7 +10,10 @@ deps to bytecode generation
   a bin_op assignment is needed or if the value can be expressed directly
 
 - bytecode generation
-    use initializer to handle custom construction of values?
+    assembler:
+        * need to build out the api here
+        * when core types are added to the root scope, emit their ctor functions
+        * two parts for initializers: ctor function and callsite injection for init
 
     data definitions:
         * string interning
@@ -131,3 +134,4 @@ DONE
       inherit from compiler::composite_type and initialize should
       set up their fields.
 - FIX: graph generator is not escaping quotes
+- use initializer to handle custom construction of values?
