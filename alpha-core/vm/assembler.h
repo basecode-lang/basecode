@@ -41,11 +41,15 @@ namespace basecode::vm {
             common::result& r,
             std::istream& source);
 
+        instruction_block* pop_block();
+
         segment_list_t segments() const;
 
         instruction_block* current_block();
 
         instruction_block* make_new_block();
+
+        void push_block(instruction_block* block);
 
         vm::segment* segment(const std::string& name);
 
@@ -53,7 +57,7 @@ namespace basecode::vm {
         vm::terp* _terp = nullptr;
         uint64_t _location_counter = 0;
         std::vector<instruction_block*> _blocks {};
-        vm::instruction_block* _current_block = nullptr;
+        std::stack<instruction_block*> _block_stack {};
         std::unordered_map<std::string, vm::segment> _segments {};
     };
 

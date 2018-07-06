@@ -25,11 +25,21 @@ namespace basecode::vm {
 
         virtual ~instruction_block();
 
+        void clear_labels();
+
+        void clear_blocks();
+
         void push(double value);
+
+        void clear_instructions();
 
         void push(uint64_t value);
 
         void call(const std::string& proc_name);
+
+        void add_block(instruction_block* block);
+
+        void remove_block(instruction_block* block);
 
         vm::label* make_label(const std::string& name);
 

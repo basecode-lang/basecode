@@ -53,6 +53,14 @@ namespace basecode::vm {
         return false;
     }
 
+    instruction_block* assembler::pop_block() {
+        if (_block_stack.empty())
+            return nullptr;
+        auto top = _block_stack.top();
+        _block_stack.pop();
+        return top;
+    }
+
     segment_list_t assembler::segments() const {
         segment_list_t list {};
         for (const auto& it : _segments) {
@@ -62,13 +70,22 @@ namespace basecode::vm {
     }
 
     instruction_block* assembler::current_block() {
-        return _current_block;
+        if (_block_stack.empty())
+            return nullptr;
+        return _block_stack.top();
     }
 
     instruction_block* assembler::make_new_block() {
         auto block = new instruction_block();
         _blocks.push_back(block);
+        auto top_block = current_block();
+        if (top_block != nullptr)
+            top_block->add_block(block);
         return block;
+    }
+
+    void assembler::push_block(instruction_block* block) {
+        _block_stack.push(block);
     }
 
     vm::segment* assembler::segment(const std::string& name) {

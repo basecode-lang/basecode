@@ -29,7 +29,7 @@ namespace basecode::compiler {
             vm::assembler& assembler) {
         auto instruction_block = assembler.make_new_block();
         instruction_block->make_label(fmt::format("block_{}", id()));
-//        assembler.push_block(instruction_block);
+        assembler.push_block(instruction_block);
 
         for (auto stmt : _statements) {
             stmt->emit(r, assembler);
@@ -39,7 +39,7 @@ namespace basecode::compiler {
             blk->emit(r, assembler);
         }
 
-//        assembler.pop_block();
+        assembler.pop_block();
 
         return !r.is_failed();
     }
