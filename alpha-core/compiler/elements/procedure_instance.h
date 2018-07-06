@@ -26,6 +26,11 @@ namespace basecode::compiler {
 
         compiler::type* procedure_type();
 
+    protected:
+        bool on_emit(
+            common::result& r,
+            vm::assembler& assembler);
+
     private:
         block* _scope = nullptr;
         compiler::type* _procedure_type = nullptr;

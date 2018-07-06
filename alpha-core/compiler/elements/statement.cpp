@@ -19,6 +19,17 @@ namespace basecode::compiler {
                              _expression(expr) {
     }
 
+    bool statement::on_emit(
+            common::result& r,
+            vm::assembler& assembler) {
+        if (_expression == nullptr)
+            return true;
+        //
+        // need to loop over labels and add them to the assembler here
+        //
+        return _expression->emit(r, assembler);
+    }
+
     element* statement::expression() {
         return _expression;
     }

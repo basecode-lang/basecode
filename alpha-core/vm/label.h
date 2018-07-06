@@ -11,28 +11,23 @@
 
 #pragma once
 
-#include "element.h"
+#include <string>
 
-namespace basecode::compiler {
+namespace basecode::vm {
 
-    class statement : public element {
+    class label {
     public:
-        statement(
-            element* parent,
-            element* expr);
+        explicit label(const std::string& name);
 
-        element* expression();
+        uint64_t address() const;
 
-        label_list_t& labels();
+        std::string name() const;
 
-    protected:
-        bool on_emit(
-            common::result& r,
-            vm::assembler& assembler) override;
+        void address(uint64_t value);
 
     private:
-        label_list_t _labels {};
-        compiler::element* _expression = nullptr;
+        std::string _name;
+        uint64_t _address = 0;
     };
 
 };

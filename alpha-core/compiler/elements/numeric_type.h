@@ -13,6 +13,8 @@
 
 #include <vm/assembler.h>
 #include "type.h"
+#include "program.h"
+
 
 namespace basecode::compiler {
 

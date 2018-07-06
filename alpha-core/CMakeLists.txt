@@ -37,6 +37,10 @@ add_library(
         vm/assembler.cpp vm/assembler.h
         vm/instruction_emitter.cpp vm/instruction_emitter.h
 
+        vm/label.cpp vm/label.h
+        vm/symbol.cpp vm/symbol.h
+        vm/segment.cpp vm/segment.h
+        vm/instruction_block.cpp vm/instruction_block.h
         compiler/elements/type.cpp compiler/elements/type.h
         compiler/elements/cast.cpp compiler/elements/cast.h
         compiler/elements/field.cpp compiler/elements/field.h

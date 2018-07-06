@@ -9,8 +9,11 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <fmt/format.h>
 #include <vm/assembler.h>
+#include <vm/instruction_block.h>
 #include "block.h"
+#include "statement.h"
 #include "initializer.h"
 #include "numeric_type.h"
 
@@ -21,15 +24,29 @@ namespace basecode::compiler {
         element_type_t type) : element(parent, type) {
     }
 
-    bool block::emit(
+    bool block::on_emit(
             common::result& r,
             vm::assembler& assembler) {
+        auto instruction_block = assembler.make_new_block();
+        instruction_block->make_label(fmt::format("block_{}", id()));
+//        assembler.push_block(instruction_block);
+
+        for (auto stmt : _statements) {
+            stmt->emit(r, assembler);
+        }
+
+        for (auto blk : _blocks) {
+            blk->emit(r, assembler);
+        }
+
+//        assembler.pop_block();
+
         return !r.is_failed();
     }
 
     void block::add_symbols(
             common::result& r,
-            vm::segment_t* segment,
+            vm::segment* segment,
             const identifier_list_t& list) {
         for (auto var : list) {
             switch (var->type()->element_type()) {
@@ -40,7 +57,7 @@ namespace basecode::compiler {
                         vm::integer_symbol_type_for_size(var->type()->size_in_bytes()));
                     uint64_t value;
                     if (var->as_integer(value)) {
-                        symbol->value.int_value = value;
+                        symbol->value(value);
                     }
                     break;
                 }
@@ -55,8 +72,9 @@ namespace basecode::compiler {
                         vm::symbol_type_t::bytes,
                         size_in_bytes);
                     if (var->initializer() != nullptr)
-                        symbol->pending_address_from_id = var->initializer()->id();
-                    symbol->value.int_value = 0;
+                        symbol->pending_address_from_id(var->initializer()->id());
+                    uint64_t value = 0;
+                    symbol->value(value);
                     break;
                 }
                 default:
@@ -76,45 +94,33 @@ namespace basecode::compiler {
             if (!constant_init.empty()) {
                 auto section = assembler.segment(
                     fmt::format("rodata_{}", id()),
-                    vm::segment_type_t::constant,
-                    assembler.location_counter());
-                section->initialized = true;
+                    vm::segment_type_t::constant);
+                section->initialized(true);
                 add_symbols(r, section, constant_init);
-
-                assembler.location_counter(assembler.location_counter() + section->offset);
             }
 
             auto constant_uninit = _identifiers.constants(false);
             if (!constant_uninit.empty()) {
                 auto section = assembler.segment(
                     fmt::format("bss_{}", id()),
-                    vm::segment_type_t::constant,
-                    assembler.location_counter());
+                    vm::segment_type_t::constant);
                 add_symbols(r, section, constant_uninit);
-
-                assembler.location_counter(assembler.location_counter() + section->offset);
             }
 
             auto global_init = _identifiers.globals(true);
             if (!global_init.empty()) {
                 auto section = assembler.segment(
                     fmt::format("data_{}", id()),
-                    vm::segment_type_t::data,
-                    assembler.location_counter());
+                    vm::segment_type_t::data);
                 add_symbols(r, section, global_init);
-
-                assembler.location_counter(assembler.location_counter() + section->offset);
             }
 
             auto global_uninit = _identifiers.globals(false);
             if (!global_uninit.empty()) {
                 auto section = assembler.segment(
                     fmt::format("bss_data_{}", id()),
-                    vm::segment_type_t::data,
-                    assembler.location_counter());
+                    vm::segment_type_t::data);
                 add_symbols(r, section, global_uninit);
-
-                assembler.location_counter(assembler.location_counter() + section->offset);
             }
         }
 

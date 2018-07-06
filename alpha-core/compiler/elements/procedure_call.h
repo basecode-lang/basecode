@@ -27,6 +27,10 @@ namespace basecode::compiler {
         compiler::argument_list* arguments();
 
     protected:
+        bool on_emit(
+            common::result& r,
+            vm::assembler& assembler) override;
+
         compiler::type* on_infer_type(const compiler::program* program) override;
 
     private:

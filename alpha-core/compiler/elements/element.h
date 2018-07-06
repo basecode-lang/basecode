@@ -12,6 +12,7 @@
 #pragma once
 
 #include <cstdint>
+#include <vm/assembler.h>
 #include <common/result.h>
 #include <common/id_pool.h>
 #include "element_types.h"
@@ -27,6 +28,10 @@ namespace basecode::compiler {
         virtual ~element();
 
         element* parent();
+
+        bool emit(
+            common::result& r,
+            vm::assembler& assembler);
 
         common::id_t id() const;
 
@@ -49,6 +54,10 @@ namespace basecode::compiler {
         compiler::type* infer_type(const compiler::program* program);
 
     protected:
+        virtual bool on_emit(
+            common::result& r,
+            vm::assembler& assembler);
+
         virtual bool on_is_constant() const;
 
         virtual bool on_fold(common::result& r);

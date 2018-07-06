@@ -93,6 +93,14 @@ namespace basecode::compiler {
         return false;
     }
 
+    bool element::emit(common::result& r, vm::assembler& assembler) {
+        return on_emit(r, assembler);
+    }
+
+    bool element::on_emit(common::result& r, vm::assembler& assembler) {
+        return true;
+    }
+
     compiler::type* element::infer_type(const compiler::program* program) {
         switch (_element_type) {
             case element_type_t::any_type:

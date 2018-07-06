@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <vm/terp.h>
 #include <fmt/format.h>
 #include "type.h"
 #include "cast.h"
@@ -394,17 +395,22 @@ namespace basecode::compiler {
         for (auto segment : segments) {
             fmt::print(
                 "segment: {}, type: {}\n",
-                segment->name,
-                segment_type_name(segment->type));
+                segment->name(),
+                segment_type_name(segment->type()));
             for (auto symbol : segment->symbols())
                 fmt::print(
-                    "\taddress: {:08x}, symbol: {}, type: {}, size: {}\n",
-                    symbol->address,
-                    symbol->name,
-                    symbol_type_name(symbol->type),
-                    symbol->size);
+                    "\toffset: {:04x}, symbol: {}, type: {}, size: {}\n",
+                    symbol->offset(),
+                    symbol->name(),
+                    symbol_type_name(symbol->type()),
+                    symbol->size());
             fmt::print("\n");
         }
+
+        if (!emit_code_blocks(r))
+            return false;
+
+        // _assembler has program instruction block at top of stack
 
         return !r.is_failed();
     }
@@ -1055,6 +1061,20 @@ namespace basecode::compiler {
             fmt::format("__proc_{}__", common::id_pool::instance()->allocate()));
         _elements.insert(std::make_pair(type->id(), type));
         return type;
+    }
+
+    bool program::emit_code_blocks(common::result& r) {
+        std::function<bool (compiler::block*)> recursive_emit =
+            [&](compiler::block* scope) -> bool {
+                scope->emit(r, _assembler);
+                for (auto block : scope->blocks()) {
+                    if (!recursive_emit(block))
+                        return false;
+                }
+                return true;
+            };
+        // auto program_instruction_block = _assembler.new_instruction_block("some_lbl");
+        return recursive_emit(block());
     }
 
     bool program::execute_directives(common::result& r) {

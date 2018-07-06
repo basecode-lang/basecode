@@ -21,6 +21,12 @@ namespace basecode::compiler {
                             _procedure_type(procedure_type) {
     }
 
+    bool procedure_instance::on_emit(
+            common::result& r,
+            vm::assembler& assembler) {
+        return element::on_emit(r, assembler);
+    }
+
     block* procedure_instance::scope() {
         return _scope;
     }

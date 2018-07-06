@@ -9,7 +9,9 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <vm/instruction_block.h>
 #include "program.h"
+#include "argument_list.h"
 #include "procedure_type.h"
 #include "procedure_call.h"
 
@@ -21,6 +23,19 @@ namespace basecode::compiler {
         compiler::argument_list* args) : element(parent, element_type_t::proc_call),
                                          _arguments(args),
                                          _identifier(identifier) {
+    }
+
+    bool procedure_call::on_emit(
+            common::result& r,
+            vm::assembler& assembler) {
+        auto instruction_block = assembler.current_block();
+
+        if (_arguments != nullptr)
+            _arguments->emit(r, assembler);
+
+        instruction_block->call(identifier()->name());
+
+        return true;
     }
 
     compiler::identifier* procedure_call::identifier() {

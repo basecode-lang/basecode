@@ -27,6 +27,11 @@ namespace basecode::compiler {
 
         const element_list_t& elements() const;
 
+    protected:
+        bool on_emit(
+            common::result& r,
+            vm::assembler& assembler) override;
+
     private:
         element_list_t _elements {};
     };

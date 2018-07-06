@@ -9,12 +9,24 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <vm/instruction_block.h>
 #include "argument_list.h"
 
 namespace basecode::compiler {
 
     argument_list::argument_list(
         element* parent) : element(parent, element_type_t::argument_list) {
+    }
+
+    bool argument_list::on_emit(
+            common::result& r,
+            vm::assembler& assembler) {
+        auto instruction_block = assembler.current_block();
+        for (auto arg : _elements) {
+            uint64_t value = 0;
+            instruction_block->push(value);
+        }
+        return true;
     }
 
     void argument_list::add(element* item) {
