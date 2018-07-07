@@ -28,7 +28,7 @@ namespace basecode::compiler {
             common::result& r,
             vm::assembler& assembler) {
         auto instruction_block = assembler.make_implicit_block();
-        instruction_block->make_label(fmt::format("block_{}", id()));
+        instruction_block->make_label(fmt::format("implicit_block_{}", id()));
         assembler.push_block(instruction_block);
 
         for (auto stmt : _statements) {

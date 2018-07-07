@@ -10,6 +10,7 @@
 // ----------------------------------------------------------------------------
 
 #include <vm/terp.h>
+#include <vm/instruction_block.h>
 #include <fmt/format.h>
 #include "type.h"
 #include "cast.h"
@@ -410,7 +411,8 @@ namespace basecode::compiler {
         if (!emit_code_blocks(r))
             return false;
 
-        // _assembler has program instruction block at top of stack
+        auto root_block = _assembler.root_block();
+        root_block->disassemble();
 
         return !r.is_failed();
     }

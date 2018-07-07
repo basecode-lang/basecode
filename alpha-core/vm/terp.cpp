@@ -10,8 +10,8 @@
 // ----------------------------------------------------------------------------
 
 #include <sstream>
-#include <iomanip>
 #include <climits>
+#include <iomanip>
 #include <fmt/format.h>
 #include <common/bytes.h>
 #include <common/hex_formatter.h>
@@ -535,6 +535,121 @@ namespace basecode::vm {
 
     void instruction_t::patch_branch_address(uint64_t address, uint8_t index) {
         operands[index].value.u64 = align(address, alignment);
+    }
+
+    std::string instruction_t::disassemble(const id_resolve_callable& id_resolver) const {
+        std::stringstream stream;
+
+        auto op_name = op_code_name(op);
+        if (!op_name.empty()) {
+            std::stringstream mnemonic;
+            std::string format_spec;
+
+            mnemonic <<  op_name;
+            switch (size) {
+                case op_sizes::byte:
+                    mnemonic << ".B";
+                    format_spec = "#${:02X}";
+                    break;
+                case op_sizes::word:
+                    mnemonic << ".W";
+                    format_spec = "#${:04X}";
+                    break;
+                case op_sizes::dword:
+                    mnemonic << ".DW";
+                    format_spec = "#${:08X}";
+                    break;
+                case op_sizes::qword:
+                    mnemonic << ".QW";
+                    format_spec = "#${:016X}";
+                    break;
+                default: {
+                    break;
+                }
+            }
+
+            stream << std::left << std::setw(10) << mnemonic.str();
+
+            std::stringstream operands_stream;
+            for (size_t i = 0; i < operands_count; i++) {
+                if (i > 0 && i < operands_count) {
+                    operands_stream << ", ";
+                }
+
+                const auto& operand = operands[i];
+                std::string prefix, postfix;
+
+                if (operand.is_negative()) {
+                    if (operand.is_prefix())
+                        prefix = "--";
+                    else
+                        prefix = "-";
+
+                    if (operand.is_postfix())
+                        postfix = "--";
+                } else {
+                    if (operand.is_prefix())
+                        prefix = "++";
+
+                    if (operand.is_postfix())
+                        postfix = "++";
+                }
+
+                if (operand.is_reg()) {
+                    if (operand.is_integer()) {
+                        switch (operand.value.r8) {
+                            case i_registers_t::sp: {
+                                operands_stream << prefix << "SP" << postfix;
+                                break;
+                            }
+                            case i_registers_t::pc: {
+                                operands_stream << prefix << "PC" << postfix;
+                                break;
+                            }
+                            case i_registers_t::fr: {
+                                operands_stream << "FR";
+                                break;
+                            }
+                            case i_registers_t::sr: {
+                                operands_stream << "SR";
+                                break;
+                            }
+                            default: {
+                                operands_stream << prefix
+                                                << "I"
+                                                << std::to_string(operand.value.r8)
+                                                << postfix;
+                                break;
+                            }
+                        }
+                    } else {
+                        operands_stream << "F" << std::to_string(operand.value.r8);
+                    }
+                } else {
+                    if (operand.is_integer()) {
+                        if (operand.is_unresolved()) {
+                            if (id_resolver == nullptr)
+                                operands_stream << fmt::format("id({})", operand.value.u64);
+                            else
+                                operands_stream << id_resolver(operand.value.u64);
+                        } else {
+                            operands_stream << prefix
+                                            << fmt::format(format_spec, operand.value.u64)
+                                            << postfix;
+                        }
+                    } else {
+                        operands_stream << prefix
+                                        << fmt::format(format_spec, operand.value.d64)
+                                        << postfix;
+                    }
+                }
+            }
+
+            stream << std::left << std::setw(24) << operands_stream.str();
+        } else {
+            stream << "UNKNOWN";
+        }
+        return stream.str();
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -1977,114 +2092,6 @@ namespace basecode::vm {
         return _meta_information;
     }
 
-    std::string terp::disassemble(const instruction_t& inst) const {
-        std::stringstream stream;
-
-        auto it = s_op_code_names.find(inst.op);
-        if (it != s_op_code_names.end()) {
-            std::stringstream mnemonic;
-            std::string format_spec;
-
-            mnemonic <<  it->second;
-            switch (inst.size) {
-                case op_sizes::byte:
-                    mnemonic << ".B";
-                    format_spec = "#${:02X}";
-                    break;
-                case op_sizes::word:
-                    mnemonic << ".W";
-                    format_spec = "#${:04X}";
-                    break;
-                case op_sizes::dword:
-                    mnemonic << ".DW";
-                    format_spec = "#${:08X}";
-                    break;
-                case op_sizes::qword:
-                    mnemonic << ".QW";
-                    format_spec = "#${:016X}";
-                    break;
-                default: {
-                    break;
-                }
-            }
-
-            stream << std::left << std::setw(10) << mnemonic.str();
-
-            std::stringstream operands_stream;
-            for (size_t i = 0; i < inst.operands_count; i++) {
-                if (i > 0 && i < inst.operands_count) {
-                    operands_stream << ", ";
-                }
-
-                const auto& operand = inst.operands[i];
-                std::string prefix, postfix;
-
-                if (operand.is_negative()) {
-                    if (operand.is_prefix())
-                        prefix = "--";
-                    else
-                        prefix = "-";
-
-                    if (operand.is_postfix())
-                        postfix = "--";
-                } else {
-                    if (operand.is_prefix())
-                        prefix = "++";
-
-                    if (operand.is_postfix())
-                        postfix = "++";
-                }
-
-                if (operand.is_reg()) {
-                    if (operand.is_integer()) {
-                        switch (operand.value.r8) {
-                            case i_registers_t::sp: {
-                                operands_stream << prefix << "SP" << postfix;
-                                break;
-                            }
-                            case i_registers_t::pc: {
-                                operands_stream << prefix << "PC" << postfix;
-                                break;
-                            }
-                            case i_registers_t::fr: {
-                                operands_stream << "FR";
-                                break;
-                            }
-                            case i_registers_t::sr: {
-                                operands_stream << "SR";
-                                break;
-                            }
-                            default: {
-                                operands_stream << prefix
-                                                << "I"
-                                                << std::to_string(operand.value.r8)
-                                                << postfix;
-                                break;
-                            }
-                        }
-                    } else {
-                        operands_stream << "F" << std::to_string(operand.value.r8);
-                    }
-                } else {
-                    if (operand.is_integer()) {
-                        operands_stream << prefix
-                                        << fmt::format(format_spec, operand.value.u64)
-                                        << postfix;
-                    } else {
-                        operands_stream << prefix
-                                        << fmt::format(format_spec, operand.value.d64)
-                                        << postfix;
-                    }
-                }
-            }
-
-            stream << std::left << std::setw(24) << operands_stream.str();
-        } else {
-            stream << "UNKNOWN";
-        }
-        return stream.str();
-    }
-
     void terp::heap_vector(heap_vectors_t vector, uint64_t address) {
         size_t heap_vector_address = heap_vector_table_start
             + (sizeof(uint64_t) * static_cast<uint8_t>(vector));
@@ -2100,7 +2107,7 @@ namespace basecode::vm {
                 break;
 
             stream << fmt::format("${:016X}: ", address)
-                   << disassemble(inst)
+                   << inst.disassemble()
                    << fmt::format(" (${:02X} bytes)\n", inst_size);
 
             if (inst.op == op_codes::exit)

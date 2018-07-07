@@ -12,8 +12,17 @@
 #pragma once
 
 #include <string>
+#include <common/id_pool.h>
 
 namespace basecode::vm {
+
+    class label;
+
+    struct label_ref_t {
+        common::id_t id;
+        std::string name;
+        label* resolved = nullptr;
+    };
 
     class label {
     public:

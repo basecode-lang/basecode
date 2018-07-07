@@ -43,17 +43,19 @@ namespace basecode::vm {
 
         instruction_block* pop_block();
 
+        instruction_block* root_block();
+
         segment_list_t segments() const;
 
         instruction_block* current_block();
 
-        instruction_block* make_implicit_block();
-
-        instruction_block* make_procedure_block();
-
         void push_block(instruction_block* block);
 
         vm::segment* segment(const std::string& name);
+
+        instruction_block* make_implicit_block(instruction_block* parent_block = nullptr);
+
+        instruction_block* make_procedure_block(instruction_block* parent_block = nullptr);
 
     private:
         void add_new_block(instruction_block* block);

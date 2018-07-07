@@ -271,6 +271,67 @@ namespace basecode::vm {
         exit
     };
 
+    inline static std::map<op_codes, std::string> s_op_code_names = {
+        {op_codes::nop,    "NOP"},
+        {op_codes::alloc,  "ALLOC"},
+        {op_codes::free,   "FREE"},
+        {op_codes::size,   "SIZE"},
+        {op_codes::load,   "LOAD"},
+        {op_codes::store,  "STORE"},
+        {op_codes::copy,   "COPY"},
+        {op_codes::fill,   "FILL"},
+        {op_codes::move,   "MOVE"},
+        {op_codes::push,   "PUSH"},
+        {op_codes::pop,    "POP"},
+        {op_codes::dup,    "DUP"},
+        {op_codes::inc,    "INC"},
+        {op_codes::dec,    "DEC"},
+        {op_codes::add,    "ADD"},
+        {op_codes::sub,    "SUB"},
+        {op_codes::mul,    "MUL"},
+        {op_codes::div,    "DIV"},
+        {op_codes::mod,    "MOD"},
+        {op_codes::neg,    "NEG"},
+        {op_codes::shr,    "SHR"},
+        {op_codes::shl,    "SHL"},
+        {op_codes::ror,    "ROR"},
+        {op_codes::rol,    "ROL"},
+        {op_codes::and_op, "AND"},
+        {op_codes::or_op,  "OR"},
+        {op_codes::xor_op, "XOR"},
+        {op_codes::not_op, "NOT"},
+        {op_codes::bis,    "BIS"},
+        {op_codes::bic,    "BIC"},
+        {op_codes::test,   "TEST"},
+        {op_codes::cmp,    "CMP"},
+        {op_codes::bz,     "BZ"},
+        {op_codes::bnz,    "BNZ"},
+        {op_codes::tbz,    "TBZ"},
+        {op_codes::tbnz,   "TBNZ"},
+        {op_codes::bne,    "BNE"},
+        {op_codes::beq,    "BEQ"},
+        {op_codes::bg,     "BG"},
+        {op_codes::bge,    "BGE"},
+        {op_codes::bl,     "BL"},
+        {op_codes::ble,    "BLE"},
+        {op_codes::jsr,    "JSR"},
+        {op_codes::rts,    "RTS"},
+        {op_codes::jmp,    "JMP"},
+        {op_codes::swi,    "SWI"},
+        {op_codes::trap,   "TRAP"},
+        {op_codes::ffi,    "FFI"},
+        {op_codes::meta,   "META"},
+        {op_codes::exit,   "EXIT"},
+    };
+
+    inline static std::string op_code_name(op_codes type) {
+        auto it = s_op_code_names.find(type);
+        if (it != s_op_code_names.end()) {
+            return it->second;
+        }
+        return "";
+    }
+
     ///////////////////////////////////////////////////////////////////////////
 
     enum class op_sizes : uint8_t {
@@ -287,13 +348,14 @@ namespace basecode::vm {
         using flags_t = uint8_t;
 
         enum flags : uint8_t {
-            none     = 0b00000000,
-            constant = 0b00000000,
-            reg      = 0b00000001,
-            integer  = 0b00000010,
-            negative = 0b00000100,
-            prefix   = 0b00001000,
-            postfix  = 0b00010000,
+            none        = 0b00000000,
+            constant    = 0b00000000,
+            reg         = 0b00000001,
+            integer     = 0b00000010,
+            negative    = 0b00000100,
+            prefix      = 0b00001000,
+            postfix     = 0b00010000,
+            unresolved  = 0b00100000,
         };
 
         inline bool is_reg() const {
@@ -316,6 +378,10 @@ namespace basecode::vm {
             return (type & flags::negative) != 0;
         }
 
+        inline bool is_unresolved() const {
+            return (type & flags::unresolved) != 0;
+        }
+
         flags_t type = flags::reg | flags::integer;
         union {
             uint8_t r8;
@@ -325,6 +391,8 @@ namespace basecode::vm {
     };
 
     ///////////////////////////////////////////////////////////////////////////
+
+    using id_resolve_callable = std::function<std::string (uint64_t)>;
 
     struct instruction_t {
         static constexpr size_t base_size = 3;
@@ -345,6 +413,8 @@ namespace basecode::vm {
         size_t align(uint64_t value, size_t size) const;
 
         void patch_branch_address(uint64_t address, uint8_t index = 0);
+
+        std::string disassemble(const id_resolve_callable& id_resolver = nullptr) const;
 
         op_codes op = op_codes::nop;
         op_sizes size = op_sizes::none;
@@ -618,8 +688,6 @@ namespace basecode::vm {
 
         const meta_information_t& meta_information() const;
 
-        std::string disassemble(const instruction_t& inst) const;
-
         void heap_vector(heap_vectors_t vector, uint64_t address);
 
         std::string disassemble(common::result& r, uint64_t address);
@@ -706,59 +774,6 @@ namespace basecode::vm {
         }
 
     private:
-        inline static std::map<op_codes, std::string> s_op_code_names = {
-            {op_codes::nop,    "NOP"},
-            {op_codes::alloc,  "ALLOC"},
-            {op_codes::free,   "FREE"},
-            {op_codes::size,   "SIZE"},
-            {op_codes::load,   "LOAD"},
-            {op_codes::store,  "STORE"},
-            {op_codes::copy,   "COPY"},
-            {op_codes::fill,   "FILL"},
-            {op_codes::move,   "MOVE"},
-            {op_codes::push,   "PUSH"},
-            {op_codes::pop,    "POP"},
-            {op_codes::dup,    "DUP"},
-            {op_codes::inc,    "INC"},
-            {op_codes::dec,    "DEC"},
-            {op_codes::add,    "ADD"},
-            {op_codes::sub,    "SUB"},
-            {op_codes::mul,    "MUL"},
-            {op_codes::div,    "DIV"},
-            {op_codes::mod,    "MOD"},
-            {op_codes::neg,    "NEG"},
-            {op_codes::shr,    "SHR"},
-            {op_codes::shl,    "SHL"},
-            {op_codes::ror,    "ROR"},
-            {op_codes::rol,    "ROL"},
-            {op_codes::and_op, "AND"},
-            {op_codes::or_op,  "OR"},
-            {op_codes::xor_op, "XOR"},
-            {op_codes::not_op, "NOT"},
-            {op_codes::bis,    "BIS"},
-            {op_codes::bic,    "BIC"},
-            {op_codes::test,   "TEST"},
-            {op_codes::cmp,    "CMP"},
-            {op_codes::bz,     "BZ"},
-            {op_codes::bnz,    "BNZ"},
-            {op_codes::tbz,    "TBZ"},
-            {op_codes::tbnz,   "TBNZ"},
-            {op_codes::bne,    "BNE"},
-            {op_codes::beq,    "BEQ"},
-            {op_codes::bg,     "BG"},
-            {op_codes::bge,    "BGE"},
-            {op_codes::bl,     "BL"},
-            {op_codes::ble,    "BLE"},
-            {op_codes::jsr,    "JSR"},
-            {op_codes::rts,    "RTS"},
-            {op_codes::jmp,    "JMP"},
-            {op_codes::swi,    "SWI"},
-            {op_codes::trap,   "TRAP"},
-            {op_codes::ffi,    "FFI"},
-            {op_codes::meta,   "META"},
-            {op_codes::exit,   "EXIT"},
-        };
-
         bool _exited = false;
         size_t _heap_size = 0;
         size_t _stack_size = 0;

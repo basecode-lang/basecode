@@ -33,7 +33,12 @@ namespace basecode::compiler {
         if (_arguments != nullptr)
             _arguments->emit(r, assembler);
 
-        instruction_block->call(identifier()->name());
+        auto procedure_type = identifier()->initializer()->procedure_type();
+        if (procedure_type->is_foreign()) {
+            instruction_block->call_foreign(identifier()->name());
+        } else {
+            instruction_block->call(identifier()->name());
+        }
 
         return true;
     }

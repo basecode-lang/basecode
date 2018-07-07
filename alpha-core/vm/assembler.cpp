@@ -69,22 +69,14 @@ namespace basecode::vm {
         return list;
     }
 
+    instruction_block* assembler::root_block() {
+        return _blocks.front();
+    }
+
     instruction_block* assembler::current_block() {
         if (_block_stack.empty())
             return nullptr;
         return _block_stack.top();
-    }
-
-    instruction_block* assembler::make_implicit_block() {
-        auto block = new instruction_block(instruction_block_type_t::implicit);
-        add_new_block(block);
-        return block;
-    }
-
-    instruction_block* assembler::make_procedure_block() {
-        auto block = new instruction_block(instruction_block_type_t::procedure);
-        add_new_block(block);
-        return block;
     }
 
     void assembler::push_block(instruction_block* block) {
@@ -103,6 +95,22 @@ namespace basecode::vm {
         if (it == _segments.end())
             return nullptr;
         return &it->second;
+    }
+
+    instruction_block* assembler::make_implicit_block(instruction_block* parent_block) {
+        auto block = new instruction_block(
+            parent_block != nullptr ? parent_block : current_block(),
+            instruction_block_type_t::implicit);
+        add_new_block(block);
+        return block;
+    }
+
+    instruction_block* assembler::make_procedure_block(instruction_block* parent_block) {
+        auto block = new instruction_block(
+            parent_block != nullptr ? parent_block : current_block(),
+            instruction_block_type_t::procedure);
+        add_new_block(block);
+        return block;
     }
 
 };
