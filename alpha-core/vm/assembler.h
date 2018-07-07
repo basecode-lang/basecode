@@ -47,11 +47,16 @@ namespace basecode::vm {
 
         instruction_block* current_block();
 
-        instruction_block* make_new_block();
+        instruction_block* make_implicit_block();
+
+        instruction_block* make_procedure_block();
 
         void push_block(instruction_block* block);
 
         vm::segment* segment(const std::string& name);
+
+    private:
+        void add_new_block(instruction_block* block);
 
     private:
         vm::terp* _terp = nullptr;

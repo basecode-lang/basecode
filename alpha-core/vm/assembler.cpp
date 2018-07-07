@@ -75,17 +75,27 @@ namespace basecode::vm {
         return _block_stack.top();
     }
 
-    instruction_block* assembler::make_new_block() {
-        auto block = new instruction_block();
-        _blocks.push_back(block);
-        auto top_block = current_block();
-        if (top_block != nullptr)
-            top_block->add_block(block);
+    instruction_block* assembler::make_implicit_block() {
+        auto block = new instruction_block(instruction_block_type_t::implicit);
+        add_new_block(block);
+        return block;
+    }
+
+    instruction_block* assembler::make_procedure_block() {
+        auto block = new instruction_block(instruction_block_type_t::procedure);
+        add_new_block(block);
         return block;
     }
 
     void assembler::push_block(instruction_block* block) {
         _block_stack.push(block);
+    }
+
+    void assembler::add_new_block(instruction_block* block) {
+        _blocks.push_back(block);
+        auto top_block = current_block();
+        if (top_block != nullptr)
+            top_block->add_block(block);
     }
 
     vm::segment* assembler::segment(const std::string& name) {

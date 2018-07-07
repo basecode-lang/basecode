@@ -24,7 +24,7 @@ namespace basecode::compiler {
         auto instruction_block = assembler.current_block();
         for (auto arg : _elements) {
             uint64_t value = 0;
-            instruction_block->push(value);
+            instruction_block->push_u8(value);
         }
         return true;
     }

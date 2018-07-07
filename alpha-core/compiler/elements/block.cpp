@@ -27,7 +27,7 @@ namespace basecode::compiler {
     bool block::on_emit(
             common::result& r,
             vm::assembler& assembler) {
-        auto instruction_block = assembler.make_new_block();
+        auto instruction_block = assembler.make_implicit_block();
         instruction_block->make_label(fmt::format("block_{}", id()));
         assembler.push_block(instruction_block);
 
