@@ -21,6 +21,11 @@ namespace basecode::compiler {
 
         element_list_t& expressions();
 
+    protected:
+        bool on_emit(
+            common::result& r,
+            vm::assembler& assembler) override;
+
     private:
         element_list_t _expressions {};
     };

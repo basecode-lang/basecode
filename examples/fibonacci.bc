@@ -36,6 +36,8 @@ alpha::compiler::examples := ns {
         if n == 0 || n == 1 {
             return n;
         } else {
+            value:u64;
+
             value := fib((n - 1) + fib(n - 2));
             print("%s\n", value);
             return value;

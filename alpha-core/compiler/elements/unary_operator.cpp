@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <vm/instruction_block.h>
 #include "program.h"
 #include "unary_operator.h"
 
@@ -19,6 +20,32 @@ namespace basecode::compiler {
             operator_type_t type,
             element* rhs) : operator_base(parent, element_type_t::unary_operator, type),
                             _rhs(rhs) {
+    }
+
+    bool unary_operator::on_emit(
+            common::result& r,
+            vm::assembler& assembler) {
+        auto instruction_block = assembler.current_block();
+        switch (operator_type()) {
+            case operator_type_t::negate: {
+                // XXX: how to best handle the rhs here?
+                auto src_reg = instruction_block->allocate_ireg();
+                instruction_block->move_u64_to_ireg(src_reg, 0xc0fefe);
+
+                auto dest_reg = instruction_block->allocate_ireg();
+                instruction_block->neg_u64(dest_reg, src_reg);
+                instruction_block->free_ireg(dest_reg);
+                instruction_block->free_ireg(src_reg);
+                break;
+            }
+            case operator_type_t::binary_not:
+                break;
+            case operator_type_t::logical_not:
+                break;
+            default:
+                break;
+        }
+        return true;
     }
 
     element* unary_operator::rhs() {

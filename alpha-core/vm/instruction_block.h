@@ -46,6 +46,23 @@ namespace basecode::vm {
 
         void clear_blocks();
 
+        // neg variations
+        void neg_u8(
+            i_registers_t dest_reg,
+            i_registers_t src_reg);
+
+        void neg_u16(
+            i_registers_t dest_reg,
+            i_registers_t src_reg);
+
+        void neg_u32(
+            i_registers_t dest_reg,
+            i_registers_t src_reg);
+
+        void neg_u64(
+            i_registers_t dest_reg,
+            i_registers_t src_reg);
+
         // load variations
         void load_to_ireg_u8(
             i_registers_t dest_reg,
@@ -186,23 +203,23 @@ namespace basecode::vm {
         // sub variations
         void sub_ireg_by_ireg_u8(
             i_registers_t dest_reg,
-            i_registers_t augend_reg,
-            i_registers_t addened_reg);
+            i_registers_t minuend_reg,
+            i_registers_t subtrahend_reg);
 
         void sub_ireg_by_ireg_u16(
             i_registers_t dest_reg,
-            i_registers_t augend_reg,
-            i_registers_t addened_reg);
+            i_registers_t minuend_reg,
+            i_registers_t subtrahend_reg);
 
         void sub_ireg_by_ireg_u32(
             i_registers_t dest_reg,
-            i_registers_t augend_reg,
-            i_registers_t addened_reg);
+            i_registers_t minuend_reg,
+            i_registers_t subtrahend_reg);
 
         void sub_ireg_by_ireg_u64(
             i_registers_t dest_reg,
-            i_registers_t augend_reg,
-            i_registers_t addened_reg);
+            i_registers_t minuend_reg,
+            i_registers_t subtrahend_reg);
 
         // div variations
         void div_ireg_by_ireg_u8(
@@ -381,6 +398,11 @@ namespace basecode::vm {
         void jump_direct(const std::string& label_name);
 
     private:
+        void make_neg_instruction(
+            op_sizes size,
+            i_registers_t dest_reg,
+            i_registers_t src_reg);
+
         void make_inc_instruction(
             op_sizes size,
             i_registers_t reg);
@@ -428,6 +450,18 @@ namespace basecode::vm {
             op_sizes size,
             i_registers_t dest_reg,
             i_registers_t src_reg);
+
+        void make_add_instruction(
+            op_sizes size,
+            i_registers_t dest_reg,
+            i_registers_t augend_reg,
+            i_registers_t addend_reg);
+
+        void make_sub_instruction(
+            op_sizes size,
+            i_registers_t dest_reg,
+            i_registers_t minuend_reg,
+            i_registers_t subtrahend_reg);
 
         void disassemble(instruction_block* block);
 

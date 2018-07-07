@@ -25,6 +25,13 @@ namespace basecode::compiler {
         auto instruction_block = assembler.current_block();
         for (auto arg : _elements) {
             switch (arg->element_type()) {
+                case element_type_t::proc_call:
+                case element_type_t::expression:
+                case element_type_t::unary_operator:
+                case element_type_t::binary_operator: {
+                    arg->emit(r, assembler);
+                    break;
+                }
                 case element_type_t::identifier: {
                     auto ident = dynamic_cast<compiler::identifier*>(arg);
                     auto reg = instruction_block->allocate_ireg();
@@ -35,8 +42,6 @@ namespace basecode::compiler {
                     instruction_block->free_ireg(reg);
                     break;
                 }
-                case element_type_t::float_literal:
-                    break;
                 case element_type_t::string_literal: {
                     auto reg = instruction_block->allocate_ireg();
                     instruction_block->move_label_to_ireg(
@@ -46,10 +51,27 @@ namespace basecode::compiler {
                     instruction_block->free_ireg(reg);
                     break;
                 }
-                case element_type_t::boolean_literal:
+                case element_type_t::float_literal: {
+                    double value;
+                    if (arg->as_float(value)) {
+                        instruction_block->push_f64(value);
+                    }
                     break;
-                case element_type_t::integer_literal:
+                }
+                case element_type_t::boolean_literal: {
+                    bool value;
+                    if (arg->as_bool(value)) {
+                        instruction_block->push_u8(static_cast<uint8_t>(value ? 1 : 0));
+                    }
                     break;
+                }
+                case element_type_t::integer_literal: {
+                    uint64_t value;
+                    if (arg->as_integer(value)) {
+                        instruction_block->push_u64(value);
+                    }
+                    break;
+                }
                 default:
                     break;
             }

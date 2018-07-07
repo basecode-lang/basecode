@@ -9,7 +9,9 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <vm/instruction_block.h>
 #include "program.h"
+#include "identifier.h"
 #include "binary_operator.h"
 
 namespace basecode::compiler {
@@ -21,6 +23,93 @@ namespace basecode::compiler {
         element* rhs) : operator_base(parent, element_type_t::binary_operator, type),
                         _lhs(lhs),
                         _rhs(rhs) {
+    }
+
+    bool binary_operator::on_emit(
+            common::result& r,
+            vm::assembler& assembler) {
+        auto instruction_block = assembler.current_block();
+        switch (operator_type()) {
+            case operator_type_t::add: {
+                auto lhs_reg = instruction_block->allocate_ireg();
+                _lhs->emit(r, assembler);
+
+                auto rhs_reg = instruction_block->allocate_ireg();
+                _rhs->emit(r, assembler);
+
+                instruction_block->add_ireg_by_ireg_u64(lhs_reg, lhs_reg, rhs_reg);
+                break;
+            }
+            case operator_type_t::subtract: {
+                auto lhs_reg = instruction_block->allocate_ireg();
+                if (_lhs != nullptr)
+                    _lhs->emit(r, assembler);
+
+                auto rhs_reg = instruction_block->allocate_ireg();
+                if (_rhs != nullptr)
+                    _rhs->emit(r, assembler);
+
+                instruction_block->sub_ireg_by_ireg_u64(lhs_reg, lhs_reg, rhs_reg);
+                break;
+            }
+            case operator_type_t::multiply:
+                break;
+            case operator_type_t::divide:
+                break;
+            case operator_type_t::modulo:
+                break;
+            case operator_type_t::equals:
+                break;
+            case operator_type_t::not_equals:
+                break;
+            case operator_type_t::greater_than:
+                break;
+            case operator_type_t::less_than:
+                break;
+            case operator_type_t::greater_than_or_equal:
+                break;
+            case operator_type_t::less_than_or_equal:
+                break;
+            case operator_type_t::logical_or:
+                break;
+            case operator_type_t::logical_and:
+                break;
+            case operator_type_t::binary_or:
+                break;
+            case operator_type_t::binary_and:
+                break;
+            case operator_type_t::binary_xor:
+                break;
+            case operator_type_t::shift_right:
+                break;
+            case operator_type_t::shift_left:
+                break;
+            case operator_type_t::rotate_right:
+                break;
+            case operator_type_t::rotate_left:
+                break;
+            case operator_type_t::exponent:
+                break;
+            case operator_type_t::assignment: {
+                // XXX:
+                auto ident = dynamic_cast<compiler::identifier*>(_lhs);
+                auto lhs_reg = instruction_block->allocate_ireg();
+                instruction_block->move_label_to_ireg(lhs_reg, ident->name());
+
+                // XXX: how to link up the rhs_reg with the code generated?
+                auto rhs_reg = instruction_block->allocate_ireg();
+                _rhs->emit(r, assembler);
+
+                instruction_block->store_from_ireg_u64(rhs_reg, lhs_reg);
+
+                instruction_block->free_ireg(lhs_reg);
+                instruction_block->free_ireg(rhs_reg);
+                break;
+            }
+            default:
+                break;
+        }
+        return true;
     }
 
     element* binary_operator::lhs() {

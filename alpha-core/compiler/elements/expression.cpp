@@ -20,6 +20,14 @@ namespace basecode::compiler {
                              _root(root) {
     }
 
+    bool expression::on_emit(
+            common::result& r,
+            vm::assembler& assembler) {
+        if (_root == nullptr)
+            return true;
+        return _root->emit(r, assembler);
+    }
+
     element* expression::root() {
         return _root;
     }

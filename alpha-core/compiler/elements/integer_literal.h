@@ -24,6 +24,10 @@ namespace basecode::compiler {
         uint64_t value() const;
 
     protected:
+        bool on_emit(
+            common::result& r,
+            vm::assembler& assembler) override;
+
         bool on_as_integer(uint64_t& value) const override;
 
         compiler::type* on_infer_type(const compiler::program* program) override;
