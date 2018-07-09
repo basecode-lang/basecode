@@ -633,9 +633,13 @@ namespace basecode::vm {
                             else
                                 operands_stream << id_resolver(operand.value.u64);
                         } else {
-                            operands_stream << prefix
-                                            << fmt::format(format_spec, operand.value.u64)
-                                            << postfix;
+                            if (prefix == "-") {
+                                operands_stream << fmt::format("{}", static_cast<int64_t>(operand.value.u64));
+                            } else {
+                                operands_stream << prefix
+                                                << fmt::format(format_spec, operand.value.u64)
+                                                << postfix;
+                            }
                         }
                     } else {
                         operands_stream << prefix
@@ -913,12 +917,12 @@ namespace basecode::vm {
                 break;
             }
             case op_codes::store: {
-                uint64_t value;
-                if (!get_operand_value(r, inst, 0, value))
+                uint64_t address;
+                if (!get_operand_value(r, inst, 0, address))
                     return false;
 
-                uint64_t address;
-                if (!get_operand_value(r, inst, 1, address))
+                uint64_t value;
+                if (!get_operand_value(r, inst, 1, value))
                     return false;
 
                 if (inst.operands_count > 2) {
@@ -1004,10 +1008,10 @@ namespace basecode::vm {
             case op_codes::move: {
                 uint64_t source_value;
 
-                if (!get_operand_value(r, inst, 0, source_value))
+                if (!get_operand_value(r, inst, 1, source_value))
                     return false;
 
-                if (!set_target_operand_value(r, inst, 1, source_value))
+                if (!set_target_operand_value(r, inst, 0, source_value))
                     return false;
 
                 _registers.flags(register_file_t::flags_t::carry, false);

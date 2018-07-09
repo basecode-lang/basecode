@@ -131,23 +131,23 @@ namespace basecode::vm {
 
         // store variations
         void store_from_ireg_u8(
-            i_registers_t src_reg,
             i_registers_t address_reg,
+            i_registers_t src_reg,
             int64_t offset = 0);
 
         void store_from_ireg_u16(
-            i_registers_t src_reg,
             i_registers_t address_reg,
+            i_registers_t src_reg,
             int64_t offset = 0);
 
         void store_from_ireg_u32(
-            i_registers_t src_reg,
             i_registers_t address_reg,
+            i_registers_t src_reg,
             int64_t offset = 0);
 
         void store_from_ireg_u64(
-            i_registers_t src_reg,
             i_registers_t address_reg,
+            i_registers_t src_reg,
             int64_t offset = 0);
 
         // move variations
@@ -186,6 +186,8 @@ namespace basecode::vm {
         instruction_block* parent();
 
         // branches
+        void bne(const std::string& label_name);
+
         void beq(const std::string& label_name);
 
         // cmp variations
@@ -482,8 +484,8 @@ namespace basecode::vm {
 
         void make_store_instruction(
             op_sizes size,
-            i_registers_t src_reg,
             i_registers_t address_reg,
+            i_registers_t src_reg,
             int64_t offset);
 
         void make_swap_instruction(

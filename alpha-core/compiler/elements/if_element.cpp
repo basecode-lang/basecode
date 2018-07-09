@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <fmt/format.h>
 #include "if_element.h"
 
 namespace basecode::compiler {
@@ -27,7 +28,13 @@ namespace basecode::compiler {
             common::result& r,
             vm::assembler& assembler,
             const emit_context_t& context) {
-        _predicate->emit(r, assembler, context);
+        _predicate->emit(
+            r,
+            assembler,
+            emit_context_t::for_if_element(
+                context,
+                fmt::format("basic_block_{}", _true_branch->id()),
+                fmt::format("basic_block_{}", _false_branch->id())));
         return true;
     }
 

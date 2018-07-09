@@ -53,10 +53,12 @@ namespace basecode::compiler {
                 continue;
             auto procedure_type = init->procedure_type();
             if (procedure_type != nullptr) {
-                emit_context_t proc_context = {
-                    .procedure_identifier = ident->name()
-                };
-                procedure_type->emit(r, assembler, proc_context);
+                procedure_type->emit(
+                    r,
+                    assembler,
+                    emit_context_t::for_procedure_type(
+                        context,
+                        ident->name()));
             }
         }
 

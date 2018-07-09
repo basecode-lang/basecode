@@ -298,6 +298,8 @@ namespace basecode::compiler {
 
         bool is_subtree_constant(const syntax::ast_node_shared_ptr& node);
 
+        bool within_procedure_scope(compiler::block* parent_scope = nullptr) const;
+
         compiler::identifier* find_identifier(const syntax::ast_node_shared_ptr& node);
 
     private:

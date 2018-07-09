@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include "element.h"
 #include "program.h"
 #include "identifier.h"
 #include "binary_operator.h"
@@ -110,15 +111,22 @@ namespace basecode::compiler {
             case operator_type_t::assignment: {
                 auto lhs_reg = instruction_block->allocate_ireg();
                 instruction_block->push_target_register(lhs_reg);
-                _lhs->emit(r, assembler, context);
+                _lhs->emit(r, assembler, emit_context_t::for_write(context));
                 instruction_block->pop_target_register();
 
                 auto rhs_reg = instruction_block->allocate_ireg();
                 instruction_block->push_target_register(rhs_reg);
-                _rhs->emit(r, assembler, context);
+                _rhs->emit(r, assembler, emit_context_t::for_read(context));
                 instruction_block->pop_target_register();
 
-                instruction_block->store_from_ireg_u64(rhs_reg, lhs_reg);
+                int64_t offset = 0;
+                auto identifier = dynamic_cast<compiler::identifier*>(_lhs);
+                if (identifier->stack_based()) {
+                    lhs_reg = vm::i_registers_t::sp;
+                    offset = -8;
+                }
+
+                instruction_block->store_from_ireg_u64(lhs_reg, rhs_reg, offset);
                 instruction_block->pop_target_register();
 
                 instruction_block->free_ireg(lhs_reg);
@@ -158,7 +166,7 @@ namespace basecode::compiler {
 
         switch (operator_type()) {
             case operator_type_t::equals: {
-                instruction_block->beq("temp_lbl");
+                instruction_block->bne(context.data.if_data->false_branch_label);
                 break;
             }
             case operator_type_t::less_than: {

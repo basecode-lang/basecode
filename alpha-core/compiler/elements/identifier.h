@@ -28,9 +28,13 @@ namespace basecode::compiler {
 
         std::string name() const;
 
+        bool stack_based() const;
+
         void constant(bool value);
 
         bool inferred_type() const;
+
+        void stack_based(bool value);
 
         void type(compiler::type* t);
 
@@ -55,6 +59,7 @@ namespace basecode::compiler {
     private:
         std::string _name;
         bool _constant = false;
+        bool _stack_based = false;
         bool _inferred_type = false;
         compiler::type* _type = nullptr;
         compiler::initializer* _initializer;

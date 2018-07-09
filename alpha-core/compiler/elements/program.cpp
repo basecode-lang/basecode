@@ -105,7 +105,9 @@ namespace basecode::compiler {
                 for (auto it = node->children.begin();
                      it != node->children.end();
                      ++it) {
-                    add_expression_to_scope(active_scope, evaluate(r, *it));
+                    add_expression_to_scope(
+                        active_scope,
+                        evaluate(r, *it, default_block_type));
                 }
 
                 return pop_scope();
@@ -282,6 +284,7 @@ namespace basecode::compiler {
                                 symbol_node,
                                 param_node->rhs,
                                 block_scope);
+                            param_identifier->stack_based(true);
                             auto field = make_field(block_scope, param_identifier);
                             proc_type->parameters().add(field);
                             break;
@@ -292,6 +295,7 @@ namespace basecode::compiler {
                                 param_node,
                                 nullptr,
                                 block_scope);
+                            param_identifier->stack_based(true);
                             auto field = make_field(block_scope, param_identifier);
                             proc_type->parameters().add(field);
                             break;
@@ -899,6 +903,8 @@ namespace basecode::compiler {
         }
 
         new_identifier->constant(symbol->is_constant_expression());
+        new_identifier->stack_based(within_procedure_scope(scope));
+
         scope->identifiers().add(new_identifier);
 
         if (init != nullptr
@@ -1279,6 +1285,17 @@ namespace basecode::compiler {
             result.array_size);
         _identifiers_with_unknown_types.push_back(identifier);
         return unknown_type;
+    }
+
+    bool program::within_procedure_scope(compiler::block* parent_scope) const {
+        auto block_scope = parent_scope == nullptr ? current_scope() : parent_scope;
+        while (block_scope != nullptr) {
+            if (block_scope->element_type() == element_type_t::proc_type_block
+            ||  block_scope->element_type() == element_type_t::proc_instance_block)
+                return true;
+            block_scope = dynamic_cast<compiler::block*>(block_scope->parent());
+        }
+        return false;
     }
 
     import* program::make_import(compiler::block* parent_scope, element* expr) {

@@ -24,13 +24,13 @@ namespace basecode::compiler {
             element_type_t type,
             const std::string& name);
 
-        std::string name() const;
-
-        size_t size_in_bytes() const;
-
         bool initialize(
             common::result& r,
             compiler::program* program);
+
+        std::string name() const;
+
+        size_t size_in_bytes() const;
 
         void name(const std::string& value);
 

@@ -13,6 +13,7 @@
 #include "block.h"
 #include "field.h"
 #include "procedure_type.h"
+#include "element.h"
 
 namespace basecode::compiler {
 
@@ -33,10 +34,17 @@ namespace basecode::compiler {
             return true;
 
         auto instruction_block = assembler.make_procedure_block();
-        auto proc_label = name();
-        if (!context.procedure_identifier.empty())
-            proc_label = context.procedure_identifier;
-        instruction_block->make_label(proc_label);
+        auto procedure_label = name();
+
+        switch (context.type) {
+            case emit_context_type_t::procedure_type:
+                procedure_label = context.data.procedure_type->identifier_name;
+                break;
+            default:
+                break;
+        }
+
+        instruction_block->make_label(procedure_label);
         assembler.push_block(instruction_block);
         _scope->emit(r, assembler, context);
         assembler.pop_block();
