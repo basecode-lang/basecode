@@ -28,7 +28,8 @@ namespace basecode::compiler {
     protected:
         bool on_emit(
             common::result& r,
-            vm::assembler& assembler) override;
+            vm::assembler& assembler,
+            const emit_context_t& context) override;
 
         bool on_is_constant() const override;
 

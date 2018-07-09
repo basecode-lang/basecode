@@ -29,6 +29,12 @@ namespace basecode::compiler {
 
         element* false_branch();
 
+    protected:
+        bool on_emit(
+            common::result& r,
+            vm::assembler& assembler,
+            const emit_context_t& context) override;
+
     private:
         element* _predicate = nullptr;
         element* _true_branch = nullptr;

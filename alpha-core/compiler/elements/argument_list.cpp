@@ -21,7 +21,8 @@ namespace basecode::compiler {
 
     bool argument_list::on_emit(
             common::result& r,
-            vm::assembler& assembler) {
+            vm::assembler& assembler,
+            const emit_context_t& context) {
         auto instruction_block = assembler.current_block();
         for (auto arg : _elements) {
             switch (arg->element_type()) {
@@ -29,7 +30,11 @@ namespace basecode::compiler {
                 case element_type_t::expression:
                 case element_type_t::unary_operator:
                 case element_type_t::binary_operator: {
-                    arg->emit(r, assembler);
+                    auto target_reg = instruction_block->allocate_ireg();
+                    instruction_block->push_target_register(target_reg);
+                    arg->emit(r, assembler, context);
+                    instruction_block->pop_target_register();
+                    instruction_block->push_u64(target_reg);
                     break;
                 }
                 case element_type_t::identifier: {

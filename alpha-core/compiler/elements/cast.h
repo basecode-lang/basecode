@@ -27,6 +27,11 @@ namespace basecode::compiler {
         element* expression();
 
     protected:
+        bool on_emit(
+            common::result& r,
+            vm::assembler& assembler,
+            const emit_context_t& context) override;
+
         compiler::type* on_infer_type(const compiler::program* program) override;
 
     private:

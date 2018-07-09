@@ -19,6 +19,17 @@
 
 namespace basecode::compiler {
 
+    enum class emit_context_type_t {
+        empty,
+        procedure_type
+    };
+
+    struct emit_context_t {
+        emit_context_type_t type = emit_context_type_t::empty;
+
+        std::string procedure_identifier;
+    };
+
     class element {
     public:
         element(
@@ -31,7 +42,8 @@ namespace basecode::compiler {
 
         bool emit(
             common::result& r,
-            vm::assembler& assembler);
+            vm::assembler& assembler,
+            const emit_context_t& context);
 
         common::id_t id() const;
 
@@ -56,7 +68,8 @@ namespace basecode::compiler {
     protected:
         virtual bool on_emit(
             common::result& r,
-            vm::assembler& assembler);
+            vm::assembler& assembler,
+            const emit_context_t& context);
 
         virtual bool on_is_constant() const;
 

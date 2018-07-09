@@ -408,7 +408,8 @@ namespace basecode::compiler {
             fmt::print("\n");
         }
 
-        if (!emit_code_blocks(r))
+        emit_context_t context {};
+        if (!emit_code_blocks(r, context))
             return false;
 
         auto root_block = _assembler.root_block();
@@ -593,10 +594,13 @@ namespace basecode::compiler {
                     break;
                 }
                 case syntax::ast_node_types_t::basic_block: {
+                    // XXX: revisit this, pushing the type block scope might be problematic
+                    push_scope(proc_type->scope());
                     auto basic_block = dynamic_cast<compiler::block*>(evaluate(
                         r,
                         child_node,
                         element_type_t::proc_instance_block));
+                    pop_scope();
                     proc_type->instances().push_back(make_procedure_instance(
                         proc_type->scope(),
                         proc_type,
@@ -1065,10 +1069,12 @@ namespace basecode::compiler {
         return type;
     }
 
-    bool program::emit_code_blocks(common::result& r) {
+    bool program::emit_code_blocks(
+            common::result& r,
+            const emit_context_t& context) {
         std::function<bool (compiler::block*)> recursive_emit =
             [&](compiler::block* scope) -> bool {
-                scope->emit(r, _assembler);
+                scope->emit(r, _assembler, context);
                 for (auto block : scope->blocks()) {
                     if (!recursive_emit(block))
                         return false;

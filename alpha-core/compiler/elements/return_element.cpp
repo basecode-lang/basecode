@@ -18,22 +18,23 @@ namespace basecode::compiler {
         element* parent) : element(parent, element_type_t::return_e) {
     }
 
-    element_list_t& return_element::expressions() {
-        return _expressions;
-    }
-
-    bool return_element::on_emit(common::result& r, vm::assembler& assembler) {
+    bool return_element::on_emit(
+            common::result& r,
+            vm::assembler& assembler,
+            const emit_context_t& context) {
         auto instruction_block = assembler.current_block();
 
         for (auto expr : _expressions) {
-            // XXX: why is expr null?
-            if (expr != nullptr)
-                expr->emit(r, assembler);
+            expr->emit(r, assembler, context);
         }
 
         instruction_block->rts();
 
         return true;
+    }
+
+    element_list_t& return_element::expressions() {
+        return _expressions;
     }
 
 };

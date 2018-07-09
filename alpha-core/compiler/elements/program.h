@@ -57,7 +57,9 @@ namespace basecode::compiler {
         compiler::block* block();
 
     private:
-        bool emit_code_blocks(common::result& r);
+        bool emit_code_blocks(
+            common::result& r,
+            const emit_context_t& context);
 
         bool execute_directives(common::result& r);
 

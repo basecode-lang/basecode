@@ -27,17 +27,23 @@ namespace basecode::compiler {
 
     bool procedure_call::on_emit(
             common::result& r,
-            vm::assembler& assembler) {
+            vm::assembler& assembler,
+            const emit_context_t& context) {
         auto instruction_block = assembler.current_block();
 
         if (_arguments != nullptr)
-            _arguments->emit(r, assembler);
+            _arguments->emit(r, assembler, context);
 
         auto procedure_type = identifier()->initializer()->procedure_type();
         if (procedure_type->is_foreign()) {
             instruction_block->call_foreign(identifier()->name());
         } else {
             instruction_block->call(identifier()->name());
+        }
+
+        auto target_reg = instruction_block->current_target_register();
+        for (auto return_type : procedure_type->returns().as_list()) {
+            instruction_block->pop_u64(target_reg->reg.i);
         }
 
         return true;

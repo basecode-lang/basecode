@@ -23,6 +23,14 @@ namespace basecode::compiler {
                                      _false_branch(false_branch) {
     }
 
+    bool if_element::on_emit(
+            common::result& r,
+            vm::assembler& assembler,
+            const emit_context_t& context) {
+        _predicate->emit(r, assembler, context);
+        return true;
+    }
+
     element* if_element::predicate() {
         return _predicate;
     }

@@ -21,6 +21,18 @@ namespace basecode::compiler {
                               _value(value) {
     }
 
+    bool integer_literal::on_emit(
+            common::result& r,
+            vm::assembler& assembler,
+            const emit_context_t& context) {
+        auto instruction_block = assembler.current_block();
+        auto target_reg = instruction_block->current_target_register();
+        instruction_block->move_u32_to_ireg(
+            target_reg->reg.i,
+            static_cast<uint32_t>(_value));
+        return true;
+    }
+
     uint64_t integer_literal::value() const {
         return _value;
     }
@@ -33,14 +45,6 @@ namespace basecode::compiler {
     compiler::type* integer_literal::on_infer_type(const compiler::program* program) {
         // XXX: i'm a bad person, i should do type narrowing here
         return program->find_type_up("u32");
-    }
-
-    bool integer_literal::on_emit(common::result& r, vm::assembler& assembler) {
-        auto instruction_block = assembler.current_block();
-        auto dest_reg = instruction_block->allocate_ireg();
-        instruction_block->move_u32_to_ireg(dest_reg, static_cast<uint32_t>(_value));
-        instruction_block->free_ireg(dest_reg);
-        return true;
     }
 
 };

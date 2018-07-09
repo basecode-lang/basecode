@@ -9,6 +9,8 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <vm/instruction_block.h>
+#include "type.h"
 #include "identifier.h"
 #include "initializer.h"
 
@@ -20,6 +22,22 @@ namespace basecode::compiler {
             compiler::initializer* initializer) : element(parent, element_type_t::identifier),
                                                   _name(name),
                                                   _initializer(initializer) {
+    }
+
+    bool identifier::on_emit(
+            common::result& r,
+            vm::assembler& assembler,
+            const emit_context_t& context) {
+        if (_type->element_type() == element_type_t::namespace_type)
+            return true;
+
+        auto instruction_block = assembler.current_block();
+        auto target_reg = instruction_block->current_target_register();
+        if (target_reg == nullptr)
+            return true;
+
+        instruction_block->move_label_to_ireg(target_reg->reg.i, _name);
+        return true;
     }
 
     bool identifier::constant() const {

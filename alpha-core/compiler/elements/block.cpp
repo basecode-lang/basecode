@@ -16,6 +16,7 @@
 #include "statement.h"
 #include "initializer.h"
 #include "numeric_type.h"
+#include "procedure_type.h"
 
 namespace basecode::compiler {
 
@@ -26,20 +27,49 @@ namespace basecode::compiler {
 
     bool block::on_emit(
             common::result& r,
-            vm::assembler& assembler) {
-        auto instruction_block = assembler.make_implicit_block();
-        instruction_block->make_label(fmt::format("implicit_block_{}", id()));
-        assembler.push_block(instruction_block);
+            vm::assembler& assembler,
+            const emit_context_t& context) {
+        vm::instruction_block* instruction_block = nullptr;
+
+        switch (element_type()) {
+            case element_type_t::block:
+                instruction_block = assembler.make_implicit_block();
+                instruction_block->make_label(fmt::format(
+                    "basic_block_{}",
+                    id()));
+                assembler.push_block(instruction_block);
+                break;
+            case element_type_t::proc_type_block:
+            case element_type_t::proc_instance_block:
+                instruction_block = assembler.current_block();
+                break;
+            default:
+                return false;
+        }
+
+        for (auto ident : _identifiers.as_list()) {
+            auto init = ident->initializer();
+            if (init == nullptr)
+                continue;
+            auto procedure_type = init->procedure_type();
+            if (procedure_type != nullptr) {
+                emit_context_t proc_context = {
+                    .procedure_identifier = ident->name()
+                };
+                procedure_type->emit(r, assembler, proc_context);
+            }
+        }
 
         for (auto stmt : _statements) {
-            stmt->emit(r, assembler);
+            stmt->emit(r, assembler, context);
         }
 
         for (auto blk : _blocks) {
-            blk->emit(r, assembler);
+            blk->emit(r, assembler, context);
         }
 
-        assembler.pop_block();
+        if (element_type() == element_type_t::block)
+            assembler.pop_block();
 
         return !r.is_failed();
     }

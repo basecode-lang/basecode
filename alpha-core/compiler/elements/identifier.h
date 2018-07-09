@@ -39,6 +39,11 @@ namespace basecode::compiler {
         compiler::initializer* initializer();
 
     protected:
+        bool on_emit(
+            common::result& r,
+            vm::assembler& assembler,
+            const emit_context_t& context) override;
+
         bool on_as_bool(bool& value) const override;
 
         bool on_as_float(double& value) const override;

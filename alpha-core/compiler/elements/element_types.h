@@ -384,6 +384,8 @@ namespace basecode::compiler {
             return _types.size();
         }
 
+        type_list_t as_list() const;
+
         void add(compiler::type* type);
 
         bool remove(const std::string& name);

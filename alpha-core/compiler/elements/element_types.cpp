@@ -143,6 +143,14 @@ namespace basecode::compiler {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    type_list_t type_map_t::as_list() const {
+        type_list_t list {};
+        for (const auto& it : _types) {
+            list.push_back(it.second);
+        }
+        return list;
+    }
+
     void type_map_t::add(compiler::type* type) {
         _types.insert(std::make_pair(type->name(), type));
     }

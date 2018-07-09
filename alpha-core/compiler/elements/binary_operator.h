@@ -11,6 +11,7 @@
 
 #pragma once
 
+#include <vm/instruction_block.h>
 #include "operator_base.h"
 #include "element_types.h"
 
@@ -31,7 +32,14 @@ namespace basecode::compiler {
     protected:
         bool on_emit(
             common::result& r,
-            vm::assembler& assembler) override;
+            vm::assembler& assembler,
+            const emit_context_t& context) override;
+
+        void emit_relational_operator(
+            common::result& r,
+            vm::assembler& assembler,
+            const emit_context_t& context,
+            vm::instruction_block* instruction_block);
 
         bool on_is_constant() const override;
 

@@ -9,7 +9,6 @@
 //
 // ----------------------------------------------------------------------------
 
-#include <vm/instruction_block.h>
 #include "program.h"
 #include "identifier.h"
 #include "binary_operator.h"
@@ -27,29 +26,52 @@ namespace basecode::compiler {
 
     bool binary_operator::on_emit(
             common::result& r,
-            vm::assembler& assembler) {
+            vm::assembler& assembler,
+            const emit_context_t& context) {
         auto instruction_block = assembler.current_block();
         switch (operator_type()) {
             case operator_type_t::add: {
+                auto result_reg = instruction_block->current_target_register();
+
                 auto lhs_reg = instruction_block->allocate_ireg();
-                _lhs->emit(r, assembler);
+                instruction_block->push_target_register(lhs_reg);
+                _lhs->emit(r, assembler, context);
+                instruction_block->pop_target_register();
 
                 auto rhs_reg = instruction_block->allocate_ireg();
-                _rhs->emit(r, assembler);
+                instruction_block->push_target_register(rhs_reg);
+                _rhs->emit(r, assembler, context);
+                instruction_block->pop_target_register();
 
-                instruction_block->add_ireg_by_ireg_u64(lhs_reg, lhs_reg, rhs_reg);
+                instruction_block->add_ireg_by_ireg_u64(
+                    result_reg->reg.i,
+                    lhs_reg,
+                    rhs_reg);
+
+                instruction_block->free_ireg(lhs_reg);
+                instruction_block->free_ireg(rhs_reg);
                 break;
             }
             case operator_type_t::subtract: {
+                auto result_reg = instruction_block->current_target_register();
+
                 auto lhs_reg = instruction_block->allocate_ireg();
-                if (_lhs != nullptr)
-                    _lhs->emit(r, assembler);
+                instruction_block->push_target_register(lhs_reg);
+                _lhs->emit(r, assembler, context);
+                instruction_block->pop_target_register();
 
                 auto rhs_reg = instruction_block->allocate_ireg();
-                if (_rhs != nullptr)
-                    _rhs->emit(r, assembler);
+                instruction_block->push_target_register(rhs_reg);
+                _rhs->emit(r, assembler, context);
+                instruction_block->pop_target_register();
 
-                instruction_block->sub_ireg_by_ireg_u64(lhs_reg, lhs_reg, rhs_reg);
+                instruction_block->sub_ireg_by_ireg_u64(
+                    result_reg->reg.i,
+                    lhs_reg,
+                    rhs_reg);
+
+                instruction_block->free_ireg(lhs_reg);
+                instruction_block->free_ireg(rhs_reg);
                 break;
             }
             case operator_type_t::multiply:
@@ -59,22 +81,21 @@ namespace basecode::compiler {
             case operator_type_t::modulo:
                 break;
             case operator_type_t::equals:
-                break;
-            case operator_type_t::not_equals:
-                break;
-            case operator_type_t::greater_than:
-                break;
             case operator_type_t::less_than:
-                break;
-            case operator_type_t::greater_than_or_equal:
-                break;
-            case operator_type_t::less_than_or_equal:
-                break;
+            case operator_type_t::not_equals:
             case operator_type_t::logical_or:
-                break;
             case operator_type_t::logical_and:
+            case operator_type_t::greater_than:
+            case operator_type_t::less_than_or_equal:
+            case operator_type_t::greater_than_or_equal: {
+                emit_relational_operator(r, assembler, context, instruction_block);
+                break;
+            }
+            case operator_type_t::exponent:
                 break;
             case operator_type_t::binary_or:
+                break;
+            case operator_type_t::shift_left:
                 break;
             case operator_type_t::binary_and:
                 break;
@@ -82,25 +103,23 @@ namespace basecode::compiler {
                 break;
             case operator_type_t::shift_right:
                 break;
-            case operator_type_t::shift_left:
-                break;
             case operator_type_t::rotate_right:
                 break;
             case operator_type_t::rotate_left:
                 break;
-            case operator_type_t::exponent:
-                break;
             case operator_type_t::assignment: {
-                // XXX:
-                auto ident = dynamic_cast<compiler::identifier*>(_lhs);
                 auto lhs_reg = instruction_block->allocate_ireg();
-                instruction_block->move_label_to_ireg(lhs_reg, ident->name());
+                instruction_block->push_target_register(lhs_reg);
+                _lhs->emit(r, assembler, context);
+                instruction_block->pop_target_register();
 
-                // XXX: how to link up the rhs_reg with the code generated?
                 auto rhs_reg = instruction_block->allocate_ireg();
-                _rhs->emit(r, assembler);
+                instruction_block->push_target_register(rhs_reg);
+                _rhs->emit(r, assembler, context);
+                instruction_block->pop_target_register();
 
                 instruction_block->store_from_ireg_u64(rhs_reg, lhs_reg);
+                instruction_block->pop_target_register();
 
                 instruction_block->free_ireg(lhs_reg);
                 instruction_block->free_ireg(rhs_reg);
@@ -118,6 +137,58 @@ namespace basecode::compiler {
 
     element* binary_operator::rhs() {
         return _rhs;
+    }
+
+    void binary_operator::emit_relational_operator(
+            common::result& r,
+            vm::assembler& assembler,
+            const emit_context_t& context,
+            vm::instruction_block* instruction_block) {
+        auto lhs_reg = instruction_block->allocate_ireg();
+        instruction_block->push_target_register(lhs_reg);
+        _lhs->emit(r, assembler, context);
+        instruction_block->pop_target_register();
+
+        auto rhs_reg = instruction_block->allocate_ireg();
+        instruction_block->push_target_register(rhs_reg);
+        _rhs->emit(r, assembler, context);
+        instruction_block->pop_target_register();
+
+        instruction_block->cmp_u64(lhs_reg, rhs_reg);
+
+        switch (operator_type()) {
+            case operator_type_t::equals: {
+                instruction_block->beq("temp_lbl");
+                break;
+            }
+            case operator_type_t::less_than: {
+                break;
+            }
+            case operator_type_t::not_equals: {
+                break;
+            }
+            case operator_type_t::logical_or: {
+                break;
+            }
+            case operator_type_t::logical_and: {
+                break;
+            }
+            case operator_type_t::greater_than: {
+                break;
+            }
+            case operator_type_t::less_than_or_equal: {
+                break;
+            }
+            case operator_type_t::greater_than_or_equal: {
+                break;
+            }
+            default: {
+                break;
+            }
+        }
+
+        instruction_block->free_ireg(lhs_reg);
+        instruction_block->free_ireg(rhs_reg);
     }
 
     bool binary_operator::on_is_constant() const {

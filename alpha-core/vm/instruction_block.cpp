@@ -187,6 +187,31 @@ namespace basecode::vm {
         _instructions.push_back(move_op);
     }
 
+    // not variations
+    void instruction_block::not_u8(
+            i_registers_t dest_reg,
+            i_registers_t src_reg) {
+        make_not_instruction(op_sizes::byte, dest_reg, src_reg);
+    }
+
+    void instruction_block::not_u16(
+            i_registers_t dest_reg,
+            i_registers_t src_reg) {
+        make_not_instruction(op_sizes::word, dest_reg, src_reg);
+    }
+
+    void instruction_block::not_u32(
+            i_registers_t dest_reg,
+            i_registers_t src_reg) {
+        make_not_instruction(op_sizes::dword, dest_reg, src_reg);
+    }
+
+    void instruction_block::not_u64(
+            i_registers_t dest_reg,
+            i_registers_t src_reg) {
+        make_not_instruction(op_sizes::qword, dest_reg, src_reg);
+    }
+
     // neg variations
     void instruction_block::neg_u8(
             i_registers_t dest_reg,
@@ -365,6 +390,21 @@ namespace basecode::vm {
         _instructions.push_back(trap_op);
     }
 
+    void instruction_block::make_not_instruction(
+            op_sizes size,
+            i_registers_t dest_reg,
+            i_registers_t src_reg) {
+        instruction_t not_op;
+        not_op.op = op_codes::not_op;
+        not_op.size = size;
+        not_op.operands_count = 2;
+        not_op.operands[0].type = operand_encoding_t::flags::reg | operand_encoding_t::flags::integer;
+        not_op.operands[0].value.r8 = dest_reg;
+        not_op.operands[1].type = operand_encoding_t::flags::reg | operand_encoding_t::flags::integer;
+        not_op.operands[1].value.r8 = src_reg;
+        _instructions.push_back(not_op);
+    }
+
     void instruction_block::make_neg_instruction(
             op_sizes size,
             i_registers_t dest_reg,
@@ -517,8 +557,62 @@ namespace basecode::vm {
         _instructions.push_back(store_op);
     }
 
+    void instruction_block::pop_target_register() {
+        if (_target_registers.empty())
+            return;
+        _target_registers.pop();
+    }
+
     instruction_block* instruction_block::parent() {
         return _parent;
+    }
+
+    void instruction_block::make_add_instruction(
+            op_sizes size,
+            i_registers_t dest_reg,
+            i_registers_t augend_reg,
+            i_registers_t addend_reg) {
+        instruction_t add_op;
+        add_op.op = op_codes::add;
+        add_op.size = size;
+        add_op.operands_count = 3;
+        add_op.operands[0].type =
+            operand_encoding_t::flags::integer
+            | operand_encoding_t::flags::reg;
+        add_op.operands[0].value.r8 = dest_reg;
+        add_op.operands[1].type =
+            operand_encoding_t::flags::integer
+            | operand_encoding_t::flags::reg;
+        add_op.operands[1].value.r8 = augend_reg;
+        add_op.operands[2].type =
+            operand_encoding_t::flags::integer
+            | operand_encoding_t::flags::reg;
+        add_op.operands[2].value.r8 = addend_reg;
+        _instructions.push_back(add_op);
+    }
+
+    void instruction_block::make_sub_instruction(
+            op_sizes size,
+            i_registers_t dest_reg,
+            i_registers_t minuend_reg,
+            i_registers_t subtrahend_reg) {
+        instruction_t sub_op;
+        sub_op.op = op_codes::sub;
+        sub_op.size = size;
+        sub_op.operands_count = 3;
+        sub_op.operands[0].type =
+            operand_encoding_t::flags::integer
+            | operand_encoding_t::flags::reg;
+        sub_op.operands[0].value.r8 = dest_reg;
+        sub_op.operands[1].type =
+            operand_encoding_t::flags::integer
+            | operand_encoding_t::flags::reg;
+        sub_op.operands[1].value.r8 = minuend_reg;
+        sub_op.operands[2].type =
+            operand_encoding_t::flags::integer
+            | operand_encoding_t::flags::reg;
+        sub_op.operands[2].value.r8 = subtrahend_reg;
+        _instructions.push_back(sub_op);
     }
 
     // swap variations
@@ -612,6 +706,32 @@ namespace basecode::vm {
         }
         _used_float_registers.insert(f_registers_t::f0);
         return *_used_float_registers.begin();
+    }
+
+    // cmp variations
+    void instruction_block::cmp_u64(
+            i_registers_t lhs_reg,
+            i_registers_t rhs_reg) {
+        make_cmp_instruction(op_sizes::qword, lhs_reg, rhs_reg);
+    }
+
+    void instruction_block::make_cmp_instruction(
+            op_sizes size,
+            i_registers_t lhs_reg,
+            i_registers_t rhs_reg) {
+        instruction_t cmp_op;
+        cmp_op.op = op_codes::cmp;
+        cmp_op.size = size;
+        cmp_op.operands_count = 2;
+        cmp_op.operands[0].type =
+            operand_encoding_t::flags::integer
+            | operand_encoding_t::flags::reg;
+        cmp_op.operands[0].value.r8 = lhs_reg;
+        cmp_op.operands[1].type =
+            operand_encoding_t::flags::integer
+            | operand_encoding_t::flags::reg;
+        cmp_op.operands[1].value.r8 = rhs_reg;
+        _instructions.push_back(cmp_op);
     }
 
     // inc variations
@@ -755,6 +875,34 @@ namespace basecode::vm {
         return _type;
     }
 
+    void instruction_block::comment(const std::string& value) {
+        auto index = _instructions.size();
+        auto it = _comments.find(index);
+        if (it == _comments.end()) {
+            instruction_comments_t comments {};
+            comments.lines.push_back(value);
+            _comments.insert(std::make_pair(index, comments));
+        } else {
+            auto& comments = it->second;
+            comments.lines.push_back(value);
+        }
+    }
+
+    void instruction_block::beq(const std::string& label_name) {
+        auto label_ref = make_unresolved_label_ref(label_name);
+
+        instruction_t branch_op;
+        branch_op.op = op_codes::beq;
+        branch_op.size = op_sizes::qword;
+        branch_op.operands_count = 1;
+        branch_op.operands[0].type =
+            operand_encoding_t::flags::integer
+            | operand_encoding_t::flags::constant
+            | operand_encoding_t::flags::unresolved;
+        branch_op.operands[0].value.u64 = label_ref->id;
+        _instructions.push_back(branch_op);
+    }
+
     void instruction_block::call(const std::string& proc_name) {
         auto label_ref = make_unresolved_label_ref(proc_name);
 
@@ -788,6 +936,11 @@ namespace basecode::vm {
     }
 
     void instruction_block::disassemble(instruction_block* block) {
+        for (const auto& it : block->_comments) {
+            for (const auto& line : it.second.lines) {
+                fmt::print("; {}\n", line);
+            }
+        }
         for (const auto& it : block->_labels) {
             fmt::print("{}:\n", it.first);
         }
@@ -812,6 +965,32 @@ namespace basecode::vm {
         if (it == _blocks.end())
             return;
         _blocks.erase(it);
+    }
+
+    target_register_t* instruction_block::current_target_register() {
+        if (_target_registers.empty())
+            return nullptr;
+        return &_target_registers.top();
+    }
+
+    void instruction_block::push_target_register(i_registers_t reg) {
+        target_register_t target {
+            .type = target_register_type_t::integer,
+            .reg = {
+                .i = reg
+            }
+        };
+        _target_registers.push(target);
+    }
+
+    void instruction_block::push_target_register(f_registers_t reg) {
+        target_register_t target {
+            .type = target_register_type_t::floating_point,
+            .reg = {
+                .f = reg
+            }
+        };
+        _target_registers.push(target);
     }
 
     vm::label* instruction_block::make_label(const std::string& name) {
@@ -987,54 +1166,6 @@ namespace basecode::vm {
             | operand_encoding_t::flags::constant;
         push_op.operands[0].value.u64 = value;
         _instructions.push_back(push_op);
-    }
-
-    void instruction_block::make_add_instruction(
-            op_sizes size,
-            i_registers_t dest_reg,
-            i_registers_t augend_reg,
-            i_registers_t addend_reg) {
-        instruction_t add_op;
-        add_op.op = op_codes::add;
-        add_op.size = size;
-        add_op.operands_count = 3;
-        add_op.operands[0].type =
-            operand_encoding_t::flags::integer
-            | operand_encoding_t::flags::reg;
-        add_op.operands[0].value.r8 = dest_reg;
-        add_op.operands[1].type =
-            operand_encoding_t::flags::integer
-            | operand_encoding_t::flags::reg;
-        add_op.operands[1].value.r8 = augend_reg;
-        add_op.operands[2].type =
-            operand_encoding_t::flags::integer
-            | operand_encoding_t::flags::reg;
-        add_op.operands[2].value.r8 = addend_reg;
-        _instructions.push_back(add_op);
-    }
-
-    void instruction_block::make_sub_instruction(
-            op_sizes size,
-            i_registers_t dest_reg,
-            i_registers_t minuend_reg,
-            i_registers_t subtrahend_reg) {
-        instruction_t sub_op;
-        sub_op.op = op_codes::sub;
-        sub_op.size = size;
-        sub_op.operands_count = 3;
-        sub_op.operands[0].type =
-            operand_encoding_t::flags::integer
-            | operand_encoding_t::flags::reg;
-        sub_op.operands[0].value.r8 = dest_reg;
-        sub_op.operands[1].type =
-            operand_encoding_t::flags::integer
-            | operand_encoding_t::flags::reg;
-        sub_op.operands[1].value.r8 = minuend_reg;
-        sub_op.operands[2].type =
-            operand_encoding_t::flags::integer
-            | operand_encoding_t::flags::reg;
-        sub_op.operands[2].value.r8 = subtrahend_reg;
-        _instructions.push_back(sub_op);
     }
 
 };

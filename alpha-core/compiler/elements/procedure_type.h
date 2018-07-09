@@ -38,6 +38,11 @@ namespace basecode::compiler {
         procedure_instance_list_t& instances();
 
     protected:
+        bool on_emit(
+            common::result& r,
+            vm::assembler& assembler,
+            const emit_context_t& context) override;
+
         bool on_initialize(
             common::result& r,
             compiler::program* program) override;

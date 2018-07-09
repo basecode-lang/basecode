@@ -21,6 +21,15 @@ namespace basecode::compiler {
                              _type(type) {
     }
 
+    bool cast::on_emit(
+            common::result& r,
+            vm::assembler& assembler,
+            const emit_context_t& context) {
+        if (_expression == nullptr)
+            return true;
+        return _expression->emit(r, assembler, context);
+    }
+
     element* cast::expression() {
         return _expression;
     }

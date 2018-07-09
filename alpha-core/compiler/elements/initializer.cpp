@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <vm/instruction_block.h>
 #include "initializer.h"
 #include "procedure_type.h"
 #include "binary_operator.h"
@@ -19,6 +20,13 @@ namespace basecode::compiler {
             element* parent,
             element* expr) : element(parent, element_type_t::initializer),
                              _expr(expr) {
+    }
+
+    bool initializer::on_emit(
+            common::result& r,
+            vm::assembler& assembler,
+            const emit_context_t& context) {
+        return true;
     }
 
     element* initializer::expression() {

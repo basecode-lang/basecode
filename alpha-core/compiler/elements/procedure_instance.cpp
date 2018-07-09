@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include "block.h"
 #include "procedure_instance.h"
 
 namespace basecode::compiler {
@@ -23,8 +24,9 @@ namespace basecode::compiler {
 
     bool procedure_instance::on_emit(
             common::result& r,
-            vm::assembler& assembler) {
-        return element::on_emit(r, assembler);
+            vm::assembler& assembler,
+            const emit_context_t& context) {
+        return _scope->emit(r, assembler, context);
     }
 
     block* procedure_instance::scope() {

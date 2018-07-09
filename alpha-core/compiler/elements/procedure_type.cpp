@@ -9,8 +9,10 @@
 //
 // ----------------------------------------------------------------------------
 
-#include "procedure_type.h"
+#include <vm/instruction_block.h>
+#include "block.h"
 #include "field.h"
+#include "procedure_type.h"
 
 namespace basecode::compiler {
 
@@ -21,6 +23,25 @@ namespace basecode::compiler {
                                                   element_type_t::proc_type,
                                                   name),
                                    _scope(scope) {
+    }
+
+    bool procedure_type::on_emit(
+            common::result& r,
+            vm::assembler& assembler,
+            const emit_context_t& context) {
+        if (is_foreign())
+            return true;
+
+        auto instruction_block = assembler.make_procedure_block();
+        auto proc_label = name();
+        if (!context.procedure_identifier.empty())
+            proc_label = context.procedure_identifier;
+        instruction_block->make_label(proc_label);
+        assembler.push_block(instruction_block);
+        _scope->emit(r, assembler, context);
+        assembler.pop_block();
+
+        return true;
     }
 
     bool procedure_type::on_initialize(

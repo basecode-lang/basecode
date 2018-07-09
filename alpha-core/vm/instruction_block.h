@@ -12,6 +12,7 @@
 #pragma once
 
 #include <map>
+#include <stack>
 #include <string>
 #include <vector>
 #include "terp.h"
@@ -19,9 +20,26 @@
 
 namespace basecode::vm {
 
+    enum class target_register_type_t {
+        integer,
+        floating_point
+    };
+
+    struct target_register_t {
+        target_register_type_t type;
+        union {
+            i_registers_t i;
+            f_registers_t f;
+        } reg;
+    };
+
     enum class instruction_block_type_t {
         implicit,
         procedure
+    };
+
+    struct instruction_comments_t {
+        std::vector<std::string> lines {};
     };
 
     class instruction_block {
@@ -45,6 +63,33 @@ namespace basecode::vm {
         void clear_labels();
 
         void clear_blocks();
+
+        void pop_target_register();
+
+        void comment(const std::string& value);
+
+        target_register_t* current_target_register();
+
+        void push_target_register(i_registers_t reg);
+
+        void push_target_register(f_registers_t reg);
+
+        // not variations
+        void not_u8(
+            i_registers_t dest_reg,
+            i_registers_t src_reg);
+
+        void not_u16(
+            i_registers_t dest_reg,
+            i_registers_t src_reg);
+
+        void not_u32(
+            i_registers_t dest_reg,
+            i_registers_t src_reg);
+
+        void not_u64(
+            i_registers_t dest_reg,
+            i_registers_t src_reg);
 
         // neg variations
         void neg_u8(
@@ -139,6 +184,14 @@ namespace basecode::vm {
             const std::string& label_name);
 
         instruction_block* parent();
+
+        // branches
+        void beq(const std::string& label_name);
+
+        // cmp variations
+        void cmp_u64(
+            i_registers_t lhs_reg,
+            i_registers_t rhs_reg);
 
         // inc variations
         void inc_u8(i_registers_t reg);
@@ -398,6 +451,16 @@ namespace basecode::vm {
         void jump_direct(const std::string& label_name);
 
     private:
+        void make_cmp_instruction(
+            op_sizes size,
+            i_registers_t lhs_reg,
+            i_registers_t rhs_reg);
+
+        void make_not_instruction(
+            op_sizes size,
+            i_registers_t dest_reg,
+            i_registers_t src_reg);
+
         void make_neg_instruction(
             op_sizes size,
             i_registers_t dest_reg,
@@ -490,7 +553,9 @@ namespace basecode::vm {
         std::vector<instruction_t> _instructions {};
         std::map<std::string, vm::label*> _labels {};
         std::set<f_registers_t> _used_float_registers {};
+        std::stack<target_register_t> _target_registers {};
         std::set<i_registers_t> _used_integer_registers {};
+        std::map<size_t, instruction_comments_t> _comments {};
         std::map<std::string, size_t> _label_to_instruction_map {};
         std::unordered_map<common::id_t, label_ref_t> _unresolved_labels {};
         std::unordered_map<std::string, common::id_t> _label_to_unresolved_ids {};
