@@ -33,8 +33,8 @@ namespace basecode::compiler {
             assembler,
             emit_context_t::for_if_element(
                 context,
-                fmt::format("basic_block_{}", _true_branch->id()),
-                fmt::format("basic_block_{}", _false_branch->id())));
+                _true_branch->label_name(),
+                _false_branch->label_name()));
         return true;
     }
 

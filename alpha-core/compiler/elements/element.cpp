@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <fmt/format.h>
 #include <common/id_pool.h>
 #include "type.h"
 #include "element.h"
@@ -51,6 +52,13 @@ namespace basecode::compiler {
 
     attribute_map_t& element::attributes() {
         return _attributes;
+    }
+
+    std::string element::label_name() const {
+        return fmt::format(
+            "{}_{}",
+            element_type_name(_element_type),
+            _id);
     }
 
     bool element::on_fold(common::result& r) {

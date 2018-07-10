@@ -11,6 +11,7 @@
 
 #pragma once
 
+#include <functional>
 #include "block.h"
 
 namespace basecode::compiler {

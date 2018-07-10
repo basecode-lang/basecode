@@ -28,6 +28,8 @@ namespace basecode::compiler {
             switch (arg->element_type()) {
                 case element_type_t::proc_call:
                 case element_type_t::expression:
+                case element_type_t::identifier:
+                case element_type_t::string_literal:
                 case element_type_t::unary_operator:
                 case element_type_t::binary_operator: {
                     auto target_reg = instruction_block->allocate_ireg();
@@ -36,24 +38,6 @@ namespace basecode::compiler {
                     instruction_block->pop_target_register();
                     instruction_block->push_u64(target_reg);
                     instruction_block->free_ireg(target_reg);
-                    break;
-                }
-                case element_type_t::identifier: {
-                    auto target_reg = instruction_block->allocate_ireg();
-                    instruction_block->push_target_register(target_reg);
-                    arg->emit(r, assembler, context);
-                    instruction_block->pop_target_register();
-                    instruction_block->push_u64(target_reg);
-                    instruction_block->free_ireg(target_reg);
-                    break;
-                }
-                case element_type_t::string_literal: {
-                    auto reg = instruction_block->allocate_ireg();
-                    instruction_block->move_label_to_ireg(
-                        reg,
-                        fmt::format("_str_constant_{}", arg->id()));
-                    instruction_block->push_u64(reg);
-                    instruction_block->free_ireg(reg);
                     break;
                 }
                 case element_type_t::float_literal: {

@@ -57,8 +57,14 @@ namespace basecode::vm {
         if (_block_stack.empty())
             return nullptr;
         auto top = _block_stack.top();
+        if (top->type() == instruction_block_type_t::procedure && _procedure_block_count > 0)
+            _procedure_block_count--;
         _block_stack.pop();
         return top;
+    }
+
+    bool assembler::in_procedure_scope() const {
+        return _procedure_block_count > 0;
     }
 
     segment_list_t assembler::segments() const {
@@ -81,6 +87,8 @@ namespace basecode::vm {
 
     void assembler::push_block(instruction_block* block) {
         _block_stack.push(block);
+        if (block->type() == instruction_block_type_t::procedure)
+            _procedure_block_count++;
     }
 
     void assembler::add_new_block(instruction_block* block) {

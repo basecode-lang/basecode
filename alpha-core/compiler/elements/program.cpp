@@ -10,8 +10,8 @@
 // ----------------------------------------------------------------------------
 
 #include <vm/terp.h>
-#include <vm/instruction_block.h>
 #include <fmt/format.h>
+#include <vm/instruction_block.h>
 #include "type.h"
 #include "cast.h"
 #include "label.h"
@@ -264,6 +264,7 @@ namespace basecode::compiler {
                                 block_scope,
                                 fmt::format("_{}", count++),
                                 nullptr);
+                            return_identifier->usage(identifier_usage_t::stack);
                             return_identifier->type(find_type_up(type_node->children[0]->token.value));
                             proc_type->returns().add(make_field(block_scope, return_identifier));
                             break;
@@ -284,7 +285,7 @@ namespace basecode::compiler {
                                 symbol_node,
                                 param_node->rhs,
                                 block_scope);
-                            param_identifier->stack_based(true);
+                            param_identifier->usage(identifier_usage_t::stack);
                             auto field = make_field(block_scope, param_identifier);
                             proc_type->parameters().add(field);
                             break;
@@ -295,7 +296,7 @@ namespace basecode::compiler {
                                 param_node,
                                 nullptr,
                                 block_scope);
-                            param_identifier->stack_based(true);
+                            param_identifier->usage(identifier_usage_t::stack);
                             auto field = make_field(block_scope, param_identifier);
                             proc_type->parameters().add(field);
                             break;
@@ -383,19 +384,44 @@ namespace basecode::compiler {
         if (!compile_module(r, root))
             return false;
 
-        if (!execute_directives(r))
-            return false;
+        // process directives
+        visit_blocks(r, [&](compiler::block* scope) {
+            for (auto stmt : scope->statements()) {
+                if (stmt->expression()->element_type() == element_type_t::directive) {
+                    auto directive_element = dynamic_cast<compiler::directive*>(stmt->expression());
+                    if (!directive_element->execute(r, this))
+                        return false;
+                }
+            }
+            return true;
+        });
 
-        if (!resolve_unknown_identifiers(r))
-            return false;
+        // resolve unknown identifiers
+        visit_blocks(r, [&](compiler::block* scope) {
+            return true;
+        });
 
         if (!resolve_unknown_types(r))
             return false;
 
-        if (!build_data_segments(r))
-            return false;
+        // build data segments
+        string_set_t interned_strings {};
+        visit_blocks(r, [&](compiler::block* scope) {
+            if (scope->element_type() == element_type_t::proc_type_block
+            ||  scope->element_type() == element_type_t::proc_instance_block) {
+                return true;
+            }
+            scope->define_data(r, interned_strings, _assembler);
+            return true;
+        });
 
-        fmt::print("\n");
+        emit_context_t context {};
+        visit_blocks(r, [&](compiler::block* scope) {
+            scope->emit(r, _assembler, context);
+            return true;
+        });
+
+        fmt::print("\n\n");
         auto segments = _assembler.segments();
         for (auto segment : segments) {
             fmt::print(
@@ -412,12 +438,10 @@ namespace basecode::compiler {
             fmt::print("\n");
         }
 
-        emit_context_t context {};
-        if (!emit_code_blocks(r, context))
-            return false;
-
         auto root_block = _assembler.root_block();
         root_block->disassemble();
+
+        fmt::print("\n");
 
         return !r.is_failed();
     }
@@ -867,9 +891,11 @@ namespace basecode::compiler {
                     auto ns = dynamic_cast<namespace_element*>(expr);
                     scope = dynamic_cast<compiler::block*>(ns->expression());
                 } else {
-                    // XXX: what should really be happening here
-                    //      if the scope isn't a namespace, is that an error?
-                    break;
+                    r.add_message(
+                        "P018",
+                        "only a namespace is valid within a qualified name.",
+                        true);
+                    return nullptr;
                 }
             }
         }
@@ -903,7 +929,6 @@ namespace basecode::compiler {
         }
 
         new_identifier->constant(symbol->is_constant_expression());
-        new_identifier->stack_based(within_procedure_scope(scope));
 
         scope->identifiers().add(new_identifier);
 
@@ -925,6 +950,22 @@ namespace basecode::compiler {
         auto cast = new compiler::cast(parent_scope, type, expr);
         _elements.insert(std::make_pair(cast->id(), cast));
         return cast;
+    }
+
+    bool program::visit_blocks(
+            common::result& r,
+            const block_visitor_callable& callable) {
+        std::function<bool (compiler::block*)> recursive_execute =
+            [&](compiler::block* scope) -> bool {
+                if (!callable(scope))
+                    return false;
+                for (auto block : scope->blocks()) {
+                    if (!recursive_execute(block))
+                        return false;
+                }
+                return true;
+            };
+        return recursive_execute(block());
     }
 
     void program::apply_attributes(
@@ -1075,63 +1116,6 @@ namespace basecode::compiler {
         return type;
     }
 
-    bool program::emit_code_blocks(
-            common::result& r,
-            const emit_context_t& context) {
-        std::function<bool (compiler::block*)> recursive_emit =
-            [&](compiler::block* scope) -> bool {
-                scope->emit(r, _assembler, context);
-                for (auto block : scope->blocks()) {
-                    if (!recursive_emit(block))
-                        return false;
-                }
-                return true;
-            };
-        // auto program_instruction_block = _assembler.new_instruction_block("some_lbl");
-        return recursive_emit(block());
-    }
-
-    bool program::execute_directives(common::result& r) {
-        std::function<bool (compiler::block*)> recursive_execute =
-            [&](compiler::block* scope) -> bool {
-                for (auto stmt : scope->statements()) {
-                    if (stmt->expression()->element_type() == element_type_t::directive) {
-                        auto directive_element = dynamic_cast<compiler::directive*>(stmt->expression());
-                        if (!directive_element->execute(r, this))
-                            return false;
-                    }
-                }
-                for (auto block : scope->blocks()) {
-                    if (!recursive_execute(block))
-                        return false;
-                }
-                return true;
-            };
-        return recursive_execute(block());
-    }
-
-    bool program::build_data_segments(common::result& r) {
-        string_set_t interned_strings {};
-
-        std::function<bool (compiler::block*)> recursive_execute =
-            [&](compiler::block* scope) -> bool {
-                if (scope->element_type() == element_type_t::proc_type_block
-                ||  scope->element_type() == element_type_t::proc_instance_block)
-                    return true;
-                scope->define_data(r, interned_strings, _assembler);
-                for (auto block : scope->blocks()) {
-                    if (!recursive_execute(block))
-                        return false;
-                }
-                return true;
-            };
-        recursive_execute(block());
-
-        // take string literal struct-thingy and dump to segment
-
-        return true;
-    }
-
     void program::add_type_to_scope(compiler::type* type) {
         current_scope()->types().add(type);
     }
@@ -1192,44 +1176,6 @@ namespace basecode::compiler {
         return _identifiers_with_unknown_types.empty();
     }
 
-    bool program::resolve_unknown_identifiers(common::result& r) {
-        return true;
-    }
-
-    compiler::type* program::find_type_down(const std::string& name) {
-        std::function<compiler::type* (compiler::block*)> recursive_find =
-            [&](compiler::block* scope) -> compiler::type* {
-                auto matching_type = scope->types().find(name);
-                if (matching_type != nullptr)
-                    return matching_type;
-                auto type_identifier = scope->identifiers().find(name);
-                if (type_identifier != nullptr)
-                    return type_identifier->type();
-                for (auto block : scope->blocks()) {
-                    auto* type = recursive_find(block);
-                    if (type != nullptr)
-                        return type;
-                }
-
-                return nullptr;
-            };
-        return recursive_find(block());
-    }
-
-    compiler::type* program::find_type_up(const std::string& name) const {
-        auto scope = current_scope();
-        while (scope != nullptr) {
-            auto type = scope->types().find(name);
-            if (type != nullptr)
-                return type;
-            auto type_identifier = scope->identifiers().find(name);
-            if (type_identifier != nullptr)
-                return type_identifier->type();
-            scope = dynamic_cast<compiler::block*>(scope->parent());
-        }
-        return nullptr;
-    }
-
     namespace_type* program::make_namespace_type(
             common::result& r,
             compiler::block* parent_scope) {
@@ -1285,6 +1231,40 @@ namespace basecode::compiler {
             result.array_size);
         _identifiers_with_unknown_types.push_back(identifier);
         return unknown_type;
+    }
+
+    compiler::type* program::find_type_down(const std::string& name) {
+        std::function<compiler::type* (compiler::block*)> recursive_find =
+            [&](compiler::block* scope) -> compiler::type* {
+                auto matching_type = scope->types().find(name);
+                if (matching_type != nullptr)
+                    return matching_type;
+                auto type_identifier = scope->identifiers().find(name);
+                if (type_identifier != nullptr)
+                    return type_identifier->type();
+                for (auto block : scope->blocks()) {
+                    auto* type = recursive_find(block);
+                    if (type != nullptr)
+                        return type;
+                }
+
+                return nullptr;
+            };
+        return recursive_find(block());
+    }
+
+    compiler::type* program::find_type_up(const std::string& name) const {
+        auto scope = current_scope();
+        while (scope != nullptr) {
+            auto type = scope->types().find(name);
+            if (type != nullptr)
+                return type;
+            auto type_identifier = scope->identifiers().find(name);
+            if (type_identifier != nullptr)
+                return type_identifier->type();
+            scope = dynamic_cast<compiler::block*>(scope->parent());
+        }
+        return nullptr;
     }
 
     bool program::within_procedure_scope(compiler::block* parent_scope) const {

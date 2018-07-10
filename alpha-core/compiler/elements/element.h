@@ -49,7 +49,6 @@ namespace basecode::compiler {
             data->false_branch_label = false_branch_label;
             return emit_context_t {
                 .type = emit_context_type_t::if_element,
-                .in_procedure_scope = parent_context.in_procedure_scope,
                 .data = {
                     .if_data = data
                 }
@@ -63,7 +62,6 @@ namespace basecode::compiler {
             data->identifier_name = name;
             return emit_context_t {
                 .type = emit_context_type_t::procedure_type,
-                .in_procedure_scope = true,
                 .data = {
                     .procedure_type = data
                 }
@@ -74,7 +72,6 @@ namespace basecode::compiler {
             return emit_context_t {
                 .access_type = emit_access_type_t::read,
                 .type = parent_context.type,
-                .in_procedure_scope = parent_context.in_procedure_scope
             };
         }
 
@@ -82,26 +79,24 @@ namespace basecode::compiler {
             return emit_context_t {
                 .access_type = emit_access_type_t::write,
                 .type = parent_context.type,
-                .in_procedure_scope = parent_context.in_procedure_scope
             };
         }
 
         ~emit_context_t() {
             switch (type) {
-                case emit_context_type_t::empty:
-                    break;
                 case emit_context_type_t::if_element:
                     delete data.if_data;
                     break;
                 case emit_context_type_t::procedure_type:
                     delete data.procedure_type;
                     break;
+                default:
+                    break;
             }
         }
 
         emit_access_type_t access_type = emit_access_type_t::read;
         emit_context_type_t type = emit_context_type_t::empty;
-        bool in_procedure_scope = false;
         union {
             if_data_t* if_data;
             procedure_type_data_t* procedure_type;
@@ -116,12 +111,12 @@ namespace basecode::compiler {
 
         virtual ~element();
 
-        element* parent();
-
         bool emit(
             common::result& r,
             vm::assembler& assembler,
             const emit_context_t& context);
+
+        element* parent();
 
         common::id_t id() const;
 
@@ -136,6 +131,8 @@ namespace basecode::compiler {
         bool as_float(double& value) const;
 
         element_type_t element_type() const;
+
+        virtual std::string label_name() const;
 
         bool as_integer(uint64_t& value) const;
 

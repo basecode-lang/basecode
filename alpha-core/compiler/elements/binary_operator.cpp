@@ -121,7 +121,7 @@ namespace basecode::compiler {
 
                 int64_t offset = 0;
                 auto identifier = dynamic_cast<compiler::identifier*>(_lhs);
-                if (identifier->stack_based()) {
+                if (identifier->usage() == identifier_usage_t::stack) {
                     lhs_reg = vm::i_registers_t::sp;
                     offset = -8;
                 }

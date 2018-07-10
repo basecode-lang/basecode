@@ -34,23 +34,29 @@ namespace basecode::compiler {
         switch (element_type()) {
             case element_type_t::block:
                 instruction_block = assembler.make_implicit_block();
-                instruction_block->make_label(fmt::format(
-                    "basic_block_{}",
-                    id()));
+                instruction_block->make_label(label_name());
                 assembler.push_block(instruction_block);
                 break;
-            case element_type_t::proc_type_block:
-            case element_type_t::proc_instance_block:
+            case element_type_t::proc_type_block: {
                 instruction_block = assembler.current_block();
                 break;
+            }
+            case element_type_t::proc_instance_block: {
+                instruction_block = assembler.current_block();
+                break;
+            }
             default:
                 return false;
         }
 
-        for (auto ident : _identifiers.as_list()) {
-            auto init = ident->initializer();
+        for (auto var : _identifiers.as_list()) {
+            if (assembler.in_procedure_scope())
+                var->usage(identifier_usage_t::stack);
+
+            auto init = var->initializer();
             if (init == nullptr)
                 continue;
+
             auto procedure_type = init->procedure_type();
             if (procedure_type != nullptr) {
                 procedure_type->emit(
@@ -58,7 +64,7 @@ namespace basecode::compiler {
                     assembler,
                     emit_context_t::for_procedure_type(
                         context,
-                        ident->name()));
+                        var->name()));
             }
         }
 

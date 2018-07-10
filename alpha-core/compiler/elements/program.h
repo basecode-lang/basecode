@@ -11,11 +11,14 @@
 
 #pragma once
 
+#include <functional>
 #include <parser/ast.h>
 #include <common/id_pool.h>
 #include "block.h"
 
 namespace basecode::compiler {
+
+    using block_visitor_callable = std::function<bool (compiler::block*)>;
 
     struct type_find_result_t {
         std::string type_name {};
@@ -57,19 +60,13 @@ namespace basecode::compiler {
         compiler::block* block();
 
     private:
-        bool emit_code_blocks(
+        bool visit_blocks(
             common::result& r,
-            const emit_context_t& context);
-
-        bool execute_directives(common::result& r);
-
-        bool build_data_segments(common::result& r);
+            const block_visitor_callable& callable);
 
         void initialize_core_types(common::result& r);
 
         bool resolve_unknown_types(common::result& r);
-
-        bool resolve_unknown_identifiers(common::result& r);
 
     private:
         friend class any_type;

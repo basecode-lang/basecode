@@ -26,6 +26,11 @@ namespace basecode::compiler {
         }
 
     protected:
+        bool on_emit(
+            common::result& r,
+            vm::assembler& assembler,
+            const emit_context_t& context) override;
+
         bool on_as_string(std::string& value) const override;
 
         compiler::type* on_infer_type(const compiler::program* program) override;

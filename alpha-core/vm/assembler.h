@@ -45,6 +45,8 @@ namespace basecode::vm {
 
         instruction_block* root_block();
 
+        bool in_procedure_scope() const;
+
         segment_list_t segments() const;
 
         instruction_block* current_block();
@@ -63,6 +65,7 @@ namespace basecode::vm {
     private:
         vm::terp* _terp = nullptr;
         uint64_t _location_counter = 0;
+        uint32_t _procedure_block_count = 0;
         std::vector<instruction_block*> _blocks {};
         std::stack<instruction_block*> _block_stack {};
         std::unordered_map<std::string, vm::segment> _segments {};

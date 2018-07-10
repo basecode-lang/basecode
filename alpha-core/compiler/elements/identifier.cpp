@@ -36,10 +36,10 @@ namespace basecode::compiler {
         if (target_reg == nullptr)
             return true;
 
-        instruction_block->comment(fmt::format("identifier: {}", name()));
-
         if (context.access_type == emit_access_type_t::write) {
-            if (context.in_procedure_scope && _stack_based) {
+            if (assembler.in_procedure_scope()
+            &&  _usage == identifier_usage_t::stack) {
+                instruction_block->comment(fmt::format("identifier: {}", name()));
                 instruction_block->load_to_ireg_u64(
                     target_reg->reg.i,
                     vm::i_registers_t::sp,
@@ -53,7 +53,9 @@ namespace basecode::compiler {
             switch (_type->element_type()) {
                 case element_type_t::bool_type:
                 case element_type_t::numeric_type: {
-                    if (context.in_procedure_scope && _stack_based) {
+                    if (assembler.in_procedure_scope()
+                    &&  _usage == identifier_usage_t::stack) {
+                        instruction_block->comment(fmt::format("identifier: {}", name()));
                         instruction_block->load_to_ireg_u64(
                             target_reg->reg.i,
                             vm::i_registers_t::sp,
@@ -92,20 +94,12 @@ namespace basecode::compiler {
         return _name;
     }
 
-    bool identifier::stack_based() const {
-        return _stack_based;
-    }
-
     void identifier::constant(bool value) {
         _constant = value;
     }
 
     bool identifier::inferred_type() const {
         return _inferred_type;
-    }
-
-    void identifier::stack_based(bool value) {
-        _stack_based = value;
     }
 
     void identifier::type(compiler::type* t) {
@@ -116,14 +110,22 @@ namespace basecode::compiler {
         _inferred_type = value;
     }
 
-    compiler::initializer* identifier::initializer() {
-        return _initializer;
+    identifier_usage_t identifier::usage() const {
+        return _usage;
     }
 
     bool identifier::on_as_bool(bool& value) const {
         if (_initializer == nullptr)
             return false;
         return _initializer->as_bool(value);
+    }
+
+    void identifier::usage(identifier_usage_t value) {
+        _usage = value;
+    }
+
+    compiler::initializer* identifier::initializer() {
+        return _initializer;
     }
 
     bool identifier::on_as_float(double& value) const {
