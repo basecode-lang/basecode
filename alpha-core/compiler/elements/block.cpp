@@ -33,7 +33,7 @@ namespace basecode::compiler {
 
         switch (element_type()) {
             case element_type_t::block:
-                instruction_block = assembler.make_implicit_block();
+                instruction_block = assembler.make_basic_block();
                 instruction_block->make_label(label_name());
                 assembler.push_block(instruction_block);
                 break;

@@ -36,8 +36,6 @@ alpha::compiler::examples := ns {
         if n == 0 || n == 1 {
             return n;
         } else {
-            value:u64;
-
             value := fib((n - 1) + fib(n - 2));
             print("%s\n", value);
             return value;
@@ -47,8 +45,8 @@ alpha::compiler::examples := ns {
     this_doesn_t_need_to_be_main := proc():u32 {
         import alpha::compiler::config::fibonacci;
 
-        final_fib_value:u32;
         final_fib_value := cast<u32>(fib(alpha::compiler::config::fibonacci::length_of_sequence));
+
     'the_end:
         return final_fib_value;
     } @entry_point;

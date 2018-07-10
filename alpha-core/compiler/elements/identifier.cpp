@@ -102,6 +102,10 @@ namespace basecode::compiler {
         return _inferred_type;
     }
 
+    bool identifier::on_is_constant() const {
+        return _constant;
+    }
+
     void identifier::type(compiler::type* t) {
         _type = t;
     }

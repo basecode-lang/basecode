@@ -55,7 +55,7 @@ namespace basecode::vm {
 
         vm::segment* segment(const std::string& name);
 
-        instruction_block* make_implicit_block(instruction_block* parent_block = nullptr);
+        instruction_block* make_basic_block(instruction_block* parent_block = nullptr);
 
         instruction_block* make_procedure_block(instruction_block* parent_block = nullptr);
 

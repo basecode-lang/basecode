@@ -29,36 +29,18 @@ namespace basecode::compiler {
                 case element_type_t::proc_call:
                 case element_type_t::expression:
                 case element_type_t::identifier:
+                case element_type_t::float_literal:
                 case element_type_t::string_literal:
                 case element_type_t::unary_operator:
-                case element_type_t::binary_operator: {
+                case element_type_t::binary_operator:
+                case element_type_t::boolean_literal:
+                case element_type_t::integer_literal: {
                     auto target_reg = instruction_block->allocate_ireg();
                     instruction_block->push_target_register(target_reg);
                     arg->emit(r, assembler, context);
                     instruction_block->pop_target_register();
                     instruction_block->push_u64(target_reg);
                     instruction_block->free_ireg(target_reg);
-                    break;
-                }
-                case element_type_t::float_literal: {
-                    double value;
-                    if (arg->as_float(value)) {
-                        instruction_block->push_f64(value);
-                    }
-                    break;
-                }
-                case element_type_t::boolean_literal: {
-                    bool value;
-                    if (arg->as_bool(value)) {
-                        instruction_block->push_u8(static_cast<uint8_t>(value ? 1 : 0));
-                    }
-                    break;
-                }
-                case element_type_t::integer_literal: {
-                    uint64_t value;
-                    if (arg->as_integer(value)) {
-                        instruction_block->push_u64(value);
-                    }
                     break;
                 }
                 default:

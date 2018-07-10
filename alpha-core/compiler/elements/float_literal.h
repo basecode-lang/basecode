@@ -24,6 +24,13 @@ namespace basecode::compiler {
         double value() const;
 
     protected:
+        bool on_emit(
+            common::result& r,
+            vm::assembler& assembler,
+            const emit_context_t& context) override;
+
+        bool on_is_constant() const override;
+
         bool on_as_float(double& value) const override;
 
         compiler::type* on_infer_type(const compiler::program* program) override;

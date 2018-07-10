@@ -47,6 +47,8 @@ namespace basecode::compiler {
             common::result& r,
             compiler::program* program) override;
 
+        bool on_is_constant() const override;
+
     private:
         field_map_t _returns {};
         bool _is_foreign = false;

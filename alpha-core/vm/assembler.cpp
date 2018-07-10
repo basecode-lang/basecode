@@ -105,10 +105,10 @@ namespace basecode::vm {
         return &it->second;
     }
 
-    instruction_block* assembler::make_implicit_block(instruction_block* parent_block) {
+    instruction_block* assembler::make_basic_block(instruction_block* parent_block) {
         auto block = new instruction_block(
             parent_block != nullptr ? parent_block : current_block(),
-            instruction_block_type_t::implicit);
+            instruction_block_type_t::basic);
         add_new_block(block);
         return block;
     }

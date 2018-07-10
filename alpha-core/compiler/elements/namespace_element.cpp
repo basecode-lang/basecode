@@ -24,6 +24,10 @@ namespace basecode::compiler {
         return _expression;
     }
 
+    bool namespace_element::on_is_constant() const {
+        return true;
+    }
+
     compiler::type* namespace_element::on_infer_type(const compiler::program* program) {
         return program->find_type_up("namespace");
     }

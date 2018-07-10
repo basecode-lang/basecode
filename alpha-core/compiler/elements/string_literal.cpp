@@ -31,6 +31,10 @@ namespace basecode::compiler {
         return true;
     }
 
+    bool string_literal::on_is_constant() const {
+        return true;
+    }
+
     bool string_literal::on_as_string(std::string& value) const {
         value = _value;
         return true;

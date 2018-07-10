@@ -902,11 +902,12 @@ namespace basecode::compiler {
 
         const auto& final_symbol = symbol->children.back();
 
+        compiler::element* init_expr = nullptr;
         compiler::initializer* init = nullptr;
         if (rhs != nullptr) {
-            auto init_expression = evaluate(r, rhs);
-            if (init_expression != nullptr)
-                init = make_initializer(scope, init_expression);
+            init_expr = evaluate(r, rhs);
+            if (init_expr != nullptr && init_expr->is_constant())
+                init = make_initializer(scope, init_expr);
         }
 
         auto new_identifier = make_identifier(
@@ -914,8 +915,8 @@ namespace basecode::compiler {
             final_symbol->token.value,
             init);
 
-        if (type_find_result.type == nullptr && init != nullptr) {
-            type_find_result.type = init->expression()->infer_type(this);
+        if (type_find_result.type == nullptr) {
+            type_find_result.type = init_expr->infer_type(this);
             new_identifier->inferred_type(type_find_result.type != nullptr);
         }
 
@@ -929,7 +930,6 @@ namespace basecode::compiler {
         }
 
         new_identifier->constant(symbol->is_constant_expression());
-
         scope->identifiers().add(new_identifier);
 
         if (init != nullptr
@@ -938,6 +938,25 @@ namespace basecode::compiler {
                 r,
                 dynamic_cast<procedure_type*>(init->expression()),
                 rhs);
+        }
+
+        if (init == nullptr && init_expr != nullptr) {
+            if (new_identifier->type()->element_type() == element_type_t::unknown_type) {
+                r.add_message(
+                    "P019",
+                    fmt::format("unable to infer type: {}", new_identifier->name()),
+                    true);
+                return nullptr;
+            } else {
+                auto assign_bin_op = make_binary_operator(
+                    scope,
+                    operator_type_t::assignment,
+                    new_identifier,
+                    init_expr);
+                add_expression_to_scope(
+                    scope,
+                    make_statement(current_scope(), label_list_t {}, assign_bin_op));
+            }
         }
 
         return new_identifier;

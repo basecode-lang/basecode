@@ -37,6 +37,10 @@ namespace basecode::compiler {
         return _value;
     }
 
+    bool integer_literal::on_is_constant() const {
+        return true;
+    }
+
     bool integer_literal::on_as_integer(uint64_t& value) const {
         value = _value;
         return true;

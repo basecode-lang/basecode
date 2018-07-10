@@ -34,7 +34,7 @@ namespace basecode::vm {
     };
 
     enum class instruction_block_type_t {
-        implicit,
+        basic,
         procedure
     };
 
@@ -65,6 +65,11 @@ namespace basecode::vm {
         void clear_blocks();
 
         void pop_target_register();
+
+        // register allocators
+        i_registers_t allocate_ireg();
+
+        f_registers_t allocate_freg();
 
         void comment(const std::string& value);
 
@@ -408,11 +413,6 @@ namespace basecode::vm {
         void push_f64(f_registers_t reg);
 
         void push_u64(i_registers_t reg);
-
-        // register allocators
-        i_registers_t allocate_ireg();
-
-        f_registers_t allocate_freg();
 
         // pop variations
         void pop_u8(i_registers_t reg);

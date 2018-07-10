@@ -29,6 +29,8 @@ namespace basecode::compiler {
             vm::assembler& assembler,
             const emit_context_t& context) override;
 
+        bool on_is_constant() const override;
+
         bool on_as_integer(uint64_t& value) const override;
 
         compiler::type* on_infer_type(const compiler::program* program) override;

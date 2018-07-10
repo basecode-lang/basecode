@@ -78,6 +78,10 @@ namespace basecode::compiler {
         _is_foreign = value;
     }
 
+    bool procedure_type::on_is_constant() const {
+        return true;
+    }
+
     type_map_t& procedure_type::type_parameters() {
         return _type_parameters;
     }

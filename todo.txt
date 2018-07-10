@@ -76,6 +76,11 @@ lower priority
 
 - map_literal
 
+- instruction flow barriers during code generation:
+    e.g. a = 1; barrier(); b= 2; ...
+
+- atomics
+
 =================================================================
 
 - add unload_shared_library to terp
