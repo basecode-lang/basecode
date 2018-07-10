@@ -239,6 +239,48 @@ namespace basecode::vm {
             i_registers_t multiplicand_reg,
             i_registers_t multiplier_reg);
 
+        // or variations
+        void or_ireg_by_ireg_u64(
+            i_registers_t dest_reg,
+            i_registers_t lhs_reg,
+            i_registers_t rhs_reg);
+
+        // xor variations
+        void xor_ireg_by_ireg_u64(
+            i_registers_t dest_reg,
+            i_registers_t lhs_reg,
+            i_registers_t rhs_reg);
+
+        // and variations
+        void and_ireg_by_ireg_u64(
+            i_registers_t dest_reg,
+            i_registers_t lhs_reg,
+            i_registers_t rhs_reg);
+
+        // shl variations
+        void shl_ireg_by_ireg_u64(
+            i_registers_t dest_reg,
+            i_registers_t lhs_reg,
+            i_registers_t rhs_reg);
+
+        // shr variations
+        void shr_ireg_by_ireg_u64(
+            i_registers_t dest_reg,
+            i_registers_t lhs_reg,
+            i_registers_t rhs_reg);
+
+        // rol variations
+        void rol_ireg_by_ireg_u64(
+            i_registers_t dest_reg,
+            i_registers_t lhs_reg,
+            i_registers_t rhs_reg);
+
+        // ror variations
+        void ror_ireg_by_ireg_u64(
+            i_registers_t dest_reg,
+            i_registers_t lhs_reg,
+            i_registers_t rhs_reg);
+
         // add variations
         void add_ireg_by_ireg_u8(
             i_registers_t dest_reg,
@@ -453,6 +495,66 @@ namespace basecode::vm {
         void jump_direct(const std::string& label_name);
 
     private:
+        void make_shl_instruction(
+            op_sizes size,
+            i_registers_t dest_reg,
+            i_registers_t value_reg,
+            i_registers_t amount_reg);
+
+        void make_rol_instruction(
+            op_sizes size,
+            i_registers_t dest_reg,
+            i_registers_t value_reg,
+            i_registers_t amount_reg);
+
+        void make_shr_instruction(
+            op_sizes size,
+            i_registers_t dest_reg,
+            i_registers_t value_reg,
+            i_registers_t amount_reg);
+
+        void make_ror_instruction(
+            op_sizes size,
+            i_registers_t dest_reg,
+            i_registers_t value_reg,
+            i_registers_t amount_reg);
+
+        void make_and_instruction(
+            op_sizes size,
+            i_registers_t dest_reg,
+            i_registers_t value_reg,
+            i_registers_t mask_reg);
+
+        void make_xor_instruction(
+            op_sizes size,
+            i_registers_t dest_reg,
+            i_registers_t value_reg,
+            i_registers_t mask_reg);
+
+        void make_or_instruction(
+            op_sizes size,
+            i_registers_t dest_reg,
+            i_registers_t value_reg,
+            i_registers_t mask_reg);
+
+        void make_mod_instruction(
+            op_sizes size,
+            i_registers_t dest_reg,
+            i_registers_t dividend_reg,
+            i_registers_t divisor_reg);
+
+        void make_div_instruction(
+            op_sizes size,
+            i_registers_t dest_reg,
+            i_registers_t dividend_reg,
+            i_registers_t divisor_reg);
+
+        void make_mul_instruction(
+            op_sizes size,
+            i_registers_t dest_reg,
+            i_registers_t multiplicand_reg,
+            i_registers_t multiplier_reg);
+
         void make_cmp_instruction(
             op_sizes size,
             i_registers_t lhs_reg,

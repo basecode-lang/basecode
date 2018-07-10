@@ -27,6 +27,9 @@ alpha::compiler::examples := ns {
     max:u16 := 32767;
     name:string := "fibonacci test program";
 
+    foo:u32 := max * 4;
+    bar_rhs_is_constant:s16 := alpha::compiler::config::fibonacci::length_of_sequence * 4;
+
     count := 1;
     print("what the hell am i doing here?");
 
