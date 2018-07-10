@@ -25,7 +25,7 @@ namespace basecode::compiler {
     bool procedure_instance::on_emit(
             common::result& r,
             vm::assembler& assembler,
-            const emit_context_t& context) {
+            emit_context_t& context) {
         return _scope->emit(r, assembler, context);
     }
 

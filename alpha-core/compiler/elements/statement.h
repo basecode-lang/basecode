@@ -29,7 +29,7 @@ namespace basecode::compiler {
         bool on_emit(
             common::result& r,
             vm::assembler& assembler,
-            const emit_context_t& context) override;
+            emit_context_t& context) override;
 
     private:
         label_list_t _labels {};

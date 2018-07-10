@@ -602,6 +602,10 @@ namespace basecode::vm {
                                 operands_stream << prefix << "SP" << postfix;
                                 break;
                             }
+                            case i_registers_t::fp: {
+                                operands_stream << prefix << "FP" << postfix;
+                                break;
+                            }
                             case i_registers_t::pc: {
                                 operands_stream << prefix << "PC" << postfix;
                                 break;
@@ -1674,6 +1678,18 @@ namespace basecode::vm {
                 }
                 break;
             }
+            case op_codes::setz: {
+                uint64_t result = _registers.flags(register_file_t::flags_t::zero) ? 1 : 0;
+                if (!set_target_operand_value(r, inst, 0, result))
+                    return false;
+                break;
+            }
+            case op_codes::setnz: {
+                uint64_t result = !_registers.flags(register_file_t::flags_t::zero) ? 1 : 0;
+                if (!set_target_operand_value(r, inst, 0, result))
+                    return false;
+                break;
+            }
             case op_codes::jsr: {
                 push(_registers.pc);
 
@@ -2165,6 +2181,10 @@ namespace basecode::vm {
                         value = _registers.sp;
                         break;
                     }
+                    case i_registers_t::fp: {
+                        value = _registers.fp;
+                        break;
+                    }
                     case i_registers_t::fr: {
                         value = _registers.fr;
                         break;
@@ -2209,6 +2229,10 @@ namespace basecode::vm {
                     }
                     case i_registers_t::sp: {
                         _registers.sp = set_zoned_value(_registers.sp, value, inst.size);
+                        break;
+                    }
+                    case i_registers_t::fp: {
+                        _registers.fp = set_zoned_value(_registers.fp, value, inst.size);
                         break;
                     }
                     case i_registers_t::fr: {
@@ -2257,6 +2281,10 @@ namespace basecode::vm {
                     }
                     case i_registers_t::sp: {
                         _registers.sp = set_zoned_value(_registers.sp, integer_value, inst.size);
+                        break;
+                    }
+                    case i_registers_t::fp: {
+                        _registers.fp = set_zoned_value(_registers.fp, integer_value, inst.size);
                         break;
                     }
                     case i_registers_t::fr: {

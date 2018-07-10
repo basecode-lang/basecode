@@ -104,14 +104,14 @@ namespace basecode::compiler {
     bool element::emit(
             common::result& r,
             vm::assembler& assembler,
-            const emit_context_t& context) {
+            emit_context_t& context) {
         return on_emit(r, assembler, context);
     }
 
     bool element::on_emit(
             common::result& r,
             vm::assembler& assembler,
-            const emit_context_t& context) {
+            emit_context_t& context) {
         return true;
     }
 

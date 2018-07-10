@@ -642,12 +642,6 @@ namespace basecode::vm {
         _instructions.push_back(store_op);
     }
 
-    void instruction_block::pop_target_register() {
-        if (_target_registers.empty())
-            return;
-        _target_registers.pop();
-    }
-
     instruction_block* instruction_block::parent() {
         return _parent;
     }
@@ -906,6 +900,28 @@ namespace basecode::vm {
         _used_float_registers.erase(reg);
     }
 
+    void instruction_block::setz(i_registers_t dest_reg) {
+        instruction_t setz_op;
+        setz_op.op = op_codes::setz;
+        setz_op.size = op_sizes::qword;
+        setz_op.operands_count = 1;
+        setz_op.operands[0].type = operand_encoding_t::flags::integer
+                                  | operand_encoding_t::flags::reg;
+        setz_op.operands[0].value.r8 = dest_reg;
+        _instructions.push_back(setz_op);
+    }
+
+    void instruction_block::setnz(i_registers_t dest_reg) {
+        instruction_t setnz_op;
+        setnz_op.op = op_codes::setnz;
+        setnz_op.size = op_sizes::qword;
+        setnz_op.operands_count = 1;
+        setnz_op.operands[0].type = operand_encoding_t::flags::integer
+                                   | operand_encoding_t::flags::reg;
+        setnz_op.operands[0].value.r8 = dest_reg;
+        _instructions.push_back(setnz_op);
+    }
+
     void instruction_block::test_mask_branch_if_not_zero_u8(
             i_registers_t value_reg,
             i_registers_t mask_reg,
@@ -1029,6 +1045,14 @@ namespace basecode::vm {
 //        jsr_op.operands[1].type = offset_type | operand_encoding_t::flags::integer;
 //        jsr_op.operands[1].value.u64 = offset;
 //        _instructions.push_back(jsr_op);
+    }
+
+    target_register_t instruction_block::pop_target_register() {
+        if (_target_registers.empty())
+            return target_register_t {};
+        auto reg = _target_registers.top();
+        _target_registers.pop();
+        return reg;
     }
 
     void instruction_block::add_block(instruction_block* block) {

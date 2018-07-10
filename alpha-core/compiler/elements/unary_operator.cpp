@@ -25,7 +25,7 @@ namespace basecode::compiler {
     bool unary_operator::on_emit(
             common::result& r,
             vm::assembler& assembler,
-            const emit_context_t& context) {
+            emit_context_t& context) {
         auto instruction_block = assembler.current_block();
         auto target_reg = instruction_block->current_target_register();
         auto rhs_reg = instruction_block->allocate_ireg();

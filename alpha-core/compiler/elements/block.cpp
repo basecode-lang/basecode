@@ -28,7 +28,7 @@ namespace basecode::compiler {
     bool block::on_emit(
             common::result& r,
             vm::assembler& assembler,
-            const emit_context_t& context) {
+            emit_context_t& context) {
         vm::instruction_block* instruction_block = nullptr;
 
         switch (element_type()) {
@@ -59,12 +59,9 @@ namespace basecode::compiler {
 
             auto procedure_type = init->procedure_type();
             if (procedure_type != nullptr) {
-                procedure_type->emit(
-                    r,
-                    assembler,
-                    emit_context_t::for_procedure_type(
-                        context,
-                        var->name()));
+                context.push_procedure_type(var->name());
+                procedure_type->emit(r, assembler, context);
+                context.pop();
             }
         }
 

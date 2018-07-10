@@ -28,7 +28,7 @@ namespace basecode::compiler {
     bool procedure_call::on_emit(
             common::result& r,
             vm::assembler& assembler,
-            const emit_context_t& context) {
+            emit_context_t& context) {
         auto instruction_block = assembler.current_block();
 
         if (_arguments != nullptr)

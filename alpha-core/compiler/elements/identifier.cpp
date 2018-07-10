@@ -27,7 +27,7 @@ namespace basecode::compiler {
     bool identifier::on_emit(
             common::result& r,
             vm::assembler& assembler,
-            const emit_context_t& context) {
+            emit_context_t& context) {
         if (_type->element_type() == element_type_t::namespace_type)
             return true;
 
@@ -36,7 +36,7 @@ namespace basecode::compiler {
         if (target_reg == nullptr)
             return true;
 
-        if (context.access_type == emit_access_type_t::write) {
+        if (context.current_access() == emit_access_type_t::write) {
             if (assembler.in_procedure_scope()
             &&  _usage == identifier_usage_t::stack) {
                 instruction_block->comment(fmt::format("identifier: {}", name()));

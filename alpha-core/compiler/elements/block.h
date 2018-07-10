@@ -48,7 +48,7 @@ namespace basecode::compiler {
         bool on_emit(
             common::result& r,
             vm::assembler& assembler,
-            const emit_context_t& context) override;
+            emit_context_t& context) override;
 
     private:
         type_map_t _types {};

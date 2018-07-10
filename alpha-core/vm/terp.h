@@ -106,7 +106,8 @@ namespace basecode::vm {
         pc,
         sp,
         fr,
-        sr
+        sr,
+        fp
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -211,6 +212,7 @@ namespace basecode::vm {
         double f[64];
         uint64_t pc;
         uint64_t sp;
+        uint64_t fp;
         uint64_t fr;
         uint64_t sr;
     };
@@ -260,6 +262,8 @@ namespace basecode::vm {
         bl,
         bge,
         ble,
+        setz,
+        setnz,
         jsr,
         rts,
         jmp,
@@ -314,6 +318,8 @@ namespace basecode::vm {
         {op_codes::bge,    "BGE"},
         {op_codes::bl,     "BL"},
         {op_codes::ble,    "BLE"},
+        {op_codes::setz,   "SETZ"},
+        {op_codes::setnz,  "SETNZ"},
         {op_codes::jsr,    "JSR"},
         {op_codes::rts,    "RTS"},
         {op_codes::jmp,    "JMP"},

@@ -21,6 +21,7 @@
 namespace basecode::vm {
 
     enum class target_register_type_t {
+        none,
         integer,
         floating_point
     };
@@ -64,14 +65,14 @@ namespace basecode::vm {
 
         void clear_blocks();
 
-        void pop_target_register();
-
         // register allocators
         i_registers_t allocate_ireg();
 
         f_registers_t allocate_freg();
 
         void comment(const std::string& value);
+
+        target_register_t pop_target_register();
 
         target_register_t* current_target_register();
 
@@ -189,6 +190,11 @@ namespace basecode::vm {
             const std::string& label_name);
 
         instruction_block* parent();
+
+        // setxx
+        void setz(i_registers_t dest_reg);
+
+        void setnz(i_registers_t dest_reg);
 
         // branches
         void bne(const std::string& label_name);

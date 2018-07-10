@@ -30,7 +30,7 @@ namespace basecode::compiler {
         bool on_emit(
             common::result& r,
             vm::assembler& assembler,
-            const emit_context_t& context);
+            emit_context_t& context);
 
     private:
         block* _scope = nullptr;

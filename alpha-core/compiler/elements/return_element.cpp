@@ -21,7 +21,7 @@ namespace basecode::compiler {
     bool return_element::on_emit(
             common::result& r,
             vm::assembler& assembler,
-            const emit_context_t& context) {
+            emit_context_t& context) {
         auto instruction_block = assembler.current_block();
 
         for (auto expr : _expressions) {

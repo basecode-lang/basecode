@@ -24,7 +24,7 @@ namespace basecode::compiler {
     bool string_literal::on_emit(
             common::result& r,
             vm::assembler& assembler,
-            const emit_context_t& context) {
+            emit_context_t& context) {
         auto instruction_block = assembler.current_block();
         auto target_reg = instruction_block->current_target_register();
         instruction_block->move_label_to_ireg(target_reg->reg.i, label_name());

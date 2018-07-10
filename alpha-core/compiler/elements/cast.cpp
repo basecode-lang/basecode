@@ -26,7 +26,7 @@ namespace basecode::compiler {
     bool cast::on_emit(
             common::result& r,
             vm::assembler& assembler,
-            const emit_context_t& context) {
+            emit_context_t& context) {
         if (_expression == nullptr)
             return true;
         auto instruction_block = assembler.current_block();

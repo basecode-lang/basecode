@@ -33,18 +33,18 @@ namespace basecode::compiler {
         bool on_emit(
             common::result& r,
             vm::assembler& assembler,
-            const emit_context_t& context) override;
+            emit_context_t& context) override;
 
         void emit_arithmetic_operator(
             common::result& r,
             vm::assembler& assembler,
-            const emit_context_t& context,
+            emit_context_t& context,
             vm::instruction_block* instruction_block);
 
         void emit_relational_operator(
             common::result& r,
             vm::assembler& assembler,
-            const emit_context_t& context,
+            emit_context_t& context,
             vm::instruction_block* instruction_block);
 
         bool on_is_constant() const override;

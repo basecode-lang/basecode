@@ -28,7 +28,7 @@ namespace basecode::compiler {
     bool binary_operator::on_emit(
             common::result& r,
             vm::assembler& assembler,
-            const emit_context_t& context) {
+            emit_context_t& context) {
         auto instruction_block = assembler.current_block();
         switch (operator_type()) {
             case operator_type_t::add:
@@ -69,12 +69,16 @@ namespace basecode::compiler {
             case operator_type_t::assignment: {
                 auto lhs_reg = instruction_block->allocate_ireg();
                 instruction_block->push_target_register(lhs_reg);
-                _lhs->emit(r, assembler, emit_context_t::for_write(context));
+                context.push_access(emit_access_type_t::write);
+                _lhs->emit(r, assembler, context);
+                context.pop_access();
                 instruction_block->pop_target_register();
 
                 auto rhs_reg = instruction_block->allocate_ireg();
                 instruction_block->push_target_register(rhs_reg);
-                _rhs->emit(r, assembler, emit_context_t::for_read(context));
+                context.push_access(emit_access_type_t::read);
+                _rhs->emit(r, assembler, context);
+                context.pop_access();
                 instruction_block->pop_target_register();
 
                 int64_t offset = 0;
@@ -113,8 +117,22 @@ namespace basecode::compiler {
     void binary_operator::emit_relational_operator(
             common::result& r,
             vm::assembler& assembler,
-            const emit_context_t& context,
+            emit_context_t& context,
             vm::instruction_block* instruction_block) {
+        auto if_data = context.top<if_data_t>();
+        if (if_data != nullptr) {
+            switch (operator_type()) {
+                case operator_type_t::logical_or:
+                    if_data->group_type = if_data_t::logical_group_t::or_group;
+                    break;
+                case operator_type_t::logical_and:
+                    if_data->group_type = if_data_t::logical_group_t::and_group;
+                    break;
+                default:
+                    break;
+            }
+        }
+
         auto lhs_reg = instruction_block->allocate_ireg();
         instruction_block->push_target_register(lhs_reg);
         _lhs->emit(r, assembler, context);
@@ -125,11 +143,19 @@ namespace basecode::compiler {
         _rhs->emit(r, assembler, context);
         instruction_block->pop_target_register();
 
-        instruction_block->cmp_u64(lhs_reg, rhs_reg);
-
         switch (operator_type()) {
             case operator_type_t::equals: {
-                instruction_block->bne(context.data.if_data->false_branch_label);
+                instruction_block->cmp_u64(lhs_reg, rhs_reg);
+                if (if_data != nullptr) {
+                    if (if_data->group_type == if_data_t::logical_group_t::and_group) {
+                        instruction_block->bne(if_data->false_branch_label);
+                    } else {
+                        instruction_block->beq(if_data->true_branch_label);
+                    }
+                } else {
+                    instruction_block->setz(lhs_reg);
+                    instruction_block->push_target_register(lhs_reg);
+                }
                 break;
             }
             case operator_type_t::less_than: {
@@ -139,9 +165,25 @@ namespace basecode::compiler {
                 break;
             }
             case operator_type_t::logical_or: {
+                if (if_data != nullptr)
+                    instruction_block->jump_direct(if_data->false_branch_label);
+                else {
+                    auto lhs_target_reg = instruction_block->pop_target_register();
+                    auto rhs_target_reg = instruction_block->pop_target_register();
+                    auto target_reg = instruction_block->current_target_register();
+                    instruction_block->or_ireg_by_ireg_u64(
+                        target_reg->reg.i,
+                        lhs_target_reg.reg.i,
+                        rhs_target_reg.reg.i);
+                }
                 break;
             }
             case operator_type_t::logical_and: {
+                if (if_data != nullptr)
+                    instruction_block->jump_direct(if_data->true_branch_label);
+                else {
+
+                }
                 break;
             }
             case operator_type_t::greater_than: {
@@ -165,7 +207,7 @@ namespace basecode::compiler {
     void binary_operator::emit_arithmetic_operator(
             common::result& r,
             vm::assembler& assembler,
-            const emit_context_t& context,
+            emit_context_t& context,
             vm::instruction_block* instruction_block) {
         auto result_reg = instruction_block->current_target_register();
 

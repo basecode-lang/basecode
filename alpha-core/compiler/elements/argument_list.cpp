@@ -22,7 +22,7 @@ namespace basecode::compiler {
     bool argument_list::on_emit(
             common::result& r,
             vm::assembler& assembler,
-            const emit_context_t& context) {
+            emit_context_t& context) {
         auto instruction_block = assembler.current_block();
         for (auto arg : _elements) {
             switch (arg->element_type()) {

@@ -22,7 +22,7 @@ namespace basecode::compiler {
     bool statement::on_emit(
             common::result& r,
             vm::assembler& assembler,
-            const emit_context_t& context) {
+            emit_context_t& context) {
         if (_expression == nullptr)
             return true;
 
