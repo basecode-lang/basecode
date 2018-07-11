@@ -25,6 +25,12 @@ namespace basecode::compiler {
     bool initializer::on_emit(
             common::result& r,
             emit_context_t& context) {
+        if (_expr == nullptr)
+            return true;
+
+        if (_expr->element_type() == element_type_t::namespace_e)
+            _expr->emit(r, context);
+
         return true;
     }
 

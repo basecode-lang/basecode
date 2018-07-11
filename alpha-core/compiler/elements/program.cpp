@@ -860,13 +860,14 @@ namespace basecode::compiler {
             if (var == nullptr) {
                 auto new_scope = make_block(scope, element_type_t::block);
                 auto ns_identifier = make_identifier(
-                    new_scope,
+                    scope,
                     symbol_node->token.value,
                     make_initializer(
-                        new_scope,
-                        make_namespace(new_scope, new_scope)));
+                        scope,
+                        make_namespace(scope, new_scope)));
                 ns_identifier->type(namespace_type);
                 ns_identifier->inferred_type(true);
+                scope->blocks().push_back(new_scope);
                 scope->identifiers().add(ns_identifier);
                 scope = new_scope;
             } else {
@@ -889,7 +890,10 @@ namespace basecode::compiler {
         compiler::element* init_expr = nullptr;
         compiler::initializer* init = nullptr;
         if (rhs != nullptr) {
+            // XXX: must find a better way to do this
+            push_scope(scope);
             init_expr = evaluate(r, rhs);
+            pop_scope();
             if (init_expr != nullptr && init_expr->is_constant())
                 init = make_initializer(scope, init_expr);
         }

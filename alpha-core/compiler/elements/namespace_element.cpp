@@ -20,6 +20,14 @@ namespace basecode::compiler {
                          _expression(expr) {
     }
 
+    bool namespace_element::on_emit(
+            common::result& r,
+            emit_context_t& context) {
+        if (_expression == nullptr)
+            return true;
+        return _expression->emit(r, context);
+    }
+
     element* namespace_element::expression() {
         return _expression;
     }

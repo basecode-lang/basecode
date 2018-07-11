@@ -104,7 +104,7 @@ namespace basecode::compiler {
                 auto details = fmt::format(
                     "comment|{{type: {} | value: '{}' }}",
                     comment_type_name(comment_element->type()),
-                    escape_quotes(comment_element->value()));
+                    escape_graphviz_chars(comment_element->value()));
                 return fmt::format(
                     "{}[shape=record,label=\"{}\"{}];",
                     node_vertex_name,
@@ -151,10 +151,12 @@ namespace basecode::compiler {
                     style);
             }
             case element_type_t::block: {
+                auto element = dynamic_cast<block*>(node);
                 auto style = ", fillcolor=floralwhite, style=\"filled\"";
                 return fmt::format(
-                    "{}[shape=record,label=\"block\"{}];",
+                    "{}[shape=record,label=\"block|{}\"{}];",
                     node_vertex_name,
+                    element->id(),
                     style);
             }
             case element_type_t::proc_type_block: {
@@ -510,11 +512,15 @@ namespace basecode::compiler {
             node->id());
     }
 
-    std::string code_dom_formatter::escape_quotes(const std::string& value) {
+    std::string code_dom_formatter::escape_graphviz_chars(const std::string& value) {
         std::string buffer;
         for (const auto& c : value) {
             if (c == '\"') {
                 buffer += "\\\"";
+            } else if (c == '{') {
+                buffer += "\\{";
+            } else if (c == '}') {
+                buffer += "\\}";
             } else {
                 buffer += c;
             }

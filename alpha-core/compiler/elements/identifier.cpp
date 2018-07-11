@@ -27,10 +27,13 @@ namespace basecode::compiler {
     bool identifier::on_emit(
             common::result& r,
             emit_context_t& context) {
-        if (_type->element_type() == element_type_t::namespace_type)
-            return true;
-
         auto instruction_block = context.assembler->current_block();
+
+        if (_type->element_type() == element_type_t::namespace_type) {
+            instruction_block->comment(fmt::format("namespace: {}", _name));
+            return true;
+        }
+
         auto target_reg = instruction_block->current_target_register();
         if (target_reg == nullptr)
             return true;

@@ -1078,22 +1078,36 @@ namespace basecode::vm {
             source_file->add_source_line(0, fmt::format("{}:", it.first));
         }
 
-        size_t index = 0;
-        for (const auto& inst : block->_instructions) {
+        auto add_comments = [&](size_t index, size_t indent) {
             auto it = block->_comments.find(index);
             if (it != block->_comments.end()) {
                 for (const auto& line : it->second.lines) {
-                    source_file->add_source_line(0, fmt::format("\t; {}", line));
+                    source_file->add_source_line(
+                        0,
+                        fmt::format(
+                            "{}; {}",
+                            std::string(indent * 4, ' '),
+                            line));
                 }
             }
-            auto stream = inst.disassemble([&](uint64_t id) -> std::string {
-                auto label_ref = block->find_unresolved_label_up(static_cast<id_t>(id));
-                return label_ref != nullptr ?
-                    label_ref->name :
-                    fmt::format("unresolved_ref_id({})", id);
-            });
-            source_file->add_source_line(0, fmt::format("\t{}", stream));
-            index++;
+        };
+
+        if (block->_instructions.empty()) {
+            add_comments(0, 0);
+        } else {
+            size_t index = 0;
+            for (const auto& inst : block->_instructions) {
+                add_comments(index, 1);
+                auto stream = inst.disassemble([&](uint64_t id) -> std::string {
+                    auto label_ref = block->find_unresolved_label_up(static_cast<id_t>(id));
+                    return label_ref != nullptr ?
+                           label_ref->name :
+                           fmt::format("unresolved_ref_id({})", id);
+                });
+                source_file->add_source_line(0, fmt::format("\t{}", stream));
+                index++;
+            }
+            add_comments(index, 1);
         }
 
         for (auto child_block : block->_blocks)
