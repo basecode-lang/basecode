@@ -18,6 +18,7 @@
 #include "terp.h"
 #include "label.h"
 #include "stack_frame.h"
+#include "assembly_listing.h"
 
 namespace basecode::vm {
 
@@ -92,8 +93,6 @@ namespace basecode::vm {
         void nop();
 
         void exit();
-
-        void disassemble();
 
         void clear_labels();
 
@@ -529,15 +528,21 @@ namespace basecode::vm {
 
         void add_block(instruction_block* block);
 
-        void remove_block(instruction_block* block);
+        void disassemble(assembly_listing& listing);
 
-        void call_foreign(const std::string& proc_name);
+        void remove_block(instruction_block* block);
 
         vm::label* make_label(const std::string& name);
 
         void jump_direct(const std::string& label_name);
 
+        void call_foreign(const std::string& proc_name);
+
     private:
+        void disassemble(
+            assembly_listing& listing,
+            instruction_block* block);
+
         void make_shl_instruction(
             op_sizes size,
             i_registers_t dest_reg,
@@ -678,8 +683,6 @@ namespace basecode::vm {
             i_registers_t dest_reg,
             i_registers_t minuend_reg,
             uint64_t subtrahend_immediate);
-
-        void disassemble(instruction_block* block);
 
         void make_float_constant_push_instruction(
             op_sizes size,

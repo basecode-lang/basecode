@@ -14,6 +14,7 @@
 #include <functional>
 #include <parser/ast.h>
 #include <common/id_pool.h>
+#include <vm/assembly_listing.h>
 #include "block.h"
 
 namespace basecode::compiler {
@@ -35,10 +36,12 @@ namespace basecode::compiler {
 
         bool compile(
             common::result& r,
+            vm::assembly_listing& listing,
             const syntax::ast_node_shared_ptr& root);
 
         bool compile_module(
             common::result& r,
+            vm::assembly_listing& listing,
             const syntax::ast_node_shared_ptr& root);
 
         bool run(common::result& r);

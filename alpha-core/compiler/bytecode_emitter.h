@@ -16,6 +16,7 @@
 #include <vm/terp.h>
 #include <filesystem>
 #include <parser/parser.h>
+#include <vm/assembly_listing.h>
 #include <compiler/elements/element_types.h>
 
 //
@@ -71,15 +72,22 @@ namespace basecode::compiler {
 
         virtual ~bytecode_emitter();
 
+        bool compile(
+            common::result& r,
+            vm::assembly_listing& listing,
+            std::istream& input);
+
+        bool compile_stream(
+            common::result& r,
+            vm::assembly_listing& listing,
+            std::istream& input);
+
         bool compile_files(
             common::result& r,
+            vm::assembly_listing& listing,
             const std::vector<std::filesystem::path>& source_files);
 
         bool initialize(common::result& r);
-
-        bool compile(common::result& r, std::istream& input);
-
-        bool compile_stream(common::result& r, std::istream& input);
 
     private:
         void write_code_dom_graph(

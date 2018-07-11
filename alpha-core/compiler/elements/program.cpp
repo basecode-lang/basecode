@@ -376,12 +376,13 @@ namespace basecode::compiler {
 
     bool program::compile(
             common::result& r,
+            vm::assembly_listing& listing,
             const syntax::ast_node_shared_ptr& root) {
         _block = push_new_block();
 
         initialize_core_types(r);
 
-        if (!compile_module(r, root))
+        if (!compile_module(r, listing, root))
             return false;
 
         // process directives
@@ -415,33 +416,15 @@ namespace basecode::compiler {
             return true;
         });
 
+        // emit byte code instruction blocks into assembler
         emit_context_t context(_terp, &_assembler, this);
         visit_blocks(r, [&](compiler::block* scope) {
             scope->emit(r, context);
             return true;
         });
 
-        fmt::print("\n\n");
-        auto segments = _assembler.segments();
-        for (auto segment : segments) {
-            fmt::print(
-                "segment: {}, type: {}\n",
-                segment->name(),
-                segment_type_name(segment->type()));
-            for (auto symbol : segment->symbols())
-                fmt::print(
-                    "\toffset: {:04x}, symbol: {}, type: {}, size: {}\n",
-                    symbol->offset(),
-                    symbol->name(),
-                    symbol_type_name(symbol->type()),
-                    symbol->size());
-            fmt::print("\n");
-        }
-
         auto root_block = _assembler.root_block();
-        root_block->disassemble();
-
-        fmt::print("\n");
+        root_block->disassemble(listing);
 
         return !r.is_failed();
     }
@@ -452,6 +435,7 @@ namespace basecode::compiler {
 
     bool program::compile_module(
             common::result& r,
+            vm::assembly_listing& listing,
             const syntax::ast_node_shared_ptr& root) {
         evaluate(r, root);
         return !r.is_failed();

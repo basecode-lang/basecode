@@ -51,10 +51,6 @@ namespace basecode::vm {
         _instructions.push_back(exit_op);
     }
 
-    void instruction_block::disassemble() {
-        disassemble(this);
-    }
-
     void instruction_block::clear_labels() {
         for (const auto& it : _labels)
             delete it.second;
@@ -1069,9 +1065,17 @@ namespace basecode::vm {
         _blocks.push_back(block);
     }
 
-    void instruction_block::disassemble(instruction_block* block) {
+    void instruction_block::disassemble(assembly_listing& listing) {
+        disassemble(listing, this);
+    }
+
+    void instruction_block::disassemble(
+            assembly_listing& listing,
+            instruction_block* block) {
+        auto source_file = listing.current_source_file();
+
         for (const auto& it : block->_labels) {
-            fmt::print("{}:\n", it.first);
+            source_file->add_source_line(0, fmt::format("{}:", it.first));
         }
 
         size_t index = 0;
@@ -1079,7 +1083,7 @@ namespace basecode::vm {
             auto it = block->_comments.find(index);
             if (it != block->_comments.end()) {
                 for (const auto& line : it->second.lines) {
-                    fmt::print("\t; {}\n", line);
+                    source_file->add_source_line(0, fmt::format("\t; {}", line));
                 }
             }
             auto stream = inst.disassemble([&](uint64_t id) -> std::string {
@@ -1088,12 +1092,12 @@ namespace basecode::vm {
                     label_ref->name :
                     fmt::format("unresolved_ref_id({})", id);
             });
-            fmt::print("\t{}\n", stream);
+            source_file->add_source_line(0, fmt::format("\t{}", stream));
             index++;
         }
 
         for (auto child_block : block->_blocks)
-            disassemble(child_block);
+            disassemble(listing, child_block);
     }
 
     void instruction_block::remove_block(instruction_block* block) {

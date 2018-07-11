@@ -41,6 +41,7 @@ add_library(
         vm/symbol.cpp vm/symbol.h
         vm/segment.cpp vm/segment.h
         vm/stack_frame.cpp vm/stack_frame.h
+        vm/assembly_listing.cpp vm/assembly_listing.h
         vm/instruction_block.cpp vm/instruction_block.h
         compiler/elements/type.cpp compiler/elements/type.h
         compiler/elements/cast.cpp compiler/elements/cast.h

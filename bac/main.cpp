@@ -151,12 +151,15 @@ int main(int argc, char** argv) {
             usage();
             rc = 1;
         } else {
-            if (!compiler.compile_files(r, source_files)) {
+            basecode::vm::assembly_listing listing {};
+            if (!compiler.compile_files(r, listing, source_files)) {
                 rc = 1;
             } else {
                 high_resolution_clock::time_point end = high_resolution_clock::now();
                 auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
-                fmt::print("Total compilation time (in μs): {}\n", duration);
+                fmt::print("compilation time (in μs): {}\n", duration);
+                fmt::print("\n");
+                listing.write(stdout);
             }
         }
     }
