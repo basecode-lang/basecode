@@ -25,12 +25,15 @@ namespace basecode::compiler {
         auto instruction_block = assembler.current_block();
 
         for (auto expr : _expressions) {
-            auto target_reg = instruction_block->allocate_ireg();
+            vm::i_registers_t target_reg;
+            if (!instruction_block->allocate_reg(target_reg)) {
+                // XXX: error
+            }
             instruction_block->push_target_register(target_reg);
             expr->emit(r, assembler, context);
             instruction_block->pop_target_register();
             instruction_block->push_u32(target_reg);
-            instruction_block->free_ireg(target_reg);
+            instruction_block->free_reg(target_reg);
         }
 
         instruction_block->rts();

@@ -61,12 +61,16 @@ namespace basecode::compiler {
                             vm::i_registers_t::sp,
                             -8);
                     } else {
-                        auto ptr_reg = instruction_block->allocate_ireg();
+                        vm::i_registers_t ptr_reg;
+                        if (!instruction_block->allocate_reg(ptr_reg)) {
+                            // XXX: error!
+                        }
+
                         instruction_block->move_label_to_ireg(ptr_reg, _name);
                         instruction_block->load_to_ireg_u64(
                             target_reg->reg.i,
                             ptr_reg);
-                        instruction_block->free_ireg(ptr_reg);
+                        instruction_block->free_reg(ptr_reg);
                     }
                     break;
                 }

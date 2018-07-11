@@ -13,6 +13,7 @@
 
 #include <any>
 #include <cstdint>
+#include <vm/terp.h>
 #include <vm/assembler.h>
 #include <common/result.h>
 #include <common/id_pool.h>
@@ -79,6 +80,11 @@ namespace basecode::compiler {
             access_stack.pop();
         }
 
+        void clear_scratch_registers() {
+            while (!scratch_registers.empty())
+                scratch_registers.pop();
+        }
+
         emit_access_type_t current_access() const {
             if (access_stack.empty())
                 return emit_access_type_t::read;
@@ -89,6 +95,23 @@ namespace basecode::compiler {
             access_stack.push(type);
         }
 
+        bool has_scratch_register() const {
+            return !scratch_registers.empty();
+        }
+
+        vm::i_registers_t pop_scratch_register() {
+            if (scratch_registers.empty())
+                return vm::i_registers_t::i0;
+
+            auto reg = scratch_registers.top();
+            scratch_registers.pop();
+            return reg;
+        }
+
+        void push_scratch_register(vm::i_registers_t reg) {
+            scratch_registers.push(reg);
+        }
+
         void push_procedure_type(const std::string& name) {
             data_stack.push(std::any(procedure_type_data_t {
                 .identifier_name = name
@@ -97,6 +120,7 @@ namespace basecode::compiler {
 
         std::stack<std::any> data_stack {};
         std::stack<emit_access_type_t> access_stack {};
+        std::stack<vm::i_registers_t> scratch_registers {};
     };
 
     class element {

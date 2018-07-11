@@ -28,7 +28,10 @@ namespace basecode::compiler {
             emit_context_t& context) {
         auto instruction_block = assembler.current_block();
         auto target_reg = instruction_block->current_target_register();
-        auto rhs_reg = instruction_block->allocate_ireg();
+        vm::i_registers_t rhs_reg;
+        if (!instruction_block->allocate_reg(rhs_reg)) {
+            // XXX: error
+        }
         instruction_block->push_target_register(rhs_reg);
         _rhs->emit(r, assembler, context);
         instruction_block->pop_target_register();
@@ -49,7 +52,7 @@ namespace basecode::compiler {
                 break;
         }
 
-        instruction_block->free_ireg(rhs_reg);
+        instruction_block->free_reg(rhs_reg);
 
         return true;
     }

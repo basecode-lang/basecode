@@ -67,14 +67,21 @@ namespace basecode::compiler {
                 break;
             }
             case operator_type_t::assignment: {
-                auto lhs_reg = instruction_block->allocate_ireg();
+                vm::i_registers_t lhs_reg, rhs_reg;
+                if (!instruction_block->allocate_reg(lhs_reg)) {
+                    // XXX: error
+                }
+
+                if (!instruction_block->allocate_reg(rhs_reg)) {
+                    // XXX: error
+                }
+
                 instruction_block->push_target_register(lhs_reg);
                 context.push_access(emit_access_type_t::write);
                 _lhs->emit(r, assembler, context);
                 context.pop_access();
                 instruction_block->pop_target_register();
 
-                auto rhs_reg = instruction_block->allocate_ireg();
                 instruction_block->push_target_register(rhs_reg);
                 context.push_access(emit_access_type_t::read);
                 _rhs->emit(r, assembler, context);
@@ -91,8 +98,8 @@ namespace basecode::compiler {
                 instruction_block->store_from_ireg_u64(lhs_reg, rhs_reg, offset);
                 instruction_block->pop_target_register();
 
-                instruction_block->free_ireg(lhs_reg);
-                instruction_block->free_ireg(rhs_reg);
+                instruction_block->free_reg(rhs_reg);
+                instruction_block->free_reg(lhs_reg);
                 break;
             }
             default:
@@ -133,12 +140,19 @@ namespace basecode::compiler {
             }
         }
 
-        auto lhs_reg = instruction_block->allocate_ireg();
+        vm::i_registers_t lhs_reg, rhs_reg;
+        if (!instruction_block->allocate_reg(lhs_reg)) {
+            // XXX: error
+        }
+
+        if (!instruction_block->allocate_reg(rhs_reg)) {
+            // XXX: error
+        }
+
         instruction_block->push_target_register(lhs_reg);
         _lhs->emit(r, assembler, context);
         instruction_block->pop_target_register();
 
-        auto rhs_reg = instruction_block->allocate_ireg();
         instruction_block->push_target_register(rhs_reg);
         _rhs->emit(r, assembler, context);
         instruction_block->pop_target_register();
@@ -153,8 +167,9 @@ namespace basecode::compiler {
                         instruction_block->beq(if_data->true_branch_label);
                     }
                 } else {
-                    instruction_block->setz(lhs_reg);
-                    instruction_block->push_target_register(lhs_reg);
+                    auto target_reg = instruction_block->current_target_register();
+                    instruction_block->setz(target_reg->reg.i);
+                    context.push_scratch_register(target_reg->reg.i);
                 }
                 break;
             }
@@ -168,13 +183,13 @@ namespace basecode::compiler {
                 if (if_data != nullptr)
                     instruction_block->jump_direct(if_data->false_branch_label);
                 else {
-                    auto lhs_target_reg = instruction_block->pop_target_register();
-                    auto rhs_target_reg = instruction_block->pop_target_register();
+                    auto rhs_target_reg = context.pop_scratch_register();
+                    auto lhs_target_reg = context.pop_scratch_register();
                     auto target_reg = instruction_block->current_target_register();
                     instruction_block->or_ireg_by_ireg_u64(
                         target_reg->reg.i,
-                        lhs_target_reg.reg.i,
-                        rhs_target_reg.reg.i);
+                        lhs_target_reg,
+                        rhs_target_reg);
                 }
                 break;
             }
@@ -182,7 +197,13 @@ namespace basecode::compiler {
                 if (if_data != nullptr)
                     instruction_block->jump_direct(if_data->true_branch_label);
                 else {
-
+                    auto rhs_target_reg = context.pop_scratch_register();
+                    auto lhs_target_reg = context.pop_scratch_register();
+                    auto target_reg = instruction_block->current_target_register();
+                    instruction_block->and_ireg_by_ireg_u64(
+                        target_reg->reg.i,
+                        lhs_target_reg,
+                        rhs_target_reg);
                 }
                 break;
             }
@@ -200,8 +221,8 @@ namespace basecode::compiler {
             }
         }
 
-        instruction_block->free_ireg(lhs_reg);
-        instruction_block->free_ireg(rhs_reg);
+        instruction_block->free_reg(rhs_reg);
+        instruction_block->free_reg(lhs_reg);
     }
 
     void binary_operator::emit_arithmetic_operator(
@@ -211,12 +232,19 @@ namespace basecode::compiler {
             vm::instruction_block* instruction_block) {
         auto result_reg = instruction_block->current_target_register();
 
-        auto lhs_reg = instruction_block->allocate_ireg();
+        vm::i_registers_t lhs_reg, rhs_reg;
+        if (!instruction_block->allocate_reg(lhs_reg)) {
+            // XXX: error
+        }
+
+        if (!instruction_block->allocate_reg(rhs_reg)) {
+            // XXX: error
+        }
+
         instruction_block->push_target_register(lhs_reg);
         _lhs->emit(r, assembler, context);
         instruction_block->pop_target_register();
 
-        auto rhs_reg = instruction_block->allocate_ireg();
         instruction_block->push_target_register(rhs_reg);
         _rhs->emit(r, assembler, context);
         instruction_block->pop_target_register();
@@ -317,8 +345,8 @@ namespace basecode::compiler {
                 break;
         }
 
-        instruction_block->free_ireg(lhs_reg);
-        instruction_block->free_ireg(rhs_reg);
+        instruction_block->free_reg(lhs_reg);
+        instruction_block->free_reg(rhs_reg);
     }
 
     // XXX: this needs lots of future love

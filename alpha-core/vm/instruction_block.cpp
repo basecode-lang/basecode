@@ -767,24 +767,12 @@ namespace basecode::vm {
         make_pop_instruction(op_sizes::byte, reg);
     }
 
-    i_registers_t instruction_block::allocate_ireg() {
-        if (!_used_integer_registers.empty()) {
-            auto reg = static_cast<i_registers_t>((*_used_integer_registers.rbegin()) + 1);
-            _used_integer_registers.insert(reg);
-            return reg;
-        }
-        _used_integer_registers.insert(i_registers_t::i0);
-        return *_used_integer_registers.begin();
+    bool instruction_block::allocate_reg(i_registers_t& reg) {
+        return _i_register_allocator.allocate(reg);
     }
 
-    f_registers_t instruction_block::allocate_freg() {
-        if (!_used_float_registers.empty()) {
-            auto reg = static_cast<f_registers_t>((*_used_float_registers.rbegin()) + 1);
-            _used_float_registers.insert(reg);
-            return reg;
-        }
-        _used_float_registers.insert(f_registers_t::f0);
-        return *_used_float_registers.begin();
+    bool instruction_block::allocate_reg(f_registers_t& reg) {
+        return _f_register_allocator.allocate(reg);
     }
 
     // cmp variations
@@ -892,12 +880,12 @@ namespace basecode::vm {
             i_registers_t address_reg) {
     }
 
-    void instruction_block::free_ireg(i_registers_t reg) {
-        _used_integer_registers.erase(reg);
+    void instruction_block::free_reg(i_registers_t reg) {
+        _i_register_allocator.free(reg);
     }
 
-    void instruction_block::free_freg(f_registers_t reg) {
-        _used_float_registers.erase(reg);
+    void instruction_block::free_reg(f_registers_t reg) {
+        _f_register_allocator.free(reg);
     }
 
     void instruction_block::setz(i_registers_t dest_reg) {
@@ -944,20 +932,6 @@ namespace basecode::vm {
             i_registers_t value_reg,
             i_registers_t mask_reg,
             i_registers_t address_reg) {
-    }
-
-    bool instruction_block::reserve_ireg(i_registers_t reg) {
-        if (_used_integer_registers.count(reg) > 0)
-            return false;
-        _used_integer_registers.insert(reg);
-        return true;
-    }
-
-    bool instruction_block::reserve_freg(f_registers_t reg) {
-        if (_used_float_registers.count(reg) > 0)
-            return false;
-        _used_float_registers.insert(reg);
-        return true;
     }
 
     void instruction_block::jump_indirect(i_registers_t reg) {

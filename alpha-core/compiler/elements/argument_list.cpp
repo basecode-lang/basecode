@@ -35,12 +35,16 @@ namespace basecode::compiler {
                 case element_type_t::binary_operator:
                 case element_type_t::boolean_literal:
                 case element_type_t::integer_literal: {
-                    auto target_reg = instruction_block->allocate_ireg();
+                    vm::i_registers_t target_reg;
+                    if (!instruction_block->allocate_reg(target_reg)) {
+                        // XXX: error
+                    }
+
                     instruction_block->push_target_register(target_reg);
                     arg->emit(r, assembler, context);
                     instruction_block->pop_target_register();
                     instruction_block->push_u64(target_reg);
-                    instruction_block->free_ireg(target_reg);
+                    instruction_block->free_reg(target_reg);
                     break;
                 }
                 default:

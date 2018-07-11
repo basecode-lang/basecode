@@ -33,8 +33,6 @@ alpha::compiler::examples := ns {
     count := 1;
     print("what the hell am i doing here?");
 
-    does_this_work := count == 1 || count == 2;
-
     @func_it 42;
     fib := proc(n:u64 := 10):u64 {
         @dont_fold_me_dude;
