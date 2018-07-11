@@ -33,6 +33,18 @@ alpha::compiler::examples := ns {
     count := 1;
     print("what the hell am i doing here?");
 
+    bar := proc() {
+        // XXX: fix unresolved identifiers
+        bing(256);
+
+        bing := proc(z:u64):u64 {
+            if z == 0 {
+                return 0;
+            };
+            return z / 2;
+        };
+    };
+
     @func_it 42;
     fib := proc(n:u64 := 10):u64 {
         @dont_fold_me_dude;
@@ -45,12 +57,15 @@ alpha::compiler::examples := ns {
         };
     };
 
-    this_doesn_t_need_to_be_main := proc():u32 {
+    fib_main := proc():u32 {
         import alpha::compiler::config::fibonacci;
 
         final_fib_value := cast<u32>(fib(alpha::compiler::config::fibonacci::length_of_sequence));
 
     'the_end:
         return final_fib_value;
-    } @entry_point;
+    };
+
+    fib_main();
+
 };

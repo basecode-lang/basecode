@@ -86,13 +86,12 @@ namespace basecode::compiler {
                 vm::i_registers_t::sp,
                 vm::i_registers_t::sp,
                 8 * local_count);
-
-            // emit initialization for locals
         }
 
         context.assembler->push_block(instruction_block);
         _scope->emit(r, context);
         context.assembler->pop_block();
+
 
         return true;
     }

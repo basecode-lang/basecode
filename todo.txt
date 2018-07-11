@@ -20,8 +20,6 @@ deps to bytecode generation
         * encode constant parameters
 
     basic block:
-        * emit actual instructions for block behavior
-        * local variables/parameters on stack
         * how do blocks link to one another in sequence?
         * @entry_point attribute link up.
             have a single JMP at program_start that is patched with
@@ -140,3 +138,6 @@ DONE
       set up their fields.
 - FIX: graph generator is not escaping quotes
 - use initializer to handle custom construction of values?
+- basic block:
+    * emit actual instructions for block behavior
+    * local variables/parameters on stack

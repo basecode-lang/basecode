@@ -29,7 +29,7 @@ namespace basecode::compiler {
             emit_context_t& context) {
         context.push_if(
             _true_branch->label_name(),
-            _false_branch->label_name());
+            _false_branch != nullptr ? _false_branch->label_name() : "");
         _predicate->emit(r, context);
         context.pop();
         return true;

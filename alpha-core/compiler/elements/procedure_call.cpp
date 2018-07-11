@@ -41,8 +41,10 @@ namespace basecode::compiler {
         }
 
         auto target_reg = instruction_block->current_target_register();
-        for (auto return_type : procedure_type->returns().as_list()) {
-            instruction_block->pop_u64(target_reg->reg.i);
+        if (target_reg != nullptr) {
+            for (auto return_type : procedure_type->returns().as_list()) {
+                instruction_block->pop_u64(target_reg->reg.i);
+            }
         }
 
         return true;
