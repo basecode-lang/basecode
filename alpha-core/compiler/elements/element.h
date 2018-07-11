@@ -25,7 +25,7 @@ namespace basecode::compiler {
     class element {
     public:
         element(
-            element* parent,
+            block* parent_scope,
             element_type_t type);
 
         virtual ~element();
@@ -34,7 +34,7 @@ namespace basecode::compiler {
             common::result& r,
             emit_context_t& context);
 
-        element* parent();
+        block* parent_scope();
 
         common::id_t id() const;
 
@@ -79,7 +79,7 @@ namespace basecode::compiler {
 
     private:
         common::id_t _id;
-        element* _parent = nullptr;
+        block* _parent_scope = nullptr;
         attribute_map_t _attributes {};
         element_type_t _element_type = element_type_t::element;
     };

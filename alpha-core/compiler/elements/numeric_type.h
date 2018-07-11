@@ -34,7 +34,7 @@ namespace basecode::compiler {
             compiler::program* program);
 
         numeric_type(
-            element* parent,
+            block* parent_scope,
             const std::string& name,
             int64_t min,
             uint64_t max);

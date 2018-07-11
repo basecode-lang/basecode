@@ -15,9 +15,9 @@
 namespace basecode::compiler {
 
     procedure_instance::procedure_instance(
-            element* parent,
+            block* parent_scope,
             compiler::type* procedure_type,
-            block* scope) : element(parent, element_type_t::proc_instance),
+            block* scope) : element(parent_scope, element_type_t::proc_instance),
                             _scope(scope),
                             _procedure_type(procedure_type) {
     }

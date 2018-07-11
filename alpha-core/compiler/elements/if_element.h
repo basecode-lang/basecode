@@ -18,7 +18,7 @@ namespace basecode::compiler {
     class if_element : public element {
     public:
         if_element(
-            element* parent,
+            block* parent_scope,
             element* predicate,
             element* true_branch,
             element* false_branch);

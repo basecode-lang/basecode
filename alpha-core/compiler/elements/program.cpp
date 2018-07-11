@@ -1150,7 +1150,7 @@ namespace basecode::compiler {
                     if (array_type == nullptr) {
                         array_type = make_array_type(
                             r,
-                            dynamic_cast<compiler::block*>(var->parent()),
+                            var->parent_scope(),
                             identifier_type,
                             unknown_type->array_size());
                     }
@@ -1270,7 +1270,7 @@ namespace basecode::compiler {
             auto type_identifier = scope->identifiers().find(name);
             if (type_identifier != nullptr)
                 return type_identifier->type();
-            scope = dynamic_cast<compiler::block*>(scope->parent());
+            scope = scope->parent_scope();
         }
         return nullptr;
     }
@@ -1281,7 +1281,7 @@ namespace basecode::compiler {
             if (block_scope->element_type() == element_type_t::proc_type_block
             ||  block_scope->element_type() == element_type_t::proc_instance_block)
                 return true;
-            block_scope = dynamic_cast<compiler::block*>(block_scope->parent());
+            block_scope = block_scope->parent_scope();
         }
         return false;
     }
@@ -1319,7 +1319,7 @@ namespace basecode::compiler {
                 var = block_scope->identifiers().find(symbol_part->token.value);
                 if (var != nullptr)
                     return var;
-                block_scope = dynamic_cast<compiler::block*>(block_scope->parent());
+                block_scope = block_scope->parent_scope();
             }
             return nullptr;
         }

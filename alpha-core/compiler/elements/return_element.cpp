@@ -15,7 +15,7 @@
 namespace basecode::compiler {
 
     return_element::return_element(
-        element* parent) : element(parent, element_type_t::return_e) {
+        block* parent_scope) : element(parent_scope, element_type_t::return_e) {
     }
 
     bool return_element::on_emit(

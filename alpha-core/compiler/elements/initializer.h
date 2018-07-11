@@ -18,7 +18,7 @@ namespace basecode::compiler {
     class initializer : public element {
     public:
         initializer(
-            element* parent,
+            block* parent_scope,
             element* expr);
 
         element* expression();

@@ -16,9 +16,9 @@
 namespace basecode::compiler {
 
     unary_operator::unary_operator(
-            element* parent,
+            block* parent_scope,
             operator_type_t type,
-            element* rhs) : operator_base(parent, element_type_t::unary_operator, type),
+            element* rhs) : operator_base(parent_scope, element_type_t::unary_operator, type),
                             _rhs(rhs) {
     }
 

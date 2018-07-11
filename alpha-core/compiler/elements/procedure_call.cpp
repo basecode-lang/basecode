@@ -18,9 +18,9 @@
 namespace basecode::compiler {
 
     procedure_call::procedure_call(
-        compiler::element* parent,
+        compiler::block* parent_scope,
         compiler::identifier* identifier,
-        compiler::argument_list* args) : element(parent, element_type_t::proc_call),
+        compiler::argument_list* args) : element(parent_scope, element_type_t::proc_call),
                                          _arguments(args),
                                          _identifier(identifier) {
     }

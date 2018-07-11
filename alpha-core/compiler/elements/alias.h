@@ -18,7 +18,7 @@ namespace basecode::compiler {
     class alias : public element {
     public:
         alias(
-            element* parent,
+            block* parent_scope,
             element* expr);
 
         element* expression();

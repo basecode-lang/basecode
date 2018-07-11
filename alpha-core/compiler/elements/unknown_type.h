@@ -17,8 +17,8 @@ namespace basecode::compiler {
 
     class unknown_type : public compiler::type {
     public:
-        explicit unknown_type(
-            element* parent,
+        unknown_type(
+            block* parent_scope,
             const std::string& name);
 
         bool is_array() const;

@@ -494,7 +494,7 @@ namespace basecode::compiler {
 
             _nodes.insert(node_def);
 
-            add_secondary_edge(pair.second->parent(), pair.second);
+            add_secondary_edge(pair.second->parent_scope(), pair.second);
         }
 
         for (const auto& node : _nodes)

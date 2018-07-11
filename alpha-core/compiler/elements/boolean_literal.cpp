@@ -16,8 +16,8 @@
 namespace basecode::compiler {
 
     boolean_literal::boolean_literal(
-            element* parent,
-            bool value) : element(parent, element_type_t::boolean_literal),
+            block* parent_scope,
+            bool value) : element(parent_scope, element_type_t::boolean_literal),
                           _value(value) {
     }
 

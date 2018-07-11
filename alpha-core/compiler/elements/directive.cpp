@@ -21,9 +21,9 @@
 namespace basecode::compiler {
 
     directive::directive(
-            block* parent,
+            block* parent_scope,
             const std::string& name,
-            element* expression) : element(parent, element_type_t::directive),
+            element* expression) : element(parent_scope, element_type_t::directive),
                                    _name(name),
                                    _expression(expression) {
     }

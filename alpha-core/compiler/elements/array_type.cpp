@@ -15,10 +15,10 @@
 namespace basecode::compiler {
 
     array_type::array_type(
-            element* parent,
+            block* parent_scope,
             const std::string& name,
             compiler::type* entry_type) : compiler::composite_type(
-                                                parent,
+                                                parent_scope,
                                                 composite_types_t::struct_type,
                                                 name,
                                                 element_type_t::array_type),
@@ -35,7 +35,7 @@ namespace basecode::compiler {
     bool array_type::on_initialize(
             common::result& r,
             compiler::program* program) {
-        auto block_scope = dynamic_cast<compiler::block*>(parent());
+        auto block_scope = parent_scope();
 
         auto u8_type = program->find_type_down("u8");
         auto u32_type = program->find_type_down("u32");

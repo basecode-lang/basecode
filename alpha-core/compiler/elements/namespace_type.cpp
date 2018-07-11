@@ -14,8 +14,8 @@
 namespace basecode::compiler {
 
     namespace_type::namespace_type(
-        element* parent) : compiler::type(
-                                parent,
+        block* parent_scope) : compiler::type(
+                                parent_scope,
                                 element_type_t::namespace_type,
                                 "namespace") {
     }

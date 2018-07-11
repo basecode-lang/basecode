@@ -21,7 +21,7 @@ namespace basecode::compiler {
     class block : public element {
     public:
         block(
-            block* parent,
+            block* parent_scope,
             element_type_t type = element_type_t::block);
 
         bool define_data(

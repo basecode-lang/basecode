@@ -20,7 +20,7 @@ namespace basecode::compiler {
     class type : public element {
     public:
         type(
-            element* parent,
+            block* parent_scope,
             element_type_t type,
             const std::string& name);
 

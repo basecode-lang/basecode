@@ -14,8 +14,8 @@
 namespace basecode::compiler {
 
     import::import(
-        element* parent,
-        element* expr) : element(parent, element_type_t::import_e),
+        block* parent_scope,
+        element* expr) : element(parent_scope, element_type_t::import_e),
                          _expression(expr) {
     }
 

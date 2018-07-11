@@ -17,7 +17,7 @@ namespace basecode::compiler {
 
     class string_type : public compiler::composite_type {
     public:
-        explicit string_type(element* parent);
+        explicit string_type(block* parent_scope);
 
     protected:
         bool on_initialize(

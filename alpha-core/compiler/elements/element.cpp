@@ -21,17 +21,17 @@
 namespace basecode::compiler {
 
     element::element(
-            element* parent,
+            block* parent_scope,
             element_type_t type) : _id(common::id_pool::instance()->allocate()),
-                                   _parent(parent),
+                                   _parent_scope(parent_scope),
                                    _element_type(type) {
     }
 
     element::~element() {
     }
 
-    element* element::parent() {
-        return _parent;
+    block* element::parent_scope() {
+        return _parent_scope;
     }
 
     common::id_t element::id() const {

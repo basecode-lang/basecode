@@ -17,7 +17,7 @@ namespace basecode::compiler {
 
     class type_info : public compiler::composite_type {
     public:
-        explicit type_info(element* parent);
+        explicit type_info(block* parent_scope);
 
     protected:
         bool on_initialize(

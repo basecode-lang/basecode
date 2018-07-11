@@ -21,8 +21,8 @@
 namespace basecode::compiler {
 
     block::block(
-        block* parent,
-        element_type_t type) : element(parent, type) {
+        block* parent_scope,
+        element_type_t type) : element(parent_scope, type) {
     }
 
     bool block::on_emit(

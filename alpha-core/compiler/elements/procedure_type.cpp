@@ -19,9 +19,9 @@
 namespace basecode::compiler {
 
     procedure_type::procedure_type(
-        element* parent,
+        block* parent_scope,
         compiler::block* scope,
-        const std::string& name) : compiler::type(parent,
+        const std::string& name) : compiler::type(parent_scope,
                                                   element_type_t::proc_type,
                                                   name),
                                    _scope(scope) {

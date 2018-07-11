@@ -14,8 +14,8 @@
 namespace basecode::compiler {
 
     statement::statement(
-            element* parent,
-            element* expr) : element(parent, element_type_t::statement),
+            block* parent_scope,
+            element* expr) : element(parent_scope, element_type_t::statement),
                              _expression(expr) {
     }
 

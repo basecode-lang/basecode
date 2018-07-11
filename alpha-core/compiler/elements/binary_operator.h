@@ -20,7 +20,7 @@ namespace basecode::compiler {
     class binary_operator : public operator_base {
     public:
         binary_operator(
-            element* parent,
+            block* parent_scope,
             operator_type_t type,
             element* lhs,
             element* rhs);

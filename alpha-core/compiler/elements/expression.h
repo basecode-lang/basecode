@@ -18,7 +18,7 @@ namespace basecode::compiler {
     class expression : public element {
     public:
         expression(
-            element* parent,
+            block* parent_scope,
             element* root);
 
         element* root();

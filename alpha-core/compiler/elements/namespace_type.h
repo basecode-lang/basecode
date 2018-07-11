@@ -17,7 +17,7 @@ namespace basecode::compiler {
 
     class namespace_type : public compiler::type {
     public:
-        explicit namespace_type(element* parent);
+        explicit namespace_type(block* parent_scope);
 
     protected:
         bool on_initialize(

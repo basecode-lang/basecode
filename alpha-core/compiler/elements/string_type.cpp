@@ -14,8 +14,8 @@
 
 namespace basecode::compiler {
 
-    string_type::string_type(element* parent) : compiler::composite_type(
-                                                    parent,
+    string_type::string_type(block* parent_scope) : compiler::composite_type(
+                                                    parent_scope,
                                                     composite_types_t::struct_type,
                                                     "string",
                                                     element_type_t::string_type) {
@@ -61,7 +61,7 @@ namespace basecode::compiler {
     bool string_type::on_initialize(
             common::result& r,
             compiler::program* program) {
-        auto block_scope = dynamic_cast<compiler::block*>(parent());
+        auto block_scope = parent_scope();
 
         auto u32_type = program->find_type_down("u32");
         auto address_type = program->find_type_down("address");

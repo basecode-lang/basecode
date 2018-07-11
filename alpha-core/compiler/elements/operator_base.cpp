@@ -14,9 +14,9 @@
 namespace basecode::compiler {
 
     operator_base::operator_base(
-            element* parent,
+            block* parent_scope,
             element_type_t element_type,
-            operator_type_t operator_type) : element(parent, element_type),
+            operator_type_t operator_type) : element(parent_scope, element_type),
                                              _operator_type(operator_type) {
     }
 

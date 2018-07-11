@@ -18,7 +18,7 @@ namespace basecode::compiler {
     class string_literal : public element {
     public:
         string_literal(
-            element* parent,
+            block* parent_scope,
             const std::string& value);
 
         inline std::string value() const {

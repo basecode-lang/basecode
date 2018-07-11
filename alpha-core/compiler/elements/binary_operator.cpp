@@ -17,10 +17,10 @@
 namespace basecode::compiler {
 
     binary_operator::binary_operator(
-        element* parent,
+        block* parent_scope,
         operator_type_t type,
         element* lhs,
-        element* rhs) : operator_base(parent, element_type_t::binary_operator, type),
+        element* rhs) : operator_base(parent_scope, element_type_t::binary_operator, type),
                         _lhs(lhs),
                         _rhs(rhs) {
     }

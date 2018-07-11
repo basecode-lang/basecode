@@ -19,7 +19,7 @@ namespace basecode::compiler {
     class composite_type : public compiler::type {
     public:
         composite_type(
-            element* parent,
+            block* parent_scope,
             composite_types_t type,
             const std::string& name,
             element_type_t element_type = element_type_t::composite_type);

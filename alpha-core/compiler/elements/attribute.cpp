@@ -14,9 +14,9 @@
 namespace basecode::compiler {
 
     attribute::attribute(
-            element* parent,
+            block* parent_scope,
             const std::string& name,
-            element* expr) : element(parent, element_type_t::attribute),
+            element* expr) : element(parent_scope, element_type_t::attribute),
                              _name(name),
                              _expr(expr) {
     }

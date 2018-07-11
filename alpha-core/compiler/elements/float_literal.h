@@ -18,7 +18,7 @@ namespace basecode::compiler {
     class float_literal : public element {
     public:
         float_literal(
-            element* parent,
+            block* parent_scope,
             double value);
 
         double value() const;

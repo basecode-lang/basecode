@@ -14,8 +14,8 @@
 
 namespace basecode::compiler {
 
-    type_info::type_info(element* parent) : compiler::composite_type(
-                                                parent,
+    type_info::type_info(block* parent_scope) : compiler::composite_type(
+                                                parent_scope,
                                                 composite_types_t::struct_type,
                                                 "type",
                                                 element_type_t::type_info) {
@@ -45,7 +45,7 @@ namespace basecode::compiler {
     bool type_info::on_initialize(
             common::result& r,
             compiler::program* program) {
-        auto block_scope = dynamic_cast<compiler::block*>(parent());
+        auto block_scope = parent_scope();
 
         auto string_type = program->find_type_down("string");
 

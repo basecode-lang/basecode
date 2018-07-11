@@ -14,8 +14,8 @@
 
 namespace basecode::compiler {
 
-    any_type::any_type(element* parent) : compiler::composite_type(
-                                                parent,
+    any_type::any_type(block* parent_scope) : compiler::composite_type(
+                                                parent_scope,
                                                 composite_types_t::struct_type,
                                                 "any",
                                                 element_type_t::any_type) {
@@ -29,7 +29,7 @@ namespace basecode::compiler {
     bool any_type::on_initialize(
             common::result& r,
             compiler::program* program) {
-        auto block_scope = dynamic_cast<compiler::block*>(parent());
+        auto block_scope = parent_scope();
 
         auto type_info_type = program->find_type_down("type");
         auto address_type = program->find_type_down("address");

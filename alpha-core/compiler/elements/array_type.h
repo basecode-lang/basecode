@@ -18,7 +18,7 @@ namespace basecode::compiler {
     class array_type : public compiler::composite_type {
     public:
         array_type(
-            element* parent,
+            block* parent_scope,
             const std::string& name,
             compiler::type* entry_type);
 

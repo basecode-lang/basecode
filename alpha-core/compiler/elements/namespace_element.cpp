@@ -15,9 +15,9 @@
 namespace basecode::compiler {
 
     namespace_element::namespace_element(
-        element* parent,
-        element* expr) : element(parent, element_type_t::namespace_e),
-                         _expression(expr) {
+            block* parent_scope,
+            element* expr) : element(parent_scope, element_type_t::namespace_e),
+                             _expression(expr) {
     }
 
     bool namespace_element::on_emit(

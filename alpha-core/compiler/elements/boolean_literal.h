@@ -18,7 +18,7 @@ namespace basecode::compiler {
     class boolean_literal : public element {
     public:
         boolean_literal(
-            element* parent,
+            block* parent_scope,
             bool value);
 
         bool value() const;

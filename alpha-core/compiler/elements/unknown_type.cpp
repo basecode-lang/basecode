@@ -14,9 +14,9 @@
 namespace basecode::compiler {
 
     unknown_type::unknown_type(
-        element* parent,
+        block* parent_scope,
         const std::string& name) : compiler::type(
-                                        parent,
+                                        parent_scope,
                                         element_type_t::unknown_type,
                                         name) {
     }
