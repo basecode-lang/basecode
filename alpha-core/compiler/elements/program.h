@@ -60,21 +60,23 @@ namespace basecode::compiler {
         compiler::block* block();
 
     private:
+        friend class any_type;
+        friend class type_info;
+        friend class array_type;
+        friend class string_type;
+        friend class numeric_type;
+        friend class procedure_type;
+
         bool visit_blocks(
             common::result& r,
-            const block_visitor_callable& callable);
+            const block_visitor_callable& callable,
+            compiler::block* root_block = nullptr);
 
         void initialize_core_types(common::result& r);
 
         bool resolve_unknown_types(common::result& r);
 
     private:
-        friend class any_type;
-        friend class type_info;
-        friend class array_type;
-        friend class string_type;
-        friend class numeric_type;
-
         cast* make_cast(
             compiler::block* parent_scope,
             compiler::type* type,

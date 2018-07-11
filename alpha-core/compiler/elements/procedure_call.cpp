@@ -27,12 +27,11 @@ namespace basecode::compiler {
 
     bool procedure_call::on_emit(
             common::result& r,
-            vm::assembler& assembler,
             emit_context_t& context) {
-        auto instruction_block = assembler.current_block();
+        auto instruction_block = context.assembler->current_block();
 
         if (_arguments != nullptr)
-            _arguments->emit(r, assembler, context);
+            _arguments->emit(r, context);
 
         auto procedure_type = identifier()->initializer()->procedure_type();
         if (procedure_type->is_foreign()) {

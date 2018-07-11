@@ -22,11 +22,10 @@ namespace basecode::compiler {
 
     bool expression::on_emit(
             common::result& r,
-            vm::assembler& assembler,
             emit_context_t& context) {
         if (_root == nullptr)
             return true;
-        return _root->emit(r, assembler, context);
+        return _root->emit(r, context);
     }
 
     element* expression::root() {

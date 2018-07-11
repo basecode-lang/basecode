@@ -29,7 +29,6 @@ namespace basecode::compiler {
     protected:
         bool on_emit(
             common::result& r,
-            vm::assembler& assembler,
             emit_context_t& context);
 
     private:

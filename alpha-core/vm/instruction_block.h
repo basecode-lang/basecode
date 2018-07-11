@@ -17,6 +17,7 @@
 #include <vector>
 #include "terp.h"
 #include "label.h"
+#include "stack_frame.h"
 
 namespace basecode::vm {
 
@@ -224,6 +225,8 @@ namespace basecode::vm {
 
         instruction_block* parent();
 
+        stack_frame_t* stack_frame();
+
         // setxx
         void setz(i_registers_t dest_reg);
 
@@ -361,6 +364,11 @@ namespace basecode::vm {
             i_registers_t dest_reg,
             i_registers_t minuend_reg,
             i_registers_t subtrahend_reg);
+
+        void sub_ireg_by_immediate(
+            i_registers_t dest_reg,
+            i_registers_t minuend_reg,
+            uint64_t subtrahend_immediate);
 
         // div variations
         void div_ireg_by_ireg_u8(
@@ -665,6 +673,12 @@ namespace basecode::vm {
             i_registers_t minuend_reg,
             i_registers_t subtrahend_reg);
 
+        void make_sub_instruction_immediate(
+            op_sizes size,
+            i_registers_t dest_reg,
+            i_registers_t minuend_reg,
+            uint64_t subtrahend_immediate);
+
         void disassemble(instruction_block* block);
 
         void make_float_constant_push_instruction(
@@ -686,6 +700,7 @@ namespace basecode::vm {
         label_ref_t* make_unresolved_label_ref(const std::string& label_name);
 
     private:
+        stack_frame_t _stack_frame;
         instruction_block_type_t _type;
         instruction_block* _parent = nullptr;
         std::vector<instruction_block*> _blocks {};

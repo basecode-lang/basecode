@@ -24,16 +24,15 @@ namespace basecode::compiler {
 
     bool unary_operator::on_emit(
             common::result& r,
-            vm::assembler& assembler,
             emit_context_t& context) {
-        auto instruction_block = assembler.current_block();
+        auto instruction_block = context.assembler->current_block();
         auto target_reg = instruction_block->current_target_register();
         vm::i_registers_t rhs_reg;
         if (!instruction_block->allocate_reg(rhs_reg)) {
             // XXX: error
         }
         instruction_block->push_target_register(rhs_reg);
-        _rhs->emit(r, assembler, context);
+        _rhs->emit(r, context);
         instruction_block->pop_target_register();
 
         switch (operator_type()) {

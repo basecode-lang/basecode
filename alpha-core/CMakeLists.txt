@@ -40,6 +40,7 @@ add_library(
         vm/label.cpp vm/label.h
         vm/symbol.cpp vm/symbol.h
         vm/segment.cpp vm/segment.h
+        vm/stack_frame.cpp vm/stack_frame.h
         vm/instruction_block.cpp vm/instruction_block.h
         compiler/elements/type.cpp compiler/elements/type.h
         compiler/elements/cast.cpp compiler/elements/cast.h
@@ -64,6 +65,7 @@ add_library(
         compiler/elements/array_type.cpp compiler/elements/array_type.h
         compiler/elements/initializer.cpp compiler/elements/initializer.h
         compiler/elements/string_type.cpp compiler/elements/string_type.h
+        compiler/elements/emit_context.cpp compiler/elements/emit_context.h
         compiler/elements/numeric_type.cpp compiler/elements/numeric_type.h
         compiler/elements/unknown_type.cpp compiler/elements/unknown_type.h
         compiler/elements/operator_base.cpp compiler/elements/operator_base.h

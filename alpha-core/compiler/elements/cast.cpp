@@ -25,15 +25,14 @@ namespace basecode::compiler {
 
     bool cast::on_emit(
             common::result& r,
-            vm::assembler& assembler,
             emit_context_t& context) {
         if (_expression == nullptr)
             return true;
-        auto instruction_block = assembler.current_block();
+        auto instruction_block = context.assembler->current_block();
         instruction_block->comment(fmt::format(
             "XXX: cast<{}> not yet implemented",
             _type->name()));
-        return _expression->emit(r, assembler, context);
+        return _expression->emit(r, context);
     }
 
     element* cast::expression() {

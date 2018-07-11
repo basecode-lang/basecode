@@ -26,12 +26,11 @@ namespace basecode::compiler {
 
     bool if_element::on_emit(
             common::result& r,
-            vm::assembler& assembler,
             emit_context_t& context) {
         context.push_if(
             _true_branch->label_name(),
             _false_branch->label_name());
-        _predicate->emit(r, assembler, context);
+        _predicate->emit(r, context);
         context.pop();
         return true;
     }

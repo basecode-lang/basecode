@@ -16,7 +16,8 @@ namespace basecode::vm {
 
     instruction_block::instruction_block(
             instruction_block* parent,
-            instruction_block_type_t type): _type(type),
+            instruction_block_type_t type): _stack_frame(parent),
+                                            _type(type),
                                             _parent(parent) {
     }
 
@@ -346,6 +347,13 @@ namespace basecode::vm {
             i_registers_t minuend_reg,
             i_registers_t subtrahend_reg) {
         make_sub_instruction(op_sizes::qword, dest_reg, minuend_reg, subtrahend_reg);
+    }
+
+    void instruction_block::sub_ireg_by_immediate(
+            i_registers_t dest_reg,
+            i_registers_t minuend_reg,
+            uint64_t subtrahend_immediate) {
+        make_sub_instruction_immediate(op_sizes::qword, dest_reg, minuend_reg, subtrahend_immediate);
     }
 
     // div variations
@@ -694,6 +702,30 @@ namespace basecode::vm {
         _instructions.push_back(sub_op);
     }
 
+    void instruction_block::make_sub_instruction_immediate(
+            op_sizes size,
+            i_registers_t dest_reg,
+            i_registers_t minuend_reg,
+            uint64_t subtrahend_immediate) {
+        instruction_t sub_op;
+        sub_op.op = op_codes::sub;
+        sub_op.size = size;
+        sub_op.operands_count = 3;
+        sub_op.operands[0].type =
+            operand_encoding_t::flags::integer
+            | operand_encoding_t::flags::reg;
+        sub_op.operands[0].value.r8 = dest_reg;
+        sub_op.operands[1].type =
+            operand_encoding_t::flags::integer
+            | operand_encoding_t::flags::reg;
+        sub_op.operands[1].value.r8 = minuend_reg;
+        sub_op.operands[2].type =
+            operand_encoding_t::flags::integer
+            | operand_encoding_t::flags::constant;
+        sub_op.operands[2].value.u64 = subtrahend_immediate;
+        _instructions.push_back(sub_op);
+    }
+
     // swap variations
     void instruction_block::swap_ireg_with_ireg_u8(
             i_registers_t dest_reg,
@@ -717,6 +749,10 @@ namespace basecode::vm {
             i_registers_t dest_reg,
             i_registers_t src_reg) {
         make_swap_instruction(op_sizes::qword, dest_reg, src_reg);
+    }
+
+    stack_frame_t* instruction_block::stack_frame() {
+        return &_stack_frame;
     }
 
     void instruction_block::push_u8(i_registers_t reg) {

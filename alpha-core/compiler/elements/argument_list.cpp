@@ -21,9 +21,8 @@ namespace basecode::compiler {
 
     bool argument_list::on_emit(
             common::result& r,
-            vm::assembler& assembler,
             emit_context_t& context) {
-        auto instruction_block = assembler.current_block();
+        auto instruction_block = context.assembler->current_block();
         for (auto arg : _elements) {
             switch (arg->element_type()) {
                 case element_type_t::proc_call:
@@ -41,7 +40,7 @@ namespace basecode::compiler {
                     }
 
                     instruction_block->push_target_register(target_reg);
-                    arg->emit(r, assembler, context);
+                    arg->emit(r, context);
                     instruction_block->pop_target_register();
                     instruction_block->push_u64(target_reg);
                     instruction_block->free_reg(target_reg);

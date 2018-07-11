@@ -24,7 +24,6 @@ namespace basecode::compiler {
 
     bool initializer::on_emit(
             common::result& r,
-            vm::assembler& assembler,
             emit_context_t& context) {
         return true;
     }

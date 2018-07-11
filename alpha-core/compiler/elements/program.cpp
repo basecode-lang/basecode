@@ -415,9 +415,9 @@ namespace basecode::compiler {
             return true;
         });
 
-        emit_context_t context {};
+        emit_context_t context(_terp, &_assembler, this);
         visit_blocks(r, [&](compiler::block* scope) {
-            scope->emit(r, _assembler, context);
+            scope->emit(r, context);
             return true;
         });
 
@@ -973,7 +973,8 @@ namespace basecode::compiler {
 
     bool program::visit_blocks(
             common::result& r,
-            const block_visitor_callable& callable) {
+            const block_visitor_callable& callable,
+            compiler::block* root_block) {
         std::function<bool (compiler::block*)> recursive_execute =
             [&](compiler::block* scope) -> bool {
                 if (!callable(scope))
@@ -984,7 +985,7 @@ namespace basecode::compiler {
                 }
                 return true;
             };
-        return recursive_execute(block());
+        return recursive_execute(root_block != nullptr ? root_block : block());
     }
 
     void program::apply_attributes(

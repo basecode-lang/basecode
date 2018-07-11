@@ -50,7 +50,6 @@ namespace basecode::compiler {
     protected:
         bool on_emit(
             common::result& r,
-            vm::assembler& assembler,
             emit_context_t& context) override;
 
         bool on_is_constant() const override;
@@ -62,6 +61,10 @@ namespace basecode::compiler {
         bool on_as_integer(uint64_t& value) const override;
 
         bool on_as_string(std::string& value) const override;
+
+    private:
+        void emit_stack_based_load(
+            vm::instruction_block* instruction_block);
 
     private:
         std::string _name;

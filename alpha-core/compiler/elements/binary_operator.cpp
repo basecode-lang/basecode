@@ -27,9 +27,8 @@ namespace basecode::compiler {
 
     bool binary_operator::on_emit(
             common::result& r,
-            vm::assembler& assembler,
             emit_context_t& context) {
-        auto instruction_block = assembler.current_block();
+        auto instruction_block = context.assembler->current_block();
         switch (operator_type()) {
             case operator_type_t::add:
             case operator_type_t::modulo:
@@ -46,7 +45,6 @@ namespace basecode::compiler {
             case operator_type_t::rotate_right: {
                 emit_arithmetic_operator(
                     r,
-                    assembler,
                     context,
                     instruction_block);
                 break;
@@ -61,7 +59,6 @@ namespace basecode::compiler {
             case operator_type_t::greater_than_or_equal: {
                 emit_relational_operator(
                     r,
-                    assembler,
                     context,
                     instruction_block);
                 break;
@@ -78,21 +75,26 @@ namespace basecode::compiler {
 
                 instruction_block->push_target_register(lhs_reg);
                 context.push_access(emit_access_type_t::write);
-                _lhs->emit(r, assembler, context);
+                _lhs->emit(r, context);
                 context.pop_access();
                 instruction_block->pop_target_register();
 
                 instruction_block->push_target_register(rhs_reg);
                 context.push_access(emit_access_type_t::read);
-                _rhs->emit(r, assembler, context);
+                _rhs->emit(r, context);
                 context.pop_access();
                 instruction_block->pop_target_register();
 
                 int64_t offset = 0;
                 auto identifier = dynamic_cast<compiler::identifier*>(_lhs);
                 if (identifier->usage() == identifier_usage_t::stack) {
-                    lhs_reg = vm::i_registers_t::sp;
-                    offset = -8;
+                    auto entry = instruction_block->stack_frame()->find_up(identifier->name());
+                    if (entry == nullptr) {
+                        // XXX: this is bad
+                        return false;
+                    }
+                    lhs_reg = vm::i_registers_t::fp;
+                    offset = entry->offset;
                 }
 
                 instruction_block->store_from_ireg_u64(lhs_reg, rhs_reg, offset);
@@ -123,7 +125,6 @@ namespace basecode::compiler {
 
     void binary_operator::emit_relational_operator(
             common::result& r,
-            vm::assembler& assembler,
             emit_context_t& context,
             vm::instruction_block* instruction_block) {
         auto if_data = context.top<if_data_t>();
@@ -150,11 +151,11 @@ namespace basecode::compiler {
         }
 
         instruction_block->push_target_register(lhs_reg);
-        _lhs->emit(r, assembler, context);
+        _lhs->emit(r, context);
         instruction_block->pop_target_register();
 
         instruction_block->push_target_register(rhs_reg);
-        _rhs->emit(r, assembler, context);
+        _rhs->emit(r, context);
         instruction_block->pop_target_register();
 
         switch (operator_type()) {
@@ -227,7 +228,6 @@ namespace basecode::compiler {
 
     void binary_operator::emit_arithmetic_operator(
             common::result& r,
-            vm::assembler& assembler,
             emit_context_t& context,
             vm::instruction_block* instruction_block) {
         auto result_reg = instruction_block->current_target_register();
@@ -242,11 +242,11 @@ namespace basecode::compiler {
         }
 
         instruction_block->push_target_register(lhs_reg);
-        _lhs->emit(r, assembler, context);
+        _lhs->emit(r, context);
         instruction_block->pop_target_register();
 
         instruction_block->push_target_register(rhs_reg);
-        _rhs->emit(r, assembler, context);
+        _rhs->emit(r, context);
         instruction_block->pop_target_register();
 
         switch (operator_type()) {

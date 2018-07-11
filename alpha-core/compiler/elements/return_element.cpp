@@ -20,9 +20,8 @@ namespace basecode::compiler {
 
     bool return_element::on_emit(
             common::result& r,
-            vm::assembler& assembler,
             emit_context_t& context) {
-        auto instruction_block = assembler.current_block();
+        auto instruction_block = context.assembler->current_block();
 
         for (auto expr : _expressions) {
             vm::i_registers_t target_reg;
@@ -30,7 +29,7 @@ namespace basecode::compiler {
                 // XXX: error
             }
             instruction_block->push_target_register(target_reg);
-            expr->emit(r, assembler, context);
+            expr->emit(r, context);
             instruction_block->pop_target_register();
             instruction_block->push_u32(target_reg);
             instruction_block->free_reg(target_reg);

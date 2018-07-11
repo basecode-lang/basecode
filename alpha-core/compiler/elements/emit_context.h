@@ -1,0 +1,98 @@
+// ----------------------------------------------------------------------------
+//
+// Basecode Bootstrap Compiler
+// Copyright (C) 2018 Jeff Panici
+// All rights reserved.
+//
+// This software source file is licensed under the terms of MIT license.
+// For details, please read the LICENSE.md file.
+//
+// ----------------------------------------------------------------------------
+
+#pragma once
+
+#include <any>
+#include <stack>
+#include <string>
+#include <vm/terp.h>
+#include <vm/assembler.h>
+
+namespace basecode::compiler {
+
+    enum class emit_context_type_t {
+        empty,
+        if_element,
+        procedure_type
+    };
+
+    enum class emit_access_type_t {
+        read,
+        write
+    };
+
+    struct procedure_type_data_t {
+        std::string identifier_name;
+    };
+
+    struct if_data_t {
+        enum class logical_group_t {
+            no_group,
+            and_group,
+            or_group,
+        };
+        std::string true_branch_label;
+        std::string false_branch_label;
+        logical_group_t group_type = logical_group_t::no_group;
+    };
+
+    class program;
+
+    struct emit_context_t {
+        emit_context_t(
+            vm::terp* terp,
+            vm::assembler* assembler,
+            compiler::program* program);
+
+        template <typename T>
+        T* top() {
+            if (data_stack.empty())
+                return nullptr;
+            try {
+                return std::any_cast<T>(&data_stack.top());
+            } catch (const std::bad_any_cast& e) {
+                return nullptr;
+            }
+        }
+
+        void pop();
+
+        void push_if(
+            const std::string& true_label_name,
+            const std::string& false_label_name);
+
+        void pop_access();
+
+        void clear_scratch_registers();
+
+        bool has_scratch_register() const;
+
+        vm::i_registers_t pop_scratch_register();
+
+        emit_access_type_t current_access() const;
+
+        void push_access(emit_access_type_t type);
+
+        void push_scratch_register(vm::i_registers_t reg);
+
+        void push_procedure_type(const std::string& name);
+
+        vm::terp* terp = nullptr;
+        vm::assembler* assembler = nullptr;
+        compiler::program* program = nullptr;
+        std::stack<std::any> data_stack {};
+        std::stack<emit_access_type_t> access_stack {};
+        std::stack<vm::i_registers_t> scratch_registers {};
+    };
+
+};
+

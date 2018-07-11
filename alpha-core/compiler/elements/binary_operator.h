@@ -32,18 +32,15 @@ namespace basecode::compiler {
     protected:
         bool on_emit(
             common::result& r,
-            vm::assembler& assembler,
             emit_context_t& context) override;
 
         void emit_arithmetic_operator(
             common::result& r,
-            vm::assembler& assembler,
             emit_context_t& context,
             vm::instruction_block* instruction_block);
 
         void emit_relational_operator(
             common::result& r,
-            vm::assembler& assembler,
             emit_context_t& context,
             vm::instruction_block* instruction_block);
 

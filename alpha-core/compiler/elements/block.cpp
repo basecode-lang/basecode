@@ -27,22 +27,21 @@ namespace basecode::compiler {
 
     bool block::on_emit(
             common::result& r,
-            vm::assembler& assembler,
             emit_context_t& context) {
         vm::instruction_block* instruction_block = nullptr;
 
         switch (element_type()) {
             case element_type_t::block:
-                instruction_block = assembler.make_basic_block();
+                instruction_block = context.assembler->make_basic_block();
                 instruction_block->make_label(label_name());
-                assembler.push_block(instruction_block);
+                context.assembler->push_block(instruction_block);
                 break;
             case element_type_t::proc_type_block: {
-                instruction_block = assembler.current_block();
+                instruction_block = context.assembler->current_block();
                 break;
             }
             case element_type_t::proc_instance_block: {
-                instruction_block = assembler.current_block();
+                instruction_block = context.assembler->current_block();
                 break;
             }
             default:
@@ -50,7 +49,7 @@ namespace basecode::compiler {
         }
 
         for (auto var : _identifiers.as_list()) {
-            if (assembler.in_procedure_scope())
+            if (context.assembler->in_procedure_scope())
                 var->usage(identifier_usage_t::stack);
 
             auto init = var->initializer();
@@ -60,21 +59,21 @@ namespace basecode::compiler {
             auto procedure_type = init->procedure_type();
             if (procedure_type != nullptr) {
                 context.push_procedure_type(var->name());
-                procedure_type->emit(r, assembler, context);
+                procedure_type->emit(r, context);
                 context.pop();
             }
         }
 
         for (auto stmt : _statements) {
-            stmt->emit(r, assembler, context);
+            stmt->emit(r, context);
         }
 
         for (auto blk : _blocks) {
-            blk->emit(r, assembler, context);
+            blk->emit(r, context);
         }
 
         if (element_type() == element_type_t::block)
-            assembler.pop_block();
+            context.assembler->pop_block();
 
         return !r.is_failed();
     }

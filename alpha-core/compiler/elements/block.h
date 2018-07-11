@@ -47,7 +47,6 @@ namespace basecode::compiler {
 
         bool on_emit(
             common::result& r,
-            vm::assembler& assembler,
             emit_context_t& context) override;
 
     private:
