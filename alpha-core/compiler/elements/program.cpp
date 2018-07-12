@@ -411,17 +411,6 @@ namespace basecode::compiler {
         if (!resolve_unknown_types(r))
             return false;
 
-        // build data segments
-        string_set_t interned_strings {};
-        visit_blocks(r, [&](compiler::block* scope) {
-            if (scope->element_type() == element_type_t::proc_type_block
-            ||  scope->element_type() == element_type_t::proc_instance_block) {
-                return true;
-            }
-            scope->define_data(r, interned_strings, _assembler);
-            return true;
-        });
-
         // emit byte code instruction blocks into assembler
         emit_context_t context(_terp, &_assembler, this);
         visit_blocks(r, [&](compiler::block* scope) {

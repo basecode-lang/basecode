@@ -17,6 +17,7 @@
 #include "initializer.h"
 #include "numeric_type.h"
 #include "procedure_type.h"
+#include "string_literal.h"
 #include "namespace_element.h"
 
 namespace basecode::compiler {
@@ -58,16 +59,83 @@ namespace basecode::compiler {
         }
 
         for (auto var : _identifiers.as_list()) {
-            if (context.assembler->in_procedure_scope())
-                var->usage(identifier_usage_t::stack);
-
-            auto init = var->initializer();
-            if (init == nullptr)
+            if (var->type()->element_type() == element_type_t::namespace_type)
                 continue;
 
-            auto procedure_type = init->procedure_type();
-            if (procedure_type != nullptr)
-                procedure_type->emit(r, context);
+            auto init = var->initializer();
+            if (init != nullptr) {
+                auto procedure_type = init->procedure_type();
+                if (procedure_type != nullptr) {
+                    procedure_type->emit(r, context);
+                    continue;
+                }
+            }
+
+            if (context.assembler->in_procedure_scope())
+                var->usage(identifier_usage_t::stack);
+            else {
+                instruction_block->make_label(var->name());
+
+                switch (var->type()->element_type()) {
+                    case element_type_t::numeric_type: {
+                        if (var->is_constant())
+                            instruction_block->section(vm::section_t::ro_data);
+                        else
+                            instruction_block->section(vm::section_t::data);
+
+                        uint64_t value = 0;
+                        var->as_integer(value);
+
+                        auto symbol_type = vm::integer_symbol_type_for_size(
+                            var->type()->size_in_bytes());
+                        switch (symbol_type) {
+                            case vm::symbol_type_t::u8:
+                                if (init == nullptr)
+                                    instruction_block->reserve_byte(1);
+                                else
+                                    instruction_block->byte(static_cast<uint8_t>(value));
+                                break;
+                            case vm::symbol_type_t::u16:
+                                if (init == nullptr)
+                                    instruction_block->reserve_word(1);
+                                else
+                                    instruction_block->word(static_cast<uint16_t>(value));
+                                break;
+                            case vm::symbol_type_t::f32:
+                            case vm::symbol_type_t::u32:
+                                if (init == nullptr)
+                                    instruction_block->reserve_dword(1);
+                                else
+                                    instruction_block->dword(static_cast<uint32_t>(value));
+                                break;
+                            case vm::symbol_type_t::f64:
+                            case vm::symbol_type_t::u64:
+                                if (init == nullptr)
+                                    instruction_block->reserve_qword(1);
+                                else
+                                    instruction_block->qword(value);
+                                break;
+                            case vm::symbol_type_t::bytes:
+                                break;
+                            default:
+                                break;
+                        }
+                        break;
+                    }
+                    case element_type_t::string_type: {
+                        if (init != nullptr) {
+                            instruction_block->section(vm::section_t::ro_data);
+                            auto string_literal = dynamic_cast<compiler::string_literal*>(
+                                init->expression());
+                            instruction_block->string(string_literal->value());
+                        }
+                        break;
+                    }
+                    default: {
+                        break;
+                    }
+                }
+            }
         }
 
         for (auto stmt : _statements) {
@@ -80,89 +148,6 @@ namespace basecode::compiler {
 
         if (element_type() == element_type_t::block)
             context.assembler->pop_block();
-
-        return !r.is_failed();
-    }
-
-    void block::add_symbols(
-            common::result& r,
-            vm::segment* segment,
-            const identifier_list_t& list) {
-        for (auto var : list) {
-            switch (var->type()->element_type()) {
-                case element_type_t::bool_type:
-                case element_type_t::numeric_type: {
-                    auto symbol = segment->symbol(
-                        var->name(),
-                        vm::integer_symbol_type_for_size(var->type()->size_in_bytes()));
-                    uint64_t value;
-                    if (var->as_integer(value)) {
-                        symbol->value(value);
-                    }
-                    break;
-                }
-                case element_type_t::any_type:
-                case element_type_t::type_info:
-                case element_type_t::array_type:
-                case element_type_t::string_type:
-                case element_type_t::composite_type: {
-                    auto size_in_bytes = var->type()->size_in_bytes();
-                    auto symbol = segment->symbol(
-                        var->name(),
-                        vm::symbol_type_t::bytes,
-                        size_in_bytes);
-                    if (var->initializer() != nullptr)
-                        symbol->pending_address_from_id(var->initializer()->id());
-                    uint64_t value = 0;
-                    symbol->value(value);
-                    break;
-                }
-                default:
-                    break;
-            }
-        }
-    }
-
-    bool block::define_data(
-            common::result& r,
-            string_set_t& interned_strings,
-            vm::assembler& assembler) {
-        // look for constant strings
-
-        if (!_identifiers.empty()) {
-            auto constant_init = _identifiers.constants(true);
-            if (!constant_init.empty()) {
-                auto section = assembler.segment(
-                    fmt::format("rodata_{}", id()),
-                    vm::segment_type_t::constant);
-                section->initialized(true);
-                add_symbols(r, section, constant_init);
-            }
-
-            auto constant_uninit = _identifiers.constants(false);
-            if (!constant_uninit.empty()) {
-                auto section = assembler.segment(
-                    fmt::format("bss_{}", id()),
-                    vm::segment_type_t::constant);
-                add_symbols(r, section, constant_uninit);
-            }
-
-            auto global_init = _identifiers.globals(true);
-            if (!global_init.empty()) {
-                auto section = assembler.segment(
-                    fmt::format("data_{}", id()),
-                    vm::segment_type_t::data);
-                add_symbols(r, section, global_init);
-            }
-
-            auto global_uninit = _identifiers.globals(false);
-            if (!global_uninit.empty()) {
-                auto section = assembler.segment(
-                    fmt::format("bss_data_{}", id()),
-                    vm::segment_type_t::data);
-                add_symbols(r, section, global_uninit);
-            }
-        }
 
         return !r.is_failed();
     }

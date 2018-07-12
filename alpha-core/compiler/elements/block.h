@@ -24,11 +24,6 @@ namespace basecode::compiler {
             block* parent_scope,
             element_type_t type = element_type_t::block);
 
-        bool define_data(
-            common::result& r,
-            string_set_t& interned_strings,
-            vm::assembler& assembler);
-
         type_map_t& types();
 
         block_list_t& blocks();
@@ -40,11 +35,6 @@ namespace basecode::compiler {
         identifier_map_t& identifiers();
 
     private:
-        void add_symbols(
-            common::result& r,
-            vm::segment* segment,
-            const identifier_list_t& list);
-
         bool on_emit(
             common::result& r,
             emit_context_t& context) override;

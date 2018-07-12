@@ -16,6 +16,7 @@
 #include <common/bytes.h>
 #include <common/hex_formatter.h>
 #include "terp.h"
+#include "instruction_block.h"
 
 namespace basecode::vm {
 
@@ -540,123 +541,193 @@ namespace basecode::vm {
     std::string instruction_t::disassemble(const id_resolve_callable& id_resolver) const {
         std::stringstream stream;
 
-        auto op_name = op_code_name(op);
-        if (!op_name.empty()) {
-            std::stringstream mnemonic;
-            std::string format_spec;
+        switch (op) {
+            case op_codes::data: {
+                std::stringstream directive;
+                std::string format_spec;
 
-            mnemonic <<  op_name;
-            switch (size) {
-                case op_sizes::byte:
-                    mnemonic << ".B";
-                    format_spec = "#${:02X}";
-                    break;
-                case op_sizes::word:
-                    mnemonic << ".W";
-                    format_spec = "#${:04X}";
-                    break;
-                case op_sizes::dword:
-                    mnemonic << ".DW";
-                    format_spec = "#${:08X}";
-                    break;
-                case op_sizes::qword:
-                    mnemonic << ".QW";
-                    format_spec = "#${:016X}";
-                    break;
-                default: {
-                    break;
-                }
-            }
-
-            stream << std::left << std::setw(10) << mnemonic.str();
-
-            std::stringstream operands_stream;
-            for (size_t i = 0; i < operands_count; i++) {
-                if (i > 0 && i < operands_count) {
-                    operands_stream << ", ";
-                }
-
-                const auto& operand = operands[i];
-                std::string prefix, postfix;
-
-                if (operand.is_negative()) {
-                    if (operand.is_prefix())
-                        prefix = "--";
-                    else
-                        prefix = "-";
-
-                    if (operand.is_postfix())
-                        postfix = "--";
-                } else {
-                    if (operand.is_prefix())
-                        prefix = "++";
-
-                    if (operand.is_postfix())
-                        postfix = "++";
-                }
-
-                if (operand.is_reg()) {
-                    if (operand.is_integer()) {
-                        switch (operand.value.r8) {
-                            case i_registers_t::sp: {
-                                operands_stream << prefix << "SP" << postfix;
-                                break;
-                            }
-                            case i_registers_t::fp: {
-                                operands_stream << prefix << "FP" << postfix;
-                                break;
-                            }
-                            case i_registers_t::pc: {
-                                operands_stream << prefix << "PC" << postfix;
-                                break;
-                            }
-                            case i_registers_t::fr: {
-                                operands_stream << "FR";
-                                break;
-                            }
-                            case i_registers_t::sr: {
-                                operands_stream << "SR";
-                                break;
-                            }
-                            default: {
-                                operands_stream << prefix
-                                                << "I"
-                                                << std::to_string(operand.value.r8)
-                                                << postfix;
-                                break;
-                            }
+                if (operands[0].value.u64 == 0) {
+                    switch (size) {
+                        case op_sizes::byte:
+                            directive << ".db";
+                            format_spec = "#${:02X}";
+                            break;
+                        case op_sizes::word:
+                            directive << ".dw";
+                            format_spec = "#${:04X}";
+                            break;
+                        case op_sizes::dword:
+                            directive << ".ddw";
+                            format_spec = "#${:08X}";
+                            break;
+                        case op_sizes::qword:
+                            directive << ".dqd";
+                            format_spec = "#${:016X}";
+                            break;
+                        default: {
+                            break;
                         }
-                    } else {
-                        operands_stream << "F" << std::to_string(operand.value.r8);
                     }
                 } else {
-                    if (operand.is_integer()) {
-                        if (operand.is_unresolved()) {
-                            if (id_resolver == nullptr)
-                                operands_stream << fmt::format("id({})", operand.value.u64);
+                    format_spec = "#${:04X}";
+                    switch (size) {
+                        case op_sizes::byte:
+                            directive << ".rb";
+                            break;
+                        case op_sizes::word:
+                            directive << ".rw";
+                            break;
+                        case op_sizes::dword:
+                            directive << ".rdw";
+                            break;
+                        case op_sizes::qword:
+                            directive << ".rqw";
+                            break;
+                        default: {
+                            break;
+                        }
+                    }
+                }
+
+                stream << std::left << std::setw(10) << directive.str();
+
+                std::stringstream operands_stream;
+                operands_stream << fmt::format(format_spec, operands[1].value.u64);
+                stream << std::left << std::setw(24) << operands_stream.str();
+                break;
+            }
+            case op_codes::section: {
+                stream << std::left << std::setw(10) << ".section";
+                std::stringstream operands_stream;
+                operands_stream
+                    << "'"
+                    << section_name(static_cast<section_t>(operands[0].value.u64))
+                    << "'";
+                stream << std::left << std::setw(24) << operands_stream.str();
+                break;
+            }
+            default: {
+                auto op_name = op_code_name(op);
+                if (!op_name.empty()) {
+                    std::stringstream mnemonic;
+                    std::string format_spec;
+
+                    mnemonic << op_name;
+                    switch (size) {
+                        case op_sizes::byte:
+                            mnemonic << ".B";
+                            format_spec = "#${:02X}";
+                            break;
+                        case op_sizes::word:
+                            mnemonic << ".W";
+                            format_spec = "#${:04X}";
+                            break;
+                        case op_sizes::dword:
+                            mnemonic << ".DW";
+                            format_spec = "#${:08X}";
+                            break;
+                        case op_sizes::qword:
+                            mnemonic << ".QW";
+                            format_spec = "#${:016X}";
+                            break;
+                        default: {
+                            break;
+                        }
+                    }
+
+                    stream << std::left << std::setw(10) << mnemonic.str();
+
+                    std::stringstream operands_stream;
+                    for (size_t i = 0; i < operands_count; i++) {
+                        if (i > 0 && i < operands_count) {
+                            operands_stream << ", ";
+                        }
+
+                        const auto& operand = operands[i];
+                        std::string prefix, postfix;
+
+                        if (operand.is_negative()) {
+                            if (operand.is_prefix())
+                                prefix = "--";
                             else
-                                operands_stream << id_resolver(operand.value.u64);
+                                prefix = "-";
+
+                            if (operand.is_postfix())
+                                postfix = "--";
                         } else {
-                            if (prefix == "-") {
-                                operands_stream << fmt::format("{}", static_cast<int64_t>(operand.value.u64));
+                            if (operand.is_prefix())
+                                prefix = "++";
+
+                            if (operand.is_postfix())
+                                postfix = "++";
+                        }
+
+                        if (operand.is_reg()) {
+                            if (operand.is_integer()) {
+                                switch (operand.value.r8) {
+                                    case i_registers_t::sp: {
+                                        operands_stream << prefix << "SP" << postfix;
+                                        break;
+                                    }
+                                    case i_registers_t::fp: {
+                                        operands_stream << prefix << "FP" << postfix;
+                                        break;
+                                    }
+                                    case i_registers_t::pc: {
+                                        operands_stream << prefix << "PC" << postfix;
+                                        break;
+                                    }
+                                    case i_registers_t::fr: {
+                                        operands_stream << "FR";
+                                        break;
+                                    }
+                                    case i_registers_t::sr: {
+                                        operands_stream << "SR";
+                                        break;
+                                    }
+                                    default: {
+                                        operands_stream << prefix
+                                                        << "I"
+                                                        << std::to_string(operand.value.r8)
+                                                        << postfix;
+                                        break;
+                                    }
+                                }
+                            } else {
+                                operands_stream << "F" << std::to_string(operand.value.r8);
+                            }
+                        } else {
+                            if (operand.is_integer()) {
+                                if (operand.is_unresolved()) {
+                                    if (id_resolver == nullptr)
+                                        operands_stream << fmt::format("id({})", operand.value.u64);
+                                    else
+                                        operands_stream << id_resolver(operand.value.u64);
+                                } else {
+                                    if (prefix == "-") {
+                                        operands_stream << fmt::format("{}", static_cast<int64_t>(operand.value.u64));
+                                    } else {
+                                        operands_stream << prefix
+                                                        << fmt::format(format_spec, operand.value.u64)
+                                                        << postfix;
+                                    }
+                                }
                             } else {
                                 operands_stream << prefix
-                                                << fmt::format(format_spec, operand.value.u64)
+                                                << fmt::format(format_spec, operand.value.d64)
                                                 << postfix;
                             }
                         }
-                    } else {
-                        operands_stream << prefix
-                                        << fmt::format(format_spec, operand.value.d64)
-                                        << postfix;
                     }
-                }
-            }
 
-            stream << std::left << std::setw(24) << operands_stream.str();
-        } else {
-            stream << "UNKNOWN";
+                    stream << std::left << std::setw(24) << operands_stream.str();
+                } else {
+                    stream << "UNKNOWN";
+                }
+                break;
+            }
         }
+
         return stream.str();
     }
 
@@ -838,7 +909,9 @@ namespace basecode::vm {
         _registers.pc += inst_size;
 
         switch (inst.op) {
-            case op_codes::nop: {
+            case op_codes::nop:
+            case op_codes::data:
+            case op_codes::section: {
                 break;
             }
             case op_codes::alloc: {
