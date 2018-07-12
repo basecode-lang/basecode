@@ -26,7 +26,8 @@ namespace basecode::compiler {
     public:
         element(
             block* parent_scope,
-            element_type_t type);
+            element_type_t type,
+            element* parent_element = nullptr);
 
         virtual ~element();
 
@@ -38,7 +39,16 @@ namespace basecode::compiler {
 
         common::id_t id() const;
 
+        template <typename T>
+        T* parent_element_as() {
+            if (_parent_element == nullptr)
+                return nullptr;
+            return dynamic_cast<T*>(_parent_element);
+        }
+
         bool is_constant() const;
+
+        element* parent_element();
 
         bool fold(common::result& r);
 
@@ -50,11 +60,19 @@ namespace basecode::compiler {
 
         element_type_t element_type() const;
 
+        void parent_element(element* value);
+
         virtual std::string label_name() const;
 
         bool as_integer(uint64_t& value) const;
 
         bool as_string(std::string& value) const;
+
+        bool is_parent_element(element_type_t type) {
+            if (_parent_element == nullptr)
+                return false;
+            return _parent_element->element_type() == type;
+        }
 
         compiler::type* infer_type(const compiler::program* program);
 
@@ -81,6 +99,7 @@ namespace basecode::compiler {
         common::id_t _id;
         block* _parent_scope = nullptr;
         attribute_map_t _attributes {};
+        element* _parent_element = nullptr;
         element_type_t _element_type = element_type_t::element;
     };
 

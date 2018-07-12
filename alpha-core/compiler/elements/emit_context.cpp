@@ -70,12 +70,6 @@ namespace basecode::compiler {
         access_stack.push(type);
     }
 
-    void emit_context_t::push_procedure_type(const std::string& name) {
-        data_stack.push(std::any(procedure_type_data_t {
-            .identifier_name = name
-        }));
-    }
-
     void emit_context_t::push_scratch_register(vm::i_registers_t reg) {
         scratch_registers.push(reg);
     }

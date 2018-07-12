@@ -21,6 +21,7 @@ add_library(
 
         exports.cpp
 
+        common/defer.h
         common/bytes.h
         common/result.h
         common/result_message.h
@@ -84,5 +85,5 @@ add_library(
         compiler/elements/binary_operator.cpp compiler/elements/binary_operator.h
         compiler/elements/boolean_literal.cpp compiler/elements/boolean_literal.h
         compiler/elements/namespace_element.cpp compiler/elements/namespace_element.h
-        compiler/elements/procedure_instance.cpp compiler/elements/procedure_instance.h)
+        compiler/elements/procedure_instance.cpp compiler/elements/procedure_instance.h compiler/elements/tuple_type.cpp compiler/elements/tuple_type.h)
 target_link_libraries(${PROJECT_NAME} ${CONAN_LIBS})

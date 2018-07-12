@@ -125,7 +125,7 @@ namespace basecode::compiler {
             common::result& r,
             compiler::block* parent_scope);
 
-        directive* make_directive(
+        compiler::directive* make_directive(
             compiler::block* parent_scope,
             const std::string& name,
             element* expr);
@@ -180,6 +180,10 @@ namespace basecode::compiler {
             compiler::block* scope,
             compiler::element* expr);
 
+        tuple_type* make_tuple_type(
+            common::result& r,
+            compiler::block* parent_scope);
+
         initializer* make_initializer(
             compiler::block* parent_scope,
             element* expr);
@@ -229,7 +233,8 @@ namespace basecode::compiler {
 
         namespace_element* make_namespace(
             compiler::block* parent_scope,
-            element* expr);
+            element* expr,
+            const std::string& name = "");
 
         namespace_type* make_namespace_type(
             common::result& r,

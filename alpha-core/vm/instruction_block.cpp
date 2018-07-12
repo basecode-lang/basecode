@@ -1074,9 +1074,11 @@ namespace basecode::vm {
             instruction_block* block) {
         auto source_file = listing.current_source_file();
 
-        for (const auto& it : block->_labels) {
-            source_file->add_source_line(0, fmt::format("{}:", it.first));
-        }
+        auto add_labels = [&]() {
+            for (const auto& it : block->_labels) {
+                source_file->add_source_line(0, fmt::format("{}:", it.first));
+            }
+        };
 
         auto add_comments = [&](size_t index, size_t indent) {
             auto it = block->_comments.find(index);
@@ -1094,10 +1096,13 @@ namespace basecode::vm {
 
         if (block->_instructions.empty()) {
             add_comments(0, 0);
+            add_labels();
         } else {
             size_t index = 0;
             for (const auto& inst : block->_instructions) {
-                add_comments(index, 1);
+                add_comments(index, index == 0 ? 0 : 1);
+                if (index == 0)
+                    add_labels();
                 auto stream = inst.disassemble([&](uint64_t id) -> std::string {
                     auto label_ref = block->find_unresolved_label_up(static_cast<id_t>(id));
                     return label_ref != nullptr ?

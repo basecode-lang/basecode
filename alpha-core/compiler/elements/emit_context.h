@@ -30,19 +30,9 @@ namespace basecode::compiler {
         write
     };
 
-    struct procedure_type_data_t {
-        std::string identifier_name;
-    };
-
     struct if_data_t {
-        enum class logical_group_t {
-            no_group,
-            and_group,
-            or_group,
-        };
         std::string true_branch_label;
         std::string false_branch_label;
-        logical_group_t group_type = logical_group_t::no_group;
     };
 
     class program;
@@ -83,8 +73,6 @@ namespace basecode::compiler {
         void push_access(emit_access_type_t type);
 
         void push_scratch_register(vm::i_registers_t reg);
-
-        void push_procedure_type(const std::string& name);
 
         vm::terp* terp = nullptr;
         vm::assembler* assembler = nullptr;

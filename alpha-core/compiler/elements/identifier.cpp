@@ -30,7 +30,6 @@ namespace basecode::compiler {
         auto instruction_block = context.assembler->current_block();
 
         if (_type->element_type() == element_type_t::namespace_type) {
-            instruction_block->comment(fmt::format("namespace: {}", _name));
             return true;
         }
 

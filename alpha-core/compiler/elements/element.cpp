@@ -22,9 +22,11 @@ namespace basecode::compiler {
 
     element::element(
             block* parent_scope,
-            element_type_t type) : _id(common::id_pool::instance()->allocate()),
-                                   _parent_scope(parent_scope),
-                                   _element_type(type) {
+            element_type_t type,
+            element* parent_element) : _id(common::id_pool::instance()->allocate()),
+                                       _parent_scope(parent_scope),
+                                       _parent_element(parent_element),
+                                       _element_type(type) {
     }
 
     element::~element() {
@@ -34,12 +36,28 @@ namespace basecode::compiler {
         return _parent_scope;
     }
 
+    bool element::emit(
+            common::result& r,
+            emit_context_t& context) {
+        return on_emit(r, context);
+    }
+
+    bool element::on_emit(
+            common::result& r,
+            emit_context_t& context) {
+        return true;
+    }
+
     common::id_t element::id() const {
         return _id;
     }
 
     bool element::is_constant() const {
         return on_is_constant();
+    }
+
+    element* element::parent_element() {
+        return _parent_element;
     }
 
     bool element::on_is_constant() const {
@@ -77,6 +95,10 @@ namespace basecode::compiler {
         return on_as_float(value);
     }
 
+    void element::parent_element(element* value) {
+        _parent_element = value;
+    }
+
     element_type_t element::element_type() const {
         return _element_type;
     }
@@ -99,18 +121,6 @@ namespace basecode::compiler {
 
     bool element::on_as_string(std::string& value) const {
         return false;
-    }
-
-    bool element::emit(
-            common::result& r,
-            emit_context_t& context) {
-        return on_emit(r, context);
-    }
-
-    bool element::on_emit(
-            common::result& r,
-            emit_context_t& context) {
-        return true;
     }
 
     compiler::type* element::infer_type(const compiler::program* program) {

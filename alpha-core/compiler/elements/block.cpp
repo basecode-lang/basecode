@@ -17,6 +17,7 @@
 #include "initializer.h"
 #include "numeric_type.h"
 #include "procedure_type.h"
+#include "namespace_element.h"
 
 namespace basecode::compiler {
 
@@ -31,11 +32,19 @@ namespace basecode::compiler {
         vm::instruction_block* instruction_block = nullptr;
 
         switch (element_type()) {
-            case element_type_t::block:
+            case element_type_t::block: {
                 instruction_block = context.assembler->make_basic_block();
+
+                auto parent_ns = parent_element_as<compiler::namespace_element>();
+                if (parent_ns != nullptr) {
+                    instruction_block->comment(fmt::format("namespace: {}", parent_ns->name()));
+                }
+
                 instruction_block->make_label(label_name());
                 context.assembler->push_block(instruction_block);
+
                 break;
+            }
             case element_type_t::proc_type_block: {
                 instruction_block = context.assembler->current_block();
                 break;
@@ -57,11 +66,8 @@ namespace basecode::compiler {
                 continue;
 
             auto procedure_type = init->procedure_type();
-            if (procedure_type != nullptr) {
-                context.push_procedure_type(var->name());
+            if (procedure_type != nullptr)
                 procedure_type->emit(r, context);
-                context.pop();
-            }
         }
 
         for (auto stmt : _statements) {
