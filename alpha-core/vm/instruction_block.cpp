@@ -66,34 +66,78 @@ namespace basecode::vm {
 
     // sections
     void instruction_block::section(section_t type) {
+        make_block_entry(type);
     }
 
     // data definitions
     void instruction_block::byte(uint8_t value) {
+        make_block_entry(data_definition_t {
+            .size = op_sizes::byte,
+            .value = value,
+            .type = data_definition_type_t::initialized,
+        });
     }
 
     void instruction_block::word(uint16_t value) {
+        make_block_entry(data_definition_t {
+            .size = op_sizes::word,
+            .value = value,
+            .type = data_definition_type_t::initialized,
+        });
     }
 
     void instruction_block::dword(uint32_t value) {
+        make_block_entry(data_definition_t {
+            .size = op_sizes::dword,
+            .value = value,
+            .type = data_definition_type_t::initialized,
+        });
     }
 
     void instruction_block::qword(uint64_t value) {
+        make_block_entry(data_definition_t {
+            .size = op_sizes::qword,
+            .value = value,
+            .type = data_definition_type_t::initialized,
+        });
     }
 
     void instruction_block::reserve_byte(size_t count) {
+        make_block_entry(data_definition_t {
+            .size = op_sizes::byte,
+            .value = count,
+            .type = data_definition_type_t::uninitialized,
+        });
     }
 
     void instruction_block::reserve_word(size_t count) {
+        make_block_entry(data_definition_t {
+            .size = op_sizes::word,
+            .value = count,
+            .type = data_definition_type_t::uninitialized,
+        });
     }
 
     void instruction_block::reserve_dword(size_t count) {
+        make_block_entry(data_definition_t {
+            .size = op_sizes::dword,
+            .value = count,
+            .type = data_definition_type_t::uninitialized,
+        });
     }
 
     void instruction_block::reserve_qword(size_t count) {
+        make_block_entry(data_definition_t {
+            .size = op_sizes::qword,
+            .value = count,
+            .type = data_definition_type_t::uninitialized,
+        });
     }
 
     void instruction_block::string(const std::string& value) {
+        dword(static_cast<uint32_t>(value.length()));
+        for (const auto& c : value)
+            byte(static_cast<uint8_t>(c));
     }
 
     // load variations
@@ -1098,20 +1142,20 @@ namespace basecode::vm {
         size_t index = 0;
         for (auto& entry : block->_entries) {
             for (const auto& comment : entry.comments()) {
+                source_file->add_source_line(0, "");
                 source_file->add_source_line(0, fmt::format("; {}", comment));
             }
             for (auto label : entry.labels()) {
+                if (entry.comments().empty())
+                    source_file->add_source_line(0, "");
                 source_file->add_source_line(0, fmt::format("{}:", label->name()));
             }
             switch (entry.type()) {
                 case block_entry_type_t::section: {
-//            stream << std::left << std::setw(10) << ".section";
-//            std::stringstream operands_stream;
-//            operands_stream
-//                << "'"
-//                << section_name(static_cast<section_t>(operands[0].value.u64))
-//                << "'";
-//            stream << std::left << std::setw(24) << operands_stream.str();
+                    auto section = entry.data<section_t>();
+                    source_file->add_source_line(
+                        0,
+                        fmt::format(".section '{}'", section_name(*section)));
                     break;
                 }
                 case block_entry_type_t::instruction: {
@@ -1126,59 +1170,62 @@ namespace basecode::vm {
                     break;
                 }
                 case block_entry_type_t::data_definition: {
-//            std::stringstream directive;
-//            std::string format_spec;
-//                switch (size) {
-//                    case op_sizes::byte:
-//                        directive << ".db";
-//                        format_spec = "#${:02X}";
-//                        break;
-//                    case op_sizes::word:
-//                        directive << ".dw";
-//                        format_spec = "#${:04X}";
-//                        break;
-//                    case op_sizes::dword:
-//                        directive << ".ddw";
-//                        format_spec = "#${:08X}";
-//                        break;
-//                    case op_sizes::qword:
-//                        directive << ".dqd";
-//                        format_spec = "#${:016X}";
-//                        break;
-//                    default: {
-//                        break;
-//                    }
-//                }
-                    break;
-                }
-                case block_entry_type_t::data_reservation: {
-//            std::stringstream directive;
-//            std::string format_spec;
-//
-//                format_spec = "#${:04X}";
-//                switch (size) {
-//                    case op_sizes::byte:
-//                        directive << ".rb";
-//                        break;
-//                    case op_sizes::word:
-//                        directive << ".rw";
-//                        break;
-//                    case op_sizes::dword:
-//                        directive << ".rdw";
-//                        break;
-//                    case op_sizes::qword:
-//                        directive << ".rqw";
-//                        break;
-//                    default: {
-//                        break;
-//                    }
-//                }
-//
-//            stream << std::left << std::setw(10) << directive.str();
-//
-//            std::stringstream operands_stream;
-//            operands_stream << fmt::format(format_spec, operands[1].value.u64);
-//            stream << std::left << std::setw(24) << operands_stream.str();
+                    auto definition = entry.data<data_definition_t>();
+                    std::stringstream directive;
+                    std::string format_spec;
+                    switch (definition->type) {
+                        case data_definition_type_t::initialized: {
+                            switch (definition->size) {
+                                case op_sizes::byte:
+                                    directive << ".db";
+                                    format_spec = "${:02X}";
+                                    break;
+                                case op_sizes::word:
+                                    directive << ".dw";
+                                    format_spec = "${:04X}";
+                                    break;
+                                case op_sizes::dword:
+                                    directive << ".ddw";
+                                    format_spec = "${:08X}";
+                                    break;
+                                case op_sizes::qword:
+                                    directive << ".dqd";
+                                    format_spec = "${:016X}";
+                                    break;
+                                default: {
+                                    break;
+                                }
+                            }
+                            break;
+                        }
+                        case data_definition_type_t::uninitialized: {
+                            format_spec = "${:04X}";
+                            switch (definition->size) {
+                                case op_sizes::byte:
+                                    directive << ".rb";
+                                    break;
+                                case op_sizes::word:
+                                    directive << ".rw";
+                                    break;
+                                case op_sizes::dword:
+                                    directive << ".rdw";
+                                    break;
+                                case op_sizes::qword:
+                                    directive << ".rqw";
+                                    break;
+                                default: {
+                                    break;
+                                }
+                            }
+                            break;
+                        }
+                    }
+                    source_file->add_source_line(
+                        0,
+                        fmt::format(
+                            "\t{:<10} {}",
+                            directive.str(),
+                            fmt::format(format_spec, definition->value)));
                     break;
                 }
             }
@@ -1615,8 +1662,16 @@ namespace basecode::vm {
         make_ror_instruction(op_sizes::qword, dest_reg, lhs_reg, rhs_reg);
     }
 
+    void instruction_block::make_block_entry(const section_t& section) {
+        _entries.push_back(block_entry_t(section));
+    }
+
     void instruction_block::make_block_entry(const instruction_t& inst) {
-        _entries.push_back(block_entry_t(block_entry_type_t::instruction, inst));
+        _entries.push_back(block_entry_t(inst));
+    }
+
+    void instruction_block::make_block_entry(const data_definition_t& data) {
+        _entries.push_back(block_entry_t(data));
     }
 
 };

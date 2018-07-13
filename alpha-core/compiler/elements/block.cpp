@@ -81,7 +81,7 @@ namespace basecode::compiler {
             if (context.assembler->in_procedure_scope())
                 var->usage(identifier_usage_t::stack);
             else {
-                instruction_block->make_label(var->name());
+                auto var_label = instruction_block->make_label(var->name());
 
                 switch (var->type()->element_type()) {
                     case element_type_t::numeric_type: {
@@ -89,6 +89,8 @@ namespace basecode::compiler {
                             instruction_block->section(vm::section_t::ro_data);
                         else
                             instruction_block->section(vm::section_t::data);
+
+                        instruction_block->current_entry()->label(var_label);
 
                         uint64_t value = 0;
                         var->as_integer(value);
@@ -132,6 +134,7 @@ namespace basecode::compiler {
                     case element_type_t::string_type: {
                         if (init != nullptr) {
                             instruction_block->section(vm::section_t::ro_data);
+                            instruction_block->current_entry()->label(var_label);
                             auto string_literal = dynamic_cast<compiler::string_literal*>(
                                 init->expression());
                             instruction_block->string(string_literal->value());

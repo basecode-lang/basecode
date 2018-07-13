@@ -60,18 +60,34 @@ namespace basecode::vm {
         return "unknown";
     }
 
-    enum class block_entry_type_t {
-        section,
-        data_definition,
-        data_reservation,
+    enum data_definition_type_t : uint8_t {
+        initialized = 1,
+        uninitialized
+    };
+
+    struct data_definition_t {
+        op_sizes size;
+        uint64_t value = 0;
+        data_definition_type_t type;
+    };
+
+    enum class block_entry_type_t : uint8_t {
+        section = 1,
         instruction,
+        data_definition,
     };
 
     struct block_entry_t {
-        block_entry_t(
-            block_entry_type_t type,
-            const instruction_t& instruction) : _data(std::any(instruction)),
-                                                _type(type) {
+        block_entry_t(const section_t& section) : _data(std::any(section)),
+                                                  _type(block_entry_type_t::section) {
+        }
+
+        block_entry_t(const instruction_t& instruction) : _data(std::any(instruction)),
+                                                          _type(block_entry_type_t::instruction) {
+        }
+
+        block_entry_t(const data_definition_t& data) : _data(std::any(data)),
+                                                       _type(block_entry_type_t::data_definition) {
         }
 
         template <typename T>
@@ -746,7 +762,11 @@ namespace basecode::vm {
             op_sizes size,
             uint64_t value);
 
+        void make_block_entry(const section_t& section);
+
         void make_block_entry(const instruction_t& inst);
+
+        void make_block_entry(const data_definition_t& data);
 
         void make_push_instruction(op_sizes size, i_registers_t reg);
 
