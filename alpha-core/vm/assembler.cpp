@@ -12,7 +12,6 @@
 #include "terp.h"
 #include "assembler.h"
 #include "instruction_block.h"
-#include "instruction_emitter.h"
 
 namespace basecode::vm {
 

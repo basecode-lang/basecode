@@ -103,14 +103,16 @@ namespace basecode::compiler {
             // XXX: error
             return;
         }
-        instruction_block->comment(fmt::format(
-            "{} identifier: {}",
-            stack_frame_entry_type_name(entry->type),
-            name()));
         instruction_block->load_to_ireg_u64(
             target_reg->reg.i,
             vm::i_registers_t::fp,
             entry->offset);
+        instruction_block
+            ->current_entry()
+            ->comment(fmt::format(
+                "{} identifier: {}",
+                stack_frame_entry_type_name(entry->type),
+                name()));
     }
 
     bool identifier::inferred_type() const {

@@ -17,7 +17,6 @@
 #include <functional>
 #include <fmt/format.h>
 #include <common/hex_formatter.h>
-#include <vm/instruction_emitter.h>
 #include <compiler/bytecode_emitter.h>
 #include "ya_getopt.h"
 

@@ -273,8 +273,6 @@ namespace basecode::vm {
         ffi,
         meta,
         exit,
-        data,
-        section
     };
 
     inline static std::map<op_codes, std::string> s_op_code_names = {
@@ -330,8 +328,6 @@ namespace basecode::vm {
         {op_codes::ffi,    "FFI"},
         {op_codes::meta,   "META"},
         {op_codes::exit,   "EXIT"},
-        {op_codes::data,   "DATA"},
-        {op_codes::section,"SECTION"},
     };
 
     inline static std::string op_code_name(op_codes type) {

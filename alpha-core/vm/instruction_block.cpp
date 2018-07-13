@@ -23,114 +23,77 @@ namespace basecode::vm {
 
     instruction_block::~instruction_block() {
         clear_blocks();
-        clear_labels();
-        clear_instructions();
+        clear_entries();
+
+        for (const auto& it : _labels)
+            delete it.second;
+        _labels.clear();
     }
 
     void instruction_block::rts() {
         instruction_t rts_op;
         rts_op.op = op_codes::rts;
-        _instructions.push_back(rts_op);
+        make_block_entry(rts_op);
     }
 
     void instruction_block::dup() {
         instruction_t dup_op;
         dup_op.op = op_codes::dup;
-        _instructions.push_back(dup_op);
+        make_block_entry(dup_op);
     }
 
     void instruction_block::nop() {
         instruction_t no_op;
         no_op.op = op_codes::nop;
-        _instructions.push_back(no_op);
+        make_block_entry(no_op);
     }
 
     void instruction_block::exit() {
         instruction_t exit_op;
         exit_op.op = op_codes::exit;
-        _instructions.push_back(exit_op);
-    }
-
-    void instruction_block::clear_labels() {
-        for (const auto& it : _labels)
-            delete it.second;
-        _labels.clear();
-        _label_to_instruction_map.clear();
+        make_block_entry(exit_op);
     }
 
     void instruction_block::clear_blocks() {
         _blocks.clear();
     }
 
+    block_entry_t* instruction_block::current_entry() {
+        if (_entries.empty())
+            return nullptr;
+        return &_entries.back();
+    }
+
     // sections
     void instruction_block::section(section_t type) {
-        instruction_t section_op;
-        section_op.op = op_codes::section;
-        section_op.size = op_sizes::byte;
-        section_op.operands_count = 1;
-        section_op.operands[0].type =
-            operand_encoding_t::flags::integer
-            | operand_encoding_t::flags::constant;
-        section_op.operands[0].value.u64 = static_cast<uint8_t>(type);
-        _instructions.push_back(section_op);
     }
 
     // data definitions
     void instruction_block::byte(uint8_t value) {
-        make_data_instruction(op_sizes::byte, 0, value);
     }
 
     void instruction_block::word(uint16_t value) {
-        make_data_instruction(op_sizes::word, 0, value);
     }
 
     void instruction_block::dword(uint32_t value) {
-        make_data_instruction(op_sizes::dword, 0, value);
     }
 
     void instruction_block::qword(uint64_t value) {
-        make_data_instruction(op_sizes::qword, 0, value);
     }
 
     void instruction_block::reserve_byte(size_t count) {
-        make_data_instruction(op_sizes::byte, 1, count);
     }
 
     void instruction_block::reserve_word(size_t count) {
-        make_data_instruction(op_sizes::word, 1, count);
     }
 
     void instruction_block::reserve_dword(size_t count) {
-        make_data_instruction(op_sizes::dword, 1, count);
     }
 
     void instruction_block::reserve_qword(size_t count) {
-        make_data_instruction(op_sizes::qword, 1, count);
     }
 
     void instruction_block::string(const std::string& value) {
-        for (const auto& c : value) {
-            make_data_instruction(op_sizes::byte, 0, static_cast<uint8_t>(c));
-        }
-    }
-
-    void instruction_block::make_data_instruction(
-            op_sizes size,
-            uint64_t flags,
-            uint64_t data) {
-        instruction_t data_op;
-        data_op.op = op_codes::data;
-        data_op.size = size;
-        data_op.operands_count = 2;
-        data_op.operands[0].type =
-            operand_encoding_t::flags::integer
-            | operand_encoding_t::flags::constant;
-        data_op.operands[0].value.u64 = flags;
-        data_op.operands[1].type =
-            operand_encoding_t::flags::integer
-            | operand_encoding_t::flags::constant;
-        data_op.operands[1].value.u64 = data;
-        _instructions.push_back(data_op);
     }
 
     // load variations
@@ -252,7 +215,7 @@ namespace basecode::vm {
             | operand_encoding_t::flags::constant
             | operand_encoding_t::flags::unresolved;
         move_op.operands[1].value.u64 = label_ref->id;
-        _instructions.push_back(move_op);
+        make_block_entry(move_op);
     }
 
     // not variations
@@ -355,7 +318,7 @@ namespace basecode::vm {
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
         mul_op.operands[2].value.r8 = multiplier_reg;
-        _instructions.push_back(mul_op);
+        make_block_entry(mul_op);
     }
 
     // add variations
@@ -473,7 +436,7 @@ namespace basecode::vm {
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
         div_op.operands[2].value.r8 = divisor_reg;
-        _instructions.push_back(div_op);
+        make_block_entry(div_op);
     }
 
     // mod variations
@@ -526,7 +489,7 @@ namespace basecode::vm {
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
         mod_op.operands[2].value.r8 = divisor_reg;
-        _instructions.push_back(mod_op);
+        make_block_entry(mod_op);
     }
 
     void instruction_block::swi(uint8_t index) {
@@ -536,7 +499,7 @@ namespace basecode::vm {
         swi_op.operands_count = 1;
         swi_op.operands[0].type = operand_encoding_t::flags::integer;
         swi_op.operands[0].value.u64 = index;
-        _instructions.push_back(swi_op);
+        make_block_entry(swi_op);
     }
 
     void instruction_block::trap(uint8_t index) {
@@ -546,7 +509,7 @@ namespace basecode::vm {
         trap_op.operands_count = 1;
         trap_op.operands[0].type = operand_encoding_t::flags::integer;
         trap_op.operands[0].value.u64 = index;
-        _instructions.push_back(trap_op);
+        make_block_entry(trap_op);
     }
 
     void instruction_block::make_not_instruction(
@@ -561,7 +524,7 @@ namespace basecode::vm {
         not_op.operands[0].value.r8 = dest_reg;
         not_op.operands[1].type = operand_encoding_t::flags::reg | operand_encoding_t::flags::integer;
         not_op.operands[1].value.r8 = src_reg;
-        _instructions.push_back(not_op);
+        make_block_entry(not_op);
     }
 
     void instruction_block::make_neg_instruction(
@@ -576,11 +539,11 @@ namespace basecode::vm {
         neg_op.operands[0].value.r8 = dest_reg;
         neg_op.operands[1].type = operand_encoding_t::flags::reg | operand_encoding_t::flags::integer;
         neg_op.operands[1].value.r8 = src_reg;
-        _instructions.push_back(neg_op);
+        make_block_entry(neg_op);
     }
 
-    void instruction_block::clear_instructions() {
-        _instructions.clear();
+    void instruction_block::clear_entries() {
+        _entries.clear();
     }
 
     void instruction_block::push_f32(float value) {
@@ -599,7 +562,7 @@ namespace basecode::vm {
         move_op.operands[0].value.r8 = dest_reg;
         move_op.operands[1].type = operand_encoding_t::flags::constant;
         move_op.operands[1].value.d64 = value;
-        _instructions.push_back(move_op);
+        make_block_entry(move_op);
     }
 
     void instruction_block::make_move_instruction(
@@ -618,7 +581,7 @@ namespace basecode::vm {
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::constant;
         move_op.operands[1].value.u64 = value;
-        _instructions.push_back(move_op);
+        make_block_entry(move_op);
     }
 
     void instruction_block::make_move_instruction(
@@ -637,7 +600,7 @@ namespace basecode::vm {
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
         move_op.operands[1].value.r8 = src_reg;
-        _instructions.push_back(move_op);
+        make_block_entry(move_op);
     }
 
     void instruction_block::make_swap_instruction(
@@ -656,7 +619,7 @@ namespace basecode::vm {
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
         swap_op.operands[1].value.r8 = src_reg;
-        _instructions.push_back(swap_op);
+        make_block_entry(swap_op);
     }
 
     void instruction_block::make_load_instruction(
@@ -684,7 +647,7 @@ namespace basecode::vm {
                 load_op.operands[2].type |= operand_encoding_t::flags::negative;
             load_op.operands[2].value.u64 = static_cast<uint64_t>(offset);
         }
-        _instructions.push_back(load_op);
+        make_block_entry(load_op);
     }
 
     void instruction_block::make_store_instruction(
@@ -714,7 +677,7 @@ namespace basecode::vm {
                 store_op.operands[2].type |= operand_encoding_t::flags::negative;
             store_op.operands[2].value.u64 = static_cast<uint64_t>(offset);
         }
-        _instructions.push_back(store_op);
+        make_block_entry(store_op);
     }
 
     instruction_block* instruction_block::parent() {
@@ -742,7 +705,7 @@ namespace basecode::vm {
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
         add_op.operands[2].value.r8 = addend_reg;
-        _instructions.push_back(add_op);
+        make_block_entry(add_op);
     }
 
     void instruction_block::make_sub_instruction(
@@ -766,7 +729,7 @@ namespace basecode::vm {
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
         sub_op.operands[2].value.r8 = subtrahend_reg;
-        _instructions.push_back(sub_op);
+        make_block_entry(sub_op);
     }
 
     void instruction_block::make_sub_instruction_immediate(
@@ -790,7 +753,7 @@ namespace basecode::vm {
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::constant;
         sub_op.operands[2].value.u64 = subtrahend_immediate;
-        _instructions.push_back(sub_op);
+        make_block_entry(sub_op);
     }
 
     // swap variations
@@ -901,7 +864,7 @@ namespace basecode::vm {
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
         cmp_op.operands[1].value.r8 = rhs_reg;
-        _instructions.push_back(cmp_op);
+        make_block_entry(cmp_op);
     }
 
     // inc variations
@@ -999,7 +962,7 @@ namespace basecode::vm {
         setz_op.operands[0].type = operand_encoding_t::flags::integer
                                   | operand_encoding_t::flags::reg;
         setz_op.operands[0].value.r8 = dest_reg;
-        _instructions.push_back(setz_op);
+        make_block_entry(setz_op);
     }
 
     void instruction_block::setnz(i_registers_t dest_reg) {
@@ -1010,7 +973,7 @@ namespace basecode::vm {
         setnz_op.operands[0].type = operand_encoding_t::flags::integer
                                    | operand_encoding_t::flags::reg;
         setnz_op.operands[0].value.r8 = dest_reg;
-        _instructions.push_back(setnz_op);
+        make_block_entry(setnz_op);
     }
 
     void instruction_block::test_mask_branch_if_not_zero_u8(
@@ -1046,24 +1009,11 @@ namespace basecode::vm {
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
         jmp_op.operands[0].value.r8 = reg;
-        _instructions.push_back(jmp_op);
+        make_block_entry(jmp_op);
     }
 
     instruction_block_type_t instruction_block::type() const {
         return _type;
-    }
-
-    void instruction_block::comment(const std::string& value) {
-        auto index = _instructions.size();
-        auto it = _comments.find(index);
-        if (it == _comments.end()) {
-            instruction_comments_t comments {};
-            comments.lines.push_back(value);
-            _comments.insert(std::make_pair(index, comments));
-        } else {
-            auto& comments = it->second;
-            comments.lines.push_back(value);
-        }
     }
 
     void instruction_block::bne(const std::string& label_name) {
@@ -1078,7 +1028,7 @@ namespace basecode::vm {
             | operand_encoding_t::flags::constant
             | operand_encoding_t::flags::unresolved;
         branch_op.operands[0].value.u64 = label_ref->id;
-        _instructions.push_back(branch_op);
+        make_block_entry(branch_op);
     }
 
     void instruction_block::beq(const std::string& label_name) {
@@ -1093,7 +1043,7 @@ namespace basecode::vm {
             | operand_encoding_t::flags::constant
             | operand_encoding_t::flags::unresolved;
         branch_op.operands[0].value.u64 = label_ref->id;
-        _instructions.push_back(branch_op);
+        make_block_entry(branch_op);
     }
 
     void instruction_block::call(const std::string& proc_name) {
@@ -1108,7 +1058,7 @@ namespace basecode::vm {
             | operand_encoding_t::flags::constant
             | operand_encoding_t::flags::unresolved;
         jsr_op.operands[0].value.u64 = label_ref->id;
-        _instructions.push_back(jsr_op);
+        make_block_entry(jsr_op);
 
 // XXX: this is a PC-relative encoding
 //        instruction_t jsr_op;
@@ -1145,47 +1095,94 @@ namespace basecode::vm {
             instruction_block* block) {
         auto source_file = listing.current_source_file();
 
-        auto add_labels = [&](size_t index) {
-            // XXX: fix this
-            if (index != 0)
-                return;
-            for (const auto& it : block->_labels) {
-                source_file->add_source_line(0, fmt::format("{}:", it.first));
+        size_t index = 0;
+        for (auto& entry : block->_entries) {
+            for (const auto& comment : entry.comments()) {
+                source_file->add_source_line(0, fmt::format("; {}", comment));
             }
-        };
-
-        auto add_comments = [&](size_t index, size_t indent) {
-            auto it = block->_comments.find(index);
-            if (it != block->_comments.end()) {
-                for (const auto& line : it->second.lines) {
-                    source_file->add_source_line(
-                        0,
-                        fmt::format(
-                            "{}; {}",
-                            std::string(indent * 4, ' '),
-                            line));
+            for (auto label : entry.labels()) {
+                source_file->add_source_line(0, fmt::format("{}:", label->name()));
+            }
+            switch (entry.type()) {
+                case block_entry_type_t::section: {
+//            stream << std::left << std::setw(10) << ".section";
+//            std::stringstream operands_stream;
+//            operands_stream
+//                << "'"
+//                << section_name(static_cast<section_t>(operands[0].value.u64))
+//                << "'";
+//            stream << std::left << std::setw(24) << operands_stream.str();
+                    break;
+                }
+                case block_entry_type_t::instruction: {
+                    auto inst = entry.data<instruction_t>();
+                    auto stream = inst->disassemble([&](uint64_t id) -> std::string {
+                        auto label_ref = block->find_unresolved_label_up(static_cast<id_t>(id));
+                        return label_ref != nullptr ?
+                               label_ref->name :
+                               fmt::format("unresolved_ref_id({})", id);
+                    });
+                    source_file->add_source_line(0, fmt::format("\t{}", stream));
+                    break;
+                }
+                case block_entry_type_t::data_definition: {
+//            std::stringstream directive;
+//            std::string format_spec;
+//                switch (size) {
+//                    case op_sizes::byte:
+//                        directive << ".db";
+//                        format_spec = "#${:02X}";
+//                        break;
+//                    case op_sizes::word:
+//                        directive << ".dw";
+//                        format_spec = "#${:04X}";
+//                        break;
+//                    case op_sizes::dword:
+//                        directive << ".ddw";
+//                        format_spec = "#${:08X}";
+//                        break;
+//                    case op_sizes::qword:
+//                        directive << ".dqd";
+//                        format_spec = "#${:016X}";
+//                        break;
+//                    default: {
+//                        break;
+//                    }
+//                }
+                    break;
+                }
+                case block_entry_type_t::data_reservation: {
+//            std::stringstream directive;
+//            std::string format_spec;
+//
+//                format_spec = "#${:04X}";
+//                switch (size) {
+//                    case op_sizes::byte:
+//                        directive << ".rb";
+//                        break;
+//                    case op_sizes::word:
+//                        directive << ".rw";
+//                        break;
+//                    case op_sizes::dword:
+//                        directive << ".rdw";
+//                        break;
+//                    case op_sizes::qword:
+//                        directive << ".rqw";
+//                        break;
+//                    default: {
+//                        break;
+//                    }
+//                }
+//
+//            stream << std::left << std::setw(10) << directive.str();
+//
+//            std::stringstream operands_stream;
+//            operands_stream << fmt::format(format_spec, operands[1].value.u64);
+//            stream << std::left << std::setw(24) << operands_stream.str();
+                    break;
                 }
             }
-        };
-
-        if (block->_instructions.empty()) {
-            add_comments(0, 0);
-            add_labels(0);
-        } else {
-            size_t index = 0;
-            for (const auto& inst : block->_instructions) {
-                add_comments(index, index == 0 ? 0 : 1);
-                add_labels(index);
-                auto stream = inst.disassemble([&](uint64_t id) -> std::string {
-                    auto label_ref = block->find_unresolved_label_up(static_cast<id_t>(id));
-                    return label_ref != nullptr ?
-                           label_ref->name :
-                           fmt::format("unresolved_ref_id({})", id);
-                });
-                source_file->add_source_line(0, fmt::format("\t{}", stream));
-                index++;
-            }
-            add_comments(index, 1);
+            index++;
         }
 
         for (auto child_block : block->_blocks)
@@ -1229,10 +1226,8 @@ namespace basecode::vm {
     }
 
     vm::label* instruction_block::make_label(const std::string& name) {
-        auto label = new vm::label(name);
-        _labels.insert(std::make_pair(name, label));
-        _label_to_instruction_map.insert(std::make_pair(name, _instructions.size()));
-        return label;
+        auto it = _labels.insert(std::make_pair(name, new vm::label(name)));
+        return it.first->second;
     }
 
     void instruction_block::call_foreign(const std::string& proc_name) {
@@ -1247,7 +1242,7 @@ namespace basecode::vm {
             | operand_encoding_t::flags::constant
             | operand_encoding_t::flags::unresolved;
         ffi_op.operands[0].value.u64 = label_ref->id;
-        _instructions.push_back(ffi_op);
+        make_block_entry(ffi_op);
     }
 
     void instruction_block::jump_direct(const std::string& label_name) {
@@ -1262,7 +1257,7 @@ namespace basecode::vm {
             | operand_encoding_t::flags::constant
             | operand_encoding_t::flags::unresolved;
         jmp_op.operands[0].value.u64 = label_ref->id;
-        _instructions.push_back(jmp_op);
+        make_block_entry(jmp_op);
     }
 
     label_ref_t* instruction_block::find_unresolved_label_up(common::id_t id) {
@@ -1298,7 +1293,7 @@ namespace basecode::vm {
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
         inc_op.operands[0].value.r8 = reg;
-        _instructions.push_back(inc_op);
+        make_block_entry(inc_op);
     }
 
     void instruction_block::make_dec_instruction(op_sizes size, i_registers_t reg) {
@@ -1310,7 +1305,7 @@ namespace basecode::vm {
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
         dec_op.operands[0].value.r8 = reg;
-        _instructions.push_back(dec_op);
+        make_block_entry(dec_op);
     }
 
     void instruction_block::make_push_instruction(op_sizes size, i_registers_t reg) {
@@ -1322,7 +1317,7 @@ namespace basecode::vm {
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
         push_op.operands[0].value.r8 = reg;
-        _instructions.push_back(push_op);
+        make_block_entry(push_op);
     }
 
     void instruction_block::make_push_instruction(op_sizes size, f_registers_t reg) {
@@ -1332,7 +1327,7 @@ namespace basecode::vm {
         push_op.operands_count = 1;
         push_op.operands[0].type = operand_encoding_t::flags::reg;
         push_op.operands[0].value.r8 = reg;
-        _instructions.push_back(push_op);
+        make_block_entry(push_op);
     }
 
     void instruction_block::make_pop_instruction(op_sizes size, i_registers_t dest_reg) {
@@ -1344,7 +1339,7 @@ namespace basecode::vm {
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
         pop_op.operands[0].value.r8 = dest_reg;
-        _instructions.push_back(pop_op);
+        make_block_entry(pop_op);
     }
 
     void instruction_block::make_pop_instruction(op_sizes size, f_registers_t dest_reg) {
@@ -1354,7 +1349,7 @@ namespace basecode::vm {
         pop_op.operands_count = 1;
         pop_op.operands[0].type = operand_encoding_t::flags::reg;
         pop_op.operands[0].value.r8 = dest_reg;
-        _instructions.push_back(pop_op);
+        make_block_entry(pop_op);
     }
 
     label_ref_t* instruction_block::make_unresolved_label_ref(const std::string& label_name) {
@@ -1388,7 +1383,7 @@ namespace basecode::vm {
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::constant;
         push_op.operands[0].value.d64 = value;
-        _instructions.push_back(push_op);
+        make_block_entry(push_op);
     }
 
     void instruction_block::make_integer_constant_push_instruction(op_sizes size, uint64_t value) {
@@ -1400,7 +1395,7 @@ namespace basecode::vm {
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::constant;
         push_op.operands[0].value.u64 = value;
-        _instructions.push_back(push_op);
+        make_block_entry(push_op);
     }
 
     void instruction_block::make_or_instruction(
@@ -1424,7 +1419,7 @@ namespace basecode::vm {
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
         or_op.operands[2].value.r8 = mask_reg;
-        _instructions.push_back(or_op);
+        make_block_entry(or_op);
     }
 
     void instruction_block::make_xor_instruction(
@@ -1448,7 +1443,7 @@ namespace basecode::vm {
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
         xor_op.operands[2].value.r8 = mask_reg;
-        _instructions.push_back(xor_op);
+        make_block_entry(xor_op);
     }
 
     void instruction_block::make_and_instruction(
@@ -1472,7 +1467,7 @@ namespace basecode::vm {
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
         and_op.operands[2].value.r8 = mask_reg;
-        _instructions.push_back(and_op);
+        make_block_entry(and_op);
     }
 
     void instruction_block::make_shl_instruction(
@@ -1496,7 +1491,7 @@ namespace basecode::vm {
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
         shift_op.operands[2].value.r8 = amount_reg;
-        _instructions.push_back(shift_op);
+        make_block_entry(shift_op);
     }
 
     void instruction_block::make_rol_instruction(
@@ -1520,7 +1515,7 @@ namespace basecode::vm {
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
         rotate_op.operands[2].value.r8 = amount_reg;
-        _instructions.push_back(rotate_op);
+        make_block_entry(rotate_op);
     }
 
     void instruction_block::make_shr_instruction(
@@ -1544,7 +1539,7 @@ namespace basecode::vm {
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
         shift_op.operands[2].value.r8 = amount_reg;
-        _instructions.push_back(shift_op);
+        make_block_entry(shift_op);
     }
 
     void instruction_block::make_ror_instruction(
@@ -1568,7 +1563,7 @@ namespace basecode::vm {
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
         rotate_op.operands[2].value.r8 = amount_reg;
-        _instructions.push_back(rotate_op);
+        make_block_entry(rotate_op);
     }
 
     void instruction_block::or_ireg_by_ireg_u64(
@@ -1618,6 +1613,10 @@ namespace basecode::vm {
             i_registers_t lhs_reg,
             i_registers_t rhs_reg) {
         make_ror_instruction(op_sizes::qword, dest_reg, lhs_reg, rhs_reg);
+    }
+
+    void instruction_block::make_block_entry(const instruction_t& inst) {
+        _entries.push_back(block_entry_t(block_entry_type_t::instruction, inst));
     }
 
 };

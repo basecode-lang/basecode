@@ -35,15 +35,15 @@ add_library(
         parser/ast_formatter.cpp parser/ast_formatter.h
 
         vm/terp.cpp vm/terp.h
-        vm/assembler.cpp vm/assembler.h
-        vm/instruction_emitter.cpp vm/instruction_emitter.h
-
         vm/label.cpp vm/label.h
         vm/symbol.cpp vm/symbol.h
         vm/segment.cpp vm/segment.h
+        vm/assembler.cpp vm/assembler.h
         vm/stack_frame.cpp vm/stack_frame.h
         vm/assembly_listing.cpp vm/assembly_listing.h
         vm/instruction_block.cpp vm/instruction_block.h
+        vm/register_allocator.cpp vm/register_allocator.h
+
         compiler/elements/type.cpp compiler/elements/type.h
         compiler/elements/cast.cpp compiler/elements/cast.h
         compiler/elements/field.cpp compiler/elements/field.h
@@ -65,6 +65,7 @@ add_library(
         compiler/elements/identifier.cpp compiler/elements/identifier.h
         compiler/elements/expression.cpp compiler/elements/expression.h
         compiler/elements/array_type.cpp compiler/elements/array_type.h
+        compiler/elements/tuple_type.cpp compiler/elements/tuple_type.h
         compiler/elements/initializer.cpp compiler/elements/initializer.h
         compiler/elements/string_type.cpp compiler/elements/string_type.h
         compiler/elements/emit_context.cpp compiler/elements/emit_context.h
@@ -85,5 +86,5 @@ add_library(
         compiler/elements/binary_operator.cpp compiler/elements/binary_operator.h
         compiler/elements/boolean_literal.cpp compiler/elements/boolean_literal.h
         compiler/elements/namespace_element.cpp compiler/elements/namespace_element.h
-        compiler/elements/procedure_instance.cpp compiler/elements/procedure_instance.h compiler/elements/tuple_type.cpp compiler/elements/tuple_type.h)
+        compiler/elements/procedure_instance.cpp compiler/elements/procedure_instance.h)
 target_link_libraries(${PROJECT_NAME} ${CONAN_LIBS})

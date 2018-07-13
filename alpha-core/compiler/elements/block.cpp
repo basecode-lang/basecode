@@ -35,13 +35,20 @@ namespace basecode::compiler {
         switch (element_type()) {
             case element_type_t::block: {
                 instruction_block = context.assembler->make_basic_block();
+                instruction_block->nop();
 
                 auto parent_ns = parent_element_as<compiler::namespace_element>();
                 if (parent_ns != nullptr) {
-                    instruction_block->comment(fmt::format("namespace: {}", parent_ns->name()));
+                    instruction_block
+                        ->current_entry()
+                        ->comment(fmt::format("namespace: {}", parent_ns->name()));
                 }
 
-                instruction_block->make_label(label_name());
+                auto block_label = instruction_block->make_label(label_name());
+                instruction_block
+                    ->current_entry()
+                    ->label(block_label);
+
                 context.assembler->push_block(instruction_block);
 
                 break;

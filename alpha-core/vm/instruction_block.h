@@ -11,6 +11,7 @@
 
 #pragma once
 
+#include <any>
 #include <map>
 #include <stack>
 #include <string>
@@ -19,6 +20,7 @@
 #include "label.h"
 #include "stack_frame.h"
 #include "assembly_listing.h"
+#include "register_allocator.h"
 
 namespace basecode::vm {
 
@@ -41,10 +43,6 @@ namespace basecode::vm {
         procedure
     };
 
-    struct instruction_comments_t {
-        std::vector<std::string> lines {};
-    };
-
     enum class section_t : uint8_t {
         bss = 1,
         ro_data,
@@ -62,37 +60,56 @@ namespace basecode::vm {
         return "unknown";
     }
 
-    template <typename T>
-    struct register_allocator_t {
-        register_allocator_t() {
-            reset();
+    enum class block_entry_type_t {
+        section,
+        data_definition,
+        data_reservation,
+        instruction,
+    };
+
+    struct block_entry_t {
+        block_entry_t(
+            block_entry_type_t type,
+            const instruction_t& instruction) : _data(std::any(instruction)),
+                                                _type(type) {
         }
 
-        void reset() {
-            used.clear();
-            while (!available.empty())
-                available.pop();
-            for (int8_t r = 63; r >=0; r--)
-                available.push(static_cast<T>(r));
-        }
-
-        void free(T reg) {
-            if (used.erase(reg) > 0) {
-                available.push(reg);
+        template <typename T>
+        T* data() {
+            if (!_data.has_value())
+                return nullptr;
+            try {
+                return std::any_cast<T>(&_data);
+            } catch (const std::bad_any_cast& e) {
+                return nullptr;
             }
         }
 
-        bool allocate(T& reg) {
-            if (available.empty())
-                return false;
-            reg = available.top();
-            available.pop();
-            used.insert(reg);
-            return true;
+        void label(vm::label* label) {
+            _labels.push_back(label);
         }
 
-        std::set<T> used {};
-        std::stack<T> available {};
+        block_entry_type_t type() const {
+            return _type;
+        }
+
+        void comment(const std::string& value) {
+            _comments.push_back(value);
+        }
+
+        const std::vector<vm::label*>& labels() const {
+            return _labels;
+        }
+
+        const std::vector<std::string>& comments() const {
+            return _comments;
+        }
+
+    private:
+        std::any _data;
+        block_entry_type_t _type;
+        std::vector<vm::label*> _labels {};
+        std::vector<std::string> _comments {};
     };
 
     class instruction_block {
@@ -103,22 +120,48 @@ namespace basecode::vm {
 
         virtual ~instruction_block();
 
-        void rts();
-
-        void dup();
-
-        void nop();
-
-        void exit();
-
-        void clear_labels();
-
+    // block support
+    public:
         void clear_blocks();
 
-        // sections
-        void section(section_t type);
+        void clear_entries();
 
-        // data definitions
+        instruction_block* parent();
+
+        stack_frame_t* stack_frame();
+
+        block_entry_t* current_entry();
+
+        instruction_block_type_t type() const;
+
+        void add_block(instruction_block* block);
+
+        void disassemble(assembly_listing& listing);
+
+        void remove_block(instruction_block* block);
+
+        vm::label* make_label(const std::string& name);
+
+    // register allocators
+    public:
+        void free_reg(i_registers_t reg);
+
+        void free_reg(f_registers_t reg);
+
+        bool allocate_reg(i_registers_t& reg);
+
+        bool allocate_reg(f_registers_t& reg);
+
+        target_register_t pop_target_register();
+
+        target_register_t* current_target_register();
+
+        void push_target_register(i_registers_t reg);
+
+        void push_target_register(f_registers_t reg);
+
+    // data definitions
+    public:
         void byte(uint8_t value);
 
         void word(uint16_t value);
@@ -126,6 +169,8 @@ namespace basecode::vm {
         void dword(uint32_t value);
 
         void qword(uint64_t value);
+
+        void section(section_t type);
 
         void reserve_byte(size_t count);
 
@@ -137,25 +182,25 @@ namespace basecode::vm {
 
         void string(const std::string& value);
 
-        void make_data_instruction(
-            op_sizes size,
-            uint64_t flags,
-            uint64_t data);
+    // instructions
+    public:
+        void rts();
 
-        // register allocators
-        bool allocate_reg(i_registers_t& reg);
+        void dup();
 
-        bool allocate_reg(f_registers_t& reg);
+        void nop();
 
-        void comment(const std::string& value);
+        void exit();
 
-        target_register_t pop_target_register();
+        // interrupts and traps
+        void swi(uint8_t index);
 
-        target_register_t* current_target_register();
+        void trap(uint8_t index);
 
-        void push_target_register(i_registers_t reg);
-
-        void push_target_register(f_registers_t reg);
+        // cmp variations
+        void cmp_u64(
+            i_registers_t lhs_reg,
+            i_registers_t rhs_reg);
 
         // not variations
         void not_u8(
@@ -266,10 +311,6 @@ namespace basecode::vm {
             i_registers_t dest_reg,
             const std::string& label_name);
 
-        instruction_block* parent();
-
-        stack_frame_t* stack_frame();
-
         // setxx
         void setz(i_registers_t dest_reg);
 
@@ -279,11 +320,6 @@ namespace basecode::vm {
         void bne(const std::string& label_name);
 
         void beq(const std::string& label_name);
-
-        // cmp variations
-        void cmp_u64(
-            i_registers_t lhs_reg,
-            i_registers_t rhs_reg);
 
         // inc variations
         void inc_u8(i_registers_t reg);
@@ -514,13 +550,6 @@ namespace basecode::vm {
             i_registers_t mask_reg,
             i_registers_t address_reg);
 
-        // interrupts and traps
-        void swi(uint8_t index);
-
-        void trap(uint8_t index);
-
-        void clear_instructions();
-
         // push variations
         void push_f32(float value);
 
@@ -559,34 +588,15 @@ namespace basecode::vm {
 
         void pop_u64(i_registers_t reg);
 
-        // register allocators
-        void free_reg(i_registers_t reg);
-
-        void free_reg(f_registers_t reg);
-
         void jump_indirect(i_registers_t reg);
 
-        instruction_block_type_t type() const;
-
         void call(const std::string& proc_name);
-
-        void add_block(instruction_block* block);
-
-        void disassemble(assembly_listing& listing);
-
-        void remove_block(instruction_block* block);
-
-        vm::label* make_label(const std::string& name);
 
         void jump_direct(const std::string& label_name);
 
         void call_foreign(const std::string& proc_name);
 
     private:
-        void disassemble(
-            assembly_listing& listing,
-            instruction_block* block);
-
         void make_shl_instruction(
             op_sizes size,
             i_registers_t dest_reg,
@@ -736,13 +746,20 @@ namespace basecode::vm {
             op_sizes size,
             uint64_t value);
 
-        label_ref_t* find_unresolved_label_up(common::id_t id);
-
-        vm::label* find_label_up(const std::string& label_name);
+        void make_block_entry(const instruction_t& inst);
 
         void make_push_instruction(op_sizes size, i_registers_t reg);
 
         void make_push_instruction(op_sizes size, f_registers_t reg);
+
+    private:
+        void disassemble(
+            assembly_listing& listing,
+            instruction_block* block);
+
+        label_ref_t* find_unresolved_label_up(common::id_t id);
+
+        vm::label* find_label_up(const std::string& label_name);
 
         label_ref_t* make_unresolved_label_ref(const std::string& label_name);
 
@@ -750,12 +767,10 @@ namespace basecode::vm {
         stack_frame_t _stack_frame;
         instruction_block_type_t _type;
         instruction_block* _parent = nullptr;
+        std::vector<block_entry_t> _entries {};
         std::vector<instruction_block*> _blocks {};
-        std::vector<instruction_t> _instructions {};
-        std::map<std::string, vm::label*> _labels {};
         std::stack<target_register_t> _target_registers {};
-        std::map<size_t, instruction_comments_t> _comments {};
-        std::map<std::string, size_t> _label_to_instruction_map {};
+        std::unordered_map<std::string, vm::label*> _labels {};
         register_allocator_t<i_registers_t> _i_register_allocator {};
         register_allocator_t<f_registers_t> _f_register_allocator {};
         std::unordered_map<common::id_t, label_ref_t> _unresolved_labels {};

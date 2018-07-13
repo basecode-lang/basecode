@@ -43,7 +43,10 @@ namespace basecode::compiler {
                 procedure_label = parent_var->name();
             }
         }
-        instruction_block->make_label(procedure_label);
+
+        auto proc_label = instruction_block->make_label(procedure_label);
+        instruction_block->nop();
+        instruction_block->current_entry()->label(proc_label);
 
         auto stack_frame = instruction_block->stack_frame();
         int32_t offset = -8;
