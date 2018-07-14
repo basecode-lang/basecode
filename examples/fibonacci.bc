@@ -12,7 +12,7 @@
 @library "libalpha-core.dylib";
 #foreign print := proc(format:string, values:...any) @alias "fmt_print";
 
-print("at the very top!");
+print("%s\n", "at the very top!");
 
 alpha::compiler::config := ns {
     fibonacci := ns {
@@ -36,15 +36,15 @@ alpha::compiler::examples := ns {
     is_this_true := count == (max == 256) && count == (max / 2);
 
     bar := proc() {
-        // XXX: fix unresolved identifiers
-        bing(256);
-
         bing := proc(z:u64):u64 {
             if z == 0 {
                 return 0;
             };
             return z / 2;
         };
+
+        bing(256);
+        return;
     };
 
     @func_it 42;

@@ -24,6 +24,9 @@ namespace basecode::syntax {
     static void pairs_to_list(
             const ast_node_shared_ptr& target,
             const ast_node_shared_ptr& root) {
+        if (root == nullptr)
+            return;
+
         if (root->type != ast_node_types_t::pair) {
             target->children.push_back(root);
             return;
@@ -311,6 +314,8 @@ namespace basecode::syntax {
             parser* parser,
             token_t& token) {
         auto return_node = parser->ast_builder()->return_node();
+        if (parser->peek(token_types_t::semi_colon))
+            return return_node;
         pairs_to_list(return_node->rhs, parser->parse_expression(r, 0));
         return return_node;
     }

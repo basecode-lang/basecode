@@ -68,11 +68,7 @@ namespace basecode::compiler {
 
         bool as_string(std::string& value) const;
 
-        bool is_parent_element(element_type_t type) {
-            if (_parent_element == nullptr)
-                return false;
-            return _parent_element->element_type() == type;
-        }
+        bool is_parent_element(element_type_t type);
 
         compiler::type* infer_type(const compiler::program* program);
 

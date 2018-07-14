@@ -123,6 +123,12 @@ namespace basecode::compiler {
         return false;
     }
 
+    bool element::is_parent_element(element_type_t type) {
+        if (_parent_element == nullptr)
+            return false;
+        return _parent_element->element_type() == type;
+    }
+
     compiler::type* element::infer_type(const compiler::program* program) {
         switch (_element_type) {
             case element_type_t::any_type:

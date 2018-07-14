@@ -1146,12 +1146,12 @@ namespace basecode::vm {
         size_t index = 0;
         for (auto& entry : block->_entries) {
             for (const auto& comment : entry.comments()) {
-                source_file->add_source_line(0, "");
+//                source_file->add_source_line(0, "");
                 source_file->add_source_line(0, fmt::format("; {}", comment));
             }
             for (auto label : entry.labels()) {
-                if (entry.comments().empty())
-                    source_file->add_source_line(0, "");
+//                if (entry.comments().empty())
+//                    source_file->add_source_line(0, "");
                 source_file->add_source_line(0, fmt::format("{}:", label->name()));
             }
             switch (entry.type()) {

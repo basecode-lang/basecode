@@ -242,7 +242,9 @@ namespace basecode::compiler {
             case syntax::ast_node_types_t::argument_list: {
                 auto args = make_argument_list(current_scope());
                 for (const auto& arg : node->children) {
-                    args->add(evaluate(r, arg));
+                    auto element = evaluate(r, arg);
+                    args->add(element);
+                    element->parent_element(args);
                 }
                 return args;
             }
@@ -377,6 +379,189 @@ namespace basecode::compiler {
         return nullptr;
     }
 
+    bool program::on_emit(
+            common::result& r,
+            emit_context_t& context) {
+        auto instruction_block = context.assembler->make_basic_block();
+        instruction_block->jump_direct("_start");
+
+        std::map<vm::section_t, element_list_t> vars_by_section {};
+        auto bss  = vars_by_section.insert(std::make_pair(vm::section_t::bss,     element_list_t()));
+        auto ro   = vars_by_section.insert(std::make_pair(vm::section_t::ro_data, element_list_t()));
+        auto data = vars_by_section.insert(std::make_pair(vm::section_t::data,    element_list_t()));
+        auto text = vars_by_section.insert(std::make_pair(vm::section_t::text,    element_list_t()));
+
+        auto identifiers = elements().find_by_type(element_type_t::identifier);
+        for (auto identifier : identifiers) {
+            auto var = dynamic_cast<compiler::identifier*>(identifier);
+            if (var->type()->element_type() == element_type_t::namespace_type)
+                continue;
+
+            if (within_procedure_scope(var->parent_scope())
+            ||  var->parent_element()->element_type() == element_type_t::field)
+                continue;
+
+            switch (var->type()->element_type()) {
+                case element_type_t::numeric_type: {
+                    if (var->is_constant()) {
+                        auto& list = ro.first->second;
+                        list.emplace_back(var);
+                    }
+                    else {
+                        auto& list = data.first->second;
+                        list.emplace_back(var);
+                    }
+                    break;
+                }
+                case element_type_t::string_type: {
+                    if (var->initializer() != nullptr) {
+                        auto& list = ro.first->second;
+                        list.emplace_back(var);
+                    }
+                    break;
+                }
+                default: {
+                    break;
+                }
+            }
+        }
+
+        auto& ro_list = ro.first->second;
+        for (const auto& it : _interned_string_literals) {
+            compiler::string_literal* str = it.second.front();
+            if (!str->is_parent_element(element_type_t::argument_list))
+                continue;
+            ro_list.emplace_back(str);
+        }
+
+        for (const auto& section : vars_by_section) {
+            instruction_block->section(section.first);
+
+            for (auto e : section.second) {
+                switch (e->element_type()) {
+                    case element_type_t::string_literal: {
+                        auto string_literal = dynamic_cast<compiler::string_literal*>(e);
+                        instruction_block->memo();
+                        auto it = _interned_string_literals.find(string_literal->value());
+                        if (it != _interned_string_literals.end()) {
+                            string_literal_list_t& str_list = it->second;
+                            for (auto str : str_list) {
+                                auto var_label = instruction_block->make_label(str->label_name());
+                                instruction_block->current_entry()->label(var_label);
+                            }
+                        }
+                        instruction_block->current_entry()->comment(fmt::format(
+                            "\"{}\"",
+                            string_literal->value()));
+                        instruction_block->string(string_literal->value());
+                        break;
+                    }
+                    case element_type_t::identifier: {
+                        auto var = dynamic_cast<compiler::identifier*>(e);
+                        auto init = var->initializer();
+
+                        instruction_block->memo();
+                        auto var_label = instruction_block->make_label(var->name());
+                        instruction_block->current_entry()->label(var_label);
+
+                        switch (var->type()->element_type()) {
+                            case element_type_t::numeric_type: {
+                                uint64_t value = 0;
+                                var->as_integer(value);
+
+                                auto symbol_type = vm::integer_symbol_type_for_size(
+                                    var->type()->size_in_bytes());
+                                switch (symbol_type) {
+                                    case vm::symbol_type_t::u8:
+                                        if (init == nullptr)
+                                            instruction_block->reserve_byte(1);
+                                        else
+                                            instruction_block->byte(static_cast<uint8_t>(value));
+                                        break;
+                                    case vm::symbol_type_t::u16:
+                                        if (init == nullptr)
+                                            instruction_block->reserve_word(1);
+                                        else
+                                            instruction_block->word(static_cast<uint16_t>(value));
+                                        break;
+                                    case vm::symbol_type_t::f32:
+                                    case vm::symbol_type_t::u32:
+                                        if (init == nullptr)
+                                            instruction_block->reserve_dword(1);
+                                        else
+                                            instruction_block->dword(static_cast<uint32_t>(value));
+                                        break;
+                                    case vm::symbol_type_t::f64:
+                                    case vm::symbol_type_t::u64:
+                                        if (init == nullptr)
+                                            instruction_block->reserve_qword(1);
+                                        else
+                                            instruction_block->qword(value);
+                                        break;
+                                    case vm::symbol_type_t::bytes:
+                                        break;
+                                    default:
+                                        break;
+                                }
+                                break;
+                            }
+                            case element_type_t::string_type: {
+                                if (init != nullptr) {
+                                    auto string_literal = dynamic_cast<compiler::string_literal*>(
+                                        init->expression());
+                                    instruction_block->current_entry()->comment(fmt::format(
+                                        "\"{}\"",
+                                        string_literal->value()));
+                                    instruction_block->string(string_literal->value());
+                                }
+                                break;
+                            }
+                            default: {
+                                break;
+                            }
+                        }
+                        break;
+                    }
+                    default:
+                        break;
+                }
+            }
+        }
+
+        context.assembler->push_block(instruction_block);
+
+        auto procedure_types = elements().find_by_type(element_type_t::proc_type);
+        procedure_type_list_t proc_list {};
+        for (auto p : procedure_types) {
+            auto procedure_type = dynamic_cast<compiler::procedure_type*>(p);
+            if (procedure_type->parent_scope()->element_type() == element_type_t::proc_instance_block) {
+                proc_list.emplace_back(procedure_type);
+            }
+        }
+
+        for (auto p : procedure_types) {
+            auto procedure_type = dynamic_cast<compiler::procedure_type*>(p);
+            if (procedure_type->parent_scope()->element_type() != element_type_t::proc_instance_block) {
+                proc_list.emplace_back(procedure_type);
+            }
+        }
+
+        for (auto procedure_type : proc_list)
+            procedure_type->emit(r, context);
+
+        auto top_level_block = context.assembler->make_basic_block();
+        top_level_block->memo();
+        auto start_label = top_level_block->make_label("_start");
+        top_level_block->current_entry()->label(start_label);
+
+        context.assembler->push_block(top_level_block);
+        context.assembler->pop_block();
+
+        context.assembler->pop_block();
+
+        return true;
+    }
+
     bool program::compile(
             common::result& r,
             vm::assembly_listing& listing,
@@ -388,32 +573,18 @@ namespace basecode::compiler {
         if (!compile_module(r, listing, root))
             return false;
 
-        // process directives
-        visit_blocks(r, [&](compiler::block* scope) {
-            for (auto stmt : scope->statements()) {
-                if (stmt->expression()->element_type() == element_type_t::directive) {
-                    auto directive_element = dynamic_cast<compiler::directive*>(stmt->expression());
-                    if (!directive_element->execute(r, this))
-                        return false;
-                }
-            }
-            return true;
-        });
-
-        // resolve unknown identifiers
-        visit_blocks(r, [&](compiler::block* scope) {
-            return true;
-        });
+        auto directives = elements().find_by_type(element_type_t::directive);
+        for (auto directive : directives) {
+            auto directive_element = dynamic_cast<compiler::directive*>(directive);
+            if (!directive_element->execute(r, this))
+                return false;
+        }
 
         if (!resolve_unknown_types(r))
             return false;
 
-        // emit byte code instruction blocks into assembler
         emit_context_t context(_terp, &_assembler, this);
-        visit_blocks(r, [&](compiler::block* scope) {
-            scope->emit(r, context);
-            return true;
-        });
+        emit(r, context);
 
         auto root_block = _assembler.root_block();
         root_block->disassemble(listing);
@@ -1053,6 +1224,17 @@ namespace basecode::compiler {
             const std::string& value) {
         auto literal = new compiler::string_literal(parent_scope, value);
         _elements.add(literal);
+
+        auto it = _interned_string_literals.find(value);
+        if (it != _interned_string_literals.end()) {
+            auto& list = it->second;
+            list.emplace_back(literal);
+        } else {
+            string_literal_list_t list {};
+            list.emplace_back(literal);
+            _interned_string_literals.insert(std::make_pair(value, list));
+        }
+
         return literal;
     }
 

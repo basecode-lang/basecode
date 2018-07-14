@@ -69,6 +69,10 @@ namespace basecode::compiler {
         friend class numeric_type;
         friend class procedure_type;
 
+        bool on_emit(
+            common::result& r,
+            emit_context_t& context) override;
+
         bool visit_blocks(
             common::result& r,
             const block_visitor_callable& callable,
@@ -313,6 +317,7 @@ namespace basecode::compiler {
         compiler::block* _block = nullptr;
         std::stack<compiler::block*> _scope_stack {};
         identifier_list_t _identifiers_with_unknown_types {};
+        std::unordered_map<std::string, string_literal_list_t> _interned_string_literals {};
     };
 
 };

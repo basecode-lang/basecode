@@ -100,7 +100,6 @@ namespace basecode::compiler {
         _scope->emit(r, context);
         context.assembler->pop_block();
 
-
         return true;
     }
 
