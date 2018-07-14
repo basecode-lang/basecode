@@ -56,9 +56,6 @@ namespace basecode::compiler {
     }
 
     program::~program() {
-        for (auto element : _elements)
-            delete element.second;
-        _elements.clear();
     }
 
     element* program::evaluate(
@@ -436,6 +433,10 @@ namespace basecode::compiler {
         return !r.is_failed();
     }
 
+    element_map& program::elements() {
+        return _elements;
+    }
+
     compiler::block* program::block() {
         return _block;
     }
@@ -453,10 +454,6 @@ namespace basecode::compiler {
         auto top = _scope_stack.top();
         _scope_stack.pop();
         return top;
-    }
-
-    const element_map_t& program::elements() const {
-        return _elements;
     }
 
     bool program::is_subtree_constant(
@@ -498,7 +495,7 @@ namespace basecode::compiler {
         auto alias_type = new compiler::alias(parent_scope, expr);
         if (expr != nullptr)
             expr->parent_element(alias_type);
-        _elements.insert(std::make_pair(alias_type->id(), alias_type));
+        _elements.add(alias_type);
         return alias_type;
     }
 
@@ -509,7 +506,7 @@ namespace basecode::compiler {
         if (!type->initialize(r, this))
             return nullptr;
 
-        _elements.insert(std::make_pair(type->id(), type));
+        _elements.add(type);
         return type;
     }
 
@@ -520,7 +517,7 @@ namespace basecode::compiler {
         if (!type->initialize(r, this))
             return nullptr;
 
-        _elements.insert(std::make_pair(type->id(), type));
+        _elements.add(type);
         return type;
     }
 
@@ -558,7 +555,7 @@ namespace basecode::compiler {
             true_branch->parent_element(if_element);
         if (false_branch != nullptr)
             false_branch->parent_element(if_element);
-        _elements.insert(std::make_pair(if_element->id(), if_element));
+        _elements.add(if_element);
         return if_element;
     }
 
@@ -567,7 +564,7 @@ namespace basecode::compiler {
             comment_type_t type,
             const std::string& value) {
         auto comment = new compiler::comment(parent_scope, type, value);
-        _elements.insert(std::make_pair(comment->id(), comment));
+        _elements.add(comment);
         return comment;
     }
 
@@ -578,7 +575,7 @@ namespace basecode::compiler {
         auto directive = new compiler::directive(parent_scope, name, expr);
         if (expr != nullptr)
             expr->parent_element(directive);
-        _elements.insert(std::make_pair(directive->id(), directive));
+        _elements.add(directive);
         return directive;
     }
 
@@ -589,7 +586,7 @@ namespace basecode::compiler {
         auto attr = new compiler::attribute(parent_scope, name, expr);
         if (expr != nullptr)
             expr->parent_element(attr);
-        _elements.insert(std::make_pair(attr->id(), attr));
+        _elements.add(attr);
         return attr;
     }
 
@@ -603,7 +600,7 @@ namespace basecode::compiler {
             expr);
         if (expr != nullptr)
             expr->parent_element(identifier);
-        _elements.insert(std::make_pair(identifier->id(), identifier));
+        _elements.add(identifier);
         return identifier;
     }
 
@@ -653,7 +650,7 @@ namespace basecode::compiler {
             parent_scope,
             composite_types_t::enum_type,
             fmt::format("__enum_{}__", common::id_pool::instance()->allocate()));
-        _elements.insert(std::make_pair(type->id(), type));
+        _elements.add(type);
         return type;
     }
 
@@ -665,13 +662,13 @@ namespace basecode::compiler {
             expr);
         if (expr != nullptr)
             expr->parent_element(initializer);
-        _elements.insert(std::make_pair(initializer->id(), initializer));
+        _elements.add(initializer);
         return initializer;
     }
 
     return_element* program::make_return(compiler::block* parent_scope) {
         auto return_element = new compiler::return_element(parent_scope);
-        _elements.insert(std::make_pair(return_element->id(), return_element));
+        _elements.add(return_element);
         return return_element;
     }
 
@@ -685,7 +682,7 @@ namespace basecode::compiler {
         if (!type->initialize(r, this))
             return nullptr;
 
-        _elements.insert(std::make_pair(type->id(), type));
+        _elements.add(type);
         return type;
     }
 
@@ -707,7 +704,7 @@ namespace basecode::compiler {
         if (!type->initialize(r, this))
             return nullptr;
 
-        _elements.insert(std::make_pair(type->id(), type));
+        _elements.add(type);
         return type;
     }
 
@@ -718,7 +715,7 @@ namespace basecode::compiler {
         if (!type->initialize(r, this))
             return nullptr;
 
-        _elements.insert(std::make_pair(type->id(), type));
+        _elements.add(type);
         return type;
     }
 
@@ -732,7 +729,7 @@ namespace basecode::compiler {
             expr);
         if (expr != nullptr)
             expr->parent_element(ns);
-        _elements.insert(std::make_pair(ns->id(), ns));
+        _elements.add(ns);
         return ns;
     }
 
@@ -743,7 +740,7 @@ namespace basecode::compiler {
             parent_scope,
             composite_types_t::union_type,
             fmt::format("__union_{}__", common::id_pool::instance()->allocate()));
-        _elements.insert(std::make_pair(type->id(), type));
+        _elements.add(type);
         return type;
     }
 
@@ -754,7 +751,7 @@ namespace basecode::compiler {
             parent_scope,
             composite_types_t::struct_type,
             fmt::format("__struct_{}__", common::id_pool::instance()->allocate()));
-        _elements.insert(std::make_pair(type->id(), type));
+        _elements.add(type);
         return type;
     }
 
@@ -766,13 +763,13 @@ namespace basecode::compiler {
             parent_scope,
             identifier,
             args);
-        _elements.insert(std::make_pair(proc_call->id(), proc_call));
+        _elements.add(proc_call);
         return proc_call;
     }
 
     argument_list* program::make_argument_list(compiler::block* parent_scope) {
         auto list = new compiler::argument_list(parent_scope);
-        _elements.insert(std::make_pair(list->id(), list));
+        _elements.add(list);
         return list;
     }
 
@@ -785,7 +782,7 @@ namespace basecode::compiler {
             type,
             rhs);
         rhs->parent_element(unary_operator);
-        _elements.insert(std::make_pair(unary_operator->id(), unary_operator));
+        _elements.add(unary_operator);
         return unary_operator;
     }
 
@@ -801,30 +798,15 @@ namespace basecode::compiler {
             rhs);
         lhs->parent_element(binary_operator);
         rhs->parent_element(binary_operator);
-        _elements.insert(std::make_pair(binary_operator->id(), binary_operator));
+        _elements.add(binary_operator);
         return binary_operator;
-    }
-
-    void program::remove_element(common::id_t id) {
-        auto item = find_element(id);
-        if (item == nullptr)
-            return;
-        _elements.erase(id);
-        delete item;
-    }
-
-    element* program::find_element(common::id_t id) {
-        auto it = _elements.find(id);
-        if (it != _elements.end())
-            return it->second;
-        return nullptr;
     }
 
     label* program::make_label(
             compiler::block* parent_scope,
             const std::string& name) {
         auto label = new compiler::label(parent_scope, name);
-        _elements.insert(std::make_pair(label->id(), label));
+        _elements.add(label);
         return label;
     }
 
@@ -833,7 +815,7 @@ namespace basecode::compiler {
             compiler::identifier* identifier) {
         auto field = new compiler::field(parent_scope, identifier);
         identifier->parent_element(field);
-        _elements.insert(std::make_pair(field->id(), field));
+        _elements.add(field);
         return field;
     }
 
@@ -841,7 +823,7 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             double value) {
         auto literal = new compiler::float_literal(parent_scope, value);
-        _elements.insert(std::make_pair(literal->id(), literal));
+        _elements.add(literal);
         return literal;
     }
 
@@ -849,7 +831,7 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             bool value) {
         auto boolean_literal = new compiler::boolean_literal(parent_scope, value);
-        _elements.insert(std::make_pair(boolean_literal->id(), boolean_literal));
+        _elements.add(boolean_literal);
         return boolean_literal;
     }
 
@@ -859,7 +841,7 @@ namespace basecode::compiler {
         auto expression = new compiler::expression(parent_scope, expr);
         if (expr != nullptr)
             expr->parent_element(expression);
-        _elements.insert(std::make_pair(expression->id(), expression));
+        _elements.add(expression);
         return expression;
     }
 
@@ -867,7 +849,7 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             uint64_t value) {
         auto literal = new compiler::integer_literal(parent_scope, value);
-        _elements.insert(std::make_pair(literal->id(), literal));
+        _elements.add(literal);
         return literal;
     }
 
@@ -884,7 +866,7 @@ namespace basecode::compiler {
             procedure_type,
             scope);
         scope->parent_element(instance);
-        _elements.insert(std::make_pair(instance->id(), instance));
+        _elements.add(instance);
         return instance;
     }
 
@@ -1010,7 +992,7 @@ namespace basecode::compiler {
             compiler::type* type,
             element* expr) {
         auto cast = new compiler::cast(parent_scope, type, expr);
-        _elements.insert(std::make_pair(cast->id(), cast));
+        _elements.add(cast);
         return cast;
     }
 
@@ -1062,7 +1044,7 @@ namespace basecode::compiler {
             statement->labels().push_back(label);
             label->parent_element(statement);
         }
-        _elements.insert(std::make_pair(statement->id(), statement));
+        _elements.add(statement);
         return statement;
     }
 
@@ -1070,7 +1052,7 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             const std::string& value) {
         auto literal = new compiler::string_literal(parent_scope, value);
-        _elements.insert(std::make_pair(literal->id(), literal));
+        _elements.add(literal);
         return literal;
     }
 
@@ -1086,7 +1068,7 @@ namespace basecode::compiler {
         if (!type->initialize(r, this))
             return nullptr;
         type->size(size);
-        _elements.insert(std::make_pair(type->id(), type));
+        _elements.add(type);
         return type;
     }
 
@@ -1094,7 +1076,7 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             element_type_t type) {
         auto block_element = new compiler::block(parent_scope, type);
-        _elements.insert(std::make_pair(block_element->id(), block_element));
+        _elements.add(block_element);
         return block_element;
     }
 
@@ -1178,7 +1160,7 @@ namespace basecode::compiler {
             return nullptr;
         type->is_array(is_array);
         type->array_size(array_size);
-        _elements.insert(std::make_pair(type->id(), type));
+        _elements.add(type);
         return type;
     }
 
@@ -1191,7 +1173,7 @@ namespace basecode::compiler {
             fmt::format("__proc_{}__", common::id_pool::instance()->allocate()));
         if (block_scope != nullptr)
             block_scope->parent_element(type);
-        _elements.insert(std::make_pair(type->id(), type));
+        _elements.add(type);
         return type;
     }
 
@@ -1230,7 +1212,7 @@ namespace basecode::compiler {
 
                 if (identifier_type != nullptr) {
                     var->type(identifier_type);
-                    remove_element(unknown_type->id());
+                    _elements.remove(unknown_type->id());
                 }
             } else {
                 identifier_type = var
@@ -1262,7 +1244,7 @@ namespace basecode::compiler {
         if (!type->initialize(r, this))
             return nullptr;
 
-        _elements.insert(std::make_pair(type->id(), type));
+        _elements.add(type);
         return type;
     }
 
@@ -1359,7 +1341,7 @@ namespace basecode::compiler {
 
     import* program::make_import(compiler::block* parent_scope, element* expr) {
         auto import_element = new compiler::import(parent_scope, expr);
-        _elements.insert(std::make_pair(import_element->id(), import_element));
+        _elements.add(import_element);
         return import_element;
     }
 

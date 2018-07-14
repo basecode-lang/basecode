@@ -66,6 +66,7 @@ add_library(
         compiler/elements/expression.cpp compiler/elements/expression.h
         compiler/elements/array_type.cpp compiler/elements/array_type.h
         compiler/elements/tuple_type.cpp compiler/elements/tuple_type.h
+        compiler/elements/element_map.cpp compiler/elements/element_map.h
         compiler/elements/initializer.cpp compiler/elements/initializer.h
         compiler/elements/string_type.cpp compiler/elements/string_type.h
         compiler/elements/emit_context.cpp compiler/elements/emit_context.h

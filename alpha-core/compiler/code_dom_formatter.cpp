@@ -485,9 +485,10 @@ namespace basecode::compiler {
         _nodes.clear();
         _edges.clear();
 
-        _nodes.insert(format_node(const_cast<compiler::program*>(_program)));
+        auto non_const_program = const_cast<compiler::program*>(_program);
+        _nodes.insert(format_node(non_const_program));
 
-        for (const auto& pair : _program->elements()) {
+        for (const auto& pair : non_const_program->elements()) {
             auto node_def = format_node(pair.second);
             if (node_def.empty())
                 continue;

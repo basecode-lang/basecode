@@ -16,6 +16,7 @@
 #include <common/id_pool.h>
 #include <vm/assembly_listing.h>
 #include "block.h"
+#include "element_map.h"
 
 namespace basecode::compiler {
 
@@ -44,11 +45,9 @@ namespace basecode::compiler {
             vm::assembly_listing& listing,
             const syntax::ast_node_shared_ptr& root);
 
+        element_map& elements();
+
         bool run(common::result& r);
-
-        const element_map_t& elements() const;
-
-        element* find_element(common::id_t id);
 
         compiler::type* find_type_down(const std::string& name);
 
@@ -293,8 +292,6 @@ namespace basecode::compiler {
 
         compiler::block* pop_scope();
 
-        void remove_element(common::id_t id);
-
         compiler::block* current_scope() const;
 
         void push_scope(compiler::block* block);
@@ -311,8 +308,8 @@ namespace basecode::compiler {
 
     private:
         vm::assembler _assembler;
+        element_map _elements {};
         vm::terp* _terp = nullptr;
-        element_map_t _elements {};
         compiler::block* _block = nullptr;
         std::stack<compiler::block*> _scope_stack {};
         identifier_list_t _identifiers_with_unknown_types {};

@@ -73,7 +73,6 @@ namespace basecode::compiler {
     using attribute_list_t = std::vector<attribute*>;
     using identifier_list_t = std::vector<identifier*>;
     using directive_map_t = std::map<std::string, directive*>;
-    using element_map_t = std::unordered_map<common::id_t, element*>;
     using procedure_instance_list_t = std::vector<procedure_instance*>;
 
     ///////////////////////////////////////////////////////////////////////////
