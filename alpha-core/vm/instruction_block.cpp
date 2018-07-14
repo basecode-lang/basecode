@@ -74,6 +74,12 @@ namespace basecode::vm {
     }
 
     // data definitions
+    void instruction_block::align(uint8_t size) {
+        make_block_entry(align_t {
+            .size = size
+        });
+    }
+
     void instruction_block::byte(uint8_t value) {
         make_block_entry(data_definition_t {
             .size = op_sizes::byte,
@@ -142,6 +148,7 @@ namespace basecode::vm {
         dword(static_cast<uint32_t>(value.length()));
         for (const auto& c : value)
             byte(static_cast<uint8_t>(c));
+        byte(0);
     }
 
     // load variations
@@ -1145,17 +1152,23 @@ namespace basecode::vm {
 
         size_t index = 0;
         for (auto& entry : block->_entries) {
+            source_file->add_blank_lines(entry.blank_lines());
+
             for (const auto& comment : entry.comments()) {
-//                source_file->add_source_line(0, "");
                 source_file->add_source_line(0, fmt::format("; {}", comment));
             }
             for (auto label : entry.labels()) {
-//                if (entry.comments().empty())
-//                    source_file->add_source_line(0, "");
                 source_file->add_source_line(0, fmt::format("{}:", label->name()));
             }
             switch (entry.type()) {
                 case block_entry_type_t::memo: {
+                    break;
+                }
+                case block_entry_type_t::align: {
+                    auto align = entry.data<align_t>();
+                    source_file->add_source_line(
+                        0,
+                        fmt::format(".align {}", align->size));
                     break;
                 }
                 case block_entry_type_t::section: {
@@ -1667,6 +1680,10 @@ namespace basecode::vm {
             i_registers_t lhs_reg,
             i_registers_t rhs_reg) {
         make_ror_instruction(op_sizes::qword, dest_reg, lhs_reg, rhs_reg);
+    }
+
+    void instruction_block::make_block_entry(const align_t& align) {
+        _entries.push_back(block_entry_t(align));
     }
 
     void instruction_block::make_block_entry(const section_t& section) {

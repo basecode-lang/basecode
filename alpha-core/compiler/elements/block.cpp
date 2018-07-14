@@ -39,9 +39,9 @@ namespace basecode::compiler {
 
                 auto parent_ns = parent_element_as<compiler::namespace_element>();
                 if (parent_ns != nullptr) {
-                    instruction_block
-                        ->current_entry()
-                        ->comment(fmt::format("namespace: {}", parent_ns->name()));
+                    auto current_entry = instruction_block->current_entry();
+                    current_entry->comment(fmt::format("namespace: {}", parent_ns->name()));
+                    current_entry->blank_lines(1);
                 }
 
                 auto block_label = instruction_block->make_label(label_name());
@@ -69,8 +69,11 @@ namespace basecode::compiler {
             stmt->emit(r, context);
         }
 
-        for (auto blk : _blocks) {
-            blk->emit(r, context);
+        auto block_data = context.top<block_data_t>();
+        if (block_data == nullptr || block_data->recurse) {
+            for (auto blk : _blocks) {
+                blk->emit(r, context);
+            }
         }
 
         if (element_type() == element_type_t::block)

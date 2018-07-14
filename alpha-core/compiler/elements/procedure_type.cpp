@@ -34,8 +34,11 @@ namespace basecode::compiler {
             return true;
 
         auto instruction_block = context.assembler->make_procedure_block();
-        auto procedure_label = name();
+        instruction_block->align(vm::instruction_t::alignment);
+        instruction_block->current_entry()->blank_lines(1);
+        instruction_block->memo();
 
+        auto procedure_label = name();
         auto parent_init = parent_element_as<compiler::initializer>();
         if (parent_init != nullptr) {
             auto parent_var = parent_init->parent_element_as<compiler::identifier>();
@@ -45,7 +48,6 @@ namespace basecode::compiler {
         }
 
         auto proc_label = instruction_block->make_label(procedure_label);
-        instruction_block->memo();
         instruction_block->current_entry()->label(proc_label);
 
         auto stack_frame = instruction_block->stack_frame();
@@ -72,7 +74,8 @@ namespace basecode::compiler {
         context.program->visit_blocks(
             r,
             [&](compiler::block* scope) {
-                if (scope->element_type() == element_type_t::proc_type_block)
+                if (scope->element_type() == element_type_t::proc_type_block
+                ||  scope->element_type() == element_type_t::proc_instance_block)
                     return true;
                 for (auto var : scope->identifiers().as_list()) {
                     stack_frame->add(

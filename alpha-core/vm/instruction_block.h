@@ -65,6 +65,10 @@ namespace basecode::vm {
         uninitialized
     };
 
+    struct align_t {
+        uint8_t size = 0;
+    };
+
     struct data_definition_t {
         op_sizes size;
         uint64_t value = 0;
@@ -74,6 +78,7 @@ namespace basecode::vm {
     enum class block_entry_type_t : uint8_t {
         section = 1,
         memo,
+        align,
         instruction,
         data_definition,
     };
@@ -81,6 +86,10 @@ namespace basecode::vm {
     struct block_entry_t {
         block_entry_t() : _data({}),
                           _type(block_entry_type_t::memo) {
+        }
+
+        block_entry_t(const align_t& align) : _data(std::any(align)),
+                                              _type(block_entry_type_t::align) {
         }
 
         block_entry_t(const section_t& section) : _data(std::any(section)),
@@ -106,12 +115,20 @@ namespace basecode::vm {
             }
         }
 
+        uint16_t blank_lines() const {
+            return _blank_lines;
+        }
+
         void label(vm::label* label) {
             _labels.push_back(label);
         }
 
         block_entry_type_t type() const {
             return _type;
+        }
+
+        void blank_lines(uint16_t count) {
+            _blank_lines += count;
         }
 
         void comment(const std::string& value) {
@@ -129,6 +146,7 @@ namespace basecode::vm {
     private:
         std::any _data;
         block_entry_type_t _type;
+        uint16_t _blank_lines = 0;
         std::vector<vm::label*> _labels {};
         std::vector<std::string> _comments {};
     };
@@ -186,6 +204,8 @@ namespace basecode::vm {
     // data definitions
     public:
         void byte(uint8_t value);
+
+        void align(uint8_t size);
 
         void word(uint16_t value);
 
@@ -768,6 +788,8 @@ namespace basecode::vm {
         void make_integer_constant_push_instruction(
             op_sizes size,
             uint64_t value);
+
+        void make_block_entry(const align_t& section);
 
         void make_block_entry(const section_t& section);
 

@@ -383,7 +383,7 @@ namespace basecode::compiler {
             common::result& r,
             emit_context_t& context) {
         auto instruction_block = context.assembler->make_basic_block();
-        instruction_block->jump_direct("_start");
+        instruction_block->jump_direct("_initializer");
 
         std::map<vm::section_t, element_list_t> vars_by_section {};
         auto bss  = vars_by_section.insert(std::make_pair(vm::section_t::bss,     element_list_t()));
@@ -436,6 +436,7 @@ namespace basecode::compiler {
 
         for (const auto& section : vars_by_section) {
             instruction_block->section(section.first);
+            instruction_block->current_entry()->blank_lines(1);
 
             for (auto e : section.second) {
                 switch (e->element_type()) {
@@ -444,11 +445,13 @@ namespace basecode::compiler {
                         instruction_block->memo();
                         auto it = _interned_string_literals.find(string_literal->value());
                         if (it != _interned_string_literals.end()) {
+                            auto current_entry = instruction_block->current_entry();
                             string_literal_list_t& str_list = it->second;
                             for (auto str : str_list) {
                                 auto var_label = instruction_block->make_label(str->label_name());
-                                instruction_block->current_entry()->label(var_label);
+                                current_entry->label(var_label);
                             }
+                            current_entry->blank_lines(1);
                         }
                         instruction_block->current_entry()->comment(fmt::format(
                             "\"{}\"",
@@ -462,7 +465,9 @@ namespace basecode::compiler {
 
                         instruction_block->memo();
                         auto var_label = instruction_block->make_label(var->name());
-                        instruction_block->current_entry()->label(var_label);
+                        auto current_entry = instruction_block->current_entry();
+                        current_entry->label(var_label);
+                        current_entry->blank_lines(1);
 
                         switch (var->type()->element_type()) {
                             case element_type_t::numeric_type: {
@@ -546,17 +551,38 @@ namespace basecode::compiler {
             }
         }
 
-        for (auto procedure_type : proc_list)
+        for (auto procedure_type : proc_list) {
             procedure_type->emit(r, context);
+        }
 
         auto top_level_block = context.assembler->make_basic_block();
+        top_level_block->align(vm::instruction_t::alignment);
+        top_level_block->current_entry()->blank_lines(1);
         top_level_block->memo();
-        auto start_label = top_level_block->make_label("_start");
-        top_level_block->current_entry()->label(start_label);
+        top_level_block->current_entry()->label(top_level_block->make_label("_initializer"));
+
+        auto all_blocks = elements().find_by_type(element_type_t::block);
+        block_list_t implicit_blocks {};
+        for (auto block : all_blocks) {
+            if (block->is_parent_element(element_type_t::namespace_e)
+            ||  block->is_parent_element(element_type_t::program)) {
+                implicit_blocks.emplace_back(dynamic_cast<compiler::block*>(block));
+            }
+        }
 
         context.assembler->push_block(top_level_block);
-        context.assembler->pop_block();
+        context.push_block(false);
+        for (auto block : implicit_blocks)
+            block->emit(r, context);
+        context.pop();
 
+        auto finalizer_block = context.assembler->make_basic_block();
+        finalizer_block->align(vm::instruction_t::alignment);
+        finalizer_block->current_entry()->blank_lines(1);
+        finalizer_block->exit();
+        finalizer_block->current_entry()->label(finalizer_block->make_label("_finalizer"));
+
+        context.assembler->pop_block();
         context.assembler->pop_block();
 
         return true;

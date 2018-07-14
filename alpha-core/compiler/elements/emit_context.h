@@ -19,15 +19,13 @@
 
 namespace basecode::compiler {
 
-    enum class emit_context_type_t {
-        empty,
-        if_element,
-        procedure_type
-    };
-
     enum class emit_access_type_t {
         read,
         write
+    };
+
+    struct block_data_t {
+        bool recurse = true;
     };
 
     struct if_data_t {
@@ -61,6 +59,8 @@ namespace basecode::compiler {
             const std::string& false_label_name);
 
         void pop_access();
+
+        void push_block(bool recurse);
 
         void clear_scratch_registers();
 
