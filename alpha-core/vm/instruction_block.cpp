@@ -54,6 +54,10 @@ namespace basecode::vm {
         make_block_entry(exit_op);
     }
 
+    void instruction_block::memo() {
+        _entries.push_back(block_entry_t());
+    }
+
     void instruction_block::clear_blocks() {
         _blocks.clear();
     }
@@ -1151,6 +1155,9 @@ namespace basecode::vm {
                 source_file->add_source_line(0, fmt::format("{}:", label->name()));
             }
             switch (entry.type()) {
+                case block_entry_type_t::memo: {
+                    break;
+                }
                 case block_entry_type_t::section: {
                     auto section = entry.data<section_t>();
                     source_file->add_source_line(
@@ -1185,11 +1192,11 @@ namespace basecode::vm {
                                     format_spec = "${:04X}";
                                     break;
                                 case op_sizes::dword:
-                                    directive << ".ddw";
+                                    directive << ".dd";
                                     format_spec = "${:08X}";
                                     break;
                                 case op_sizes::qword:
-                                    directive << ".dqd";
+                                    directive << ".dq";
                                     format_spec = "${:016X}";
                                     break;
                                 default: {
@@ -1208,10 +1215,10 @@ namespace basecode::vm {
                                     directive << ".rw";
                                     break;
                                 case op_sizes::dword:
-                                    directive << ".rdw";
+                                    directive << ".rd";
                                     break;
                                 case op_sizes::qword:
-                                    directive << ".rqw";
+                                    directive << ".rq";
                                     break;
                                 default: {
                                     break;

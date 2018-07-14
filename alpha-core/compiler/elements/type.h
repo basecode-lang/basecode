@@ -28,9 +28,17 @@ namespace basecode::compiler {
             common::result& r,
             compiler::program* program);
 
+        bool packed() const;
+
+        void packed(bool value);
+
         std::string name() const;
 
+        size_t alignment() const;
+
         size_t size_in_bytes() const;
+
+        void alignment(size_t value);
 
         void name(const std::string& value);
 
@@ -43,6 +51,8 @@ namespace basecode::compiler {
 
     private:
         std::string _name;
+        bool _packed = false;
+        size_t _alignment = 0;
         size_t _size_in_bytes {};
     };
 

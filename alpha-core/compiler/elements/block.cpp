@@ -35,7 +35,7 @@ namespace basecode::compiler {
         switch (element_type()) {
             case element_type_t::block: {
                 instruction_block = context.assembler->make_basic_block();
-                instruction_block->nop();
+                instruction_block->memo();
 
                 auto parent_ns = parent_element_as<compiler::namespace_element>();
                 if (parent_ns != nullptr) {

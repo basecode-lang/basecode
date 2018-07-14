@@ -73,11 +73,16 @@ namespace basecode::vm {
 
     enum class block_entry_type_t : uint8_t {
         section = 1,
+        memo,
         instruction,
         data_definition,
     };
 
     struct block_entry_t {
+        block_entry_t() : _data({}),
+                          _type(block_entry_type_t::memo) {
+        }
+
         block_entry_t(const section_t& section) : _data(std::any(section)),
                                                   _type(block_entry_type_t::section) {
         }
@@ -138,6 +143,8 @@ namespace basecode::vm {
 
     // block support
     public:
+        void memo();
+
         void clear_blocks();
 
         void clear_entries();

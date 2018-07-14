@@ -33,8 +33,24 @@ namespace basecode::compiler {
         return true;
     }
 
+    bool type::packed() const {
+        return _packed;
+    }
+
+    void type::packed(bool value) {
+        _packed = value;
+    }
+
     std::string type::name() const {
         return _name;
+    }
+
+    size_t type::alignment() const {
+        return _alignment;
+    }
+
+    void type::alignment(size_t value) {
+        _alignment = value;
     }
 
     size_t type::size_in_bytes() const {

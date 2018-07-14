@@ -15,6 +15,12 @@
 
 namespace basecode::common {
 
+    inline bool is_power_of_two(int64_t x) {
+        if (x <= 0)
+            return false;
+        return !(x & (x-1));
+    }
+
     inline bool is_platform_little_endian() {
         int n = 1;
         return (*(char*)&n) == 1;
@@ -28,8 +34,50 @@ namespace basecode::common {
         return static_cast<uint8_t>(value & 0x0f);
     }
 
+    inline uint32_t next_power_of_two(uint32_t n) {
+        n--;
+        n |= n >> 1;
+        n |= n >> 2;
+        n |= n >> 4;
+        n |= n >> 8;
+        n |= n >> 16;
+        n++;
+        return n;
+    }
+
+    inline uint64_t next_power_of_two(uint64_t n) {
+        n--;
+        n |= n >> 1;
+        n |= n >> 2;
+        n |= n >> 4;
+        n |= n >> 8;
+        n |= n >> 16;
+        n |= n >> 32;
+        n++;
+        return n;
+    }
+
     inline uint16_t endian_swap_word(uint16_t value) {
         return (value >> 8) | (value << 8);
+    }
+
+    inline uint32_t previous_power_of_two(uint32_t n) {
+        n |= n >> 1;
+        n |= n >> 2;
+        n |= n >> 4;
+        n |= n >> 8;
+        n |= n >> 16;
+        return n - (n >> 1);
+    }
+
+    inline uint64_t previous_power_of_two(uint64_t n) {
+        n |= n >> 1;
+        n |= n >> 2;
+        n |= n >> 4;
+        n |= n >> 8;
+        n |= n >> 16;
+        n |= n >> 32;
+        return n - (n >> 1);
     }
 
     inline uint32_t endian_swap_dword(uint32_t value) {
@@ -48,6 +96,14 @@ namespace basecode::common {
                ((value & 0x0000ff0000000000u) >> 24) |
                ((value & 0x00ff000000000000u) >> 40) |
                ((value & 0xff00000000000000u) >> 56);
+    }
+
+    inline uint64_t align(uint64_t size, uint64_t align) {
+        if (align > 0) {
+            auto result = size + align - 1;
+            return result - result % align;
+        }
+        return size;
     }
 
     inline uint8_t set_lower_nybble(uint8_t original, uint8_t value) {
