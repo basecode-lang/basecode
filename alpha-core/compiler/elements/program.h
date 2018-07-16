@@ -22,8 +22,16 @@ namespace basecode::compiler {
 
     using block_visitor_callable = std::function<bool (compiler::block*)>;
 
+    struct qualified_symbol_t {
+        bool is_qualified() const {
+            return !namespaces.empty();
+        }
+        std::string name {};
+        string_list_t namespaces {};
+    };
+
     struct type_find_result_t {
-        compiler::symbol_element* type_name;
+        qualified_symbol_t type_name;
         bool is_array = false;
         size_t array_size = 0;
         compiler::type* type = nullptr;
@@ -281,6 +289,10 @@ namespace basecode::compiler {
             compiler::type* procedure_type,
             compiler::block* scope);
 
+        compiler::element* resolve_symbol_or_evaluate(
+            common::result& r,
+            const syntax::ast_node_shared_ptr& node);
+
         compiler::identifier* add_identifier_to_scope(
             common::result& r,
             compiler::symbol_element* symbol,
@@ -289,6 +301,10 @@ namespace basecode::compiler {
             compiler::block* parent_scope = nullptr);
 
         void add_type_to_scope(compiler::type* type);
+
+        void make_qualified_symbol(
+            qualified_symbol_t& symbol,
+            const syntax::ast_node_shared_ptr& node);
 
         compiler::symbol_element* make_symbol_from_node(
             common::result& r,
@@ -312,19 +328,20 @@ namespace basecode::compiler {
             const syntax::ast_node_shared_ptr& node,
             element_type_t default_block_type = element_type_t::block);
 
+        bool find_identifier_type(
+            common::result& r,
+            type_find_result_t& result,
+            const syntax::ast_node_shared_ptr& type_node);
+
         compiler::block* pop_scope();
 
         compiler::block* current_scope() const;
 
         void push_scope(compiler::block* block);
 
-        type_find_result_t find_identifier_type(
-            common::result& r,
-            const syntax::ast_node_shared_ptr& type_node);
-
-        compiler::identifier* find_identifier(compiler::symbol_element* symbol);
-
         bool is_subtree_constant(const syntax::ast_node_shared_ptr& node);
+
+        compiler::identifier* find_identifier(const qualified_symbol_t& symbol);
 
         bool within_procedure_scope(compiler::block* parent_scope = nullptr) const;
 

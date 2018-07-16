@@ -22,21 +22,21 @@ namespace basecode::compiler {
             common::result& r,
             emit_context_t& context) {
         auto instruction_block = context.assembler->current_block();
-
-        for (auto expr : _expressions) {
+        if (!_expressions.empty()) {
             vm::i_registers_t target_reg;
             if (!instruction_block->allocate_reg(target_reg)) {
-                // XXX: error
             }
             instruction_block->push_target_register(target_reg);
-            expr->emit(r, context);
+            // XXX: temporarily, only the first return value
+            _expressions.front()->emit(r, context);
+            instruction_block->store_from_ireg_u64(
+                vm::i_registers_t::fp,
+                target_reg,
+                8);
             instruction_block->pop_target_register();
-            instruction_block->push_u32(target_reg);
             instruction_block->free_reg(target_reg);
         }
-
         instruction_block->rts();
-
         return true;
     }
 

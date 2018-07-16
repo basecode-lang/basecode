@@ -62,7 +62,8 @@ namespace basecode::compiler {
         }
 
         offset = 8;
-        if (!_returns.as_list().empty()) {
+        const auto& returns_list = _returns.as_list();
+        if (!returns_list.empty()) {
             stack_frame->add(
                 vm::stack_frame_entry_type_t::return_slot,
                 "return_value",
@@ -70,19 +71,23 @@ namespace basecode::compiler {
             offset += 8;
         }
 
+        fmt::print("proc: {}\n", procedure_label);
+
         offset = 16;
         size_t local_count = 0;
         context.program->visit_blocks(
             r,
             [&](compiler::block* scope) {
-                if (scope->element_type() == element_type_t::proc_type_block
-                ||  scope->element_type() == element_type_t::proc_instance_block)
+                if (scope->element_type() == element_type_t::proc_type_block)
                     return true;
                 for (auto var : scope->identifiers().as_list()) {
+                    if (var->type()->element_type() == element_type_t::proc_type)
+                        continue;
                     stack_frame->add(
                         vm::stack_frame_entry_type_t::local,
                         var->symbol()->name(),
                         offset);
+                    var->usage(identifier_usage_t::stack);
                     offset += 8;
                     local_count++;
                 }
@@ -93,11 +98,14 @@ namespace basecode::compiler {
         instruction_block->move_ireg_to_ireg(
             vm::i_registers_t::fp,
             vm::i_registers_t::sp);
-        if (local_count > 0) {
+        auto size = 8 * local_count;
+        if (!returns_list.empty())
+            size += 8;
+        if (size > 0) {
             instruction_block->sub_ireg_by_immediate(
                 vm::i_registers_t::sp,
                 vm::i_registers_t::sp,
-                8 * local_count);
+                size);
         }
 
         context.assembler->push_block(instruction_block);
