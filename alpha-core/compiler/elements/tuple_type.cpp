@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include "program.h"
 #include "tuple_type.h"
 
 namespace basecode::compiler {
@@ -16,13 +17,14 @@ namespace basecode::compiler {
     tuple_type::tuple_type(block* parent_scope) : compiler::composite_type(
                                                         parent_scope,
                                                         composite_types_t::struct_type,
-                                                        "tuple",
+                                                        nullptr,
                                                         element_type_t::tuple_type) {
     }
 
     bool tuple_type::on_initialize(
             common::result& r,
             compiler::program* program) {
+        symbol(program->make_symbol(parent_scope(), "tuple"));
         return true;
     }
 

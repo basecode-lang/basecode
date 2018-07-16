@@ -49,6 +49,7 @@ namespace basecode::compiler {
     class float_literal;
     class operator_base;
     class argument_list;
+    class symbol_element;
     class procedure_type;
     class composite_type;
     class unary_operator;
@@ -62,13 +63,14 @@ namespace basecode::compiler {
     class namespace_element;
     class procedure_instance;
 
-    using string_set_t = std::set<std::string>;
     using type_list_t = std::vector<type*>;
     using label_list_t = std::vector<label*>;
     using block_list_t = std::vector<block*>;
     using field_list_t = std::vector<field*>;
+    using string_set_t = std::set<std::string>;
     using element_list_t = std::vector<element*>;
     using comment_list_t = std::vector<comment*>;
+    using string_list_t = std::vector<std::string>;
     using statement_list_t = std::vector<statement*>;
     using attribute_list_t = std::vector<attribute*>;
     using identifier_list_t = std::vector<identifier*>;
@@ -107,6 +109,7 @@ namespace basecode::compiler {
         label,
         block,
         field,
+        symbol,
         comment,
         program,
         any_type,
@@ -151,6 +154,7 @@ namespace basecode::compiler {
         {element_type_t::label, "label"},
         {element_type_t::block, "block"},
         {element_type_t::field, "field"},
+        {element_type_t::symbol, "symbol_element"},
         {element_type_t::comment, "comment"},
         {element_type_t::program, "program"},
         {element_type_t::any_type, "any_type"},
@@ -344,12 +348,12 @@ namespace basecode::compiler {
             return _fields.size();
         }
 
-        bool remove(const std::string& name);
+        bool remove(common::id_t id);
 
-        compiler::field* find(const std::string& name);
+        compiler::field* find(common::id_t id);
 
     private:
-        std::unordered_map<std::string, field*> _fields {};
+        std::unordered_map<common::id_t, field*> _fields {};
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -372,10 +376,6 @@ namespace basecode::compiler {
         bool remove(const std::string& name);
 
         identifier* find(const std::string& name);
-
-        identifier_list_t globals(bool initialized);
-
-        identifier_list_t constants(bool initialized);
 
     private:
         std::unordered_multimap<std::string, identifier*> _identifiers {};

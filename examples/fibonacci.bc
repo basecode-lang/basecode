@@ -19,6 +19,12 @@ alpha::compiler::config := ns {
         @ship_it "now!";
         constant length_of_sequence := 1000;
     };
+
+    vector3 := struct {
+        x:f64;
+        y:f64;
+        z:f64;
+    };
 };
 
 @foobar "baz";
@@ -35,7 +41,11 @@ alpha::compiler::examples := ns {
 
     is_this_true := count == (max == 256) && count == (max / 2);
 
+    //point:alpha::compiler::config::vector3;
+
     bar := proc() {
+        bing(256);
+
         bing := proc(z:u64):u64 {
             if z == 0 {
                 return 0;
@@ -43,7 +53,6 @@ alpha::compiler::examples := ns {
             return z / 2;
         };
 
-        bing(256);
         return;
     };
 

@@ -19,7 +19,7 @@ namespace basecode::compiler {
     public:
         array_type(
             block* parent_scope,
-            const std::string& name,
+            compiler::symbol_element* symbol,
             compiler::type* entry_type);
 
         uint64_t size() const;

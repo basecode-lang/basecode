@@ -12,6 +12,7 @@
 #include <vm/instruction_block.h>
 #include "type.h"
 #include "cast.h"
+#include "symbol_element.h"
 
 namespace basecode::compiler {
 
@@ -31,7 +32,7 @@ namespace basecode::compiler {
         auto instruction_block = context.assembler->current_block();
         instruction_block->current_entry()->comment(fmt::format(
             "XXX: cast<{}> not yet implemented",
-            _type->name()));
+            _type->symbol()->name()));
         return _expression->emit(r, context);
     }
 

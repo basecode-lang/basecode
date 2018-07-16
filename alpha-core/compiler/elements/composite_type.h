@@ -21,7 +21,7 @@ namespace basecode::compiler {
         composite_type(
             block* parent_scope,
             composite_types_t type,
-            const std::string& name,
+            compiler::symbol_element* symbol,
             element_type_t element_type = element_type_t::composite_type);
 
         field_map_t& fields();

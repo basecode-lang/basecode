@@ -18,11 +18,11 @@ namespace basecode::compiler {
     composite_type::composite_type(
             block* parent_scope,
             composite_types_t type,
-            const std::string& name,
+            compiler::symbol_element* symbol,
             element_type_t element_type) : compiler::type(
                                                 parent_scope,
                                                 element_type,
-                                                name),
+                                                symbol),
                                            _type(type) {
     }
 

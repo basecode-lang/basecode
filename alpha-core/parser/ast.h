@@ -262,6 +262,8 @@ namespace basecode::syntax {
 
         ast_node_shared_ptr proc_expression_node();
 
+        ast_node_shared_ptr type_identifier_node();
+
         ast_node_shared_ptr cast_node(token_t& token);
 
         ast_node_shared_ptr label_node(token_t& token);
@@ -311,8 +313,6 @@ namespace basecode::syntax {
         ast_node_shared_ptr string_literal_node(const token_t& token);
 
         ast_node_shared_ptr unary_operator_node(const token_t& token);
-
-        ast_node_shared_ptr type_identifier_node(const token_t& token);
 
         ast_node_shared_ptr boolean_literal_node(const token_t& token);
 

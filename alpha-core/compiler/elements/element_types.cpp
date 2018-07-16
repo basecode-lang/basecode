@@ -15,7 +15,7 @@
 #include "attribute.h"
 #include "identifier.h"
 #include "element_types.h"
-
+#include "symbol_element.h"
 
 namespace basecode::compiler {
 
@@ -47,7 +47,7 @@ namespace basecode::compiler {
     ///////////////////////////////////////////////////////////////////////////
 
     void field_map_t::add(field* value) {
-        _fields.insert(std::make_pair(value->identifier()->name(), value));
+        _fields.insert(std::make_pair(value->id(), value));
     }
 
     field_list_t field_map_t::as_list() {
@@ -58,12 +58,12 @@ namespace basecode::compiler {
         return list;
     }
 
-    bool field_map_t::remove(const std::string& name) {
-        return _fields.erase(name) > 0;
+    bool field_map_t::remove(common::id_t id) {
+        return _fields.erase(id) > 0;
     }
 
-    compiler::field* field_map_t::find(const std::string& name) {
-        auto it = _fields.find(name);
+    compiler::field* field_map_t::find(common::id_t id) {
+        auto it = _fields.find(id);
         if (it != _fields.end())
             return it->second;
         return nullptr;
@@ -78,7 +78,8 @@ namespace basecode::compiler {
     }
 
     void identifier_map_t::add(identifier* value) {
-        _identifiers.insert(std::make_pair(value->name(), value));
+        // XXX:
+        _identifiers.insert(std::make_pair(value->symbol()->name(), value));
     }
 
     identifier_list_t identifier_map_t::as_list() const {
@@ -100,47 +101,6 @@ namespace basecode::compiler {
         return nullptr;
     }
 
-    identifier_list_t identifier_map_t::globals(bool initialized) {
-        identifier_list_t list {};
-        for (const auto& it : _identifiers) {
-            if (it.second->constant())
-                continue;
-            auto init = it.second->initializer();
-            if (!initialized) {
-                if (init == nullptr)
-                    list.push_back(it.second);
-            }
-            else {
-                if (init != nullptr) {
-                    if (init->expression()->element_type() == element_type_t::namespace_e
-                    ||  init->expression()->element_type() == element_type_t::proc_type) {
-                        continue;
-                    }
-                    list.push_back(it.second);
-                }
-            }
-        }
-        return list;
-    }
-
-    identifier_list_t identifier_map_t::constants(bool initialized) {
-        identifier_list_t list {};
-        for (const auto& it : _identifiers) {
-            if (!it.second->constant())
-                continue;
-            auto init = it.second->initializer();
-            if (!initialized) {
-                if (init == nullptr)
-                    list.push_back(it.second);
-            }
-            else {
-                if (init != nullptr)
-                    list.push_back(it.second);
-            }
-        }
-        return list;
-    }
-
     ///////////////////////////////////////////////////////////////////////////
 
     type_list_t type_map_t::as_list() const {
@@ -152,7 +112,7 @@ namespace basecode::compiler {
     }
 
     void type_map_t::add(compiler::type* type) {
-        _types.insert(std::make_pair(type->name(), type));
+        _types.insert(std::make_pair(type->symbol()->name(), type));
     }
 
     bool type_map_t::remove(const std::string& name) {

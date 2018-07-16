@@ -15,15 +15,16 @@
 #include "element.h"
 #include "program.h"
 #include "procedure_type.h"
+#include "symbol_element.h"
 
 namespace basecode::compiler {
 
     procedure_type::procedure_type(
         block* parent_scope,
         compiler::block* scope,
-        const std::string& name) : compiler::type(parent_scope,
+        compiler::symbol_element* symbol) : compiler::type(parent_scope,
                                                   element_type_t::proc_type,
-                                                  name),
+                                                  symbol),
                                    _scope(scope) {
     }
 
@@ -38,12 +39,12 @@ namespace basecode::compiler {
         instruction_block->current_entry()->blank_lines(1);
         instruction_block->memo();
 
-        auto procedure_label = name();
+        auto procedure_label = symbol()->name();
         auto parent_init = parent_element_as<compiler::initializer>();
         if (parent_init != nullptr) {
             auto parent_var = parent_init->parent_element_as<compiler::identifier>();
             if (parent_var != nullptr) {
-                procedure_label = parent_var->name();
+                procedure_label = parent_var->symbol()->name();
             }
         }
 
@@ -55,13 +56,13 @@ namespace basecode::compiler {
         for (auto param : _parameters.as_list()) {
             stack_frame->add(
                 vm::stack_frame_entry_type_t::parameter,
-                param->identifier()->name(),
+                param->identifier()->symbol()->name(),
                 offset);
             offset -= 8;
         }
 
         offset = 8;
-        for (auto return_param : _returns.as_list()) {
+        if (!_returns.as_list().empty()) {
             stack_frame->add(
                 vm::stack_frame_entry_type_t::return_slot,
                 "return_value",
@@ -80,7 +81,7 @@ namespace basecode::compiler {
                 for (auto var : scope->identifiers().as_list()) {
                     stack_frame->add(
                         vm::stack_frame_entry_type_t::local,
-                        var->name(),
+                        var->symbol()->name(),
                         offset);
                     offset += 8;
                     local_count++;

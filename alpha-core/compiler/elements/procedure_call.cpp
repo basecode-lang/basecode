@@ -11,7 +11,9 @@
 
 #include <vm/instruction_block.h>
 #include "program.h"
+#include "identifier.h"
 #include "argument_list.h"
+#include "symbol_element.h"
 #include "procedure_type.h"
 #include "procedure_call.h"
 
@@ -29,22 +31,24 @@ namespace basecode::compiler {
             common::result& r,
             emit_context_t& context) {
         auto instruction_block = context.assembler->current_block();
+        auto init = identifier()->initializer();
+        if (init == nullptr)
+            return false;
 
         if (_arguments != nullptr)
             _arguments->emit(r, context);
 
-        auto procedure_type = identifier()->initializer()->procedure_type();
+        auto procedure_type = init->procedure_type();
         if (procedure_type->is_foreign()) {
-            instruction_block->call_foreign(identifier()->name());
+            instruction_block->call_foreign(identifier()->symbol()->name());
         } else {
-            instruction_block->call(identifier()->name());
+            instruction_block->call(identifier()->symbol()->name());
         }
 
         auto target_reg = instruction_block->current_target_register();
         if (target_reg != nullptr) {
-            for (auto return_type : procedure_type->returns().as_list()) {
+            if (!procedure_type->returns().as_list().empty())
                 instruction_block->pop_u64(target_reg->reg.i);
-            }
         }
 
         return true;

@@ -11,13 +11,14 @@
 
 #include "program.h"
 #include "type_info.h"
+#include "identifier.h"
 
 namespace basecode::compiler {
 
     type_info::type_info(block* parent_scope) : compiler::composite_type(
                                                 parent_scope,
                                                 composite_types_t::struct_type,
-                                                "type",
+                                                nullptr,
                                                 element_type_t::type_info) {
     }
 
@@ -45,14 +46,17 @@ namespace basecode::compiler {
     bool type_info::on_initialize(
             common::result& r,
             compiler::program* program) {
+        symbol(program->make_symbol(parent_scope(), "type"));
+
         auto block_scope = parent_scope();
 
         auto string_type = program->find_type_down("string");
 
         auto name_identifier = program->make_identifier(
             block_scope,
-            "name",
-            nullptr);
+            program->make_symbol(parent_scope(), "name"),
+            nullptr,
+            true);
         name_identifier->type(string_type);
         auto name_field = program->make_field(block_scope, name_identifier);
 

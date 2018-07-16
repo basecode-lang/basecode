@@ -15,7 +15,7 @@
 #include <parser/ast.h>
 #include <common/id_pool.h>
 #include <vm/assembly_listing.h>
-#include "block.h"
+#include "element.h"
 #include "element_map.h"
 
 namespace basecode::compiler {
@@ -23,7 +23,7 @@ namespace basecode::compiler {
     using block_visitor_callable = std::function<bool (compiler::block*)>;
 
     struct type_find_result_t {
-        std::string type_name {};
+        compiler::symbol_element* type_name;
         bool is_array = false;
         size_t array_size = 0;
         compiler::type* type = nullptr;
@@ -54,7 +54,6 @@ namespace basecode::compiler {
         compiler::type* find_type_up(const std::string& name) const;
 
     protected:
-        friend class directive;
         friend class code_dom_formatter;
 
         vm::terp* terp();
@@ -63,10 +62,13 @@ namespace basecode::compiler {
 
     private:
         friend class any_type;
+        friend class directive;
         friend class type_info;
         friend class array_type;
+        friend class tuple_type;
         friend class string_type;
         friend class numeric_type;
+        friend class namespace_type;
         friend class procedure_type;
 
         bool on_emit(
@@ -155,6 +157,16 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             element_type_t type);
 
+        compiler::symbol_element* make_symbol(
+            compiler::block* parent_scope,
+            const std::string& name,
+            const string_list_t& namespaces = {});
+
+        compiler::symbol_element* make_temp_symbol(
+            compiler::block* parent_scope,
+            const std::string& name,
+            const string_list_t& namespaces);
+
         void add_procedure_instance(
             common::result& r,
             compiler::procedure_type* proc_type,
@@ -162,8 +174,9 @@ namespace basecode::compiler {
 
         identifier* make_identifier(
             compiler::block* parent_scope,
-            const std::string& name,
-            initializer* expr);
+            compiler::symbol_element* symbol,
+            initializer* expr,
+            bool resolved);
 
         string_literal* make_string(
             compiler::block* parent_scope,
@@ -215,7 +228,7 @@ namespace basecode::compiler {
         unknown_type* make_unknown_type(
             common::result& r,
             compiler::block* parent_scope,
-            const std::string& name,
+            compiler::symbol_element* symbol,
             bool is_array,
             size_t array_size);
 
@@ -270,11 +283,16 @@ namespace basecode::compiler {
 
         compiler::identifier* add_identifier_to_scope(
             common::result& r,
-            const syntax::ast_node_shared_ptr& symbol,
+            compiler::symbol_element* symbol,
+            type_find_result_t& find_type_result,
             const syntax::ast_node_shared_ptr& rhs,
             compiler::block* parent_scope = nullptr);
 
         void add_type_to_scope(compiler::type* type);
+
+        compiler::symbol_element* make_symbol_from_node(
+            common::result& r,
+            const syntax::ast_node_shared_ptr& node);
 
         unknown_type* make_unknown_type_from_find_result(
             common::result& r,
@@ -302,13 +320,13 @@ namespace basecode::compiler {
 
         type_find_result_t find_identifier_type(
             common::result& r,
-            const syntax::ast_node_shared_ptr& symbol);
+            const syntax::ast_node_shared_ptr& type_node);
+
+        compiler::identifier* find_identifier(compiler::symbol_element* symbol);
 
         bool is_subtree_constant(const syntax::ast_node_shared_ptr& node);
 
         bool within_procedure_scope(compiler::block* parent_scope = nullptr) const;
-
-        compiler::identifier* find_identifier(const syntax::ast_node_shared_ptr& node);
 
     private:
         vm::assembler _assembler;

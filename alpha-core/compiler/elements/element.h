@@ -13,8 +13,6 @@
 
 #include <any>
 #include <cstdint>
-#include <vm/terp.h>
-#include <vm/assembler.h>
 #include <common/result.h>
 #include <common/id_pool.h>
 #include "emit_context.h"

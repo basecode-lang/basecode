@@ -60,8 +60,9 @@ namespace basecode::syntax {
                 ->ast_builder()
                 ->symbol_part_node(token);
             symbol_node->children.push_back(symbol_part_node);
-            if (!parser->peek(token_types_t::scope_operator))
+            if (!parser->peek(token_types_t::scope_operator)) {
                 break;
+            }
             parser->consume();
             if (!parser->expect(r, token))
                 return nullptr;
@@ -120,7 +121,8 @@ namespace basecode::syntax {
 
         cast_node->lhs = parser
             ->ast_builder()
-            ->type_identifier_node(identifier);
+            ->type_identifier_node();
+        cast_node->lhs->lhs = create_symbol_node(r, parser, nullptr, identifier);
 
         token_t greater_than;
         greater_than.type = token_types_t::greater_than;
@@ -164,7 +166,6 @@ namespace basecode::syntax {
 
         token_t type_identifier;
         type_identifier.type = token_types_t::identifier;
-
         if (!parser->expect(r, type_identifier)) {
             parser->error(
                 r,
@@ -175,9 +176,11 @@ namespace basecode::syntax {
             return nullptr;
         }
 
+        auto symbol_node = create_symbol_node(r, parser, nullptr, type_identifier);
         auto type_node = parser
             ->ast_builder()
-            ->type_identifier_node(type_identifier);
+            ->type_identifier_node();
+        type_node->lhs = symbol_node;
 
         if (array_node != nullptr) {
             type_node->rhs = array_node;

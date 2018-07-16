@@ -11,16 +11,17 @@
 
 #include "program.h"
 #include "array_type.h"
+#include "identifier.h"
 
 namespace basecode::compiler {
 
     array_type::array_type(
             block* parent_scope,
-            const std::string& name,
+            compiler::symbol_element* symbol,
             compiler::type* entry_type) : compiler::composite_type(
                                                 parent_scope,
                                                 composite_types_t::struct_type,
-                                                name,
+                                                symbol,
                                                 element_type_t::array_type),
                                           _entry_type(entry_type) {
     }
@@ -44,8 +45,9 @@ namespace basecode::compiler {
 
         auto flags_identifier = program->make_identifier(
             block_scope,
-            "flags",
-            nullptr);
+            program->make_symbol(block_scope, "flags"),
+            nullptr,
+            true);
         flags_identifier->type(u8_type);
         auto flags_field = program->make_field(
             block_scope,
@@ -53,8 +55,9 @@ namespace basecode::compiler {
 
         auto length_identifier = program->make_identifier(
             block_scope,
-            "length",
-            nullptr);
+            program->make_symbol(block_scope, "length"),
+            nullptr,
+            true);
         length_identifier->type(u32_type);
         auto length_field = program->make_field(
             block_scope,
@@ -62,8 +65,9 @@ namespace basecode::compiler {
 
         auto capacity_identifier = program->make_identifier(
             block_scope,
-            "capacity",
-            nullptr);
+            program->make_symbol(block_scope, "capacity"),
+            nullptr,
+            true);
         capacity_identifier->type(u32_type);
         auto capacity_field = program->make_field(
             block_scope,
@@ -71,8 +75,9 @@ namespace basecode::compiler {
 
         auto element_type_identifier = program->make_identifier(
             block_scope,
-            "element_type",
-            nullptr);
+            program->make_symbol(block_scope, "element_type"),
+            nullptr,
+            true);
         element_type_identifier->type(type_info_type);
         auto element_type_field = program->make_field(
             block_scope,
@@ -80,8 +85,9 @@ namespace basecode::compiler {
 
         auto data_identifier = program->make_identifier(
             block_scope,
-            "data",
-            nullptr);
+            program->make_symbol(block_scope, "data"),
+            nullptr,
+            true);
         data_identifier->type(address_type);
         auto data_field = program->make_field(block_scope, data_identifier);
 

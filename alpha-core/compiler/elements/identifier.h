@@ -24,14 +24,16 @@ namespace basecode::compiler {
     public:
         identifier(
             block* parent_scope,
-            const std::string& name,
+            compiler::symbol_element* name,
             compiler::initializer* initializer);
 
         bool constant() const;
 
         compiler::type* type();
 
-        std::string name() const;
+        bool resolved() const;
+
+        void resolved(bool value);
 
         void constant(bool value);
 
@@ -46,6 +48,8 @@ namespace basecode::compiler {
         void usage(identifier_usage_t value);
 
         compiler::initializer* initializer();
+
+        compiler::symbol_element* symbol() const;
 
     protected:
         bool on_emit(
@@ -67,10 +71,11 @@ namespace basecode::compiler {
             vm::instruction_block* instruction_block);
 
     private:
-        std::string _name;
+        bool _resolved = false;
         bool _constant = false;
         bool _inferred_type = false;
         compiler::type* _type = nullptr;
+        compiler::symbol_element* _symbol;
         compiler::initializer* _initializer;
         identifier_usage_t _usage = identifier_usage_t::heap;
     };

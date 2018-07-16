@@ -19,7 +19,7 @@ namespace basecode::compiler {
     public:
         unknown_type(
             block* parent_scope,
-            const std::string& name);
+            compiler::symbol_element* symbol);
 
         bool is_array() const;
 

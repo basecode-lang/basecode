@@ -21,7 +21,7 @@ namespace basecode::compiler {
         procedure_type(
             block* parent_scope,
             compiler::block* scope,
-            const std::string& name);
+            compiler::symbol_element* symbol);
 
         field_map_t& returns();
 

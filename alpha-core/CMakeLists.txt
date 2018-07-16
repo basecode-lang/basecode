@@ -76,6 +76,7 @@ add_library(
         compiler/elements/float_literal.cpp compiler/elements/float_literal.h
         compiler/elements/element_types.cpp compiler/elements/element_types.h
         compiler/elements/argument_list.cpp compiler/elements/argument_list.h
+        compiler/elements/symbol_element.cpp compiler/elements/symbol_element.h
         compiler/elements/namespace_type.cpp compiler/elements/namespace_type.h
         compiler/elements/composite_type.cpp compiler/elements/composite_type.h
         compiler/elements/procedure_type.cpp compiler/elements/procedure_type.h

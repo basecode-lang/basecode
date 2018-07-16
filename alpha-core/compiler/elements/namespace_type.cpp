@@ -9,20 +9,22 @@
 //
 // ----------------------------------------------------------------------------
 
+#include "program.h"
 #include "namespace_type.h"
+#include "symbol_element.h"
 
 namespace basecode::compiler {
 
-    namespace_type::namespace_type(
-        block* parent_scope) : compiler::type(
-                                parent_scope,
-                                element_type_t::namespace_type,
-                                "namespace") {
+    namespace_type::namespace_type(block* parent_scope) : compiler::type(
+                                                                parent_scope,
+                                                                element_type_t::namespace_type,
+                                                                nullptr) {
     }
 
     bool namespace_type::on_initialize(
             common::result& r,
             compiler::program* program) {
+        symbol(program->make_symbol(parent_scope(), "namespace"));
         return true;
     }
 

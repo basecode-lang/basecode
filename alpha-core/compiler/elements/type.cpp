@@ -17,8 +17,8 @@ namespace basecode::compiler {
     type::type(
         block* parent_scope,
         element_type_t type,
-        const std::string& name) : element(parent_scope, type),
-                                   _name(name) {
+        compiler::symbol_element* symbol) : element(parent_scope, type),
+                                    _symbol(symbol) {
     }
 
     bool type::initialize(
@@ -41,10 +41,6 @@ namespace basecode::compiler {
         _packed = value;
     }
 
-    std::string type::name() const {
-        return _name;
-    }
-
     size_t type::alignment() const {
         return _alignment;
     }
@@ -61,8 +57,12 @@ namespace basecode::compiler {
         _size_in_bytes = value;
     }
 
-    void type::name(const std::string& value) {
-        _name = value;
+    compiler::symbol_element* type::symbol() const {
+        return _symbol;
+    }
+
+    void type::symbol(compiler::symbol_element* value) {
+        _symbol = value;
     }
 
 };

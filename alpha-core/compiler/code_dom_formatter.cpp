@@ -39,6 +39,7 @@
 #include <compiler/elements/string_literal.h>
 #include <compiler/elements/unary_operator.h>
 #include <compiler/elements/namespace_type.h>
+#include <compiler/elements/symbol_element.h>
 #include <compiler/elements/integer_literal.h>
 #include <compiler/elements/boolean_literal.h>
 #include <compiler/elements/binary_operator.h>
@@ -118,7 +119,7 @@ namespace basecode::compiler {
                 return fmt::format(
                     "{}[shape=record,label=\"cast|{}\"{}];",
                     node_vertex_name,
-                    element->type()->name(),
+                    element->type()->symbol()->name(),
                     style);
             }
             case element_type_t::if_e: {
@@ -180,7 +181,7 @@ namespace basecode::compiler {
                 return fmt::format(
                     "{}[shape=record,label=\"field|{}\"{}];",
                     node_vertex_name,
-                    element->identifier()->name(),
+                    element->identifier()->symbol()->name(),
                     style);
             }
             case element_type_t::program: {
@@ -200,7 +201,7 @@ namespace basecode::compiler {
                 return fmt::format(
                     "{}[shape=record,label=\"any_type|{}\"{}];",
                     node_vertex_name,
-                    element->name(),
+                    element->symbol()->name(),
                     style);
             }
             case element_type_t::type_info: {
@@ -211,7 +212,7 @@ namespace basecode::compiler {
                 return fmt::format(
                     "{}[shape=record,label=\"type_info|{}\"{}];",
                     node_vertex_name,
-                    element->name(),
+                    element->symbol()->name(),
                     style);
             }
             case element_type_t::return_e: {
@@ -231,7 +232,7 @@ namespace basecode::compiler {
                 return fmt::format(
                     "{}[shape=record,label=\"proc_type|{}|foreign: {}\"{}];",
                     node_vertex_name,
-                    element->name(),
+                    element->symbol()->name(),
                     element->is_foreign(),
                     style);
             }
@@ -284,7 +285,7 @@ namespace basecode::compiler {
                 return fmt::format(
                     "{}[shape=record,label=\"proc_call|{}\"{}];",
                     node_vertex_name,
-                    element->identifier()->name(),
+                    element->identifier()->symbol()->name(),
                     style);
             }
             case element_type_t::alias_type: {
@@ -301,7 +302,7 @@ namespace basecode::compiler {
                 auto style = ", fillcolor=gainsboro, style=\"filled\"";
                 std::string entry_type_name = "unknown";
                 if (element->entry_type() != nullptr)
-                    entry_type_name = element->entry_type()->name();
+                    entry_type_name = element->entry_type()->symbol()->name();
                 add_primary_edge(element, element->entry_type());
                 for (auto fld : element->fields().as_list())
                     add_primary_edge(element, fld);
@@ -317,10 +318,10 @@ namespace basecode::compiler {
                 auto style = ", fillcolor=deepskyblue1, style=\"filled\"";
                 std::string type_name = "unknown";
                 if (identifier_element->type() != nullptr)
-                    type_name = identifier_element->type()->name();
+                    type_name = identifier_element->type()->symbol()->name();
                 auto details = fmt::format(
                     "identifier|{}|{{type: {} | inferred: {} | constant: {} }}",
-                    identifier_element->name(),
+                    identifier_element->symbol()->name(),
                     type_name,
                     identifier_element->inferred_type(),
                     identifier_element->constant());
@@ -349,7 +350,7 @@ namespace basecode::compiler {
                 return fmt::format(
                     "{}[shape=record,label=\"string_type|{}\"{}];",
                     node_vertex_name,
-                    element->name(),
+                    element->symbol()->name(),
                     style);
             }
             case element_type_t::namespace_e: {
@@ -377,7 +378,7 @@ namespace basecode::compiler {
                 return fmt::format(
                     "{}[shape=record,label=\"numeric_type|{}\"{}];",
                     node_vertex_name,
-                    element->name(),
+                    element->symbol()->name(),
                     style);
             }
             case element_type_t::proc_instance: {
@@ -417,7 +418,7 @@ namespace basecode::compiler {
                     "{}[shape=record,label=\"composite_type|{}|{}\"{}];",
                     node_vertex_name,
                     composite_type_name(element->type()),
-                    element->name(),
+                    element->symbol()->name(),
                     style);
             }
             case element_type_t::unary_operator: {
@@ -465,7 +466,7 @@ namespace basecode::compiler {
                 return fmt::format(
                     "{}[shape=record,label=\"namespace_type|{}\"{}];",
                     node_vertex_name,
-                    element->name(),
+                    element->symbol()->name(),
                     style);
             }
             default:

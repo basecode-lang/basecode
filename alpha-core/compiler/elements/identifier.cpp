@@ -13,14 +13,15 @@
 #include "type.h"
 #include "identifier.h"
 #include "initializer.h"
+#include "symbol_element.h"
 
 namespace basecode::compiler {
 
     identifier::identifier(
             block* parent_scope,
-            const std::string& name,
+            compiler::symbol_element* name,
             compiler::initializer* initializer) : element(parent_scope, element_type_t::identifier),
-                                                  _name(name),
+                                                  _symbol(name),
                                                   _initializer(initializer) {
     }
 
@@ -44,7 +45,7 @@ namespace basecode::compiler {
             } else {
                 instruction_block->move_label_to_ireg(
                     target_reg->reg.i,
-                    _name);
+                    _symbol->name());
             }
         } else {
             switch (_type->element_type()) {
@@ -59,7 +60,7 @@ namespace basecode::compiler {
                             // XXX: error!
                         }
 
-                        instruction_block->move_label_to_ireg(ptr_reg, _name);
+                        instruction_block->move_label_to_ireg(ptr_reg, _symbol->name());
                         instruction_block->load_to_ireg_u64(
                             target_reg->reg.i,
                             ptr_reg);
@@ -70,13 +71,17 @@ namespace basecode::compiler {
                 default: {
                     instruction_block->move_label_to_ireg(
                         target_reg->reg.i,
-                        _name);
+                        _symbol->name());
                     break;
                 }
             }
         }
 
         return true;
+    }
+
+    bool identifier::resolved() const {
+        return _resolved;
     }
 
     bool identifier::constant() const {
@@ -87,10 +92,6 @@ namespace basecode::compiler {
         return _type;
     }
 
-    std::string identifier::name() const {
-        return _name;
-    }
-
     void identifier::constant(bool value) {
         _constant = value;
     }
@@ -98,7 +99,7 @@ namespace basecode::compiler {
     void identifier::emit_stack_based_load(
             vm::instruction_block* instruction_block) {
         auto target_reg = instruction_block->current_target_register();
-        auto entry = instruction_block->stack_frame()->find_up(name());
+        auto entry = instruction_block->stack_frame()->find_up(_symbol->name());
         if (entry == nullptr) {
             // XXX: error
             return;
@@ -112,7 +113,11 @@ namespace basecode::compiler {
             ->comment(fmt::format(
                 "{} identifier: {}",
                 stack_frame_entry_type_name(entry->type),
-                name()));
+                symbol()->name()));
+    }
+
+    void identifier::resolved(bool value) {
+        _resolved = value;
     }
 
     bool identifier::inferred_type() const {
@@ -153,6 +158,10 @@ namespace basecode::compiler {
         if (_initializer == nullptr)
             return false;
         return _initializer->as_float(value);
+    }
+
+    compiler::symbol_element* identifier::symbol() const {
+        return _symbol;
     }
 
     bool identifier::on_as_integer(uint64_t& value) const {

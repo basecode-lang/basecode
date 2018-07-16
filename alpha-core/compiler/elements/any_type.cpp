@@ -11,13 +11,14 @@
 
 #include "program.h"
 #include "any_type.h"
+#include "identifier.h"
 
 namespace basecode::compiler {
 
     any_type::any_type(block* parent_scope) : compiler::composite_type(
                                                 parent_scope,
                                                 composite_types_t::struct_type,
-                                                "any",
+                                                nullptr,
                                                 element_type_t::any_type) {
     }
 
@@ -29,6 +30,8 @@ namespace basecode::compiler {
     bool any_type::on_initialize(
             common::result& r,
             compiler::program* program) {
+        symbol(program->make_symbol(parent_scope(), "any"));
+
         auto block_scope = parent_scope();
 
         auto type_info_type = program->find_type_down("type");
@@ -36,8 +39,9 @@ namespace basecode::compiler {
 
         auto type_info_identifier = program->make_identifier(
             block_scope,
-            "type_info",
-            nullptr);
+            program->make_symbol(parent_scope(), "type_info"),
+            nullptr,
+            true);
         type_info_identifier->type(type_info_type);
         auto type_info_field = program->make_field(
             block_scope,
@@ -45,8 +49,9 @@ namespace basecode::compiler {
 
         auto data_identifier = program->make_identifier(
             block_scope,
-            "data",
-            nullptr);
+            program->make_symbol(parent_scope(), "data"),
+            nullptr,
+            true);
         data_identifier->type(address_type);
         auto data_field = program->make_field(
             block_scope,

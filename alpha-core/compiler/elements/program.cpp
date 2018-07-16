@@ -11,6 +11,8 @@
 
 #include <vm/terp.h>
 #include <fmt/format.h>
+#include <vm/assembler.h>
+#include <common/defer.h>
 #include <vm/instruction_block.h>
 #include "type.h"
 #include "cast.h"
@@ -42,6 +44,7 @@
 #include "return_element.h"
 #include "procedure_call.h"
 #include "namespace_type.h"
+#include "symbol_element.h"
 #include "boolean_literal.h"
 #include "binary_operator.h"
 #include "integer_literal.h"
@@ -67,11 +70,7 @@ namespace basecode::compiler {
 
         switch (node->type) {
             case syntax::ast_node_types_t::symbol: {
-                if (node->has_type_identifier()) {
-                    return add_identifier_to_scope(r, node, nullptr);
-                } else {
-                    return find_identifier(node);
-                }
+                return make_symbol_from_node(r, node);
             }
             case syntax::ast_node_types_t::attribute: {
                 return make_attribute(
@@ -103,9 +102,9 @@ namespace basecode::compiler {
                 for (auto it = node->children.begin();
                      it != node->children.end();
                      ++it) {
-                    add_expression_to_scope(
-                        active_scope,
-                        evaluate(r, *it, default_block_type));
+                    auto expr = evaluate(r, *it, default_block_type);
+                    if (expr != nullptr)
+                        add_expression_to_scope(active_scope, expr);
                 }
 
                 return pop_scope();
@@ -121,10 +120,25 @@ namespace basecode::compiler {
                     }
                 }
 
-                return make_statement(
-                    current_scope(),
-                    labels,
-                    evaluate(r, node->rhs));
+                auto expr = evaluate(r, node->rhs);
+                if (expr->element_type() == element_type_t::symbol) {
+                    auto find_type_result = find_identifier_type(
+                        r,
+                        node->rhs->rhs);
+                    if (find_type_result.type == nullptr) {
+                        r.add_message(
+                            "P002",
+                            fmt::format("unknown type '{}'.", find_type_result.type_name->name()),
+                            true);
+                        return nullptr;
+                    }
+                    add_identifier_to_scope(
+                        r,
+                        dynamic_cast<compiler::symbol_element*>(expr),
+                        find_type_result,
+                        nullptr);
+                }
+                return make_statement(current_scope(), labels, expr);
             }
             case syntax::ast_node_types_t::expression: {
                 return make_expression(
@@ -135,7 +149,8 @@ namespace basecode::compiler {
                 const auto& assignment_target_list = node->lhs;
 
                 identifier_list_t list {};
-                for (const auto& symbol : assignment_target_list->children) {
+                for (const auto& symbol_node : assignment_target_list->children) {
+                    auto symbol = dynamic_cast<compiler::symbol_element*>(evaluate(r, symbol_node));
                     auto existing_identifier = find_identifier(symbol);
                     if (existing_identifier != nullptr) {
                         return make_binary_operator(
@@ -144,9 +159,13 @@ namespace basecode::compiler {
                             existing_identifier,
                             evaluate(r, node->rhs));
                     } else {
+                        auto find_type_result = find_identifier_type(
+                            r,
+                            symbol_node->rhs);
                         auto new_identifier = add_identifier_to_scope(
                             r,
                             symbol,
+                            find_type_result,
                             node->rhs);
                         list.push_back(new_identifier);
                     }
@@ -225,19 +244,25 @@ namespace basecode::compiler {
                     evaluate(r, node->rhs));
             }
             case syntax::ast_node_types_t::proc_call: {
-                auto proc_identifier = find_identifier(node->lhs);
-                if (proc_identifier != nullptr) {
-                    argument_list* args = nullptr;
-                    auto expr = evaluate(r, node->rhs);
-                    if (expr != nullptr) {
-                        args = dynamic_cast<argument_list*>(expr);
-                    }
-                    return make_procedure_call(
+                auto symbol = dynamic_cast<compiler::symbol_element*>(evaluate(r, node->lhs));
+                auto proc_identifier = find_identifier(symbol);
+                if (proc_identifier == nullptr) {
+                    proc_identifier = make_identifier(
                         current_scope(),
-                        proc_identifier,
-                        args);
+                        symbol,
+                        nullptr,
+                        false);
                 }
-                return nullptr;
+
+                compiler::argument_list* args = nullptr;
+                auto expr = evaluate(r, node->rhs);
+                if (expr != nullptr) {
+                    args = dynamic_cast<compiler::argument_list*>(expr);
+                }
+                return make_procedure_call(
+                    current_scope(),
+                    proc_identifier,
+                    args);
             }
             case syntax::ast_node_types_t::argument_list: {
                 auto args = make_argument_list(current_scope());
@@ -262,8 +287,9 @@ namespace basecode::compiler {
                         case syntax::ast_node_types_t::symbol: {
                             auto return_identifier = make_identifier(
                                 block_scope,
-                                fmt::format("_{}", count++),
-                                nullptr);
+                                make_symbol(block_scope, fmt::format("_{}", count++)),
+                                nullptr,
+                                true);
                             return_identifier->usage(identifier_usage_t::stack);
                             return_identifier->type(find_type_up(type_node->children[0]->token.value));
                             proc_type->returns().add(make_field(block_scope, return_identifier));
@@ -279,10 +305,13 @@ namespace basecode::compiler {
                     switch (param_node->type) {
                         case syntax::ast_node_types_t::assignment: {
                             // XXX: in the parameter list, multiple targets is an error
-                            const auto& symbol_node = param_node->lhs->children[0];
+                            const auto& first_target = param_node->lhs->children[0];
+                            auto symbol = dynamic_cast<compiler::symbol_element*>(evaluate(r, first_target));
+                            auto find_type_result = find_identifier_type(r, first_target->rhs);
                             auto param_identifier = add_identifier_to_scope(
                                 r,
-                                symbol_node,
+                                symbol,
+                                find_type_result,
                                 param_node->rhs,
                                 block_scope);
                             param_identifier->usage(identifier_usage_t::stack);
@@ -291,9 +320,12 @@ namespace basecode::compiler {
                             break;
                         }
                         case syntax::ast_node_types_t::symbol: {
+                            auto symbol = dynamic_cast<compiler::symbol_element*>(evaluate(r, param_node));
+                            auto find_type_result = find_identifier_type(r, param_node->rhs);
                             auto param_identifier = add_identifier_to_scope(
                                 r,
-                                param_node,
+                                symbol,
+                                find_type_result,
                                 nullptr,
                                 block_scope);
                             param_identifier->usage(identifier_usage_t::stack);
@@ -319,11 +351,12 @@ namespace basecode::compiler {
                 return enum_type;
             }
             case syntax::ast_node_types_t::cast_expression: {
-                auto type = find_type_up(node->lhs->token.value);
+                auto type_name = node->lhs->lhs->children[0]->token.value;
+                auto type = find_type_up(type_name);
                 if (type == nullptr) {
                     r.add_message(
                         "P002",
-                        fmt::format("unknown type '{}'.", node->lhs->token.value),
+                        fmt::format("unknown type '{}'.", type_name),
                         true);
                 }
                 return make_cast(current_scope(), type, evaluate(r, node->rhs));
@@ -394,7 +427,9 @@ namespace basecode::compiler {
         auto identifiers = elements().find_by_type(element_type_t::identifier);
         for (auto identifier : identifiers) {
             auto var = dynamic_cast<compiler::identifier*>(identifier);
-            if (var->type()->element_type() == element_type_t::namespace_type)
+            auto var_type = var->type();
+            if (var_type == nullptr
+            ||  var_type->element_type() == element_type_t::namespace_type)
                 continue;
 
             if (within_procedure_scope(var->parent_scope())
@@ -464,7 +499,7 @@ namespace basecode::compiler {
                         auto init = var->initializer();
 
                         instruction_block->memo();
-                        auto var_label = instruction_block->make_label(var->name());
+                        auto var_label = instruction_block->make_label(var->symbol()->name());
                         auto current_entry = instruction_block->current_entry();
                         current_entry->label(var_label);
                         current_entry->blank_lines(1);
@@ -609,11 +644,17 @@ namespace basecode::compiler {
         if (!resolve_unknown_types(r))
             return false;
 
-        emit_context_t context(_terp, &_assembler, this);
-        emit(r, context);
+        if (!r.is_failed()) {
+            emit_context_t context(_terp, &_assembler, this);
+            emit(r, context);
 
-        auto root_block = _assembler.root_block();
-        root_block->disassemble(listing);
+            // XXX: encode to terp
+
+            // XXX: execute #run directives
+
+            auto root_block = _assembler.root_block();
+            root_block->disassemble(listing);
+        }
 
         return !r.is_failed();
     }
@@ -787,14 +828,38 @@ namespace basecode::compiler {
         return attr;
     }
 
-    identifier* program::make_identifier(
+    compiler::symbol_element* program::make_symbol(
             compiler::block* parent_scope,
             const std::string& name,
-            initializer* expr) {
-        auto identifier = new compiler::identifier(
+            const string_list_t& namespaces) {
+        auto symbol = new compiler::symbol_element(
             parent_scope,
             name,
+            namespaces);
+        _elements.add(symbol);
+        return symbol;
+    }
+
+    compiler::symbol_element* program::make_temp_symbol(
+            compiler::block* parent_scope,
+            const std::string& name,
+            const string_list_t& namespaces) {
+        return new compiler::symbol_element(
+            parent_scope,
+            name,
+            namespaces);
+    }
+
+    identifier* program::make_identifier(
+            compiler::block* parent_scope,
+            compiler::symbol_element* symbol,
+            initializer* expr,
+            bool resolved) {
+        auto identifier = new compiler::identifier(
+            parent_scope,
+            symbol,
             expr);
+        identifier->resolved(resolved);
         if (expr != nullptr)
             expr->parent_element(identifier);
         _elements.add(identifier);
@@ -843,10 +908,11 @@ namespace basecode::compiler {
     composite_type* program::make_enum_type(
             common::result& r,
             compiler::block* parent_scope) {
+        auto type_name = fmt::format("__enum_{}__", common::id_pool::instance()->allocate());
         auto type = new compiler::composite_type(
             parent_scope,
             composite_types_t::enum_type,
-            fmt::format("__enum_{}__", common::id_pool::instance()->allocate()));
+            make_symbol(parent_scope, type_name));
         _elements.add(type);
         return type;
     }
@@ -875,7 +941,11 @@ namespace basecode::compiler {
             const std::string& name,
             int64_t min,
             uint64_t max) {
-        auto type = new compiler::numeric_type(parent_scope, name, min, max);
+        auto type = new compiler::numeric_type(
+            parent_scope,
+            make_symbol(parent_scope, name),
+            min,
+            max);
         if (!type->initialize(r, this))
             return nullptr;
 
@@ -933,10 +1003,11 @@ namespace basecode::compiler {
     composite_type* program::make_union_type(
             common::result& r,
             compiler::block* parent_scope) {
+        auto type_name = fmt::format("__union_{}__", common::id_pool::instance()->allocate());
         auto type = new compiler::composite_type(
             parent_scope,
             composite_types_t::union_type,
-            fmt::format("__union_{}__", common::id_pool::instance()->allocate()));
+            make_symbol(parent_scope, type_name));
         _elements.add(type);
         return type;
     }
@@ -944,10 +1015,11 @@ namespace basecode::compiler {
     composite_type* program::make_struct_type(
             common::result& r,
             compiler::block* parent_scope) {
+        auto type_name = fmt::format("__struct_{}__", common::id_pool::instance()->allocate());
         auto type = new compiler::composite_type(
             parent_scope,
             composite_types_t::struct_type,
-            fmt::format("__struct_{}__", common::id_pool::instance()->allocate()));
+            make_symbol(parent_scope, type_name));
         _elements.add(type);
         return type;
     }
@@ -1069,30 +1141,35 @@ namespace basecode::compiler {
 
     compiler::identifier* program::add_identifier_to_scope(
             common::result& r,
-            const syntax::ast_node_shared_ptr& symbol,
+            compiler::symbol_element* symbol,
+            type_find_result_t& type_find_result,
             const syntax::ast_node_shared_ptr& rhs,
             compiler::block* parent_scope) {
         auto namespace_type = find_type_up("namespace");
 
-        auto type_find_result = find_identifier_type(r, symbol);
-
-        auto scope = symbol->is_qualified_symbol()
+        auto scope = symbol->is_qualified()
             ? block()
             : parent_scope != nullptr ? parent_scope : current_scope();
 
-        for (size_t i = 0; i < symbol->children.size() - 1; i++) {
-            const auto& symbol_node = symbol->children[i];
-            auto var = scope->identifiers().find(symbol_node->token.value);
+        auto namespaces = symbol->namespaces();
+        string_list_t temp_list {};
+        std::string namespace_name {};
+        for (size_t i = 0; i < namespaces.size(); i++) {
+            if (!namespace_name.empty())
+                temp_list.push_back(namespace_name);
+            namespace_name = namespaces[i];
+            auto var = scope->identifiers().find(namespace_name);
             if (var == nullptr) {
                 auto new_scope = make_block(scope, element_type_t::block);
                 auto ns = make_namespace(
                     scope,
                     new_scope,
-                    symbol_node->token.value);
+                    namespace_name);
                 auto ns_identifier = make_identifier(
                     scope,
-                    symbol_node->token.value,
-                    make_initializer(scope, ns));
+                    make_symbol(scope, namespace_name, temp_list),
+                    make_initializer(scope, ns),
+                    true);
                 ns_identifier->type(namespace_type);
                 ns_identifier->inferred_type(true);
                 scope->blocks().push_back(new_scope);
@@ -1113,10 +1190,8 @@ namespace basecode::compiler {
             }
         }
 
-        const auto& final_symbol = symbol->children.back();
-
-        compiler::element* init_expr = nullptr;
-        compiler::initializer* init = nullptr;
+        auto init_expr = (compiler::element*) nullptr;
+        auto init = (compiler::initializer*) nullptr;
         if (rhs != nullptr) {
             // XXX: must find a better way to do this
             push_scope(scope);
@@ -1125,7 +1200,7 @@ namespace basecode::compiler {
 
             if (init_expr->element_type() == element_type_t::namespace_e) {
                 auto ns = dynamic_cast<compiler::namespace_element*>(init_expr);
-                ns->name(final_symbol->token.value);
+                ns->name(symbol->name());
             }
 
             if (init_expr != nullptr && init_expr->is_constant())
@@ -1134,24 +1209,29 @@ namespace basecode::compiler {
 
         auto new_identifier = make_identifier(
             scope,
-            final_symbol->token.value,
-            init);
+            symbol,
+            init,
+            true);
 
         if (type_find_result.type == nullptr) {
-            type_find_result.type = init_expr->infer_type(this);
-            new_identifier->inferred_type(type_find_result.type != nullptr);
+            if (init_expr != nullptr) {
+                type_find_result.type = init_expr->infer_type(this);
+                new_identifier->type(type_find_result.type);
+                new_identifier->inferred_type(type_find_result.type != nullptr);
+            }
+
+            if (type_find_result.type == nullptr) {
+                new_identifier->type(make_unknown_type_from_find_result(
+                    r,
+                    scope,
+                    new_identifier,
+                    type_find_result));
+            }
+        } else {
+            new_identifier->type(type_find_result.type);
         }
 
-        new_identifier->type(type_find_result.type);
-        if (type_find_result.type == nullptr) {
-            new_identifier->type(make_unknown_type_from_find_result(
-                r,
-                scope,
-                new_identifier,
-                type_find_result));
-        }
-
-        new_identifier->constant(symbol->is_constant_expression());
+        new_identifier->constant(symbol->is_constant());
         scope->identifiers().add(new_identifier);
 
         if (init != nullptr
@@ -1166,7 +1246,7 @@ namespace basecode::compiler {
             if (new_identifier->type()->element_type() == element_type_t::unknown_type) {
                 r.add_message(
                     "P019",
-                    fmt::format("unable to infer type: {}", new_identifier->name()),
+                    fmt::format("unable to infer type: {}", new_identifier->symbol()->name()),
                     true);
                 return nullptr;
             } else {
@@ -1269,9 +1349,10 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             compiler::type* entry_type,
             size_t size) {
+        auto type_name = fmt::format("__array_{}_{}__", entry_type->symbol()->name(), size);
         auto type = new compiler::array_type(
             parent_scope,
-            fmt::format("__array_{}_{}__", entry_type->name(), size),
+            make_symbol(parent_scope, type_name),
             entry_type);
         if (!type->initialize(r, this))
             return nullptr;
@@ -1302,15 +1383,16 @@ namespace basecode::compiler {
             auto expr_node = child->rhs;
             switch (expr_node->type) {
                 case syntax::ast_node_types_t::assignment: {
-                    auto symbol_node = expr_node->lhs->children[0];
-                    auto type_find_result = find_identifier_type(r, symbol_node);
+                    auto symbol = dynamic_cast<compiler::symbol_element*>(evaluate(r, expr_node->lhs));
+                    auto type_find_result = find_identifier_type(r, expr_node->rhs);
                     auto init = make_initializer(
                         current_scope(),
                         evaluate(r, expr_node->rhs));
                     auto field_identifier = make_identifier(
                         current_scope(),
-                        symbol_node->children[0]->token.value,
-                        init);
+                        symbol,
+                        init,
+                        true);
                     if (type_find_result.type == nullptr) {
                         type_find_result.type = init->expression()->infer_type(this);
                         field_identifier->inferred_type(type_find_result.type != nullptr);
@@ -1324,11 +1406,13 @@ namespace basecode::compiler {
                     break;
                 }
                 case syntax::ast_node_types_t::symbol: {
-                    auto type_find_result = find_identifier_type(r, expr_node);
+                    auto symbol = dynamic_cast<compiler::symbol_element*>(evaluate(r, expr_node));
+                    auto type_find_result = find_identifier_type(r, expr_node->rhs);
                     auto field_identifier = make_identifier(
                         current_scope(),
-                        expr_node->children[0]->token.value,
-                        nullptr);
+                        symbol,
+                        nullptr,
+                        true);
                     if (type_find_result.type == nullptr) {
                         if (type->type() == composite_types_t::enum_type) {
                             field_identifier->type(u32_type);
@@ -1358,12 +1442,10 @@ namespace basecode::compiler {
     unknown_type* program::make_unknown_type(
             common::result& r,
             compiler::block* parent_scope,
-            const std::string& name,
+            compiler::symbol_element* symbol,
             bool is_array,
             size_t array_size) {
-        auto type = new compiler::unknown_type(
-            parent_scope,
-            name);
+        auto type = new compiler::unknown_type(parent_scope, symbol);
         if (!type->initialize(r, this))
             return nullptr;
         type->is_array(is_array);
@@ -1375,10 +1457,11 @@ namespace basecode::compiler {
     procedure_type* program::make_procedure_type(
             compiler::block* parent_scope,
             compiler::block* block_scope) {
+        auto type_name = fmt::format("__proc_{}__", common::id_pool::instance()->allocate());
         auto type = new compiler::procedure_type(
             parent_scope,
             block_scope,
-            fmt::format("__proc_{}__", common::id_pool::instance()->allocate()));
+            make_symbol(parent_scope, type_name));
         if (block_scope != nullptr)
             block_scope->parent_element(type);
         _elements.add(type);
@@ -1403,7 +1486,7 @@ namespace basecode::compiler {
             compiler::type* identifier_type = nullptr;
             if (var->initializer() == nullptr) {
                 auto unknown_type = dynamic_cast<compiler::unknown_type*>(var->type());
-                identifier_type = find_type_down(unknown_type->name());
+                identifier_type = find_type_down(unknown_type->symbol()->name());
                 if (unknown_type->is_array()) {
                     auto array_type = find_array_type(
                         identifier_type,
@@ -1437,7 +1520,7 @@ namespace basecode::compiler {
                 ++it;
                 r.add_message(
                     "P004",
-                    fmt::format("unable to resolve type for identifier: {}", var->name()),
+                    fmt::format("unable to resolve type for identifier: {}", var->symbol()->name()),
                     true);
             }
         }
@@ -1458,30 +1541,30 @@ namespace basecode::compiler {
 
     type_find_result_t program::find_identifier_type(
             common::result& r,
-            const syntax::ast_node_shared_ptr& symbol) {
+            const syntax::ast_node_shared_ptr& type_node) {
         type_find_result_t result {};
 
-        if (symbol->rhs != nullptr) {
-            result.type_name = symbol->rhs->token.value;
-            result.is_array = symbol->rhs->is_array();
-            result.array_size = 0; // XXX: this needs to be fixed!
+        if (!(type_node != nullptr))
+            return result;
 
-            if (!result.type_name.empty()) {
-                result.type = find_type_up(result.type_name);
-                if (result.is_array) {
-                    auto array_type = find_array_type(
-                        result.type,
-                        result.array_size);
-                    if (array_type == nullptr) {
-                        array_type = make_array_type(
-                            r,
-                            current_scope(),
-                            result.type,
-                            result.array_size);
-                    }
-                    result.type = array_type;
-                }
+        result.type_name = dynamic_cast<compiler::symbol_element*>(evaluate(
+            r,
+            type_node->lhs));
+        result.is_array = type_node->is_array();
+        result.array_size = 0; // XXX: this needs to be fixed!
+        result.type = find_type_up(result.type_name->name());
+        if (result.is_array) {
+            auto array_type = find_array_type(
+                result.type,
+                result.array_size);
+            if (array_type == nullptr) {
+                array_type = make_array_type(
+                    r,
+                    current_scope(),
+                    result.type,
+                    result.array_size);
             }
+            result.type = array_type;
         }
 
         return result;
@@ -1500,6 +1583,25 @@ namespace basecode::compiler {
             result.array_size);
         _identifiers_with_unknown_types.push_back(identifier);
         return unknown_type;
+    }
+
+    compiler::symbol_element* program::make_symbol_from_node(
+            common::result& r,
+            const syntax::ast_node_shared_ptr& node) {
+        string_list_t namespaces {};
+
+        if (!node->children.empty()) {
+            for (size_t i = 0; i < node->children.size() - 1; i++)
+                namespaces.push_back(node->children[i]->token.value);
+        }
+
+        auto symbol = make_symbol(
+            current_scope(),
+            node->children.back()->token.value,
+            namespaces);
+        symbol->constant(node->is_constant_expression());
+
+        return symbol;
     }
 
     compiler::type* program::find_type_down(const std::string& name) {
@@ -1554,15 +1656,14 @@ namespace basecode::compiler {
     }
 
     compiler::type* program::find_array_type(compiler::type* entry_type, size_t size) {
-        return find_type_up(fmt::format("__array_{}_{}__", entry_type->name(), size));
+        return find_type_up(fmt::format("__array_{}_{}__", entry_type->symbol()->name(), size));
     }
 
-    compiler::identifier* program::find_identifier(const syntax::ast_node_shared_ptr& node) {
-        auto var = (identifier*) nullptr;
-        if (node->is_qualified_symbol()) {
+    compiler::identifier* program::find_identifier(compiler::symbol_element* symbol) {
+        if (symbol->is_qualified()) {
             auto block_scope = block();
-            for (const auto& symbol_node : node->children) {
-                var = block_scope->identifiers().find(symbol_node->token.value);
+            for (const auto& namespace_name : symbol->namespaces()) {
+                auto var = block_scope->identifiers().find(namespace_name);
                 if (var == nullptr || var->initializer() == nullptr)
                     return nullptr;
                 auto expr = var->initializer()->expression();
@@ -1570,21 +1671,20 @@ namespace basecode::compiler {
                     auto ns = dynamic_cast<namespace_element*>(expr);
                     block_scope = dynamic_cast<compiler::block*>(ns->expression());
                 } else {
-                    break;
+                    return nullptr;
                 }
             }
+            return block_scope->identifiers().find(symbol->name());
         } else {
-            const auto& symbol_part = node->children[0];
             auto block_scope = current_scope();
             while (block_scope != nullptr) {
-                var = block_scope->identifiers().find(symbol_part->token.value);
+                auto var = block_scope->identifiers().find(symbol->name());
                 if (var != nullptr)
                     return var;
                 block_scope = block_scope->parent_scope();
             }
             return nullptr;
         }
-        return var;
     }
 
     void program::add_expression_to_scope(compiler::block* scope, compiler::element* expr) {

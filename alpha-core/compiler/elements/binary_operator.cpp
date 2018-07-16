@@ -12,6 +12,7 @@
 #include "element.h"
 #include "program.h"
 #include "identifier.h"
+#include "symbol_element.h"
 #include "binary_operator.h"
 
 namespace basecode::compiler {
@@ -88,7 +89,7 @@ namespace basecode::compiler {
                 int64_t offset = 0;
                 auto identifier = dynamic_cast<compiler::identifier*>(_lhs);
                 if (identifier->usage() == identifier_usage_t::stack) {
-                    auto entry = instruction_block->stack_frame()->find_up(identifier->name());
+                    auto entry = instruction_block->stack_frame()->find_up(identifier->symbol()->name());
                     if (entry == nullptr) {
                         // XXX: this is bad
                         return false;

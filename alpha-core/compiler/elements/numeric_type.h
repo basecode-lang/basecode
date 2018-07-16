@@ -11,10 +11,8 @@
 
 #pragma once
 
-#include <vm/assembler.h>
 #include "type.h"
 #include "program.h"
-
 
 namespace basecode::compiler {
 
@@ -35,7 +33,7 @@ namespace basecode::compiler {
 
         numeric_type(
             block* parent_scope,
-            const std::string& name,
+            compiler::symbol_element* symbol,
             int64_t min,
             uint64_t max);
 

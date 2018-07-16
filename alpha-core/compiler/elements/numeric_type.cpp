@@ -11,6 +11,7 @@
 
 #include "program.h"
 #include "numeric_type.h"
+#include "symbol_element.h"
 
 namespace basecode::compiler {
 
@@ -34,12 +35,12 @@ namespace basecode::compiler {
 
     numeric_type::numeric_type(
             block* parent_scope,
-            const std::string& name,
+            compiler::symbol_element* symbol,
             int64_t min,
             uint64_t max) : compiler::type(
                                 parent_scope,
                                 element_type_t::numeric_type,
-                                name),
+                                symbol),
                             _min(min),
                             _max(max) {
     }
@@ -55,7 +56,7 @@ namespace basecode::compiler {
     bool numeric_type::on_initialize(
             common::result& r,
             compiler::program* program) {
-        auto it = s_types_map.find(name());
+        auto it = s_types_map.find(symbol()->name());
         if (it == s_types_map.end())
             return false;
         size_in_bytes(it->second.size_in_bytes);

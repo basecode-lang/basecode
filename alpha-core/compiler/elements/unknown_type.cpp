@@ -15,10 +15,10 @@ namespace basecode::compiler {
 
     unknown_type::unknown_type(
         block* parent_scope,
-        const std::string& name) : compiler::type(
+        compiler::symbol_element* symbol) : compiler::type(
                                         parent_scope,
                                         element_type_t::unknown_type,
-                                        name) {
+                                        symbol) {
     }
 
     bool unknown_type::on_initialize(

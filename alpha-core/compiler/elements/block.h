@@ -11,7 +11,6 @@
 
 #pragma once
 
-#include <vm/assembler.h>
 #include "type.h"
 #include "element.h"
 #include "identifier.h"

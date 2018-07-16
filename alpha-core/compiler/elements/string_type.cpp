@@ -10,6 +10,7 @@
 // ----------------------------------------------------------------------------
 
 #include "program.h"
+#include "identifier.h"
 #include "string_type.h"
 
 namespace basecode::compiler {
@@ -17,7 +18,7 @@ namespace basecode::compiler {
     string_type::string_type(block* parent_scope) : compiler::composite_type(
                                                     parent_scope,
                                                     composite_types_t::struct_type,
-                                                    "string",
+                                                    nullptr,
                                                     element_type_t::string_type) {
     }
 
@@ -61,6 +62,8 @@ namespace basecode::compiler {
     bool string_type::on_initialize(
             common::result& r,
             compiler::program* program) {
+        symbol(program->make_symbol(parent_scope(), "string"));
+
         auto block_scope = parent_scope();
 
         auto u32_type = program->find_type_down("u32");
@@ -68,22 +71,25 @@ namespace basecode::compiler {
 
         auto length_identifier = program->make_identifier(
             block_scope,
-            "length",
-            nullptr);
+            program->make_symbol(parent_scope(), "length"),
+            nullptr,
+            true);
         length_identifier->type(u32_type);
         auto length_field = program->make_field(block_scope, length_identifier);
 
         auto capacity_identifier = program->make_identifier(
             block_scope,
-            "capacity",
-            nullptr);
+            program->make_symbol(parent_scope(), "capacity"),
+            nullptr,
+            true);
         capacity_identifier->type(u32_type);
         auto capacity_field = program->make_field(block_scope, capacity_identifier);
 
         auto data_identifier = program->make_identifier(
             block_scope,
-            "data",
-            nullptr);
+            program->make_symbol(parent_scope(), "data"),
+            nullptr,
+            true);
         data_identifier->type(address_type);
         auto data_field = program->make_field(block_scope, data_identifier);
 
