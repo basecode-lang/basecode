@@ -46,6 +46,10 @@ namespace basecode::compiler {
         return _scope;
     }
 
+    bool composite_type::on_is_constant() const {
+        return true;
+    }
+
     type_map_t& composite_type::type_parameters() {
         return _type_parameters;
     }

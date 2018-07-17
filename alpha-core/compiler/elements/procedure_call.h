@@ -26,6 +26,8 @@ namespace basecode::compiler {
 
         compiler::argument_list* arguments();
 
+        void identifier(compiler::identifier* value);
+
     protected:
         bool on_emit(
             common::result& r,

@@ -62,6 +62,10 @@ namespace basecode::compiler {
         return _arguments;
     }
 
+    void procedure_call::identifier(compiler::identifier* value) {
+        _identifier = value;
+    }
+
     // XXX: not handling multiple returns yet
     compiler::type* procedure_call::on_infer_type(const compiler::program* program) {
         auto proc_type = dynamic_cast<procedure_type*>(_identifier->type());

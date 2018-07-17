@@ -90,6 +90,8 @@ namespace basecode::compiler {
 
         bool resolve_unknown_types(common::result& r);
 
+        bool resolve_unknown_identifiers(common::result& r);
+
     private:
         cast* make_cast(
             compiler::block* parent_scope,
@@ -364,6 +366,7 @@ namespace basecode::compiler {
         vm::terp* _terp = nullptr;
         compiler::block* _block = nullptr;
         std::stack<compiler::block*> _scope_stack {};
+        identifier_list_t _unresolved_identifiers {};
         identifier_list_t _identifiers_with_unknown_types {};
         std::unordered_map<std::string, string_literal_list_t> _interned_string_literals {};
     };

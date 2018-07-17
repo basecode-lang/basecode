@@ -497,10 +497,19 @@ namespace basecode::compiler {
                     }
                     break;
                 }
-                case element_type_t::string_type: {
+                case element_type_t::any_type:
+                case element_type_t::array_type:
+                case element_type_t::tuple_type:
+                case element_type_t::string_type:
+                case element_type_t::composite_type: {
                     if (var->initializer() != nullptr) {
-                        auto& list = ro.first->second;
-                        list.emplace_back(var);
+                        if (var->is_constant()) {
+                            auto& list = ro.first->second;
+                            list.emplace_back(var);
+                        } else {
+                            auto& list = data.first->second;
+                            list.emplace_back(var);
+                        }
                     }
                     break;
                 }
@@ -691,6 +700,9 @@ namespace basecode::compiler {
         }
 
         if (!resolve_unknown_types(r))
+            return false;
+
+        if (!resolve_unknown_identifiers(r))
             return false;
 
         if (!r.is_failed()) {
@@ -923,10 +935,16 @@ namespace basecode::compiler {
             symbol,
             expr);
         identifier->resolved(resolved);
+
         if (expr != nullptr)
             expr->parent_element(identifier);
+
         symbol->parent_element(identifier);
         _elements.add(identifier);
+
+        if (!resolved)
+            _unresolved_identifiers.emplace_back(identifier);
+
         return identifier;
     }
 
@@ -1112,6 +1130,8 @@ namespace basecode::compiler {
             identifier,
             args);
         _elements.add(proc_call);
+        args->parent_element(proc_call);
+        identifier->parent_element(proc_call);
         return proc_call;
     }
 
@@ -1633,6 +1653,55 @@ namespace basecode::compiler {
         }
 
         return _identifiers_with_unknown_types.empty();
+    }
+
+    bool program::resolve_unknown_identifiers(common::result& r) {
+        auto it = _unresolved_identifiers.begin();
+        while (it != _unresolved_identifiers.end()) {
+            auto unknown_identifier = *it;
+
+            if (unknown_identifier->resolved()) {
+                it = _unresolved_identifiers.erase(it);
+                continue;
+            }
+
+            identifier_list_t candidates {};
+            auto all_identifiers = _elements.find_by_type(element_type_t::identifier);
+            for (auto element : all_identifiers) {
+                auto identifier = dynamic_cast<compiler::identifier*>(element);
+                if (identifier->resolved()
+                &&  identifier->symbol()->name() == unknown_identifier->symbol()->name())
+                    candidates.emplace_back(identifier);
+            }
+
+            if (candidates.empty()) {
+                ++it;
+                r.add_message(
+                    "P004",
+                    fmt::format(
+                        "unable to resolve identifier: {}",
+                        unknown_identifier->symbol()->name()),
+                    true);
+                continue;
+            }
+
+            auto winner = candidates.front();
+            auto parent_element = unknown_identifier->parent_element();
+            switch (parent_element->element_type()) {
+                case element_type_t::proc_call: {
+                    auto proc_call = dynamic_cast<compiler::procedure_call*>(parent_element);
+                    proc_call->identifier(winner);
+                    _elements.remove(unknown_identifier->id());
+                    break;
+                }
+                default:
+                    break;
+            }
+
+            it = _unresolved_identifiers.erase(it);
+        }
+
+        return _unresolved_identifiers.empty();
     }
 
     namespace_type* program::make_namespace_type(
