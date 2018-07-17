@@ -71,8 +71,6 @@ namespace basecode::compiler {
             offset += 8;
         }
 
-        fmt::print("proc: {}\n", procedure_label);
-
         offset = 16;
         size_t local_count = 0;
         context.program->visit_blocks(
