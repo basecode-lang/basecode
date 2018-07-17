@@ -18,9 +18,11 @@ namespace basecode::compiler {
     array_type::array_type(
             block* parent_scope,
             compiler::symbol_element* symbol,
+            compiler::block* scope,
             compiler::type* entry_type) : compiler::composite_type(
                                                 parent_scope,
                                                 composite_types_t::struct_type,
+                                                scope,
                                                 symbol,
                                                 element_type_t::array_type),
                                           _entry_type(entry_type) {
@@ -36,12 +38,12 @@ namespace basecode::compiler {
     bool array_type::on_initialize(
             common::result& r,
             compiler::program* program) {
-        auto block_scope = parent_scope();
+        auto block_scope = scope();
 
-        auto u8_type = program->find_type_down("u8");
-        auto u32_type = program->find_type_down("u32");
-        auto type_info_type = program->find_type_down("type");
-        auto address_type = program->find_type_down("address");
+        auto u8_type = program->find_type({.name = "u8"});
+        auto u32_type = program->find_type({.name = "u32"});
+        auto type_info_type = program->find_type({.name = "type"});
+        auto address_type = program->find_type({.name = "address"});
 
         auto flags_identifier = program->make_identifier(
             block_scope,

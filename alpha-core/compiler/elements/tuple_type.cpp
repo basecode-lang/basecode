@@ -14,11 +14,14 @@
 
 namespace basecode::compiler {
 
-    tuple_type::tuple_type(block* parent_scope) : compiler::composite_type(
-                                                        parent_scope,
-                                                        composite_types_t::struct_type,
-                                                        nullptr,
-                                                        element_type_t::tuple_type) {
+    tuple_type::tuple_type(
+        compiler::block* parent_scope,
+        compiler::block* scope) : compiler::composite_type(
+                                    parent_scope,
+                                    composite_types_t::struct_type,
+                                    scope,
+                                    nullptr,
+                                    element_type_t::tuple_type) {
     }
 
     bool tuple_type::on_initialize(

@@ -41,7 +41,7 @@ alpha::compiler::examples := ns {
 
     is_this_true := count == (max == 256) && count == (max / 2);
 
-    //point:alpha::compiler::config::vector3;
+    point:alpha::compiler::config::vector3;
 
     bar := proc() {
         bing(256);

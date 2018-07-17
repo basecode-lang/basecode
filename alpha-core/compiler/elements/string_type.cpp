@@ -15,11 +15,14 @@
 
 namespace basecode::compiler {
 
-    string_type::string_type(block* parent_scope) : compiler::composite_type(
-                                                    parent_scope,
-                                                    composite_types_t::struct_type,
-                                                    nullptr,
-                                                    element_type_t::string_type) {
+    string_type::string_type(
+        compiler::block* parent_scope,
+        compiler::block* scope) : compiler::composite_type(
+                                    parent_scope,
+                                    composite_types_t::struct_type,
+                                    scope,
+                                    nullptr,
+                                    element_type_t::string_type) {
     }
 
     // rodata_str_1:
@@ -64,10 +67,10 @@ namespace basecode::compiler {
             compiler::program* program) {
         symbol(program->make_symbol(parent_scope(), "string"));
 
-        auto block_scope = parent_scope();
+        auto block_scope = scope();
 
-        auto u32_type = program->find_type_down("u32");
-        auto address_type = program->find_type_down("address");
+        auto u32_type = program->find_type({.name = "u32"});
+        auto address_type = program->find_type({.name = "address"});
 
         auto length_identifier = program->make_identifier(
             block_scope,

@@ -69,10 +69,10 @@ namespace basecode::compiler {
         switch (operator_type()) {
             case operator_type_t::negate:
             case operator_type_t::binary_not: {
-                return program->find_type_up("u64");
+                return program->find_type({.name = "u64"});
             }
             case operator_type_t::logical_not: {
-                return program->find_type_up("bool");
+                return program->find_type({.name = "bool"});
             }
             default:
                 return nullptr;

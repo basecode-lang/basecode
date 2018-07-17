@@ -198,6 +198,7 @@ namespace basecode::compiler {
                 auto style = ", fillcolor=gainsboro, style=\"filled\"";
                 for (auto fld : element->fields().as_list())
                     add_primary_edge(element, fld);
+                add_primary_edge(element, element->scope());
                 return fmt::format(
                     "{}[shape=record,label=\"any_type|{}\"{}];",
                     node_vertex_name,
@@ -209,6 +210,7 @@ namespace basecode::compiler {
                 auto style = ", fillcolor=gainsboro, style=\"filled\"";
                 for (auto fld : element->fields().as_list())
                     add_primary_edge(element, fld);
+                add_primary_edge(element, element->scope());
                 return fmt::format(
                     "{}[shape=record,label=\"type_info|{}\"{}];",
                     node_vertex_name,
@@ -306,6 +308,7 @@ namespace basecode::compiler {
                 add_primary_edge(element, element->entry_type());
                 for (auto fld : element->fields().as_list())
                     add_primary_edge(element, fld);
+                add_primary_edge(element, element->scope());
                 return fmt::format(
                     "{}[shape=record,label=\"array_type|size: {}|type: {}\"{}];",
                     node_vertex_name,
@@ -347,6 +350,7 @@ namespace basecode::compiler {
                 auto style = ", fillcolor=gainsboro, style=\"filled\"";
                 for (auto fld : element->fields().as_list())
                     add_primary_edge(element, fld);
+                add_primary_edge(element, element->scope());
                 return fmt::format(
                     "{}[shape=record,label=\"string_type|{}\"{}];",
                     node_vertex_name,
@@ -414,6 +418,7 @@ namespace basecode::compiler {
                 auto style = ", fillcolor=gainsboro, style=\"filled\"";
                 for (auto fld : element->fields().as_list())
                     add_primary_edge(element, fld);
+                add_primary_edge(element, element->scope());
                 return fmt::format(
                     "{}[shape=record,label=\"composite_type|{}|{}\"{}];",
                     node_vertex_name,

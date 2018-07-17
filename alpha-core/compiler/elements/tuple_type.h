@@ -17,7 +17,9 @@ namespace basecode::compiler {
 
     class tuple_type: public compiler::composite_type {
     public:
-        explicit tuple_type(block* parent_scope);
+        tuple_type(
+            compiler::block* parent_scope,
+            compiler::block* scope);
 
     protected:
         bool on_initialize(

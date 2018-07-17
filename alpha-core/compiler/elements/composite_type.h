@@ -21,10 +21,13 @@ namespace basecode::compiler {
         composite_type(
             block* parent_scope,
             composite_types_t type,
+            compiler::block* scope,
             compiler::symbol_element* symbol,
             element_type_t element_type = element_type_t::composite_type);
 
         field_map_t& fields();
+
+        compiler::block* scope();
 
         type_map_t& type_parameters();
 
@@ -39,6 +42,7 @@ namespace basecode::compiler {
         field_map_t _fields {};
         composite_types_t _type;
         type_map_t _type_parameters {};
+        compiler::block* _scope = nullptr;
     };
 
 };

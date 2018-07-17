@@ -15,11 +15,14 @@
 
 namespace basecode::compiler {
 
-    type_info::type_info(block* parent_scope) : compiler::composite_type(
-                                                parent_scope,
-                                                composite_types_t::struct_type,
-                                                nullptr,
-                                                element_type_t::type_info) {
+    type_info::type_info(
+        compiler::block* parent_scope,
+        compiler::block* scope) : compiler::composite_type(
+                                    parent_scope,
+                                    composite_types_t::struct_type,
+                                    scope,
+                                    nullptr,
+                                    element_type_t::type_info) {
     }
 
     // type_category := enum {
@@ -48,9 +51,9 @@ namespace basecode::compiler {
             compiler::program* program) {
         symbol(program->make_symbol(parent_scope(), "type"));
 
-        auto block_scope = parent_scope();
+        auto block_scope = scope();
 
-        auto string_type = program->find_type_down("string");
+        auto string_type = program->find_type({.name = "string"});
 
         auto name_identifier = program->make_identifier(
             block_scope,

@@ -15,11 +15,14 @@
 
 namespace basecode::compiler {
 
-    any_type::any_type(block* parent_scope) : compiler::composite_type(
-                                                parent_scope,
-                                                composite_types_t::struct_type,
-                                                nullptr,
-                                                element_type_t::any_type) {
+    any_type::any_type(
+        compiler::block* parent_scope,
+        compiler::block* scope) : compiler::composite_type(
+                                    parent_scope,
+                                    composite_types_t::struct_type,
+                                    scope,
+                                    nullptr,
+                                    element_type_t::any_type) {
     }
 
     // any_type := struct {
@@ -32,10 +35,10 @@ namespace basecode::compiler {
             compiler::program* program) {
         symbol(program->make_symbol(parent_scope(), "any"));
 
-        auto block_scope = parent_scope();
+        auto block_scope = scope();
 
-        auto type_info_type = program->find_type_down("type");
-        auto address_type = program->find_type_down("address");
+        auto type_info_type = program->find_type({ .name = "type" });
+        auto address_type = program->find_type({ .name = "address" });
 
         auto type_info_identifier = program->make_identifier(
             block_scope,

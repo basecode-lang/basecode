@@ -46,7 +46,7 @@ namespace basecode::compiler {
     }
 
     compiler::type* float_literal::on_infer_type(const compiler::program* program) {
-        return program->find_type_up("f64");
+        return program->find_type({.name = "f64"});
     }
 
 };

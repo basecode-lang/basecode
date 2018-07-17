@@ -18,12 +18,14 @@ namespace basecode::compiler {
     composite_type::composite_type(
             block* parent_scope,
             composite_types_t type,
+            compiler::block* scope,
             compiler::symbol_element* symbol,
             element_type_t element_type) : compiler::type(
                                                 parent_scope,
                                                 element_type,
                                                 symbol),
-                                           _type(type) {
+                                           _type(type),
+                                           _scope(scope) {
     }
 
     bool composite_type::on_initialize(
@@ -38,6 +40,10 @@ namespace basecode::compiler {
 
     field_map_t& composite_type::fields() {
         return _fields;
+    }
+
+    compiler::block* composite_type::scope() {
+        return _scope;
     }
 
     type_map_t& composite_type::type_parameters() {

@@ -17,7 +17,9 @@ namespace basecode::compiler {
 
     class any_type : public compiler::composite_type {
     public:
-        explicit any_type(block* parent_scope);
+        any_type(
+            compiler::block* parent_scope,
+            compiler::block* scope);
 
         compiler::type* underlying_type();
 
