@@ -30,6 +30,13 @@ namespace basecode::compiler {
 
         void identifier(compiler::identifier* value);
 
+    protected:
+        bool on_emit(
+            common::result& r,
+            emit_context_t& context) override;
+
+        bool on_is_constant() const override;
+
     private:
         qualified_symbol_t _symbol;
         compiler::identifier* _identifier = nullptr;

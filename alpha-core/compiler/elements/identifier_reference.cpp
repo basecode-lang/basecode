@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include "identifier.h"
 #include "identifier_reference.h"
 
 namespace basecode::compiler {
@@ -21,8 +22,22 @@ namespace basecode::compiler {
                                             _identifier(identifier) {
     }
 
+    bool identifier_reference::on_emit(
+            common::result& r,
+            emit_context_t& context) {
+        if (_identifier == nullptr)
+            return false;
+        return _identifier->emit(r, context);
+    }
+
     bool identifier_reference::resolved() const {
         return _identifier != nullptr;
+    }
+
+    bool identifier_reference::on_is_constant() const {
+        if (_identifier == nullptr)
+            return false;
+        return _identifier->is_constant();
     }
 
     compiler::identifier* identifier_reference::identifier() {
