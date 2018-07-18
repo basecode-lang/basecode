@@ -34,6 +34,10 @@ namespace basecode::compiler {
             common::result& r,
             emit_context_t& context) override;
 
+        element* on_fold(
+            common::result& r,
+            compiler::program* program) override;
+
         void emit_arithmetic_operator(
             common::result& r,
             emit_context_t& context,

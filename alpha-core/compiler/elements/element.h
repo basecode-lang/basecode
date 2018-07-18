@@ -48,7 +48,9 @@ namespace basecode::compiler {
 
         element* parent_element();
 
-        bool fold(common::result& r);
+        element* fold(
+            common::result& r,
+            compiler::program* program);
 
         attribute_map_t& attributes();
 
@@ -68,6 +70,8 @@ namespace basecode::compiler {
 
         bool is_parent_element(element_type_t type);
 
+        attribute* find_attribute(const std::string& name);
+
         compiler::type* infer_type(const compiler::program* program);
 
     protected:
@@ -75,9 +79,11 @@ namespace basecode::compiler {
             common::result& r,
             emit_context_t& context);
 
-        virtual bool on_is_constant() const;
+        virtual element* on_fold(
+            common::result& r,
+            compiler::program* program);
 
-        virtual bool on_fold(common::result& r);
+        virtual bool on_is_constant() const;
 
         virtual bool on_as_bool(bool& value) const;
 

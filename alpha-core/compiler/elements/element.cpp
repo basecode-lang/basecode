@@ -13,6 +13,7 @@
 #include <common/id_pool.h>
 #include "type.h"
 #include "element.h"
+#include "attribute.h"
 #include "float_literal.h"
 #include "string_literal.h"
 #include "integer_literal.h"
@@ -32,6 +33,15 @@ namespace basecode::compiler {
     element::~element() {
     }
 
+    element* element::fold(
+            common::result& r,
+            compiler::program* program) {
+        auto no_fold_attribute = find_attribute("no_fold");
+        if (no_fold_attribute != nullptr)
+            return nullptr;
+        return on_fold(r, program);
+    }
+
     block* element::parent_scope() {
         return _parent_scope;
     }
@@ -46,6 +56,12 @@ namespace basecode::compiler {
             common::result& r,
             emit_context_t& context) {
         return true;
+    }
+
+    element* element::on_fold(
+            common::result& r,
+            compiler::program* program) {
+        return nullptr;
     }
 
     common::id_t element::id() const {
@@ -64,10 +80,6 @@ namespace basecode::compiler {
         return false;
     }
 
-    bool element::fold(common::result& r) {
-        return on_fold(r);
-    }
-
     attribute_map_t& element::attributes() {
         return _attributes;
     }
@@ -77,10 +89,6 @@ namespace basecode::compiler {
             "{}_{}",
             element_type_name(_element_type),
             _id);
-    }
-
-    bool element::on_fold(common::result& r) {
-        return true;
     }
 
     bool element::as_bool(bool& value) const {
@@ -127,6 +135,17 @@ namespace basecode::compiler {
         if (_parent_element == nullptr)
             return false;
         return _parent_element->element_type() == type;
+    }
+
+    attribute* element::find_attribute(const std::string& name) {
+        auto current_element = this;
+        while (current_element != nullptr) {
+            auto attr = current_element->_attributes.find(name);
+            if (attr != nullptr)
+                return attr;
+            current_element = current_element->parent_element();
+        }
+        return nullptr;
     }
 
     compiler::type* element::infer_type(const compiler::program* program) {

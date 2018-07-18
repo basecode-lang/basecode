@@ -38,6 +38,10 @@ namespace basecode::compiler {
         return _expr;
     }
 
+    void initializer::expression(element* value) {
+        _expr = value;
+    }
+
     bool initializer::on_as_bool(bool& value) const {
         if (_expr == nullptr)
             return false;

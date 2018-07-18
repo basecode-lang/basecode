@@ -14,6 +14,7 @@
 #include "identifier.h"
 #include "symbol_element.h"
 #include "binary_operator.h"
+#include "integer_literal.h"
 
 namespace basecode::compiler {
 
@@ -109,6 +110,20 @@ namespace basecode::compiler {
                 break;
         }
         return true;
+    }
+
+    element* binary_operator::on_fold(
+            common::result& r,
+            compiler::program* program) {
+        switch (operator_type()) {
+            case operator_type_t::multiply: {
+                return program->make_integer(parent_scope(), 4000);
+            }
+            default:
+                break;
+        }
+
+        return nullptr;
     }
 
     element* binary_operator::lhs() {

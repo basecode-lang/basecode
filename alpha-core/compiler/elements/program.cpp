@@ -154,6 +154,7 @@ namespace basecode::compiler {
                         find_type_result,
                         nullptr);
                 }
+
                 return make_statement(current_scope(), labels, expr);
             }
             case syntax::ast_node_types_t::expression: {
@@ -170,11 +171,13 @@ namespace basecode::compiler {
                     make_qualified_symbol(qualified_symbol, symbol_node);
                     auto existing_identifier = find_identifier(qualified_symbol);
                     if (existing_identifier != nullptr) {
-                        return make_binary_operator(
+                        auto binary_op = make_binary_operator(
                             current_scope(),
                             operator_type_t::assignment,
                             existing_identifier,
                             evaluate(r, node->rhs));
+                        apply_attributes(r, binary_op, node);
+                        return binary_op;
                     } else {
                         auto symbol = dynamic_cast<compiler::symbol_element*>(evaluate(
                             r,
@@ -188,14 +191,14 @@ namespace basecode::compiler {
                             r,
                             symbol,
                             find_type_result,
-                            node->rhs);
+                            node);
                         list.push_back(new_identifier);
                     }
                 }
 
                 // XXX: handle proper multi-assignment
-
-                return list.front();
+                auto result = list.front();
+                return result;
             }
             case syntax::ast_node_types_t::line_comment: {
                 return make_comment(
@@ -334,7 +337,7 @@ namespace basecode::compiler {
                                 r,
                                 symbol,
                                 find_type_result,
-                                param_node->rhs,
+                                param_node,
                                 block_scope);
                             param_identifier->usage(identifier_usage_t::stack);
                             auto field = make_field(block_scope, param_identifier);
@@ -1263,9 +1266,11 @@ namespace basecode::compiler {
             common::result& r,
             compiler::symbol_element* symbol,
             type_find_result_t& type_find_result,
-            const syntax::ast_node_shared_ptr& rhs,
+            const syntax::ast_node_shared_ptr& node,
             compiler::block* parent_scope) {
-        auto namespace_type = find_type(qualified_symbol_t {.name = "namespace"});
+        auto namespace_type = find_type(qualified_symbol_t {
+            .name = "namespace"
+        });
 
         auto scope = symbol->is_qualified()
             ? block()
@@ -1309,8 +1314,8 @@ namespace basecode::compiler {
 
         auto init_expr = (compiler::element*) nullptr;
         auto init = (compiler::initializer*) nullptr;
-        if (rhs != nullptr) {
-            init_expr = evaluate_in_scope(r, rhs, scope);
+        if (node != nullptr && node->rhs != nullptr) {
+            init_expr = evaluate_in_scope(r, node->rhs, scope);
             if (init_expr != nullptr) {
                 if (init_expr->is_constant()) {
                     init = make_initializer(scope, init_expr);
@@ -1319,8 +1324,21 @@ namespace basecode::compiler {
         }
 
         auto new_identifier = make_identifier(scope, symbol, init);
-        if (init_expr != nullptr && init == nullptr) {
-            init_expr->parent_element(new_identifier);
+        apply_attributes(r, new_identifier, node);
+        if (init_expr != nullptr) {
+            if (init == nullptr)
+                init_expr->parent_element(new_identifier);
+            else {
+                auto folded_expr = init_expr->fold(r, this);
+                if (folded_expr != nullptr) {
+                    init_expr = folded_expr;
+                    auto old_expr = init->expression();
+                    init->expression(init_expr);
+
+                    // XXX: need a better way to do this
+                    _elements.remove(old_expr->id());
+                }
+            }
         }
 
         if (type_find_result.type == nullptr) {
@@ -1348,7 +1366,7 @@ namespace basecode::compiler {
             add_procedure_instance(
                 r,
                 dynamic_cast<procedure_type*>(init->expression()),
-                rhs);
+                node->rhs);
         }
 
         if (init == nullptr && init_expr != nullptr) {
@@ -1403,6 +1421,9 @@ namespace basecode::compiler {
             common::result& r,
             compiler::element* element,
             const syntax::ast_node_shared_ptr& node) {
+        if (node == nullptr)
+            return;
+
         for (auto it = node->children.begin();
              it != node->children.end();
              ++it) {
@@ -1412,7 +1433,9 @@ namespace basecode::compiler {
                     r,
                     child_node));
                 attribute->parent_element(element);
-                element->attributes().add(attribute);
+
+                auto& attributes = element->attributes();
+                attributes.add(attribute);
             }
         }
     }
@@ -1424,7 +1447,8 @@ namespace basecode::compiler {
         auto statement = new compiler::statement(
             parent_scope,
             expr);
-        if (expr != nullptr)
+        // XXX: double check this
+        if (expr != nullptr && expr->parent_element() == nullptr)
             expr->parent_element(statement);
         for (auto label : labels) {
             statement->labels().push_back(label);

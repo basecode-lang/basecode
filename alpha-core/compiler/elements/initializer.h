@@ -23,6 +23,8 @@ namespace basecode::compiler {
 
         element* expression();
 
+        void expression(element* value);
+
         compiler::procedure_type* procedure_type();
 
     protected:

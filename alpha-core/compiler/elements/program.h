@@ -66,8 +66,10 @@ namespace basecode::compiler {
         friend class tuple_type;
         friend class string_type;
         friend class numeric_type;
+        friend class unary_operator;
         friend class namespace_type;
         friend class procedure_type;
+        friend class binary_operator;
 
         bool on_emit(
             common::result& r,
@@ -300,7 +302,7 @@ namespace basecode::compiler {
             common::result& r,
             compiler::symbol_element* symbol,
             type_find_result_t& find_type_result,
-            const syntax::ast_node_shared_ptr& rhs,
+            const syntax::ast_node_shared_ptr& node,
             compiler::block* parent_scope = nullptr);
 
         void add_type_to_scope(compiler::type* type);
