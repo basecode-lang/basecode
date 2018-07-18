@@ -75,24 +75,21 @@ namespace basecode::compiler {
         auto length_identifier = program->make_identifier(
             block_scope,
             program->make_symbol(parent_scope(), "length"),
-            nullptr,
-            true);
+            nullptr);
         length_identifier->type(u32_type);
         auto length_field = program->make_field(block_scope, length_identifier);
 
         auto capacity_identifier = program->make_identifier(
             block_scope,
             program->make_symbol(parent_scope(), "capacity"),
-            nullptr,
-            true);
+            nullptr);
         capacity_identifier->type(u32_type);
         auto capacity_field = program->make_field(block_scope, capacity_identifier);
 
         auto data_identifier = program->make_identifier(
             block_scope,
             program->make_symbol(parent_scope(), "data"),
-            nullptr,
-            true);
+            nullptr);
         data_identifier->type(address_type);
         auto data_field = program->make_field(block_scope, data_identifier);
 

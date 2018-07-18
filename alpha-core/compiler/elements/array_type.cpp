@@ -48,8 +48,7 @@ namespace basecode::compiler {
         auto flags_identifier = program->make_identifier(
             block_scope,
             program->make_symbol(block_scope, "flags"),
-            nullptr,
-            true);
+            nullptr);
         flags_identifier->type(u8_type);
         auto flags_field = program->make_field(
             block_scope,
@@ -58,8 +57,7 @@ namespace basecode::compiler {
         auto length_identifier = program->make_identifier(
             block_scope,
             program->make_symbol(block_scope, "length"),
-            nullptr,
-            true);
+            nullptr);
         length_identifier->type(u32_type);
         auto length_field = program->make_field(
             block_scope,
@@ -68,8 +66,7 @@ namespace basecode::compiler {
         auto capacity_identifier = program->make_identifier(
             block_scope,
             program->make_symbol(block_scope, "capacity"),
-            nullptr,
-            true);
+            nullptr);
         capacity_identifier->type(u32_type);
         auto capacity_field = program->make_field(
             block_scope,
@@ -78,8 +75,7 @@ namespace basecode::compiler {
         auto element_type_identifier = program->make_identifier(
             block_scope,
             program->make_symbol(block_scope, "element_type"),
-            nullptr,
-            true);
+            nullptr);
         element_type_identifier->type(type_info_type);
         auto element_type_field = program->make_field(
             block_scope,
@@ -88,8 +84,7 @@ namespace basecode::compiler {
         auto data_identifier = program->make_identifier(
             block_scope,
             program->make_symbol(block_scope, "data"),
-            nullptr,
-            true);
+            nullptr);
         data_identifier->type(address_type);
         auto data_field = program->make_field(block_scope, data_identifier);
 

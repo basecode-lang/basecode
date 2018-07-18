@@ -62,6 +62,7 @@ namespace basecode::compiler {
     class binary_operator;
     class namespace_element;
     class procedure_instance;
+    class identifier_reference;
 
     using type_list_t = std::vector<type*>;
     using label_list_t = std::vector<label*>;
@@ -78,6 +79,7 @@ namespace basecode::compiler {
     using string_literal_list_t = std::vector<string_literal*>;
     using procedure_type_list_t = std::vector<procedure_type*>;
     using procedure_instance_list_t = std::vector<procedure_instance*>;
+    using identifier_reference_list_t = std::vector<identifier_reference*>;
 
     ///////////////////////////////////////////////////////////////////////////
 
@@ -145,6 +147,7 @@ namespace basecode::compiler {
         proc_type_block,
         unknown_identifier,
         proc_instance_block,
+        identifier_reference,
     };
 
     static inline std::unordered_map<element_type_t, std::string> s_element_type_names = {
@@ -190,6 +193,7 @@ namespace basecode::compiler {
         {element_type_t::proc_type_block, "proc_type_block"},
         {element_type_t::unknown_identifier, "unknown_identifier"},
         {element_type_t::proc_instance_block, "proc_instance_block"},
+        {element_type_t::identifier_reference, "identifier_reference"},
     };
 
     static inline std::string element_type_name(element_type_t type) {
@@ -399,4 +403,15 @@ namespace basecode::compiler {
     private:
         std::unordered_map<std::string, type*> _types {};
     };
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    struct qualified_symbol_t {
+        bool is_qualified() const {
+            return !namespaces.empty();
+        }
+        std::string name {};
+        string_list_t namespaces {};
+    };
+
 };

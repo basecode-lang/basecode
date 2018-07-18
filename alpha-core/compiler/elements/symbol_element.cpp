@@ -41,4 +41,17 @@ namespace basecode::compiler {
         return _namespaces;
     }
 
+    std::string symbol_element::fully_qualified_name() const {
+        std::stringstream stream {};
+        auto count = 0;
+        for (const auto& name : _namespaces) {
+            stream << name;
+            if (count > 0)
+                stream << "::";
+            count++;
+        }
+        stream << _name;
+        return stream.str();
+    }
+
 };

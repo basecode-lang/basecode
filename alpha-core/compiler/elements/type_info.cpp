@@ -58,8 +58,7 @@ namespace basecode::compiler {
         auto name_identifier = program->make_identifier(
             block_scope,
             program->make_symbol(parent_scope(), "name"),
-            nullptr,
-            true);
+            nullptr);
         name_identifier->type(string_type);
         auto name_field = program->make_field(block_scope, name_identifier);
 

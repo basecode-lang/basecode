@@ -45,6 +45,7 @@
 #include <compiler/elements/binary_operator.h>
 #include <compiler/elements/namespace_element.h>
 #include <compiler/elements/procedure_instance.h>
+#include <compiler/elements/identifier_reference.h>
 #include "code_dom_formatter.h"
 
 namespace basecode::compiler {
@@ -99,6 +100,15 @@ namespace basecode::compiler {
             add_primary_edge(node, attr);
 
         switch (node->element_type()) {
+            case element_type_t::symbol: {
+                auto element = dynamic_cast<symbol_element*>(node);
+                auto style = ", fillcolor=pink, style=\"filled\"";
+                return fmt::format(
+                    "{}[shape=record,label=\"symbol|{}\"{}];",
+                    node_vertex_name,
+                    element->fully_qualified_name(),
+                    style);
+            }
             case element_type_t::comment: {
                 auto comment_element = dynamic_cast<comment*>(node);
                 auto style = ", fillcolor=green, style=\"filled\"";
@@ -279,15 +289,24 @@ namespace basecode::compiler {
                     node_vertex_name,
                     style);
             }
+            case element_type_t::identifier_reference: {
+                auto element = dynamic_cast<identifier_reference*>(node);
+                auto style = ", fillcolor=yellow, style=\"filled\"";
+                if (element->identifier() != nullptr)
+                    add_primary_edge(element, element->identifier());
+                return fmt::format(
+                    "{}[shape=record,label=\"identifier_reference\"{}];",
+                    node_vertex_name,
+                    style);
+            }
             case element_type_t::proc_call: {
                 auto element = dynamic_cast<procedure_call*>(node);
                 auto style = ", fillcolor=darkorchid1, style=\"filled\"";
                 add_primary_edge(element, element->arguments());
-                add_primary_edge(element, element->identifier()->type());
+                add_primary_edge(element, element->reference());
                 return fmt::format(
-                    "{}[shape=record,label=\"proc_call|{}\"{}];",
+                    "{}[shape=record,label=\"proc_call\"{}];",
                     node_vertex_name,
-                    element->identifier()->symbol()->name(),
                     style);
             }
             case element_type_t::alias_type: {
@@ -327,7 +346,7 @@ namespace basecode::compiler {
                     identifier_element->symbol()->name(),
                     type_name,
                     identifier_element->inferred_type(),
-                    identifier_element->constant());
+                    identifier_element->symbol()->is_constant());
                 add_primary_edge(identifier_element, identifier_element->type());
                 add_primary_edge(identifier_element, identifier_element->initializer());
                 return fmt::format(

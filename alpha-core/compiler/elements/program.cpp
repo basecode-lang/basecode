@@ -50,6 +50,7 @@
 #include "integer_literal.h"
 #include "namespace_element.h"
 #include "procedure_instance.h"
+#include "identifier_reference.h"
 
 namespace basecode::compiler {
 
@@ -266,13 +267,6 @@ namespace basecode::compiler {
                 qualified_symbol_t qualified_symbol {};
                 make_qualified_symbol(qualified_symbol, node->lhs);
                 auto proc_identifier = find_identifier(qualified_symbol);
-                if (proc_identifier == nullptr) {
-                    proc_identifier = make_identifier(
-                        current_scope(),
-                        dynamic_cast<compiler::symbol_element*>(evaluate(r, node->lhs)),
-                        nullptr,
-                        false);
-                }
 
                 compiler::argument_list* args = nullptr;
                 auto expr = evaluate(r, node->rhs);
@@ -281,7 +275,10 @@ namespace basecode::compiler {
                 }
                 return make_procedure_call(
                     current_scope(),
-                    proc_identifier,
+                    make_identifier_reference(
+                        current_scope(),
+                        qualified_symbol,
+                        proc_identifier),
                     args);
             }
             case syntax::ast_node_types_t::argument_list: {
@@ -308,8 +305,7 @@ namespace basecode::compiler {
                             auto return_identifier = make_identifier(
                                 block_scope,
                                 make_symbol(block_scope, fmt::format("_{}", count++)),
-                                nullptr,
-                                true);
+                                nullptr);
                             return_identifier->usage(identifier_usage_t::stack);
                             return_identifier->type(find_type(qualified_symbol_t {
                                 .name = type_node->children[0]->token.value
@@ -441,13 +437,13 @@ namespace basecode::compiler {
                     current_scope(),
                     resolve_symbol_or_evaluate(r, node->lhs));
             }
-            case syntax::ast_node_types_t::constant_expression: {
-                auto identifier = dynamic_cast<compiler::identifier*>(
-                    evaluate(r, node->rhs));
-                if (identifier != nullptr)
-                    identifier->constant(true);
-                return identifier;
-            }
+//            case syntax::ast_node_types_t::constant_expression: {
+//                auto expr = evaluate(r, node->rhs);
+//                auto identifier = dynamic_cast<compiler::identifier*>(expr);
+//                if (identifier != nullptr)
+//                    identifier->constant(true);
+//                return identifier;
+//            }
             case syntax::ast_node_types_t::namespace_expression: {
                 return make_namespace(
                     current_scope(),
@@ -925,25 +921,34 @@ namespace basecode::compiler {
             namespaces);
     }
 
+    identifier_reference* program::make_identifier_reference(
+            compiler::block* parent_scope,
+            const qualified_symbol_t& symbol,
+            compiler::identifier* identifier) {
+        auto reference = new compiler::identifier_reference(
+            parent_scope,
+            symbol,
+            identifier);
+        _elements.add(reference);
+        if (!reference->resolved())
+            _unresolved_identifier_references.emplace_back(reference);
+        return reference;
+    }
+
     identifier* program::make_identifier(
             compiler::block* parent_scope,
             compiler::symbol_element* symbol,
-            initializer* expr,
-            bool resolved) {
+            initializer* expr) {
         auto identifier = new compiler::identifier(
             parent_scope,
             symbol,
             expr);
-        identifier->resolved(resolved);
 
         if (expr != nullptr)
             expr->parent_element(identifier);
 
         symbol->parent_element(identifier);
         _elements.add(identifier);
-
-        if (!resolved)
-            _unresolved_identifiers.emplace_back(identifier);
 
         return identifier;
     }
@@ -1123,15 +1128,15 @@ namespace basecode::compiler {
 
     procedure_call* program::make_procedure_call(
             compiler::block* parent_scope,
-            compiler::identifier* identifier,
+            compiler::identifier_reference* reference,
             compiler::argument_list* args) {
         auto proc_call = new compiler::procedure_call(
             parent_scope,
-            identifier,
+            reference,
             args);
         _elements.add(proc_call);
         args->parent_element(proc_call);
-        identifier->parent_element(proc_call);
+        reference->parent_element(proc_call);
         return proc_call;
     }
 
@@ -1245,7 +1250,10 @@ namespace basecode::compiler {
         if (node->type == syntax::ast_node_types_t::symbol) {
             qualified_symbol_t qualified_symbol {};
             make_qualified_symbol(qualified_symbol, node);
-            element = find_identifier(qualified_symbol);
+            element = make_identifier_reference(
+                current_scope(),
+                qualified_symbol,
+                find_identifier(qualified_symbol));
         } else {
             element = evaluate(r, node);
         }
@@ -1281,8 +1289,7 @@ namespace basecode::compiler {
                 auto ns_identifier = make_identifier(
                     scope,
                     make_symbol(scope, namespace_name, temp_list),
-                    make_initializer(scope, ns),
-                    true);
+                    make_initializer(scope, ns));
                 ns_identifier->type(namespace_type);
                 ns_identifier->inferred_type(true);
                 scope->blocks().push_back(new_scope);
@@ -1322,8 +1329,7 @@ namespace basecode::compiler {
         auto new_identifier = make_identifier(
             scope,
             symbol,
-            init,
-            true);
+            init);
 
         if (type_find_result.type == nullptr) {
             if (init_expr != nullptr) {
@@ -1343,7 +1349,6 @@ namespace basecode::compiler {
             new_identifier->type(type_find_result.type);
         }
 
-        new_identifier->constant(symbol->is_constant());
         scope->identifiers().add(new_identifier);
 
         if (init != nullptr
@@ -1512,8 +1517,7 @@ namespace basecode::compiler {
                     auto field_identifier = make_identifier(
                         type->scope(),
                         symbol,
-                        init,
-                        true);
+                        init);
                     if (type_find_result.type == nullptr) {
                         type_find_result.type = init->expression()->infer_type(this);
                         field_identifier->inferred_type(type_find_result.type != nullptr);
@@ -1536,8 +1540,7 @@ namespace basecode::compiler {
                     auto field_identifier = make_identifier(
                         type->scope(),
                         symbol,
-                        nullptr,
-                        true);
+                        nullptr);
                     if (type_find_result.type == nullptr) {
                         if (type->type() == composite_types_t::enum_type) {
                             field_identifier->type(u32_type);
@@ -1656,12 +1659,11 @@ namespace basecode::compiler {
     }
 
     bool program::resolve_unknown_identifiers(common::result& r) {
-        auto it = _unresolved_identifiers.begin();
-        while (it != _unresolved_identifiers.end()) {
-            auto unknown_identifier = *it;
-
-            if (unknown_identifier->resolved()) {
-                it = _unresolved_identifiers.erase(it);
+        auto it = _unresolved_identifier_references.begin();
+        while (it != _unresolved_identifier_references.end()) {
+            auto unresolved_reference = *it;
+            if (unresolved_reference->resolved()) {
+                it = _unresolved_identifier_references.erase(it);
                 continue;
             }
 
@@ -1669,8 +1671,7 @@ namespace basecode::compiler {
             auto all_identifiers = _elements.find_by_type(element_type_t::identifier);
             for (auto element : all_identifiers) {
                 auto identifier = dynamic_cast<compiler::identifier*>(element);
-                if (identifier->resolved()
-                &&  identifier->symbol()->name() == unknown_identifier->symbol()->name())
+                if (identifier->symbol()->name() == unresolved_reference->symbol().name)
                     candidates.emplace_back(identifier);
             }
 
@@ -1680,28 +1681,18 @@ namespace basecode::compiler {
                     "P004",
                     fmt::format(
                         "unable to resolve identifier: {}",
-                        unknown_identifier->symbol()->name()),
+                        unresolved_reference->symbol().name),
                     true);
                 continue;
             }
 
             auto winner = candidates.front();
-            auto parent_element = unknown_identifier->parent_element();
-            switch (parent_element->element_type()) {
-                case element_type_t::proc_call: {
-                    auto proc_call = dynamic_cast<compiler::procedure_call*>(parent_element);
-                    proc_call->identifier(winner);
-                    _elements.remove(unknown_identifier->id());
-                    break;
-                }
-                default:
-                    break;
-            }
+            unresolved_reference->identifier(winner);
 
-            it = _unresolved_identifiers.erase(it);
+            it = _unresolved_identifier_references.erase(it);
         }
 
-        return _unresolved_identifiers.empty();
+        return _unresolved_identifier_references.empty();
     }
 
     namespace_type* program::make_namespace_type(

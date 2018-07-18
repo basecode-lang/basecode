@@ -19,14 +19,14 @@ namespace basecode::compiler {
     public:
         procedure_call(
             compiler::block* parent_scope,
-            compiler::identifier* identifier,
+            compiler::identifier_reference* reference,
             compiler::argument_list* args);
-
-        compiler::identifier* identifier();
 
         compiler::argument_list* arguments();
 
-        void identifier(compiler::identifier* value);
+        compiler::identifier_reference* reference();
+
+        void reference(compiler::identifier_reference* value);
 
     protected:
         bool on_emit(
@@ -37,7 +37,7 @@ namespace basecode::compiler {
 
     private:
         compiler::argument_list* _arguments = nullptr;
-        compiler::identifier* _identifier = nullptr;
+        compiler::identifier_reference* _reference = nullptr;
     };
 
 };

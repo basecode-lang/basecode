@@ -80,20 +80,8 @@ namespace basecode::compiler {
         return true;
     }
 
-    bool identifier::resolved() const {
-        return _resolved;
-    }
-
-    bool identifier::constant() const {
-        return _constant;
-    }
-
     compiler::type* identifier::type() {
         return _type;
-    }
-
-    void identifier::constant(bool value) {
-        _constant = value;
     }
 
     void identifier::emit_stack_based_load(
@@ -116,16 +104,12 @@ namespace basecode::compiler {
                 symbol()->name()));
     }
 
-    void identifier::resolved(bool value) {
-        _resolved = value;
-    }
-
     bool identifier::inferred_type() const {
         return _inferred_type;
     }
 
     bool identifier::on_is_constant() const {
-        return _constant;
+        return _symbol->is_constant();
     }
 
     void identifier::type(compiler::type* t) {

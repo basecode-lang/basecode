@@ -43,8 +43,7 @@ namespace basecode::compiler {
         auto type_info_identifier = program->make_identifier(
             block_scope,
             program->make_symbol(parent_scope(), "type_info"),
-            nullptr,
-            true);
+            nullptr);
         type_info_identifier->type(type_info_type);
         auto type_info_field = program->make_field(
             block_scope,
@@ -53,8 +52,7 @@ namespace basecode::compiler {
         auto data_identifier = program->make_identifier(
             block_scope,
             program->make_symbol(parent_scope(), "data"),
-            nullptr,
-            true);
+            nullptr);
         data_identifier->type(address_type);
         auto data_field = program->make_field(
             block_scope,

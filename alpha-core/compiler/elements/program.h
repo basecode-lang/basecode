@@ -22,14 +22,6 @@ namespace basecode::compiler {
 
     using block_visitor_callable = std::function<bool (compiler::block*)>;
 
-    struct qualified_symbol_t {
-        bool is_qualified() const {
-            return !namespaces.empty();
-        }
-        std::string name {};
-        string_list_t namespaces {};
-    };
-
     struct type_find_result_t {
         qualified_symbol_t type_name;
         bool is_array = false;
@@ -185,8 +177,7 @@ namespace basecode::compiler {
         identifier* make_identifier(
             compiler::block* parent_scope,
             compiler::symbol_element* symbol,
-            initializer* expr,
-            bool resolved);
+            initializer* expr);
 
         string_literal* make_string(
             compiler::block* parent_scope,
@@ -274,7 +265,7 @@ namespace basecode::compiler {
 
         procedure_call* make_procedure_call(
             compiler::block* parent_scope,
-            compiler::identifier* identifier,
+            compiler::identifier_reference* reference,
             compiler::argument_list* args);
 
         unary_operator* make_unary_operator(
@@ -291,6 +282,11 @@ namespace basecode::compiler {
             operator_type_t type,
             element* lhs,
             element* rhs);
+
+        identifier_reference* make_identifier_reference(
+            compiler::block* parent_scope,
+            const qualified_symbol_t& symbol,
+            compiler::identifier* identifier);
 
         procedure_instance* make_procedure_instance(
             compiler::block* parent_scope,
@@ -366,8 +362,8 @@ namespace basecode::compiler {
         vm::terp* _terp = nullptr;
         compiler::block* _block = nullptr;
         std::stack<compiler::block*> _scope_stack {};
-        identifier_list_t _unresolved_identifiers {};
         identifier_list_t _identifiers_with_unknown_types {};
+        identifier_reference_list_t _unresolved_identifier_references {};
         std::unordered_map<std::string, string_literal_list_t> _interned_string_literals {};
     };
 

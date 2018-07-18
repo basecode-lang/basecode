@@ -27,15 +27,7 @@ namespace basecode::compiler {
             compiler::symbol_element* name,
             compiler::initializer* initializer);
 
-        bool constant() const;
-
         compiler::type* type();
-
-        bool resolved() const;
-
-        void resolved(bool value);
-
-        void constant(bool value);
 
         bool inferred_type() const;
 
@@ -71,8 +63,6 @@ namespace basecode::compiler {
             vm::instruction_block* instruction_block);
 
     private:
-        bool _resolved = false;
-        bool _constant = false;
         bool _inferred_type = false;
         compiler::type* _type = nullptr;
         compiler::symbol_element* _symbol;
