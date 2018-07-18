@@ -160,4 +160,8 @@ namespace basecode::compiler {
         return _initializer->as_string(value);
     }
 
+    void identifier::initializer(compiler::initializer* value) {
+        _initializer = value;
+    }
+
 };

@@ -682,6 +682,7 @@ namespace basecode::compiler {
             vm::assembly_listing& listing,
             const syntax::ast_node_shared_ptr& root) {
         _block = push_new_block();
+        _block->parent_element(this);
 
         initialize_core_types(r);
 
@@ -1080,11 +1081,9 @@ namespace basecode::compiler {
 
     namespace_element* program::make_namespace(
             compiler::block* parent_scope,
-            element* expr,
-            const std::string& name) {
+            element* expr) {
         auto ns = new compiler::namespace_element(
             parent_scope,
-            name,
             expr);
         if (expr != nullptr)
             expr->parent_element(ns);
@@ -1282,16 +1281,14 @@ namespace basecode::compiler {
             auto var = scope->identifiers().find(namespace_name);
             if (var == nullptr) {
                 auto new_scope = make_block(scope, element_type_t::block);
-                auto ns = make_namespace(
-                    scope,
-                    new_scope,
-                    namespace_name);
+                auto ns = make_namespace(scope, new_scope);
                 auto ns_identifier = make_identifier(
                     scope,
                     make_symbol(scope, namespace_name, temp_list),
                     make_initializer(scope, ns));
                 ns_identifier->type(namespace_type);
                 ns_identifier->inferred_type(true);
+                ns_identifier->parent_element(scope->parent_element());
                 scope->blocks().push_back(new_scope);
                 scope->identifiers().add(ns_identifier);
                 scope = new_scope;
@@ -1314,22 +1311,17 @@ namespace basecode::compiler {
         auto init = (compiler::initializer*) nullptr;
         if (rhs != nullptr) {
             init_expr = evaluate_in_scope(r, rhs, scope);
-
             if (init_expr != nullptr) {
-                if (init_expr->is_constant())
+                if (init_expr->is_constant()) {
                     init = make_initializer(scope, init_expr);
-
-                if (init_expr->element_type() == element_type_t::namespace_e) {
-                    auto ns = dynamic_cast<compiler::namespace_element*>(init_expr);
-                    ns->name(symbol->name());
                 }
             }
         }
 
-        auto new_identifier = make_identifier(
-            scope,
-            symbol,
-            init);
+        auto new_identifier = make_identifier(scope, symbol, init);
+        if (init_expr != nullptr && init == nullptr) {
+            init_expr->parent_element(new_identifier);
+        }
 
         if (type_find_result.type == nullptr) {
             if (init_expr != nullptr) {

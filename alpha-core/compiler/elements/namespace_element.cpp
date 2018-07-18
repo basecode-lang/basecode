@@ -10,16 +10,17 @@
 // ----------------------------------------------------------------------------
 
 #include "program.h"
+#include "identifier.h"
+#include "initializer.h"
+#include "symbol_element.h"
 #include "namespace_element.h"
 
 namespace basecode::compiler {
 
     namespace_element::namespace_element(
-            block* parent_scope,
-            const std::string& name,
-            element* expr) : element(parent_scope, element_type_t::namespace_e),
-                             _name(name),
-                             _expression(expr) {
+            compiler::block* parent_scope,
+            compiler::element* expr) : element(parent_scope, element_type_t::namespace_e),
+                                       _expression(expr) {
     }
 
     bool namespace_element::on_emit(
@@ -34,16 +35,28 @@ namespace basecode::compiler {
         return _expression;
     }
 
-    std::string namespace_element::name() const {
-        return _name;
+    std::string namespace_element::name() {
+        std::string name("unknown");
+        switch (parent_element()->element_type()) {
+            case element_type_t::initializer: {
+                auto parent_init = dynamic_cast<compiler::initializer*>(parent_element());
+                auto parent_identifier = dynamic_cast<compiler::identifier*>(parent_init->parent_element());
+                name = parent_identifier->symbol()->fully_qualified_name();
+                break;
+            }
+            case element_type_t::identifier: {
+                auto parent_identifier = dynamic_cast<compiler::identifier*>(parent_element());
+                name = parent_identifier->symbol()->fully_qualified_name();
+                break;
+            }
+            default:
+                break;
+        }
+        return name;
     }
 
     bool namespace_element::on_is_constant() const {
         return true;
-    }
-
-    void namespace_element::name(const std::string& value) {
-        _name = value;
     }
 
     compiler::type* namespace_element::on_infer_type(const compiler::program* program) {

@@ -43,6 +43,8 @@ namespace basecode::compiler {
 
         compiler::symbol_element* symbol() const;
 
+        void initializer(compiler::initializer* value);
+
     protected:
         bool on_emit(
             common::result& r,

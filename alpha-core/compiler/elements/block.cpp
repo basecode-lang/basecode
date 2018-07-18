@@ -16,6 +16,7 @@
 #include "statement.h"
 #include "initializer.h"
 #include "numeric_type.h"
+#include "symbol_element.h"
 #include "procedure_type.h"
 #include "string_literal.h"
 #include "namespace_element.h"
@@ -39,10 +40,11 @@ namespace basecode::compiler {
 
                 auto parent_ns = parent_element_as<compiler::namespace_element>();
                 if (parent_ns != nullptr) {
-                    auto current_entry = instruction_block->current_entry();
-                    current_entry->comment(fmt::format("namespace: {}", parent_ns->name()));
-                    current_entry->blank_lines(1);
+                    instruction_block->current_entry()->comment(fmt::format(
+                        "namespace: {}",
+                        parent_ns->name()));
                 }
+                instruction_block->current_entry()->blank_lines(1);
 
                 auto block_label = instruction_block->make_label(label_name());
                 instruction_block

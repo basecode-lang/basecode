@@ -45,11 +45,13 @@ namespace basecode::compiler {
         std::stringstream stream {};
         auto count = 0;
         for (const auto& name : _namespaces) {
-            stream << name;
             if (count > 0)
                 stream << "::";
+            stream << name;
             count++;
         }
+        if (count > 0)
+            stream << "::";
         stream << _name;
         return stream.str();
     }

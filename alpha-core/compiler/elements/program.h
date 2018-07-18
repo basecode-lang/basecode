@@ -256,8 +256,7 @@ namespace basecode::compiler {
 
         namespace_element* make_namespace(
             compiler::block* parent_scope,
-            element* expr,
-            const std::string& name = "");
+            element* expr);
 
         namespace_type* make_namespace_type(
             common::result& r,

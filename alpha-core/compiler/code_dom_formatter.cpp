@@ -348,6 +348,7 @@ namespace basecode::compiler {
                     identifier_element->inferred_type(),
                     identifier_element->symbol()->is_constant());
                 add_primary_edge(identifier_element, identifier_element->type());
+                add_primary_edge(identifier_element, identifier_element->symbol());
                 add_primary_edge(identifier_element, identifier_element->initializer());
                 return fmt::format(
                     "{}[shape=record,label=\"{}\"{}];",

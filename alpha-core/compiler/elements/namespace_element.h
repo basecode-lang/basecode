@@ -18,15 +18,12 @@ namespace basecode::compiler {
     class namespace_element : public element {
     public:
         namespace_element(
-            block* parent_scope,
-            const std::string& name,
-            element* expr);
+            compiler::block* parent_scope,
+            compiler::element* expr);
+
+        std::string name();
 
         element* expression();
-
-        std::string name() const;
-
-        void name(const std::string& value);
 
     protected:
         bool on_emit(
@@ -38,7 +35,6 @@ namespace basecode::compiler {
         compiler::type* on_infer_type(const compiler::program* program) override;
 
     private:
-        std::string _name;
         element* _expression = nullptr;
     };
 

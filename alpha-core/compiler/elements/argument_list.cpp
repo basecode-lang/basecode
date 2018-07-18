@@ -28,13 +28,13 @@ namespace basecode::compiler {
             switch (arg->element_type()) {
                 case element_type_t::proc_call:
                 case element_type_t::expression:
-                case element_type_t::identifier:
                 case element_type_t::float_literal:
                 case element_type_t::string_literal:
                 case element_type_t::unary_operator:
                 case element_type_t::binary_operator:
                 case element_type_t::boolean_literal:
-                case element_type_t::integer_literal: {
+                case element_type_t::integer_literal:
+                case element_type_t::identifier_reference: {
                     vm::i_registers_t target_reg;
                     if (!instruction_block->allocate_reg(target_reg)) {
                         // XXX: error
