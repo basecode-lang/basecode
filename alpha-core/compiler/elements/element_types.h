@@ -29,6 +29,7 @@ namespace basecode::compiler {
     class label;
     class alias;
     class import;
+    class module;
     class element;
     class program;
     class comment;
@@ -112,6 +113,7 @@ namespace basecode::compiler {
         block,
         field,
         symbol,
+        module,
         comment,
         program,
         any_type,
@@ -134,6 +136,7 @@ namespace basecode::compiler {
         initializer,
         unknown_type,
         numeric_type,
+        module_block,
         argument_list,
         proc_instance,
         float_literal,
@@ -157,7 +160,8 @@ namespace basecode::compiler {
         {element_type_t::label, "label"},
         {element_type_t::block, "block"},
         {element_type_t::field, "field"},
-        {element_type_t::symbol, "symbol_element"},
+        {element_type_t::module, "module"},
+        {element_type_t::symbol, "symbol"},
         {element_type_t::comment, "comment"},
         {element_type_t::program, "program"},
         {element_type_t::any_type, "any_type"},
@@ -178,6 +182,7 @@ namespace basecode::compiler {
         {element_type_t::string_type, "string_type"},
         {element_type_t::namespace_e, "namespace"},
         {element_type_t::initializer, "initializer"},
+        {element_type_t::module_block, "module_block"},
         {element_type_t::unknown_type, "unknown_type"},
         {element_type_t::numeric_type, "numeric_type"},
         {element_type_t::proc_instance, "proc_instance"},

@@ -116,6 +116,10 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             element* expr);
 
+        module* make_module(
+            compiler::block* parent_scope,
+            compiler::block* scope);
+
         comment* make_comment(
             compiler::block* parent_scope,
             comment_type_t type,
@@ -353,8 +357,6 @@ namespace basecode::compiler {
 
         void push_scope(compiler::block* block);
 
-        bool is_subtree_constant(const syntax::ast_node_shared_ptr& node);
-
         compiler::identifier* find_identifier(const qualified_symbol_t& symbol);
 
         bool within_procedure_scope(compiler::block* parent_scope = nullptr) const;
@@ -365,6 +367,7 @@ namespace basecode::compiler {
         vm::terp* _terp = nullptr;
         compiler::block* _block = nullptr;
         std::stack<compiler::block*> _scope_stack {};
+        std::stack<compiler::block*> _top_level_stack {};
         identifier_list_t _identifiers_with_unknown_types {};
         identifier_reference_list_t _unresolved_identifier_references {};
         std::unordered_map<std::string, string_literal_list_t> _interned_string_literals {};

@@ -16,6 +16,7 @@
 #include <compiler/elements/field.h>
 #include <compiler/elements/label.h>
 #include <compiler/elements/import.h>
+#include <compiler/elements/module.h>
 #include <compiler/elements/program.h>
 #include <compiler/elements/comment.h>
 #include <compiler/elements/any_type.h>
@@ -23,6 +24,7 @@
 #include <compiler/elements/attribute.h>
 #include <compiler/elements/directive.h>
 #include <compiler/elements/statement.h>
+#include <compiler/elements/tuple_type.h>
 #include <compiler/elements/expression.h>
 #include <compiler/elements/array_type.h>
 #include <compiler/elements/identifier.h>
@@ -100,6 +102,16 @@ namespace basecode::compiler {
             add_primary_edge(node, attr);
 
         switch (node->element_type()) {
+            case element_type_t::module: {
+                auto element = dynamic_cast<module*>(node);
+                auto style = ", fillcolor=grey, style=\"filled\"";
+                add_primary_edge(element, element->scope());
+                return fmt::format(
+                    "{}[shape=record,label=\"module|{}\"{}];",
+                    node_vertex_name,
+                    element->source_file().string(),
+                    style);
+            }
             case element_type_t::symbol: {
                 auto element = dynamic_cast<symbol_element*>(node);
                 auto style = ", fillcolor=pink, style=\"filled\"";
@@ -170,18 +182,31 @@ namespace basecode::compiler {
                     element->id(),
                     style);
             }
-            case element_type_t::proc_type_block: {
+            case element_type_t::module_block: {
+                auto element = dynamic_cast<block*>(node);
                 auto style = ", fillcolor=floralwhite, style=\"filled\"";
                 return fmt::format(
-                    "{}[shape=record,label=\"block|proc_type\"{}];",
+                    "{}[shape=record,label=\"block|module|{}\"{}];",
                     node_vertex_name,
+                    element->id(),
+                    style);
+            }
+            case element_type_t::proc_type_block: {
+                auto element = dynamic_cast<block*>(node);
+                auto style = ", fillcolor=floralwhite, style=\"filled\"";
+                return fmt::format(
+                    "{}[shape=record,label=\"block|proc_type|{}\"{}];",
+                    node_vertex_name,
+                    element->id(),
                     style);
             }
             case element_type_t::proc_instance_block: {
+                auto element = dynamic_cast<block*>(node);
                 auto style = ", fillcolor=floralwhite, style=\"filled\"";
                 return fmt::format(
-                    "{}[shape=record,label=\"block|proc_instance\"{}];",
+                    "{}[shape=record,label=\"block|proc_instance|{}\"{}];",
                     node_vertex_name,
+                    element->id(),
                     style);
             }
             case element_type_t::field: {
@@ -431,6 +456,18 @@ namespace basecode::compiler {
                     "{}[shape=record,label=\"string_literal|{}\"{}];",
                     node_vertex_name,
                     element->value(),
+                    style);
+            }
+            case element_type_t::tuple_type: {
+                auto element = dynamic_cast<tuple_type*>(node);
+                auto style = ", fillcolor=gainsboro, style=\"filled\"";
+                for (auto fld : element->fields().as_list())
+                    add_primary_edge(element, fld);
+                add_primary_edge(element, element->scope());
+                return fmt::format(
+                    "{}[shape=record,label=\"tuple_type|{}\"{}];",
+                    node_vertex_name,
+                    element->symbol()->name(),
                     style);
             }
             case element_type_t::composite_type: {

@@ -40,13 +40,14 @@ namespace basecode::compiler {
     void session::write_code_dom_graph(
             compiler::program* program,
             const std::filesystem::path& path) {
-        FILE* output_file = stdout;
+        FILE* output_file = nullptr;
         if (!path.empty()) {
             output_file = fopen(path.c_str(), "wt");
-            defer({
-              fclose(output_file);
-            });
         }
+        defer({
+            if (output_file != nullptr)
+                fclose(output_file);
+        });
 
         compiler::code_dom_formatter formatter(program, output_file);
         formatter.format(fmt::format("Code DOM Graph: {}", path.string()));

@@ -19,6 +19,7 @@
 #include "label.h"
 #include "alias.h"
 #include "import.h"
+#include "module.h"
 #include "comment.h"
 #include "program.h"
 #include "any_type.h"
@@ -101,12 +102,20 @@ namespace basecode::compiler {
                 return directive_element;
             }
             case syntax::ast_node_types_t::module: {
+                auto module_block = push_new_block(element_type_t::module_block);
+                _top_level_stack.push(module_block);
+
                 for (auto it = node->children.begin();
                      it != node->children.end();
                      ++it) {
-                    add_expression_to_scope(_block, evaluate(r, *it));
+                    add_expression_to_scope(
+                        module_block,
+                        evaluate(r, *it, default_block_type));
                 }
-                return _block;
+
+                _top_level_stack.pop();
+
+                return make_module(_block, pop_scope());
             }
             case syntax::ast_node_types_t::basic_block: {
                 auto active_scope = push_new_block(default_block_type);
@@ -440,17 +449,10 @@ namespace basecode::compiler {
                     current_scope(),
                     resolve_symbol_or_evaluate(r, node->lhs));
             }
-//            case syntax::ast_node_types_t::constant_expression: {
-//                auto expr = evaluate(r, node->rhs);
-//                auto identifier = dynamic_cast<compiler::identifier*>(expr);
-//                if (identifier != nullptr)
-//                    identifier->constant(true);
-//                return identifier;
-//            }
             case syntax::ast_node_types_t::namespace_expression: {
                 return make_namespace(
                     current_scope(),
-                    evaluate(r, node->rhs));
+                    evaluate(r, node->rhs, default_block_type));
             }
             default: {
                 break;
@@ -686,6 +688,8 @@ namespace basecode::compiler {
         _block = push_new_block();
         _block->parent_element(this);
 
+        _top_level_stack.push(_block);
+
         initialize_core_types(r);
 
         for (const auto& source_file : session.source_files()) {
@@ -717,6 +721,8 @@ namespace basecode::compiler {
 
         session.post_processing(this);
 
+        _top_level_stack.pop();
+
         return !r.is_failed();
     }
 
@@ -724,14 +730,24 @@ namespace basecode::compiler {
         return _terp;
     }
 
+    compiler::block* program::block() {
+        return _block;
+    }
+
     bool program::compile_module(
             common::result& r,
             compiler::session& session,
             const std::filesystem::path& source_file) {
         session.raise_phase(session_compile_phase_t::start, source_file);
-        auto module_node = session.parse(r, source_file);
         session.listing().add_source_file(source_file.string());
-        evaluate(r, module_node);
+
+        auto module_node = session.parse(r, source_file);
+        if (module_node != nullptr) {
+            auto module = dynamic_cast<compiler::module*>(evaluate(r, module_node));
+            module->parent_element(this);
+            module->source_file(source_file);
+        }
+
         if (r.is_failed()) {
             session.raise_phase(session_compile_phase_t::failed, source_file);
             return false;
@@ -750,10 +766,6 @@ namespace basecode::compiler {
         return _elements;
     }
 
-    compiler::block* program::block() {
-        return _block;
-    }
-
     bool program::run(common::result& r) {
         while (!_terp->has_exited())
             if (!_terp->step(r))
@@ -767,39 +779,6 @@ namespace basecode::compiler {
         auto top = _scope_stack.top();
         _scope_stack.pop();
         return top;
-    }
-
-    bool program::is_subtree_constant(
-            const syntax::ast_node_shared_ptr& node) {
-        if (node == nullptr)
-            return false;
-
-        switch (node->type) {
-            case syntax::ast_node_types_t::expression: {
-                return is_subtree_constant(node->lhs);
-            }
-            case syntax::ast_node_types_t::assignment: {
-                return is_subtree_constant(node->rhs);
-            }
-            case syntax::ast_node_types_t::unary_operator: {
-                return is_subtree_constant(node->rhs);
-            }
-            case syntax::ast_node_types_t::binary_operator: {
-                return is_subtree_constant(node->lhs)
-                       && is_subtree_constant(node->rhs);
-            }
-            case syntax::ast_node_types_t::basic_block:
-            case syntax::ast_node_types_t::line_comment:
-            case syntax::ast_node_types_t::null_literal:
-            case syntax::ast_node_types_t::block_comment:
-            case syntax::ast_node_types_t::number_literal:
-            case syntax::ast_node_types_t::string_literal:
-            case syntax::ast_node_types_t::boolean_literal:
-            case syntax::ast_node_types_t::character_literal:
-                return true;
-            default:
-                return false;
-        }
     }
 
     alias* program::make_alias(
@@ -1287,7 +1266,7 @@ namespace basecode::compiler {
         });
 
         auto scope = symbol->is_qualified()
-            ? block()
+            ? _top_level_stack.top()
             : parent_scope != nullptr ? parent_scope : current_scope();
 
         auto namespaces = symbol->namespaces();
@@ -1426,7 +1405,7 @@ namespace basecode::compiler {
                 }
                 return true;
             };
-        return recursive_execute(root_block != nullptr ? root_block : block());
+        return recursive_execute(root_block != nullptr ? root_block : _top_level_stack.top());
     }
 
     void program::apply_attributes(
@@ -1509,6 +1488,15 @@ namespace basecode::compiler {
         scope->parent_element(type);
         _elements.add(type);
         return type;
+    }
+
+    module* program::make_module(
+            compiler::block* parent_scope,
+            compiler::block* scope) {
+        auto module_element = new compiler::module(parent_scope, scope);
+        _elements.add(module_element);
+        scope->parent_element(module_element);
+        return module_element;
     }
 
     compiler::block* program::make_block(
@@ -1810,7 +1798,7 @@ namespace basecode::compiler {
     compiler::type* program::find_type(const qualified_symbol_t& symbol) const {
         if (symbol.is_qualified()) {
             auto non_const_this = const_cast<compiler::program*>(this);
-            auto block_scope = non_const_this->block();
+            auto block_scope = non_const_this->_top_level_stack.top();
             for (const auto& namespace_name : symbol.namespaces) {
                 auto var = block_scope->identifiers().find(namespace_name);
                 if (var == nullptr || var->initializer() == nullptr)
@@ -1865,7 +1853,7 @@ namespace basecode::compiler {
 
     compiler::identifier* program::find_identifier(const qualified_symbol_t& symbol) {
         if (symbol.is_qualified()) {
-            auto block_scope = block();
+            auto block_scope = _top_level_stack.top();
             for (const auto& namespace_name : symbol.namespaces) {
                 auto var = block_scope->identifiers().find(namespace_name);
                 if (var == nullptr || var->initializer() == nullptr)

@@ -52,6 +52,7 @@ add_library(
         compiler/elements/label.cpp compiler/elements/label.h
         compiler/elements/alias.cpp compiler/elements/alias.h
         compiler/elements/import.cpp compiler/elements/import.h
+        compiler/elements/module.cpp compiler/elements/module.h
         compiler/elements/comment.cpp compiler/elements/comment.h
         compiler/bytecode_emitter.cpp compiler/bytecode_emitter.h
         compiler/elements/element.cpp compiler/elements/element.h
