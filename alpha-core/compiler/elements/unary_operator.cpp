@@ -64,6 +64,11 @@ namespace basecode::compiler {
         return _rhs != nullptr && _rhs->is_constant();
     }
 
+    void unary_operator::on_owned_elements(element_list_t& list) {
+        if (_rhs != nullptr)
+            list.emplace_back(_rhs);
+    }
+
     // XXX: this requires lots of future love
     compiler::type* unary_operator::on_infer_type(const compiler::program* program) {
         switch (operator_type()) {

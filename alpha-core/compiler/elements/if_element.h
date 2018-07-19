@@ -34,6 +34,8 @@ namespace basecode::compiler {
             common::result& r,
             emit_context_t& context) override;
 
+        void on_owned_elements(element_list_t& list) override;
+
     private:
         element* _predicate = nullptr;
         element* _true_branch = nullptr;

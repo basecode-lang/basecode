@@ -59,6 +59,11 @@ namespace basecode::compiler {
         return true;
     }
 
+    void namespace_element::on_owned_elements(element_list_t& list) {
+        if (_expression != nullptr)
+            list.emplace_back(_expression);
+    }
+
     compiler::type* namespace_element::on_infer_type(const compiler::program* program) {
         return program->find_type({.name = "namespace" });
     }

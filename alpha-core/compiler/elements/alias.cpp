@@ -23,4 +23,9 @@ namespace basecode::compiler {
         return _expression;
     }
 
+    void alias::on_owned_elements(element_list_t& list) {
+        if (_expression != nullptr)
+            list.emplace_back(_expression);
+    }
+
 };

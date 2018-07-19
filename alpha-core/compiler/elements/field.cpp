@@ -10,6 +10,7 @@
 // ----------------------------------------------------------------------------
 
 #include "field.h"
+#include "identifier.h"
 
 namespace basecode::compiler {
 
@@ -21,6 +22,11 @@ namespace basecode::compiler {
 
     compiler::identifier* field::identifier() {
         return _identifier;
+    }
+
+    void field::on_owned_elements(element_list_t& list) {
+        if (_identifier != nullptr)
+            list.emplace_back(_identifier);
     }
 
 };

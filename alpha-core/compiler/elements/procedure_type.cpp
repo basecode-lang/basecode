@@ -151,4 +151,15 @@ namespace basecode::compiler {
         return _instances;
     }
 
+    void procedure_type::on_owned_elements(element_list_t& list) {
+        if (_scope != nullptr)
+            list.emplace_back(_scope);
+
+        for (auto element : _returns.as_list())
+            list.emplace_back(element);
+
+        for (auto element : _parameters.as_list())
+            list.emplace_back(element);
+    }
+
 };

@@ -64,6 +64,11 @@ namespace basecode::compiler {
         return _reference;
     }
 
+    void procedure_call::on_owned_elements(element_list_t& list) {
+        if (_arguments != nullptr)
+            list.emplace_back(_arguments);
+    }
+
     void procedure_call::reference(compiler::identifier_reference* value) {
         _reference = value;
     }

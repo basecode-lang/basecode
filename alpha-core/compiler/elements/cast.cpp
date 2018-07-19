@@ -44,6 +44,11 @@ namespace basecode::compiler {
         return _type;
     }
 
+    void cast::on_owned_elements(element_list_t& list) {
+        if (_expression != nullptr)
+            list.emplace_back(_expression);
+    }
+
     compiler::type* cast::on_infer_type(const compiler::program* program) {
         return _type;
     }

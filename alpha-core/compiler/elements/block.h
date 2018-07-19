@@ -38,6 +38,8 @@ namespace basecode::compiler {
             common::result& r,
             emit_context_t& context) override;
 
+        void on_owned_elements(element_list_t& list) override;
+
     private:
         type_map_t _types {};
         block_list_t _blocks {};

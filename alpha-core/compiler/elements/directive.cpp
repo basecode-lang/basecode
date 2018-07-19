@@ -55,6 +55,11 @@ namespace basecode::compiler {
         return _name;
     }
 
+    void directive::on_owned_elements(element_list_t& list) {
+        if (_expression != nullptr)
+            list.emplace_back(_expression);
+    }
+
     ///////////////////////////////////////////////////////////////////////////
     //
     // run directive

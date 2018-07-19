@@ -29,6 +29,9 @@ namespace basecode::compiler {
 
         compiler::identifier* identifier();
 
+    protected:
+        void on_owned_elements(element_list_t& list) override;
+
     private:
         compiler::identifier* _identifier;
     };

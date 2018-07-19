@@ -47,4 +47,13 @@ namespace basecode::compiler {
         return _false_branch;
     }
 
+    void if_element::on_owned_elements(element_list_t& list) {
+        if (_predicate != nullptr)
+            list.emplace_back(_predicate);
+        if (_true_branch != nullptr)
+            list.emplace_back(_true_branch);
+        if (_false_branch != nullptr)
+            list.emplace_back(_false_branch);
+    }
+
 };

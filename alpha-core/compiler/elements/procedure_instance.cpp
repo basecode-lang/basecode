@@ -36,4 +36,9 @@ namespace basecode::compiler {
         return _procedure_type;
     }
 
+    void procedure_instance::on_owned_elements(element_list_t& list) {
+        if (_scope != nullptr)
+            list.emplace_back(_scope);
+    }
+
 };

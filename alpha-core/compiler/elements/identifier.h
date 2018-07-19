@@ -60,6 +60,8 @@ namespace basecode::compiler {
 
         bool on_as_string(std::string& value) const override;
 
+        void on_owned_elements(element_list_t& list) override;
+
     private:
         void emit_stack_based_load(
             vm::instruction_block* instruction_block);

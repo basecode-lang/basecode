@@ -127,6 +127,10 @@ namespace basecode::compiler {
         return false;
     }
 
+    void element::owned_elements(element_list_t& list) {
+        on_owned_elements(list);
+    }
+
     bool element::on_as_string(std::string& value) const {
         return false;
     }
@@ -135,6 +139,9 @@ namespace basecode::compiler {
         if (_parent_element == nullptr)
             return false;
         return _parent_element->element_type() == type;
+    }
+
+    void element::on_owned_elements(element_list_t& list) {
     }
 
     attribute* element::find_attribute(const std::string& name) {

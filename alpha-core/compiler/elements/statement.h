@@ -30,6 +30,8 @@ namespace basecode::compiler {
             common::result& r,
             emit_context_t& context) override;
 
+        void on_owned_elements(element_list_t& list) override;
+
     private:
         label_list_t _labels {};
         compiler::element* _expression = nullptr;

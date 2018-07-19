@@ -40,6 +40,8 @@ namespace basecode::compiler {
             common::result& r,
             compiler::program* program) override;
 
+        void on_owned_elements(element_list_t& list) override;
+
     private:
         field_map_t _fields {};
         composite_types_t _type;

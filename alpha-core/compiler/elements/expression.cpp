@@ -38,6 +38,11 @@ namespace basecode::compiler {
         return _root->is_constant();
     }
 
+    void expression::on_owned_elements(element_list_t& list) {
+        if (_root != nullptr)
+            list.emplace_back(_root);
+    }
+
     compiler::type* expression::on_infer_type(const compiler::program* program) {
         if (_root == nullptr)
             return nullptr;

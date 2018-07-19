@@ -11,6 +11,7 @@
 
 #include "type.h"
 #include "field.h"
+#include "symbol_element.h"
 
 namespace basecode::compiler {
 
@@ -18,7 +19,7 @@ namespace basecode::compiler {
         block* parent_scope,
         element_type_t type,
         compiler::symbol_element* symbol) : element(parent_scope, type),
-                                    _symbol(symbol) {
+                                            _symbol(symbol) {
     }
 
     bool type::initialize(
@@ -63,6 +64,11 @@ namespace basecode::compiler {
 
     void type::symbol(compiler::symbol_element* value) {
         _symbol = value;
+    }
+
+    void type::on_owned_elements(element_list_t& list) {
+        if (_symbol != nullptr)
+            list.emplace_back(_symbol);
     }
 
 };

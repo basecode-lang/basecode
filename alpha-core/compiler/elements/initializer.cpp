@@ -72,4 +72,9 @@ namespace basecode::compiler {
         return _expr->as_string(value);
     }
 
+    void initializer::on_owned_elements(element_list_t& list) {
+        if (_expr != nullptr)
+            list.emplace_back(_expr);
+    }
+
 };

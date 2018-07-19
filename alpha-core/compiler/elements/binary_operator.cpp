@@ -354,6 +354,13 @@ namespace basecode::compiler {
         instruction_block->free_reg(rhs_reg);
     }
 
+    void binary_operator::on_owned_elements(element_list_t& list) {
+        if (_lhs != nullptr)
+            list.emplace_back(_lhs);
+        if( _rhs != nullptr)
+            list.emplace_back(_rhs);
+    }
+
     // XXX: this needs lots of future love
     compiler::type* binary_operator::on_infer_type(const compiler::program* program) {
         switch (operator_type()) {

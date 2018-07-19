@@ -82,4 +82,9 @@ namespace basecode::compiler {
         return _elements;
     }
 
+    void argument_list::on_owned_elements(element_list_t& list) {
+        for (auto element : _elements)
+            list.emplace_back(element);
+    }
+
 };

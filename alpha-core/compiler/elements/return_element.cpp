@@ -44,4 +44,9 @@ namespace basecode::compiler {
         return _expressions;
     }
 
+    void return_element::on_owned_elements(element_list_t& list) {
+        for (auto element : _expressions)
+            list.emplace_back(element);
+    }
+
 };

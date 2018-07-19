@@ -29,7 +29,9 @@ namespace basecode::compiler {
     protected:
         bool on_emit(
             common::result& r,
-            emit_context_t& context);
+            emit_context_t& context) override;
+
+        void on_owned_elements(element_list_t& list) override;
 
     private:
         block* _scope = nullptr;

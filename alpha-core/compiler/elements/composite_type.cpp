@@ -10,6 +10,7 @@
 // ----------------------------------------------------------------------------
 
 #include "field.h"
+#include "block.h"
 #include "identifier.h"
 #include "composite_type.h"
 
@@ -56,6 +57,14 @@ namespace basecode::compiler {
 
     composite_types_t composite_type::type() const {
         return _type;
+    }
+
+    void composite_type::on_owned_elements(element_list_t& list) {
+        for (auto element : _fields.as_list())
+            list.emplace_back(element);
+
+        if (_scope != nullptr)
+            list.emplace_back(_scope);
     }
 
 };

@@ -1334,8 +1334,6 @@ namespace basecode::compiler {
                     init_expr = folded_expr;
                     auto old_expr = init->expression();
                     init->expression(init_expr);
-
-                    // XXX: need a better way to do this
                     _elements.remove(old_expr->id());
                 }
             }

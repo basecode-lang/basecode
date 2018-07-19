@@ -13,6 +13,7 @@
 #include <vm/assembler.h>
 #include <vm/instruction_block.h>
 #include "block.h"
+#include "comment.h"
 #include "statement.h"
 #include "initializer.h"
 #include "numeric_type.h"
@@ -102,6 +103,23 @@ namespace basecode::compiler {
 
     identifier_map_t& block::identifiers() {
         return _identifiers;
+    }
+
+    void block::on_owned_elements(element_list_t& list) {
+        for (auto element : _types.as_list())
+            list.emplace_back(element);
+
+        for (auto element : _blocks)
+            list.emplace_back(element);
+
+        for (auto element : _comments)
+            list.emplace_back(element);
+
+        for (auto element : _statements)
+            list.emplace_back(element);
+
+        for (auto element : _identifiers.as_list())
+            list.emplace_back(element);
     }
 
 };

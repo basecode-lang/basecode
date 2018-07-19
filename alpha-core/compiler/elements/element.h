@@ -68,6 +68,8 @@ namespace basecode::compiler {
 
         bool as_string(std::string& value) const;
 
+        void owned_elements(element_list_t& list);
+
         bool is_parent_element(element_type_t type);
 
         attribute* find_attribute(const std::string& name);
@@ -92,6 +94,8 @@ namespace basecode::compiler {
         virtual bool on_as_integer(uint64_t& value) const;
 
         virtual bool on_as_string(std::string& value) const;
+
+        virtual void on_owned_elements(element_list_t& list);
 
         virtual compiler::type* on_infer_type(const compiler::program* program);
 

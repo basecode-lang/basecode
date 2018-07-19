@@ -6,24 +6,10 @@ Basecode Bootstrap Tasks
 
 deps to bytecode generation
 ===========================
-- assignment needs to check is_constant on the rhs to determine if
-  a bin_op assignment is needed or if the value can be expressed directly
-
 - bytecode generation
     assembler:
-        * need to build out the api here
-        * when core types are added to the root scope, emit their ctor functions
-        * two parts for initializers: ctor function and callsite injection for init
-
-    data definitions:
-        * string interning
-        * encode constant parameters
-
-    basic block:
-        * how do blocks link to one another in sequence?
-        * @entry_point attribute link up.
-            have a single JMP at program_start that is patched with
-            designated entry_point function.
+        * initializers/finalizers
+        * procedure call/return stack frame
 
 - bytecode-to-native:
     * x64 and ARM 64
@@ -32,6 +18,8 @@ deps to bytecode generation
 
 lower priority
 ===========================
+- FIX: program::evaluate should handle applying attributes to almost everything
+
 - FIX: line comments within non-block contexts?
 
 - FIX: string, number, boolean literals aren't infix so pre-block comments don't work.
@@ -40,6 +28,11 @@ lower priority
     the_result := if x == 1 {
         return x * 2;
     };
+
+- directive execution: inline/post
+
+- inline assembly
+    #assembly { };
 
 - namespace importing
 
@@ -66,9 +59,6 @@ lower priority
 - struct
 
 - enum
-
-- inline assembly
-    #assembly { };
 
 - array_literal
 
@@ -136,8 +126,15 @@ DONE
     * compiler::string_type, compiler::array_type, compiler::any_type should
       inherit from compiler::composite_type and initialize should
       set up their fields.
+    * string interning
+    * encode constant parameters
 - FIX: graph generator is not escaping quotes
 - use initializer to handle custom construction of values?
 - basic block:
     * emit actual instructions for block behavior
     * local variables/parameters on stack
+        * how do blocks link to one another in sequence?
+- assignment needs to check is_constant on the rhs to determine if
+  a bin_op assignment is needed or if the value can be expressed directly
+- assembler:
+    * need to build out the api here

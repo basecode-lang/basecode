@@ -160,6 +160,13 @@ namespace basecode::compiler {
         return _initializer->as_string(value);
     }
 
+    void identifier::on_owned_elements(element_list_t& list) {
+        if (_initializer != nullptr)
+            list.emplace_back(_initializer);
+        if( _symbol != nullptr)
+            list.emplace_back(_symbol);
+    }
+
     void identifier::initializer(compiler::initializer* value) {
         _initializer = value;
     }

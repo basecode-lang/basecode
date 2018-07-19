@@ -49,6 +49,8 @@ namespace basecode::compiler {
 
         void size_in_bytes(size_t value);
 
+        void on_owned_elements(element_list_t& list) override;
+
     private:
         bool _packed = false;
         size_t _alignment = 0;

@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include "label.h"
 #include "statement.h"
 
 namespace basecode::compiler {
@@ -36,6 +37,14 @@ namespace basecode::compiler {
 
     label_list_t& statement::labels() {
         return _labels;
+    }
+
+    void statement::on_owned_elements(element_list_t& list) {
+        if (_expression != nullptr)
+            list.emplace_back(_expression);
+
+        for (auto element : _labels)
+            list.emplace_back(element);
     }
 
 };
