@@ -9,6 +9,8 @@
 //
 // ----------------------------------------------------------------------------
 
+#load "../examples/preload.bc";
+
 @library "libalpha-core.dylib";
 #foreign print := proc(format:string, values:...any) @alias "fmt_print";
 
@@ -17,12 +19,6 @@ print("%s\n", "at the very top!");
 alpha::compiler::config := ns {
     fibonacci := ns {
         constant length_of_sequence := 1000;
-    };
-
-    vector3 := struct {
-        x:f64;
-        y:f64;
-        z:f64;
     };
 };
 
@@ -40,7 +36,7 @@ alpha::compiler::examples := ns {
 
     is_this_true := count == (max == 256) && count == (max / 2);
 
-    point:alpha::compiler::config::vector3;
+    //point:basecode::linear::vector3;
 
     bar := proc() {
         bing(256);

@@ -89,7 +89,6 @@ namespace basecode::compiler {
     void session::post_processing(compiler::program* program) {
         if (_options.verbose && !_options.dom_graph_file.empty()) {
             write_code_dom_graph(program, _options.dom_graph_file);
-            program->disassemble(_listing);
         }
     }
 

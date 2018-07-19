@@ -11,6 +11,7 @@
 
 #pragma once
 
+#include <stack>
 #include <string>
 #include <vector>
 
@@ -52,11 +53,16 @@ namespace basecode::vm {
 
         void write(FILE* file);
 
+        void pop_source_file();
+
+        void push_source_file(size_t index);
+
         listing_source_file_t* current_source_file();
 
-        void add_source_file(const std::string& filename);
+        size_t add_source_file(const std::string& filename);
 
     private:
+        std::stack<size_t> _source_file_stack {};
         std::vector<listing_source_file_t> _source_files {};
     };
 

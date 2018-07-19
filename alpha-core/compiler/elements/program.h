@@ -49,7 +49,7 @@ namespace basecode::compiler {
 
         bool run(common::result& r);
 
-        void disassemble(vm::assembly_listing& listing);
+        void disassemble(vm::listing_source_file_t* source_file);
 
         compiler::type* find_type(const qualified_symbol_t& symbol) const;
 
@@ -127,6 +127,7 @@ namespace basecode::compiler {
 
         void apply_attributes(
             common::result& r,
+            compiler::session& session,
             compiler::element* element,
             const syntax::ast_node_shared_ptr& node);
 
@@ -179,6 +180,7 @@ namespace basecode::compiler {
 
         void add_procedure_instance(
             common::result& r,
+            compiler::session& session,
             compiler::procedure_type* proc_type,
             const syntax::ast_node_shared_ptr& node);
 
@@ -226,6 +228,7 @@ namespace basecode::compiler {
 
         void add_composite_type_fields(
             common::result& r,
+            compiler::session& session,
             compiler::composite_type* type,
             const syntax::ast_node_shared_ptr& block);
 
@@ -302,10 +305,12 @@ namespace basecode::compiler {
 
         compiler::element* resolve_symbol_or_evaluate(
             common::result& r,
+            compiler::session& session,
             const syntax::ast_node_shared_ptr& node);
 
         compiler::identifier* add_identifier_to_scope(
             common::result& r,
+            compiler::session& session,
             compiler::symbol_element* symbol,
             type_find_result_t& find_type_result,
             const syntax::ast_node_shared_ptr& node,
@@ -336,12 +341,14 @@ namespace basecode::compiler {
     private:
         element* evaluate_in_scope(
             common::result& r,
+            compiler::session& session,
             const syntax::ast_node_shared_ptr& node,
             compiler::block* scope,
             element_type_t default_block_type = element_type_t::block);
 
         element* evaluate(
             common::result& r,
+            compiler::session& session,
             const syntax::ast_node_shared_ptr& node,
             element_type_t default_block_type = element_type_t::block);
 

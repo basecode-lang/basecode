@@ -18,7 +18,15 @@ namespace basecode::vm {
     }
 
     void assembly_listing::reset() {
+        while (!_source_file_stack.empty())
+            _source_file_stack.pop();
         _source_files.clear();
+    }
+
+    void assembly_listing::pop_source_file() {
+        if (_source_file_stack.empty())
+            return;
+        _source_file_stack.pop();
     }
 
     void assembly_listing::write(FILE* file) {
@@ -41,16 +49,21 @@ namespace basecode::vm {
         }
     }
 
-    listing_source_file_t* assembly_listing::current_source_file() {
-        if (_source_files.empty())
-            return nullptr;
-        return &_source_files.back();
+    void assembly_listing::push_source_file(size_t index) {
+        _source_file_stack.push(index);
     }
 
-    void assembly_listing::add_source_file(const std::string& filename) {
+    listing_source_file_t* assembly_listing::current_source_file() {
+        if (_source_file_stack.empty())
+            return nullptr;
+        return &_source_files[_source_file_stack.top()];
+    }
+
+    size_t assembly_listing::add_source_file(const std::string& filename) {
         if (_source_files.capacity() < 256)
             _source_files.reserve(256);
         _source_files.push_back(listing_source_file_t {.filename = filename});
+        return _source_files.size() - 1;
     }
 
 };

@@ -1141,15 +1141,9 @@ namespace basecode::vm {
         _blocks.push_back(block);
     }
 
-    void instruction_block::disassemble(assembly_listing& listing) {
-        disassemble(listing, this);
-    }
-
     void instruction_block::disassemble(
-            assembly_listing& listing,
-            instruction_block* block) {
-        auto source_file = listing.current_source_file();
-
+            instruction_block* block,
+            listing_source_file_t* source_file) {
         size_t index = 0;
         for (auto& entry : block->_entries) {
             source_file->add_blank_lines(entry.blank_lines());
@@ -1253,7 +1247,7 @@ namespace basecode::vm {
         }
 
         for (auto child_block : block->_blocks)
-            disassemble(listing, child_block);
+            disassemble(child_block, source_file);
     }
 
     void instruction_block::remove_block(instruction_block* block) {
@@ -1325,6 +1319,10 @@ namespace basecode::vm {
             | operand_encoding_t::flags::unresolved;
         jmp_op.operands[0].value.u64 = label_ref->id;
         make_block_entry(jmp_op);
+    }
+
+    void instruction_block::disassemble(listing_source_file_t* source_file) {
+        disassemble(this, source_file);
     }
 
     label_ref_t* instruction_block::find_unresolved_label_up(common::id_t id) {

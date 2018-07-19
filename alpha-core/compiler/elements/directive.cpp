@@ -31,20 +31,22 @@ namespace basecode::compiler {
 
     bool directive::evaluate(
             common::result& r,
+            compiler::session& session,
             compiler::program* program) {
         auto it = s_evaluate_handlers.find(_name);
         if (it == s_evaluate_handlers.end())
             return true;
-        return it->second(this, r, program);
+        return it->second(this, r, session, program);
     }
 
     bool directive::execute(
             common::result& r,
+            compiler::session& session,
             compiler::program* program) {
         auto it = s_execute_handlers.find(_name);
         if (it == s_execute_handlers.end())
             return true;
-        return it->second(this, r, program);
+        return it->second(this, r, session, program);
     }
 
     element* directive::expression() {
@@ -66,12 +68,14 @@ namespace basecode::compiler {
 
     bool directive::on_execute_run(
             common::result& r,
+            compiler::session& session,
             compiler::program* program) {
         return true;
     }
 
     bool directive::on_evaluate_run(
             common::result& r,
+            compiler::session& session,
             compiler::program* program) {
         return true;
     }
@@ -82,14 +86,17 @@ namespace basecode::compiler {
 
     bool directive::on_execute_load(
             common::result& r,
+            compiler::session& session,
             compiler::program* program) {
         return true;
     }
 
     bool directive::on_evaluate_load(
             common::result& r,
+            compiler::session& session,
             compiler::program* program) {
-        return true;
+        auto source_file = dynamic_cast<compiler::string_literal*>(_expression);
+        return program->compile_module(r, session, source_file->value());
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -98,6 +105,7 @@ namespace basecode::compiler {
 
     bool directive::on_execute_foreign(
             common::result& r,
+            compiler::session& session,
             compiler::program* program) {
         auto terp = program->terp();
 
@@ -153,6 +161,7 @@ namespace basecode::compiler {
 
     bool directive::on_evaluate_foreign(
             common::result& r,
+            compiler::session& session,
             compiler::program* program) {
         auto proc_identifier = dynamic_cast<compiler::identifier*>(_expression);
         auto proc_type = proc_identifier->initializer()->procedure_type();

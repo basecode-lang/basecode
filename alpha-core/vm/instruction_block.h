@@ -177,13 +177,13 @@ namespace basecode::vm {
 
         void add_block(instruction_block* block);
 
-        void disassemble(assembly_listing& listing);
-
         void remove_block(instruction_block* block);
 
         vm::label* make_label(const std::string& name);
 
-    // register allocators
+        void disassemble(listing_source_file_t* source_file);
+
+        // register allocators
     public:
         void free_reg(i_registers_t reg);
 
@@ -803,8 +803,8 @@ namespace basecode::vm {
 
     private:
         void disassemble(
-            assembly_listing& listing,
-            instruction_block* block);
+            instruction_block* block,
+            listing_source_file_t* source_file);
 
         label_ref_t* find_unresolved_label_up(common::id_t id);
 
