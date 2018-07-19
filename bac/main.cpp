@@ -126,14 +126,11 @@ int main(int argc, char** argv) {
 
     high_resolution_clock::time_point start = high_resolution_clock::now();
 
-    basecode::compiler::bytecode_emitter_options_t compiler_options {
-        .verbose = verbose_flag,
+    basecode::compiler::bytecode_emitter_options_t emitter_options {
         .heap_size = heap_size,
         .stack_size = stack_size,
-        .ast_graph_file_name = ast_graph_file_name,
-        .code_dom_graph_file_name = code_dom_graph_file_name,
     };
-    basecode::compiler::bytecode_emitter compiler(compiler_options);
+    basecode::compiler::bytecode_emitter compiler(emitter_options);
     basecode::common::result r;
     int rc = 0;
 
@@ -150,16 +147,38 @@ int main(int argc, char** argv) {
             usage();
             rc = 1;
         } else {
-            basecode::vm::assembly_listing listing {};
-            if (!compiler.compile_files(r, listing, source_files)) {
+            basecode::compiler::session_options_t session_options {
+                .verbose = verbose_flag,
+                .ast_graph_file = ast_graph_file_name,
+                .dom_graph_file = code_dom_graph_file_name,
+                .compile_callback = [&](
+                        basecode::compiler::session_compile_phase_t phase,
+                        const std::filesystem::path& source_file) {
+                    switch (phase) {
+                        case basecode::compiler::session_compile_phase_t::start:
+                            fmt::print("compile: {} ... ", source_file.string());
+                            break;
+                        case basecode::compiler::session_compile_phase_t::success:
+                            fmt::print("ok.\n");
+                            break;
+                        case basecode::compiler::session_compile_phase_t::failed:
+                            fmt::print("failed.\n");
+                            break;
+                    }
+                }
+            };
+            basecode::compiler::session compilation_session(
+                session_options,
+                source_files);
+            if (!compiler.compile(r, compilation_session)) {
                 rc = 1;
             } else {
                 high_resolution_clock::time_point end = high_resolution_clock::now();
                 auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
                 fmt::print("compilation time (in μs): {}\n", duration);
                 fmt::print("\n");
-                listing.write(stdout);
-            }
+                compilation_session.finalize();
+           }
         }
     }
 

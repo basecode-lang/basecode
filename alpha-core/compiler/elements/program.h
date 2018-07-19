@@ -14,6 +14,7 @@
 #include <functional>
 #include <parser/ast.h>
 #include <common/id_pool.h>
+#include <compiler/session.h>
 #include <vm/assembly_listing.h>
 #include "element.h"
 #include "element_map.h"
@@ -37,17 +38,18 @@ namespace basecode::compiler {
 
         bool compile(
             common::result& r,
-            vm::assembly_listing& listing,
-            const syntax::ast_node_shared_ptr& root);
+            compiler::session& session);
 
         bool compile_module(
             common::result& r,
-            vm::assembly_listing& listing,
-            const syntax::ast_node_shared_ptr& root);
+            compiler::session& session,
+            const std::filesystem::path& source_file);
 
         element_map& elements();
 
         bool run(common::result& r);
+
+        void disassemble(vm::assembly_listing& listing);
 
         compiler::type* find_type(const qualified_symbol_t& symbol) const;
 

@@ -13,7 +13,8 @@
 
 #include <set>
 #include <map>
-#include <compiler/elements/element.h>
+#include <cstdio>
+#include "elements/element_types.h"
 
 namespace basecode::compiler {
 
@@ -21,7 +22,7 @@ namespace basecode::compiler {
     public:
         code_dom_formatter(
             const compiler::program* program_element,
-            FILE* file);
+            FILE* output_file);
 
         void format(const std::string& title);
 

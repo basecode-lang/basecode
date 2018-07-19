@@ -15,9 +15,7 @@
 #include <cstdint>
 #include <vm/terp.h>
 #include <filesystem>
-#include <parser/parser.h>
-#include <vm/assembly_listing.h>
-#include <compiler/elements/element_types.h>
+#include "session.h"
 
 //
 // basecode heap (as seen by the terp)
@@ -59,11 +57,8 @@
 namespace basecode::compiler {
 
     struct bytecode_emitter_options_t {
-        bool verbose = false;
         size_t heap_size = 0;
         size_t stack_size = 0;
-        std::filesystem::path ast_graph_file_name {};
-        std::filesystem::path code_dom_graph_file_name {};
     };
 
     class bytecode_emitter {
@@ -74,25 +69,9 @@ namespace basecode::compiler {
 
         bool compile(
             common::result& r,
-            vm::assembly_listing& listing,
-            std::istream& input);
-
-        bool compile_stream(
-            common::result& r,
-            vm::assembly_listing& listing,
-            std::istream& input);
-
-        bool compile_files(
-            common::result& r,
-            vm::assembly_listing& listing,
-            const std::vector<std::filesystem::path>& source_files);
+            compiler::session& session);
 
         bool initialize(common::result& r);
-
-    private:
-        void write_code_dom_graph(
-            const std::filesystem::path& path,
-            const compiler::program* program);
 
     private:
         vm::terp _terp;

@@ -682,15 +682,16 @@ namespace basecode::compiler {
 
     bool program::compile(
             common::result& r,
-            vm::assembly_listing& listing,
-            const syntax::ast_node_shared_ptr& root) {
+            compiler::session& session) {
         _block = push_new_block();
         _block->parent_element(this);
 
         initialize_core_types(r);
 
-        if (!compile_module(r, listing, root))
-            return false;
+        for (const auto& source_file : session.source_files()) {
+            if (!compile_module(r, session, source_file))
+                return false;
+        }
 
         auto directives = elements().find_by_type(element_type_t::directive);
         for (auto directive : directives) {
@@ -712,10 +713,9 @@ namespace basecode::compiler {
             // XXX: encode to terp
 
             // XXX: execute #run directives
-
-            auto root_block = _assembler.root_block();
-            root_block->disassemble(listing);
         }
+
+        session.post_processing(this);
 
         return !r.is_failed();
     }
@@ -726,10 +726,24 @@ namespace basecode::compiler {
 
     bool program::compile_module(
             common::result& r,
-            vm::assembly_listing& listing,
-            const syntax::ast_node_shared_ptr& root) {
-        evaluate(r, root);
-        return !r.is_failed();
+            compiler::session& session,
+            const std::filesystem::path& source_file) {
+        session.raise_phase(session_compile_phase_t::start, source_file);
+        auto module_node = session.parse(r, source_file);
+        session.listing().add_source_file(source_file.string());
+        evaluate(r, module_node);
+        if (r.is_failed()) {
+            session.raise_phase(session_compile_phase_t::failed, source_file);
+            return false;
+        } else {
+            session.raise_phase(session_compile_phase_t::success, source_file);
+            return true;
+        }
+    }
+
+    void program::disassemble(vm::assembly_listing& listing) {
+        auto root_block = _assembler.root_block();
+        root_block->disassemble(listing);
     }
 
     element_map& program::elements() {

@@ -52,8 +52,8 @@ namespace basecode::compiler {
 
     code_dom_formatter::code_dom_formatter(
             const compiler::program* program_element,
-            FILE* file) : _file(file),
-                          _program(program_element) {
+            FILE* output_file) : _file(output_file),
+                                 _program(program_element) {
     }
 
     void code_dom_formatter::add_primary_edge(

@@ -44,6 +44,7 @@ add_library(
         vm/instruction_block.cpp vm/instruction_block.h
         vm/register_allocator.cpp vm/register_allocator.h
 
+        compiler/session.cpp compiler/session.h
         compiler/elements/type.cpp compiler/elements/type.h
         compiler/elements/cast.cpp compiler/elements/cast.h
         compiler/elements/field.cpp compiler/elements/field.h
