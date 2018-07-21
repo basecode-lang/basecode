@@ -58,6 +58,10 @@ namespace basecode::vm {
         _entries.push_back(block_entry_t());
     }
 
+    void instruction_block::disassemble() {
+        disassemble(this);
+    }
+
     void instruction_block::clear_blocks() {
         _blocks.clear();
     }
@@ -1141,9 +1145,11 @@ namespace basecode::vm {
         _blocks.push_back(block);
     }
 
-    void instruction_block::disassemble(
-            instruction_block* block,
-            listing_source_file_t* source_file) {
+    void instruction_block::disassemble(instruction_block* block) {
+        auto source_file = block->source_file();
+        if (source_file == nullptr)
+            return;
+
         size_t index = 0;
         for (auto& entry : block->_entries) {
             source_file->add_blank_lines(entry.blank_lines());
@@ -1247,7 +1253,7 @@ namespace basecode::vm {
         }
 
         for (auto child_block : block->_blocks)
-            disassemble(child_block, source_file);
+            disassemble(child_block);
     }
 
     void instruction_block::remove_block(instruction_block* block) {
@@ -1321,8 +1327,8 @@ namespace basecode::vm {
         make_block_entry(jmp_op);
     }
 
-    void instruction_block::disassemble(listing_source_file_t* source_file) {
-        disassemble(this, source_file);
+    listing_source_file_t* instruction_block::source_file() {
+        return _source_file;
     }
 
     label_ref_t* instruction_block::find_unresolved_label_up(common::id_t id) {
@@ -1682,6 +1688,10 @@ namespace basecode::vm {
 
     void instruction_block::make_block_entry(const align_t& align) {
         _entries.push_back(block_entry_t(align));
+    }
+
+    void instruction_block::source_file(listing_source_file_t* value) {
+        _source_file = value;
     }
 
     void instruction_block::make_block_entry(const section_t& section) {

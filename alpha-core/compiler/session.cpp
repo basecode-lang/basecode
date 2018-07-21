@@ -18,11 +18,18 @@ namespace basecode::compiler {
 
     session::session(
             const session_options_t& options,
-            const path_list_t& source_files) : _source_files(source_files),
+            const path_list_t& source_files) : _terp(options.heap_size, options.stack_size),
+                                               _assembler(&_terp),
+                                               _program(&_terp, &_assembler),
+                                               _source_files(source_files),
                                                _options(options) {
     }
 
     session::~session() {
+    }
+
+    vm::terp& session::terp() {
+        return _terp;
     }
 
     void session::raise_phase(
@@ -34,23 +41,29 @@ namespace basecode::compiler {
     }
 
     void session::finalize() {
-        _listing.write(stdout);
+        if (_options.verbose) {
+            _program.disassemble(stdout);
+            if (!_options.dom_graph_file.empty())
+                write_code_dom_graph(_options.dom_graph_file);
+        }
     }
 
-    void session::write_code_dom_graph(
-            compiler::program* program,
-            const std::filesystem::path& path) {
-        FILE* output_file = nullptr;
-        if (!path.empty()) {
-            output_file = fopen(path.c_str(), "wt");
-        }
-        defer({
-            if (output_file != nullptr)
-                fclose(output_file);
-        });
+    vm::assembler& session::assembler() {
+        return _assembler;
+    }
 
-        compiler::code_dom_formatter formatter(program, output_file);
-        formatter.format(fmt::format("Code DOM Graph: {}", path.string()));
+    compiler::program& session::program() {
+        return _program;
+    }
+
+    bool session::compile(common::result& r) {
+        return _program.compile(r, *this);
+    }
+
+    bool session::initialize(common::result& r) {
+        _terp.initialize(r);
+        _assembler.initialize(r);
+        return !r.is_failed();
     }
 
     syntax::ast_node_shared_ptr session::parse(
@@ -74,10 +87,6 @@ namespace basecode::compiler {
         return nullptr;
     }
 
-    vm::assembly_listing& session::listing() {
-        return _listing;
-    }
-
     const path_list_t& session::source_files() const {
         return _source_files;
     }
@@ -86,10 +95,18 @@ namespace basecode::compiler {
         return _options;
     }
 
-    void session::post_processing(compiler::program* program) {
-        if (_options.verbose && !_options.dom_graph_file.empty()) {
-            write_code_dom_graph(program, _options.dom_graph_file);
+    void session::write_code_dom_graph(const std::filesystem::path& path) {
+        FILE* output_file = nullptr;
+        if (!path.empty()) {
+            output_file = fopen(path.c_str(), "wt");
         }
+        defer({
+            if (output_file != nullptr)
+                fclose(output_file);
+        });
+
+        compiler::code_dom_formatter formatter(&_program, output_file);
+        formatter.format(fmt::format("Code DOM Graph: {}", path.string()));
     }
 
 };

@@ -11,7 +11,7 @@
 
 #include <vm/terp.h>
 #include <filesystem>
-#include "program.h"
+#include <compiler/session.h>
 #include "attribute.h"
 #include "directive.h"
 #include "initializer.h"

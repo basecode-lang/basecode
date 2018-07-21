@@ -14,7 +14,7 @@
 #include <set>
 #include <map>
 #include <cstdio>
-#include "elements/element_types.h"
+#include "compiler_types.h"
 
 namespace basecode::compiler {
 

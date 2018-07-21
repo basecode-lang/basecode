@@ -16,7 +16,6 @@
 namespace basecode::vm {
 
     assembler::assembler(vm::terp* terp) : _terp(terp) {
-        _location_counter = _terp->heap_vector(heap_vectors_t::program_start);
     }
 
     assembler::~assembler() {
@@ -62,6 +61,10 @@ namespace basecode::vm {
         return top;
     }
 
+    vm::assembly_listing& assembler::listing() {
+        return _listing;
+    }
+
     bool assembler::in_procedure_scope() const {
         return _procedure_block_count > 0;
     }
@@ -78,6 +81,11 @@ namespace basecode::vm {
         return _blocks.front();
     }
 
+    bool assembler::initialize(common::result& r) {
+        _location_counter = _terp->heap_vector(heap_vectors_t::program_start);
+        return true;
+    }
+
     instruction_block* assembler::current_block() {
         if (_block_stack.empty())
             return nullptr;
@@ -91,6 +99,9 @@ namespace basecode::vm {
     }
 
     void assembler::add_new_block(instruction_block* block) {
+        auto source_file = _listing.current_source_file();
+        if (source_file != nullptr)
+            block->source_file(source_file);
         _blocks.push_back(block);
         auto top_block = current_block();
         if (top_block != nullptr)

@@ -163,6 +163,8 @@ namespace basecode::vm {
     public:
         void memo();
 
+        void disassemble();
+
         void clear_blocks();
 
         void clear_entries();
@@ -173,6 +175,8 @@ namespace basecode::vm {
 
         block_entry_t* current_entry();
 
+        listing_source_file_t* source_file();
+
         instruction_block_type_t type() const;
 
         void add_block(instruction_block* block);
@@ -181,7 +185,7 @@ namespace basecode::vm {
 
         vm::label* make_label(const std::string& name);
 
-        void disassemble(listing_source_file_t* source_file);
+        void source_file(listing_source_file_t* value);
 
         // register allocators
     public:
@@ -802,9 +806,7 @@ namespace basecode::vm {
         void make_push_instruction(op_sizes size, f_registers_t reg);
 
     private:
-        void disassemble(
-            instruction_block* block,
-            listing_source_file_t* source_file);
+        void disassemble(instruction_block* block);
 
         label_ref_t* find_unresolved_label_up(common::id_t id);
 
@@ -818,6 +820,7 @@ namespace basecode::vm {
         instruction_block* _parent = nullptr;
         std::vector<block_entry_t> _entries {};
         std::vector<instruction_block*> _blocks {};
+        vm::listing_source_file_t* _source_file = nullptr;
         std::stack<target_register_t> _target_registers {};
         std::unordered_map<std::string, vm::label*> _labels {};
         register_allocator_t<i_registers_t> _i_register_allocator {};

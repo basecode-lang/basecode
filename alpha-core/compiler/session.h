@@ -13,33 +13,16 @@
 
 #include <cstdio>
 #include <string>
+#include <vm/terp.h>
 #include <filesystem>
 #include <fmt/format.h>
+#include <vm/assembler.h>
 #include <common/defer.h>
 #include <parser/parser.h>
-#include <vm/assembly_listing.h>
-#include "elements/element_types.h"
+#include "compiler_types.h"
+#include "elements/program.h"
 
 namespace basecode::compiler {
-
-    using path_list_t = std::vector<std::filesystem::path>;
-
-    enum class session_compile_phase_t : uint8_t {
-        start,
-        success,
-        failed
-    };
-
-    using session_compile_callback = std::function<void (
-        session_compile_phase_t,
-        const std::filesystem::path&)>;
-
-    struct session_options_t {
-        bool verbose = false;
-        std::filesystem::path ast_graph_file;
-        std::filesystem::path dom_graph_file;
-        session_compile_callback compile_callback;
-    };
 
     class session {
     public:
@@ -51,31 +34,37 @@ namespace basecode::compiler {
 
         void finalize();
 
+        vm::terp& terp();
+
         void raise_phase(
             session_compile_phase_t phase,
             const std::filesystem::path& source_file);
 
-        vm::assembly_listing& listing();
+        vm::assembler& assembler();
+
+        compiler::program& program();
+
+        bool compile(common::result& r);
 
         syntax::ast_node_shared_ptr parse(
             common::result& r,
             const std::filesystem::path& source_file);
 
+        bool initialize(common::result& r);
+
         const path_list_t& source_files() const;
 
         const session_options_t& options() const;
 
-        void post_processing(compiler::program* program);
+    private:
+        void write_code_dom_graph(const std::filesystem::path& path);
 
     private:
-        void write_code_dom_graph(
-            compiler::program* program,
-            const std::filesystem::path& path);
-
-    private:
+        vm::terp _terp;
+        vm::assembler _assembler;
+        compiler::program _program;
         path_list_t _source_files {};
         session_options_t _options {};
-        vm::assembly_listing _listing {};
     };
 
 };

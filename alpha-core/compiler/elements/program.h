@@ -14,8 +14,7 @@
 #include <functional>
 #include <parser/ast.h>
 #include <common/id_pool.h>
-#include <compiler/session.h>
-#include <vm/assembly_listing.h>
+#include <compiler/compiler_types.h>
 #include "element.h"
 #include "element_map.h"
 
@@ -32,7 +31,9 @@ namespace basecode::compiler {
 
     class program : public element {
     public:
-        explicit program(vm::terp* terp);
+        program(
+            vm::terp* terp,
+            vm::assembler* assembler);
 
         ~program() override;
 
@@ -49,7 +50,7 @@ namespace basecode::compiler {
 
         bool run(common::result& r);
 
-        void disassemble(vm::listing_source_file_t* source_file);
+        void disassemble(FILE* file);
 
         compiler::type* find_type(const qualified_symbol_t& symbol) const;
 
@@ -369,10 +370,10 @@ namespace basecode::compiler {
         bool within_procedure_scope(compiler::block* parent_scope = nullptr) const;
 
     private:
-        vm::assembler _assembler;
         element_map _elements {};
         vm::terp* _terp = nullptr;
         compiler::block* _block = nullptr;
+        vm::assembler* _assembler = nullptr;
         std::stack<compiler::block*> _scope_stack {};
         std::stack<compiler::block*> _top_level_stack {};
         identifier_list_t _identifiers_with_unknown_types {};

@@ -17,6 +17,7 @@
 #include <common/result.h>
 #include <common/id_pool.h>
 #include "segment.h"
+#include "assembly_listing.h"
 
 namespace basecode::vm {
 
@@ -45,9 +46,13 @@ namespace basecode::vm {
 
         instruction_block* root_block();
 
+        vm::assembly_listing& listing();
+
         bool in_procedure_scope() const;
 
         segment_list_t segments() const;
+
+        bool initialize(common::result& r);
 
         instruction_block* current_block();
 
@@ -65,6 +70,7 @@ namespace basecode::vm {
     private:
         vm::terp* _terp = nullptr;
         uint64_t _location_counter = 0;
+        vm::assembly_listing _listing {};
         uint32_t _procedure_block_count = 0;
         std::vector<instruction_block*> _blocks {};
         std::stack<instruction_block*> _block_stack {};

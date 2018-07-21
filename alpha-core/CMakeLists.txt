@@ -44,6 +44,7 @@ add_library(
         vm/instruction_block.cpp vm/instruction_block.h
         vm/register_allocator.cpp vm/register_allocator.h
 
+        compiler/compiler_types.h
         compiler/session.cpp compiler/session.h
         compiler/elements/type.cpp compiler/elements/type.h
         compiler/elements/cast.cpp compiler/elements/cast.h
@@ -54,7 +55,6 @@ add_library(
         compiler/elements/import.cpp compiler/elements/import.h
         compiler/elements/module.cpp compiler/elements/module.h
         compiler/elements/comment.cpp compiler/elements/comment.h
-        compiler/bytecode_emitter.cpp compiler/bytecode_emitter.h
         compiler/elements/element.cpp compiler/elements/element.h
         compiler/elements/program.cpp compiler/elements/program.h
         compiler/elements/any_type.cpp compiler/elements/any_type.h

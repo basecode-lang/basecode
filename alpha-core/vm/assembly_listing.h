@@ -14,6 +14,8 @@
 #include <stack>
 #include <string>
 #include <vector>
+#include <filesystem>
+#include <unordered_map>
 
 namespace basecode::vm {
 
@@ -41,7 +43,7 @@ namespace basecode::vm {
             }
         }
 
-        std::string filename;
+        std::filesystem::path path;
         std::vector<listing_source_line_t> lines {};
     };
 
@@ -53,17 +55,15 @@ namespace basecode::vm {
 
         void write(FILE* file);
 
-        void pop_source_file();
-
-        void push_source_file(size_t index);
-
         listing_source_file_t* current_source_file();
 
-        size_t add_source_file(const std::string& filename);
+        void add_source_file(const std::filesystem::path& path);
+
+        void select_source_file(const std::filesystem::path& path);
 
     private:
-        std::stack<size_t> _source_file_stack {};
-        std::vector<listing_source_file_t> _source_files {};
+        listing_source_file_t* _current_source_file = nullptr;
+        std::unordered_map<std::string, listing_source_file_t> _source_files {};
     };
 
 };

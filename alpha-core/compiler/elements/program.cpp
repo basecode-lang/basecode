@@ -13,6 +13,7 @@
 #include <fmt/format.h>
 #include <vm/assembler.h>
 #include <common/defer.h>
+#include <compiler/session.h>
 #include <vm/instruction_block.h>
 #include "type.h"
 #include "cast.h"
@@ -21,7 +22,6 @@
 #include "import.h"
 #include "module.h"
 #include "comment.h"
-#include "program.h"
 #include "any_type.h"
 #include "attribute.h"
 #include "directive.h"
@@ -55,24 +55,21 @@
 
 namespace basecode::compiler {
 
-    program::program(vm::terp* terp) : element(nullptr, element_type_t::program),
-                                       _assembler(terp),
-                                       _terp(terp) {
+    program::program(
+        vm::terp* terp,
+        vm::assembler* assembler) : element(nullptr, element_type_t::program),
+                                    _terp(terp),
+                                    _assembler(assembler) {
     }
 
     program::~program() {
     }
 
-    element* program::evaluate_in_scope(
-            common::result& r,
-            compiler::session& session,
-            const syntax::ast_node_shared_ptr& node,
-            compiler::block* scope,
-            element_type_t default_block_type) {
-        push_scope(scope);
-        auto result = evaluate(r, session, node, default_block_type);
-        pop_scope();
-        return result;
+    void program::disassemble(FILE* file) {
+        auto root_block = _assembler->root_block();
+        root_block->disassemble();
+        if (file != nullptr)
+            _assembler->listing().write(file);
     }
 
     element* program::evaluate(
@@ -724,15 +721,19 @@ namespace basecode::compiler {
             return false;
 
         if (!r.is_failed()) {
-            emit_context_t context(_terp, &_assembler, this);
+            // XXX: this works for now; eventually need to fix this
+            //      so instructions align with original source files
+            auto& listing = _assembler->listing();
+            listing.add_source_file("top_level.basm");
+            listing.select_source_file("top_level.basm");
+
+            emit_context_t context(_terp, _assembler, this);
             emit(r, context);
 
             // XXX: encode to terp
 
             // XXX: execute #run directives
         }
-
-        session.post_processing(this);
 
         _top_level_stack.pop();
 
@@ -751,10 +752,7 @@ namespace basecode::compiler {
             common::result& r,
             compiler::session& session,
             const std::filesystem::path& source_file) {
-        auto& listing = session.listing();
-
         session.raise_phase(session_compile_phase_t::start, source_file);
-        listing.push_source_file(listing.add_source_file(source_file.string()));
 
         auto module_node = session.parse(r, source_file);
         if (module_node != nullptr) {
@@ -766,12 +764,6 @@ namespace basecode::compiler {
             module->source_file(source_file);
         }
 
-//        if (session.options().verbose) {
-//            disassemble(listing.current_source_file());
-//        }
-
-        listing.pop_source_file();
-
         if (r.is_failed()) {
             session.raise_phase(session_compile_phase_t::failed, source_file);
             return false;
@@ -779,11 +771,6 @@ namespace basecode::compiler {
             session.raise_phase(session_compile_phase_t::success, source_file);
             return true;
         }
-    }
-
-    void program::disassemble(vm::listing_source_file_t* source_file) {
-        auto root_block = _assembler.root_block();
-        root_block->disassemble(source_file);
     }
 
     element_map& program::elements() {
@@ -795,6 +782,18 @@ namespace basecode::compiler {
             if (!_terp->step(r))
                 return false;
         return true;
+    }
+
+    element* program::evaluate_in_scope(
+            common::result& r,
+            compiler::session& session,
+            const syntax::ast_node_shared_ptr& node,
+            compiler::block* scope,
+            element_type_t default_block_type) {
+        push_scope(scope);
+        auto result = evaluate(r, session, node, default_block_type);
+        pop_scope();
+        return result;
     }
 
     compiler::block* program::pop_scope() {
