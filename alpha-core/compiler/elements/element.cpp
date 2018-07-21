@@ -144,6 +144,10 @@ namespace basecode::compiler {
     void element::on_owned_elements(element_list_t& list) {
     }
 
+    const common::source_location& element::location() const {
+        return _location;
+    }
+
     attribute* element::find_attribute(const std::string& name) {
         auto current_element = this;
         while (current_element != nullptr) {
@@ -153,6 +157,10 @@ namespace basecode::compiler {
             current_element = current_element->parent_element();
         }
         return nullptr;
+    }
+
+    void element::location(const common::source_location& location) {
+        _location = location;
     }
 
     compiler::type* element::infer_type(const compiler::program* program) {

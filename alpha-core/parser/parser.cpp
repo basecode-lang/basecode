@@ -171,8 +171,7 @@ namespace basecode::syntax {
                 r,
                 "B027",
                 "type expected.",
-                token.line,
-                token.column);
+                token.location);
             return nullptr;
         }
 
@@ -740,8 +739,7 @@ namespace basecode::syntax {
             common::result& r,
             const std::string& code,
             const std::string& message,
-            uint32_t line,
-            uint32_t column) {
+            const common::source_location& location) {
         _source.seekg(0, std::ios_base::beg);
 
         std::vector<std::string> source_lines {};
@@ -752,17 +750,17 @@ namespace basecode::syntax {
 
         std::stringstream stream;
         stream << "\n";
-        auto start_line = std::max<int32_t>(0, static_cast<int32_t>(line) - 4);
+        auto start_line = std::max<int32_t>(0, static_cast<int32_t>(location.line()) - 4);
         auto stop_line = std::min<int32_t>(
             static_cast<int32_t>(source_lines.size()),
-            line + 4);
+            location.line() + 4);
         auto message_indicator = "^ " + message;
         for (int32_t i = start_line; i < stop_line; i++) {
-            if (i == static_cast<int32_t>(line + 1)) {
+            if (i == static_cast<int32_t>(location.line() + 1)) {
                 stream << fmt::format("{:04d}: ", i + 1)
                        << source_lines[i] << "\n"
                        << fmt::format("{}{}",
-                                      std::string(column + 6, ' '),
+                                      std::string(location.start_column() + 6, ' '),
                                       message_indicator);
             } else {
                 stream << fmt::format("{:04d}: ", i + 1)
@@ -775,7 +773,11 @@ namespace basecode::syntax {
 
         r.add_message(
             code,
-            fmt::format("{} @ {}:{}", message, line, column),
+            fmt::format(
+                "{} @ {}:{}",
+                message,
+                location.line(),
+                location.start_column()),
             stream.str(),
             true);
     }
@@ -861,8 +863,7 @@ namespace basecode::syntax {
                 r,
                 "B021",
                 fmt::format("prefix parser for token '{}' not found.", token.name()),
-                token.line,
-                token.column);
+                token.location);
             return nullptr;
         }
 
@@ -872,8 +873,7 @@ namespace basecode::syntax {
                 r,
                 "B021",
                 "unexpected empty ast node.",
-                token.line,
-                token.column);
+                token.location);
             return nullptr;
         }
 
@@ -892,8 +892,7 @@ namespace basecode::syntax {
                     r,
                     "B021",
                     fmt::format("infix parser for token '{}' not found.", token.name()),
-                    token.line,
-                    token.column);
+                    token.location);
                 break;
             }
             lhs = infix_parser->parse(r, this, lhs, token);
@@ -920,8 +919,7 @@ namespace basecode::syntax {
                     "unexpected '{}', wanted '{}'.",
                     node->name(),
                     ast_node_type_name(expected_type)),
-                node->token.line,
-                node->token.column);
+                node->token.location);
             return nullptr;
         }
 
@@ -947,8 +945,7 @@ namespace basecode::syntax {
                     "expected token '{}' but found '{}'.",
                     expected_name,
                     token.name()),
-                token.line,
-                token.column);
+                token.location);
             return false;
         }
 

@@ -72,7 +72,11 @@ namespace basecode::compiler {
 
         bool is_parent_element(element_type_t type);
 
+        const common::source_location& location() const;
+
         attribute* find_attribute(const std::string& name);
+
+        void location(const common::source_location& location);
 
         compiler::type* infer_type(const compiler::program* program);
 
@@ -104,6 +108,7 @@ namespace basecode::compiler {
         block* _parent_scope = nullptr;
         attribute_map_t _attributes {};
         element* _parent_element = nullptr;
+        common::source_location _location {};
         element_type_t _element_type = element_type_t::element;
     };
 

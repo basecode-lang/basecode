@@ -536,8 +536,7 @@ namespace basecode::syntax {
             common::result& r,
             const std::string& code,
             const std::string& message,
-            uint32_t line,
-            uint32_t column);
+            const common::source_location& location);
 
         bool consume();
 

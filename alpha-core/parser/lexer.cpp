@@ -260,8 +260,9 @@ namespace basecode::syntax {
         if (_source.eof()) {
             _has_next = false;
             token = s_end_of_file;
-            token.line = _line;
-            token.column = _column;
+            token.location.line(_line);
+            token.location.start_column(static_cast<uint16_t>(_column));
+            token.location.end_column(static_cast<uint16_t>(_column));
             return true;
         }
 
@@ -274,16 +275,18 @@ namespace basecode::syntax {
             token.radix = 10;
             token.number_type = number_types_t::none;
             if (it->second(this, token)) {
-                token.line = _line;
-                token.column = _column;
+                token.location.line(_line);
+                token.location.start_column(static_cast<uint16_t>(_column));
+                token.location.end_column(static_cast<uint16_t>(_column + token.value.length()));
                 return true;
             }
             restore_position();
         }
 
         token = s_end_of_file;
-        token.line = _line;
-        token.column = _column;
+        token.location.line(_line);
+        token.location.start_column(static_cast<uint16_t>(_column));
+        token.location.end_column(static_cast<uint16_t>(_column));
 
         _has_next = false;
 
@@ -1076,8 +1079,9 @@ namespace basecode::syntax {
             while (true) {
                 if (_source.eof()) {
                     token = s_end_of_file;
-                    token.line = _line;
-                    token.column = _column;
+                    token.location.line(_line);
+                    token.location.start_column(static_cast<uint16_t>(_column));
+                    token.location.end_column(static_cast<uint16_t>(_column));
                     return true;
                 }
 

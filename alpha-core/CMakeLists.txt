@@ -27,6 +27,7 @@ add_library(
         common/result_message.h
         common/id_pool.cpp common/id_pool.h
         common/hex_formatter.cpp common/hex_formatter.h
+        common/source_location.cpp common/source_location.h
 
         parser/ast.cpp parser/ast.h
         parser/lexer.cpp parser/lexer.h
