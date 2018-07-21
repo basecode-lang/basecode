@@ -195,7 +195,10 @@ namespace basecode::syntax {
         uint32_t _column = 0;
         bool _has_next = true;
         std::istream& _source;
+        uint32_t _marked_line = 0;
+        uint32_t _marked_column = 0;
         std::istream::pos_type _mark;
+        uint32_t _previous_line_column = 0;
         std::set<std::istream::pos_type> _line_breaks {};
     };
 

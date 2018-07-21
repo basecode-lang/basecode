@@ -198,6 +198,7 @@ namespace basecode::syntax {
         token_t token;
         ast_node_types_t type;
         ast_node_list children;
+        common::source_location location {};
         ast_node_list pending_attributes {};
         ast_node_shared_ptr lhs = nullptr;
         ast_node_shared_ptr rhs = nullptr;

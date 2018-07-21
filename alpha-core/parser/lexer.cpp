@@ -10,6 +10,7 @@
 // ----------------------------------------------------------------------------
 
 #include <sstream>
+#include <fmt/format.h>
 #include "lexer.h"
 
 namespace basecode::syntax {
@@ -231,12 +232,15 @@ namespace basecode::syntax {
 
     void lexer::mark_position() {
         _mark = _source.tellg();
+        _marked_line = _line;
+        _marked_column = _column;
     }
 
     void lexer::increment_line() {
         auto pos = _source.tellg();
         if (_line_breaks.count(pos) == 0) {
             _line++;
+            _previous_line_column = _column;
             _column = 0;
             _line_breaks.insert(pos);
         }
@@ -248,12 +252,12 @@ namespace basecode::syntax {
 
     void lexer::rewind_one_char() {
         _source.seekg(-1, std::ios_base::cur);
-        if (_column > 0)
-            _column--;
     }
 
     void lexer::restore_position() {
         _source.seekg(_mark);
+        _line = _marked_line;
+        _column = _marked_column;
     }
 
     bool lexer::next(token_t& token) {
@@ -261,8 +265,8 @@ namespace basecode::syntax {
             _has_next = false;
             token = s_end_of_file;
             token.location.line(_line);
-            token.location.start_column(static_cast<uint16_t>(_column));
-            token.location.end_column(static_cast<uint16_t>(_column));
+            token.location.start_column(_column);
+            token.location.end_column(_column);
             return true;
         }
 
@@ -274,10 +278,18 @@ namespace basecode::syntax {
         for (auto it = case_range.first; it != case_range.second; ++it) {
             token.radix = 10;
             token.number_type = number_types_t::none;
+            auto line = _line;
+            auto start_column = _column - 1;
             if (it->second(this, token)) {
-                token.location.line(_line);
-                token.location.start_column(static_cast<uint16_t>(_column));
-                token.location.end_column(static_cast<uint16_t>(_column + token.value.length()));
+                token.location.line(line);
+                token.location.start_column(start_column);
+                token.location.end_column(_line > line ? _previous_line_column : _column - 1);
+                fmt::print(
+                    "token.type = {}, line = {}, start_column = {}, end_column = {}\n",
+                    token.name(),
+                    token.location.line() + 1,
+                    token.location.start_column(),
+                    token.location.end_column());
                 return true;
             }
             restore_position();
@@ -285,8 +297,8 @@ namespace basecode::syntax {
 
         token = s_end_of_file;
         token.location.line(_line);
-        token.location.start_column(static_cast<uint16_t>(_column));
-        token.location.end_column(static_cast<uint16_t>(_column));
+        token.location.start_column(_column);
+        token.location.end_column(_column);
 
         _has_next = false;
 

@@ -4,6 +4,8 @@ NOTES
 Basecode Bootstrap Tasks
 ------------------------
 
+- FIX: ast_node_t should have a source_location on it that spans all intervening tokens
+
 deps to bytecode generation
 ===========================
 - bytecode generation

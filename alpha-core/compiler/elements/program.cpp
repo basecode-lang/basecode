@@ -1824,6 +1824,7 @@ namespace basecode::compiler {
             current_scope(),
             qualified_symbol.name,
             qualified_symbol.namespaces);
+        symbol->location(node->location);
         symbol->constant(node->is_constant_expression());
         return symbol;
     }

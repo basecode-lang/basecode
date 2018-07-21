@@ -54,6 +54,8 @@ namespace basecode::syntax {
         auto symbol_node = parser
             ->ast_builder()
             ->symbol_node();
+        symbol_node->location.line(token.location.line());
+        symbol_node->location.start_column(token.location.start_column());
 
         while (true) {
             auto symbol_part_node = parser
@@ -61,6 +63,7 @@ namespace basecode::syntax {
                 ->symbol_part_node(token);
             symbol_node->children.push_back(symbol_part_node);
             if (!parser->peek(token_types_t::scope_operator)) {
+                symbol_node->location.end_column(token.location.end_column());
                 break;
             }
             parser->consume();
@@ -755,12 +758,13 @@ namespace basecode::syntax {
             static_cast<int32_t>(source_lines.size()),
             location.line() + 4);
         auto message_indicator = "^ " + message;
+        int32_t target_line = static_cast<int32_t>(location.line());
         for (int32_t i = start_line; i < stop_line; i++) {
-            if (i == static_cast<int32_t>(location.line() + 1)) {
+            if (i == target_line) {
                 stream << fmt::format("{:04d}: ", i + 1)
                        << source_lines[i] << "\n"
                        << fmt::format("{}{}",
-                                      std::string(location.start_column() + 6, ' '),
+                                      std::string(location.start_column(), ' '),
                                       message_indicator);
             } else {
                 stream << fmt::format("{:04d}: ", i + 1)
