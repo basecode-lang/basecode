@@ -13,39 +13,30 @@
 
 namespace basecode::common {
 
-    source_location::source_location() {
+    const location_t& source_location::end() const {
+        return _end;
     }
 
-    source_location::source_location(
-            uint32_t line,
-            uint32_t start_column,
-            uint32_t end_column) : _line(line),
-                                   _end_column(end_column),
-                                   _start_column(start_column) {
+    const location_t& source_location::start() const {
+        return _start;
     }
 
-    uint32_t source_location::line() const {
-        return _line;
+    void source_location::end(const location_t& value) {
+        _end = value;
     }
 
-    void source_location::line(uint32_t value) {
-        _line = value;
+    void source_location::start(const location_t& value) {
+        _start = value;
     }
 
-    uint32_t source_location::end_column() const {
-        return _end_column;
+    void source_location::end(uint32_t line, uint32_t column) {
+        _end.line = line;
+        _end.column = column;
     }
 
-    uint32_t source_location::start_column() const {
-        return _start_column;
-    }
-
-    void source_location::end_column(uint32_t value) {
-        _end_column = value;
-    }
-
-    void source_location::start_column(uint32_t value) {
-        _start_column = value;
+    void source_location::start(uint32_t line, uint32_t column) {
+        _start.line = line;
+        _start.column = column;
     }
 
 }

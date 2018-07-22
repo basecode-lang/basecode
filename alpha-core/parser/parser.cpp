@@ -54,8 +54,7 @@ namespace basecode::syntax {
         auto symbol_node = parser
             ->ast_builder()
             ->symbol_node();
-        symbol_node->location.line(token.location.line());
-        symbol_node->location.start_column(token.location.start_column());
+        symbol_node->location.start(token.location.start());
 
         while (true) {
             auto symbol_part_node = parser
@@ -63,7 +62,7 @@ namespace basecode::syntax {
                 ->symbol_part_node(token);
             symbol_node->children.push_back(symbol_part_node);
             if (!parser->peek(token_types_t::scope_operator)) {
-                symbol_node->location.end_column(token.location.end_column());
+                symbol_node->location.end(token.location.end());
                 break;
             }
             parser->consume();
@@ -753,18 +752,18 @@ namespace basecode::syntax {
 
         std::stringstream stream;
         stream << "\n";
-        auto start_line = std::max<int32_t>(0, static_cast<int32_t>(location.line()) - 4);
+        auto start_line = std::max<int32_t>(0, static_cast<int32_t>(location.start().line - 4));
         auto stop_line = std::min<int32_t>(
             static_cast<int32_t>(source_lines.size()),
-            location.line() + 4);
+            location.end().line + 4);
         auto message_indicator = "^ " + message;
-        int32_t target_line = static_cast<int32_t>(location.line());
+        int32_t target_line = static_cast<int32_t>(location.start().line);
         for (int32_t i = start_line; i < stop_line; i++) {
             if (i == target_line) {
                 stream << fmt::format("{:04d}: ", i + 1)
                        << source_lines[i] << "\n"
                        << fmt::format("{}{}",
-                                      std::string(location.start_column(), ' '),
+                                      std::string(location.start().column, ' '),
                                       message_indicator);
             } else {
                 stream << fmt::format("{:04d}: ", i + 1)
@@ -780,8 +779,8 @@ namespace basecode::syntax {
             fmt::format(
                 "{} @ {}:{}",
                 message,
-                location.line(),
-                location.start_column()),
+                location.start().line,
+                location.start().column),
             stream.str(),
             true);
     }

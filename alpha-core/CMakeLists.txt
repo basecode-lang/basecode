@@ -21,6 +21,7 @@ add_library(
 
         exports.cpp
 
+        common/rune.h
         common/defer.h
         common/bytes.h
         common/result.h

@@ -224,6 +224,8 @@ namespace basecode::syntax {
     char lexer::peek() {
         while (!_source.eof()) {
             auto ch = static_cast<char>(_source.get());
+            if (ch == std::char_traits<char>::eof())
+                return ch;
             if (!isspace(ch))
                 return ch;
         }
@@ -261,16 +263,14 @@ namespace basecode::syntax {
     }
 
     bool lexer::next(token_t& token) {
-        if (_source.eof()) {
+        const auto ch = static_cast<char>(tolower(read()));
+        if (ch == std::char_traits<char>::eof()) {
             _has_next = false;
             token = s_end_of_file;
-            token.location.line(_line);
-            token.location.start_column(_column);
-            token.location.end_column(_column);
+            token.location.end(_line, _column);
+            token.location.start(_line, _column);
             return true;
         }
-
-        const auto ch = static_cast<char>(tolower(read()));
         rewind_one_char();
         mark_position();
 
@@ -281,25 +281,26 @@ namespace basecode::syntax {
             auto line = _line;
             auto start_column = _column - 1;
             if (it->second(this, token)) {
-                token.location.line(line);
-                token.location.start_column(start_column);
-                token.location.end_column(_line > line ? _previous_line_column : _column - 1);
+                token.location.start(_line, start_column);
+                token.location.end(
+                    _line,
+                    _line > line ? _previous_line_column : _column - 1);
                 fmt::print(
-                    "token.type = {}, line = {}, start_column = {}, end_column = {}\n",
+                    "token.type = {}, start = {}@{}, end = {}@{}\n",
                     token.name(),
-                    token.location.line() + 1,
-                    token.location.start_column(),
-                    token.location.end_column());
+                    token.location.start().line,
+                    token.location.start().column,
+                    token.location.end().line,
+                    token.location.end().column);
                 return true;
             }
             restore_position();
         }
 
-        token = s_end_of_file;
-        token.location.line(_line);
-        token.location.start_column(_column);
-        token.location.end_column(_column);
-
+        token = s_invalid;
+        token.value = ch;
+        token.location.end(_line, _column);
+        token.location.start(_line, _column);
         _has_next = false;
 
         return true;
@@ -308,6 +309,8 @@ namespace basecode::syntax {
     char lexer::read(bool skip_whitespace) {
         while (true) {
             auto ch = static_cast<char>(_source.get());
+            if (ch == std::char_traits<char>::eof())
+                return ch;
 
             _column++;
 
@@ -1091,9 +1094,8 @@ namespace basecode::syntax {
             while (true) {
                 if (_source.eof()) {
                     token = s_end_of_file;
-                    token.location.line(_line);
-                    token.location.start_column(static_cast<uint16_t>(_column));
-                    token.location.end_column(static_cast<uint16_t>(_column));
+                    token.location.end(_line, _column);
+                    token.location.start(_line, _column);
                     return true;
                 }
 

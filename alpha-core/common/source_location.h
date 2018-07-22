@@ -15,31 +15,29 @@
 
 namespace basecode::common {
 
-    class source_location {
+    struct location_t {
+        uint32_t line = 0;
+        uint32_t column = 0;
+    };
+
+    class
+    source_location {
     public:
-        source_location();
+        const location_t& end() const;
 
-        source_location(
-            uint32_t line,
-            uint32_t start_column,
-            uint32_t end_column);
+        const location_t& start() const;
 
-        uint32_t line() const;
+        void end(const location_t& value);
 
-        void line(uint32_t value);
+        void start(const location_t& value);
 
-        uint32_t end_column() const;
+        void end(uint32_t line, uint32_t column);
 
-        uint32_t start_column() const;
-
-        void end_column(uint32_t value);
-
-        void start_column(uint32_t value);
+        void start(uint32_t line, uint32_t column);
 
     private:
-        uint32_t _line = 0;
-        uint32_t _end_column = 0;
-        uint32_t _start_column = 0;
+        location_t _end {};
+        location_t _start {};
     };
 
 };

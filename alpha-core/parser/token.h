@@ -20,7 +20,7 @@
 namespace basecode::syntax {
 
     enum class token_types_t {
-        unknown,
+        invalid,
         plus,
         bang,
         pipe,
@@ -94,7 +94,7 @@ namespace basecode::syntax {
     };
 
     static inline std::unordered_map<token_types_t, std::string> s_type_to_name = {
-        {token_types_t::unknown,                "unknown"},
+        {token_types_t::invalid,                "invalid"},
         {token_types_t::plus,                   "plus"},
         {token_types_t::bang,                   "bang"},
         {token_types_t::pipe,                   "pipe"},
@@ -201,11 +201,16 @@ namespace basecode::syntax {
 
         conversion_result_t parse(uint64_t& out) const;
 
-        token_types_t type = token_types_t::unknown;
+        token_types_t type = token_types_t::invalid;
         std::string value {};
         uint8_t radix = 10;
         common::source_location location {};
         number_types_t number_type = number_types_t::none;
+    };
+
+    static inline token_t s_invalid = {
+        .type = token_types_t::invalid,
+        .value = ""
     };
 
     static inline token_t s_end_of_file = {
