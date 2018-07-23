@@ -113,9 +113,12 @@ namespace basecode::syntax {
         {'t', std::bind(&lexer::true_literal, std::placeholders::_1, std::placeholders::_2)},
         {'f', std::bind(&lexer::false_literal, std::placeholders::_1, std::placeholders::_2)},
 
-        // null/none/ns/empty literals
+        // null/ns literals
         {'n', std::bind(&lexer::null_literal, std::placeholders::_1, std::placeholders::_2)},
         {'n', std::bind(&lexer::ns_literal, std::placeholders::_1, std::placeholders::_2)},
+
+        // module literals
+        {'m', std::bind(&lexer::module_literal, std::placeholders::_1, std::placeholders::_2)},
 
         // import literal
         // if literal
@@ -130,7 +133,8 @@ namespace basecode::syntax {
         {'e', std::bind(&lexer::enum_literal, std::placeholders::_1, std::placeholders::_2)},
         {'e', std::bind(&lexer::else_literal, std::placeholders::_1, std::placeholders::_2)},
 
-        // for literal
+        // from/for literal
+        {'f', std::bind(&lexer::from_literal, std::placeholders::_1, std::placeholders::_2)},
         {'f', std::bind(&lexer::for_literal, std::placeholders::_1, std::placeholders::_2)},
 
         // break literal
@@ -1114,6 +1118,30 @@ namespace basecode::syntax {
 
             token.value = stream.str();
             return true;
+        }
+        return false;
+    }
+
+    bool lexer::from_literal(token_t& token) {
+        if (match_literal("from")) {
+            auto ch = read(false);
+            if (!isalnum(ch)) {
+                rewind_one_char();
+                token = s_from_literal;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    bool lexer::module_literal(token_t& token) {
+        if (match_literal("module")) {
+            auto ch = read(false);
+            if (!isalnum(ch)) {
+                rewind_one_char();
+                token = s_from_literal;
+                return true;
+            }
         }
         return false;
     }

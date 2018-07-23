@@ -18,6 +18,23 @@ deps to bytecode generation
     * executable and shared libraries only
     * use elfio for read/writing obj/executable files
 
+- add support to compiler:
+    * add operators: += -= /= *= &= |= ~=
+    * inline assembly: #assembly { };
+    * module(expr) instead of #load
+    * namespace importing
+        - import <expr> [from <identifier>]
+    * defer
+    * for (range)
+    * switch
+    * while
+    * break/continue
+    * union
+    * struct
+    * enum
+    * array_literal
+    * map_literal
+
 lower priority
 ===========================
 - FIX: program::evaluate should handle applying attributes to almost everything
@@ -31,47 +48,18 @@ lower priority
         return x * 2;
     };
 
-- directive execution: inline/post
-
-- inline assembly
-    #assembly { };
-
-- namespace importing
-
 - type parameter constraints
 
 - multiple return/assignment
-
-- switch
 
 - with
 
 - transaction, commit, rollback
 
-- defer
-
-- for (range)
-
-- while
-
-- break/continue
-
-- union
-
-- struct
-
-- enum
-
-- array_literal
-
-- map_literal
-
 - instruction flow barriers during code generation:
     e.g. a = 1; barrier(); b= 2; ...
 
 - atomics
-
-=================================================================
 
 - add unload_shared_library to terp
 

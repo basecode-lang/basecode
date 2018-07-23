@@ -63,6 +63,7 @@ namespace basecode::syntax {
         type_identifier,
         enum_expression,
         cast_expression,
+        from_expression,
         alias_expression,
         symbol_reference,
         return_statement,
@@ -70,6 +71,7 @@ namespace basecode::syntax {
         for_in_statement,
         union_expression,
         defer_expression,
+        module_expression,
         character_literal,
         array_constructor,
         elseif_expression,
@@ -109,6 +111,7 @@ namespace basecode::syntax {
         {ast_node_types_t::string_literal, "string_literal"},
         {ast_node_types_t::unary_operator, "unary_operator"},
         {ast_node_types_t::cast_expression, "cast_expression"},
+        {ast_node_types_t::from_expression, "from_expression"},
         {ast_node_types_t::proc_expression, "proc_expression"},
         {ast_node_types_t::enum_expression, "enum_expression"},
         {ast_node_types_t::binary_operator, "binary_operator"},
@@ -131,6 +134,7 @@ namespace basecode::syntax {
         {ast_node_types_t::struct_expression, "struct_expression"},
         {ast_node_types_t::character_literal, "character_literal"},
         {ast_node_types_t::array_constructor, "array_constructor"},
+        {ast_node_types_t::module_expression, "module_expression"},
         {ast_node_types_t::elseif_expression, "elseif_expression"},
         {ast_node_types_t::continue_statement, "continue_statement"},
         {ast_node_types_t::constant_expression, "constant_expression"},
@@ -265,6 +269,8 @@ namespace basecode::syntax {
 
         ast_node_shared_ptr type_identifier_node();
 
+        ast_node_shared_ptr from_node(token_t& token);
+
         ast_node_shared_ptr cast_node(token_t& token);
 
         ast_node_shared_ptr label_node(token_t& token);
@@ -302,6 +308,8 @@ namespace basecode::syntax {
         ast_node_shared_ptr namespace_node(const token_t& token);
 
         ast_node_shared_ptr symbol_part_node(const token_t& token);
+
+        ast_node_shared_ptr module_expression_node(token_t& token);
 
         ast_node_shared_ptr null_literal_node(const token_t& token);
 

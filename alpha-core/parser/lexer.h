@@ -109,6 +109,8 @@ namespace basecode::syntax {
 
         bool with_literal(token_t& token);
 
+        bool from_literal(token_t& token);
+
         bool block_comment(token_t& token);
 
         bool false_literal(token_t& token);
@@ -122,6 +124,8 @@ namespace basecode::syntax {
         bool alias_literal(token_t& token);
 
         bool union_literal(token_t& token);
+
+        bool module_literal(token_t& token);
 
         bool struct_literal(token_t& token);
 

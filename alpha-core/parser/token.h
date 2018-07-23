@@ -57,6 +57,7 @@ namespace basecode::syntax {
         shr_literal,
         rol_literal,
         ror_literal,
+        from_literal,
         proc_literal,
         with_literal,
         greater_than,
@@ -73,6 +74,7 @@ namespace basecode::syntax {
         defer_literal,
         union_literal,
         block_comment,
+        module_literal,
         struct_literal,
         number_literal,
         scope_operator,
@@ -131,6 +133,7 @@ namespace basecode::syntax {
         {token_types_t::shr_literal,            "shr_literal"},
         {token_types_t::rol_literal,            "rol_literal"},
         {token_types_t::ror_literal,            "ror_literal"},
+        {token_types_t::from_literal,           "from_literal"},
         {token_types_t::proc_literal,           "proc_literal"},
         {token_types_t::null_literal,           "null_literal"},
         {token_types_t::with_literal,           "with_literal"},
@@ -147,6 +150,7 @@ namespace basecode::syntax {
         {token_types_t::defer_literal,          "defer_literal"},
         {token_types_t::union_literal,          "union_literal"},
         {token_types_t::block_comment,          "block_comment"},
+        {token_types_t::module_literal,         "module_literal"},
         {token_types_t::struct_literal,         "struct_literal"},
         {token_types_t::return_literal,         "return_literal"},
         {token_types_t::number_literal,         "number_literal"},
@@ -338,6 +342,11 @@ namespace basecode::syntax {
         .value = "defer"
     };
 
+    static inline token_t s_module_literal = {
+        .type = token_types_t::module_literal,
+        .value = "module"
+    };
+
     static inline token_t s_break_literal = {
         .type = token_types_t::break_literal,
         .value = "break"
@@ -391,6 +400,11 @@ namespace basecode::syntax {
     static inline token_t s_return_literal = {
         .type = token_types_t::return_literal,
         .value = "return"
+    };
+
+    static inline token_t s_from_literal = {
+        .type = token_types_t::from_literal,
+        .value = "from"
     };
 
     static inline token_t s_else_if_literal = {

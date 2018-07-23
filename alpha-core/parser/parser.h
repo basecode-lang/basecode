@@ -491,6 +491,30 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    class from_prefix_parser : public prefix_parser {
+    public:
+        from_prefix_parser() = default;
+
+        ast_node_shared_ptr parse(
+            common::result& r,
+            parser* parser,
+            token_t& token) override;
+    };
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    class module_prefix_parser : public prefix_parser {
+    public:
+        module_prefix_parser() = default;
+
+        ast_node_shared_ptr parse(
+            common::result& r,
+            parser* parser,
+            token_t& token) override;
+    };
+
+    ///////////////////////////////////////////////////////////////////////////
+
     class directive_prefix_parser : public prefix_parser {
     public:
         directive_prefix_parser() = default;
@@ -583,10 +607,12 @@ namespace basecode::syntax {
         static inline cast_prefix_parser s_cast_prefix_parser {};
         static inline with_prefix_parser s_with_prefix_parser {};
         static inline enum_prefix_parser s_enum_prefix_parser {};
+        static inline from_prefix_parser s_from_prefix_parser {};
         static inline defer_prefix_parser s_defer_prefix_parser {};
         static inline union_prefix_parser s_union_prefix_parser {};
         static inline group_prefix_parser s_group_prefix_parser {};
         static inline label_prefix_parser s_label_prefix_parser {};
+        static inline module_prefix_parser s_module_prefix_parser {};
         static inline struct_prefix_parser s_struct_prefix_parser {};
         static inline for_in_prefix_parser s_for_in_prefix_parser {};
         static inline return_prefix_parser s_return_prefix_parser {};
@@ -615,6 +641,7 @@ namespace basecode::syntax {
             {token_types_t::cast_literal,        &s_cast_prefix_parser},
             {token_types_t::enum_literal,        &s_enum_prefix_parser},
             {token_types_t::with_literal,        &s_with_prefix_parser},
+            {token_types_t::from_literal,        &s_from_prefix_parser},
             {token_types_t::label,               &s_label_prefix_parser},
             {token_types_t::left_paren,          &s_group_prefix_parser},
             {token_types_t::union_literal,       &s_union_prefix_parser},
@@ -624,6 +651,7 @@ namespace basecode::syntax {
             {token_types_t::minus,               &s_negate_prefix_parser},
             {token_types_t::return_literal,      &s_return_prefix_parser},
             {token_types_t::identifier,          &s_symbol_prefix_parser},
+            {token_types_t::module_literal,      &s_module_prefix_parser},
             {token_types_t::constant_literal,    &s_constant_prefix_parser},
             {token_types_t::namespace_literal,   &s_namespace_prefix_parser},
             {token_types_t::attribute,           &s_attribute_prefix_parser},

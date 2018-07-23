@@ -476,10 +476,10 @@ namespace basecode::compiler {
         instruction_block->jump_direct("_initializer");
 
         std::map<vm::section_t, element_list_t> vars_by_section {};
-        auto bss  = vars_by_section.insert(std::make_pair(vm::section_t::bss,     element_list_t()));
+        /* auto bss  = */vars_by_section.insert(std::make_pair(vm::section_t::bss,     element_list_t()));
         auto ro   = vars_by_section.insert(std::make_pair(vm::section_t::ro_data, element_list_t()));
         auto data = vars_by_section.insert(std::make_pair(vm::section_t::data,    element_list_t()));
-        auto text = vars_by_section.insert(std::make_pair(vm::section_t::text,    element_list_t()));
+        /* auto text = */vars_by_section.insert(std::make_pair(vm::section_t::text,    element_list_t()));
 
         auto identifiers = elements().find_by_type(element_type_t::identifier);
         for (auto identifier : identifiers) {
@@ -615,10 +615,12 @@ namespace basecode::compiler {
                                 if (init != nullptr) {
                                     auto string_literal = dynamic_cast<compiler::string_literal*>(
                                         init->expression());
-                                    instruction_block->current_entry()->comment(fmt::format(
-                                        "\"{}\"",
-                                        string_literal->value()));
-                                    instruction_block->string(string_literal->value());
+                                    if (string_literal != nullptr) {
+                                        instruction_block->current_entry()->comment(fmt::format(
+                                            "\"{}\"",
+                                            string_literal->value()));
+                                        instruction_block->string(string_literal->value());
+                                    }
                                 }
                                 break;
                             }

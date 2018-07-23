@@ -177,7 +177,11 @@ namespace basecode::syntax {
             return nullptr;
         }
 
-        auto symbol_node = create_symbol_node(r, parser, nullptr, type_identifier);
+        auto symbol_node = create_symbol_node(
+            r,
+            parser,
+            nullptr,
+            type_identifier);
         auto type_node = parser
             ->ast_builder()
             ->type_identifier_node();
@@ -192,6 +196,44 @@ namespace basecode::syntax {
             type_node->flags |= ast_node_t::flags_t::spread;
 
         return type_node;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    ast_node_shared_ptr from_prefix_parser::parse(
+            common::result& r,
+            parser* parser,
+            token_t& token) {
+        auto from_node = parser
+            ->ast_builder()
+            ->from_node(token);
+        from_node->rhs = parser->parse_expression(r, 0);
+        return from_node;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    ast_node_shared_ptr module_prefix_parser::parse(
+            common::result& r,
+            parser* parser,
+            token_t& token) {
+        auto module_expression_node = parser
+            ->ast_builder()
+            ->module_expression_node(token);
+
+        token_t left_paren;
+        left_paren.type = token_types_t::left_paren;
+        if (!parser->expect(r, left_paren))
+            return nullptr;
+
+        module_expression_node->rhs = parser->parse_expression(r, 0);
+
+        token_t right_paren;
+        right_paren.type = token_types_t::right_paren;
+        if (!parser->expect(r, right_paren))
+            return nullptr;
+
+        return module_expression_node;
     }
 
     ///////////////////////////////////////////////////////////////////////////
