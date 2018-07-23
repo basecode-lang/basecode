@@ -59,9 +59,15 @@ namespace basecode::compiler {
 
         bool initialize(common::result& r);
 
+        common::source_file* pop_source_file();
+
         const session_options_t& options() const;
 
+        common::source_file* current_source_file();
+
         std::vector<common::source_file*> source_files();
+
+        void push_source_file(common::source_file* source_file);
 
         common::source_file* add_source_file(const std::filesystem::path& path);
 
@@ -75,6 +81,7 @@ namespace basecode::compiler {
         vm::assembler _assembler;
         compiler::program _program;
         session_options_t _options {};
+        std::stack<common::source_file*> _source_file_stack {};
         std::map<std::string, common::source_file> _source_files {};
     };
 

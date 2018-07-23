@@ -22,6 +22,7 @@
 #include "import.h"
 #include "module.h"
 #include "comment.h"
+#include "program.h"
 #include "any_type.h"
 #include "attribute.h"
 #include "directive.h"
@@ -104,6 +105,9 @@ namespace basecode::compiler {
                 auto module_block = make_block(
                     _block,
                     element_type_t::module_block);
+                auto module = make_module(_block, module_block);
+                module->source_file(session.current_source_file());
+
                 // XXX: this isn't adding to the parent's block list
                 push_scope(module_block);
                 _top_level_stack.push(module_block);
@@ -111,14 +115,14 @@ namespace basecode::compiler {
                 for (auto it = node->children.begin();
                      it != node->children.end();
                      ++it) {
-                    add_expression_to_scope(
-                        module_block,
-                        evaluate(r, session, *it, default_block_type));
+                    auto expr = evaluate(r, session, *it, default_block_type);
+                    add_expression_to_scope(module_block, expr);
+                    expr->parent_element(module);
                 }
 
                 _top_level_stack.pop();
 
-                return make_module(_block, pop_scope());
+                return module;
             }
             case syntax::ast_node_types_t::basic_block: {
                 auto active_scope = push_new_block(default_block_type);
@@ -127,8 +131,10 @@ namespace basecode::compiler {
                      it != node->children.end();
                      ++it) {
                     auto expr = evaluate(r, session, *it, default_block_type);
-                    if (expr != nullptr)
+                    if (expr != nullptr) {
                         add_expression_to_scope(active_scope, expr);
+                        expr->parent_element(active_scope);
+                    }
                 }
 
                 return pop_scope();
@@ -151,16 +157,7 @@ namespace basecode::compiler {
                         r,
                         find_type_result,
                         node->rhs->rhs);
-                    if (find_type_result.type == nullptr) {
-                        r.add_message(
-                            "P002",
-                            fmt::format(
-                                "unknown type '{}'.",
-                                find_type_result.type_name.name),
-                            true);
-                        return nullptr;
-                    }
-                    add_identifier_to_scope(
+                    expr = add_identifier_to_scope(
                         r,
                         session,
                         dynamic_cast<compiler::symbol_element*>(expr),
@@ -752,6 +749,11 @@ namespace basecode::compiler {
             common::result& r,
             compiler::session& session,
             common::source_file* source_file) {
+        session.push_source_file(source_file);
+        defer({
+            session.pop_source_file();
+        });
+
         session.raise_phase(session_compile_phase_t::start, source_file->path());
 
         auto module_node = session.parse(r, source_file);
@@ -761,7 +763,6 @@ namespace basecode::compiler {
                 session,
                 module_node));
             module->parent_element(this);
-            module->source_file(source_file);
         }
 
         if (r.is_failed()) {
@@ -836,6 +837,12 @@ namespace basecode::compiler {
 
         _elements.add(type);
         return type;
+    }
+
+    compiler::block* program::current_top_level() {
+        if (_top_level_stack.empty())
+            return nullptr;
+        return _top_level_stack.top();
     }
 
     compiler::block* program::current_scope() const {
@@ -1401,9 +1408,12 @@ namespace basecode::compiler {
                     operator_type_t::assignment,
                     new_identifier,
                     init_expr);
-                add_expression_to_scope(
+                auto statement = make_statement(
                     scope,
-                    make_statement(current_scope(), label_list_t {}, assign_bin_op));
+                    label_list_t {},
+                    assign_bin_op);
+                add_expression_to_scope(scope, statement);
+                statement->parent_element(scope);
             }
         }
 
@@ -1697,10 +1707,16 @@ namespace basecode::compiler {
                 it = _identifiers_with_unknown_types.erase(it);
             } else {
                 ++it;
-                r.add_message(
-                    "P004",
-                    fmt::format("unable to resolve type for identifier: {}", var->symbol()->name()),
-                    true);
+                auto module = find_module(var);
+                if (module != nullptr) {
+                    module->source_file()->error(
+                        r,
+                        "P004",
+                        fmt::format(
+                            "unable to resolve type for identifier: {}",
+                            var->symbol()->name()),
+                        var->location());
+                }
             }
         }
 
@@ -1726,12 +1742,16 @@ namespace basecode::compiler {
 
             if (candidates.empty()) {
                 ++it;
-                r.add_message(
-                    "P004",
-                    fmt::format(
-                        "unable to resolve identifier: {}",
-                        unresolved_reference->symbol().name),
-                    true);
+                auto module = find_module(unresolved_reference);
+                if (module != nullptr) {
+                    module->source_file()->error(
+                        r,
+                        "P004",
+                        fmt::format(
+                            "unable to resolve identifier: {}",
+                            unresolved_reference->symbol().name),
+                        unresolved_reference->location());
+                }
                 continue;
             }
 
@@ -1827,6 +1847,16 @@ namespace basecode::compiler {
         symbol->location(node->location);
         symbol->constant(node->is_constant_expression());
         return symbol;
+    }
+
+    compiler::module* program::find_module(compiler::element* element) {
+        auto current = element;
+        while (current != nullptr) {
+            if (current->element_type() == element_type_t::module)
+                return dynamic_cast<compiler::module*>(current);
+            current = current->parent_element();
+        }
+        return nullptr;
     }
 
     compiler::type* program::find_type(const qualified_symbol_t& symbol) const {

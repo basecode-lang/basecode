@@ -11,6 +11,8 @@
 
 #load "../examples/preload.bc";
 
+//preload := module("../examples/preload.bc");
+
 @library "libalpha-core.dylib";
 #foreign print := proc(format:string, values:...any) @alias "fmt_print";
 

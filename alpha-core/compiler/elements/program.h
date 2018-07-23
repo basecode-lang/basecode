@@ -62,6 +62,8 @@ namespace basecode::compiler {
 
         compiler::block* block();
 
+        compiler::block* current_top_level();
+
     private:
         friend class any_type;
         friend class directive;
@@ -365,6 +367,8 @@ namespace basecode::compiler {
         compiler::block* current_scope() const;
 
         void push_scope(compiler::block* block);
+
+        compiler::module* find_module(compiler::element* element);
 
         compiler::identifier* find_identifier(const qualified_symbol_t& symbol);
 

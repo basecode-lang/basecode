@@ -95,8 +95,22 @@ namespace basecode::compiler {
         return module_node;
     }
 
+    common::source_file* session::pop_source_file() {
+        if (_source_file_stack.empty())
+            return nullptr;
+        auto source_file = _source_file_stack.top();
+        _source_file_stack.pop();
+        return source_file;
+    }
+
     const session_options_t& session::options() const {
         return _options;
+    }
+
+    common::source_file* session::current_source_file() {
+        if (_source_file_stack.empty())
+            return nullptr;
+        return _source_file_stack.top();
     }
 
     std::vector<common::source_file*> session::source_files() {
@@ -105,6 +119,10 @@ namespace basecode::compiler {
             list.push_back(&it.second);
         }
         return list;
+    }
+
+    void session::push_source_file(common::source_file* source_file) {
+        _source_file_stack.push(source_file);
     }
 
     void session::write_code_dom_graph(const std::filesystem::path& path) {

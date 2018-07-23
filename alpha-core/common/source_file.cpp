@@ -30,14 +30,23 @@ namespace basecode::common {
             const common::source_location& location) {
         std::stringstream stream;
         stream << "\n";
-        auto start_line = std::max<int32_t>(0, static_cast<int32_t>(location.start().line - 4));
-        auto stop_line = std::min<int32_t>(
-            static_cast<int32_t>(number_of_lines()),
-            location.end().line + 4);
+
+        int32_t number_of_lines = static_cast<int32_t>(_lines_by_number.size());
+
+        auto start_line = static_cast<int32_t>(location.start().line - 4);
+        if (start_line < 0)
+            start_line = 0;
+
+        auto stop_line = static_cast<int32_t>(location.end().line + 4);
+        if (stop_line >= number_of_lines)
+            stop_line = number_of_lines - 1;
+
         auto message_indicator = "^ " + message;
         int32_t target_line = static_cast<int32_t>(location.start().line);
         for (int32_t i = start_line; i < stop_line; i++) {
             auto source_line = line_by_number(static_cast<size_t>(i));
+            if (source_line == nullptr)
+                break;
             auto source_text = substring(source_line->begin, source_line->end);
             if (i == target_line) {
                 stream << fmt::format("{:04d}: ", i + 1)
