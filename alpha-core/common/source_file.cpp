@@ -13,6 +13,7 @@
 #include <iterator>
 #include <fmt/format.h>
 #include "rune.h"
+#include "colorizer.h"
 #include "source_file.h"
 
 namespace basecode::common {
@@ -29,7 +30,6 @@ namespace basecode::common {
             const std::string& message,
             const common::source_location& location) {
         std::stringstream stream;
-        stream << "\n";
 
         int32_t number_of_lines = static_cast<int32_t>(_lines_by_number.size());
 
@@ -41,7 +41,9 @@ namespace basecode::common {
         if (stop_line >= number_of_lines)
             stop_line = number_of_lines - 1;
 
-        auto message_indicator = "^ " + message;
+        auto message_indicator = common::colorizer::colorize(
+            "^ " + message,
+            common::term_colors_t::red);
         int32_t target_line = static_cast<int32_t>(location.start().line);
         for (int32_t i = start_line; i < stop_line; i++) {
             auto source_line = line_by_number(static_cast<size_t>(i));
@@ -50,10 +52,14 @@ namespace basecode::common {
             auto source_text = substring(source_line->begin, source_line->end);
             if (i == target_line) {
                 stream << fmt::format("{:04d}: ", i + 1)
-                       << source_text << "\n"
+                       << common::colorizer::colorize_range(
+                           source_text,
+                           location.start().column,
+                           location.end().column,
+                           common::term_colors_t::magenta) << "\n"
                        << fmt::format("{}{}",
-                                      std::string(location.start().column, ' '),
-                                      message_indicator);
+                              std::string(6 + location.start().column, ' '),
+                              message_indicator);
             } else {
                 stream << fmt::format("{:04d}: ", i + 1)
                        << source_text;
@@ -66,10 +72,11 @@ namespace basecode::common {
         r.add_message(
             code,
             fmt::format(
-                "{} @ {}:{}",
-                message,
-                location.start().line,
-                location.start().column),
+                "({}@{}:{}) {}",
+                _path.filename().string(),
+                location.start().line + 1,
+                location.start().column + 1,
+                message),
             stream.str(),
             true);
     }

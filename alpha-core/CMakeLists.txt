@@ -27,6 +27,7 @@ add_library(
         common/result.h
         common/result_message.h
         common/id_pool.cpp common/id_pool.h
+        common/colorizer.cpp common/colorizer.h
         common/source_file.cpp common/source_file.h
         common/hex_formatter.cpp common/hex_formatter.h
         common/source_location.cpp common/source_location.h

@@ -38,6 +38,20 @@ namespace basecode::compiler {
 
         ~program() override;
 
+        void error(
+            common::result& r,
+            compiler::session& session,
+            const std::string& code,
+            const std::string& message,
+            const common::source_location& location);
+
+        void error(
+            common::result& r,
+            compiler::element* element,
+            const std::string& code,
+            const std::string& message,
+            const common::source_location& location);
+
         bool compile(
             common::result& r,
             compiler::session& session);

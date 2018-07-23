@@ -270,13 +270,13 @@ namespace basecode::syntax {
                 auto end_line = _source_file->line_by_index(_source_file->pos());
                 token.location.start(start_line->line, start_column);
                 token.location.end(end_line->line, end_column);
-                fmt::print(
-                    "token.type = {}, start = {}@{}, end = {}@{}\n",
-                    token.name(),
-                    token.location.start().line,
-                    token.location.start().column,
-                    token.location.end().line,
-                    token.location.end().column);
+//                fmt::print(
+//                    "token.type = {}, start = {}@{}, end = {}@{}\n",
+//                    token.name(),
+//                    token.location.start().line,
+//                    token.location.start().column,
+//                    token.location.end().line,
+//                    token.location.end().column);
                 return true;
             }
             _source_file->restore_top_mark();

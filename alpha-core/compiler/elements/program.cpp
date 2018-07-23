@@ -689,6 +689,30 @@ namespace basecode::compiler {
         return true;
     }
 
+    void program::error(
+            common::result& r,
+            compiler::session& session,
+            const std::string& code,
+            const std::string& message,
+            const common::source_location& location) {
+        auto source_file = session.current_source_file();
+        if (source_file == nullptr)
+            return;
+        source_file->error(r, code, message, location);
+    }
+
+    void program::error(
+            common::result& r,
+            compiler::element* element,
+            const std::string& code,
+            const std::string& message,
+            const common::source_location& location) {
+        auto module = find_module(element);
+        if (module != nullptr) {
+            module->source_file()->error(r, code, message, location);
+        }
+    }
+
     bool program::compile(
             common::result& r,
             compiler::session& session) {
@@ -1707,16 +1731,14 @@ namespace basecode::compiler {
                 it = _identifiers_with_unknown_types.erase(it);
             } else {
                 ++it;
-                auto module = find_module(var);
-                if (module != nullptr) {
-                    module->source_file()->error(
-                        r,
-                        "P004",
-                        fmt::format(
-                            "unable to resolve type for identifier: {}",
-                            var->symbol()->name()),
-                        var->location());
-                }
+                error(
+                    r,
+                    var,
+                    "P004",
+                    fmt::format(
+                        "unable to resolve type for identifier: {}",
+                        var->symbol()->name()),
+                    var->symbol()->location());
             }
         }
 
@@ -1742,16 +1764,14 @@ namespace basecode::compiler {
 
             if (candidates.empty()) {
                 ++it;
-                auto module = find_module(unresolved_reference);
-                if (module != nullptr) {
-                    module->source_file()->error(
-                        r,
-                        "P004",
-                        fmt::format(
-                            "unable to resolve identifier: {}",
-                            unresolved_reference->symbol().name),
-                        unresolved_reference->location());
-                }
+                error(
+                    r,
+                    unresolved_reference,
+                    "P004",
+                    fmt::format(
+                        "unable to resolve identifier: {}",
+                        unresolved_reference->symbol().name),
+                    unresolved_reference->symbol().location);
                 continue;
             }
 
@@ -1833,6 +1853,7 @@ namespace basecode::compiler {
                 symbol.namespaces.push_back(node->children[i]->token.value);
         }
         symbol.name = node->children.back()->token.value;
+        symbol.location = node->location;
     }
 
     compiler::symbol_element* program::make_symbol_from_node(

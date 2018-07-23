@@ -417,6 +417,7 @@ namespace basecode::compiler {
         }
         std::string name {};
         string_list_t namespaces {};
+        common::source_location location {};
     };
 
 };
