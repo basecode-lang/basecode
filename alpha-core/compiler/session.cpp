@@ -21,8 +21,10 @@ namespace basecode::compiler {
             const path_list_t& source_files) : _terp(options.heap_size, options.stack_size),
                                                _assembler(&_terp),
                                                _program(&_terp, &_assembler),
-                                               _source_files(source_files),
                                                _options(options) {
+        for (const auto& path : source_files) {
+            add_source_file(path);
+        }
     }
 
     session::~session() {
@@ -68,31 +70,41 @@ namespace basecode::compiler {
 
     syntax::ast_node_shared_ptr session::parse(
             common::result& r,
-            const std::filesystem::path& source_file) {
-        std::ifstream input_stream(source_file);
-        if (input_stream.is_open()) {
-            syntax::parser alpha_parser(input_stream);
-            auto module_node = alpha_parser.parse(r);
-            if (module_node != nullptr && !r.is_failed()) {
-                if (_options.verbose && !_options.ast_graph_file.empty())
-                    alpha_parser.write_ast_graph(_options.ast_graph_file, module_node);
-            }
-            return module_node;
-        } else {
-            r.add_message(
-                "S001",
-                fmt::format("unable to open source file: {}", source_file.string()),
-                true);
+            const std::filesystem::path& path) {
+        auto source_file = find_source_file(path);
+        if (source_file == nullptr) {
+            source_file = add_source_file(path);
         }
-        return nullptr;
+        return parse(r, source_file);
     }
 
-    const path_list_t& session::source_files() const {
-        return _source_files;
+    syntax::ast_node_shared_ptr session::parse(
+            common::result& r,
+            common::source_file* source_file) {
+        if (source_file->empty()) {
+            if (!source_file->load(r))
+                return nullptr;
+        }
+
+        syntax::parser alpha_parser(source_file);
+        auto module_node = alpha_parser.parse(r);
+        if (module_node != nullptr && !r.is_failed()) {
+            if (_options.verbose && !_options.ast_graph_file.empty())
+                alpha_parser.write_ast_graph(_options.ast_graph_file, module_node);
+        }
+        return module_node;
     }
 
     const session_options_t& session::options() const {
         return _options;
+    }
+
+    std::vector<common::source_file*> session::source_files() {
+        std::vector<common::source_file*> list {};
+        for (auto& it : _source_files) {
+            list.push_back(&it.second);
+        }
+        return list;
     }
 
     void session::write_code_dom_graph(const std::filesystem::path& path) {
@@ -107,6 +119,22 @@ namespace basecode::compiler {
 
         compiler::code_dom_formatter formatter(&_program, output_file);
         formatter.format(fmt::format("Code DOM Graph: {}", path.string()));
+    }
+
+    common::source_file* session::add_source_file(const std::filesystem::path& path) {
+        auto it = _source_files.insert(std::make_pair(
+            path.string(),
+            common::source_file(path)));
+        if (!it.second)
+            return nullptr;
+        return &it.first->second;
+    }
+
+    common::source_file* session::find_source_file(const std::filesystem::path& path) {
+        auto it = _source_files.find(path.string());
+        if (it == _source_files.end())
+            return nullptr;
+        return &it->second;
     }
 
 };

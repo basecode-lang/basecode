@@ -11,14 +11,17 @@
 
 #pragma once
 
+#include <map>
 #include <cstdio>
 #include <string>
+#include <vector>
 #include <vm/terp.h>
 #include <filesystem>
 #include <fmt/format.h>
 #include <vm/assembler.h>
 #include <common/defer.h>
 #include <parser/parser.h>
+#include <common/source_file.h>
 #include "compiler_types.h"
 #include "elements/program.h"
 
@@ -48,13 +51,21 @@ namespace basecode::compiler {
 
         syntax::ast_node_shared_ptr parse(
             common::result& r,
-            const std::filesystem::path& source_file);
+            const std::filesystem::path& path);
+
+        syntax::ast_node_shared_ptr parse(
+            common::result& r,
+            common::source_file* source_file);
 
         bool initialize(common::result& r);
 
-        const path_list_t& source_files() const;
-
         const session_options_t& options() const;
+
+        std::vector<common::source_file*> source_files();
+
+        common::source_file* add_source_file(const std::filesystem::path& path);
+
+        common::source_file* find_source_file(const std::filesystem::path& path);
 
     private:
         void write_code_dom_graph(const std::filesystem::path& path);
@@ -63,8 +74,8 @@ namespace basecode::compiler {
         vm::terp _terp;
         vm::assembler _assembler;
         compiler::program _program;
-        path_list_t _source_files {};
         session_options_t _options {};
+        std::map<std::string, common::source_file> _source_files {};
     };
 
 };

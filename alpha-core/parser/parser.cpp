@@ -730,8 +730,8 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    parser::parser(std::istream& source) : _source(source),
-                                           _lexer(source) {
+    parser::parser(common::source_file* source_file) : _lexer(source_file),
+                                                       _source_file(source_file) {
     }
 
     parser::~parser() {
@@ -742,47 +742,7 @@ namespace basecode::syntax {
             const std::string& code,
             const std::string& message,
             const common::source_location& location) {
-        _source.seekg(0, std::ios_base::beg);
-
-        std::vector<std::string> source_lines {};
-        std::string source_line;
-        while (std::getline(_source, source_line)) {
-            source_lines.push_back(source_line);
-        }
-
-        std::stringstream stream;
-        stream << "\n";
-        auto start_line = std::max<int32_t>(0, static_cast<int32_t>(location.start().line - 4));
-        auto stop_line = std::min<int32_t>(
-            static_cast<int32_t>(source_lines.size()),
-            location.end().line + 4);
-        auto message_indicator = "^ " + message;
-        int32_t target_line = static_cast<int32_t>(location.start().line);
-        for (int32_t i = start_line; i < stop_line; i++) {
-            if (i == target_line) {
-                stream << fmt::format("{:04d}: ", i + 1)
-                       << source_lines[i] << "\n"
-                       << fmt::format("{}{}",
-                                      std::string(location.start().column, ' '),
-                                      message_indicator);
-            } else {
-                stream << fmt::format("{:04d}: ", i + 1)
-                       << source_lines[i];
-            }
-
-            if (i < static_cast<int32_t>(stop_line - 1))
-                stream << "\n";
-        }
-
-        r.add_message(
-            code,
-            fmt::format(
-                "{} @ {}:{}",
-                message,
-                location.start().line,
-                location.start().column),
-            stream.str(),
-            true);
+        _source_file->error(r, code, message, location);
     }
 
     bool parser::consume() {

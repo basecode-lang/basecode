@@ -18,6 +18,7 @@
 #include <fmt/format.h>
 #include <unordered_map>
 #include <common/result.h>
+#include <common/source_file.h>
 #include "ast.h"
 #include "lexer.h"
 
@@ -528,7 +529,7 @@ namespace basecode::syntax {
 
     class parser {
     public:
-        explicit parser(std::istream& source);
+        explicit parser(common::source_file* source_file);
 
         virtual ~parser();
 
@@ -691,10 +692,10 @@ namespace basecode::syntax {
             {token_types_t::colon,              &s_type_identifier_infix_parser},
         };
 
-        std::istream& _source;
         syntax::lexer _lexer;
         std::vector<token_t> _tokens {};
         syntax::ast_builder _ast_builder;
+        common::source_file* _source_file = nullptr;
     };
 
 };

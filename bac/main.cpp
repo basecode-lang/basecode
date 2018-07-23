@@ -162,19 +162,6 @@ int main(int argc, char** argv) {
         session_options,
         source_files);
     basecode::common::result r;
-
-//    basecode::common::source_file source_file(source_files[0]);
-//    if (!source_file.load(r)) {
-//        print_results(r);
-//        return 1;
-//    }
-//
-//    for (size_t i = 0; i < source_file.number_of_lines(); i++) {
-//        auto line = source_file.line_by_number(i);
-//        auto text = source_file.substring(line->begin, line->end);
-//        fmt::print("{}\n", text);
-//    }
-
     if (!compilation_session.initialize(r)) {
         print_results(r);
         return 1;

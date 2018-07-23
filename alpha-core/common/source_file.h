@@ -12,9 +12,11 @@
 #pragma once
 
 #include <map>
+#include <stack>
 #include <cstdint>
 #include <filesystem>
 #include "result.h"
+#include "source_location.h"
 
 namespace basecode::common {
 
@@ -41,13 +43,31 @@ namespace basecode::common {
 
         ~source_file();
 
+        void error(
+            common::result& r,
+            const std::string& code,
+            const std::string& message,
+            const common::source_location& location);
+
         rune_t next();
 
+        size_t pop_mark();
+
         bool eof() const;
+
+        void push_mark();
+
+        size_t pos() const;
 
         bool empty() const;
 
         size_t length() const;
+
+        size_t current_mark();
+
+        void seek(size_t index);
+
+        void restore_top_mark();
 
         bool load(common::result& r);
 
@@ -58,6 +78,8 @@ namespace basecode::common {
         const std::filesystem::path& path() const;
 
         std::string substring(size_t start, size_t end);
+
+        const uint32_t column_by_index(size_t index) const;
 
         const source_file_line_t* line_by_number(size_t line) const;
 
@@ -70,6 +92,7 @@ namespace basecode::common {
         size_t _index = 0;
         std::filesystem::path _path;
         std::vector<uint8_t> _buffer;
+        std::stack<size_t> _mark_stack {};
         std::map<size_t, source_file_line_t*> _lines_by_number {};
         std::map<
             source_file_range_t,

@@ -109,7 +109,7 @@ namespace basecode::compiler {
                 return fmt::format(
                     "{}[shape=record,label=\"module|{}\"{}];",
                     node_vertex_name,
-                    element->source_file().string(),
+                    element->source_file()->path().string(),
                     style);
             }
             case element_type_t::symbol: {

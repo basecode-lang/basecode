@@ -23,6 +23,48 @@ namespace basecode::common {
     source_file::~source_file() {
     }
 
+    void source_file::error(
+            common::result& r,
+            const std::string& code,
+            const std::string& message,
+            const common::source_location& location) {
+        std::stringstream stream;
+        stream << "\n";
+        auto start_line = std::max<int32_t>(0, static_cast<int32_t>(location.start().line - 4));
+        auto stop_line = std::min<int32_t>(
+            static_cast<int32_t>(number_of_lines()),
+            location.end().line + 4);
+        auto message_indicator = "^ " + message;
+        int32_t target_line = static_cast<int32_t>(location.start().line);
+        for (int32_t i = start_line; i < stop_line; i++) {
+            auto source_line = line_by_number(static_cast<size_t>(i));
+            auto source_text = substring(source_line->begin, source_line->end);
+            if (i == target_line) {
+                stream << fmt::format("{:04d}: ", i + 1)
+                       << source_text << "\n"
+                       << fmt::format("{}{}",
+                                      std::string(location.start().column, ' '),
+                                      message_indicator);
+            } else {
+                stream << fmt::format("{:04d}: ", i + 1)
+                       << source_text;
+            }
+
+            if (i < static_cast<int32_t>(stop_line - 1))
+                stream << "\n";
+        }
+
+        r.add_message(
+            code,
+            fmt::format(
+                "{} @ {}:{}",
+                message,
+                location.start().line,
+                location.start().column),
+            stream.str(),
+            true);
+    }
+
     rune_t source_file::next() {
         if (_index >= _buffer.size())
             return rune_eof;
@@ -31,8 +73,24 @@ namespace basecode::common {
         return c;
     }
 
+    void source_file::push_mark() {
+        _mark_stack.push(_index);
+    }
+
     bool source_file::eof() const {
         return _index >= _buffer.size();
+    }
+
+    size_t source_file::pop_mark() {
+        if (_mark_stack.empty())
+            return _index;
+        auto mark = _mark_stack.top();
+        _mark_stack.pop();
+        return mark;
+    }
+
+    size_t source_file::pos() const {
+        return _index;
     }
 
     bool source_file::empty() const {
@@ -68,8 +126,24 @@ namespace basecode::common {
         }
     }
 
+    size_t source_file::current_mark() {
+        if (_mark_stack.empty())
+            return _index;
+        return _mark_stack.top();
+    }
+
     size_t source_file::length() const {
         return _buffer.size();
+    }
+
+    void source_file::restore_top_mark() {
+        if (_mark_stack.empty())
+            return;
+        _index = _mark_stack.top();
+    }
+
+    void source_file::seek(size_t index) {
+        _index = index;
     }
 
     bool source_file::load(common::result& r) {
@@ -115,6 +189,13 @@ namespace basecode::common {
         value.reserve(length);
         value.assign((const char*)_buffer.data(), start, length);
         return value;
+    }
+
+    const uint32_t source_file::column_by_index(size_t index) const {
+        auto line = line_by_index(index);
+        if (line == nullptr)
+            return 0;
+        return static_cast<const uint32_t>(index - line->begin);
     }
 
     const source_file_line_t* source_file::line_by_number(size_t line) const {

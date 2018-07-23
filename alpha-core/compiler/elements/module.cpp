@@ -32,7 +32,7 @@ namespace basecode::compiler {
         return _scope;
     }
 
-    std::filesystem::path module::source_file() const {
+    common::source_file* module::source_file() const {
         return _source_file;
     }
 
@@ -41,8 +41,8 @@ namespace basecode::compiler {
             list.emplace_back(_scope);
     }
 
-    void module::source_file(const std::filesystem::path& value) {
-        _source_file = value;
+    void module::source_file(common::source_file* source_file) {
+        _source_file = source_file;
     }
 
 };

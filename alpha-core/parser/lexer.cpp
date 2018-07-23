@@ -217,35 +217,16 @@ namespace basecode::syntax {
         {'9', std::bind(&lexer::number_literal, std::placeholders::_1, std::placeholders::_2)},
     };
 
-    lexer::lexer(std::istream& source) : _source(source) {
-        _source.seekg(0, std::ios_base::beg);
+    lexer::lexer(common::source_file* source_file) : _source_file(source_file) {
     }
 
-    char lexer::peek() {
-        while (!_source.eof()) {
-            auto ch = static_cast<char>(_source.get());
-            if (ch == std::char_traits<char>::eof())
-                return ch;
+    common::rune_t lexer::peek() {
+        while (!_source_file->eof()) {
+            auto ch = _source_file->next();
             if (!isspace(ch))
                 return ch;
         }
         return 0;
-    }
-
-    void lexer::mark_position() {
-        _mark = _source.tellg();
-        _marked_line = _line;
-        _marked_column = _column;
-    }
-
-    void lexer::increment_line() {
-        auto pos = _source.tellg();
-        if (_line_breaks.count(pos) == 0) {
-            _line++;
-            _previous_line_column = _column;
-            _column = 0;
-            _line_breaks.insert(pos);
-        }
     }
 
     bool lexer::has_next() const {
@@ -253,38 +234,42 @@ namespace basecode::syntax {
     }
 
     void lexer::rewind_one_char() {
-        _source.seekg(-1, std::ios_base::cur);
+        auto pos = _source_file->pos();
+        if (pos == 0)
+            return;
+        _source_file->seek(pos - 1);
     }
 
-    void lexer::restore_position() {
-        _source.seekg(_mark);
-        _line = _marked_line;
-        _column = _marked_column;
+    void lexer::set_token_location(token_t& token) {
+        auto column = _source_file->column_by_index(_source_file->pos());
+        auto source_line = _source_file->line_by_index(_source_file->pos());
+        token.location.end(source_line->line, column);
+        token.location.start(source_line->line, column);
     }
 
     bool lexer::next(token_t& token) {
-        const auto ch = static_cast<char>(tolower(read()));
-        if (ch == std::char_traits<char>::eof()) {
+        if (_source_file->eof()) {
             _has_next = false;
             token = s_end_of_file;
-            token.location.end(_line, _column);
-            token.location.start(_line, _column);
+            set_token_location(token);
             return true;
         }
+
+        const auto ch = tolower(read());
         rewind_one_char();
-        mark_position();
+        _source_file->push_mark();
 
         auto case_range = s_cases.equal_range(ch);
         for (auto it = case_range.first; it != case_range.second; ++it) {
             token.radix = 10;
             token.number_type = number_types_t::none;
-            auto line = _line;
-            auto start_column = _column - 1;
+            auto start_column = _source_file->column_by_index(_source_file->pos());
+            auto start_line = _source_file->line_by_index(_source_file->pos());
             if (it->second(this, token)) {
-                token.location.start(_line, start_column);
-                token.location.end(
-                    _line,
-                    _line > line ? _previous_line_column : _column - 1);
+                auto end_column = _source_file->column_by_index(_source_file->pos());
+                auto end_line = _source_file->line_by_index(_source_file->pos());
+                token.location.start(start_line->line, start_column);
+                token.location.end(end_line->line, end_column);
                 fmt::print(
                     "token.type = {}, start = {}@{}, end = {}@{}\n",
                     token.name(),
@@ -294,28 +279,22 @@ namespace basecode::syntax {
                     token.location.end().column);
                 return true;
             }
-            restore_position();
+            _source_file->restore_top_mark();
         }
+
+        _source_file->pop_mark();
 
         token = s_invalid;
         token.value = ch;
-        token.location.end(_line, _column);
-        token.location.start(_line, _column);
+        set_token_location(token);
         _has_next = false;
 
         return true;
     }
 
-    char lexer::read(bool skip_whitespace) {
+    common::rune_t lexer::read(bool skip_whitespace) {
         while (true) {
-            auto ch = static_cast<char>(_source.get());
-            if (ch == std::char_traits<char>::eof())
-                return ch;
-
-            _column++;
-
-            if (ch == '\n')
-                increment_line();
+            auto ch = _source_file->next();
 
             if (skip_whitespace && isspace(ch))
                 continue;
@@ -330,14 +309,16 @@ namespace basecode::syntax {
             return "";
         }
         std::stringstream stream;
-        stream << ch;
+        // XXX: requires utf8 fix
+        stream << static_cast<char>(ch);
         while (true) {
             ch = read(false);
             if (ch == ';') {
                 return stream.str();
             }
             if (ch == '_' || isalnum(ch)) {
-                stream << ch;
+                // XXX: requires utf8 fix
+                stream << static_cast<char>(ch);
                 continue;
             }
             return stream.str();
@@ -452,7 +433,8 @@ namespace basecode::syntax {
             auto ch = read(false);
             if (ch == target_ch)
                 break;
-            stream << ch;
+            // XXX: requires utf8 fix
+            stream << static_cast<char>(ch);
         }
         return stream.str();
     }
@@ -915,7 +897,8 @@ namespace basecode::syntax {
                     continue;
                 if (!ishexnumber(ch))
                     break;
-                stream << ch;
+                // XXX: requires utf8 fix
+                stream << static_cast<char>(ch);
             }
         } else if (ch == '@') {
             const std::string valid = "012345678";
@@ -924,9 +907,11 @@ namespace basecode::syntax {
                 ch = read();
                 if (ch == '_')
                     continue;
-                if (valid.find_first_of(ch) == std::string::npos)
+                // XXX: requires utf8 fix
+                if (valid.find_first_of(static_cast<char>(ch)) == std::string::npos)
                     break;
-                stream << ch;
+                // XXX: requires utf8 fix
+                stream << static_cast<char>(ch);
             }
         } else if (ch == '%') {
             token.radix = 2;
@@ -936,15 +921,18 @@ namespace basecode::syntax {
                     continue;
                 if (ch != '0' && ch != '1')
                     break;
-                stream << ch;
+                // XXX: requires utf8 fix
+                stream << static_cast<char>(ch);
             }
         } else {
             const std::string valid = "0123456789_.";
-            while (valid.find_first_of(ch) != std::string::npos) {
+            // XXX: requires utf8 fix
+            while (valid.find_first_of(static_cast<char>(ch)) != std::string::npos) {
                 if (ch != '_') {
                     if (ch == '.')
                         token.number_type = number_types_t::floating_point;
-                    stream << ch;
+                    // XXX: requires utf8 fix
+                    stream << static_cast<char>(ch);
                 }
                 ch = read();
             }
@@ -1092,10 +1080,9 @@ namespace basecode::syntax {
 
             std::stringstream stream;
             while (true) {
-                if (_source.eof()) {
+                if (_source_file->eof()) {
                     token = s_end_of_file;
-                    token.location.end(_line, _column);
-                    token.location.start(_line, _column);
+                    set_token_location(token);
                     return true;
                 }
 
@@ -1121,7 +1108,8 @@ namespace basecode::syntax {
                         ch = read(false);
                     }
                 }
-                stream << ch;
+                // XXX: requires utf8 fix
+                stream << static_cast<char>(ch);
             }
 
             token.value = stream.str();

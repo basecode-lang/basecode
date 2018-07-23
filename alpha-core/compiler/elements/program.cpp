@@ -702,7 +702,7 @@ namespace basecode::compiler {
 
         initialize_core_types(r);
 
-        for (const auto& source_file : session.source_files()) {
+        for (auto source_file : session.source_files()) {
             if (!compile_module(r, session, source_file))
                 return false;
         }
@@ -751,8 +751,8 @@ namespace basecode::compiler {
     bool program::compile_module(
             common::result& r,
             compiler::session& session,
-            const std::filesystem::path& source_file) {
-        session.raise_phase(session_compile_phase_t::start, source_file);
+            common::source_file* source_file) {
+        session.raise_phase(session_compile_phase_t::start, source_file->path());
 
         auto module_node = session.parse(r, source_file);
         if (module_node != nullptr) {
@@ -765,10 +765,10 @@ namespace basecode::compiler {
         }
 
         if (r.is_failed()) {
-            session.raise_phase(session_compile_phase_t::failed, source_file);
+            session.raise_phase(session_compile_phase_t::failed, source_file->path());
             return false;
         } else {
-            session.raise_phase(session_compile_phase_t::success, source_file);
+            session.raise_phase(session_compile_phase_t::success, source_file->path());
             return true;
         }
     }

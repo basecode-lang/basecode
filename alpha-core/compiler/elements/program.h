@@ -14,6 +14,7 @@
 #include <functional>
 #include <parser/ast.h>
 #include <common/id_pool.h>
+#include <common/source_file.h>
 #include <compiler/compiler_types.h>
 #include "element.h"
 #include "element_map.h"
@@ -44,7 +45,7 @@ namespace basecode::compiler {
         bool compile_module(
             common::result& r,
             compiler::session& session,
-            const std::filesystem::path& source_file);
+            common::source_file* source_file);
 
         element_map& elements();
 

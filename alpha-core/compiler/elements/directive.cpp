@@ -95,8 +95,9 @@ namespace basecode::compiler {
             common::result& r,
             compiler::session& session,
             compiler::program* program) {
-        auto source_file = dynamic_cast<compiler::string_literal*>(_expression);
-        return program->compile_module(r, session, source_file->value());
+        auto path = dynamic_cast<compiler::string_literal*>(_expression);
+        auto source_file = session.add_source_file(path->value());
+        return program->compile_module(r, session, source_file);
     }
 
     ///////////////////////////////////////////////////////////////////////////

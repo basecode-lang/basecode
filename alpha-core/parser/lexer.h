@@ -16,6 +16,8 @@
 #include <vector>
 #include <istream>
 #include <functional>
+#include <common/rune.h>
+#include <common/source_file.h>
 #include "token.h"
 
 namespace basecode::syntax {
@@ -24,7 +26,7 @@ namespace basecode::syntax {
     public:
         using lexer_case_callable = std::function<bool (lexer*, token_t&)>;
 
-        explicit lexer(std::istream& source);
+        explicit lexer(common::source_file* source_file);
 
         bool has_next() const;
 
@@ -170,35 +172,25 @@ namespace basecode::syntax {
         bool greater_than_equal_operator(token_t& token);
 
     private:
-        char peek();
-
-        void mark_position();
-
-        void increment_line();
+        common::rune_t peek();
 
         void rewind_one_char();
-
-        void restore_position();
 
         std::string read_identifier();
 
         std::string read_until(char target_ch);
 
-        char read(bool skip_whitespace = true);
+        void set_token_location(token_t& token);
 
         bool match_literal(const std::string& literal);
+
+        common::rune_t read(bool skip_whitespace = true);
 
     private:
         static std::multimap<char, lexer_case_callable> s_cases;
 
-        uint32_t _line = 0;
-        uint32_t _column = 0;
         bool _has_next = true;
-        std::istream& _source;
-        uint32_t _marked_line = 0;
-        uint32_t _marked_column = 0;
-        std::istream::pos_type _mark;
-        uint32_t _previous_line_column = 0;
+        common::source_file* _source_file = nullptr;
         std::set<std::istream::pos_type> _line_breaks {};
     };
 

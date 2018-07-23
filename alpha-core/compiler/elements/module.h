@@ -11,6 +11,7 @@
 
 #pragma once
 
+#include <common/source_file.h>
 #include "element.h"
 
 namespace basecode::compiler {
@@ -23,9 +24,9 @@ namespace basecode::compiler {
 
         compiler::block* scope();
 
-        std::filesystem::path source_file() const;
+        common::source_file* source_file() const;
 
-        void source_file(const std::filesystem::path& value);
+        void source_file(common::source_file* source_file);
 
     protected:
         bool on_emit(
@@ -36,7 +37,7 @@ namespace basecode::compiler {
 
     private:
         compiler::block* _scope = nullptr;
-        std::filesystem::path _source_file;
+        common::source_file* _source_file = nullptr;
     };
 
 };
