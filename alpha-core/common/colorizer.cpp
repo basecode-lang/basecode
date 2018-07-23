@@ -17,21 +17,28 @@ namespace basecode::common {
 
     std::string colorizer::colorize(
             const std::string& text,
-            term_colors_t color) {
-        return fmt::format("\033[1;{}m{}\033[0m", (uint32_t)color, text);
+            term_colors_t fg_color,
+            term_colors_t bg_color) {
+        return fmt::format(
+            "\033[1;{}m\033[1;{}m{}\033[0m",
+            (uint32_t)bg_color + 10,
+            (uint32_t)fg_color,
+            text);
     }
 
     std::string colorizer::colorize_range(
             const std::string& text,
             size_t begin,
             size_t end,
-            term_colors_t color) {
+            term_colors_t fg_color,
+            term_colors_t bg_color) {
         std::stringstream colored_source;
         for (size_t j = 0; j < text.length(); j++) {
             if (j == begin) {
                 colored_source << fmt::format(
-                    "\033[1;{}m",
-                    (uint32_t)color);
+                    "\033[1;{}m\033[1;{}m",
+                    (uint32_t)bg_color + 10,
+                    (uint32_t)fg_color);
             } else if (j == end) {
                 colored_source << "\033[0m";
             }

@@ -30,7 +30,9 @@ static void print_results(basecode::common::result& r) {
     if (has_messages)
         fmt::print("\n");
 
-    for (const auto& msg : r.messages()) {
+    auto messages = r.messages();
+    for (size_t i = 0; i < messages.size(); i++) {
+        const auto& msg = messages[i];
         fmt::print(
             "[{}] {}{}\n",
             msg.code(),
@@ -39,10 +41,9 @@ static void print_results(basecode::common::result& r) {
         if (!msg.details().empty()) {
             fmt::print("{}\n", msg.details());
         }
+        if (i < messages.size() - 1)
+            fmt::print("\n");
     }
-
-    if (has_messages)
-        fmt::print("\n");
 }
 
 static void usage() {
@@ -126,6 +127,11 @@ int main(int argc, char** argv) {
     }
 
     high_resolution_clock::time_point start = high_resolution_clock::now();
+    defer({
+        high_resolution_clock::time_point end = high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+        fmt::print("\ncompilation time (in μs): {}\n", duration);
+    });
 
     std::vector<std::filesystem::path> source_files {};
     while (ya_optind < argc) {
@@ -170,9 +176,6 @@ int main(int argc, char** argv) {
             print_results(r);
             return 1;
         } else {
-            high_resolution_clock::time_point end = high_resolution_clock::now();
-            auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
-            fmt::print("compilation time (in μs): {}\n", duration);
             fmt::print("\n");
             compilation_session.finalize();
             return 0;

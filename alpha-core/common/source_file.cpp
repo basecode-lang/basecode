@@ -56,7 +56,8 @@ namespace basecode::common {
                            source_text,
                            location.start().column,
                            location.end().column,
-                           common::term_colors_t::magenta) << "\n"
+                           common::term_colors_t::yellow,
+                           common::term_colors_t::blue) << "\n"
                        << fmt::format("{}{}",
                               std::string(6 + location.start().column, ' '),
                               message_indicator);
