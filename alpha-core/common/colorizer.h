@@ -16,16 +16,6 @@
 
 namespace basecode::common {
 
-//    foreground background
-//    black        30         40
-//    red          31         41
-//    green        32         42
-//    yellow       33         43
-//    blue         34         44
-//    magenta      35         45
-//    cyan         36         46
-//    white        37         47
-
     enum class term_colors_t : uint8_t {
         black = 30,
         red,
@@ -50,6 +40,12 @@ namespace basecode::common {
             size_t end,
             term_colors_t fg_color,
             term_colors_t bg_color = term_colors_t::black);
+
+        static constexpr const char* color_code_reset();
+
+        static std::string color_code(term_colors_t color);
+
+        static constexpr term_colors_t make_bg_color(term_colors_t color);
     };
 
 };

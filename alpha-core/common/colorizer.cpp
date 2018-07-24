@@ -20,10 +20,11 @@ namespace basecode::common {
             term_colors_t fg_color,
             term_colors_t bg_color) {
         return fmt::format(
-            "\033[1;{}m\033[1;{}m{}\033[0m",
-            (uint32_t)bg_color + 10,
-            (uint32_t)fg_color,
-            text);
+            "{}{}{}{}",
+            color_code(make_bg_color(bg_color)),
+            color_code(fg_color),
+            text,
+            color_code_reset());
     }
 
     std::string colorizer::colorize_range(
@@ -34,17 +35,38 @@ namespace basecode::common {
             term_colors_t bg_color) {
         std::stringstream colored_source;
         for (size_t j = 0; j < text.length(); j++) {
-            if (j == begin) {
+            if (begin == end && j == begin) {
                 colored_source << fmt::format(
-                    "\033[1;{}m\033[1;{}m",
-                    (uint32_t)bg_color + 10,
-                    (uint32_t)fg_color);
-            } else if (j == end) {
-                colored_source << "\033[0m";
+                    "{}{}",
+                    color_code(make_bg_color(bg_color)),
+                    color_code(fg_color));
+                colored_source << text[j];
+                colored_source << color_code_reset();
+            } else {
+                if (j == begin) {
+                    colored_source << fmt::format(
+                        "{}{}",
+                        color_code(make_bg_color(bg_color)),
+                        color_code(fg_color));
+                } else if (j == end) {
+                    colored_source << color_code_reset();
+                }
+                colored_source << text[j];
             }
-            colored_source << text[j];
         }
         return colored_source.str();
+    }
+
+    constexpr const char* colorizer::color_code_reset() {
+        return "\033[0m";
+    }
+
+    std::string colorizer::color_code(term_colors_t color) {
+        return fmt::format("\033[1;{}m", (uint32_t) color);
+    }
+
+    constexpr term_colors_t colorizer::make_bg_color(term_colors_t color) {
+        return static_cast<term_colors_t>(static_cast<uint8_t>(color) + 10);
     }
 
 };
