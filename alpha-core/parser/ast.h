@@ -216,11 +216,7 @@ namespace basecode::syntax {
 
         virtual ~ast_builder();
 
-        ast_node_shared_ptr if_node();
-
         ast_node_shared_ptr pair_node();
-
-        ast_node_shared_ptr else_node();
 
         ast_node_shared_ptr end_scope();
 
@@ -230,15 +226,9 @@ namespace basecode::syntax {
 
         ast_node_t* current_scope() const;
 
-        ast_node_shared_ptr return_node();
-
-        ast_node_shared_ptr for_in_node();
-
         ast_node_shared_ptr symbol_node();
 
         ast_node_shared_ptr module_node();
-
-        ast_node_shared_ptr else_if_node();
 
         ast_node_shared_ptr type_list_node();
 
@@ -265,9 +255,11 @@ namespace basecode::syntax {
 
         ast_node_shared_ptr parameter_list_node();
 
-        ast_node_shared_ptr proc_expression_node();
-
         ast_node_shared_ptr type_identifier_node();
+
+        ast_node_shared_ptr if_node(token_t& token);
+
+        ast_node_shared_ptr else_node(token_t& token);
 
         ast_node_shared_ptr from_node(token_t& token);
 
@@ -279,7 +271,13 @@ namespace basecode::syntax {
 
         ast_node_shared_ptr return_argument_list_node();
 
+        ast_node_shared_ptr return_node(token_t& token);
+
+        ast_node_shared_ptr for_in_node(token_t& token);
+
         void push_scope(const ast_node_shared_ptr& node);
+
+        ast_node_shared_ptr else_if_node(token_t& token);
 
         ast_node_shared_ptr assignment_target_list_node();
 
@@ -300,6 +298,8 @@ namespace basecode::syntax {
         ast_node_shared_ptr constant_node(const token_t& token);
 
         ast_node_shared_ptr continue_node(const token_t& token);
+
+        ast_node_shared_ptr proc_expression_node(token_t& token);
 
         ast_node_shared_ptr directive_node(const token_t& token);
 

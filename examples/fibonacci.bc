@@ -63,8 +63,7 @@ alpha::compiler::examples := ns {
 
     fib_main := proc():u32 {
         import alpha::compiler::config::fibonacci;
-        // XXX: why is the compiler OK with this?
-        final_fib_value := cast<u32>(fib(length_of_sequence));
+        final_fib_value := cast<u32>(fib(alpha::compiler::config::fibonacci::length_of_sequence));
 
     'the_end:
         return final_fib_value;

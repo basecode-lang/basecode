@@ -28,9 +28,15 @@ namespace basecode::compiler {
 
         void constant(bool value);
 
+        void cache_fully_qualified_name();
+
+        std::string fully_qualified_name();
+
         const string_list_t& namespaces() const;
 
-        std::string fully_qualified_name() const;
+        bool operator== (const symbol_element& other) const;
+
+        bool operator== (const qualified_symbol_t& other) const;
 
     protected:
         bool on_is_constant() const override;
@@ -39,6 +45,7 @@ namespace basecode::compiler {
         std::string _name {};
         bool _is_constant = false;
         string_list_t _namespaces {};
+        std::string _fully_qualified_name {};
     };
 
 };

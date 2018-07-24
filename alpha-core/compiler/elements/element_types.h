@@ -423,7 +423,12 @@ namespace basecode::compiler {
         }
         std::string name {};
         string_list_t namespaces {};
+        std::string fully_qualified_name {};
         common::source_location location {};
     };
+
+    std::string make_fully_qualified_name(const symbol_element* symbol);
+
+    std::string make_fully_qualified_name(const qualified_symbol_t& symbol);
 
 };

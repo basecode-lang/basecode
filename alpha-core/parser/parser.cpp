@@ -348,7 +348,7 @@ namespace basecode::syntax {
             common::result& r,
             parser* parser,
             token_t& token) {
-        auto for_node = parser->ast_builder()->for_in_node();
+        auto for_node = parser->ast_builder()->for_in_node(token);
         for_node->lhs = parser->parse_expression(r, 0);
 
         token_t in_token;
@@ -368,7 +368,7 @@ namespace basecode::syntax {
             common::result& r,
             parser* parser,
             token_t& token) {
-        auto return_node = parser->ast_builder()->return_node();
+        auto return_node = parser->ast_builder()->return_node(token);
         if (parser->peek(token_types_t::semi_colon))
             return return_node;
         pairs_to_list(return_node->rhs, parser->parse_expression(r, 0));
@@ -381,7 +381,7 @@ namespace basecode::syntax {
             common::result& r,
             parser* parser,
             token_t& token) {
-        auto if_node = parser->ast_builder()->if_node();
+        auto if_node = parser->ast_builder()->if_node(token);
         if_node->lhs = parser->parse_expression(r, 0);
         if_node->children.push_back(parser->parse_expression(r, 0));
 
@@ -389,16 +389,20 @@ namespace basecode::syntax {
         while (true) {
             if (!parser->peek(token_types_t::else_if_literal))
                 break;
+            token_t else_if_token;
+            parser->current(else_if_token);
             parser->consume();
-            current_branch->rhs = parser->ast_builder()->else_if_node();
+            current_branch->rhs = parser->ast_builder()->else_if_node(else_if_token);
             current_branch->rhs->lhs = parser->parse_expression(r, 0);
             current_branch->rhs->children.push_back(parser->parse_expression(r, 0));
             current_branch = current_branch->rhs;
         }
 
         if (parser->peek(token_types_t::else_literal)) {
+            token_t else_token;
+            parser->current(else_token);
             parser->consume();
-            current_branch->rhs = parser->ast_builder()->else_node();
+            current_branch->rhs = parser->ast_builder()->else_node(else_token);
             current_branch->rhs->children.push_back(parser->parse_expression(r, 0));
         }
 
@@ -420,7 +424,7 @@ namespace basecode::syntax {
             common::result& r,
             parser* parser,
             token_t& token) {
-        return parser->parse_scope(r);
+        return parser->parse_scope(r, token);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -429,7 +433,7 @@ namespace basecode::syntax {
             common::result& r,
             parser* parser,
             token_t& token) {
-        auto proc_node = parser->ast_builder()->proc_expression_node();
+        auto proc_node = parser->ast_builder()->proc_expression_node(token);
 
         token_t left_paren_token;
         left_paren_token.type = token_types_t::left_paren;
@@ -838,6 +842,15 @@ namespace basecode::syntax {
         return token.type != token_types_t::end_of_file;
     }
 
+    bool parser::current(token_t& token) {
+        if (!look_ahead(0))
+            return false;
+
+        token = _tokens.front();
+
+        return token.type != token_types_t::end_of_file;
+    }
+
     bool parser::peek(token_types_t type) {
         if (!look_ahead(0))
             return false;
@@ -947,7 +960,8 @@ namespace basecode::syntax {
     }
 
     ast_node_shared_ptr parser::parse(common::result& r) {
-        return parse_scope(r);
+        token_t empty_token {};
+        return parse_scope(r, empty_token);
     }
 
     bool parser::expect(common::result& r, token_t& token) {
@@ -974,12 +988,18 @@ namespace basecode::syntax {
         return true;
     }
 
-    ast_node_shared_ptr parser::parse_scope(common::result& r) {
+    ast_node_shared_ptr parser::parse_scope(
+            common::result& r,
+            token_t& token) {
         auto scope = _ast_builder.begin_scope();
+        scope->location.start(token.location.start());
 
         while (true) {
             if (peek(token_types_t::right_curly_brace)) {
+                token_t right_curly_brace;
+                current(right_curly_brace);
                 consume();
+                scope->location.end(right_curly_brace.location.end());
                 break;
             }
 

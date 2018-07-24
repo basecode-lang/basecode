@@ -133,10 +133,18 @@ namespace basecode::compiler {
                     expr);
 
                 std::string path;
-                if (expr->as_string(path)) {
+                if (expr->is_constant() && expr->as_string(path)) {
                     auto source_file = session.add_source_file(path);
                     auto module = compile_module(r, session, source_file);
                     reference->module(module);
+                } else {
+                    error(
+                        r,
+                        session,
+                        "C021",
+                        "expected string literal or constant string variable.",
+                        node->rhs->location);
+                    return nullptr;
                 }
 
                 return reference;
@@ -992,6 +1000,7 @@ namespace basecode::compiler {
             name,
             namespaces);
         _elements.add(symbol);
+        symbol->cache_fully_qualified_name();
         return symbol;
     }
 
@@ -1496,6 +1505,8 @@ namespace basecode::compiler {
             element* expr) {
         auto cast = new compiler::cast(parent_scope, type, expr);
         _elements.add(cast);
+        if (expr != nullptr)
+            expr->parent_element(cast);
         return cast;
     }
 
@@ -1810,15 +1821,10 @@ namespace basecode::compiler {
                 continue;
             }
 
-            identifier_list_t candidates {};
-            auto all_identifiers = _elements.find_by_type(element_type_t::identifier);
-            for (auto element : all_identifiers) {
-                auto identifier = dynamic_cast<compiler::identifier*>(element);
-                if (identifier->symbol()->name() == unresolved_reference->symbol().name)
-                    candidates.emplace_back(identifier);
-            }
-
-            if (candidates.empty()) {
+            auto identifier = find_identifier(
+                unresolved_reference->symbol(),
+                unresolved_reference->parent_scope());
+            if (identifier == nullptr) {
                 ++it;
                 error(
                     r,
@@ -1831,8 +1837,7 @@ namespace basecode::compiler {
                 continue;
             }
 
-            auto winner = candidates.front();
-            unresolved_reference->identifier(winner);
+            unresolved_reference->identifier(identifier);
 
             it = _unresolved_identifier_references.erase(it);
         }
@@ -1910,6 +1915,7 @@ namespace basecode::compiler {
         }
         symbol.name = node->children.back()->token.value;
         symbol.location = node->location;
+        symbol.fully_qualified_name = make_fully_qualified_name(symbol);
     }
 
     compiler::symbol_element* program::make_symbol_from_node(
@@ -2002,7 +2008,9 @@ namespace basecode::compiler {
         return import_element;
     }
 
-    compiler::identifier* program::find_identifier(const qualified_symbol_t& symbol) {
+    compiler::identifier* program::find_identifier(
+            const qualified_symbol_t& symbol,
+            compiler::block* scope) {
         if (symbol.is_qualified()) {
             auto block_scope = _top_level_stack.top();
             for (const auto& namespace_name : symbol.namespaces) {
@@ -2019,7 +2027,7 @@ namespace basecode::compiler {
             }
             return block_scope->identifiers().find(symbol.name);
         } else {
-            auto block_scope = current_scope();
+            auto block_scope = scope != nullptr ? scope : current_scope();
             while (block_scope != nullptr) {
                 auto var = block_scope->identifiers().find(symbol.name);
                 if (var != nullptr)

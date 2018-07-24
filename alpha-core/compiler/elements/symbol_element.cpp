@@ -37,23 +37,26 @@ namespace basecode::compiler {
         return _is_constant;
     }
 
+    void symbol_element::cache_fully_qualified_name() {
+        _fully_qualified_name = make_fully_qualified_name(this);
+    }
+
+    std::string symbol_element::fully_qualified_name() {
+        if (_fully_qualified_name.empty())
+            cache_fully_qualified_name();
+        return _fully_qualified_name;
+    }
+
     const string_list_t& symbol_element::namespaces() const {
         return _namespaces;
     }
 
-    std::string symbol_element::fully_qualified_name() const {
-        std::stringstream stream {};
-        auto count = 0;
-        for (const auto& name : _namespaces) {
-            if (count > 0)
-                stream << "::";
-            stream << name;
-            count++;
-        }
-        if (count > 0)
-            stream << "::";
-        stream << _name;
-        return stream.str();
+    bool symbol_element::operator==(const symbol_element& other) const {
+        return _fully_qualified_name == other._fully_qualified_name;
+    }
+
+    bool symbol_element::operator==(const qualified_symbol_t& other) const {
+        return _fully_qualified_name == other.fully_qualified_name;
     }
 
 };

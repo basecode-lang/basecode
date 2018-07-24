@@ -571,9 +571,15 @@ namespace basecode::syntax {
 
         bool consume(token_t& token);
 
+        bool current(token_t& token);
+
         bool peek(token_types_t type);
 
         bool look_ahead(size_t count);
+
+        ast_node_shared_ptr parse_scope(
+            common::result& r,
+            token_t& token);
 
         syntax::ast_builder* ast_builder();
 
@@ -589,8 +595,6 @@ namespace basecode::syntax {
         ast_node_shared_ptr parse(common::result& r);
 
         bool expect(common::result& r, token_t& token);
-
-        ast_node_shared_ptr parse_scope(common::result& r);
 
     protected:
         ast_node_shared_ptr parse_statement(common::result& r);
