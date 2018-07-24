@@ -11,20 +11,13 @@
 
 #pragma once
 
-#include "composite_type.h"
+#include <string>
 
-namespace basecode::compiler {
+namespace basecode::common {
 
-    class tuple_type : public compiler::composite_type {
+    class graphviz_formatter {
     public:
-        tuple_type(
-            compiler::block* parent_scope,
-            compiler::block* scope);
-
-    protected:
-        bool on_initialize(
-            common::result& r,
-            compiler::program* program) override;
+        static std::string escape_chars(const std::string& value);
     };
 
 };

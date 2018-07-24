@@ -45,6 +45,31 @@ namespace basecode::syntax {
     }
 
     ///////////////////////////////////////////////////////////////////////////
+    static ast_node_shared_ptr create_module_expression_node(
+            common::result& r,
+            parser* parser,
+            const ast_node_shared_ptr& lhs,
+            token_t& token) {
+        auto module_expression_node = parser
+            ->ast_builder()
+            ->module_expression_node(token);
+
+        token_t left_paren;
+        left_paren.type = token_types_t::left_paren;
+        if (!parser->expect(r, left_paren))
+            return nullptr;
+
+        module_expression_node->rhs = parser->parse_expression(r, 0);
+
+        token_t right_paren;
+        right_paren.type = token_types_t::right_paren;
+        if (!parser->expect(r, right_paren))
+            return nullptr;
+
+        return module_expression_node;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
 
     static ast_node_shared_ptr create_symbol_node(
             common::result& r,
@@ -217,23 +242,7 @@ namespace basecode::syntax {
             common::result& r,
             parser* parser,
             token_t& token) {
-        auto module_expression_node = parser
-            ->ast_builder()
-            ->module_expression_node(token);
-
-        token_t left_paren;
-        left_paren.type = token_types_t::left_paren;
-        if (!parser->expect(r, left_paren))
-            return nullptr;
-
-        module_expression_node->rhs = parser->parse_expression(r, 0);
-
-        token_t right_paren;
-        right_paren.type = token_types_t::right_paren;
-        if (!parser->expect(r, right_paren))
-            return nullptr;
-
-        return module_expression_node;
+        return create_module_expression_node(r, parser, nullptr, token);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -492,6 +501,12 @@ namespace basecode::syntax {
             case token_types_t::import_literal: {
                 auto import_node = parser->ast_builder()->import_node(token);
                 import_node->lhs = parser->parse_expression(r, 0);
+
+                if (parser->peek(syntax::token_types_t::from_literal)) {
+                    parser->consume();
+                    import_node->rhs = parser->parse_expression(r, 0);
+                }
+
                 return import_node;
             }
             case token_types_t::break_literal: {

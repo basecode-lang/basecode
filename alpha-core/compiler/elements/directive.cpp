@@ -82,26 +82,6 @@ namespace basecode::compiler {
 
     ///////////////////////////////////////////////////////////////////////////
     //
-    // load directive
-
-    bool directive::on_execute_load(
-            common::result& r,
-            compiler::session& session,
-            compiler::program* program) {
-        return true;
-    }
-
-    bool directive::on_evaluate_load(
-            common::result& r,
-            compiler::session& session,
-            compiler::program* program) {
-        auto path = dynamic_cast<compiler::string_literal*>(_expression);
-        auto source_file = session.add_source_file(path->value());
-        return program->compile_module(r, session, source_file);
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    //
     // foreign directive
 
     bool directive::on_execute_foreign(

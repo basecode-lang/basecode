@@ -11,6 +11,7 @@
 
 #include <set>
 #include <fmt/format.h>
+#include <common/graphviz_formatter.h>
 #include "ast_formatter.h"
 
 namespace basecode::syntax {
@@ -42,7 +43,9 @@ namespace basecode::syntax {
             case basecode::syntax::ast_node_types_t::line_comment:
             case basecode::syntax::ast_node_types_t::block_comment:
                 style = ", fillcolor=green, style=\"filled\"";
-                details = fmt::format("|{{ token: '{}' }}", node->token.value);
+                details = fmt::format(
+                    "|{{ token: '{}' }}",
+                    common::graphviz_formatter::escape_chars(node->token.value));
                 break;
             case basecode::syntax::ast_node_types_t::module:
                 style = ", fillcolor=cadetblue, style=\"filled\"";

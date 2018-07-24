@@ -19,6 +19,7 @@
 #include <compiler/elements/module.h>
 #include <compiler/elements/program.h>
 #include <compiler/elements/comment.h>
+#include <common/graphviz_formatter.h>
 #include <compiler/elements/any_type.h>
 #include <compiler/elements/type_info.h>
 #include <compiler/elements/attribute.h>
@@ -29,6 +30,7 @@
 #include <compiler/elements/array_type.h>
 #include <compiler/elements/identifier.h>
 #include <compiler/elements/if_element.h>
+#include <compiler/elements/module_type.h>
 #include <compiler/elements/initializer.h>
 #include <compiler/elements/string_type.h>
 #include <compiler/elements/numeric_type.h>
@@ -45,6 +47,7 @@
 #include <compiler/elements/integer_literal.h>
 #include <compiler/elements/boolean_literal.h>
 #include <compiler/elements/binary_operator.h>
+#include <compiler/elements/module_reference.h>
 #include <compiler/elements/namespace_element.h>
 #include <compiler/elements/procedure_instance.h>
 #include <compiler/elements/identifier_reference.h>
@@ -112,6 +115,16 @@ namespace basecode::compiler {
                     element->source_file()->path().string(),
                     style);
             }
+            case element_type_t::module_reference: {
+                auto element = dynamic_cast<module_reference*>(node);
+                auto style = ", fillcolor=grey, style=\"filled\"";
+                add_primary_edge(element, element->expression());
+                add_primary_edge(element, element->module());
+                return fmt::format(
+                    "{}[shape=record,label=\"module_reference\"{}];",
+                    node_vertex_name,
+                    style);
+            }
             case element_type_t::symbol: {
                 auto element = dynamic_cast<symbol_element*>(node);
                 auto style = ", fillcolor=pink, style=\"filled\"";
@@ -127,7 +140,7 @@ namespace basecode::compiler {
                 auto details = fmt::format(
                     "comment|{{type: {} | value: '{}' }}",
                     comment_type_name(comment_element->type()),
-                    escape_graphviz_chars(comment_element->value()));
+                    common::graphviz_formatter::escape_chars(comment_element->value()));
                 return fmt::format(
                     "{}[shape=record,label=\"{}\"{}];",
                     node_vertex_name,
@@ -168,6 +181,9 @@ namespace basecode::compiler {
                 auto element = dynamic_cast<import*>(node);
                 auto style = ", fillcolor=cyan, style=\"filled\"";
                 add_primary_edge(element, element->expression());
+                auto from_expr = element->from_expression();
+                if (from_expr != nullptr)
+                    add_primary_edge(element, from_expr);
                 return fmt::format(
                     "{}[shape=record,label=\"import\"{}];",
                     node_vertex_name,
@@ -234,6 +250,7 @@ namespace basecode::compiler {
                 for (auto fld : element->fields().as_list())
                     add_primary_edge(element, fld);
                 add_primary_edge(element, element->scope());
+                add_primary_edge(element, element->symbol());
                 return fmt::format(
                     "{}[shape=record,label=\"any_type|{}\"{}];",
                     node_vertex_name,
@@ -246,6 +263,7 @@ namespace basecode::compiler {
                 for (auto fld : element->fields().as_list())
                     add_primary_edge(element, fld);
                 add_primary_edge(element, element->scope());
+                add_primary_edge(element, element->symbol());
                 return fmt::format(
                     "{}[shape=record,label=\"type_info|{}\"{}];",
                     node_vertex_name,
@@ -266,6 +284,7 @@ namespace basecode::compiler {
                 auto element = dynamic_cast<procedure_type*>(node);
                 auto style = ", fillcolor=gainsboro, style=\"filled\"";
                 add_primary_edge(element, element->scope());
+                add_primary_edge(element, element->symbol());
                 return fmt::format(
                     "{}[shape=record,label=\"proc_type|{}|foreign: {}\"{}];",
                     node_vertex_name,
@@ -353,6 +372,7 @@ namespace basecode::compiler {
                 for (auto fld : element->fields().as_list())
                     add_primary_edge(element, fld);
                 add_primary_edge(element, element->scope());
+                add_primary_edge(element, element->symbol());
                 return fmt::format(
                     "{}[shape=record,label=\"array_type|size: {}|type: {}\"{}];",
                     node_vertex_name,
@@ -396,6 +416,7 @@ namespace basecode::compiler {
                 for (auto fld : element->fields().as_list())
                     add_primary_edge(element, fld);
                 add_primary_edge(element, element->scope());
+                add_primary_edge(element, element->symbol());
                 return fmt::format(
                     "{}[shape=record,label=\"string_type|{}\"{}];",
                     node_vertex_name,
@@ -424,6 +445,7 @@ namespace basecode::compiler {
             case element_type_t::numeric_type: {
                 auto element = dynamic_cast<numeric_type*>(node);
                 auto style = ", fillcolor=gainsboro, style=\"filled\"";
+                add_primary_edge(element, element->symbol());
                 return fmt::format(
                     "{}[shape=record,label=\"numeric_type|{}\"{}];",
                     node_vertex_name,
@@ -458,12 +480,26 @@ namespace basecode::compiler {
                     element->value(),
                     style);
             }
+            case element_type_t::module_type: {
+                auto element = dynamic_cast<module_type*>(node);
+                auto style = ", fillcolor=gainsboro, style=\"filled\"";
+                for (auto fld : element->fields().as_list())
+                    add_primary_edge(element, fld);
+                add_primary_edge(element, element->scope());
+                add_primary_edge(element, element->symbol());
+                return fmt::format(
+                    "{}[shape=record,label=\"module_type|{}\"{}];",
+                    node_vertex_name,
+                    element->symbol()->name(),
+                    style);
+            }
             case element_type_t::tuple_type: {
                 auto element = dynamic_cast<tuple_type*>(node);
                 auto style = ", fillcolor=gainsboro, style=\"filled\"";
                 for (auto fld : element->fields().as_list())
                     add_primary_edge(element, fld);
                 add_primary_edge(element, element->scope());
+                add_primary_edge(element, element->symbol());
                 return fmt::format(
                     "{}[shape=record,label=\"tuple_type|{}\"{}];",
                     node_vertex_name,
@@ -476,6 +512,7 @@ namespace basecode::compiler {
                 for (auto fld : element->fields().as_list())
                     add_primary_edge(element, fld);
                 add_primary_edge(element, element->scope());
+                add_primary_edge(element, element->symbol());
                 return fmt::format(
                     "{}[shape=record,label=\"composite_type|{}|{}\"{}];",
                     node_vertex_name,
@@ -525,6 +562,7 @@ namespace basecode::compiler {
             case element_type_t::namespace_type: {
                 auto element = dynamic_cast<namespace_type*>(node);
                 auto style = ", fillcolor=gainsboro, style=\"filled\"";
+                add_primary_edge(element, element->symbol());
                 return fmt::format(
                     "{}[shape=record,label=\"namespace_type|{}\"{}];",
                     node_vertex_name,
@@ -574,22 +612,6 @@ namespace basecode::compiler {
             "{}_{}",
             element_type_name(node->element_type()),
             node->id());
-    }
-
-    std::string code_dom_formatter::escape_graphviz_chars(const std::string& value) {
-        std::string buffer;
-        for (const auto& c : value) {
-            if (c == '\"') {
-                buffer += "\\\"";
-            } else if (c == '{') {
-                buffer += "\\{";
-            } else if (c == '}') {
-                buffer += "\\}";
-            } else {
-                buffer += c;
-            }
-        }
-        return buffer;
     }
 
 };

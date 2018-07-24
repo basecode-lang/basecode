@@ -56,7 +56,7 @@ namespace basecode::compiler {
             common::result& r,
             compiler::session& session);
 
-        bool compile_module(
+        compiler::module* compile_module(
             common::result& r,
             compiler::session& session,
             common::source_file* source_file);
@@ -85,6 +85,7 @@ namespace basecode::compiler {
         friend class array_type;
         friend class tuple_type;
         friend class string_type;
+        friend class module_type;
         friend class numeric_type;
         friend class unary_operator;
         friend class namespace_type;
@@ -132,11 +133,16 @@ namespace basecode::compiler {
 
         import* make_import(
             compiler::block* parent_scope,
-            element* expr);
+            element* expr,
+            element* from_expr);
 
         module* make_module(
             compiler::block* parent_scope,
             compiler::block* scope);
+
+        module_reference* make_module_reference(
+            compiler::block* parent_scope,
+            compiler::element* expr);
 
         comment* make_comment(
             compiler::block* parent_scope,
@@ -227,6 +233,11 @@ namespace basecode::compiler {
             compiler::element* expr);
 
         tuple_type* make_tuple_type(
+            common::result& r,
+            compiler::block* parent_scope,
+            compiler::block* scope);
+
+        module_type* make_module_type(
             common::result& r,
             compiler::block* parent_scope,
             compiler::block* scope);

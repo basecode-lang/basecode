@@ -1139,7 +1139,7 @@ namespace basecode::syntax {
             auto ch = read(false);
             if (!isalnum(ch)) {
                 rewind_one_char();
-                token = s_from_literal;
+                token = s_module_literal;
                 return true;
             }
         }

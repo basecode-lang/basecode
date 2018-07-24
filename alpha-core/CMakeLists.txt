@@ -31,6 +31,7 @@ add_library(
         common/source_file.cpp common/source_file.h
         common/hex_formatter.cpp common/hex_formatter.h
         common/source_location.cpp common/source_location.h
+        common/graphviz_formatter.cpp common/graphviz_formatter.h
 
         parser/ast.cpp parser/ast.h
         parser/lexer.cpp parser/lexer.h
@@ -75,6 +76,7 @@ add_library(
         compiler/elements/element_map.cpp compiler/elements/element_map.h
         compiler/elements/initializer.cpp compiler/elements/initializer.h
         compiler/elements/string_type.cpp compiler/elements/string_type.h
+        compiler/elements/module_type.cpp compiler/elements/module_type.h
         compiler/elements/emit_context.cpp compiler/elements/emit_context.h
         compiler/elements/numeric_type.cpp compiler/elements/numeric_type.h
         compiler/elements/unknown_type.cpp compiler/elements/unknown_type.h
@@ -93,6 +95,7 @@ add_library(
         compiler/elements/integer_literal.cpp compiler/elements/integer_literal.h
         compiler/elements/binary_operator.cpp compiler/elements/binary_operator.h
         compiler/elements/boolean_literal.cpp compiler/elements/boolean_literal.h
+        compiler/elements/module_reference.cpp compiler/elements/module_reference.h
         compiler/elements/namespace_element.cpp compiler/elements/namespace_element.h
         compiler/elements/procedure_instance.cpp compiler/elements/procedure_instance.h
         compiler/elements/identifier_reference.cpp compiler/elements/identifier_reference.h)

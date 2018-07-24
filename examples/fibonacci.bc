@@ -9,9 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
-#load "../examples/preload.bc";
-
-//preload := module("../examples/preload.bc");
+preload := module("../examples/preload.bc");
 
 @library "libalpha-core.dylib";
 #foreign print := proc(format:string, values:...any) @alias "fmt_print";
@@ -38,7 +36,7 @@ alpha::compiler::examples := ns {
 
     is_this_true := count == (max == 256) && count == (max / 2);
 
-    //point:basecode::linear::vector3;
+    //point:preload::basecode::linear::vector3;
 
     bar := proc() {
         bing(256);
@@ -65,8 +63,8 @@ alpha::compiler::examples := ns {
 
     fib_main := proc():u32 {
         import alpha::compiler::config::fibonacci;
-
-        final_fib_value := cast<u32>(fib(alpha::compiler::config::fibonacci::length_of_sequence));
+        // XXX: why is the compiler OK with this?
+        final_fib_value := cast<u32>(fib(length_of_sequence));
 
     'the_end:
         return final_fib_value;

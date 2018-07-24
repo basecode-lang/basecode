@@ -34,6 +34,7 @@
 #include "array_type.h"
 #include "tuple_type.h"
 #include "initializer.h"
+#include "module_type.h"
 #include "string_type.h"
 #include "numeric_type.h"
 #include "unknown_type.h"
@@ -50,6 +51,7 @@
 #include "boolean_literal.h"
 #include "binary_operator.h"
 #include "integer_literal.h"
+#include "module_reference.h"
 #include "namespace_element.h"
 #include "procedure_instance.h"
 #include "identifier_reference.h"
@@ -123,6 +125,21 @@ namespace basecode::compiler {
                 _top_level_stack.pop();
 
                 return module;
+            }
+            case syntax::ast_node_types_t::module_expression: {
+                auto expr = resolve_symbol_or_evaluate(r, session, node->rhs);
+                auto reference = make_module_reference(
+                    current_scope(),
+                    expr);
+
+                std::string path;
+                if (expr->as_string(path)) {
+                    auto source_file = session.add_source_file(path);
+                    auto module = compile_module(r, session, source_file);
+                    reference->module(module);
+                }
+
+                return reference;
             }
             case syntax::ast_node_types_t::basic_block: {
                 auto active_scope = push_new_block(default_block_type);
@@ -452,9 +469,17 @@ namespace basecode::compiler {
                 return return_element;
             }
             case syntax::ast_node_types_t::import_expression: {
+                compiler::element* from_expr = nullptr;
+                if (node->rhs != nullptr) {
+                    from_expr = resolve_symbol_or_evaluate(
+                        r,
+                        session,
+                        node->rhs);
+                }
                 return make_import(
                     current_scope(),
-                    resolve_symbol_or_evaluate(r, session, node->lhs));
+                    resolve_symbol_or_evaluate(r, session, node->lhs),
+                    from_expr);
             }
             case syntax::ast_node_types_t::namespace_expression: {
                 return make_namespace(
@@ -726,7 +751,8 @@ namespace basecode::compiler {
         initialize_core_types(r);
 
         for (auto source_file : session.source_files()) {
-            if (!compile_module(r, session, source_file))
+            auto module = compile_module(r, session, source_file);
+            if (module == nullptr)
                 return false;
         }
 
@@ -771,7 +797,7 @@ namespace basecode::compiler {
         return _block;
     }
 
-    bool program::compile_module(
+    compiler::module* program::compile_module(
             common::result& r,
             compiler::session& session,
             common::source_file* source_file) {
@@ -782,9 +808,10 @@ namespace basecode::compiler {
 
         session.raise_phase(session_compile_phase_t::start, source_file->path());
 
+        compiler::module* module = nullptr;
         auto module_node = session.parse(r, source_file);
         if (module_node != nullptr) {
-            auto module = dynamic_cast<compiler::module*>(evaluate(
+            module = dynamic_cast<compiler::module*>(evaluate(
                 r,
                 session,
                 module_node));
@@ -793,11 +820,11 @@ namespace basecode::compiler {
 
         if (r.is_failed()) {
             session.raise_phase(session_compile_phase_t::failed, source_file->path());
-            return false;
         } else {
             session.raise_phase(session_compile_phase_t::success, source_file->path());
-            return true;
         }
+
+        return module;
     }
 
     element_map& program::elements() {
@@ -881,6 +908,10 @@ namespace basecode::compiler {
         auto parent_scope = current_scope();
 
         compiler::numeric_type::make_types(r, parent_scope, this);
+        add_type_to_scope(make_module_type(
+            r,
+            parent_scope,
+            make_block(parent_scope, element_type_t::block)));
         add_type_to_scope(make_namespace_type(r, parent_scope));
         add_type_to_scope(make_string_type(
             r,
@@ -1121,6 +1152,18 @@ namespace basecode::compiler {
         return type;
     }
 
+    module_type* program::make_module_type(
+            common::result& r,
+            compiler::block* parent_scope,
+            compiler::block* scope) {
+        auto type = new compiler::module_type(parent_scope, scope);
+        if (!type->initialize(r, this))
+            return nullptr;
+        scope->parent_element(type);
+        _elements.add(type);
+        return type;
+    }
+
     string_type* program::make_string_type(
             common::result& r,
             compiler::block* parent_scope,
@@ -1301,7 +1344,8 @@ namespace basecode::compiler {
             compiler::session& session,
             const syntax::ast_node_shared_ptr& node) {
         compiler::element* element = nullptr;
-        if (node->type == syntax::ast_node_types_t::symbol) {
+        if (node != nullptr
+        &&  node->type == syntax::ast_node_types_t::symbol) {
             qualified_symbol_t qualified_symbol {};
             make_qualified_symbol(qualified_symbol, node);
             element = make_identifier_reference(
@@ -1563,6 +1607,16 @@ namespace basecode::compiler {
         _elements.add(module_element);
         scope->parent_element(module_element);
         return module_element;
+    }
+
+    module_reference* program::make_module_reference(
+            compiler::block* parent_scope,
+            compiler::element* expr) {
+        auto module_reference = new compiler::module_reference(parent_scope, expr);
+        _elements.add(module_reference);
+        if (expr != nullptr)
+            expr->parent_element(module_reference);
+        return module_reference;
     }
 
     compiler::block* program::make_block(
@@ -1932,9 +1986,19 @@ namespace basecode::compiler {
         return false;
     }
 
-    import* program::make_import(compiler::block* parent_scope, element* expr) {
-        auto import_element = new compiler::import(parent_scope, expr);
+    import* program::make_import(
+            compiler::block* parent_scope,
+            element* expr,
+            element* from_expr) {
+        auto import_element = new compiler::import(parent_scope, expr, from_expr);
         _elements.add(import_element);
+
+        if (expr != nullptr)
+            expr->parent_element(import_element);
+
+        if (from_expr != nullptr)
+            from_expr->parent_element(import_element);
+
         return import_element;
     }
 

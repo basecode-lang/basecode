@@ -31,5 +31,4 @@ namespace basecode::compiler {
         return true;
     }
 
-
 };

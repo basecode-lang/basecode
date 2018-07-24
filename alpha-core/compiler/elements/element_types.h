@@ -43,6 +43,7 @@ namespace basecode::compiler {
     class array_type;
     class if_element;
     class tuple_type;
+    class module_type;
     class initializer;
     class string_type;
     class numeric_type;
@@ -61,6 +62,7 @@ namespace basecode::compiler {
     class boolean_literal;
     class integer_literal;
     class binary_operator;
+    class module_reference;
     class namespace_element;
     class procedure_instance;
     class identifier_reference;
@@ -134,6 +136,7 @@ namespace basecode::compiler {
         string_type,
         namespace_e,
         initializer,
+        module_type,
         unknown_type,
         numeric_type,
         module_block,
@@ -148,6 +151,7 @@ namespace basecode::compiler {
         integer_literal,
         binary_operator,
         proc_type_block,
+        module_reference,
         unknown_identifier,
         proc_instance_block,
         identifier_reference,
@@ -179,6 +183,7 @@ namespace basecode::compiler {
         {element_type_t::array_type, "array_type"},
         {element_type_t::identifier, "identifier"},
         {element_type_t::expression, "expression"},
+        {element_type_t::module_type, "module_type"},
         {element_type_t::string_type, "string_type"},
         {element_type_t::namespace_e, "namespace"},
         {element_type_t::initializer, "initializer"},
@@ -196,6 +201,7 @@ namespace basecode::compiler {
         {element_type_t::integer_literal, "integer_literal"},
         {element_type_t::binary_operator, "binary_operator"},
         {element_type_t::proc_type_block, "proc_type_block"},
+        {element_type_t::module_reference, "module_reference"},
         {element_type_t::unknown_identifier, "unknown_identifier"},
         {element_type_t::proc_instance_block, "proc_instance_block"},
         {element_type_t::identifier_reference, "identifier_reference"},

@@ -15,23 +15,28 @@
 
 namespace basecode::compiler {
 
-    class import : public element {
+    class module_reference : public element {
     public:
-        import(
-            block* parent_scope,
-            element* expr,
-            element* from_expr);
+        module_reference(
+            compiler::block* parent_scope,
+            compiler::element* expr);
 
-        element* expression();
+        compiler::module* module();
 
-        element* from_expression();
+        compiler::element* expression();
+
+        void module(compiler::module* value);
 
     protected:
+        bool on_is_constant() const override;
+
         void on_owned_elements(element_list_t& list) override;
 
+        compiler::type* on_infer_type(const compiler::program* program) override;
+
     private:
-        element* _expression = nullptr;
-        element* _from_expression = nullptr;
+        compiler::module* _module = nullptr;
+        compiler::element* _expression = nullptr;
     };
 
 };
