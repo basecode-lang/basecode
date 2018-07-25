@@ -377,6 +377,8 @@ namespace basecode::compiler {
                     }
                 }
 
+                // XXX: FIX!
+                //      type identifiers aren't being converted into unknown_type
                 for (const auto& param_node : node->rhs->children) {
                     switch (param_node->type) {
                         case syntax::ast_node_types_t::assignment: {
