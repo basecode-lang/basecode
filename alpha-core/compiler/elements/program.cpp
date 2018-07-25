@@ -109,8 +109,8 @@ namespace basecode::compiler {
                     element_type_t::module_block);
                 auto module = make_module(_block, module_block);
                 module->source_file(session.current_source_file());
+                _block->blocks().push_back(module_block);
 
-                // XXX: this isn't adding to the parent's block list
                 push_scope(module_block);
                 _top_level_stack.push(module_block);
 
@@ -518,7 +518,8 @@ namespace basecode::compiler {
                 auto import = make_import(
                     current_scope(),
                     identifier_reference,
-                    from_reference);
+                    from_reference,
+                    dynamic_cast<compiler::module*>(current_top_level()->parent_element()));
                 add_expression_to_scope(current_scope(), import);
                 return import;
             }
@@ -804,10 +805,10 @@ namespace basecode::compiler {
                 return false;
         }
 
-        if (!resolve_unknown_types(r))
+        if (!resolve_unknown_identifiers(r))
             return false;
 
-        if (!resolve_unknown_identifiers(r))
+        if (!resolve_unknown_types(r))
             return false;
 
         if (!r.is_failed()) {
@@ -1460,18 +1461,12 @@ namespace basecode::compiler {
         if (node != nullptr && node->rhs != nullptr) {
             init_expr = evaluate_in_scope(r, session, node->rhs, scope);
             if (init_expr != nullptr) {
-                // XXX: need to revisit this!!!
                 if (init_expr->element_type() == element_type_t::symbol) {
                     auto init_symbol = dynamic_cast<compiler::symbol_element*>(init_expr);
-                    auto var = find_identifier(init_symbol->qualified_symbol(), scope);
-                    if (var != nullptr)
-                        init_expr = var;
-                    else {
-                        init_expr = make_identifier_reference(
-                            scope,
-                            init_symbol->qualified_symbol(),
-                            nullptr);
-                    }
+                    init_expr = make_identifier_reference(
+                        scope,
+                        init_symbol->qualified_symbol(),
+                        nullptr);
                 }
                 if (init_expr->is_constant()) {
                     init = make_initializer(scope, init_expr);
@@ -1525,27 +1520,17 @@ namespace basecode::compiler {
         }
 
         if (init == nullptr && init_expr != nullptr) {
-            if (new_identifier->type()->element_type() == element_type_t::unknown_type) {
-                error(
-                    r,
-                    session,
-                    "P019",
-                    fmt::format("unable to infer type: {}", new_identifier->symbol()->name()),
-                    node->lhs->location);
-                return nullptr;
-            } else {
-                auto assign_bin_op = make_binary_operator(
-                    scope,
-                    operator_type_t::assignment,
-                    new_identifier,
-                    init_expr);
-                auto statement = make_statement(
-                    scope,
-                    label_list_t {},
-                    assign_bin_op);
-                add_expression_to_scope(scope, statement);
-                statement->parent_element(scope);
-            }
+            auto assign_bin_op = make_binary_operator(
+                scope,
+                operator_type_t::assignment,
+                new_identifier,
+                init_expr);
+            auto statement = make_statement(
+                scope,
+                label_list_t {},
+                assign_bin_op);
+            add_expression_to_scope(scope, statement);
+            statement->parent_element(scope);
         }
 
         return new_identifier;
@@ -1815,34 +1800,42 @@ namespace basecode::compiler {
             }
 
             compiler::type* identifier_type = nullptr;
-            if (var->initializer() == nullptr) {
-                auto unknown_type = dynamic_cast<compiler::unknown_type*>(var->type());
-                identifier_type = find_type({.name = unknown_type->symbol()->name()});
-                if (unknown_type->is_array()) {
-                    auto array_type = find_array_type(
-                        identifier_type,
-                        unknown_type->array_size());
-                    if (array_type == nullptr) {
-                        array_type = make_array_type(
-                            r,
-                            var->parent_scope(),
-                            make_block(var->parent_scope(), element_type_t::block),
-                            identifier_type,
-                            unknown_type->array_size());
-                    }
-                    identifier_type = array_type;
-                }
-
-                if (identifier_type != nullptr) {
+            if (var->is_parent_element(element_type_t::binary_operator)) {
+                auto binary_operator = dynamic_cast<compiler::binary_operator*>(var->parent_element());
+                if (binary_operator->operator_type() == operator_type_t::assignment) {
+                    identifier_type = binary_operator->rhs()->infer_type(this);
                     var->type(identifier_type);
-                    _elements.remove(unknown_type->id());
                 }
             } else {
-                identifier_type = var
-                    ->initializer()
-                    ->expression()
-                    ->infer_type(this);
-                var->type(identifier_type);
+                if (var->initializer() == nullptr) {
+                    auto unknown_type = dynamic_cast<compiler::unknown_type*>(var->type());
+                    identifier_type = find_type({.name = unknown_type->symbol()->name()});
+                    if (unknown_type->is_array()) {
+                        auto array_type = find_array_type(
+                            identifier_type,
+                            unknown_type->array_size());
+                        if (array_type == nullptr) {
+                            array_type = make_array_type(
+                                r,
+                                var->parent_scope(),
+                                make_block(var->parent_scope(), element_type_t::block),
+                                identifier_type,
+                                unknown_type->array_size());
+                        }
+                        identifier_type = array_type;
+                    }
+
+                    if (identifier_type != nullptr) {
+                        var->type(identifier_type);
+                        _elements.remove(unknown_type->id());
+                    }
+                } else {
+                    identifier_type = var
+                        ->initializer()
+                        ->expression()
+                        ->infer_type(this);
+                    var->type(identifier_type);
+                }
             }
 
             if (identifier_type != nullptr) {
@@ -2063,9 +2056,14 @@ namespace basecode::compiler {
 
     import* program::make_import(
             compiler::block* parent_scope,
-            element* expr,
-            element* from_expr) {
-        auto import_element = new compiler::import(parent_scope, expr, from_expr);
+            compiler::element* expr,
+            compiler::element* from_expr,
+            compiler::module* module) {
+        auto import_element = new compiler::import(
+            parent_scope,
+            expr,
+            from_expr,
+            module);
         _elements.add(import_element);
 
         if (expr != nullptr)
@@ -2100,15 +2098,9 @@ namespace basecode::compiler {
                         qualified_symbol.namespaces.push_back(qualified_symbol.name);
                         qualified_symbol.name = symbol.name;
                         qualified_symbol.fully_qualified_name = make_fully_qualified_name(qualified_symbol);
-
-                        auto owning_module = find_module(import);
-                        if (owning_module != nullptr) {
-                            var = find_identifier(
-                                qualified_symbol,
-                                owning_module->scope());
-                            if (var != nullptr)
-                                return var;
-                        }
+                        var = find_identifier(qualified_symbol, import->module()->scope());
+                        if (var != nullptr)
+                            return var;
                     }
                     return nullptr;
                 }));

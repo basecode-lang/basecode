@@ -483,10 +483,14 @@ namespace basecode::syntax {
             common::result& r,
             parser* parser,
             token_t& token) {
-        auto unary_operator_node = parser->ast_builder()->unary_operator_node(token);
+        auto unary_operator_node = parser
+            ->ast_builder()
+            ->unary_operator_node(token);
         unary_operator_node->rhs = parser->parse_expression(
             r,
             static_cast<uint8_t>(_precedence));
+        unary_operator_node->location.start(token.location.start());
+        unary_operator_node->location.end(unary_operator_node->rhs->location.end());
         return unary_operator_node;
     }
 

@@ -136,8 +136,9 @@ namespace basecode::compiler {
 
         import* make_import(
             compiler::block* parent_scope,
-            element* expr,
-            element* from_expr);
+            compiler::element* expr,
+            compiler::element* from_expr,
+            compiler::module* module);
 
         module* make_module(
             compiler::block* parent_scope,

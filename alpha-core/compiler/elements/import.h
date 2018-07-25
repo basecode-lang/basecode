@@ -18,20 +18,24 @@ namespace basecode::compiler {
     class import : public element {
     public:
         import(
-            block* parent_scope,
-            element* expr,
-            element* from_expr);
+            compiler::block* parent_scope,
+            compiler::element* expr,
+            compiler::element* from_expr,
+            compiler::module* module);
 
-        element* expression();
+        compiler::module* module();
 
-        element* from_expression();
+        compiler::element* expression();
+
+        compiler::element* from_expression();
 
     protected:
         void on_owned_elements(element_list_t& list) override;
 
     private:
-        element* _expression = nullptr;
-        element* _from_expression = nullptr;
+        compiler::module* _module = nullptr;
+        compiler::element* _expression = nullptr;
+        compiler::element* _from_expression = nullptr;
     };
 
 };
