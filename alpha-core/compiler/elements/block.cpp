@@ -13,6 +13,7 @@
 #include <vm/assembler.h>
 #include <vm/instruction_block.h>
 #include "block.h"
+#include "import.h"
 #include "comment.h"
 #include "statement.h"
 #include "initializer.h"
@@ -93,6 +94,10 @@ namespace basecode::compiler {
         return _blocks;
     }
 
+    import_list_t& block::imports() {
+        return _imports;
+    }
+
     comment_list_t& block::comments() {
         return _comments;
     }
@@ -119,6 +124,9 @@ namespace basecode::compiler {
             list.emplace_back(element);
 
         for (auto element : _identifiers.as_list())
+            list.emplace_back(element);
+
+        for (auto element : _imports)
             list.emplace_back(element);
     }
 

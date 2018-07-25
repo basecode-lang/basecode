@@ -72,6 +72,7 @@ namespace basecode::compiler {
     using block_list_t = std::vector<block*>;
     using field_list_t = std::vector<field*>;
     using string_set_t = std::set<std::string>;
+    using import_list_t = std::vector<import*>;
     using element_list_t = std::vector<element*>;
     using comment_list_t = std::vector<comment*>;
     using string_list_t = std::vector<std::string>;

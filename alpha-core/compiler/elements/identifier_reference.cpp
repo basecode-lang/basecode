@@ -77,4 +77,10 @@ namespace basecode::compiler {
         _identifier = value;
     }
 
+    compiler::type* identifier_reference::on_infer_type(const compiler::program* program) {
+        if (_identifier != nullptr)
+            return _identifier->infer_type(program);
+        return nullptr;
+    }
+
 };

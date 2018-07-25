@@ -34,6 +34,8 @@ namespace basecode::compiler {
 
         const string_list_t& namespaces() const;
 
+        qualified_symbol_t qualified_symbol() const;
+
         bool operator== (const symbol_element& other) const;
 
         bool operator== (const qualified_symbol_t& other) const;

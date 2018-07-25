@@ -45,6 +45,8 @@ namespace basecode::compiler {
 
         bool on_as_string(std::string& value) const override;
 
+        compiler::type* on_infer_type(const compiler::program* program) override;
+
     private:
         qualified_symbol_t _symbol;
         compiler::identifier* _identifier = nullptr;

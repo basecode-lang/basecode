@@ -51,6 +51,15 @@ namespace basecode::compiler {
         return _namespaces;
     }
 
+    qualified_symbol_t symbol_element::qualified_symbol() const {
+        qualified_symbol_t symbol {};
+        symbol.name = _name;
+        symbol.location = location();
+        symbol.namespaces = _namespaces;
+        symbol.fully_qualified_name = _fully_qualified_name;
+        return symbol;
+    }
+
     bool symbol_element::operator==(const symbol_element& other) const {
         return _fully_qualified_name == other._fully_qualified_name;
     }

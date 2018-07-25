@@ -28,15 +28,18 @@ namespace basecode::syntax {
             return;
 
         if (root->type != ast_node_types_t::pair) {
+            target->location = root->location;
             target->children.push_back(root);
             return;
         }
 
         auto current_pair = root;
+        target->location.start(current_pair->location.start());
         while (true) {
             if (current_pair->lhs->type != ast_node_types_t::pair) {
                 target->children.push_back(current_pair->lhs);
                 target->children.push_back(current_pair->rhs);
+                target->location.end(current_pair->rhs->location.end());
                 break;
             }
             target->children.push_back(current_pair->rhs);
@@ -731,10 +734,16 @@ namespace basecode::syntax {
             const ast_node_shared_ptr& lhs,
             token_t& token) {
         auto assignment_node = parser->ast_builder()->assignment_node();
+
         pairs_to_list(assignment_node->lhs, lhs);
+
         assignment_node->rhs = parser->parse_expression(
             r,
             static_cast<uint8_t>(precedence_t::assignment) - 1);
+
+        assignment_node->location.start(lhs->location.start());
+        assignment_node->location.end(assignment_node->rhs->location.end());
+
         return assignment_node;
     }
 
@@ -1071,6 +1080,7 @@ namespace basecode::syntax {
         }
 
         statement_node->rhs = expression;
+        statement_node->location = expression->location;
 
         return statement_node;
     }

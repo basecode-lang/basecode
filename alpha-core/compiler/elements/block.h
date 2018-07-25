@@ -27,6 +27,8 @@ namespace basecode::compiler {
 
         block_list_t& blocks();
 
+        import_list_t& imports();
+
         comment_list_t& comments();
 
         statement_list_t& statements();
@@ -43,6 +45,7 @@ namespace basecode::compiler {
     private:
         type_map_t _types {};
         block_list_t _blocks {};
+        import_list_t _imports {};
         comment_list_t _comments {};
         statement_list_t _statements {};
         identifier_map_t _identifiers {};

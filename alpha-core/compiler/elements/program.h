@@ -391,13 +391,13 @@ namespace basecode::compiler {
 
         compiler::identifier* find_identifier(
             const qualified_symbol_t& symbol,
-            compiler::block* scope = nullptr);
+            compiler::block* scope = nullptr) const;
 
         compiler::block* current_scope() const;
 
         void push_scope(compiler::block* block);
 
-        compiler::module* find_module(compiler::element* element);
+        compiler::module* find_module(compiler::element* element) const;
 
         bool within_procedure_scope(compiler::block* parent_scope = nullptr) const;
 

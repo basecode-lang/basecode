@@ -141,6 +141,8 @@ namespace basecode::syntax {
         configure_node(node, token, ast_node_types_t::binary_operator);
         node->lhs = lhs;
         node->rhs = rhs;
+        node->location.start(lhs->location.start());
+        node->location.end(rhs->location.end());
         return node;
     }
 

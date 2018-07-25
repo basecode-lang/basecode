@@ -155,11 +155,23 @@ namespace basecode::compiler {
                 for (auto it = node->children.begin();
                      it != node->children.end();
                      ++it) {
-                    auto expr = evaluate(r, session, *it, default_block_type);
-                    if (expr != nullptr) {
-                        add_expression_to_scope(active_scope, expr);
-                        expr->parent_element(active_scope);
+                    auto current_node = *it;
+                    auto expr = evaluate(
+                        r,
+                        session,
+                        current_node,
+                        default_block_type);
+                    if (expr == nullptr) {
+                        error(
+                            r,
+                            session,
+                            "C024",
+                            "invalid statement",
+                            current_node->location);
+                        return nullptr;
                     }
+                    add_expression_to_scope(active_scope, expr);
+                    expr->parent_element(active_scope);
                 }
 
                 return pop_scope();
@@ -176,6 +188,9 @@ namespace basecode::compiler {
                 }
 
                 auto expr = evaluate(r, session, node->rhs);
+                if (expr == nullptr)
+                    return nullptr;
+
                 if (expr->element_type() == element_type_t::symbol) {
                     type_find_result_t find_type_result {};
                     find_identifier_type(
@@ -229,6 +244,8 @@ namespace basecode::compiler {
                             symbol,
                             find_type_result,
                             node);
+                        if (new_identifier == nullptr)
+                            return nullptr;
                         list.push_back(new_identifier);
                     }
                 }
@@ -427,10 +444,13 @@ namespace basecode::compiler {
                 auto type_name = node->lhs->lhs->children[0]->token.value;
                 auto type = find_type(qualified_symbol_t {.name = type_name});
                 if (type == nullptr) {
-                    r.add_message(
+                    error(
+                        r,
+                        session,
                         "P002",
                         fmt::format("unknown type '{}'.", type_name),
-                        true);
+                        node->lhs->lhs->location);
+                    return nullptr;
                 }
                 return make_cast(
                     current_scope(),
@@ -477,17 +497,30 @@ namespace basecode::compiler {
                 return return_element;
             }
             case syntax::ast_node_types_t::import_expression: {
-                compiler::element* from_expr = nullptr;
+                qualified_symbol_t qualified_symbol {};
+                make_qualified_symbol(qualified_symbol, node->lhs);
+
+                compiler::identifier_reference* from_reference = nullptr;
                 if (node->rhs != nullptr) {
-                    from_expr = resolve_symbol_or_evaluate(
+                    from_reference = dynamic_cast<compiler::identifier_reference*>(resolve_symbol_or_evaluate(
                         r,
                         session,
-                        node->rhs);
+                        node->rhs));
+                    qualified_symbol.namespaces.insert(
+                        qualified_symbol.namespaces.begin(),
+                        from_reference->symbol().name);
                 }
-                return make_import(
+
+                auto identifier_reference = make_identifier_reference(
                     current_scope(),
-                    resolve_symbol_or_evaluate(r, session, node->lhs),
-                    from_expr);
+                    qualified_symbol,
+                    find_identifier(qualified_symbol));
+                auto import = make_import(
+                    current_scope(),
+                    identifier_reference,
+                    from_reference);
+                add_expression_to_scope(current_scope(), import);
+                return import;
             }
             case syntax::ast_node_types_t::namespace_expression: {
                 return make_namespace(
@@ -1142,8 +1175,10 @@ namespace basecode::compiler {
         auto parent_scope = current_scope();
         auto scope_block = make_block(parent_scope, type);
 
-        if (parent_scope != nullptr)
+        if (parent_scope != nullptr) {
+            scope_block->parent_element(parent_scope);
             parent_scope->blocks().push_back(scope_block);
+        }
 
         push_scope(scope_block);
         return scope_block;
@@ -1379,7 +1414,7 @@ namespace basecode::compiler {
         });
 
         auto scope = symbol->is_qualified()
-            ? _top_level_stack.top()
+            ? current_top_level()
             : parent_scope != nullptr ? parent_scope : current_scope();
 
         auto namespaces = symbol->namespaces();
@@ -1409,10 +1444,12 @@ namespace basecode::compiler {
                     auto ns = dynamic_cast<namespace_element*>(expr);
                     scope = dynamic_cast<compiler::block*>(ns->expression());
                 } else {
-                    r.add_message(
+                    error(
+                        r,
+                        session,
                         "P018",
                         "only a namespace is valid within a qualified name.",
-                        true);
+                        node->lhs->location);
                     return nullptr;
                 }
             }
@@ -1423,6 +1460,19 @@ namespace basecode::compiler {
         if (node != nullptr && node->rhs != nullptr) {
             init_expr = evaluate_in_scope(r, session, node->rhs, scope);
             if (init_expr != nullptr) {
+                // XXX: need to revisit this!!!
+                if (init_expr->element_type() == element_type_t::symbol) {
+                    auto init_symbol = dynamic_cast<compiler::symbol_element*>(init_expr);
+                    auto var = find_identifier(init_symbol->qualified_symbol(), scope);
+                    if (var != nullptr)
+                        init_expr = var;
+                    else {
+                        init_expr = make_identifier_reference(
+                            scope,
+                            init_symbol->qualified_symbol(),
+                            nullptr);
+                    }
+                }
                 if (init_expr->is_constant()) {
                     init = make_initializer(scope, init_expr);
                 }
@@ -1476,10 +1526,12 @@ namespace basecode::compiler {
 
         if (init == nullptr && init_expr != nullptr) {
             if (new_identifier->type()->element_type() == element_type_t::unknown_type) {
-                r.add_message(
+                error(
+                    r,
+                    session,
                     "P019",
                     fmt::format("unable to infer type: {}", new_identifier->symbol()->name()),
-                    true);
+                    node->lhs->location);
                 return nullptr;
             } else {
                 auto assign_bin_op = make_binary_operator(
@@ -1932,7 +1984,7 @@ namespace basecode::compiler {
         return symbol;
     }
 
-    compiler::module* program::find_module(compiler::element* element) {
+    compiler::module* program::find_module(compiler::element* element) const {
         auto current = element;
         while (current != nullptr) {
             if (current->element_type() == element_type_t::module)
@@ -1945,7 +1997,7 @@ namespace basecode::compiler {
     compiler::type* program::find_type(const qualified_symbol_t& symbol) const {
         if (symbol.is_qualified()) {
             auto non_const_this = const_cast<compiler::program*>(this);
-            auto block_scope = non_const_this->_top_level_stack.top();
+            auto block_scope = non_const_this->current_top_level();
             for (const auto& namespace_name : symbol.namespaces) {
                 auto var = block_scope->identifiers().find(namespace_name);
                 if (var == nullptr || var->initializer() == nullptr)
@@ -1954,6 +2006,9 @@ namespace basecode::compiler {
                 if (expr->element_type() == element_type_t::namespace_e) {
                     auto ns = dynamic_cast<namespace_element*>(expr);
                     block_scope = dynamic_cast<compiler::block*>(ns->expression());
+                } else if (expr->element_type() == element_type_t::module_reference) {
+                    auto module_reference = dynamic_cast<compiler::module_reference*>(expr);
+                    block_scope = module_reference->module()->scope();
                 } else {
                     return nullptr;
                 }
@@ -1963,7 +2018,7 @@ namespace basecode::compiler {
             if (matching_type != nullptr)
                 return matching_type;
 
-            auto type_identifier = block_scope->identifiers().find(symbol.name);
+            auto type_identifier = find_identifier(symbol, block_scope);
             if (type_identifier != nullptr)
                 return type_identifier->type();
         } else {
@@ -1972,7 +2027,7 @@ namespace basecode::compiler {
                 auto type = scope->types().find(symbol.name);
                 if (type != nullptr)
                     return type;
-                auto type_identifier = scope->identifiers().find(symbol.name);
+                auto type_identifier = find_identifier(symbol, scope);
                 if (type_identifier != nullptr)
                     return type_identifier->type();
                 scope = scope->parent_scope();
@@ -2010,9 +2065,10 @@ namespace basecode::compiler {
 
     compiler::identifier* program::find_identifier(
             const qualified_symbol_t& symbol,
-            compiler::block* scope) {
+            compiler::block* scope) const {
         if (symbol.is_qualified()) {
-            auto block_scope = _top_level_stack.top();
+            auto non_const_this = const_cast<compiler::program*>(this);
+            auto block_scope = scope != nullptr ? scope : non_const_this->current_top_level();
             for (const auto& namespace_name : symbol.namespaces) {
                 auto var = block_scope->identifiers().find(namespace_name);
                 if (var == nullptr || var->initializer() == nullptr)
@@ -2021,6 +2077,9 @@ namespace basecode::compiler {
                 if (expr->element_type() == element_type_t::namespace_e) {
                     auto ns = dynamic_cast<namespace_element*>(expr);
                     block_scope = dynamic_cast<compiler::block*>(ns->expression());
+                } else if (expr->element_type() == element_type_t::module_reference) {
+                    auto module_reference = dynamic_cast<compiler::module_reference*>(expr);
+                    block_scope = module_reference->module()->scope();
                 } else {
                     return nullptr;
                 }
@@ -2032,6 +2091,22 @@ namespace basecode::compiler {
                 auto var = block_scope->identifiers().find(symbol.name);
                 if (var != nullptr)
                     return var;
+                for (auto import : block_scope->imports()) {
+                    auto identifier_reference = dynamic_cast<compiler::identifier_reference*>(import->expression());
+                    auto qualified_symbol = identifier_reference->symbol();
+                    qualified_symbol.namespaces.push_back(qualified_symbol.name);
+                    qualified_symbol.name = symbol.name;
+                    qualified_symbol.fully_qualified_name = make_fully_qualified_name(qualified_symbol);
+
+                    auto owning_module = find_module(import);
+                    if (owning_module != nullptr) {
+                        var = find_identifier(
+                            qualified_symbol,
+                            owning_module->scope());
+                        if (var != nullptr)
+                            return var;
+                    }
+                }
                 block_scope = block_scope->parent_scope();
             }
             return nullptr;
@@ -2050,7 +2125,12 @@ namespace basecode::compiler {
         switch (expr->element_type()) {
             case element_type_t::comment: {
                 auto comment = dynamic_cast<compiler::comment*>(expr);
-                scope->comments().push_back(comment);
+                scope->comments().emplace_back(comment);
+                break;
+            }
+            case element_type_t::import_e: {
+                auto import = dynamic_cast<compiler::import*>(expr);
+                scope->imports().emplace_back(import);
                 break;
             }
             case element_type_t::attribute: {
@@ -2060,7 +2140,7 @@ namespace basecode::compiler {
             }
             case element_type_t::statement: {
                 auto statement = dynamic_cast<compiler::statement*>(expr);
-                scope->statements().push_back(statement);
+                scope->statements().emplace_back(statement);
                 break;
             }
             default:

@@ -21,9 +21,6 @@ deps to bytecode generation
 - add support to compiler:
     * add operators: += -= /= *= &= |= ~=
     * inline assembly: #assembly { };
-    * module(expr) instead of #load
-    * namespace importing
-        - import <expr> [from <identifier>]
     * defer
     * for (range)
     * switch
@@ -128,3 +125,7 @@ DONE
   a bin_op assignment is needed or if the value can be expressed directly
 - assembler:
     * need to build out the api here
+- add support to compiler:
+    * module(expr) instead of #load
+    * namespace importing
+        - import <expr> [from <identifier>]
