@@ -486,9 +486,18 @@ namespace basecode::syntax {
         auto unary_operator_node = parser
             ->ast_builder()
             ->unary_operator_node(token);
-        unary_operator_node->rhs = parser->parse_expression(
+        auto rhs = parser->parse_expression(
             r,
             static_cast<uint8_t>(_precedence));
+        if (rhs == nullptr) {
+            parser->error(
+                r,
+                "P019",
+                "unary operator expects right-hand-side expression",
+                token.location);
+            return nullptr;
+        }
+        unary_operator_node->rhs = rhs;
         unary_operator_node->location.start(token.location.start());
         unary_operator_node->location.end(unary_operator_node->rhs->location.end());
         return unary_operator_node;
@@ -512,10 +521,27 @@ namespace basecode::syntax {
             case token_types_t::import_literal: {
                 auto import_node = parser->ast_builder()->import_node(token);
                 import_node->lhs = parser->parse_expression(r, 0);
-
+                if (import_node->lhs == nullptr) {
+                    parser->error(
+                        r,
+                        "P019",
+                        "import expects namespace",
+                        token.location);
+                    return nullptr;
+                }
                 if (parser->peek(syntax::token_types_t::from_literal)) {
+                    token_t from_token;
+                    parser->current(from_token);
                     parser->consume();
                     import_node->rhs = parser->parse_expression(r, 0);
+                    if (import_node->rhs == nullptr) {
+                        parser->error(
+                            r,
+                            "P019",
+                            "from expects identifier of type module",
+                            from_token.location);
+                        return nullptr;
+                    }
                 }
 
                 return import_node;
@@ -720,10 +746,16 @@ namespace basecode::syntax {
             token_t& token) {
         auto associative_precedence = static_cast<uint8_t>(
             static_cast<uint8_t>(_precedence) - (_is_right_associative ? 1 : 0));
-        return parser->ast_builder()->binary_operator_node(
-            lhs,
-            token,
-            parser->parse_expression(r, associative_precedence));
+        auto rhs = parser->parse_expression(r, associative_precedence);
+        if (rhs == nullptr) {
+            parser->error(
+                r,
+                "P019",
+                "binary operator expects right-hand-side expression",
+                token.location);
+            return nullptr;
+        }
+        return parser->ast_builder()->binary_operator_node(lhs, token, rhs);
     }
 
     precedence_t binary_operator_infix_parser::precedence() const {
@@ -740,11 +772,18 @@ namespace basecode::syntax {
         auto assignment_node = parser->ast_builder()->assignment_node();
 
         pairs_to_list(assignment_node->lhs, lhs);
-
-        assignment_node->rhs = parser->parse_expression(
+        auto rhs = parser->parse_expression(
             r,
             static_cast<uint8_t>(precedence_t::assignment) - 1);
-
+        if (rhs == nullptr) {
+            parser->error(
+                r,
+                "P019",
+                "assignment expects right-hand-side expression",
+                token.location);
+            return nullptr;
+        }
+        assignment_node->rhs = rhs;
         assignment_node->location.start(lhs->location.start());
         assignment_node->location.end(assignment_node->rhs->location.end());
 
