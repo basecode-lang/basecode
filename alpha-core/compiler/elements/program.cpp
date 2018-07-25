@@ -1984,56 +1984,70 @@ namespace basecode::compiler {
         return symbol;
     }
 
-    compiler::module* program::find_module(compiler::element* element) const {
+    element* program::walk_parent_scopes(
+            compiler::block* scope,
+            const scope_visitor_callable& callable) const {
+        while (scope != nullptr) {
+            auto* result = callable(scope);
+            if (result != nullptr)
+                return result;
+            scope = scope->parent_scope();
+        }
+        return nullptr;
+    }
+
+    element* program::walk_parent_elements(
+            compiler::element* element,
+            const element_visitor_callable& callable) const {
         auto current = element;
         while (current != nullptr) {
-            if (current->element_type() == element_type_t::module)
-                return dynamic_cast<compiler::module*>(current);
+            auto* result = callable(current);
+            if (result != nullptr)
+                return result;
             current = current->parent_element();
         }
         return nullptr;
     }
 
+    compiler::module* program::find_module(compiler::element* element) const {
+        return dynamic_cast<compiler::module*>(walk_parent_elements(
+            element,
+            [](compiler::element* each) -> compiler::element* {
+                if (each->element_type() == element_type_t::module)
+                    return each;
+                return nullptr;
+            }));
+    }
+
     compiler::type* program::find_type(const qualified_symbol_t& symbol) const {
         if (symbol.is_qualified()) {
-            auto non_const_this = const_cast<compiler::program*>(this);
-            auto block_scope = non_const_this->current_top_level();
-            for (const auto& namespace_name : symbol.namespaces) {
-                auto var = block_scope->identifiers().find(namespace_name);
-                if (var == nullptr || var->initializer() == nullptr)
-                    return nullptr;
-                auto expr = var->initializer()->expression();
-                if (expr->element_type() == element_type_t::namespace_e) {
-                    auto ns = dynamic_cast<namespace_element*>(expr);
-                    block_scope = dynamic_cast<compiler::block*>(ns->expression());
-                } else if (expr->element_type() == element_type_t::module_reference) {
-                    auto module_reference = dynamic_cast<compiler::module_reference*>(expr);
-                    block_scope = module_reference->module()->scope();
-                } else {
-                    return nullptr;
-                }
-            }
+            return dynamic_cast<compiler::type*>(walk_qualified_symbol(
+                symbol,
+                const_cast<compiler::program*>(this)->current_top_level(),
+                [&](compiler::block* scope) -> compiler::element* {
+                    auto matching_type = scope->types().find(symbol.name);
+                    if (matching_type != nullptr)
+                        return matching_type;
 
-            auto matching_type = block_scope->types().find(symbol.name);
-            if (matching_type != nullptr)
-                return matching_type;
+                    auto type_identifier = find_identifier(symbol, scope);
+                    if (type_identifier != nullptr)
+                        return type_identifier->type();
 
-            auto type_identifier = find_identifier(symbol, block_scope);
-            if (type_identifier != nullptr)
-                return type_identifier->type();
+                    return nullptr;
+                }));
         } else {
-            auto scope = current_scope();
-            while (scope != nullptr) {
-                auto type = scope->types().find(symbol.name);
-                if (type != nullptr)
-                    return type;
-                auto type_identifier = find_identifier(symbol, scope);
-                if (type_identifier != nullptr)
-                    return type_identifier->type();
-                scope = scope->parent_scope();
-            }
+            return dynamic_cast<compiler::type*>(walk_parent_scopes(
+                current_scope(),
+                [&](compiler::block* scope) -> compiler::element* {
+                    auto type = scope->types().find(symbol.name);
+                    if (type != nullptr)
+                        return type;
+                    auto type_identifier = find_identifier(symbol, scope);
+                    if (type_identifier != nullptr)
+                        return type_identifier->type();
+                    return nullptr;
+                }));
         }
-        return nullptr;
     }
 
     bool program::within_procedure_scope(compiler::block* parent_scope) const {
@@ -2067,50 +2081,62 @@ namespace basecode::compiler {
             const qualified_symbol_t& symbol,
             compiler::block* scope) const {
         if (symbol.is_qualified()) {
-            auto non_const_this = const_cast<compiler::program*>(this);
-            auto block_scope = scope != nullptr ? scope : non_const_this->current_top_level();
-            for (const auto& namespace_name : symbol.namespaces) {
-                auto var = block_scope->identifiers().find(namespace_name);
-                if (var == nullptr || var->initializer() == nullptr)
-                    return nullptr;
-                auto expr = var->initializer()->expression();
-                if (expr->element_type() == element_type_t::namespace_e) {
-                    auto ns = dynamic_cast<namespace_element*>(expr);
-                    block_scope = dynamic_cast<compiler::block*>(ns->expression());
-                } else if (expr->element_type() == element_type_t::module_reference) {
-                    auto module_reference = dynamic_cast<compiler::module_reference*>(expr);
-                    block_scope = module_reference->module()->scope();
-                } else {
-                    return nullptr;
-                }
-            }
-            return block_scope->identifiers().find(symbol.name);
+            return dynamic_cast<compiler::identifier*>(walk_qualified_symbol(
+                symbol,
+                scope,
+                [&symbol](compiler::block* scope) {
+                    return scope->identifiers().find(symbol.name);
+                }));
         } else {
-            auto block_scope = scope != nullptr ? scope : current_scope();
-            while (block_scope != nullptr) {
-                auto var = block_scope->identifiers().find(symbol.name);
-                if (var != nullptr)
-                    return var;
-                for (auto import : block_scope->imports()) {
-                    auto identifier_reference = dynamic_cast<compiler::identifier_reference*>(import->expression());
-                    auto qualified_symbol = identifier_reference->symbol();
-                    qualified_symbol.namespaces.push_back(qualified_symbol.name);
-                    qualified_symbol.name = symbol.name;
-                    qualified_symbol.fully_qualified_name = make_fully_qualified_name(qualified_symbol);
+            return dynamic_cast<compiler::identifier*>(walk_parent_scopes(
+                scope != nullptr ? scope : current_scope(),
+                [&](compiler::block* scope) -> compiler::element* {
+                    auto var = scope->identifiers().find(symbol.name);
+                    if (var != nullptr)
+                        return var;
+                    for (auto import : scope->imports()) {
+                        auto identifier_reference = dynamic_cast<compiler::identifier_reference*>(import->expression());
+                        auto qualified_symbol = identifier_reference->symbol();
+                        qualified_symbol.namespaces.push_back(qualified_symbol.name);
+                        qualified_symbol.name = symbol.name;
+                        qualified_symbol.fully_qualified_name = make_fully_qualified_name(qualified_symbol);
 
-                    auto owning_module = find_module(import);
-                    if (owning_module != nullptr) {
-                        var = find_identifier(
-                            qualified_symbol,
-                            owning_module->scope());
-                        if (var != nullptr)
-                            return var;
+                        auto owning_module = find_module(import);
+                        if (owning_module != nullptr) {
+                            var = find_identifier(
+                                qualified_symbol,
+                                owning_module->scope());
+                            if (var != nullptr)
+                                return var;
+                        }
                     }
-                }
-                block_scope = block_scope->parent_scope();
-            }
-            return nullptr;
+                    return nullptr;
+                }));
         }
+    }
+
+    element* program::walk_qualified_symbol(
+            const qualified_symbol_t& symbol,
+            compiler::block* scope,
+            const namespace_visitor_callable& callable) const {
+        auto non_const_this = const_cast<compiler::program*>(this);
+        auto block_scope = scope != nullptr ? scope : non_const_this->current_top_level();
+        for (const auto& namespace_name : symbol.namespaces) {
+            auto var = block_scope->identifiers().find(namespace_name);
+            if (var == nullptr || var->initializer() == nullptr)
+                return nullptr;
+            auto expr = var->initializer()->expression();
+            if (expr->element_type() == element_type_t::namespace_e) {
+                auto ns = dynamic_cast<namespace_element*>(expr);
+                block_scope = dynamic_cast<compiler::block*>(ns->expression());
+            } else if (expr->element_type() == element_type_t::module_reference) {
+                auto module_reference = dynamic_cast<compiler::module_reference*>(expr);
+                block_scope = module_reference->module()->scope();
+            } else {
+                return nullptr;
+            }
+        }
+        return callable(block_scope);
     }
 
     compiler::type* program::find_array_type(compiler::type* entry_type, size_t size) {

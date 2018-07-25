@@ -22,6 +22,9 @@
 namespace basecode::compiler {
 
     using block_visitor_callable = std::function<bool (compiler::block*)>;
+    using scope_visitor_callable = std::function<compiler::element* (compiler::block*)>;
+    using element_visitor_callable = std::function<compiler::element* (compiler::element*)>;
+    using namespace_visitor_callable = std::function<compiler::element* (compiler::block*)>;
 
     struct type_find_result_t {
         qualified_symbol_t type_name;
@@ -388,6 +391,19 @@ namespace basecode::compiler {
             compiler::block* parent_scope = nullptr);
 
         compiler::block* pop_scope();
+
+        element* walk_parent_scopes(
+            compiler::block* scope,
+            const scope_visitor_callable& callable) const;
+
+        element* walk_parent_elements(
+            compiler::element* element,
+            const element_visitor_callable& callable) const;
+
+        element* walk_qualified_symbol(
+            const qualified_symbol_t& symbol,
+            compiler::block* scope,
+            const namespace_visitor_callable& callable) const;
 
         compiler::identifier* find_identifier(
             const qualified_symbol_t& symbol,
