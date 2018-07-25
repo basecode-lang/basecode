@@ -181,7 +181,13 @@ namespace basecode::syntax {
             parser* parser,
             token_t& token) {
         auto is_spread = false;
+        auto is_pointer = false;
         ast_node_shared_ptr array_node = nullptr;
+
+        if (parser->peek(token_types_t::caret)) {
+            parser->consume();
+            is_pointer = true;
+        }
 
         if (parser->peek(token_types_t::left_square_bracket)) {
             array_node = parser->parse_expression(
@@ -222,6 +228,9 @@ namespace basecode::syntax {
 
         if (is_spread)
             type_node->flags |= ast_node_t::flags_t::spread;
+
+        if (is_pointer)
+            type_node->flags |= ast_node_t::flags_t::pointer;
 
         return type_node;
     }

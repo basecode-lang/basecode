@@ -25,14 +25,16 @@ alpha::compiler::config := ns {
 alpha::compiler::examples := ns {
     import alpha::compiler::config::fibonacci;
 
-    count:u32;
-    max:u16 := 32767;
-    name:string := "fibonacci test program";
+    count: u32;
+    max: u16 := 32767;
+    name: string := "fibonacci test program";
 
-    foo:u32 := max * 4;
+    name_ptr: ^string;
+
+    foo: u32 := max * 4;
     boom := length_of_sequence;
 
-    bar_rhs_is_constant:s16 := length_of_sequence * 4;
+    bar_rhs_is_constant: s16 := length_of_sequence * 4;
 
     count := 1;
     print("what the hell am i doing here?");
@@ -45,7 +47,7 @@ alpha::compiler::examples := ns {
     bar := proc() {
         bing(256);
 
-        bing := proc(z:u64):u64 {
+        bing := proc(z: u64): u64 {
             if z == 0 {
                 return 0;
             };
@@ -55,7 +57,7 @@ alpha::compiler::examples := ns {
         return;
     };
 
-    fib := proc(n:u64 := 10):u64 {
+    fib := proc(n: u64 := 10): u64 {
         if n == 0 || n == 1 {
             return n;
         } else {
@@ -65,7 +67,7 @@ alpha::compiler::examples := ns {
         };
     };
 
-    fib_main := proc():u32 {
+    fib_main := proc(): u32 {
         final_fib_value := cast<u32>(fib(length_of_sequence));
 
     'the_end:

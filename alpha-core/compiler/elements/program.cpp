@@ -38,6 +38,7 @@
 #include "string_type.h"
 #include "numeric_type.h"
 #include "unknown_type.h"
+#include "pointer_type.h"
 #include "argument_list.h"
 #include "float_literal.h"
 #include "string_literal.h"
@@ -1626,23 +1627,32 @@ namespace basecode::compiler {
         return literal;
     }
 
+    pointer_type* program::make_pointer_type(
+            common::result& r,
+            compiler::block* parent_scope,
+            compiler::type* base_type) {
+        auto type = new compiler::pointer_type(
+            parent_scope,
+            base_type);
+        if (!type->initialize(r, this))
+            return nullptr;
+        _elements.add(type);
+        return type;
+    }
+
     array_type* program::make_array_type(
             common::result& r,
             compiler::block* parent_scope,
             compiler::block* scope,
             compiler::type* entry_type,
             size_t size) {
-        auto type_name = fmt::format("__array_{}_{}__", entry_type->symbol()->name(), size);
-        auto symbol = make_symbol(parent_scope, type_name);
         auto type = new compiler::array_type(
             parent_scope,
-            symbol,
             scope,
-            entry_type);
+            entry_type,
+            size);
         if (!type->initialize(r, this))
             return nullptr;
-        type->size(size);
-        symbol->parent_element(type);
         scope->parent_element(type);
         _elements.add(type);
         return type;
@@ -1690,30 +1700,36 @@ namespace basecode::compiler {
             auto expr_node = child->rhs;
             switch (expr_node->type) {
                 case syntax::ast_node_types_t::assignment: {
-                    auto symbol = dynamic_cast<compiler::symbol_element*>(evaluate_in_scope(
-                        r,
-                        session,
-                        expr_node->lhs,
-                        type->scope()));
-                    type_find_result_t type_find_result {};
-                    find_identifier_type(r, type_find_result, expr_node->rhs, type->scope());
-                    auto init = make_initializer(
-                        type->scope(),
-                        evaluate_in_scope(r, session, expr_node->rhs, type->scope()));
-                    auto field_identifier = make_identifier(
-                        type->scope(),
-                        symbol,
-                        init);
-                    if (type_find_result.type == nullptr) {
-                        type_find_result.type = init->expression()->infer_type(this);
-                        field_identifier->inferred_type(type_find_result.type != nullptr);
+                    for (const auto& symbol_node : expr_node->lhs->children) {
+                        auto symbol = dynamic_cast<compiler::symbol_element*>(evaluate_in_scope(
+                            r,
+                            session,
+                            symbol_node,
+                            type->scope()));
+                        type_find_result_t type_find_result{};
+                        find_identifier_type(
+                            r,
+                            type_find_result,
+                            expr_node->rhs,
+                            type->scope());
+                        auto init = make_initializer(
+                            type->scope(),
+                            evaluate_in_scope(r, session, expr_node->rhs, type->scope()));
+                        auto field_identifier = make_identifier(
+                            type->scope(),
+                            symbol,
+                            init);
+                        if (type_find_result.type == nullptr) {
+                            type_find_result.type = init->expression()->infer_type(this);
+                            field_identifier->inferred_type(type_find_result.type != nullptr);
+                        }
+                        field_identifier->type(type_find_result.type);
+                        auto new_field = make_field(
+                            type->scope(),
+                            field_identifier);
+                        new_field->parent_element(type);
+                        type->fields().add(new_field);
                     }
-                    field_identifier->type(type_find_result.type);
-                    auto new_field = make_field(
-                        type->scope(),
-                        field_identifier);
-                    new_field->parent_element(type);
-                    type->fields().add(new_field);
                     break;
                 }
                 case syntax::ast_node_types_t::symbol: {
@@ -1911,22 +1927,34 @@ namespace basecode::compiler {
 
         parent_scope = parent_scope == nullptr ? current_scope() : parent_scope;
         make_qualified_symbol(result.type_name, type_node->lhs);
+        result.array_size = 0;
         result.is_array = type_node->is_array();
-        result.array_size = 0; // XXX: this needs to be fixed!
+        result.is_pointer = type_node->is_pointer();
+
         result.type = find_type(result.type_name);
-        if (result.is_array) {
-            auto array_type = find_array_type(
-                result.type,
-                result.array_size);
-            if (array_type == nullptr) {
-                array_type = make_array_type(
-                    r,
-                    parent_scope,
-                    make_block(parent_scope, element_type_t::block),
+        if (result.type != nullptr) {
+            if (result.is_array) {
+                auto array_type = find_array_type(
                     result.type,
                     result.array_size);
+                if (array_type == nullptr) {
+                    array_type = make_array_type(
+                        r,
+                        parent_scope,
+                        make_block(parent_scope, element_type_t::block),
+                        result.type,
+                        result.array_size);
+                }
+                result.type = array_type;
             }
-            result.type = array_type;
+
+            if (result.is_pointer) {
+                auto pointer_type = find_pointer_type(result.type);
+                if (pointer_type == nullptr) {
+                    pointer_type = make_pointer_type(r, parent_scope, result.type);
+                }
+                result.type = pointer_type;
+            }
         }
 
         return result.type != nullptr;
@@ -2131,12 +2159,16 @@ namespace basecode::compiler {
         return callable(block_scope);
     }
 
+    compiler::type* program::find_pointer_type(compiler::type* base_type) {
+        return find_type(qualified_symbol_t {
+            .name = compiler::pointer_type::name_for_pointer(base_type)
+        });
+    }
+
     compiler::type* program::find_array_type(compiler::type* entry_type, size_t size) {
-        auto type_name = fmt::format(
-            "__array_{}_{}__",
-            entry_type->symbol()->name(),
-            size);
-        return find_type(qualified_symbol_t { .name = type_name });
+        return find_type(qualified_symbol_t {
+            .name = compiler::array_type::name_for_array(entry_type, size)
+        });
     }
 
     void program::add_expression_to_scope(compiler::block* scope, compiler::element* expr) {

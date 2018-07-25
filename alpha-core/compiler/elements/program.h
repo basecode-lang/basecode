@@ -29,6 +29,7 @@ namespace basecode::compiler {
     struct type_find_result_t {
         qualified_symbol_t type_name;
         bool is_array = false;
+        bool is_pointer = false;
         size_t array_size = 0;
         compiler::type* type = nullptr;
     };
@@ -90,6 +91,7 @@ namespace basecode::compiler {
         friend class string_type;
         friend class module_type;
         friend class numeric_type;
+        friend class pointer_type;
         friend class unary_operator;
         friend class namespace_type;
         friend class procedure_type;
@@ -259,6 +261,11 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             compiler::block* scope);
 
+        pointer_type* make_pointer_type(
+            common::result& r,
+            compiler::block* parent_scope,
+            compiler::type* base_type);
+
         void add_composite_type_fields(
             common::result& r,
             compiler::session& session,
@@ -366,6 +373,8 @@ namespace basecode::compiler {
             const type_find_result_t& result);
 
         return_element* make_return(compiler::block* parent_scope);
+
+        compiler::type* find_pointer_type(compiler::type* base_type);
 
         argument_list* make_argument_list(compiler::block* parent_scope);
 

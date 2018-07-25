@@ -12,6 +12,7 @@
 #include "program.h"
 #include "identifier.h"
 #include "string_type.h"
+#include "pointer_type.h"
 
 namespace basecode::compiler {
 
@@ -70,7 +71,7 @@ namespace basecode::compiler {
         auto block_scope = scope();
 
         auto u32_type = program->find_type({.name = "u32"});
-        auto address_type = program->find_type({.name = "address"});
+        auto u8_type = program->find_type({.name = "u8"});
 
         auto length_identifier = program->make_identifier(
             block_scope,
@@ -90,7 +91,7 @@ namespace basecode::compiler {
             block_scope,
             program->make_symbol(parent_scope(), "data"),
             nullptr);
-        data_identifier->type(address_type);
+        data_identifier->type(program->make_pointer_type(r, block_scope, u8_type));
         auto data_field = program->make_field(block_scope, data_identifier);
 
         fields().add(length_field);

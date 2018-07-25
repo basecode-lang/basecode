@@ -33,6 +33,7 @@
 #include <compiler/elements/module_type.h>
 #include <compiler/elements/initializer.h>
 #include <compiler/elements/string_type.h>
+#include <compiler/elements/pointer_type.h>
 #include <compiler/elements/numeric_type.h>
 #include <compiler/elements/float_literal.h>
 #include <compiler/elements/argument_list.h>
@@ -360,6 +361,20 @@ namespace basecode::compiler {
                 return fmt::format(
                     "{}[shape=record,label=\"alias_type\"{}];",
                     node_vertex_name,
+                    style);
+            }
+            case element_type_t::pointer_type: {
+                auto element = dynamic_cast<pointer_type*>(node);
+                auto style = ", fillcolor=gainsboro, style=\"filled\"";
+                std::string base_type_name = "unknown";
+                if (element->base_type() != nullptr)
+                    base_type_name = element->base_type()->symbol()->name();
+                add_primary_edge(element, element->base_type());
+                add_primary_edge(element, element->symbol());
+                return fmt::format(
+                    "{}[shape=record,label=\"pointer_type|type: {}\"{}];",
+                    node_vertex_name,
+                    base_type_name,
                     style);
             }
             case element_type_t::array_type: {

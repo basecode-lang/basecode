@@ -12,19 +12,33 @@
 #include "program.h"
 #include "array_type.h"
 #include "identifier.h"
+#include "pointer_type.h"
+#include "symbol_element.h"
 
 namespace basecode::compiler {
 
+    std::string array_type::name_for_array(
+            compiler::type* entry_type,
+            size_t size) {
+        return fmt::format(
+            "__array_{}_{}__",
+            entry_type->symbol()->name(),
+            size);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
     array_type::array_type(
             block* parent_scope,
-            compiler::symbol_element* symbol,
             compiler::block* scope,
-            compiler::type* entry_type) : compiler::composite_type(
+            compiler::type* entry_type,
+            size_t size) : compiler::composite_type(
                                                 parent_scope,
                                                 composite_types_t::struct_type,
                                                 scope,
-                                                symbol,
+                                                nullptr,
                                                 element_type_t::array_type),
+                                          _size(size),
                                           _entry_type(entry_type) {
     }
 
@@ -38,12 +52,17 @@ namespace basecode::compiler {
     bool array_type::on_initialize(
             common::result& r,
             compiler::program* program) {
+        auto type_symbol = program->make_symbol(
+            parent_scope(),
+            name_for_array(_entry_type, _size));
+        symbol(type_symbol);
+        type_symbol->parent_element(this);
+
         auto block_scope = scope();
 
         auto u8_type = program->find_type({.name = "u8"});
         auto u32_type = program->find_type({.name = "u32"});
         auto type_info_type = program->find_type({.name = "type"});
-        auto address_type = program->find_type({.name = "address"});
 
         auto flags_identifier = program->make_identifier(
             block_scope,
@@ -85,7 +104,7 @@ namespace basecode::compiler {
             block_scope,
             program->make_symbol(block_scope, "data"),
             nullptr);
-        data_identifier->type(address_type);
+        data_identifier->type(program->make_pointer_type(r, block_scope, u8_type));
         auto data_field = program->make_field(block_scope, data_identifier);
 
         auto& field_map = fields();

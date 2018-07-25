@@ -11,27 +11,19 @@
 
 #pragma once
 
-#include "composite_type.h"
+#include "type.h"
 
 namespace basecode::compiler {
 
-    class array_type : public compiler::composite_type {
+    class pointer_type : public compiler::type {
     public:
-        static std::string name_for_array(
-            compiler::type* entry_type,
-            size_t size);
+        static std::string name_for_pointer(compiler::type* base_type);
 
-        array_type(
-            block* parent_scope,
-            compiler::block* scope,
-            compiler::type* entry_type,
-            size_t size);
+        pointer_type(
+            compiler::block* parent_scope,
+            compiler::type* base_type);
 
-        uint64_t size() const;
-
-        void size(uint64_t value);
-
-        compiler::type* entry_type();
+        compiler::type* base_type() const;
 
     protected:
         bool on_initialize(
@@ -39,8 +31,7 @@ namespace basecode::compiler {
             compiler::program* program) override;
 
     private:
-        uint64_t _size = 0;
-        compiler::type* _entry_type = nullptr;
+        compiler::type* _base_type = nullptr;
     };
 
 };

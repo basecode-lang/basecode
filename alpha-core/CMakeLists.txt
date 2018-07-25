@@ -80,6 +80,7 @@ add_library(
         compiler/elements/emit_context.cpp compiler/elements/emit_context.h
         compiler/elements/numeric_type.cpp compiler/elements/numeric_type.h
         compiler/elements/unknown_type.cpp compiler/elements/unknown_type.h
+        compiler/elements/pointer_type.cpp compiler/elements/pointer_type.h
         compiler/elements/operator_base.cpp compiler/elements/operator_base.h
         compiler/elements/float_literal.cpp compiler/elements/float_literal.h
         compiler/elements/element_types.cpp compiler/elements/element_types.h
