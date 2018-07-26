@@ -23,9 +23,13 @@ namespace basecode::compiler {
 
         bool is_array() const;
 
+        bool is_pointer() const;
+
         void is_array(bool value);
 
         size_t array_size() const;
+
+        void is_pointer(bool value);
 
         void array_size(size_t value);
 
@@ -37,6 +41,7 @@ namespace basecode::compiler {
     private:
         size_t _array_size = 0;
         bool _is_array = false;
+        bool _is_pointer = false;
     };
 
 };

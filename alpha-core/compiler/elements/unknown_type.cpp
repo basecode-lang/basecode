@@ -31,12 +31,20 @@ namespace basecode::compiler {
         return _is_array;
     }
 
+    bool unknown_type::is_pointer() const {
+        return _is_pointer;
+    }
+
     void unknown_type::is_array(bool value) {
         _is_array = value;
     }
 
     size_t unknown_type::array_size() const {
         return _array_size;
+    }
+
+    void unknown_type::is_pointer(bool value) {
+        _is_pointer = value;
     }
 
     void unknown_type::array_size(size_t value) {

@@ -60,18 +60,20 @@ namespace basecode::compiler {
             common::result& r,
             compiler::session& session);
 
-        compiler::module* compile_module(
-            common::result& r,
-            compiler::session& session,
-            common::source_file* source_file);
-
         element_map& elements();
+
+        compiler::type* find_type(
+            const qualified_symbol_t& symbol,
+            compiler::block* scope = nullptr) const;
 
         bool run(common::result& r);
 
         void disassemble(FILE* file);
 
-        compiler::type* find_type(const qualified_symbol_t& symbol) const;
+        compiler::module* compile_module(
+            common::result& r,
+            compiler::session& session,
+            common::source_file* source_file);
 
     protected:
         friend class code_dom_formatter;
@@ -279,12 +281,18 @@ namespace basecode::compiler {
 
         compiler::type* find_array_type(
             compiler::type* entry_type,
-            size_t size);
+            size_t size,
+            compiler::block* scope = nullptr);
+
+        compiler::type* find_pointer_type(
+            compiler::type* base_type,
+            compiler::block* scope = nullptr);
 
         unknown_type* make_unknown_type(
             common::result& r,
             compiler::block* parent_scope,
             compiler::symbol_element* symbol,
+            bool is_pointer,
             bool is_array,
             size_t array_size);
 
@@ -374,13 +382,17 @@ namespace basecode::compiler {
 
         return_element* make_return(compiler::block* parent_scope);
 
-        compiler::type* find_pointer_type(compiler::type* base_type);
-
         argument_list* make_argument_list(compiler::block* parent_scope);
 
         compiler::block* push_new_block(element_type_t type = element_type_t::block);
 
     private:
+        element* evaluate(
+            common::result& r,
+            compiler::session& session,
+            const syntax::ast_node_shared_ptr& node,
+            element_type_t default_block_type = element_type_t::block);
+
         element* evaluate_in_scope(
             common::result& r,
             compiler::session& session,
@@ -388,16 +400,15 @@ namespace basecode::compiler {
             compiler::block* scope,
             element_type_t default_block_type = element_type_t::block);
 
-        element* evaluate(
-            common::result& r,
-            compiler::session& session,
-            const syntax::ast_node_shared_ptr& node,
-            element_type_t default_block_type = element_type_t::block);
-
         bool find_identifier_type(
             common::result& r,
             type_find_result_t& result,
             const syntax::ast_node_shared_ptr& type_node,
+            compiler::block* parent_scope = nullptr);
+
+        compiler::type* make_complete_type(
+            common::result& r,
+            type_find_result_t& result,
             compiler::block* parent_scope = nullptr);
 
         compiler::block* pop_scope();

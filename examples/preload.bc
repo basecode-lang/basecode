@@ -16,7 +16,8 @@ basecode::linear := ns {
         z: f64;
 
         transpose := proc(self: ^vector3): vector3 {
-            return self;
+            new_vector: vector3;
+            return new_vector;
         };
     };
 };
