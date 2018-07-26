@@ -29,7 +29,27 @@ alpha::compiler::examples := ns {
     max: u16 := 32767;
     name: string := "fibonacci test program";
 
-    name_ptr: ^string;
+//    numbers1: ^[]^u32;
+//    numbers2: ^[100]^u32;
+//    name_ptr: ^string;
+
+//    (name: string,  len: u32);
+//            !=
+//    (name: ^string, len: u64);
+//
+//    (foo:  string,  bar: u32);
+//            !=
+//    (bing: string,  baz: u32);
+//
+//    dummy := proc(name: ^string): result: s32, name: string, len: u32 {
+//        result := -1;
+//        name := "foo";
+//        len := 3;
+//
+//        return -1, "foo", 3;
+//    };
+
+//    print(name_ptr^);
 
     foo: u32 := max * 4;
     boom := length_of_sequence;
@@ -42,7 +62,7 @@ alpha::compiler::examples := ns {
     is_this_true := count == (max == 256) && count == (max / 2);
 
     import basecode::linear from preload;
-    point:vector3;
+    point: vector3;
 
     bar := proc() {
         bing(256);

@@ -182,17 +182,21 @@ namespace basecode::syntax {
             token_t& token) {
         auto is_spread = false;
         auto is_pointer = false;
-        ast_node_shared_ptr array_node = nullptr;
+
+        auto array_subscripts = parser
+            ->ast_builder()
+            ->array_subscript_list_node();
+        while (true) {
+            if (!parser->peek(token_types_t::left_square_bracket))
+                break;
+            array_subscripts->children.push_back(parser->parse_expression(
+                r,
+                static_cast<uint8_t>(precedence_t::variable)));
+        }
 
         if (parser->peek(token_types_t::caret)) {
             parser->consume();
             is_pointer = true;
-        }
-
-        if (parser->peek(token_types_t::left_square_bracket)) {
-            array_node = parser->parse_expression(
-                r,
-                static_cast<uint8_t>(precedence_t::variable));
         }
 
         if (parser->peek(token_types_t::spread_operator)) {
@@ -220,11 +224,10 @@ namespace basecode::syntax {
             ->ast_builder()
             ->type_identifier_node();
         type_node->lhs = symbol_node;
+        type_node->rhs = array_subscripts;
 
-        if (array_node != nullptr) {
-            type_node->rhs = array_node;
+        if (!array_subscripts->children.empty())
             type_node->flags |= ast_node_t::flags_t::array;
-        }
 
         if (is_spread)
             type_node->flags |= ast_node_t::flags_t::spread;

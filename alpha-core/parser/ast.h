@@ -83,6 +83,7 @@ namespace basecode::syntax {
         namespace_expression,
         subscript_expression,
         return_argument_list,
+        array_subscript_list,
         assignment_target_list,
     };
 
@@ -141,6 +142,7 @@ namespace basecode::syntax {
         {ast_node_types_t::namespace_expression, "namespace_expression"},
         {ast_node_types_t::subscript_expression, "subscript_expression"},
         {ast_node_types_t::return_argument_list, "return_argument_list"},
+        {ast_node_types_t::array_subscript_list, "array_subscript_list"},
         {ast_node_types_t::assignment_target_list, "assignment_target_list"}
     };
 
@@ -274,6 +276,8 @@ namespace basecode::syntax {
         ast_node_shared_ptr return_node(token_t& token);
 
         ast_node_shared_ptr for_in_node(token_t& token);
+
+        ast_node_shared_ptr array_subscript_list_node();
 
         void push_scope(const ast_node_shared_ptr& node);
 

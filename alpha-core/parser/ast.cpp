@@ -241,6 +241,13 @@ namespace basecode::syntax {
         return node;
     }
 
+    ast_node_shared_ptr ast_builder::array_subscript_list_node() {
+        auto node = std::make_shared<ast_node_t>();
+        node->id = ++_id;
+        node->type = ast_node_types_t::array_subscript_list;
+        return node;
+    }
+
     void ast_builder::push_scope(const ast_node_shared_ptr& node) {
         _scope_stack.push(node);
     }
