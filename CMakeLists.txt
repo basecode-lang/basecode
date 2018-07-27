@@ -3,11 +3,9 @@ project(alpha-bootstrap)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-# conan configuration
-set(CONAN_DISABLE_CHECK_COMPILER true)
-include(conanbuildinfo.cmake)
-conan_basic_setup(KEEP_RPATHS)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 # enhance unit test discovery
 enable_testing()
@@ -22,6 +20,13 @@ endmacro(add_unit_test)
 add_custom_target(dummy-target ALL DEPENDS custom-output)
 add_custom_command(OUTPUT custom-output COMMAND ${CMAKE_COMMAND} -E echo DEPENDS always-rebuild)
 add_custom_command(OUTPUT always-rebuild COMMAND ${CMAKE_COMMAND} -E echo)
+
+# external dependencies
+add_subdirectory(ext/fmt-5.1.0 EXCLUDE_FROM_ALL)
+add_subdirectory(ext/dyncall-1.0 EXCLUDE_FROM_ALL)
+include_directories(
+        ext/boost-1.67.0
+        ext/dyncall-1.0)
 
 # projects
 add_subdirectory(alpha-core)

@@ -15,12 +15,17 @@ else ()
 endif()
 
 include_directories(
-        ${PROJECT_SOURCE_DIR}
-        ${PROJECT_SOURCE_DIR}/../alpha-core)
+    ${PROJECT_SOURCE_DIR}
+    ${PROJECT_SOURCE_DIR}/../alpha-core
+)
 
 add_executable(
-        ${PROJECT_NAME}
-        main.cpp
-        ya_getopt.c ya_getopt.h
+    ${PROJECT_NAME}
+    main.cpp
+    ya_getopt.c ya_getopt.h
 )
-target_link_libraries(${PROJECT_NAME} alpha-core ${CONAN_LIBS})
+target_link_libraries(
+    ${PROJECT_NAME}
+    alpha-core
+    fmt-header-only
+)

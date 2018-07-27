@@ -17,87 +17,91 @@ endif()
 include_directories(${PROJECT_SOURCE_DIR})
 
 add_library(
-        ${PROJECT_NAME} SHARED
+    ${PROJECT_NAME} SHARED
 
-        exports.cpp
+    exports.cpp
 
-        common/rune.h
-        common/defer.h
-        common/bytes.h
-        common/result.h
-        common/result_message.h
-        common/id_pool.cpp common/id_pool.h
-        common/colorizer.cpp common/colorizer.h
-        common/source_file.cpp common/source_file.h
-        common/hex_formatter.cpp common/hex_formatter.h
-        common/source_location.cpp common/source_location.h
-        common/graphviz_formatter.cpp common/graphviz_formatter.h
+    common/rune.h
+    common/defer.h
+    common/bytes.h
+    common/result.h
+    common/result_message.h
+    common/id_pool.cpp common/id_pool.h
+    common/colorizer.cpp common/colorizer.h
+    common/source_file.cpp common/source_file.h
+    common/hex_formatter.cpp common/hex_formatter.h
+    common/source_location.cpp common/source_location.h
+    common/graphviz_formatter.cpp common/graphviz_formatter.h
 
-        parser/ast.cpp parser/ast.h
-        parser/lexer.cpp parser/lexer.h
-        parser/token.cpp parser/token.h
-        parser/parser.cpp parser/parser.h
-        parser/ast_formatter.cpp parser/ast_formatter.h
+    parser/ast.cpp parser/ast.h
+    parser/lexer.cpp parser/lexer.h
+    parser/token.cpp parser/token.h
+    parser/parser.cpp parser/parser.h
+    parser/ast_formatter.cpp parser/ast_formatter.h
 
-        vm/terp.cpp vm/terp.h
-        vm/label.cpp vm/label.h
-        vm/symbol.cpp vm/symbol.h
-        vm/segment.cpp vm/segment.h
-        vm/assembler.cpp vm/assembler.h
-        vm/stack_frame.cpp vm/stack_frame.h
-        vm/assembly_listing.cpp vm/assembly_listing.h
-        vm/instruction_block.cpp vm/instruction_block.h
-        vm/register_allocator.cpp vm/register_allocator.h
+    vm/terp.cpp vm/terp.h
+    vm/label.cpp vm/label.h
+    vm/symbol.cpp vm/symbol.h
+    vm/segment.cpp vm/segment.h
+    vm/assembler.cpp vm/assembler.h
+    vm/stack_frame.cpp vm/stack_frame.h
+    vm/assembly_listing.cpp vm/assembly_listing.h
+    vm/instruction_block.cpp vm/instruction_block.h
+    vm/register_allocator.cpp vm/register_allocator.h
 
-        compiler/compiler_types.h
-        compiler/session.cpp compiler/session.h
-        compiler/elements/type.cpp compiler/elements/type.h
-        compiler/elements/cast.cpp compiler/elements/cast.h
-        compiler/elements/field.cpp compiler/elements/field.h
-        compiler/elements/block.cpp compiler/elements/block.h
-        compiler/elements/label.cpp compiler/elements/label.h
-        compiler/elements/alias.cpp compiler/elements/alias.h
-        compiler/elements/import.cpp compiler/elements/import.h
-        compiler/elements/module.cpp compiler/elements/module.h
-        compiler/elements/comment.cpp compiler/elements/comment.h
-        compiler/elements/element.cpp compiler/elements/element.h
-        compiler/elements/program.cpp compiler/elements/program.h
-        compiler/elements/any_type.cpp compiler/elements/any_type.h
-        compiler/elements/attribute.cpp compiler/elements/attribute.h
-        compiler/elements/directive.cpp compiler/elements/directive.h
-        compiler/elements/statement.cpp compiler/elements/statement.h
-        compiler/code_dom_formatter.cpp compiler/code_dom_formatter.h
-        compiler/elements/type_info.cpp compiler/elements/type_info.h
-        compiler/elements/if_element.cpp compiler/elements/if_element.h
-        compiler/elements/identifier.cpp compiler/elements/identifier.h
-        compiler/elements/expression.cpp compiler/elements/expression.h
-        compiler/elements/array_type.cpp compiler/elements/array_type.h
-        compiler/elements/tuple_type.cpp compiler/elements/tuple_type.h
-        compiler/elements/element_map.cpp compiler/elements/element_map.h
-        compiler/elements/initializer.cpp compiler/elements/initializer.h
-        compiler/elements/string_type.cpp compiler/elements/string_type.h
-        compiler/elements/module_type.cpp compiler/elements/module_type.h
-        compiler/elements/emit_context.cpp compiler/elements/emit_context.h
-        compiler/elements/numeric_type.cpp compiler/elements/numeric_type.h
-        compiler/elements/unknown_type.cpp compiler/elements/unknown_type.h
-        compiler/elements/pointer_type.cpp compiler/elements/pointer_type.h
-        compiler/elements/operator_base.cpp compiler/elements/operator_base.h
-        compiler/elements/float_literal.cpp compiler/elements/float_literal.h
-        compiler/elements/element_types.cpp compiler/elements/element_types.h
-        compiler/elements/argument_list.cpp compiler/elements/argument_list.h
-        compiler/elements/symbol_element.cpp compiler/elements/symbol_element.h
-        compiler/elements/namespace_type.cpp compiler/elements/namespace_type.h
-        compiler/elements/composite_type.cpp compiler/elements/composite_type.h
-        compiler/elements/procedure_type.cpp compiler/elements/procedure_type.h
-        compiler/elements/string_literal.cpp compiler/elements/string_literal.h
-        compiler/elements/unary_operator.cpp compiler/elements/unary_operator.h
-        compiler/elements/return_element.cpp compiler/elements/return_element.h
-        compiler/elements/procedure_call.cpp compiler/elements/procedure_call.h
-        compiler/elements/integer_literal.cpp compiler/elements/integer_literal.h
-        compiler/elements/binary_operator.cpp compiler/elements/binary_operator.h
-        compiler/elements/boolean_literal.cpp compiler/elements/boolean_literal.h
-        compiler/elements/module_reference.cpp compiler/elements/module_reference.h
-        compiler/elements/namespace_element.cpp compiler/elements/namespace_element.h
-        compiler/elements/procedure_instance.cpp compiler/elements/procedure_instance.h
-        compiler/elements/identifier_reference.cpp compiler/elements/identifier_reference.h)
-target_link_libraries(${PROJECT_NAME} ${CONAN_LIBS})
+    compiler/compiler_types.h
+    compiler/session.cpp compiler/session.h
+    compiler/elements/type.cpp compiler/elements/type.h
+    compiler/elements/cast.cpp compiler/elements/cast.h
+    compiler/elements/field.cpp compiler/elements/field.h
+    compiler/elements/block.cpp compiler/elements/block.h
+    compiler/elements/label.cpp compiler/elements/label.h
+    compiler/elements/alias.cpp compiler/elements/alias.h
+    compiler/elements/import.cpp compiler/elements/import.h
+    compiler/elements/module.cpp compiler/elements/module.h
+    compiler/elements/comment.cpp compiler/elements/comment.h
+    compiler/elements/element.cpp compiler/elements/element.h
+    compiler/elements/program.cpp compiler/elements/program.h
+    compiler/elements/any_type.cpp compiler/elements/any_type.h
+    compiler/elements/attribute.cpp compiler/elements/attribute.h
+    compiler/elements/directive.cpp compiler/elements/directive.h
+    compiler/elements/statement.cpp compiler/elements/statement.h
+    compiler/code_dom_formatter.cpp compiler/code_dom_formatter.h
+    compiler/elements/type_info.cpp compiler/elements/type_info.h
+    compiler/elements/if_element.cpp compiler/elements/if_element.h
+    compiler/elements/identifier.cpp compiler/elements/identifier.h
+    compiler/elements/expression.cpp compiler/elements/expression.h
+    compiler/elements/array_type.cpp compiler/elements/array_type.h
+    compiler/elements/tuple_type.cpp compiler/elements/tuple_type.h
+    compiler/elements/element_map.cpp compiler/elements/element_map.h
+    compiler/elements/initializer.cpp compiler/elements/initializer.h
+    compiler/elements/string_type.cpp compiler/elements/string_type.h
+    compiler/elements/module_type.cpp compiler/elements/module_type.h
+    compiler/elements/emit_context.cpp compiler/elements/emit_context.h
+    compiler/elements/numeric_type.cpp compiler/elements/numeric_type.h
+    compiler/elements/unknown_type.cpp compiler/elements/unknown_type.h
+    compiler/elements/pointer_type.cpp compiler/elements/pointer_type.h
+    compiler/elements/operator_base.cpp compiler/elements/operator_base.h
+    compiler/elements/float_literal.cpp compiler/elements/float_literal.h
+    compiler/elements/element_types.cpp compiler/elements/element_types.h
+    compiler/elements/argument_list.cpp compiler/elements/argument_list.h
+    compiler/elements/symbol_element.cpp compiler/elements/symbol_element.h
+    compiler/elements/namespace_type.cpp compiler/elements/namespace_type.h
+    compiler/elements/composite_type.cpp compiler/elements/composite_type.h
+    compiler/elements/procedure_type.cpp compiler/elements/procedure_type.h
+    compiler/elements/string_literal.cpp compiler/elements/string_literal.h
+    compiler/elements/unary_operator.cpp compiler/elements/unary_operator.h
+    compiler/elements/return_element.cpp compiler/elements/return_element.h
+    compiler/elements/procedure_call.cpp compiler/elements/procedure_call.h
+    compiler/elements/integer_literal.cpp compiler/elements/integer_literal.h
+    compiler/elements/binary_operator.cpp compiler/elements/binary_operator.h
+    compiler/elements/boolean_literal.cpp compiler/elements/boolean_literal.h
+    compiler/elements/module_reference.cpp compiler/elements/module_reference.h
+    compiler/elements/namespace_element.cpp compiler/elements/namespace_element.h
+    compiler/elements/procedure_instance.cpp compiler/elements/procedure_instance.h
+    compiler/elements/identifier_reference.cpp compiler/elements/identifier_reference.h)
+target_link_libraries(
+    ${PROJECT_NAME}
+    fmt-header-only
+    dyncall_s
+    dynload_s)
