@@ -28,4 +28,6 @@ target_link_libraries(
     ${PROJECT_NAME}
     alpha-core
     fmt-header-only
+    boost-system
+    boost-filesystem
 )

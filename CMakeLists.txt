@@ -7,6 +7,10 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
+#set(CMAKE_SKIP_BUILD_RPATH FALSE)
+#set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
+#set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+
 # enhance unit test discovery
 enable_testing()
 set_property(GLOBAL PROPERTY UNIT_TEST_TARGETS "")
@@ -27,6 +31,29 @@ add_subdirectory(ext/dyncall-1.0 EXCLUDE_FROM_ALL)
 include_directories(
         ext/boost-1.67.0
         ext/dyncall-1.0)
+
+# boost system library
+add_library(boost-system ext/boost-1.67.0/libs/system/src/error_code.cpp)
+
+# boost filesystem library
+set(
+    BOOST_FILESYSTEM_SOURCES
+    ext/boost-1.67.0/libs/filesystem/src/codecvt_error_category.cpp
+    ext/boost-1.67.0/libs/filesystem/src/operations.cpp
+    ext/boost-1.67.0/libs/filesystem/src/path.cpp
+    ext/boost-1.67.0/libs/filesystem/src/path_traits.cpp
+    ext/boost-1.67.0/libs/filesystem/src/portability.cpp
+    ext/boost-1.67.0/libs/filesystem/src/unique_path.cpp
+    ext/boost-1.67.0/libs/filesystem/src/utf8_codecvt_facet.cpp
+)
+if (WIN32)
+    set(
+        BOOST_FILESYSTEM_SOURCES
+        ${BOOST_FILESYSTEM_SOURCES}
+        ext/boost-1.67.0/libs/filesystem/src/windows_file_codecvt.cpp
+    )
+endif()
+add_library(boost-filesystem ${BOOST_FILESYSTEM_SOURCES})
 
 # projects
 add_subdirectory(alpha-core)

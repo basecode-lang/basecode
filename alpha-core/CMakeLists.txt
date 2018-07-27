@@ -104,4 +104,6 @@ target_link_libraries(
     ${PROJECT_NAME}
     fmt-header-only
     dyncall_s
-    dynload_s)
+    dynload_s
+    boost-system
+    boost-filesystem)
