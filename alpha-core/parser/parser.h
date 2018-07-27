@@ -14,11 +14,11 @@
 #include <map>
 #include <stack>
 #include <string>
-#include <filesystem>
 #include <fmt/format.h>
 #include <unordered_map>
 #include <common/result.h>
 #include <common/source_file.h>
+#include <boost/filesystem.hpp>
 #include "ast.h"
 #include "lexer.h"
 
@@ -566,7 +566,7 @@ namespace basecode::syntax {
         bool consume();
 
         void write_ast_graph(
-            const std::filesystem::path& path,
+            const boost::filesystem::path& path,
             const ast_node_shared_ptr& program_node);
 
         bool consume(token_t& token);

@@ -14,7 +14,7 @@
 #include <map>
 #include <stack>
 #include <cstdint>
-#include <filesystem>
+#include <boost/filesystem.hpp>
 #include "result.h"
 #include "source_location.h"
 
@@ -39,7 +39,7 @@ namespace basecode::common {
 
     class source_file {
     public:
-        explicit source_file(const std::filesystem::path& path);
+        explicit source_file(const boost::filesystem::path& path);
 
         ~source_file();
 
@@ -75,7 +75,7 @@ namespace basecode::common {
 
         uint8_t operator[](size_t index);
 
-        const std::filesystem::path& path() const;
+        const boost::filesystem::path& path() const;
 
         std::string substring(size_t start, size_t end);
 
@@ -90,7 +90,7 @@ namespace basecode::common {
 
     private:
         size_t _index = 0;
-        std::filesystem::path _path;
+        boost::filesystem::path _path;
         std::vector<uint8_t> _buffer;
         std::stack<size_t> _mark_stack {};
         std::map<size_t, source_file_line_t*> _lines_by_number {};

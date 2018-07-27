@@ -11,15 +11,15 @@
 
 #pragma once
 
-#include <filesystem>
 #include <functional>
+#include <boost/filesystem.hpp>
 #include "elements/element_types.h"
 
 namespace basecode::compiler {
 
     class session;
 
-    using path_list_t = std::vector<std::filesystem::path>;
+    using path_list_t = std::vector<boost::filesystem::path>;
 
     enum class session_compile_phase_t : uint8_t {
         start,
@@ -29,14 +29,14 @@ namespace basecode::compiler {
 
     using session_compile_callback = std::function<void (
         session_compile_phase_t,
-        const std::filesystem::path&)>;
+        const boost::filesystem::path&)>;
 
     struct session_options_t {
         bool verbose = false;
         size_t heap_size = 0;
         size_t stack_size = 0;
-        std::filesystem::path ast_graph_file;
-        std::filesystem::path dom_graph_file;
+        boost::filesystem::path ast_graph_file;
+        boost::filesystem::path dom_graph_file;
         session_compile_callback compile_callback;
     };
 

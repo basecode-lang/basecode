@@ -876,7 +876,7 @@ namespace basecode::syntax {
     }
 
     void parser::write_ast_graph(
-            const std::filesystem::path& path,
+            const boost::filesystem::path& path,
             const ast_node_shared_ptr& program_node) {
         auto close_required = false;
         FILE* ast_output_file = stdout;

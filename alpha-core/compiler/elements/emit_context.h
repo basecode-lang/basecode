@@ -11,10 +11,10 @@
 
 #pragma once
 
-#include <any>
 #include <stack>
 #include <string>
 #include <vm/terp.h>
+#include <boost/any.hpp>
 #include <vm/assembler.h>
 
 namespace basecode::compiler {
@@ -46,8 +46,8 @@ namespace basecode::compiler {
             if (data_stack.empty())
                 return nullptr;
             try {
-                return std::any_cast<T>(&data_stack.top());
-            } catch (const std::bad_any_cast& e) {
+                return boost::any_cast<T>(&data_stack.top());
+            } catch (const boost::bad_any_cast& e) {
                 return nullptr;
             }
         }
@@ -77,7 +77,7 @@ namespace basecode::compiler {
         vm::terp* terp = nullptr;
         vm::assembler* assembler = nullptr;
         compiler::program* program = nullptr;
-        std::stack<std::any> data_stack {};
+        std::stack<boost::any> data_stack {};
         std::stack<emit_access_type_t> access_stack {};
         std::stack<vm::i_registers_t> scratch_registers {};
     };

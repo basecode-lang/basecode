@@ -10,8 +10,8 @@
 // ----------------------------------------------------------------------------
 
 #include <vm/terp.h>
-#include <filesystem>
 #include <compiler/session.h>
+#include <boost/filesystem.hpp>
 #include "attribute.h"
 #include "directive.h"
 #include "initializer.h"
@@ -20,6 +20,18 @@
 #include "symbol_element.h"
 
 namespace basecode::compiler {
+
+    std::unordered_map<std::string, directive::directive_callable> directive::s_execute_handlers = {
+        {"run",     std::bind(&directive::on_execute_run,     std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4)},
+        {"foreign", std::bind(&directive::on_execute_foreign, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4)},
+    };
+
+    std::unordered_map<std::string, directive::directive_callable> directive::s_evaluate_handlers = {
+        {"run",     std::bind(&directive::on_evaluate_run,     std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4)},
+        {"foreign", std::bind(&directive::on_evaluate_foreign, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4)},
+    };
+
+    ///////////////////////////////////////////////////////////////////////////
 
     directive::directive(
             block* parent_scope,
@@ -105,7 +117,7 @@ namespace basecode::compiler {
             }
         }
 
-        std::filesystem::path library_path(library_name);
+        boost::filesystem::path library_path(library_name);
         auto library = terp->load_shared_library(r, library_path);
         if (library == nullptr) {
             return false;

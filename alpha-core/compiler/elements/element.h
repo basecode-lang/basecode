@@ -11,7 +11,6 @@
 
 #pragma once
 
-#include <any>
 #include <cstdint>
 #include <common/result.h>
 #include <common/id_pool.h>

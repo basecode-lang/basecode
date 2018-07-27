@@ -10,6 +10,7 @@
 // ----------------------------------------------------------------------------
 
 #include <fstream>
+#include <sstream>
 #include <iterator>
 #include <fmt/format.h>
 #include "rune.h"
@@ -18,7 +19,7 @@
 
 namespace basecode::common {
 
-    source_file::source_file(const std::filesystem::path& path) : _path(path) {
+    source_file::source_file(const boost::filesystem::path& path) : _path(path) {
     }
 
     source_file::~source_file() {
@@ -168,7 +169,9 @@ namespace basecode::common {
         _lines_by_number.clear();
         _lines_by_index_range.clear();
 
-        std::ifstream file(_path, std::ios::in | std::ios::binary);
+        std::ifstream file(
+            _path.string(),
+            std::ios::in | std::ios::binary);
         if (file.is_open()) {
             file.unsetf(std::ios::skipws);
             file.seekg(0, std::ios::end);
@@ -196,7 +199,7 @@ namespace basecode::common {
         return _buffer[index];
     }
 
-    const std::filesystem::path& source_file::path() const {
+    const boost::filesystem::path& source_file::path() const {
         return _path;
     }
 

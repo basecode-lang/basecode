@@ -61,8 +61,8 @@ int main(int argc, char** argv) {
     int opt = -1;
     bool help_flag = false;
     bool verbose_flag = false;
-    std::filesystem::path ast_graph_file_name;
-    std::filesystem::path code_dom_graph_file_name;
+    boost::filesystem::path ast_graph_file_name;
+    boost::filesystem::path code_dom_graph_file_name;
 
     static struct option long_options[] = {
         {"help",    ya_no_argument,       nullptr, 0  },
@@ -133,9 +133,9 @@ int main(int argc, char** argv) {
         fmt::print("\ncompilation time (in μs): {}\n", duration);
     });
 
-    std::vector<std::filesystem::path> source_files {};
+    std::vector<boost::filesystem::path> source_files {};
     while (ya_optind < argc) {
-        std::filesystem::path source_file_path(argv[ya_optind++]);
+        boost::filesystem::path source_file_path(argv[ya_optind++]);
         source_files.push_back(source_file_path);
     }
 
@@ -152,7 +152,7 @@ int main(int argc, char** argv) {
         .dom_graph_file = code_dom_graph_file_name,
         .compile_callback = [&](
                 basecode::compiler::session_compile_phase_t phase,
-                const std::filesystem::path& source_file) {
+                const boost::filesystem::path& source_file) {
             switch (phase) {
                 case basecode::compiler::session_compile_phase_t::start:
                     fmt::print("{}\n", source_file.filename().string());

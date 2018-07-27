@@ -20,12 +20,12 @@
 #include <memory>
 #include <cstdint>
 #include <functional>
-#include <filesystem>
 #include <fmt/format.h>
 #include <unordered_map>
 #include <common/result.h>
 #include <dyncall/dyncall.h>
 #include <dynload/dynload.h>
+#include <boost/filesystem.hpp>
 #include <dyncall/dyncall_struct.h>
 #include <dyncall/dyncall_signature.h>
 
@@ -509,20 +509,20 @@ namespace basecode::vm {
         }
 
         bool initialize(
-                common::result& r,
-                const std::filesystem::path& path);
+            common::result& r,
+            const boost::filesystem::path& path);
 
         bool initialize(common::result& r);
-
-        inline const std::filesystem::path& path() const {
-            return _path;
-        }
 
         inline const symbol_address_map& symbols() const {
             return _symbols;
         }
 
         bool exports_symbol(const std::string& symbol_name);
+
+        inline const boost::filesystem::path& path() const {
+            return _path;
+        }
 
         void* symbol_address(const std::string& symbol_name);
 
@@ -533,8 +533,8 @@ namespace basecode::vm {
 
     private:
         DLLib* _library = nullptr;
-        std::filesystem::path _path {};
         symbol_address_map _symbols {};
+        boost::filesystem::path _path {};
     };
 
     struct function_value_t {
@@ -676,7 +676,7 @@ namespace basecode::vm {
 
         shared_library_t* load_shared_library(
             common::result& r,
-            const std::filesystem::path& path);
+            const boost::filesystem::path& path);
 
         std::vector<uint64_t> jump_to_subroutine(
             common::result& r,
@@ -700,7 +700,7 @@ namespace basecode::vm {
 
         void register_trap(uint8_t index, const trap_callable& callable);
 
-        shared_library_t* shared_library(const std::filesystem::path& path);
+        shared_library_t* shared_library(const boost::filesystem::path& path);
 
     private:
         bool has_overflow(

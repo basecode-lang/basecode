@@ -233,7 +233,7 @@ namespace basecode::vm {
 
     bool shared_library_t::initialize(
             common::result& r,
-            const std::filesystem::path& path) {
+            const boost::filesystem::path& path) {
         _library = dlLoadLibrary(path.c_str());
         if (_library == nullptr) {
             r.add_message(
@@ -2040,7 +2040,7 @@ namespace basecode::vm {
 
     shared_library_t* terp::load_shared_library(
             common::result& r,
-            const std::filesystem::path& path) {
+            const boost::filesystem::path& path) {
         auto it = _shared_libraries.find(path.string());
         if (it != _shared_libraries.end())
             return &it->second;
@@ -2373,7 +2373,7 @@ namespace basecode::vm {
         }
     }
 
-    shared_library_t* terp::shared_library(const std::filesystem::path& path) {
+    shared_library_t* terp::shared_library(const boost::filesystem::path& path) {
         auto it = _shared_libraries.find(path.string());
         if (it == _shared_libraries.end())
             return nullptr;

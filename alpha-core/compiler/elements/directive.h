@@ -75,15 +75,8 @@ namespace basecode::compiler {
             compiler::program* program);
 
     private:
-        static inline std::unordered_map<std::string, directive_callable> s_evaluate_handlers = {
-            {"run",     std::bind(&directive::on_evaluate_run,     std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4)},
-            {"foreign", std::bind(&directive::on_evaluate_foreign, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4)},
-        };
-
-        static inline std::unordered_map<std::string, directive_callable> s_execute_handlers = {
-            {"run",     std::bind(&directive::on_execute_run,     std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4)},
-            {"foreign", std::bind(&directive::on_execute_foreign, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4)},
-        };
+        static std::unordered_map<std::string, directive_callable> s_execute_handlers;
+        static std::unordered_map<std::string, directive_callable> s_evaluate_handlers;
 
         std::string _name;
         element* _expression = nullptr;

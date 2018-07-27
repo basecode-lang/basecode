@@ -14,8 +14,8 @@
 #include <stack>
 #include <string>
 #include <vector>
-#include <filesystem>
 #include <unordered_map>
+#include <boost/filesystem.hpp>
 
 namespace basecode::vm {
 
@@ -43,7 +43,7 @@ namespace basecode::vm {
             }
         }
 
-        std::filesystem::path path;
+        boost::filesystem::path path;
         std::vector<listing_source_line_t> lines {};
     };
 
@@ -57,9 +57,9 @@ namespace basecode::vm {
 
         listing_source_file_t* current_source_file();
 
-        void add_source_file(const std::filesystem::path& path);
+        void add_source_file(const boost::filesystem::path& path);
 
-        void select_source_file(const std::filesystem::path& path);
+        void select_source_file(const boost::filesystem::path& path);
 
     private:
         listing_source_file_t* _current_source_file = nullptr;

@@ -17,7 +17,6 @@
 #include <vector>
 #include <string>
 #include <cerrno>
-#include <variant>
 #include <functional>
 #include "token.h"
 

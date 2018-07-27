@@ -11,11 +11,11 @@
 
 #pragma once
 
-#include <any>
 #include <map>
 #include <stack>
 #include <string>
 #include <vector>
+#include <boost/any.hpp>
 #include "terp.h"
 #include "label.h"
 #include "stack_frame.h"
@@ -88,29 +88,29 @@ namespace basecode::vm {
                           _type(block_entry_type_t::memo) {
         }
 
-        block_entry_t(const align_t& align) : _data(std::any(align)),
+        block_entry_t(const align_t& align) : _data(boost::any(align)),
                                               _type(block_entry_type_t::align) {
         }
 
-        block_entry_t(const section_t& section) : _data(std::any(section)),
+        block_entry_t(const section_t& section) : _data(boost::any(section)),
                                                   _type(block_entry_type_t::section) {
         }
 
-        block_entry_t(const instruction_t& instruction) : _data(std::any(instruction)),
+        block_entry_t(const instruction_t& instruction) : _data(boost::any(instruction)),
                                                           _type(block_entry_type_t::instruction) {
         }
 
-        block_entry_t(const data_definition_t& data) : _data(std::any(data)),
+        block_entry_t(const data_definition_t& data) : _data(boost::any(data)),
                                                        _type(block_entry_type_t::data_definition) {
         }
 
         template <typename T>
         T* data() {
-            if (!_data.has_value())
+            if (_data.empty())
                 return nullptr;
             try {
-                return std::any_cast<T>(&_data);
-            } catch (const std::bad_any_cast& e) {
+                return boost::any_cast<T>(&_data);
+            } catch (const boost::bad_any_cast& e) {
                 return nullptr;
             }
         }
@@ -144,7 +144,7 @@ namespace basecode::vm {
         }
 
     private:
-        std::any _data;
+        boost::any _data;
         block_entry_type_t _type;
         uint16_t _blank_lines = 0;
         std::vector<vm::label*> _labels {};

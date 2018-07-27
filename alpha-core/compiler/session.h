@@ -16,11 +16,11 @@
 #include <string>
 #include <vector>
 #include <vm/terp.h>
-#include <filesystem>
 #include <fmt/format.h>
 #include <vm/assembler.h>
 #include <common/defer.h>
 #include <parser/parser.h>
+#include <boost/filesystem.hpp>
 #include <common/source_file.h>
 #include "compiler_types.h"
 #include "elements/program.h"
@@ -41,7 +41,7 @@ namespace basecode::compiler {
 
         void raise_phase(
             session_compile_phase_t phase,
-            const std::filesystem::path& source_file);
+            const boost::filesystem::path& source_file);
 
         vm::assembler& assembler();
 
@@ -51,7 +51,7 @@ namespace basecode::compiler {
 
         syntax::ast_node_shared_ptr parse(
             common::result& r,
-            const std::filesystem::path& path);
+            const boost::filesystem::path& path);
 
         syntax::ast_node_shared_ptr parse(
             common::result& r,
@@ -69,12 +69,12 @@ namespace basecode::compiler {
 
         void push_source_file(common::source_file* source_file);
 
-        common::source_file* add_source_file(const std::filesystem::path& path);
+        common::source_file* add_source_file(const boost::filesystem::path& path);
 
-        common::source_file* find_source_file(const std::filesystem::path& path);
+        common::source_file* find_source_file(const boost::filesystem::path& path);
 
     private:
-        void write_code_dom_graph(const std::filesystem::path& path);
+        void write_code_dom_graph(const boost::filesystem::path& path);
 
     private:
         vm::terp _terp;

@@ -45,13 +45,13 @@ namespace basecode::vm {
         return _current_source_file;
     }
 
-    void assembly_listing::add_source_file(const std::filesystem::path& path) {
+    void assembly_listing::add_source_file(const boost::filesystem::path& path) {
         _source_files.insert(std::make_pair(
             path.string(),
             listing_source_file_t {.path = path}));
     }
 
-    void assembly_listing::select_source_file(const std::filesystem::path& path) {
+    void assembly_listing::select_source_file(const boost::filesystem::path& path) {
         auto it = _source_files.find(path.string());
         if (it == _source_files.end()) {
             _current_source_file = nullptr;

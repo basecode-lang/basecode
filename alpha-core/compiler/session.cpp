@@ -36,7 +36,7 @@ namespace basecode::compiler {
 
     void session::raise_phase(
             session_compile_phase_t phase,
-            const std::filesystem::path& source_file) {
+            const boost::filesystem::path& source_file) {
         if (_options.compile_callback == nullptr)
             return;
         _options.compile_callback(phase, source_file);
@@ -70,7 +70,7 @@ namespace basecode::compiler {
 
     syntax::ast_node_shared_ptr session::parse(
             common::result& r,
-            const std::filesystem::path& path) {
+            const boost::filesystem::path& path) {
         auto source_file = find_source_file(path);
         if (source_file == nullptr) {
             source_file = add_source_file(path);
@@ -125,7 +125,7 @@ namespace basecode::compiler {
         _source_file_stack.push(source_file);
     }
 
-    void session::write_code_dom_graph(const std::filesystem::path& path) {
+    void session::write_code_dom_graph(const boost::filesystem::path& path) {
         FILE* output_file = nullptr;
         if (!path.empty()) {
             output_file = fopen(path.c_str(), "wt");
@@ -139,7 +139,7 @@ namespace basecode::compiler {
         formatter.format(fmt::format("Code DOM Graph: {}", path.string()));
     }
 
-    common::source_file* session::add_source_file(const std::filesystem::path& path) {
+    common::source_file* session::add_source_file(const boost::filesystem::path& path) {
         auto it = _source_files.insert(std::make_pair(
             path.string(),
             common::source_file(path)));
@@ -148,7 +148,7 @@ namespace basecode::compiler {
         return &it.first->second;
     }
 
-    common::source_file* session::find_source_file(const std::filesystem::path& path) {
+    common::source_file* session::find_source_file(const boost::filesystem::path& path) {
         auto it = _source_files.find(path.string());
         if (it == _source_files.end())
             return nullptr;
