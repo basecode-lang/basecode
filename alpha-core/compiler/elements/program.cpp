@@ -749,7 +749,8 @@ namespace basecode::compiler {
         block_list_t implicit_blocks {};
         for (auto block : all_blocks) {
             if (block->is_parent_element(element_type_t::namespace_e)
-            ||  block->is_parent_element(element_type_t::program)) {
+            ||  block->is_parent_element(element_type_t::program)
+            ||  block->is_parent_element(element_type_t::block)) {
                 implicit_blocks.emplace_back(dynamic_cast<compiler::block*>(block));
             }
         }

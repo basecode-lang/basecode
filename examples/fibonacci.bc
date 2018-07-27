@@ -25,9 +25,17 @@ alpha::compiler::config := ns {
 alpha::compiler::examples := ns {
     import alpha::compiler::config::fibonacci;
 
-    count: u32;
-    max: u16 := 32767;
-    name: string := "fibonacci test program";
+    count:  u32;
+    max:    u16 := 32767;
+    name:   string := "fibonacci test program";
+
+    {
+        a: u8;
+
+        a := 2;
+        a := a shr 2;
+        print("%d\n", a);
+    }
 
 //    numbers1: ^[]^u32;
 //    numbers2: ^[100]^u32;
