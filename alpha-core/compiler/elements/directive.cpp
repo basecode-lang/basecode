@@ -137,8 +137,8 @@ namespace basecode::compiler {
         }
 
         vm::function_signature_t signature {
-            .symbol = symbol_name,
-            .library = library,
+            symbol_name,
+            library,
         };
 
         auto result = terp->register_foreign_function(r, signature);

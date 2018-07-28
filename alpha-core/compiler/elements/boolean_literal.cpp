@@ -46,7 +46,7 @@ namespace basecode::compiler {
     }
 
     compiler::type* boolean_literal::on_infer_type(const compiler::program* program) {
-        return program->find_type({.name = "bool"});
+        return program->find_type({"bool"});
     }
 
 };

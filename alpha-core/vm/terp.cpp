@@ -11,6 +11,12 @@
 
 #include <sstream>
 #include <climits>
+
+#ifdef _MSC_VER
+// XXX: this is temporary; need to find the best header
+#define PATH_MAX (260)
+#endif
+
 #include <iomanip>
 #include <fmt/format.h>
 #include <common/bytes.h>
@@ -21,13 +27,13 @@
 namespace basecode::vm {
 
     static inline uint64_t rotl(uint64_t n, uint8_t c) {
-        const unsigned int mask = (CHAR_BIT * sizeof(n) - 1);
+        const auto mask = (CHAR_BIT * sizeof(n) - 1);
         c &= mask;
         return (n << c) | (n >> ((-c) & mask));
     }
 
     static inline uint64_t rotr(uint64_t n, uint8_t c) {
-        const unsigned int mask = (CHAR_BIT * sizeof(n) - 1);
+        const auto mask = (CHAR_BIT * sizeof(n) - 1);
         c &= mask;
         return (n >> c) | (n << ((-c) & mask));
     }
@@ -159,61 +165,61 @@ namespace basecode::vm {
                 dcCallVoid(vm, reinterpret_cast<DCpointer>(address));
                 break;
             case ffi_types_t::bool_type: {
-                auto value = static_cast<uint64_t>(dcCallBool(
+                const auto value = static_cast<uint64_t>(dcCallBool(
                     vm,
                     reinterpret_cast<DCpointer>(address)));
                 return value;
             }
             case ffi_types_t::char_type: {
-                auto value = static_cast<uint64_t>(dcCallChar(
+                const auto value = static_cast<uint64_t>(dcCallChar(
                     vm,
                     reinterpret_cast<DCpointer>(address)));
                 return value;
             }
             case ffi_types_t::short_type: {
-                auto value = static_cast<uint64_t>(dcCallShort(
+                const auto value = static_cast<uint64_t>(dcCallShort(
                     vm,
                     reinterpret_cast<DCpointer>(address)));
                 return value;
             }
             case ffi_types_t::int_type: {
-                auto value = static_cast<uint64_t>(dcCallInt(
+                const auto value = static_cast<uint64_t>(dcCallInt(
                     vm,
                     reinterpret_cast<DCpointer>(address)));
                 return value;
             }
             case ffi_types_t::long_type: {
-                auto value = static_cast<uint64_t>(dcCallLong(
+                const auto value = static_cast<uint64_t>(dcCallLong(
                     vm,
                     reinterpret_cast<DCpointer>(address)));
                 return value;
             }
             case ffi_types_t::long_long_type: {
-                auto value = static_cast<uint64_t>(dcCallLongLong(
+                const auto value = static_cast<uint64_t>(dcCallLongLong(
                     vm,
                     reinterpret_cast<DCpointer>(address)));
                 return value;
             }
             case ffi_types_t::float_type: {
-                auto value = static_cast<uint64_t>(dcCallFloat(
+                const auto value = static_cast<uint64_t>(dcCallFloat(
                     vm,
                     reinterpret_cast<DCpointer>(address)));
                 return value;
             }
             case ffi_types_t::double_type: {
-                auto value = static_cast<uint64_t>(dcCallDouble(
+                const auto value = static_cast<uint64_t>(dcCallDouble(
                     vm,
                     reinterpret_cast<DCpointer>(address)));
                 return value;
             }
             case ffi_types_t::pointer_type: {
-                auto value = reinterpret_cast<uint64_t>(dcCallPointer(
+                const auto value = reinterpret_cast<uint64_t>(dcCallPointer(
                     vm,
                     reinterpret_cast<DCpointer>(address)));
                 return value;
             }
             case ffi_types_t::struct_type: {
-                auto dc_struct = return_value.struct_meta_info();
+                const auto dc_struct = return_value.struct_meta_info();
 
                 DCpointer output_value;
                 dcCallStruct(
@@ -234,7 +240,7 @@ namespace basecode::vm {
     bool shared_library_t::initialize(
             common::result& r,
             const boost::filesystem::path& path) {
-        _library = dlLoadLibrary(path.c_str());
+        _library = dlLoadLibrary(reinterpret_cast<const char*>(path.c_str()));
         if (_library == nullptr) {
             r.add_message(
                 "B062",
@@ -675,14 +681,14 @@ namespace basecode::vm {
             common::result& r,
             uint64_t address,
             instruction_t& inst) {
-        auto it = _cache.find(address);
+        const auto it = _cache.find(address);
         if (it == _cache.end()) {
-            auto size = inst.decode(r, _terp->heap(), address);
+            const auto size = inst.decode(r, _terp->heap(), address);
             if (size == 0)
                 return 0;
             _cache.insert(std::make_pair(
                 address,
-                icache_entry_t{.size = size, .inst = inst}));
+                icache_entry_t{size, inst}));
             return size;
         } else {
             inst = it->second.inst;

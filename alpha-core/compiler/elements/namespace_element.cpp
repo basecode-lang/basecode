@@ -65,7 +65,7 @@ namespace basecode::compiler {
     }
 
     compiler::type* namespace_element::on_infer_type(const compiler::program* program) {
-        return program->find_type({.name = "namespace" });
+        return program->find_type({"namespace" });
     }
 
 };

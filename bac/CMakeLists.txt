@@ -10,6 +10,9 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
 elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
     set(CMAKE_CXX_FLAGS "-Wall -Wno-unknown-pragmas -Wno-parentheses" CACHE STRING "compile flags" FORCE)
     message(STATUS "bac using gcc flags: ${CMAKE_CXX_FLAGS}")
+elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "MSVC")
+    set(CMAKE_CXX_FLAGS "/EHsc" CACHE STRING "compile flags" FORCE)
+    message(STATUS "bac using msvc flags: ${CMAKE_CXX_FLAGS}")
 else ()
     message(STATUS "bac unknown compiler: ${CMAKE_CXX_COMPILER_ID}")
 endif()
@@ -17,6 +20,7 @@ endif()
 include_directories(
     ${PROJECT_SOURCE_DIR}
     ${PROJECT_SOURCE_DIR}/../alpha-core
+    ${PROJECT_SOURCE_DIR}/../alpha-core/include
 )
 
 add_executable(

@@ -60,9 +60,9 @@ namespace basecode::compiler {
 
         auto block_scope = scope();
 
-        auto u8_type = program->find_type({.name = "u8"});
-        auto u32_type = program->find_type({.name = "u32"});
-        auto type_info_type = program->find_type({.name = "type"});
+        auto u8_type = program->find_type({"u8"});
+        auto u32_type = program->find_type({"u32"});
+        auto type_info_type = program->find_type({"type"});
 
         auto flags_identifier = program->make_identifier(
             block_scope,

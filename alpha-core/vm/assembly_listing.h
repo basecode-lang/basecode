@@ -29,17 +29,14 @@ namespace basecode::vm {
                 uint64_t address,
                 const std::string& source) {
             lines.push_back(listing_source_line_t {
-                .address = address,
-                .source = source
+                address,
+                source
             });
         }
 
         void add_blank_lines(uint16_t count = 1) {
             for (uint16_t i = 0; i < count; i++) {
-                lines.push_back(listing_source_line_t {
-                    .address = 0,
-                    .source = ""
-                });
+                lines.push_back(listing_source_line_t {0, ""});
             }
         }
 

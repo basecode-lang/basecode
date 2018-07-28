@@ -47,7 +47,7 @@ namespace basecode::compiler {
                 return nullptr;
             try {
                 return boost::any_cast<T>(&data_stack.top());
-            } catch (const boost::bad_any_cast& e) {
+            } catch (const boost::bad_any_cast&) {
                 return nullptr;
             }
         }

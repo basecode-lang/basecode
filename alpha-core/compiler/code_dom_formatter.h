@@ -12,9 +12,8 @@
 #pragma once
 
 #include <set>
-#include <map>
 #include <cstdio>
-#include "compiler_types.h"
+#include <compiler_types.h>
 
 namespace basecode::compiler {
 

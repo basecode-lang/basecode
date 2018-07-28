@@ -31,8 +31,8 @@ namespace basecode::compiler {
             const std::string& true_label_name,
             const std::string& false_label_name) {
         data_stack.push(boost::any(if_data_t {
-            .true_branch_label = true_label_name,
-            .false_branch_label = false_label_name,
+            true_label_name,
+            false_label_name,
         }));
     }
 
@@ -44,7 +44,7 @@ namespace basecode::compiler {
 
     void emit_context_t::push_block(bool recurse) {
         data_stack.push(boost::any(block_data_t {
-            .recurse = recurse
+            recurse
         }));
     }
 

@@ -15,6 +15,7 @@
 #include <stack>
 #include <cstdint>
 #include <boost/filesystem.hpp>
+#include "rune.h"
 #include "result.h"
 #include "source_location.h"
 
@@ -49,13 +50,13 @@ namespace basecode::common {
             const std::string& message,
             const common::source_location& location);
 
-        rune_t next();
+        common::rune_t next();
+
+		bool eof() const;
+
+		void push_mark();
 
         size_t pop_mark();
-
-        bool eof() const;
-
-        void push_mark();
 
         size_t pos() const;
 
@@ -79,7 +80,7 @@ namespace basecode::common {
 
         std::string substring(size_t start, size_t end);
 
-        const uint32_t column_by_index(size_t index) const;
+	    uint32_t column_by_index(size_t index) const;
 
         const source_file_line_t* line_by_number(size_t line) const;
 

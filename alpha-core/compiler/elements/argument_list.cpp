@@ -10,7 +10,6 @@
 // ----------------------------------------------------------------------------
 
 #include <vm/instruction_block.h>
-#include "identifier.h"
 #include "argument_list.h"
 
 namespace basecode::compiler {

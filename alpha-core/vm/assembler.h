@@ -11,6 +11,14 @@
 
 #pragma once
 
+#if _MSC_VER 
+	#if !defined(API_EXPORT)
+		#define API_EXPORT __declspec(dllexport)
+	#endif
+#else
+	#define API_EXPORT
+#endif
+
 #include <stack>
 #include <vector>
 #include <unordered_map>
@@ -24,7 +32,7 @@ namespace basecode::vm {
     class terp;
     class instruction_block;
 
-    class assembler {
+    class API_EXPORT assembler {
     public:
         explicit assembler(vm::terp* terp);
 

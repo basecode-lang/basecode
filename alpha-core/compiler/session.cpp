@@ -10,9 +10,10 @@
 // ----------------------------------------------------------------------------
 
 #include <fstream>
-#include "session.h"
-#include "elements/program.h"
-#include "code_dom_formatter.h"
+#include <common/defer.h>
+#include <compiler/session.h>
+#include <compiler/elements/program.h>
+#include <compiler/code_dom_formatter.h>
 
 namespace basecode::compiler {
 
@@ -128,7 +129,9 @@ namespace basecode::compiler {
     void session::write_code_dom_graph(const boost::filesystem::path& path) {
         FILE* output_file = nullptr;
         if (!path.empty()) {
-            output_file = fopen(path.c_str(), "wt");
+            output_file = fopen(
+				reinterpret_cast<const char*>(path.c_str()), 
+				"wt");
         }
         defer({
             if (output_file != nullptr)

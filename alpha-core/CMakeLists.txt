@@ -10,6 +10,9 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
 elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
     set(CMAKE_CXX_FLAGS "-Wall -Wno-unknown-pragmas -Wno-parentheses" CACHE STRING "compile flags" FORCE)
     message(STATUS "alpha-core using gcc flags: ${CMAKE_CXX_FLAGS}")
+elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "MSVC")
+    set(CMAKE_CXX_FLAGS "/EHsc" CACHE STRING "compile flags" FORCE)
+    message(STATUS "alpha-core using msvc flags: ${CMAKE_CXX_FLAGS}")
 else ()
     message(STATUS "alpha-core unknown compiler: ${CMAKE_CXX_COMPILER_ID}")
 endif()
@@ -19,6 +22,8 @@ include_directories(${PROJECT_SOURCE_DIR})
 add_library(
     ${PROJECT_NAME} SHARED
 
+	include/basecode/compiler.h
+    compiler_types.h
     exports.cpp
 
     common/rune.h
@@ -49,7 +54,6 @@ add_library(
     vm/instruction_block.cpp vm/instruction_block.h
     vm/register_allocator.cpp vm/register_allocator.h
 
-    compiler/compiler_types.h
     compiler/session.cpp compiler/session.h
     compiler/elements/type.cpp compiler/elements/type.h
     compiler/elements/cast.cpp compiler/elements/cast.h

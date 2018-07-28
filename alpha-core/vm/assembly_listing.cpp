@@ -48,7 +48,7 @@ namespace basecode::vm {
     void assembly_listing::add_source_file(const boost::filesystem::path& path) {
         _source_files.insert(std::make_pair(
             path.string(),
-            listing_source_file_t {.path = path}));
+            listing_source_file_t {path}));
     }
 
     void assembly_listing::select_source_file(const boost::filesystem::path& path) {

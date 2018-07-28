@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <sstream>
 #include "instruction_block.h"
 #include "terp.h"
 
@@ -80,71 +81,71 @@ namespace basecode::vm {
     // data definitions
     void instruction_block::align(uint8_t size) {
         make_block_entry(align_t {
-            .size = size
+            size
         });
     }
 
     void instruction_block::byte(uint8_t value) {
         make_block_entry(data_definition_t {
-            .size = op_sizes::byte,
-            .value = value,
-            .type = data_definition_type_t::initialized,
+            op_sizes::byte,
+            value,
+            data_definition_type_t::initialized,
         });
     }
 
     void instruction_block::word(uint16_t value) {
         make_block_entry(data_definition_t {
-            .size = op_sizes::word,
-            .value = value,
-            .type = data_definition_type_t::initialized,
+            op_sizes::word,
+            value,
+            data_definition_type_t::initialized,
         });
     }
 
     void instruction_block::dword(uint32_t value) {
         make_block_entry(data_definition_t {
-            .size = op_sizes::dword,
-            .value = value,
-            .type = data_definition_type_t::initialized,
+            op_sizes::dword,
+            value,
+            data_definition_type_t::initialized,
         });
     }
 
     void instruction_block::qword(uint64_t value) {
         make_block_entry(data_definition_t {
-            .size = op_sizes::qword,
-            .value = value,
-            .type = data_definition_type_t::initialized,
+            op_sizes::qword,
+            value,
+            data_definition_type_t::initialized,
         });
     }
 
     void instruction_block::reserve_byte(size_t count) {
         make_block_entry(data_definition_t {
-            .size = op_sizes::byte,
-            .value = count,
-            .type = data_definition_type_t::uninitialized,
+            op_sizes::byte,
+            count,
+            data_definition_type_t::uninitialized,
         });
     }
 
     void instruction_block::reserve_word(size_t count) {
         make_block_entry(data_definition_t {
-            .size = op_sizes::word,
-            .value = count,
-            .type = data_definition_type_t::uninitialized,
+            op_sizes::word,
+            count,
+            data_definition_type_t::uninitialized,
         });
     }
 
     void instruction_block::reserve_dword(size_t count) {
         make_block_entry(data_definition_t {
-            .size = op_sizes::dword,
-            .value = count,
-            .type = data_definition_type_t::uninitialized,
+            op_sizes::dword,
+            count,
+            data_definition_type_t::uninitialized,
         });
     }
 
     void instruction_block::reserve_qword(size_t count) {
         make_block_entry(data_definition_t {
-            .size = op_sizes::qword,
-            .value = count,
-            .type = data_definition_type_t::uninitialized,
+            op_sizes::qword,
+            count,
+            data_definition_type_t::uninitialized,
         });
     }
 
@@ -1181,7 +1182,7 @@ namespace basecode::vm {
                 case block_entry_type_t::instruction: {
                     auto inst = entry.data<instruction_t>();
                     auto stream = inst->disassemble([&](uint64_t id) -> std::string {
-                        auto label_ref = block->find_unresolved_label_up(static_cast<id_t>(id));
+                        auto label_ref = block->find_unresolved_label_up(static_cast<common::id_t>(id));
                         return label_ref != nullptr ?
                                label_ref->name :
                                fmt::format("unresolved_ref_id({})", id);
@@ -1274,31 +1275,27 @@ namespace basecode::vm {
 
     void instruction_block::push_target_register(i_registers_t reg) {
         target_register_t target {
-            .type = target_register_type_t::integer,
-            .reg = {
-                .i = reg
-            }
+            target_register_type_t::integer,
         };
+		target.reg.i = reg;
         _target_registers.push(target);
     }
 
     void instruction_block::push_target_register(f_registers_t reg) {
         target_register_t target {
-            .type = target_register_type_t::floating_point,
-            .reg = {
-                .f = reg
-            }
+            target_register_type_t::floating_point,
         };
+		target.reg.f = reg;
         _target_registers.push(target);
     }
 
     vm::label* instruction_block::make_label(const std::string& name) {
-        auto it = _labels.insert(std::make_pair(name, new vm::label(name)));
+        const auto it = _labels.insert(std::make_pair(name, new vm::label(name)));
         return it.first->second;
     }
 
     void instruction_block::call_foreign(const std::string& proc_name) {
-        auto label_ref = make_unresolved_label_ref(proc_name);
+        const auto label_ref = make_unresolved_label_ref(proc_name);
 
         instruction_t ffi_op;
         ffi_op.op = op_codes::ffi;
@@ -1436,9 +1433,9 @@ namespace basecode::vm {
         auto insert_pair = _unresolved_labels.insert(std::make_pair(
             ref_id,
             label_ref_t {
-                .id = ref_id,
-                .name = label_name,
-                .resolved = label
+                ref_id,
+                label_name,
+                label
             }));
         _label_to_unresolved_ids.insert(std::make_pair(label_name, ref_id));
 
@@ -1687,7 +1684,7 @@ namespace basecode::vm {
     }
 
     void instruction_block::make_block_entry(const align_t& align) {
-        _entries.push_back(block_entry_t(align));
+        _entries.emplace_back(align);
     }
 
     void instruction_block::source_file(listing_source_file_t* value) {
@@ -1695,15 +1692,15 @@ namespace basecode::vm {
     }
 
     void instruction_block::make_block_entry(const section_t& section) {
-        _entries.push_back(block_entry_t(section));
+        _entries.emplace_back(section);
     }
 
     void instruction_block::make_block_entry(const instruction_t& inst) {
-        _entries.push_back(block_entry_t(inst));
+        _entries.emplace_back(inst);
     }
 
     void instruction_block::make_block_entry(const data_definition_t& data) {
-        _entries.push_back(block_entry_t(data));
+        _entries.emplace_back(data);
     }
 
 };

@@ -11,9 +11,20 @@
 
 #pragma once
 
+#if _MSC_VER 
+	#if !defined(API_EXPORT)
+		#define API_EXPORT __declspec(dllexport)
+	#endif
+#else
+	#define API_EXPORT
+#endif
+
+#include <cstdio>
+#include <cstdint>
+#include <stdarg.h>
 #include <functional>
 #include <boost/filesystem.hpp>
-#include "elements/element_types.h"
+#include <compiler/elements/element_types.h>
 
 namespace basecode::compiler {
 
@@ -27,11 +38,11 @@ namespace basecode::compiler {
         failed
     };
 
-    using session_compile_callback = std::function<void (
-        session_compile_phase_t,
-        const boost::filesystem::path&)>;
+	using session_compile_callback = std::function<void(
+		session_compile_phase_t,
+		const boost::filesystem::path&)>;
 
-    struct session_options_t {
+    struct API_EXPORT session_options_t {
         bool verbose = false;
         size_t heap_size = 0;
         size_t stack_size = 0;

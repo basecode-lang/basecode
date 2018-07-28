@@ -53,7 +53,7 @@ namespace basecode::compiler {
 
         auto block_scope = scope();
 
-        auto string_type = program->find_type({.name = "string"});
+        auto string_type = program->find_type({"string"});
 
         auto name_identifier = program->make_identifier(
             block_scope,

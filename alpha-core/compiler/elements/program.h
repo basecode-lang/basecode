@@ -13,9 +13,8 @@
 
 #include <functional>
 #include <parser/ast.h>
-#include <common/id_pool.h>
+#include <compiler_types.h>
 #include <common/source_file.h>
-#include <compiler/compiler_types.h>
 #include "element.h"
 #include "element_map.h"
 

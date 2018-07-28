@@ -11,8 +11,13 @@
 
 #pragma once
 
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "OCUnusedGlobalDeclarationInspection"
+#if _MSC_VER 
+	#if !defined(API_EXPORT)
+		#define API_EXPORT __declspec(dllexport)
+	#endif
+#else
+	#define API_EXPORT
+#endif
 
 #include <map>
 #include <set>
@@ -537,7 +542,7 @@ namespace basecode::vm {
         boost::filesystem::path _path {};
     };
 
-    struct function_value_t {
+    struct API_EXPORT function_value_t {
         ~function_value_t();
 
         DCstruct* struct_meta_info();
@@ -555,7 +560,7 @@ namespace basecode::vm {
         DCstruct* _struct_meta_data = nullptr;
     };
 
-    struct function_signature_t {
+    struct API_EXPORT function_signature_t {
         void apply_calling_convention(DCCallVM* vm);
 
         uint64_t call(DCCallVM* vm, uint64_t address);
@@ -597,7 +602,7 @@ namespace basecode::vm {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    class terp {
+    class API_EXPORT terp {
     public:
         using trap_callable = std::function<void (terp*)>;
 
@@ -796,5 +801,3 @@ namespace basecode::vm {
     };
 
 };
-
-#pragma clang diagnostic pop

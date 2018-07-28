@@ -42,7 +42,7 @@ namespace basecode::compiler {
     }
 
     compiler::type* module_reference::on_infer_type(const compiler::program* program) {
-        return program->find_type({.name = "module"});
+        return program->find_type({"module"});
     }
 
 };

@@ -12,22 +12,19 @@
 #pragma once
 
 #include <map>
-#include <cstdio>
 #include <string>
 #include <vector>
 #include <vm/terp.h>
-#include <fmt/format.h>
 #include <vm/assembler.h>
-#include <common/defer.h>
 #include <parser/parser.h>
+#include <compiler_types.h>
 #include <boost/filesystem.hpp>
 #include <common/source_file.h>
-#include "compiler_types.h"
-#include "elements/program.h"
+#include <compiler/elements/program.h>
 
 namespace basecode::compiler {
 
-    class session {
+    class API_EXPORT session {
     public:
         session(
             const session_options_t& options,

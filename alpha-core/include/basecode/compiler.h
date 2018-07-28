@@ -9,13 +9,8 @@
 //
 // ----------------------------------------------------------------------------
 
-#include <compiler_types.h>
+#pragma once
 
-extern "C" {
-    void API_EXPORT fmt_print(const char* fmt, ...) {
-        va_list ap;
-        va_start(ap, fmt);
-        printf(fmt, ap);
-        va_end(ap);
-    }
-};
+#include <common/defer.h>
+#include <common/result.h>
+#include <compiler/session.h>

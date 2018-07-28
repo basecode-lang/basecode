@@ -25,9 +25,9 @@ namespace basecode::vm {
         auto it = entries.insert(std::make_pair(
             name,
             stack_frame_entry_t {
-                .offset = offset,
-                .name = name,
-                .type = type
+                offset,
+                name,
+                type
             }));
         return &it.first->second;
     }

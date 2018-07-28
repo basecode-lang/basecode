@@ -38,8 +38,8 @@ namespace basecode::compiler {
 
         auto block_scope = scope();
 
-        auto type_info_type = program->find_type({ .name = "type" });
-        auto u8_type = program->find_type({ .name = "u8" });
+        auto type_info_type = program->find_type({"type" });
+        auto u8_type = program->find_type({"u8" });
 
         auto type_info_identifier = program->make_identifier(
             block_scope,

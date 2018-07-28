@@ -12,7 +12,7 @@
 #pragma once
 
 #include <functional>
-#include <compiler/compiler_types.h>
+#include <compiler_types.h>
 #include "block.h"
 
 namespace basecode::compiler {

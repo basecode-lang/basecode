@@ -10,22 +10,17 @@
 // ----------------------------------------------------------------------------
 
 #include <chrono>
-#include <sstream>
 #include <cstdlib>
-#include <iostream>
-#include <vm/terp.h>
 #include <functional>
 #include <fmt/format.h>
-#include <compiler/session.h>
-#include <common/source_file.h>
-#include <common/hex_formatter.h>
+#include <basecode/compiler.h>
 #include "ya_getopt.h"
 
 static constexpr size_t heap_size = (1024 * 1024) * 32;
 static constexpr size_t stack_size = (1024 * 1024) * 8;
 
 static void print_results(basecode::common::result& r) {
-    auto has_messages = !r.messages().empty();
+	const auto has_messages = !r.messages().empty();
 
     if (has_messages)
         fmt::print("\n");
@@ -58,9 +53,9 @@ static void usage() {
 int main(int argc, char** argv) {
     using namespace std::chrono;
 
-    int opt = -1;
-    bool help_flag = false;
-    bool verbose_flag = false;
+	auto opt = -1;
+	auto help_flag = false;
+	auto verbose_flag = false;
     boost::filesystem::path ast_graph_file_name;
     boost::filesystem::path code_dom_graph_file_name;
 
@@ -126,16 +121,16 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    high_resolution_clock::time_point start = high_resolution_clock::now();
+	const auto start = high_resolution_clock::now();
     defer({
-        high_resolution_clock::time_point end = high_resolution_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+        const auto end = high_resolution_clock::now();
+        const auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
         fmt::print("\ncompilation time (in μs): {}\n", duration);
     });
 
     std::vector<boost::filesystem::path> source_files {};
     while (ya_optind < argc) {
-        boost::filesystem::path source_file_path(argv[ya_optind++]);
+	    const boost::filesystem::path source_file_path(argv[ya_optind++]);
         source_files.push_back(source_file_path);
     }
 
@@ -144,25 +139,24 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    basecode::compiler::session_options_t session_options {
-        .verbose = verbose_flag,
-        .heap_size = heap_size,
-        .stack_size = stack_size,
-        .ast_graph_file = ast_graph_file_name,
-        .dom_graph_file = code_dom_graph_file_name,
-        .compile_callback = [&](
-                basecode::compiler::session_compile_phase_t phase,
-                const boost::filesystem::path& source_file) {
-            switch (phase) {
-                case basecode::compiler::session_compile_phase_t::start:
-                    fmt::print("{}\n", source_file.filename().string());
-                    break;
-                case basecode::compiler::session_compile_phase_t::success:
-                case basecode::compiler::session_compile_phase_t::failed:
-                    break;
-            }
+	basecode::compiler::session_options_t session_options{};
+    session_options.verbose = verbose_flag,
+	session_options.heap_size = heap_size,
+	session_options.stack_size = stack_size,
+	session_options.ast_graph_file = ast_graph_file_name,
+	session_options.dom_graph_file = code_dom_graph_file_name,
+	session_options.compile_callback = [&](
+            basecode::compiler::session_compile_phase_t phase,
+            const boost::filesystem::path& source_file) {
+        switch (phase) {
+            case basecode::compiler::session_compile_phase_t::start:
+                fmt::print("{}\n", source_file.filename().string());
+                break;
+            case basecode::compiler::session_compile_phase_t::success:
+            case basecode::compiler::session_compile_phase_t::failed:
+                break;
         }
-    };
+	};
 
     basecode::compiler::session compilation_session(
         session_options,
