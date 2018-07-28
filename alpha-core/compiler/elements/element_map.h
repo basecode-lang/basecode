@@ -11,6 +11,14 @@
 
 #pragma once
 
+#if _MSC_VER 
+	#if !defined(API_EXPORT)
+		#define API_EXPORT __declspec(dllexport)
+	#endif
+#else
+	#define API_EXPORT
+#endif
+
 #include <string>
 #include <unordered_map>
 #include <common/id_pool.h>
@@ -21,7 +29,7 @@ namespace basecode::compiler {
     using element_by_id_map_t = std::unordered_map<common::id_t, element*>;
     using element_by_type_map_t = std::unordered_map<element_type_t, element_list_t>;
 
-    class element_map {
+    class API_EXPORT element_map {
     public:
         element_map();
 

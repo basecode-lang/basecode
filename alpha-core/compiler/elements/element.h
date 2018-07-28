@@ -11,6 +11,14 @@
 
 #pragma once
 
+#if _MSC_VER 
+	#if !defined(API_EXPORT)
+		#define API_EXPORT __declspec(dllexport)
+	#endif
+#else
+	#define API_EXPORT
+#endif
+
 #include <cstdint>
 #include <common/result.h>
 #include <common/id_pool.h>
@@ -19,7 +27,7 @@
 
 namespace basecode::compiler {
 
-    class element {
+    class API_EXPORT element {
     public:
         element(
             block* parent_scope,

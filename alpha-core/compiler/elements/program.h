@@ -11,6 +11,14 @@
 
 #pragma once
 
+#if _MSC_VER 
+	#if !defined(API_EXPORT)
+		#define API_EXPORT __declspec(dllexport)
+	#endif
+#else
+	#define API_EXPORT
+#endif
+
 #include <functional>
 #include <parser/ast.h>
 #include <compiler_types.h>
@@ -33,7 +41,7 @@ namespace basecode::compiler {
         compiler::type* type = nullptr;
     };
 
-    class program : public element {
+    class API_EXPORT program : public element {
     public:
         program(
             vm::terp* terp,

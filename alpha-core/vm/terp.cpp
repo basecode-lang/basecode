@@ -240,7 +240,7 @@ namespace basecode::vm {
     bool shared_library_t::initialize(
             common::result& r,
             const boost::filesystem::path& path) {
-        _library = dlLoadLibrary(reinterpret_cast<const char*>(path.c_str()));
+        _library = dlLoadLibrary(path.string().c_str());
         if (_library == nullptr) {
             r.add_message(
                 "B062",

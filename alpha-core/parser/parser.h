@@ -55,7 +55,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    class infix_parser {
+    class API_EXPORT infix_parser {
     public:
         virtual ~infix_parser() = default;
 
@@ -70,7 +70,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    class comma_infix_parser : public infix_parser {
+    class API_EXPORT comma_infix_parser : public infix_parser {
     public:
         comma_infix_parser() = default;
 
@@ -85,7 +85,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    class type_identifier_infix_parser : public infix_parser {
+    class API_EXPORT type_identifier_infix_parser : public infix_parser {
     public:
         type_identifier_infix_parser() = default;
 
@@ -100,7 +100,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    class symbol_infix_parser : public infix_parser {
+    class API_EXPORT symbol_infix_parser : public infix_parser {
     public:
         symbol_infix_parser() = default;
 
@@ -115,7 +115,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    class cast_infix_parser : public infix_parser {
+    class API_EXPORT cast_infix_parser : public infix_parser {
     public:
         cast_infix_parser() = default;
 
@@ -130,7 +130,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    class proc_call_infix_parser : public infix_parser {
+    class API_EXPORT proc_call_infix_parser : public infix_parser {
     public:
         proc_call_infix_parser() = default;
 
@@ -145,7 +145,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    class binary_operator_infix_parser : public infix_parser {
+    class API_EXPORT binary_operator_infix_parser : public infix_parser {
     public:
         binary_operator_infix_parser(
             precedence_t precedence,
@@ -166,7 +166,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    class assignment_infix_parser : public infix_parser {
+    class API_EXPORT assignment_infix_parser : public infix_parser {
     public:
         assignment_infix_parser() = default;
 
@@ -181,7 +181,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    class block_comment_infix_parser : public infix_parser {
+    class API_EXPORT block_comment_infix_parser : public infix_parser {
     public:
         block_comment_infix_parser() = default;
 
@@ -196,7 +196,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    class prefix_parser {
+    class API_EXPORT prefix_parser {
     public:
         virtual ~prefix_parser() = default;
 
@@ -208,7 +208,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    class cast_prefix_parser : public prefix_parser {
+    class API_EXPORT cast_prefix_parser : public prefix_parser {
     public:
         cast_prefix_parser() = default;
 
@@ -220,7 +220,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    class label_prefix_parser : public prefix_parser {
+    class API_EXPORT label_prefix_parser : public prefix_parser {
     public:
         label_prefix_parser() = default;
 
@@ -232,7 +232,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    class constant_prefix_parser : public prefix_parser {
+    class API_EXPORT constant_prefix_parser : public prefix_parser {
     public:
         constant_prefix_parser() = default;
 
@@ -244,7 +244,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    class with_prefix_parser : public prefix_parser {
+    class API_EXPORT with_prefix_parser : public prefix_parser {
     public:
         with_prefix_parser() = default;
 
@@ -256,7 +256,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    class defer_prefix_parser : public prefix_parser {
+    class API_EXPORT defer_prefix_parser : public prefix_parser {
     public:
         defer_prefix_parser() = default;
 
@@ -268,7 +268,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    class union_prefix_parser : public prefix_parser {
+    class API_EXPORT union_prefix_parser : public prefix_parser {
     public:
         union_prefix_parser() = default;
 
@@ -280,7 +280,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    class namespace_prefix_parser : public prefix_parser {
+    class API_EXPORT namespace_prefix_parser : public prefix_parser {
     public:
         namespace_prefix_parser() = default;
 
@@ -292,7 +292,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    class struct_prefix_parser : public prefix_parser {
+    class API_EXPORT struct_prefix_parser : public prefix_parser {
     public:
         struct_prefix_parser() = default;
 
@@ -304,7 +304,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    class enum_prefix_parser : public prefix_parser {
+    class API_EXPORT enum_prefix_parser : public prefix_parser {
     public:
         enum_prefix_parser() = default;
 
@@ -316,7 +316,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    class for_in_prefix_parser : public prefix_parser {
+    class API_EXPORT for_in_prefix_parser : public prefix_parser {
     public:
         for_in_prefix_parser() = default;
 
@@ -328,7 +328,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    class return_prefix_parser : public prefix_parser {
+    class API_EXPORT return_prefix_parser : public prefix_parser {
     public:
         return_prefix_parser() = default;
 
@@ -340,7 +340,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    class if_prefix_parser : public prefix_parser {
+    class API_EXPORT if_prefix_parser : public prefix_parser {
     public:
         if_prefix_parser() = default;
 
@@ -352,7 +352,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    class type_identifier_prefix_parser : public prefix_parser {
+    class API_EXPORT type_identifier_prefix_parser : public prefix_parser {
     public:
         type_identifier_prefix_parser() = default;
 
@@ -364,7 +364,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    class basic_block_prefix_parser : public prefix_parser {
+    class API_EXPORT basic_block_prefix_parser : public prefix_parser {
     public:
         basic_block_prefix_parser() = default;
 
@@ -376,7 +376,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    class group_prefix_parser : public prefix_parser {
+    class API_EXPORT group_prefix_parser : public prefix_parser {
     public:
         group_prefix_parser() = default;
 
@@ -388,7 +388,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    class proc_expression_prefix_parser : public prefix_parser {
+    class API_EXPORT proc_expression_prefix_parser : public prefix_parser {
     public:
         proc_expression_prefix_parser() = default;
 
@@ -400,7 +400,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    class unary_operator_prefix_parser : public prefix_parser {
+    class API_EXPORT unary_operator_prefix_parser : public prefix_parser {
     public:
         explicit unary_operator_prefix_parser(precedence_t precedence);
 
@@ -415,7 +415,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    class keyword_literal_prefix_parser : public prefix_parser {
+    class API_EXPORT keyword_literal_prefix_parser : public prefix_parser {
     public:
         keyword_literal_prefix_parser() = default;
 
@@ -427,7 +427,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    class number_literal_prefix_parser : public prefix_parser {
+    class API_EXPORT number_literal_prefix_parser : public prefix_parser {
     public:
         number_literal_prefix_parser() = default;
 
@@ -439,7 +439,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    class string_literal_prefix_parser : public prefix_parser {
+    class API_EXPORT string_literal_prefix_parser : public prefix_parser {
     public:
         string_literal_prefix_parser() = default;
 
@@ -451,7 +451,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    class char_literal_prefix_parser : public prefix_parser {
+    class API_EXPORT char_literal_prefix_parser : public prefix_parser {
     public:
         char_literal_prefix_parser() = default;
 
@@ -463,7 +463,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    class line_comment_prefix_parser : public prefix_parser {
+    class API_EXPORT line_comment_prefix_parser : public prefix_parser {
     public:
         line_comment_prefix_parser() = default;
 
@@ -475,7 +475,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    class block_comment_prefix_parser : public prefix_parser {
+    class API_EXPORT block_comment_prefix_parser : public prefix_parser {
     public:
         block_comment_prefix_parser() = default;
 
@@ -487,7 +487,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    class symbol_prefix_parser : public prefix_parser {
+    class API_EXPORT symbol_prefix_parser : public prefix_parser {
     public:
         symbol_prefix_parser() = default;
 
@@ -499,7 +499,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    class from_prefix_parser : public prefix_parser {
+    class API_EXPORT from_prefix_parser : public prefix_parser {
     public:
         from_prefix_parser() = default;
 
@@ -511,7 +511,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    class module_prefix_parser : public prefix_parser {
+    class API_EXPORT module_prefix_parser : public prefix_parser {
     public:
         module_prefix_parser() = default;
 
@@ -523,7 +523,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    class directive_prefix_parser : public prefix_parser {
+    class API_EXPORT directive_prefix_parser : public prefix_parser {
     public:
         directive_prefix_parser() = default;
 
@@ -535,7 +535,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    class attribute_prefix_parser : public prefix_parser {
+    class API_EXPORT attribute_prefix_parser : public prefix_parser {
     public:
         attribute_prefix_parser() = default;
 
@@ -547,7 +547,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    class array_subscript_prefix_parser : public prefix_parser {
+    class API_EXPORT array_subscript_prefix_parser : public prefix_parser {
     public:
         array_subscript_prefix_parser() = default;
 

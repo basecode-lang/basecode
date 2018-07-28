@@ -11,6 +11,14 @@
 
 #pragma once
 
+#if _MSC_VER 
+	#if !defined(API_EXPORT)
+		#define API_EXPORT __declspec(dllexport)
+	#endif
+#else
+	#define API_EXPORT
+#endif
+
 #include <map>
 #include <stack>
 #include <memory>
@@ -211,7 +219,7 @@ namespace basecode::syntax {
         ast_node_shared_ptr parent = nullptr;
     };
 
-    class ast_builder {
+    class API_EXPORT ast_builder {
     public:
         ast_builder();
 

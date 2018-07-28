@@ -99,7 +99,7 @@ namespace basecode::compiler {
     common::source_file* session::pop_source_file() {
         if (_source_file_stack.empty())
             return nullptr;
-        auto source_file = _source_file_stack.top();
+        const auto source_file = _source_file_stack.top();
         _source_file_stack.pop();
         return source_file;
     }
@@ -129,9 +129,7 @@ namespace basecode::compiler {
     void session::write_code_dom_graph(const boost::filesystem::path& path) {
         FILE* output_file = nullptr;
         if (!path.empty()) {
-            output_file = fopen(
-				reinterpret_cast<const char*>(path.c_str()), 
-				"wt");
+            output_file = fopen(path.string().c_str(), "wt");
         }
         defer({
             if (output_file != nullptr)

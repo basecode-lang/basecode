@@ -11,7 +11,7 @@
 
 preload := module("../examples/preload.bc");
 
-@library "libalpha-core.dylib";
+@library "alpha-core.dll";
 #foreign print := proc(format:string, values:...any) @alias "fmt_print";
 
 print("%s\n", "at the very top!");

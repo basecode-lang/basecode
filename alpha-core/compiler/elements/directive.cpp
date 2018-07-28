@@ -103,10 +103,14 @@ namespace basecode::compiler {
         auto terp = program->terp();
 
         // XXX: this should move to a cmake generated header file
+#if _MSC_VER
+		std::string library_name = "alpha-core.dll";
+#else
         std::string library_name = "libalpha-core.dylib";
+#endif
         // XXX: -------------------------------------------------
 
-        auto library_attribute = attributes().find("library");
+        const auto library_attribute = attributes().find("library");
         if (library_attribute != nullptr) {
             if (!library_attribute->as_string(library_name)) {
                 r.add_message(
@@ -117,15 +121,15 @@ namespace basecode::compiler {
             }
         }
 
-        boost::filesystem::path library_path(library_name);
-        auto library = terp->load_shared_library(r, library_path);
+        const boost::filesystem::path library_path(library_name);
+        const auto library = terp->load_shared_library(r, library_path);
         if (library == nullptr) {
             return false;
         }
 
-        auto ffi_identifier = dynamic_cast<compiler::identifier*>(_expression);
-        std::string symbol_name = ffi_identifier->symbol()->name();
-        auto alias_attribute = attributes().find("alias");
+        const auto ffi_identifier = dynamic_cast<compiler::identifier*>(_expression);
+	    auto symbol_name = ffi_identifier->symbol()->name();
+        const auto alias_attribute = attributes().find("alias");
         if (alias_attribute != nullptr) {
             if (!alias_attribute->as_string(symbol_name)) {
                 r.add_message(
@@ -141,7 +145,7 @@ namespace basecode::compiler {
             library,
         };
 
-        auto result = terp->register_foreign_function(r, signature);
+        const auto result = terp->register_foreign_function(r, signature);
         if (!result) {
             r.add_message(
                 "P004",

@@ -15,6 +15,20 @@
 
 namespace basecode::compiler {
 
+	numeric_type_map_t numeric_type::s_types_map = {
+		{ "bool",{ 0,             1,           1 } },
+		{ "u8",	 { 0,             UINT8_MAX,   1 } },
+		{ "u16", { 0,             UINT16_MAX,  2 } },
+		{ "u32", { 0,             UINT32_MAX,  4 } },
+		{ "u64", { 0,             UINT64_MAX,  8 } },
+		{ "s8",  { INT8_MIN,      INT8_MAX,    1 } },
+		{ "s16", { INT16_MIN,     INT16_MAX,   2 } },
+		{ "s32", { INT32_MIN,     INT32_MAX,   4 } },
+		{ "s64", { INT64_MIN,     INT64_MAX,   8 } },
+		{ "f32", { 0,             UINT32_MAX,  4 } },
+		{ "f64", { 0,             UINT64_MAX,  8 } },
+	};
+
     void numeric_type::make_types(
             common::result& r,
             compiler::block* parent_scope,

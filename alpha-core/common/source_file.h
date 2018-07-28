@@ -11,6 +11,14 @@
 
 #pragma once
 
+#if _MSC_VER 
+	#if !defined(API_EXPORT)
+		#define API_EXPORT __declspec(dllexport)
+	#endif
+#else
+	#define API_EXPORT
+#endif
+
 #include <map>
 #include <stack>
 #include <cstdint>
@@ -38,7 +46,7 @@ namespace basecode::common {
         uint32_t columns {};
     };
 
-    class source_file {
+    class API_EXPORT source_file {
     public:
         explicit source_file(const boost::filesystem::path& path);
 
