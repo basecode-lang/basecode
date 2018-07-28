@@ -78,9 +78,9 @@ namespace basecode::common {
 
         const boost::filesystem::path& path() const;
 
-        std::string substring(size_t start, size_t end);
+        uint32_t column_by_index(size_t index) const;
 
-        const uint32_t column_by_index(size_t index) const;
+        std::string substring(size_t start, size_t end);
 
         const source_file_line_t* line_by_number(size_t line) const;
 

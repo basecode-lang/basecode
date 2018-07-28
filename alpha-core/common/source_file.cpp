@@ -31,7 +31,11 @@ namespace basecode::common {
             const common::source_location& location) {
         std::stringstream stream;
 
-        int32_t number_of_lines = static_cast<int32_t>(_lines_by_number.size());
+        const auto number_of_lines = static_cast<int32_t>(_lines_by_number.size());
+        const auto target_line = static_cast<int32_t>(location.start().line);
+        const auto message_indicator = common::colorizer::colorize(
+            "^ " + message,
+            common::term_colors_t::red);
 
         auto start_line = static_cast<int32_t>(location.start().line - 4);
         if (start_line < 0)
@@ -41,15 +45,13 @@ namespace basecode::common {
         if (stop_line >= number_of_lines)
             stop_line = number_of_lines - 1;
 
-        auto message_indicator = common::colorizer::colorize(
-            "^ " + message,
-            common::term_colors_t::red);
-        int32_t target_line = static_cast<int32_t>(location.start().line);
         for (int32_t i = start_line; i < stop_line; i++) {
-            auto source_line = line_by_number(static_cast<size_t>(i));
+            const auto source_line = line_by_number(static_cast<size_t>(i));
             if (source_line == nullptr)
                 break;
-            auto source_text = substring(source_line->begin, source_line->end);
+            const auto source_text = substring(
+                source_line->begin,
+                source_line->end);
             if (i == target_line) {
                 stream << fmt::format("{:04d}: ", i + 1)
                        << common::colorizer::colorize_range(
@@ -85,9 +87,7 @@ namespace basecode::common {
     rune_t source_file::next() {
         if (_index >= _buffer.size())
             return rune_eof;
-        rune_t c = _buffer[_index];
-        _index++;
-        return c;
+        return _buffer[_index++];
     }
 
     void source_file::push_mark() {
@@ -101,7 +101,7 @@ namespace basecode::common {
     size_t source_file::pop_mark() {
         if (_mark_stack.empty())
             return _index;
-        auto mark = _mark_stack.top();
+        const auto mark = _mark_stack.top();
         _mark_stack.pop();
         return mark;
     }
@@ -120,10 +120,10 @@ namespace basecode::common {
         size_t line_start = 0;
 
         for (size_t i = 0; i < _buffer.size(); i++) {
-            auto end_of_buffer = i == _buffer.size() - 1;
+            const auto end_of_buffer = i == _buffer.size() - 1;
             if (_buffer[i] == '\n' || end_of_buffer) {
-                auto end = end_of_buffer ? _buffer.size() : i;
-                auto it = _lines_by_index_range.insert(std::make_pair(
+                const auto end = end_of_buffer ? _buffer.size() : i;
+                const auto it = _lines_by_index_range.insert(std::make_pair(
                     std::make_pair(line_start, end),
                     source_file_line_t {
                         .end = end,
@@ -174,7 +174,7 @@ namespace basecode::common {
         if (file.is_open()) {
             file.unsetf(std::ios::skipws);
             file.seekg(0, std::ios::end);
-            auto file_size = file.tellg();
+            const auto file_size = file.tellg();
             file.seekg(0, std::ios::beg);
             _buffer.reserve(static_cast<size_t>(file_size));
             _buffer.insert(_buffer.begin(),
@@ -202,19 +202,19 @@ namespace basecode::common {
         return _path;
     }
 
-    std::string source_file::substring(size_t start, size_t end) {
-        std::string value;
-        auto length = end - start;
-        value.reserve(length);
-        value.assign((const char*)_buffer.data(), start, length);
-        return value;
-    }
-
-    const uint32_t source_file::column_by_index(size_t index) const {
+    uint32_t source_file::column_by_index(size_t index) const {
         auto line = line_by_index(index);
         if (line == nullptr)
             return 0;
         return static_cast<const uint32_t>(index - line->begin);
+    }
+
+    std::string source_file::substring(size_t start, size_t end) {
+        const auto length = end - start;
+        std::string value;
+        value.reserve(length);
+        value.assign((const char*)_buffer.data(), start, length);
+        return value;
     }
 
     const source_file_line_t* source_file::line_by_number(size_t line) const {
