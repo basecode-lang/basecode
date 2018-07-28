@@ -21,7 +21,7 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             compiler::block* scope);
 
-        compiler::type* underlying_type();
+        compiler::type* underlying_type() const;
 
         void underlying_type(compiler::type* value);
 

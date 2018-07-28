@@ -58,17 +58,17 @@ namespace basecode::compiler {
     }
 
     void argument_list::remove(common::id_t id) {
-        auto item = find(id);
+        const auto item = find(id);
         if (item == nullptr)
             return;
-        std::remove(
+        const auto it = std::remove(
             _elements.begin(),
             _elements.end(),
             item);
     }
 
     element* argument_list::find(common::id_t id) {
-        auto it = std::find_if(
+        const auto it = std::find_if(
             _elements.begin(),
             _elements.end(),
             [&id](auto item) { return item->id() == id; });

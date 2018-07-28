@@ -36,17 +36,17 @@ namespace basecode::compiler {
             compiler::program* program) {
         symbol(program->make_symbol(parent_scope(), "any"));
 
-        auto block_scope = scope();
+        const auto block_scope = scope();
 
-        auto type_info_type = program->find_type({"type" });
-        auto u8_type = program->find_type({"u8" });
+		const auto type_info_type = program->find_type({"type"});
+        const auto u8_type = program->find_type({"u8" });
 
         auto type_info_identifier = program->make_identifier(
             block_scope,
             program->make_symbol(parent_scope(), "type_info"),
             nullptr);
         type_info_identifier->type(type_info_type);
-        auto type_info_field = program->make_field(
+        const auto type_info_field = program->make_field(
             block_scope,
             type_info_identifier);
 
@@ -55,7 +55,7 @@ namespace basecode::compiler {
             program->make_symbol(parent_scope(), "data"),
             nullptr);
         data_identifier->type(program->make_pointer_type(r, block_scope, u8_type));
-        auto data_field = program->make_field(
+        const auto data_field = program->make_field(
             block_scope,
             data_identifier);
 
@@ -66,7 +66,7 @@ namespace basecode::compiler {
         return composite_type::on_initialize(r, program);
     }
 
-    compiler::type* any_type::underlying_type() {
+    compiler::type* any_type::underlying_type() const {
         return _underlying_type;
     }
 

@@ -15,7 +15,6 @@
 #include <map>
 #include <vector>
 #include <string>
-#include <memory>
 #include <unordered_map>
 #include <parser/token.h>
 #include <common/id_pool.h>
@@ -101,7 +100,7 @@ namespace basecode::compiler {
     };
 
     static inline std::string composite_type_name(composite_types_t type) {
-        auto it = s_composite_type_names.find(type);
+        const auto it = s_composite_type_names.find(type);
         if (it == s_composite_type_names.end())
             return "unknown_composite_type";
         return it->second;
@@ -212,7 +211,7 @@ namespace basecode::compiler {
     };
 
     static inline std::string element_type_name(element_type_t type) {
-        auto it = s_element_type_names.find(type);
+        const auto it = s_element_type_names.find(type);
         if (it == s_element_type_names.end()) {
             return "";
         }
@@ -299,7 +298,7 @@ namespace basecode::compiler {
     };
 
     static inline std::string operator_type_name(operator_type_t type) {
-        auto it = s_operator_type_names.find(type);
+        const auto it = s_operator_type_names.find(type);
         if (it == s_operator_type_names.end())
             return "";
         return it->second;

@@ -19,7 +19,7 @@ namespace basecode::compiler {
                          _expression(expr) {
     }
 
-    element* alias::expression() {
+    element* alias::expression() const {
         return _expression;
     }
 

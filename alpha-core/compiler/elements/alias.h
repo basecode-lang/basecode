@@ -21,7 +21,7 @@ namespace basecode::compiler {
             block* parent_scope,
             element* expr);
 
-        element* expression();
+        element* expression() const;
 
     protected:
         void on_owned_elements(element_list_t& list) override;
