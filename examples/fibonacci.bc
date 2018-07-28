@@ -29,6 +29,8 @@ alpha::compiler::examples := ns {
     max:    u16 := 32767;
     name:   string := "fibonacci test program";
 
+    // XXX: the parser isn't treating this like a statement
+    // XXX: initializer/finalizer requirements here
     {
         a: u8;
 

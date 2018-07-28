@@ -1117,6 +1117,7 @@ namespace basecode::syntax {
                 continue;
             }
 
+            // XXX: why are we bailing on basic_block here?
             if (expression->type == ast_node_types_t::line_comment
             ||  expression->type == ast_node_types_t::block_comment
             ||  expression->type == ast_node_types_t::basic_block) {
