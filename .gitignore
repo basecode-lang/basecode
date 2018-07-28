@@ -1,3 +1,6 @@
+# visual studio
+.vs
+
 # tmux stuff
 *.ti
 
