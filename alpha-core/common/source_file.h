@@ -15,6 +15,7 @@
 #include <stack>
 #include <cstdint>
 #include <boost/filesystem.hpp>
+#include "rune.h"
 #include "result.h"
 #include "source_location.h"
 

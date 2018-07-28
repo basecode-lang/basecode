@@ -128,7 +128,7 @@ namespace basecode::compiler {
     void session::write_code_dom_graph(const boost::filesystem::path& path) {
         FILE* output_file = nullptr;
         if (!path.empty()) {
-            output_file = fopen(path.c_str(), "wt");
+            output_file = fopen(path.string().c_str(), "wt");
         }
         defer({
             if (output_file != nullptr)

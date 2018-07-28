@@ -1181,7 +1181,7 @@ namespace basecode::vm {
                 case block_entry_type_t::instruction: {
                     auto inst = entry.data<instruction_t>();
                     auto stream = inst->disassemble([&](uint64_t id) -> std::string {
-                        auto label_ref = block->find_unresolved_label_up(static_cast<id_t>(id));
+                        auto label_ref = block->find_unresolved_label_up(static_cast<common::id_t>(id));
                         return label_ref != nullptr ?
                                label_ref->name :
                                fmt::format("unresolved_ref_id({})", id);

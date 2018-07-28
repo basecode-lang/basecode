@@ -13,7 +13,6 @@
 #include <sstream>
 #include <iterator>
 #include <fmt/format.h>
-#include "rune.h"
 #include "colorizer.h"
 #include "source_file.h"
 

@@ -899,7 +899,7 @@ namespace basecode::syntax {
                 ch = read();
                 if (ch == '_')
                     continue;
-                if (!ishexnumber(ch))
+                if (!isxdigit(ch))
                     break;
                 // XXX: requires utf8 fix
                 stream << static_cast<char>(ch);
