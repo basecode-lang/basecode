@@ -147,6 +147,12 @@ namespace basecode::compiler {
                 "P004",
                 fmt::format("unable to find foreign function symbol: {}", symbol_name),
                 false);
+        } else {
+            auto proc_identifier = dynamic_cast<compiler::identifier*>(_expression);
+            auto proc_type = proc_identifier->initializer()->procedure_type();
+            if (proc_type != nullptr) {
+                proc_type->foreign_address(reinterpret_cast<uint64_t>(signature.func_ptr));
+            }
         }
 
         return !r.is_failed();

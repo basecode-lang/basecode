@@ -57,7 +57,6 @@ namespace basecode::vm {
             case section_t::data:   return "data";
             case section_t::text:   return "text";
         }
-        return "unknown";
     }
 
     enum data_definition_type_t : uint8_t {
@@ -115,6 +114,16 @@ namespace basecode::vm {
             }
         }
 
+        uint64_t address() const {
+            return _address;
+        }
+
+        void address(uint64_t value) {
+            _address = value;
+            for (auto label : _labels)
+                label->address(value);
+        }
+
         uint16_t blank_lines() const {
             return _blank_lines;
         }
@@ -145,6 +154,7 @@ namespace basecode::vm {
 
     private:
         boost::any _data;
+        uint64_t _address = 0;
         block_entry_type_t _type;
         uint16_t _blank_lines = 0;
         std::vector<vm::label*> _labels {};
@@ -153,6 +163,8 @@ namespace basecode::vm {
 
     class instruction_block {
     public:
+        using block_predicate_visitor_callable = std::function<bool (instruction_block*)>;
+
         instruction_block(
             instruction_block* parent,
             instruction_block_type_t type);
@@ -179,13 +191,39 @@ namespace basecode::vm {
 
         instruction_block_type_t type() const;
 
+        std::vector<block_entry_t>& entries();
+
         void add_block(instruction_block* block);
 
+        label* find_label(const std::string& name);
+
         void remove_block(instruction_block* block);
+
+        std::vector<label_ref_t*> label_references();
 
         vm::label* make_label(const std::string& name);
 
         void source_file(listing_source_file_t* value);
+
+        const std::vector<instruction_block*>& blocks() const;
+
+        bool walk_blocks(const block_predicate_visitor_callable& callable);
+
+        template <typename T>
+        T* find_in_blocks(const std::function<T* (instruction_block*)>& callable) {
+            std::stack<instruction_block*> block_stack {};
+            block_stack.push(this);
+            while (!block_stack.empty()) {
+                auto block = block_stack.top();
+                auto found = callable(block);
+                if (found != nullptr)
+                    return found;
+                block_stack.pop();
+                for (auto child_block : block->blocks())
+                    block_stack.push(child_block);
+            }
+            return nullptr;
+        }
 
         // register allocators
     public:
@@ -635,13 +673,14 @@ namespace basecode::vm {
 
         void pop_u64(i_registers_t reg);
 
+        // calls & jumps
         void jump_indirect(i_registers_t reg);
 
         void call(const std::string& proc_name);
 
-        void jump_direct(const std::string& label_name);
+        void call_foreign(uint64_t proc_address);
 
-        void call_foreign(const std::string& proc_name);
+        void jump_direct(const std::string& label_name);
 
     private:
         void make_shl_instruction(

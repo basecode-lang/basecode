@@ -1152,13 +1152,19 @@ namespace basecode::vm {
 
         size_t index = 0;
         for (auto& entry : block->_entries) {
-            source_file->add_blank_lines(entry.blank_lines());
+            source_file->add_blank_lines(
+                entry.address(),
+                entry.blank_lines());
 
             for (const auto& comment : entry.comments()) {
-                source_file->add_source_line(0, fmt::format("; {}", comment));
+                source_file->add_source_line(
+                    entry.address(),
+                    fmt::format("; {}", comment));
             }
             for (auto label : entry.labels()) {
-                source_file->add_source_line(0, fmt::format("{}:", label->name()));
+                source_file->add_source_line(
+                    entry.address(),
+                    fmt::format("{}:", label->name()));
             }
             switch (entry.type()) {
                 case block_entry_type_t::memo: {
@@ -1167,14 +1173,14 @@ namespace basecode::vm {
                 case block_entry_type_t::align: {
                     auto align = entry.data<align_t>();
                     source_file->add_source_line(
-                        0,
+                        entry.address(),
                         fmt::format(".align {}", align->size));
                     break;
                 }
                 case block_entry_type_t::section: {
                     auto section = entry.data<section_t>();
                     source_file->add_source_line(
-                        0,
+                        entry.address(),
                         fmt::format(".section '{}'", section_name(*section)));
                     break;
                 }
@@ -1182,11 +1188,21 @@ namespace basecode::vm {
                     auto inst = entry.data<instruction_t>();
                     auto stream = inst->disassemble([&](uint64_t id) -> std::string {
                         auto label_ref = block->find_unresolved_label_up(static_cast<common::id_t>(id));
-                        return label_ref != nullptr ?
-                               label_ref->name :
-                               fmt::format("unresolved_ref_id({})", id);
+                        if (label_ref != nullptr) {
+                            if (label_ref->resolved != nullptr) {
+                                return fmt::format(
+                                    "{} (${:08x})",
+                                    label_ref->name,
+                                    label_ref->resolved->address());
+                            } else {
+                                return label_ref->name;
+                            }
+                        }
+                        return fmt::format("unresolved_ref_id({})", id);
                     });
-                    source_file->add_source_line(0, fmt::format("\t{}", stream));
+                    source_file->add_source_line(
+                        entry.address(),
+                        fmt::format("\t{}", stream));
                     break;
                 }
                 case block_entry_type_t::data_definition: {
@@ -1241,7 +1257,7 @@ namespace basecode::vm {
                         }
                     }
                     source_file->add_source_line(
-                        0,
+                        entry.address(),
                         fmt::format(
                             "\t{:<10} {}",
                             directive.str(),
@@ -1297,18 +1313,15 @@ namespace basecode::vm {
         return it.first->second;
     }
 
-    void instruction_block::call_foreign(const std::string& proc_name) {
-        auto label_ref = make_unresolved_label_ref(proc_name);
-
+    void instruction_block::call_foreign(uint64_t proc_address) {
         instruction_t ffi_op;
         ffi_op.op = op_codes::ffi;
         ffi_op.size = op_sizes::qword;
         ffi_op.operands_count = 1;
         ffi_op.operands[0].type =
             operand_encoding_t::flags::integer
-            | operand_encoding_t::flags::constant
-            | operand_encoding_t::flags::unresolved;
-        ffi_op.operands[0].value.u64 = label_ref->id;
+            | operand_encoding_t::flags::constant;
+        ffi_op.operands[0].value.u64 = proc_address;
         make_block_entry(ffi_op);
     }
 
@@ -1686,8 +1699,29 @@ namespace basecode::vm {
         make_ror_instruction(op_sizes::qword, dest_reg, lhs_reg, rhs_reg);
     }
 
+    std::vector<block_entry_t>& instruction_block::entries() {
+        return _entries;
+    }
+
+    label* instruction_block::find_label(const std::string& name) {
+        return find_in_blocks<label>([&](instruction_block* block) -> label* {
+            const auto it = block->_labels.find(name);
+            if (it == block->_labels.end())
+                return nullptr;
+            return it->second;
+        });
+    }
+
     void instruction_block::make_block_entry(const align_t& align) {
         _entries.push_back(block_entry_t(align));
+    }
+
+    std::vector<label_ref_t*> instruction_block::label_references() {
+        std::vector<label_ref_t*> refs {};
+        for (auto& kvp : _unresolved_labels) {
+            refs.push_back(&kvp.second);
+        }
+        return refs;
     }
 
     void instruction_block::source_file(listing_source_file_t* value) {
@@ -1704,6 +1738,25 @@ namespace basecode::vm {
 
     void instruction_block::make_block_entry(const data_definition_t& data) {
         _entries.push_back(block_entry_t(data));
+    }
+
+    const std::vector<instruction_block*>& instruction_block::blocks() const {
+        return _blocks;
+    }
+
+    bool instruction_block::walk_blocks(
+            const instruction_block::block_predicate_visitor_callable& callable) {
+        std::stack<instruction_block*> block_stack {};
+        block_stack.push(this);
+        while (!block_stack.empty()) {
+            auto block = block_stack.top();
+            if (!callable(block))
+                return false;
+            block_stack.pop();
+            for (auto child_block : block->blocks())
+                block_stack.push(child_block);
+        }
+        return true;
     }
 
 };

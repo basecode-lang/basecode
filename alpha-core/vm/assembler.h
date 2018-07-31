@@ -56,6 +56,10 @@ namespace basecode::vm {
 
         instruction_block* current_block();
 
+        bool resolve_labels(common::result& r);
+
+        bool apply_addresses(common::result& r);
+
         void push_block(instruction_block* block);
 
         vm::segment* segment(const std::string& name);

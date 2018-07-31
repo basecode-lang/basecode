@@ -35,6 +35,10 @@ namespace basecode::compiler {
 
         type_map_t& type_parameters();
 
+        uint64_t foreign_address() const;
+
+        void foreign_address(uint64_t value);
+
         procedure_instance_list_t& instances();
 
     protected:
@@ -54,6 +58,7 @@ namespace basecode::compiler {
         field_map_t _returns {};
         bool _is_foreign = false;
         field_map_t _parameters {};
+        uint64_t _foreign_address = 0;
         type_map_t _type_parameters {};
         compiler::block* _scope = nullptr;
         procedure_instance_list_t _instances {};

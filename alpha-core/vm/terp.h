@@ -331,7 +331,7 @@ namespace basecode::vm {
     };
 
     inline static std::string op_code_name(op_codes type) {
-        auto it = s_op_code_names.find(type);
+        const auto it = s_op_code_names.find(type);
         if (it != s_op_code_names.end()) {
             return it->second;
         }
@@ -347,6 +347,16 @@ namespace basecode::vm {
         dword,
         qword
     };
+
+    static inline uint8_t op_size_in_bytes(op_sizes size) {
+        switch (size) {
+            case op_sizes::byte:  return 1;
+            case op_sizes::word:  return 2;
+            case op_sizes::dword: return 4;
+            case op_sizes::qword: return 8;
+            default:              return 0;
+        }
+    }
 
     ///////////////////////////////////////////////////////////////////////////
 
@@ -767,16 +777,6 @@ namespace basecode::vm {
 
         inline uint32_t* dword_ptr(uint64_t address) const {
             return reinterpret_cast<uint32_t*>(_heap + address);
-        }
-
-        inline uint8_t op_size_in_bytes(op_sizes size) const {
-            switch (size) {
-                case op_sizes::byte:  return 1;
-                case op_sizes::word:  return 2;
-                case op_sizes::dword: return 4;
-                case op_sizes::qword: return 8;
-                default:              return 0;
-            }
         }
 
     private:

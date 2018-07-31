@@ -42,7 +42,10 @@ namespace basecode::compiler {
 
         auto procedure_type = init->procedure_type();
         if (procedure_type->is_foreign()) {
-            instruction_block->call_foreign(identifier->symbol()->name());
+            instruction_block->call_foreign(procedure_type->foreign_address());
+            instruction_block->current_entry()->comment(fmt::format(
+                "foreign call: {}",
+                identifier->symbol()->name()));
         } else {
             instruction_block->call(identifier->symbol()->name());
         }

@@ -31,14 +31,6 @@ namespace basecode::compiler {
     bool procedure_type::on_emit(
             common::result& r,
             emit_context_t& context) {
-        if (is_foreign())
-            return true;
-
-        auto instruction_block = context.assembler->make_procedure_block();
-        instruction_block->align(vm::instruction_t::alignment);
-        instruction_block->current_entry()->blank_lines(1);
-        instruction_block->memo();
-
         auto procedure_label = symbol()->name();
         auto parent_init = parent_element_as<compiler::initializer>();
         if (parent_init != nullptr) {
@@ -47,6 +39,15 @@ namespace basecode::compiler {
                 procedure_label = parent_var->symbol()->name();
             }
         }
+
+        if (is_foreign()) {
+            return true;
+        }
+
+        auto instruction_block = context.assembler->make_procedure_block();
+        instruction_block->align(vm::instruction_t::alignment);
+        instruction_block->current_entry()->blank_lines(1);
+        instruction_block->memo();
 
         auto proc_label = instruction_block->make_label(procedure_label);
         instruction_block->current_entry()->label(proc_label);
@@ -160,6 +161,14 @@ namespace basecode::compiler {
 
         for (auto element : _parameters.as_list())
             list.emplace_back(element);
+    }
+
+    uint64_t procedure_type::foreign_address() const {
+        return _foreign_address;
+    }
+
+    void procedure_type::foreign_address(uint64_t value) {
+        _foreign_address = value;
     }
 
 };

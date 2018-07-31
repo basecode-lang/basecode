@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <common/bytes.h>
 #include "terp.h"
 #include "assembler.h"
 #include "instruction_block.h"
@@ -90,6 +91,70 @@ namespace basecode::vm {
         if (_block_stack.empty())
             return nullptr;
         return _block_stack.top();
+    }
+
+    bool assembler::resolve_labels(common::result& r) {
+        auto root_block = current_block();
+        root_block->walk_blocks([&](instruction_block* block) -> bool {
+            auto label_refs = block->label_references();
+            for (auto label_ref : label_refs) {
+                label_ref->resolved = root_block->find_label(label_ref->name);
+                if (label_ref->resolved == nullptr) {
+                    r.add_message(
+                        "A001",
+                        fmt::format("unable to resolve label: {}", label_ref->name),
+                        true);
+                    return false;
+                }
+            }
+            return true;
+        });
+        return !r.is_failed();
+    }
+
+    bool assembler::apply_addresses(common::result& r) {
+        size_t offset = 0;
+        current_block()->walk_blocks([&](instruction_block* block) -> bool {
+            for (auto& entry : block->entries()) {
+                entry.address(_location_counter + offset);
+                switch (entry.type()) {
+                    case block_entry_type_t::memo: {
+                        break;
+                    }
+                    case block_entry_type_t::align: {
+                        auto alignment = entry.data<align_t>();
+                        offset = common::align(offset, alignment->size);
+                        entry.address(_location_counter + offset);
+                        break;
+                    }
+                    case block_entry_type_t::section: {
+                        auto section = entry.data<section_t>();
+                        switch (*section) {
+                            case section_t::bss:
+                                break;
+                            case section_t::text:
+                                break;
+                            case section_t::data:
+                                break;
+                            case section_t::ro_data:
+                                break;
+                        }
+                        break;
+                    }
+                    case block_entry_type_t::instruction: {
+                        auto inst = entry.data<instruction_t>();
+                        offset += inst->encoding_size();
+                        break;
+                    }
+                    case block_entry_type_t::data_definition:
+                        auto data_def = entry.data<data_definition_t>();
+                        offset += op_size_in_bytes(data_def->size);
+                        break;
+                }
+            }
+            return true;
+        });
+        return !r.is_failed();
     }
 
     void assembler::push_block(instruction_block* block) {

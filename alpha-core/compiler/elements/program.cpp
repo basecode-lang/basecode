@@ -831,8 +831,6 @@ namespace basecode::compiler {
             return false;
 
         if (!r.is_failed()) {
-            // XXX: this works for now; eventually need to fix this
-            //      so instructions align with original source files
             auto& listing = _assembler->listing();
             listing.add_source_file("top_level.basm");
             listing.select_source_file("top_level.basm");
@@ -840,9 +838,8 @@ namespace basecode::compiler {
             emit_context_t context(_terp, _assembler, this);
             emit(r, context);
 
-            // XXX: encode to terp
-
-            // XXX: execute #run directives
+            context.assembler->apply_addresses(r);
+            context.assembler->resolve_labels(r);
         }
 
         _top_level_stack.pop();
