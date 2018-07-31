@@ -14,6 +14,7 @@
 #include <vm/instruction_block.h>
 #include "block.h"
 #include "import.h"
+#include "module.h"
 #include "comment.h"
 #include "statement.h"
 #include "initializer.h"
@@ -55,6 +56,26 @@ namespace basecode::compiler {
 
                 context.assembler->push_block(instruction_block);
 
+                break;
+            }
+            case element_type_t::module_block: {
+                instruction_block = context.assembler->make_basic_block();
+                instruction_block->memo();
+
+                auto parent_module = parent_element_as<compiler::module>();
+                if (parent_module != nullptr) {
+                    instruction_block->current_entry()->comment(fmt::format(
+                        "module: {}",
+                        parent_module->source_file()->path().string()));
+                }
+                instruction_block->current_entry()->blank_lines(1);
+
+                auto block_label = instruction_block->make_label(label_name());
+                instruction_block
+                    ->current_entry()
+                    ->label(block_label);
+
+                context.assembler->push_block(instruction_block);
                 break;
             }
             case element_type_t::proc_type_block: {

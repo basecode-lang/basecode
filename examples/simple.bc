@@ -1,0 +1,4 @@
+@library "libalpha-core.dylib";
+#foreign print := proc(format:string, values:...any) @alias "fmt_print";
+
+print("hello world\n");

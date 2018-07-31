@@ -745,11 +745,15 @@ namespace basecode::compiler {
         top_level_block->memo();
         top_level_block->current_entry()->label(top_level_block->make_label("_initializer"));
 
-        auto all_blocks = elements().find_by_type(element_type_t::block);
         block_list_t implicit_blocks {};
+        auto module_blocks = elements().find_by_type(element_type_t::module_block);
+        for (auto block : module_blocks) {
+            implicit_blocks.emplace_back(dynamic_cast<compiler::block*>(block));
+        }
+
+        auto all_blocks = elements().find_by_type(element_type_t::block);
         for (auto block : all_blocks) {
             if (block->is_parent_element(element_type_t::namespace_e)
-            ||  block->is_parent_element(element_type_t::program)
             ||  block->is_parent_element(element_type_t::block)) {
                 implicit_blocks.emplace_back(dynamic_cast<compiler::block*>(block));
             }
