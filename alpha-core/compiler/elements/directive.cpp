@@ -141,6 +141,29 @@ namespace basecode::compiler {
             .library = library,
         };
 
+        auto proc_identifier = dynamic_cast<compiler::identifier*>(_expression);
+        auto proc_type = proc_identifier->initializer()->procedure_type();
+        if (proc_type != nullptr) {
+            for (auto param : proc_type->parameters().as_list()) {
+                // XXX: need to figure out how to best handle this
+                if (param->identifier()->type()->element_type() == element_type_t::any_type)
+                    continue;
+                vm::function_value_t value;
+                value.name = param->identifier()->symbol()->name();
+                value.type = vm::ffi_types_t::pointer_type;
+                signature.arguments.push_back(value);
+            }
+
+            if (proc_type->returns().size() == 0) {
+                signature.return_value.type = vm::ffi_types_t::void_type;
+            }
+
+            // XXX: this is a hack
+            if (proc_type->is_foreign()) {
+                signature.calling_mode = vm::ffi_calling_mode_t::c_ellipsis;
+            }
+        }
+
         auto result = terp->register_foreign_function(r, signature);
         if (!result) {
             r.add_message(
@@ -148,11 +171,8 @@ namespace basecode::compiler {
                 fmt::format("unable to find foreign function symbol: {}", symbol_name),
                 false);
         } else {
-            auto proc_identifier = dynamic_cast<compiler::identifier*>(_expression);
-            auto proc_type = proc_identifier->initializer()->procedure_type();
-            if (proc_type != nullptr) {
+            if (proc_type != nullptr)
                 proc_type->foreign_address(reinterpret_cast<uint64_t>(signature.func_ptr));
-            }
         }
 
         return !r.is_failed();

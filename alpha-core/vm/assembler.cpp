@@ -28,13 +28,51 @@ namespace basecode::vm {
     bool assembler::assemble(
             common::result& r,
             vm::instruction_block* block) {
-        // write out bootstrap jmp
+        if (block == nullptr)
+            block = current_block();
 
-        // write out data segments
+        current_block()->walk_blocks([&](instruction_block* block) -> bool {
+            for (auto& entry : block->entries()) {
+                switch (entry.type()) {
+                    case block_entry_type_t::instruction: {
+                        auto inst = entry.data<instruction_t>();
+                        auto inst_size = inst->encode(
+                            r,
+                            _terp->heap(),
+                            entry.address());
+                        if (inst_size == 0)
+                            return false;
+                        break;
+                    }
+                    case block_entry_type_t::data_definition: {
+                        auto data_def = entry.data<data_definition_t>();
+                        switch (data_def->size) {
+                            case op_sizes::byte:
+                                *(_terp->byte_ptr(entry.address())) = static_cast<uint8_t>(data_def->value);
+                                break;
+                            case op_sizes::word:
+                                *(_terp->word_ptr(entry.address())) = static_cast<uint16_t>(data_def->value);
+                                break;
+                            case op_sizes::dword:
+                                *(_terp->dword_ptr(entry.address())) = static_cast<uint32_t>(data_def->value);
+                                break;
+                            case op_sizes::qword:
+                                *(_terp->qword_ptr(entry.address())) = data_def->value;
+                                break;
+                            default:
+                                break;
+                        }
+                        break;
+                    }
+                    default: {
+                        break;
+                    }
+                }
+            }
+            return true;
+        });
 
-        // write out instruction blocks
-
-        return false;
+        return !r.is_failed();
     }
 
     vm::segment* assembler::segment(
@@ -107,6 +145,25 @@ namespace basecode::vm {
                     return false;
                 }
             }
+
+            for (auto& entry : block->entries()) {
+                if (entry.type() != block_entry_type_t::instruction)
+                    continue;
+
+                auto inst = entry.data<instruction_t>();
+                for (size_t i = 0; i < inst->operands_count; i++) {
+                    auto& operand = inst->operands[i];
+                    if (operand.is_unresolved()) {
+                        auto label_ref = block->find_unresolved_label_up(
+                            static_cast<uint32_t>(operand.value.u64));
+                        if (label_ref != nullptr) {
+                            operand.value.u64 = label_ref->resolved->address();
+                            operand.clear_unresolved();
+                        }
+                    }
+                }
+            }
+
             return true;
         });
         return !r.is_failed();

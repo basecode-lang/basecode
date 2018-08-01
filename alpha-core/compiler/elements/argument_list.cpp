@@ -24,7 +24,8 @@ namespace basecode::compiler {
             common::result& r,
             emit_context_t& context) {
         auto instruction_block = context.assembler->current_block();
-        for (auto arg : _elements) {
+        for (auto it = _elements.rbegin(); it != _elements.rend(); ++it) {
+            element* arg = *it;
             switch (arg->element_type()) {
                 case element_type_t::proc_call:
                 case element_type_t::expression:

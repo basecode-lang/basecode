@@ -65,9 +65,6 @@ namespace basecode::vm {
             case ffi_types_t::short_type:
                 dcArgShort(vm, static_cast<DCshort>(value));
                 break;
-            case ffi_types_t::int_type:
-                dcArgInt(vm, static_cast<DCint>(value));
-                break;
             case ffi_types_t::long_type:
                 dcArgLong(vm, static_cast<DClong>(value));
                 break;
@@ -91,6 +88,10 @@ namespace basecode::vm {
                     reinterpret_cast<DCpointer>(value));
                 break;
             }
+            default:
+            case ffi_types_t::int_type:
+                dcArgInt(vm, static_cast<DCint>(value));
+                break;
         }
     }
 
@@ -831,6 +832,13 @@ namespace basecode::vm {
         fmt::print("\n");
     }
 
+    bool terp::run(common::result& r) {
+        while (!has_exited())
+            if (!step(r))
+                return false;
+        return true;
+    }
+
     bool terp::step(common::result& r) {
         instruction_t inst;
         auto inst_size = _icache.fetch(r, inst);
@@ -1012,12 +1020,18 @@ namespace basecode::vm {
                 break;
             }
             case op_codes::move: {
-                uint64_t source_value;
+                uint64_t source_value = 0;
+                uint64_t offset = 0;
+
+                if (inst.operands_count > 2) {
+                    if (!get_operand_value(r, inst, 2, offset))
+                        return false;
+                }
 
                 if (!get_operand_value(r, inst, 1, source_value))
                     return false;
 
-                if (!set_target_operand_value(r, inst, 0, source_value))
+                if (!set_target_operand_value(r, inst, 0, source_value + offset))
                     return false;
 
                 _registers.flags(register_file_t::flags_t::carry, false);
@@ -1808,8 +1822,19 @@ namespace basecode::vm {
                 func_signature->apply_calling_convention(_call_vm);
                 dcReset(_call_vm);
 
-                for (auto& argument : func_signature->arguments) {
-                    argument.push(_call_vm, pop());
+                auto param_index = 0;
+                auto arg_count = pop();
+                while (arg_count > 0) {
+                    auto& argument = func_signature->arguments[param_index];
+
+                    auto value = pop();
+                    if (argument.type == ffi_types_t::pointer_type)
+                        value += reinterpret_cast<uint64_t>(_heap);
+                    argument.push(_call_vm, value);
+                    --arg_count;
+
+                    if (param_index < func_signature->arguments.size())
+                        ++param_index;
                 }
 
                 uint64_t result_value = func_signature->call(_call_vm, address);

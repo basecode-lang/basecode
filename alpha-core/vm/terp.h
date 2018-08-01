@@ -374,6 +374,10 @@ namespace basecode::vm {
             unresolved  = 0b00100000,
         };
 
+        void clear_unresolved() {
+            type &= ~flags::unresolved;
+        }
+
         inline bool is_reg() const {
             return (type & flags::reg) != 0;
         }
@@ -664,6 +668,8 @@ namespace basecode::vm {
 
         size_t stack_size() const;
 
+        bool run(common::result& r);
+
         bool step(common::result& r);
 
         void dump_shared_libraries();
@@ -703,6 +709,22 @@ namespace basecode::vm {
         void dump_heap(uint64_t offset, size_t size = 256);
 
         const meta_information_t& meta_information() const;
+
+        inline uint8_t* byte_ptr(uint64_t address) const {
+            return _heap + address;
+        }
+
+        inline uint16_t* word_ptr(uint64_t address) const {
+            return reinterpret_cast<uint16_t*>(_heap + address);
+        }
+
+        inline uint64_t* qword_ptr(uint64_t address) const {
+            return reinterpret_cast<uint64_t*>(_heap + address);
+        }
+
+        inline uint32_t* dword_ptr(uint64_t address) const {
+            return reinterpret_cast<uint32_t*>(_heap + address);
+        }
 
         void heap_vector(heap_vectors_t vector, uint64_t address);
 
@@ -762,22 +784,6 @@ namespace basecode::vm {
         bool has_carry(uint64_t value, op_sizes size);
 
         bool is_negative(uint64_t value, op_sizes size);
-
-        inline uint8_t* byte_ptr(uint64_t address) const {
-            return _heap + address;
-        }
-
-        inline uint16_t* word_ptr(uint64_t address) const {
-            return reinterpret_cast<uint16_t*>(_heap + address);
-        }
-
-        inline uint64_t* qword_ptr(uint64_t address) const {
-            return reinterpret_cast<uint64_t*>(_heap + address);
-        }
-
-        inline uint32_t* dword_ptr(uint64_t address) const {
-            return reinterpret_cast<uint32_t*>(_heap + address);
-        }
 
     private:
         bool _exited = false;

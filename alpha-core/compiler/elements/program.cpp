@@ -638,7 +638,7 @@ namespace basecode::compiler {
                         instruction_block->current_entry()->comment(fmt::format(
                             "\"{}\"",
                             string_literal->value()));
-                        instruction_block->string(string_literal->value());
+                        instruction_block->string(string_literal->escaped_value());
                         break;
                     }
                     case element_type_t::identifier: {
@@ -840,6 +840,9 @@ namespace basecode::compiler {
 
             context.assembler->apply_addresses(r);
             context.assembler->resolve_labels(r);
+            if (context.assembler->assemble(r)) {
+                context.terp->run(r);
+            }
         }
 
         _top_level_stack.pop();

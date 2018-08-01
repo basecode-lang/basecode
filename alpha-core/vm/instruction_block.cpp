@@ -277,6 +277,32 @@ namespace basecode::vm {
         make_block_entry(move_op);
     }
 
+    void instruction_block::move_label_to_ireg_with_offset(
+            i_registers_t dest_reg,
+            const std::string& label_name,
+            uint64_t offset) {
+        auto label_ref = make_unresolved_label_ref(label_name);
+
+        instruction_t move_op;
+        move_op.op = op_codes::move;
+        move_op.size = op_sizes::qword;
+        move_op.operands_count = 3;
+        move_op.operands[0].type =
+            operand_encoding_t::flags::integer
+            | operand_encoding_t::flags::reg;
+        move_op.operands[0].value.r8 = dest_reg;
+        move_op.operands[1].type =
+            operand_encoding_t::flags::integer
+            | operand_encoding_t::flags::constant
+            | operand_encoding_t::flags::unresolved;
+        move_op.operands[1].value.u64 = label_ref->id;
+        move_op.operands[2].type =
+            operand_encoding_t::flags::integer
+            | operand_encoding_t::flags::constant;
+        move_op.operands[2].value.u64 = offset;
+        make_block_entry(move_op);
+    }
+
     // not variations
     void instruction_block::not_u8(
             i_registers_t dest_reg,

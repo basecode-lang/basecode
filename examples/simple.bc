@@ -1,4 +1,12 @@
 @library "libalpha-core.dylib";
 #foreign print := proc(format:string, values:...any) @alias "fmt_print";
 
+print("\n------ this code is running in the compiler!\n");
+
 print("hello world\n");
+
+a: u64 := 2;
+a := a shl 4;
+print("a = %d\n", a);
+
+print("----------------------------------------------\n\n");

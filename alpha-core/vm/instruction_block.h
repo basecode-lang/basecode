@@ -207,6 +207,8 @@ namespace basecode::vm {
 
         const std::vector<instruction_block*>& blocks() const;
 
+        label_ref_t* find_unresolved_label_up(common::id_t id);
+
         bool walk_blocks(const block_predicate_visitor_callable& callable);
 
         template <typename T>
@@ -395,6 +397,11 @@ namespace basecode::vm {
         void move_label_to_ireg(
             i_registers_t dest_reg,
             const std::string& label_name);
+
+        void move_label_to_ireg_with_offset(
+            i_registers_t dest_reg,
+            const std::string& label_name,
+            uint64_t offset);
 
         // setxx
         void setz(i_registers_t dest_reg);
@@ -846,8 +853,6 @@ namespace basecode::vm {
 
     private:
         void disassemble(instruction_block* block);
-
-        label_ref_t* find_unresolved_label_up(common::id_t id);
 
         vm::label* find_label_up(const std::string& label_name);
 

@@ -372,7 +372,7 @@ namespace basecode::compiler {
         compiler::field* find(common::id_t id);
 
     private:
-        std::unordered_map<common::id_t, field*> _fields {};
+        std::map<common::id_t, field*> _fields {};
     };
 
     ///////////////////////////////////////////////////////////////////////////

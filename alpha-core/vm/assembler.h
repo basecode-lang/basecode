@@ -32,7 +32,7 @@ namespace basecode::vm {
 
         bool assemble(
             common::result& r,
-            vm::instruction_block* block);
+            vm::instruction_block* block = nullptr);
 
         vm::segment* segment(
             const std::string& name,

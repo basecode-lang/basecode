@@ -37,11 +37,13 @@ namespace basecode::compiler {
         if (init == nullptr)
             return false;
 
+        auto procedure_type = init->procedure_type();
+
         if (_arguments != nullptr)
             _arguments->emit(r, context);
 
-        auto procedure_type = init->procedure_type();
         if (procedure_type->is_foreign()) {
+            instruction_block->push_u64(_arguments->elements().size());
             instruction_block->call_foreign(procedure_type->foreign_address());
             instruction_block->current_entry()->comment(fmt::format(
                 "foreign call: {}",
