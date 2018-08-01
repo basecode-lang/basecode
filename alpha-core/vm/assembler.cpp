@@ -117,6 +117,8 @@ namespace basecode::vm {
     }
 
     instruction_block* assembler::root_block() {
+        if (_blocks.empty())
+            return nullptr;
         return _blocks.front();
     }
 

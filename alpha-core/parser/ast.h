@@ -83,6 +83,7 @@ namespace basecode::syntax {
         subscript_expression,
         return_argument_list,
         array_subscript_list,
+        assignment_source_list,
         assignment_target_list,
     };
 
@@ -281,6 +282,8 @@ namespace basecode::syntax {
         void push_scope(const ast_node_shared_ptr& node);
 
         ast_node_shared_ptr else_if_node(token_t& token);
+
+        ast_node_shared_ptr assignment_source_list_node();
 
         ast_node_shared_ptr assignment_target_list_node();
 

@@ -798,7 +798,8 @@ namespace basecode::syntax {
                 token.location);
             return nullptr;
         }
-        assignment_node->rhs = rhs;
+        pairs_to_list(assignment_node->rhs, rhs);
+
         assignment_node->location.start(lhs->location.start());
         assignment_node->location.end(assignment_node->rhs->location.end());
 

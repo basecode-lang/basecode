@@ -50,6 +50,11 @@ print("\n------ this code is running in the compiler!\n");
 
 print("hello world\n");
 
+b := 6;
+c := 7;
+
+//b, c := c, b;
+
 a := 2;
 a := a shl 4;
 

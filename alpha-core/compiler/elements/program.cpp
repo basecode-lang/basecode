@@ -71,6 +71,8 @@ namespace basecode::compiler {
 
     void program::disassemble(FILE* file) {
         auto root_block = _assembler->root_block();
+        if (root_block == nullptr)
+            return;
         root_block->disassemble();
         if (file != nullptr)
             _assembler->listing().write(file);
@@ -119,6 +121,8 @@ namespace basecode::compiler {
                      it != node->children.end();
                      ++it) {
                     auto expr = evaluate(r, session, *it, default_block_type);
+                    if (expr == nullptr)
+                        return nullptr;
                     add_expression_to_scope(module_block, expr);
                     expr->parent_element(module);
                 }
@@ -203,7 +207,8 @@ namespace basecode::compiler {
                         session,
                         dynamic_cast<compiler::symbol_element*>(expr),
                         find_type_result,
-                        nullptr);
+                        nullptr,
+                        0);
                 }
 
                 return make_statement(current_scope(), labels, expr);
@@ -214,10 +219,24 @@ namespace basecode::compiler {
                     evaluate(r, session, node->lhs));
             }
             case syntax::ast_node_types_t::assignment: {
-                const auto& assignment_target_list = node->lhs;
+                const auto& target_list = node->lhs;
+                const auto& source_list = node->rhs;
+
+                if (target_list->children.size() != source_list->children.size()) {
+                    error(
+                        r,
+                        session,
+                        "P027",
+                        "the number of left-hand-side targets must match"
+                        " the number of right-hand-side expressions.",
+                        source_list->location);
+                    return nullptr;
+                }
 
                 identifier_list_t list {};
-                for (const auto& symbol_node : assignment_target_list->children) {
+                for (size_t i = 0; i < target_list->children.size(); i++) {
+                    const auto& symbol_node = target_list->children[i];
+
                     qualified_symbol_t qualified_symbol {};
                     make_qualified_symbol(qualified_symbol, symbol_node);
                     auto existing_identifier = find_identifier(qualified_symbol);
@@ -226,7 +245,7 @@ namespace basecode::compiler {
                             current_scope(),
                             operator_type_t::assignment,
                             existing_identifier,
-                            evaluate(r, session, node->rhs));
+                            evaluate(r, session, source_list->children[i]));
                         apply_attributes(r, session, binary_op, node);
                         return binary_op;
                     } else {
@@ -244,14 +263,14 @@ namespace basecode::compiler {
                             session,
                             symbol,
                             find_type_result,
-                            node);
+                            node,
+                            i);
                         if (new_identifier == nullptr)
                             return nullptr;
                         list.push_back(new_identifier);
                     }
                 }
 
-                // XXX: handle proper multi-assignment
                 auto result = list.front();
                 return result;
             }
@@ -397,6 +416,7 @@ namespace basecode::compiler {
                                 symbol,
                                 find_type_result,
                                 param_node,
+                                0,
                                 block_scope);
                             param_identifier->usage(identifier_usage_t::stack);
                             auto field = make_field(block_scope, param_identifier);
@@ -418,6 +438,7 @@ namespace basecode::compiler {
                                 symbol,
                                 find_type_result,
                                 nullptr,
+                                0,
                                 block_scope);
                             if (param_identifier != nullptr) {
                                 param_identifier->usage(identifier_usage_t::stack);
@@ -875,7 +896,8 @@ namespace basecode::compiler {
                 r,
                 session,
                 module_node));
-            module->parent_element(this);
+            if (module != nullptr)
+                module->parent_element(this);
         }
 
         if (r.is_failed()) {
@@ -1427,6 +1449,7 @@ namespace basecode::compiler {
             compiler::symbol_element* symbol,
             type_find_result_t& type_find_result,
             const syntax::ast_node_shared_ptr& node,
+            size_t source_index,
             compiler::block* parent_scope) {
         auto namespace_type = find_type(qualified_symbol_t {
             .name = "namespace"
@@ -1474,10 +1497,15 @@ namespace basecode::compiler {
             }
         }
 
+        syntax::ast_node_shared_ptr source_node = nullptr;
+        if (node != nullptr) {
+            source_node = node->rhs->children[source_index];
+        }
+
         auto init_expr = (compiler::element*) nullptr;
         auto init = (compiler::initializer*) nullptr;
-        if (node != nullptr && node->rhs != nullptr) {
-            init_expr = evaluate_in_scope(r, session, node->rhs, scope);
+        if (node != nullptr) {
+            init_expr = evaluate_in_scope(r, session, source_node, scope);
             if (init_expr != nullptr) {
                 if (init_expr->element_type() == element_type_t::symbol) {
                     auto init_symbol = dynamic_cast<compiler::symbol_element*>(init_expr);
@@ -1534,7 +1562,7 @@ namespace basecode::compiler {
                 r,
                 session,
                 dynamic_cast<procedure_type*>(init->expression()),
-                node->rhs);
+                source_node);
         }
 
         if (init == nullptr

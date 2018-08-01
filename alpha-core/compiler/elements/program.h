@@ -363,6 +363,7 @@ namespace basecode::compiler {
             compiler::symbol_element* symbol,
             type_find_result_t& find_type_result,
             const syntax::ast_node_shared_ptr& node,
+            size_t source_index,
             compiler::block* parent_scope = nullptr);
 
         void add_type_to_scope(compiler::type* type);
