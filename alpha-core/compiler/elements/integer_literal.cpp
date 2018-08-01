@@ -11,6 +11,7 @@
 
 #include <vm/instruction_block.h>
 #include "program.h"
+#include "numeric_type.h"
 #include "integer_literal.h"
 
 namespace basecode::compiler {
@@ -26,9 +27,11 @@ namespace basecode::compiler {
             emit_context_t& context) {
         auto instruction_block = context.assembler->current_block();
         auto target_reg = instruction_block->current_target_register();
-        instruction_block->move_u32_to_ireg(
+        auto inferred_type = infer_type(context.program);
+        instruction_block->move_constant_to_ireg(
+            vm::op_size_for_byte_size(inferred_type->size_in_bytes()),
             target_reg->reg.i,
-            static_cast<uint32_t>(_value));
+            _value);
         return true;
     }
 
@@ -46,8 +49,9 @@ namespace basecode::compiler {
     }
 
     compiler::type* integer_literal::on_infer_type(const compiler::program* program) {
-        // XXX: i'm a bad person, i should do type narrowing here
-        return program->find_type({.name = "u32"});
+        return program->find_type({
+            .name = numeric_type::narrow_to_value(_value)
+        });
     }
 
 };

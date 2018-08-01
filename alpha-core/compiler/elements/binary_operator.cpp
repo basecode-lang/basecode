@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include "type.h"
 #include "element.h"
 #include "program.h"
 #include "identifier.h"
@@ -99,7 +100,9 @@ namespace basecode::compiler {
                     offset = entry->offset;
                 }
 
-                instruction_block->store_from_ireg_u64(lhs_reg, rhs_reg, offset);
+                auto lhs_identifier = dynamic_cast<compiler::identifier*>(_lhs);
+                auto lhs_size = vm::op_size_for_byte_size(lhs_identifier->type()->size_in_bytes());
+                instruction_block->store_from_ireg(lhs_size, lhs_reg, rhs_reg, offset);
                 instruction_block->pop_target_register();
 
                 instruction_block->free_reg(rhs_reg);
@@ -163,7 +166,7 @@ namespace basecode::compiler {
         auto if_data = context.top<if_data_t>();
         switch (operator_type()) {
             case operator_type_t::equals: {
-                instruction_block->cmp_u64(lhs_reg, rhs_reg);
+                instruction_block->cmp(vm::op_sizes::qword, lhs_reg, rhs_reg);
                 if (if_data != nullptr) {
                     auto parent_op = parent_element_as<compiler::binary_operator>();
                     if (parent_op != nullptr

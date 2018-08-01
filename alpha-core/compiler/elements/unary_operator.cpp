@@ -10,6 +10,7 @@
 // ----------------------------------------------------------------------------
 
 #include <vm/instruction_block.h>
+#include "type.h"
 #include "program.h"
 #include "unary_operator.h"
 
@@ -35,13 +36,15 @@ namespace basecode::compiler {
         _rhs->emit(r, context);
         instruction_block->pop_target_register();
 
+        auto rhs_size = vm::op_size_for_byte_size(_rhs->infer_type(context.program)->size_in_bytes());
+
         switch (operator_type()) {
             case operator_type_t::negate: {
-                instruction_block->neg_u64(target_reg->reg.i, rhs_reg);
+                instruction_block->neg(rhs_size, target_reg->reg.i, rhs_reg);
                 break;
             }
             case operator_type_t::binary_not: {
-                instruction_block->not_u64(target_reg->reg.i, rhs_reg);
+                instruction_block->not_op(rhs_size, target_reg->reg.i, rhs_reg);
                 break;
             }
             case operator_type_t::logical_not: {

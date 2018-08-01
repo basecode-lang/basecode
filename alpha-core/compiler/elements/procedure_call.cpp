@@ -43,7 +43,7 @@ namespace basecode::compiler {
             _arguments->emit(r, context);
 
         if (procedure_type->is_foreign()) {
-            instruction_block->push_u64(_arguments->elements().size());
+            instruction_block->push_u16(static_cast<uint16_t>(_arguments->elements().size()));
             instruction_block->call_foreign(procedure_type->foreign_address());
             instruction_block->current_entry()->comment(fmt::format(
                 "foreign call: {}",
@@ -55,7 +55,7 @@ namespace basecode::compiler {
         auto target_reg = instruction_block->current_target_register();
         if (target_reg != nullptr) {
             if (!procedure_type->returns().as_list().empty())
-                instruction_block->pop_u64(target_reg->reg.i);
+                instruction_block->pop(vm::op_sizes::qword, target_reg->reg.i);
         }
 
         return true;

@@ -61,7 +61,8 @@ namespace basecode::compiler {
                         }
 
                         instruction_block->move_label_to_ireg(ptr_reg, _symbol->name());
-                        instruction_block->load_to_ireg_u64(
+                        instruction_block->load_to_ireg(
+                            vm::op_size_for_byte_size(_type->size_in_bytes()),
                             target_reg->reg.i,
                             ptr_reg);
                         instruction_block->free_reg(ptr_reg);
@@ -92,7 +93,8 @@ namespace basecode::compiler {
             // XXX: error
             return;
         }
-        instruction_block->load_to_ireg_u64(
+        instruction_block->load_to_ireg(
+            vm::op_sizes::qword,
             target_reg->reg.i,
             vm::i_registers_t::fp,
             entry->offset);

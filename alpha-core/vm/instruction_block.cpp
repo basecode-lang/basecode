@@ -156,98 +156,36 @@ namespace basecode::vm {
     }
 
     // load variations
-    void instruction_block::load_to_ireg_u8(
+    void instruction_block::load_to_ireg(
+            op_sizes size,
             i_registers_t dest_reg,
             i_registers_t address_reg,
             int64_t offset) {
-        make_load_instruction(op_sizes::byte, dest_reg, address_reg, offset);
-    }
-
-    void instruction_block::load_to_ireg_u16(
-            i_registers_t dest_reg,
-            i_registers_t address_reg,
-            int64_t offset) {
-        make_load_instruction(op_sizes::word, dest_reg, address_reg, offset);
-    }
-
-    void instruction_block::load_to_ireg_u32(
-            i_registers_t dest_reg,
-            i_registers_t address_reg,
-            int64_t offset) {
-        make_load_instruction(op_sizes::dword, dest_reg, address_reg, offset);
-    }
-
-    void instruction_block::load_to_ireg_u64(
-            i_registers_t dest_reg,
-            i_registers_t address_reg,
-            int64_t offset) {
-        make_load_instruction(op_sizes::qword, dest_reg, address_reg, offset);
+        make_load_instruction(size, dest_reg, address_reg, offset);
     }
 
     // store variations
-    void instruction_block::store_from_ireg_u8(
+    void instruction_block::store_from_ireg(
+            op_sizes size,
             i_registers_t address_reg,
             i_registers_t src_reg,
             int64_t offset) {
-        make_store_instruction(op_sizes::byte, address_reg, src_reg, offset);
-    }
-
-    void instruction_block::store_from_ireg_u16(
-            i_registers_t address_reg,
-            i_registers_t src_reg,
-            int64_t offset) {
-        make_store_instruction(op_sizes::word, address_reg, src_reg, offset);
-    }
-
-    void instruction_block::store_from_ireg_u32(
-            i_registers_t address_reg,
-            i_registers_t src_reg,
-            int64_t offset) {
-        make_store_instruction(op_sizes::dword, address_reg, src_reg, offset);
-    }
-
-    void instruction_block::store_from_ireg_u64(
-            i_registers_t address_reg,
-            i_registers_t src_reg,
-            int64_t offset) {
-        make_store_instruction(op_sizes::qword, address_reg, src_reg, offset);
+        make_store_instruction(size, address_reg, src_reg, offset);
     }
 
     // move constant to reg variations
-    void instruction_block::move_f32_to_freg(
-            f_registers_t dest_reg,
-            float immediate) {
-        make_move_instruction(op_sizes::dword, dest_reg, immediate);
-    }
-
-    void instruction_block::move_f64_to_freg(
+    void instruction_block::move_constant_to_freg(
+            op_sizes size,
             f_registers_t dest_reg,
             double immediate) {
-        make_move_instruction(op_sizes::qword, dest_reg, immediate);
+        make_move_instruction(size, dest_reg, immediate);
     }
 
-    void instruction_block::move_u8_to_ireg(
-            i_registers_t dest_reg,
-            uint8_t immediate) {
-        make_move_instruction(op_sizes::byte, dest_reg, immediate);
-    }
-
-    void instruction_block::move_u16_to_ireg(
-            i_registers_t dest_reg,
-            uint16_t immediate) {
-        make_move_instruction(op_sizes::word, dest_reg, immediate);
-    }
-
-    void instruction_block::move_u32_to_ireg(
-            i_registers_t dest_reg,
-            uint32_t immediate) {
-        make_move_instruction(op_sizes::dword, dest_reg, immediate);
-    }
-
-    void instruction_block::move_u64_to_ireg(
+    void instruction_block::move_constant_to_ireg(
+            op_sizes size,
             i_registers_t dest_reg,
             uint64_t immediate) {
-        make_move_instruction(op_sizes::qword, dest_reg, immediate);
+        make_move_instruction(size, dest_reg, immediate);
     }
 
     void instruction_block::move_ireg_to_ireg(
@@ -280,7 +218,7 @@ namespace basecode::vm {
     void instruction_block::move_label_to_ireg_with_offset(
             i_registers_t dest_reg,
             const std::string& label_name,
-            uint64_t offset) {
+            int64_t offset) {
         auto label_ref = make_unresolved_label_ref(label_name);
 
         instruction_t move_op;
@@ -299,58 +237,26 @@ namespace basecode::vm {
         move_op.operands[2].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::constant;
-        move_op.operands[2].value.u64 = offset;
+        if (offset < 0)
+            move_op.operands[2].type |= operand_encoding_t::flags::negative;
+        move_op.operands[2].value.u64 = static_cast<uint64_t>(offset);
         make_block_entry(move_op);
     }
 
     // not variations
-    void instruction_block::not_u8(
+    void instruction_block::not_op(
+            op_sizes size,
             i_registers_t dest_reg,
             i_registers_t src_reg) {
-        make_not_instruction(op_sizes::byte, dest_reg, src_reg);
-    }
-
-    void instruction_block::not_u16(
-            i_registers_t dest_reg,
-            i_registers_t src_reg) {
-        make_not_instruction(op_sizes::word, dest_reg, src_reg);
-    }
-
-    void instruction_block::not_u32(
-            i_registers_t dest_reg,
-            i_registers_t src_reg) {
-        make_not_instruction(op_sizes::dword, dest_reg, src_reg);
-    }
-
-    void instruction_block::not_u64(
-            i_registers_t dest_reg,
-            i_registers_t src_reg) {
-        make_not_instruction(op_sizes::qword, dest_reg, src_reg);
+        make_not_instruction(size, dest_reg, src_reg);
     }
 
     // neg variations
-    void instruction_block::neg_u8(
+    void instruction_block::neg(
+            op_sizes size,
             i_registers_t dest_reg,
             i_registers_t src_reg) {
-        make_neg_instruction(op_sizes::byte, dest_reg, src_reg);
-    }
-
-    void instruction_block::neg_u16(
-            i_registers_t dest_reg,
-            i_registers_t src_reg) {
-        make_neg_instruction(op_sizes::word, dest_reg, src_reg);
-    }
-
-    void instruction_block::neg_u32(
-            i_registers_t dest_reg,
-            i_registers_t src_reg) {
-        make_neg_instruction(op_sizes::dword, dest_reg, src_reg);
-    }
-
-    void instruction_block::neg_u64(
-            i_registers_t dest_reg,
-            i_registers_t src_reg) {
-        make_neg_instruction(op_sizes::qword, dest_reg, src_reg);
+        make_neg_instruction(size, dest_reg, src_reg);
     }
 
     // mul variations
@@ -870,28 +776,12 @@ namespace basecode::vm {
         return &_stack_frame;
     }
 
-    void instruction_block::push_u8(i_registers_t reg) {
-        make_push_instruction(op_sizes::byte, reg);
+    void instruction_block::push(op_sizes size, i_registers_t reg) {
+        make_push_instruction(size, reg);
     }
 
-    void instruction_block::push_u16(i_registers_t reg) {
-        make_push_instruction(op_sizes::word, reg);
-    }
-
-    void instruction_block::push_u32(i_registers_t reg) {
-        make_push_instruction(op_sizes::dword, reg);
-    }
-
-    void instruction_block::push_f32(f_registers_t reg) {
-        make_push_instruction(op_sizes::dword, reg);
-    }
-
-    void instruction_block::push_f64(f_registers_t reg) {
-        make_push_instruction(op_sizes::qword, reg);
-    }
-
-    void instruction_block::push_u64(i_registers_t reg) {
-        make_push_instruction(op_sizes::qword, reg);
+    void instruction_block::push(op_sizes size, f_registers_t reg) {
+        make_push_instruction(size, reg);
     }
 
     void instruction_block::push_f64(double value) {
@@ -914,10 +804,6 @@ namespace basecode::vm {
         make_integer_constant_push_instruction(op_sizes::qword, value);
     }
 
-    void instruction_block::pop_u8(i_registers_t reg) {
-        make_pop_instruction(op_sizes::byte, reg);
-    }
-
     bool instruction_block::allocate_reg(i_registers_t& reg) {
         return _i_register_allocator.allocate(reg);
     }
@@ -927,10 +813,11 @@ namespace basecode::vm {
     }
 
     // cmp variations
-    void instruction_block::cmp_u64(
+    void instruction_block::cmp(
+            op_sizes size,
             i_registers_t lhs_reg,
             i_registers_t rhs_reg) {
-        make_cmp_instruction(op_sizes::qword, lhs_reg, rhs_reg);
+        make_cmp_instruction(size, lhs_reg, rhs_reg);
     }
 
     void instruction_block::make_cmp_instruction(
@@ -987,26 +874,15 @@ namespace basecode::vm {
     }
 
     // pop variations
-    void instruction_block::pop_f32(f_registers_t reg) {
-        make_pop_instruction(op_sizes::dword, reg);
+    void instruction_block::pop(op_sizes size, i_registers_t reg) {
+        make_pop_instruction(size, reg);
     }
 
-    void instruction_block::pop_f64(f_registers_t reg) {
-        make_pop_instruction(op_sizes::qword, reg);
+    void instruction_block::pop(op_sizes size, f_registers_t reg) {
+        make_pop_instruction(size, reg);
     }
 
-    void instruction_block::pop_u16(i_registers_t reg) {
-        make_pop_instruction(op_sizes::word, reg);
-    }
-
-    void instruction_block::pop_u32(i_registers_t reg) {
-        make_pop_instruction(op_sizes::dword, reg);
-    }
-
-    void instruction_block::pop_u64(i_registers_t reg) {
-        make_pop_instruction(op_sizes::qword, reg);
-    }
-
+    // test & branch
     void instruction_block::test_mask_branch_if_zero_u8(
             i_registers_t value_reg,
             i_registers_t mask_reg,

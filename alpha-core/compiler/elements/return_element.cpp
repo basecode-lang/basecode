@@ -29,7 +29,8 @@ namespace basecode::compiler {
             instruction_block->push_target_register(target_reg);
             // XXX: temporarily, only the first return value
             _expressions.front()->emit(r, context);
-            instruction_block->store_from_ireg_u64(
+            instruction_block->store_from_ireg(
+                vm::op_sizes::qword,
                 vm::i_registers_t::fp,
                 target_reg,
                 8);

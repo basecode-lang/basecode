@@ -285,108 +285,45 @@ namespace basecode::vm {
         void trap(uint8_t index);
 
         // cmp variations
-        void cmp_u64(
+        void cmp(
+            op_sizes size,
             i_registers_t lhs_reg,
             i_registers_t rhs_reg);
 
         // not variations
-        void not_u8(
-            i_registers_t dest_reg,
-            i_registers_t src_reg);
-
-        void not_u16(
-            i_registers_t dest_reg,
-            i_registers_t src_reg);
-
-        void not_u32(
-            i_registers_t dest_reg,
-            i_registers_t src_reg);
-
-        void not_u64(
+        void not_op(
+            op_sizes size,
             i_registers_t dest_reg,
             i_registers_t src_reg);
 
         // neg variations
-        void neg_u8(
-            i_registers_t dest_reg,
-            i_registers_t src_reg);
-
-        void neg_u16(
-            i_registers_t dest_reg,
-            i_registers_t src_reg);
-
-        void neg_u32(
-            i_registers_t dest_reg,
-            i_registers_t src_reg);
-
-        void neg_u64(
+        void neg(
+            op_sizes size,
             i_registers_t dest_reg,
             i_registers_t src_reg);
 
         // load variations
-        void load_to_ireg_u8(
-            i_registers_t dest_reg,
-            i_registers_t address_reg,
-            int64_t offset = 0);
-
-        void load_to_ireg_u16(
-            i_registers_t dest_reg,
-            i_registers_t address_reg,
-            int64_t offset = 0);
-
-        void load_to_ireg_u32(
-            i_registers_t dest_reg,
-            i_registers_t address_reg,
-            int64_t offset = 0);
-
-        void load_to_ireg_u64(
+        void load_to_ireg(
+            op_sizes size,
             i_registers_t dest_reg,
             i_registers_t address_reg,
             int64_t offset = 0);
 
         // store variations
-        void store_from_ireg_u8(
-            i_registers_t address_reg,
-            i_registers_t src_reg,
-            int64_t offset = 0);
-
-        void store_from_ireg_u16(
-            i_registers_t address_reg,
-            i_registers_t src_reg,
-            int64_t offset = 0);
-
-        void store_from_ireg_u32(
-            i_registers_t address_reg,
-            i_registers_t src_reg,
-            int64_t offset = 0);
-
-        void store_from_ireg_u64(
+        void store_from_ireg(
+            op_sizes size,
             i_registers_t address_reg,
             i_registers_t src_reg,
             int64_t offset = 0);
 
         // move variations
-        void move_f32_to_freg(
-            f_registers_t dest_reg,
-            float immediate);
-
-        void move_f64_to_freg(
+        void move_constant_to_freg(
+            op_sizes size,
             f_registers_t dest_reg,
             double immediate);
 
-        void move_u8_to_ireg(
-            i_registers_t dest_reg,
-            uint8_t immediate);
-
-        void move_u16_to_ireg(
-            i_registers_t dest_reg,
-            uint16_t immediate);
-
-        void move_u32_to_ireg(
-            i_registers_t dest_reg,
-            uint32_t immediate);
-
-        void move_u64_to_ireg(
+        void move_constant_to_ireg(
+            op_sizes size,
             i_registers_t dest_reg,
             uint64_t immediate);
 
@@ -401,7 +338,7 @@ namespace basecode::vm {
         void move_label_to_ireg_with_offset(
             i_registers_t dest_reg,
             const std::string& label_name,
-            uint64_t offset);
+            int64_t offset);
 
         // setxx
         void setz(i_registers_t dest_reg);
@@ -655,30 +592,14 @@ namespace basecode::vm {
 
         void push_u64(uint64_t value);
 
-        void push_u8(i_registers_t reg);
+        void push(op_sizes size, i_registers_t reg);
 
-        void push_u16(i_registers_t reg);
-
-        void push_f32(f_registers_t reg);
-
-        void push_u32(i_registers_t reg);
-
-        void push_f64(f_registers_t reg);
-
-        void push_u64(i_registers_t reg);
+        void push(op_sizes size, f_registers_t reg);
 
         // pop variations
-        void pop_u8(i_registers_t reg);
+        void pop(op_sizes size, i_registers_t reg);
 
-        void pop_f32(f_registers_t reg);
-
-        void pop_f64(f_registers_t reg);
-
-        void pop_u16(i_registers_t reg);
-
-        void pop_u32(i_registers_t reg);
-
-        void pop_u64(i_registers_t reg);
+        void pop(op_sizes size, f_registers_t reg);
 
         // calls & jumps
         void jump_indirect(i_registers_t reg);

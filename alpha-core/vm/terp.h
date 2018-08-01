@@ -358,6 +358,16 @@ namespace basecode::vm {
         }
     }
 
+    static inline op_sizes op_size_for_byte_size(size_t size) {
+        switch (size) {
+            case 1:     return op_sizes::byte;
+            case 2:     return op_sizes::word;
+            case 4:     return op_sizes::dword;
+            case 8:     return op_sizes::qword;
+            default:    return op_sizes::none;
+        }
+    }
+
     ///////////////////////////////////////////////////////////////////////////
 
     struct operand_encoding_t {

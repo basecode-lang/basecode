@@ -392,6 +392,9 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    // XXX: this needs to be broken up
+    //      else_if_literal can only occur in an infix position related to an if
+    //      else_literal can only occur in an infix position related to an if or else if
     ast_node_shared_ptr if_prefix_parser::parse(
             common::result& r,
             parser* parser,

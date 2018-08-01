@@ -29,6 +29,7 @@ namespace basecode::compiler {
     struct type_find_result_t {
         qualified_symbol_t type_name;
         bool is_array = false;
+        bool is_spread = false;
         bool is_pointer = false;
         size_t array_size = 0;
         compiler::type* type = nullptr;

@@ -168,17 +168,20 @@ int main(int argc, char** argv) {
         session_options,
         source_files);
     basecode::common::result r;
+
+    defer({
+        if (r.is_failed()) {
+            print_results(r);
+        }
+        fmt::print("\n");
+        compilation_session.finalize();
+    });
+
     if (!compilation_session.initialize(r)) {
-        print_results(r);
         return 1;
     } else {
-        if (!compilation_session.compile(r)) {
-            print_results(r);
+        if (!compilation_session.compile(r))
             return 1;
-        } else {
-            fmt::print("\n");
-            compilation_session.finalize();
-            return 0;
-       }
     }
+    return 0;
 }

@@ -26,9 +26,10 @@ namespace basecode::compiler {
             emit_context_t& context) {
         auto instruction_block = context.assembler->current_block();
         auto target_reg = instruction_block->current_target_register();
-        instruction_block->move_u8_to_ireg(
+        instruction_block->move_constant_to_ireg(
+            vm::op_sizes::byte,
             target_reg->reg.i,
-            static_cast<uint8_t>(_value ? 1 : 0));
+            _value ? 1 : 0);
         return true;
     }
 

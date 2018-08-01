@@ -1,12 +1,62 @@
+// Issues
+//
+
+// 0. how to encode the spread operator?
+//
+
+// 1. block filtering in program::on_emit isn't strong enough.
+//    a. blocks that belong to procedures should be flagged as such
+
+// 2. types
+//    a. type metadata needs to be emitted by the compiler
+//    b. type initializers & finalizers
+//    c. type_of(x)
+//    d. align_of(x)
+//    e. size_of(x)
+
+// 3. finish constant expression folding
+
+// 4. rework constant assignment syntax
+//      x :: "foo";
+
+// 5. array initializer lists
+// 6. dictionary initializer lists
+// 7. tuples
+// 8. structs/unions/enums
+//    a. dot defer syntax
+// 9. with syntax for composite types
+// 10. context implicit
+
+// 11. procedure call verification against type
+//     a. named, unordered arguments, e.g. print(a, 2, 10, 3, format := "a = %hhu\n");
+//     b. procedure stack frame
+//     c. return fixes
+
+// 12. #if/#elseif/#else
+// 13. assert
+
+// 14. fix multiple assignment/destructuring
+
+// 15. assembler label names need to be fully qualified
+// 16. disassemble strings as comma-separated list of .db instead of lines
+
+// 17. cast operator & rules
+//     a. transmute<type>()
+
 @library "libalpha-core.dylib";
-#foreign print := proc(format:string, values:...any) @alias "fmt_print";
+#foreign print := proc(format: string, values: ...any) @alias "fmt_print";
 
 print("\n------ this code is running in the compiler!\n");
 
 print("hello world\n");
 
-a: u64 := 2;
+a := 2;
 a := a shl 4;
-print("a = %d\n", a);
+
+//names: []string := ["one", "two", "three"];
+//types: dict<u8, string> := [5 := "simple", 8 := "complex"];
+//tuples
+
+print("a = %hhu\n", a);
 
 print("----------------------------------------------\n\n");

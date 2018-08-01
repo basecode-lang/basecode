@@ -19,16 +19,24 @@ namespace basecode::compiler {
             common::result& r,
             compiler::block* parent_scope,
             compiler::program* program) {
-        for (const auto& it : s_types_map) {
+        for (const auto& props : s_type_properties) {
             auto type = program->make_numeric_type(
                 r,
                 parent_scope,
-                it.first,
-                it.second.min,
-                it.second.max);
+                props.name,
+                props.min,
+                props.max);
             type->initialize(r, program);
             program->add_type_to_scope(type);
         }
+    }
+
+    std::string numeric_type::narrow_to_value(uint64_t value) {
+        for (const auto& props : s_type_properties) {
+            if (value >= props.min && value <= props.max)
+                return props.name;
+        }
+        return "u32";
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -59,7 +67,7 @@ namespace basecode::compiler {
         auto it = s_types_map.find(symbol()->name());
         if (it == s_types_map.end())
             return false;
-        size_in_bytes(it->second.size_in_bytes);
+        size_in_bytes(it->second->size_in_bytes);
         return true;
     }
 

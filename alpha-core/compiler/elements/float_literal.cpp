@@ -10,6 +10,7 @@
 // ----------------------------------------------------------------------------
 
 #include <vm/instruction_block.h>
+#include "type.h"
 #include "program.h"
 #include "float_literal.h"
 
@@ -26,9 +27,11 @@ namespace basecode::compiler {
             emit_context_t& context) {
         auto instruction_block = context.assembler->current_block();
         auto target_reg = instruction_block->current_target_register();
-        instruction_block->move_u64_to_ireg(
-            target_reg->reg.i,
-            static_cast<uint64_t>(_value));
+        auto inferred_type = infer_type(context.program);
+        instruction_block->move_constant_to_freg(
+            vm::op_size_for_byte_size(inferred_type->size_in_bytes()),
+            target_reg->reg.f,
+            _value);
         return true;
     }
 

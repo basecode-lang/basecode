@@ -546,6 +546,7 @@ namespace basecode::vm {
         if (!op_name.empty()) {
             std::stringstream mnemonic;
             std::string format_spec;
+            std::string offset_spec = "{}";
 
             mnemonic << op_name;
             switch (size) {
@@ -639,8 +640,8 @@ namespace basecode::vm {
                             else
                                 operands_stream << id_resolver(operand.value.u64);
                         } else {
-                            if (prefix == "-") {
-                                operands_stream << fmt::format("{}", static_cast<int64_t>(operand.value.u64));
+                            if (i == 2) {
+                                operands_stream << fmt::format(offset_spec, static_cast<int64_t>(operand.value.u64));
                             } else {
                                 operands_stream << prefix
                                                 << fmt::format(format_spec, operand.value.u64)

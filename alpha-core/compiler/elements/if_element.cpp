@@ -31,6 +31,9 @@ namespace basecode::compiler {
             _true_branch->label_name(),
             _false_branch != nullptr ? _false_branch->label_name() : "");
         _predicate->emit(r, context);
+        _true_branch->emit(r, context);
+        if (_false_branch != nullptr)
+            _false_branch->emit(r, context);
         context.pop();
         return true;
     }
