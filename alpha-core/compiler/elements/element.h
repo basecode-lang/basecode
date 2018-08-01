@@ -53,6 +53,8 @@ namespace basecode::compiler {
 
         attribute_map_t& attributes();
 
+        bool is_type() const;
+
         bool as_bool(bool& value) const;
 
         bool as_float(double& value) const;

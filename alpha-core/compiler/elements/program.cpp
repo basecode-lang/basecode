@@ -774,7 +774,9 @@ namespace basecode::compiler {
 
         auto all_blocks = elements().find_by_type(element_type_t::block);
         for (auto block : all_blocks) {
-            if (block->is_parent_element(element_type_t::if_e))
+            if (block->is_parent_element(element_type_t::if_e)
+            ||  block->is_parent_element(element_type_t::program)
+            ||  (block->parent_element() != nullptr && block->parent_element()->is_type()))
                 continue;
             implicit_blocks.emplace_back(dynamic_cast<compiler::block*>(block));
         }
@@ -957,7 +959,7 @@ namespace basecode::compiler {
         auto type = new compiler::any_type(parent_scope, scope);
         if (!type->initialize(r, this))
             return nullptr;
-
+        scope->parent_element(type);
         _elements.add(type);
         return type;
     }
@@ -969,7 +971,7 @@ namespace basecode::compiler {
         auto type = new compiler::type_info(parent_scope, scope);
         if (!type->initialize(r, this))
             return nullptr;
-
+        scope->parent_element(type);
         _elements.add(type);
         return type;
     }

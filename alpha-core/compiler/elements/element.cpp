@@ -64,6 +64,27 @@ namespace basecode::compiler {
         return nullptr;
     }
 
+    bool element::is_type() const {
+        switch (_element_type) {
+            case element_type_t::any_type:
+            case element_type_t::proc_type:
+            case element_type_t::bool_type:
+            case element_type_t::type_info:
+            case element_type_t::alias_type:
+            case element_type_t::array_type:
+            case element_type_t::tuple_type:
+            case element_type_t::string_type:
+            case element_type_t::module_type:
+            case element_type_t::numeric_type:
+            case element_type_t::pointer_type:
+            case element_type_t::composite_type:
+            case element_type_t::namespace_type:
+                return true;
+            default:
+                return false;
+        }
+    }
+
     common::id_t element::id() const {
         return _id;
     }
@@ -164,22 +185,9 @@ namespace basecode::compiler {
     }
 
     compiler::type* element::infer_type(const compiler::program* program) {
-        switch (_element_type) {
-            case element_type_t::any_type:
-            case element_type_t::proc_type:
-            case element_type_t::bool_type:
-            case element_type_t::alias_type:
-            case element_type_t::array_type:
-            case element_type_t::string_type:
-            case element_type_t::module_type:
-            case element_type_t::numeric_type:
-            case element_type_t::pointer_type:
-            case element_type_t::composite_type:
-            case element_type_t::namespace_type:
-                return dynamic_cast<compiler::type*>(this);
-            default:
-                return on_infer_type(program);
-        }
+        if (is_type())
+            return dynamic_cast<compiler::type*>(this);
+        return on_infer_type(program);
     }
 
     compiler::type* element::on_infer_type(const compiler::program* program) {

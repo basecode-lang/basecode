@@ -64,4 +64,10 @@ a := a shl 4;
 
 print("a = %hhu\n", a);
 
+//if a == 32 {
+//    print("we have a match!\n");
+//} else {
+//    print("no match\n");
+//};
+
 print("----------------------------------------------\n\n");
