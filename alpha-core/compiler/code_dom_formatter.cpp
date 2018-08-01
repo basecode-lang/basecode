@@ -21,6 +21,7 @@
 #include <compiler/elements/comment.h>
 #include <common/graphviz_formatter.h>
 #include <compiler/elements/any_type.h>
+#include <compiler/elements/bool_type.h>
 #include <compiler/elements/type_info.h>
 #include <compiler/elements/attribute.h>
 #include <compiler/elements/directive.h>
@@ -456,7 +457,17 @@ namespace basecode::compiler {
                     node_vertex_name,
                     style);
             }
-            case element_type_t::bool_type:
+            case element_type_t::bool_type: {
+                auto element = dynamic_cast<bool_type*>(node);
+                auto style = ", fillcolor=gainsboro, style=\"filled\"";
+                add_primary_edge(element, element->symbol());
+                return fmt::format(
+                    "{}[shape=record,label=\"bool_type|{}\"{}];",
+                    node_vertex_name,
+                    element->symbol()->name(),
+                    style);
+                break;
+            }
             case element_type_t::numeric_type: {
                 auto element = dynamic_cast<numeric_type*>(node);
                 auto style = ", fillcolor=gainsboro, style=\"filled\"";

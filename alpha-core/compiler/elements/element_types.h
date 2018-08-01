@@ -34,6 +34,7 @@ namespace basecode::compiler {
     class program;
     class comment;
     class any_type;
+    class bool_type;
     class directive;
     class attribute;
     class statement;

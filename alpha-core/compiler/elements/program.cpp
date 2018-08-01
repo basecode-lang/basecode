@@ -24,6 +24,7 @@
 #include "comment.h"
 #include "program.h"
 #include "any_type.h"
+#include "bool_type.h"
 #include "attribute.h"
 #include "directive.h"
 #include "statement.h"
@@ -952,6 +953,16 @@ namespace basecode::compiler {
         return alias_type;
     }
 
+    bool_type* program::make_bool_type(
+            common::result& r,
+            compiler::block* parent_scope) {
+        auto type = new compiler::bool_type(parent_scope);
+        if (!type->initialize(r, this))
+            return nullptr;
+        _elements.add(type);
+        return type;
+    }
+
     any_type* program::make_any_type(
             common::result& r,
             compiler::block* parent_scope,
@@ -997,6 +1008,7 @@ namespace basecode::compiler {
             parent_scope,
             make_block(parent_scope, element_type_t::block)));
         add_type_to_scope(make_namespace_type(r, parent_scope));
+        add_type_to_scope(make_bool_type(r, parent_scope));
         add_type_to_scope(make_string_type(
             r,
             parent_scope,
@@ -1201,12 +1213,14 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             const std::string& name,
             int64_t min,
-            uint64_t max) {
+            uint64_t max,
+            bool is_signed) {
         auto type = new compiler::numeric_type(
             parent_scope,
             make_symbol(parent_scope, name),
             min,
-            max);
+            max,
+            is_signed);
         if (!type->initialize(r, this))
             return nullptr;
 

@@ -63,6 +63,7 @@ add_library(
     compiler/elements/element.cpp compiler/elements/element.h
     compiler/elements/program.cpp compiler/elements/program.h
     compiler/elements/any_type.cpp compiler/elements/any_type.h
+    compiler/elements/bool_type.cpp compiler/elements/bool_type.h
     compiler/elements/attribute.cpp compiler/elements/attribute.h
     compiler/elements/directive.cpp compiler/elements/directive.h
     compiler/elements/statement.cpp compiler/elements/statement.h

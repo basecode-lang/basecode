@@ -87,6 +87,7 @@ namespace basecode::compiler {
 
     private:
         friend class any_type;
+        friend class bool_type;
         friend class directive;
         friend class type_info;
         friend class array_type;
@@ -168,6 +169,10 @@ namespace basecode::compiler {
             common::result& r,
             compiler::block* parent_scope,
             compiler::block* scope);
+
+        bool_type* make_bool_type(
+            common::result& r,
+            compiler::block* parent_scope);
 
         type_info* make_type_info_type(
             common::result& r,
@@ -307,7 +312,8 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             const std::string& name,
             int64_t min,
-            uint64_t max);
+            uint64_t max,
+            bool is_signed);
 
         composite_type* make_struct_type(
             common::result& r,

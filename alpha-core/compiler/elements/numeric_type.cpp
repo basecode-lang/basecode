@@ -25,7 +25,8 @@ namespace basecode::compiler {
                 parent_scope,
                 props.name,
                 props.min,
-                props.max);
+                props.max,
+                props.is_signed);
             type->initialize(r, program);
             program->add_type_to_scope(type);
         }
@@ -45,12 +46,14 @@ namespace basecode::compiler {
             block* parent_scope,
             compiler::symbol_element* symbol,
             int64_t min,
-            uint64_t max) : compiler::type(
+            uint64_t max,
+            bool is_signed) : compiler::type(
                                 parent_scope,
                                 element_type_t::numeric_type,
                                 symbol),
-                            _min(min),
-                            _max(max) {
+                              _min(min),
+                              _max(max),
+                              _is_signed(is_signed) {
     }
 
     int64_t numeric_type::min() const {
@@ -69,6 +72,10 @@ namespace basecode::compiler {
             return false;
         size_in_bytes(it->second->size_in_bytes);
         return true;
+    }
+
+    bool numeric_type::is_signed() const {
+        return _is_signed;
     }
 
 };
