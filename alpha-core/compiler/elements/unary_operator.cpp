@@ -63,6 +63,26 @@ namespace basecode::compiler {
         return _rhs;
     }
 
+    element* unary_operator::on_fold(
+            common::result& r,
+            compiler::program* program) {
+        switch (operator_type()) {
+            case operator_type_t::negate: {
+                break;
+            }
+            case operator_type_t::binary_not: {
+                break;
+            }
+            case operator_type_t::logical_not: {
+                break;
+            }
+            default:
+                break;
+        }
+
+        return nullptr;
+    }
+
     bool unary_operator::on_is_constant() const {
         return _rhs != nullptr && _rhs->is_constant();
     }
