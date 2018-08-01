@@ -295,16 +295,20 @@ namespace basecode::compiler {
             case syntax::ast_node_types_t::number_literal: {
                 switch (node->token.number_type) {
                     case syntax::number_types_t::integer: {
-                        uint64_t value;
-                        if (node->token.parse(value) == syntax::conversion_result_t::success)
-                            return make_integer(current_scope(), value);
                         // XXX: need to handle conversion failures
+                        uint64_t value;
+                        if (node->token.parse(value) == syntax::conversion_result_t::success) {
+                            if (node->token.is_signed())
+                                return make_integer(current_scope(), ~value + 1);
+                            else
+                                return make_integer(current_scope(), value);
+                        }
                     }
                     case syntax::number_types_t::floating_point: {
+                        // XXX: need to handle conversion failures
                         double value;
                         if (node->token.parse(value) == syntax::conversion_result_t::success)
                             return make_float(current_scope(), value);
-                        // XXX: need to handle conversion failures
                     }
                     default:
                         break;
@@ -647,6 +651,7 @@ namespace basecode::compiler {
                     case element_type_t::string_literal: {
                         auto string_literal = dynamic_cast<compiler::string_literal*>(e);
                         instruction_block->memo();
+                        instruction_block->align(4);
                         auto it = _interned_string_literals.find(string_literal->value());
                         if (it != _interned_string_literals.end()) {
                             auto current_entry = instruction_block->current_entry();
@@ -668,10 +673,13 @@ namespace basecode::compiler {
                         auto init = var->initializer();
 
                         instruction_block->memo();
+                        instruction_block->current_entry()->blank_lines(1);
+
+                        auto type_alignment = static_cast<uint8_t>(var->type()->alignment());
+                        if (type_alignment > 1)
+                            instruction_block->align(type_alignment);
                         auto var_label = instruction_block->make_label(var->symbol()->name());
-                        auto current_entry = instruction_block->current_entry();
-                        current_entry->label(var_label);
-                        current_entry->blank_lines(1);
+                        instruction_block->current_entry()->label(var_label);
 
                         switch (var->type()->element_type()) {
                             case element_type_t::numeric_type: {

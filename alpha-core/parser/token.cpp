@@ -30,6 +30,10 @@ namespace basecode::syntax {
         return type == token_types_t::number_literal;
     }
 
+    bool token_t::is_signed() const {
+        return !value.empty() && value[0] == '-';
+    }
+
     std::string token_t::name() const {
         auto it = s_type_to_name.find(type);
         if (it == s_type_to_name.end())
@@ -73,7 +77,13 @@ namespace basecode::syntax {
     }
 
     conversion_result_t token_t::parse(uint64_t& out) const {
-        const char* s = value.c_str();
+        if (value.empty())
+            return conversion_result_t::inconvertible;
+        const char* s = nullptr;
+        if (value[0] == '-')
+            s = value.substr(1).c_str();
+        else
+            s = value.c_str();
         char* end;
         errno = 0;
         out = strtoul(s, &end, radix);

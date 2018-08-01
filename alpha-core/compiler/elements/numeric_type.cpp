@@ -70,6 +70,7 @@ namespace basecode::compiler {
         auto it = s_types_map.find(symbol()->name());
         if (it == s_types_map.end())
             return false;
+        alignment(it->second->size_in_bytes);
         size_in_bytes(it->second->size_in_bytes);
         return true;
     }

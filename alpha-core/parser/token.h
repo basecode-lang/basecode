@@ -189,6 +189,8 @@ namespace basecode::syntax {
 
         bool is_label() const;
 
+        bool is_signed() const;
+
         bool is_boolean() const;
 
         bool is_numeric() const;

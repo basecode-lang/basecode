@@ -63,16 +63,16 @@ namespace basecode::compiler {
         };
 
         static inline numeric_type_map_t s_types_map = {
-            {"u8",   {&s_type_properties[1]}},
-            {"u16",  {&s_type_properties[2]}},
-            {"u32",  {&s_type_properties[3]}},
-            {"u64",  {&s_type_properties[4]}},
-            {"s8",   {&s_type_properties[5]}},
-            {"s16",  {&s_type_properties[6]}},
-            {"s32",  {&s_type_properties[7]}},
-            {"s64",  {&s_type_properties[8]}},
-            {"f32",  {&s_type_properties[9]}},
-            {"f64",  {&s_type_properties[10]}},
+            {"u8",   {&s_type_properties[0]}},
+            {"u16",  {&s_type_properties[1]}},
+            {"u32",  {&s_type_properties[2]}},
+            {"u64",  {&s_type_properties[3]}},
+            {"s8",   {&s_type_properties[4]}},
+            {"s16",  {&s_type_properties[5]}},
+            {"s32",  {&s_type_properties[6]}},
+            {"s64",  {&s_type_properties[7]}},
+            {"f32",  {&s_type_properties[8]}},
+            {"f64",  {&s_type_properties[9]}},
         };
 
         bool on_initialize(

@@ -25,9 +25,6 @@ namespace basecode::syntax {
         // add
         {'+', std::bind(&lexer::plus, std::placeholders::_1, std::placeholders::_2)},
 
-        // minus, negate
-        {'-', std::bind(&lexer::minus, std::placeholders::_1, std::placeholders::_2)},
-
         // block comment, line comment, slash
         {'/', std::bind(&lexer::block_comment, std::placeholders::_1, std::placeholders::_2)},
         {'/', std::bind(&lexer::line_comment, std::placeholders::_1, std::placeholders::_2)},
@@ -205,6 +202,7 @@ namespace basecode::syntax {
         {'z', std::bind(&lexer::identifier, std::placeholders::_1, std::placeholders::_2)},
 
         // number literal
+        {'-', std::bind(&lexer::number_literal, std::placeholders::_1, std::placeholders::_2)},
         {'_', std::bind(&lexer::number_literal, std::placeholders::_1, std::placeholders::_2)},
         {'$', std::bind(&lexer::number_literal, std::placeholders::_1, std::placeholders::_2)},
         {'%', std::bind(&lexer::number_literal, std::placeholders::_1, std::placeholders::_2)},
@@ -219,6 +217,9 @@ namespace basecode::syntax {
         {'7', std::bind(&lexer::number_literal, std::placeholders::_1, std::placeholders::_2)},
         {'8', std::bind(&lexer::number_literal, std::placeholders::_1, std::placeholders::_2)},
         {'9', std::bind(&lexer::number_literal, std::placeholders::_1, std::placeholders::_2)},
+
+        // minus, negate
+        {'-', std::bind(&lexer::minus, std::placeholders::_1, std::placeholders::_2)},
     };
 
     lexer::lexer(common::source_file* source_file) : _source_file(source_file) {
@@ -435,7 +436,7 @@ namespace basecode::syntax {
         std::stringstream stream;
         while (true) {
             auto ch = read(false);
-            if (ch == target_ch)
+            if (ch == target_ch || ch == -1)
                 break;
             // XXX: requires utf8 fix
             stream << static_cast<char>(ch);
@@ -773,7 +774,7 @@ namespace basecode::syntax {
     bool lexer::line_comment(token_t& token) {
         auto ch = read();
         if (ch == '/') {
-            ch = read();
+            ch = read(false);
             if (ch == '/') {
                 token.type = token_types_t::line_comment;
                 token.value = read_until('\n');
@@ -896,7 +897,7 @@ namespace basecode::syntax {
         if (ch == '$') {
             token.radix = 16;
             while (true) {
-                ch = read();
+                ch = read(false);
                 if (ch == '_')
                     continue;
                 if (!isxdigit(ch))
@@ -908,7 +909,7 @@ namespace basecode::syntax {
             const std::string valid = "012345678";
             token.radix = 8;
             while (true) {
-                ch = read();
+                ch = read(false);
                 if (ch == '_')
                     continue;
                 // XXX: requires utf8 fix
@@ -920,7 +921,7 @@ namespace basecode::syntax {
         } else if (ch == '%') {
             token.radix = 2;
             while (true) {
-                ch = read();
+                ch = read(false);
                 if (ch == '_')
                     continue;
                 if (ch != '0' && ch != '1')
@@ -930,15 +931,27 @@ namespace basecode::syntax {
             }
         } else {
             const std::string valid = "0123456789_.";
+
+            if (ch == '-') {
+                stream << '-';
+                ch = read(false);
+            }
             // XXX: requires utf8 fix
             while (valid.find_first_of(static_cast<char>(ch)) != std::string::npos) {
                 if (ch != '_') {
-                    if (ch == '.')
-                        token.number_type = number_types_t::floating_point;
+                    if (ch == '.') {
+                        if (token.number_type != number_types_t::floating_point) {
+                            token.number_type = number_types_t::floating_point;
+                        } else {
+                            token.type = token_types_t::invalid;
+                            token.number_type = number_types_t::none;
+                            return false;
+                        }
+                    }
                     // XXX: requires utf8 fix
                     stream << static_cast<char>(ch);
                 }
-                ch = read();
+                ch = read(false);
             }
         }
 

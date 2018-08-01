@@ -1063,27 +1063,29 @@ namespace basecode::vm {
                     entry.address(),
                     fmt::format("; {}", comment));
             }
+
+            if (entry.type() == block_entry_type_t::align) {
+                auto align = entry.data<align_t>();
+                source_file->add_source_line(
+                    entry.address(),
+                    fmt::format(".align {}", align->size));
+            } else if (entry.type() == block_entry_type_t::section) {
+                auto section = entry.data<section_t>();
+                source_file->add_source_line(
+                    entry.address(),
+                    fmt::format(".section '{}'", section_name(*section)));
+            }
+
             for (auto label : entry.labels()) {
                 source_file->add_source_line(
                     entry.address(),
                     fmt::format("{}:", label->name()));
             }
+
             switch (entry.type()) {
-                case block_entry_type_t::memo: {
-                    break;
-                }
-                case block_entry_type_t::align: {
-                    auto align = entry.data<align_t>();
-                    source_file->add_source_line(
-                        entry.address(),
-                        fmt::format(".align {}", align->size));
-                    break;
-                }
+                case block_entry_type_t::memo:
+                case block_entry_type_t::align:
                 case block_entry_type_t::section: {
-                    auto section = entry.data<section_t>();
-                    source_file->add_source_line(
-                        entry.address(),
-                        fmt::format(".section '{}'", section_name(*section)));
                     break;
                 }
                 case block_entry_type_t::instruction: {
