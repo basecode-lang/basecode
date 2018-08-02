@@ -51,16 +51,20 @@ print("hello world\n");
 
 // XXX: there's a memory alignment issue with the signed integer
 // XXX: signed integers aren't type inferring properly
-//s: s32 := -32768;
-//b := 6;
-//c := 7;
+s: s32 := -32768;
+b := 6;
+c := 7;
+
+d: u32;
+d := ((b * c) / 2) % 2;
 //b, c := c, b;
 
 a := 2;
 a := a shl 4;
 
 print("a := %hhu\n", a);
-//print("s := %d\n", s);
+print("s := %d\n", s);
+print("d := %d\n", d);
 
 //if a == 32 {
 //    print("we have a match!\n");

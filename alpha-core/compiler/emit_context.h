@@ -32,9 +32,13 @@ namespace basecode::compiler {
     };
 
     struct variable_t {
-        bool read(vm::instruction_block* block);
+        bool read(
+            vm::assembler* assembler,
+            vm::instruction_block* block);
 
-        bool write(vm::instruction_block* block);
+        bool write(
+            vm::assembler* assembler,
+            vm::instruction_block* block);
 
         std::string name;
         bool written = false;

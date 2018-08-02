@@ -789,7 +789,7 @@ namespace basecode::compiler {
         top_level_block->memo();
         top_level_block->current_entry()->label(top_level_block->make_label("_initializer"));
         for (auto var : literals)
-            var->read(top_level_block);
+            var->read(context.assembler, top_level_block);
 
         block_list_t implicit_blocks {};
         auto module_blocks = elements().find_by_type(element_type_t::module_block);

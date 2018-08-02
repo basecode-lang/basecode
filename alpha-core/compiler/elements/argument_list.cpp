@@ -48,17 +48,17 @@ namespace basecode::compiler {
                             target_reg = var->value_reg.i;
                     }
                     else {
-                        if (!instruction_block->allocate_reg(target_reg)) {
+                        if (!context.assembler->allocate_reg(target_reg)) {
                         }
                         cleanup = true;
                     }
 
-                    instruction_block->push_target_register(target_reg);
+                    context.assembler->push_target_register(target_reg);
                     arg->emit(r, context);
-                    instruction_block->pop_target_register();
+                    context.assembler->pop_target_register();
                     instruction_block->push(vm::op_sizes::qword, target_reg);
                     if (cleanup)
-                        instruction_block->free_reg(target_reg);
+                        context.assembler->free_reg(target_reg);
                     break;
                 }
                 default:

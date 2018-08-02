@@ -24,20 +24,6 @@
 
 namespace basecode::vm {
 
-    enum class target_register_type_t {
-        none,
-        integer,
-        floating_point
-    };
-
-    struct target_register_t {
-        target_register_type_t type;
-        union {
-            i_registers_t i;
-            f_registers_t f;
-        } reg;
-    };
-
     enum class instruction_block_type_t {
         basic,
         procedure
@@ -226,24 +212,6 @@ namespace basecode::vm {
             }
             return nullptr;
         }
-
-        // register allocators
-    public:
-        void free_reg(i_registers_t reg);
-
-        void free_reg(f_registers_t reg);
-
-        bool allocate_reg(i_registers_t& reg);
-
-        bool allocate_reg(f_registers_t& reg);
-
-        target_register_t pop_target_register();
-
-        target_register_t* current_target_register();
-
-        void push_target_register(i_registers_t reg);
-
-        void push_target_register(f_registers_t reg);
 
     // data definitions
     public:
@@ -786,10 +754,7 @@ namespace basecode::vm {
         std::vector<block_entry_t> _entries {};
         std::vector<instruction_block*> _blocks {};
         vm::listing_source_file_t* _source_file = nullptr;
-        std::stack<target_register_t> _target_registers {};
         std::unordered_map<std::string, vm::label*> _labels {};
-        register_allocator_t<i_registers_t> _i_register_allocator {};
-        register_allocator_t<f_registers_t> _f_register_allocator {};
         std::unordered_map<common::id_t, label_ref_t> _unresolved_labels {};
         std::unordered_map<std::string, common::id_t> _label_to_unresolved_ids {};
     };

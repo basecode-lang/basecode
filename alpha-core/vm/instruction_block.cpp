@@ -804,14 +804,6 @@ namespace basecode::vm {
         make_integer_constant_push_instruction(op_sizes::qword, value);
     }
 
-    bool instruction_block::allocate_reg(i_registers_t& reg) {
-        return _i_register_allocator.allocate(reg);
-    }
-
-    bool instruction_block::allocate_reg(f_registers_t& reg) {
-        return _f_register_allocator.allocate(reg);
-    }
-
     // cmp variations
     void instruction_block::cmp(
             op_sizes size,
@@ -905,14 +897,6 @@ namespace basecode::vm {
             i_registers_t value_reg,
             i_registers_t mask_reg,
             i_registers_t address_reg) {
-    }
-
-    void instruction_block::free_reg(i_registers_t reg) {
-        _i_register_allocator.free(reg);
-    }
-
-    void instruction_block::free_reg(f_registers_t reg) {
-        _f_register_allocator.free(reg);
     }
 
     void instruction_block::setz(i_registers_t dest_reg) {
@@ -1033,14 +1017,6 @@ namespace basecode::vm {
 //        jsr_op.operands[1].type = offset_type | operand_encoding_t::flags::integer;
 //        jsr_op.operands[1].value.u64 = offset;
 //        _instructions.push_back(jsr_op);
-    }
-
-    target_register_t instruction_block::pop_target_register() {
-        if (_target_registers.empty())
-            return target_register_t {};
-        auto reg = _target_registers.top();
-        _target_registers.pop();
-        return reg;
     }
 
     void instruction_block::add_block(instruction_block* block) {
@@ -1184,32 +1160,6 @@ namespace basecode::vm {
         if (it == _blocks.end())
             return;
         _blocks.erase(it);
-    }
-
-    target_register_t* instruction_block::current_target_register() {
-        if (_target_registers.empty())
-            return nullptr;
-        return &_target_registers.top();
-    }
-
-    void instruction_block::push_target_register(i_registers_t reg) {
-        target_register_t target {
-            .type = target_register_type_t::integer,
-            .reg = {
-                .i = reg
-            }
-        };
-        _target_registers.push(target);
-    }
-
-    void instruction_block::push_target_register(f_registers_t reg) {
-        target_register_t target {
-            .type = target_register_type_t::floating_point,
-            .reg = {
-                .f = reg
-            }
-        };
-        _target_registers.push(target);
     }
 
     vm::label* instruction_block::make_label(const std::string& name) {

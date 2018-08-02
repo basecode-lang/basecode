@@ -16,12 +16,27 @@
 #include <unordered_map>
 #include <common/result.h>
 #include <common/id_pool.h>
+#include "terp.h"
 #include "segment.h"
 #include "assembly_listing.h"
+#include "register_allocator.h"
 
 namespace basecode::vm {
 
-    class terp;
+    enum class target_register_type_t {
+        none,
+        integer,
+        floating_point
+    };
+
+    struct target_register_t {
+        target_register_type_t type;
+        union {
+            i_registers_t i;
+            f_registers_t f;
+        } reg;
+    };
+
     class instruction_block;
 
     class assembler {
@@ -52,15 +67,31 @@ namespace basecode::vm {
 
         segment_list_t segments() const;
 
+        void free_reg(i_registers_t reg);
+
+        void free_reg(f_registers_t reg);
+
         bool initialize(common::result& r);
 
         instruction_block* current_block();
+
+        bool allocate_reg(i_registers_t& reg);
+
+        bool allocate_reg(f_registers_t& reg);
 
         bool resolve_labels(common::result& r);
 
         bool apply_addresses(common::result& r);
 
         void push_block(instruction_block* block);
+
+        target_register_t pop_target_register();
+
+        target_register_t* current_target_register();
+
+        void push_target_register(i_registers_t reg);
+
+        void push_target_register(f_registers_t reg);
 
         vm::segment* segment(const std::string& name);
 
@@ -78,7 +109,10 @@ namespace basecode::vm {
         uint32_t _procedure_block_count = 0;
         std::vector<instruction_block*> _blocks {};
         std::stack<instruction_block*> _block_stack {};
+        std::stack<target_register_t> _target_registers {};
         std::unordered_map<std::string, vm::segment> _segments {};
+        register_allocator_t<i_registers_t> _i_register_allocator {};
+        register_allocator_t<f_registers_t> _f_register_allocator {};
     };
 
 };

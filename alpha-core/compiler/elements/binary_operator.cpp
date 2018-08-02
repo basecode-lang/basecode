@@ -71,16 +71,16 @@ namespace basecode::compiler {
                 auto var = context.variable_for_element(_lhs);
 
                 vm::i_registers_t rhs_reg;
-                if (!instruction_block->allocate_reg(rhs_reg)) {
+                if (!context.assembler->allocate_reg(rhs_reg)) {
                 }
 
                 _lhs->emit(r, context);
-                instruction_block->push_target_register(rhs_reg);
+                context.assembler->push_target_register(rhs_reg);
                 _rhs->emit(r, context);
-                var->write(instruction_block);
-                instruction_block->pop_target_register();
+                var->write(context.assembler, instruction_block);
+                context.assembler->pop_target_register();
 
-                instruction_block->free_reg(rhs_reg);
+                context.assembler->free_reg(rhs_reg);
                 break;
             }
             default:
@@ -188,7 +188,7 @@ namespace basecode::compiler {
         if (lhs_var != nullptr)
             lhs_reg = lhs_var->value_reg.i;
         else {
-            if (!instruction_block->allocate_reg(lhs_reg)) {
+            if (!context.assembler->allocate_reg(lhs_reg)) {
             }
             cleanup_left = true;
         }
@@ -197,18 +197,18 @@ namespace basecode::compiler {
         if (rhs_var != nullptr)
             rhs_reg = rhs_var->value_reg.i;
         else {
-            if (!instruction_block->allocate_reg(rhs_reg)) {
+            if (!context.assembler->allocate_reg(rhs_reg)) {
             }
             cleanup_right = true;
         }
 
-        instruction_block->push_target_register(lhs_reg);
+        context.assembler->push_target_register(lhs_reg);
         _lhs->emit(r, context);
-        instruction_block->pop_target_register();
+        context.assembler->pop_target_register();
 
-        instruction_block->push_target_register(rhs_reg);
+        context.assembler->push_target_register(rhs_reg);
         _rhs->emit(r, context);
-        instruction_block->pop_target_register();
+        context.assembler->pop_target_register();
 
         auto if_data = context.top<if_data_t>();
         switch (operator_type()) {
@@ -223,7 +223,7 @@ namespace basecode::compiler {
                         instruction_block->beq(if_data->true_branch_label);
                     }
                 } else {
-                    auto target_reg = instruction_block->current_target_register();
+                    auto target_reg = context.assembler->current_target_register();
                     instruction_block->setz(target_reg->reg.i);
                     context.push_scratch_register(target_reg->reg.i);
                 }
@@ -241,7 +241,7 @@ namespace basecode::compiler {
                 else {
                     auto rhs_target_reg = context.pop_scratch_register();
                     auto lhs_target_reg = context.pop_scratch_register();
-                    auto target_reg = instruction_block->current_target_register();
+                    auto target_reg = context.assembler->current_target_register();
                     instruction_block->or_ireg_by_ireg_u64(
                         target_reg->reg.i,
                         lhs_target_reg,
@@ -255,7 +255,7 @@ namespace basecode::compiler {
                 else {
                     auto rhs_target_reg = context.pop_scratch_register();
                     auto lhs_target_reg = context.pop_scratch_register();
-                    auto target_reg = instruction_block->current_target_register();
+                    auto target_reg = context.assembler->current_target_register();
                     instruction_block->and_ireg_by_ireg_u64(
                         target_reg->reg.i,
                         lhs_target_reg,
@@ -278,17 +278,17 @@ namespace basecode::compiler {
         }
 
         if (cleanup_right)
-            instruction_block->free_reg(rhs_reg);
+            context.assembler->free_reg(rhs_reg);
 
         if (cleanup_left)
-            instruction_block->free_reg(lhs_reg);
+            context.assembler->free_reg(lhs_reg);
     }
 
     void binary_operator::emit_arithmetic_operator(
             common::result& r,
             emit_context_t& context,
             vm::instruction_block* instruction_block) {
-        auto result_reg = instruction_block->current_target_register();
+        auto result_reg = context.assembler->current_target_register();
 
         vm::i_registers_t lhs_reg, rhs_reg;
         auto cleanup_left = false;
@@ -298,7 +298,7 @@ namespace basecode::compiler {
         if (lhs_var != nullptr)
             lhs_reg = lhs_var->value_reg.i;
         else {
-            if (!instruction_block->allocate_reg(lhs_reg)) {
+            if (!context.assembler->allocate_reg(lhs_reg)) {
             }
             cleanup_left = true;
         }
@@ -307,18 +307,18 @@ namespace basecode::compiler {
         if (rhs_var != nullptr)
             rhs_reg = rhs_var->value_reg.i;
         else {
-            if (!instruction_block->allocate_reg(rhs_reg)) {
+            if (!context.assembler->allocate_reg(rhs_reg)) {
             }
             cleanup_right = true;
         }
 
-        instruction_block->push_target_register(lhs_reg);
+        context.assembler->push_target_register(lhs_reg);
         _lhs->emit(r, context);
-        instruction_block->pop_target_register();
+        context.assembler->pop_target_register();
 
-        instruction_block->push_target_register(rhs_reg);
+        context.assembler->push_target_register(rhs_reg);
         _rhs->emit(r, context);
-        instruction_block->pop_target_register();
+        context.assembler->pop_target_register();
 
         switch (operator_type()) {
             case operator_type_t::add: {
@@ -417,10 +417,10 @@ namespace basecode::compiler {
         }
 
         if (cleanup_left)
-            instruction_block->free_reg(lhs_reg);
+            context.assembler->free_reg(lhs_reg);
 
         if (cleanup_right)
-            instruction_block->free_reg(rhs_reg);
+            context.assembler->free_reg(rhs_reg);
     }
 
     void binary_operator::on_owned_elements(element_list_t& list) {

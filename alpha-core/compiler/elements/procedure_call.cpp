@@ -52,7 +52,7 @@ namespace basecode::compiler {
             instruction_block->call(identifier->symbol()->name());
         }
 
-        auto target_reg = instruction_block->current_target_register();
+        auto target_reg = context.assembler->current_target_register();
         if (target_reg != nullptr) {
             if (!procedure_type->returns().as_list().empty())
                 instruction_block->pop(vm::op_sizes::qword, target_reg->reg.i);

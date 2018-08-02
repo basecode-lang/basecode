@@ -18,7 +18,9 @@
 
 namespace basecode::compiler {
 
-    bool variable_t::read(vm::instruction_block* block) {
+    bool variable_t::read(
+            vm::assembler* assembler,
+            vm::instruction_block* block) {
         if (!address_loaded) {
             if (usage == identifier_usage_t::heap) {
                 if (address_offset != 0) {
@@ -57,7 +59,7 @@ namespace basecode::compiler {
             requires_read = false;
         }
 
-        auto target_reg = block->current_target_register();
+        auto target_reg = assembler->current_target_register();
         if (target_reg != nullptr && target_reg->reg.i != value_reg.i) {
             block->move_ireg_to_ireg(target_reg->reg.i, value_reg.i);
             block
@@ -68,8 +70,10 @@ namespace basecode::compiler {
         return true;
     }
 
-    bool variable_t::write(vm::instruction_block* block) {
-        auto target_reg = block->current_target_register();
+    bool variable_t::write(
+            vm::assembler* assembler,
+            vm::instruction_block* block) {
+        auto target_reg = assembler->current_target_register();
         if (target_reg == nullptr)
             return false;
 
@@ -138,16 +142,16 @@ namespace basecode::compiler {
         };
 
         if (usage == identifier_usage_t::heap) {
-            if (!block->allocate_reg(new_var.address_reg)) {
+            if (!assembler->allocate_reg(new_var.address_reg)) {
             }
         }
 
         if (new_var.type->number_class() == type_number_class_t::integer) {
-            if (!block->allocate_reg(new_var.value_reg.i)) {
+            if (!assembler->allocate_reg(new_var.value_reg.i)) {
             }
             new_var.requires_read = true;
         } else if (new_var.type->number_class() == type_number_class_t::floating_point) {
-            if (!block->allocate_reg(new_var.value_reg.f)) {
+            if (!assembler->allocate_reg(new_var.value_reg.f)) {
             }
             new_var.requires_read = true;
         } else {
@@ -185,11 +189,11 @@ namespace basecode::compiler {
         auto var = variable(name);
         if (var != nullptr) {
             if (var->usage == identifier_usage_t::heap)
-                assembler->current_block()->free_reg(var->address_reg);
+                assembler->free_reg(var->address_reg);
             if (var->type->number_class() == type_number_class_t::integer) {
-                assembler->current_block()->free_reg(var->value_reg.i);
+                assembler->free_reg(var->value_reg.i);
             } else {
-                assembler->current_block()->free_reg(var->value_reg.f);
+                assembler->free_reg(var->value_reg.f);
             }
             variables.erase(name);
         }

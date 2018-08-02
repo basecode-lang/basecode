@@ -27,14 +27,14 @@ namespace basecode::compiler {
             common::result& r,
             emit_context_t& context) {
         auto instruction_block = context.assembler->current_block();
-        auto target_reg = instruction_block->current_target_register();
+        auto target_reg = context.assembler->current_target_register();
         vm::i_registers_t rhs_reg;
-        if (!instruction_block->allocate_reg(rhs_reg)) {
+        if (!context.assembler->allocate_reg(rhs_reg)) {
             // XXX: error
         }
-        instruction_block->push_target_register(rhs_reg);
+        context.assembler->push_target_register(rhs_reg);
         _rhs->emit(r, context);
-        instruction_block->pop_target_register();
+        context.assembler->pop_target_register();
 
         auto rhs_size = vm::op_size_for_byte_size(_rhs->infer_type(context.program)->size_in_bytes());
 
@@ -54,7 +54,7 @@ namespace basecode::compiler {
                 break;
         }
 
-        instruction_block->free_reg(rhs_reg);
+        context.assembler->free_reg(rhs_reg);
 
         return true;
     }
