@@ -23,6 +23,10 @@ namespace basecode::compiler {
         bool on_initialize(
             common::result& r,
             compiler::program* program) override;
+
+        type_number_class_t on_number_class() const override;
+
+        type_access_model_t on_access_model() const override;
     };
 
 };

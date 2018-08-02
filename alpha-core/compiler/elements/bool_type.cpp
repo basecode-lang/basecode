@@ -28,4 +28,12 @@ namespace basecode::compiler {
         return true;
     }
 
+    type_access_model_t bool_type::on_access_model() const {
+        return type_access_model_t::value;
+    }
+
+    type_number_class_t bool_type::on_number_class() const {
+        return type_number_class_t::integer;
+    }
+
 };

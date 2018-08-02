@@ -51,6 +51,7 @@ add_library(
 
     compiler/compiler_types.h
     compiler/session.cpp compiler/session.h
+    compiler/emit_context.cpp compiler/emit_context.h
     compiler/elements/type.cpp compiler/elements/type.h
     compiler/elements/cast.cpp compiler/elements/cast.h
     compiler/elements/field.cpp compiler/elements/field.h
@@ -78,7 +79,6 @@ add_library(
     compiler/elements/initializer.cpp compiler/elements/initializer.h
     compiler/elements/string_type.cpp compiler/elements/string_type.h
     compiler/elements/module_type.cpp compiler/elements/module_type.h
-    compiler/elements/emit_context.cpp compiler/elements/emit_context.h
     compiler/elements/numeric_type.cpp compiler/elements/numeric_type.h
     compiler/elements/unknown_type.cpp compiler/elements/unknown_type.h
     compiler/elements/pointer_type.cpp compiler/elements/pointer_type.h

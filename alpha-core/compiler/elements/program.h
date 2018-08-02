@@ -313,7 +313,8 @@ namespace basecode::compiler {
             const std::string& name,
             int64_t min,
             uint64_t max,
-            bool is_signed);
+            bool is_signed,
+            type_number_class_t number_class);
 
         composite_type* make_struct_type(
             common::result& r,

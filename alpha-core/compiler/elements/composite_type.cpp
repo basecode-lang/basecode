@@ -59,6 +59,10 @@ namespace basecode::compiler {
         return _type;
     }
 
+    type_access_model_t composite_type::on_access_model() const {
+        return type_access_model_t::pointer;
+    }
+
     void composite_type::on_owned_elements(element_list_t& list) {
         for (auto element : _fields.as_list())
             list.emplace_back(element);

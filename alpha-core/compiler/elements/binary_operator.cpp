@@ -16,6 +16,7 @@
 #include "symbol_element.h"
 #include "binary_operator.h"
 #include "integer_literal.h"
+#include "identifier_reference.h"
 
 namespace basecode::compiler {
 
@@ -67,46 +68,19 @@ namespace basecode::compiler {
                 break;
             }
             case operator_type_t::assignment: {
-                vm::i_registers_t lhs_reg, rhs_reg;
-                if (!instruction_block->allocate_reg(lhs_reg)) {
-                    // XXX: error
-                }
+                auto var = context.variable_for_element(_lhs);
 
+                vm::i_registers_t rhs_reg;
                 if (!instruction_block->allocate_reg(rhs_reg)) {
-                    // XXX: error
                 }
 
-                instruction_block->push_target_register(lhs_reg);
-                context.push_access(emit_access_type_t::write);
                 _lhs->emit(r, context);
-                context.pop_access();
-                instruction_block->pop_target_register();
-
                 instruction_block->push_target_register(rhs_reg);
-                context.push_access(emit_access_type_t::read);
                 _rhs->emit(r, context);
-                context.pop_access();
-                instruction_block->pop_target_register();
-
-                int64_t offset = 0;
-                auto identifier = dynamic_cast<compiler::identifier*>(_lhs);
-                if (identifier->usage() == identifier_usage_t::stack) {
-                    auto entry = instruction_block->stack_frame()->find_up(identifier->symbol()->name());
-                    if (entry == nullptr) {
-                        // XXX: this is bad
-                        return false;
-                    }
-                    lhs_reg = vm::i_registers_t::fp;
-                    offset = entry->offset;
-                }
-
-                auto lhs_identifier = dynamic_cast<compiler::identifier*>(_lhs);
-                auto lhs_size = vm::op_size_for_byte_size(lhs_identifier->type()->size_in_bytes());
-                instruction_block->store_from_ireg(lhs_size, lhs_reg, rhs_reg, offset);
+                var->write(instruction_block);
                 instruction_block->pop_target_register();
 
                 instruction_block->free_reg(rhs_reg);
-                instruction_block->free_reg(lhs_reg);
                 break;
             }
             default:
@@ -207,12 +181,25 @@ namespace basecode::compiler {
             emit_context_t& context,
             vm::instruction_block* instruction_block) {
         vm::i_registers_t lhs_reg, rhs_reg;
-        if (!instruction_block->allocate_reg(lhs_reg)) {
-            // XXX: error
+        auto cleanup_left = false;
+        auto cleanup_right = false;
+
+        auto lhs_var = context.variable_for_element(_lhs);
+        if (lhs_var != nullptr)
+            lhs_reg = lhs_var->value_reg.i;
+        else {
+            if (!instruction_block->allocate_reg(lhs_reg)) {
+            }
+            cleanup_left = true;
         }
 
-        if (!instruction_block->allocate_reg(rhs_reg)) {
-            // XXX: error
+        auto rhs_var = context.variable_for_element(_rhs);
+        if (rhs_var != nullptr)
+            rhs_reg = rhs_var->value_reg.i;
+        else {
+            if (!instruction_block->allocate_reg(rhs_reg)) {
+            }
+            cleanup_right = true;
         }
 
         instruction_block->push_target_register(lhs_reg);
@@ -290,8 +277,11 @@ namespace basecode::compiler {
             }
         }
 
-        instruction_block->free_reg(rhs_reg);
-        instruction_block->free_reg(lhs_reg);
+        if (cleanup_right)
+            instruction_block->free_reg(rhs_reg);
+
+        if (cleanup_left)
+            instruction_block->free_reg(lhs_reg);
     }
 
     void binary_operator::emit_arithmetic_operator(
@@ -301,12 +291,25 @@ namespace basecode::compiler {
         auto result_reg = instruction_block->current_target_register();
 
         vm::i_registers_t lhs_reg, rhs_reg;
-        if (!instruction_block->allocate_reg(lhs_reg)) {
-            // XXX: error
+        auto cleanup_left = false;
+        auto cleanup_right = false;
+
+        auto lhs_var = context.variable_for_element(_lhs);
+        if (lhs_var != nullptr)
+            lhs_reg = lhs_var->value_reg.i;
+        else {
+            if (!instruction_block->allocate_reg(lhs_reg)) {
+            }
+            cleanup_left = true;
         }
 
-        if (!instruction_block->allocate_reg(rhs_reg)) {
-            // XXX: error
+        auto rhs_var = context.variable_for_element(_rhs);
+        if (rhs_var != nullptr)
+            rhs_reg = rhs_var->value_reg.i;
+        else {
+            if (!instruction_block->allocate_reg(rhs_reg)) {
+            }
+            cleanup_right = true;
         }
 
         instruction_block->push_target_register(lhs_reg);
@@ -413,8 +416,11 @@ namespace basecode::compiler {
                 break;
         }
 
-        instruction_block->free_reg(lhs_reg);
-        instruction_block->free_reg(rhs_reg);
+        if (cleanup_left)
+            instruction_block->free_reg(lhs_reg);
+
+        if (cleanup_right)
+            instruction_block->free_reg(rhs_reg);
     }
 
     void binary_operator::on_owned_elements(element_list_t& list) {

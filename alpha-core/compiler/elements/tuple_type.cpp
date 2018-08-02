@@ -31,4 +31,8 @@ namespace basecode::compiler {
         return true;
     }
 
+    type_access_model_t tuple_type::on_access_model() const {
+        return type_access_model_t::pointer;
+    }
+
 };

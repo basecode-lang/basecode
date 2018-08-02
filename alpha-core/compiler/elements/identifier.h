@@ -11,14 +11,10 @@
 
 #pragma once
 
+#include <compiler/compiler_types.h>
 #include "element.h"
 
 namespace basecode::compiler {
-
-    enum class identifier_usage_t : uint8_t {
-        heap = 1,
-        stack
-    };
 
     class identifier : public element {
     public:
@@ -63,10 +59,6 @@ namespace basecode::compiler {
         void on_owned_elements(element_list_t& list) override;
 
         compiler::type* on_infer_type(const compiler::program* program) override;
-
-    private:
-        void emit_stack_based_load(
-            vm::instruction_block* instruction_block);
 
     private:
         bool _inferred_type = false;

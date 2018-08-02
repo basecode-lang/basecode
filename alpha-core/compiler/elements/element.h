@@ -14,8 +14,8 @@
 #include <cstdint>
 #include <common/result.h>
 #include <common/id_pool.h>
-#include "emit_context.h"
 #include "element_types.h"
+#include "compiler/emit_context.h"
 
 namespace basecode::compiler {
 

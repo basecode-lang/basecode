@@ -47,21 +47,20 @@
 #foreign print := proc(format: string, values: ...any) @alias "fmt_print";
 
 print("\n------ this code is running in the compiler!\n");
-
 print("hello world\n");
 
 // XXX: there's a memory alignment issue with the signed integer
 // XXX: signed integers aren't type inferring properly
-s: s32 := -32768;
-b := 6;
-c := 7;
+//s: s32 := -32768;
+//b := 6;
+//c := 7;
 //b, c := c, b;
 
 a := 2;
 a := a shl 4;
 
 print("a := %hhu\n", a);
-print("s := %d\n", s);
+//print("s := %d\n", s);
 
 //if a == 32 {
 //    print("we have a match!\n");

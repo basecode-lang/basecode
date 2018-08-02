@@ -16,13 +16,11 @@
 #include <vm/terp.h>
 #include <boost/any.hpp>
 #include <vm/assembler.h>
+#include <vm/stack_frame.h>
+#include <vm/instruction_block.h>
+#include <compiler/compiler_types.h>
 
 namespace basecode::compiler {
-
-    enum class emit_access_type_t {
-        read,
-        write
-    };
 
     struct block_data_t {
         bool recurse = true;
@@ -31,6 +29,26 @@ namespace basecode::compiler {
     struct if_data_t {
         std::string true_branch_label;
         std::string false_branch_label;
+    };
+
+    struct variable_t {
+        bool read(vm::instruction_block* block);
+
+        bool write(vm::instruction_block* block);
+
+        std::string name;
+        bool written = false;
+        identifier_usage_t usage;
+        int64_t address_offset = 0;
+        vm::i_registers_t address_reg;
+        union {
+            vm::i_registers_t i;
+            vm::f_registers_t f;
+        } value_reg;
+        bool requires_read = false;
+        bool address_loaded = false;
+        compiler::type* type = nullptr;
+        vm::stack_frame_entry_t* frame_entry = nullptr;
     };
 
     class program;
@@ -58,9 +76,15 @@ namespace basecode::compiler {
             const std::string& true_label_name,
             const std::string& false_label_name);
 
-        void pop_access();
-
         void push_block(bool recurse);
+
+        variable_t* allocate_variable(
+            common::result& r,
+            const std::string& name,
+            compiler::type* type,
+            identifier_usage_t usage,
+            vm::stack_frame_entry_t* frame_entry = nullptr,
+            vm::instruction_block* block = nullptr);
 
         void clear_scratch_registers();
 
@@ -68,18 +92,20 @@ namespace basecode::compiler {
 
         vm::i_registers_t pop_scratch_register();
 
-        emit_access_type_t current_access() const;
+        void free_variable(const std::string& name);
 
-        void push_access(emit_access_type_t type);
+        variable_t* variable(const std::string& name);
 
         void push_scratch_register(vm::i_registers_t reg);
+
+        variable_t* variable_for_element(compiler::element* element);
 
         vm::terp* terp = nullptr;
         vm::assembler* assembler = nullptr;
         compiler::program* program = nullptr;
         std::stack<boost::any> data_stack {};
-        std::stack<emit_access_type_t> access_stack {};
         std::stack<vm::i_registers_t> scratch_registers {};
+        std::unordered_map<std::string, variable_t> variables {};
     };
 
 };

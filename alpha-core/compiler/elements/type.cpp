@@ -58,8 +58,24 @@ namespace basecode::compiler {
         _size_in_bytes = value;
     }
 
+    type_access_model_t type::access_model() const {
+        return on_access_model();
+    }
+
+    type_number_class_t type::number_class() const {
+        return on_number_class();
+    }
+
     compiler::symbol_element* type::symbol() const {
         return _symbol;
+    }
+
+    type_access_model_t type::on_access_model() const {
+        return type_access_model_t::none;
+    }
+
+    type_number_class_t type::on_number_class() const {
+        return type_number_class_t::none;
     }
 
     void type::symbol(compiler::symbol_element* value) {

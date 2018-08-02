@@ -45,4 +45,8 @@ namespace basecode::compiler {
         return _base_type;
     }
 
+    type_access_model_t pointer_type::on_access_model() const {
+        return type_access_model_t::pointer;
+    }
+
 };

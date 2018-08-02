@@ -45,6 +45,8 @@ namespace basecode::vm {
             auto entry = current_frame->find(name);
             if (entry != nullptr)
                 return entry;
+            if (current_frame->parent_block == nullptr)
+                break;
             current_frame = current_frame->parent_block->stack_frame();
         }
         return nullptr;

@@ -19,6 +19,23 @@ namespace basecode::compiler {
 
     class session;
 
+    enum class type_access_model_t {
+        none,
+        value,
+        pointer
+    };
+
+    enum class type_number_class_t {
+        none,
+        integer,
+        floating_point,
+    };
+
+    enum class identifier_usage_t : uint8_t {
+        heap = 1,
+        stack
+    };
+
     using path_list_t = std::vector<boost::filesystem::path>;
 
     enum class session_compile_phase_t : uint8_t {

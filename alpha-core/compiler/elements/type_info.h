@@ -25,6 +25,8 @@ namespace basecode::compiler {
         bool on_initialize(
             common::result& r,
             compiler::program* program) override;
+
+        type_access_model_t on_access_model() const override;
     };
 
 };

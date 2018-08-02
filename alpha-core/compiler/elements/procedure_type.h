@@ -52,6 +52,8 @@ namespace basecode::compiler {
 
         bool on_is_constant() const override;
 
+        type_access_model_t on_access_model() const override;
+
         void on_owned_elements(element_list_t& list) override;
 
     private:

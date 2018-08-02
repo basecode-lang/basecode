@@ -642,6 +642,7 @@ namespace basecode::compiler {
             ro_list.emplace_back(str);
         }
 
+        std::vector<variable_t*> literals {};
         for (const auto& section : vars_by_section) {
             instruction_block->section(section.first);
             instruction_block->current_entry()->blank_lines(1);
@@ -659,6 +660,18 @@ namespace basecode::compiler {
                             for (auto str : str_list) {
                                 auto var_label = instruction_block->make_label(str->label_name());
                                 current_entry->label(var_label);
+
+                                auto var = context.allocate_variable(
+                                    r,
+                                    var_label->name(),
+                                    context.program->find_type({.name = "string"}),
+                                    identifier_usage_t::heap,
+                                    nullptr,
+                                    instruction_block);
+                                if (var != nullptr) {
+                                    var->address_offset = 4;
+                                    literals.emplace_back(var);
+                                }
                             }
                             current_entry->blank_lines(1);
                         }
@@ -666,6 +679,7 @@ namespace basecode::compiler {
                             "\"{}\"",
                             string_literal->value()));
                         instruction_block->string(string_literal->escaped_value());
+
                         break;
                     }
                     case element_type_t::identifier: {
@@ -774,6 +788,8 @@ namespace basecode::compiler {
         top_level_block->current_entry()->blank_lines(1);
         top_level_block->memo();
         top_level_block->current_entry()->label(top_level_block->make_label("_initializer"));
+        for (auto var : literals)
+            var->read(top_level_block);
 
         block_list_t implicit_blocks {};
         auto module_blocks = elements().find_by_type(element_type_t::module_block);
@@ -1222,13 +1238,15 @@ namespace basecode::compiler {
             const std::string& name,
             int64_t min,
             uint64_t max,
-            bool is_signed) {
+            bool is_signed,
+            type_number_class_t number_class) {
         auto type = new compiler::numeric_type(
             parent_scope,
             make_symbol(parent_scope, name),
             min,
             max,
-            is_signed);
+            is_signed,
+            number_class);
         if (!type->initialize(r, this))
             return nullptr;
 

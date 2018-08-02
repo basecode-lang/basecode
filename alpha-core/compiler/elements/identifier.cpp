@@ -28,82 +28,28 @@ namespace basecode::compiler {
     bool identifier::on_emit(
             common::result& r,
             emit_context_t& context) {
+        if (_type->element_type() == element_type_t::namespace_type)
+            return true;
+
         auto instruction_block = context.assembler->current_block();
 
-        if (_type->element_type() == element_type_t::namespace_type) {
-            return true;
-        }
+        vm::stack_frame_entry_t* frame_entry = nullptr;
+        auto stack_frame = instruction_block->stack_frame();
+        if (stack_frame != nullptr)
+            frame_entry = stack_frame->find_up(_symbol->name());
 
-        auto target_reg = instruction_block->current_target_register();
-        if (target_reg == nullptr)
-            return true;
-
-        if (context.current_access() == emit_access_type_t::write) {
-            if (context.assembler->in_procedure_scope()
-            &&  _usage == identifier_usage_t::stack) {
-                emit_stack_based_load(instruction_block);
-            } else {
-                instruction_block->move_label_to_ireg(
-                    target_reg->reg.i,
-                    _symbol->name());
-            }
-        } else {
-            switch (_type->element_type()) {
-                case element_type_t::bool_type:
-                case element_type_t::numeric_type: {
-                    if (context.assembler->in_procedure_scope()
-                    &&  _usage == identifier_usage_t::stack) {
-                        emit_stack_based_load(instruction_block);
-                    } else {
-                        vm::i_registers_t ptr_reg;
-                        if (!instruction_block->allocate_reg(ptr_reg)) {
-                            // XXX: error!
-                        }
-
-                        instruction_block->move_label_to_ireg(ptr_reg, _symbol->name());
-                        instruction_block->load_to_ireg(
-                            vm::op_size_for_byte_size(_type->size_in_bytes()),
-                            target_reg->reg.i,
-                            ptr_reg);
-                        instruction_block->free_reg(ptr_reg);
-                    }
-                    break;
-                }
-                default: {
-                    instruction_block->move_label_to_ireg(
-                        target_reg->reg.i,
-                        _symbol->name());
-                    break;
-                }
-            }
-        }
-
+        auto var = context.allocate_variable(
+            r,
+            _symbol->name(),
+            _type,
+            _usage,
+            frame_entry);
+        var->read(instruction_block);
         return true;
     }
 
     compiler::type* identifier::type() {
         return _type;
-    }
-
-    void identifier::emit_stack_based_load(
-            vm::instruction_block* instruction_block) {
-        auto target_reg = instruction_block->current_target_register();
-        auto entry = instruction_block->stack_frame()->find_up(_symbol->name());
-        if (entry == nullptr) {
-            // XXX: error
-            return;
-        }
-        instruction_block->load_to_ireg(
-            vm::op_sizes::qword,
-            target_reg->reg.i,
-            vm::i_registers_t::fp,
-            entry->offset);
-        instruction_block
-            ->current_entry()
-            ->comment(fmt::format(
-                "{} identifier: {}",
-                stack_frame_entry_type_name(entry->type),
-                symbol()->name()));
     }
 
     bool identifier::inferred_type() const {

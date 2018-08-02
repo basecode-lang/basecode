@@ -148,8 +148,20 @@ namespace basecode::compiler {
         return _type_parameters;
     }
 
+    uint64_t procedure_type::foreign_address() const {
+        return _foreign_address;
+    }
+
+    void procedure_type::foreign_address(uint64_t value) {
+        _foreign_address = value;
+    }
+
     procedure_instance_list_t& procedure_type::instances() {
         return _instances;
+    }
+
+    type_access_model_t procedure_type::on_access_model() const {
+        return type_access_model_t::pointer;
     }
 
     void procedure_type::on_owned_elements(element_list_t& list) {
@@ -161,14 +173,6 @@ namespace basecode::compiler {
 
         for (auto element : _parameters.as_list())
             list.emplace_back(element);
-    }
-
-    uint64_t procedure_type::foreign_address() const {
-        return _foreign_address;
-    }
-
-    void procedure_type::foreign_address(uint64_t value) {
-        _foreign_address = value;
     }
 
 };

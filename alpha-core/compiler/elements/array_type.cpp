@@ -129,4 +129,8 @@ namespace basecode::compiler {
         return _entry_type;
     }
 
+    type_access_model_t array_type::on_access_model() const {
+        return type_access_model_t::pointer;
+    }
+
 };

@@ -74,4 +74,8 @@ namespace basecode::compiler {
         _underlying_type = value;
     }
 
+    type_access_model_t any_type::on_access_model() const {
+        return type_access_model_t::pointer;
+    }
+
 };

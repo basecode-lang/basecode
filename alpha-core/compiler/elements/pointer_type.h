@@ -30,6 +30,8 @@ namespace basecode::compiler {
             common::result& r,
             compiler::program* program) override;
 
+        type_access_model_t on_access_model() const override;
+
     private:
         compiler::type* _base_type = nullptr;
     };

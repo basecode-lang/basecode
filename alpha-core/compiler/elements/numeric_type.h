@@ -22,6 +22,7 @@ namespace basecode::compiler {
         uint64_t max;
         size_t size_in_bytes;
         bool is_signed = false;
+        type_number_class_t number_class;
     };
 
     using numeric_type_map_t = std::unordered_map<std::string, numeric_type_properties_t*>;
@@ -40,7 +41,8 @@ namespace basecode::compiler {
             compiler::symbol_element* symbol,
             int64_t min,
             uint64_t max,
-            bool is_signed);
+            bool is_signed,
+            type_number_class_t number_class);
 
         int64_t min() const;
 
@@ -50,16 +52,16 @@ namespace basecode::compiler {
 
     protected:
         static inline std::vector<numeric_type_properties_t> s_type_properties = {
-            {"u8",   0,         UINT8_MAX,   1},
-            {"u16",  0,         UINT16_MAX,  2},
-            {"u32",  0,         UINT32_MAX,  4},
-            {"u64",  0,         UINT64_MAX,  8},
-            {"s8",   INT8_MIN,  INT8_MAX,    1, true},
-            {"s16",  INT16_MIN, INT16_MAX,   2, true},
-            {"s32",  INT32_MIN, INT32_MAX,   4, true},
-            {"s64",  INT64_MIN, INT64_MAX,   8, true},
-            {"f32",  0,         UINT32_MAX,  4, true},
-            {"f64",  0,         UINT64_MAX,  8, true},
+            {"u8",   0,         UINT8_MAX,   1, false, type_number_class_t::integer},
+            {"u16",  0,         UINT16_MAX,  2, false, type_number_class_t::integer},
+            {"u32",  0,         UINT32_MAX,  4, false, type_number_class_t::integer},
+            {"u64",  0,         UINT64_MAX,  8, false, type_number_class_t::integer},
+            {"s8",   INT8_MIN,  INT8_MAX,    1, true,  type_number_class_t::integer},
+            {"s16",  INT16_MIN, INT16_MAX,   2, true,  type_number_class_t::integer},
+            {"s32",  INT32_MIN, INT32_MAX,   4, true,  type_number_class_t::integer},
+            {"s64",  INT64_MIN, INT64_MAX,   8, true,  type_number_class_t::integer},
+            {"f32",  0,         UINT32_MAX,  4, true,  type_number_class_t::floating_point},
+            {"f64",  0,         UINT64_MAX,  8, true,  type_number_class_t::floating_point},
         };
 
         static inline numeric_type_map_t s_types_map = {
@@ -79,10 +81,15 @@ namespace basecode::compiler {
             common::result& r,
             compiler::program* program) override;
 
+        type_number_class_t on_number_class() const override;
+
+        type_access_model_t on_access_model() const override;
+
     private:
         int64_t _min;
         uint64_t _max;
         bool _is_signed;
+        type_number_class_t _number_class;
     };
 
 };

@@ -24,13 +24,12 @@ namespace basecode::compiler {
     bool string_literal::on_emit(
             common::result& r,
             emit_context_t& context) {
-        auto instruction_block = context.assembler->current_block();
-        auto target_reg = instruction_block->current_target_register();
-        // XXX: this is a temporary hack to skip past the string length
-        instruction_block->move_label_to_ireg_with_offset(
-            target_reg->reg.i,
-            label_name(),
-            4);
+//        auto instruction_block = context.assembler->current_block();
+//        auto target_reg = instruction_block->current_target_register();
+//        instruction_block->move_label_to_ireg_with_offset(
+//            target_reg->reg.i,
+//            label_name(),
+//            4);
         return true;
     }
 
