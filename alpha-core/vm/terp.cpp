@@ -734,13 +734,13 @@ namespace basecode::vm {
     }
 
     uint64_t terp::pop() {
-        uint64_t value = *qword_ptr(_registers.sp);
+        uint64_t value = read(op_sizes::qword, _registers.sp);
         _registers.sp += sizeof(uint64_t);
         return value;
     }
 
     uint64_t terp::peek() const {
-        uint64_t value = *qword_ptr(_registers.sp);
+        uint64_t value = read(op_sizes::qword, _registers.sp);
         return value;
     }
 
@@ -841,6 +841,10 @@ namespace basecode::vm {
     }
 
     bool terp::step(common::result& r) {
+//        if (_registers.pc == 0x340) {
+//            fmt::print("BRK\n");
+//        }
+
         instruction_t inst;
         auto inst_size = _icache.fetch(r, inst);
         if (inst_size == 0)
@@ -920,7 +924,7 @@ namespace basecode::vm {
                     address += offset;
                 }
 
-                uint64_t value = *qword_ptr(address);
+                uint64_t value = read(inst.size, address);
                 if (!set_target_operand_value(r, inst, 0, value))
                     return false;
 
@@ -947,7 +951,7 @@ namespace basecode::vm {
                     address += offset;
                 }
 
-                *qword_ptr(address) = value;
+                write(inst.size, address, value);
 
                 _registers.flags(register_file_t::flags_t::carry, false);
                 _registers.flags(register_file_t::flags_t::subtract, false);
@@ -1750,7 +1754,7 @@ namespace basecode::vm {
                     return false;
 
                 size_t swi_offset = sizeof(uint64_t) * index;
-                uint64_t swi_address = *qword_ptr(swi_offset);
+                uint64_t swi_address = read(op_sizes::qword, swi_offset);
                 if (swi_address != 0) {
                     // XXX: what state should we save and restore here?
                     push(_registers.pc);
@@ -1875,7 +1879,7 @@ namespace basecode::vm {
 
     void terp::push(uint64_t value) {
         _registers.sp -= sizeof(uint64_t);
-        *qword_ptr(_registers.sp) = value;
+        write(op_sizes::qword, _registers.sp, value);
         return;
     }
 
@@ -2108,7 +2112,7 @@ namespace basecode::vm {
 
     void terp::swi(uint8_t index, uint64_t address) {
         size_t swi_address = interrupt_vector_table_start + (sizeof(uint64_t) * index);
-        *qword_ptr(swi_address) = address;
+        write(op_sizes::qword, swi_address, address);
     }
 
     const register_file_t& terp::register_file() const {
@@ -2130,10 +2134,50 @@ namespace basecode::vm {
         _address_blocks.insert(std::make_pair(_head_heap_block->address, _head_heap_block));
     }
 
+    // XXX: need to add support for both big and little endian
+    uint64_t terp::read(op_sizes size, uint64_t address) const {
+        uint8_t* relative_heap_ptr = _heap + address;
+        uint64_t result = 0;
+        auto result_ptr = reinterpret_cast<uint8_t*>(&result);
+        switch (size) {
+            case op_sizes::none: {
+                break;
+            }
+            case op_sizes::byte: {
+                result = *relative_heap_ptr;
+                break;
+            }
+            case op_sizes::word: {
+                *(result_ptr + 0) = relative_heap_ptr[0];
+                *(result_ptr + 1) = relative_heap_ptr[1];
+                break;
+            }
+            case op_sizes::dword: {
+                *(result_ptr + 0) = relative_heap_ptr[0];
+                *(result_ptr + 1) = relative_heap_ptr[1];
+                *(result_ptr + 2) = relative_heap_ptr[2];
+                *(result_ptr + 3) = relative_heap_ptr[3];
+                break;
+            }
+            case op_sizes::qword: {
+                *(result_ptr + 0) = relative_heap_ptr[0];
+                *(result_ptr + 1) = relative_heap_ptr[1];
+                *(result_ptr + 2) = relative_heap_ptr[2];
+                *(result_ptr + 3) = relative_heap_ptr[3];
+                *(result_ptr + 4) = relative_heap_ptr[4];
+                *(result_ptr + 5) = relative_heap_ptr[5];
+                *(result_ptr + 6) = relative_heap_ptr[6];
+                *(result_ptr + 7) = relative_heap_ptr[7];
+                break;
+            }
+        }
+        return result;
+    }
+
     uint64_t terp::heap_vector(heap_vectors_t vector) const {
-        size_t heap_vector_address = heap_vector_table_start
+        uint64_t heap_vector_address = heap_vector_table_start
             + (sizeof(uint64_t) * static_cast<uint8_t>(vector));
-        return *qword_ptr(heap_vector_address);
+        return read(op_sizes::qword, heap_vector_address);
     }
 
     const meta_information_t& terp::meta_information() const {
@@ -2143,7 +2187,7 @@ namespace basecode::vm {
     void terp::heap_vector(heap_vectors_t vector, uint64_t address) {
         size_t heap_vector_address = heap_vector_table_start
             + (sizeof(uint64_t) * static_cast<uint8_t>(vector));
-        *qword_ptr(heap_vector_address) = address;
+        write(op_sizes::qword, heap_vector_address, address);
     }
 
     std::string terp::disassemble(common::result& r, uint64_t address) {
@@ -2396,6 +2440,44 @@ namespace basecode::vm {
             case op_sizes::qword:
             default:
                 return (value & mask_qword_negative) != 0;
+        }
+    }
+
+    // XXX: need to add support for both big and little endian
+    void terp::write(op_sizes size, uint64_t address, uint64_t value) {
+        uint8_t* relative_heap_ptr = _heap + address;
+        auto value_ptr = reinterpret_cast<uint8_t*>(&value);
+        switch (size) {
+            case op_sizes::none: {
+                break;
+            }
+            case op_sizes::byte: {
+                *relative_heap_ptr = static_cast<uint8_t>(value);
+                break;
+            }
+            case op_sizes::word: {
+                *(relative_heap_ptr + 0) = value_ptr[0];
+                *(relative_heap_ptr + 1) = value_ptr[1];
+                break;
+            }
+            case op_sizes::dword: {
+                *(relative_heap_ptr + 0) = value_ptr[0];
+                *(relative_heap_ptr + 1) = value_ptr[1];
+                *(relative_heap_ptr + 2) = value_ptr[2];
+                *(relative_heap_ptr + 3) = value_ptr[3];
+                break;
+            }
+            case op_sizes::qword: {
+                *(relative_heap_ptr + 0) = value_ptr[0];
+                *(relative_heap_ptr + 1) = value_ptr[1];
+                *(relative_heap_ptr + 2) = value_ptr[2];
+                *(relative_heap_ptr + 3) = value_ptr[3];
+                *(relative_heap_ptr + 4) = value_ptr[4];
+                *(relative_heap_ptr + 5) = value_ptr[5];
+                *(relative_heap_ptr + 6) = value_ptr[6];
+                *(relative_heap_ptr + 7) = value_ptr[7];
+                break;
+            }
         }
     }
 

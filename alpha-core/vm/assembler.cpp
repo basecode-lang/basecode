@@ -46,22 +46,7 @@ namespace basecode::vm {
                     case block_entry_type_t::data_definition: {
                         auto data_def = entry.data<data_definition_t>();
                         if (data_def->type == data_definition_type_t::initialized) {
-                            switch (data_def->size) {
-                                case op_sizes::byte:
-                                    *(_terp->byte_ptr(entry.address())) = static_cast<uint8_t>(data_def->value);
-                                    break;
-                                case op_sizes::word:
-                                    *(_terp->word_ptr(entry.address())) = static_cast<uint16_t>(data_def->value);
-                                    break;
-                                case op_sizes::dword:
-                                    *(_terp->dword_ptr(entry.address())) = static_cast<uint32_t>(data_def->value);
-                                    break;
-                                case op_sizes::qword:
-                                    *(_terp->qword_ptr(entry.address())) = data_def->value;
-                                    break;
-                                default:
-                                    break;
-                            }
+                            _terp->write(data_def->size, entry.address(), data_def->value);
                         }
                         break;
                     }

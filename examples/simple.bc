@@ -49,8 +49,6 @@
 print("\n------ this code is running in the compiler!\n");
 print("hello world\n");
 
-// XXX: there's a memory alignment issue with the signed integer
-s := -32768;
 b := 6;
 c := 7;
 
@@ -62,8 +60,10 @@ a := 2;
 a := a shl 4;
 
 print("a := %hhu\n", a);
-print("s := %d\n", s);
 print("d := %d\n", d);
+
+s := -32768;
+print("s := %hd\n", s);
 
 //if a == 32 {
 //    print("we have a match!\n");

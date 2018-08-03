@@ -720,23 +720,11 @@ namespace basecode::vm {
 
         const meta_information_t& meta_information() const;
 
-        inline uint8_t* byte_ptr(uint64_t address) const {
-            return _heap + address;
-        }
-
-        inline uint16_t* word_ptr(uint64_t address) const {
-            return reinterpret_cast<uint16_t*>(_heap + address);
-        }
-
-        inline uint64_t* qword_ptr(uint64_t address) const {
-            return reinterpret_cast<uint64_t*>(_heap + address);
-        }
-
-        inline uint32_t* dword_ptr(uint64_t address) const {
-            return reinterpret_cast<uint32_t*>(_heap + address);
-        }
+        uint64_t read(op_sizes size, uint64_t address) const;
 
         void heap_vector(heap_vectors_t vector, uint64_t address);
+
+        void write(op_sizes size, uint64_t address, uint64_t value);
 
         std::string disassemble(common::result& r, uint64_t address);
 
