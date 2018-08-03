@@ -52,23 +52,38 @@ print("hello world\n");
 b := 6;
 c := 7;
 
-d: u32;
-d := ((b * c) / 2) % 2;
+// XXX: add_identifier_to_scope isn't calling context.allocate_variable
+//d := ((b * c) / 2) % 2;
 //b, c := c, b;
 
 a := 2;
 a := a shl 4;
 
 print("a := %hhu\n", a);
-print("d := %d\n", d);
+//print("d := %d\n", d);
 
-s := -32768;
-print("s := %hd\n", s);
+// XXX: need to verify value ranges against declared types
+s := -65536;
+print("s := %d\n", s);
 
 //if a == 32 {
 //    print("we have a match!\n");
 //} else {
 //    print("no match\n");
 //};
+
+// XXX: after all of the primitive types are happy....
+// XXX: also, need to implement defer
+{
+    // create a stack frame
+    // variables here are allocated on the stack by default
+
+    {
+        {
+        };
+    };
+
+   // free stack frame
+}; // <--- parser bug here
 
 print("----------------------------------------------\n\n");
