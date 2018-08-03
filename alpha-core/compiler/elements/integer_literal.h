@@ -21,6 +21,8 @@ namespace basecode::compiler {
             block* parent_scope,
             uint64_t value);
 
+        bool is_signed() const;
+
         uint64_t value() const;
 
     protected:

@@ -12,6 +12,7 @@
 #include <vm/instruction_block.h>
 #include "type.h"
 #include "program.h"
+#include "numeric_type.h"
 #include "float_literal.h"
 
 namespace basecode::compiler {
@@ -39,6 +40,10 @@ namespace basecode::compiler {
         return _value;
     }
 
+    bool float_literal::is_signed() const {
+        return _value < 0;
+    }
+
     bool float_literal::on_is_constant() const {
         return true;
     }
@@ -49,7 +54,9 @@ namespace basecode::compiler {
     }
 
     compiler::type* float_literal::on_infer_type(const compiler::program* program) {
-        return program->find_type({.name = "f64"});
+        return program->find_type({
+            .name = numeric_type::narrow_to_value(_value)
+        });
     }
 
 };

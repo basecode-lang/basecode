@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <common/bytes.h>
 #include <vm/instruction_block.h>
 #include "program.h"
 #include "numeric_type.h"
@@ -33,6 +34,10 @@ namespace basecode::compiler {
             target_reg->reg.i,
             _value);
         return true;
+    }
+
+    bool integer_literal::is_signed() const {
+        return common::is_sign_bit_set(_value);
     }
 
     uint64_t integer_literal::value() const {

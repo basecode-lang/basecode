@@ -12,8 +12,19 @@
 #pragma once
 
 #include <cstdint>
+#include <climits>
 
 namespace basecode::common {
+
+    template <typename T>
+    inline T twos_complement(T value) {
+        return ~value + 1;
+    }
+
+    template <typename T>
+    inline bool is_sign_bit_set(T value) {
+        return (value & (static_cast<T>(1) << ((sizeof(T) * CHAR_BIT) - 1))) != 0;
+    }
 
     inline bool is_power_of_two(int64_t x) {
         if (x <= 0)

@@ -13,6 +13,7 @@
 #include <fmt/format.h>
 #include <vm/assembler.h>
 #include <common/defer.h>
+#include <common/bytes.h>
 #include <compiler/session.h>
 #include <vm/instruction_block.h>
 #include "type.h"
@@ -298,8 +299,11 @@ namespace basecode::compiler {
                         // XXX: need to handle conversion failures
                         uint64_t value;
                         if (node->token.parse(value) == syntax::conversion_result_t::success) {
-                            if (node->token.is_signed())
-                                return make_integer(current_scope(), ~value + 1);
+                            if (node->token.is_signed()) {
+                                return make_integer(
+                                    current_scope(),
+                                    common::twos_complement(value));
+                            }
                             else
                                 return make_integer(current_scope(), value);
                         }

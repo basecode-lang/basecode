@@ -33,10 +33,30 @@ namespace basecode::compiler {
         }
     }
 
+    // XXX: need to determine how to best narrow for floating point
+    std::string numeric_type::narrow_to_value(double value) {
+        return "f32";
+    }
+
     std::string numeric_type::narrow_to_value(uint64_t value) {
-        for (const auto& props : s_type_properties) {
-            if (value >= props.min && value <= props.max)
-                return props.name;
+        size_t start_index = 0;
+        size_t end_index = 4;
+        if (common::is_sign_bit_set(value)) {
+            end_index = 8;
+            start_index = 4;
+        }
+        int64_t signed_value = static_cast<int64_t>(value);
+        for (size_t i = start_index; i < end_index; i++) {
+            auto& props = s_type_properties[i];
+            if (props.is_signed) {
+                if (signed_value >= props.min
+                &&  signed_value <= static_cast<int64_t>(props.max)) {
+                    return props.name;
+                }
+            } else {
+                if (value >= props.min && value <= props.max)
+                    return props.name;
+            }
         }
         return "u32";
     }

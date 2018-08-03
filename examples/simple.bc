@@ -50,8 +50,7 @@ print("\n------ this code is running in the compiler!\n");
 print("hello world\n");
 
 // XXX: there's a memory alignment issue with the signed integer
-// XXX: signed integers aren't type inferring properly
-s: s32 := -32768;
+s := -32768;
 b := 6;
 c := 7;
 

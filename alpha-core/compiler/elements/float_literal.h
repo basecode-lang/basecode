@@ -23,6 +23,8 @@ namespace basecode::compiler {
 
         double value() const;
 
+        bool is_signed() const;
+
     protected:
         bool on_emit(
             common::result& r,
