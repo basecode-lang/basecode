@@ -10,6 +10,7 @@
 // ----------------------------------------------------------------------------
 
 #include <vm/instruction_block.h>
+#include "type.h"
 #include "identifier.h"
 #include "argument_list.h"
 
@@ -37,6 +38,7 @@ namespace basecode::compiler {
                 case element_type_t::integer_literal:
                 case element_type_t::identifier_reference: {
                     vm::i_registers_t target_reg;
+                    auto push_size = vm::op_sizes::qword;
 
                     auto cleanup = false;
                     auto var = context.variable_for_element(arg);
@@ -44,8 +46,10 @@ namespace basecode::compiler {
                         // XXX: this is a hack!
                         if (var->address_offset != 0)
                             target_reg = var->address_reg;
-                        else
+                        else {
                             target_reg = var->value_reg.i;
+                            push_size = vm::op_size_for_byte_size(var->type->size_in_bytes());
+                        }
                     }
                     else {
                         if (!context.assembler->allocate_reg(target_reg)) {
@@ -56,7 +60,7 @@ namespace basecode::compiler {
                     context.assembler->push_target_register(target_reg);
                     arg->emit(r, context);
                     context.assembler->pop_target_register();
-                    instruction_block->push(vm::op_sizes::qword, target_reg);
+                    instruction_block->push(push_size, target_reg);
                     if (cleanup)
                         context.assembler->free_reg(target_reg);
                     break;
