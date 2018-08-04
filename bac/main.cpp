@@ -170,9 +170,8 @@ int main(int argc, char** argv) {
     basecode::common::result r;
 
     defer({
-        if (r.is_failed()) {
+        if (r.is_failed())
             print_results(r);
-        }
         fmt::print("\n");
         compilation_session.finalize();
     });

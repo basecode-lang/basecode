@@ -86,9 +86,8 @@ namespace basecode::syntax {
             s = value.c_str();
         char* end;
         errno = 0;
-        out = strtoul(s, &end, radix);
-        if ((errno == ERANGE && out == ULONG_MAX)
-        ||   out > UINT_MAX)
+        out = strtoull(s, &end, radix);
+        if (errno == ERANGE)
             return conversion_result_t::overflow;
         if (*s == '\0' || *end != '\0')
             return conversion_result_t::inconvertible;

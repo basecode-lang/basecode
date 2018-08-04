@@ -11,6 +11,7 @@
 
 #include <fmt/format.h>
 #include <vm/assembler.h>
+#include <common/defer.h>
 #include <vm/instruction_block.h>
 #include "block.h"
 #include "import.h"
@@ -27,14 +28,20 @@
 namespace basecode::compiler {
 
     block::block(
-        block* parent_scope,
-        element_type_t type) : element(parent_scope, type) {
+            block* parent_scope,
+            element_type_t type) : element(parent_scope, type) {
     }
 
     bool block::on_emit(
             common::result& r,
             emit_context_t& context) {
         vm::instruction_block* instruction_block = nullptr;
+
+        auto clean_up = false;
+        defer({
+            if (clean_up)
+                context.assembler->pop_block();
+        });
 
         switch (element_type()) {
             case element_type_t::block: {
@@ -55,7 +62,7 @@ namespace basecode::compiler {
                     ->label(block_label);
 
                 context.assembler->push_block(instruction_block);
-
+                clean_up = true;
                 break;
             }
             case element_type_t::module_block: {
@@ -78,31 +85,17 @@ namespace basecode::compiler {
                 context.assembler->push_block(instruction_block);
                 break;
             }
-            case element_type_t::proc_type_block: {
-                instruction_block = context.assembler->current_block();
-                break;
-            }
+            case element_type_t::proc_type_block:
             case element_type_t::proc_instance_block: {
-                instruction_block = context.assembler->current_block();
                 break;
             }
-            default:
+            default: {
                 return false;
-        }
-
-        for (auto stmt : _statements) {
-            stmt->emit(r, context);
-        }
-
-        auto block_data = context.top<block_data_t>();
-        if (block_data == nullptr || block_data->recurse) {
-            for (auto blk : _blocks) {
-                blk->emit(r, context);
             }
         }
 
-        if (element_type() == element_type_t::block)
-            context.assembler->pop_block();
+        for (auto stmt : _statements)
+            stmt->emit(r, context);
 
         return !r.is_failed();
     }

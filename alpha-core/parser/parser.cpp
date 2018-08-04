@@ -1107,7 +1107,10 @@ namespace basecode::syntax {
             if (expression == nullptr)
                 return nullptr;
 
-            if (expression->type == ast_node_types_t::attribute) {
+            if (expression->is_comment())
+                return expression;
+
+            if (expression->is_attribute()) {
                 _ast_builder.current_scope()->pending_attributes.push_back(expression);
                 token_t line_terminator_token;
                 line_terminator_token.type = token_types_t::semi_colon;
@@ -1116,16 +1119,9 @@ namespace basecode::syntax {
                 continue;
             }
 
-            if (expression->type == ast_node_types_t::label) {
+            if (expression->is_label()) {
                 pending_labels.push_back(expression);
                 continue;
-            }
-
-            // XXX: why are we bailing on basic_block here?
-            if (expression->type == ast_node_types_t::line_comment
-            ||  expression->type == ast_node_types_t::block_comment
-            ||  expression->type == ast_node_types_t::basic_block) {
-                return expression;
             }
 
             break;

@@ -243,11 +243,14 @@ namespace basecode::compiler {
                     make_qualified_symbol(qualified_symbol, symbol_node);
                     auto existing_identifier = find_identifier(qualified_symbol);
                     if (existing_identifier != nullptr) {
+                        auto rhs = evaluate(r, session, source_list->children[i]);
+                        if (rhs == nullptr)
+                            return nullptr;
                         auto binary_op = make_binary_operator(
                             current_scope(),
                             operator_type_t::assignment,
                             existing_identifier,
-                            evaluate(r, session, source_list->children[i]));
+                            rhs);
                         apply_attributes(r, session, binary_op, node);
                         return binary_op;
                     } else {
@@ -306,13 +309,22 @@ namespace basecode::compiler {
                             }
                             else
                                 return make_integer(current_scope(), value);
+                        } else {
+                            error(
+                                r,
+                                session,
+                                "P041",
+                                "invalid integer literal",
+                                node->location);
                         }
+                        break;
                     }
                     case syntax::number_types_t::floating_point: {
                         // XXX: need to handle conversion failures
                         double value;
                         if (node->token.parse(value) == syntax::conversion_result_t::success)
                             return make_float(current_scope(), value);
+                        break;
                     }
                     default:
                         break;
@@ -801,20 +813,9 @@ namespace basecode::compiler {
             implicit_blocks.emplace_back(dynamic_cast<compiler::block*>(block));
         }
 
-        auto all_blocks = elements().find_by_type(element_type_t::block);
-        for (auto block : all_blocks) {
-            if (block->is_parent_element(element_type_t::if_e)
-            ||  block->is_parent_element(element_type_t::program)
-            ||  (block->parent_element() != nullptr && block->parent_element()->is_type()))
-                continue;
-            implicit_blocks.emplace_back(dynamic_cast<compiler::block*>(block));
-        }
-
         context.assembler->push_block(top_level_block);
-        context.push_block(false);
         for (auto block : implicit_blocks)
             block->emit(r, context);
-        context.pop();
 
         auto finalizer_block = context.assembler->make_basic_block();
         finalizer_block->align(vm::instruction_t::alignment);

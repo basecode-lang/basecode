@@ -46,44 +46,44 @@
 @library "libalpha-core.dylib";
 #foreign print := proc(format: string, values: ...any) @alias "fmt_print";
 
-print("\n------ this code is running in the compiler!\n");
-print("hello world\n");
+///////////////////////////////////////////////////////////////////////////////
+// u8
 
-b := 6;
-c := 7;
+// uninitialized
+unsigned_byte: u8;
+unsigned_byte := 255;
 
-// XXX: add_identifier_to_scope isn't calling context.allocate_variable
-//d := ((b * c) / 2) % 2;
-//b, c := c, b;
+// initialized
+unsigned_byte_init: u8 := 255;
 
-a := 2;
-a := a shl 4;
+///////////////////////////////////////////////////////////////////////////////
+// u16
 
-print("a := %hhu\n", a);
-//print("d := %d\n", d);
+// uninitialized
+unsigned_word: u16;
+unsigned_word := 65535;
 
-// XXX: need to verify value ranges against declared types
-s := -65536;
-print("s := %d\n", s);
+// initialized
+unsigned_word_init: u16 := 65535;
 
-//if a == 32 {
-//    print("we have a match!\n");
-//} else {
-//    print("no match\n");
-//};
+///////////////////////////////////////////////////////////////////////////////
+// u32
 
-// XXX: after all of the primitive types are happy....
-// XXX: also, need to implement defer
-{
-    // create a stack frame
-    // variables here are allocated on the stack by default
+// uninitialized
+unsigned_dword: u32;
+unsigned_dword := 4_294_967_295;
 
-    {
-        {
-        };
-    };
+// initialized
+unsigned_dword_init: u32 := 4_294_967_295;
 
-   // free stack frame
-}; // <--- parser bug here
+///////////////////////////////////////////////////////////////////////////////
+// u64
 
-print("----------------------------------------------\n\n");
+// uninitialized
+unsigned_qword: u64;
+unsigned_qword := 18_446_744_073_709_551_615;
+
+// initialized
+unsigned_qword_init: u64 := 18_446_744_073_709_551_615;
+
+//print("test\n");

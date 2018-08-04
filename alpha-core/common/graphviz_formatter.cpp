@@ -24,6 +24,12 @@ namespace basecode::common {
                 buffer += "\\}";
             } else if (c == '.') {
                 buffer += "\\.";
+            } else if (c == '|') {
+                buffer += "\\|";
+            } else if (c == '<') {
+                buffer += "\\<";
+            } else if (c == '>') {
+                buffer += "\\>";
             } else {
                 buffer += c;
             }

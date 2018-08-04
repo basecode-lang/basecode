@@ -22,10 +22,6 @@
 
 namespace basecode::compiler {
 
-    struct block_data_t {
-        bool recurse = true;
-    };
-
     struct if_data_t {
         std::string true_branch_label;
         std::string false_branch_label;
@@ -79,8 +75,6 @@ namespace basecode::compiler {
         void push_if(
             const std::string& true_label_name,
             const std::string& false_label_name);
-
-        void push_block(bool recurse);
 
         variable_t* allocate_variable(
             common::result& r,

@@ -161,12 +161,6 @@ namespace basecode::compiler {
         return it.second ? &it.first->second : nullptr;
     }
 
-    void emit_context_t::push_block(bool recurse) {
-        data_stack.push(boost::any(block_data_t {
-            .recurse = recurse
-        }));
-    }
-
     void emit_context_t::clear_scratch_registers() {
         while (!scratch_registers.empty())
             scratch_registers.pop();
