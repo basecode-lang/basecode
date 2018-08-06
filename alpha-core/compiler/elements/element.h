@@ -90,6 +90,11 @@ namespace basecode::compiler {
             common::result& r,
             compiler::program* program);
 
+        element_register_t register_for(
+            common::result& r,
+            emit_context_t& context,
+            element* e);
+
         virtual bool on_is_constant() const;
 
         virtual bool on_as_bool(bool& value) const;

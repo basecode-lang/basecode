@@ -16,7 +16,9 @@
 #include <vector>
 #include <string>
 #include <memory>
+#include <vm/terp.h>
 #include <unordered_map>
+#include <vm/assembler.h>
 #include <parser/token.h>
 #include <common/id_pool.h>
 
@@ -435,5 +437,19 @@ namespace basecode::compiler {
     std::string make_fully_qualified_name(const symbol_element* symbol);
 
     std::string make_fully_qualified_name(const qualified_symbol_t& symbol);
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    struct element_register_t {
+        ~element_register_t() {
+            if (clean_up && assembler != nullptr)
+                assembler->free_reg(reg);
+        }
+
+        bool valid = false;
+        bool clean_up = false;
+        vm::i_registers_t reg;
+        vm::assembler* assembler = nullptr;
+    };
 
 };

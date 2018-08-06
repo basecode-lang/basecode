@@ -196,8 +196,8 @@ namespace basecode::compiler {
             common::result& r,
             emit_context_t& context,
             vm::instruction_block* instruction_block) {
-        auto lhs_reg = element_register(r, context, _lhs);
-        auto rhs_reg = element_register(r, context, _rhs);
+        auto lhs_reg = register_for(r, context, _lhs);
+        auto rhs_reg = register_for(r, context, _rhs);
 
         if (!lhs_reg.valid || !rhs_reg.valid)
             return;
@@ -278,44 +278,14 @@ namespace basecode::compiler {
         }
     }
 
-    element_register_t binary_operator::element_register(
-            common::result& r,
-            emit_context_t& context,
-            element* e) {
-        element_register_t result {.assembler = context.assembler};
-
-        auto var = context.variable_for_element(e);
-        if (var != nullptr) {
-            result.valid = true;
-            result.reg = var->value_reg.i;
-        }
-        else {
-            vm::i_registers_t reg;
-            if (!context.assembler->allocate_reg(reg)) {
-                context.program->error(
-                    r,
-                    e,
-                    "P052",
-                    "assembler registers exhausted.",
-                    e->location());
-            } else {
-                result.reg = reg;
-                result.valid = true;
-                result.clean_up = true;
-            }
-        }
-
-        return result;
-    }
-
     void binary_operator::emit_arithmetic_operator(
             common::result& r,
             emit_context_t& context,
             vm::instruction_block* instruction_block) {
         auto result_reg = context.assembler->current_target_register();
 
-        auto lhs_reg = element_register(r, context, _lhs);
-        auto rhs_reg = element_register(r, context, _rhs);
+        auto lhs_reg = register_for(r, context, _lhs);
+        auto rhs_reg = register_for(r, context, _rhs);
 
         if (!lhs_reg.valid || !rhs_reg.valid)
             return;

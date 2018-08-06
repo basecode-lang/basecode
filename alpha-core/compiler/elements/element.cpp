@@ -13,6 +13,7 @@
 #include <common/id_pool.h>
 #include "type.h"
 #include "element.h"
+#include "program.h"
 #include "attribute.h"
 #include "float_literal.h"
 #include "string_literal.h"
@@ -114,6 +115,38 @@ namespace basecode::compiler {
 
     bool element::as_bool(bool& value) const {
         return on_as_bool(value);
+    }
+
+    element_register_t element::register_for(
+            common::result& r,
+            emit_context_t& context,
+            element* e) {
+        element_register_t result {
+            .assembler = context.assembler
+        };
+
+        auto var = context.variable_for_element(e);
+        if (var != nullptr) {
+            result.valid = true;
+            result.reg = var->value_reg.i;
+        }
+        else {
+            vm::i_registers_t reg;
+            if (!context.assembler->allocate_reg(reg)) {
+                context.program->error(
+                    r,
+                    e,
+                    "P052",
+                    "assembler registers exhausted.",
+                    e->location());
+            } else {
+                result.reg = reg;
+                result.valid = true;
+                result.clean_up = true;
+            }
+        }
+
+        return result;
     }
 
     bool element::on_as_bool(bool& value) const {
