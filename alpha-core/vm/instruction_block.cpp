@@ -84,42 +84,10 @@ namespace basecode::vm {
         });
     }
 
-    void instruction_block::byte(uint8_t value) {
-        make_block_entry(data_definition_t {
-            .size = op_sizes::byte,
-            .value = value,
-            .type = data_definition_type_t::initialized,
-        });
-    }
-
-    void instruction_block::word(uint16_t value) {
-        make_block_entry(data_definition_t {
-            .size = op_sizes::word,
-            .value = value,
-            .type = data_definition_type_t::initialized,
-        });
-    }
-
-    void instruction_block::dword(uint32_t value) {
-        make_block_entry(data_definition_t {
-            .size = op_sizes::dword,
-            .value = value,
-            .type = data_definition_type_t::initialized,
-        });
-    }
-
-    void instruction_block::qword(uint64_t value) {
-        make_block_entry(data_definition_t {
-            .size = op_sizes::qword,
-            .value = value,
-            .type = data_definition_type_t::initialized,
-        });
-    }
-
     void instruction_block::reserve_byte(size_t count) {
         make_block_entry(data_definition_t {
             .size = op_sizes::byte,
-            .value = count,
+            .values = {count},
             .type = data_definition_type_t::uninitialized,
         });
     }
@@ -127,7 +95,7 @@ namespace basecode::vm {
     void instruction_block::reserve_word(size_t count) {
         make_block_entry(data_definition_t {
             .size = op_sizes::word,
-            .value = count,
+            .values = {count},
             .type = data_definition_type_t::uninitialized,
         });
     }
@@ -135,7 +103,7 @@ namespace basecode::vm {
     void instruction_block::reserve_dword(size_t count) {
         make_block_entry(data_definition_t {
             .size = op_sizes::dword,
-            .value = count,
+            .values = {count},
             .type = data_definition_type_t::uninitialized,
         });
     }
@@ -143,16 +111,58 @@ namespace basecode::vm {
     void instruction_block::reserve_qword(size_t count) {
         make_block_entry(data_definition_t {
             .size = op_sizes::qword,
-            .value = count,
+            .values = {count},
             .type = data_definition_type_t::uninitialized,
         });
     }
 
     void instruction_block::string(const std::string& value) {
-        dword(static_cast<uint32_t>(value.length()));
+        dwords({static_cast<uint32_t>(value.length())});
+        std::vector<uint8_t> str_bytes {};
         for (const auto& c : value)
-            byte(static_cast<uint8_t>(c));
-        byte(0);
+            str_bytes.emplace_back(static_cast<uint8_t>(c));
+        str_bytes.emplace_back(0);
+        bytes(str_bytes);
+    }
+
+    void instruction_block::bytes(const std::vector<uint8_t>& values) {
+        data_definition_t def {
+            .size = op_sizes::byte,
+            .type = data_definition_type_t::initialized,
+        };
+        for (const auto& v : values)
+            def.values.emplace_back(v);
+        make_block_entry(def);
+    }
+
+    void instruction_block::words(const std::vector<uint16_t>& values) {
+        data_definition_t def {
+            .size = op_sizes::word,
+            .type = data_definition_type_t::initialized,
+        };
+        for (const auto& v : values)
+            def.values.emplace_back(v);
+        make_block_entry(def);
+    }
+
+    void instruction_block::dwords(const std::vector<uint32_t>& values) {
+        data_definition_t def {
+            .size = op_sizes::dword,
+            .type = data_definition_type_t::initialized,
+        };
+        for (const auto& v : values)
+            def.values.emplace_back(v);
+        make_block_entry(def);
+    }
+
+    void instruction_block::qwords(const std::vector<uint64_t>& values) {
+        data_definition_t def {
+            .size = op_sizes::qword,
+            .type = data_definition_type_t::initialized,
+        };
+        for (const auto& v : values)
+            def.values.emplace_back(v);
+        make_block_entry(def);
     }
 
     // load variations
@@ -1136,12 +1146,27 @@ namespace basecode::vm {
                             break;
                         }
                     }
-                    source_file->add_source_line(
-                        entry.address(),
-                        fmt::format(
-                            "\t{:<10} {}",
-                            directive.str(),
-                            fmt::format(format_spec, definition->value)));
+
+                    auto item_index = 0;
+                    auto item_count = definition->values.size();
+                    std::string items;
+                    while (item_count > 0) {
+                        if (!items.empty())
+                            items += ", ";
+                        items += fmt::format(format_spec, definition->values[item_index++]);
+                        if ((item_index % 8) == 0) {
+                            source_file->add_source_line(
+                                entry.address(),
+                                fmt::format("\t{:<10}{}", directive.str(), items));
+                            items.clear();
+                        }
+                        --item_count;
+                    }
+                    if (!items.empty()) {
+                        source_file->add_source_line(
+                            entry.address(),
+                            fmt::format("\t{:<10}{}", directive.str(), items));
+                    }
                     break;
                 }
             }

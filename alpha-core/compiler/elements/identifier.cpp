@@ -44,7 +44,6 @@ namespace basecode::compiler {
             _type,
             _usage,
             frame_entry);
-        var->read(context.assembler, instruction_block);
         return true;
     }
 

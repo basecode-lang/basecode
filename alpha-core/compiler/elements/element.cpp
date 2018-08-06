@@ -129,6 +129,7 @@ namespace basecode::compiler {
         if (var != nullptr) {
             result.valid = true;
             result.reg = var->value_reg.i;
+            var->read(context.assembler, context.assembler->current_block());
         }
         else {
             vm::i_registers_t reg;

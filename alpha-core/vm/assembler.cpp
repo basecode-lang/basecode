@@ -46,7 +46,7 @@ namespace basecode::vm {
                     case block_entry_type_t::data_definition: {
                         auto data_def = entry.data<data_definition_t>();
                         if (data_def->type == data_definition_type_t::initialized) {
-                            _terp->write(data_def->size, entry.address(), data_def->value);
+                            _terp->write(data_def->size, entry.address(), data_def->values.front());
                         }
                         break;
                     }

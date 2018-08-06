@@ -733,7 +733,7 @@ namespace basecode::compiler {
                                 if (init == nullptr)
                                     instruction_block->reserve_byte(1);
                                 else
-                                    instruction_block->byte(static_cast<uint8_t>(value ? 1 : 0));
+                                    instruction_block->bytes({static_cast<uint8_t>(value ? 1 : 0)});
                                 break;
                             }
                             case element_type_t::numeric_type: {
@@ -747,27 +747,27 @@ namespace basecode::compiler {
                                         if (init == nullptr)
                                             instruction_block->reserve_byte(1);
                                         else
-                                            instruction_block->byte(static_cast<uint8_t>(value));
+                                            instruction_block->bytes({static_cast<uint8_t>(value)});
                                         break;
                                     case vm::symbol_type_t::u16:
                                         if (init == nullptr)
                                             instruction_block->reserve_word(1);
                                         else
-                                            instruction_block->word(static_cast<uint16_t>(value));
+                                            instruction_block->words({static_cast<uint16_t>(value)});
                                         break;
                                     case vm::symbol_type_t::f32:
                                     case vm::symbol_type_t::u32:
                                         if (init == nullptr)
                                             instruction_block->reserve_dword(1);
                                         else
-                                            instruction_block->dword(static_cast<uint32_t>(value));
+                                            instruction_block->dwords({static_cast<uint32_t>(value)});
                                         break;
                                     case vm::symbol_type_t::f64:
                                     case vm::symbol_type_t::u64:
                                         if (init == nullptr)
                                             instruction_block->reserve_qword(1);
                                         else
-                                            instruction_block->qword(value);
+                                            instruction_block->qwords({value});
                                         break;
                                     case vm::symbol_type_t::bytes:
                                         break;

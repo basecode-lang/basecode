@@ -56,8 +56,8 @@ namespace basecode::vm {
 
     struct data_definition_t {
         op_sizes size;
-        uint64_t value = 0;
         data_definition_type_t type;
+        std::vector<uint64_t> values {};
     };
 
     enum class block_entry_type_t : uint8_t {
@@ -215,15 +215,7 @@ namespace basecode::vm {
 
     // data definitions
     public:
-        void byte(uint8_t value);
-
         void align(uint8_t size);
-
-        void word(uint16_t value);
-
-        void dword(uint32_t value);
-
-        void qword(uint64_t value);
 
         void section(section_t type);
 
@@ -237,7 +229,15 @@ namespace basecode::vm {
 
         void string(const std::string& value);
 
-    // instructions
+        void bytes(const std::vector<uint8_t>& values);
+
+        void words(const std::vector<uint16_t>& values);
+
+        void dwords(const std::vector<uint32_t>& values);
+
+        void qwords(const std::vector<uint64_t>& values);
+
+        // instructions
     public:
         void rts();
 

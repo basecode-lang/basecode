@@ -80,6 +80,7 @@ namespace basecode::compiler {
                 }
 
                 _lhs->emit(r, context);
+                var->read(context.assembler, instruction_block);
 
                 vm::i_registers_t rhs_reg;
                 if (!context.assembler->allocate_reg(rhs_reg)) {
