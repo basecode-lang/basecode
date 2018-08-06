@@ -107,4 +107,5 @@ target_link_libraries(
     dyncall_s
     dynload_s
     boost-system
-    boost-filesystem)
+    boost-filesystem
+    utf8proc)

@@ -121,7 +121,10 @@ namespace basecode::common {
 
         for (size_t i = 0; i < _buffer.size(); i++) {
             const auto end_of_buffer = i == _buffer.size() - 1;
-            if (_buffer[i] == '\n' || end_of_buffer) {
+            const auto unix_new_line = _buffer[i] == '\n';
+            const auto windblows_new_line = _buffer[i] == '\r'
+                && (i + 1 < _buffer.size() && _buffer[i + 1] == '\n');
+            if (unix_new_line || windblows_new_line || end_of_buffer) {
                 const auto end = end_of_buffer ? _buffer.size() : i;
                 const auto it = _lines_by_index_range.insert(std::make_pair(
                     std::make_pair(line_start, end),
@@ -140,6 +143,8 @@ namespace basecode::common {
             } else {
                 columns++;
             }
+            if (windblows_new_line)
+                i++;
         }
     }
 

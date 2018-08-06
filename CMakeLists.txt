@@ -7,10 +7,6 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-#set(CMAKE_SKIP_BUILD_RPATH FALSE)
-#set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
-#set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
-
 # enhance unit test discovery
 enable_testing()
 set_property(GLOBAL PROPERTY UNIT_TEST_TARGETS "")
@@ -25,12 +21,15 @@ add_custom_target(dummy-target ALL DEPENDS custom-output)
 add_custom_command(OUTPUT custom-output COMMAND ${CMAKE_COMMAND} -E echo DEPENDS always-rebuild)
 add_custom_command(OUTPUT always-rebuild COMMAND ${CMAKE_COMMAND} -E echo)
 
-# external dependencies
+# libfmt
 add_subdirectory(ext/fmt-5.1.0 EXCLUDE_FROM_ALL)
+
+# dyncall
 add_subdirectory(ext/dyncall-1.0 EXCLUDE_FROM_ALL)
-include_directories(
-        ext/boost-1.67.0
-        ext/dyncall-1.0)
+include_directories(ext/dyncall-1.0)
+
+# boost
+include_directories(ext/boost-1.67.0)
 
 # boost system library
 add_library(boost-system ext/boost-1.67.0/libs/system/src/error_code.cpp)
@@ -54,6 +53,10 @@ if (WIN32)
     )
 endif()
 add_library(boost-filesystem ${BOOST_FILESYSTEM_SOURCES})
+
+# utf8proc
+add_subdirectory(ext/utf8proc-2.2.0 EXCLUDE_FROM_ALL)
+include_directories(ext/utf8proc-2.2.0)
 
 # projects
 add_subdirectory(alpha-core)

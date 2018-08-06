@@ -11,6 +11,7 @@
 
 #include <sstream>
 #include <fmt/format.h>
+#include <common/defer.h>
 #include "lexer.h"
 
 namespace basecode::syntax {
@@ -239,6 +240,8 @@ namespace basecode::syntax {
     }
 
     void lexer::rewind_one_char() {
+        if (_source_file->eof())
+            return;
         auto pos = _source_file->pos();
         if (pos == 0)
             return;
@@ -253,16 +256,23 @@ namespace basecode::syntax {
     }
 
     bool lexer::next(token_t& token) {
+        defer({
+            _has_next = !_source_file->eof();
+        });
+
         if (_source_file->eof()) {
-            _has_next = false;
             token = s_end_of_file;
             set_token_location(token);
             return true;
         }
 
-        const auto ch = tolower(read());
+        const char ch = static_cast<const char>(tolower(read()));
         rewind_one_char();
+
         _source_file->push_mark();
+        defer({
+            _source_file->pop_mark();
+        });
 
         auto case_range = s_cases.equal_range(ch);
         for (auto it = case_range.first; it != case_range.second; ++it) {
@@ -287,12 +297,9 @@ namespace basecode::syntax {
             _source_file->restore_top_mark();
         }
 
-        _source_file->pop_mark();
-
         token = s_invalid;
         token.value = ch;
         set_token_location(token);
-        _has_next = false;
 
         return true;
     }
