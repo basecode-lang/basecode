@@ -79,11 +79,18 @@ namespace basecode::compiler {
                     return false;
                 }
 
+                _lhs->emit(r, context);
+
                 vm::i_registers_t rhs_reg;
                 if (!context.assembler->allocate_reg(rhs_reg)) {
+                    context.program->error(
+                        r,
+                        _rhs,
+                        "P052",
+                        "assembler registers exhausted.",
+                        _rhs->location());
+                    return false;
                 }
-
-                _lhs->emit(r, context);
                 context.assembler->push_target_register(rhs_reg);
                 _rhs->emit(r, context);
                 var->write(context.assembler, instruction_block);
@@ -189,40 +196,24 @@ namespace basecode::compiler {
             common::result& r,
             emit_context_t& context,
             vm::instruction_block* instruction_block) {
-        vm::i_registers_t lhs_reg, rhs_reg;
-        auto cleanup_left = false;
-        auto cleanup_right = false;
+        auto lhs_reg = element_register(r, context, _lhs);
+        auto rhs_reg = element_register(r, context, _rhs);
 
-        auto lhs_var = context.variable_for_element(_lhs);
-        if (lhs_var != nullptr)
-            lhs_reg = lhs_var->value_reg.i;
-        else {
-            if (!context.assembler->allocate_reg(lhs_reg)) {
-            }
-            cleanup_left = true;
-        }
+        if (!lhs_reg.valid || !rhs_reg.valid)
+            return;
 
-        auto rhs_var = context.variable_for_element(_rhs);
-        if (rhs_var != nullptr)
-            rhs_reg = rhs_var->value_reg.i;
-        else {
-            if (!context.assembler->allocate_reg(rhs_reg)) {
-            }
-            cleanup_right = true;
-        }
-
-        context.assembler->push_target_register(lhs_reg);
+        context.assembler->push_target_register(lhs_reg.reg);
         _lhs->emit(r, context);
         context.assembler->pop_target_register();
 
-        context.assembler->push_target_register(rhs_reg);
+        context.assembler->push_target_register(rhs_reg.reg);
         _rhs->emit(r, context);
         context.assembler->pop_target_register();
 
         auto if_data = context.top<if_data_t>();
         switch (operator_type()) {
             case operator_type_t::equals: {
-                instruction_block->cmp(vm::op_sizes::qword, lhs_reg, rhs_reg);
+                instruction_block->cmp(vm::op_sizes::qword, lhs_reg.reg, rhs_reg.reg);
                 if (if_data != nullptr) {
                     auto parent_op = parent_element_as<compiler::binary_operator>();
                     if (parent_op != nullptr
@@ -285,12 +276,36 @@ namespace basecode::compiler {
                 break;
             }
         }
+    }
 
-        if (cleanup_right)
-            context.assembler->free_reg(rhs_reg);
+    element_register_t binary_operator::element_register(
+            common::result& r,
+            emit_context_t& context,
+            element* e) {
+        element_register_t result {.assembler = context.assembler};
 
-        if (cleanup_left)
-            context.assembler->free_reg(lhs_reg);
+        auto var = context.variable_for_element(e);
+        if (var != nullptr) {
+            result.valid = true;
+            result.reg = var->value_reg.i;
+        }
+        else {
+            vm::i_registers_t reg;
+            if (!context.assembler->allocate_reg(reg)) {
+                context.program->error(
+                    r,
+                    e,
+                    "P052",
+                    "assembler registers exhausted.",
+                    e->location());
+            } else {
+                result.reg = reg;
+                result.valid = true;
+                result.clean_up = true;
+            }
+        }
+
+        return result;
     }
 
     void binary_operator::emit_arithmetic_operator(
@@ -299,33 +314,17 @@ namespace basecode::compiler {
             vm::instruction_block* instruction_block) {
         auto result_reg = context.assembler->current_target_register();
 
-        vm::i_registers_t lhs_reg, rhs_reg;
-        auto cleanup_left = false;
-        auto cleanup_right = false;
+        auto lhs_reg = element_register(r, context, _lhs);
+        auto rhs_reg = element_register(r, context, _rhs);
 
-        auto lhs_var = context.variable_for_element(_lhs);
-        if (lhs_var != nullptr)
-            lhs_reg = lhs_var->value_reg.i;
-        else {
-            if (!context.assembler->allocate_reg(lhs_reg)) {
-            }
-            cleanup_left = true;
-        }
+        if (!lhs_reg.valid || !rhs_reg.valid)
+            return;
 
-        auto rhs_var = context.variable_for_element(_rhs);
-        if (rhs_var != nullptr)
-            rhs_reg = rhs_var->value_reg.i;
-        else {
-            if (!context.assembler->allocate_reg(rhs_reg)) {
-            }
-            cleanup_right = true;
-        }
-
-        context.assembler->push_target_register(lhs_reg);
+        context.assembler->push_target_register(lhs_reg.reg);
         _lhs->emit(r, context);
         context.assembler->pop_target_register();
 
-        context.assembler->push_target_register(rhs_reg);
+        context.assembler->push_target_register(rhs_reg.reg);
         _rhs->emit(r, context);
         context.assembler->pop_target_register();
 
@@ -333,29 +332,29 @@ namespace basecode::compiler {
             case operator_type_t::add: {
                 instruction_block->add_ireg_by_ireg_u64(
                     result_reg->reg.i,
-                    lhs_reg,
-                    rhs_reg);
+                    lhs_reg.reg,
+                    rhs_reg.reg);
                 break;
             }
             case operator_type_t::divide: {
                 instruction_block->div_ireg_by_ireg_u64(
                     result_reg->reg.i,
-                    lhs_reg,
-                    rhs_reg);
+                    lhs_reg.reg,
+                    rhs_reg.reg);
                 break;
             }
             case operator_type_t::modulo: {
                 instruction_block->mod_ireg_by_ireg_u64(
                     result_reg->reg.i,
-                    lhs_reg,
-                    rhs_reg);
+                    lhs_reg.reg,
+                    rhs_reg.reg);
                 break;
             }
             case operator_type_t::multiply: {
                 instruction_block->mul_ireg_by_ireg_u64(
                     result_reg->reg.i,
-                    lhs_reg,
-                    rhs_reg);
+                    lhs_reg.reg,
+                    rhs_reg.reg);
                 break;
             }
             case operator_type_t::exponent: {
@@ -368,68 +367,62 @@ namespace basecode::compiler {
             case operator_type_t::subtract: {
                 instruction_block->sub_ireg_by_ireg_u64(
                     result_reg->reg.i,
-                    lhs_reg,
-                    rhs_reg);
+                    lhs_reg.reg,
+                    rhs_reg.reg);
                 break;
             }
             case operator_type_t::binary_or: {
                 instruction_block->or_ireg_by_ireg_u64(
                     result_reg->reg.i,
-                    lhs_reg,
-                    rhs_reg);
+                    lhs_reg.reg,
+                    rhs_reg.reg);
                 break;
             }
             case operator_type_t::shift_left: {
                 instruction_block->shl_ireg_by_ireg_u64(
                     result_reg->reg.i,
-                    lhs_reg,
-                    rhs_reg);
+                    lhs_reg.reg,
+                    rhs_reg.reg);
                 break;
             }
             case operator_type_t::binary_and: {
                 instruction_block->and_ireg_by_ireg_u64(
                     result_reg->reg.i,
-                    lhs_reg,
-                    rhs_reg);
+                    lhs_reg.reg,
+                    rhs_reg.reg);
                 break;
             }
             case operator_type_t::binary_xor: {
                 instruction_block->xor_ireg_by_ireg_u64(
                     result_reg->reg.i,
-                    lhs_reg,
-                    rhs_reg);
+                    lhs_reg.reg,
+                    rhs_reg.reg);
                 break;
             }
             case operator_type_t::rotate_left: {
                 instruction_block->rol_ireg_by_ireg_u64(
                     result_reg->reg.i,
-                    lhs_reg,
-                    rhs_reg);
+                    lhs_reg.reg,
+                    rhs_reg.reg);
                 break;
             }
             case operator_type_t::shift_right: {
                 instruction_block->shr_ireg_by_ireg_u64(
                     result_reg->reg.i,
-                    lhs_reg,
-                    rhs_reg);
+                    lhs_reg.reg,
+                    rhs_reg.reg);
                 break;
             }
             case operator_type_t::rotate_right: {
                 instruction_block->ror_ireg_by_ireg_u64(
                     result_reg->reg.i,
-                    lhs_reg,
-                    rhs_reg);
+                    lhs_reg.reg,
+                    rhs_reg.reg);
                 break;
             }
             default:
                 break;
         }
-
-        if (cleanup_left)
-            context.assembler->free_reg(lhs_reg);
-
-        if (cleanup_right)
-            context.assembler->free_reg(rhs_reg);
     }
 
     void binary_operator::on_owned_elements(element_list_t& list) {

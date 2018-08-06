@@ -302,13 +302,16 @@ namespace basecode::compiler {
                         // XXX: need to handle conversion failures
                         uint64_t value;
                         if (node->token.parse(value) == syntax::conversion_result_t::success) {
+                            compiler::element* element = nullptr;
                             if (node->token.is_signed()) {
-                                return make_integer(
+                                element = make_integer(
                                     current_scope(),
                                     common::twos_complement(value));
+                            } else {
+                                element = make_integer(current_scope(), value);
                             }
-                            else
-                                return make_integer(current_scope(), value);
+                            element->location(node->location);
+                            return element;
                         } else {
                             error(
                                 r,
@@ -322,8 +325,11 @@ namespace basecode::compiler {
                     case syntax::number_types_t::floating_point: {
                         // XXX: need to handle conversion failures
                         double value;
-                        if (node->token.parse(value) == syntax::conversion_result_t::success)
-                            return make_float(current_scope(), value);
+                        if (node->token.parse(value) == syntax::conversion_result_t::success) {
+                            auto element = make_float(current_scope(), value);
+                            element->location(node->location);
+                            return element;
+                        }
                         break;
                     }
                     default:
@@ -332,7 +338,9 @@ namespace basecode::compiler {
                 return nullptr;
             }
             case syntax::ast_node_types_t::boolean_literal: {
-                return make_bool(current_scope(), node->token.as_bool());
+                auto element = make_bool(current_scope(), node->token.as_bool());
+                element->location(node->location);
+                return element;
             }
             case syntax::ast_node_types_t::else_expression: {
                 return evaluate(r, session, node->children[0]);
@@ -683,8 +691,7 @@ namespace basecode::compiler {
                                     var_label->name(),
                                     context.program->find_type({.name = "string"}),
                                     identifier_usage_t::heap,
-                                    nullptr,
-                                    instruction_block);
+                                    nullptr);
                                 if (var != nullptr) {
                                     var->address_offset = 4;
                                     literals.emplace_back(var);
@@ -716,8 +723,7 @@ namespace basecode::compiler {
                             var_label->name(),
                             var->type(),
                             identifier_usage_t::heap,
-                            nullptr,
-                            instruction_block);
+                            nullptr);
 
                         switch (var->type()->element_type()) {
                             case element_type_t::bool_type: {
@@ -823,7 +829,7 @@ namespace basecode::compiler {
         top_level_block->memo();
         top_level_block->current_entry()->label(top_level_block->make_label("_initializer"));
         for (auto var : literals)
-            var->read(context.assembler, top_level_block);
+            var->init(context.assembler, top_level_block);
 
         block_list_t implicit_blocks {};
         auto module_blocks = elements().find_by_type(element_type_t::module_block);

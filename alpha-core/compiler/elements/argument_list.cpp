@@ -11,6 +11,7 @@
 
 #include <vm/instruction_block.h>
 #include "type.h"
+#include "program.h"
 #include "identifier.h"
 #include "argument_list.h"
 
@@ -53,6 +54,12 @@ namespace basecode::compiler {
                     }
                     else {
                         if (!context.assembler->allocate_reg(target_reg)) {
+                            context.program->error(
+                                r,
+                                this,
+                                "P052",
+                                "assembler registers exhausted.",
+                                location());
                         }
                         cleanup = true;
                     }

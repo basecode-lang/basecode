@@ -17,6 +17,18 @@
 
 namespace basecode::compiler {
 
+    struct element_register_t {
+        ~element_register_t() {
+            if (clean_up && assembler != nullptr)
+                assembler->free_reg(reg);
+        }
+
+        bool valid = false;
+        bool clean_up = false;
+        vm::i_registers_t reg;
+        vm::assembler* assembler = nullptr;
+    };
+
     class binary_operator : public operator_base {
     public:
         binary_operator(
@@ -53,6 +65,12 @@ namespace basecode::compiler {
         void on_owned_elements(element_list_t& list) override;
 
         compiler::type* on_infer_type(const compiler::program* program) override;
+
+    private:
+        element_register_t element_register(
+            common::result& r,
+            emit_context_t& context,
+            element* e);
 
     private:
         element* _lhs = nullptr;

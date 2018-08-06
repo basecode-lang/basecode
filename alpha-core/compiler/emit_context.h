@@ -28,6 +28,10 @@ namespace basecode::compiler {
     };
 
     struct variable_t {
+        bool init(
+            vm::assembler* assembler,
+            vm::instruction_block* block);
+
         bool read(
             vm::assembler* assembler,
             vm::instruction_block* block);
@@ -81,8 +85,7 @@ namespace basecode::compiler {
             const std::string& name,
             compiler::type* type,
             identifier_usage_t usage,
-            vm::stack_frame_entry_t* frame_entry = nullptr,
-            vm::instruction_block* block = nullptr);
+            vm::stack_frame_entry_t* frame_entry = nullptr);
 
         void clear_scratch_registers();
 
