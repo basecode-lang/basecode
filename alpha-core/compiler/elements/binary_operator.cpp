@@ -69,6 +69,15 @@ namespace basecode::compiler {
             }
             case operator_type_t::assignment: {
                 auto var = context.variable_for_element(_lhs);
+                if (var == nullptr) {
+                    context.program->error(
+                        r,
+                        _lhs,
+                        "P051",
+                        fmt::format("missing assembler variable for {}.", _lhs->label_name()),
+                        _lhs->location());
+                    return false;
+                }
 
                 vm::i_registers_t rhs_reg;
                 if (!context.assembler->allocate_reg(rhs_reg)) {

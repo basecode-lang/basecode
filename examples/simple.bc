@@ -47,43 +47,103 @@
 #foreign print := proc(format: string, values: ...any) @alias "fmt_print";
 
 ///////////////////////////////////////////////////////////////////////////////
+// bool
+
+// uninitialized
+bool_true_uninit: bool;
+bool_true_uninit := true;
+
+bool_false_uninit: bool;
+bool_false_uninit := false;
+
+// initialized
+bool_true_init:  bool := true;
+bool_false_init: bool := false;
+
+///////////////////////////////////////////////////////////////////////////////
 // u8
 
 // uninitialized
-unsigned_byte: u8;
-unsigned_byte := 255;
+unsigned_byte_min: u8;
+unsigned_byte_min := 0;
+
+unsigned_byte_max: u8;
+unsigned_byte_max := 255;
+
+signed_byte_min: s8;
+signed_byte_min := -127
+
+signed_byte_max: s8;
+signed_byte_max := 128;
 
 // initialized
-unsigned_byte_init: u8 := 255;
+unsigned_byte_init_min: u8 := 0;
+unsigned_byte_init_max: u8 := 255;
+signed_byte_init_min:   s8 := -128;
+signed_byte_init_max:   s8 := 127;
 
 ///////////////////////////////////////////////////////////////////////////////
 // u16
 
 // uninitialized
-unsigned_word: u16;
-unsigned_word := 65535;
+unsigned_word_min: u16;
+unsigned_word_min := 0;
+
+unsigned_word_max: u16;
+unsigned_word_max := 65535;
+
+signed_word_min: s16;
+signed_word_min := -32768
+
+signed_word_max: s16;
+signed_word_max := 32767;
 
 // initialized
-unsigned_word_init: u16 := 65535;
+unsigned_word_init_min: u16 := 0;
+unsigned_word_init_max: u16 := 65535;
+signed_word_init_min:   s16 := -32768;
+signed_word_init_max:   s16 := 32767;
 
 ///////////////////////////////////////////////////////////////////////////////
 // u32
 
 // uninitialized
-unsigned_dword: u32;
-unsigned_dword := 4_294_967_295;
+unsigned_dword_min: u32;
+unsigned_dword_min := 0;
+
+unsigned_dword_max: u32;
+unsigned_dword_max := 4_294_967_295;
+
+signed_dword_min: s32;
+signed_dword_min := -2_147_483_646;
+
+signed_dword_max: s32;
+signed_dword_max := 2_147_483_647;
 
 // initialized
-unsigned_dword_init: u32 := 4_294_967_295;
+unsigned_dword_init_min: u32 := 0;
+unsigned_dword_init_max: u32 := 4_294_967_295;
+signed_dword_init_min:   s32 := -2_147_483_646;
+signed_dword_init_max:   s32 := 2_147_483_647;
 
 ///////////////////////////////////////////////////////////////////////////////
 // u64
 
 // uninitialized
-unsigned_qword: u64;
-unsigned_qword := 18_446_744_073_709_551_615;
+unsigned_qword_min: u64;
+unsigned_qword_min := 0;
+
+unsigned_qword_max: u64;
+unsigned_qword_max := 18_446_744_073_709_551_615;
+
+signed_qword_min: s64;
+signed_qword_min := -9_223_372_036_854_775_806;
+
+signed_qword_max: s64;
+signed_qword_max := 9_223_372_036_854_775_807;
 
 // initialized
-unsigned_qword_init: u64 := 18_446_744_073_709_551_615;
-
-//print("test\n");
+unsigned_qword_init_min: u64 := 0;
+unsigned_qword_init_max: u64 := 18_446_744_073_709_551_615;
+signed_qword_init_min:   s64 := -9_223_372_036_854_775_806;
+signed_qword_init_max:   s64 := 9_223_372_036_854_775_807;

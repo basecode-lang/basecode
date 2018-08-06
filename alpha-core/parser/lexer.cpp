@@ -260,13 +260,13 @@ namespace basecode::syntax {
             _has_next = !_source_file->eof();
         });
 
+        const char ch = static_cast<const char>(tolower(read()));
         if (_source_file->eof()) {
             token = s_end_of_file;
             set_token_location(token);
             return true;
         }
 
-        const char ch = static_cast<const char>(tolower(read()));
         rewind_one_char();
 
         _source_file->push_mark();

@@ -617,6 +617,7 @@ namespace basecode::compiler {
                 continue;
 
             switch (var->type()->element_type()) {
+                case element_type_t::bool_type:
                 case element_type_t::numeric_type: {
                     if (var->is_constant()) {
                         auto& list = ro.first->second;
@@ -710,8 +711,25 @@ namespace basecode::compiler {
                             instruction_block->align(type_alignment);
                         auto var_label = instruction_block->make_label(var->symbol()->name());
                         instruction_block->current_entry()->label(var_label);
+                        context.allocate_variable(
+                            r,
+                            var_label->name(),
+                            var->type(),
+                            identifier_usage_t::heap,
+                            nullptr,
+                            instruction_block);
 
                         switch (var->type()->element_type()) {
+                            case element_type_t::bool_type: {
+                                bool value = false;
+                                var->as_bool(value);
+
+                                if (init == nullptr)
+                                    instruction_block->reserve_byte(1);
+                                else
+                                    instruction_block->byte(static_cast<uint8_t>(value ? 1 : 0));
+                                break;
+                            }
                             case element_type_t::numeric_type: {
                                 uint64_t value = 0;
                                 var->as_integer(value);
@@ -1154,10 +1172,13 @@ namespace basecode::compiler {
             symbol,
             expr);
 
-        if (expr != nullptr)
+        if (expr != nullptr) {
             expr->parent_element(identifier);
+        }
 
         symbol->parent_element(identifier);
+        identifier->location(symbol->location());
+
         _elements.add(identifier);
 
         return identifier;
