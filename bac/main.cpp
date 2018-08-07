@@ -16,6 +16,7 @@
 #include <vm/terp.h>
 #include <functional>
 #include <fmt/format.h>
+#include <common/colorizer.h>
 #include <compiler/session.h>
 #include <common/source_file.h>
 #include <common/hex_formatter.h>
@@ -52,7 +53,7 @@ static void usage() {
                "[-v|--verbose] "
                "[-G{{filename}}|--ast={{filename}}] "
                "[-H{{filename}}|--code_dom={{filename}}] "
-               " file\n");
+               "file\n");
 }
 
 int main(int argc, char** argv) {
@@ -130,7 +131,12 @@ int main(int argc, char** argv) {
     defer({
         high_resolution_clock::time_point end = high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
-        fmt::print("\ncompilation time (in μs): {}\n", duration);
+        fmt::print(
+            "\n{} {}\n",
+            basecode::common::colorizer::colorize(
+                "compilation time (in μs):",
+                basecode::common::term_colors_t::cyan),
+            duration);
     });
 
     std::vector<boost::filesystem::path> source_files {};
@@ -155,7 +161,12 @@ int main(int argc, char** argv) {
                 const boost::filesystem::path& source_file) {
             switch (phase) {
                 case basecode::compiler::session_compile_phase_t::start:
-                    fmt::print("{}\n", source_file.filename().string());
+                    fmt::print(
+                        "{} {}\n",
+                        basecode::common::colorizer::colorize(
+                            "module:",
+                            basecode::common::term_colors_t::cyan),
+                        source_file.filename().string());
                     break;
                 case basecode::compiler::session_compile_phase_t::success:
                 case basecode::compiler::session_compile_phase_t::failed:
@@ -172,7 +183,6 @@ int main(int argc, char** argv) {
     defer({
         if (r.is_failed())
             print_results(r);
-        fmt::print("\n");
         compilation_session.finalize();
     });
 
@@ -182,5 +192,6 @@ int main(int argc, char** argv) {
         if (!compilation_session.compile(r))
             return 1;
     }
+
     return 0;
 }

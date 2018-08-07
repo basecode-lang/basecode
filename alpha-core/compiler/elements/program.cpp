@@ -71,15 +71,6 @@ namespace basecode::compiler {
     program::~program() {
     }
 
-    void program::disassemble(FILE* file) {
-        auto root_block = _assembler->root_block();
-        if (root_block == nullptr)
-            return;
-        root_block->disassemble();
-        if (file != nullptr)
-            _assembler->listing().write(file);
-    }
-
     element* program::evaluate(
             common::result& r,
             compiler::session& session,
@@ -1027,6 +1018,17 @@ namespace basecode::compiler {
         scope->parent_element(type);
         _elements.add(type);
         return type;
+    }
+
+    void program::disassemble(FILE* file) {
+        auto root_block = _assembler->root_block();
+        if (root_block == nullptr)
+            return;
+        root_block->disassemble();
+        if (file != nullptr) {
+            fmt::print(file, "\n");
+            _assembler->listing().write(file);
+        }
     }
 
     type_info* program::make_type_info_type(
