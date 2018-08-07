@@ -16,7 +16,7 @@
 
 namespace basecode::syntax {
 
-    std::multimap<char, lexer::lexer_case_callable> lexer::s_cases = {
+    std::multimap<rune_t, lexer::lexer_case_callable> lexer::s_cases = {
         // attribute
         {'@', std::bind(&lexer::attribute, std::placeholders::_1, std::placeholders::_2)},
 
@@ -38,8 +38,9 @@ namespace basecode::syntax {
         {'^', std::bind(&lexer::caret, std::placeholders::_1, std::placeholders::_2)},
 
         // not equals, bang
-        {'!', std::bind(&lexer::not_equals_operator, std::placeholders::_1, std::placeholders::_2)},
-        {'!', std::bind(&lexer::bang, std::placeholders::_1, std::placeholders::_2)},
+        //{0x2260, std::bind(&lexer::not_equals_operator, std::placeholders::_1, std::placeholders::_2)}, // ≠
+        {'!',    std::bind(&lexer::not_equals_operator, std::placeholders::_1, std::placeholders::_2)},
+        {'!',    std::bind(&lexer::bang, std::placeholders::_1, std::placeholders::_2)},
 
         // question
         {'?', std::bind(&lexer::question, std::placeholders::_1, std::placeholders::_2)},
@@ -228,7 +229,9 @@ namespace basecode::syntax {
 
     common::rune_t lexer::peek() {
         while (!_source_file->eof()) {
-            auto ch = _source_file->next();
+            auto ch = _source_file->next(_result);
+            if (_result.is_failed())
+                return common::rune_invalid;
             if (!isspace(ch))
                 return ch;
         }
@@ -260,7 +263,14 @@ namespace basecode::syntax {
             _has_next = !_source_file->eof();
         });
 
-        const char ch = static_cast<const char>(tolower(read()));
+        auto rune = read();
+        if (rune == common::rune_invalid) {
+            token = s_invalid;
+            set_token_location(token);
+            return false;
+        }
+
+        rune = rune > 0x80 ? rune : tolower(rune);
         if (_source_file->eof()) {
             token = s_end_of_file;
             set_token_location(token);
@@ -274,7 +284,7 @@ namespace basecode::syntax {
             _source_file->pop_mark();
         });
 
-        auto case_range = s_cases.equal_range(ch);
+        auto case_range = s_cases.equal_range(rune);
         for (auto it = case_range.first; it != case_range.second; ++it) {
             token.radix = 10;
             token.number_type = number_types_t::none;
@@ -298,15 +308,22 @@ namespace basecode::syntax {
         }
 
         token = s_invalid;
-        token.value = ch;
+        // XXX: revisit this
+        token.value = static_cast<char>(rune);
         set_token_location(token);
 
         return true;
     }
 
+    const common::result& lexer::result() const {
+        return _result;
+    }
+
     common::rune_t lexer::read(bool skip_whitespace) {
         while (true) {
-            auto ch = _source_file->next();
+            auto ch = _source_file->next(_result);
+            if (_result.is_failed())
+                return common::rune_invalid;
 
             if (skip_whitespace && isspace(ch))
                 continue;

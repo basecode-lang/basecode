@@ -84,12 +84,6 @@ namespace basecode::common {
             true);
     }
 
-    rune_t source_file::next() {
-        if (_index >= _buffer.size())
-            return rune_eof;
-        return _buffer[_index++];
-    }
-
     void source_file::push_mark() {
         _mark_stack.push(_index);
     }
@@ -114,18 +108,24 @@ namespace basecode::common {
         return _buffer.empty();
     }
 
-    void source_file::build_lines() {
+    void source_file::build_lines(common::result& r) {
         uint32_t line = 0;
         uint32_t columns = 0;
         size_t line_start = 0;
 
-        for (size_t i = 0; i < _buffer.size(); i++) {
-            const auto end_of_buffer = i == _buffer.size() - 1;
-            const auto unix_new_line = _buffer[i] == '\n';
-            const auto windblows_new_line = _buffer[i] == '\r'
-                && (i + 1 < _buffer.size() && _buffer[i + 1] == '\n');
-            if (unix_new_line || windblows_new_line || end_of_buffer) {
-                const auto end = end_of_buffer ? _buffer.size() : i;
+        while (true) {
+            auto rune = next(r);
+            if (rune == rune_invalid) {
+                break;
+            } else if (rune == rune_bom) {
+                rune = next(r);
+            }
+
+            const auto end_of_buffer = rune == rune_eof;
+            const auto unix_new_line = rune == '\n';
+
+            if (unix_new_line || end_of_buffer) {
+                const auto end = end_of_buffer ? _buffer.size() : _index;
                 const auto it = _lines_by_index_range.insert(std::make_pair(
                     std::make_pair(line_start, end),
                     source_file_line_t {
@@ -137,15 +137,18 @@ namespace basecode::common {
                 _lines_by_number.insert(std::make_pair(
                     line,
                     &it.first->second));
-                line_start = i + 1;
+                line_start = _index + 1;
                 line++;
                 columns = 0;
             } else {
                 columns++;
             }
-            if (windblows_new_line)
-                i++;
+
+            if (rune == rune_eof)
+                break;
         }
+
+        seek(0);
     }
 
     size_t source_file::current_mark() {
@@ -185,18 +188,54 @@ namespace basecode::common {
             _buffer.insert(_buffer.begin(),
                            std::istream_iterator<uint8_t>(file),
                            std::istream_iterator<uint8_t>());
-            build_lines();
+            build_lines(r);
         } else {
             r.add_message(
                 "S001",
                 fmt::format("unable to open source file: {}", _path.string()),
                 true );
         }
-        return true;
+        return !r.is_failed();
     }
 
     size_t source_file::number_of_lines() const {
         return _lines_by_number.size();
+    }
+
+    rune_t source_file::next(common::result& r) {
+        if (_index >= _buffer.size())
+            return rune_eof;
+        size_t width = 1;
+        auto ch = _buffer[_index];
+        rune_t rune = ch;
+        if (ch == 0) {
+            r.add_message(
+                "S003",
+                "illegal character NUL",
+                true);
+            return rune_invalid;
+        } else if (ch >= 0x80) {
+            auto cp = utf8_decode(
+                (char*)(_buffer.data() + _index),
+                _buffer.size() - _index);
+            width = cp.width;
+            rune = cp.value;
+            if (rune == rune_invalid && width == 1) {
+                r.add_message(
+                    "S001",
+                    "illegal utf-8 encoding",
+                    true);
+                return rune_invalid;
+            } else if (rune == rune_bom && _index > 0) {
+                r.add_message(
+                    "S002",
+                    "illegal byte order mark",
+                    true);
+                return rune_invalid;
+            }
+        }
+        _index += width;
+        return rune;
     }
 
     uint8_t source_file::operator[](size_t index) {

@@ -38,7 +38,6 @@
 // 14. fix multiple assignment/destructuring
 
 // 15. assembler label names need to be fully qualified
-// 16. disassemble strings as comma-separated list of .db instead of lines
 
 // 17. cast operator & rules
 //     a. transmute<type>()
@@ -48,6 +47,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 // bool
+// ≠
 
 // uninitialized
 bool_true_uninit: bool;

@@ -50,13 +50,11 @@ namespace basecode::common {
             const std::string& message,
             const common::source_location& location);
 
-        rune_t next();
-
-        size_t pop_mark();
-
         bool eof() const;
 
         void push_mark();
+
+        size_t pop_mark();
 
         size_t pos() const;
 
@@ -71,6 +69,8 @@ namespace basecode::common {
         void restore_top_mark();
 
         bool load(common::result& r);
+
+        rune_t next(common::result& r);
 
         size_t number_of_lines() const;
 
@@ -87,7 +87,7 @@ namespace basecode::common {
         const source_file_line_t* line_by_index(size_t index) const;
 
     private:
-        void build_lines();
+        void build_lines(common::result& r);
 
     private:
         size_t _index = 0;

@@ -21,11 +21,11 @@ add_library(
 
     exports.cpp
 
-    common/rune.h
     common/defer.h
     common/bytes.h
     common/result.h
     common/result_message.h
+    common/rune.cpp common/rune.h
     common/id_pool.cpp common/id_pool.h
     common/colorizer.cpp common/colorizer.h
     common/source_file.cpp common/source_file.h

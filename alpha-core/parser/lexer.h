@@ -32,6 +32,8 @@ namespace basecode::syntax {
 
         bool next(token_t& token);
 
+        const common::result& result() const;
+
     private:
         bool plus(token_t& token);
 
@@ -191,9 +193,10 @@ namespace basecode::syntax {
         common::rune_t read(bool skip_whitespace = true);
 
     private:
-        static std::multimap<char, lexer_case_callable> s_cases;
+        static std::multimap<rune_t, lexer_case_callable> s_cases;
 
         bool _has_next = true;
+        common::result _result {};
         common::source_file* _source_file = nullptr;
         std::set<std::istream::pos_type> _line_breaks {};
     };
