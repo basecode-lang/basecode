@@ -50,68 +50,113 @@
 // ≠
 
 // uninitialized
-bool_true_uninit: bool;
-bool_true_uninit := true;
+bool_true_u: bool;
+bool_true_u := true;
 
-bool_false_uninit: bool;
-bool_false_uninit := false;
+bool_false_u: bool;
+bool_false_u := false;
 
 // initialized
-bool_true_init:  bool := true;
-bool_false_init: bool := false;
-
-print("bool_true_init := %hhu (before not)\n", bool_true_init);
-bool_true_init := !bool_true_init;
-print("bool_true_init := %hhu (after not)\n", bool_true_init);
+bool_true_i:  bool := true;
+bool_false_i: bool := false;
 
 ///////////////////////////////////////////////////////////////////////////////
 // u8
 
 // uninitialized
-unsigned_byte_min: u8;
-unsigned_byte_min := 0;
+u8_min_u: u8;
+u8_min_u := 0;
+u8_min_u := $0;
+u8_min_u := @0;
+u8_min_u := %0000_0000;
 
-unsigned_byte_max: u8;
-unsigned_byte_max := 255;
+u8_max_u: u8;
+u8_max_u := 255;
+u8_max_u := $ff;
+u8_max_u := @377;
+u8_max_u := %1111_1111;
 
-temp := ((unsigned_byte_max * 4) / 2) shl 4;
-temp := ~temp;
+s8_min_u: s8;
+s8_min_u := -128;
+s8_min_u := $80;
+s8_min_u := @200;
+s8_min_u := %1000_0000;
 
-print("temp := %X\n", temp);
-
-signed_byte_min: s8;
-signed_byte_min := -127;
-
-signed_byte_max: s8;
-signed_byte_max := 128;
+s8_max_u: s8;
+s8_max_u := 127;
+s8_max_u := $7f;
+s8_max_u := @177;
+s8_max_u := %0111_1111;
 
 // initialized
-unsigned_byte_init_min: u8 := 0;
-unsigned_byte_init_max: u8 := 255;
-signed_byte_init_min:   s8 := -128;
-signed_byte_init_max:   s8 := 127;
+u8_min_i1: u8 := 0;
+u8_min_i2: u8 := $0;
+u8_min_i3: u8 := @0;
+u8_min_i4: u8 := %0000_0000;
+
+u8_max_i1: u8 := 255;
+u8_max_i2: u8 := $ff;
+u8_max_i3: u8 := @377;
+u8_max_i4: u8 := %1111_1111;
+
+s8_min_i1: s8 := -128;
+s8_min_i2: s8 := $80;
+s8_min_i3: s8 := $200;
+s8_min_i4: s8 := %1000_0000;
+
+s8_max_i1: s8 := 127;
+s8_max_i2: s8 := $7f;
+s8_max_i3: s8 := @177;
+s8_max_i4: s8 := %0111_1111;
 
 ///////////////////////////////////////////////////////////////////////////////
 // u16
 
 // uninitialized
-unsigned_word_min: u16;
-unsigned_word_min := 0;
+u16_min_u: u16;
+u16_min_u := 0;
+u16_min_u := $0;
+u16_min_u := @0;
+u16_min_u := %0000_0000_0000_0000;
 
-unsigned_word_max: u16;
-unsigned_word_max := 65535;
+u16_max_u: u16;
+u16_max_u := 65535;
+u16_max_u := $ffff;
+u16_max_u := @177777;
+u16_max_u := %1111_1111_1111_1111;
 
-signed_word_min: s16;
-signed_word_min := -32768;
+s16_min_u: s16;
+s16_min_u := -32768;
+s16_min_u := $8000;
+s16_min_u := @100000;
+s16_min_u := %1000_0000_0000_0000;
 
-signed_word_max: s16;
-signed_word_max := 32767;
+s16_max_u: s16;
+s16_max_u := 32767;
+s16_max_u := $7fff;
+s16_max_u := @77777;
+s16_max_u := %0111_1111_1111_1111;
 
 // initialized
-unsigned_word_init_min: u16 := 0;
-unsigned_word_init_max: u16 := 65535;
-signed_word_init_min:   s16 := -32768;
-signed_word_init_max:   s16 := 32767;
+u16_min_i1: u16 := 0;
+u16_min_i2: u16 := $0;
+u16_min_i3: u16 := @0;
+u16_min_i4: u16 := %0000_0000_0000_0000;
+
+u16_max_i1: u16 := 65535;
+u16_max_i2: u16 := $ffff;
+u16_max_i3: u16 := @177777;
+u16_max_i4: u16 := %1111_1111_1111_1111;
+
+s16_min_i1: s16 := -32768;
+s16_min_i2: s16 := $8000;
+s16_min_i3: s16 := @100000;
+s16_min_i4: s16 := %1000_0000_0000_0000;
+
+s16_max_i1: s16 := 32767;
+s16_max_i2: s16 := $7fff;
+s16_max_i3: s16 := @77777;
+s16_max_i4: s16 := %0111_1111_1111_1111;
 
 ///////////////////////////////////////////////////////////////////////////////
 // u32

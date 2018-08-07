@@ -177,4 +177,10 @@ namespace basecode::compiler {
         }
     }
 
+    vm::op_sizes element_register_t::size() const {
+        if (var != nullptr) {
+            return vm::op_size_for_byte_size(var->type->size_in_bytes());
+        }
+        return vm::op_sizes::qword;
+    }
 };

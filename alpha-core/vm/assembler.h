@@ -30,6 +30,7 @@ namespace basecode::vm {
     };
 
     struct target_register_t {
+        op_sizes size;
         target_register_type_t type;
         union {
             i_registers_t i;
@@ -89,11 +90,11 @@ namespace basecode::vm {
 
         target_register_t* current_target_register();
 
-        void push_target_register(i_registers_t reg);
-
-        void push_target_register(f_registers_t reg);
-
         vm::segment* segment(const std::string& name);
+
+        void push_target_register(op_sizes size, i_registers_t reg);
+
+        void push_target_register(op_sizes size, f_registers_t reg);
 
         instruction_block* make_basic_block(instruction_block* parent_block = nullptr);
 

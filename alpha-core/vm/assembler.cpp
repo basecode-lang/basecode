@@ -260,8 +260,9 @@ namespace basecode::vm {
         return &_target_registers.top();
     }
 
-    void assembler::push_target_register(i_registers_t reg) {
+    void assembler::push_target_register(op_sizes size, i_registers_t reg) {
         target_register_t target {
+            .size = size,
             .type = target_register_type_t::integer,
             .reg = {
                 .i = reg
@@ -270,8 +271,9 @@ namespace basecode::vm {
         _target_registers.push(target);
     }
 
-    void assembler::push_target_register(f_registers_t reg) {
+    void assembler::push_target_register(op_sizes size, f_registers_t reg) {
         target_register_t target {
+            .size = size,
             .type = target_register_type_t::floating_point,
             .reg = {
                 .f = reg

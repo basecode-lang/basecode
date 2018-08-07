@@ -26,7 +26,9 @@ namespace basecode::compiler {
             vm::i_registers_t target_reg;
             if (!context.assembler->allocate_reg(target_reg)) {
             }
-            context.assembler->push_target_register(target_reg);
+            context.assembler->push_target_register(
+                vm::op_sizes::qword,
+                target_reg);
             // XXX: temporarily, only the first return value
             _expressions.front()->emit(r, context);
             instruction_block->store_from_ireg(

@@ -445,6 +445,8 @@ namespace basecode::compiler {
     struct element_register_t {
         ~element_register_t();
 
+        vm::op_sizes size() const;
+
         bool valid = false;
         bool clean_up = false;
         bool integer = true;

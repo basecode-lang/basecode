@@ -33,13 +33,13 @@ namespace basecode::compiler {
         if (!rhs_reg.valid)
             return false;
 
-        context.assembler->push_target_register(rhs_reg.reg.i);
+        auto rhs_size = rhs_reg.size();
+
+        context.assembler->push_target_register(
+            rhs_size,
+            rhs_reg.reg.i);
         _rhs->emit(r, context);
         context.assembler->pop_target_register();
-
-        auto rhs_size = vm::op_size_for_byte_size(
-            _rhs->infer_type(context.program)
-                ->size_in_bytes());
 
         switch (operator_type()) {
             case operator_type_t::negate: {

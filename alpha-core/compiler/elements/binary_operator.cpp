@@ -98,7 +98,9 @@ namespace basecode::compiler {
                         _rhs->location());
                     return false;
                 }
-                context.assembler->push_target_register(rhs_reg);
+                context.assembler->push_target_register(
+                    vm::op_size_for_byte_size(var->type->size_in_bytes()),
+                    rhs_reg);
                 _rhs->emit(r, context);
                 var->write(context.assembler, instruction_block);
                 context.assembler->pop_target_register();
@@ -208,11 +210,15 @@ namespace basecode::compiler {
         if (!lhs_reg.valid || !rhs_reg.valid)
             return;
 
-        context.assembler->push_target_register(lhs_reg.reg.i);
+        context.assembler->push_target_register(
+            lhs_reg.size(),
+            lhs_reg.reg.i);
         _lhs->emit(r, context);
         context.assembler->pop_target_register();
 
-        context.assembler->push_target_register(rhs_reg.reg.i);
+        context.assembler->push_target_register(
+            rhs_reg.size(),
+            rhs_reg.reg.i);
         _rhs->emit(r, context);
         context.assembler->pop_target_register();
 
@@ -298,11 +304,15 @@ namespace basecode::compiler {
         if (!lhs_reg.valid || !rhs_reg.valid)
             return;
 
-        context.assembler->push_target_register(lhs_reg.reg.i);
+        context.assembler->push_target_register(
+            lhs_reg.size(),
+            lhs_reg.reg.i);
         _lhs->emit(r, context);
         context.assembler->pop_target_register();
 
-        context.assembler->push_target_register(rhs_reg.reg.i);
+        context.assembler->push_target_register(
+            rhs_reg.size(),
+            rhs_reg.reg.i);
         _rhs->emit(r, context);
         context.assembler->pop_target_register();
 

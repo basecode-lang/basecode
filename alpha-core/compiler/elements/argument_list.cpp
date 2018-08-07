@@ -46,7 +46,9 @@ namespace basecode::compiler {
                                        ->size_in_bytes());
                         arg_reg.clean_up = true;
                     }
-                    context.assembler->push_target_register(arg_reg.reg.i);
+                    context.assembler->push_target_register(
+                        arg_reg.size(),
+                        arg_reg.reg.i);
                     arg->emit(r, context);
                     context.assembler->pop_target_register();
                     instruction_block->push(push_size, arg_reg.reg.i);

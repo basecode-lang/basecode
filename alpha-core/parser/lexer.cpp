@@ -960,6 +960,9 @@ namespace basecode::syntax {
                 stream << '-';
                 ch = read(false);
             }
+
+            auto has_digits = false;
+
             // XXX: requires utf8 fix
             while (valid.find_first_of(static_cast<char>(ch)) != std::string::npos) {
                 if (ch != '_') {
@@ -974,9 +977,13 @@ namespace basecode::syntax {
                     }
                     // XXX: requires utf8 fix
                     stream << static_cast<char>(ch);
+                    has_digits = true;
                 }
                 ch = read(false);
             }
+
+            if (!has_digits)
+                return false;
         }
 
         token.value = stream.str();
