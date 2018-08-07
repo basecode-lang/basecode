@@ -46,7 +46,12 @@ namespace basecode::vm {
                     case block_entry_type_t::data_definition: {
                         auto data_def = entry.data<data_definition_t>();
                         if (data_def->type == data_definition_type_t::initialized) {
-                            _terp->write(data_def->size, entry.address(), data_def->values.front());
+                            auto size_in_bytes = op_size_in_bytes(data_def->size);
+                            auto offset = 0;
+                            for (auto v : data_def->values) {
+                                _terp->write(data_def->size, entry.address() + offset, v);
+                                offset += size_in_bytes;
+                            }
                         }
                         break;
                     }
@@ -209,7 +214,7 @@ namespace basecode::vm {
                     }
                     case block_entry_type_t::data_definition:
                         auto data_def = entry.data<data_definition_t>();
-                        offset += op_size_in_bytes(data_def->size);
+                        offset += op_size_in_bytes(data_def->size) * data_def->values.size();
                         break;
                 }
             }

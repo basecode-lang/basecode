@@ -11,6 +11,7 @@
 
 #include <sstream>
 #include <fmt/format.h>
+#include <compiler/emit_context.h>
 #include "type.h"
 #include "field.h"
 #include "attribute.h"
@@ -157,6 +158,23 @@ namespace basecode::compiler {
             stream << "::";
         stream << symbol.name;
         return stream.str();
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    element_register_t::~element_register_t() {
+        if (assembler == nullptr)
+            return;
+        if (clean_up) {
+            if (var != nullptr) {
+                var->make_dormat(assembler);
+            } else {
+                if (integer)
+                    assembler->free_reg(reg.i);
+                else
+                    assembler->free_reg(reg.f);
+            }
+        }
     }
 
 };

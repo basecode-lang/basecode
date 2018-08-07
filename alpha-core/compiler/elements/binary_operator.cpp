@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <common/defer.h>
 #include "type.h"
 #include "element.h"
 #include "program.h"
@@ -79,8 +80,13 @@ namespace basecode::compiler {
                     return false;
                 }
 
+                var->make_live(context.assembler);
+                defer({
+                    var->make_dormat(context.assembler);
+                });
+
                 _lhs->emit(r, context);
-                var->read(context.assembler, instruction_block);
+                var->init(context.assembler, instruction_block);
 
                 vm::i_registers_t rhs_reg;
                 if (!context.assembler->allocate_reg(rhs_reg)) {
@@ -96,7 +102,6 @@ namespace basecode::compiler {
                 _rhs->emit(r, context);
                 var->write(context.assembler, instruction_block);
                 context.assembler->pop_target_register();
-
                 context.assembler->free_reg(rhs_reg);
                 break;
             }
@@ -203,18 +208,18 @@ namespace basecode::compiler {
         if (!lhs_reg.valid || !rhs_reg.valid)
             return;
 
-        context.assembler->push_target_register(lhs_reg.reg);
+        context.assembler->push_target_register(lhs_reg.reg.i);
         _lhs->emit(r, context);
         context.assembler->pop_target_register();
 
-        context.assembler->push_target_register(rhs_reg.reg);
+        context.assembler->push_target_register(rhs_reg.reg.i);
         _rhs->emit(r, context);
         context.assembler->pop_target_register();
 
         auto if_data = context.top<if_data_t>();
         switch (operator_type()) {
             case operator_type_t::equals: {
-                instruction_block->cmp(vm::op_sizes::qword, lhs_reg.reg, rhs_reg.reg);
+                instruction_block->cmp(vm::op_sizes::qword, lhs_reg.reg.i, rhs_reg.reg.i);
                 if (if_data != nullptr) {
                     auto parent_op = parent_element_as<compiler::binary_operator>();
                     if (parent_op != nullptr
@@ -243,7 +248,8 @@ namespace basecode::compiler {
                     auto rhs_target_reg = context.pop_scratch_register();
                     auto lhs_target_reg = context.pop_scratch_register();
                     auto target_reg = context.assembler->current_target_register();
-                    instruction_block->or_ireg_by_ireg_u64(
+                    instruction_block->or_ireg_by_ireg(
+                        vm::op_sizes::qword,
                         target_reg->reg.i,
                         lhs_target_reg,
                         rhs_target_reg);
@@ -257,7 +263,8 @@ namespace basecode::compiler {
                     auto rhs_target_reg = context.pop_scratch_register();
                     auto lhs_target_reg = context.pop_scratch_register();
                     auto target_reg = context.assembler->current_target_register();
-                    instruction_block->and_ireg_by_ireg_u64(
+                    instruction_block->and_ireg_by_ireg(
+                        vm::op_sizes::qword,
                         target_reg->reg.i,
                         lhs_target_reg,
                         rhs_target_reg);
@@ -291,41 +298,45 @@ namespace basecode::compiler {
         if (!lhs_reg.valid || !rhs_reg.valid)
             return;
 
-        context.assembler->push_target_register(lhs_reg.reg);
+        context.assembler->push_target_register(lhs_reg.reg.i);
         _lhs->emit(r, context);
         context.assembler->pop_target_register();
 
-        context.assembler->push_target_register(rhs_reg.reg);
+        context.assembler->push_target_register(rhs_reg.reg.i);
         _rhs->emit(r, context);
         context.assembler->pop_target_register();
 
         switch (operator_type()) {
             case operator_type_t::add: {
-                instruction_block->add_ireg_by_ireg_u64(
+                instruction_block->add_ireg_by_ireg(
+                    vm::op_sizes::qword,
                     result_reg->reg.i,
-                    lhs_reg.reg,
-                    rhs_reg.reg);
+                    lhs_reg.reg.i,
+                    rhs_reg.reg.i);
                 break;
             }
             case operator_type_t::divide: {
-                instruction_block->div_ireg_by_ireg_u64(
+                instruction_block->div_ireg_by_ireg(
+                    vm::op_sizes::qword,
                     result_reg->reg.i,
-                    lhs_reg.reg,
-                    rhs_reg.reg);
+                    lhs_reg.reg.i,
+                    rhs_reg.reg.i);
                 break;
             }
             case operator_type_t::modulo: {
-                instruction_block->mod_ireg_by_ireg_u64(
+                instruction_block->mod_ireg_by_ireg(
+                    vm::op_sizes::qword,
                     result_reg->reg.i,
-                    lhs_reg.reg,
-                    rhs_reg.reg);
+                    lhs_reg.reg.i,
+                    rhs_reg.reg.i);
                 break;
             }
             case operator_type_t::multiply: {
-                instruction_block->mul_ireg_by_ireg_u64(
+                instruction_block->mul_ireg_by_ireg(
+                    vm::op_sizes::qword,
                     result_reg->reg.i,
-                    lhs_reg.reg,
-                    rhs_reg.reg);
+                    lhs_reg.reg.i,
+                    rhs_reg.reg.i);
                 break;
             }
             case operator_type_t::exponent: {
@@ -336,59 +347,67 @@ namespace basecode::compiler {
                 break;
             }
             case operator_type_t::subtract: {
-                instruction_block->sub_ireg_by_ireg_u64(
+                instruction_block->sub_ireg_by_ireg(
+                    vm::op_sizes::qword,
                     result_reg->reg.i,
-                    lhs_reg.reg,
-                    rhs_reg.reg);
+                    lhs_reg.reg.i,
+                    rhs_reg.reg.i);
                 break;
             }
             case operator_type_t::binary_or: {
-                instruction_block->or_ireg_by_ireg_u64(
+                instruction_block->or_ireg_by_ireg(
+                    vm::op_sizes::qword,
                     result_reg->reg.i,
-                    lhs_reg.reg,
-                    rhs_reg.reg);
+                    lhs_reg.reg.i,
+                    rhs_reg.reg.i);
                 break;
             }
             case operator_type_t::shift_left: {
-                instruction_block->shl_ireg_by_ireg_u64(
+                instruction_block->shl_ireg_by_ireg(
+                    vm::op_sizes::qword,
                     result_reg->reg.i,
-                    lhs_reg.reg,
-                    rhs_reg.reg);
+                    lhs_reg.reg.i,
+                    rhs_reg.reg.i);
                 break;
             }
             case operator_type_t::binary_and: {
-                instruction_block->and_ireg_by_ireg_u64(
+                instruction_block->and_ireg_by_ireg(
+                    vm::op_sizes::qword,
                     result_reg->reg.i,
-                    lhs_reg.reg,
-                    rhs_reg.reg);
+                    lhs_reg.reg.i,
+                    rhs_reg.reg.i);
                 break;
             }
             case operator_type_t::binary_xor: {
-                instruction_block->xor_ireg_by_ireg_u64(
+                instruction_block->xor_ireg_by_ireg(
+                    vm::op_sizes::qword,
                     result_reg->reg.i,
-                    lhs_reg.reg,
-                    rhs_reg.reg);
+                    lhs_reg.reg.i,
+                    rhs_reg.reg.i);
                 break;
             }
             case operator_type_t::rotate_left: {
-                instruction_block->rol_ireg_by_ireg_u64(
+                instruction_block->rol_ireg_by_ireg(
+                    vm::op_sizes::qword,
                     result_reg->reg.i,
-                    lhs_reg.reg,
-                    rhs_reg.reg);
+                    lhs_reg.reg.i,
+                    rhs_reg.reg.i);
                 break;
             }
             case operator_type_t::shift_right: {
-                instruction_block->shr_ireg_by_ireg_u64(
+                instruction_block->shr_ireg_by_ireg(
+                    vm::op_sizes::qword,
                     result_reg->reg.i,
-                    lhs_reg.reg,
-                    rhs_reg.reg);
+                    lhs_reg.reg.i,
+                    rhs_reg.reg.i);
                 break;
             }
             case operator_type_t::rotate_right: {
-                instruction_block->ror_ireg_by_ireg_u64(
+                instruction_block->ror_ireg_by_ireg(
+                    vm::op_sizes::qword,
                     result_reg->reg.i,
-                    lhs_reg.reg,
-                    rhs_reg.reg);
+                    lhs_reg.reg.i,
+                    rhs_reg.reg.i);
                 break;
             }
             default:

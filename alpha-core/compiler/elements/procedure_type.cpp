@@ -102,6 +102,7 @@ namespace basecode::compiler {
             size += 8;
         if (size > 0) {
             instruction_block->sub_ireg_by_immediate(
+                vm::op_sizes::qword,
                 vm::i_registers_t::sp,
                 vm::i_registers_t::sp,
                 size);

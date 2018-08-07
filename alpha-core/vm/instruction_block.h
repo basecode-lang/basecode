@@ -319,230 +319,117 @@ namespace basecode::vm {
         void beq(const std::string& label_name);
 
         // inc variations
-        void inc_u8(i_registers_t reg);
-
-        void inc_u16(i_registers_t reg);
-
-        void inc_u32(i_registers_t reg);
-
-        void inc_u64(i_registers_t reg);
+        void inc(op_sizes size, i_registers_t reg);
 
         // dec variations
-        void dec_u8(i_registers_t reg);
-
-        void dec_u16(i_registers_t reg);
-
-        void dec_u32(i_registers_t reg);
-
-        void dec_u64(i_registers_t reg);
+        void dec(op_sizes size, i_registers_t reg);
 
         // mul variations
-        void mul_ireg_by_ireg_u8(
-            i_registers_t dest_reg,
-            i_registers_t multiplicand_reg,
-            i_registers_t multiplier_reg);
-
-        void mul_ireg_by_ireg_u16(
-            i_registers_t dest_reg,
-            i_registers_t multiplicand_reg,
-            i_registers_t multiplier_reg);
-
-        void mul_ireg_by_ireg_u32(
-            i_registers_t dest_reg,
-            i_registers_t multiplicand_reg,
-            i_registers_t multiplier_reg);
-
-        void mul_ireg_by_ireg_u64(
+        void mul_ireg_by_ireg(
+            op_sizes size,
             i_registers_t dest_reg,
             i_registers_t multiplicand_reg,
             i_registers_t multiplier_reg);
 
         // or variations
-        void or_ireg_by_ireg_u64(
+        void or_ireg_by_ireg(
+            op_sizes size,
             i_registers_t dest_reg,
             i_registers_t lhs_reg,
             i_registers_t rhs_reg);
 
         // xor variations
-        void xor_ireg_by_ireg_u64(
+        void xor_ireg_by_ireg(
+            op_sizes size,
             i_registers_t dest_reg,
             i_registers_t lhs_reg,
             i_registers_t rhs_reg);
 
         // and variations
-        void and_ireg_by_ireg_u64(
+        void and_ireg_by_ireg(
+            op_sizes size,
             i_registers_t dest_reg,
             i_registers_t lhs_reg,
             i_registers_t rhs_reg);
 
         // shl variations
-        void shl_ireg_by_ireg_u64(
+        void shl_ireg_by_ireg(
+            op_sizes size,
             i_registers_t dest_reg,
             i_registers_t lhs_reg,
             i_registers_t rhs_reg);
 
         // shr variations
-        void shr_ireg_by_ireg_u64(
+        void shr_ireg_by_ireg(
+            op_sizes size,
             i_registers_t dest_reg,
             i_registers_t lhs_reg,
             i_registers_t rhs_reg);
 
         // rol variations
-        void rol_ireg_by_ireg_u64(
+        void rol_ireg_by_ireg(
+            op_sizes size,
             i_registers_t dest_reg,
             i_registers_t lhs_reg,
             i_registers_t rhs_reg);
 
         // ror variations
-        void ror_ireg_by_ireg_u64(
+        void ror_ireg_by_ireg(
+            op_sizes size,
             i_registers_t dest_reg,
             i_registers_t lhs_reg,
             i_registers_t rhs_reg);
 
         // add variations
-        void add_ireg_by_ireg_u8(
-            i_registers_t dest_reg,
-            i_registers_t augend_reg,
-            i_registers_t addened_reg);
-
-        void add_ireg_by_ireg_u16(
-            i_registers_t dest_reg,
-            i_registers_t augend_reg,
-            i_registers_t addened_reg);
-
-        void add_ireg_by_ireg_u32(
-            i_registers_t dest_reg,
-            i_registers_t augend_reg,
-            i_registers_t addened_reg);
-
-        void add_ireg_by_ireg_u64(
+        void add_ireg_by_ireg(
+            op_sizes size,
             i_registers_t dest_reg,
             i_registers_t augend_reg,
             i_registers_t addened_reg);
 
         // sub variations
-        void sub_ireg_by_ireg_u8(
-            i_registers_t dest_reg,
-            i_registers_t minuend_reg,
-            i_registers_t subtrahend_reg);
-
-        void sub_ireg_by_ireg_u16(
-            i_registers_t dest_reg,
-            i_registers_t minuend_reg,
-            i_registers_t subtrahend_reg);
-
-        void sub_ireg_by_ireg_u32(
-            i_registers_t dest_reg,
-            i_registers_t minuend_reg,
-            i_registers_t subtrahend_reg);
-
-        void sub_ireg_by_ireg_u64(
+        void sub_ireg_by_ireg(
+            op_sizes size,
             i_registers_t dest_reg,
             i_registers_t minuend_reg,
             i_registers_t subtrahend_reg);
 
         void sub_ireg_by_immediate(
+            op_sizes size,
             i_registers_t dest_reg,
             i_registers_t minuend_reg,
             uint64_t subtrahend_immediate);
 
         // div variations
-        void div_ireg_by_ireg_u8(
-            i_registers_t dest_reg,
-            i_registers_t dividend_reg,
-            i_registers_t divisor_reg);
-
-        void div_ireg_by_ireg_u16(
-            i_registers_t dest_reg,
-            i_registers_t dividend_reg,
-            i_registers_t divisor_reg);
-
-        void div_ireg_by_ireg_u32(
-            i_registers_t dest_reg,
-            i_registers_t dividend_reg,
-            i_registers_t divisor_reg);
-
-        void div_ireg_by_ireg_u64(
+        void div_ireg_by_ireg(
+            op_sizes size,
             i_registers_t dest_reg,
             i_registers_t dividend_reg,
             i_registers_t divisor_reg);
 
         // mod variations
-        void mod_ireg_by_ireg_u8(
-            i_registers_t dest_reg,
-            i_registers_t dividend_reg,
-            i_registers_t divisor_reg);
-
-        void mod_ireg_by_ireg_u16(
-            i_registers_t dest_reg,
-            i_registers_t dividend_reg,
-            i_registers_t divisor_reg);
-
-        void mod_ireg_by_ireg_u32(
-            i_registers_t dest_reg,
-            i_registers_t dividend_reg,
-            i_registers_t divisor_reg);
-
-        void mod_ireg_by_ireg_u64(
+        void mod_ireg_by_ireg(
+            op_sizes size,
             i_registers_t dest_reg,
             i_registers_t dividend_reg,
             i_registers_t divisor_reg);
 
         // swap variations
-        void swap_ireg_with_ireg_u8(
-            i_registers_t dest_reg,
-            i_registers_t src_reg);
-
-        void swap_ireg_with_ireg_u16(
-            i_registers_t dest_reg,
-            i_registers_t src_reg);
-
-        void swap_ireg_with_ireg_u32(
-            i_registers_t dest_reg,
-            i_registers_t src_reg);
-
-        void swap_ireg_with_ireg_u64(
+        void swap_ireg_with_ireg(
+            op_sizes size,
             i_registers_t dest_reg,
             i_registers_t src_reg);
 
         // test mask for zero and branch
-        void test_mask_branch_if_zero_u8(
-            i_registers_t value_reg,
-            i_registers_t mask_reg,
-            i_registers_t address_reg);
-
-        void test_mask_branch_if_zero_u16(
-            i_registers_t value_reg,
-            i_registers_t mask_reg,
-            i_registers_t address_reg);
-
-        void test_mask_branch_if_zero_u32(
-            i_registers_t value_reg,
-            i_registers_t mask_reg,
-            i_registers_t address_reg);
-
-        void test_mask_branch_if_zero_u64(
+        void test_mask_branch_if_zero(
+            op_sizes size,
             i_registers_t value_reg,
             i_registers_t mask_reg,
             i_registers_t address_reg);
 
         // test mask for non-zero and branch
-        void test_mask_branch_if_not_zero_u8(
-            i_registers_t value_reg,
-            i_registers_t mask_reg,
-            i_registers_t address_reg);
-
-        void test_mask_branch_if_not_zero_u16(
-            i_registers_t value_reg,
-            i_registers_t mask_reg,
-            i_registers_t address_reg);
-
-        void test_mask_branch_if_not_zero_u32(
-            i_registers_t value_reg,
-            i_registers_t mask_reg,
-            i_registers_t address_reg);
-
-        void test_mask_branch_if_not_zero_u64(
+        void test_mask_branch_if_not_zero(
+            op_sizes size,
             i_registers_t value_reg,
             i_registers_t mask_reg,
             i_registers_t address_reg);

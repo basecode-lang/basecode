@@ -127,9 +127,23 @@ namespace basecode::compiler {
 
         auto var = context.variable_for_element(e);
         if (var != nullptr) {
+            var->make_live(context.assembler);
+
+            result.var = var;
+            result.var->read(
+                context.assembler,
+                context.assembler->current_block());
             result.valid = true;
-            result.reg = var->value_reg.i;
-            var->read(context.assembler, context.assembler->current_block());
+            result.integer = var->value_reg.integer;
+            if (var->address_reg.allocated
+            &&  var->type->access_model() == type_access_model_t::pointer) {
+                result.reg.i = var->address_reg.value.i;
+            } else {
+                if (result.integer)
+                    result.reg.i = result.var->value_reg.value.i;
+                else
+                    result.reg.f = result.var->value_reg.value.f;
+            }
         }
         else {
             vm::i_registers_t reg;
@@ -141,8 +155,9 @@ namespace basecode::compiler {
                     "assembler registers exhausted.",
                     e->location());
             } else {
-                result.reg = reg;
+                result.reg.i = reg;
                 result.valid = true;
+                result.integer = true;
                 result.clean_up = true;
             }
         }

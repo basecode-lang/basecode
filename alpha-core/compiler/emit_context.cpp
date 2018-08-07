@@ -18,20 +18,46 @@
 
 namespace basecode::compiler {
 
+    bool variable_register_t::reserve(vm::assembler* assembler) {
+        if (integer)
+            allocated = assembler->allocate_reg(value.i);
+        else
+            allocated = assembler->allocate_reg(value.f);
+        return allocated;
+    }
+
+    void variable_register_t::release(vm::assembler* assembler) {
+        if (!allocated)
+            return;
+        if (integer)
+            assembler->free_reg(value.i);
+        else
+            assembler->free_reg(value.f);
+        allocated = false;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
     bool variable_t::init(
             vm::assembler* assembler,
             vm::instruction_block* block) {
+        if (!live)
+            return false;
+
         if (address_loaded)
             return true;
 
         if (usage == identifier_usage_t::heap) {
+            if (!address_reg.reserve(assembler))
+                return false;
+
             if (address_offset != 0) {
                 block->move_label_to_ireg_with_offset(
-                    address_reg,
+                    address_reg.value.i,
                     name,
                     address_offset);
             } else {
-                block->move_label_to_ireg(address_reg, name);
+                block->move_label_to_ireg(address_reg.value.i, name);
             }
             block
                 ->current_entry()
@@ -46,22 +72,29 @@ namespace basecode::compiler {
     bool variable_t::read(
             vm::assembler* assembler,
             vm::instruction_block* block) {
-        init(assembler, block);
+        if (!live)
+            return false;
+
+        if (!init(assembler, block))
+            return false;
 
         std::string type_name = "global";
         if (requires_read) {
+            if (!value_reg.reserve(assembler))
+                return false;
+
             if (usage == identifier_usage_t::stack) {
                 type_name = stack_frame_entry_type_name(frame_entry->type);
                 block->load_to_ireg(
                     vm::op_sizes::qword,
-                    value_reg.i,
+                    value_reg.value.i,
                     vm::i_registers_t::fp,
                     frame_entry->offset);
             } else {
                 block->load_to_ireg(
                     vm::op_size_for_byte_size(type->size_in_bytes()),
-                    value_reg.i,
-                    address_reg);
+                    value_reg.value.i,
+                    address_reg.value.i);
                 block
                     ->current_entry()
                     ->comment(fmt::format("load identifier '{}' value ({})", name, type_name));
@@ -69,13 +102,13 @@ namespace basecode::compiler {
             requires_read = false;
         }
 
-        auto target_reg = assembler->current_target_register();
-        if (target_reg != nullptr && target_reg->reg.i != value_reg.i) {
-            block->move_ireg_to_ireg(target_reg->reg.i, value_reg.i);
-            block
-                ->current_entry()
-                ->comment("assign target register to value register");
-        }
+//        auto target_reg = assembler->current_target_register();
+//        if (target_reg != nullptr && target_reg->reg.i != value_reg.value.i) {
+//            block->move_ireg_to_ireg(target_reg->reg.i, value_reg.value.i);
+//            block
+//                ->current_entry()
+//                ->comment("assign target register to value register");
+//        }
 
         return true;
     }
@@ -89,7 +122,7 @@ namespace basecode::compiler {
 
         block->store_from_ireg(
             vm::op_size_for_byte_size(type->size_in_bytes()),
-            address_reg,
+            address_reg.value.i,
             target_reg->reg.i,
             frame_entry != nullptr ? frame_entry->offset : 0);
 
@@ -97,6 +130,24 @@ namespace basecode::compiler {
         requires_read = true;
 
         return true;
+    }
+
+    void variable_t::make_live(vm::assembler* assembler) {
+        if (live)
+            return;
+        live = true;
+        address_loaded = false;
+        requires_read = type->access_model() != type_access_model_t::pointer;
+    }
+
+    void variable_t::make_dormat(vm::assembler* assembler) {
+        if (!live)
+            return;
+        live = false;
+        requires_read = false;
+        address_loaded = false;
+        value_reg.release(assembler);
+        address_reg.release(assembler);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -134,33 +185,17 @@ namespace basecode::compiler {
         if (var != nullptr)
             return var;
 
-        variable_t new_var {
-            .name = name,
-            .type = type,
-            .usage = usage,
-            .written = false,
-            .requires_read = false,
-            .address_loaded = false,
-            .frame_entry = frame_entry,
-        };
-
-        if (usage == identifier_usage_t::heap) {
-            if (!assembler->allocate_reg(new_var.address_reg)) {
-            }
-        }
-
-        if (new_var.type->number_class() == type_number_class_t::integer) {
-            if (!assembler->allocate_reg(new_var.value_reg.i)) {
-            }
-            new_var.requires_read = true;
-        } else if (new_var.type->number_class() == type_number_class_t::floating_point) {
-            if (!assembler->allocate_reg(new_var.value_reg.f)) {
-            }
-            new_var.requires_read = true;
-        } else {
-            // XXX: what happened here?  add error
-        }
-        auto it = variables.insert(std::make_pair(name, new_var));
+        auto it = variables.insert(std::make_pair(
+            name,
+            variable_t {
+                .name = name,
+                .type = type,
+                .usage = usage,
+                .written = false,
+                .requires_read = false,
+                .address_loaded = false,
+                .frame_entry = frame_entry,
+            }));
         return it.second ? &it.first->second : nullptr;
     }
 
@@ -185,13 +220,7 @@ namespace basecode::compiler {
     void emit_context_t::free_variable(const std::string& name) {
         auto var = variable(name);
         if (var != nullptr) {
-            if (var->usage == identifier_usage_t::heap)
-                assembler->free_reg(var->address_reg);
-            if (var->type->number_class() == type_number_class_t::integer) {
-                assembler->free_reg(var->value_reg.i);
-            } else {
-                assembler->free_reg(var->value_reg.f);
-            }
+            var->make_dormat(assembler);
             variables.erase(name);
         }
     }

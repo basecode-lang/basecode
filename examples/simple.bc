@@ -60,6 +60,10 @@ bool_false_uninit := false;
 bool_true_init:  bool := true;
 bool_false_init: bool := false;
 
+print("bool_true_init := %hhu (before not)\n", bool_true_init);
+bool_true_init := !bool_true_init;
+print("bool_true_init := %hhu (after not)\n", bool_true_init);
+
 ///////////////////////////////////////////////////////////////////////////////
 // u8
 
@@ -69,6 +73,11 @@ unsigned_byte_min := 0;
 
 unsigned_byte_max: u8;
 unsigned_byte_max := 255;
+
+temp := ((unsigned_byte_max * 4) / 2) shl 4;
+temp := ~temp;
+
+print("temp := %X\n", temp);
 
 signed_byte_min: s8;
 signed_byte_min := -127

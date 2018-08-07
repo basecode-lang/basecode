@@ -722,8 +722,7 @@ namespace basecode::compiler {
                             r,
                             var_label->name(),
                             var->type(),
-                            identifier_usage_t::heap,
-                            nullptr);
+                            identifier_usage_t::heap);
 
                         switch (var->type()->element_type()) {
                             case element_type_t::bool_type: {
@@ -828,8 +827,8 @@ namespace basecode::compiler {
         top_level_block->current_entry()->blank_lines(1);
         top_level_block->memo();
         top_level_block->current_entry()->label(top_level_block->make_label("_initializer"));
-        for (auto var : literals)
-            var->init(context.assembler, top_level_block);
+//        for (auto var : literals)
+//            var->init(context.assembler, top_level_block);
 
         block_list_t implicit_blocks {};
         auto module_blocks = elements().find_by_type(element_type_t::module_block);

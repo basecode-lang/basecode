@@ -38,7 +38,7 @@ namespace basecode::compiler {
         if (stack_frame != nullptr)
             frame_entry = stack_frame->find_up(_symbol->name());
 
-        auto var = context.allocate_variable(
+        context.allocate_variable(
             r,
             _symbol->name(),
             _type,

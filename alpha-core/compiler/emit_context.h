@@ -27,6 +27,19 @@ namespace basecode::compiler {
         std::string false_branch_label;
     };
 
+    struct variable_register_t {
+        bool reserve(vm::assembler* assembler);
+
+        void release(vm::assembler* assembler);
+
+        bool integer = true;
+        bool allocated = false;
+        union {
+            vm::i_registers_t i;
+            vm::f_registers_t f;
+        } value;
+    };
+
     struct variable_t {
         bool init(
             vm::assembler* assembler,
@@ -40,18 +53,20 @@ namespace basecode::compiler {
             vm::assembler* assembler,
             vm::instruction_block* block);
 
+        void make_live(vm::assembler* assembler);
+
+        void make_dormat(vm::assembler* assembler);
+
         std::string name;
+        bool live = false;
         bool written = false;
         identifier_usage_t usage;
         int64_t address_offset = 0;
-        vm::i_registers_t address_reg;
-        union {
-            vm::i_registers_t i;
-            vm::f_registers_t f;
-        } value_reg;
         bool requires_read = false;
         bool address_loaded = false;
+        variable_register_t value_reg;
         compiler::type* type = nullptr;
+        variable_register_t address_reg;
         vm::stack_frame_entry_t* frame_entry = nullptr;
     };
 

@@ -28,33 +28,45 @@ namespace basecode::compiler {
             emit_context_t& context) {
         auto instruction_block = context.assembler->current_block();
         auto target_reg = context.assembler->current_target_register();
-        vm::i_registers_t rhs_reg;
-        if (!context.assembler->allocate_reg(rhs_reg)) {
-            // XXX: error
-        }
-        context.assembler->push_target_register(rhs_reg);
+
+        auto rhs_reg = register_for(r, context, _rhs);
+        if (!rhs_reg.valid)
+            return false;
+
+        context.assembler->push_target_register(rhs_reg.reg.i);
         _rhs->emit(r, context);
         context.assembler->pop_target_register();
 
-        auto rhs_size = vm::op_size_for_byte_size(_rhs->infer_type(context.program)->size_in_bytes());
+        auto rhs_size = vm::op_size_for_byte_size(
+            _rhs->infer_type(context.program)
+                ->size_in_bytes());
 
         switch (operator_type()) {
             case operator_type_t::negate: {
-                instruction_block->neg(rhs_size, target_reg->reg.i, rhs_reg);
+                instruction_block->neg(
+                    rhs_size,
+                    target_reg->reg.i,
+                    rhs_reg.reg.i);
                 break;
             }
             case operator_type_t::binary_not: {
-                instruction_block->not_op(rhs_size, target_reg->reg.i, rhs_reg);
+                instruction_block->not_op(
+                    rhs_size,
+                    target_reg->reg.i,
+                    rhs_reg.reg.i);
                 break;
             }
             case operator_type_t::logical_not: {
+                instruction_block->xor_ireg_by_ireg(
+                    rhs_size,
+                    target_reg->reg.i,
+                    rhs_reg.reg.i,
+                    rhs_reg.reg.i);
                 break;
             }
             default:
                 break;
         }
-
-        context.assembler->free_reg(rhs_reg);
 
         return true;
     }

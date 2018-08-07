@@ -440,15 +440,19 @@ namespace basecode::compiler {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    struct variable_t;
+
     struct element_register_t {
-        ~element_register_t() {
-            if (clean_up && assembler != nullptr)
-                assembler->free_reg(reg);
-        }
+        ~element_register_t();
 
         bool valid = false;
         bool clean_up = false;
-        vm::i_registers_t reg;
+        bool integer = true;
+        union {
+            vm::i_registers_t i;
+            vm::f_registers_t f;
+        } reg;
+        variable_t* var = nullptr;
         vm::assembler* assembler = nullptr;
     };
 
