@@ -379,13 +379,15 @@ namespace basecode::compiler {
                 if (expr != nullptr) {
                     args = dynamic_cast<compiler::argument_list*>(expr);
                 }
-                return make_procedure_call(
+                auto element = make_procedure_call(
                     current_scope(),
                     make_identifier_reference(
                         current_scope(),
                         qualified_symbol,
                         proc_identifier),
                     args);
+                element->location(node->location);
+                return element;
             }
             case syntax::ast_node_types_t::argument_list: {
                 auto args = make_argument_list(current_scope());
@@ -1165,6 +1167,7 @@ namespace basecode::compiler {
         _elements.add(reference);
         if (!reference->resolved())
             _unresolved_identifier_references.emplace_back(reference);
+        reference->location(symbol.location);
         return reference;
     }
 

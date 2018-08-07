@@ -548,6 +548,8 @@ namespace basecode::vm {
             std::string format_spec;
             std::string offset_spec = "{}";
 
+            // XXX: format_spec is only specifing the minimum width; not the max
+            //      will need to adjust either the value or the string result
             mnemonic << op_name;
             switch (size) {
                 case op_sizes::byte:

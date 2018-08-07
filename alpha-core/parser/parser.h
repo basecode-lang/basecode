@@ -92,18 +92,18 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    class symbol_infix_parser : public infix_parser {
-    public:
-        symbol_infix_parser() = default;
-
-        ast_node_shared_ptr parse(
-            common::result& r,
-            parser* parser,
-            const ast_node_shared_ptr& lhs,
-            token_t& token) override;
-
-        precedence_t precedence() const override;
-    };
+//    class symbol_infix_parser : public infix_parser {
+//    public:
+//        symbol_infix_parser() = default;
+//
+//        ast_node_shared_ptr parse(
+//            common::result& r,
+//            parser* parser,
+//            const ast_node_shared_ptr& lhs,
+//            token_t& token) override;
+//
+//        precedence_t precedence() const override;
+//    };
 
     ///////////////////////////////////////////////////////////////////////////
 
@@ -681,7 +681,6 @@ namespace basecode::syntax {
 
         static inline cast_infix_parser s_cast_infix_parser {};
         static inline comma_infix_parser s_comma_infix_parser {};
-        static inline symbol_infix_parser s_symbol_infix_parser {};
         static inline proc_call_infix_parser s_proc_call_infix_parser {};
         static inline assignment_infix_parser s_assignment_infix_parser {};
         static inline block_comment_infix_parser s_block_comment_infix_parser {};
@@ -696,7 +695,6 @@ namespace basecode::syntax {
         static inline std::unordered_map<token_types_t, infix_parser*> s_infix_parsers = {
             {token_types_t::cast_literal,       &s_cast_infix_parser},
             {token_types_t::comma,              &s_comma_infix_parser},
-            {token_types_t::identifier,         &s_symbol_infix_parser},
             {token_types_t::minus,              &s_sum_binary_op_parser},
             {token_types_t::plus,               &s_sum_binary_op_parser},
             {token_types_t::left_paren,         &s_proc_call_infix_parser},

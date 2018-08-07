@@ -125,7 +125,7 @@ namespace basecode::common {
             const auto unix_new_line = rune == '\n';
 
             if (unix_new_line || end_of_buffer) {
-                const auto end = end_of_buffer ? _buffer.size() : _index;
+                const auto end = end_of_buffer ? _buffer.size() : _index - 1;
                 const auto it = _lines_by_index_range.insert(std::make_pair(
                     std::make_pair(line_start, end),
                     source_file_line_t {
@@ -137,7 +137,7 @@ namespace basecode::common {
                 _lines_by_number.insert(std::make_pair(
                     line,
                     &it.first->second));
-                line_start = _index + 1;
+                line_start = _index;
                 line++;
                 columns = 0;
             } else {
@@ -189,6 +189,11 @@ namespace basecode::common {
                            std::istream_iterator<uint8_t>(file),
                            std::istream_iterator<uint8_t>());
             build_lines(r);
+
+//            for (size_t i = 0; i < number_of_lines(); i++) {
+//                auto line = line_by_number(i);
+//                fmt::print("{}\n", substring(line->begin, line->end));
+//            }
         } else {
             r.add_message(
                 "S001",

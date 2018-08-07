@@ -80,7 +80,7 @@ temp := ~temp;
 print("temp := %X\n", temp);
 
 signed_byte_min: s8;
-signed_byte_min := -127
+signed_byte_min := -127;
 
 signed_byte_max: s8;
 signed_byte_max := 128;
@@ -102,7 +102,7 @@ unsigned_word_max: u16;
 unsigned_word_max := 65535;
 
 signed_word_min: s16;
-signed_word_min := -32768
+signed_word_min := -32768;
 
 signed_word_max: s16;
 signed_word_max := 32767;

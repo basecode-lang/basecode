@@ -695,6 +695,7 @@ namespace basecode::syntax {
         if (lhs->type == ast_node_types_t::symbol) {
             auto proc_call_node = parser->ast_builder()->proc_call_node();
             proc_call_node->lhs = lhs;
+            proc_call_node->location.start(lhs->location.start());
 
             if (!parser->peek(token_types_t::right_paren)) {
                 pairs_to_list(
@@ -706,6 +707,7 @@ namespace basecode::syntax {
             right_paren_token.type = token_types_t::right_paren;
             if (!parser->expect(r, right_paren_token))
                 return nullptr;
+            proc_call_node->location.end(right_paren_token.location.end());
 
             return proc_call_node;
         } else {
@@ -719,17 +721,17 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    ast_node_shared_ptr symbol_infix_parser::parse(
-            common::result& r,
-            parser* parser,
-            const ast_node_shared_ptr& lhs,
-            token_t& token) {
-        return create_symbol_node(r, parser, lhs, token);
-    }
-
-    precedence_t symbol_infix_parser::precedence() const {
-        return precedence_t::variable;
-    }
+//    ast_node_shared_ptr symbol_infix_parser::parse(
+//            common::result& r,
+//            parser* parser,
+//            const ast_node_shared_ptr& lhs,
+//            token_t& token) {
+//        return create_symbol_node(r, parser, lhs, token);
+//    }
+//
+//    precedence_t symbol_infix_parser::precedence() const {
+//        return precedence_t::variable;
+//    }
 
     ///////////////////////////////////////////////////////////////////////////
 
@@ -789,7 +791,7 @@ namespace basecode::syntax {
         pairs_to_list(assignment_node->lhs, lhs);
         auto rhs = parser->parse_expression(
             r,
-            static_cast<uint8_t>(precedence_t::assignment) - 1);
+            static_cast<uint8_t>(precedence_t::assignment));
         if (rhs == nullptr) {
             parser->error(
                 r,
@@ -1079,8 +1081,9 @@ namespace basecode::syntax {
             if (node->type == ast_node_types_t::statement) {
                 token_t line_terminator_token;
                 line_terminator_token.type = token_types_t::semi_colon;
-                if (!expect(r, line_terminator_token))
-                    break;
+                if (!expect(r, line_terminator_token)) {
+                    return nullptr;
+                }
             }
 
             if (!scope->pending_attributes.empty()) {
