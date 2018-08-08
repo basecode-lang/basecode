@@ -154,6 +154,7 @@ int main(int argc, char** argv) {
         .verbose = verbose_flag,
         .heap_size = heap_size,
         .stack_size = stack_size,
+        .compiler_path = boost::filesystem::system_complete(argv[0]).remove_filename(),
         .ast_graph_file = ast_graph_file_name,
         .dom_graph_file = code_dom_graph_file_name,
         .compile_callback = [&](

@@ -67,6 +67,13 @@ namespace basecode::common {
             return !_success;
         }
 
+        void remove_code(const std::string& code) {
+            for (auto it = _messages.begin(); it != _messages.end(); ++it) {
+                if ((*it).code() == code)
+                    it = _messages.erase(it);
+            }
+        }
+
         inline const result_message_list& messages() const {
             return _messages;
         }

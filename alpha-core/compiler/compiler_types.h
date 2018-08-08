@@ -52,6 +52,7 @@ namespace basecode::compiler {
         bool verbose = false;
         size_t heap_size = 0;
         size_t stack_size = 0;
+        boost::filesystem::path compiler_path;
         boost::filesystem::path ast_graph_file;
         boost::filesystem::path dom_graph_file;
         session_compile_callback compile_callback;

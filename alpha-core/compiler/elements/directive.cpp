@@ -135,6 +135,17 @@ namespace basecode::compiler {
         boost::filesystem::path library_path(platform_name.str());
         auto library = terp->load_shared_library(r, library_path);
         if (library == nullptr) {
+            // XXX: revisit this at some point
+            auto msg = r.find_code("B062");
+            if (msg != nullptr) {
+                program->error(
+                    r,
+                    this,
+                    "P006",
+                    msg->message(),
+                    location());
+                r.remove_code("B062");
+            }
             return false;
         }
 
