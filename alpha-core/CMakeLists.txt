@@ -4,14 +4,19 @@ project(alpha-core)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+set(CUSTOM_LIBRARIES "")
+
 if (UNIX AND NOT APPLE)
     set(CMAKE_CXX_FLAGS "-fPIC")
 endif()
 
+if ("${CMAKE_SYSTEM_NAME}" MATCHES "FreeBSD")
+    add_definitions(-D__USE_ISOC99)
+elseif ("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
+    set(CUSTOM_LIBRARIES "${CUSTOM_LIBRARIES} dl")
+endif()
+
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
-    if ("${CMAKE_SYSTEM_NAME}" MATCHES "FreeBSD")
-        add_definitions(-D__USE_ISOC99)
-    endif()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-unused-private-field -Wno-unknown-pragmas -Wno-inconsistent-missing-override" CACHE STRING "compile flags" FORCE)
     message(STATUS "alpha-core using clang flags: ${CMAKE_CXX_FLAGS}")
 elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
@@ -139,4 +144,5 @@ target_link_libraries(
     dynload_s
     boost-system
     boost-filesystem
-    utf8proc)
+    utf8proc
+    ${CUSTOM_LIBRARIES})
