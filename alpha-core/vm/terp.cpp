@@ -288,15 +288,21 @@ namespace basecode::vm {
     }
 
     void* shared_library_t::symbol_address(const std::string& symbol_name) {
+        DLLib* effective_library = nullptr;
+#if defined(__FreeBSD__)
+        effective_library = _self_loaded ? nullptr : _library;
+#else
+        effective_library = _library;
+#endif
         auto it = _symbols.find(symbol_name);
         if (it == _symbols.end()) {
-            auto func_ptr = dlFindSymbol(_library, symbol_name.c_str());
+            auto func_ptr = dlFindSymbol(effective_library, symbol_name.c_str());
             _symbols.insert(std::make_pair(symbol_name, func_ptr));
             return func_ptr;
         }
 
         if (it->second == nullptr) {
-            it->second = dlFindSymbol(_library, symbol_name.c_str());
+            it->second = dlFindSymbol(effective_library, symbol_name.c_str());
         }
 
         return it->second;

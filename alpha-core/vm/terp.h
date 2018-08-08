@@ -536,6 +536,14 @@ namespace basecode::vm {
             common::result& r,
             const boost::filesystem::path& path);
 
+        bool self_loaded() const {
+            return _self_loaded;
+        }
+
+        void self_loaded(bool value) {
+            _self_loaded = value;
+        }
+
         bool initialize(common::result& r);
 
         inline const symbol_address_map& symbols() const {
@@ -556,6 +564,7 @@ namespace basecode::vm {
         void load_symbols(const char* path);
 
     private:
+        bool _self_loaded = false;
         DLLib* _library = nullptr;
         symbol_address_map _symbols {};
         boost::filesystem::path _path {};

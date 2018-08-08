@@ -127,20 +127,14 @@ namespace basecode::compiler {
             return false;
         }
 
-        vm::shared_library_t* library = nullptr;
         std::stringstream platform_name;
         platform_name
             << SHARED_LIBRARY_PREFIX
             << library_name
             << SHARED_LIBRARY_SUFFIX;
         boost::filesystem::path library_path(platform_name.str());
-        library = terp->load_shared_library(r, library_path);
-#if defined(__FreeBSD__)
-        if (library == nullptr && library_name != COMPILER_LIBRARY_NAME) {
-#else
+        auto library = terp->load_shared_library(r, library_path);
         if (library == nullptr) {
-#endif
-            // XXX: revisit this at some point
             auto msg = r.find_code("B062");
             if (msg != nullptr) {
                 program->error(
@@ -153,6 +147,7 @@ namespace basecode::compiler {
             }
             return false;
         }
+        library->self_loaded(library_name == COMPILER_LIBRARY_NAME);
 
         auto ffi_identifier = dynamic_cast<compiler::identifier*>(_expression);
         std::string symbol_name = ffi_identifier->symbol()->name();
