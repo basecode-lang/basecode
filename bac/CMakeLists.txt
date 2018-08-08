@@ -30,7 +30,7 @@ include_directories(
 add_executable(
     ${PROJECT_NAME}
     main.cpp
-    ya_getopt.c ya_getopt.h
+    ../ext/ya_getopt-1.0.0/ya_getopt.c
 )
 target_link_libraries(
     ${PROJECT_NAME}

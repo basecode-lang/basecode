@@ -15,6 +15,7 @@
 #include <iostream>
 #include <vm/terp.h>
 #include <functional>
+#include <ya_getopt.h>
 #include <fmt/format.h>
 #include <unordered_map>
 #include <common/colorizer.h>
@@ -22,7 +23,6 @@
 #include <common/source_file.h>
 #include <common/hex_formatter.h>
 #include <common/string_support.h>
-#include "ya_getopt.h"
 
 static constexpr size_t heap_size = (1024 * 1024) * 32;
 static constexpr size_t stack_size = (1024 * 1024) * 8;

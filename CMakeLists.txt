@@ -58,6 +58,9 @@ add_library(boost-filesystem ${BOOST_FILESYSTEM_SOURCES})
 add_subdirectory(ext/utf8proc-2.2.0 EXCLUDE_FROM_ALL)
 include_directories(ext/utf8proc-2.2.0)
 
+# ya_getopt
+include_directories(ext/ya_getopt-1.0.0)
+
 # projects
 add_subdirectory(alpha-core)
 add_subdirectory(bac)
