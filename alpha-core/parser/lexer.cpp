@@ -16,7 +16,7 @@
 
 namespace basecode::syntax {
 
-    std::multimap<rune_t, lexer::lexer_case_callable> lexer::s_cases = {
+    std::multimap<common::rune_t, lexer::lexer_case_callable> lexer::s_cases = {
         // attribute
         {'@', std::bind(&lexer::attribute, std::placeholders::_1, std::placeholders::_2)},
 

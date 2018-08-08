@@ -193,7 +193,7 @@ namespace basecode::syntax {
         common::rune_t read(bool skip_whitespace = true);
 
     private:
-        static std::multimap<rune_t, lexer_case_callable> s_cases;
+        static std::multimap<common::rune_t, lexer_case_callable> s_cases;
 
         bool _has_next = true;
         common::result _result {};
