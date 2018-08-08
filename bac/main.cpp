@@ -16,10 +16,12 @@
 #include <vm/terp.h>
 #include <functional>
 #include <fmt/format.h>
+#include <unordered_map>
 #include <common/colorizer.h>
 #include <compiler/session.h>
 #include <common/source_file.h>
 #include <common/hex_formatter.h>
+#include <common/string_support.h>
 #include "ya_getopt.h"
 
 static constexpr size_t heap_size = (1024 * 1024) * 32;
@@ -64,6 +66,7 @@ int main(int argc, char** argv) {
     bool verbose_flag = false;
     bool output_ast_graphs = false;
     boost::filesystem::path code_dom_graph_file_name;
+    std::unordered_map<std::string, std::string> definitions {};
 
     static struct option long_options[] = {
         {"help",    ya_no_argument,       nullptr, 0  },
@@ -78,7 +81,7 @@ int main(int argc, char** argv) {
         opt = ya_getopt_long(
             argc,
             argv,
-            "?vGH:",
+            "?vGH:D:",
             long_options,
             &option_index);
         if (opt == -1) {
@@ -117,6 +120,15 @@ int main(int argc, char** argv) {
             case 'H':
                 code_dom_graph_file_name = ya_optarg;
                 break;
+            case 'D': {
+                auto parts = basecode::common::string_to_list(ya_optarg, '=');
+                std::string value;
+                if (parts.size() == 2)
+                    value = parts[1];
+                basecode::common::trim(parts[0]);
+                definitions.insert(std::make_pair(parts[0], value));
+                break;
+            }
             default:
                 break;
         }
@@ -173,7 +185,8 @@ int main(int argc, char** argv) {
                 case basecode::compiler::session_compile_phase_t::failed:
                     break;
             }
-        }
+        },
+        .definitions = definitions
     };
 
     basecode::compiler::session compilation_session(

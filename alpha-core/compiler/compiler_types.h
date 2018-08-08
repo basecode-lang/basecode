@@ -12,6 +12,7 @@
 #pragma once
 
 #include <functional>
+#include <unordered_map>
 #include <boost/filesystem.hpp>
 #include "elements/element_types.h"
 
@@ -56,6 +57,7 @@ namespace basecode::compiler {
         boost::filesystem::path dom_graph_file;
         boost::filesystem::path compiler_path;
         session_compile_callback compile_callback;
+        std::unordered_map<std::string, std::string> definitions {};
     };
 
 }

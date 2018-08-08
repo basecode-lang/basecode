@@ -57,6 +57,7 @@ add_library(
     common/colorizer.cpp common/colorizer.h
     common/source_file.cpp common/source_file.h
     common/hex_formatter.cpp common/hex_formatter.h
+    common/string_support.cpp common/string_support.h
     common/source_location.cpp common/source_location.h
     common/graphviz_formatter.cpp common/graphviz_formatter.h
 
