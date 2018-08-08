@@ -58,8 +58,10 @@ namespace basecode::compiler {
                     return props.name;
                 }
             } else {
-                if (value >= props.min && value <= props.max)
+                if (value >= static_cast<uint64_t>(props.min)
+                &&  value <= props.max) {
                     return props.name;
+                }
             }
         }
         return "u32";

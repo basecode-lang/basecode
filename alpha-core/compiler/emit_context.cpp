@@ -189,11 +189,11 @@ namespace basecode::compiler {
             name,
             variable_t {
                 .name = name,
-                .type = type,
-                .usage = usage,
                 .written = false,
+                .usage = usage,
                 .requires_read = false,
                 .address_loaded = false,
+                .type = type,
                 .frame_entry = frame_entry,
             }));
         return it.second ? &it.first->second : nullptr;

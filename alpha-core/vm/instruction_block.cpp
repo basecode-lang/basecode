@@ -87,32 +87,32 @@ namespace basecode::vm {
     void instruction_block::reserve_byte(size_t count) {
         make_block_entry(data_definition_t {
             .size = op_sizes::byte,
-            .values = {count},
             .type = data_definition_type_t::uninitialized,
+            .values = {count},
         });
     }
 
     void instruction_block::reserve_word(size_t count) {
         make_block_entry(data_definition_t {
             .size = op_sizes::word,
-            .values = {count},
             .type = data_definition_type_t::uninitialized,
+            .values = {count},
         });
     }
 
     void instruction_block::reserve_dword(size_t count) {
         make_block_entry(data_definition_t {
             .size = op_sizes::dword,
-            .values = {count},
             .type = data_definition_type_t::uninitialized,
+            .values = {count},
         });
     }
 
     void instruction_block::reserve_qword(size_t count) {
         make_block_entry(data_definition_t {
             .size = op_sizes::qword,
-            .values = {count},
             .type = data_definition_type_t::uninitialized,
+            .values = {count},
         });
     }
 

@@ -43,6 +43,7 @@ namespace basecode::vm {
             case section_t::data:   return "data";
             case section_t::text:   return "text";
         }
+        return "unknown";
     }
 
     enum data_definition_type_t : uint8_t {

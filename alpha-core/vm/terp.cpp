@@ -1825,7 +1825,7 @@ namespace basecode::vm {
                 func_signature->apply_calling_convention(_call_vm);
                 dcReset(_call_vm);
 
-                auto param_index = 0;
+                size_t param_index = 0;
                 auto arg_count = pop();
                 while (arg_count > 0) {
                     auto& argument = func_signature->arguments[param_index];

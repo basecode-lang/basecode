@@ -3,12 +3,7 @@ NOTES
 
 Basecode Bootstrap Tasks
 ------------------------
-- FIX: now that boost is available, get the executable full path
-- FIX: pass executable path into session so paths for module files can be full paths
-- FIX: the AST node graph output option shouldn't take a filename now.  the filename should
-        be based on the module compiled.  the option should just be a flag.
 - NEW: implement #if/#elseif/#else directives for conditional compilation
-- NEW: add command line flags that are passed into the compiler as definitions
 
 deps to bytecode generation
 ===========================
@@ -133,3 +128,8 @@ DONE
     * module(expr) instead of #load
     * namespace importing
         - import <expr> [from <identifier>]
+- FIX: now that boost is available, get the executable full path
+- FIX: pass executable path into session so paths for module files can be full paths
+- FIX: the AST node graph output option shouldn't take a filename now.  the filename should
+        be based on the module compiled.  the option should just be a flag.
+- NEW: add command line flags that are passed into the compiler as definitions
