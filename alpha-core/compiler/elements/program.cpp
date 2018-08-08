@@ -145,6 +145,15 @@ namespace basecode::compiler {
                     }
                     auto source_file = session.add_source_file(source_path);
                     auto module = compile_module(r, session, source_file);
+                    if (module == nullptr) {
+                        error(
+                            r,
+                            session,
+                            "C021",
+                            "unable to load module.",
+                            node->rhs->location);
+                        return nullptr;
+                    }
                     reference->module(module);
                 } else {
                     error(
@@ -679,7 +688,6 @@ namespace basecode::compiler {
             ro_list.emplace_back(str);
         }
 
-        std::vector<variable_t*> literals {};
         for (const auto& section : vars_by_section) {
             instruction_block->section(section.first);
             instruction_block->current_entry()->blank_lines(1);
@@ -704,10 +712,8 @@ namespace basecode::compiler {
                                     context.program->find_type({.name = "string"}),
                                     identifier_usage_t::heap,
                                     nullptr);
-                                if (var != nullptr) {
+                                if (var != nullptr)
                                     var->address_offset = 4;
-                                    literals.emplace_back(var);
-                                }
                             }
                             current_entry->blank_lines(1);
                         }
@@ -839,8 +845,6 @@ namespace basecode::compiler {
         top_level_block->current_entry()->blank_lines(1);
         top_level_block->memo();
         top_level_block->current_entry()->label(top_level_block->make_label("_initializer"));
-//        for (auto var : literals)
-//            var->init(context.assembler, top_level_block);
 
         block_list_t implicit_blocks {};
         auto module_blocks = elements().find_by_type(element_type_t::module_block);
@@ -949,6 +953,8 @@ namespace basecode::compiler {
             common::result& r,
             compiler::session& session,
             common::source_file* source_file) {
+        auto is_root = session.current_source_file() == nullptr;
+
         session.push_source_file(source_file);
         defer({
             session.pop_source_file();
@@ -963,8 +969,10 @@ namespace basecode::compiler {
                 r,
                 session,
                 module_node));
-            if (module != nullptr)
+            if (module != nullptr) {
                 module->parent_element(this);
+                module->is_root(is_root);
+            }
         }
 
         if (r.is_failed()) {
@@ -1854,7 +1862,10 @@ namespace basecode::compiler {
             auto expr_node = child->rhs;
             switch (expr_node->type) {
                 case syntax::ast_node_types_t::assignment: {
-                    for (const auto& symbol_node : expr_node->lhs->children) {
+                    const auto& target_list = expr_node->lhs;
+                    const auto& source_list = expr_node->rhs;
+                    for (size_t i = 0; i < target_list->children.size(); i++) {
+                        const auto& symbol_node = target_list->children[i];
                         auto symbol = dynamic_cast<compiler::symbol_element*>(evaluate_in_scope(
                             r,
                             session,
@@ -1864,11 +1875,11 @@ namespace basecode::compiler {
                         find_identifier_type(
                             r,
                             type_find_result,
-                            expr_node->rhs,
+                            source_list->children[i],
                             type->scope());
                         auto init = make_initializer(
                             type->scope(),
-                            evaluate_in_scope(r, session, expr_node->rhs, type->scope()));
+                            evaluate_in_scope(r, session, source_list->children[i], type->scope()));
                         auto field_identifier = make_identifier(
                             type->scope(),
                             symbol,

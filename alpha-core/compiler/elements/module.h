@@ -22,6 +22,10 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             compiler::block* scope);
 
+        bool is_root() const;
+
+        void is_root(bool value);
+
         compiler::block* scope();
 
         common::source_file* source_file() const;
@@ -36,6 +40,7 @@ namespace basecode::compiler {
         void on_owned_elements(element_list_t& list) override;
 
     private:
+        bool _is_root = false;
         compiler::block* _scope = nullptr;
         common::source_file* _source_file = nullptr;
     };

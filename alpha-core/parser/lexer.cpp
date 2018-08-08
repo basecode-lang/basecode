@@ -243,8 +243,6 @@ namespace basecode::syntax {
     }
 
     void lexer::rewind_one_char() {
-        if (_source_file->eof())
-            return;
         auto pos = _source_file->pos();
         if (pos == 0)
             return;
@@ -259,10 +257,6 @@ namespace basecode::syntax {
     }
 
     bool lexer::next(token_t& token) {
-        defer({
-            _has_next = !_source_file->eof();
-        });
-
         auto rune = read();
         if (rune == common::rune_invalid) {
             token = s_invalid;
@@ -271,17 +265,18 @@ namespace basecode::syntax {
         }
 
         rune = rune > 0x80 ? rune : tolower(rune);
-        if (_source_file->eof()) {
+        if (rune == common::rune_eof) {
             token = s_end_of_file;
             set_token_location(token);
             return true;
         }
 
         rewind_one_char();
-
         _source_file->push_mark();
         defer({
             _source_file->pop_mark();
+            _has_next = rune != common::rune_eof
+                && rune != common::rune_invalid;
         });
 
         auto case_range = s_cases.equal_range(rune);
@@ -295,20 +290,12 @@ namespace basecode::syntax {
                 auto end_line = _source_file->line_by_index(_source_file->pos());
                 token.location.start(start_line->line, start_column);
                 token.location.end(end_line->line, end_column);
-//                fmt::print(
-//                    "token.type = {}, start = {}@{}, end = {}@{}\n",
-//                    token.name(),
-//                    token.location.start().line,
-//                    token.location.start().column,
-//                    token.location.end().line,
-//                    token.location.end().column);
                 return true;
             }
             _source_file->restore_top_mark();
         }
 
         token = s_invalid;
-        // XXX: revisit this
         token.value = static_cast<char>(rune);
         set_token_location(token);
 
@@ -802,7 +789,7 @@ namespace basecode::syntax {
             if (ch == '/') {
                 token.type = token_types_t::line_comment;
                 token.value = read_until('\n');
-                rewind_one_char();
+                //rewind_one_char();
                 return true;
             }
         }
@@ -1128,13 +1115,13 @@ namespace basecode::syntax {
 
             std::stringstream stream;
             while (true) {
-                if (_source_file->eof()) {
+                auto ch = read(false);
+                if (ch == common::rune_eof) {
                     token = s_end_of_file;
                     set_token_location(token);
                     return true;
                 }
 
-                auto ch = read(false);
                 if (ch == '/') {
                     ch = read(false);
                     if (ch == '*') {

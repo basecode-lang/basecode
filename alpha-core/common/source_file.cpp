@@ -89,7 +89,7 @@ namespace basecode::common {
     }
 
     bool source_file::eof() const {
-        return _index >= _buffer.size();
+        return _index > _buffer.size() - 1;
     }
 
     size_t source_file::pop_mark() {
@@ -208,7 +208,7 @@ namespace basecode::common {
     }
 
     rune_t source_file::next(common::result& r) {
-        if (_index >= _buffer.size())
+        if (_index > _buffer.size() - 1)
             return rune_eof;
         size_t width = 1;
         auto ch = _buffer[_index];

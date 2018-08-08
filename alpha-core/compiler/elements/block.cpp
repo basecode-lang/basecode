@@ -74,6 +74,7 @@ namespace basecode::compiler {
                     instruction_block->current_entry()->comment(fmt::format(
                         "module: {}",
                         parent_module->source_file()->path().string()));
+                    clean_up = !parent_module->is_root();
                 }
                 instruction_block->current_entry()->blank_lines(1);
 

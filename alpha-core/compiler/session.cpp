@@ -97,8 +97,19 @@ namespace basecode::compiler {
         syntax::parser alpha_parser(source_file);
         auto module_node = alpha_parser.parse(r);
         if (module_node != nullptr && !r.is_failed()) {
-            if (_options.verbose && !_options.ast_graph_file.empty())
-                alpha_parser.write_ast_graph(_options.ast_graph_file, module_node);
+            if (_options.output_ast_graphs) {
+                boost::filesystem::path ast_file_path(source_file->path().parent_path());
+                auto filename = source_file->path()
+                    .filename()
+                    .replace_extension("")
+                    .string();
+                filename += "-ast";
+                ast_file_path.append(filename);
+                ast_file_path.replace_extension(".dot");
+                alpha_parser.write_ast_graph(
+                    ast_file_path,
+                    module_node);
+            }
         }
         return module_node;
     }

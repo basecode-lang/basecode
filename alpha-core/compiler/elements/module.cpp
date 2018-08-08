@@ -28,6 +28,14 @@ namespace basecode::compiler {
         return _scope->emit(r, context);
     }
 
+    bool module::is_root() const {
+        return _is_root;
+    }
+
+    void module::is_root(bool value) {
+        _is_root = value;
+    }
+
     compiler::block* module::scope() {
         return _scope;
     }

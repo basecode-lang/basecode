@@ -62,13 +62,13 @@ int main(int argc, char** argv) {
     int opt = -1;
     bool help_flag = false;
     bool verbose_flag = false;
-    boost::filesystem::path ast_graph_file_name;
+    bool output_ast_graphs = false;
     boost::filesystem::path code_dom_graph_file_name;
 
     static struct option long_options[] = {
         {"help",    ya_no_argument,       nullptr, 0  },
         {"verbose", ya_no_argument,       nullptr, 0  },
-        {"ast",     ya_required_argument, 0,       'G'},
+        {"ast",     ya_no_argument,       0,       'G'},
         {"code_dom",ya_required_argument, 0,       'H'},
         {0,         0,                    0,       0  },
     };
@@ -78,7 +78,7 @@ int main(int argc, char** argv) {
         opt = ya_getopt_long(
             argc,
             argv,
-            "?vG:H:",
+            "?vGH:",
             long_options,
             &option_index);
         if (opt == -1) {
@@ -95,7 +95,7 @@ int main(int argc, char** argv) {
                         verbose_flag = true;
                         break;
                     case 2:
-                        ast_graph_file_name = ya_optarg;
+                        output_ast_graphs = true;
                         break;
                     case 3:
                         code_dom_graph_file_name = ya_optarg;
@@ -112,7 +112,7 @@ int main(int argc, char** argv) {
                 verbose_flag = true;
                 break;
             case 'G':
-                ast_graph_file_name = ya_optarg;
+                output_ast_graphs = true;
                 break;
             case 'H':
                 code_dom_graph_file_name = ya_optarg;
@@ -154,9 +154,9 @@ int main(int argc, char** argv) {
         .verbose = verbose_flag,
         .heap_size = heap_size,
         .stack_size = stack_size,
-        .compiler_path = boost::filesystem::system_complete(argv[0]).remove_filename(),
-        .ast_graph_file = ast_graph_file_name,
+        .output_ast_graphs = output_ast_graphs,
         .dom_graph_file = code_dom_graph_file_name,
+        .compiler_path = boost::filesystem::system_complete(argv[0]).remove_filename(),
         .compile_callback = [&](
                 basecode::compiler::session_compile_phase_t phase,
                 const boost::filesystem::path& source_file) {
