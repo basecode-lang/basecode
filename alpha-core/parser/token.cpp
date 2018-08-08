@@ -80,8 +80,11 @@ namespace basecode::syntax {
         if (value.empty())
             return conversion_result_t::inconvertible;
         const char* s = nullptr;
-        if (value[0] == '-')
-            s = value.substr(1).c_str();
+        std::string without_negative;
+        if (value[0] == '-') {
+            without_negative = value.substr(1);
+            s = without_negative.c_str();
+        }
         else
             s = value.c_str();
         char* end;

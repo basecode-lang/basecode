@@ -4,7 +4,7 @@ project(alpha-core)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(CUSTOM_LIBRARIES "")
+set(DL_LIBRARY "")
 
 if (UNIX AND NOT APPLE)
     set(CMAKE_CXX_FLAGS "-fPIC")
@@ -13,7 +13,7 @@ endif()
 if ("${CMAKE_SYSTEM_NAME}" MATCHES "FreeBSD")
     add_definitions(-D__USE_ISOC99)
 elseif ("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
-    set(CUSTOM_LIBRARIES "${CUSTOM_LIBRARIES} dl")
+    set(DL_LIBRARY "dl")
 endif()
 
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
@@ -145,4 +145,4 @@ target_link_libraries(
     boost-system
     boost-filesystem
     utf8proc
-    ${CUSTOM_LIBRARIES})
+    ${DL_LIBRARY})
