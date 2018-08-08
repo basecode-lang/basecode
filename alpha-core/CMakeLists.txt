@@ -39,6 +39,7 @@ endif()
 
 set (VER_MAJOR 0)
 set (VER_MINOR 1)
+set (COMPILER_LIBRARY_NAME ${PROJECT_NAME})
 
 configure_file (
     "${PROJECT_SOURCE_DIR}/configure.in.h"

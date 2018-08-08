@@ -751,11 +751,6 @@ namespace basecode::vm {
                 return true;
         }
 
-        if (signature.library == nullptr) {
-            // XXX: add an error message
-            return false;
-        }
-
         auto func_ptr = signature.library->symbol_address(signature.symbol);
         if (func_ptr == nullptr) {
             // XXX: add an error message
