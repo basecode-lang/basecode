@@ -135,7 +135,15 @@ namespace basecode::compiler {
 
                 std::string path;
                 if (expr->is_constant() && expr->as_string(path)) {
-                    auto source_file = session.add_source_file(path);
+                    boost::filesystem::path source_path(path);
+                    auto current_source_file = session.current_source_file();
+                    if (current_source_file != nullptr
+                    &&  source_path.is_relative()) {
+                        source_path = boost::filesystem::absolute(
+                            source_path,
+                            current_source_file->path().parent_path());
+                    }
+                    auto source_file = session.add_source_file(source_path);
                     auto module = compile_module(r, session, source_file);
                     reference->module(module);
                 } else {

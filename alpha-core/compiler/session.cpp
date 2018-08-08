@@ -23,7 +23,11 @@ namespace basecode::compiler {
                                                _program(&_terp, &_assembler),
                                                _options(options) {
         for (const auto& path : source_files) {
-            add_source_file(path);
+            if (path.is_relative()) {
+                add_source_file(boost::filesystem::absolute(path));
+            } else {
+                add_source_file(path);
+            }
         }
     }
 
