@@ -10,6 +10,7 @@
 // ----------------------------------------------------------------------------
 
 #include <vm/terp.h>
+#include <configure.h>
 #include <compiler/session.h>
 #include <boost/filesystem.hpp>
 #include "attribute.h"
@@ -102,22 +103,36 @@ namespace basecode::compiler {
             compiler::program* program) {
         auto terp = program->terp();
 
-        // XXX: this should move to a cmake generated header file
-        std::string library_name = "libalpha-core.dylib";
-        // XXX: -------------------------------------------------
-
+        std::string library_name;
         auto library_attribute = attributes().find("library");
         if (library_attribute != nullptr) {
             if (!library_attribute->as_string(library_name)) {
-                r.add_message(
+                program->error(
+                    r,
+                    this,
                     "P004",
-                    "unable to convert library attribute's name.",
-                    true);
+                    "unable to convert library name.",
+                    location());
                 return false;
             }
         }
 
-        boost::filesystem::path library_path(library_name);
+        if (library_name.empty()) {
+            program->error(
+                r,
+                this,
+                "P005",
+                "library attribute required for foreign directive.",
+                location());
+            return false;
+        }
+
+        std::stringstream platform_name;
+        platform_name
+            << SHARED_LIBRARY_PREFIX
+            << library_name
+            << SHARED_LIBRARY_SUFFIX;
+        boost::filesystem::path library_path(platform_name.str());
         auto library = terp->load_shared_library(r, library_path);
         if (library == nullptr) {
             return false;
@@ -128,10 +143,12 @@ namespace basecode::compiler {
         auto alias_attribute = attributes().find("alias");
         if (alias_attribute != nullptr) {
             if (!alias_attribute->as_string(symbol_name)) {
-                r.add_message(
+                program->error(
+                    r,
+                    this,
                     "P004",
                     "unable to convert alias attribute's name.",
-                    true);
+                    location());
                 return false;
             }
         }
@@ -166,10 +183,13 @@ namespace basecode::compiler {
 
         auto result = terp->register_foreign_function(r, signature);
         if (!result) {
-            r.add_message(
+            program->error(
+                r,
+                this,
                 "P004",
                 fmt::format("unable to find foreign function symbol: {}", symbol_name),
-                false);
+                location());
+            return false;
         } else {
             if (proc_type != nullptr)
                 proc_type->foreign_address(reinterpret_cast<uint64_t>(signature.func_ptr));

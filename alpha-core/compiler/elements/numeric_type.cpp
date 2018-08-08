@@ -33,9 +33,13 @@ namespace basecode::compiler {
         }
     }
 
-    // XXX: need to determine how to best narrow for floating point
+    // float:  -3.4e+38  to 3.4e+38
+    // double: -1.7e+308 to 1.7e+308
     std::string numeric_type::narrow_to_value(double value) {
-        return "f32";
+        if (value < -3.4e+38 || value > 3.4e+38)
+            return "f64";
+        else
+            return "f32";
     }
 
     std::string numeric_type::narrow_to_value(uint64_t value) {

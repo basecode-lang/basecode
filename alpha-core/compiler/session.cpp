@@ -44,9 +44,13 @@ namespace basecode::compiler {
 
     void session::finalize() {
         if (_options.verbose) {
-            _program.disassemble(stdout);
-            if (!_options.dom_graph_file.empty())
-                write_code_dom_graph(_options.dom_graph_file);
+            try {
+                _program.disassemble(stdout);
+                if (!_options.dom_graph_file.empty())
+                    write_code_dom_graph(_options.dom_graph_file);
+            } catch (const fmt::format_error& e) {
+                fmt::print("fmt::format_error caught: {}\n", e.what());
+            }
         }
     }
 

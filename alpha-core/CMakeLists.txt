@@ -18,11 +18,34 @@ else ()
     message(STATUS "alpha-core unknown compiler: ${CMAKE_CXX_COMPILER_ID}")
 endif()
 
-include_directories(${PROJECT_SOURCE_DIR})
+if (WIN32)
+    set(SHARED_LIBRARY_PREFIX "")
+    set(SHARED_LIBRARY_SUFFIX ".dll")
+elseif (APPLE)
+    set(SHARED_LIBRARY_PREFIX "lib")
+    set(SHARED_LIBRARY_SUFFIX ".dylib")
+else()
+    set(SHARED_LIBRARY_PREFIX "lib")
+    set(SHARED_LIBRARY_SUFFIX ".so")
+endif()
+
+set (VER_MAJOR 0)
+set (VER_MINOR 1)
+
+configure_file (
+    "${PROJECT_SOURCE_DIR}/configure.in.h"
+    "${PROJECT_BINARY_DIR}/configure.h"
+)
+
+include_directories(
+    ${PROJECT_SOURCE_DIR}
+    ${PROJECT_BINARY_DIR}
+)
 
 add_library(
     ${PROJECT_NAME} SHARED
 
+    configure.in.h
     exports.cpp
 
     common/defer.h

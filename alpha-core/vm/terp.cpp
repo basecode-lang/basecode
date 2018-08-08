@@ -635,25 +635,21 @@ namespace basecode::vm {
                         operands_stream << "F" << std::to_string(operand.value.r8);
                     }
                 } else {
-                    if (operand.is_integer()) {
-                        if (operand.is_unresolved()) {
-                            if (id_resolver == nullptr)
-                                operands_stream << fmt::format("id({})", operand.value.u64);
-                            else
-                                operands_stream << id_resolver(operand.value.u64);
-                        } else {
-                            if (i == 2) {
-                                operands_stream << fmt::format(offset_spec, static_cast<int64_t>(operand.value.u64));
-                            } else {
-                                operands_stream << prefix
-                                                << fmt::format(format_spec, operand.value.u64)
-                                                << postfix;
-                            }
-                        }
+                    if (operand.is_unresolved()) {
+                        if (id_resolver == nullptr)
+                            operands_stream << fmt::format("id({})", operand.value.u64);
+                        else
+                            operands_stream << id_resolver(operand.value.u64);
                     } else {
-                        operands_stream << prefix
-                                        << fmt::format(format_spec, operand.value.d64)
-                                        << postfix;
+                        if (i == 2) {
+                            operands_stream << fmt::format(
+                                offset_spec,
+                                static_cast<int64_t>(operand.value.u64));
+                        } else {
+                            operands_stream << prefix
+                                            << fmt::format(format_spec, operand.value.u64)
+                                            << postfix;
+                        }
                     }
                 }
             }

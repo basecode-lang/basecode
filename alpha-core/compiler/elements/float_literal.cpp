@@ -28,9 +28,8 @@ namespace basecode::compiler {
             emit_context_t& context) {
         auto instruction_block = context.assembler->current_block();
         auto target_reg = context.assembler->current_target_register();
-        auto inferred_type = infer_type(context.program);
         instruction_block->move_constant_to_freg(
-            vm::op_size_for_byte_size(inferred_type->size_in_bytes()),
+            target_reg->size,
             target_reg->reg.f,
             _value);
         return true;

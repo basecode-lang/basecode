@@ -84,10 +84,12 @@ namespace basecode::compiler {
                 return make_symbol_from_node(r, node);
             }
             case syntax::ast_node_types_t::attribute: {
-                return make_attribute(
+                auto element = make_attribute(
                     current_scope(),
                     node->token.value,
                     evaluate(r, session, node->lhs));
+                element->location(node->location);
+                return element;
             }
             case syntax::ast_node_types_t::directive: {
                 auto expression = evaluate(r, session, node->lhs);
@@ -95,6 +97,7 @@ namespace basecode::compiler {
                     current_scope(),
                     node->token.value,
                     expression);
+                directive_element->location(node->location);
                 apply_attributes(r, session, directive_element, node);
                 directive_element->evaluate(r, session, this);
                 return directive_element;
@@ -207,9 +210,11 @@ namespace basecode::compiler {
                 return make_statement(current_scope(), labels, expr);
             }
             case syntax::ast_node_types_t::expression: {
-                return make_expression(
+                auto element = make_expression(
                     current_scope(),
                     evaluate(r, session, node->lhs));
+                element->location(node->location);
+                return element;
             }
             case syntax::ast_node_types_t::assignment: {
                 const auto& target_list = node->lhs;
@@ -283,9 +288,11 @@ namespace basecode::compiler {
                     node->token.value);
             }
             case syntax::ast_node_types_t::string_literal: {
-                return make_string(
+                auto element = make_string(
                     current_scope(),
                     node->token.value);
+                element->location(node->location);
+                return element;
             }
             case syntax::ast_node_types_t::number_literal: {
                 switch (node->token.number_type) {
@@ -509,15 +516,19 @@ namespace basecode::compiler {
                         node->lhs->lhs->location);
                     return nullptr;
                 }
-                return make_cast(
+                auto element = make_cast(
                     current_scope(),
                     type,
                     resolve_symbol_or_evaluate(r, session, node->rhs));
+                element->location(node->location);
+                return element;
             }
             case syntax::ast_node_types_t::alias_expression: {
-                return make_alias(
+                auto element = make_alias(
                     current_scope(),
                     resolve_symbol_or_evaluate(r, session, node->lhs));
+                element->location(node->location);
+                return element;
             }
             case syntax::ast_node_types_t::union_expression: {
                 auto active_scope = current_scope();
