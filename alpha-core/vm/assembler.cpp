@@ -113,12 +113,8 @@ namespace basecode::vm {
         return _blocks.front();
     }
 
-    void assembler::free_reg(i_registers_t reg) {
-        _i_register_allocator.free(reg);
-    }
-
-    void assembler::free_reg(f_registers_t reg) {
-        _f_register_allocator.free(reg);
+    void assembler::free_reg(registers_t reg) {
+        _register_allocator.free(reg);
     }
 
     bool assembler::initialize(common::result& r) {
@@ -132,12 +128,8 @@ namespace basecode::vm {
         return _block_stack.top();
     }
 
-    bool assembler::allocate_reg(i_registers_t& reg) {
-        return _i_register_allocator.allocate(reg);
-    }
-
-    bool assembler::allocate_reg(f_registers_t& reg) {
-        return _f_register_allocator.allocate(reg);
+    bool assembler::allocate_reg(registers_t& reg) {
+        return _register_allocator.allocate(reg);
     }
 
     bool assembler::resolve_labels(common::result& r) {
@@ -260,24 +252,11 @@ namespace basecode::vm {
         return &_target_registers.top();
     }
 
-    void assembler::push_target_register(op_sizes size, i_registers_t reg) {
+    void assembler::push_target_register(op_sizes size, registers_t reg) {
         target_register_t target {
             .size = size,
-            .type = target_register_type_t::integer,
-            .reg = {
-                .i = reg
-            }
-        };
-        _target_registers.push(target);
-    }
-
-    void assembler::push_target_register(op_sizes size, f_registers_t reg) {
-        target_register_t target {
-            .size = size,
-            .type = target_register_type_t::floating_point,
-            .reg = {
-                .f = reg
-            }
+            .type = register_type_t::integer,
+            .i = reg
         };
         _target_registers.push(target);
     }

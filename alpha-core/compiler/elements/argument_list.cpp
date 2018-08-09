@@ -48,10 +48,10 @@ namespace basecode::compiler {
                     }
                     context.assembler->push_target_register(
                         arg_reg.size(),
-                        arg_reg.reg.i);
+                        arg_reg.i);
                     arg->emit(r, context);
                     context.assembler->pop_target_register();
-                    instruction_block->push(push_size, arg_reg.reg.i);
+                    instruction_block->push(push_size, arg_reg.i);
                     break;
                 }
                 default:

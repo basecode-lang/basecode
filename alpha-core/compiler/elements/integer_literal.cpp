@@ -30,7 +30,7 @@ namespace basecode::compiler {
         auto target_reg = context.assembler->current_target_register();
         instruction_block->move_constant_to_ireg(
             target_reg->size,
-            target_reg->reg.i,
+            target_reg->i,
             _value);
         return true;
     }

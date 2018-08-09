@@ -19,20 +19,14 @@
 namespace basecode::compiler {
 
     bool variable_register_t::reserve(vm::assembler* assembler) {
-        if (integer)
-            allocated = assembler->allocate_reg(value.i);
-        else
-            allocated = assembler->allocate_reg(value.f);
+        allocated = assembler->allocate_reg(i);
         return allocated;
     }
 
     void variable_register_t::release(vm::assembler* assembler) {
         if (!allocated)
             return;
-        if (integer)
-            assembler->free_reg(value.i);
-        else
-            assembler->free_reg(value.f);
+        assembler->free_reg(i);
         allocated = false;
     }
 
@@ -53,11 +47,11 @@ namespace basecode::compiler {
 
             if (address_offset != 0) {
                 block->move_label_to_ireg_with_offset(
-                    address_reg.value.i,
+                    address_reg.i,
                     name,
                     address_offset);
             } else {
-                block->move_label_to_ireg(address_reg.value.i, name);
+                block->move_label_to_ireg(address_reg.i, name);
             }
             block
                 ->current_entry()
@@ -87,14 +81,14 @@ namespace basecode::compiler {
                 type_name = stack_frame_entry_type_name(frame_entry->type);
                 block->load_to_ireg(
                     vm::op_sizes::qword,
-                    value_reg.value.i,
-                    vm::i_registers_t::fp,
+                    value_reg.i,
+                    vm::registers_t::fp,
                     frame_entry->offset);
             } else {
                 block->load_to_ireg(
                     vm::op_size_for_byte_size(type->size_in_bytes()),
-                    value_reg.value.i,
-                    address_reg.value.i);
+                    value_reg.i,
+                    address_reg.i);
                 block
                     ->current_entry()
                     ->comment(fmt::format("load identifier '{}' value ({})", name, type_name));
@@ -122,8 +116,8 @@ namespace basecode::compiler {
 
         block->store_from_ireg(
             vm::op_size_for_byte_size(type->size_in_bytes()),
-            address_reg.value.i,
-            target_reg->reg.i,
+            address_reg.i,
+            target_reg->i,
             frame_entry != nullptr ? frame_entry->offset : 0);
 
         written = true;
@@ -208,9 +202,9 @@ namespace basecode::compiler {
         return !scratch_registers.empty();
     }
 
-    vm::i_registers_t emit_context_t::pop_scratch_register() {
+    vm::registers_t emit_context_t::pop_scratch_register() {
         if (scratch_registers.empty())
-            return vm::i_registers_t::i0;
+            return vm::registers_t::r0;
 
         auto reg = scratch_registers.top();
         scratch_registers.pop();
@@ -232,7 +226,7 @@ namespace basecode::compiler {
         return &it->second;
     }
 
-    void emit_context_t::push_scratch_register(vm::i_registers_t reg) {
+    void emit_context_t::push_scratch_register(vm::registers_t reg) {
         scratch_registers.push(reg);
     }
 

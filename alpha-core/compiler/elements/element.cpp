@@ -137,16 +137,13 @@ namespace basecode::compiler {
             result.integer = var->value_reg.integer;
             if (var->address_reg.allocated
             &&  var->type->access_model() == type_access_model_t::pointer) {
-                result.reg.i = var->address_reg.value.i;
+                result.i = var->address_reg.i;
             } else {
-                if (result.integer)
-                    result.reg.i = result.var->value_reg.value.i;
-                else
-                    result.reg.f = result.var->value_reg.value.f;
+                result.i = result.var->value_reg.i;
             }
         }
         else {
-            vm::i_registers_t reg;
+            vm::registers_t reg;
             if (!context.assembler->allocate_reg(reg)) {
                 context.program->error(
                     r,
@@ -155,7 +152,7 @@ namespace basecode::compiler {
                     "assembler registers exhausted.",
                     e->location());
             } else {
-                result.reg.i = reg;
+                result.i = reg;
                 result.valid = true;
                 result.integer = true;
                 result.clean_up = true;

@@ -31,77 +31,88 @@
 
 namespace basecode::vm {
 
-    enum i_registers_t : uint8_t {
-        i0,
-        i1,
-        i2,
-        i3,
-        i4,
-        i5,
-        i6,
-        i7,
-        i8,
-        i9,
+    enum class register_type_t : uint8_t {
+        none,
+        pc,
+        sp,
+        fp,
+        fr,
+        sr,
+        integer,
+        floating_point,
+    };
 
-        i10,
-        i11,
-        i12,
-        i13,
-        i14,
-        i15,
-        i16,
-        i17,
-        i18,
-        i19,
+    enum registers_t : uint8_t {
+        r0,
+        r1,
+        r2,
+        r3,
+        r4,
+        r5,
+        r6,
+        r7,
+        r8,
+        r9,
 
-        i20,
-        i21,
-        i22,
-        i23,
-        i24,
-        i25,
-        i26,
-        i27,
-        i28,
-        i29,
+        r10,
+        r11,
+        r12,
+        r13,
+        r14,
+        r15,
+        r16,
+        r17,
+        r18,
+        r19,
 
-        i30,
-        i31,
-        i32,
-        i33,
-        i34,
-        i35,
-        i36,
-        i37,
-        i38,
-        i39,
+        r20,
+        r21,
+        r22,
+        r23,
+        r24,
+        r25,
+        r26,
+        r27,
+        r28,
+        r29,
 
-        i40,
-        i41,
-        i42,
-        i43,
-        i44,
-        i45,
-        i46,
-        i47,
-        i48,
-        i49,
+        r30,
+        r31,
+        r32,
+        r33,
+        r34,
+        r35,
+        r36,
+        r37,
+        r38,
+        r39,
 
-        i50,
-        i51,
-        i52,
-        i53,
-        i54,
-        i55,
-        i56,
-        i57,
-        i58,
-        i59,
+        r40,
+        r41,
+        r42,
+        r43,
+        r44,
+        r45,
+        r46,
+        r47,
+        r48,
+        r49,
 
-        i60,
-        i61,
-        i62,
-        i63,
+        r50,
+        r51,
+        r52,
+        r53,
+        r54,
+        r55,
+        r56,
+        r57,
+        r58,
+        r59,
+
+        r60,
+        r61,
+        r62,
+        r63,
 
         pc,
         sp,
@@ -110,82 +121,49 @@ namespace basecode::vm {
         fp
     };
 
-    ///////////////////////////////////////////////////////////////////////////
-
-    enum f_registers_t : uint8_t {
-        f0,
-        f1,
-        f2,
-        f3,
-        f4,
-        f5,
-        f6,
-        f7,
-        f8,
-        f9,
-
-        f10,
-        f11,
-        f12,
-        f13,
-        f14,
-        f15,
-        f16,
-        f17,
-        f18,
-        f19,
-
-        f20,
-        f21,
-        f22,
-        f23,
-        f24,
-        f25,
-        f26,
-        f27,
-        f28,
-        f29,
-
-        f30,
-        f31,
-        f32,
-        f33,
-        f34,
-        f35,
-        f36,
-        f37,
-        f38,
-        f39,
-
-        f40,
-        f41,
-        f42,
-        f43,
-        f44,
-        f45,
-        f46,
-        f47,
-        f48,
-        f49,
-
-        f50,
-        f51,
-        f52,
-        f53,
-        f54,
-        f55,
-        f56,
-        f57,
-        f58,
-        f59,
-
-        f60,
-        f61,
-        f62,
-        f63,
+    union register_value_alias_t {
+        double   d;
+        uint64_t u;
     };
 
-    ///////////////////////////////////////////////////////////////////////////
+    struct register_t {
+        registers_t number;
+        register_type_t type;
+        register_value_alias_t value;
+    };
+
+    static constexpr const uint32_t register_integer_start   = 0;
+    static constexpr const uint32_t number_integer_registers = 64;
+    static constexpr const uint32_t register_float_start     = number_integer_registers;
+    static constexpr const uint32_t number_float_registers   = 64;
+    static constexpr const uint32_t number_special_registers = 5;
+    static constexpr const uint32_t number_general_purpose_registers = number_integer_registers + number_float_registers;
+    static constexpr const uint32_t number_total_registers   = number_integer_registers
+        + number_float_registers
+        + number_special_registers;
+    static constexpr const uint32_t register_special_start   = number_integer_registers
+        + number_float_registers;
+    static constexpr const uint32_t register_pc = register_special_start;
+    static constexpr const uint32_t register_sp = register_special_start + 1;
+    static constexpr const uint32_t register_fr = register_special_start + 2;
+    static constexpr const uint32_t register_sr = register_special_start + 3;
+    static constexpr const uint32_t register_fp = register_special_start + 4;
+
+    static inline size_t register_index(registers_t r, register_type_t type) {
+        switch (r) {
+            case pc: return register_pc;
+            case sp: return register_sp;
+            case fr: return register_fr;
+            case sr: return register_sr;
+            case fp: return register_fp;
+            default:
+                if (type == register_type_t::floating_point)
+                    return register_float_start + static_cast<uint8_t>(r);
+                else
+                    return static_cast<uint8_t>(r);
+        }
+        return 0;
+    }
 
     struct register_file_t {
         enum flags_t : uint64_t {
@@ -198,23 +176,17 @@ namespace basecode::vm {
         };
 
         bool flags(flags_t f) const {
-            return (fr & f) != 0;
+            return (r[register_fr].u & f) != 0;
         }
 
         void flags(flags_t f, bool value) {
             if (value)
-                fr |= f;
+                r[register_fr].u |= f;
             else
-                fr &= ~f;
+                r[register_fr].u &= ~f;
         }
 
-        uint64_t i[64];
-        double f[64];
-        uint64_t pc;
-        uint64_t sp;
-        uint64_t fp;
-        uint64_t fr;
-        uint64_t sr;
+        register_value_alias_t r[number_total_registers];
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -370,6 +342,17 @@ namespace basecode::vm {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    union operand_value_alias_t {
+        uint8_t r8;
+        uint64_t u64;
+        double d64;
+    };
+
+    struct operand_value_t {
+        register_type_t type;
+        operand_value_alias_t value;
+    };
+
     struct operand_encoding_t {
         using flags_t = uint8_t;
 
@@ -413,11 +396,7 @@ namespace basecode::vm {
         }
 
         flags_t type = flags::reg | flags::integer;
-        union {
-            uint8_t r8;
-            uint64_t u64;
-            double d64;
-        } value;
+        operand_value_alias_t value;
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -759,12 +738,6 @@ namespace basecode::vm {
             uint8_t operand_index,
             uint64_t& value) const;
 
-        bool get_operand_value(
-            common::result& r,
-            const instruction_t& inst,
-            uint8_t operand_index,
-            double& value) const;
-
         void free_heap_block_list();
 
         bool set_target_operand_value(
@@ -772,12 +745,6 @@ namespace basecode::vm {
             const instruction_t& inst,
             uint8_t operand_index,
             uint64_t value);
-
-        bool set_target_operand_value(
-            common::result& r,
-            const instruction_t& inst,
-            uint8_t operand_index,
-            double value);
 
         void execute_trap(uint8_t index);
 

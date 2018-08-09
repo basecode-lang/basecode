@@ -169,10 +169,7 @@ namespace basecode::compiler {
             if (var != nullptr) {
                 var->make_dormat(assembler);
             } else {
-                if (integer)
-                    assembler->free_reg(reg.i);
-                else
-                    assembler->free_reg(reg.f);
+                assembler->free_reg(i);
             }
         }
     }

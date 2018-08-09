@@ -28,9 +28,9 @@ namespace basecode::compiler {
             emit_context_t& context) {
         auto instruction_block = context.assembler->current_block();
         auto target_reg = context.assembler->current_target_register();
-        instruction_block->move_constant_to_freg(
+        instruction_block->move_constant_to_ireg(
             target_reg->size,
-            target_reg->reg.f,
+            target_reg->i,
             _value);
         return true;
     }

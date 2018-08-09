@@ -256,63 +256,58 @@ namespace basecode::vm {
         // cmp variations
         void cmp(
             op_sizes size,
-            i_registers_t lhs_reg,
-            i_registers_t rhs_reg);
+            registers_t lhs_reg,
+            registers_t rhs_reg);
 
         // not variations
         void not_op(
             op_sizes size,
-            i_registers_t dest_reg,
-            i_registers_t src_reg);
+            registers_t dest_reg,
+            registers_t src_reg);
 
         // neg variations
         void neg(
             op_sizes size,
-            i_registers_t dest_reg,
-            i_registers_t src_reg);
+            registers_t dest_reg,
+            registers_t src_reg);
 
         // load variations
         void load_to_ireg(
             op_sizes size,
-            i_registers_t dest_reg,
-            i_registers_t address_reg,
+            registers_t dest_reg,
+            registers_t address_reg,
             int64_t offset = 0);
 
         // store variations
         void store_from_ireg(
             op_sizes size,
-            i_registers_t address_reg,
-            i_registers_t src_reg,
+            registers_t address_reg,
+            registers_t src_reg,
             int64_t offset = 0);
 
         // move variations
-        void move_constant_to_freg(
-            op_sizes size,
-            f_registers_t dest_reg,
-            double immediate);
-
         void move_constant_to_ireg(
             op_sizes size,
-            i_registers_t dest_reg,
+            registers_t dest_reg,
             uint64_t immediate);
 
         void move_ireg_to_ireg(
-            i_registers_t dest_reg,
-            i_registers_t src_reg);
+            registers_t dest_reg,
+            registers_t src_reg);
 
         void move_label_to_ireg(
-            i_registers_t dest_reg,
+            registers_t dest_reg,
             const std::string& label_name);
 
         void move_label_to_ireg_with_offset(
-            i_registers_t dest_reg,
+            registers_t dest_reg,
             const std::string& label_name,
             int64_t offset);
 
         // setxx
-        void setz(i_registers_t dest_reg);
+        void setz(registers_t dest_reg);
 
-        void setnz(i_registers_t dest_reg);
+        void setnz(registers_t dest_reg);
 
         // branches
         void bne(const std::string& label_name);
@@ -320,126 +315,122 @@ namespace basecode::vm {
         void beq(const std::string& label_name);
 
         // inc variations
-        void inc(op_sizes size, i_registers_t reg);
+        void inc(op_sizes size, registers_t reg);
 
         // dec variations
-        void dec(op_sizes size, i_registers_t reg);
+        void dec(op_sizes size, registers_t reg);
 
         // mul variations
         void mul_ireg_by_ireg(
             op_sizes size,
-            i_registers_t dest_reg,
-            i_registers_t multiplicand_reg,
-            i_registers_t multiplier_reg);
+            registers_t dest_reg,
+            registers_t multiplicand_reg,
+            registers_t multiplier_reg);
 
         // or variations
         void or_ireg_by_ireg(
             op_sizes size,
-            i_registers_t dest_reg,
-            i_registers_t lhs_reg,
-            i_registers_t rhs_reg);
+            registers_t dest_reg,
+            registers_t lhs_reg,
+            registers_t rhs_reg);
 
         // xor variations
         void xor_ireg_by_ireg(
             op_sizes size,
-            i_registers_t dest_reg,
-            i_registers_t lhs_reg,
-            i_registers_t rhs_reg);
+            registers_t dest_reg,
+            registers_t lhs_reg,
+            registers_t rhs_reg);
 
         // and variations
         void and_ireg_by_ireg(
             op_sizes size,
-            i_registers_t dest_reg,
-            i_registers_t lhs_reg,
-            i_registers_t rhs_reg);
+            registers_t dest_reg,
+            registers_t lhs_reg,
+            registers_t rhs_reg);
 
         // shl variations
         void shl_ireg_by_ireg(
             op_sizes size,
-            i_registers_t dest_reg,
-            i_registers_t lhs_reg,
-            i_registers_t rhs_reg);
+            registers_t dest_reg,
+            registers_t lhs_reg,
+            registers_t rhs_reg);
 
         // shr variations
         void shr_ireg_by_ireg(
             op_sizes size,
-            i_registers_t dest_reg,
-            i_registers_t lhs_reg,
-            i_registers_t rhs_reg);
+            registers_t dest_reg,
+            registers_t lhs_reg,
+            registers_t rhs_reg);
 
         // rol variations
         void rol_ireg_by_ireg(
             op_sizes size,
-            i_registers_t dest_reg,
-            i_registers_t lhs_reg,
-            i_registers_t rhs_reg);
+            registers_t dest_reg,
+            registers_t lhs_reg,
+            registers_t rhs_reg);
 
         // ror variations
         void ror_ireg_by_ireg(
             op_sizes size,
-            i_registers_t dest_reg,
-            i_registers_t lhs_reg,
-            i_registers_t rhs_reg);
+            registers_t dest_reg,
+            registers_t lhs_reg,
+            registers_t rhs_reg);
 
         // add variations
         void add_ireg_by_ireg(
             op_sizes size,
-            i_registers_t dest_reg,
-            i_registers_t augend_reg,
-            i_registers_t addened_reg);
+            registers_t dest_reg,
+            registers_t augend_reg,
+            registers_t addened_reg);
 
         // sub variations
         void sub_ireg_by_ireg(
             op_sizes size,
-            i_registers_t dest_reg,
-            i_registers_t minuend_reg,
-            i_registers_t subtrahend_reg);
+            registers_t dest_reg,
+            registers_t minuend_reg,
+            registers_t subtrahend_reg);
 
         void sub_ireg_by_immediate(
             op_sizes size,
-            i_registers_t dest_reg,
-            i_registers_t minuend_reg,
+            registers_t dest_reg,
+            registers_t minuend_reg,
             uint64_t subtrahend_immediate);
 
         // div variations
         void div_ireg_by_ireg(
             op_sizes size,
-            i_registers_t dest_reg,
-            i_registers_t dividend_reg,
-            i_registers_t divisor_reg);
+            registers_t dest_reg,
+            registers_t dividend_reg,
+            registers_t divisor_reg);
 
         // mod variations
         void mod_ireg_by_ireg(
             op_sizes size,
-            i_registers_t dest_reg,
-            i_registers_t dividend_reg,
-            i_registers_t divisor_reg);
+            registers_t dest_reg,
+            registers_t dividend_reg,
+            registers_t divisor_reg);
 
         // swap variations
         void swap_ireg_with_ireg(
             op_sizes size,
-            i_registers_t dest_reg,
-            i_registers_t src_reg);
+            registers_t dest_reg,
+            registers_t src_reg);
 
         // test mask for zero and branch
         void test_mask_branch_if_zero(
             op_sizes size,
-            i_registers_t value_reg,
-            i_registers_t mask_reg,
-            i_registers_t address_reg);
+            registers_t value_reg,
+            registers_t mask_reg,
+            registers_t address_reg);
 
         // test mask for non-zero and branch
         void test_mask_branch_if_not_zero(
             op_sizes size,
-            i_registers_t value_reg,
-            i_registers_t mask_reg,
-            i_registers_t address_reg);
+            registers_t value_reg,
+            registers_t mask_reg,
+            registers_t address_reg);
 
         // push variations
-        void push_f32(float value);
-
-        void push_f64(double value);
-
         void push_u8(uint8_t value);
 
         void push_u16(uint16_t value);
@@ -448,17 +439,13 @@ namespace basecode::vm {
 
         void push_u64(uint64_t value);
 
-        void push(op_sizes size, i_registers_t reg);
-
-        void push(op_sizes size, f_registers_t reg);
+        void push(op_sizes size, registers_t reg);
 
         // pop variations
-        void pop(op_sizes size, i_registers_t reg);
-
-        void pop(op_sizes size, f_registers_t reg);
+        void pop(op_sizes size, registers_t reg);
 
         // calls & jumps
-        void jump_indirect(i_registers_t reg);
+        void jump_indirect(registers_t reg);
 
         void call(const std::string& proc_name);
 
@@ -469,148 +456,135 @@ namespace basecode::vm {
     private:
         void make_shl_instruction(
             op_sizes size,
-            i_registers_t dest_reg,
-            i_registers_t value_reg,
-            i_registers_t amount_reg);
+            registers_t dest_reg,
+            registers_t value_reg,
+            registers_t amount_reg);
 
         void make_rol_instruction(
             op_sizes size,
-            i_registers_t dest_reg,
-            i_registers_t value_reg,
-            i_registers_t amount_reg);
+            registers_t dest_reg,
+            registers_t value_reg,
+            registers_t amount_reg);
 
         void make_shr_instruction(
             op_sizes size,
-            i_registers_t dest_reg,
-            i_registers_t value_reg,
-            i_registers_t amount_reg);
+            registers_t dest_reg,
+            registers_t value_reg,
+            registers_t amount_reg);
 
         void make_ror_instruction(
             op_sizes size,
-            i_registers_t dest_reg,
-            i_registers_t value_reg,
-            i_registers_t amount_reg);
+            registers_t dest_reg,
+            registers_t value_reg,
+            registers_t amount_reg);
 
         void make_and_instruction(
             op_sizes size,
-            i_registers_t dest_reg,
-            i_registers_t value_reg,
-            i_registers_t mask_reg);
+            registers_t dest_reg,
+            registers_t value_reg,
+            registers_t mask_reg);
 
         void make_xor_instruction(
             op_sizes size,
-            i_registers_t dest_reg,
-            i_registers_t value_reg,
-            i_registers_t mask_reg);
+            registers_t dest_reg,
+            registers_t value_reg,
+            registers_t mask_reg);
 
         void make_or_instruction(
             op_sizes size,
-            i_registers_t dest_reg,
-            i_registers_t value_reg,
-            i_registers_t mask_reg);
+            registers_t dest_reg,
+            registers_t value_reg,
+            registers_t mask_reg);
 
         void make_mod_instruction(
             op_sizes size,
-            i_registers_t dest_reg,
-            i_registers_t dividend_reg,
-            i_registers_t divisor_reg);
+            registers_t dest_reg,
+            registers_t dividend_reg,
+            registers_t divisor_reg);
 
         void make_div_instruction(
             op_sizes size,
-            i_registers_t dest_reg,
-            i_registers_t dividend_reg,
-            i_registers_t divisor_reg);
+            registers_t dest_reg,
+            registers_t dividend_reg,
+            registers_t divisor_reg);
 
         void make_mul_instruction(
             op_sizes size,
-            i_registers_t dest_reg,
-            i_registers_t multiplicand_reg,
-            i_registers_t multiplier_reg);
+            registers_t dest_reg,
+            registers_t multiplicand_reg,
+            registers_t multiplier_reg);
 
         void make_cmp_instruction(
             op_sizes size,
-            i_registers_t lhs_reg,
-            i_registers_t rhs_reg);
+            registers_t lhs_reg,
+            registers_t rhs_reg);
 
         void make_not_instruction(
             op_sizes size,
-            i_registers_t dest_reg,
-            i_registers_t src_reg);
+            registers_t dest_reg,
+            registers_t src_reg);
 
         void make_neg_instruction(
             op_sizes size,
-            i_registers_t dest_reg,
-            i_registers_t src_reg);
+            registers_t dest_reg,
+            registers_t src_reg);
 
         void make_inc_instruction(
             op_sizes size,
-            i_registers_t reg);
+            registers_t reg);
 
         void make_dec_instruction(
             op_sizes size,
-            i_registers_t reg);
+            registers_t reg);
 
         void make_load_instruction(
             op_sizes size,
-            i_registers_t dest_reg,
-            i_registers_t address_reg,
+            registers_t dest_reg,
+            registers_t address_reg,
             int64_t offset);
 
         void make_store_instruction(
             op_sizes size,
-            i_registers_t address_reg,
-            i_registers_t src_reg,
+            registers_t address_reg,
+            registers_t src_reg,
             int64_t offset);
 
         void make_swap_instruction(
             op_sizes size,
-            i_registers_t dest_reg,
-            i_registers_t src_reg);
+            registers_t dest_reg,
+            registers_t src_reg);
 
         void make_pop_instruction(
             op_sizes size,
-            i_registers_t dest_reg);
-
-        void make_pop_instruction(
-            op_sizes size,
-            f_registers_t dest_reg);
+            registers_t dest_reg);
 
         void make_move_instruction(
             op_sizes size,
-            i_registers_t dest_reg,
+            registers_t dest_reg,
             uint64_t value);
 
         void make_move_instruction(
             op_sizes size,
-            f_registers_t dest_reg,
-            double value);
-
-        void make_move_instruction(
-            op_sizes size,
-            i_registers_t dest_reg,
-            i_registers_t src_reg);
+            registers_t dest_reg,
+            registers_t src_reg);
 
         void make_add_instruction(
             op_sizes size,
-            i_registers_t dest_reg,
-            i_registers_t augend_reg,
-            i_registers_t addend_reg);
+            registers_t dest_reg,
+            registers_t augend_reg,
+            registers_t addend_reg);
 
         void make_sub_instruction(
             op_sizes size,
-            i_registers_t dest_reg,
-            i_registers_t minuend_reg,
-            i_registers_t subtrahend_reg);
+            registers_t dest_reg,
+            registers_t minuend_reg,
+            registers_t subtrahend_reg);
 
         void make_sub_instruction_immediate(
             op_sizes size,
-            i_registers_t dest_reg,
-            i_registers_t minuend_reg,
+            registers_t dest_reg,
+            registers_t minuend_reg,
             uint64_t subtrahend_immediate);
-
-        void make_float_constant_push_instruction(
-            op_sizes size,
-            double value);
 
         void make_integer_constant_push_instruction(
             op_sizes size,
@@ -624,9 +598,7 @@ namespace basecode::vm {
 
         void make_block_entry(const data_definition_t& data);
 
-        void make_push_instruction(op_sizes size, i_registers_t reg);
-
-        void make_push_instruction(op_sizes size, f_registers_t reg);
+        void make_push_instruction(op_sizes size, registers_t reg);
 
     private:
         void disassemble(instruction_block* block);

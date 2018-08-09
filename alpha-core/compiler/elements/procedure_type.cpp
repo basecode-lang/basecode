@@ -95,16 +95,16 @@ namespace basecode::compiler {
             _scope);
 
         instruction_block->move_ireg_to_ireg(
-            vm::i_registers_t::fp,
-            vm::i_registers_t::sp);
+            vm::registers_t::fp,
+            vm::registers_t::sp);
         auto size = 8 * local_count;
         if (!returns_list.empty())
             size += 8;
         if (size > 0) {
             instruction_block->sub_ireg_by_immediate(
                 vm::op_sizes::qword,
-                vm::i_registers_t::sp,
-                vm::i_registers_t::sp,
+                vm::registers_t::sp,
+                vm::registers_t::sp,
                 size);
         }
 

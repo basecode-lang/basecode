@@ -34,10 +34,7 @@ namespace basecode::compiler {
 
         bool integer = true;
         bool allocated = false;
-        union {
-            vm::i_registers_t i;
-            vm::f_registers_t f;
-        } value;
+        vm::registers_t i;
     };
 
     struct variable_t {
@@ -106,13 +103,13 @@ namespace basecode::compiler {
 
         bool has_scratch_register() const;
 
-        vm::i_registers_t pop_scratch_register();
+        vm::registers_t pop_scratch_register();
 
         void free_variable(const std::string& name);
 
         variable_t* variable(const std::string& name);
 
-        void push_scratch_register(vm::i_registers_t reg);
+        void push_scratch_register(vm::registers_t reg);
 
         variable_t* variable_for_element(compiler::element* element);
 
@@ -120,7 +117,7 @@ namespace basecode::compiler {
         vm::assembler* assembler = nullptr;
         compiler::program* program = nullptr;
         std::stack<boost::any> data_stack {};
-        std::stack<vm::i_registers_t> scratch_registers {};
+        std::stack<vm::registers_t> scratch_registers {};
         std::unordered_map<std::string, variable_t> variables {};
     };
 

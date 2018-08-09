@@ -14,10 +14,10 @@
 #include <set>
 #include <stack>
 #include <cstdint>
+#include "terp.h"
 
 namespace basecode::vm {
 
-    template <typename T>
     struct register_allocator_t {
         register_allocator_t() {
             reset();
@@ -27,17 +27,17 @@ namespace basecode::vm {
             used.clear();
             while (!available.empty())
                 available.pop();
-            for (int8_t r = 63; r >=0; r--)
-                available.push(static_cast<T>(r));
+            for (int8_t r = 63; r >= 0; r--)
+                available.push(static_cast<registers_t>(r));
         }
 
-        void free(T reg) {
+        void free(registers_t reg) {
             if (used.erase(reg) > 0) {
                 available.push(reg);
             }
         }
 
-        bool allocate(T& reg) {
+        bool allocate(registers_t& reg) {
             if (available.empty())
                 return false;
             reg = available.top();
@@ -46,8 +46,8 @@ namespace basecode::vm {
             return true;
         }
 
-        std::set<T> used {};
-        std::stack<T> available {};
+        std::set<registers_t> used {};
+        std::stack<registers_t> available {};
     };
 
 };
