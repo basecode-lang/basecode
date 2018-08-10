@@ -343,14 +343,14 @@ namespace basecode::vm {
     ///////////////////////////////////////////////////////////////////////////
 
     union operand_value_alias_t {
-        uint8_t r8;
-        uint64_t u64;
-        double d64;
+        uint8_t  r;
+        uint64_t u;
+        double   d;
     };
 
     struct operand_value_t {
         register_type_t type;
-        operand_value_alias_t value;
+        operand_value_alias_t alias {.u = 0};
     };
 
     struct operand_encoding_t {
@@ -736,7 +736,7 @@ namespace basecode::vm {
             common::result& r,
             const instruction_t& inst,
             uint8_t operand_index,
-            uint64_t& value) const;
+            operand_value_t& value) const;
 
         void free_heap_block_list();
 
@@ -744,7 +744,7 @@ namespace basecode::vm {
             common::result& r,
             const instruction_t& inst,
             uint8_t operand_index,
-            uint64_t value);
+            const operand_value_t& value);
 
         void execute_trap(uint8_t index);
 
@@ -753,11 +753,11 @@ namespace basecode::vm {
             const instruction_t& inst,
             uint8_t operand_index,
             uint64_t inst_size,
-            uint64_t& address);
+            operand_value_t& address);
 
-        bool has_carry(uint64_t value, op_sizes size);
+        bool has_carry(const operand_value_t& value, op_sizes size);
 
-        bool is_negative(uint64_t value, op_sizes size);
+        bool is_negative(const operand_value_t& value, op_sizes size);
 
     private:
         bool _exited = false;

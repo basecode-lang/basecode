@@ -156,9 +156,9 @@ namespace basecode::vm {
                     auto& operand = inst->operands[i];
                     if (operand.is_unresolved()) {
                         auto label_ref = block->find_unresolved_label_up(
-                            static_cast<uint32_t>(operand.value.u64));
+                            static_cast<uint32_t>(operand.value.u));
                         if (label_ref != nullptr) {
-                            operand.value.u64 = label_ref->resolved->address();
+                            operand.value.u = label_ref->resolved->address();
                             operand.clear_unresolved();
                         }
                     }

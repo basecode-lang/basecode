@@ -378,30 +378,30 @@ namespace basecode::vm {
             ++offset;
 
             if ((operands[i].is_reg())) {
-                operands[i].value.r8 = *(encoding_ptr + offset);
+                operands[i].value.r = *(encoding_ptr + offset);
                 ++offset;
             } else {
                 switch (size) {
                     case op_sizes::byte: {
                         uint8_t* constant_value_ptr = encoding_ptr + offset;
-                        operands[i].value.u64 = *constant_value_ptr;
+                        operands[i].value.u = *constant_value_ptr;
                         offset += sizeof(uint8_t);
                         break;
                     }
                     case op_sizes::word: {
                         uint16_t* constant_value_ptr = reinterpret_cast<uint16_t*>(encoding_ptr + offset);
-                        operands[i].value.u64 = *constant_value_ptr;
+                        operands[i].value.u = *constant_value_ptr;
                         offset += sizeof(uint16_t);
                         break;
                     }
                     case op_sizes::dword: {
                         if (operands[i].is_integer()) {
                             uint32_t* constant_value_ptr = reinterpret_cast<uint32_t*>(encoding_ptr + offset);
-                            operands[i].value.u64 = *constant_value_ptr;
+                            operands[i].value.u = *constant_value_ptr;
                             offset += sizeof(uint32_t);
                         } else {
                             float* constant_value_ptr = reinterpret_cast<float*>(encoding_ptr + offset);
-                            operands[i].value.d64 = *constant_value_ptr;
+                            operands[i].value.d = *constant_value_ptr;
                             offset += sizeof(float);
                         }
                         break;
@@ -409,11 +409,11 @@ namespace basecode::vm {
                     case op_sizes::qword: {
                         if (operands[i].is_integer()) {
                             uint64_t* constant_value_ptr = reinterpret_cast<uint64_t*>(encoding_ptr + offset);
-                            operands[i].value.u64 = *constant_value_ptr;
+                            operands[i].value.u = *constant_value_ptr;
                             offset += sizeof(uint64_t);
                         } else {
                             double* constant_value_ptr = reinterpret_cast<double*>(encoding_ptr + offset);
-                            operands[i].value.d64 = *constant_value_ptr;
+                            operands[i].value.d = *constant_value_ptr;
                             offset += sizeof(double);
                         }
                         break;
@@ -471,21 +471,21 @@ namespace basecode::vm {
             ++encoding_size;
 
             if (operands[i].is_reg()) {
-                *(encoding_ptr + offset) = operands[i].value.r8;
+                *(encoding_ptr + offset) = operands[i].value.r;
                 ++offset;
                 ++encoding_size;
             } else {
                 switch (size) {
                     case op_sizes::byte: {
                         uint8_t* constant_value_ptr = encoding_ptr + offset;
-                        *constant_value_ptr = static_cast<uint8_t>(operands[i].value.u64);
+                        *constant_value_ptr = static_cast<uint8_t>(operands[i].value.u);
                         offset += sizeof(uint8_t);
                         encoding_size += sizeof(uint8_t);
                         break;
                     }
                     case op_sizes::word: {
                         uint16_t* constant_value_ptr = reinterpret_cast<uint16_t*>(encoding_ptr + offset);
-                        *constant_value_ptr = static_cast<uint16_t>(operands[i].value.u64);
+                        *constant_value_ptr = static_cast<uint16_t>(operands[i].value.u);
                         offset += sizeof(uint16_t);
                         encoding_size += sizeof(uint16_t);
                         break;
@@ -493,12 +493,12 @@ namespace basecode::vm {
                     case op_sizes::dword: {
                         if (operands[i].is_integer()) {
                             uint32_t* constant_value_ptr = reinterpret_cast<uint32_t*>(encoding_ptr + offset);
-                            *constant_value_ptr = static_cast<uint32_t>(operands[i].value.u64);
+                            *constant_value_ptr = static_cast<uint32_t>(operands[i].value.u);
                             offset += sizeof(uint32_t);
                             encoding_size += sizeof(uint32_t);
                         } else {
                             float* constant_value_ptr = reinterpret_cast<float*>(encoding_ptr + offset);
-                            *constant_value_ptr = static_cast<float>(operands[i].value.d64);
+                            *constant_value_ptr = static_cast<float>(operands[i].value.d);
                             offset += sizeof(float);
                             encoding_size += sizeof(float);
                         }
@@ -507,12 +507,12 @@ namespace basecode::vm {
                     case op_sizes::qword: {
                         if (operands[i].is_integer()) {
                             uint64_t* constant_value_ptr = reinterpret_cast<uint64_t*>(encoding_ptr + offset);
-                            *constant_value_ptr = operands[i].value.u64;
+                            *constant_value_ptr = operands[i].value.u;
                             offset += sizeof(uint64_t);
                             encoding_size += sizeof(uint64_t);
                         } else {
                             double* constant_value_ptr = reinterpret_cast<double*>(encoding_ptr + offset);
-                            *constant_value_ptr = operands[i].value.d64;
+                            *constant_value_ptr = operands[i].value.d;
                             offset += sizeof(double);
                             encoding_size += sizeof(double);
                         }
@@ -542,7 +542,7 @@ namespace basecode::vm {
     }
 
     void instruction_t::patch_branch_address(uint64_t address, uint8_t index) {
-        operands[index].value.u64 = align(address, alignment);
+        operands[index].value.u = align(address, alignment);
     }
 
     std::string instruction_t::disassemble(const id_resolve_callable& id_resolver) const {
@@ -608,7 +608,7 @@ namespace basecode::vm {
 
                 if (operand.is_reg()) {
                     if (operand.is_integer()) {
-                        switch (operand.value.r8) {
+                        switch (operand.value.r) {
                             case registers_t::sp: {
                                 operands_stream << prefix << "SP" << postfix;
                                 break;
@@ -632,28 +632,28 @@ namespace basecode::vm {
                             default: {
                                 operands_stream << prefix
                                                 << "I"
-                                                << std::to_string(operand.value.r8)
+                                                << std::to_string(operand.value.r)
                                                 << postfix;
                                 break;
                             }
                         }
                     } else {
-                        operands_stream << "F" << std::to_string(operand.value.r8);
+                        operands_stream << "F" << std::to_string(operand.value.r);
                     }
                 } else {
                     if (operand.is_unresolved()) {
                         if (id_resolver == nullptr)
-                            operands_stream << fmt::format("id({})", operand.value.u64);
+                            operands_stream << fmt::format("id({})", operand.value.u);
                         else
-                            operands_stream << id_resolver(operand.value.u64);
+                            operands_stream << id_resolver(operand.value.u);
                     } else {
                         if (i == 2) {
                             operands_stream << fmt::format(
                                 offset_spec,
-                                static_cast<int64_t>(operand.value.u64));
+                                static_cast<int64_t>(operand.value.u));
                         } else {
                             operands_stream << prefix
-                                            << fmt::format(format_spec, operand.value.u64)
+                                            << fmt::format(format_spec, operand.value.u)
                                             << postfix;
                         }
                     }
@@ -854,13 +854,14 @@ namespace basecode::vm {
                 break;
             }
             case op_codes::alloc: {
-                uint64_t size;
+                operand_value_t size;
                 if (!get_operand_value(r, inst, 1, size))
                     return false;
 
-                size *= op_size_in_bytes(inst.size);
-                uint64_t address = alloc(size);
-                if (address == 0) {
+                size.alias.u *= op_size_in_bytes(inst.size);
+                operand_value_t address;
+                address.alias.u = alloc(size.alias.u);
+                if (address.alias.u == 0) {
                     execute_trap(trap_out_of_memory);
                     return false;
                 }
@@ -871,17 +872,19 @@ namespace basecode::vm {
                 _registers.flags(register_file_t::flags_t::carry, false);
                 _registers.flags(register_file_t::flags_t::subtract, false);
                 _registers.flags(register_file_t::flags_t::overflow, false);
-                _registers.flags(register_file_t::flags_t::zero, address == 0);
-                _registers.flags(register_file_t::flags_t::negative, is_negative(address, inst.size));
+                _registers.flags(register_file_t::flags_t::zero, address.alias.u == 0);
+                _registers.flags(
+                    register_file_t::flags_t::negative,
+                    is_negative(address, inst.size));
 
                 break;
             }
             case op_codes::free: {
-                uint64_t address;
+                operand_value_t address;
                 if (!get_operand_value(r, inst, 0, address))
                     return false;
 
-                auto freed_size = free(address);
+                auto freed_size = free(address.alias.u);
 
                 _registers.flags(register_file_t::flags_t::carry, false);
                 _registers.flags(register_file_t::flags_t::subtract, false);
@@ -892,73 +895,81 @@ namespace basecode::vm {
                 break;
             }
             case op_codes::size: {
-                uint64_t address;
+                operand_value_t address;
                 if (!get_operand_value(r, inst, 1, address))
                     return false;
 
-                uint64_t block_size = size(address);
+                operand_value_t block_size;
+                block_size.alias.u = size(address.alias.u);
                 if (!set_target_operand_value(r, inst, 0, block_size))
                     return false;
 
                 _registers.flags(register_file_t::flags_t::carry, false);
                 _registers.flags(register_file_t::flags_t::subtract, false);
                 _registers.flags(register_file_t::flags_t::overflow, false);
-                _registers.flags(register_file_t::flags_t::zero, block_size == 0);
-                _registers.flags(register_file_t::flags_t::negative, is_negative(block_size, inst.size));
+                _registers.flags(register_file_t::flags_t::zero, block_size.alias.u == 0);
+                _registers.flags(
+                    register_file_t::flags_t::negative,
+                    is_negative(block_size, inst.size));
 
                 break;
             }
             case op_codes::load: {
-                uint64_t address;
+                operand_value_t address;
 
                 if (!get_operand_value(r, inst, 1, address))
                     return false;
 
                 if (inst.operands_count > 2) {
-                    uint64_t offset;
+                    operand_value_t offset;
                     if (!get_operand_value(r, inst, 2, offset))
                         return false;
-                    address += offset;
+                    address.alias.u += offset.alias.u;
                 }
 
-                uint64_t value = read(inst.size, address);
-                if (!set_target_operand_value(r, inst, 0, value))
+                operand_value_t loaded_data;
+                loaded_data.alias.u = read(inst.size, address.alias.u);
+                if (!set_target_operand_value(r, inst, 0, loaded_data))
                     return false;
 
                 _registers.flags(register_file_t::flags_t::carry, false);
                 _registers.flags(register_file_t::flags_t::subtract, false);
                 _registers.flags(register_file_t::flags_t::overflow, false);
-                _registers.flags(register_file_t::flags_t::zero, value == 0);
-                _registers.flags(register_file_t::flags_t::negative, is_negative(value, inst.size));
+                _registers.flags(register_file_t::flags_t::zero, loaded_data.alias.u == 0);
+                _registers.flags(
+                    register_file_t::flags_t::negative,
+                    is_negative(loaded_data, inst.size));
                 break;
             }
             case op_codes::store: {
-                uint64_t address;
+                operand_value_t address;
                 if (!get_operand_value(r, inst, 0, address))
                     return false;
 
-                uint64_t value;
-                if (!get_operand_value(r, inst, 1, value))
+                operand_value_t data;
+                if (!get_operand_value(r, inst, 1, data))
                     return false;
 
                 if (inst.operands_count > 2) {
-                    uint64_t offset;
+                    operand_value_t offset;
                     if (!get_operand_value(r, inst, 2, offset))
                         return false;
-                    address += offset;
+                    address.alias.u += offset.alias.u;
                 }
 
-                write(inst.size, address, value);
+                write(inst.size, address.alias.u, data.alias.u);
 
                 _registers.flags(register_file_t::flags_t::carry, false);
                 _registers.flags(register_file_t::flags_t::subtract, false);
                 _registers.flags(register_file_t::flags_t::overflow, false);
-                _registers.flags(register_file_t::flags_t::zero, value == 0);
-                _registers.flags(register_file_t::flags_t::negative, is_negative(value, inst.size));
+                _registers.flags(register_file_t::flags_t::zero, data.alias.u == 0);
+                _registers.flags(
+                    register_file_t::flags_t::negative,
+                    is_negative(data, inst.size));
                 break;
             }
             case op_codes::copy: {
-                uint64_t source_address, target_address;
+                operand_value_t source_address, target_address;
 
                 if (!get_operand_value(r, inst, 0, source_address))
                     return false;
@@ -966,14 +977,14 @@ namespace basecode::vm {
                 if (!get_operand_value(r, inst, 1, target_address))
                     return false;
 
-                uint64_t length;
+                operand_value_t length;
                 if (!get_operand_value(r, inst, 2, length))
                     return false;
 
                 memcpy(
-                    _heap + target_address,
-                    _heap + source_address,
-                    length * op_size_in_bytes(inst.size));
+                    _heap + target_address.alias.u,
+                    _heap + source_address.alias.u,
+                    length.alias.u * op_size_in_bytes(inst.size));
 
                 _registers.flags(register_file_t::flags_t::zero, false);
                 _registers.flags(register_file_t::flags_t::carry, false);
@@ -984,28 +995,37 @@ namespace basecode::vm {
                 break;
             }
             case op_codes::fill: {
-                uint64_t value;
+                operand_value_t value;
                 if (!get_operand_value(r, inst, 0, value))
                     return false;
 
-                uint64_t address;
+                operand_value_t address;
                 if (!get_operand_value(r, inst, 1, address))
                     return false;
 
-                uint64_t length;
+                operand_value_t length;
                 if (!get_operand_value(r, inst, 2, length))
                     return false;
-                length *= op_size_in_bytes(inst.size);
+                length.alias.u *= op_size_in_bytes(inst.size);
 
                 switch (inst.size) {
                     case op_sizes::byte:
-                        memset(_heap + address, static_cast<uint8_t>(value), length);
+                        memset(
+                            _heap + address.alias.u,
+                            static_cast<uint8_t>(value.alias.u),
+                            length.alias.u);
                         break;
                     case op_sizes::word:
-                        memset(_heap + address, static_cast<uint16_t>(value), length);
+                        memset(
+                            _heap + address.alias.u,
+                            static_cast<uint16_t>(value.alias.u),
+                            length.alias.u);
                         break;
                     case op_sizes::dword:
-                        memset(_heap + address, static_cast<uint32_t>(value), length);
+                        memset(
+                            _heap + address.alias.u,
+                            static_cast<uint32_t>(value.alias.u),
+                            length.alias.u);
                         break;
                     case op_sizes::qword:
                     default:
@@ -1022,8 +1042,8 @@ namespace basecode::vm {
                 break;
             }
             case op_codes::move: {
-                uint64_t source_value = 0;
-                uint64_t offset = 0;
+                operand_value_t source_value;
+                operand_value_t offset;
 
                 if (inst.operands_count > 2) {
                     if (!get_operand_value(r, inst, 2, offset))
@@ -1033,98 +1053,126 @@ namespace basecode::vm {
                 if (!get_operand_value(r, inst, 1, source_value))
                     return false;
 
-                if (!set_target_operand_value(r, inst, 0, source_value + offset))
+                operand_value_t address;
+                address.alias.u = source_value.alias.u + offset.alias.u;
+                if (!set_target_operand_value(r, inst, 0, address))
                     return false;
 
                 _registers.flags(register_file_t::flags_t::carry, false);
                 _registers.flags(register_file_t::flags_t::overflow, false);
                 _registers.flags(register_file_t::flags_t::subtract, false);
-                _registers.flags(register_file_t::flags_t::zero, source_value == 0);
-                _registers.flags(register_file_t::flags_t::negative, is_negative(source_value, inst.size));
+                _registers.flags(register_file_t::flags_t::zero, source_value.alias.u == 0);
+                _registers.flags(
+                    register_file_t::flags_t::negative,
+                    is_negative(source_value, inst.size));
 
                 break;
             }
             case op_codes::push: {
-                uint64_t source_value;
+                operand_value_t source_value;
 
                 if (!get_operand_value(r, inst, 0, source_value))
                     return false;
 
-                push(source_value);
+                push(source_value.alias.u);
 
                 _registers.flags(register_file_t::flags_t::carry, false);
                 _registers.flags(register_file_t::flags_t::overflow, false);
                 _registers.flags(register_file_t::flags_t::subtract, false);
-                _registers.flags(register_file_t::flags_t::zero, source_value == 0);
-                _registers.flags(register_file_t::flags_t::negative, is_negative(source_value, inst.size));
+                _registers.flags(register_file_t::flags_t::zero, source_value.alias.u == 0);
+                _registers.flags(
+                    register_file_t::flags_t::negative,
+                    is_negative(source_value, inst.size));
 
                 break;
             }
             case op_codes::pop: {
-                uint64_t value = pop();
+                operand_value_t top_of_stack;
+                top_of_stack.alias.u = pop();
 
-                if (!set_target_operand_value(r, inst, 0, value))
+                if (!set_target_operand_value(r, inst, 0, top_of_stack))
                     return false;
 
-                _registers.flags(register_file_t::flags_t::zero, value == 0);
+                _registers.flags(register_file_t::flags_t::zero, top_of_stack.alias.u == 0);
                 _registers.flags(register_file_t::flags_t::overflow, false);
                 _registers.flags(register_file_t::flags_t::carry, false);
                 _registers.flags(register_file_t::flags_t::subtract, false);
-                _registers.flags(register_file_t::flags_t::negative, is_negative(value, inst.size));
+                _registers.flags(
+                    register_file_t::flags_t::negative,
+                    is_negative(top_of_stack, inst.size));
 
                 break;
             }
             case op_codes::dup: {
-                uint64_t value = peek();
-                push(value);
+                operand_value_t top_of_stack;
+                top_of_stack.alias.u = peek();
+                push(top_of_stack.alias.u);
 
                 _registers.flags(register_file_t::flags_t::carry, false);
                 _registers.flags(register_file_t::flags_t::overflow, false);
                 _registers.flags(register_file_t::flags_t::subtract, false);
-                _registers.flags(register_file_t::flags_t::zero, value == 0);
-                _registers.flags(register_file_t::flags_t::negative, is_negative(value, inst.size));
+                _registers.flags(register_file_t::flags_t::zero, top_of_stack.alias.u == 0);
+                _registers.flags(
+                    register_file_t::flags_t::negative,
+                    is_negative(top_of_stack, inst.size));
 
                 break;
             }
             case op_codes::inc: {
-                uint8_t reg = inst.operands[0].value.r8;
+                operand_value_t reg_value;
+                if (get_operand_value(r, inst, 0, reg_value))
+                    return false;
 
-                uint64_t lhs_value = _registers.r[reg].u;
-                uint64_t rhs_value = 1;
-                uint64_t value = lhs_value + rhs_value;
-                if (set_target_operand_value(r, inst, reg, value))
+                operand_value_t new_value;
+                if (reg_value.type == register_type_t::floating_point)
+                    new_value.alias.d = reg_value.alias.d + 1.0;
+                else
+                    new_value.alias.u = reg_value.alias.u + 1;
+                if (set_target_operand_value(r, inst, 0, reg_value))
                     return false;
 
                 _registers.flags(
                     register_file_t::flags_t::overflow,
-                    has_overflow(lhs_value, rhs_value, value, inst.size));
-                _registers.flags(register_file_t::flags_t::zero, value == 0);
+                    has_overflow(reg_value.alias.u, 1, new_value.alias.u, inst.size));
+                _registers.flags(register_file_t::flags_t::zero, new_value.alias.u == 0);
                 _registers.flags(register_file_t::flags_t::subtract, false);
-                _registers.flags(register_file_t::flags_t::carry, has_carry(value, inst.size));
-                _registers.flags(register_file_t::flags_t::negative, is_negative(value, inst.size));
+                _registers.flags(
+                    register_file_t::flags_t::carry,
+                    has_carry(new_value, inst.size));
+                _registers.flags(
+                    register_file_t::flags_t::negative,
+                    is_negative(new_value, inst.size));
 
                 break;
             }
             case op_codes::dec: {
-                uint8_t reg = inst.operands[0].value.r8;
+                operand_value_t reg_value;
+                if (get_operand_value(r, inst, 0, reg_value))
+                    return false;
 
-                uint64_t lhs_value = _registers.r[reg].u;
-                uint64_t rhs_value = 1;
-                uint64_t value = lhs_value - rhs_value;
-                if (set_target_operand_value(r, inst, reg, value))
+                operand_value_t new_value;
+                if (reg_value.type == register_type_t::floating_point)
+                    new_value.alias.d = reg_value.alias.d - 1.0;
+                else
+                    new_value.alias.u = reg_value.alias.u - 1;
+                if (set_target_operand_value(r, inst, 0, reg_value))
                     return false;
 
                 _registers.flags(
                     register_file_t::flags_t::overflow,
-                    has_overflow(lhs_value, rhs_value, value, inst.size));
+                    has_overflow(reg_value.alias.u, 1, new_value.alias.u, inst.size));
                 _registers.flags(register_file_t::flags_t::subtract, true);
-                _registers.flags(register_file_t::flags_t::zero, value == 0);
-                _registers.flags(register_file_t::flags_t::carry, has_carry(value, inst.size));
-                _registers.flags(register_file_t::flags_t::negative, is_negative(value, inst.size));
+                _registers.flags(register_file_t::flags_t::zero, new_value.alias.u == 0);
+                _registers.flags(
+                    register_file_t::flags_t::carry,
+                    has_carry(new_value, inst.size));
+                _registers.flags(
+                    register_file_t::flags_t::negative,
+                    is_negative(new_value, inst.size));
                 break;
             }
             case op_codes::add: {
-                uint64_t lhs_value, rhs_value;
+                operand_value_t lhs_value, rhs_value;
 
                 if (!get_operand_value(r, inst, 1, lhs_value))
                     return false;
@@ -1132,22 +1180,32 @@ namespace basecode::vm {
                 if (!get_operand_value(r, inst, 2, rhs_value))
                     return false;
 
-                uint64_t sum_result = lhs_value + rhs_value;
+                operand_value_t sum_result;
+                if (lhs_value.type == register_type_t::floating_point
+                &&  rhs_value.type == register_type_t::floating_point) {
+                    sum_result.alias.d = lhs_value.alias.d + rhs_value.alias.d;
+                } else {
+                    sum_result.alias.u = lhs_value.alias.u + rhs_value.alias.u;
+                }
                 if (!set_target_operand_value(r, inst, 0, sum_result))
                     return false;
 
                 _registers.flags(
                     register_file_t::flags_t::overflow,
-                    has_overflow(lhs_value, rhs_value, sum_result, inst.size));
+                    has_overflow(lhs_value.alias.u, rhs_value.alias.u, sum_result.alias.u, inst.size));
                 _registers.flags(register_file_t::flags_t::subtract, false);
-                _registers.flags(register_file_t::flags_t::zero, sum_result == 0);
-                _registers.flags(register_file_t::flags_t::carry, has_carry(sum_result, inst.size));
-                _registers.flags(register_file_t::flags_t::negative, is_negative(sum_result, inst.size));
+                _registers.flags(register_file_t::flags_t::zero, sum_result.alias.u == 0);
+                _registers.flags(
+                    register_file_t::flags_t::carry,
+                    has_carry(sum_result, inst.size));
+                _registers.flags(
+                    register_file_t::flags_t::negative,
+                    is_negative(sum_result, inst.size));
 
                 break;
             }
             case op_codes::sub: {
-                uint64_t lhs_value, rhs_value;
+                operand_value_t lhs_value, rhs_value;
 
                 if (!get_operand_value(r, inst, 1, lhs_value))
                     return false;
@@ -1155,21 +1213,30 @@ namespace basecode::vm {
                 if (!get_operand_value(r, inst, 2, rhs_value))
                     return false;
 
-                uint64_t subtraction_result = lhs_value - rhs_value;
+                operand_value_t subtraction_result;
+                if (lhs_value.type == register_type_t::floating_point
+                &&  rhs_value.type == register_type_t::floating_point)
+                    subtraction_result.alias.d = lhs_value.alias.d - rhs_value.alias.d;
+                else
+                    subtraction_result.alias.u = lhs_value.alias.u - rhs_value.alias.u;
                 if (!set_target_operand_value(r, inst, 0, subtraction_result))
                     return false;
 
                 _registers.flags(
                     register_file_t::flags_t::overflow,
-                    has_overflow(lhs_value, rhs_value, subtraction_result, inst.size));
+                    has_overflow(lhs_value.alias.u, rhs_value.alias.u, subtraction_result.alias.u, inst.size));
                 _registers.flags(register_file_t::flags_t::subtract, true);
-                _registers.flags(register_file_t::flags_t::carry, rhs_value > lhs_value);
-                _registers.flags(register_file_t::flags_t::zero, subtraction_result == 0);
-                _registers.flags(register_file_t::flags_t::negative, is_negative(subtraction_result, inst.size));
+                _registers.flags(register_file_t::flags_t::carry, rhs_value.alias.u > lhs_value.alias.u);
+                _registers.flags(
+                    register_file_t::flags_t::zero,
+                    subtraction_result.alias.u == 0);
+                _registers.flags(
+                    register_file_t::flags_t::negative,
+                    is_negative(subtraction_result, inst.size));
                 break;
             }
             case op_codes::mul: {
-                uint64_t lhs_value, rhs_value;
+                operand_value_t lhs_value, rhs_value;
 
                 if (!get_operand_value(r, inst, 1, lhs_value))
                     return false;
@@ -1177,21 +1244,30 @@ namespace basecode::vm {
                 if (!get_operand_value(r, inst, 2, rhs_value))
                     return false;
 
-                uint64_t product_result = lhs_value * rhs_value;
+                operand_value_t product_result;
+                if (lhs_value.type == register_type_t::floating_point
+                &&  rhs_value.type == register_type_t::floating_point)
+                    product_result.alias.d = lhs_value.alias.d * rhs_value.alias.d;
+                else
+                    product_result.alias.u = lhs_value.alias.u * rhs_value.alias.u;
                 if (!set_target_operand_value(r, inst, 0, product_result))
                     return false;
 
                 _registers.flags(
                     register_file_t::flags_t::overflow,
-                    has_overflow(lhs_value, rhs_value, product_result, inst.size));
+                    has_overflow(lhs_value.alias.u, rhs_value.alias.u, product_result.alias.u, inst.size));
                 _registers.flags(register_file_t::flags_t::carry, false);
                 _registers.flags(register_file_t::flags_t::subtract, false);
-                _registers.flags(register_file_t::flags_t::zero, product_result == 0);
-                _registers.flags(register_file_t::flags_t::negative, is_negative(product_result, inst.size));
+                _registers.flags(
+                    register_file_t::flags_t::zero,
+                    product_result.alias.u == 0);
+                _registers.flags(
+                    register_file_t::flags_t::negative,
+                    is_negative(product_result, inst.size));
                 break;
             }
             case op_codes::div: {
-                uint64_t lhs_value, rhs_value;
+                operand_value_t lhs_value, rhs_value;
 
                 if (!get_operand_value(r, inst, 1, lhs_value))
                     return false;
@@ -1199,25 +1275,37 @@ namespace basecode::vm {
                 if (!get_operand_value(r, inst, 2, rhs_value))
                     return false;
 
-                uint64_t result = 0;
-                if (rhs_value != 0)
-                    result = lhs_value / rhs_value;
+                operand_value_t result;
+                if (lhs_value.type == register_type_t::floating_point
+                &&  rhs_value.type == register_type_t::floating_point) {
+                    if (rhs_value.alias.d != 0) {
+                        result.alias.d = lhs_value.alias.d / rhs_value.alias.d;
+                    }
+                } else {
+                    if (rhs_value.alias.u != 0) {
+                        result.alias.u = lhs_value.alias.u / rhs_value.alias.u;
+                    }
+                }
 
                 if (!set_target_operand_value(r, inst, 0, result))
                     return false;
 
                 _registers.flags(
                     register_file_t::flags_t::overflow,
-                    has_overflow(lhs_value, rhs_value, result, inst.size));
+                    has_overflow(lhs_value.alias.u, rhs_value.alias.u, result.alias.u, inst.size));
                 _registers.flags(register_file_t::flags_t::carry, false);
                 _registers.flags(register_file_t::flags_t::subtract, false);
-                _registers.flags(register_file_t::flags_t::zero, result == 0);
-                _registers.flags(register_file_t::flags_t::negative, is_negative(result, inst.size));
+                _registers.flags(
+                    register_file_t::flags_t::zero,
+                    result.alias.u == 0);
+                _registers.flags(
+                    register_file_t::flags_t::negative,
+                    is_negative(result, inst.size));
 
                 break;
             }
             case op_codes::mod: {
-                uint64_t lhs_value, rhs_value;
+                operand_value_t lhs_value, rhs_value;
 
                 if (!get_operand_value(r, inst, 1, lhs_value))
                     return false;
@@ -1225,42 +1313,57 @@ namespace basecode::vm {
                 if (!get_operand_value(r, inst, 2, rhs_value))
                     return false;
 
-                uint64_t result = lhs_value % rhs_value;
+                operand_value_t result;
+                result.alias.u = lhs_value.alias.u % rhs_value.alias.u;
                 if (!set_target_operand_value(r, inst, 0, result))
                     return false;
 
                 _registers.flags(
                     register_file_t::flags_t::overflow,
-                    has_overflow(lhs_value, rhs_value, result, inst.size));
+                    has_overflow(lhs_value.alias.u, rhs_value.alias.u, result.alias.u, inst.size));
                 _registers.flags(register_file_t::flags_t::carry, false);
                 _registers.flags(register_file_t::flags_t::subtract, false);
                 _registers.flags(register_file_t::flags_t::overflow, false);
-                _registers.flags(register_file_t::flags_t::zero, result == 0);
-                _registers.flags(register_file_t::flags_t::negative, is_negative(result, inst.size));
+                _registers.flags(
+                    register_file_t::flags_t::zero,
+                    result.alias.u == 0);
+                _registers.flags(
+                    register_file_t::flags_t::negative,
+                    is_negative(result, inst.size));
 
                 break;
             }
             case op_codes::neg: {
-                uint64_t value;
+                operand_value_t value;
 
                 if (!get_operand_value(r, inst, 1, value))
                     return false;
 
-                int64_t negated_result = -static_cast<int64_t>(value);
-                uint64_t result = static_cast<uint64_t>(negated_result);
+                operand_value_t result;
+                if (value.type == register_type_t::floating_point) {
+                    result.alias.d = value.alias.d * -1.0;
+                } else {
+                    int64_t negated_result = -static_cast<int64_t>(value.alias.u);
+                    result.alias.u = static_cast<uint64_t>(negated_result);
+                }
+
                 if (!set_target_operand_value(r, inst, 0, result))
                     return false;
 
                 _registers.flags(register_file_t::flags_t::carry, false);
                 _registers.flags(register_file_t::flags_t::subtract, false);
                 _registers.flags(register_file_t::flags_t::overflow, false);
-                _registers.flags(register_file_t::flags_t::zero, result == 0);
-                _registers.flags(register_file_t::flags_t::negative, is_negative(result, inst.size));
+                _registers.flags(
+                    register_file_t::flags_t::zero,
+                    result.alias.u == 0);
+                _registers.flags(
+                    register_file_t::flags_t::negative,
+                    is_negative(result, inst.size));
 
                 break;
             }
             case op_codes::shr: {
-                uint64_t lhs_value, rhs_value;
+                operand_value_t lhs_value, rhs_value;
 
                 if (!get_operand_value(r, inst, 1, lhs_value))
                     return false;
@@ -1268,19 +1371,24 @@ namespace basecode::vm {
                 if (!get_operand_value(r, inst, 2, rhs_value))
                     return false;
 
-                uint64_t result = lhs_value >> rhs_value;
+                operand_value_t result;
+                result.alias.u = lhs_value.alias.u >> rhs_value.alias.u;
                 if (!set_target_operand_value(r, inst, 0, result))
                     return false;
 
                 _registers.flags(register_file_t::flags_t::carry, false);
                 _registers.flags(register_file_t::flags_t::subtract, false);
                 _registers.flags(register_file_t::flags_t::overflow, false);
-                _registers.flags(register_file_t::flags_t::zero, result == 0);
-                _registers.flags(register_file_t::flags_t::negative, is_negative(result, inst.size));
+                _registers.flags(
+                    register_file_t::flags_t::zero,
+                    result.alias.u == 0);
+                _registers.flags(
+                    register_file_t::flags_t::negative,
+                    is_negative(result, inst.size));
                 break;
             }
             case op_codes::shl: {
-                uint64_t lhs_value, rhs_value;
+                operand_value_t lhs_value, rhs_value;
 
                 if (!get_operand_value(r, inst, 1, lhs_value))
                     return false;
@@ -1288,20 +1396,25 @@ namespace basecode::vm {
                 if (!get_operand_value(r, inst, 2, rhs_value))
                     return false;
 
-                uint64_t result = lhs_value << rhs_value;
+                operand_value_t result;
+                result.alias.u = lhs_value.alias.u << rhs_value.alias.u;
                 if (!set_target_operand_value(r, inst, 0, result))
                     return false;
 
                 _registers.flags(register_file_t::flags_t::carry, false);
                 _registers.flags(register_file_t::flags_t::subtract, false);
                 _registers.flags(register_file_t::flags_t::overflow, false);
-                _registers.flags(register_file_t::flags_t::zero, result == 0);
-                _registers.flags(register_file_t::flags_t::negative, is_negative(result, inst.size));
+                _registers.flags(
+                    register_file_t::flags_t::zero,
+                    result.alias.u == 0);
+                _registers.flags(
+                    register_file_t::flags_t::negative,
+                    is_negative(result, inst.size));
 
                 break;
             }
             case op_codes::ror: {
-                uint64_t lhs_value, rhs_value;
+                operand_value_t lhs_value, rhs_value;
 
                 if (!get_operand_value(r, inst, 1, lhs_value))
                     return false;
@@ -1309,20 +1422,27 @@ namespace basecode::vm {
                 if (!get_operand_value(r, inst, 2, rhs_value))
                     return false;
 
-                uint64_t right_rotated_value = rotr(lhs_value, static_cast<uint8_t>(rhs_value));
+                operand_value_t right_rotated_value;
+                right_rotated_value.alias.u = rotr(
+                    lhs_value.alias.u,
+                    static_cast<uint8_t>(rhs_value.alias.u));
                 if (!set_target_operand_value(r, inst, 0, right_rotated_value))
                     return false;
 
                 _registers.flags(register_file_t::flags_t::carry, false);
                 _registers.flags(register_file_t::flags_t::subtract, false);
                 _registers.flags(register_file_t::flags_t::overflow, false);
-                _registers.flags(register_file_t::flags_t::zero, right_rotated_value == 0);
-                _registers.flags(register_file_t::flags_t::negative, is_negative(right_rotated_value, inst.size));
+                _registers.flags(
+                    register_file_t::flags_t::zero,
+                    right_rotated_value.alias.u == 0);
+                _registers.flags(
+                    register_file_t::flags_t::negative,
+                    is_negative(right_rotated_value, inst.size));
 
                 break;
             }
             case op_codes::rol: {
-                uint64_t lhs_value, rhs_value;
+                operand_value_t lhs_value, rhs_value;
 
                 if (!get_operand_value(r, inst, 1, lhs_value))
                     return false;
@@ -1330,20 +1450,27 @@ namespace basecode::vm {
                 if (!get_operand_value(r, inst, 2, rhs_value))
                     return false;
 
-                uint64_t left_rotated_value = rotl(lhs_value, static_cast<uint8_t>(rhs_value));
+                operand_value_t left_rotated_value;
+                left_rotated_value.alias.u = rotl(
+                    lhs_value.alias.u,
+                    static_cast<uint8_t>(rhs_value.alias.u));
                 if (!set_target_operand_value(r, inst, 0, left_rotated_value))
                     return false;
 
                 _registers.flags(register_file_t::flags_t::carry, false);
                 _registers.flags(register_file_t::flags_t::subtract, false);
                 _registers.flags(register_file_t::flags_t::overflow, false);
-                _registers.flags(register_file_t::flags_t::zero, left_rotated_value == 0);
-                _registers.flags(register_file_t::flags_t::negative, is_negative(left_rotated_value, inst.size));
+                _registers.flags(
+                    register_file_t::flags_t::zero,
+                    left_rotated_value.alias.u == 0);
+                _registers.flags(
+                    register_file_t::flags_t::negative,
+                    is_negative(left_rotated_value, inst.size));
 
                 break;
             }
             case op_codes::and_op: {
-                uint64_t lhs_value, rhs_value;
+                operand_value_t lhs_value, rhs_value;
 
                 if (!get_operand_value(r, inst, 1, lhs_value))
                     return false;
@@ -1351,20 +1478,25 @@ namespace basecode::vm {
                 if (!get_operand_value(r, inst, 2, rhs_value))
                     return false;
 
-                uint64_t result = lhs_value & rhs_value;
+                operand_value_t result;
+                result.alias.u = lhs_value.alias.u & rhs_value.alias.u;
                 if (!set_target_operand_value(r, inst, 0, result))
                     return false;
 
                 _registers.flags(register_file_t::flags_t::carry, false);
                 _registers.flags(register_file_t::flags_t::subtract, false);
                 _registers.flags(register_file_t::flags_t::overflow, false);
-                _registers.flags(register_file_t::flags_t::zero, result == 0);
-                _registers.flags(register_file_t::flags_t::negative, is_negative(result, inst.size));
+                _registers.flags(
+                    register_file_t::flags_t::zero,
+                    result.alias.u == 0);
+                _registers.flags(
+                    register_file_t::flags_t::negative,
+                    is_negative(result, inst.size));
 
                 break;
             }
             case op_codes::or_op: {
-                uint64_t lhs_value, rhs_value;
+                operand_value_t lhs_value, rhs_value;
 
                 if (!get_operand_value(r, inst, 1, lhs_value))
                     return false;
@@ -1372,20 +1504,25 @@ namespace basecode::vm {
                 if (!get_operand_value(r, inst, 2, rhs_value))
                     return false;
 
-                uint64_t result = lhs_value | rhs_value;
+                operand_value_t result;
+                result.alias.u = lhs_value.alias.u | rhs_value.alias.u;
                 if (!set_target_operand_value(r, inst, 0, result))
                     return false;
 
                 _registers.flags(register_file_t::flags_t::carry, false);
                 _registers.flags(register_file_t::flags_t::subtract, false);
                 _registers.flags(register_file_t::flags_t::overflow, false);
-                _registers.flags(register_file_t::flags_t::zero, result == 0);
-                _registers.flags(register_file_t::flags_t::negative, is_negative(result, inst.size));
+                _registers.flags(
+                    register_file_t::flags_t::zero,
+                    result.alias.u == 0);
+                _registers.flags(
+                    register_file_t::flags_t::negative,
+                    is_negative(result, inst.size));
 
                 break;
             }
             case op_codes::xor_op: {
-                uint64_t lhs_value, rhs_value;
+                operand_value_t lhs_value, rhs_value;
 
                 if (!get_operand_value(r, inst, 1, lhs_value))
                     return false;
@@ -1393,38 +1530,48 @@ namespace basecode::vm {
                 if (!get_operand_value(r, inst, 2, rhs_value))
                     return false;
 
-                uint64_t result = lhs_value ^ rhs_value;
+                operand_value_t result;
+                result.alias.u = lhs_value.alias.u ^ rhs_value.alias.u;
                 if (!set_target_operand_value(r, inst, 0, result))
                     return false;
 
                 _registers.flags(register_file_t::flags_t::carry, false);
                 _registers.flags(register_file_t::flags_t::subtract, false);
                 _registers.flags(register_file_t::flags_t::overflow, false);
-                _registers.flags(register_file_t::flags_t::zero, result == 0);
-                _registers.flags(register_file_t::flags_t::negative, is_negative(result, inst.size));
+                _registers.flags(
+                    register_file_t::flags_t::zero,
+                    result.alias.u == 0);
+                _registers.flags(
+                    register_file_t::flags_t::negative,
+                    is_negative(result, inst.size));
 
                 break;
             }
             case op_codes::not_op: {
-                uint64_t value;
+                operand_value_t value;
 
                 if (!get_operand_value(r, inst, 1, value))
                     return false;
 
-                uint64_t not_result = ~value;
+                operand_value_t not_result;
+                not_result.alias.u = ~value.alias.u;
                 if (!set_target_operand_value(r, inst, 0, not_result))
                     return false;
 
                 _registers.flags(register_file_t::flags_t::carry, false);
                 _registers.flags(register_file_t::flags_t::subtract, false);
                 _registers.flags(register_file_t::flags_t::overflow, false);
-                _registers.flags(register_file_t::flags_t::zero, not_result == 0);
-                _registers.flags(register_file_t::flags_t::negative, is_negative(not_result, inst.size));
+                _registers.flags(
+                    register_file_t::flags_t::zero,
+                    not_result.alias.u == 0);
+                _registers.flags(
+                    register_file_t::flags_t::negative,
+                    is_negative(not_result, inst.size));
 
                 break;
             }
             case op_codes::bis: {
-                uint64_t value, bit_number;
+                operand_value_t value, bit_number;
 
                 if (!get_operand_value(r, inst, 1, value))
                     return false;
@@ -1432,8 +1579,9 @@ namespace basecode::vm {
                 if (!get_operand_value(r, inst, 2, bit_number))
                     return false;
 
-                uint64_t masked_value = static_cast<uint64_t>(1 << bit_number);
-                uint64_t result = value | masked_value;
+                uint64_t masked_value = static_cast<uint64_t>(1 << bit_number.alias.u);
+                operand_value_t result;
+                result.alias.u = value.alias.u | masked_value;
                 if (!set_target_operand_value(r, inst, 0, result))
                     return false;
 
@@ -1441,12 +1589,14 @@ namespace basecode::vm {
                 _registers.flags(register_file_t::flags_t::carry, false);
                 _registers.flags(register_file_t::flags_t::subtract, false);
                 _registers.flags(register_file_t::flags_t::overflow, false);
-                _registers.flags(register_file_t::flags_t::negative, is_negative(result, inst.size));
+                _registers.flags(
+                    register_file_t::flags_t::negative,
+                    is_negative(result, inst.size));
 
                 break;
             }
             case op_codes::bic: {
-                uint64_t value, bit_number;
+                operand_value_t value, bit_number;
 
                 if (!get_operand_value(r, inst, 1, value))
                     return false;
@@ -1454,8 +1604,9 @@ namespace basecode::vm {
                 if (!get_operand_value(r, inst, 2, bit_number))
                     return false;
 
-                uint64_t masked_value = static_cast<uint64_t>(~(1 << bit_number));
-                uint64_t result = value & masked_value;
+                uint64_t masked_value = static_cast<uint64_t>(~(1 << bit_number.alias.u));
+                operand_value_t result;
+                result.alias.u = value.alias.u & masked_value;
                 if (!set_target_operand_value(r, inst, 0, result))
                     return false;
 
@@ -1463,12 +1614,14 @@ namespace basecode::vm {
                 _registers.flags(register_file_t::flags_t::carry, false);
                 _registers.flags(register_file_t::flags_t::subtract, false);
                 _registers.flags(register_file_t::flags_t::overflow, false);
-                _registers.flags(register_file_t::flags_t::negative, is_negative(result, inst.size));
+                _registers.flags(
+                    register_file_t::flags_t::negative,
+                    is_negative(result, inst.size));
 
                 break;
             }
             case op_codes::test: {
-                uint64_t value, mask;
+                operand_value_t value, mask;
 
                 if (!get_operand_value(r, inst, 0, value))
                     return false;
@@ -1476,18 +1629,21 @@ namespace basecode::vm {
                 if (!get_operand_value(r, inst, 1, mask))
                     return false;
 
-                uint64_t result = value & mask;
+                operand_value_t result;
+                result.alias.u = value.alias.u & mask.alias.u;
 
                 _registers.flags(register_file_t::flags_t::carry, false);
                 _registers.flags(register_file_t::flags_t::subtract, false);
                 _registers.flags(register_file_t::flags_t::overflow, false);
-                _registers.flags(register_file_t::flags_t::zero, result == 0);
-                _registers.flags(register_file_t::flags_t::negative, is_negative(result, inst.size));
+                _registers.flags(register_file_t::flags_t::zero, result.alias.u == 0);
+                _registers.flags(
+                    register_file_t::flags_t::negative,
+                    is_negative(result, inst.size));
 
                 break;
             }
             case op_codes::cmp: {
-                uint64_t lhs_value, rhs_value;
+                operand_value_t lhs_value, rhs_value;
 
                 if (!get_operand_value(r, inst, 0, lhs_value))
                     return false;
@@ -1495,20 +1651,25 @@ namespace basecode::vm {
                 if (!get_operand_value(r, inst, 1, rhs_value))
                     return false;
 
-                uint64_t result = lhs_value - rhs_value;
+                operand_value_t result;
+                result.alias.u = lhs_value.alias.u - rhs_value.alias.u;
 
                 _registers.flags(
                     register_file_t::flags_t::overflow,
-                    has_overflow(lhs_value, rhs_value, result, inst.size));
+                    has_overflow(lhs_value.alias.u, rhs_value.alias.u, result.alias.u, inst.size));
                 _registers.flags(register_file_t::flags_t::subtract, true);
-                _registers.flags(register_file_t::flags_t::zero, result == 0);
-                _registers.flags(register_file_t::flags_t::carry, has_carry(result, inst.size));
-                _registers.flags(register_file_t::flags_t::negative, is_negative(result, inst.size));
+                _registers.flags(register_file_t::flags_t::zero, result.alias.u == 0);
+                _registers.flags(
+                    register_file_t::flags_t::carry,
+                    has_carry(result, inst.size));
+                _registers.flags(
+                    register_file_t::flags_t::negative,
+                    is_negative(result, inst.size));
 
                 break;
             }
             case op_codes::bz: {
-                uint64_t value, address;
+                operand_value_t value, address;
 
                 if (!get_operand_value(r, inst, 0, value))
                     return false;
@@ -1516,19 +1677,23 @@ namespace basecode::vm {
                 if (!get_operand_value(r, inst, 1, address))
                     return false;
 
-                if (value == 0)
-                    _registers.r[register_pc].u = address;
+                if (value.alias.u == 0)
+                    _registers.r[register_pc].u = address.alias.u;
 
-                _registers.flags(register_file_t::flags_t::zero, value == 0);
+                _registers.flags(register_file_t::flags_t::zero, value.alias.u == 0);
                 _registers.flags(register_file_t::flags_t::subtract, false);
                 _registers.flags(register_file_t::flags_t::overflow, false);
-                _registers.flags(register_file_t::flags_t::carry, has_carry(value, inst.size));
-                _registers.flags(register_file_t::flags_t::negative, is_negative(value, inst.size));
+                _registers.flags(
+                    register_file_t::flags_t::carry,
+                    has_carry(value, inst.size));
+                _registers.flags(
+                    register_file_t::flags_t::negative,
+                    is_negative(value, inst.size));
 
                 break;
             }
             case op_codes::bnz: {
-                uint64_t value, address;
+                operand_value_t value, address;
 
                 if (!get_operand_value(r, inst, 0, value))
                     return false;
@@ -1536,19 +1701,23 @@ namespace basecode::vm {
                 if (!get_operand_value(r, inst, 1, address))
                     return false;
 
-                if (value != 0)
-                    _registers.r[register_pc].u = address;
+                if (value.alias.u != 0)
+                    _registers.r[register_pc].u = address.alias.u;
 
-                _registers.flags(register_file_t::flags_t::zero, value == 0);
+                _registers.flags(register_file_t::flags_t::zero, value.alias.u == 0);
                 _registers.flags(register_file_t::flags_t::subtract, false);
                 _registers.flags(register_file_t::flags_t::overflow, false);
-                _registers.flags(register_file_t::flags_t::carry, has_carry(value, inst.size));
-                _registers.flags(register_file_t::flags_t::negative, is_negative(value, inst.size));
+                _registers.flags(
+                    register_file_t::flags_t::carry,
+                    has_carry(value, inst.size));
+                _registers.flags(
+                    register_file_t::flags_t::negative,
+                    is_negative(value, inst.size));
 
                 break;
             }
             case op_codes::tbz: {
-                uint64_t value, mask, address;
+                operand_value_t value, mask, address;
 
                 if (!get_operand_value(r, inst, 0, value))
                     return false;
@@ -1559,20 +1728,21 @@ namespace basecode::vm {
                 if (!get_operand_value(r, inst, 2, address))
                     return false;
 
-                uint64_t result = value & mask;
-                if (result == 0)
-                    _registers.r[register_pc].u = address;
+                operand_value_t result;
+                result.alias.u = value.alias.u & mask.alias.u;
+                if (result.alias.u == 0)
+                    _registers.r[register_pc].u = address.alias.u;
 
                 _registers.flags(register_file_t::flags_t::carry, false);
                 _registers.flags(register_file_t::flags_t::subtract, false);
                 _registers.flags(register_file_t::flags_t::overflow, false);
-                _registers.flags(register_file_t::flags_t::zero, result == 0);
+                _registers.flags(register_file_t::flags_t::zero, result.alias.u == 0);
                 _registers.flags(register_file_t::flags_t::negative, is_negative(result, inst.size));
 
                 break;
             }
             case op_codes::tbnz: {
-                uint64_t value, mask, address;
+                operand_value_t value, mask, address;
 
                 if (!get_operand_value(r, inst, 0, value))
                     return false;
@@ -1583,20 +1753,21 @@ namespace basecode::vm {
                 if (!get_operand_value(r, inst, 2, address))
                     return false;
 
-                uint64_t result = value & mask;
-                if (result != 0)
-                    _registers.r[register_pc].u = address;
+                operand_value_t result;
+                result.alias.u = value.alias.u & mask.alias.u;
+                if (result.alias.u != 0)
+                    _registers.r[register_pc].u = address.alias.u;
 
                 _registers.flags(register_file_t::flags_t::carry, false);
                 _registers.flags(register_file_t::flags_t::subtract, false);
                 _registers.flags(register_file_t::flags_t::overflow, false);
-                _registers.flags(register_file_t::flags_t::zero, result == 0);
+                _registers.flags(register_file_t::flags_t::zero, result.alias.u == 0);
                 _registers.flags(register_file_t::flags_t::negative, is_negative(result, inst.size));
 
                 break;
             }
             case op_codes::bne: {
-                uint64_t address;
+                operand_value_t address;
                 auto result = get_constant_address_or_pc_with_offset(
                     r,
                     inst,
@@ -1607,13 +1778,13 @@ namespace basecode::vm {
                     return false;
 
                 if (!_registers.flags(register_file_t::flags_t::zero)) {
-                    _registers.r[register_pc].u = address;
+                    _registers.r[register_pc].u = address.alias.u;
                 }
 
                 break;
             }
             case op_codes::beq: {
-                uint64_t address;
+                operand_value_t address;
                 auto result = get_constant_address_or_pc_with_offset(
                     r,
                     inst,
@@ -1624,13 +1795,13 @@ namespace basecode::vm {
                     return false;
 
                 if (_registers.flags(register_file_t::flags_t::zero)) {
-                    _registers.r[register_pc].u = address;
+                    _registers.r[register_pc].u = address.alias.u;
                 }
 
                 break;
             }
             case op_codes::bg: {
-                uint64_t address;
+                operand_value_t address;
                 auto result = get_constant_address_or_pc_with_offset(
                     r,
                     inst,
@@ -1642,13 +1813,13 @@ namespace basecode::vm {
 
                 if (!_registers.flags(register_file_t::flags_t::carry)
                 &&  !_registers.flags(register_file_t::flags_t::zero)) {
-                    _registers.r[register_pc].u = address;
+                    _registers.r[register_pc].u = address.alias.u;
                 }
 
                 break;
             }
             case op_codes::bge: {
-                uint64_t address;
+                operand_value_t address;
                 auto result = get_constant_address_or_pc_with_offset(
                     r,
                     inst,
@@ -1659,12 +1830,12 @@ namespace basecode::vm {
                     return false;
 
                 if (!_registers.flags(register_file_t::flags_t::carry)) {
-                    _registers.r[register_pc].u = address;
+                    _registers.r[register_pc].u = address.alias.u;
                 }
                 break;
             }
             case op_codes::bl: {
-                uint64_t address;
+                operand_value_t address;
                 auto result = get_constant_address_or_pc_with_offset(
                     r,
                     inst,
@@ -1676,12 +1847,12 @@ namespace basecode::vm {
 
                 if (_registers.flags(register_file_t::flags_t::carry)
                 ||  _registers.flags(register_file_t::flags_t::zero)) {
-                    _registers.r[register_pc].u = address;
+                    _registers.r[register_pc].u = address.alias.u;
                 }
                 break;
             }
             case op_codes::ble: {
-                uint64_t address;
+                operand_value_t address;
                 auto result = get_constant_address_or_pc_with_offset(
                     r,
                     inst,
@@ -1692,18 +1863,20 @@ namespace basecode::vm {
                     return false;
 
                 if (_registers.flags(register_file_t::flags_t::carry)) {
-                    _registers.r[register_pc].u = address;
+                    _registers.r[register_pc].u = address.alias.u;
                 }
                 break;
             }
             case op_codes::setz: {
-                uint64_t result = _registers.flags(register_file_t::flags_t::zero) ? 1 : 0;
+                operand_value_t result;
+                result.alias.u = _registers.flags(register_file_t::flags_t::zero) ? 1 : 0;
                 if (!set_target_operand_value(r, inst, 0, result))
                     return false;
                 break;
             }
             case op_codes::setnz: {
-                uint64_t result = !_registers.flags(register_file_t::flags_t::zero) ? 1 : 0;
+                operand_value_t result;
+                result.alias.u = !_registers.flags(register_file_t::flags_t::zero) ? 1 : 0;
                 if (!set_target_operand_value(r, inst, 0, result))
                     return false;
                 break;
@@ -1711,7 +1884,7 @@ namespace basecode::vm {
             case op_codes::jsr: {
                 push(_registers.r[register_pc].u);
 
-                uint64_t address;
+                operand_value_t address;
                 auto result = get_constant_address_or_pc_with_offset(
                     r,
                     inst,
@@ -1721,7 +1894,7 @@ namespace basecode::vm {
                 if (!result)
                     return false;
 
-                _registers.r[register_pc].u = address;
+                _registers.r[register_pc].u = address.alias.u;
                 break;
             }
             case op_codes::rts: {
@@ -1730,7 +1903,7 @@ namespace basecode::vm {
                 break;
             }
             case op_codes::jmp: {
-                uint64_t address;
+                operand_value_t address;
 
                 auto result = get_constant_address_or_pc_with_offset(
                     r,
@@ -1741,16 +1914,16 @@ namespace basecode::vm {
                 if (!result)
                     return false;
 
-                _registers.r[register_pc].u = address;
+                _registers.r[register_pc].u = address.alias.u;
                 break;
             }
             case op_codes::swi: {
-                uint64_t index;
+                operand_value_t index;
 
                 if (!get_operand_value(r, inst, 0, index))
                     return false;
 
-                size_t swi_offset = sizeof(uint64_t) * index;
+                size_t swi_offset = sizeof(uint64_t) * index.alias.u;
                 uint64_t swi_address = read(op_sizes::qword, swi_offset);
                 if (swi_address != 0) {
                     // XXX: what state should we save and restore here?
@@ -1761,30 +1934,32 @@ namespace basecode::vm {
                 break;
             }
             case op_codes::swap: {
-                uint64_t value;
+                operand_value_t value;
 
                 if (!get_operand_value(r, inst, 1, value))
                     return false;
 
-                uint64_t result = 0;
+                operand_value_t result;
+                result.alias.u = 0;
+
                 switch (inst.size) {
                     case op_sizes::byte: {
-                        uint8_t byte_value = static_cast<uint8_t>(value);
+                        uint8_t byte_value = static_cast<uint8_t>(value.alias.u);
                         uint8_t upper_nybble = common::get_upper_nybble(byte_value);
                         uint8_t lower_nybble = common::get_lower_nybble(byte_value);
                         byte_value = common::set_upper_nybble(byte_value, lower_nybble);
-                        result = common::set_lower_nybble(byte_value, upper_nybble);
+                        result.alias.u = common::set_lower_nybble(byte_value, upper_nybble);
                         break;
                     }
                     case op_sizes::word:
-                        result = common::endian_swap_word(static_cast<uint16_t>(value));
+                        result.alias.u = common::endian_swap_word(static_cast<uint16_t>(value.alias.u));
                         break;
                     case op_sizes::dword:
-                        result = common::endian_swap_dword(static_cast<uint32_t>(value));
+                        result.alias.u = common::endian_swap_dword(static_cast<uint32_t>(value.alias.u));
                         break;
                     case op_sizes::qword:
                     default:
-                        result = common::endian_swap_qword(value);
+                        result.alias.u = common::endian_swap_qword(value.alias.u);
                         break;
                 }
 
@@ -1794,27 +1969,27 @@ namespace basecode::vm {
                 _registers.flags(register_file_t::flags_t::carry, false);
                 _registers.flags(register_file_t::flags_t::subtract, false);
                 _registers.flags(register_file_t::flags_t::overflow, false);
-                _registers.flags(register_file_t::flags_t::zero, result == 0);
+                _registers.flags(register_file_t::flags_t::zero, result.alias.u == 0);
                 _registers.flags(register_file_t::flags_t::negative, is_negative(result, inst.size));
 
                 break;
             }
             case op_codes::trap: {
-                uint64_t index;
+                operand_value_t index;
 
                 if (!get_operand_value(r, inst, 0, index))
                     return false;
 
-                execute_trap(static_cast<uint8_t>(index));
+                execute_trap(static_cast<uint8_t>(index.alias.u));
 
                 break;
             }
             case op_codes::ffi: {
-                uint64_t address;
+                operand_value_t address;
                 if (!get_operand_value(r, inst, 0, address))
                     return false;
 
-                auto it = _foreign_functions.find(reinterpret_cast<void*>(address));
+                auto it = _foreign_functions.find(reinterpret_cast<void*>(address.alias.u));
                 if (it == _foreign_functions.end()) {
                     execute_trap(trap_invalid_ffi_call);
                     break;
@@ -1839,14 +2014,14 @@ namespace basecode::vm {
                         ++param_index;
                 }
 
-                uint64_t result_value = func_signature->call(_call_vm, address);
+                uint64_t result_value = func_signature->call(_call_vm, address.alias.u);
                 if (func_signature->return_value.type != ffi_types_t::void_type)
                     push(result_value);
 
                 break;
             }
             case op_codes::meta: {
-                uint64_t meta_data_size;
+                operand_value_t meta_data_size;
 
                 if (!get_operand_value(r, inst, 0, meta_data_size))
                     return false;
@@ -2206,16 +2381,18 @@ namespace basecode::vm {
             common::result& r,
             const instruction_t& inst,
             uint8_t operand_index,
-            uint64_t& value) const {
+            operand_value_t& value) const {
         auto& operand = inst.operands[operand_index];
-
+        value.type = operand.is_integer() ?
+            register_type_t::integer :
+            register_type_t::floating_point;
         if (operand.is_reg()) {
             auto reg_index = register_index(
-                static_cast<registers_t>(operand.value.r8),
-                operand.is_integer() ? register_type_t::integer : register_type_t::floating_point);
-            value = _registers.r[reg_index].u;
+                static_cast<registers_t>(operand.value.r),
+                value.type);
+            value.alias.u = _registers.r[reg_index].u;
         } else {
-            value = operand.value.u64;
+            value.alias.u = operand.value.u;
         }
 
         return true;
@@ -2225,14 +2402,19 @@ namespace basecode::vm {
             common::result& r,
             const instruction_t& inst,
             uint8_t operand_index,
-            uint64_t value) {
+            const operand_value_t& value) {
         auto& operand = inst.operands[operand_index];
-
+        auto type = operand.is_integer() ?
+            register_type_t::integer :
+            register_type_t::floating_point;
         if (operand.is_reg()) {
             auto reg_index = register_index(
-                static_cast<registers_t>(operand.value.r8),
-                operand.is_integer() ? register_type_t::integer : register_type_t::floating_point);
-            _registers.r[reg_index].u = set_zoned_value(_registers.r[reg_index].u, value, inst.size);
+                static_cast<registers_t>(operand.value.r),
+                type);
+            _registers.r[reg_index].u = set_zoned_value(
+                _registers.r[reg_index].u,
+                value.alias.u,
+                inst.size);
         } else {
             r.add_message(
                 "B006",
@@ -2249,55 +2431,55 @@ namespace basecode::vm {
             const instruction_t& inst,
             uint8_t operand_index,
             uint64_t inst_size,
-            uint64_t& address) {
+            operand_value_t& address) {
         if (!get_operand_value(r, inst, operand_index, address))
             return false;
 
         if (inst.operands_count >= 2) {
-            uint64_t offset;
+            operand_value_t offset;
 
             uint8_t offset_index = static_cast<uint8_t>(operand_index + 1);
             if (!get_operand_value(r, inst, offset_index, offset))
                 return false;
 
             if (inst.operands[offset_index].is_negative()) {
-                address -= offset + inst_size;
+                address.alias.u -= offset.alias.u + inst_size;
             } else {
-                address += offset - inst_size;
+                address.alias.u += offset.alias.u - inst_size;
             }
         }
 
         return true;
     }
 
-    bool terp::has_carry(uint64_t value, op_sizes size) {
+    bool terp::has_carry(const operand_value_t& value, op_sizes size) {
         switch (size) {
             case op_sizes::byte:
-                return value > UINT8_MAX;
+                return value.alias.u > UINT8_MAX;
             case op_sizes::word:
-                return value > UINT16_MAX;
+                return value.alias.u > UINT16_MAX;
             case op_sizes::dword:
-                return value > UINT32_MAX;
+                return value.alias.u > UINT32_MAX;
             case op_sizes::qword:
             default:
-                return value > UINT64_MAX;
+                return value.alias.u > UINT64_MAX;
         }
     }
 
-    bool terp::is_negative(uint64_t value, op_sizes size) {
+    bool terp::is_negative(const operand_value_t& value, op_sizes size) {
         switch (size) {
             case op_sizes::byte: {
-                return (value & mask_byte_negative) != 0;
+                return (value.alias.u & mask_byte_negative) != 0;
             }
             case op_sizes::word: {
-                return (value & mask_word_negative) != 0;
+                return (value.alias.u & mask_word_negative) != 0;
             }
             case op_sizes::dword: {
-                return (value & mask_dword_negative) != 0;
+                return (value.alias.u & mask_dword_negative) != 0;
             }
             case op_sizes::qword:
             default:
-                return (value & mask_qword_negative) != 0;
+                return (value.alias.u & mask_qword_negative) != 0;
         }
     }
 

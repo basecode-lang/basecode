@@ -209,12 +209,12 @@ namespace basecode::vm {
         move_op.operands[0].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
-        move_op.operands[0].value.r8 = dest_reg;
+        move_op.operands[0].value.r = dest_reg;
         move_op.operands[1].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::constant
             | operand_encoding_t::flags::unresolved;
-        move_op.operands[1].value.u64 = label_ref->id;
+        move_op.operands[1].value.u = label_ref->id;
         make_block_entry(move_op);
     }
 
@@ -231,18 +231,18 @@ namespace basecode::vm {
         move_op.operands[0].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
-        move_op.operands[0].value.r8 = dest_reg;
+        move_op.operands[0].value.r = dest_reg;
         move_op.operands[1].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::constant
             | operand_encoding_t::flags::unresolved;
-        move_op.operands[1].value.u64 = label_ref->id;
+        move_op.operands[1].value.u = label_ref->id;
         move_op.operands[2].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::constant;
         if (offset < 0)
             move_op.operands[2].type |= operand_encoding_t::flags::negative;
-        move_op.operands[2].value.u64 = static_cast<uint64_t>(offset);
+        move_op.operands[2].value.u = static_cast<uint64_t>(offset);
         make_block_entry(move_op);
     }
 
@@ -283,15 +283,15 @@ namespace basecode::vm {
         mul_op.operands[0].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
-        mul_op.operands[0].value.r8 = dest_reg;
+        mul_op.operands[0].value.r = dest_reg;
         mul_op.operands[1].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
-        mul_op.operands[1].value.r8 = multiplicand_reg;
+        mul_op.operands[1].value.r = multiplicand_reg;
         mul_op.operands[2].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
-        mul_op.operands[2].value.r8 = multiplier_reg;
+        mul_op.operands[2].value.r = multiplier_reg;
         make_block_entry(mul_op);
     }
 
@@ -342,15 +342,15 @@ namespace basecode::vm {
         div_op.operands[0].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
-        div_op.operands[0].value.r8 = dest_reg;
+        div_op.operands[0].value.r = dest_reg;
         div_op.operands[1].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
-        div_op.operands[1].value.r8 = dividend_reg;
+        div_op.operands[1].value.r = dividend_reg;
         div_op.operands[2].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
-        div_op.operands[2].value.r8 = divisor_reg;
+        div_op.operands[2].value.r = divisor_reg;
         make_block_entry(div_op);
     }
 
@@ -375,15 +375,15 @@ namespace basecode::vm {
         mod_op.operands[0].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
-        mod_op.operands[0].value.r8 = dest_reg;
+        mod_op.operands[0].value.r = dest_reg;
         mod_op.operands[1].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
-        mod_op.operands[1].value.r8 = dividend_reg;
+        mod_op.operands[1].value.r = dividend_reg;
         mod_op.operands[2].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
-        mod_op.operands[2].value.r8 = divisor_reg;
+        mod_op.operands[2].value.r = divisor_reg;
         make_block_entry(mod_op);
     }
 
@@ -393,7 +393,7 @@ namespace basecode::vm {
         swi_op.size = op_sizes::byte;
         swi_op.operands_count = 1;
         swi_op.operands[0].type = operand_encoding_t::flags::integer;
-        swi_op.operands[0].value.u64 = index;
+        swi_op.operands[0].value.u = index;
         make_block_entry(swi_op);
     }
 
@@ -403,7 +403,7 @@ namespace basecode::vm {
         trap_op.size = op_sizes::byte;
         trap_op.operands_count = 1;
         trap_op.operands[0].type = operand_encoding_t::flags::integer;
-        trap_op.operands[0].value.u64 = index;
+        trap_op.operands[0].value.u = index;
         make_block_entry(trap_op);
     }
 
@@ -416,9 +416,9 @@ namespace basecode::vm {
         not_op.size = size;
         not_op.operands_count = 2;
         not_op.operands[0].type = operand_encoding_t::flags::reg | operand_encoding_t::flags::integer;
-        not_op.operands[0].value.r8 = dest_reg;
+        not_op.operands[0].value.r = dest_reg;
         not_op.operands[1].type = operand_encoding_t::flags::reg | operand_encoding_t::flags::integer;
-        not_op.operands[1].value.r8 = src_reg;
+        not_op.operands[1].value.r = src_reg;
         make_block_entry(not_op);
     }
 
@@ -431,9 +431,9 @@ namespace basecode::vm {
         neg_op.size = size;
         neg_op.operands_count = 2;
         neg_op.operands[0].type = operand_encoding_t::flags::reg | operand_encoding_t::flags::integer;
-        neg_op.operands[0].value.r8 = dest_reg;
+        neg_op.operands[0].value.r = dest_reg;
         neg_op.operands[1].type = operand_encoding_t::flags::reg | operand_encoding_t::flags::integer;
-        neg_op.operands[1].value.r8 = src_reg;
+        neg_op.operands[1].value.r = src_reg;
         make_block_entry(neg_op);
     }
 
@@ -452,11 +452,11 @@ namespace basecode::vm {
         move_op.operands[0].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
-        move_op.operands[0].value.r8 = dest_reg;
+        move_op.operands[0].value.r = dest_reg;
         move_op.operands[1].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::constant;
-        move_op.operands[1].value.u64 = value;
+        move_op.operands[1].value.u = value;
         make_block_entry(move_op);
     }
 
@@ -471,11 +471,11 @@ namespace basecode::vm {
         move_op.operands[0].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
-        move_op.operands[0].value.r8 = dest_reg;
+        move_op.operands[0].value.r = dest_reg;
         move_op.operands[1].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
-        move_op.operands[1].value.r8 = src_reg;
+        move_op.operands[1].value.r = src_reg;
         make_block_entry(move_op);
     }
 
@@ -490,11 +490,11 @@ namespace basecode::vm {
         swap_op.operands[0].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
-        swap_op.operands[0].value.r8 = dest_reg;
+        swap_op.operands[0].value.r = dest_reg;
         swap_op.operands[1].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
-        swap_op.operands[1].value.r8 = src_reg;
+        swap_op.operands[1].value.r = src_reg;
         make_block_entry(swap_op);
     }
 
@@ -510,18 +510,18 @@ namespace basecode::vm {
         load_op.operands[0].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
-        load_op.operands[0].value.r8 = dest_reg;
+        load_op.operands[0].value.r = dest_reg;
         load_op.operands[1].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
-        load_op.operands[1].value.r8 = address_reg;
+        load_op.operands[1].value.r = address_reg;
         if (load_op.operands_count == 3) {
             load_op.operands[2].type =
                 operand_encoding_t::flags::integer
                 | operand_encoding_t::flags::constant;
             if (offset < 0)
                 load_op.operands[2].type |= operand_encoding_t::flags::negative;
-            load_op.operands[2].value.u64 = static_cast<uint64_t>(offset);
+            load_op.operands[2].value.u = static_cast<uint64_t>(offset);
         }
         make_block_entry(load_op);
     }
@@ -538,12 +538,12 @@ namespace basecode::vm {
         store_op.operands[0].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
-        store_op.operands[0].value.r8 = address_reg;
+        store_op.operands[0].value.r = address_reg;
 
         store_op.operands[1].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
-        store_op.operands[1].value.r8 = src_reg;
+        store_op.operands[1].value.r = src_reg;
 
         if (store_op.operands_count == 3) {
             store_op.operands[2].type =
@@ -551,7 +551,7 @@ namespace basecode::vm {
                 | operand_encoding_t::flags::constant;
             if (offset < 0)
                 store_op.operands[2].type |= operand_encoding_t::flags::negative;
-            store_op.operands[2].value.u64 = static_cast<uint64_t>(offset);
+            store_op.operands[2].value.u = static_cast<uint64_t>(offset);
         }
         make_block_entry(store_op);
     }
@@ -572,15 +572,15 @@ namespace basecode::vm {
         add_op.operands[0].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
-        add_op.operands[0].value.r8 = dest_reg;
+        add_op.operands[0].value.r = dest_reg;
         add_op.operands[1].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
-        add_op.operands[1].value.r8 = augend_reg;
+        add_op.operands[1].value.r = augend_reg;
         add_op.operands[2].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
-        add_op.operands[2].value.r8 = addend_reg;
+        add_op.operands[2].value.r = addend_reg;
         make_block_entry(add_op);
     }
 
@@ -596,15 +596,15 @@ namespace basecode::vm {
         sub_op.operands[0].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
-        sub_op.operands[0].value.r8 = dest_reg;
+        sub_op.operands[0].value.r = dest_reg;
         sub_op.operands[1].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
-        sub_op.operands[1].value.r8 = minuend_reg;
+        sub_op.operands[1].value.r = minuend_reg;
         sub_op.operands[2].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
-        sub_op.operands[2].value.r8 = subtrahend_reg;
+        sub_op.operands[2].value.r = subtrahend_reg;
         make_block_entry(sub_op);
     }
 
@@ -620,15 +620,15 @@ namespace basecode::vm {
         sub_op.operands[0].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
-        sub_op.operands[0].value.r8 = dest_reg;
+        sub_op.operands[0].value.r = dest_reg;
         sub_op.operands[1].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
-        sub_op.operands[1].value.r8 = minuend_reg;
+        sub_op.operands[1].value.r = minuend_reg;
         sub_op.operands[2].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::constant;
-        sub_op.operands[2].value.u64 = subtrahend_immediate;
+        sub_op.operands[2].value.u = subtrahend_immediate;
         make_block_entry(sub_op);
     }
 
@@ -683,11 +683,11 @@ namespace basecode::vm {
         cmp_op.operands[0].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
-        cmp_op.operands[0].value.r8 = lhs_reg;
+        cmp_op.operands[0].value.r = lhs_reg;
         cmp_op.operands[1].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
-        cmp_op.operands[1].value.r8 = rhs_reg;
+        cmp_op.operands[1].value.r = rhs_reg;
         make_block_entry(cmp_op);
     }
 
@@ -721,7 +721,7 @@ namespace basecode::vm {
         setz_op.operands_count = 1;
         setz_op.operands[0].type = operand_encoding_t::flags::integer
                                   | operand_encoding_t::flags::reg;
-        setz_op.operands[0].value.r8 = dest_reg;
+        setz_op.operands[0].value.r = dest_reg;
         make_block_entry(setz_op);
     }
 
@@ -732,7 +732,7 @@ namespace basecode::vm {
         setnz_op.operands_count = 1;
         setnz_op.operands[0].type = operand_encoding_t::flags::integer
                                    | operand_encoding_t::flags::reg;
-        setnz_op.operands[0].value.r8 = dest_reg;
+        setnz_op.operands[0].value.r = dest_reg;
         make_block_entry(setnz_op);
     }
 
@@ -751,7 +751,7 @@ namespace basecode::vm {
         jmp_op.operands[0].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
-        jmp_op.operands[0].value.r8 = reg;
+        jmp_op.operands[0].value.r = reg;
         make_block_entry(jmp_op);
     }
 
@@ -770,7 +770,7 @@ namespace basecode::vm {
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::constant
             | operand_encoding_t::flags::unresolved;
-        branch_op.operands[0].value.u64 = label_ref->id;
+        branch_op.operands[0].value.u = label_ref->id;
         make_block_entry(branch_op);
     }
 
@@ -785,7 +785,7 @@ namespace basecode::vm {
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::constant
             | operand_encoding_t::flags::unresolved;
-        branch_op.operands[0].value.u64 = label_ref->id;
+        branch_op.operands[0].value.u = label_ref->id;
         make_block_entry(branch_op);
     }
 
@@ -800,7 +800,7 @@ namespace basecode::vm {
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::constant
             | operand_encoding_t::flags::unresolved;
-        jsr_op.operands[0].value.u64 = label_ref->id;
+        jsr_op.operands[0].value.u = label_ref->id;
         make_block_entry(jsr_op);
 
 // XXX: this is a PC-relative encoding
@@ -811,9 +811,9 @@ namespace basecode::vm {
 //        jsr_op.operands[0].type =
 //            operand_encoding_t::flags::integer
 //            | operand_encoding_t::flags::reg;
-//        jsr_op.operands[0].value.r8 = i_registers_t::pc;
+//        jsr_op.operands[0].value.r = i_registers_t::pc;
 //        jsr_op.operands[1].type = offset_type | operand_encoding_t::flags::integer;
-//        jsr_op.operands[1].value.u64 = offset;
+//        jsr_op.operands[1].value.u = offset;
 //        _instructions.push_back(jsr_op);
     }
 
@@ -988,7 +988,7 @@ namespace basecode::vm {
         ffi_op.operands[0].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::constant;
-        ffi_op.operands[0].value.u64 = proc_address;
+        ffi_op.operands[0].value.u = proc_address;
         make_block_entry(ffi_op);
     }
 
@@ -1003,7 +1003,7 @@ namespace basecode::vm {
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::constant
             | operand_encoding_t::flags::unresolved;
-        jmp_op.operands[0].value.u64 = label_ref->id;
+        jmp_op.operands[0].value.u = label_ref->id;
         make_block_entry(jmp_op);
     }
 
@@ -1043,7 +1043,7 @@ namespace basecode::vm {
         inc_op.operands[0].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
-        inc_op.operands[0].value.r8 = reg;
+        inc_op.operands[0].value.r = reg;
         make_block_entry(inc_op);
     }
 
@@ -1055,7 +1055,7 @@ namespace basecode::vm {
         dec_op.operands[0].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
-        dec_op.operands[0].value.r8 = reg;
+        dec_op.operands[0].value.r = reg;
         make_block_entry(dec_op);
     }
 
@@ -1067,7 +1067,7 @@ namespace basecode::vm {
         push_op.operands[0].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
-        push_op.operands[0].value.r8 = reg;
+        push_op.operands[0].value.r = reg;
         make_block_entry(push_op);
     }
 
@@ -1079,7 +1079,7 @@ namespace basecode::vm {
         pop_op.operands[0].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
-        pop_op.operands[0].value.r8 = dest_reg;
+        pop_op.operands[0].value.r = dest_reg;
         make_block_entry(pop_op);
     }
 
@@ -1113,7 +1113,7 @@ namespace basecode::vm {
         push_op.operands[0].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::constant;
-        push_op.operands[0].value.u64 = value;
+        push_op.operands[0].value.u = value;
         make_block_entry(push_op);
     }
 
@@ -1129,15 +1129,15 @@ namespace basecode::vm {
         or_op.operands[0].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
-        or_op.operands[0].value.r8 = dest_reg;
+        or_op.operands[0].value.r = dest_reg;
         or_op.operands[1].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
-        or_op.operands[1].value.r8 = value_reg;
+        or_op.operands[1].value.r = value_reg;
         or_op.operands[2].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
-        or_op.operands[2].value.r8 = mask_reg;
+        or_op.operands[2].value.r = mask_reg;
         make_block_entry(or_op);
     }
 
@@ -1153,15 +1153,15 @@ namespace basecode::vm {
         xor_op.operands[0].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
-        xor_op.operands[0].value.r8 = dest_reg;
+        xor_op.operands[0].value.r = dest_reg;
         xor_op.operands[1].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
-        xor_op.operands[1].value.r8 = value_reg;
+        xor_op.operands[1].value.r = value_reg;
         xor_op.operands[2].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
-        xor_op.operands[2].value.r8 = mask_reg;
+        xor_op.operands[2].value.r = mask_reg;
         make_block_entry(xor_op);
     }
 
@@ -1177,15 +1177,15 @@ namespace basecode::vm {
         and_op.operands[0].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
-        and_op.operands[0].value.r8 = dest_reg;
+        and_op.operands[0].value.r = dest_reg;
         and_op.operands[1].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
-        and_op.operands[1].value.r8 = value_reg;
+        and_op.operands[1].value.r = value_reg;
         and_op.operands[2].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
-        and_op.operands[2].value.r8 = mask_reg;
+        and_op.operands[2].value.r = mask_reg;
         make_block_entry(and_op);
     }
 
@@ -1201,15 +1201,15 @@ namespace basecode::vm {
         shift_op.operands[0].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
-        shift_op.operands[0].value.r8 = dest_reg;
+        shift_op.operands[0].value.r = dest_reg;
         shift_op.operands[1].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
-        shift_op.operands[1].value.r8 = value_reg;
+        shift_op.operands[1].value.r = value_reg;
         shift_op.operands[2].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
-        shift_op.operands[2].value.r8 = amount_reg;
+        shift_op.operands[2].value.r = amount_reg;
         make_block_entry(shift_op);
     }
 
@@ -1225,15 +1225,15 @@ namespace basecode::vm {
         rotate_op.operands[0].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
-        rotate_op.operands[0].value.r8 = dest_reg;
+        rotate_op.operands[0].value.r = dest_reg;
         rotate_op.operands[1].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
-        rotate_op.operands[1].value.r8 = value_reg;
+        rotate_op.operands[1].value.r = value_reg;
         rotate_op.operands[2].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
-        rotate_op.operands[2].value.r8 = amount_reg;
+        rotate_op.operands[2].value.r = amount_reg;
         make_block_entry(rotate_op);
     }
 
@@ -1249,22 +1249,23 @@ namespace basecode::vm {
         shift_op.operands[0].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
-        shift_op.operands[0].value.r8 = dest_reg;
+        shift_op.operands[0].value.r = dest_reg;
         shift_op.operands[1].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
-        shift_op.operands[1].value.r8 = value_reg;
+        shift_op.operands[1].value.r = value_reg;
         shift_op.operands[2].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
-        shift_op.operands[2].value.r8 = amount_reg;
+        shift_op.operands[2].value.r = amount_reg;
         make_block_entry(shift_op);
     }
 
     void instruction_block::make_ror_instruction(
             op_sizes size,
             registers_t dest_reg,
-            registers_t value_reg,            registers_t amount_reg) {
+            registers_t value_reg,
+            registers_t amount_reg) {
         instruction_t rotate_op;
         rotate_op.op = op_codes::ror;
         rotate_op.size = size;
@@ -1272,15 +1273,15 @@ namespace basecode::vm {
         rotate_op.operands[0].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
-        rotate_op.operands[0].value.r8 = dest_reg;
+        rotate_op.operands[0].value.r = dest_reg;
         rotate_op.operands[1].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
-        rotate_op.operands[1].value.r8 = value_reg;
+        rotate_op.operands[1].value.r = value_reg;
         rotate_op.operands[2].type =
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::reg;
-        rotate_op.operands[2].value.r8 = amount_reg;
+        rotate_op.operands[2].value.r = amount_reg;
         make_block_entry(rotate_op);
     }
 
