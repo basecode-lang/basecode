@@ -25,8 +25,7 @@ namespace basecode::vm {
 
     struct target_register_t {
         op_sizes size;
-        register_type_t type;
-        registers_t i;
+        register_t reg;
     };
 
     class instruction_block;
@@ -59,13 +58,13 @@ namespace basecode::vm {
 
         segment_list_t segments() const;
 
-        void free_reg(registers_t reg);
-
         bool initialize(common::result& r);
 
         instruction_block* current_block();
 
-        bool allocate_reg(registers_t& reg);
+        bool allocate_reg(register_t& reg);
+
+        void free_reg(const register_t& reg);
 
         bool resolve_labels(common::result& r);
 
@@ -79,7 +78,7 @@ namespace basecode::vm {
 
         vm::segment* segment(const std::string& name);
 
-        void push_target_register(op_sizes size, registers_t reg);
+        void push_target_register(op_sizes size, const register_t& reg);
 
         instruction_block* make_basic_block(instruction_block* parent_block = nullptr);
 

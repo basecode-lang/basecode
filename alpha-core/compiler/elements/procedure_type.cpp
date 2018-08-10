@@ -94,17 +94,17 @@ namespace basecode::compiler {
             },
             _scope);
 
-        instruction_block->move_ireg_to_ireg(
-            vm::registers_t::fp,
-            vm::registers_t::sp);
+        instruction_block->move_reg_to_reg(
+            vm::register_t::fp(),
+            vm::register_t::sp());
         auto size = 8 * local_count;
         if (!returns_list.empty())
             size += 8;
         if (size > 0) {
-            instruction_block->sub_ireg_by_immediate(
+            instruction_block->sub_reg_by_immediate(
                 vm::op_sizes::qword,
-                vm::registers_t::sp,
-                vm::registers_t::sp,
+                vm::register_t::sp(),
+                vm::register_t::sp(),
                 size);
         }
 

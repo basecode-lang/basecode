@@ -32,9 +32,8 @@ namespace basecode::compiler {
 
         void release(vm::assembler* assembler);
 
-        bool integer = true;
         bool allocated = false;
-        vm::registers_t i;
+        vm::register_t reg;
     };
 
     struct variable_t {
@@ -63,7 +62,9 @@ namespace basecode::compiler {
         bool address_loaded = false;
         variable_register_t value_reg;
         compiler::type* type = nullptr;
-        variable_register_t address_reg;
+        variable_register_t address_reg {
+            .reg.type = vm::register_type_t::integer
+        };
         vm::stack_frame_entry_t* frame_entry = nullptr;
     };
 
@@ -103,13 +104,13 @@ namespace basecode::compiler {
 
         bool has_scratch_register() const;
 
-        vm::registers_t pop_scratch_register();
+        vm::register_t pop_scratch_register();
 
         void free_variable(const std::string& name);
 
         variable_t* variable(const std::string& name);
 
-        void push_scratch_register(vm::registers_t reg);
+        void push_scratch_register(const vm::register_t& reg);
 
         variable_t* variable_for_element(compiler::element* element);
 
@@ -117,7 +118,7 @@ namespace basecode::compiler {
         vm::assembler* assembler = nullptr;
         compiler::program* program = nullptr;
         std::stack<boost::any> data_stack {};
-        std::stack<vm::registers_t> scratch_registers {};
+        std::stack<vm::register_t> scratch_registers {};
         std::unordered_map<std::string, variable_t> variables {};
     };
 

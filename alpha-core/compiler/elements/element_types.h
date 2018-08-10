@@ -449,8 +449,7 @@ namespace basecode::compiler {
 
         bool valid = false;
         bool clean_up = false;
-        bool integer = true;
-        vm::registers_t i;
+        vm::register_t reg;
         variable_t* var = nullptr;
         vm::assembler* assembler = nullptr;
     };

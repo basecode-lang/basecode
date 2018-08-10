@@ -113,10 +113,6 @@ namespace basecode::vm {
         return _blocks.front();
     }
 
-    void assembler::free_reg(registers_t reg) {
-        _register_allocator.free(reg);
-    }
-
     bool assembler::initialize(common::result& r) {
         _location_counter = _terp->heap_vector(heap_vectors_t::program_start);
         return true;
@@ -128,8 +124,12 @@ namespace basecode::vm {
         return _block_stack.top();
     }
 
-    bool assembler::allocate_reg(registers_t& reg) {
+    bool assembler::allocate_reg(register_t& reg) {
         return _register_allocator.allocate(reg);
+    }
+
+    void assembler::free_reg(const register_t& reg) {
+        _register_allocator.free(reg);
     }
 
     bool assembler::resolve_labels(common::result& r) {
@@ -252,11 +252,10 @@ namespace basecode::vm {
         return &_target_registers.top();
     }
 
-    void assembler::push_target_register(op_sizes size, registers_t reg) {
+    void assembler::push_target_register(op_sizes size, const register_t& reg) {
         target_register_t target {
             .size = size,
-            .type = register_type_t::integer,
-            .i = reg
+            .reg = reg
         };
         _target_registers.push(target);
     }

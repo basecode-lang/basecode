@@ -37,7 +37,7 @@ namespace basecode::compiler {
 
         context.assembler->push_target_register(
             rhs_size,
-            rhs_reg.i);
+            rhs_reg.reg);
         _rhs->emit(r, context);
         context.assembler->pop_target_register();
 
@@ -45,23 +45,23 @@ namespace basecode::compiler {
             case operator_type_t::negate: {
                 instruction_block->neg(
                     rhs_size,
-                    target_reg->i,
-                    rhs_reg.i);
+                    target_reg->reg,
+                    rhs_reg.reg);
                 break;
             }
             case operator_type_t::binary_not: {
                 instruction_block->not_op(
                     rhs_size,
-                    target_reg->i,
-                    rhs_reg.i);
+                    target_reg->reg,
+                    rhs_reg.reg);
                 break;
             }
             case operator_type_t::logical_not: {
-                instruction_block->xor_ireg_by_ireg(
+                instruction_block->xor_reg_by_reg(
                     rhs_size,
-                    target_reg->i,
-                    rhs_reg.i,
-                    rhs_reg.i);
+                    target_reg->reg,
+                    rhs_reg.reg,
+                    rhs_reg.reg);
                 break;
             }
             default:

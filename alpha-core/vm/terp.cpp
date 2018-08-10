@@ -53,6 +53,9 @@ namespace basecode::vm {
     }
 
     void function_value_t::push(DCCallVM* vm, uint64_t value) {
+        register_value_alias_t alias;
+        alias.u = value;
+
         switch (type) {
             case ffi_types_t::void_type:
                 break;
@@ -72,10 +75,10 @@ namespace basecode::vm {
                 dcArgLongLong(vm, static_cast<DClonglong>(value));
                 break;
             case ffi_types_t::float_type:
-                dcArgFloat(vm, static_cast<DCfloat>(value));
+                dcArgFloat(vm, alias.d);
                 break;
             case ffi_types_t::double_type:
-                dcArgDouble(vm, static_cast<DCdouble>(value));
+                dcArgDouble(vm, alias.d);
                 break;
             case ffi_types_t::pointer_type:
                 dcArgPointer(vm, reinterpret_cast<DCpointer>(value));
@@ -89,9 +92,10 @@ namespace basecode::vm {
                 break;
             }
             default:
-            case ffi_types_t::int_type:
+            case ffi_types_t::int_type: {
                 dcArgInt(vm, static_cast<DCint>(value));
                 break;
+            }
         }
     }
 

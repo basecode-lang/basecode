@@ -755,7 +755,16 @@ namespace basecode::compiler {
                             }
                             case element_type_t::numeric_type: {
                                 uint64_t value = 0;
-                                var->as_integer(value);
+                                if (var->type()->number_class() == type_number_class_t::integer) {
+                                    var->as_integer(value);
+                                } else {
+                                    double temp = 0;
+                                    if (var->as_float(temp)) {
+                                        vm::register_value_alias_t alias;
+                                        alias.d = temp;
+                                        value = alias.u;
+                                    }
+                                }
 
                                 auto symbol_type = vm::integer_symbol_type_for_size(
                                     var->type()->size_in_bytes());

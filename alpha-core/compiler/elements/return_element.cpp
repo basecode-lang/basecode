@@ -23,7 +23,7 @@ namespace basecode::compiler {
             emit_context_t& context) {
         auto instruction_block = context.assembler->current_block();
         if (!_expressions.empty()) {
-            vm::registers_t target_reg;
+            vm::register_t target_reg;
             if (!context.assembler->allocate_reg(target_reg)) {
             }
             context.assembler->push_target_register(
@@ -31,9 +31,9 @@ namespace basecode::compiler {
                 target_reg);
             // XXX: temporarily, only the first return value
             _expressions.front()->emit(r, context);
-            instruction_block->store_from_ireg(
+            instruction_block->store_from_reg(
                 vm::op_sizes::qword,
-                vm::registers_t::fp,
+                vm::register_t::fp(),
                 target_reg,
                 8);
             context.assembler->pop_target_register();

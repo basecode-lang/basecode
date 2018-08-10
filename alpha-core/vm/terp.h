@@ -127,9 +127,30 @@ namespace basecode::vm {
     };
 
     struct register_t {
-        registers_t number;
-        register_type_t type;
-        register_value_alias_t value;
+        static register_t pc() {
+            return register_t {
+                .number = registers_t::pc,
+                .type = register_type_t::pc,
+            };
+        }
+
+        static register_t sp() {
+            return register_t {
+                .number = registers_t::sp,
+                .type = register_type_t::sp,
+            };
+        }
+
+        static register_t fp() {
+            return register_t {
+                .number = registers_t::fp,
+                .type = register_type_t::fp,
+            };
+        }
+
+        registers_t number = registers_t::r0;
+        register_type_t type = register_type_t::none;
+        register_value_alias_t value {.u = 0};
     };
 
     static constexpr const uint32_t register_integer_start   = 0;
@@ -164,6 +185,16 @@ namespace basecode::vm {
         }
         return 0;
     }
+
+    struct register_comparator {
+        bool operator()(
+                const register_t& lhs,
+                const register_t& rhs) const {
+            auto lhs_index = register_index(lhs.number, lhs.type);
+            auto rhs_index = register_index(rhs.number, rhs.type);
+            return lhs_index < rhs_index;
+        }
+    };
 
     struct register_file_t {
         enum flags_t : uint64_t {

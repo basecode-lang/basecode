@@ -25,29 +25,55 @@ namespace basecode::vm {
 
         void reset() {
             used.clear();
-            while (!available.empty())
-                available.pop();
-            for (int8_t r = 63; r >= 0; r--)
-                available.push(static_cast<registers_t>(r));
-        }
 
-        void free(registers_t reg) {
-            if (used.erase(reg) > 0) {
-                available.push(reg);
+            while (!available_float.empty())
+                available_float.pop();
+
+            while (!available_integer.empty())
+                available_integer.pop();
+
+            for (int8_t r = 63; r >= 0; r--) {
+                available_integer.push(register_t {
+                    .number = static_cast<registers_t>(r),
+                    .type = register_type_t::integer
+                });
+                available_float.push(register_t {
+                    .number = static_cast<registers_t>(r),
+                    .type = register_type_t::floating_point
+                });
             }
         }
 
-        bool allocate(registers_t& reg) {
-            if (available.empty())
-                return false;
-            reg = available.top();
-            available.pop();
+        void free(const register_t& reg) {
+            auto removed = used.erase(reg) > 0;
+            if (removed) {
+                if (reg.type == register_type_t::integer) {
+                    available_integer.push(reg);
+                } else {
+                    available_float.push(reg);
+                }
+            }
+        }
+
+        bool allocate(register_t& reg) {
+            if (reg.type == register_type_t::integer) {
+                if (available_integer.empty())
+                    return false;
+                reg = available_integer.top();
+                available_integer.pop();
+            } else {
+                if (available_float.empty())
+                    return false;
+                reg = available_float.top();
+                available_float.pop();
+            }
             used.insert(reg);
             return true;
         }
 
-        std::set<registers_t> used {};
-        std::stack<registers_t> available {};
+        std::stack<register_t> available_float {};
+        std::stack<register_t> available_integer {};
+        std::set<register_t, register_comparator> used {};
     };
 
 };
