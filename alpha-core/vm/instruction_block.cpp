@@ -167,41 +167,37 @@ namespace basecode::vm {
 
     // load variations
     void instruction_block::load_to_reg(
-            op_sizes size,
             const register_t& dest_reg,
             const register_t& address_reg,
             int64_t offset) {
-        make_load_instruction(size, dest_reg, address_reg, offset);
+        make_load_instruction(dest_reg.size, dest_reg, address_reg, offset);
     }
 
     // store variations
     void instruction_block::store_from_reg(
-            op_sizes size,
             const register_t& address_reg,
             const register_t& src_reg,
             int64_t offset) {
-        make_store_instruction(size, address_reg, src_reg, offset);
+        make_store_instruction(src_reg.size, address_reg, src_reg, offset);
     }
 
     // move constant to reg variations
     void instruction_block::move_constant_to_reg(
-            op_sizes size,
             const register_t& dest_reg,
             uint64_t immediate) {
-        make_move_instruction(size, dest_reg, immediate);
+        make_move_instruction(dest_reg.size, dest_reg, immediate);
     }
 
     void instruction_block::move_constant_to_reg(
-            op_sizes size,
             const register_t& dest_reg,
             double immediate) {
-        make_move_instruction(size, dest_reg, immediate);
+        make_move_instruction(dest_reg.size, dest_reg, immediate);
     }
 
     void instruction_block::move_reg_to_reg(
             const register_t& dest_reg,
             const register_t& src_reg) {
-        make_move_instruction(op_sizes::qword, dest_reg, src_reg);
+        make_move_instruction(dest_reg.size, dest_reg, src_reg);
     }
 
     void instruction_block::move_label_to_reg(
@@ -255,27 +251,24 @@ namespace basecode::vm {
 
     // not variations
     void instruction_block::not_op(
-            op_sizes size,
             const register_t& dest_reg,
             const register_t& src_reg) {
-        make_not_instruction(size, dest_reg, src_reg);
+        make_not_instruction(dest_reg.size, dest_reg, src_reg);
     }
 
     // neg variations
     void instruction_block::neg(
-            op_sizes size,
             const register_t& dest_reg,
             const register_t& src_reg) {
-        make_neg_instruction(size, dest_reg, src_reg);
+        make_neg_instruction(dest_reg.size, dest_reg, src_reg);
     }
 
     // mul variations
     void instruction_block::mul_reg_by_reg(
-            op_sizes size,
             const register_t& dest_reg,
             const register_t& multiplicand_reg,
             const register_t& multiplier_reg) {
-        make_mul_instruction(size, dest_reg, multiplicand_reg, multiplier_reg);
+        make_mul_instruction(dest_reg.size, dest_reg, multiplicand_reg, multiplier_reg);
     }
 
     void instruction_block::make_mul_instruction(
@@ -287,54 +280,50 @@ namespace basecode::vm {
         mul_op.op = op_codes::mul;
         mul_op.size = size;
         mul_op.operands_count = 3;
-        mul_op.operands[0].type =
-            operand_encoding_t::flags::integer
-            | operand_encoding_t::flags::reg;
+        mul_op.operands[0].type = operand_encoding_t::flags::reg;
+        if (dest_reg.type == register_type_t::integer)
+            mul_op.operands[0].type |= operand_encoding_t::flags::integer;
         mul_op.operands[0].value.r = dest_reg.number;
-        mul_op.operands[1].type =
-            operand_encoding_t::flags::integer
-            | operand_encoding_t::flags::reg;
+        mul_op.operands[1].type = operand_encoding_t::flags::reg;
+        if (multiplicand_reg.type == register_type_t::integer)
+            mul_op.operands[1].type |= operand_encoding_t::flags::integer;
         mul_op.operands[1].value.r = multiplicand_reg.number;
-        mul_op.operands[2].type =
-            operand_encoding_t::flags::integer
-            | operand_encoding_t::flags::reg;
+        mul_op.operands[2].type = operand_encoding_t::flags::reg;
+        if (multiplier_reg.type == register_type_t::integer)
+            mul_op.operands[2].type |= operand_encoding_t::flags::integer;
         mul_op.operands[2].value.r = multiplier_reg.number;
         make_block_entry(mul_op);
     }
 
     // add variations
     void instruction_block::add_reg_by_reg(
-            op_sizes size,
             const register_t& dest_reg,
             const register_t& augend_reg,
             const register_t& addened_reg) {
-        make_add_instruction(size, dest_reg, augend_reg, addened_reg);
+        make_add_instruction(dest_reg.size, dest_reg, augend_reg, addened_reg);
     }
 
     // sub variations
     void instruction_block::sub_reg_by_reg(
-            op_sizes size,
             const register_t& dest_reg,
             const register_t& minuend_reg,
             const register_t& subtrahend_reg) {
-        make_sub_instruction(size, dest_reg, minuend_reg, subtrahend_reg);
+        make_sub_instruction(dest_reg.size, dest_reg, minuend_reg, subtrahend_reg);
     }
 
     void instruction_block::sub_reg_by_immediate(
-            op_sizes size,
             const register_t& dest_reg,
             const register_t& minuend_reg,
             uint64_t subtrahend_immediate) {
-        make_sub_instruction_immediate(size, dest_reg, minuend_reg, subtrahend_immediate);
+        make_sub_instruction_immediate(dest_reg.size, dest_reg, minuend_reg, subtrahend_immediate);
     }
 
     // div variations
     void instruction_block::div_reg_by_reg(
-            op_sizes size,
             const register_t& dest_reg,
             const register_t& dividend_reg,
             const register_t& divisor_reg) {
-        make_div_instruction(size, dest_reg, dividend_reg, divisor_reg);
+        make_div_instruction(dest_reg.size, dest_reg, dividend_reg, divisor_reg);
     }
 
     void instruction_block::make_div_instruction(
@@ -346,28 +335,27 @@ namespace basecode::vm {
         div_op.op = op_codes::div;
         div_op.size = size;
         div_op.operands_count = 3;
-        div_op.operands[0].type =
-            operand_encoding_t::flags::integer
-            | operand_encoding_t::flags::reg;
+        div_op.operands[0].type = operand_encoding_t::flags::reg;
         div_op.operands[0].value.r = dest_reg.number;
-        div_op.operands[1].type =
-            operand_encoding_t::flags::integer
-            | operand_encoding_t::flags::reg;
+        if (dest_reg.type == register_type_t::integer)
+            div_op.operands[0].type |= operand_encoding_t::flags::integer;
+        div_op.operands[1].type = operand_encoding_t::flags::reg;
         div_op.operands[1].value.r = dividend_reg.number;
-        div_op.operands[2].type =
-            operand_encoding_t::flags::integer
-            | operand_encoding_t::flags::reg;
+        if (dividend_reg.type == register_type_t::integer)
+            div_op.operands[1].type |= operand_encoding_t::flags::integer;
+        div_op.operands[2].type = operand_encoding_t::flags::reg;
         div_op.operands[2].value.r = divisor_reg.number;
+        if (divisor_reg.type == register_type_t::integer)
+            div_op.operands[2].type |= operand_encoding_t::flags::integer;
         make_block_entry(div_op);
     }
 
     // mod variations
     void instruction_block::mod_reg_by_reg(
-            op_sizes size,
             const register_t& dest_reg,
             const register_t& dividend_reg,
             const register_t& divisor_reg) {
-        make_mod_instruction(size, dest_reg, dividend_reg, divisor_reg);
+        make_mod_instruction(dest_reg.size, dest_reg, dividend_reg, divisor_reg);
     }
 
     void instruction_block::make_mod_instruction(
@@ -437,10 +425,16 @@ namespace basecode::vm {
         neg_op.op = op_codes::neg;
         neg_op.size = size;
         neg_op.operands_count = 2;
-        neg_op.operands[0].type = operand_encoding_t::flags::reg | operand_encoding_t::flags::integer;
+        neg_op.operands[0].type = operand_encoding_t::flags::reg;
         neg_op.operands[0].value.r = dest_reg.number;
-        neg_op.operands[1].type = operand_encoding_t::flags::reg | operand_encoding_t::flags::integer;
+        if (dest_reg.type == register_type_t::integer)
+            neg_op.operands[0].type |= operand_encoding_t::flags::integer;
+
+        neg_op.operands[1].type = operand_encoding_t::flags::reg;
         neg_op.operands[1].value.r = src_reg.number;
+        if (src_reg.type == register_type_t::integer)
+            neg_op.operands[1].type |= operand_encoding_t::flags::integer;
+
         make_block_entry(neg_op);
     }
 
@@ -490,14 +484,16 @@ namespace basecode::vm {
         move_op.op = op_codes::move;
         move_op.size = size;
         move_op.operands_count = 2;
-        move_op.operands[0].type =
-            operand_encoding_t::flags::integer
-            | operand_encoding_t::flags::reg;
+        move_op.operands[0].type = operand_encoding_t::flags::reg;
         move_op.operands[0].value.r = dest_reg.number;
-        move_op.operands[1].type =
-            operand_encoding_t::flags::integer
-            | operand_encoding_t::flags::reg;
+        if (dest_reg.type == register_type_t::integer)
+            move_op.operands[0].type |= operand_encoding_t::flags::integer;
+
+        move_op.operands[1].type = operand_encoding_t::flags::reg;
         move_op.operands[1].value.r = src_reg.number;
+        if (src_reg.type == register_type_t::integer)
+            move_op.operands[1].type |= operand_encoding_t::flags::integer;
+
         make_block_entry(move_op);
     }
 
@@ -591,18 +587,21 @@ namespace basecode::vm {
         add_op.op = op_codes::add;
         add_op.size = size;
         add_op.operands_count = 3;
-        add_op.operands[0].type =
-            operand_encoding_t::flags::integer
-            | operand_encoding_t::flags::reg;
+        add_op.operands[0].type = operand_encoding_t::flags::reg;
         add_op.operands[0].value.r = dest_reg.number;
-        add_op.operands[1].type =
-            operand_encoding_t::flags::integer
-            | operand_encoding_t::flags::reg;
+        if (dest_reg.type == register_type_t::integer)
+            add_op.operands[0].type |= operand_encoding_t::flags::integer;
+
+        add_op.operands[1].type = operand_encoding_t::flags::reg;
         add_op.operands[1].value.r = augend_reg.number;
-        add_op.operands[2].type =
-            operand_encoding_t::flags::integer
-            | operand_encoding_t::flags::reg;
+        if (augend_reg.type == register_type_t::integer)
+            add_op.operands[1].type |= operand_encoding_t::flags::integer;
+
+        add_op.operands[2].type = operand_encoding_t::flags::reg;
         add_op.operands[2].value.r = addend_reg.number;
+        if (addend_reg.type == register_type_t::integer)
+            add_op.operands[2].type |= operand_encoding_t::flags::integer;
+
         make_block_entry(add_op);
     }
 
@@ -615,18 +614,21 @@ namespace basecode::vm {
         sub_op.op = op_codes::sub;
         sub_op.size = size;
         sub_op.operands_count = 3;
-        sub_op.operands[0].type =
-            operand_encoding_t::flags::integer
-            | operand_encoding_t::flags::reg;
+        sub_op.operands[0].type = operand_encoding_t::flags::reg;
         sub_op.operands[0].value.r = dest_reg.number;
-        sub_op.operands[1].type =
-            operand_encoding_t::flags::integer
-            | operand_encoding_t::flags::reg;
+        if (dest_reg.type == register_type_t::integer)
+            sub_op.operands[0].type |= operand_encoding_t::flags::integer;
+
+        sub_op.operands[1].type = operand_encoding_t::flags::reg;
         sub_op.operands[1].value.r = minuend_reg.number;
-        sub_op.operands[2].type =
-            operand_encoding_t::flags::integer
-            | operand_encoding_t::flags::reg;
+        if (minuend_reg.type == register_type_t::integer)
+            sub_op.operands[1].type |= operand_encoding_t::flags::integer;
+
+        sub_op.operands[2].type = operand_encoding_t::flags::reg;
         sub_op.operands[2].value.r = subtrahend_reg.number;
+        if (subtrahend_reg.type == register_type_t::integer)
+            sub_op.operands[2].type |= operand_encoding_t::flags::integer;
+
         make_block_entry(sub_op);
     }
 
@@ -656,20 +658,17 @@ namespace basecode::vm {
 
     // swap variations
     void instruction_block::swap_reg_with_reg(
-            op_sizes size,
             const register_t& dest_reg,
             const register_t& src_reg) {
-        make_swap_instruction(size, dest_reg, src_reg);
+        make_swap_instruction(dest_reg.size, dest_reg, src_reg);
     }
 
     stack_frame_t* instruction_block::stack_frame() {
         return &_stack_frame;
     }
 
-    void instruction_block::push(
-            op_sizes size,
-            const register_t& reg) {
-        make_push_instruction(size, reg);
+    void instruction_block::push(const register_t& reg) {
+        make_push_instruction(reg);
     }
 
     void instruction_block::push_u8(uint8_t value) {
@@ -690,10 +689,9 @@ namespace basecode::vm {
 
     // cmp variations
     void instruction_block::cmp(
-            op_sizes size,
             const register_t& lhs_reg,
             const register_t& rhs_reg) {
-        make_cmp_instruction(size, lhs_reg, rhs_reg);
+        make_cmp_instruction(lhs_reg.size, lhs_reg, rhs_reg);
     }
 
     void instruction_block::make_cmp_instruction(
@@ -721,29 +719,22 @@ namespace basecode::vm {
     }
 
     // inc variations
-    void instruction_block::inc(
-            op_sizes size,
-            const register_t& reg) {
-        make_inc_instruction(size, reg);
+    void instruction_block::inc(const register_t& reg) {
+        make_inc_instruction(reg.size, reg);
     }
 
     // dec variations
-    void instruction_block::dec(
-            op_sizes size,
-            const register_t& reg) {
-        make_dec_instruction(size, reg);
+    void instruction_block::dec(const register_t& reg) {
+        make_dec_instruction(reg.size, reg);
     }
 
     // pop variations
-    void instruction_block::pop(
-            op_sizes size,
-            const register_t& reg) {
-        make_pop_instruction(size, reg);
+    void instruction_block::pop(const register_t& reg) {
+        make_pop_instruction(reg);
     }
 
     // test & branch
     void instruction_block::test_mask_branch_if_zero(
-            op_sizes size,
             const register_t& value_reg,
             const register_t& mask_reg,
             const register_t& address_reg) {
@@ -772,7 +763,6 @@ namespace basecode::vm {
     }
 
     void instruction_block::test_mask_branch_if_not_zero(
-            op_sizes size,
             const register_t& value_reg,
             const register_t& mask_reg,
             const register_t& address_reg) {
@@ -1075,10 +1065,11 @@ namespace basecode::vm {
         inc_op.op = op_codes::inc;
         inc_op.size = size;
         inc_op.operands_count = 1;
-        inc_op.operands[0].type =
-            operand_encoding_t::flags::integer
-            | operand_encoding_t::flags::reg;
+        inc_op.operands[0].type = operand_encoding_t::flags::reg;
         inc_op.operands[0].value.r = reg.number;
+        if (reg.type == register_type_t::integer)
+            inc_op.operands[0].type |= operand_encoding_t::flags::integer;
+
         make_block_entry(inc_op);
     }
 
@@ -1087,17 +1078,17 @@ namespace basecode::vm {
         dec_op.op = op_codes::dec;
         dec_op.size = size;
         dec_op.operands_count = 1;
-        dec_op.operands[0].type =
-            operand_encoding_t::flags::integer
-            | operand_encoding_t::flags::reg;
+        dec_op.operands[0].type = operand_encoding_t::flags::reg;
         dec_op.operands[0].value.r = reg.number;
+        if (reg.type == register_type_t::integer)
+            dec_op.operands[0].type |= operand_encoding_t::flags::integer;
         make_block_entry(dec_op);
     }
 
-    void instruction_block::make_push_instruction(op_sizes size, const register_t& reg) {
+    void instruction_block::make_push_instruction(const register_t& reg) {
         instruction_t push_op;
         push_op.op = op_codes::push;
-        push_op.size = size;
+        push_op.size = reg.size;
         push_op.operands_count = 1;
         push_op.operands[0].type = operand_encoding_t::flags::reg;
         if (reg.type == register_type_t::integer)
@@ -1106,10 +1097,10 @@ namespace basecode::vm {
         make_block_entry(push_op);
     }
 
-    void instruction_block::make_pop_instruction(op_sizes size, const register_t& dest_reg) {
+    void instruction_block::make_pop_instruction(const register_t& dest_reg) {
         instruction_t pop_op;
         pop_op.op = op_codes::pop;
-        pop_op.size = size;
+        pop_op.size = dest_reg.size;
         pop_op.operands_count = 1;
         pop_op.operands[0].type = operand_encoding_t::flags::reg;
         if (dest_reg.type == register_type_t::integer)
@@ -1321,59 +1312,52 @@ namespace basecode::vm {
     }
 
     void instruction_block::or_reg_by_reg(
-            op_sizes size,
             const register_t& dest_reg,
             const register_t& lhs_reg,
             const register_t& rhs_reg) {
-        make_or_instruction(size, dest_reg, lhs_reg, rhs_reg);
+        make_or_instruction(dest_reg.size, dest_reg, lhs_reg, rhs_reg);
     }
 
     void instruction_block::xor_reg_by_reg(
-            op_sizes size,
             const register_t& dest_reg,
             const register_t& lhs_reg,
             const register_t& rhs_reg) {
-        make_xor_instruction(size, dest_reg, lhs_reg, rhs_reg);
+        make_xor_instruction(dest_reg.size, dest_reg, lhs_reg, rhs_reg);
     }
 
     void instruction_block::and_reg_by_reg(
-            op_sizes size,
             const register_t& dest_reg,
             const register_t& lhs_reg,
             const register_t& rhs_reg) {
-        make_and_instruction(size, dest_reg, lhs_reg, rhs_reg);
+        make_and_instruction(dest_reg.size, dest_reg, lhs_reg, rhs_reg);
     }
 
     void instruction_block::shl_reg_by_reg(
-            op_sizes size,
             const register_t& dest_reg,
             const register_t& lhs_reg,
             const register_t& rhs_reg) {
-        make_shl_instruction(size, dest_reg, lhs_reg, rhs_reg);
+        make_shl_instruction(dest_reg.size, dest_reg, lhs_reg, rhs_reg);
     }
 
     void instruction_block::shr_reg_by_reg(
-            op_sizes size,
             const register_t& dest_reg,
             const register_t& lhs_reg,
             const register_t& rhs_reg) {
-        make_shr_instruction(size, dest_reg, lhs_reg, rhs_reg);
+        make_shr_instruction(dest_reg.size, dest_reg, lhs_reg, rhs_reg);
     }
 
     void instruction_block::rol_reg_by_reg(
-            op_sizes size,
             const register_t& dest_reg,
             const register_t& lhs_reg,
             const register_t& rhs_reg) {
-        make_rol_instruction(size, dest_reg, lhs_reg, rhs_reg);
+        make_rol_instruction(dest_reg.size, dest_reg, lhs_reg, rhs_reg);
     }
 
     void instruction_block::ror_reg_by_reg(
-            op_sizes size,
             const register_t& dest_reg,
             const register_t& lhs_reg,
             const register_t& rhs_reg) {
-        make_ror_instruction(size, dest_reg, lhs_reg, rhs_reg);
+        make_ror_instruction(dest_reg.size, dest_reg, lhs_reg, rhs_reg);
     }
 
     std::vector<block_entry_t>& instruction_block::entries() {

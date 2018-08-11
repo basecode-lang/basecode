@@ -31,6 +31,36 @@
 
 namespace basecode::vm {
 
+    enum class op_sizes : uint8_t {
+        none,
+        byte,
+        word,
+        dword,
+        qword
+    };
+
+    static inline uint8_t op_size_in_bytes(op_sizes size) {
+        switch (size) {
+            case op_sizes::byte:  return 1;
+            case op_sizes::word:  return 2;
+            case op_sizes::dword: return 4;
+            case op_sizes::qword: return 8;
+            default:              return 0;
+        }
+    }
+
+    static inline op_sizes op_size_for_byte_size(size_t size) {
+        switch (size) {
+            case 1:     return op_sizes::byte;
+            case 2:     return op_sizes::word;
+            case 4:     return op_sizes::dword;
+            case 8:     return op_sizes::qword;
+            default:    return op_sizes::none;
+        }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
     enum class register_type_t : uint8_t {
         none,
         pc,
@@ -148,6 +178,14 @@ namespace basecode::vm {
             };
         }
 
+        static register_t empty() {
+            return register_t {
+                .number = registers_t::r0,
+                .type = register_type_t::none,
+            };
+        }
+
+        op_sizes size = op_sizes::qword;
         registers_t number = registers_t::r0;
         register_type_t type = register_type_t::none;
         register_value_alias_t value {.u = 0};
@@ -185,16 +223,6 @@ namespace basecode::vm {
         }
         return 0;
     }
-
-    struct register_comparator {
-        bool operator()(
-                const register_t& lhs,
-                const register_t& rhs) const {
-            auto lhs_index = register_index(lhs.number, lhs.type);
-            auto rhs_index = register_index(rhs.number, rhs.type);
-            return lhs_index < rhs_index;
-        }
-    };
 
     struct register_file_t {
         enum flags_t : uint64_t {
@@ -339,36 +367,6 @@ namespace basecode::vm {
             return it->second;
         }
         return "";
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-
-    enum class op_sizes : uint8_t {
-        none,
-        byte,
-        word,
-        dword,
-        qword
-    };
-
-    static inline uint8_t op_size_in_bytes(op_sizes size) {
-        switch (size) {
-            case op_sizes::byte:  return 1;
-            case op_sizes::word:  return 2;
-            case op_sizes::dword: return 4;
-            case op_sizes::qword: return 8;
-            default:              return 0;
-        }
-    }
-
-    static inline op_sizes op_size_for_byte_size(size_t size) {
-        switch (size) {
-            case 1:     return op_sizes::byte;
-            case 2:     return op_sizes::word;
-            case 4:     return op_sizes::dword;
-            case 8:     return op_sizes::qword;
-            default:    return op_sizes::none;
-        }
     }
 
     ///////////////////////////////////////////////////////////////////////////

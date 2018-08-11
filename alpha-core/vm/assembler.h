@@ -23,11 +23,6 @@
 
 namespace basecode::vm {
 
-    struct target_register_t {
-        op_sizes size;
-        register_t reg;
-    };
-
     class instruction_block;
 
     class assembler {
@@ -48,6 +43,8 @@ namespace basecode::vm {
             common::result& r,
             std::istream& source);
 
+        void pop_target_register();
+
         instruction_block* pop_block();
 
         instruction_block* root_block();
@@ -66,19 +63,17 @@ namespace basecode::vm {
 
         void free_reg(const register_t& reg);
 
+        register_t* current_target_register();
+
         bool resolve_labels(common::result& r);
 
         bool apply_addresses(common::result& r);
 
-        target_register_t pop_target_register();
-
         void push_block(instruction_block* block);
-
-        target_register_t* current_target_register();
 
         vm::segment* segment(const std::string& name);
 
-        void push_target_register(op_sizes size, const register_t& reg);
+        void push_target_register(const register_t& reg);
 
         instruction_block* make_basic_block(instruction_block* parent_block = nullptr);
 
@@ -94,8 +89,8 @@ namespace basecode::vm {
         uint32_t _procedure_block_count = 0;
         std::vector<instruction_block*> _blocks {};
         register_allocator_t _register_allocator {};
+        std::stack<register_t> _target_registers {};
         std::stack<instruction_block*> _block_stack {};
-        std::stack<target_register_t> _target_registers {};
         std::unordered_map<std::string, vm::segment> _segments {};
     };
 

@@ -89,7 +89,9 @@ namespace basecode::compiler {
                 var->init(context.assembler, instruction_block);
 
                 vm::register_t rhs_reg;
+                rhs_reg.size = var->value_reg.reg.size;
                 rhs_reg.type = var->value_reg.reg.type;
+
                 if (!context.assembler->allocate_reg(rhs_reg)) {
                     context.program->error(
                         r,
@@ -99,9 +101,7 @@ namespace basecode::compiler {
                         _rhs->location());
                     return false;
                 }
-                context.assembler->push_target_register(
-                    vm::op_size_for_byte_size(var->type->size_in_bytes()),
-                    rhs_reg);
+                context.assembler->push_target_register(rhs_reg);
                 _rhs->emit(r, context);
                 var->write(context.assembler, instruction_block);
                 context.assembler->pop_target_register();
@@ -211,22 +211,18 @@ namespace basecode::compiler {
         if (!lhs_reg.valid || !rhs_reg.valid)
             return;
 
-        context.assembler->push_target_register(
-            lhs_reg.size(),
-            lhs_reg.reg);
+        context.assembler->push_target_register(lhs_reg.reg);
         _lhs->emit(r, context);
         context.assembler->pop_target_register();
 
-        context.assembler->push_target_register(
-            rhs_reg.size(),
-            rhs_reg.reg);
+        context.assembler->push_target_register(rhs_reg.reg);
         _rhs->emit(r, context);
         context.assembler->pop_target_register();
 
         auto if_data = context.top<if_data_t>();
         switch (operator_type()) {
             case operator_type_t::equals: {
-                instruction_block->cmp(vm::op_sizes::qword, lhs_reg.reg, rhs_reg.reg);
+                instruction_block->cmp(lhs_reg.reg, rhs_reg.reg);
                 if (if_data != nullptr) {
                     auto parent_op = parent_element_as<compiler::binary_operator>();
                     if (parent_op != nullptr
@@ -237,8 +233,8 @@ namespace basecode::compiler {
                     }
                 } else {
                     auto target_reg = context.assembler->current_target_register();
-                    instruction_block->setz(target_reg->reg);
-                    context.push_scratch_register(target_reg->reg);
+                    instruction_block->setz(*target_reg);
+                    context.push_scratch_register(*target_reg);
                 }
                 break;
             }
@@ -256,8 +252,7 @@ namespace basecode::compiler {
                     auto lhs_target_reg = context.pop_scratch_register();
                     auto target_reg = context.assembler->current_target_register();
                     instruction_block->or_reg_by_reg(
-                        vm::op_sizes::qword,
-                        target_reg->reg,
+                        *target_reg,
                         lhs_target_reg,
                         rhs_target_reg);
                 }
@@ -271,8 +266,7 @@ namespace basecode::compiler {
                     auto lhs_target_reg = context.pop_scratch_register();
                     auto target_reg = context.assembler->current_target_register();
                     instruction_block->and_reg_by_reg(
-                        vm::op_sizes::qword,
-                        target_reg->reg,
+                        *target_reg,
                         lhs_target_reg,
                         rhs_target_reg);
                 }
@@ -305,118 +299,120 @@ namespace basecode::compiler {
         if (!lhs_reg.valid || !rhs_reg.valid)
             return;
 
-        context.assembler->push_target_register(
-            lhs_reg.size(),
-            lhs_reg.reg);
+        vm::register_t target_reg {
+            .type = vm::register_type_t::none
+        };
+        defer({
+            if (target_reg.type != vm::register_type_t::none) {
+              context.assembler->free_reg(target_reg);
+            }
+        });
+
+        if (result_reg == nullptr) {
+            result_reg = &target_reg;
+            result_reg->size = lhs_reg.size();
+            result_reg->type = lhs_reg.reg.type;
+            if (!context.assembler->allocate_reg(*result_reg)) {
+
+            }
+        }
+
+        context.assembler->push_target_register(lhs_reg.reg);
         _lhs->emit(r, context);
         context.assembler->pop_target_register();
 
-        context.assembler->push_target_register(
-            rhs_reg.size(),
-            rhs_reg.reg);
+        context.assembler->push_target_register(rhs_reg.reg);
         _rhs->emit(r, context);
         context.assembler->pop_target_register();
 
         switch (operator_type()) {
             case operator_type_t::add: {
                 instruction_block->add_reg_by_reg(
-                    vm::op_sizes::qword,
-                    result_reg->reg,
+                    *result_reg,
                     lhs_reg.reg,
                     rhs_reg.reg);
                 break;
             }
             case operator_type_t::divide: {
                 instruction_block->div_reg_by_reg(
-                    vm::op_sizes::qword,
-                    result_reg->reg,
+                    *result_reg,
                     lhs_reg.reg,
                     rhs_reg.reg);
                 break;
             }
             case operator_type_t::modulo: {
                 instruction_block->mod_reg_by_reg(
-                    vm::op_sizes::qword,
-                    result_reg->reg,
+                    *result_reg,
                     lhs_reg.reg,
                     rhs_reg.reg);
                 break;
             }
             case operator_type_t::multiply: {
                 instruction_block->mul_reg_by_reg(
-                    vm::op_sizes::qword,
-                    result_reg->reg,
+                    *result_reg,
                     lhs_reg.reg,
                     rhs_reg.reg);
                 break;
             }
             case operator_type_t::exponent: {
 //                instruction_block->pow_ireg_by_ireg_u64(
-//                    result_reg->reg,
+//                    *result_reg,
 //                    lhs_reg.reg,
 //                    rhs_reg.reg);
                 break;
             }
             case operator_type_t::subtract: {
                 instruction_block->sub_reg_by_reg(
-                    vm::op_sizes::qword,
-                    result_reg->reg,
+                    *result_reg,
                     lhs_reg.reg,
                     rhs_reg.reg);
                 break;
             }
             case operator_type_t::binary_or: {
                 instruction_block->or_reg_by_reg(
-                    vm::op_sizes::qword,
-                    result_reg->reg,
+                    *result_reg,
                     lhs_reg.reg,
                     rhs_reg.reg);
                 break;
             }
             case operator_type_t::shift_left: {
                 instruction_block->shl_reg_by_reg(
-                    vm::op_sizes::qword,
-                    result_reg->reg,
+                    *result_reg,
                     lhs_reg.reg,
                     rhs_reg.reg);
                 break;
             }
             case operator_type_t::binary_and: {
                 instruction_block->and_reg_by_reg(
-                    vm::op_sizes::qword,
-                    result_reg->reg,
+                    *result_reg,
                     lhs_reg.reg,
                     rhs_reg.reg);
                 break;
             }
             case operator_type_t::binary_xor: {
                 instruction_block->xor_reg_by_reg(
-                    vm::op_sizes::qword,
-                    result_reg->reg,
+                    *result_reg,
                     lhs_reg.reg,
                     rhs_reg.reg);
                 break;
             }
             case operator_type_t::rotate_left: {
                 instruction_block->rol_reg_by_reg(
-                    vm::op_sizes::qword,
-                    result_reg->reg,
+                    *result_reg,
                     lhs_reg.reg,
                     rhs_reg.reg);
                 break;
             }
             case operator_type_t::shift_right: {
                 instruction_block->shr_reg_by_reg(
-                    vm::op_sizes::qword,
-                    result_reg->reg,
+                    *result_reg,
                     lhs_reg.reg,
                     rhs_reg.reg);
                 break;
             }
             case operator_type_t::rotate_right: {
                 instruction_block->ror_reg_by_reg(
-                    vm::op_sizes::qword,
-                    result_reg->reg,
+                    *result_reg,
                     lhs_reg.reg,
                     rhs_reg.reg);
                 break;
@@ -433,7 +429,6 @@ namespace basecode::compiler {
             list.emplace_back(_rhs);
     }
 
-    // XXX: this needs lots of future love
     compiler::type* binary_operator::on_infer_type(const compiler::program* program) {
         switch (operator_type()) {
             case operator_type_t::add:
@@ -449,9 +444,10 @@ namespace basecode::compiler {
             case operator_type_t::shift_right:
             case operator_type_t::rotate_left:
             case operator_type_t::rotate_right: {
-                // XXX: this is SOOO not correct, but it gets us to the next step of
-                //      code generation.
-                return program->find_type({.name = "u64"});
+                auto lhs_type = _lhs->infer_type(program);
+                auto rhs_type = _rhs->infer_type(program);
+                // XXX: need to type-check and possibly widen here
+                return lhs_type;
             }
             case operator_type_t::equals:
             case operator_type_t::less_than:

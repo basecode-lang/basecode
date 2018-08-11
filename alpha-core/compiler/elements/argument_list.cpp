@@ -38,20 +38,17 @@ namespace basecode::compiler {
                 case element_type_t::boolean_literal:
                 case element_type_t::integer_literal:
                 case element_type_t::identifier_reference: {
-                    auto push_size = vm::op_sizes::qword;
                     auto arg_reg = register_for(r, context, arg);
                     if (arg_reg.var != nullptr) {
-                        push_size = vm::op_size_for_byte_size(
-                            arg_reg.var->type
-                                       ->size_in_bytes());
+//                        push_size = vm::op_size_for_byte_size(
+//                            arg_reg.var->type
+//                                       ->size_in_bytes());
                         arg_reg.clean_up = true;
                     }
-                    context.assembler->push_target_register(
-                        arg_reg.size(),
-                        arg_reg.reg);
+                    context.assembler->push_target_register(arg_reg.reg);
                     arg->emit(r, context);
                     context.assembler->pop_target_register();
-                    instruction_block->push(push_size, arg_reg.reg);
+                    instruction_block->push(arg_reg.reg);
                     break;
                 }
                 default:

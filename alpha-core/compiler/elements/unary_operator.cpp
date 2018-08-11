@@ -33,33 +33,22 @@ namespace basecode::compiler {
         if (!rhs_reg.valid)
             return false;
 
-        auto rhs_size = rhs_reg.size();
-
-        context.assembler->push_target_register(
-            rhs_size,
-            rhs_reg.reg);
+        context.assembler->push_target_register(rhs_reg.reg);
         _rhs->emit(r, context);
         context.assembler->pop_target_register();
 
         switch (operator_type()) {
             case operator_type_t::negate: {
-                instruction_block->neg(
-                    rhs_size,
-                    target_reg->reg,
-                    rhs_reg.reg);
+                instruction_block->neg(*target_reg, rhs_reg.reg);
                 break;
             }
             case operator_type_t::binary_not: {
-                instruction_block->not_op(
-                    rhs_size,
-                    target_reg->reg,
-                    rhs_reg.reg);
+                instruction_block->not_op(*target_reg, rhs_reg.reg);
                 break;
             }
             case operator_type_t::logical_not: {
                 instruction_block->xor_reg_by_reg(
-                    rhs_size,
-                    target_reg->reg,
+                    *target_reg,
                     rhs_reg.reg,
                     rhs_reg.reg);
                 break;

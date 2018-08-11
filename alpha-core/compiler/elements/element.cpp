@@ -143,8 +143,15 @@ namespace basecode::compiler {
                 result.reg = result.var->value_reg.reg;
             }
         } else {
+            auto type = e->infer_type(context.program);
+
             vm::register_t reg;
-            reg.type = vm::register_type_t::integer;
+            reg.size = vm::op_size_for_byte_size(type->size_in_bytes());
+
+            if (type->number_class() == type_number_class_t::floating_point)
+                reg.type = vm::register_type_t::floating_point;
+            else
+                reg.type = vm::register_type_t::integer;
 
             if (!context.assembler->allocate_reg(reg)) {
                 context.program->error(

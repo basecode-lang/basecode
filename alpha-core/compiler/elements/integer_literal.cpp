@@ -28,10 +28,7 @@ namespace basecode::compiler {
             emit_context_t& context) {
         auto instruction_block = context.assembler->current_block();
         auto target_reg = context.assembler->current_target_register();
-        instruction_block->move_constant_to_reg(
-            target_reg->size,
-            target_reg->reg,
-            _value);
+        instruction_block->move_constant_to_reg(*target_reg, _value);
         return true;
     }
 

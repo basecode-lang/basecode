@@ -81,6 +81,12 @@ namespace basecode::vm {
         return false;
     }
 
+    void assembler::pop_target_register() {
+        if (_target_registers.empty())
+            return;
+        _target_registers.pop();
+    }
+
     instruction_block* assembler::pop_block() {
         if (_block_stack.empty())
             return nullptr;
@@ -130,6 +136,12 @@ namespace basecode::vm {
 
     void assembler::free_reg(const register_t& reg) {
         _register_allocator.free(reg);
+    }
+
+    register_t* assembler::current_target_register() {
+        if (_target_registers.empty())
+            return nullptr;
+        return &_target_registers.top();
     }
 
     bool assembler::resolve_labels(common::result& r) {
@@ -238,26 +250,8 @@ namespace basecode::vm {
         return &it->second;
     }
 
-    target_register_t assembler::pop_target_register() {
-        if (_target_registers.empty())
-            return target_register_t {};
-        auto reg = _target_registers.top();
-        _target_registers.pop();
-        return reg;
-    }
-
-    target_register_t* assembler::current_target_register() {
-        if (_target_registers.empty())
-            return nullptr;
-        return &_target_registers.top();
-    }
-
-    void assembler::push_target_register(op_sizes size, const register_t& reg) {
-        target_register_t target {
-            .size = size,
-            .reg = reg
-        };
-        _target_registers.push(target);
+    void assembler::push_target_register(const register_t& reg) {
+        _target_registers.push(reg);
     }
 
     instruction_block* assembler::make_basic_block(instruction_block* parent_block) {

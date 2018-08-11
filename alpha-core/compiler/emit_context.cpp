@@ -61,6 +61,7 @@ namespace basecode::compiler {
         value_reg.reg.type = vm::register_type_t::integer;
         if (type != nullptr
         &&  type->access_model() == type_access_model_t::value) {
+            value_reg.reg.size = vm::op_size_for_byte_size(type->size_in_bytes());
             if (type->number_class() == type_number_class_t::floating_point) {
                 value_reg.reg.type = vm::register_type_t::floating_point;
             }
@@ -88,29 +89,18 @@ namespace basecode::compiler {
             if (usage == identifier_usage_t::stack) {
                 type_name = stack_frame_entry_type_name(frame_entry->type);
                 block->load_to_reg(
-                    vm::op_sizes::qword,
                     value_reg.reg,
                     vm::register_t::fp(),
                     frame_entry->offset);
             } else {
-                block->load_to_reg(
-                    vm::op_size_for_byte_size(type->size_in_bytes()),
-                    value_reg.reg,
-                    address_reg.reg);
+                block->load_to_reg(value_reg.reg, address_reg.reg);
                 block
                     ->current_entry()
                     ->comment(fmt::format("load identifier '{}' value ({})", name, type_name));
             }
+
             requires_read = false;
         }
-
-//        auto target_reg = assembler->current_target_register();
-//        if (target_reg != nullptr && target_reg->reg.i != value_reg.value.i) {
-//            block->move_ireg_to_ireg(target_reg->reg.i, value_reg.value.i);
-//            block
-//                ->current_entry()
-//                ->comment("assign target register to value register");
-//        }
 
         return true;
     }
@@ -123,9 +113,8 @@ namespace basecode::compiler {
             return false;
 
         block->store_from_reg(
-            vm::op_size_for_byte_size(type->size_in_bytes()),
             address_reg.reg,
-            target_reg->reg,
+            *target_reg,
             frame_entry != nullptr ? frame_entry->offset : 0);
 
         written = true;
@@ -211,10 +200,8 @@ namespace basecode::compiler {
     }
 
     vm::register_t emit_context_t::pop_scratch_register() {
-        if (scratch_registers.empty()) {
-            // XXX: fix this!
-            return vm::register_t::pc();
-        }
+        if (scratch_registers.empty())
+            return vm::register_t::empty();
 
         auto reg = scratch_registers.top();
         scratch_registers.pop();

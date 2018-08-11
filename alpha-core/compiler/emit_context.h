@@ -63,7 +63,10 @@ namespace basecode::compiler {
         variable_register_t value_reg;
         compiler::type* type = nullptr;
         variable_register_t address_reg {
-            .reg.type = vm::register_type_t::integer
+            .reg = {
+                .size = vm::op_sizes::qword,
+                .type = vm::register_type_t::integer
+            },
         };
         vm::stack_frame_entry_t* frame_entry = nullptr;
     };

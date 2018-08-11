@@ -54,8 +54,9 @@ namespace basecode::compiler {
 
         auto target_reg = context.assembler->current_target_register();
         if (target_reg != nullptr) {
-            if (!procedure_type->returns().as_list().empty())
-                instruction_block->pop(vm::op_sizes::qword, target_reg->reg);
+            if (!procedure_type->returns().as_list().empty()) {
+                instruction_block->pop(*target_reg);
+            }
         }
 
         return true;

@@ -33,25 +33,8 @@ namespace basecode::vm {
                 available_integer.pop();
 
             for (int8_t r = 63; r >= 0; r--) {
-                available_integer.push(register_t {
-                    .number = static_cast<registers_t>(r),
-                    .type = register_type_t::integer
-                });
-                available_float.push(register_t {
-                    .number = static_cast<registers_t>(r),
-                    .type = register_type_t::floating_point
-                });
-            }
-        }
-
-        void free(const register_t& reg) {
-            auto removed = used.erase(reg) > 0;
-            if (removed) {
-                if (reg.type == register_type_t::integer) {
-                    available_integer.push(reg);
-                } else {
-                    available_float.push(reg);
-                }
+                available_float.push(static_cast<registers_t>(r));
+                available_integer.push(static_cast<registers_t>(r));
             }
         }
 
@@ -59,21 +42,34 @@ namespace basecode::vm {
             if (reg.type == register_type_t::integer) {
                 if (available_integer.empty())
                     return false;
-                reg = available_integer.top();
+                auto next_reg = available_integer.top();
+                reg.number = next_reg;
                 available_integer.pop();
             } else {
                 if (available_float.empty())
                     return false;
-                reg = available_float.top();
+                auto next_reg = available_float.top();
+                reg.number = next_reg;
                 available_float.pop();
             }
-            used.insert(reg);
+            used.insert(register_index(reg.number, reg.type));
             return true;
         }
 
-        std::stack<register_t> available_float {};
-        std::stack<register_t> available_integer {};
-        std::set<register_t, register_comparator> used {};
+        void free(const register_t& reg) {
+            auto removed = used.erase(register_index(reg.number, reg.type)) > 0;
+            if (removed) {
+                if (reg.type == register_type_t::integer) {
+                    available_integer.push(reg.number);
+                } else {
+                    available_float.push(reg.number);
+                }
+            }
+        }
+
+        std::set<size_t> used {};
+        std::stack<registers_t> available_float {};
+        std::stack<registers_t> available_integer {};
     };
 
 };
