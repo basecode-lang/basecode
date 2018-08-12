@@ -33,7 +33,7 @@ namespace basecode::compiler {
     bool pointer_type::on_initialize(
             common::result& r,
             compiler::program* program) {
-        auto type_symbol = program->make_symbol(
+        auto type_symbol = program->builder().make_symbol(
             parent_scope(),
             name_for_pointer(_base_type));
         symbol(type_symbol);

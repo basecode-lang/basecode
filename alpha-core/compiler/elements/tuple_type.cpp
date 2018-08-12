@@ -27,7 +27,7 @@ namespace basecode::compiler {
     bool tuple_type::on_initialize(
             common::result& r,
             compiler::program* program) {
-        symbol(program->make_symbol(parent_scope(), "tuple"));
+        symbol(program->builder().make_symbol(parent_scope(), "tuple"));
         return true;
     }
 

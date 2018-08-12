@@ -19,8 +19,9 @@ namespace basecode::compiler {
             common::result& r,
             compiler::block* parent_scope,
             compiler::program* program) {
+        auto& builder = program->builder();
         for (const auto& props : s_type_properties) {
-            auto type = program->make_numeric_type(
+            auto type = builder.make_numeric_type(
                 r,
                 parent_scope,
                 props.name,

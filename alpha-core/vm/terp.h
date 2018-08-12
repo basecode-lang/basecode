@@ -380,12 +380,15 @@ namespace basecode::vm {
     union operand_value_alias_t {
         uint8_t  r;
         uint64_t u;
+        float    f;
         double   d;
     };
 
     struct operand_value_t {
         register_type_t type;
-        operand_value_alias_t alias {.u = 0};
+        operand_value_alias_t alias {
+            .u = 0
+        };
     };
 
     struct operand_encoding_t {

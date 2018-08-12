@@ -34,28 +34,30 @@ namespace basecode::compiler {
     bool any_type::on_initialize(
             common::result& r,
             compiler::program* program) {
-        symbol(program->make_symbol(parent_scope(), "any"));
+        auto& builder = program->builder();
+
+        symbol(builder.make_symbol(parent_scope(), "any"));
 
         auto block_scope = scope();
 
         auto type_info_type = program->find_type({ .name = "type" });
         auto u8_type = program->find_type({ .name = "u8" });
 
-        auto type_info_identifier = program->make_identifier(
+        auto type_info_identifier = builder.make_identifier(
             block_scope,
-            program->make_symbol(parent_scope(), "type_info"),
+            builder.make_symbol(parent_scope(), "type_info"),
             nullptr);
         type_info_identifier->type(type_info_type);
-        auto type_info_field = program->make_field(
+        auto type_info_field = builder.make_field(
             block_scope,
             type_info_identifier);
 
-        auto data_identifier = program->make_identifier(
+        auto data_identifier = builder.make_identifier(
             block_scope,
-            program->make_symbol(parent_scope(), "data"),
+            builder.make_symbol(parent_scope(), "data"),
             nullptr);
-        data_identifier->type(program->make_pointer_type(r, block_scope, u8_type));
-        auto data_field = program->make_field(
+        data_identifier->type(builder.make_pointer_type(r, block_scope, u8_type));
+        auto data_field = builder.make_field(
             block_scope,
             data_identifier);
 

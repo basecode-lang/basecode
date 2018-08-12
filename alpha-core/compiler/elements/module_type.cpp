@@ -27,7 +27,7 @@ namespace basecode::compiler {
     bool module_type::on_initialize(
             common::result& r,
             compiler::program* program) {
-        symbol(program->make_symbol(parent_scope(), "module"));
+        symbol(program->builder().make_symbol(parent_scope(), "module"));
         return true;
     }
 

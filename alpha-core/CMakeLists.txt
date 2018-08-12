@@ -131,6 +131,7 @@ add_library(
     compiler/elements/unary_operator.cpp compiler/elements/unary_operator.h
     compiler/elements/return_element.cpp compiler/elements/return_element.h
     compiler/elements/procedure_call.cpp compiler/elements/procedure_call.h
+    compiler/elements/element_builder.cpp compiler/elements/element_builder.h
     compiler/elements/integer_literal.cpp compiler/elements/integer_literal.h
     compiler/elements/binary_operator.cpp compiler/elements/binary_operator.h
     compiler/elements/boolean_literal.cpp compiler/elements/boolean_literal.h

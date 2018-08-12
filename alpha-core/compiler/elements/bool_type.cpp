@@ -23,7 +23,7 @@ namespace basecode::compiler {
     bool bool_type::on_initialize(
             common::result& r,
             compiler::program* program) {
-        symbol(program->make_symbol(parent_scope(), "bool"));
+        symbol(program->builder().make_symbol(parent_scope(), "bool"));
         size_in_bytes(1);
         return true;
     }

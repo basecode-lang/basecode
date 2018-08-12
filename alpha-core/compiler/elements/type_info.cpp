@@ -49,18 +49,19 @@ namespace basecode::compiler {
     bool type_info::on_initialize(
             common::result& r,
             compiler::program* program) {
-        symbol(program->make_symbol(parent_scope(), "type"));
+        auto& builder = program->builder();
+        symbol(builder.make_symbol(parent_scope(), "type"));
 
         auto block_scope = scope();
 
         auto string_type = program->find_type({.name = "string"});
 
-        auto name_identifier = program->make_identifier(
+        auto name_identifier = builder.make_identifier(
             block_scope,
-            program->make_symbol(parent_scope(), "name"),
+            builder.make_symbol(parent_scope(), "name"),
             nullptr);
         name_identifier->type(string_type);
-        auto name_field = program->make_field(block_scope, name_identifier);
+        auto name_field = builder.make_field(block_scope, name_identifier);
 
         fields().add(name_field);
 

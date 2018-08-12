@@ -24,7 +24,7 @@ namespace basecode::compiler {
     bool namespace_type::on_initialize(
             common::result& r,
             compiler::program* program) {
-        symbol(program->make_symbol(parent_scope(), "namespace"));
+        symbol(program->builder().make_symbol(parent_scope(), "namespace"));
         return true;
     }
 

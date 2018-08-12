@@ -18,6 +18,7 @@
 #include <compiler/compiler_types.h>
 #include "element.h"
 #include "element_map.h"
+#include "element_builder.h"
 
 namespace basecode::compiler {
 
@@ -25,15 +26,6 @@ namespace basecode::compiler {
     using scope_visitor_callable = std::function<compiler::element* (compiler::block*)>;
     using element_visitor_callable = std::function<compiler::element* (compiler::element*)>;
     using namespace_visitor_callable = std::function<compiler::element* (compiler::block*)>;
-
-    struct type_find_result_t {
-        qualified_symbol_t type_name;
-        bool is_array = false;
-        bool is_spread = false;
-        bool is_pointer = false;
-        size_t array_size = 0;
-        compiler::type* type = nullptr;
-    };
 
     class program : public element {
     public:
@@ -62,6 +54,8 @@ namespace basecode::compiler {
             compiler::session& session);
 
         element_map& elements();
+
+        element_builder& builder();
 
         compiler::type* find_type(
             const qualified_symbol_t& symbol,
@@ -100,6 +94,7 @@ namespace basecode::compiler {
         friend class namespace_type;
         friend class procedure_type;
         friend class binary_operator;
+        friend class element_builder;
 
         bool on_emit(
             common::result& r,
@@ -117,104 +112,11 @@ namespace basecode::compiler {
         bool resolve_unknown_identifiers(common::result& r);
 
     private:
-        cast* make_cast(
-            compiler::block* parent_scope,
-            compiler::type* type,
-            element* expr);
-
-        field* make_field(
-            compiler::block* parent_scope,
-            compiler::identifier* identifier);
-
-        label* make_label(
-            compiler::block* parent_scope,
-            const std::string& name);
-
-        alias* make_alias(
-            compiler::block* parent_scope,
-            element* expr);
-
-        if_element* make_if(
-            compiler::block* parent_scope,
-            element* predicate,
-            element* true_branch,
-            element* false_branch);
-
-        import* make_import(
-            compiler::block* parent_scope,
-            compiler::element* expr,
-            compiler::element* from_expr,
-            compiler::module* module);
-
-        module* make_module(
-            compiler::block* parent_scope,
-            compiler::block* scope);
-
-        module_reference* make_module_reference(
-            compiler::block* parent_scope,
-            compiler::element* expr);
-
-        comment* make_comment(
-            compiler::block* parent_scope,
-            comment_type_t type,
-            const std::string& value);
-
         void apply_attributes(
             common::result& r,
             compiler::session& session,
             compiler::element* element,
             const syntax::ast_node_shared_ptr& node);
-
-        any_type* make_any_type(
-            common::result& r,
-            compiler::block* parent_scope,
-            compiler::block* scope);
-
-        bool_type* make_bool_type(
-            common::result& r,
-            compiler::block* parent_scope);
-
-        type_info* make_type_info_type(
-            common::result& r,
-            compiler::block* parent_scope,
-            compiler::block* scope);
-
-        compiler::directive* make_directive(
-            compiler::block* parent_scope,
-            const std::string& name,
-            element* expr);
-
-        statement* make_statement(
-            compiler::block* parent_scope,
-            label_list_t labels,
-            element* expr);
-
-        attribute* make_attribute(
-            compiler::block* parent_scope,
-            const std::string& name,
-            element* expr);
-
-        float_literal* make_float(
-            compiler::block* parent_scope,
-            double value);
-
-        boolean_literal* make_bool(
-            compiler::block* parent_scope,
-            bool value);
-
-        compiler::block* make_block(
-            compiler::block* parent_scope,
-            element_type_t type);
-
-        compiler::symbol_element* make_symbol(
-            compiler::block* parent_scope,
-            const std::string& name,
-            const string_list_t& namespaces = {});
-
-        compiler::symbol_element* make_temp_symbol(
-            compiler::block* parent_scope,
-            const std::string& name,
-            const string_list_t& namespaces);
 
         void add_procedure_instance(
             common::result& r,
@@ -222,68 +124,15 @@ namespace basecode::compiler {
             compiler::procedure_type* proc_type,
             const syntax::ast_node_shared_ptr& node);
 
-        identifier* make_identifier(
-            compiler::block* parent_scope,
-            compiler::symbol_element* symbol,
-            initializer* expr);
-
-        string_literal* make_string(
-            compiler::block* parent_scope,
-            const std::string& value);
-
-        array_type* make_array_type(
-            common::result& r,
-            compiler::block* parent_scope,
-            compiler::block* scope,
-            compiler::type* entry_type,
-            size_t size);
-
-        expression* make_expression(
-            compiler::block* parent_scope,
-            element* expr);
-
         void add_expression_to_scope(
             compiler::block* scope,
             compiler::element* expr);
-
-        tuple_type* make_tuple_type(
-            common::result& r,
-            compiler::block* parent_scope,
-            compiler::block* scope);
-
-        module_type* make_module_type(
-            common::result& r,
-            compiler::block* parent_scope,
-            compiler::block* scope);
-
-        initializer* make_initializer(
-            compiler::block* parent_scope,
-            element* expr);
-
-        integer_literal* make_integer(
-            compiler::block* parent_scope,
-            uint64_t value);
-
-        string_type* make_string_type(
-            common::result& r,
-            compiler::block* parent_scope,
-            compiler::block* scope);
-
-        pointer_type* make_pointer_type(
-            common::result& r,
-            compiler::block* parent_scope,
-            compiler::type* base_type);
 
         void add_composite_type_fields(
             common::result& r,
             compiler::session& session,
             compiler::composite_type* type,
             const syntax::ast_node_shared_ptr& block);
-
-        composite_type* make_enum_type(
-            common::result& r,
-            compiler::block* parent_scope,
-            compiler::block* scope);
 
         compiler::type* find_array_type(
             compiler::type* entry_type,
@@ -294,75 +143,17 @@ namespace basecode::compiler {
             compiler::type* base_type,
             compiler::block* scope = nullptr);
 
-        unknown_type* make_unknown_type(
-            common::result& r,
-            compiler::block* parent_scope,
-            compiler::symbol_element* symbol,
-            bool is_pointer,
-            bool is_array,
-            size_t array_size);
-
-        composite_type* make_union_type(
-            common::result& r,
-            compiler::block* parent_scope,
-            compiler::block* scope);
-
-        numeric_type* make_numeric_type(
-            common::result& r,
-            compiler::block* parent_scope,
-            const std::string& name,
-            int64_t min,
-            uint64_t max,
-            bool is_signed,
-            type_number_class_t number_class);
-
-        composite_type* make_struct_type(
-            common::result& r,
-            compiler::block* parent_scope,
-            compiler::block* scope);
-
-        namespace_element* make_namespace(
-            compiler::block* parent_scope,
-            element* expr);
-
-        namespace_type* make_namespace_type(
-            common::result& r,
-            compiler::block* parent_scope);
-
-        procedure_call* make_procedure_call(
-            compiler::block* parent_scope,
-            compiler::identifier_reference* reference,
-            compiler::argument_list* args);
-
-        unary_operator* make_unary_operator(
-            compiler::block* parent_scope,
-            operator_type_t type,
-            element* rhs);
-
-        procedure_type* make_procedure_type(
-            compiler::block* parent_scope,
-            compiler::block* block_scope);
-
-        binary_operator* make_binary_operator(
-            compiler::block* parent_scope,
-            operator_type_t type,
-            element* lhs,
-            element* rhs);
-
-        identifier_reference* make_identifier_reference(
-            compiler::block* parent_scope,
-            const qualified_symbol_t& symbol,
-            compiler::identifier* identifier);
-
-        procedure_instance* make_procedure_instance(
-            compiler::block* parent_scope,
-            compiler::type* procedure_type,
-            compiler::block* scope);
-
         compiler::element* resolve_symbol_or_evaluate(
             common::result& r,
             compiler::session& session,
             const syntax::ast_node_shared_ptr& node);
+
+        compiler::block* add_namespaces_to_scope(
+            common::result& r,
+            compiler::session& session,
+            const syntax::ast_node_shared_ptr& node,
+            compiler::symbol_element* symbol,
+            compiler::block* parent_scope);
 
         compiler::identifier* add_identifier_to_scope(
             common::result& r,
@@ -374,24 +165,6 @@ namespace basecode::compiler {
             compiler::block* parent_scope = nullptr);
 
         void add_type_to_scope(compiler::type* type);
-
-        void make_qualified_symbol(
-            qualified_symbol_t& symbol,
-            const syntax::ast_node_shared_ptr& node);
-
-        compiler::symbol_element* make_symbol_from_node(
-            common::result& r,
-            const syntax::ast_node_shared_ptr& node);
-
-        unknown_type* make_unknown_type_from_find_result(
-            common::result& r,
-            compiler::block* scope,
-            compiler::identifier* identifier,
-            const type_find_result_t& result);
-
-        return_element* make_return(compiler::block* parent_scope);
-
-        argument_list* make_argument_list(compiler::block* parent_scope);
 
         compiler::block* push_new_block(element_type_t type = element_type_t::block);
 
@@ -413,11 +186,6 @@ namespace basecode::compiler {
             common::result& r,
             type_find_result_t& result,
             const syntax::ast_node_shared_ptr& type_node,
-            compiler::block* parent_scope = nullptr);
-
-        compiler::type* make_complete_type(
-            common::result& r,
-            type_find_result_t& result,
             compiler::block* parent_scope = nullptr);
 
         compiler::block* pop_scope();
@@ -449,6 +217,7 @@ namespace basecode::compiler {
 
     private:
         element_map _elements {};
+        element_builder _builder;
         vm::terp* _terp = nullptr;
         compiler::block* _block = nullptr;
         vm::assembler* _assembler = nullptr;
