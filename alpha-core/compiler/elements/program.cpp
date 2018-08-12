@@ -761,8 +761,8 @@ namespace basecode::compiler {
                                     double temp = 0;
                                     if (var->as_float(temp)) {
                                         vm::register_value_alias_t alias;
-                                        alias.d = temp;
-                                        value = alias.u;
+                                        alias.qwf = temp;
+                                        value = alias.qw;
                                     }
                                 }
 

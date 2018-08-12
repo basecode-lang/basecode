@@ -54,7 +54,7 @@ namespace basecode::vm {
 
     void function_value_t::push(DCCallVM* vm, uint64_t value) {
         register_value_alias_t alias;
-        alias.u = value;
+        alias.qw = value;
 
         switch (type) {
             case ffi_types_t::void_type:
@@ -75,10 +75,10 @@ namespace basecode::vm {
                 dcArgLongLong(vm, static_cast<DClonglong>(value));
                 break;
             case ffi_types_t::float_type:
-                dcArgFloat(vm, alias.d);
+                dcArgFloat(vm, alias.dwf);
                 break;
             case ffi_types_t::double_type:
-                dcArgDouble(vm, alias.d);
+                dcArgDouble(vm, alias.qwf);
                 break;
             case ffi_types_t::pointer_type:
                 dcArgPointer(vm, reinterpret_cast<DCpointer>(value));
@@ -701,7 +701,7 @@ namespace basecode::vm {
     }
 
     size_t instruction_cache::fetch(common::result& r, instruction_t& inst) {
-        return fetch_at(r, _terp->register_file().r[register_pc].u, inst);
+        return fetch_at(r, _terp->register_file().r[register_pc].qw, inst);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -724,13 +724,13 @@ namespace basecode::vm {
     }
 
     void terp::reset() {
-        _registers.r[register_pc].u = heap_vector(heap_vectors_t::program_start);
-        _registers.r[register_sp].u = heap_vector(heap_vectors_t::top_of_stack);
-        _registers.r[register_fr].u = 0;
-        _registers.r[register_sr].u = 0;
+        _registers.r[register_pc].qw = heap_vector(heap_vectors_t::program_start);
+        _registers.r[register_sp].qw = heap_vector(heap_vectors_t::top_of_stack);
+        _registers.r[register_fr].qw = 0;
+        _registers.r[register_sr].qw = 0;
 
         for (size_t i = 0; i < number_general_purpose_registers; i++) {
-            _registers.r[i].u = 0;
+            _registers.r[i].qw = 0;
         }
 
         _icache.reset();
@@ -741,13 +741,13 @@ namespace basecode::vm {
     }
 
     uint64_t terp::pop() {
-        uint64_t value = read(op_sizes::qword, _registers.r[register_sp].u);
-        _registers.r[register_sp].u += sizeof(uint64_t);
+        uint64_t value = read(op_sizes::qword, _registers.r[register_sp].qw);
+        _registers.r[register_sp].qw += sizeof(uint64_t);
         return value;
     }
 
     uint64_t terp::peek() const {
-        return read(op_sizes::qword, _registers.r[register_sp].u);
+        return read(op_sizes::qword, _registers.r[register_sp].qw);
     }
 
     bool terp::register_foreign_function(
@@ -792,10 +792,10 @@ namespace basecode::vm {
         fmt::print("\n-------------------------------------------------------------\n");
         fmt::print(
             "PC =${:08x} | SP =${:08x} | FR =${:08x} | SR =${:08x}\n",
-            _registers.r[register_pc].u,
-            _registers.r[register_sp].u,
-            _registers.r[register_fr].u,
-            _registers.r[register_sr].u);
+            _registers.r[register_pc].qw,
+            _registers.r[register_sp].qw,
+            _registers.r[register_fr].qw,
+            _registers.r[register_sr].qw);
 
         fmt::print("-------------------------------------------------------------\n");
 
@@ -804,13 +804,13 @@ namespace basecode::vm {
             fmt::print(
                 "I{:02}=${:08x} | I{:02}=${:08x} | I{:02}=${:08x} | I{:02}=${:08x}\n",
                 index,
-                _registers.r[index].u,
+                _registers.r[index].qw,
                 index + 1,
-                _registers.r[index + 1].u,
+                _registers.r[index + 1].qw,
                 index + 2,
-                _registers.r[index + 2].u,
+                _registers.r[index + 2].qw,
                 index + 3,
-                _registers.r[index + 3].u);
+                _registers.r[index + 3].qw);
             index += 4;
         }
 
@@ -821,13 +821,13 @@ namespace basecode::vm {
             fmt::print(
                 "F{:02}=${:08x} | F{:02}=${:08x} | F{:02}=${:08x} | F{:02}=${:08x}\n",
                 index,
-                _registers.r[index].u,
+                _registers.r[index].qw,
                 index + 1,
-                _registers.r[index + 1].u,
+                _registers.r[index + 1].qw,
                 index + 2,
-                _registers.r[index + 2].u,
+                _registers.r[index + 2].qw,
                 index + 3,
-                _registers.r[index + 3].u);
+                _registers.r[index + 3].qw);
             index += 4;
         }
 
@@ -851,7 +851,7 @@ namespace basecode::vm {
         if (inst_size == 0)
             return false;
 
-        _registers.r[register_pc].u += inst_size;
+        _registers.r[register_pc].qw += inst_size;
 
         switch (inst.op) {
             case op_codes::nop: {
@@ -1682,7 +1682,7 @@ namespace basecode::vm {
                     return false;
 
                 if (value.alias.u == 0)
-                    _registers.r[register_pc].u = address.alias.u;
+                    _registers.r[register_pc].qw = address.alias.u;
 
                 _registers.flags(register_file_t::flags_t::zero, value.alias.u == 0);
                 _registers.flags(register_file_t::flags_t::subtract, false);
@@ -1706,7 +1706,7 @@ namespace basecode::vm {
                     return false;
 
                 if (value.alias.u != 0)
-                    _registers.r[register_pc].u = address.alias.u;
+                    _registers.r[register_pc].qw = address.alias.u;
 
                 _registers.flags(register_file_t::flags_t::zero, value.alias.u == 0);
                 _registers.flags(register_file_t::flags_t::subtract, false);
@@ -1735,7 +1735,7 @@ namespace basecode::vm {
                 operand_value_t result;
                 result.alias.u = value.alias.u & mask.alias.u;
                 if (result.alias.u == 0)
-                    _registers.r[register_pc].u = address.alias.u;
+                    _registers.r[register_pc].qw = address.alias.u;
 
                 _registers.flags(register_file_t::flags_t::carry, false);
                 _registers.flags(register_file_t::flags_t::subtract, false);
@@ -1760,7 +1760,7 @@ namespace basecode::vm {
                 operand_value_t result;
                 result.alias.u = value.alias.u & mask.alias.u;
                 if (result.alias.u != 0)
-                    _registers.r[register_pc].u = address.alias.u;
+                    _registers.r[register_pc].qw = address.alias.u;
 
                 _registers.flags(register_file_t::flags_t::carry, false);
                 _registers.flags(register_file_t::flags_t::subtract, false);
@@ -1782,7 +1782,7 @@ namespace basecode::vm {
                     return false;
 
                 if (!_registers.flags(register_file_t::flags_t::zero)) {
-                    _registers.r[register_pc].u = address.alias.u;
+                    _registers.r[register_pc].qw = address.alias.u;
                 }
 
                 break;
@@ -1799,7 +1799,7 @@ namespace basecode::vm {
                     return false;
 
                 if (_registers.flags(register_file_t::flags_t::zero)) {
-                    _registers.r[register_pc].u = address.alias.u;
+                    _registers.r[register_pc].qw = address.alias.u;
                 }
 
                 break;
@@ -1817,7 +1817,7 @@ namespace basecode::vm {
 
                 if (!_registers.flags(register_file_t::flags_t::carry)
                 &&  !_registers.flags(register_file_t::flags_t::zero)) {
-                    _registers.r[register_pc].u = address.alias.u;
+                    _registers.r[register_pc].qw = address.alias.u;
                 }
 
                 break;
@@ -1834,7 +1834,7 @@ namespace basecode::vm {
                     return false;
 
                 if (!_registers.flags(register_file_t::flags_t::carry)) {
-                    _registers.r[register_pc].u = address.alias.u;
+                    _registers.r[register_pc].qw = address.alias.u;
                 }
                 break;
             }
@@ -1851,7 +1851,7 @@ namespace basecode::vm {
 
                 if (_registers.flags(register_file_t::flags_t::carry)
                 ||  _registers.flags(register_file_t::flags_t::zero)) {
-                    _registers.r[register_pc].u = address.alias.u;
+                    _registers.r[register_pc].qw = address.alias.u;
                 }
                 break;
             }
@@ -1867,7 +1867,7 @@ namespace basecode::vm {
                     return false;
 
                 if (_registers.flags(register_file_t::flags_t::carry)) {
-                    _registers.r[register_pc].u = address.alias.u;
+                    _registers.r[register_pc].qw = address.alias.u;
                 }
                 break;
             }
@@ -1886,7 +1886,7 @@ namespace basecode::vm {
                 break;
             }
             case op_codes::jsr: {
-                push(_registers.r[register_pc].u);
+                push(_registers.r[register_pc].qw);
 
                 operand_value_t address;
                 auto result = get_constant_address_or_pc_with_offset(
@@ -1898,12 +1898,12 @@ namespace basecode::vm {
                 if (!result)
                     return false;
 
-                _registers.r[register_pc].u = address.alias.u;
+                _registers.r[register_pc].qw = address.alias.u;
                 break;
             }
             case op_codes::rts: {
                 uint64_t address = pop();
-                _registers.r[register_pc].u = address;
+                _registers.r[register_pc].qw = address;
                 break;
             }
             case op_codes::jmp: {
@@ -1918,7 +1918,7 @@ namespace basecode::vm {
                 if (!result)
                     return false;
 
-                _registers.r[register_pc].u = address.alias.u;
+                _registers.r[register_pc].qw = address.alias.u;
                 break;
             }
             case op_codes::swi: {
@@ -1931,8 +1931,8 @@ namespace basecode::vm {
                 uint64_t swi_address = read(op_sizes::qword, swi_offset);
                 if (swi_address != 0) {
                     // XXX: what state should we save and restore here?
-                    push(_registers.r[register_pc].u);
-                    _registers.r[register_pc].u = swi_address;
+                    push(_registers.r[register_pc].qw);
+                    _registers.r[register_pc].qw = swi_address;
                 }
 
                 break;
@@ -2054,8 +2054,8 @@ namespace basecode::vm {
     }
 
     void terp::push(uint64_t value) {
-        _registers.r[register_sp].u -= sizeof(uint64_t);
-        write(op_sizes::qword, _registers.r[register_sp].u, value);
+        _registers.r[register_sp].qw -= sizeof(uint64_t);
+        write(op_sizes::qword, _registers.r[register_sp].qw, value);
         return;
     }
 
@@ -2262,9 +2262,9 @@ namespace basecode::vm {
             uint64_t address) {
         std::vector<uint64_t> return_values;
 
-        auto return_address = _registers.r[register_pc].u;
+        auto return_address = _registers.r[register_pc].qw;
         push(return_address);
-        _registers.r[register_pc].u = address;
+        _registers.r[register_pc].qw = address;
 
         while (!has_exited()) {
             // XXX: need to introduce a terp_step_result_t
@@ -2394,7 +2394,7 @@ namespace basecode::vm {
             auto reg_index = register_index(
                 static_cast<registers_t>(operand.value.r),
                 value.type);
-            value.alias.u = _registers.r[reg_index].u;
+            value.alias.u = _registers.r[reg_index].qw;
         } else {
             value.alias.u = operand.value.u;
         }
@@ -2415,10 +2415,7 @@ namespace basecode::vm {
             auto reg_index = register_index(
                 static_cast<registers_t>(operand.value.r),
                 type);
-            _registers.r[reg_index].u = set_zoned_value(
-                _registers.r[reg_index].u,
-                value.alias.u,
-                inst.size);
+            set_zoned_value(_registers.r[reg_index], value.alias.u, inst.size);
         } else {
             r.add_message(
                 "B006",
@@ -2536,30 +2533,29 @@ namespace basecode::vm {
         _traps.insert(std::make_pair(index, callable));
     }
 
-    uint64_t terp::set_zoned_value(uint64_t source, uint64_t value, op_sizes size) {
-        uint64_t result = source;
+    void terp::set_zoned_value(
+            register_value_alias_t& reg,
+            uint64_t value,
+            op_sizes size) {
         switch (size) {
             case op_sizes::byte: {
-                result &= mask_byte_clear;
-                result |= (value & mask_byte);
+                reg.b = static_cast<uint8_t>(value);
                 break;
             }
             case op_sizes::word: {
-                result &= mask_word_clear;
-                result |= (value & mask_word);
+                reg.w = static_cast<uint16_t>(value);
                 break;
             }
             case op_sizes::dword: {
-                result &= mask_dword_clear;
-                result |= (value & mask_dword);
+                reg.dw = static_cast<uint32_t>(value);
                 break;
             }
-            case op_sizes::qword:
             default:
-                result = value;
+            case op_sizes::qword: {
+                reg.qw = value;
                 break;
+            }
         }
-        return result;
     }
 
     bool terp::has_overflow(uint64_t lhs, uint64_t rhs, uint64_t result, op_sizes size) {

@@ -152,8 +152,12 @@ namespace basecode::vm {
     };
 
     union register_value_alias_t {
-        double   d;
-        uint64_t u;
+        uint8_t  b;
+        uint16_t w;
+        uint32_t dw;
+        float    dwf;
+        uint64_t qw;
+        double   qwf;
     };
 
     struct register_t {
@@ -188,7 +192,9 @@ namespace basecode::vm {
         op_sizes size = op_sizes::qword;
         registers_t number = registers_t::r0;
         register_type_t type = register_type_t::none;
-        register_value_alias_t value {.u = 0};
+        register_value_alias_t value {
+            .qw = 0
+        };
     };
 
     static constexpr const uint32_t register_integer_start   = 0;
@@ -235,14 +241,14 @@ namespace basecode::vm {
         };
 
         bool flags(flags_t f) const {
-            return (r[register_fr].u & f) != 0;
+            return (r[register_fr].qw & f) != 0;
         }
 
         void flags(flags_t f, bool value) {
             if (value)
-                r[register_fr].u |= f;
+                r[register_fr].qw |= f;
             else
-                r[register_fr].u &= ~f;
+                r[register_fr].qw &= ~f;
         }
 
         register_value_alias_t r[number_total_registers];
@@ -642,15 +648,6 @@ namespace basecode::vm {
     public:
         using trap_callable = std::function<void (terp*)>;
 
-        static constexpr uint64_t mask_byte        = 0b0000000000000000000000000000000000000000000000000000000011111111;
-        static constexpr uint64_t mask_byte_clear  = ~mask_byte;
-
-        static constexpr uint64_t mask_word        = 0b0000000000000000000000000000000000000000000000001111111111111111;
-        static constexpr uint64_t mask_word_clear  = ~mask_word;
-
-        static constexpr uint64_t mask_dword       = 0b0000000000000000000000000000000011111111111111111111111111111111;
-        static constexpr uint64_t mask_dword_clear = ~mask_dword;
-
         static constexpr uint64_t mask_byte_negative  = 0b0000000000000000000000000000000000000000000000000000000010000000;
         static constexpr uint64_t mask_word_negative  = 0b0000000000000000000000000000000000000000000000001000000000000000;
         static constexpr uint64_t mask_dword_negative = 0b0000000000000000000000000000000010000000000000000000000000000000;
@@ -756,8 +753,8 @@ namespace basecode::vm {
             uint64_t result,
             op_sizes size);
 
-        uint64_t set_zoned_value(
-            uint64_t source,
+        void set_zoned_value(
+            register_value_alias_t& reg,
             uint64_t value,
             op_sizes size);
 
