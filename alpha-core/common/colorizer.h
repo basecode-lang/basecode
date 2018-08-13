@@ -27,6 +27,9 @@ namespace basecode::common {
         white
     };
 
+    // N.B. this is not thread safe
+    extern bool g_color_enabled;
+
     class colorizer {
     public:
         static std::string colorize(

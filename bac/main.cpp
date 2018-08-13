@@ -53,7 +53,8 @@ static void usage() {
     fmt::print("usage: bac "
                "[-?|--help] "
                "[-v|--verbose] "
-               "[-G{{filename}}|--ast={{filename}}] "
+               "[--no-color]"
+               "[-G] "
                "[-H{{filename}}|--code_dom={{filename}}] "
                "file\n");
 }
@@ -73,6 +74,7 @@ int main(int argc, char** argv) {
         {"verbose", ya_no_argument,       nullptr, 0  },
         {"ast",     ya_no_argument,       0,       'G'},
         {"code_dom",ya_required_argument, 0,       'H'},
+        {"no-color",ya_no_argument,       0,       0  },
         {0,         0,                    0,       0  },
     };
 
@@ -102,6 +104,9 @@ int main(int argc, char** argv) {
                         break;
                     case 3:
                         code_dom_graph_file_name = ya_optarg;
+                        break;
+                    case 4:
+                        basecode::common::g_color_enabled = false;
                         break;
                     default:
                         abort();
@@ -169,7 +174,7 @@ int main(int argc, char** argv) {
         .output_ast_graphs = output_ast_graphs,
         .dom_graph_file = code_dom_graph_file_name,
         .compiler_path = boost::filesystem::system_complete(argv[0]).remove_filename(),
-        .compile_callback = [&](
+        .compile_callback = [](
                 basecode::compiler::session_compile_phase_t phase,
                 const boost::filesystem::path& source_file) {
             switch (phase) {

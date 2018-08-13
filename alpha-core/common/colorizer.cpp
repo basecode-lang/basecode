@@ -15,10 +15,14 @@
 
 namespace basecode::common {
 
+    bool g_color_enabled = true;
+
     std::string colorizer::colorize(
             const std::string& text,
             term_colors_t fg_color,
             term_colors_t bg_color) {
+        if (!g_color_enabled)
+            return text;
         return fmt::format(
             "{}{}{}{}",
             color_code(make_bg_color(bg_color)),
@@ -33,6 +37,8 @@ namespace basecode::common {
             size_t end,
             term_colors_t fg_color,
             term_colors_t bg_color) {
+        if (!g_color_enabled)
+            return text;
         std::stringstream colored_source;
         for (size_t j = 0; j < text.length(); j++) {
             if (begin == end && j == begin) {
