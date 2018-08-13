@@ -116,7 +116,7 @@ namespace basecode::compiler {
 
     void element_builder::make_qualified_symbol(
             qualified_symbol_t& symbol,
-            const syntax::ast_node_shared_ptr& node) {
+            const syntax::ast_node_t* node) {
         if (!node->children.empty()) {
             for (size_t i = 0; i < node->children.size() - 1; i++)
                 symbol.namespaces.push_back(node->children[i]->token.value);
@@ -128,7 +128,7 @@ namespace basecode::compiler {
 
     compiler::symbol_element* element_builder::make_symbol_from_node(
             common::result& r,
-            const syntax::ast_node_shared_ptr& node) {
+            const syntax::ast_node_t* node) {
         qualified_symbol_t qualified_symbol {};
         make_qualified_symbol(qualified_symbol, node);
         auto symbol = make_symbol(

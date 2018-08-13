@@ -426,13 +426,13 @@ namespace basecode::compiler {
 
         session.raise_phase(session_compile_phase_t::start, source_file->path());
 
-        compiler::module* module = nullptr;
+        compiler::module* module = (compiler::module*)nullptr;
         auto module_node = session.parse(r, source_file);
         if (module_node != nullptr) {
             module = dynamic_cast<compiler::module*>(_ast_evaluator.evaluate(
                 r,
                 session,
-                module_node));
+                module_node.get()));
             if (module != nullptr) {
                 module->parent_element(this);
                 module->is_root(is_root);
@@ -714,7 +714,7 @@ namespace basecode::compiler {
         if (type_node == nullptr)
             return false;
 
-        _builder.make_qualified_symbol(result.type_name, type_node->lhs);
+        _builder.make_qualified_symbol(result.type_name, type_node->lhs.get());
         result.array_size = 0;
         result.is_array = type_node->is_array();
         result.is_spread = type_node->is_spread();

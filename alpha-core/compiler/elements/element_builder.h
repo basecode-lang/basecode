@@ -239,11 +239,11 @@ namespace basecode::compiler {
 
         void make_qualified_symbol(
             qualified_symbol_t& symbol,
-            const syntax::ast_node_shared_ptr& node);
+            const syntax::ast_node_t* node);
 
         compiler::symbol_element* make_symbol_from_node(
             common::result& r,
-            const syntax::ast_node_shared_ptr& node);
+            const syntax::ast_node_t* node);
 
         unknown_type* make_unknown_type_from_find_result(
             common::result& r,

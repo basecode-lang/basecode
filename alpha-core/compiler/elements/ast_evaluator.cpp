@@ -58,6 +58,68 @@
 
 namespace basecode::compiler {
 
+    std::unordered_map<syntax::ast_node_types_t, node_evaluator_callable> ast_evaluator::s_node_evaluators = {
+        {syntax::ast_node_types_t::pair,                    std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::label,                   std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::module,                  std::bind(&ast_evaluator::module, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::symbol,                  std::bind(&ast_evaluator::symbol, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::type_list,               std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::proc_call,               std::bind(&ast_evaluator::proc_call, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::statement,               std::bind(&ast_evaluator::statement, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::attribute,               std::bind(&ast_evaluator::attribute, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::directive,               std::bind(&ast_evaluator::directive, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::assignment,              std::bind(&ast_evaluator::assignment, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::expression,              std::bind(&ast_evaluator::expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::label_list,              std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::basic_block,             std::bind(&ast_evaluator::basic_block, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::symbol_part,             std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::line_comment,            std::bind(&ast_evaluator::line_comment, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::null_literal,            std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::block_comment,           std::bind(&ast_evaluator::block_comment, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::argument_list,           std::bind(&ast_evaluator::argument_list, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::if_expression,           std::bind(&ast_evaluator::if_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::parameter_list,          std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::number_literal,          std::bind(&ast_evaluator::number_literal, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::string_literal,          std::bind(&ast_evaluator::string_literal, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::unary_operator,          std::bind(&ast_evaluator::unary_operator, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::cast_expression,         std::bind(&ast_evaluator::cast_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::from_expression,         std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::proc_expression,         std::bind(&ast_evaluator::proc_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::enum_expression,         std::bind(&ast_evaluator::enum_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::binary_operator,         std::bind(&ast_evaluator::binary_operator, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::boolean_literal,         std::bind(&ast_evaluator::boolean_literal, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::map_constructor,         std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::else_expression,         std::bind(&ast_evaluator::else_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::while_statement,         std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::break_statement,         std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::with_expression,         std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::type_identifier,         std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::alias_expression,        std::bind(&ast_evaluator::alias_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::defer_expression,        std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::union_expression,        std::bind(&ast_evaluator::union_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::return_statement,        std::bind(&ast_evaluator::return_statement, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::symbol_reference,        std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::extend_statement,        std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::for_in_statement,        std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::switch_expression,       std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::import_expression,       std::bind(&ast_evaluator::import_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::struct_expression,       std::bind(&ast_evaluator::struct_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::character_literal,       std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::array_constructor,       std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::module_expression,       std::bind(&ast_evaluator::module_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::elseif_expression,       std::bind(&ast_evaluator::if_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::continue_statement,      std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::constant_expression,     std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::namespace_expression,    std::bind(&ast_evaluator::namespace_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::subscript_expression,    std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::return_argument_list,    std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::array_subscript_list,    std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::assignment_source_list,  std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::assignment_target_list,  std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+    };
+
+    ///////////////////////////////////////////////////////////////////////////
+
     ast_evaluator::ast_evaluator(
             element_builder* builder,
             compiler::program* program) : _builder(builder),
@@ -67,548 +129,31 @@ namespace basecode::compiler {
     element* ast_evaluator::evaluate(
             common::result& r,
             compiler::session& session,
-            const syntax::ast_node_shared_ptr& node,
+            const syntax::ast_node_t* node,
             element_type_t default_block_type) {
         if (node == nullptr)
             return nullptr;
 
-        switch (node->type) {
-            case syntax::ast_node_types_t::symbol: {
-                return _builder->make_symbol_from_node(r, node);
-            }
-            case syntax::ast_node_types_t::attribute: {
-                auto element = _builder->make_attribute(
-                    _program->current_scope(),
-                    node->token.value,
-                    evaluate(r, session, node->lhs));
-                element->location(node->location);
-                return element;
-            }
-            case syntax::ast_node_types_t::directive: {
-                auto expression = evaluate(r, session, node->lhs);
-                auto directive_element = _builder->make_directive(
-                    _program->current_scope(),
-                    node->token.value,
-                    expression);
-                directive_element->location(node->location);
-                apply_attributes(r, session, directive_element, node);
-                directive_element->evaluate(r, session, _program);
-                return directive_element;
-            }
-            case syntax::ast_node_types_t::module: {
-                auto module_block = _builder->make_block(
-                    _program->_block,
-                    element_type_t::module_block);
-                auto module = _builder->make_module(_program->_block, module_block);
-                module->source_file(session.current_source_file());
-                _program->_block->blocks().push_back(module_block);
+        evaluator_context_t context(r, session);
+        context.node = node;
+        context.scope = _program->current_scope();
+        context.default_block_type = default_block_type;
 
-                _program->push_scope(module_block);
-                _program->_top_level_stack.push(module_block);
-
-                for (auto it = node->children.begin();
-                     it != node->children.end();
-                     ++it) {
-                    auto expr = evaluate(r, session, *it, default_block_type);
-                    if (expr == nullptr)
-                        return nullptr;
-                    add_expression_to_scope(module_block, expr);
-                    expr->parent_element(module);
-                }
-
-                _program->_top_level_stack.pop();
-
-                return module;
-            }
-            case syntax::ast_node_types_t::module_expression: {
-                auto expr = resolve_symbol_or_evaluate(r, session, node->rhs);
-                auto reference = _builder->make_module_reference(
-                    _program->current_scope(),
-                    expr);
-
-                std::string path;
-                if (expr->is_constant() && expr->as_string(path)) {
-                    boost::filesystem::path source_path(path);
-                    auto current_source_file = session.current_source_file();
-                    if (current_source_file != nullptr
-                        &&  source_path.is_relative()) {
-                        source_path = boost::filesystem::absolute(
-                            source_path,
-                            current_source_file->path().parent_path());
-                    }
-                    auto source_file = session.add_source_file(source_path);
-                    auto module = _program->compile_module(r, session, source_file);
-                    if (module == nullptr) {
-                        _program->error(
-                            r,
-                            session,
-                            "C021",
-                            "unable to load module.",
-                            node->rhs->location);
-                        return nullptr;
-                    }
-                    reference->module(module);
-                } else {
-                    _program->error(
-                        r,
-                        session,
-                        "C021",
-                        "expected string literal or constant string variable.",
-                        node->rhs->location);
-                    return nullptr;
-                }
-
-                return reference;
-            }
-            case syntax::ast_node_types_t::basic_block: {
-                auto active_scope = _program->push_new_block(default_block_type);
-
-                for (auto it = node->children.begin();
-                     it != node->children.end();
-                     ++it) {
-                    auto current_node = *it;
-                    auto expr = evaluate(
-                        r,
-                        session,
-                        current_node,
-                        default_block_type);
-                    if (expr == nullptr) {
-                        _program->error(
-                            r,
-                            session,
-                            "C024",
-                            "invalid statement",
-                            current_node->location);
-                        return nullptr;
-                    }
-                    add_expression_to_scope(active_scope, expr);
-                    expr->parent_element(active_scope);
-                }
-
-                return _program->pop_scope();
-            }
-            case syntax::ast_node_types_t::statement: {
-                label_list_t labels {};
-
-                if (node->lhs != nullptr) {
-                    for (const auto& label : node->lhs->children) {
-                        labels.push_back(_builder->make_label(
-                            _program->current_scope(),
-                            label->token.value));
-                    }
-                }
-
-                auto expr = evaluate(r, session, node->rhs);
-                if (expr == nullptr)
-                    return nullptr;
-
-                if (expr->element_type() == element_type_t::symbol) {
-                    type_find_result_t find_type_result {};
-                    _program->find_identifier_type(
-                        r,
-                        find_type_result,
-                        node->rhs->rhs);
-                    expr = add_identifier_to_scope(
-                        r,
-                        session,
-                        dynamic_cast<compiler::symbol_element*>(expr),
-                        find_type_result,
-                        nullptr,
-                        0);
-                }
-
-                return _builder->make_statement(_program->current_scope(), labels, expr);
-            }
-            case syntax::ast_node_types_t::expression: {
-                auto element = _builder->make_expression(
-                    _program->current_scope(),
-                    evaluate(r, session, node->lhs));
-                element->location(node->location);
-                return element;
-            }
-            case syntax::ast_node_types_t::assignment: {
-                const auto& target_list = node->lhs;
-                const auto& source_list = node->rhs;
-
-                if (target_list->children.size() != source_list->children.size()) {
-                    _program->error(
-                        r,
-                        session,
-                        "P027",
-                        "the number of left-hand-side targets must match"
-                        " the number of right-hand-side expressions.",
-                        source_list->location);
-                    return nullptr;
-                }
-
-                identifier_list_t list {};
-                for (size_t i = 0; i < target_list->children.size(); i++) {
-                    const auto& symbol_node = target_list->children[i];
-
-                    qualified_symbol_t qualified_symbol {};
-                    _builder->make_qualified_symbol(qualified_symbol, symbol_node);
-                    auto existing_identifier = _program->find_identifier(qualified_symbol);
-                    if (existing_identifier != nullptr) {
-                        auto rhs = evaluate(r, session, source_list->children[i]);
-                        if (rhs == nullptr)
-                            return nullptr;
-                        auto binary_op = _builder->make_binary_operator(
-                            _program->current_scope(),
-                            operator_type_t::assignment,
-                            existing_identifier,
-                            rhs);
-                        apply_attributes(r, session, binary_op, node);
-                        return binary_op;
-                    } else {
-                        auto symbol = dynamic_cast<compiler::symbol_element*>(evaluate(
-                            r,
-                            session,
-                            symbol_node));
-                        type_find_result_t find_type_result {};
-                        _program->find_identifier_type(
-                            r,
-                            find_type_result,
-                            symbol_node->rhs);
-                        auto new_identifier = add_identifier_to_scope(
-                            r,
-                            session,
-                            symbol,
-                            find_type_result,
-                            node,
-                            i);
-                        if (new_identifier == nullptr)
-                            return nullptr;
-                        list.push_back(new_identifier);
-                    }
-                }
-
-                auto result = list.front();
-                return result;
-            }
-            case syntax::ast_node_types_t::line_comment: {
-                return _builder->make_comment(
-                    _program->current_scope(),
-                    comment_type_t::line,
-                    node->token.value);
-            }
-            case syntax::ast_node_types_t::block_comment: {
-                return _builder->make_comment(
-                    _program->current_scope(),
-                    comment_type_t::block,
-                    node->token.value);
-            }
-            case syntax::ast_node_types_t::string_literal: {
-                auto element = _builder->make_string(
-                    _program->current_scope(),
-                    node->token.value);
-                element->location(node->location);
-                return element;
-            }
-            case syntax::ast_node_types_t::number_literal: {
-                switch (node->token.number_type) {
-                    case syntax::number_types_t::integer: {
-                        // XXX: need to handle conversion failures
-                        uint64_t value;
-                        if (node->token.parse(value) == syntax::conversion_result_t::success) {
-                            compiler::element* element = nullptr;
-                            if (node->token.is_signed()) {
-                                element = _builder->make_integer(
-                                    _program->current_scope(),
-                                    common::twos_complement(value));
-                            } else {
-                                element = _builder->make_integer(_program->current_scope(), value);
-                            }
-                            element->location(node->location);
-                            return element;
-                        } else {
-                            _program->error(
-                                r,
-                                session,
-                                "P041",
-                                "invalid integer literal",
-                                node->location);
-                        }
-                        break;
-                    }
-                    case syntax::number_types_t::floating_point: {
-                        // XXX: need to handle conversion failures
-                        double value;
-                        if (node->token.parse(value) == syntax::conversion_result_t::success) {
-                            auto element = _builder->make_float(_program->current_scope(), value);
-                            element->location(node->location);
-                            return element;
-                        }
-                        break;
-                    }
-                    default:
-                        break;
-                }
-                return nullptr;
-            }
-            case syntax::ast_node_types_t::boolean_literal: {
-                auto element = _builder->make_bool(_program->current_scope(), node->token.as_bool());
-                element->location(node->location);
-                return element;
-            }
-            case syntax::ast_node_types_t::else_expression: {
-                return evaluate(r, session, node->children[0]);
-            }
-            case syntax::ast_node_types_t::if_expression:
-            case syntax::ast_node_types_t::elseif_expression: {
-                auto predicate = evaluate(r, session, node->lhs);
-                auto true_branch = evaluate(r, session, node->children[0]);
-                auto false_branch = evaluate(r, session, node->rhs);
-                return _builder->make_if(_program->current_scope(), predicate, true_branch, false_branch);
-            }
-            case syntax::ast_node_types_t::unary_operator: {
-                auto it = s_unary_operators.find(node->token.type);
-                if (it == s_unary_operators.end())
-                    return nullptr;
-                return _builder->make_unary_operator(
-                    _program->current_scope(),
-                    it->second,
-                    resolve_symbol_or_evaluate(r, session, node->rhs));
-            }
-            case syntax::ast_node_types_t::binary_operator: {
-                auto it = s_binary_operators.find(node->token.type);
-                if (it == s_binary_operators.end())
-                    return nullptr;
-                auto lhs = resolve_symbol_or_evaluate(r, session, node->lhs);
-                auto rhs = resolve_symbol_or_evaluate(r, session, node->rhs);
-                return _builder->make_binary_operator(_program->current_scope(), it->second, lhs, rhs);
-            }
-            case syntax::ast_node_types_t::proc_call: {
-                qualified_symbol_t qualified_symbol {};
-                _builder->make_qualified_symbol(qualified_symbol, node->lhs);
-                auto proc_identifier = _program->find_identifier(qualified_symbol);
-
-                compiler::argument_list* args = nullptr;
-                auto expr = evaluate(r, session, node->rhs);
-                if (expr != nullptr) {
-                    args = dynamic_cast<compiler::argument_list*>(expr);
-                }
-                auto element = _builder->make_procedure_call(
-                    _program->current_scope(),
-                    _builder->make_identifier_reference(
-                        _program->current_scope(),
-                        qualified_symbol,
-                        proc_identifier),
-                    args);
-                element->location(node->location);
-                return element;
-            }
-            case syntax::ast_node_types_t::argument_list: {
-                auto args = _builder->make_argument_list(_program->current_scope());
-                for (const auto& arg_node : node->children) {
-                    auto arg = resolve_symbol_or_evaluate(r, session, arg_node);
-                    args->add(arg);
-                    arg->parent_element(args);
-                }
-                return args;
-            }
-            case syntax::ast_node_types_t::proc_expression: {
-                auto active_scope = _program->current_scope();
-                auto block_scope = _builder->make_block(
-                    active_scope,
-                    element_type_t::proc_type_block);
-                auto proc_type = _builder->make_procedure_type(active_scope, block_scope);
-                active_scope->types().add(proc_type);
-
-                auto count = 0;
-                for (const auto& type_node : node->lhs->children) {
-                    switch (type_node->type) {
-                        case syntax::ast_node_types_t::symbol: {
-                            auto return_identifier = _builder->make_identifier(
-                                block_scope,
-                                _builder->make_symbol(block_scope, fmt::format("_{}", count++)),
-                                nullptr);
-                            return_identifier->usage(identifier_usage_t::stack);
-                            return_identifier->type(_program->find_type(qualified_symbol_t {
-                                .name = type_node->children[0]->token.value
-                            }));
-                            auto new_field = _builder->make_field(block_scope, return_identifier);
-                            proc_type->returns().add(new_field);
-                            new_field->parent_element(proc_type);
-                            break;
-                        }
-                        default: {
-                            break;
-                        }
-                    }
-                }
-
-                for (const auto& param_node : node->rhs->children) {
-                    switch (param_node->type) {
-                        case syntax::ast_node_types_t::assignment: {
-                            // XXX: in the parameter list, multiple targets is an error
-                            const auto& first_target = param_node->lhs->children[0];
-                            auto symbol = dynamic_cast<compiler::symbol_element*>(evaluate_in_scope(
-                                r,
-                                session,
-                                first_target,
-                                block_scope));
-                            type_find_result_t find_type_result {};
-                            _program->find_identifier_type(r, find_type_result, first_target->rhs, block_scope);
-                            auto param_identifier = add_identifier_to_scope(
-                                r,
-                                session,
-                                symbol,
-                                find_type_result,
-                                param_node,
-                                0,
-                                block_scope);
-                            param_identifier->usage(identifier_usage_t::stack);
-                            auto field = _builder->make_field(block_scope, param_identifier);
-                            proc_type->parameters().add(field);
-                            field->parent_element(proc_type);
-                            break;
-                        }
-                        case syntax::ast_node_types_t::symbol: {
-                            auto symbol = dynamic_cast<compiler::symbol_element*>(evaluate_in_scope(
-                                r,
-                                session,
-                                param_node,
-                                block_scope));
-                            type_find_result_t find_type_result {};
-                            _program->find_identifier_type(r, find_type_result, param_node->rhs, block_scope);
-                            auto param_identifier = add_identifier_to_scope(
-                                r,
-                                session,
-                                symbol,
-                                find_type_result,
-                                nullptr,
-                                0,
-                                block_scope);
-                            if (param_identifier != nullptr) {
-                                param_identifier->usage(identifier_usage_t::stack);
-                                auto field = _builder->make_field(block_scope, param_identifier);
-                                proc_type->parameters().add(field);
-                                field->parent_element(proc_type);
-                            } else {
-                                _program->error(
-                                    r,
-                                    session,
-                                    "P014",
-                                    fmt::format("invalid parameter declaration: {}", symbol->name()),
-                                    symbol->location());
-                            }
-                            break;
-                        }
-                        default: {
-                            break;
-                        }
-                    }
-                }
-
-                return proc_type;
-            }
-            case syntax::ast_node_types_t::enum_expression: {
-                auto active_scope = _program->current_scope();
-                auto enum_type = _builder->make_enum_type(
+        auto it = s_node_evaluators.find(node->type);
+        if (it != s_node_evaluators.end()) {
+            evaluator_result_t result {};
+            if (it->second(this, context, result)) {
+                return result.element;
+            } else {
+                _program->error(
                     r,
-                    active_scope,
-                    _builder->make_block(active_scope, element_type_t::block));
-                active_scope->types().add(enum_type);
-                add_composite_type_fields(r, session, enum_type, node->rhs);
-                if (!enum_type->initialize(r, _program))
-                    return nullptr;
-                return enum_type;
-            }
-            case syntax::ast_node_types_t::cast_expression: {
-                auto type_name = node->lhs->lhs->children[0]->token.value;
-                auto type = _program->find_type(qualified_symbol_t {.name = type_name});
-                if (type == nullptr) {
-                    _program->error(
-                        r,
-                        session,
-                        "P002",
-                        fmt::format("unknown type '{}'.", type_name),
-                        node->lhs->lhs->location);
-                    return nullptr;
-                }
-                auto element = _builder->make_cast(
-                    _program->current_scope(),
-                    type,
-                    resolve_symbol_or_evaluate(r, session, node->rhs));
-                element->location(node->location);
-                return element;
-            }
-            case syntax::ast_node_types_t::alias_expression: {
-                auto element = _builder->make_alias(
-                    _program->current_scope(),
-                    resolve_symbol_or_evaluate(r, session, node->lhs));
-                element->location(node->location);
-                return element;
-            }
-            case syntax::ast_node_types_t::union_expression: {
-                auto active_scope = _program->current_scope();
-                auto union_type = _builder->make_union_type(
-                    r,
-                    active_scope,
-                    _builder->make_block(active_scope, element_type_t::block));
-                active_scope->types().add(union_type);
-                add_composite_type_fields(r, session, union_type, node->rhs);
-                if (!union_type->initialize(r, _program))
-                    return nullptr;
-                return union_type;
-            }
-            case syntax::ast_node_types_t::struct_expression: {
-                auto active_scope = _program->current_scope();
-                auto struct_type = _builder->make_struct_type(
-                    r,
-                    active_scope,
-                    _builder->make_block(active_scope, element_type_t::block));
-                active_scope->types().add(struct_type);
-                add_composite_type_fields(r, session, struct_type, node->rhs);
-                if (!struct_type->initialize(r, _program))
-                    return nullptr;
-                return struct_type;
-            }
-            case syntax::ast_node_types_t::return_statement: {
-                auto return_element = _builder->make_return(_program->current_scope());
-                auto& expressions = return_element->expressions();
-                for (const auto& arg_node : node->rhs->children) {
-                    auto arg = resolve_symbol_or_evaluate(r, session, arg_node);
-                    expressions.push_back(arg);
-                    arg->parent_element(return_element);
-                }
-                return return_element;
-            }
-            case syntax::ast_node_types_t::import_expression: {
-                qualified_symbol_t qualified_symbol {};
-                _builder->make_qualified_symbol(qualified_symbol, node->lhs);
-
-                compiler::identifier_reference* from_reference = nullptr;
-                if (node->rhs != nullptr) {
-                    from_reference = dynamic_cast<compiler::identifier_reference*>(
-                        resolve_symbol_or_evaluate(
-                            r,
-                            session,
-                            node->rhs));
-                    qualified_symbol.namespaces.insert(
-                        qualified_symbol.namespaces.begin(),
-                        from_reference->symbol().name);
-                }
-
-                auto identifier_reference = _builder->make_identifier_reference(
-                    _program->current_scope(),
-                    qualified_symbol,
-                    _program->find_identifier(qualified_symbol));
-                auto import = _builder->make_import(
-                    _program->current_scope(),
-                    identifier_reference,
-                    from_reference,
-                    dynamic_cast<compiler::module*>(_program->current_top_level()->parent_element()));
-                add_expression_to_scope(_program->current_scope(), import);
-                return import;
-            }
-            case syntax::ast_node_types_t::namespace_expression: {
-                return _builder->make_namespace(
-                    _program->current_scope(),
-                    evaluate(r, session, node->rhs, default_block_type));
-            }
-            default: {
-                break;
+                    session,
+                    "P071",
+                    fmt::format(
+                        "ast node evaluation failed: id = {}, type = {}",
+                        node->id,
+                        syntax::ast_node_type_name(node->type)),
+                    node->location);
             }
         }
 
@@ -619,7 +164,7 @@ namespace basecode::compiler {
             common::result& r,
             compiler::session& session,
             compiler::element* element,
-            const syntax::ast_node_shared_ptr& node) {
+            const syntax::ast_node_t* node) {
         if (node == nullptr)
             return;
 
@@ -631,7 +176,7 @@ namespace basecode::compiler {
                 auto attribute = dynamic_cast<compiler::attribute*>(evaluate(
                     r,
                     session,
-                    child_node));
+                    child_node.get()));
                 attribute->parent_element(element);
 
                 auto& attributes = element->attributes();
@@ -643,7 +188,7 @@ namespace basecode::compiler {
     element* ast_evaluator::evaluate_in_scope(
             common::result& r,
             compiler::session& session,
-            const syntax::ast_node_shared_ptr& node,
+            const syntax::ast_node_t* node,
             compiler::block* scope,
             element_type_t default_block_type) {
         _program->push_scope(scope);
@@ -656,7 +201,7 @@ namespace basecode::compiler {
             common::result& r,
             compiler::session& session,
             compiler::procedure_type* proc_type,
-            const syntax::ast_node_shared_ptr& node) {
+            const syntax::ast_node_t* node) {
         if (node->children.empty())
             return;
 
@@ -666,7 +211,7 @@ namespace basecode::compiler {
                     auto attribute = _builder->make_attribute(
                         proc_type->scope(),
                         child_node->token.value,
-                        evaluate(r, session, child_node->lhs));
+                        evaluate(r, session, child_node->lhs.get()));
                     attribute->parent_element(proc_type);
                     proc_type->attributes().add(attribute);
                     break;
@@ -675,7 +220,7 @@ namespace basecode::compiler {
                     auto basic_block = dynamic_cast<compiler::block*>(evaluate_in_scope(
                         r,
                         session,
-                        child_node,
+                        child_node.get(),
                         proc_type->scope(),
                         element_type_t::proc_instance_block));
                     auto instance = _builder->make_procedure_instance(
@@ -721,20 +266,19 @@ namespace basecode::compiler {
     }
 
     compiler::element* ast_evaluator::resolve_symbol_or_evaluate(
-            common::result& r,
-            compiler::session& session,
-            const syntax::ast_node_shared_ptr& node) {
+            const evaluator_context_t& context,
+            const syntax::ast_node_t* node) {
         compiler::element* element = nullptr;
         if (node != nullptr
         &&  node->type == syntax::ast_node_types_t::symbol) {
             qualified_symbol_t qualified_symbol {};
-            _builder->make_qualified_symbol(qualified_symbol, node);
+            _builder->make_qualified_symbol(qualified_symbol, context.node);
             element = _builder->make_identifier_reference(
                 _program->current_scope(),
                 qualified_symbol,
                 _program->find_identifier(qualified_symbol));
         } else {
-            element = evaluate(r, session, node);
+            element = evaluate(context.r, context.session, node);
         }
         return element;
     }
@@ -742,7 +286,7 @@ namespace basecode::compiler {
     compiler::block* ast_evaluator::add_namespaces_to_scope(
             common::result& r,
             compiler::session& session,
-            const syntax::ast_node_shared_ptr& node,
+            const syntax::ast_node_t* node,
             compiler::symbol_element* symbol,
             compiler::block* parent_scope) {
         auto namespace_type = _program->find_type(qualified_symbol_t {
@@ -794,7 +338,7 @@ namespace basecode::compiler {
             common::result& r,
             compiler::session& session,
             compiler::composite_type* type,
-            const syntax::ast_node_shared_ptr& block) {
+            const syntax::ast_node_t* block) {
         auto u32_type = _program->find_type(qualified_symbol_t {.name = "u32"});
 
         for (const auto& child : block->children) {
@@ -812,7 +356,7 @@ namespace basecode::compiler {
                         auto symbol = dynamic_cast<compiler::symbol_element*>(evaluate_in_scope(
                             r,
                             session,
-                            symbol_node,
+                            symbol_node.get(),
                             type->scope()));
                         type_find_result_t type_find_result{};
                         _program->find_identifier_type(
@@ -822,7 +366,7 @@ namespace basecode::compiler {
                             type->scope());
                         auto init = _builder->make_initializer(
                             type->scope(),
-                            evaluate_in_scope(r, session, source_list->children[i], type->scope()));
+                            evaluate_in_scope(r, session, source_list->children[i].get(), type->scope()));
                         auto field_identifier = _builder->make_identifier(
                             type->scope(),
                             symbol,
@@ -844,7 +388,7 @@ namespace basecode::compiler {
                     auto symbol = dynamic_cast<compiler::symbol_element*>(evaluate_in_scope(
                         r,
                         session,
-                        expr_node,
+                        expr_node.get(),
                         type->scope()));
                     type_find_result_t type_find_result {};
                     _program->find_identifier_type(r, type_find_result, expr_node->rhs, type->scope());
@@ -883,7 +427,7 @@ namespace basecode::compiler {
             compiler::session& session,
             compiler::symbol_element* symbol,
             type_find_result_t& type_find_result,
-            const syntax::ast_node_shared_ptr& node,
+            const syntax::ast_node_t* node,
             size_t source_index,
             compiler::block* parent_scope) {
         auto scope = symbol->is_qualified()
@@ -900,7 +444,7 @@ namespace basecode::compiler {
         auto init_expr = (compiler::element*) nullptr;
         auto init = (compiler::initializer*) nullptr;
         if (node != nullptr) {
-            init_expr = evaluate_in_scope(r, session, source_node, scope);
+            init_expr = evaluate_in_scope(r, session, source_node.get(), scope);
             if (init_expr != nullptr) {
                 if (init_expr->element_type() == element_type_t::symbol) {
                     auto init_symbol = dynamic_cast<compiler::symbol_element*>(init_expr);
@@ -957,7 +501,7 @@ namespace basecode::compiler {
                 r,
                 session,
                 dynamic_cast<procedure_type*>(init->expression()),
-                source_node);
+                source_node.get());
         }
 
         if (init == nullptr
@@ -987,6 +531,710 @@ namespace basecode::compiler {
         }
 
         return new_identifier;
+    }
+
+    bool ast_evaluator::noop(
+            evaluator_context_t& context,
+            evaluator_result_t& result) {
+        return false;
+    }
+
+    bool ast_evaluator::symbol(
+            evaluator_context_t& context,
+            evaluator_result_t& result) {
+        result.element = _builder->make_symbol_from_node(context.r, context.node);
+        return true;
+    }
+
+    bool ast_evaluator::attribute(
+            evaluator_context_t& context,
+            evaluator_result_t& result) {
+        result.element = _builder->make_attribute(
+            _program->current_scope(),
+            context.node->token.value,
+            evaluate(context.r, context.session, context.node->lhs.get()));
+        result.element->location(context.node->location);
+        return true;
+    }
+
+    bool ast_evaluator::directive(
+            evaluator_context_t& context,
+            evaluator_result_t& result) {
+        auto expression = evaluate(context.r, context.session, context.node->lhs.get());
+        auto directive_element = _builder->make_directive(
+            _program->current_scope(),
+            context.node->token.value,
+            expression);
+        directive_element->location(context.node->location);
+        apply_attributes(context.r, context.session, directive_element, context.node);
+        directive_element->evaluate(context.r, context.session, _program);
+        result.element = directive_element;
+        return true;
+    }
+
+    bool ast_evaluator::module(
+            evaluator_context_t& context,
+            evaluator_result_t& result) {
+        auto module_block = _builder->make_block(
+            _program->_block,
+            element_type_t::module_block);
+        auto module = _builder->make_module(_program->_block, module_block);
+        module->source_file(context.session.current_source_file());
+        _program->_block->blocks().push_back(module_block);
+
+        _program->push_scope(module_block);
+        _program->_top_level_stack.push(module_block);
+
+        for (auto it = context.node->children.begin();
+             it != context.node->children.end();
+             ++it) {
+            auto expr = evaluate(
+                context.r,
+                context.session,
+                (*it).get(),
+                context.default_block_type);
+            if (expr == nullptr)
+                return false;
+            add_expression_to_scope(module_block, expr);
+            expr->parent_element(module);
+        }
+
+        _program->_top_level_stack.pop();
+        result.element = module;
+
+        return true;
+    }
+
+    bool ast_evaluator::module_expression(
+            evaluator_context_t& context,
+            evaluator_result_t& result) {
+        auto expr = resolve_symbol_or_evaluate(context, context.node->rhs.get());
+        auto reference = _builder->make_module_reference(
+            _program->current_scope(),
+            expr);
+
+        std::string path;
+        if (expr->is_constant() && expr->as_string(path)) {
+            boost::filesystem::path source_path(path);
+            auto current_source_file = context.session.current_source_file();
+            if (current_source_file != nullptr
+            &&  source_path.is_relative()) {
+                source_path = boost::filesystem::absolute(
+                    source_path,
+                    current_source_file->path().parent_path());
+            }
+            auto source_file = context.session.add_source_file(source_path);
+            auto module = _program->compile_module(context.r, context.session, source_file);
+            if (module == nullptr) {
+                _program->error(
+                    context.r,
+                    context.session,
+                    "C021",
+                    "unable to load module.",
+                    context.node->rhs->location);
+                return false;
+            }
+            reference->module(module);
+            result.element = reference;
+        } else {
+            _program->error(
+                context.r,
+                context.session,
+                "C021",
+                "expected string literal or constant string variable.",
+                context.node->rhs->location);
+            return false;
+        }
+
+        return true;
+    }
+
+    bool ast_evaluator::line_comment(
+            evaluator_context_t& context,
+            evaluator_result_t& result) {
+        result.element = _builder->make_comment(
+            _program->current_scope(),
+            comment_type_t::line,
+            context.node->token.value);
+        return true;
+    }
+
+    bool ast_evaluator::block_comment(
+            evaluator_context_t& context,
+            evaluator_result_t& result) {
+        result.element = _builder->make_comment(
+            _program->current_scope(),
+            comment_type_t::block,
+            context.node->token.value);
+        return true;
+    }
+
+    bool ast_evaluator::string_literal(
+            evaluator_context_t& context,
+            evaluator_result_t& result) {
+        result.element = _builder->make_string(
+            _program->current_scope(),
+            context.node->token.value);
+        result.element->location(context.node->location);
+        return true;
+    }
+
+    bool ast_evaluator::number_literal(
+            evaluator_context_t& context,
+            evaluator_result_t& result) {
+        switch (context.node->token.number_type) {
+            case syntax::number_types_t::integer: {
+                uint64_t value;
+                if (context.node->token.parse(value) == syntax::conversion_result_t::success) {
+                    if (context.node->token.is_signed()) {
+                        result.element = _builder->make_integer(
+                            _program->current_scope(),
+                            common::twos_complement(value));
+                    } else {
+                        result.element = _builder->make_integer(_program->current_scope(), value);
+                    }
+                    result.element->location(context.node->location);
+                    return true;
+                } else {
+                    _program->error(
+                        context.r,
+                        context.session,
+                        "P041",
+                        "invalid integer literal",
+                        context.node->location);
+                }
+                break;
+            }
+            case syntax::number_types_t::floating_point: {
+                double value;
+                if (context.node->token.parse(value) == syntax::conversion_result_t::success) {
+                    result.element = _builder->make_float(
+                        _program->current_scope(),
+                        value);
+                    result.element->location(context.node->location);
+                    return true;
+                } else {
+                    _program->error(
+                        context.r,
+                        context.session,
+                        "P041",
+                        "invalid float literal",
+                        context.node->location);
+                }
+                break;
+            }
+            default:
+                break;
+        }
+
+        return false;
+    }
+
+    bool ast_evaluator::boolean_literal(
+            evaluator_context_t& context,
+            evaluator_result_t& result) {
+        result.element = _builder->make_bool(
+            _program->current_scope(),
+            context.node->token.as_bool());
+        result.element->location(context.node->location);
+        return true;
+    }
+
+    bool ast_evaluator::namespace_expression(
+            evaluator_context_t& context,
+            evaluator_result_t& result) {
+        result.element = _builder->make_namespace(
+            _program->current_scope(),
+            evaluate(context.r, context.session, context.node->rhs.get(), context.default_block_type));
+        return true;
+    }
+
+    bool ast_evaluator::expression(
+            evaluator_context_t& context,
+            evaluator_result_t& result) {
+        result.element = _builder->make_expression(
+            _program->current_scope(),
+            evaluate(context.r, context.session, context.node->lhs.get()));
+        result.element->location(context.node->location);
+        return true;
+    }
+
+    bool ast_evaluator::argument_list(
+            evaluator_context_t& context,
+            evaluator_result_t& result) {
+        auto args = _builder->make_argument_list(_program->current_scope());
+        for (const auto& arg_node : context.node->children) {
+            auto arg = resolve_symbol_or_evaluate(context, arg_node.get());
+            args->add(arg);
+            arg->parent_element(args);
+        }
+        result.element = args;
+        return true;
+    }
+
+    bool ast_evaluator::unary_operator(
+            evaluator_context_t& context,
+            evaluator_result_t& result) {
+        auto it = s_unary_operators.find(context.node->token.type);
+        if (it == s_unary_operators.end())
+            return false;
+        result.element = _builder->make_unary_operator(
+            _program->current_scope(),
+            it->second,
+            resolve_symbol_or_evaluate(context, context.node->rhs.get()));
+        return true;
+    }
+
+    bool ast_evaluator::binary_operator(
+            evaluator_context_t& context,
+            evaluator_result_t& result) {
+        auto it = s_binary_operators.find(context.node->token.type);
+        if (it == s_binary_operators.end())
+            return false;
+        auto lhs = resolve_symbol_or_evaluate(context, context.node->lhs.get());
+        auto rhs = resolve_symbol_or_evaluate(context, context.node->rhs.get());
+        result.element = _builder->make_binary_operator(
+            _program->current_scope(),
+            it->second,
+            lhs,
+            rhs);
+        return true;
+    }
+
+    bool ast_evaluator::cast_expression(
+            evaluator_context_t& context,
+            evaluator_result_t& result) {
+        auto type_name = context.node->lhs->lhs->children[0]->token.value;
+        auto type = _program->find_type(qualified_symbol_t {.name = type_name});
+        if (type == nullptr) {
+            _program->error(
+                context.r,
+                context.session,
+                "P002",
+                fmt::format("unknown type '{}'.", type_name),
+                context.node->lhs->lhs->location);
+            return false;
+        }
+        result.element = _builder->make_cast(
+            _program->current_scope(),
+            type,
+            resolve_symbol_or_evaluate(context, context.node->rhs.get()));
+        result.element->location(context.node->location);
+        return true;
+    }
+
+    bool ast_evaluator::alias_expression(
+            evaluator_context_t& context,
+            evaluator_result_t& result) {
+        result.element = _builder->make_alias(
+            _program->current_scope(),
+            resolve_symbol_or_evaluate(context, context.node->lhs.get()));
+        result.element->location(context.node->location);
+        return true;
+    }
+
+    bool ast_evaluator::return_statement(
+            evaluator_context_t& context,
+            evaluator_result_t& result) {
+        auto return_element = _builder->make_return(_program->current_scope());
+        auto& expressions = return_element->expressions();
+        for (const auto& arg_node : context.node->rhs->children) {
+            auto arg = resolve_symbol_or_evaluate(context, arg_node.get());
+            expressions.push_back(arg);
+            arg->parent_element(return_element);
+        }
+        result.element = return_element;
+        return true;
+    }
+
+    bool ast_evaluator::import_expression(
+            evaluator_context_t& context,
+            evaluator_result_t& result) {
+        qualified_symbol_t qualified_symbol {};
+        _builder->make_qualified_symbol(qualified_symbol, context.node->lhs.get());
+
+        compiler::identifier_reference* from_reference = nullptr;
+        if (context.node->rhs != nullptr) {
+            from_reference = dynamic_cast<compiler::identifier_reference*>(
+                resolve_symbol_or_evaluate(context, context.node->rhs.get()));
+            qualified_symbol.namespaces.insert(
+                qualified_symbol.namespaces.begin(),
+                from_reference->symbol().name);
+        }
+
+        auto identifier_reference = _builder->make_identifier_reference(
+            _program->current_scope(),
+            qualified_symbol,
+            _program->find_identifier(qualified_symbol));
+        auto import = _builder->make_import(
+            _program->current_scope(),
+            identifier_reference,
+            from_reference,
+            dynamic_cast<compiler::module*>(_program->current_top_level()->parent_element()));
+        add_expression_to_scope(_program->current_scope(), import);
+
+        result.element = import;
+
+        return true;
+    }
+
+    bool ast_evaluator::basic_block(
+            evaluator_context_t& context,
+            evaluator_result_t& result) {
+        auto active_scope = _program->push_new_block(context.default_block_type);
+
+        for (auto it = context.node->children.begin();
+             it != context.node->children.end();
+             ++it) {
+            auto current_node = *it;
+            auto expr = evaluate(
+                context.r,
+                context.session,
+                current_node.get(),
+                context.default_block_type);
+            if (expr == nullptr) {
+                _program->error(
+                    context.r,
+                    context.session,
+                    "C024",
+                    "invalid statement",
+                    current_node->location);
+                return false;
+            }
+            add_expression_to_scope(active_scope, expr);
+            expr->parent_element(active_scope);
+        }
+
+        result.element = _program->pop_scope();
+        return true;
+    }
+
+    bool ast_evaluator::proc_call(
+            evaluator_context_t& context,
+            evaluator_result_t& result) {
+        qualified_symbol_t qualified_symbol {};
+        _builder->make_qualified_symbol(qualified_symbol, context.node->lhs.get());
+        auto proc_identifier = _program->find_identifier(qualified_symbol);
+
+        compiler::argument_list* args = nullptr;
+        auto expr = evaluate(context.r, context.session, context.node->rhs.get());
+        if (expr != nullptr) {
+            args = dynamic_cast<compiler::argument_list*>(expr);
+        }
+        result.element = _builder->make_procedure_call(
+            _program->current_scope(),
+            _builder->make_identifier_reference(
+                _program->current_scope(),
+                qualified_symbol,
+                proc_identifier),
+            args);
+        result.element->location(context.node->location);
+
+        return true;
+    }
+
+    bool ast_evaluator::statement(
+            evaluator_context_t& context,
+            evaluator_result_t& result) {
+        label_list_t labels {};
+
+        if (context.node->lhs != nullptr) {
+            for (const auto& label : context.node->lhs->children) {
+                labels.push_back(_builder->make_label(
+                    _program->current_scope(),
+                    label->token.value));
+            }
+        }
+
+        auto expr = evaluate(
+            context.r,
+            context.session,
+            context.node->rhs.get());
+        if (expr == nullptr)
+            return false;
+
+        if (expr->element_type() == element_type_t::symbol) {
+            type_find_result_t find_type_result {};
+            _program->find_identifier_type(
+                context.r,
+                find_type_result,
+                context.node->rhs->rhs);
+            expr = add_identifier_to_scope(
+                context.r,
+                context.session,
+                dynamic_cast<compiler::symbol_element*>(expr),
+                find_type_result,
+                nullptr,
+                0);
+        }
+
+        result.element = _builder->make_statement(
+            _program->current_scope(),
+            labels,
+            expr);
+
+        return true;
+    }
+
+    bool ast_evaluator::enum_expression(
+            evaluator_context_t& context,
+            evaluator_result_t& result) {
+        auto active_scope = _program->current_scope();
+        auto enum_type = _builder->make_enum_type(
+            context.r,
+            active_scope,
+            _builder->make_block(active_scope, element_type_t::block));
+        active_scope->types().add(enum_type);
+        add_composite_type_fields(
+            context.r,
+            context.session,
+            enum_type,
+            context.node->rhs.get());
+        if (!enum_type->initialize(context.r, _program))
+            return false;
+        result.element = enum_type;
+
+        return true;
+    }
+
+    bool ast_evaluator::struct_expression(
+            evaluator_context_t& context,
+            evaluator_result_t& result) {
+        auto active_scope = _program->current_scope();
+        auto struct_type = _builder->make_struct_type(
+            context.r,
+            active_scope,
+            _builder->make_block(active_scope, element_type_t::block));
+        active_scope->types().add(struct_type);
+        add_composite_type_fields(
+            context.r,
+            context.session,
+            struct_type,
+            context.node->rhs.get());
+        if (!struct_type->initialize(context.r, _program))
+            return false;
+        result.element = struct_type;
+        return true;
+    }
+
+    bool ast_evaluator::union_expression(
+            evaluator_context_t& context,
+            evaluator_result_t& result) {
+        auto active_scope = _program->current_scope();
+        auto union_type = _builder->make_union_type(
+            context.r,
+            active_scope,
+            _builder->make_block(active_scope, element_type_t::block));
+        active_scope->types().add(union_type);
+        add_composite_type_fields(
+            context.r,
+            context.session,
+            union_type,
+            context.node->rhs.get());
+        if (!union_type->initialize(context.r, _program))
+            return false;
+        result.element = union_type;
+        return true;
+    }
+
+    bool ast_evaluator::else_expression(
+            evaluator_context_t& context,
+            evaluator_result_t& result) {
+        result.element = evaluate(
+            context.r,
+            context.session,
+            context.node->children[0].get());
+        return true;
+    }
+
+    bool ast_evaluator::if_expression(
+            evaluator_context_t& context,
+            evaluator_result_t& result) {
+        auto predicate = evaluate(context.r, context.session, context.node->lhs.get());
+        auto true_branch = evaluate(context.r, context.session, context.node->children[0].get());
+        auto false_branch = evaluate(context.r, context.session, context.node->rhs.get());
+        result.element = _builder->make_if(
+            _program->current_scope(),
+            predicate,
+            true_branch,
+            false_branch);
+        return true;
+    }
+
+    bool ast_evaluator::proc_expression(
+            evaluator_context_t& context,
+            evaluator_result_t& result) {
+        auto active_scope = _program->current_scope();
+        auto block_scope = _builder->make_block(
+            active_scope,
+            element_type_t::proc_type_block);
+        auto proc_type = _builder->make_procedure_type(active_scope, block_scope);
+        active_scope->types().add(proc_type);
+
+        auto count = 0;
+        for (const auto& type_node : context.node->lhs->children) {
+            switch (type_node->type) {
+                case syntax::ast_node_types_t::symbol: {
+                    auto return_identifier = _builder->make_identifier(
+                        block_scope,
+                        _builder->make_symbol(block_scope, fmt::format("_{}", count++)),
+                        nullptr);
+                    return_identifier->usage(identifier_usage_t::stack);
+                    return_identifier->type(_program->find_type(qualified_symbol_t {
+                        .name = type_node->children[0]->token.value
+                    }));
+                    auto new_field = _builder->make_field(block_scope, return_identifier);
+                    proc_type->returns().add(new_field);
+                    new_field->parent_element(proc_type);
+                    break;
+                }
+                default: {
+                    break;
+                }
+            }
+        }
+
+        for (const auto& param_node : context.node->rhs->children) {
+            switch (param_node->type) {
+                case syntax::ast_node_types_t::assignment: {
+                    // XXX: in the parameter list, multiple targets is an error
+                    const auto& first_target = param_node->lhs->children[0];
+                    auto symbol = dynamic_cast<compiler::symbol_element*>(evaluate_in_scope(
+                        context.r,
+                        context.session,
+                        first_target.get(),
+                        block_scope));
+                    type_find_result_t find_type_result {};
+                    _program->find_identifier_type(
+                        context.r,
+                        find_type_result,
+                        first_target->rhs,
+                        block_scope);
+                    auto param_identifier = add_identifier_to_scope(
+                        context.r,
+                        context.session,
+                        symbol,
+                        find_type_result,
+                        param_node.get(),
+                        0,
+                        block_scope);
+                    param_identifier->usage(identifier_usage_t::stack);
+                    auto field = _builder->make_field(block_scope, param_identifier);
+                    proc_type->parameters().add(field);
+                    field->parent_element(proc_type);
+                    break;
+                }
+                case syntax::ast_node_types_t::symbol: {
+                    auto symbol = dynamic_cast<compiler::symbol_element*>(evaluate_in_scope(
+                        context.r,
+                        context.session,
+                        param_node.get(),
+                        block_scope));
+                    type_find_result_t find_type_result {};
+                    _program->find_identifier_type(
+                        context.r,
+                        find_type_result,
+                        param_node->rhs,
+                        block_scope);
+                    auto param_identifier = add_identifier_to_scope(
+                        context.r,
+                        context.session,
+                        symbol,
+                        find_type_result,
+                        nullptr,
+                        0,
+                        block_scope);
+                    if (param_identifier != nullptr) {
+                        param_identifier->usage(identifier_usage_t::stack);
+                        auto field = _builder->make_field(block_scope, param_identifier);
+                        proc_type->parameters().add(field);
+                        field->parent_element(proc_type);
+                    } else {
+                        _program->error(
+                            context.r,
+                            context.session,
+                            "P014",
+                            fmt::format("invalid parameter declaration: {}", symbol->name()),
+                            symbol->location());
+                    }
+                    break;
+                }
+                default: {
+                    break;
+                }
+            }
+        }
+
+        result.element = proc_type;
+
+        return true;
+    }
+
+    bool ast_evaluator::assignment(
+            evaluator_context_t& context,
+            evaluator_result_t& result) {
+        const auto& target_list = context.node->lhs;
+        const auto& source_list = context.node->rhs;
+
+        if (target_list->children.size() != source_list->children.size()) {
+            _program->error(
+                context.r,
+                context.session,
+                "P027",
+                "the number of left-hand-side targets must match"
+                " the number of right-hand-side expressions.",
+                source_list->location);
+            return false;
+        }
+
+        element_list_t list {};
+
+        for (size_t i = 0; i < target_list->children.size(); i++) {
+            const auto& symbol_node = target_list->children[i];
+
+            qualified_symbol_t qualified_symbol {};
+            _builder->make_qualified_symbol(qualified_symbol, symbol_node.get());
+            auto existing_identifier = _program->find_identifier(qualified_symbol);
+            if (existing_identifier != nullptr) {
+                auto rhs = evaluate(
+                    context.r,
+                    context.session,
+                    source_list->children[i].get());
+                if (rhs == nullptr)
+                    return false;
+                auto binary_op = _builder->make_binary_operator(
+                    _program->current_scope(),
+                    operator_type_t::assignment,
+                    existing_identifier,
+                    rhs);
+                apply_attributes(context.r, context.session, binary_op, context.node);
+                list.emplace_back(binary_op);
+            } else {
+                auto symbol = dynamic_cast<compiler::symbol_element*>(evaluate(
+                    context.r,
+                    context.session,
+                    symbol_node.get()));
+                type_find_result_t find_type_result {};
+                _program->find_identifier_type(
+                    context.r,
+                    find_type_result,
+                    symbol_node->rhs);
+                auto new_identifier = add_identifier_to_scope(
+                    context.r,
+                    context.session,
+                    symbol,
+                    find_type_result,
+                    context.node,
+                    i);
+                if (new_identifier == nullptr)
+                    return false;
+                list.emplace_back(new_identifier);
+            }
+        }
+
+        result.element = list.front();
+
+        return true;
     }
 
 };
