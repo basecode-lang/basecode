@@ -39,8 +39,10 @@ namespace basecode::compiler {
     std::string numeric_type::narrow_to_value(double value) {
         if (value < -3.4e+38 || value > 3.4e+38)
             return "f64";
-        else
+        else if (value >= -3.4e+38 && value <= 3.4e+38)
             return "f32";
+        else
+            return "unknown";
     }
 
     std::string numeric_type::narrow_to_value(uint64_t value) {
@@ -65,7 +67,7 @@ namespace basecode::compiler {
                 }
             }
         }
-        return "u32";
+        return "unknown";
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -107,6 +109,26 @@ namespace basecode::compiler {
 
     bool numeric_type::is_signed() const {
         return _is_signed;
+    }
+
+    bool numeric_type::on_type_check(compiler::type* other) {
+        auto other_numeric_type = dynamic_cast<compiler::numeric_type*>(other);
+        if (other_numeric_type == nullptr)
+            return false;
+
+        if (symbol()->name() == other_numeric_type->symbol()->name())
+            return true;
+
+        if (_number_class == type_number_class_t::floating_point
+        &&  other_numeric_type->number_class() == type_number_class_t::floating_point) {
+            return other_numeric_type->size_in_bytes() < size_in_bytes();
+        }
+
+        if (is_signed() && other_numeric_type->is_signed()) {
+            return other_numeric_type->size_in_bytes() < size_in_bytes();
+        }
+
+        return other_numeric_type->size_in_bytes() <= size_in_bytes();
     }
 
     type_number_class_t numeric_type::on_number_class() const {

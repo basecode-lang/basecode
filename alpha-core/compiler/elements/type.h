@@ -38,6 +38,8 @@ namespace basecode::compiler {
 
         void alignment(size_t value);
 
+        bool type_check(compiler::type* other);
+
         type_access_model_t access_model() const;
 
         type_number_class_t number_class() const;
@@ -52,6 +54,8 @@ namespace basecode::compiler {
             compiler::program* program);
 
         void size_in_bytes(size_t value);
+
+        virtual bool on_type_check(compiler::type* other);
 
         virtual type_access_model_t on_access_model() const;
 

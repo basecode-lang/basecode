@@ -28,4 +28,9 @@ namespace basecode::compiler {
         return true;
     }
 
+    bool namespace_type::on_type_check(compiler::type* other) {
+        return other != nullptr
+            && other->symbol()->name() == symbol()->name();
+    }
+
 };

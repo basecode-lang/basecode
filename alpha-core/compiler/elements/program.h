@@ -90,6 +90,7 @@ namespace basecode::compiler {
         friend class module_type;
         friend class numeric_type;
         friend class pointer_type;
+        friend class symbol_element;
         friend class unary_operator;
         friend class namespace_type;
         friend class procedure_type;
@@ -104,6 +105,10 @@ namespace basecode::compiler {
             common::result& r,
             const block_visitor_callable& callable,
             compiler::block* root_block = nullptr);
+
+        bool type_check(
+            common::result& r,
+            compiler::session& session);
 
         void initialize_core_types(common::result& r);
 

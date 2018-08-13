@@ -25,6 +25,8 @@ namespace basecode::compiler {
         bool on_initialize(
             common::result& r,
             compiler::program* program) override;
+
+        bool on_type_check(compiler::type* other) override;
     };
 
 };

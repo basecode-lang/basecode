@@ -11,6 +11,7 @@
 
 #include "program.h"
 #include "module_type.h"
+#include "symbol_element.h"
 
 namespace basecode::compiler {
 
@@ -29,6 +30,11 @@ namespace basecode::compiler {
             compiler::program* program) {
         symbol(program->builder().make_symbol(parent_scope(), "module"));
         return true;
+    }
+
+    bool module_type::on_type_check(compiler::type* other) {
+        return other != nullptr
+            && other->symbol()->name() == symbol()->name();
     }
 
 };

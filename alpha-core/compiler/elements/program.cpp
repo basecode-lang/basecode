@@ -931,6 +931,9 @@ namespace basecode::compiler {
         if (!resolve_unknown_types(r))
             return false;
 
+        if (!type_check(r, session))
+            return false;
+
         if (!r.is_failed()) {
             auto& listing = _assembler->listing();
             listing.add_source_file("top_level.basm");
@@ -1358,6 +1361,54 @@ namespace basecode::compiler {
                 attributes.add(attribute);
             }
         }
+    }
+
+    bool program::type_check(
+            common::result& r,
+            compiler::session& session) {
+        auto identifiers = elements().find_by_type(element_type_t::identifier);
+        for (auto identifier : identifiers) {
+            auto var = dynamic_cast<compiler::identifier*>(identifier);
+            auto init = var->initializer();
+            if (init == nullptr)
+                continue;
+            auto rhs_type = init->infer_type(this);
+            if (!var->type()->type_check(rhs_type)) {
+                error(
+                    r,
+                    init,
+                    "C051",
+                    fmt::format(
+                        "type mismatch: cannot assign {} to {}.",
+                        rhs_type->symbol()->name(),
+                        var->type()->symbol()->name()),
+                    var->location());
+            }
+        }
+
+        auto binary_ops = elements().find_by_type(element_type_t::binary_operator);
+        for (auto op : binary_ops) {
+            auto binary_op = dynamic_cast<compiler::binary_operator*>(op);
+            if (binary_op->operator_type() != operator_type_t::assignment)
+                continue;
+
+            // XXX: revisit this for destructuring/multiple assignment
+            auto var = dynamic_cast<compiler::identifier*>(binary_op->lhs());
+            auto rhs_type = binary_op->rhs()->infer_type(this);
+            if (!var->type()->type_check(rhs_type)) {
+                error(
+                    r,
+                    binary_op,
+                    "C051",
+                    fmt::format(
+                        "type mismatch: cannot assign {} to {}.",
+                        rhs_type->symbol()->name(),
+                        var->type()->symbol()->name()),
+                    binary_op->rhs()->location());
+            }
+        }
+
+        return !r.is_failed();
     }
 
     void program::add_composite_type_fields(

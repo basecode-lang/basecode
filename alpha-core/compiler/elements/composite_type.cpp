@@ -12,6 +12,7 @@
 #include "field.h"
 #include "block.h"
 #include "identifier.h"
+#include "symbol_element.h"
 #include "composite_type.h"
 
 namespace basecode::compiler {
@@ -57,6 +58,11 @@ namespace basecode::compiler {
 
     composite_types_t composite_type::type() const {
         return _type;
+    }
+
+    bool composite_type::on_type_check(compiler::type* other) {
+        return other != nullptr
+               && other->symbol()->name() == symbol()->name();
     }
 
     type_access_model_t composite_type::on_access_model() const {

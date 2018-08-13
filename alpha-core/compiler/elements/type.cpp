@@ -58,6 +58,10 @@ namespace basecode::compiler {
         _size_in_bytes = value;
     }
 
+    bool type::type_check(compiler::type* other) {
+        return on_type_check(other);
+    }
+
     type_access_model_t type::access_model() const {
         return on_access_model();
     }
@@ -68,6 +72,10 @@ namespace basecode::compiler {
 
     compiler::symbol_element* type::symbol() const {
         return _symbol;
+    }
+
+    bool type::on_type_check(compiler::type* other) {
+        return false;
     }
 
     type_access_model_t type::on_access_model() const {

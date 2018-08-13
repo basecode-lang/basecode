@@ -40,6 +40,8 @@ namespace basecode::compiler {
             common::result& r,
             compiler::program* program) override;
 
+        bool on_type_check(compiler::type* other) override;
+
         type_access_model_t on_access_model() const override;
 
         void on_owned_elements(element_list_t& list) override;

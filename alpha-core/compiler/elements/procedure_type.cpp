@@ -160,6 +160,13 @@ namespace basecode::compiler {
         return _instances;
     }
 
+    bool procedure_type::on_type_check(compiler::type* other) {
+        if (other == nullptr)
+            return false;
+
+        return symbol()->name() == other->symbol()->name();
+    }
+
     type_access_model_t procedure_type::on_access_model() const {
         return type_access_model_t::pointer;
     }

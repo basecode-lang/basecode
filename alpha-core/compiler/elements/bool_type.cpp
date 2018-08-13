@@ -28,6 +28,11 @@ namespace basecode::compiler {
         return true;
     }
 
+    bool bool_type::on_type_check(compiler::type* other) {
+        return other != nullptr
+            && other->element_type() == element_type_t::bool_type;
+    }
+
     type_access_model_t bool_type::on_access_model() const {
         return type_access_model_t::value;
     }
