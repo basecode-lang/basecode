@@ -33,7 +33,7 @@ namespace basecode::compiler {
     ///////////////////////////////////////////////////////////////////////////
 
     bool variable_t::init(
-            vm::assembler* assembler,
+            emit_context_t& context,
             vm::instruction_block* block) {
         if (!live)
             return false;
@@ -42,7 +42,7 @@ namespace basecode::compiler {
             return true;
 
         if (usage == identifier_usage_t::heap) {
-            if (!address_reg.reserve(assembler))
+            if (!address_reg.reserve(context.assembler))
                 return false;
 
             if (address_offset != 0) {
@@ -55,7 +55,12 @@ namespace basecode::compiler {
             }
             block
                 ->current_entry()
-                ->comment(fmt::format("identifier '{}' address (global)", name));
+                ->blank_lines(1)
+                ->comment(
+                    fmt::format(
+                        "identifier '{}' address (global)",
+                        name),
+                    context.indent);
         }
 
         value_reg.reg.type = vm::register_type_t::integer;
@@ -73,17 +78,17 @@ namespace basecode::compiler {
     }
 
     bool variable_t::read(
-            vm::assembler* assembler,
+            emit_context_t& context,
             vm::instruction_block* block) {
         if (!live)
             return false;
 
-        if (!init(assembler, block))
+        if (!init(context, block))
             return false;
 
         std::string type_name = "global";
         if (requires_read) {
-            if (!value_reg.reserve(assembler))
+            if (!value_reg.reserve(context.assembler))
                 return false;
 
             if (usage == identifier_usage_t::stack) {
@@ -96,7 +101,13 @@ namespace basecode::compiler {
                 block->load_to_reg(value_reg.reg, address_reg.reg);
                 block
                     ->current_entry()
-                    ->comment(fmt::format("load identifier '{}' value ({})", name, type_name));
+                    ->blank_lines(1)
+                    ->comment(
+                        fmt::format(
+                            "load identifier '{}' value ({})",
+                            name,
+                            type_name),
+                        context.indent);
             }
 
             requires_read = false;
@@ -106,9 +117,9 @@ namespace basecode::compiler {
     }
 
     bool variable_t::write(
-            vm::assembler* assembler,
+            emit_context_t& context,
             vm::instruction_block* block) {
-        auto target_reg = assembler->current_target_register();
+        auto target_reg = context.assembler->current_target_register();
         if (target_reg == nullptr)
             return false;
 
@@ -123,7 +134,7 @@ namespace basecode::compiler {
         return true;
     }
 
-    void variable_t::make_live(vm::assembler* assembler) {
+    void variable_t::make_live(emit_context_t& context) {
         if (live)
             return;
         live = true;
@@ -131,14 +142,14 @@ namespace basecode::compiler {
         requires_read = type->access_model() != type_access_model_t::pointer;
     }
 
-    void variable_t::make_dormat(vm::assembler* assembler) {
+    void variable_t::make_dormant(emit_context_t& context) {
         if (!live)
             return;
         live = false;
         requires_read = false;
         address_loaded = false;
-        value_reg.release(assembler);
-        address_reg.release(assembler);
+        value_reg.release(context.assembler);
+        address_reg.release(context.assembler);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -211,7 +222,7 @@ namespace basecode::compiler {
     void emit_context_t::free_variable(const std::string& name) {
         auto var = variable(name);
         if (var != nullptr) {
-            var->make_dormat(assembler);
+            var->make_dormant(*this);
             variables.erase(name);
         }
     }

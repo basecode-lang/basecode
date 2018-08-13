@@ -33,6 +33,11 @@ namespace basecode::compiler {
     bool binary_operator::on_emit(
             common::result& r,
             emit_context_t& context) {
+        context.indent = 4;
+        defer({
+            context.indent = 0;
+        });
+
         auto instruction_block = context.assembler->current_block();
         switch (operator_type()) {
             case operator_type_t::add:
@@ -80,13 +85,13 @@ namespace basecode::compiler {
                     return false;
                 }
 
-                var->make_live(context.assembler);
+                var->make_live(context);
                 defer({
-                    var->make_dormat(context.assembler);
+                    var->make_dormant(context);
                 });
 
                 _lhs->emit(r, context);
-                var->init(context.assembler, instruction_block);
+                var->init(context, instruction_block);
 
                 vm::register_t rhs_reg;
                 rhs_reg.size = var->value_reg.reg.size;
@@ -103,7 +108,7 @@ namespace basecode::compiler {
                 }
                 context.assembler->push_target_register(rhs_reg);
                 _rhs->emit(r, context);
-                var->write(context.assembler, instruction_block);
+                var->write(context, instruction_block);
                 context.assembler->pop_target_register();
                 context.assembler->free_reg(rhs_reg);
                 break;

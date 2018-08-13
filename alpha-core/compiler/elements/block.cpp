@@ -50,9 +50,9 @@ namespace basecode::compiler {
 
                 auto parent_ns = parent_element_as<compiler::namespace_element>();
                 if (parent_ns != nullptr) {
-                    instruction_block->current_entry()->comment(fmt::format(
-                        "namespace: {}",
-                        parent_ns->name()));
+                    instruction_block->current_entry()->comment(
+                        fmt::format("namespace: {}", parent_ns->name()),
+                        context.indent);
                 }
                 instruction_block->current_entry()->blank_lines(1);
 
@@ -71,9 +71,9 @@ namespace basecode::compiler {
 
                 auto parent_module = parent_element_as<compiler::module>();
                 if (parent_module != nullptr) {
-                    instruction_block->current_entry()->comment(fmt::format(
-                        "module: {}",
-                        parent_module->source_file()->path().string()));
+                    instruction_block->current_entry()->comment(
+                        fmt::format("module: {}", parent_module->source_file()->path().string()),
+                        context.indent);
                     clean_up = !parent_module->is_root();
                 }
                 instruction_block->current_entry()->blank_lines(1);

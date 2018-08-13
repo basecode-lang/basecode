@@ -718,9 +718,9 @@ namespace basecode::compiler {
                             }
                             current_entry->blank_lines(1);
                         }
-                        instruction_block->current_entry()->comment(fmt::format(
-                            "\"{}\"",
-                            string_literal->value()));
+                        instruction_block->current_entry()->comment(
+                            fmt::format("\"{}\"", string_literal->value()),
+                            context.indent);
                         instruction_block->string(string_literal->escaped_value());
 
                         break;
@@ -808,9 +808,9 @@ namespace basecode::compiler {
                                     auto string_literal = dynamic_cast<compiler::string_literal*>(
                                         init->expression());
                                     if (string_literal != nullptr) {
-                                        instruction_block->current_entry()->comment(fmt::format(
-                                            "\"{}\"",
-                                            string_literal->value()));
+                                        instruction_block->current_entry()->comment(
+                                            fmt::format("\"{}\"", string_literal->value()),
+                                            context.indent);
                                         instruction_block->string(string_literal->value());
                                     }
                                 }

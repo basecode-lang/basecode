@@ -30,9 +30,9 @@ namespace basecode::compiler {
         if (_expression == nullptr)
             return true;
         auto instruction_block = context.assembler->current_block();
-        instruction_block->current_entry()->comment(fmt::format(
-            "XXX: cast<{}> not yet implemented",
-            _type->symbol()->name()));
+        instruction_block->current_entry()->comment(
+            fmt::format("XXX: cast<{}> not yet implemented", _type->symbol()->name()),
+            context.indent);
         return _expression->emit(r, context);
     }
 

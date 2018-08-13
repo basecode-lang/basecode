@@ -122,16 +122,16 @@ namespace basecode::compiler {
             emit_context_t& context,
             element* e) {
         element_register_t result {
-            .assembler = context.assembler
+            .context = &context
         };
 
         auto var = context.variable_for_element(e);
         if (var != nullptr) {
-            var->make_live(context.assembler);
+            var->make_live(context);
 
             result.var = var;
             result.var->read(
-                context.assembler,
+                context,
                 context.assembler->current_block());
             result.valid = true;
             result.reg = var->value_reg.reg;

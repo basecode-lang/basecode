@@ -163,13 +163,13 @@ namespace basecode::compiler {
     ///////////////////////////////////////////////////////////////////////////
 
     element_register_t::~element_register_t() {
-        if (assembler == nullptr)
+        if (context == nullptr)
             return;
         if (clean_up) {
             if (var != nullptr) {
-                var->make_dormat(assembler);
+                var->make_dormant(*context);
             } else {
-                assembler->free_reg(reg);
+                context->assembler->free_reg(reg);
             }
         }
     }

@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <common/defer.h>
 #include <vm/instruction_block.h>
 #include "program.h"
 #include "identifier.h"
@@ -31,6 +32,11 @@ namespace basecode::compiler {
     bool procedure_call::on_emit(
             common::result& r,
             emit_context_t& context) {
+        context.indent = 4;
+        defer({
+            context.indent = 0;
+        });
+
         auto instruction_block = context.assembler->current_block();
         auto identifier = _reference->identifier();
         auto init = identifier->initializer();
@@ -45,9 +51,9 @@ namespace basecode::compiler {
         if (procedure_type->is_foreign()) {
             instruction_block->push_u16(static_cast<uint16_t>(_arguments->elements().size()));
             instruction_block->call_foreign(procedure_type->foreign_address());
-            instruction_block->current_entry()->comment(fmt::format(
-                "foreign call: {}",
-                identifier->symbol()->name()));
+            instruction_block->current_entry()->comment(
+                fmt::format("foreign call: {}", identifier->symbol()->name()),
+                context.indent);
         } else {
             instruction_block->call(identifier->symbol()->name());
         }

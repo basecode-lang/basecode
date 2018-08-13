@@ -441,6 +441,7 @@ namespace basecode::compiler {
     ///////////////////////////////////////////////////////////////////////////
 
     struct variable_t;
+    struct emit_context_t;
 
     struct element_register_t {
         ~element_register_t();
@@ -451,7 +452,7 @@ namespace basecode::compiler {
         bool clean_up = false;
         vm::register_t reg;
         variable_t* var = nullptr;
-        vm::assembler* assembler = nullptr;
+        emit_context_t* context = nullptr;
     };
 
     ///////////////////////////////////////////////////////////////////////////

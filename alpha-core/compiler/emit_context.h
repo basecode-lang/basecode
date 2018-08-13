@@ -36,22 +36,24 @@ namespace basecode::compiler {
         vm::register_t reg;
     };
 
+    struct emit_context_t;
+
     struct variable_t {
         bool init(
-            vm::assembler* assembler,
+            emit_context_t& context,
             vm::instruction_block* block);
 
         bool read(
-            vm::assembler* assembler,
+            emit_context_t& context,
             vm::instruction_block* block);
 
         bool write(
-            vm::assembler* assembler,
+            emit_context_t& context,
             vm::instruction_block* block);
 
-        void make_live(vm::assembler* assembler);
+        void make_live(emit_context_t& context);
 
-        void make_dormat(vm::assembler* assembler);
+        void make_dormant(emit_context_t& context);
 
         std::string name;
         bool live = false;
@@ -117,6 +119,7 @@ namespace basecode::compiler {
 
         variable_t* variable_for_element(compiler::element* element);
 
+        uint8_t indent = 0;
         vm::terp* terp = nullptr;
         vm::assembler* assembler = nullptr;
         compiler::program* program = nullptr;

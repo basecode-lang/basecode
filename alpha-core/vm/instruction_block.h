@@ -61,6 +61,13 @@ namespace basecode::vm {
         std::vector<uint64_t> values {};
     };
 
+    struct comment_t {
+        uint8_t indent {};
+        std::string value {};
+    };
+
+    using comment_list_t = std::vector<comment_t>;
+
     enum class block_entry_type_t : uint8_t {
         section = 1,
         memo,
@@ -105,38 +112,45 @@ namespace basecode::vm {
             return _address;
         }
 
-        void address(uint64_t value) {
-            _address = value;
-            for (auto label : _labels)
-                label->address(value);
-        }
-
         uint16_t blank_lines() const {
             return _blank_lines;
-        }
-
-        void label(vm::label* label) {
-            _labels.push_back(label);
         }
 
         block_entry_type_t type() const {
             return _type;
         }
 
-        void blank_lines(uint16_t count) {
-            _blank_lines += count;
+        block_entry_t* address(uint64_t value) {
+            _address = value;
+            for (auto label : _labels)
+                label->address(value);
+            return this;
         }
 
-        void comment(const std::string& value) {
-            _comments.push_back(value);
+        const comment_list_t& comments() const {
+            return _comments;
+        }
+
+        block_entry_t* label(vm::label* label) {
+            _labels.push_back(label);
+            return this;
+        }
+
+        block_entry_t* blank_lines(uint16_t count) {
+            _blank_lines += count;
+            return this;
         }
 
         const std::vector<vm::label*>& labels() const {
             return _labels;
         }
 
-        const std::vector<std::string>& comments() const {
-            return _comments;
+        block_entry_t* comment(const std::string& value, uint8_t indent = 0) {
+            _comments.push_back(comment_t {
+                .indent = indent,
+                .value = value
+            });
+            return this;
         }
 
     private:
@@ -144,8 +158,8 @@ namespace basecode::vm {
         uint64_t _address = 0;
         block_entry_type_t _type;
         uint16_t _blank_lines = 0;
+        comment_list_t _comments {};
         std::vector<vm::label*> _labels {};
-        std::vector<std::string> _comments {};
     };
 
     class instruction_block {

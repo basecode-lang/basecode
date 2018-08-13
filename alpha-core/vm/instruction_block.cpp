@@ -858,9 +858,12 @@ namespace basecode::vm {
                 entry.blank_lines());
 
             for (const auto& comment : entry.comments()) {
+                std::string indent;
+                if (comment.indent > 0)
+                    indent = std::string(comment.indent, ' ');
                 source_file->add_source_line(
                     entry.address(),
-                    fmt::format("; {}", comment));
+                    fmt::format("{}; {}", indent, comment.value));
             }
 
             if (entry.type() == block_entry_type_t::align) {
