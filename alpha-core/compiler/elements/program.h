@@ -18,6 +18,7 @@
 #include <compiler/compiler_types.h>
 #include "element.h"
 #include "element_map.h"
+#include "ast_evaluator.h"
 #include "element_builder.h"
 
 namespace basecode::compiler {
@@ -90,6 +91,7 @@ namespace basecode::compiler {
         friend class module_type;
         friend class numeric_type;
         friend class pointer_type;
+        friend class ast_evaluator;
         friend class symbol_element;
         friend class unary_operator;
         friend class namespace_type;
@@ -117,28 +119,6 @@ namespace basecode::compiler {
         bool resolve_unknown_identifiers(common::result& r);
 
     private:
-        void apply_attributes(
-            common::result& r,
-            compiler::session& session,
-            compiler::element* element,
-            const syntax::ast_node_shared_ptr& node);
-
-        void add_procedure_instance(
-            common::result& r,
-            compiler::session& session,
-            compiler::procedure_type* proc_type,
-            const syntax::ast_node_shared_ptr& node);
-
-        void add_expression_to_scope(
-            compiler::block* scope,
-            compiler::element* expr);
-
-        void add_composite_type_fields(
-            common::result& r,
-            compiler::session& session,
-            compiler::composite_type* type,
-            const syntax::ast_node_shared_ptr& block);
-
         compiler::type* find_array_type(
             compiler::type* entry_type,
             size_t size,
@@ -148,45 +128,11 @@ namespace basecode::compiler {
             compiler::type* base_type,
             compiler::block* scope = nullptr);
 
-        compiler::element* resolve_symbol_or_evaluate(
-            common::result& r,
-            compiler::session& session,
-            const syntax::ast_node_shared_ptr& node);
-
-        compiler::block* add_namespaces_to_scope(
-            common::result& r,
-            compiler::session& session,
-            const syntax::ast_node_shared_ptr& node,
-            compiler::symbol_element* symbol,
-            compiler::block* parent_scope);
-
-        compiler::identifier* add_identifier_to_scope(
-            common::result& r,
-            compiler::session& session,
-            compiler::symbol_element* symbol,
-            type_find_result_t& find_type_result,
-            const syntax::ast_node_shared_ptr& node,
-            size_t source_index,
-            compiler::block* parent_scope = nullptr);
-
         void add_type_to_scope(compiler::type* type);
 
         compiler::block* push_new_block(element_type_t type = element_type_t::block);
 
     private:
-        element* evaluate(
-            common::result& r,
-            compiler::session& session,
-            const syntax::ast_node_shared_ptr& node,
-            element_type_t default_block_type = element_type_t::block);
-
-        element* evaluate_in_scope(
-            common::result& r,
-            compiler::session& session,
-            const syntax::ast_node_shared_ptr& node,
-            compiler::block* scope,
-            element_type_t default_block_type = element_type_t::block);
-
         bool find_identifier_type(
             common::result& r,
             type_find_result_t& result,
@@ -224,6 +170,7 @@ namespace basecode::compiler {
         element_map _elements {};
         element_builder _builder;
         vm::terp* _terp = nullptr;
+        ast_evaluator _ast_evaluator;
         compiler::block* _block = nullptr;
         vm::assembler* _assembler = nullptr;
         std::stack<compiler::block*> _scope_stack {};

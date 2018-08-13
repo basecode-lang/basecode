@@ -119,6 +119,7 @@ add_library(
     compiler/elements/numeric_type.cpp compiler/elements/numeric_type.h
     compiler/elements/unknown_type.cpp compiler/elements/unknown_type.h
     compiler/elements/pointer_type.cpp compiler/elements/pointer_type.h
+    compiler/elements/ast_evaluator.cpp compiler/elements/ast_evaluator.h
     compiler/elements/operator_base.cpp compiler/elements/operator_base.h
     compiler/elements/float_literal.cpp compiler/elements/float_literal.h
     compiler/elements/element_types.cpp compiler/elements/element_types.h
