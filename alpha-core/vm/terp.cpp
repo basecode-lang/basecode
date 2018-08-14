@@ -558,8 +558,6 @@ namespace basecode::vm {
             std::string format_spec;
             std::string offset_spec = "{}";
 
-            // XXX: format_spec is only specifing the minimum width; not the max
-            //      will need to adjust either the value or the string result
             mnemonic << op_name;
             switch (size) {
                 case op_sizes::byte:
@@ -592,6 +590,9 @@ namespace basecode::vm {
                 }
 
                 const auto& operand = operands[i];
+                register_value_alias_t alias;
+                alias.qw = operand.value.u;
+
                 std::string prefix, postfix;
 
                 if (operand.is_negative()) {
@@ -656,9 +657,27 @@ namespace basecode::vm {
                                 offset_spec,
                                 static_cast<int64_t>(operand.value.u));
                         } else {
-                            operands_stream << prefix
-                                            << fmt::format(format_spec, operand.value.u)
-                                            << postfix;
+                            operands_stream << prefix;
+
+                            switch (size) {
+                                case op_sizes::byte:
+                                    operands_stream << fmt::format(format_spec, alias.b);
+                                    break;
+                                case op_sizes::word:
+                                    operands_stream << fmt::format(format_spec, alias.w);
+                                    break;
+                                case op_sizes::dword:
+                                    operands_stream << fmt::format(format_spec, alias.dw);
+                                    break;
+                                case op_sizes::qword:
+                                    operands_stream << fmt::format(format_spec, alias.qw);
+                                    break;
+                                default: {
+                                    break;
+                                }
+                            }
+
+                            operands_stream << postfix;
                         }
                     }
                 }
