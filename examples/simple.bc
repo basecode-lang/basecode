@@ -62,6 +62,33 @@ bool_false_u := false;
 bool_true_i:  bool := true;
 bool_false_i: bool := false;
 
+
+// cast rules
+// from          to          result
+// ---------------------------------
+// bool          bool        noop
+// bool          any int     1 or 0
+// any int{0, 1} bool        convert
+// s8            u8          widen
+// u8            s8          sign extend/truncate
+// u8            u8          noop
+// s8            s8          noop
+// s8            s16         widen/sign extend
+// u8            s16         widen/truncate
+// s16           s16         noop
+// u16           s16         sign extend/truncate
+// s16           u16         widen
+// ""            ""          ""
+// f32           any int     truncate/range check
+//                           may require actual conversion code
+// f64           any int     truncate/range check
+//                           may require actual conversion code
+// f32           f64         widen
+// f64           f32         truncate
+
+// transmute
+// copy lsb to msb of rhs to lhs based on type specified in transmute<t>
+
 ///////////////////////////////////////////////////////////////////////////////
 // u8
 
