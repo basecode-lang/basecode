@@ -173,7 +173,7 @@ namespace basecode::compiler {
             compiler::type* base_type);
 
         composite_type* make_enum_type(
-            common::result& r,
+            compiler::session& session,
             compiler::block* parent_scope,
             compiler::block* scope);
 
@@ -186,7 +186,7 @@ namespace basecode::compiler {
             size_t array_size);
 
         composite_type* make_union_type(
-            common::result& r,
+            compiler::session& session,
             compiler::block* parent_scope,
             compiler::block* scope);
 
@@ -200,7 +200,7 @@ namespace basecode::compiler {
             type_number_class_t number_class);
 
         composite_type* make_struct_type(
-            common::result& r,
+            compiler::session& session,
             compiler::block* parent_scope,
             compiler::block* scope);
 
@@ -247,7 +247,7 @@ namespace basecode::compiler {
             const syntax::ast_node_t* node);
 
         compiler::symbol_element* make_symbol_from_node(
-            common::result& r,
+            compiler::session& session,
             const syntax::ast_node_t* node);
 
         unknown_type* make_unknown_type_from_find_result(

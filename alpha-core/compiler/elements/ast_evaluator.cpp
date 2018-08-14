@@ -540,7 +540,7 @@ namespace basecode::compiler {
             evaluator_context_t& context,
             evaluator_result_t& result) {
         result.element = _builder->make_symbol_from_node(
-            context.session.result(),
+            context.session,
             context.node);
         return true;
     }
@@ -968,7 +968,7 @@ namespace basecode::compiler {
             evaluator_result_t& result) {
         auto active_scope = _program->current_scope();
         auto enum_type = _builder->make_enum_type(
-            context.session.result(),
+            context.session,
             active_scope,
             _builder->make_block(active_scope, element_type_t::block));
         active_scope->types().add(enum_type);
@@ -988,7 +988,7 @@ namespace basecode::compiler {
             evaluator_result_t& result) {
         auto active_scope = _program->current_scope();
         auto struct_type = _builder->make_struct_type(
-            context.session.result(),
+            context.session,
             active_scope,
             _builder->make_block(active_scope, element_type_t::block));
         active_scope->types().add(struct_type);
@@ -1007,7 +1007,7 @@ namespace basecode::compiler {
             evaluator_result_t& result) {
         auto active_scope = _program->current_scope();
         auto union_type = _builder->make_union_type(
-            context.session.result(),
+            context.session,
             active_scope,
             _builder->make_block(active_scope, element_type_t::block));
         active_scope->types().add(union_type);

@@ -131,7 +131,7 @@ namespace basecode::compiler {
     }
 
     compiler::symbol_element* element_builder::make_symbol_from_node(
-            common::result& r,
+            compiler::session& session,
             const syntax::ast_node_t* node) {
         qualified_symbol_t qualified_symbol {};
         make_qualified_symbol(qualified_symbol, node);
@@ -366,7 +366,7 @@ namespace basecode::compiler {
     }
 
     composite_type* element_builder::make_union_type(
-            common::result& r,
+            compiler::session& session,
             compiler::block* parent_scope,
             compiler::block* scope) {
         auto type_name = fmt::format("__union_{}__", common::id_pool::instance()->allocate());
@@ -383,7 +383,7 @@ namespace basecode::compiler {
     }
 
     composite_type* element_builder::make_struct_type(
-            common::result& r,
+            compiler::session& session,
             compiler::block* parent_scope,
             compiler::block* scope) {
         auto type_name = fmt::format("__struct_{}__", common::id_pool::instance()->allocate());
@@ -500,7 +500,7 @@ namespace basecode::compiler {
     }
 
     composite_type* element_builder::make_enum_type(
-            common::result& r,
+            compiler::session& session,
             compiler::block* parent_scope,
             compiler::block* scope) {
         auto type_name = fmt::format("__enum_{}__", common::id_pool::instance()->allocate());
