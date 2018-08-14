@@ -27,7 +27,7 @@
 static constexpr size_t heap_size = (1024 * 1024) * 32;
 static constexpr size_t stack_size = (1024 * 1024) * 8;
 
-static void print_results(basecode::common::result& r) {
+static void print_results(const basecode::common::result& r) {
     auto has_messages = !r.messages().empty();
 
     if (has_messages)
@@ -197,20 +197,19 @@ int main(int argc, char** argv) {
     basecode::compiler::session compilation_session(
         session_options,
         source_files);
-    basecode::common::result r;
 
     defer({
+        const auto& r = compilation_session.result();
         if (r.is_failed())
             print_results(r);
         compilation_session.finalize();
     });
 
-    if (!compilation_session.initialize(r)) {
+    if (!compilation_session.initialize())
         return 1;
-    } else {
-        if (!compilation_session.compile(r))
+    else
+        if (!compilation_session.compile())
             return 1;
-    }
 
     return 0;
 }

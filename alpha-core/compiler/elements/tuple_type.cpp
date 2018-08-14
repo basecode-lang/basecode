@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <compiler/session.h>
 #include "program.h"
 #include "tuple_type.h"
 
@@ -24,9 +25,8 @@ namespace basecode::compiler {
                                     element_type_t::tuple_type) {
     }
 
-    bool tuple_type::on_initialize(
-            common::result& r,
-            compiler::program* program) {
+    bool tuple_type::on_initialize(compiler::session& session) {
+        auto program = &session.program();
         symbol(program->builder().make_symbol(parent_scope(), "tuple"));
         return true;
     }

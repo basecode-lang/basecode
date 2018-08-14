@@ -18,13 +18,9 @@
 namespace basecode::compiler {
 
     struct evaluator_context_t {
-        evaluator_context_t(
-                common::result& r,
-                compiler::session& session) : r(r),
-                                              session(session) {
+        evaluator_context_t(compiler::session& session) : session(session) {
         }
 
-        common::result& r;
         compiler::session& session;
         compiler::block* scope = nullptr;
         const syntax::ast_node_t* node = nullptr;
@@ -49,28 +45,24 @@ namespace basecode::compiler {
             compiler::program* program);
 
         element* evaluate(
-            common::result& r,
             compiler::session& session,
             const syntax::ast_node_t* node,
             element_type_t default_block_type = element_type_t::block);
 
+    private:
         element* evaluate_in_scope(
-            common::result& r,
-            compiler::session& session,
+            const evaluator_context_t& context,
             const syntax::ast_node_t* node,
             compiler::block* scope,
             element_type_t default_block_type = element_type_t::block);
 
-    private:
         void apply_attributes(
-            common::result& r,
-            compiler::session& session,
+            const evaluator_context_t& context,
             compiler::element* element,
             const syntax::ast_node_t* node);
 
         void add_procedure_instance(
-            common::result& r,
-            compiler::session& session,
+            const evaluator_context_t& context,
             compiler::procedure_type* proc_type,
             const syntax::ast_node_t* node);
 
@@ -79,21 +71,18 @@ namespace basecode::compiler {
             compiler::element* expr);
 
         void add_composite_type_fields(
-            common::result& r,
-            compiler::session& session,
+            const evaluator_context_t& context,
             compiler::composite_type* type,
             const syntax::ast_node_t* block);
 
         compiler::block* add_namespaces_to_scope(
-            common::result& r,
-            compiler::session& session,
+            const evaluator_context_t& context,
             const syntax::ast_node_t* node,
             compiler::symbol_element* symbol,
             compiler::block* parent_scope);
 
         compiler::identifier* add_identifier_to_scope(
-            common::result& r,
-            compiler::session& session,
+            const evaluator_context_t& context,
             compiler::symbol_element* symbol,
             type_find_result_t& find_type_result,
             const syntax::ast_node_t* node,

@@ -47,9 +47,7 @@ namespace basecode::compiler {
 
         element* parent_element();
 
-        element* fold(
-            common::result& r,
-            compiler::program* program);
+        element* fold(compiler::session& session);
 
         attribute_map_t& attributes();
 
@@ -86,9 +84,7 @@ namespace basecode::compiler {
             common::result& r,
             emit_context_t& context);
 
-        virtual element* on_fold(
-            common::result& r,
-            compiler::program* program);
+        virtual element* on_fold(compiler::session& session);
 
         element_register_t register_for(
             common::result& r,

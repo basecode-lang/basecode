@@ -11,6 +11,7 @@
 
 #pragma once
 
+#include <compiler/session.h>
 #include "composite_type.h"
 
 namespace basecode::compiler {
@@ -22,11 +23,9 @@ namespace basecode::compiler {
             compiler::block* scope);
 
     protected:
-        bool on_initialize(
-            common::result& r,
-            compiler::program* program) override;
-
         type_access_model_t on_access_model() const override;
+
+        bool on_initialize(compiler::session& session) override;
     };
 
 };

@@ -26,9 +26,7 @@ namespace basecode::compiler {
         void underlying_type(compiler::type* value);
 
     protected:
-        bool on_initialize(
-            common::result& r,
-            compiler::program* program) override;
+        bool on_initialize(compiler::session& session) override;
 
         type_access_model_t on_access_model() const override;
 

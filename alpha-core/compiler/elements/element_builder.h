@@ -22,7 +22,7 @@ namespace basecode::compiler {
         explicit element_builder(compiler::program* program);
 
         compiler::type* make_complete_type(
-            common::result& r,
+            compiler::session& session,
             type_find_result_t& result,
             compiler::block* parent_scope = nullptr);
 
@@ -69,16 +69,16 @@ namespace basecode::compiler {
             const std::string& value);
 
         any_type* make_any_type(
-            common::result& r,
+            compiler::session& session,
             compiler::block* parent_scope,
             compiler::block* scope);
 
         bool_type* make_bool_type(
-            common::result& r,
+            compiler::session& session,
             compiler::block* parent_scope);
 
         type_info* make_type_info_type(
-            common::result& r,
+            compiler::session& session,
             compiler::block* parent_scope,
             compiler::block* scope);
 
@@ -129,7 +129,7 @@ namespace basecode::compiler {
             const std::string& value);
 
         array_type* make_array_type(
-            common::result& r,
+            compiler::session& session,
             compiler::block* parent_scope,
             compiler::block* scope,
             compiler::type* entry_type,
@@ -140,12 +140,12 @@ namespace basecode::compiler {
             element* expr);
 
         tuple_type* make_tuple_type(
-            common::result& r,
+            compiler::session& session,
             compiler::block* parent_scope,
             compiler::block* scope);
 
         module_type* make_module_type(
-            common::result& r,
+            compiler::session& session,
             compiler::block* parent_scope,
             compiler::block* scope);
 
@@ -158,12 +158,12 @@ namespace basecode::compiler {
             uint64_t value);
 
         string_type* make_string_type(
-            common::result& r,
+            compiler::session& session,
             compiler::block* parent_scope,
             compiler::block* scope);
 
         pointer_type* make_pointer_type(
-            common::result& r,
+            compiler::session& session,
             compiler::block* parent_scope,
             compiler::type* base_type);
 
@@ -173,7 +173,7 @@ namespace basecode::compiler {
             compiler::block* scope);
 
         unknown_type* make_unknown_type(
-            common::result& r,
+            compiler::session& session,
             compiler::block* parent_scope,
             compiler::symbol_element* symbol,
             bool is_pointer,
@@ -186,7 +186,7 @@ namespace basecode::compiler {
             compiler::block* scope);
 
         numeric_type* make_numeric_type(
-            common::result& r,
+            compiler::session& session,
             compiler::block* parent_scope,
             const std::string& name,
             int64_t min,
@@ -204,7 +204,7 @@ namespace basecode::compiler {
             element* expr);
 
         namespace_type* make_namespace_type(
-            common::result& r,
+            compiler::session& session,
             compiler::block* parent_scope);
 
         procedure_call* make_procedure_call(
@@ -246,7 +246,7 @@ namespace basecode::compiler {
             const syntax::ast_node_t* node);
 
         unknown_type* make_unknown_type_from_find_result(
-            common::result& r,
+            compiler::session& session,
             compiler::block* scope,
             compiler::identifier* identifier,
             const type_find_result_t& result);

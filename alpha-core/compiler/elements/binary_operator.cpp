@@ -119,9 +119,7 @@ namespace basecode::compiler {
         return true;
     }
 
-    element* binary_operator::on_fold(
-            common::result& r,
-            compiler::program* program) {
+    element* binary_operator::on_fold(compiler::session& session) {
         switch (operator_type()) {
             case operator_type_t::add: {
                 break;

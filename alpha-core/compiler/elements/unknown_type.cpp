@@ -16,15 +16,9 @@ namespace basecode::compiler {
     unknown_type::unknown_type(
         block* parent_scope,
         compiler::symbol_element* symbol) : compiler::type(
-                                        parent_scope,
-                                        element_type_t::unknown_type,
-                                        symbol) {
-    }
-
-    bool unknown_type::on_initialize(
-            common::result& r,
-            compiler::program* program) {
-        return true;
+                                                parent_scope,
+                                                element_type_t::unknown_type,
+                                                symbol) {
     }
 
     bool unknown_type::is_array() const {
@@ -49,6 +43,10 @@ namespace basecode::compiler {
 
     void unknown_type::array_size(size_t value) {
         _array_size = value;
+    }
+
+    bool unknown_type::on_initialize(compiler::session& session) {
+        return true;
     }
 
 };

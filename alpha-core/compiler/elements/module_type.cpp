@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <compiler/session.h>
 #include "program.h"
 #include "module_type.h"
 #include "symbol_element.h"
@@ -25,9 +26,8 @@ namespace basecode::compiler {
                                             element_type_t::module_type) {
     }
 
-    bool module_type::on_initialize(
-            common::result& r,
-            compiler::program* program) {
+    bool module_type::on_initialize(compiler::session& session) {
+        auto program = &session.program();
         symbol(program->builder().make_symbol(parent_scope(), "module"));
         return true;
     }

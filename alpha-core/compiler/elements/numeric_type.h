@@ -35,9 +35,8 @@ namespace basecode::compiler {
         static std::string narrow_to_value(uint64_t value);
 
         static void make_types(
-            common::result& r,
-            compiler::block* parent_scope,
-            compiler::program* program);
+            compiler::session& session,
+            compiler::block* parent_scope);
 
         numeric_type(
             block* parent_scope,
@@ -80,15 +79,13 @@ namespace basecode::compiler {
             {"f64",  {&s_type_properties[9]}},
         };
 
-        bool on_initialize(
-            common::result& r,
-            compiler::program* program) override;
-
         bool on_type_check(compiler::type* other) override;
 
         type_number_class_t on_number_class() const override;
 
         type_access_model_t on_access_model() const override;
+
+        bool on_initialize(compiler::session& session) override;
 
     private:
         int64_t _min;

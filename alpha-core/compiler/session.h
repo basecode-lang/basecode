@@ -35,29 +35,19 @@ namespace basecode::compiler {
 
         virtual ~session();
 
+        bool compile();
+
         void finalize();
 
         vm::terp& terp();
 
-        void raise_phase(
-            session_compile_phase_t phase,
-            const boost::filesystem::path& source_file);
+        bool initialize();
+
+        common::result& result();
 
         vm::assembler& assembler();
 
         compiler::program& program();
-
-        bool compile(common::result& r);
-
-        syntax::ast_node_shared_ptr parse(
-            common::result& r,
-            const boost::filesystem::path& path);
-
-        syntax::ast_node_shared_ptr parse(
-            common::result& r,
-            common::source_file* source_file);
-
-        bool initialize(common::result& r);
 
         common::source_file* pop_source_file();
 
@@ -69,15 +59,24 @@ namespace basecode::compiler {
 
         void push_source_file(common::source_file* source_file);
 
+        syntax::ast_node_shared_ptr parse(common::source_file* source_file);
+
+        syntax::ast_node_shared_ptr parse(const boost::filesystem::path& path);
+
         common::source_file* add_source_file(const boost::filesystem::path& path);
 
         common::source_file* find_source_file(const boost::filesystem::path& path);
 
     private:
+        void raise_phase(
+            session_compile_phase_t phase,
+            const boost::filesystem::path& source_file);
+
         void write_code_dom_graph(const boost::filesystem::path& path);
 
     private:
         vm::terp _terp;
+        common::result _result;
         vm::assembler _assembler;
         compiler::program _program;
         session_options_t _options {};

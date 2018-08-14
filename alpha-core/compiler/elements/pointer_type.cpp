@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <compiler/session.h>
 #include "program.h"
 #include "symbol_element.h"
 #include "pointer_type.h"
@@ -30,23 +31,22 @@ namespace basecode::compiler {
                                          _base_type(base_type) {
     }
 
-    bool pointer_type::on_initialize(
-            common::result& r,
-            compiler::program* program) {
-        auto type_symbol = program->builder().make_symbol(
-            parent_scope(),
-            name_for_pointer(_base_type));
-        symbol(type_symbol);
-        type_symbol->parent_element(this);
-        return true;
-    }
-
     compiler::type* pointer_type::base_type() const {
         return _base_type;
     }
 
     type_access_model_t pointer_type::on_access_model() const {
         return type_access_model_t::pointer;
+    }
+
+    bool pointer_type::on_initialize(compiler::session& session) {
+        auto program = &session.program();
+        auto type_symbol = program->builder().make_symbol(
+            parent_scope(),
+            name_for_pointer(_base_type));
+        symbol(type_symbol);
+        type_symbol->parent_element(this);
+        return true;
     }
 
 };

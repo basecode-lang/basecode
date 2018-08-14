@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <compiler/session.h>
 #include "program.h"
 #include "namespace_type.h"
 #include "symbol_element.h"
@@ -21,9 +22,8 @@ namespace basecode::compiler {
                                                                 nullptr) {
     }
 
-    bool namespace_type::on_initialize(
-            common::result& r,
-            compiler::program* program) {
+    bool namespace_type::on_initialize(compiler::session& session) {
+        auto program = &session.program();
         symbol(program->builder().make_symbol(parent_scope(), "namespace"));
         return true;
     }

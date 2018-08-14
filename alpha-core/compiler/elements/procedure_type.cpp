@@ -114,12 +114,6 @@ namespace basecode::compiler {
         return true;
     }
 
-    bool procedure_type::on_initialize(
-            common::result& r,
-            compiler::program* program) {
-        return true;
-    }
-
     bool procedure_type::is_foreign() const {
         return _is_foreign;
     }
@@ -180,6 +174,10 @@ namespace basecode::compiler {
 
         for (auto element : _parameters.as_list())
             list.emplace_back(element);
+    }
+
+    bool procedure_type::on_initialize(compiler::session& session) {
+        return true;
     }
 
 };

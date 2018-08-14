@@ -34,9 +34,7 @@ namespace basecode::compiler {
         void array_size(size_t value);
 
     protected:
-        bool on_initialize(
-            common::result& r,
-            compiler::program* program) override;
+        bool on_initialize(compiler::session& session) override;
 
     private:
         size_t _array_size = 0;

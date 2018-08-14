@@ -64,9 +64,11 @@ namespace basecode::compiler {
         return _rhs;
     }
 
-    element* unary_operator::on_fold(
-            common::result& r,
-            compiler::program* program) {
+    bool unary_operator::on_is_constant() const {
+        return _rhs != nullptr && _rhs->is_constant();
+    }
+
+    element* unary_operator::on_fold(compiler::session& session) {
         switch (operator_type()) {
             case operator_type_t::negate: {
                 break;
@@ -82,10 +84,6 @@ namespace basecode::compiler {
         }
 
         return nullptr;
-    }
-
-    bool unary_operator::on_is_constant() const {
-        return _rhs != nullptr && _rhs->is_constant();
     }
 
     void unary_operator::on_owned_elements(element_list_t& list) {

@@ -30,16 +30,6 @@ namespace basecode::compiler {
                                            _scope(scope) {
     }
 
-    bool composite_type::on_initialize(
-            common::result& r,
-            compiler::program* program) {
-        size_t size = 0;
-        for (auto fld : _fields.as_list())
-            size += fld->identifier()->type()->size_in_bytes();
-        size_in_bytes(size);
-        return true;
-    }
-
     field_map_t& composite_type::fields() {
         return _fields;
     }
@@ -75,6 +65,14 @@ namespace basecode::compiler {
 
         if (_scope != nullptr)
             list.emplace_back(_scope);
+    }
+
+    bool composite_type::on_initialize(compiler::session& session) {
+        size_t size = 0;
+        for (auto fld : _fields.as_list())
+            size += fld->identifier()->type()->size_in_bytes();
+        size_in_bytes(size);
+        return true;
     }
 
 };

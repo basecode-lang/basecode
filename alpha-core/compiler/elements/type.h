@@ -24,10 +24,6 @@ namespace basecode::compiler {
             element_type_t type,
             compiler::symbol_element* symbol);
 
-        bool initialize(
-            common::result& r,
-            compiler::program* program);
-
         bool packed() const;
 
         void packed(bool value);
@@ -46,13 +42,11 @@ namespace basecode::compiler {
 
         compiler::symbol_element* symbol() const;
 
+        bool initialize(compiler::session& session);
+
         void symbol(compiler::symbol_element* value);
 
     protected:
-        virtual bool on_initialize(
-            common::result& r,
-            compiler::program* program);
-
         void size_in_bytes(size_t value);
 
         virtual bool on_type_check(compiler::type* other);
@@ -62,6 +56,8 @@ namespace basecode::compiler {
         virtual type_number_class_t on_number_class() const;
 
         void on_owned_elements(element_list_t& list) override;
+
+        virtual bool on_initialize(compiler::session& session);
 
     private:
         bool _packed = false;

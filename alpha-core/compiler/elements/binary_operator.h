@@ -34,10 +34,6 @@ namespace basecode::compiler {
             common::result& r,
             emit_context_t& context) override;
 
-        element* on_fold(
-            common::result& r,
-            compiler::program* program) override;
-
         void emit_arithmetic_operator(
             common::result& r,
             emit_context_t& context,
@@ -51,6 +47,8 @@ namespace basecode::compiler {
         bool on_is_constant() const override;
 
         void on_owned_elements(element_list_t& list) override;
+
+        element* on_fold(compiler::session& session) override;
 
         compiler::type* on_infer_type(const compiler::program* program) override;
 

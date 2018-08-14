@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <compiler/session.h>
 #include "program.h"
 #include "bool_type.h"
 
@@ -20,9 +21,8 @@ namespace basecode::compiler {
                                                     nullptr) {
     }
 
-    bool bool_type::on_initialize(
-            common::result& r,
-            compiler::program* program) {
+    bool bool_type::on_initialize(compiler::session& session) {
+        auto program = &session.program();
         symbol(program->builder().make_symbol(parent_scope(), "bool"));
         size_in_bytes(1);
         return true;

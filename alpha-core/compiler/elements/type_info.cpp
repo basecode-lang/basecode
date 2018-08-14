@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <compiler/session.h>
 #include "program.h"
 #include "type_info.h"
 #include "identifier.h"
@@ -46,9 +47,8 @@ namespace basecode::compiler {
     //      fields:[]type_field;
     // };
 
-    bool type_info::on_initialize(
-            common::result& r,
-            compiler::program* program) {
+    bool type_info::on_initialize(compiler::session& session) {
+        auto program = &session.program();
         auto& builder = program->builder();
         symbol(builder.make_symbol(parent_scope(), "type"));
 
@@ -65,7 +65,7 @@ namespace basecode::compiler {
 
         fields().add(name_field);
 
-        return composite_type::on_initialize(r, program);
+        return composite_type::on_initialize(session);
     }
 
     type_access_model_t type_info::on_access_model() const {

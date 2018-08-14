@@ -58,60 +58,26 @@ namespace basecode::compiler {
         }
     }
 
+    bool session::compile() {
+        return _program.compile(*this);
+    }
+
+    bool session::initialize() {
+        _terp.initialize(_result);
+        _assembler.initialize(_result);
+        return !_result.is_failed();
+    }
+
+    common::result& session::result() {
+        return _result;
+    }
+
     vm::assembler& session::assembler() {
         return _assembler;
     }
 
     compiler::program& session::program() {
         return _program;
-    }
-
-    bool session::compile(common::result& r) {
-        return _program.compile(r, *this);
-    }
-
-    bool session::initialize(common::result& r) {
-        _terp.initialize(r);
-        _assembler.initialize(r);
-        return !r.is_failed();
-    }
-
-    syntax::ast_node_shared_ptr session::parse(
-            common::result& r,
-            const boost::filesystem::path& path) {
-        auto source_file = find_source_file(path);
-        if (source_file == nullptr) {
-            source_file = add_source_file(path);
-        }
-        return parse(r, source_file);
-    }
-
-    syntax::ast_node_shared_ptr session::parse(
-            common::result& r,
-            common::source_file* source_file) {
-        if (source_file->empty()) {
-            if (!source_file->load(r))
-                return nullptr;
-        }
-
-        syntax::parser alpha_parser(source_file);
-        auto module_node = alpha_parser.parse(r);
-        if (module_node != nullptr && !r.is_failed()) {
-            if (_options.output_ast_graphs) {
-                boost::filesystem::path ast_file_path(source_file->path().parent_path());
-                auto filename = source_file->path()
-                    .filename()
-                    .replace_extension("")
-                    .string();
-                filename += "-ast";
-                ast_file_path.append(filename);
-                ast_file_path.replace_extension(".dot");
-                alpha_parser.write_ast_graph(
-                    ast_file_path,
-                    module_node);
-            }
-        }
-        return module_node;
     }
 
     common::source_file* session::pop_source_file() {
@@ -156,6 +122,50 @@ namespace basecode::compiler {
 
         compiler::code_dom_formatter formatter(&_program, output_file);
         formatter.format(fmt::format("Code DOM Graph: {}", path.string()));
+    }
+
+    syntax::ast_node_shared_ptr session::parse(common::source_file* source_file) {
+        raise_phase(session_compile_phase_t::start, source_file->path());
+        defer({
+            if (_result.is_failed()) {
+              raise_phase(session_compile_phase_t::failed, source_file->path());
+            } else {
+              raise_phase(session_compile_phase_t::success, source_file->path());
+            }
+        });
+
+        if (source_file->empty()) {
+            if (!source_file->load(_result))
+                return nullptr;
+        }
+
+        syntax::parser alpha_parser(source_file);
+        auto module_node = alpha_parser.parse(_result);
+        if (module_node != nullptr && !_result.is_failed()) {
+            if (_options.output_ast_graphs) {
+                boost::filesystem::path ast_file_path(source_file->path().parent_path());
+                auto filename = source_file->path()
+                    .filename()
+                    .replace_extension("")
+                    .string();
+                filename += "-ast";
+                ast_file_path.append(filename);
+                ast_file_path.replace_extension(".dot");
+                alpha_parser.write_ast_graph(
+                    ast_file_path,
+                    module_node);
+            }
+        }
+
+        return module_node;
+    }
+
+    syntax::ast_node_shared_ptr session::parse(const boost::filesystem::path& path) {
+        auto source_file = find_source_file(path);
+        if (source_file == nullptr) {
+            source_file = add_source_file(path);
+        }
+        return parse(source_file);
     }
 
     common::source_file* session::add_source_file(const boost::filesystem::path& path) {

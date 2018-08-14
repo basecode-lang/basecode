@@ -22,18 +22,6 @@ namespace basecode::compiler {
                                             _symbol(symbol) {
     }
 
-    bool type::initialize(
-            common::result& r,
-            compiler::program* program) {
-        return on_initialize(r, program);
-    }
-
-    bool type::on_initialize(
-            common::result& r,
-            compiler::program* program) {
-        return true;
-    }
-
     bool type::packed() const {
         return _packed;
     }
@@ -78,6 +66,10 @@ namespace basecode::compiler {
         return false;
     }
 
+    bool type::initialize(compiler::session& session) {
+        return on_initialize(session);
+    }
+
     type_access_model_t type::on_access_model() const {
         return type_access_model_t::none;
     }
@@ -93,6 +85,10 @@ namespace basecode::compiler {
     void type::on_owned_elements(element_list_t& list) {
         if (_symbol != nullptr)
             list.emplace_back(_symbol);
+    }
+
+    bool type::on_initialize(compiler::session& session) {
+        return true;
     }
 
 };

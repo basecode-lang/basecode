@@ -46,10 +46,6 @@ namespace basecode::compiler {
             common::result& r,
             emit_context_t& context) override;
 
-        bool on_initialize(
-            common::result& r,
-            compiler::program* program) override;
-
         bool on_is_constant() const override;
 
         bool on_type_check(compiler::type* other) override;
@@ -57,6 +53,8 @@ namespace basecode::compiler {
         type_access_model_t on_access_model() const override;
 
         void on_owned_elements(element_list_t& list) override;
+
+        bool on_initialize(compiler::session& session) override;
 
     private:
         field_map_t _returns {};

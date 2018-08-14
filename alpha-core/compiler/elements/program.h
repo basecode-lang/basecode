@@ -37,7 +37,6 @@ namespace basecode::compiler {
         ~program() override;
 
         void error(
-            common::result& r,
             compiler::session& session,
             const std::string& code,
             const std::string& message,
@@ -50,9 +49,7 @@ namespace basecode::compiler {
             const std::string& message,
             const common::source_location& location);
 
-        bool compile(
-            common::result& r,
-            compiler::session& session);
+        bool compile(compiler::session& session);
 
         element_map& elements();
 
@@ -67,7 +64,6 @@ namespace basecode::compiler {
         void disassemble(FILE* file);
 
         compiler::module* compile_module(
-            common::result& r,
             compiler::session& session,
             common::source_file* source_file);
 
@@ -108,15 +104,13 @@ namespace basecode::compiler {
             const block_visitor_callable& callable,
             compiler::block* root_block = nullptr);
 
-        bool type_check(
-            common::result& r,
-            compiler::session& session);
+        bool type_check(compiler::session& session);
 
-        void initialize_core_types(common::result& r);
+        bool resolve_unknown_types(compiler::session& session);
 
-        bool resolve_unknown_types(common::result& r);
+        void initialize_core_types(compiler::session& session);
 
-        bool resolve_unknown_identifiers(common::result& r);
+        bool resolve_unknown_identifiers(compiler::session& session);
 
     private:
         compiler::type* find_array_type(
@@ -134,7 +128,7 @@ namespace basecode::compiler {
 
     private:
         bool find_identifier_type(
-            common::result& r,
+            compiler::session& session,
             type_find_result_t& result,
             const syntax::ast_node_shared_ptr& type_node,
             compiler::block* parent_scope = nullptr);

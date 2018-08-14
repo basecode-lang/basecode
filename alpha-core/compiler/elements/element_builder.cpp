@@ -80,7 +80,7 @@ namespace basecode::compiler {
     }
 
     compiler::type* element_builder::make_complete_type(
-            common::result& r,
+            compiler::session& session,
             type_find_result_t& result,
             compiler::block* parent_scope) {
         result.type = _program->find_type(result.type_name, parent_scope);
@@ -92,7 +92,7 @@ namespace basecode::compiler {
                     parent_scope);
                 if (array_type == nullptr) {
                     array_type = make_array_type(
-                        r,
+                        session,
                         parent_scope,
                         make_block(parent_scope, element_type_t::block),
                         result.type,
@@ -106,7 +106,10 @@ namespace basecode::compiler {
                     result.type,
                     parent_scope);
                 if (pointer_type == nullptr) {
-                    pointer_type = make_pointer_type(r, parent_scope, result.type);
+                    pointer_type = make_pointer_type(
+                        session,
+                        parent_scope,
+                        result.type);
                 }
                 result.type = pointer_type;
             }
@@ -141,10 +144,10 @@ namespace basecode::compiler {
     }
 
     namespace_type* element_builder::make_namespace_type(
-            common::result& r,
+            compiler::session& session,
             compiler::block* parent_scope) {
         auto type = new compiler::namespace_type(parent_scope);
-        if (!type->initialize(r, _program))
+        if (!type->initialize(session))
             return nullptr;
 
         _program->elements().add(type);
@@ -152,14 +155,14 @@ namespace basecode::compiler {
     }
 
     unknown_type* element_builder::make_unknown_type(
-            common::result& r,
+            compiler::session& session,
             compiler::block* parent_scope,
             compiler::symbol_element* symbol,
             bool is_pointer,
             bool is_array,
             size_t array_size) {
         auto type = new compiler::unknown_type(parent_scope, symbol);
-        if (!type->initialize(r, _program))
+        if (!type->initialize(session))
             return nullptr;
         type->is_array(is_array);
         type->is_pointer(is_pointer);
@@ -221,20 +224,20 @@ namespace basecode::compiler {
     }
 
     pointer_type* element_builder::make_pointer_type(
-            common::result& r,
+            compiler::session& session,
             compiler::block* parent_scope,
             compiler::type* base_type) {
         auto type = new compiler::pointer_type(
             parent_scope,
             base_type);
-        if (!type->initialize(r, _program))
+        if (!type->initialize(session))
             return nullptr;
         _program->elements().add(type);
         return type;
     }
 
     array_type* element_builder::make_array_type(
-            common::result& r,
+            compiler::session& session,
             compiler::block* parent_scope,
             compiler::block* scope,
             compiler::type* entry_type,
@@ -244,7 +247,7 @@ namespace basecode::compiler {
             scope,
             entry_type,
             size);
-        if (!type->initialize(r, _program))
+        if (!type->initialize(session))
             return nullptr;
         scope->parent_element(type);
         _program->elements().add(type);
@@ -303,11 +306,11 @@ namespace basecode::compiler {
     }
 
     tuple_type* element_builder::make_tuple_type(
-            common::result& r,
+            compiler::session& session,
             compiler::block* parent_scope,
             compiler::block* scope) {
         auto type = new compiler::tuple_type(parent_scope, scope);
-        if (!type->initialize(r, _program))
+        if (!type->initialize(session))
             return nullptr;
         scope->parent_element(type);
         _program->elements().add(type);
@@ -315,11 +318,11 @@ namespace basecode::compiler {
     }
 
     module_type* element_builder::make_module_type(
-            common::result& r,
+            compiler::session& session,
             compiler::block* parent_scope,
             compiler::block* scope) {
         auto type = new compiler::module_type(parent_scope, scope);
-        if (!type->initialize(r, _program))
+        if (!type->initialize(session))
             return nullptr;
         scope->parent_element(type);
         _program->elements().add(type);
@@ -327,11 +330,11 @@ namespace basecode::compiler {
     }
 
     string_type* element_builder::make_string_type(
-            common::result& r,
+            compiler::session& session,
             compiler::block* parent_scope,
             compiler::block* scope) {
         auto type = new compiler::string_type(parent_scope, scope);
-        if (!type->initialize(r, _program))
+        if (!type->initialize(session))
             return nullptr;
         scope->parent_element(type);
         _program->elements().add(type);
@@ -520,7 +523,7 @@ namespace basecode::compiler {
     }
 
     numeric_type* element_builder::make_numeric_type(
-            common::result& r,
+            compiler::session& session,
             compiler::block* parent_scope,
             const std::string& name,
             int64_t min,
@@ -534,7 +537,7 @@ namespace basecode::compiler {
             max,
             is_signed,
             number_class);
-        if (!type->initialize(r, _program))
+        if (!type->initialize(session))
             return nullptr;
 
         _program->elements().add(type);
@@ -652,11 +655,11 @@ namespace basecode::compiler {
     }
 
     type_info* element_builder::make_type_info_type(
-            common::result& r,
+            compiler::session& session,
             compiler::block* parent_scope,
             compiler::block* scope) {
         auto type = new compiler::type_info(parent_scope, scope);
-        if (!type->initialize(r, _program))
+        if (!type->initialize(session))
             return nullptr;
         scope->parent_element(type);
         _program->elements().add(type);
@@ -674,21 +677,21 @@ namespace basecode::compiler {
     }
 
     bool_type* element_builder::make_bool_type(
-            common::result& r,
+            compiler::session& session,
             compiler::block* parent_scope) {
         auto type = new compiler::bool_type(parent_scope);
-        if (!type->initialize(r, _program))
+        if (!type->initialize(session))
             return nullptr;
         _program->elements().add(type);
         return type;
     }
 
     any_type* element_builder::make_any_type(
-            common::result& r,
+            compiler::session& session,
             compiler::block* parent_scope,
             compiler::block* scope) {
         auto type = new compiler::any_type(parent_scope, scope);
-        if (!type->initialize(r, _program))
+        if (!type->initialize(session))
             return nullptr;
         scope->parent_element(type);
         _program->elements().add(type);
@@ -696,7 +699,7 @@ namespace basecode::compiler {
     }
 
     unknown_type* element_builder::make_unknown_type_from_find_result(
-            common::result& r,
+            compiler::session& session,
             compiler::block* scope,
             compiler::identifier* identifier,
             const type_find_result_t& result) {
@@ -705,7 +708,7 @@ namespace basecode::compiler {
             result.type_name.name,
             result.type_name.namespaces);
         auto unknown_type = make_unknown_type(
-            r,
+            session,
             scope,
             symbol,
             result.is_pointer,

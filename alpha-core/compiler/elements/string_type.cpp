@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <compiler/session.h>
 #include "program.h"
 #include "identifier.h"
 #include "string_type.h"
@@ -63,9 +64,8 @@ namespace basecode::compiler {
     //      data:address;
     // }; 16 bytes
 
-    bool string_type::on_initialize(
-            common::result& r,
-            compiler::program* program) {
+    bool string_type::on_initialize(compiler::session& session) {
+        auto program = &session.program();
         auto& builder = program->builder();
         symbol(builder.make_symbol(parent_scope(), "string"));
 
@@ -92,14 +92,17 @@ namespace basecode::compiler {
             block_scope,
             builder.make_symbol(parent_scope(), "data"),
             nullptr);
-        data_identifier->type(builder.make_pointer_type(r, block_scope, u8_type));
+        data_identifier->type(builder.make_pointer_type(
+            session,
+            block_scope,
+            u8_type));
         auto data_field = builder.make_field(block_scope, data_identifier);
 
         fields().add(length_field);
         fields().add(capacity_field);
         fields().add(data_field);
 
-        return composite_type::on_initialize(r, program);
+        return composite_type::on_initialize(session);
     }
 
     type_access_model_t string_type::on_access_model() const {

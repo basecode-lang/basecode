@@ -32,9 +32,7 @@ namespace basecode::compiler {
 
         bool on_is_constant() const override;
 
-        element* on_fold(
-            common::result& r,
-            compiler::program* program) override;
+        element* on_fold(compiler::session& session) override;
 
         void on_owned_elements(element_list_t& list) override;
 

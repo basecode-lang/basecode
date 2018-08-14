@@ -49,9 +49,8 @@ namespace basecode::compiler {
     //      element_type:type;
     //      data:address;
     // };
-    bool array_type::on_initialize(
-            common::result& r,
-            compiler::program* program) {
+    bool array_type::on_initialize(compiler::session& session) {
+        auto program = &session.program();
         auto& builder = program->builder();
         auto type_symbol = program->builder().make_symbol(
             parent_scope(),
@@ -105,7 +104,10 @@ namespace basecode::compiler {
             block_scope,
             builder.make_symbol(block_scope, "data"),
             nullptr);
-        data_identifier->type(builder.make_pointer_type(r, block_scope, u8_type));
+        data_identifier->type(builder.make_pointer_type(
+            session,
+            block_scope,
+            u8_type));
         auto data_field = builder.make_field(block_scope, data_identifier);
 
         auto& field_map = fields();
@@ -115,7 +117,7 @@ namespace basecode::compiler {
         field_map.add(element_type_field);
         field_map.add(data_field);
 
-        return composite_type::on_initialize(r, program);
+        return composite_type::on_initialize(session);
     }
 
     uint64_t array_type::size() const {

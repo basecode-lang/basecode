@@ -23,13 +23,13 @@
 namespace basecode::compiler {
 
     std::unordered_map<std::string, directive::directive_callable> directive::s_execute_handlers = {
-        {"run",     std::bind(&directive::on_execute_run,     std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4)},
-        {"foreign", std::bind(&directive::on_execute_foreign, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4)},
+        {"run",     std::bind(&directive::on_execute_run,     std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {"foreign", std::bind(&directive::on_execute_foreign, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
     };
 
     std::unordered_map<std::string, directive::directive_callable> directive::s_evaluate_handlers = {
-        {"run",     std::bind(&directive::on_evaluate_run,     std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4)},
-        {"foreign", std::bind(&directive::on_evaluate_foreign, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4)},
+        {"run",     std::bind(&directive::on_evaluate_run,     std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {"foreign", std::bind(&directive::on_evaluate_foreign, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -43,23 +43,21 @@ namespace basecode::compiler {
     }
 
     bool directive::evaluate(
-            common::result& r,
             compiler::session& session,
             compiler::program* program) {
         auto it = s_evaluate_handlers.find(_name);
         if (it == s_evaluate_handlers.end())
             return true;
-        return it->second(this, r, session, program);
+        return it->second(this, session, program);
     }
 
     bool directive::execute(
-            common::result& r,
             compiler::session& session,
             compiler::program* program) {
         auto it = s_execute_handlers.find(_name);
         if (it == s_execute_handlers.end())
             return true;
-        return it->second(this, r, session, program);
+        return it->second(this, session, program);
     }
 
     element* directive::expression() {
@@ -80,14 +78,12 @@ namespace basecode::compiler {
     // run directive
 
     bool directive::on_execute_run(
-            common::result& r,
             compiler::session& session,
             compiler::program* program) {
         return true;
     }
 
     bool directive::on_evaluate_run(
-            common::result& r,
             compiler::session& session,
             compiler::program* program) {
         return true;
@@ -98,7 +94,6 @@ namespace basecode::compiler {
     // foreign directive
 
     bool directive::on_execute_foreign(
-            common::result& r,
             compiler::session& session,
             compiler::program* program) {
         auto terp = program->terp();
@@ -108,7 +103,7 @@ namespace basecode::compiler {
         if (library_attribute != nullptr) {
             if (!library_attribute->as_string(library_name)) {
                 program->error(
-                    r,
+                    session.result(),
                     this,
                     "P004",
                     "unable to convert library name.",
@@ -119,7 +114,7 @@ namespace basecode::compiler {
 
         if (library_name.empty()) {
             program->error(
-                r,
+                session.result(),
                 this,
                 "P005",
                 "library attribute required for foreign directive.",
@@ -133,17 +128,17 @@ namespace basecode::compiler {
             << library_name
             << SHARED_LIBRARY_SUFFIX;
         boost::filesystem::path library_path(platform_name.str());
-        auto library = terp->load_shared_library(r, library_path);
+        auto library = terp->load_shared_library(session.result(), library_path);
         if (library == nullptr) {
-            auto msg = r.find_code("B062");
+            auto msg = session.result().find_code("B062");
             if (msg != nullptr) {
                 program->error(
-                    r,
+                    session.result(),
                     this,
                     "P006",
                     msg->message(),
                     location());
-                r.remove_code("B062");
+                session.result().remove_code("B062");
             }
             return false;
         }
@@ -155,7 +150,7 @@ namespace basecode::compiler {
         if (alias_attribute != nullptr) {
             if (!alias_attribute->as_string(symbol_name)) {
                 program->error(
-                    r,
+                    session.result(),
                     this,
                     "P004",
                     "unable to convert alias attribute's name.",
@@ -192,10 +187,10 @@ namespace basecode::compiler {
             }
         }
 
-        auto result = terp->register_foreign_function(r, signature);
+        auto result = terp->register_foreign_function(session.result(), signature);
         if (!result) {
             program->error(
-                r,
+                session.result(),
                 this,
                 "P004",
                 fmt::format("unable to find foreign function symbol: {}", symbol_name),
@@ -206,11 +201,10 @@ namespace basecode::compiler {
                 proc_type->foreign_address(reinterpret_cast<uint64_t>(signature.func_ptr));
         }
 
-        return !r.is_failed();
+        return !session.result().is_failed();
     }
 
     bool directive::on_evaluate_foreign(
-            common::result& r,
             compiler::session& session,
             compiler::program* program) {
         auto proc_identifier = dynamic_cast<compiler::identifier*>(_expression);

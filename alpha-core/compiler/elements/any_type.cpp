@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <compiler/session.h>
 #include "program.h"
 #include "any_type.h"
 #include "identifier.h"
@@ -31,9 +32,8 @@ namespace basecode::compiler {
     //      data:address;
     // };
 
-    bool any_type::on_initialize(
-            common::result& r,
-            compiler::program* program) {
+    bool any_type::on_initialize(compiler::session& session) {
+        auto program = &session.program();
         auto& builder = program->builder();
 
         symbol(builder.make_symbol(parent_scope(), "any"));
@@ -56,7 +56,10 @@ namespace basecode::compiler {
             block_scope,
             builder.make_symbol(parent_scope(), "data"),
             nullptr);
-        data_identifier->type(builder.make_pointer_type(r, block_scope, u8_type));
+        data_identifier->type(builder.make_pointer_type(
+            session,
+            block_scope,
+            u8_type));
         auto data_field = builder.make_field(
             block_scope,
             data_identifier);
@@ -65,7 +68,7 @@ namespace basecode::compiler {
         field_map.add(type_info_field);
         field_map.add(data_field);
 
-        return composite_type::on_initialize(r, program);
+        return composite_type::on_initialize(session);
     }
 
     compiler::type* any_type::underlying_type() {

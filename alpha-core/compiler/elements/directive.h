@@ -21,7 +21,6 @@ namespace basecode::compiler {
     public:
         using directive_callable = std::function<bool (
             compiler::directive*,
-            common::result&,
             compiler::session&,
             compiler::program*)>;
 
@@ -31,12 +30,10 @@ namespace basecode::compiler {
             element* expression);
 
         bool evaluate(
-            common::result& r,
             compiler::session& session,
             compiler::program* program);
 
         bool execute(
-            common::result& r,
             compiler::session& session,
             compiler::program* program);
 
@@ -52,12 +49,10 @@ namespace basecode::compiler {
         // run directive
         // --------------------
         bool on_execute_run(
-            common::result& r,
             compiler::session& session,
             compiler::program* program);
 
         bool on_evaluate_run(
-            common::result& r,
             compiler::session& session,
             compiler::program* program);
 
@@ -65,12 +60,10 @@ namespace basecode::compiler {
         // run directive
         // --------------------
         bool on_execute_foreign(
-            common::result& r,
             compiler::session& session,
             compiler::program* program);
 
         bool on_evaluate_foreign(
-            common::result& r,
             compiler::session& session,
             compiler::program* program);
 
