@@ -167,6 +167,9 @@ namespace basecode::syntax {
         {'s', std::bind(&lexer::shl_literal, std::placeholders::_1, std::placeholders::_2)},
         {'s', std::bind(&lexer::shr_literal, std::placeholders::_1, std::placeholders::_2)},
 
+        // transmute
+        {'t', std::bind(&lexer::transmute_literal, std::placeholders::_1, std::placeholders::_2)},
+
         // while literal
         {'w', std::bind(&lexer::while_literal, std::placeholders::_1, std::placeholders::_2)},
         {'w', std::bind(&lexer::with_literal, std::placeholders::_1, std::placeholders::_2)},
@@ -1171,6 +1174,18 @@ namespace basecode::syntax {
             if (!isalnum(ch)) {
                 rewind_one_char();
                 token = s_module_literal;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    bool lexer::transmute_literal(token_t& token) {
+        if (match_literal("transmute")) {
+            auto ch = read(false);
+            if (!isalnum(ch)) {
+                rewind_one_char();
+                token = s_transmute_literal;
                 return true;
             }
         }

@@ -267,6 +267,12 @@ namespace basecode::syntax {
         return node;
     }
 
+    ast_node_shared_ptr ast_builder::transmute_node(token_t& token) {
+        auto node = std::make_shared<ast_node_t>();
+        configure_node(node, token, ast_node_types_t::transmute_expression);
+        return node;
+    }
+
     ast_node_shared_ptr ast_builder::enum_node(const token_t& token) {
         auto node = std::make_shared<ast_node_t>();
         configure_node(node, token, ast_node_types_t::enum_expression);

@@ -24,6 +24,7 @@
 #include "directive.h"
 #include "statement.h"
 #include "type_info.h"
+#include "transmute.h"
 #include "expression.h"
 #include "identifier.h"
 #include "if_element.h"
@@ -110,6 +111,7 @@ namespace basecode::compiler {
         {syntax::ast_node_types_t::elseif_expression,       std::bind(&ast_evaluator::if_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::continue_statement,      std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::constant_expression,     std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::transmute_expression,    std::bind(&ast_evaluator::transmute_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::namespace_expression,    std::bind(&ast_evaluator::namespace_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::subscript_expression,    std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::return_argument_list,    std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
@@ -1204,6 +1206,27 @@ namespace basecode::compiler {
 
         result.element = list.front();
 
+        return true;
+    }
+
+    bool ast_evaluator::transmute_expression(
+            evaluator_context_t& context,
+            evaluator_result_t& result) {
+        auto type_name = context.node->lhs->lhs->children[0]->token.value;
+        auto type = _program->find_type(qualified_symbol_t {.name = type_name});
+        if (type == nullptr) {
+            _program->error(
+                context.session,
+                "P002",
+                fmt::format("unknown type '{}'.", type_name),
+                context.node->lhs->lhs->location);
+            return false;
+        }
+        result.element = _builder->make_transmute(
+            _program->current_scope(),
+            type,
+            resolve_symbol_or_evaluate(context, context.node->rhs.get()));
+        result.element->location(context.node->location);
         return true;
     }
 

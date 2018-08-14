@@ -41,6 +41,7 @@ namespace basecode::compiler {
     class attribute;
     class statement;
     class type_info;
+    class transmute;
     class identifier;
     class expression;
     class array_type;
@@ -133,6 +134,7 @@ namespace basecode::compiler {
         statement,
         proc_call,
         type_info,
+        transmute,
         alias_type,
         array_type,
         identifier,
@@ -177,6 +179,7 @@ namespace basecode::compiler {
         {element_type_t::any_type, "any_type"},
         {element_type_t::return_e, "return"},
         {element_type_t::import_e, "import"},
+        {element_type_t::transmute, "transmute"},
         {element_type_t::proc_type, "proc_type"},
         {element_type_t::directive, "directive"},
         {element_type_t::attribute, "attribute"},

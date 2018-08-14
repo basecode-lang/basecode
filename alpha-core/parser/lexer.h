@@ -159,6 +159,8 @@ namespace basecode::syntax {
 
         bool character_literal(token_t& token);
 
+        bool transmute_literal(token_t& token);
+
         bool less_than_operator(token_t& token);
 
         bool not_equals_operator(token_t& token);

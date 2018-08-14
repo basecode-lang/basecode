@@ -90,6 +90,7 @@ namespace basecode::syntax {
         right_curly_brace,
         character_literal,
         namespace_literal,
+        transmute_literal,
         greater_than_equal,
         left_square_bracket,
         right_square_bracket,
@@ -166,6 +167,7 @@ namespace basecode::syntax {
         {token_types_t::right_curly_brace,      "right_curly_brace"},
         {token_types_t::character_literal,      "character_literal"},
         {token_types_t::namespace_literal,      "namespace_literal"},
+        {token_types_t::transmute_literal,      "transmute_literal"},
         {token_types_t::greater_than_equal,     "greater_than_equal"},
         {token_types_t::left_square_bracket,    "left_square_bracket"},
         {token_types_t::right_square_bracket,   "right_square_bracket"},
@@ -319,6 +321,11 @@ namespace basecode::syntax {
         .value = "with"
     };
 
+    static inline token_t s_from_literal = {
+        .type = token_types_t::from_literal,
+        .value = "from"
+    };
+
     static inline token_t s_true_literal = {
         .type = token_types_t::true_literal,
         .value = "true"
@@ -404,11 +411,6 @@ namespace basecode::syntax {
         .value = "return"
     };
 
-    static inline token_t s_from_literal = {
-        .type = token_types_t::from_literal,
-        .value = "from"
-    };
-
     static inline token_t s_else_if_literal = {
         .type = token_types_t::else_if_literal,
         .value = "else if"
@@ -437,6 +439,11 @@ namespace basecode::syntax {
     static inline token_t s_question_literal = {
         .type = token_types_t::question,
         .value = "?"
+    };
+
+    static inline token_t s_transmute_literal = {
+        .type = token_types_t::transmute_literal,
+        .value = "transmute"
     };
 
     static inline token_t s_namespace_literal = {

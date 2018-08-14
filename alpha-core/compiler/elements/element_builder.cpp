@@ -23,6 +23,7 @@
 #include "directive.h"
 #include "statement.h"
 #include "type_info.h"
+#include "transmute.h"
 #include "expression.h"
 #include "identifier.h"
 #include "if_element.h"
@@ -290,6 +291,17 @@ namespace basecode::compiler {
         if (expr != nullptr)
             expr->parent_element(cast);
         return cast;
+    }
+
+    transmute* element_builder::make_transmute(
+            compiler::block* parent_scope,
+            compiler::type* type,
+            element* expr) {
+        auto transmute = new compiler::transmute(parent_scope, type, expr);
+        _program->elements().add(transmute);
+        if (expr != nullptr)
+            expr->parent_element(transmute);
+        return transmute;
     }
 
     procedure_instance* element_builder::make_procedure_instance(

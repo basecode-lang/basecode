@@ -31,6 +31,11 @@ namespace basecode::compiler {
             compiler::type* type,
             element* expr);
 
+        transmute* make_transmute(
+            compiler::block* parent_scope,
+            compiler::type* type,
+            element* expr);
+
         field* make_field(
             compiler::block* parent_scope,
             compiler::identifier* identifier);

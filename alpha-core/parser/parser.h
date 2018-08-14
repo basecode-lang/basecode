@@ -212,6 +212,18 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    class transmute_prefix_parser : public prefix_parser {
+    public:
+        transmute_prefix_parser() = default;
+
+        ast_node_shared_ptr parse(
+            common::result& r,
+            parser* parser,
+            token_t& token) override;
+    };
+
+    ///////////////////////////////////////////////////////////////////////////
+
     class label_prefix_parser : public prefix_parser {
     public:
         label_prefix_parser() = default;
@@ -625,6 +637,7 @@ namespace basecode::syntax {
         static inline namespace_prefix_parser s_namespace_prefix_parser {};
         static inline attribute_prefix_parser s_attribute_prefix_parser {};
         static inline directive_prefix_parser s_directive_prefix_parser {};
+        static inline transmute_prefix_parser s_transmute_prefix_parser {};
         static inline basic_block_prefix_parser s_basic_block_prefix_parser {};
         static inline char_literal_prefix_parser s_char_literal_prefix_parser {};
         static inline line_comment_prefix_parser s_line_comment_prefix_parser {};
@@ -660,6 +673,7 @@ namespace basecode::syntax {
             {token_types_t::namespace_literal,   &s_namespace_prefix_parser},
             {token_types_t::attribute,           &s_attribute_prefix_parser},
             {token_types_t::directive,           &s_directive_prefix_parser},
+            {token_types_t::transmute_literal,   &s_transmute_prefix_parser},
             {token_types_t::tilde,               &s_binary_not_prefix_parser},
             {token_types_t::left_curly_brace,    &s_basic_block_prefix_parser},
             {token_types_t::character_literal,   &s_char_literal_prefix_parser},

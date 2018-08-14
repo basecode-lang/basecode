@@ -21,6 +21,7 @@
 #include <compiler/elements/comment.h>
 #include <common/graphviz_formatter.h>
 #include <compiler/elements/any_type.h>
+#include <compiler/elements/transmute.h>
 #include <compiler/elements/bool_type.h>
 #include <compiler/elements/type_info.h>
 #include <compiler/elements/attribute.h>
@@ -155,6 +156,16 @@ namespace basecode::compiler {
                 add_primary_edge(element, element->expression());
                 return fmt::format(
                     "{}[shape=record,label=\"cast|{}\"{}];",
+                    node_vertex_name,
+                    element->type()->symbol()->name(),
+                    style);
+            }
+            case element_type_t::transmute: {
+                auto element = dynamic_cast<cast*>(node);
+                auto style = ", fillcolor=deeppink, style=\"filled\"";
+                add_primary_edge(element, element->expression());
+                return fmt::format(
+                    "{}[shape=record,label=\"transmute|{}\"{}];",
                     node_vertex_name,
                     element->type()->symbol()->name(),
                     style);
