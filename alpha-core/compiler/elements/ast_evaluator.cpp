@@ -580,6 +580,7 @@ namespace basecode::compiler {
 
         _program->push_scope(module_block);
         _program->_top_level_stack.push(module_block);
+        _program->_module_stack.push(module);
 
         for (auto it = context.node->children.begin();
              it != context.node->children.end();
@@ -595,6 +596,8 @@ namespace basecode::compiler {
         }
 
         _program->_top_level_stack.pop();
+        _program->_module_stack.pop();
+
         result.element = module;
 
         return true;

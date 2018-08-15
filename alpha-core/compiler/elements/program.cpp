@@ -436,6 +436,12 @@ namespace basecode::compiler {
         }
     }
 
+    compiler::module* program::current_module() {
+        if (_module_stack.empty())
+            return nullptr;
+        return _module_stack.top();
+    }
+
     compiler::block* program::current_top_level() {
         if (_top_level_stack.empty())
             return nullptr;

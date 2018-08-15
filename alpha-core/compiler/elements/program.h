@@ -38,10 +38,6 @@ namespace basecode::compiler {
 
         element_builder& builder();
 
-        compiler::type* find_type(
-            const qualified_symbol_t& symbol,
-            compiler::block* scope = nullptr) const;
-
         void disassemble(
             compiler::session& session,
             FILE* file);
@@ -52,10 +48,16 @@ namespace basecode::compiler {
 
         bool compile(compiler::session& session);
 
+        compiler::type* find_type(
+            const qualified_symbol_t& symbol,
+            compiler::block* scope = nullptr) const;
+
     protected:
         friend class code_dom_formatter;
 
         compiler::block* block();
+
+        compiler::module* current_module();
 
         compiler::block* current_top_level();
 
@@ -147,6 +149,7 @@ namespace basecode::compiler {
         ast_evaluator _ast_evaluator;
         compiler::block* _block = nullptr;
         std::stack<compiler::block*> _scope_stack {};
+        std::stack<compiler::module*> _module_stack {};
         std::stack<compiler::block*> _top_level_stack {};
         identifier_list_t _identifiers_with_unknown_types {};
         identifier_reference_list_t _unresolved_identifier_references {};
