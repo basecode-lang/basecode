@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <compiler/session.h>
 #include <vm/instruction_block.h>
 #include "type.h"
 #include "identifier.h"
@@ -26,21 +27,18 @@ namespace basecode::compiler {
                                                   _initializer(initializer) {
     }
 
-    bool identifier::on_emit(
-            common::result& r,
-            emit_context_t& context) {
+    bool identifier::on_emit(compiler::session& session) {
         if (_type->element_type() == element_type_t::namespace_type)
             return true;
 
-        auto instruction_block = context.assembler->current_block();
+        auto instruction_block = session.assembler().current_block();
 
         vm::stack_frame_entry_t* frame_entry = nullptr;
         auto stack_frame = instruction_block->stack_frame();
         if (stack_frame != nullptr)
             frame_entry = stack_frame->find_up(_symbol->name());
 
-        context.allocate_variable(
-            r,
+        session.emit_context().allocate_variable(
             _symbol->name(),
             _type,
             _usage,

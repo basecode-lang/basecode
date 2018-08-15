@@ -31,21 +31,17 @@ namespace basecode::compiler {
         element* rhs();
 
     protected:
-        bool on_emit(
-            common::result& r,
-            emit_context_t& context) override;
-
         void emit_arithmetic_operator(
-            common::result& r,
-            emit_context_t& context,
+            compiler::session& session,
             vm::instruction_block* instruction_block);
 
         void emit_relational_operator(
-            common::result& r,
-            emit_context_t& context,
+            compiler::session& session,
             vm::instruction_block* instruction_block);
 
         bool on_is_constant() const override;
+
+        bool on_emit(compiler::session& session) override;
 
         void on_owned_elements(element_list_t& list) override;
 

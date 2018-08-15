@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <compiler/session.h>
 #include <vm/instruction_block.h>
 #include "type.h"
 #include "cast.h"
@@ -25,16 +26,14 @@ namespace basecode::compiler {
                              _type(type) {
     }
 
-    bool cast::on_emit(
-            common::result& r,
-            emit_context_t& context) {
+    bool cast::on_emit(compiler::session& session) {
         if (_expression == nullptr)
             return true;
-        auto instruction_block = context.assembler->current_block();
+        auto instruction_block = session.assembler().current_block();
         instruction_block->current_entry()->comment(
             fmt::format("XXX: cast<{}> not yet implemented", _type->symbol()->name()),
-            context.indent);
-        return _expression->emit(r, context);
+            session.emit_context().indent);
+        return _expression->emit(session);
     }
 
     element* cast::expression() {

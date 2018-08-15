@@ -21,7 +21,6 @@ namespace basecode::compiler {
             const session_options_t& options,
             const path_list_t& source_files) : _terp(options.heap_size, options.stack_size),
                                                _assembler(&_terp),
-                                               _program(&_terp, &_assembler),
                                                _options(options) {
         for (const auto& path : source_files) {
             if (path.is_relative()) {
@@ -33,6 +32,10 @@ namespace basecode::compiler {
     }
 
     session::~session() {
+    }
+
+    bool session::run() {
+        return _terp.run(_result);
     }
 
     vm::terp& session::terp() {
@@ -50,7 +53,7 @@ namespace basecode::compiler {
     void session::finalize() {
         if (_options.verbose) {
             try {
-                _program.disassemble(stdout);
+                _program.disassemble(*this, stdout);
                 if (!_options.dom_graph_file.empty())
                     write_code_dom_graph(_options.dom_graph_file);
             } catch (const fmt::format_error& e) {
@@ -99,6 +102,10 @@ namespace basecode::compiler {
         element->module()
                 ->source_file()
                 ->error(_result, code, message, location);
+    }
+
+    emit_context_t& session::emit_context() {
+        return _emit_context;
     }
 
     common::source_file* session::pop_source_file() {

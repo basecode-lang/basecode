@@ -21,15 +21,13 @@ namespace basecode::compiler {
                              _expression(expr) {
     }
 
-    bool statement::on_emit(
-            common::result& r,
-            emit_context_t& context) {
+    bool statement::on_emit(compiler::session& session) {
         if (_expression == nullptr)
             return true;
 
         // XXX: need to loop over labels and add them to the assembler here
 
-        return _expression->emit(r, context);
+        return _expression->emit(session);
     }
 
     element* statement::expression() {

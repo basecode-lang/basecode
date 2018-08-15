@@ -61,22 +61,18 @@
 
 namespace basecode::compiler {
 
-    program::program(
-        vm::terp* terp,
-        vm::assembler* assembler) : element(nullptr, nullptr, element_type_t::program),
-                                    _builder(this),
-                                    _terp(terp),
-                                    _ast_evaluator(&_builder, this),
-                                    _assembler(assembler) {
+    program::program() : element(nullptr, nullptr, element_type_t::program),
+                         _builder(this),
+                         _ast_evaluator(&_builder, this) {
     }
 
     program::~program() {
     }
 
-    bool program::on_emit(
-            common::result& r,
-            emit_context_t& context) {
-        auto instruction_block = context.assembler->make_basic_block();
+    bool program::on_emit(compiler::session& session) {
+        auto& assembler = session.assembler();
+
+        auto instruction_block = assembler.make_basic_block();
         instruction_block->jump_direct("_initializer");
 
         std::map<vm::section_t, element_list_t> vars_by_section {};
@@ -158,10 +154,9 @@ namespace basecode::compiler {
                                 auto var_label = instruction_block->make_label(str->label_name());
                                 current_entry->label(var_label);
 
-                                auto var = context.allocate_variable(
-                                    r,
+                                auto var = session.emit_context().allocate_variable(
                                     var_label->name(),
-                                    context.program->find_type({.name = "string"}),
+                                    session.program().find_type({.name = "string"}),
                                     identifier_usage_t::heap,
                                     nullptr);
                                 if (var != nullptr)
@@ -171,7 +166,7 @@ namespace basecode::compiler {
                         }
                         instruction_block->current_entry()->comment(
                             fmt::format("\"{}\"", string_literal->value()),
-                            context.indent);
+                            session.emit_context().indent);
                         instruction_block->string(string_literal->escaped_value());
 
                         break;
@@ -188,8 +183,7 @@ namespace basecode::compiler {
                             instruction_block->align(type_alignment);
                         auto var_label = instruction_block->make_label(var->symbol()->name());
                         instruction_block->current_entry()->label(var_label);
-                        context.allocate_variable(
-                            r,
+                        session.emit_context().allocate_variable(
                             var_label->name(),
                             var->type(),
                             identifier_usage_t::heap);
@@ -261,7 +255,7 @@ namespace basecode::compiler {
                                     if (string_literal != nullptr) {
                                         instruction_block->current_entry()->comment(
                                             fmt::format("\"{}\"", string_literal->value()),
-                                            context.indent);
+                                            session.emit_context().indent);
                                         instruction_block->string(string_literal->value());
                                     }
                                 }
@@ -279,7 +273,7 @@ namespace basecode::compiler {
             }
         }
 
-        context.assembler->push_block(instruction_block);
+        assembler.push_block(instruction_block);
 
         auto procedure_types = elements().find_by_type(element_type_t::proc_type);
         procedure_type_list_t proc_list {};
@@ -298,10 +292,10 @@ namespace basecode::compiler {
         }
 
         for (auto procedure_type : proc_list) {
-            procedure_type->emit(r, context);
+            procedure_type->emit(session);
         }
 
-        auto top_level_block = context.assembler->make_basic_block();
+        auto top_level_block = assembler.make_basic_block();
         top_level_block->align(vm::instruction_t::alignment);
         top_level_block->current_entry()->blank_lines(1);
         top_level_block->memo();
@@ -313,23 +307,24 @@ namespace basecode::compiler {
             implicit_blocks.emplace_back(dynamic_cast<compiler::block*>(block));
         }
 
-        context.assembler->push_block(top_level_block);
+        assembler.push_block(top_level_block);
         for (auto block : implicit_blocks)
-            block->emit(r, context);
+            block->emit(session);
 
-        auto finalizer_block = context.assembler->make_basic_block();
+        auto finalizer_block = assembler.make_basic_block();
         finalizer_block->align(vm::instruction_t::alignment);
         finalizer_block->current_entry()->blank_lines(1);
         finalizer_block->exit();
         finalizer_block->current_entry()->label(finalizer_block->make_label("_finalizer"));
 
-        context.assembler->pop_block();
-        context.assembler->pop_block();
+        assembler.pop_block();
+        assembler.pop_block();
 
         return true;
     }
 
     bool program::compile(compiler::session& session) {
+        auto& assembler = session.assembler();
         // XXX: temporary!
         auto& r = session.result();
 
@@ -363,27 +358,22 @@ namespace basecode::compiler {
             return false;
 
         if (!r.is_failed()) {
-            auto& listing = _assembler->listing();
+            auto& listing = assembler.listing();
             listing.add_source_file("top_level.basm");
             listing.select_source_file("top_level.basm");
 
-            emit_context_t context(session, _terp, _assembler, this);
-            emit(r, context);
+            emit(session);
 
-            context.assembler->apply_addresses(r);
-            context.assembler->resolve_labels(r);
-            if (context.assembler->assemble(r)) {
-                context.terp->run(r);
+            assembler.apply_addresses(r);
+            assembler.resolve_labels(r);
+            if (assembler.assemble(r)) {
+                session.run();
             }
         }
 
         _top_level_stack.pop();
 
         return !r.is_failed();
-    }
-
-    vm::terp* program::terp() {
-        return _terp;
     }
 
     compiler::block* program::block() {
@@ -423,13 +413,6 @@ namespace basecode::compiler {
         return _builder;
     }
 
-    bool program::run(common::result& r) {
-        while (!_terp->has_exited())
-            if (!_terp->step(r))
-                return false;
-        return true;
-    }
-
     compiler::block* program::pop_scope() {
         if (_scope_stack.empty())
             return nullptr;
@@ -438,14 +421,18 @@ namespace basecode::compiler {
         return top;
     }
 
-    void program::disassemble(FILE* file) {
-        auto root_block = _assembler->root_block();
+    void program::disassemble(
+            compiler::session& session,
+            FILE* file) {
+        auto& assembler = session.assembler();
+
+        auto root_block = assembler.root_block();
         if (root_block == nullptr)
             return;
         root_block->disassemble();
         if (file != nullptr) {
             fmt::print(file, "\n");
-            _assembler->listing().write(file);
+            assembler.listing().write(file);
         }
     }
 

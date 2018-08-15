@@ -10,6 +10,7 @@
 // ----------------------------------------------------------------------------
 
 #include <common/defer.h>
+#include <compiler/session.h>
 #include <vm/instruction_block.h>
 #include "program.h"
 #include "identifier.h"
@@ -30,15 +31,13 @@ namespace basecode::compiler {
                                          _reference(reference) {
     }
 
-    bool procedure_call::on_emit(
-            common::result& r,
-            emit_context_t& context) {
-        context.indent = 4;
+    bool procedure_call::on_emit(compiler::session& session) {
+        session.emit_context().indent = 4;
         defer({
-            context.indent = 0;
+            session.emit_context().indent = 0;
         });
 
-        auto instruction_block = context.assembler->current_block();
+        auto instruction_block = session.assembler().current_block();
         auto identifier = _reference->identifier();
         auto init = identifier->initializer();
         if (init == nullptr)
@@ -47,19 +46,19 @@ namespace basecode::compiler {
         auto procedure_type = init->procedure_type();
 
         if (_arguments != nullptr)
-            _arguments->emit(r, context);
+            _arguments->emit(session);
 
         if (procedure_type->is_foreign()) {
             instruction_block->push_u16(static_cast<uint16_t>(_arguments->elements().size()));
             instruction_block->call_foreign(procedure_type->foreign_address());
             instruction_block->current_entry()->comment(
                 fmt::format("foreign call: {}", identifier->symbol()->name()),
-                context.indent);
+                session.emit_context().indent);
         } else {
             instruction_block->call(identifier->symbol()->name());
         }
 
-        auto target_reg = context.assembler->current_target_register();
+        auto target_reg = session.assembler().current_target_register();
         if (target_reg != nullptr) {
             if (!procedure_type->returns().as_list().empty()) {
                 instruction_block->pop(*target_reg);

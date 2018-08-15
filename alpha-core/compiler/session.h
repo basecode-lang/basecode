@@ -35,6 +35,8 @@ namespace basecode::compiler {
 
         virtual ~session();
 
+        bool run();
+
         void error(
             const std::string& code,
             const std::string& message,
@@ -59,6 +61,8 @@ namespace basecode::compiler {
         vm::assembler& assembler();
 
         compiler::program& program();
+
+        emit_context_t& emit_context();
 
         common::source_file* pop_source_file();
 
@@ -90,6 +94,7 @@ namespace basecode::compiler {
         common::result _result;
         vm::assembler _assembler;
         compiler::program _program;
+        emit_context_t _emit_context;
         session_options_t _options {};
         std::stack<common::source_file*> _source_file_stack {};
         std::map<std::string, common::source_file> _source_files {};

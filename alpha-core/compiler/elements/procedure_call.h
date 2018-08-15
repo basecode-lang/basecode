@@ -30,9 +30,7 @@ namespace basecode::compiler {
         void reference(compiler::identifier_reference* value);
 
     protected:
-        bool on_emit(
-            common::result& r,
-            emit_context_t& context) override;
+        bool on_emit(compiler::session& session) override;
 
         void on_owned_elements(element_list_t& list) override;
 

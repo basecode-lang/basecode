@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <compiler/session.h>
 #include <vm/instruction_block.h>
 #include "type.h"
 #include "program.h"
@@ -22,10 +23,8 @@ namespace basecode::compiler {
         block* parent_scope) : element(module, parent_scope, element_type_t::argument_list) {
     }
 
-    bool argument_list::on_emit(
-            common::result& r,
-            emit_context_t& context) {
-        auto instruction_block = context.assembler->current_block();
+    bool argument_list::on_emit(compiler::session& session) {
+        auto instruction_block = session.assembler().current_block();
         for (auto it = _elements.rbegin(); it != _elements.rend(); ++it) {
             element* arg = *it;
             switch (arg->element_type()) {
@@ -38,16 +37,16 @@ namespace basecode::compiler {
                 case element_type_t::boolean_literal:
                 case element_type_t::integer_literal:
                 case element_type_t::identifier_reference: {
-                    auto arg_reg = register_for(r, context, arg);
+                    auto arg_reg = register_for(session, arg);
                     if (arg_reg.var != nullptr) {
 //                        push_size = vm::op_size_for_byte_size(
 //                            arg_reg.var->type
 //                                       ->size_in_bytes());
                         arg_reg.clean_up = true;
                     }
-                    context.assembler->push_target_register(arg_reg.reg);
-                    arg->emit(r, context);
-                    context.assembler->pop_target_register();
+                    session.assembler().push_target_register(arg_reg.reg);
+                    arg->emit(session);
+                    session.assembler().pop_target_register();
                     instruction_block->push(arg_reg.reg);
                     break;
                 }

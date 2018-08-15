@@ -36,10 +36,8 @@ namespace basecode::compiler {
 
         identifier_map_t& identifiers();
 
-    private:
-        bool on_emit(
-            common::result& r,
-            emit_context_t& context) override;
+    protected:
+        bool on_emit(compiler::session& session) override;
 
         void on_owned_elements(element_list_t& list) override;
 

@@ -97,7 +97,7 @@ namespace basecode::compiler {
     bool directive::on_execute_foreign(
             compiler::session& session,
             compiler::program* program) {
-        auto terp = program->terp();
+        auto& terp = session.terp();
 
         std::string library_name;
         auto library_attribute = attributes().find("library");
@@ -127,7 +127,7 @@ namespace basecode::compiler {
             << library_name
             << SHARED_LIBRARY_SUFFIX;
         boost::filesystem::path library_path(platform_name.str());
-        auto library = terp->load_shared_library(session.result(), library_path);
+        auto library = terp.load_shared_library(session.result(), library_path);
         if (library == nullptr) {
             auto msg = session.result().find_code("B062");
             if (msg != nullptr) {
@@ -184,7 +184,7 @@ namespace basecode::compiler {
             }
         }
 
-        auto result = terp->register_foreign_function(session.result(), signature);
+        auto result = terp.register_foreign_function(session.result(), signature);
         if (!result) {
             session.error(
                 this,

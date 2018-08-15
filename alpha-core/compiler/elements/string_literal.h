@@ -29,11 +29,9 @@ namespace basecode::compiler {
         }
 
     protected:
-        bool on_emit(
-            common::result& r,
-            emit_context_t& context) override;
-
         bool on_is_constant() const override;
+
+        bool on_emit(compiler::session& session) override;
 
         bool on_as_string(std::string& value) const override;
 

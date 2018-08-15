@@ -12,6 +12,7 @@
 #include <fmt/format.h>
 #include <vm/assembler.h>
 #include <common/defer.h>
+#include <compiler/session.h>
 #include <vm/instruction_block.h>
 #include "block.h"
 #include "import.h"
@@ -33,27 +34,25 @@ namespace basecode::compiler {
             element_type_t type) : element(module, parent_scope, type) {
     }
 
-    bool block::on_emit(
-            common::result& r,
-            emit_context_t& context) {
+    bool block::on_emit(compiler::session& session) {
         vm::instruction_block* instruction_block = nullptr;
 
         auto clean_up = false;
         defer({
             if (clean_up)
-                context.assembler->pop_block();
+                session.assembler().pop_block();
         });
 
         switch (element_type()) {
             case element_type_t::block: {
-                instruction_block = context.assembler->make_basic_block();
+                instruction_block = session.assembler().make_basic_block();
                 instruction_block->memo();
 
                 auto parent_ns = parent_element_as<compiler::namespace_element>();
                 if (parent_ns != nullptr) {
                     instruction_block->current_entry()->comment(
                         fmt::format("namespace: {}", parent_ns->name()),
-                        context.indent);
+                        session.emit_context().indent);
                 }
                 instruction_block->current_entry()->blank_lines(1);
 
@@ -62,19 +61,19 @@ namespace basecode::compiler {
                     ->current_entry()
                     ->label(block_label);
 
-                context.assembler->push_block(instruction_block);
+                session.assembler().push_block(instruction_block);
                 clean_up = true;
                 break;
             }
             case element_type_t::module_block: {
-                instruction_block = context.assembler->make_basic_block();
+                instruction_block = session.assembler().make_basic_block();
                 instruction_block->memo();
 
                 auto parent_module = parent_element_as<compiler::module>();
                 if (parent_module != nullptr) {
                     instruction_block->current_entry()->comment(
                         fmt::format("module: {}", parent_module->source_file()->path().string()),
-                        context.indent);
+                        session.emit_context().indent);
                     clean_up = !parent_module->is_root();
                 }
                 instruction_block->current_entry()->blank_lines(1);
@@ -84,7 +83,7 @@ namespace basecode::compiler {
                     ->current_entry()
                     ->label(block_label);
 
-                context.assembler->push_block(instruction_block);
+                session.assembler().push_block(instruction_block);
                 break;
             }
             case element_type_t::proc_type_block:
@@ -97,9 +96,9 @@ namespace basecode::compiler {
         }
 
         for (auto stmt : _statements)
-            stmt->emit(r, context);
+            stmt->emit(session);
 
-        return !r.is_failed();
+        return !session.result().is_failed();
     }
 
     type_map_t& block::types() {

@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <compiler/session.h>
 #include <vm/instruction_block.h>
 #include "type.h"
 #include "program.h"
@@ -22,15 +23,6 @@ namespace basecode::compiler {
             block* parent_scope,
             double value) : element(module, parent_scope, element_type_t::float_literal),
                             _value(value) {
-    }
-
-    bool float_literal::on_emit(
-            common::result& r,
-            emit_context_t& context) {
-        auto instruction_block = context.assembler->current_block();
-        auto target_reg = context.assembler->current_target_register();
-        instruction_block->move_constant_to_reg(*target_reg, _value);
-        return true;
     }
 
     double float_literal::value() const {
@@ -47,6 +39,13 @@ namespace basecode::compiler {
 
     bool float_literal::on_as_float(double& value) const {
         value = _value;
+        return true;
+    }
+
+    bool float_literal::on_emit(compiler::session& session) {
+        auto instruction_block = session.assembler().current_block();
+        auto target_reg = session.assembler().current_target_register();
+        instruction_block->move_constant_to_reg(*target_reg, _value);
         return true;
     }
 

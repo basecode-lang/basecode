@@ -19,22 +19,22 @@
 
 namespace basecode::compiler {
 
-    bool variable_register_t::reserve(vm::assembler* assembler) {
-        allocated = assembler->allocate_reg(reg);
+    bool variable_register_t::reserve(compiler::session& session) {
+        allocated = session.assembler().allocate_reg(reg);
         return allocated;
     }
 
-    void variable_register_t::release(vm::assembler* assembler) {
+    void variable_register_t::release(compiler::session& session) {
         if (!allocated)
             return;
-        assembler->free_reg(reg);
+        session.assembler().free_reg(reg);
         allocated = false;
     }
 
     ///////////////////////////////////////////////////////////////////////////
 
     bool variable_t::init(
-            emit_context_t& context,
+            compiler::session& session,
             vm::instruction_block* block) {
         if (!live)
             return false;
@@ -43,7 +43,7 @@ namespace basecode::compiler {
             return true;
 
         if (usage == identifier_usage_t::heap) {
-            if (!address_reg.reserve(context.assembler))
+            if (!address_reg.reserve(session))
                 return false;
 
             if (address_offset != 0) {
@@ -61,7 +61,7 @@ namespace basecode::compiler {
                     fmt::format(
                         "identifier '{}' address (global)",
                         name),
-                    context.indent);
+                    session.emit_context().indent);
         }
 
         value_reg.reg.type = vm::register_type_t::integer;
@@ -79,17 +79,17 @@ namespace basecode::compiler {
     }
 
     bool variable_t::read(
-            emit_context_t& context,
+            compiler::session& session,
             vm::instruction_block* block) {
         if (!live)
             return false;
 
-        if (!init(context, block))
+        if (!init(session, block))
             return false;
 
         std::string type_name = "global";
         if (requires_read) {
-            if (!value_reg.reserve(context.assembler))
+            if (!value_reg.reserve(session))
                 return false;
 
             if (usage == identifier_usage_t::stack) {
@@ -108,7 +108,7 @@ namespace basecode::compiler {
                             "load identifier '{}' value ({})",
                             name,
                             type_name),
-                        context.indent);
+                        session.emit_context().indent);
             }
 
             requires_read = false;
@@ -118,9 +118,9 @@ namespace basecode::compiler {
     }
 
     bool variable_t::write(
-            emit_context_t& context,
+            compiler::session& session,
             vm::instruction_block* block) {
-        auto target_reg = context.assembler->current_target_register();
+        auto target_reg = session.assembler().current_target_register();
         if (target_reg == nullptr)
             return false;
 
@@ -135,7 +135,7 @@ namespace basecode::compiler {
         return true;
     }
 
-    void variable_t::make_live(emit_context_t& context) {
+    void variable_t::make_live(compiler::session& session) {
         if (live)
             return;
         live = true;
@@ -143,27 +143,17 @@ namespace basecode::compiler {
         requires_read = type->access_model() != type_access_model_t::pointer;
     }
 
-    void variable_t::make_dormant(emit_context_t& context) {
+    void variable_t::make_dormant(compiler::session& session) {
         if (!live)
             return;
         live = false;
         requires_read = false;
         address_loaded = false;
-        value_reg.release(context.assembler);
-        address_reg.release(context.assembler);
+        value_reg.release(session);
+        address_reg.release(session);
     }
 
     ///////////////////////////////////////////////////////////////////////////
-
-    emit_context_t::emit_context_t(
-        compiler::session& session,
-        vm::terp* terp,
-        vm::assembler* assembler,
-        compiler::program* program) : terp(terp),
-                                      session(session),
-                                      assembler(assembler),
-                                      program(program) {
-    }
 
     void emit_context_t::pop() {
         if (data_stack.empty())
@@ -181,7 +171,6 @@ namespace basecode::compiler {
     }
 
     variable_t* emit_context_t::allocate_variable(
-            common::result& r,
             const std::string& name,
             compiler::type* type,
             identifier_usage_t usage,
@@ -222,10 +211,12 @@ namespace basecode::compiler {
         return reg;
     }
 
-    void emit_context_t::free_variable(const std::string& name) {
+    void emit_context_t::free_variable(
+            compiler::session& session,
+            const std::string& name) {
         auto var = variable(name);
         if (var != nullptr) {
-            var->make_dormant(*this);
+            var->make_dormant(session);
             variables.erase(name);
         }
     }

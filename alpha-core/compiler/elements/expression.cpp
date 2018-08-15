@@ -21,14 +21,6 @@ namespace basecode::compiler {
                              _root(root) {
     }
 
-    bool expression::on_emit(
-            common::result& r,
-            emit_context_t& context) {
-        if (_root == nullptr)
-            return true;
-        return _root->emit(r, context);
-    }
-
     element* expression::root() {
         return _root;
     }
@@ -37,6 +29,12 @@ namespace basecode::compiler {
         if (_root == nullptr)
             return false;
         return _root->is_constant();
+    }
+
+    bool expression::on_emit(compiler::session& session) {
+        if (_root == nullptr)
+            return true;
+        return _root->emit(session);
     }
 
     void expression::on_owned_elements(element_list_t& list) {

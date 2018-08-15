@@ -29,13 +29,11 @@ namespace basecode::compiler {
         compiler::procedure_type* procedure_type();
 
     protected:
-        bool on_emit(
-            common::result& r,
-            emit_context_t& context) override;
-
         bool on_as_bool(bool& value) const override;
 
         bool on_as_float(double& value) const override;
+
+        bool on_emit(compiler::session& session) override;
 
         bool on_as_integer(uint64_t& value) const override;
 

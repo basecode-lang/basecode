@@ -32,15 +32,13 @@ namespace basecode::compiler {
                             _rhs(rhs) {
     }
 
-    bool binary_operator::on_emit(
-            common::result& r,
-            emit_context_t& context) {
-        context.indent = 4;
+    bool binary_operator::on_emit(compiler::session& session) {
+        session.emit_context().indent = 4;
         defer({
-            context.indent = 0;
+            session.emit_context().indent = 0;
         });
 
-        auto instruction_block = context.assembler->current_block();
+        auto instruction_block = session.assembler().current_block();
         switch (operator_type()) {
             case operator_type_t::add:
             case operator_type_t::modulo:
@@ -56,8 +54,7 @@ namespace basecode::compiler {
             case operator_type_t::rotate_left:
             case operator_type_t::rotate_right: {
                 emit_arithmetic_operator(
-                    r,
-                    context,
+                    session,
                     instruction_block);
                 break;
             }
@@ -70,15 +67,14 @@ namespace basecode::compiler {
             case operator_type_t::less_than_or_equal:
             case operator_type_t::greater_than_or_equal: {
                 emit_relational_operator(
-                    r,
-                    context,
+                    session,
                     instruction_block);
                 break;
             }
             case operator_type_t::assignment: {
-                auto var = context.variable_for_element(_lhs);
+                auto var = session.emit_context().variable_for_element(_lhs);
                 if (var == nullptr) {
-                    context.session.error(
+                    session.error(
                         _lhs,
                         "P051",
                         fmt::format("missing assembler variable for {}.", _lhs->label_name()),
@@ -86,31 +82,31 @@ namespace basecode::compiler {
                     return false;
                 }
 
-                var->make_live(context);
+                var->make_live(session);
                 defer({
-                    var->make_dormant(context);
+                    var->make_dormant(session);
                 });
 
-                _lhs->emit(r, context);
-                var->init(context, instruction_block);
+                _lhs->emit(session);
+                var->init(session, instruction_block);
 
                 vm::register_t rhs_reg;
                 rhs_reg.size = var->value_reg.reg.size;
                 rhs_reg.type = var->value_reg.reg.type;
 
-                if (!context.assembler->allocate_reg(rhs_reg)) {
-                    context.session.error(
+                if (!session.assembler().allocate_reg(rhs_reg)) {
+                    session.error(
                         _rhs,
                         "P052",
                         "assembler registers exhausted.",
                         _rhs->location());
                     return false;
                 }
-                context.assembler->push_target_register(rhs_reg);
-                _rhs->emit(r, context);
-                var->write(context, instruction_block);
-                context.assembler->pop_target_register();
-                context.assembler->free_reg(rhs_reg);
+                session.assembler().push_target_register(rhs_reg);
+                _rhs->emit(session);
+                var->write(session, instruction_block);
+                session.assembler().pop_target_register();
+                session.assembler().free_reg(rhs_reg);
                 break;
             }
             default:
@@ -205,24 +201,23 @@ namespace basecode::compiler {
     }
 
     void binary_operator::emit_relational_operator(
-            common::result& r,
-            emit_context_t& context,
+            compiler::session& session,
             vm::instruction_block* instruction_block) {
-        auto lhs_reg = register_for(r, context, _lhs);
-        auto rhs_reg = register_for(r, context, _rhs);
+        auto lhs_reg = register_for(session, _lhs);
+        auto rhs_reg = register_for(session, _rhs);
 
         if (!lhs_reg.valid || !rhs_reg.valid)
             return;
 
-        context.assembler->push_target_register(lhs_reg.reg);
-        _lhs->emit(r, context);
-        context.assembler->pop_target_register();
+        session.assembler().push_target_register(lhs_reg.reg);
+        _lhs->emit(session);
+        session.assembler().pop_target_register();
 
-        context.assembler->push_target_register(rhs_reg.reg);
-        _rhs->emit(r, context);
-        context.assembler->pop_target_register();
+        session.assembler().push_target_register(rhs_reg.reg);
+        _rhs->emit(session);
+        session.assembler().pop_target_register();
 
-        auto if_data = context.top<if_data_t>();
+        auto if_data = session.emit_context().top<if_data_t>();
         switch (operator_type()) {
             case operator_type_t::equals: {
                 instruction_block->cmp(lhs_reg.reg, rhs_reg.reg);
@@ -235,9 +230,9 @@ namespace basecode::compiler {
                         instruction_block->beq(if_data->true_branch_label);
                     }
                 } else {
-                    auto target_reg = context.assembler->current_target_register();
+                    auto target_reg = session.assembler().current_target_register();
                     instruction_block->setz(*target_reg);
-                    context.push_scratch_register(*target_reg);
+                    session.emit_context().push_scratch_register(*target_reg);
                 }
                 break;
             }
@@ -251,9 +246,9 @@ namespace basecode::compiler {
                 if (if_data != nullptr)
                     instruction_block->jump_direct(if_data->false_branch_label);
                 else {
-                    auto rhs_target_reg = context.pop_scratch_register();
-                    auto lhs_target_reg = context.pop_scratch_register();
-                    auto target_reg = context.assembler->current_target_register();
+                    auto rhs_target_reg = session.emit_context().pop_scratch_register();
+                    auto lhs_target_reg = session.emit_context().pop_scratch_register();
+                    auto target_reg = session.assembler().current_target_register();
                     instruction_block->or_reg_by_reg(
                         *target_reg,
                         lhs_target_reg,
@@ -265,9 +260,9 @@ namespace basecode::compiler {
                 if (if_data != nullptr)
                     instruction_block->jump_direct(if_data->true_branch_label);
                 else {
-                    auto rhs_target_reg = context.pop_scratch_register();
-                    auto lhs_target_reg = context.pop_scratch_register();
-                    auto target_reg = context.assembler->current_target_register();
+                    auto rhs_target_reg = session.emit_context().pop_scratch_register();
+                    auto lhs_target_reg = session.emit_context().pop_scratch_register();
+                    auto target_reg = session.assembler().current_target_register();
                     instruction_block->and_reg_by_reg(
                         *target_reg,
                         lhs_target_reg,
@@ -291,13 +286,12 @@ namespace basecode::compiler {
     }
 
     void binary_operator::emit_arithmetic_operator(
-            common::result& r,
-            emit_context_t& context,
+            compiler::session& session,
             vm::instruction_block* instruction_block) {
-        auto result_reg = context.assembler->current_target_register();
+        auto result_reg = session.assembler().current_target_register();
 
-        auto lhs_reg = register_for(r, context, _lhs);
-        auto rhs_reg = register_for(r, context, _rhs);
+        auto lhs_reg = register_for(session, _lhs);
+        auto rhs_reg = register_for(session, _rhs);
 
         if (!lhs_reg.valid || !rhs_reg.valid)
             return;
@@ -307,7 +301,7 @@ namespace basecode::compiler {
         };
         defer({
             if (target_reg.type != vm::register_type_t::none) {
-              context.assembler->free_reg(target_reg);
+                session.assembler().free_reg(target_reg);
             }
         });
 
@@ -315,18 +309,18 @@ namespace basecode::compiler {
             result_reg = &target_reg;
             result_reg->size = lhs_reg.size();
             result_reg->type = lhs_reg.reg.type;
-            if (!context.assembler->allocate_reg(*result_reg)) {
+            if (!session.assembler().allocate_reg(*result_reg)) {
 
             }
         }
 
-        context.assembler->push_target_register(lhs_reg.reg);
-        _lhs->emit(r, context);
-        context.assembler->pop_target_register();
+        session.assembler().push_target_register(lhs_reg.reg);
+        _lhs->emit(session);
+        session.assembler().pop_target_register();
 
-        context.assembler->push_target_register(rhs_reg.reg);
-        _rhs->emit(r, context);
-        context.assembler->pop_target_register();
+        session.assembler().push_target_register(rhs_reg.reg);
+        _rhs->emit(session);
+        session.assembler().pop_target_register();
 
         switch (operator_type()) {
             case operator_type_t::add: {

@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <compiler/session.h>
 #include <vm/instruction_block.h>
 #include "program.h"
 #include "boolean_literal.h"
@@ -22,17 +23,6 @@ namespace basecode::compiler {
                           _value(value) {
     }
 
-    bool boolean_literal::on_emit(
-            common::result& r,
-            emit_context_t& context) {
-        auto instruction_block = context.assembler->current_block();
-        auto target_reg = context.assembler->current_target_register();
-        instruction_block->move_constant_to_reg(
-            *target_reg,
-            static_cast<uint64_t>(_value ? 1 : 0));
-        return true;
-    }
-
     bool boolean_literal::value() const {
         return _value;
     }
@@ -43,6 +33,16 @@ namespace basecode::compiler {
 
     bool boolean_literal::on_as_bool(bool& value) const {
         value = _value;
+        return true;
+    }
+
+    bool boolean_literal::on_emit(compiler::session& session) {
+        auto& assembler = session.assembler();
+        auto instruction_block = assembler.current_block();
+        auto target_reg = assembler.current_target_register();
+        instruction_block->move_constant_to_reg(
+            *target_reg,
+            static_cast<uint64_t>(_value ? 1 : 0));
         return true;
     }
 

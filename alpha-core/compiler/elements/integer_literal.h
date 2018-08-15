@@ -27,11 +27,9 @@ namespace basecode::compiler {
         uint64_t value() const;
 
     protected:
-        bool on_emit(
-            common::result& r,
-            emit_context_t& context) override;
-
         bool on_is_constant() const override;
+
+        bool on_emit(compiler::session& session) override;
 
         bool on_as_integer(uint64_t& value) const override;
 

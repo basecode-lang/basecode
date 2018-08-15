@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <compiler/session.h>
 #include <vm/instruction_block.h>
 #include "type.h"
 #include "program.h"
@@ -24,19 +25,17 @@ namespace basecode::compiler {
                             _rhs(rhs) {
     }
 
-    bool unary_operator::on_emit(
-            common::result& r,
-            emit_context_t& context) {
-        auto instruction_block = context.assembler->current_block();
-        auto target_reg = context.assembler->current_target_register();
+    bool unary_operator::on_emit(compiler::session& session) {
+        auto instruction_block = session.assembler().current_block();
+        auto target_reg = session.assembler().current_target_register();
 
-        auto rhs_reg = register_for(r, context, _rhs);
+        auto rhs_reg = register_for(session, _rhs);
         if (!rhs_reg.valid)
             return false;
 
-        context.assembler->push_target_register(rhs_reg.reg);
-        _rhs->emit(r, context);
-        context.assembler->pop_target_register();
+        session.assembler().push_target_register(rhs_reg.reg);
+        _rhs->emit(session);
+        session.assembler().pop_target_register();
 
         switch (operator_type()) {
             case operator_type_t::negate: {

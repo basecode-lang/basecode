@@ -29,10 +29,6 @@ namespace basecode::compiler {
 
         virtual ~element();
 
-        bool emit(
-            common::result& r,
-            emit_context_t& context);
-
         bool is_type() const;
 
         block* parent_scope();
@@ -64,6 +60,8 @@ namespace basecode::compiler {
 
         void module(compiler::module* value);
 
+        bool emit(compiler::session& session);
+
         virtual std::string label_name() const;
 
         bool as_integer(uint64_t& value) const;
@@ -85,15 +83,12 @@ namespace basecode::compiler {
         compiler::type* infer_type(const compiler::program* program);
 
     protected:
-        virtual bool on_emit(
-            common::result& r,
-            emit_context_t& context);
+        virtual bool on_emit(compiler::session& session);
 
         virtual element* on_fold(compiler::session& session);
 
         element_register_t register_for(
-            common::result& r,
-            emit_context_t& context,
+            compiler::session& session,
             element* e);
 
         virtual bool on_is_constant() const;

@@ -28,9 +28,9 @@ namespace basecode::compiler {
     };
 
     struct variable_register_t {
-        bool reserve(vm::assembler* assembler);
+        bool reserve(compiler::session& session);
 
-        void release(vm::assembler* assembler);
+        void release(compiler::session& session);
 
         bool allocated = false;
         vm::register_t reg;
@@ -40,20 +40,20 @@ namespace basecode::compiler {
 
     struct variable_t {
         bool init(
-            emit_context_t& context,
+            compiler::session& session,
             vm::instruction_block* block);
 
         bool read(
-            emit_context_t& context,
+            compiler::session& session,
             vm::instruction_block* block);
 
         bool write(
-            emit_context_t& context,
+            compiler::session& session,
             vm::instruction_block* block);
 
-        void make_live(emit_context_t& context);
+        void make_live(compiler::session& session);
 
-        void make_dormant(emit_context_t& context);
+        void make_dormant(compiler::session& session);
 
         std::string name;
         bool live = false;
@@ -76,11 +76,7 @@ namespace basecode::compiler {
     class program;
 
     struct emit_context_t {
-        emit_context_t(
-            compiler::session& session,
-            vm::terp* terp,
-            vm::assembler* assembler,
-            compiler::program* program);
+        emit_context_t() = default;
 
         template <typename T>
         T* top() {
@@ -100,7 +96,6 @@ namespace basecode::compiler {
             const std::string& false_label_name);
 
         variable_t* allocate_variable(
-            common::result& r,
             const std::string& name,
             compiler::type* type,
             identifier_usage_t usage,
@@ -112,7 +107,9 @@ namespace basecode::compiler {
 
         vm::register_t pop_scratch_register();
 
-        void free_variable(const std::string& name);
+        void free_variable(
+            compiler::session& session,
+            const std::string& name);
 
         variable_t* variable(const std::string& name);
 
@@ -121,10 +118,6 @@ namespace basecode::compiler {
         variable_t* variable_for_element(compiler::element* element);
 
         uint8_t indent = 0;
-        vm::terp* terp = nullptr;
-        compiler::session& session;
-        vm::assembler* assembler = nullptr;
-        compiler::program* program = nullptr;
         std::stack<boost::any> data_stack {};
         std::stack<vm::register_t> scratch_registers {};
         std::unordered_map<std::string, variable_t> variables {};

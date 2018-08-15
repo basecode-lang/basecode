@@ -41,18 +41,6 @@ namespace basecode::compiler {
         return _parent_scope;
     }
 
-    bool element::emit(
-            common::result& r,
-            emit_context_t& context) {
-        return on_emit(r, context);
-    }
-
-    bool element::on_emit(
-            common::result& r,
-            emit_context_t& context) {
-        return true;
-    }
-
     bool element::is_type() const {
         switch (_element_type) {
             case element_type_t::any_type:
@@ -110,21 +98,20 @@ namespace basecode::compiler {
     }
 
     element_register_t element::register_for(
-            common::result& r,
-            emit_context_t& context,
+            compiler::session& session,
             element* e) {
         element_register_t result {
-            .context = &context
+            .session = &session
         };
 
-        auto var = context.variable_for_element(e);
+        auto var = session.emit_context().variable_for_element(e);
         if (var != nullptr) {
-            var->make_live(context);
+            var->make_live(session);
 
             result.var = var;
             result.var->read(
-                context,
-                context.assembler->current_block());
+                session,
+                session.assembler().current_block());
             result.valid = true;
             result.reg = var->value_reg.reg;
 
@@ -135,7 +122,7 @@ namespace basecode::compiler {
                 result.reg = result.var->value_reg.reg;
             }
         } else {
-            auto type = e->infer_type(context.program);
+            auto type = e->infer_type(&session.program());
 
             vm::register_t reg;
             reg.size = vm::op_size_for_byte_size(type->size_in_bytes());
@@ -145,8 +132,8 @@ namespace basecode::compiler {
             else
                 reg.type = vm::register_type_t::integer;
 
-            if (!context.assembler->allocate_reg(reg)) {
-                context.session.error(
+            if (!session.assembler().allocate_reg(reg)) {
+                session.error(
                     e,
                     "P052",
                     "assembler registers exhausted.",
@@ -181,6 +168,10 @@ namespace basecode::compiler {
         _module = value;
     }
 
+    bool element::emit(compiler::session& session) {
+        return on_emit(session);
+    }
+
     bool element::on_as_float(double& value) const {
         return false;
     }
@@ -191,6 +182,10 @@ namespace basecode::compiler {
 
     bool element::as_string(std::string& value) const {
         return on_as_string(value);
+    }
+
+    bool element::on_emit(compiler::session& session) {
+        return true;
     }
 
     element* element::fold(compiler::session& session) {

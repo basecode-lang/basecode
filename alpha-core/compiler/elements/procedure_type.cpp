@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <compiler/session.h>
 #include <vm/instruction_block.h>
 #include "block.h"
 #include "field.h"
@@ -31,9 +32,7 @@ namespace basecode::compiler {
                                                 _scope(scope) {
     }
 
-    bool procedure_type::on_emit(
-            common::result& r,
-            emit_context_t& context) {
+    bool procedure_type::on_emit(compiler::session& session) {
         auto procedure_label = symbol()->name();
         auto parent_init = parent_element_as<compiler::initializer>();
         if (parent_init != nullptr) {
@@ -47,7 +46,7 @@ namespace basecode::compiler {
             return true;
         }
 
-        auto instruction_block = context.assembler->make_procedure_block();
+        auto instruction_block = session.assembler().make_procedure_block();
         instruction_block->align(vm::instruction_t::alignment);
         instruction_block->current_entry()->blank_lines(1);
         instruction_block->memo();
@@ -77,8 +76,8 @@ namespace basecode::compiler {
 
         offset = 16;
         size_t local_count = 0;
-        context.program->visit_blocks(
-            r,
+        session.program().visit_blocks(
+            session.result(),
             [&](compiler::block* scope) {
                 if (scope->element_type() == element_type_t::proc_type_block)
                     return true;
@@ -110,9 +109,9 @@ namespace basecode::compiler {
                 size);
         }
 
-        context.assembler->push_block(instruction_block);
-        _scope->emit(r, context);
-        context.assembler->pop_block();
+        session.assembler().push_block(instruction_block);
+        _scope->emit(session);
+        session.assembler().pop_block();
 
         return true;
     }

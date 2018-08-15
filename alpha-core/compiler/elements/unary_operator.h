@@ -27,11 +27,9 @@ namespace basecode::compiler {
         element* rhs();
 
     protected:
-        bool on_emit(
-            common::result& r,
-            emit_context_t& context) override;
-
         bool on_is_constant() const override;
+
+        bool on_emit(compiler::session& session) override;
 
         element* on_fold(compiler::session& session) override;
 

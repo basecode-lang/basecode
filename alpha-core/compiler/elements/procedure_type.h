@@ -43,11 +43,9 @@ namespace basecode::compiler {
         procedure_instance_list_t& instances();
 
     protected:
-        bool on_emit(
-            common::result& r,
-            emit_context_t& context) override;
-
         bool on_is_constant() const override;
+
+        bool on_emit(compiler::session& session) override;
 
         bool on_type_check(compiler::type* other) override;
 

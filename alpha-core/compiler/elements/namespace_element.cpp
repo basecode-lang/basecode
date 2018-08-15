@@ -24,18 +24,6 @@ namespace basecode::compiler {
                                        _expression(expr) {
     }
 
-    bool namespace_element::on_emit(
-            common::result& r,
-            emit_context_t& context) {
-        if (_expression == nullptr)
-            return true;
-        return _expression->emit(r, context);
-    }
-
-    element* namespace_element::expression() {
-        return _expression;
-    }
-
     std::string namespace_element::name() {
         std::string name("unknown");
         switch (parent_element()->element_type()) {
@@ -56,8 +44,18 @@ namespace basecode::compiler {
         return name;
     }
 
+    element* namespace_element::expression() {
+        return _expression;
+    }
+
     bool namespace_element::on_is_constant() const {
         return true;
+    }
+
+    bool namespace_element::on_emit(compiler::session& session) {
+        if (_expression == nullptr)
+            return true;
+        return _expression->emit(session);
     }
 
     void namespace_element::on_owned_elements(element_list_t& list) {

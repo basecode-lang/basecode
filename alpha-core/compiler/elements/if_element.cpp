@@ -10,6 +10,7 @@
 // ----------------------------------------------------------------------------
 
 #include <fmt/format.h>
+#include <compiler/session.h>
 #include "if_element.h"
 
 namespace basecode::compiler {
@@ -25,20 +26,6 @@ namespace basecode::compiler {
                                      _false_branch(false_branch) {
     }
 
-    bool if_element::on_emit(
-            common::result& r,
-            emit_context_t& context) {
-        context.push_if(
-            _true_branch->label_name(),
-            _false_branch != nullptr ? _false_branch->label_name() : "");
-        _predicate->emit(r, context);
-        _true_branch->emit(r, context);
-        if (_false_branch != nullptr)
-            _false_branch->emit(r, context);
-        context.pop();
-        return true;
-    }
-
     element* if_element::predicate() {
         return _predicate;
     }
@@ -49,6 +36,18 @@ namespace basecode::compiler {
 
     element* if_element::false_branch() {
         return _false_branch;
+    }
+
+    bool if_element::on_emit(compiler::session& session) {
+        session.emit_context().push_if(
+            _true_branch->label_name(),
+            _false_branch != nullptr ? _false_branch->label_name() : "");
+        _predicate->emit(session);
+        _true_branch->emit(session);
+        if (_false_branch != nullptr)
+            _false_branch->emit(session);
+        session.emit_context().pop();
+        return true;
     }
 
     void if_element::on_owned_elements(element_list_t& list) {

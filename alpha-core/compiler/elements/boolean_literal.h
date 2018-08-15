@@ -25,13 +25,11 @@ namespace basecode::compiler {
         bool value() const;
 
     protected:
-        bool on_emit(
-            common::result& r,
-            emit_context_t& context) override;
-
         bool on_is_constant() const override;
 
         bool on_as_bool(bool& value) const override;
+
+        bool on_emit(compiler::session& session) override;
 
         compiler::type* on_infer_type(const compiler::program* program) override;
 

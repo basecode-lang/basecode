@@ -23,18 +23,16 @@ namespace basecode::compiler {
                             _procedure_type(procedure_type) {
     }
 
-    bool procedure_instance::on_emit(
-            common::result& r,
-            emit_context_t& context) {
-        return _scope->emit(r, context);
-    }
-
     block* procedure_instance::scope() {
         return _scope;
     }
 
     compiler::type* procedure_instance::procedure_type() {
         return _procedure_type;
+    }
+
+    bool procedure_instance::on_emit(compiler::session& session) {
+        return _scope->emit(session);
     }
 
     void procedure_instance::on_owned_elements(element_list_t& list) {

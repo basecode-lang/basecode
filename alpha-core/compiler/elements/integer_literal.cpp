@@ -10,6 +10,7 @@
 // ----------------------------------------------------------------------------
 
 #include <common/bytes.h>
+#include <compiler/session.h>
 #include <vm/instruction_block.h>
 #include "program.h"
 #include "numeric_type.h"
@@ -24,15 +25,6 @@ namespace basecode::compiler {
                               _value(value) {
     }
 
-    bool integer_literal::on_emit(
-            common::result& r,
-            emit_context_t& context) {
-        auto instruction_block = context.assembler->current_block();
-        auto target_reg = context.assembler->current_target_register();
-        instruction_block->move_constant_to_reg(*target_reg, _value);
-        return true;
-    }
-
     bool integer_literal::is_signed() const {
         return common::is_sign_bit_set(_value);
     }
@@ -42,6 +34,13 @@ namespace basecode::compiler {
     }
 
     bool integer_literal::on_is_constant() const {
+        return true;
+    }
+
+    bool integer_literal::on_emit(compiler::session& session) {
+        auto instruction_block = session.assembler().current_block();
+        auto target_reg = session.assembler().current_target_register();
+        instruction_block->move_constant_to_reg(*target_reg, _value);
         return true;
     }
 

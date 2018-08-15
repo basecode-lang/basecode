@@ -23,18 +23,6 @@ namespace basecode::compiler {
                              _expr(expr) {
     }
 
-    bool initializer::on_emit(
-            common::result& r,
-            emit_context_t& context) {
-        if (_expr == nullptr)
-            return true;
-
-        if (_expr->element_type() == element_type_t::namespace_e)
-            _expr->emit(r, context);
-
-        return true;
-    }
-
     element* initializer::expression() {
         return _expr;
     }
@@ -53,6 +41,16 @@ namespace basecode::compiler {
         if (_expr == nullptr)
             return false;
         return _expr->as_float(value);
+    }
+
+    bool initializer::on_emit(compiler::session& session) {
+        if (_expr == nullptr)
+            return true;
+
+        if (_expr->element_type() == element_type_t::namespace_e)
+            _expr->emit(session);
+
+        return true;
     }
 
     bool initializer::on_as_integer(uint64_t& value) const {

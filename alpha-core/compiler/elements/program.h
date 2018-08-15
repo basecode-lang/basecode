@@ -30,9 +30,7 @@ namespace basecode::compiler {
 
     class program : public element {
     public:
-        program(
-            vm::terp* terp,
-            vm::assembler* assembler);
+        program();
 
         ~program() override;
 
@@ -44,9 +42,9 @@ namespace basecode::compiler {
             const qualified_symbol_t& symbol,
             compiler::block* scope = nullptr) const;
 
-        bool run(common::result& r);
-
-        void disassemble(FILE* file);
+        void disassemble(
+            compiler::session& session,
+            FILE* file);
 
         compiler::module* compile_module(
             compiler::session& session,
@@ -56,8 +54,6 @@ namespace basecode::compiler {
 
     protected:
         friend class code_dom_formatter;
-
-        vm::terp* terp();
 
         compiler::block* block();
 
@@ -82,16 +78,14 @@ namespace basecode::compiler {
         friend class binary_operator;
         friend class element_builder;
 
-        bool on_emit(
-            common::result& r,
-            emit_context_t& context) override;
-
         bool visit_blocks(
             common::result& r,
             const block_visitor_callable& callable,
             compiler::block* root_block = nullptr);
 
         bool type_check(compiler::session& session);
+
+        bool on_emit(compiler::session& session) override;
 
         bool resolve_unknown_types(compiler::session& session);
 
@@ -150,10 +144,8 @@ namespace basecode::compiler {
     private:
         element_map _elements {};
         element_builder _builder;
-        vm::terp* _terp = nullptr;
         ast_evaluator _ast_evaluator;
         compiler::block* _block = nullptr;
-        vm::assembler* _assembler = nullptr;
         std::stack<compiler::block*> _scope_stack {};
         std::stack<compiler::block*> _top_level_stack {};
         identifier_list_t _identifiers_with_unknown_types {};
