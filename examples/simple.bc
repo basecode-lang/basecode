@@ -45,6 +45,8 @@
 @library "alpha-core";
 #foreign print := proc(format: string, values: ...any) @alias "fmt_print";
 
+2 * 16 + (4 shl 2);
+
 preload := module("preload.bc");
 
 ///////////////////////////////////////////////////////////////////////////////

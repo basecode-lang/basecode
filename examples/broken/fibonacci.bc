@@ -9,20 +9,20 @@
 //
 // ----------------------------------------------------------------------------
 
-preload := module("../examples/preload.bc");
+preload := module("preload.bc");
 
-@library "libalpha-core.dylib";
+@library "alpha-core";
 #foreign print := proc(format:string, values:...any) @alias "fmt_print";
 
 print("%s\n", "at the very top!");
 
-alpha::compiler::config := ns {
+alpha::compiler::config ::= ns {
     fibonacci := ns {
-        constant length_of_sequence := 1000;
+        length_of_sequence ::= 1000;
     };
 };
 
-alpha::compiler::examples := ns {
+alpha::compiler::examples ::= ns {
     import alpha::compiler::config::fibonacci;
 
     count:  u32;
@@ -36,7 +36,7 @@ alpha::compiler::examples := ns {
         a := 2;
         a := a shr 2;
         print("%d\n", a);
-    }
+    };
 
 //    numbers1: ^[]^u32;
 //    numbers2: ^[100]^u32;

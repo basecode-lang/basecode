@@ -54,7 +54,8 @@ namespace basecode::syntax {
         proc_expression,
         binary_operator,
         boolean_literal,
-        map_constructor,
+        map_constructor,    // XXX: this is probably going away
+                            //      to be replaced by associate operator, e.g. "a" := 2
         else_expression,
         while_statement,
         break_statement,
@@ -63,22 +64,23 @@ namespace basecode::syntax {
         enum_expression,
         cast_expression,
         from_expression,
-        alias_expression,
+        alias_expression,   // XXX: this dies
         symbol_reference,
         return_statement,
-        extend_statement,
-        for_in_statement,
+        extend_statement,   // XXX: this dies
+        for_in_statement,   // XXX: need to think about how for loops work
         union_expression,
         defer_expression,
         module_expression,
         character_literal,
-        array_constructor,
+        array_constructor,  // e.g. [1, 2, 3, 4]
+                            // ["a" := 2, "b" := 3]
         elseif_expression,
         switch_expression,
         struct_expression,
         import_expression,
         continue_statement,
-        constant_expression,
+        constant_expression,    // XXX: this dies
         namespace_expression,
         subscript_expression,
         return_argument_list,
