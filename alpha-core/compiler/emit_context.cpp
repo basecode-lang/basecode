@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <compiler/session.h>
 #include <compiler/elements/type.h>
 #include <compiler/elements/identifier.h>
 #include <compiler/elements/symbol_element.h>
@@ -155,9 +156,11 @@ namespace basecode::compiler {
     ///////////////////////////////////////////////////////////////////////////
 
     emit_context_t::emit_context_t(
+        compiler::session& session,
         vm::terp* terp,
         vm::assembler* assembler,
         compiler::program* program) : terp(terp),
+                                      session(session),
                                       assembler(assembler),
                                       program(program) {
     }

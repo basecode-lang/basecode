@@ -18,6 +18,7 @@ namespace basecode::compiler {
     class namespace_element : public element {
     public:
         namespace_element(
+            compiler::module* module,
             compiler::block* parent_scope,
             compiler::element* expr);
 

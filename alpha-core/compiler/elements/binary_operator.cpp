@@ -10,6 +10,7 @@
 // ----------------------------------------------------------------------------
 
 #include <common/defer.h>
+#include <compiler/session.h>
 #include "type.h"
 #include "element.h"
 #include "program.h"
@@ -22,12 +23,13 @@
 namespace basecode::compiler {
 
     binary_operator::binary_operator(
-        block* parent_scope,
-        operator_type_t type,
-        element* lhs,
-        element* rhs) : operator_base(parent_scope, element_type_t::binary_operator, type),
-                        _lhs(lhs),
-                        _rhs(rhs) {
+            compiler::module* module,
+            block* parent_scope,
+            operator_type_t type,
+            element* lhs,
+            element* rhs) : operator_base(module, parent_scope, element_type_t::binary_operator, type),
+                            _lhs(lhs),
+                            _rhs(rhs) {
     }
 
     bool binary_operator::on_emit(
@@ -76,8 +78,7 @@ namespace basecode::compiler {
             case operator_type_t::assignment: {
                 auto var = context.variable_for_element(_lhs);
                 if (var == nullptr) {
-                    context.program->error(
-                        r,
+                    context.session.error(
                         _lhs,
                         "P051",
                         fmt::format("missing assembler variable for {}.", _lhs->label_name()),
@@ -98,8 +99,7 @@ namespace basecode::compiler {
                 rhs_reg.type = var->value_reg.reg.type;
 
                 if (!context.assembler->allocate_reg(rhs_reg)) {
-                    context.program->error(
-                        r,
+                    context.session.error(
                         _rhs,
                         "P052",
                         "assembler registers exhausted.",

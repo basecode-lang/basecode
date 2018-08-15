@@ -16,9 +16,10 @@
 namespace basecode::compiler {
 
     type::type(
+        compiler::module* module,
         block* parent_scope,
         element_type_t type,
-        compiler::symbol_element* symbol) : element(parent_scope, type),
+        compiler::symbol_element* symbol) : element(module, parent_scope, type),
                                             _symbol(symbol) {
     }
 

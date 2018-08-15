@@ -19,6 +19,7 @@ namespace basecode::compiler {
     class procedure_type : public compiler::type {
     public:
         procedure_type(
+            compiler::module* module,
             block* parent_scope,
             compiler::block* scope,
             compiler::symbol_element* symbol);

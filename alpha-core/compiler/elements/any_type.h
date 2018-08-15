@@ -18,6 +18,7 @@ namespace basecode::compiler {
     class any_type : public compiler::composite_type {
     public:
         any_type(
+            compiler::module* module,
             compiler::block* parent_scope,
             compiler::block* scope);
 
@@ -26,9 +27,9 @@ namespace basecode::compiler {
         void underlying_type(compiler::type* value);
 
     protected:
-        bool on_initialize(compiler::session& session) override;
-
         type_access_model_t on_access_model() const override;
+
+        bool on_initialize(compiler::session& session) override;
 
     private:
         compiler::type* _underlying_type = nullptr;

@@ -17,8 +17,10 @@
 namespace basecode::compiler {
 
     type_info::type_info(
+        compiler::module* module,
         compiler::block* parent_scope,
         compiler::block* scope) : compiler::composite_type(
+                                    module,
                                     parent_scope,
                                     composite_types_t::struct_type,
                                     scope,

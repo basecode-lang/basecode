@@ -17,9 +17,10 @@
 namespace basecode::compiler {
 
     cast::cast(
+            compiler::module* module,
             block* parent_scope,
             compiler::type* type,
-            element* expr) : element(parent_scope, element_type_t::cast),
+            element* expr) : element(module, parent_scope, element_type_t::cast),
                              _expression(expr),
                              _type(type) {
     }

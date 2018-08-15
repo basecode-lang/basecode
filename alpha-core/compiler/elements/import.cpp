@@ -14,21 +14,22 @@
 namespace basecode::compiler {
 
     import::import(
-        compiler::block* parent_scope,
-        compiler::element* expr,
-        compiler::element* from_expr,
-        compiler::module* module) : element(parent_scope, element_type_t::import_e),
-                                    _module(module),
-                                    _expression(expr),
-                                    _from_expression(from_expr) {
-    }
-
-    compiler::module* import::module() {
-        return _module;
+            compiler::module* module,
+            compiler::block* parent_scope,
+            compiler::element* expr,
+            compiler::element* from_expr,
+            compiler::module* imported_module) : element(module, parent_scope, element_type_t::import_e),
+                                                 _expression(expr),
+                                                 _imported_module(imported_module),
+                                                 _from_expression(from_expr) {
     }
 
     compiler::element* import::expression() {
         return _expression;
+    }
+
+    compiler::module* import::imported_module() {
+        return _imported_module;
     }
 
     compiler::element* import::from_expression() {

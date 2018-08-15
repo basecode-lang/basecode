@@ -18,8 +18,10 @@
 namespace basecode::compiler {
 
     any_type::any_type(
+        compiler::module* module,
         compiler::block* parent_scope,
         compiler::block* scope) : compiler::composite_type(
+                                    module,
                                     parent_scope,
                                     composite_types_t::struct_type,
                                     scope,
@@ -27,10 +29,17 @@ namespace basecode::compiler {
                                     element_type_t::any_type) {
     }
 
-    // any_type := struct {
-    //      type_info:type;
-    //      data:address;
-    // };
+    compiler::type* any_type::underlying_type() {
+        return _underlying_type;
+    }
+
+    void any_type::underlying_type(compiler::type* value) {
+        _underlying_type = value;
+    }
+
+    type_access_model_t any_type::on_access_model() const {
+        return type_access_model_t::pointer;
+    }
 
     bool any_type::on_initialize(compiler::session& session) {
         auto program = &session.program();
@@ -69,18 +78,6 @@ namespace basecode::compiler {
         field_map.add(data_field);
 
         return composite_type::on_initialize(session);
-    }
-
-    compiler::type* any_type::underlying_type() {
-        return _underlying_type;
-    }
-
-    void any_type::underlying_type(compiler::type* value) {
-        _underlying_type = value;
-    }
-
-    type_access_model_t any_type::on_access_model() const {
-        return type_access_model_t::pointer;
     }
 
 };

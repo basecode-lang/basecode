@@ -14,9 +14,10 @@
 namespace basecode::compiler {
 
     comment::comment(
+            compiler::module* module,
             block* parent_scope,
             comment_type_t type,
-            const std::string& value) : element(parent_scope, element_type_t::comment),
+            const std::string& value) : element(module, parent_scope, element_type_t::comment),
                                         _value(value),
                                         _type(type) {
     }

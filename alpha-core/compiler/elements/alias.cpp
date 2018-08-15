@@ -14,9 +14,10 @@
 namespace basecode::compiler {
 
     alias::alias(
-        block* parent_scope,
-        element* expr) : element(parent_scope, element_type_t::alias_type),
-                         _expression(expr) {
+            compiler::module* module,
+            block* parent_scope,
+            element* expr) : element(module, parent_scope, element_type_t::alias_type),
+                             _expression(expr) {
     }
 
     element* alias::expression() {

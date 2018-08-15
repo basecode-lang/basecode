@@ -22,9 +22,10 @@
 namespace basecode::compiler {
 
     procedure_call::procedure_call(
+        compiler::module* module,
         compiler::block* parent_scope,
         compiler::identifier_reference* reference,
-        compiler::argument_list* args) : element(parent_scope, element_type_t::proc_call),
+        compiler::argument_list* args) : element(module, parent_scope, element_type_t::proc_call),
                                          _arguments(args),
                                          _reference(reference) {
     }

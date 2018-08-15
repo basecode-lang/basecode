@@ -35,6 +35,17 @@ namespace basecode::compiler {
 
         virtual ~session();
 
+        void error(
+            const std::string& code,
+            const std::string& message,
+            const common::source_location& location);
+
+        void error(
+            compiler::element* element,
+            const std::string& code,
+            const std::string& message,
+            const common::source_location& location);
+
         bool compile();
 
         void finalize();

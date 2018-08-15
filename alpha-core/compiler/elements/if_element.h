@@ -18,6 +18,7 @@ namespace basecode::compiler {
     class if_element : public element {
     public:
         if_element(
+            compiler::module* module,
             block* parent_scope,
             element* predicate,
             element* true_branch,

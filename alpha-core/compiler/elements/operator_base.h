@@ -18,6 +18,7 @@ namespace basecode::compiler {
     class operator_base : public element {
     public:
         operator_base(
+            compiler::module* module,
             block* parent_scope,
             element_type_t element_type,
             operator_type_t operator_type);

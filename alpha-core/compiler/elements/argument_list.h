@@ -17,7 +17,9 @@ namespace basecode::compiler {
 
     class argument_list : public element {
     public:
-        explicit argument_list(block* parent_scope);
+        argument_list(
+            compiler::module* module,
+            block* parent_scope);
 
         void add(element* item);
 

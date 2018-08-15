@@ -63,7 +63,7 @@ namespace basecode::compiler {
 
     program::program(
         vm::terp* terp,
-        vm::assembler* assembler) : element(nullptr, element_type_t::program),
+        vm::assembler* assembler) : element(nullptr, nullptr, element_type_t::program),
                                     _builder(this),
                                     _terp(terp),
                                     _ast_evaluator(&_builder, this),
@@ -329,29 +329,6 @@ namespace basecode::compiler {
         return true;
     }
 
-    void program::error(
-            compiler::session& session,
-            const std::string& code,
-            const std::string& message,
-            const common::source_location& location) {
-        auto source_file = session.current_source_file();
-        if (source_file == nullptr)
-            return;
-        source_file->error(session.result(), code, message, location);
-    }
-
-    void program::error(
-            common::result& r,
-            compiler::element* element,
-            const std::string& code,
-            const std::string& message,
-            const common::source_location& location) {
-        auto module = find_module(element);
-        if (module != nullptr) {
-            module->source_file()->error(r, code, message, location);
-        }
-    }
-
     bool program::compile(compiler::session& session) {
         // XXX: temporary!
         auto& r = session.result();
@@ -390,7 +367,7 @@ namespace basecode::compiler {
             listing.add_source_file("top_level.basm");
             listing.select_source_file("top_level.basm");
 
-            emit_context_t context(_terp, _assembler, this);
+            emit_context_t context(session, _terp, _assembler, this);
             emit(r, context);
 
             context.assembler->apply_addresses(r);
@@ -556,8 +533,7 @@ namespace basecode::compiler {
                 continue;
             auto rhs_type = init->infer_type(this);
             if (!var->type()->type_check(rhs_type)) {
-                error(
-                    session.result(),
+                session.error(
                     init,
                     "C051",
                     fmt::format(
@@ -578,8 +554,7 @@ namespace basecode::compiler {
             auto var = dynamic_cast<compiler::identifier*>(binary_op->lhs());
             auto rhs_type = binary_op->rhs()->infer_type(this);
             if (!var->type()->type_check(rhs_type)) {
-                error(
-                    session.result(),
+                session.error(
                     binary_op,
                     "C051",
                     fmt::format(
@@ -647,8 +622,7 @@ namespace basecode::compiler {
                 it = _identifiers_with_unknown_types.erase(it);
             } else {
                 ++it;
-                error(
-                    session.result(),
+                session.error(
                     var,
                     "P004",
                     fmt::format(
@@ -675,8 +649,7 @@ namespace basecode::compiler {
                 unresolved_reference->parent_scope());
             if (identifier == nullptr) {
                 ++it;
-                error(
-                    session.result(),
+                session.error(
                     unresolved_reference,
                     "P004",
                     fmt::format(

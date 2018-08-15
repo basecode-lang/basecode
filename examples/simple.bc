@@ -62,7 +62,6 @@ bool_false_u := false;
 bool_true_i:  bool := true;
 bool_false_i: bool := false;
 
-
 // cast rules
 // from          to          result
 // ---------------------------------
@@ -85,6 +84,10 @@ bool_false_i: bool := false;
 //                           may require actual conversion code
 // f32           f64         widen
 // f64           f32         truncate
+
+one := 2;
+three: u16 := 128;
+one := cast<u8>(three);
 
 // transmute
 // copy lsb to msb of rhs to lhs based on type specified in transmute<t>

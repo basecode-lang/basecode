@@ -16,8 +16,9 @@
 namespace basecode::compiler {
 
     string_literal::string_literal(
+            compiler::module* module,
             block* parent_scope,
-            const std::string& value) : element(parent_scope, element_type_t::string_literal),
+            const std::string& value) : element(module, parent_scope, element_type_t::string_literal),
                                         _value(value) {
     }
 

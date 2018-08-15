@@ -18,6 +18,7 @@ namespace basecode::compiler {
     class statement : public element {
     public:
         statement(
+            compiler::module* module,
             block* parent_scope,
             element* expr);
 

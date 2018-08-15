@@ -18,6 +18,7 @@ namespace basecode::compiler {
     class transmute  : public element {
     public:
         transmute(
+            compiler::module* module,
             block* parent_scope,
             compiler::type* type,
             element* expr);

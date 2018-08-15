@@ -15,9 +15,10 @@
 namespace basecode::compiler {
 
     field::field(
-        block* parent_scope,
-        compiler::identifier* identifier): element(parent_scope, element_type_t::field),
-                                           _identifier(identifier) {
+            compiler::module* module,
+            block* parent_scope,
+            compiler::identifier* identifier): element(module, parent_scope, element_type_t::field),
+                                               _identifier(identifier) {
     }
 
     compiler::identifier* field::identifier() {

@@ -20,6 +20,7 @@ namespace basecode::compiler {
     class block : public element {
     public:
         block(
+            compiler::module* module,
             block* parent_scope,
             element_type_t type = element_type_t::block);
 

@@ -18,6 +18,7 @@ namespace basecode::compiler {
     class integer_literal : public element {
     public:
         integer_literal(
+            compiler::module* module,
             block* parent_scope,
             uint64_t value);
 

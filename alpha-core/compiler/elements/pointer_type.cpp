@@ -23,8 +23,10 @@ namespace basecode::compiler {
     ///////////////////////////////////////////////////////////////////////////
 
     pointer_type::pointer_type(
+            compiler::module* module,
             compiler::block* parent_scope,
             compiler::type* base_type) : compiler::type(
+                                            module,
                                             parent_scope,
                                             element_type_t::pointer_type,
                                             nullptr),

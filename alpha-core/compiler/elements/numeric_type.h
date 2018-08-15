@@ -39,6 +39,7 @@ namespace basecode::compiler {
             compiler::block* parent_scope);
 
         numeric_type(
+            compiler::module* module,
             block* parent_scope,
             compiler::symbol_element* symbol,
             int64_t min,

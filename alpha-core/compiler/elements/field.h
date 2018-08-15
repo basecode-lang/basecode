@@ -24,6 +24,7 @@ namespace basecode::compiler {
     class field : public element {
     public:
         field(
+            compiler::module* module,
             block* parent_scope,
             compiler::identifier* identifier);
 

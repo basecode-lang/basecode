@@ -77,6 +77,7 @@ namespace basecode::compiler {
 
     struct emit_context_t {
         emit_context_t(
+            compiler::session& session,
             vm::terp* terp,
             vm::assembler* assembler,
             compiler::program* program);
@@ -121,6 +122,7 @@ namespace basecode::compiler {
 
         uint8_t indent = 0;
         vm::terp* terp = nullptr;
+        compiler::session& session;
         vm::assembler* assembler = nullptr;
         compiler::program* program = nullptr;
         std::stack<boost::any> data_stack {};

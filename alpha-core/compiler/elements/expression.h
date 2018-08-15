@@ -18,6 +18,7 @@ namespace basecode::compiler {
     class expression : public element {
     public:
         expression(
+            compiler::module* module,
             block* parent_scope,
             element* root);
 

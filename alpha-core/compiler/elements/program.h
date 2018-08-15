@@ -36,21 +36,6 @@ namespace basecode::compiler {
 
         ~program() override;
 
-        void error(
-            compiler::session& session,
-            const std::string& code,
-            const std::string& message,
-            const common::source_location& location);
-
-        void error(
-            common::result& r,
-            compiler::element* element,
-            const std::string& code,
-            const std::string& message,
-            const common::source_location& location);
-
-        bool compile(compiler::session& session);
-
         element_map& elements();
 
         element_builder& builder();
@@ -66,6 +51,8 @@ namespace basecode::compiler {
         compiler::module* compile_module(
             compiler::session& session,
             common::source_file* source_file);
+
+        bool compile(compiler::session& session);
 
     protected:
         friend class code_dom_formatter;

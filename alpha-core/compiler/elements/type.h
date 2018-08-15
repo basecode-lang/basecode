@@ -20,6 +20,7 @@ namespace basecode::compiler {
     class type : public element {
     public:
         type(
+            compiler::module* module,
             block* parent_scope,
             element_type_t type,
             compiler::symbol_element* symbol);

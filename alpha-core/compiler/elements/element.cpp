@@ -11,6 +11,7 @@
 
 #include <fmt/format.h>
 #include <common/id_pool.h>
+#include <compiler/session.h>
 #include "type.h"
 #include "element.h"
 #include "program.h"
@@ -23,11 +24,13 @@
 namespace basecode::compiler {
 
     element::element(
+            compiler::module* module,
             block* parent_scope,
             element_type_t type,
             element* parent_element) : _id(common::id_pool::instance()->allocate()),
                                        _parent_scope(parent_scope),
                                        _parent_element(parent_element),
+                                       _module(module),
                                        _element_type(type) {
     }
 
@@ -81,6 +84,10 @@ namespace basecode::compiler {
 
     element* element::parent_element() {
         return _parent_element;
+    }
+
+    compiler::module* element::module() {
+        return _module;
     }
 
     bool element::on_is_constant() const {
@@ -139,8 +146,7 @@ namespace basecode::compiler {
                 reg.type = vm::register_type_t::integer;
 
             if (!context.assembler->allocate_reg(reg)) {
-                context.program->error(
-                    r,
+                context.session.error(
                     e,
                     "P052",
                     "assembler registers exhausted.",
@@ -169,6 +175,10 @@ namespace basecode::compiler {
 
     element_type_t element::element_type() const {
         return _element_type;
+    }
+
+    void element::module(compiler::module* value) {
+        _module = value;
     }
 
     bool element::on_as_float(double& value) const {

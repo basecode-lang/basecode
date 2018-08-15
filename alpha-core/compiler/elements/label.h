@@ -18,6 +18,7 @@ namespace basecode::compiler {
     class label : public element {
     public:
         label(
+            compiler::module* module,
             block* parent_scope,
             const std::string& name);
 

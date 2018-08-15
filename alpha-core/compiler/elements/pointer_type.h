@@ -20,6 +20,7 @@ namespace basecode::compiler {
         static std::string name_for_pointer(compiler::type* base_type);
 
         pointer_type(
+            compiler::module* module,
             compiler::block* parent_scope,
             compiler::type* base_type);
 

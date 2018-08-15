@@ -18,8 +18,9 @@
 namespace basecode::compiler {
 
     integer_literal::integer_literal(
+            compiler::module* module,
             block* parent_scope,
-            uint64_t value) : element(parent_scope, element_type_t::integer_literal),
+            uint64_t value) : element(module, parent_scope, element_type_t::integer_literal),
                               _value(value) {
     }
 

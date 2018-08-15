@@ -14,11 +14,13 @@
 namespace basecode::compiler {
 
     unknown_type::unknown_type(
-        block* parent_scope,
-        compiler::symbol_element* symbol) : compiler::type(
-                                                parent_scope,
-                                                element_type_t::unknown_type,
-                                                symbol) {
+            compiler::module* module,
+            block* parent_scope,
+            compiler::symbol_element* symbol) : compiler::type(
+                                                    module,
+                                                    parent_scope,
+                                                    element_type_t::unknown_type,
+                                                    symbol) {
     }
 
     bool unknown_type::is_array() const {

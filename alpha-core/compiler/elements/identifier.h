@@ -19,6 +19,7 @@ namespace basecode::compiler {
     class identifier : public element {
     public:
         identifier(
+            compiler::module* module,
             block* parent_scope,
             compiler::symbol_element* name,
             compiler::initializer* initializer);

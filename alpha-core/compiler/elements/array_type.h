@@ -23,6 +23,7 @@ namespace basecode::compiler {
             size_t size);
 
         array_type(
+            compiler::module* module,
             block* parent_scope,
             compiler::block* scope,
             compiler::type* entry_type,

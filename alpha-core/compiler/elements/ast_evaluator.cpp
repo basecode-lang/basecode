@@ -146,8 +146,7 @@ namespace basecode::compiler {
             if (it->second(this, context, result)) {
                 return result.element;
             } else {
-                _program->error(
-                    session,
+                session.error(
                     "P071",
                     fmt::format(
                         "ast node evaluation failed: id = {}, type = {}",
@@ -270,7 +269,7 @@ namespace basecode::compiler {
         if (node != nullptr
         &&  node->type == syntax::ast_node_types_t::symbol) {
             qualified_symbol_t qualified_symbol {};
-            _builder->make_qualified_symbol(qualified_symbol, context.node);
+            _builder->make_qualified_symbol(qualified_symbol, node);
             element = _builder->make_identifier_reference(
                 _program->current_scope(),
                 qualified_symbol,
@@ -318,8 +317,7 @@ namespace basecode::compiler {
                     auto ns = dynamic_cast<namespace_element*>(expr);
                     scope = dynamic_cast<compiler::block*>(ns->expression());
                 } else {
-                    _program->error(
-                        context.session,
+                    context.session.error(
                         "P018",
                         "only a namespace is valid within a qualified name.",
                         node->lhs->location);
@@ -505,8 +503,7 @@ namespace basecode::compiler {
         if (init == nullptr
             &&  init_expr == nullptr
             &&  new_identifier->type() == nullptr) {
-            _program->error(
-                context.session,
+            context.session.error(
                 "P019",
                 fmt::format("unable to infer type: {}", new_identifier->symbol()->name()),
                 new_identifier->symbol()->location());
@@ -624,8 +621,7 @@ namespace basecode::compiler {
             auto source_file = context.session.add_source_file(source_path);
             auto module = _program->compile_module(context.session, source_file);
             if (module == nullptr) {
-                _program->error(
-                    context.session,
+                context.session.error(
                     "C021",
                     "unable to load module.",
                     context.node->rhs->location);
@@ -634,8 +630,7 @@ namespace basecode::compiler {
             reference->module(module);
             result.element = reference;
         } else {
-            _program->error(
-                context.session,
+            context.session.error(
                 "C021",
                 "expected string literal or constant string variable.",
                 context.node->rhs->location);
@@ -692,8 +687,7 @@ namespace basecode::compiler {
                     result.element->location(context.node->location);
                     return true;
                 } else {
-                    _program->error(
-                        context.session,
+                    context.session.error(
                         "P041",
                         "invalid integer literal",
                         context.node->location);
@@ -709,8 +703,7 @@ namespace basecode::compiler {
                     result.element->location(context.node->location);
                     return true;
                 } else {
-                    _program->error(
-                        context.session,
+                    context.session.error(
                         "P041",
                         "invalid float literal",
                         context.node->location);
@@ -801,8 +794,7 @@ namespace basecode::compiler {
         auto type_name = context.node->lhs->lhs->children[0]->token.value;
         auto type = _program->find_type(qualified_symbol_t {.name = type_name});
         if (type == nullptr) {
-            _program->error(
-                context.session,
+            context.session.error(
                 "P002",
                 fmt::format("unknown type '{}'.", type_name),
                 context.node->lhs->lhs->location);
@@ -885,8 +877,7 @@ namespace basecode::compiler {
                 current_node.get(),
                 context.default_block_type);
             if (expr == nullptr) {
-                _program->error(
-                    context.session,
+                context.session.error(
                     "C024",
                     "invalid statement",
                     current_node->location);
@@ -1127,8 +1118,7 @@ namespace basecode::compiler {
                         proc_type->parameters().add(field);
                         field->parent_element(proc_type);
                     } else {
-                        _program->error(
-                            context.session,
+                        context.session.error(
                             "P014",
                             fmt::format("invalid parameter declaration: {}", symbol->name()),
                             symbol->location());
@@ -1153,8 +1143,7 @@ namespace basecode::compiler {
         const auto& source_list = context.node->rhs;
 
         if (target_list->children.size() != source_list->children.size()) {
-            _program->error(
-                context.session,
+            context.session.error(
                 "P027",
                 "the number of left-hand-side targets must match"
                 " the number of right-hand-side expressions.",
@@ -1215,8 +1204,7 @@ namespace basecode::compiler {
         auto type_name = context.node->lhs->lhs->children[0]->token.value;
         auto type = _program->find_type(qualified_symbol_t {.name = type_name});
         if (type == nullptr) {
-            _program->error(
-                context.session,
+            context.session.error(
                 "P002",
                 fmt::format("unknown type '{}'.", type_name),
                 context.node->lhs->lhs->location);

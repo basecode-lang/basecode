@@ -16,10 +16,13 @@
 
 namespace basecode::compiler {
 
-    namespace_type::namespace_type(block* parent_scope) : compiler::type(
-                                                                parent_scope,
-                                                                element_type_t::namespace_type,
-                                                                nullptr) {
+    namespace_type::namespace_type(
+        compiler::module* module,
+        block* parent_scope) : compiler::type(
+                                    module,
+                                    parent_scope,
+                                    element_type_t::namespace_type,
+                                    nullptr) {
     }
 
     bool namespace_type::on_initialize(compiler::session& session) {

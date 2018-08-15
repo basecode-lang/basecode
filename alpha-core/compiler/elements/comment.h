@@ -18,6 +18,7 @@ namespace basecode::compiler {
     class comment : public element {
     public:
         comment(
+            compiler::module* module,
             block* parent_scope,
             comment_type_t type,
             const std::string& value);

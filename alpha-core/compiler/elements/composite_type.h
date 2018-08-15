@@ -19,6 +19,7 @@ namespace basecode::compiler {
     class composite_type : public compiler::type {
     public:
         composite_type(
+            compiler::module* module,
             block* parent_scope,
             composite_types_t type,
             compiler::block* scope,

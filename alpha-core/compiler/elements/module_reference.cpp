@@ -15,25 +15,26 @@
 namespace basecode::compiler {
 
     module_reference::module_reference(
+            compiler::module* module,
             compiler::block* parent_scope,
-            compiler::element* expr) : compiler::element(parent_scope, element_type_t::module_reference),
+            compiler::element* expr) : compiler::element(module, parent_scope, element_type_t::module_reference),
                                        _expression(expr) {
-    }
-
-    compiler::module* module_reference::module() {
-        return _module;
     }
 
     bool module_reference::on_is_constant() const {
         return true;
     }
 
+    compiler::module* module_reference::reference() {
+        return _reference;
+    }
+
     compiler::element* module_reference::expression() {
         return _expression;
     }
 
-    void module_reference::module(compiler::module* value) {
-        _module = value;
+    void module_reference::reference(compiler::module* value) {
+        _reference = value;
     }
 
     void module_reference::on_owned_elements(element_list_t& list) {

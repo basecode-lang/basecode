@@ -20,12 +20,15 @@
 namespace basecode::compiler {
 
     procedure_type::procedure_type(
-        block* parent_scope,
-        compiler::block* scope,
-        compiler::symbol_element* symbol) : compiler::type(parent_scope,
-                                                  element_type_t::proc_type,
-                                                  symbol),
-                                   _scope(scope) {
+            compiler::module* module,
+            block* parent_scope,
+            compiler::block* scope,
+            compiler::symbol_element* symbol) : compiler::type(
+                                                      module,
+                                                      parent_scope,
+                                                      element_type_t::proc_type,
+                                                      symbol),
+                                                _scope(scope) {
     }
 
     bool procedure_type::on_emit(

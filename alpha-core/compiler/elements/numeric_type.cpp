@@ -73,12 +73,14 @@ namespace basecode::compiler {
     ///////////////////////////////////////////////////////////////////////////
 
     numeric_type::numeric_type(
+            compiler::module* module,
             block* parent_scope,
             compiler::symbol_element* symbol,
             int64_t min,
             uint64_t max,
             bool is_signed,
             type_number_class_t number_class) : compiler::type(
+                                                    module,
                                                     parent_scope,
                                                     element_type_t::numeric_type,
                                                     symbol),

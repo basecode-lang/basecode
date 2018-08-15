@@ -17,9 +17,9 @@
 
 namespace basecode::compiler {
 
-    argument_list::argument_list(block* parent_scope) : element(
-                                                            parent_scope,
-                                                            element_type_t::argument_list) {
+    argument_list::argument_list(
+        compiler::module* module,
+        block* parent_scope) : element(module, parent_scope, element_type_t::argument_list) {
     }
 
     bool argument_list::on_emit(

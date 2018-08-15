@@ -18,6 +18,7 @@ namespace basecode::compiler {
     class cast : public element {
     public:
         cast(
+            compiler::module* module,
             block* parent_scope,
             compiler::type* type,
             element* expr);

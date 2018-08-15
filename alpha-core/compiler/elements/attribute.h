@@ -20,6 +20,7 @@ namespace basecode::compiler {
     class attribute : public element {
     public:
         attribute(
+            compiler::module* module,
             block* parent_scope,
             const std::string& name,
             element* expr);

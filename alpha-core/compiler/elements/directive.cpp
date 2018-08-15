@@ -35,9 +35,10 @@ namespace basecode::compiler {
     ///////////////////////////////////////////////////////////////////////////
 
     directive::directive(
+            compiler::module* module,
             block* parent_scope,
             const std::string& name,
-            element* expression) : element(parent_scope, element_type_t::directive),
+            element* expression) : element(module, parent_scope, element_type_t::directive),
                                    _name(name),
                                    _expression(expression) {
     }
@@ -102,8 +103,7 @@ namespace basecode::compiler {
         auto library_attribute = attributes().find("library");
         if (library_attribute != nullptr) {
             if (!library_attribute->as_string(library_name)) {
-                program->error(
-                    session.result(),
+                session.error(
                     this,
                     "P004",
                     "unable to convert library name.",
@@ -113,8 +113,7 @@ namespace basecode::compiler {
         }
 
         if (library_name.empty()) {
-            program->error(
-                session.result(),
+            session.error(
                 this,
                 "P005",
                 "library attribute required for foreign directive.",
@@ -132,8 +131,7 @@ namespace basecode::compiler {
         if (library == nullptr) {
             auto msg = session.result().find_code("B062");
             if (msg != nullptr) {
-                program->error(
-                    session.result(),
+                session.error(
                     this,
                     "P006",
                     msg->message(),
@@ -149,8 +147,7 @@ namespace basecode::compiler {
         auto alias_attribute = attributes().find("alias");
         if (alias_attribute != nullptr) {
             if (!alias_attribute->as_string(symbol_name)) {
-                program->error(
-                    session.result(),
+                session.error(
                     this,
                     "P004",
                     "unable to convert alias attribute's name.",
@@ -189,8 +186,7 @@ namespace basecode::compiler {
 
         auto result = terp->register_foreign_function(session.result(), signature);
         if (!result) {
-            program->error(
-                session.result(),
+            session.error(
                 this,
                 "P004",
                 fmt::format("unable to find foreign function symbol: {}", symbol_name),

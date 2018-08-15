@@ -18,14 +18,15 @@ namespace basecode::compiler {
     class module_reference : public element {
     public:
         module_reference(
+            compiler::module* module,
             compiler::block* parent_scope,
             compiler::element* expr);
 
-        compiler::module* module();
+        compiler::module* reference();
 
         compiler::element* expression();
 
-        void module(compiler::module* value);
+        void reference(compiler::module* value);
 
     protected:
         bool on_is_constant() const override;
@@ -35,7 +36,7 @@ namespace basecode::compiler {
         compiler::type* on_infer_type(const compiler::program* program) override;
 
     private:
-        compiler::module* _module = nullptr;
+        compiler::module* _reference = nullptr;
         compiler::element* _expression = nullptr;
     };
 

@@ -15,8 +15,9 @@
 namespace basecode::compiler {
 
     module::module(
+            compiler::module* module,
             compiler::block* parent_scope,
-            compiler::block* scope) : compiler::element(parent_scope, element_type_t::module),
+            compiler::block* scope) : compiler::element(module, parent_scope, element_type_t::module),
                                       _scope(scope) {
     }
 

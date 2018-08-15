@@ -14,8 +14,9 @@
 namespace basecode::compiler {
 
     label::label(
+            compiler::module* module,
             block* parent_scope,
-            const std::string& name) : element(parent_scope, element_type_t::label),
+            const std::string& name) : element(module, parent_scope, element_type_t::label),
                                        _name(name) {
     }
 

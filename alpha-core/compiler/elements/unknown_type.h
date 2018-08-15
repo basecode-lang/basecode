@@ -18,6 +18,7 @@ namespace basecode::compiler {
     class unknown_type : public compiler::type {
     public:
         unknown_type(
+            compiler::module* module,
             block* parent_scope,
             compiler::symbol_element* symbol);
 

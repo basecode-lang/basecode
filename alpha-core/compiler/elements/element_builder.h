@@ -58,7 +58,7 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             compiler::element* expr,
             compiler::element* from_expr,
-            compiler::module* module);
+            compiler::module* imported_module);
 
         module* make_module(
             compiler::block* parent_scope,

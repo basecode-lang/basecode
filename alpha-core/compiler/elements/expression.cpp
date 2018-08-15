@@ -15,8 +15,9 @@
 namespace basecode::compiler {
 
     expression::expression(
+            compiler::module* module,
             block* parent_scope,
-            element* root) : element(parent_scope, element_type_t::expression),
+            element* root) : element(module, parent_scope, element_type_t::expression),
                              _root(root) {
     }
 

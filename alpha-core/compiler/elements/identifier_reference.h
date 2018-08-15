@@ -18,6 +18,7 @@ namespace basecode::compiler {
     class identifier_reference  : public element {
     public:
         identifier_reference(
+            compiler::module* module,
             block* parent_scope,
             const qualified_symbol_t& symbol,
             compiler::identifier* identifier);

@@ -18,13 +18,15 @@
 namespace basecode::compiler {
 
     string_type::string_type(
-        compiler::block* parent_scope,
-        compiler::block* scope) : compiler::composite_type(
-                                    parent_scope,
-                                    composite_types_t::struct_type,
-                                    scope,
-                                    nullptr,
-                                    element_type_t::string_type) {
+            compiler::module* module,
+            compiler::block* parent_scope,
+            compiler::block* scope) : compiler::composite_type(
+                                        module,
+                                        parent_scope,
+                                        composite_types_t::struct_type,
+                                        scope,
+                                        nullptr,
+                                        element_type_t::string_type) {
     }
 
     // rodata_str_1:

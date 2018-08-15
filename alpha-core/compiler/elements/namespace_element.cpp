@@ -18,8 +18,9 @@
 namespace basecode::compiler {
 
     namespace_element::namespace_element(
+            compiler::module* module,
             compiler::block* parent_scope,
-            compiler::element* expr) : element(parent_scope, element_type_t::namespace_e),
+            compiler::element* expr) : element(module, parent_scope, element_type_t::namespace_e),
                                        _expression(expr) {
     }
 

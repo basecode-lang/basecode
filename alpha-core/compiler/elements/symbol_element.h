@@ -18,6 +18,7 @@ namespace basecode::compiler {
     class symbol_element : public element {
     public:
         symbol_element(
+            compiler::module* module,
             compiler::block* parent_scope,
             const std::string& name,
             const string_list_t& namespaces);

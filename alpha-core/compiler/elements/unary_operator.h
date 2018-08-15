@@ -19,6 +19,7 @@ namespace basecode::compiler {
     class unary_operator : public operator_base {
     public:
         unary_operator(
+            compiler::module* module,
             block* parent_scope,
             operator_type_t type,
             element* rhs);

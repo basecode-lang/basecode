@@ -17,7 +17,9 @@ namespace basecode::compiler {
 
     class return_element : public element {
     public:
-        explicit return_element(block* parent_scope);
+        return_element(
+            compiler::module* module,
+            block* parent_scope);
 
         element_list_t& expressions();
 

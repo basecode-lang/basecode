@@ -18,6 +18,7 @@ namespace basecode::compiler {
     class procedure_call : public element {
     public:
         procedure_call(
+            compiler::module* module,
             compiler::block* parent_scope,
             compiler::identifier_reference* reference,
             compiler::argument_list* args);

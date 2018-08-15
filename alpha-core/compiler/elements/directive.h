@@ -25,6 +25,7 @@ namespace basecode::compiler {
             compiler::program*)>;
 
         directive(
+            compiler::module* module,
             block* parent_scope,
             const std::string& name,
             element* expression);

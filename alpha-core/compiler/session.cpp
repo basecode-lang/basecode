@@ -11,6 +11,7 @@
 
 #include <fstream>
 #include "session.h"
+#include "elements/module.h"
 #include "elements/program.h"
 #include "code_dom_formatter.h"
 
@@ -78,6 +79,26 @@ namespace basecode::compiler {
 
     compiler::program& session::program() {
         return _program;
+    }
+
+    void session::error(
+            const std::string& code,
+            const std::string& message,
+            const common::source_location& location) {
+        auto source_file = current_source_file();
+        if (source_file == nullptr)
+            return;
+        source_file->error(_result, code, message, location);
+    }
+
+    void session::error(
+            compiler::element* element,
+            const std::string& code,
+            const std::string& message,
+            const common::source_location& location) {
+        element->module()
+                ->source_file()
+                ->error(_result, code, message, location);
     }
 
     common::source_file* session::pop_source_file() {

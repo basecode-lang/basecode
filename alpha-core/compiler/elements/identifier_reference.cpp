@@ -16,11 +16,12 @@
 namespace basecode::compiler {
 
     identifier_reference::identifier_reference(
-        block* parent_scope,
-        const qualified_symbol_t& symbol,
-        compiler::identifier* identifier) : element(parent_scope, element_type_t::identifier_reference),
-                                            _symbol(symbol),
-                                            _identifier(identifier) {
+            compiler::module* module,
+            block* parent_scope,
+            const qualified_symbol_t& symbol,
+            compiler::identifier* identifier) : element(module, parent_scope, element_type_t::identifier_reference),
+                                                _symbol(symbol),
+                                                _identifier(identifier) {
     }
 
     bool identifier_reference::on_emit(

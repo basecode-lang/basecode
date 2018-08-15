@@ -18,9 +18,10 @@
 namespace basecode::compiler {
 
     identifier::identifier(
+            compiler::module* module,
             block* parent_scope,
             compiler::symbol_element* name,
-            compiler::initializer* initializer) : element(parent_scope, element_type_t::identifier),
+            compiler::initializer* initializer) : element(module, parent_scope, element_type_t::identifier),
                                                   _symbol(name),
                                                   _initializer(initializer) {
     }

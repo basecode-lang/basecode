@@ -16,11 +16,12 @@
 namespace basecode::compiler {
 
     symbol_element::symbol_element(
-        compiler::block* parent_scope,
-        const std::string& name,
-        const string_list_t& namespaces) : element(parent_scope, element_type_t::symbol),
-                                           _name(name),
-                                           _namespaces(namespaces) {
+            compiler::module* module,
+            compiler::block* parent_scope,
+            const std::string& name,
+            const string_list_t& namespaces) : element(module, parent_scope, element_type_t::symbol),
+                                               _name(name),
+                                               _namespaces(namespaces) {
     }
 
     std::string symbol_element::name() const {

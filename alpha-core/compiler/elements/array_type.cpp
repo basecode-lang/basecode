@@ -29,26 +29,21 @@ namespace basecode::compiler {
     ///////////////////////////////////////////////////////////////////////////
 
     array_type::array_type(
+            compiler::module* module,
             block* parent_scope,
             compiler::block* scope,
             compiler::type* entry_type,
             size_t size) : compiler::composite_type(
-                                                parent_scope,
-                                                composite_types_t::struct_type,
-                                                scope,
-                                                nullptr,
-                                                element_type_t::array_type),
-                                          _size(size),
-                                          _entry_type(entry_type) {
+                                module,
+                                parent_scope,
+                                composite_types_t::struct_type,
+                                scope,
+                                nullptr,
+                                element_type_t::array_type),
+                           _size(size),
+                           _entry_type(entry_type) {
     }
 
-    // array_type := struct {
-    //      flags:u8;
-    //      length:u32;
-    //      capacity:u32;
-    //      element_type:type;
-    //      data:address;
-    // };
     bool array_type::on_initialize(compiler::session& session) {
         auto program = &session.program();
         auto& builder = program->builder();

@@ -22,6 +22,7 @@ namespace basecode::compiler {
     class element {
     public:
         element(
+            compiler::module* module,
             block* parent_scope,
             element_type_t type,
             element* parent_element = nullptr);
@@ -31,6 +32,8 @@ namespace basecode::compiler {
         bool emit(
             common::result& r,
             emit_context_t& context);
+
+        bool is_type() const;
 
         block* parent_scope();
 
@@ -47,11 +50,9 @@ namespace basecode::compiler {
 
         element* parent_element();
 
-        element* fold(compiler::session& session);
+        compiler::module* module();
 
         attribute_map_t& attributes();
-
-        bool is_type() const;
 
         bool as_bool(bool& value) const;
 
@@ -61,11 +62,15 @@ namespace basecode::compiler {
 
         void parent_element(element* value);
 
+        void module(compiler::module* value);
+
         virtual std::string label_name() const;
 
         bool as_integer(uint64_t& value) const;
 
         bool as_string(std::string& value) const;
+
+        element* fold(compiler::session& session);
 
         void owned_elements(element_list_t& list);
 
@@ -110,6 +115,7 @@ namespace basecode::compiler {
         block* _parent_scope = nullptr;
         attribute_map_t _attributes {};
         element* _parent_element = nullptr;
+        compiler::module* _module = nullptr;
         common::source_location _location {};
         element_type_t _element_type = element_type_t::element;
     };

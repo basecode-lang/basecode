@@ -15,10 +15,11 @@
 namespace basecode::compiler {
 
     if_element::if_element(
+            compiler::module* module,
             block* parent_scope,
             element* predicate,
             element* true_branch,
-            element* false_branch) : element(parent_scope, element_type_t::if_e),
+            element* false_branch) : element(module, parent_scope, element_type_t::if_e),
                                      _predicate(predicate),
                                      _true_branch(true_branch),
                                      _false_branch(false_branch) {

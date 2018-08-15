@@ -17,8 +17,9 @@
 namespace basecode::compiler {
 
     initializer::initializer(
+            compiler::module* module,
             block* parent_scope,
-            element* expr) : element(parent_scope, element_type_t::initializer),
+            element* expr) : element(module, parent_scope, element_type_t::initializer),
                              _expr(expr) {
     }
 

@@ -19,6 +19,7 @@ namespace basecode::compiler {
     class module : public element {
     public:
         module(
+            compiler::module* module,
             compiler::block* parent_scope,
             compiler::block* scope);
 

@@ -18,8 +18,9 @@
 namespace basecode::compiler {
 
     float_literal::float_literal(
+            compiler::module* module,
             block* parent_scope,
-            double value) : element(parent_scope, element_type_t::float_literal),
+            double value) : element(module, parent_scope, element_type_t::float_literal),
                             _value(value) {
     }
 

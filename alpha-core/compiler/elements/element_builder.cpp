@@ -63,12 +63,13 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             compiler::element* expr,
             compiler::element* from_expr,
-            compiler::module* module) {
+            compiler::module* imported_module) {
         auto import_element = new compiler::import(
+            _program->find_module(_program->current_top_level()),
             parent_scope,
             expr,
             from_expr,
-            module);
+            imported_module);
         _program->elements().add(import_element);
 
         if (expr != nullptr)
@@ -147,7 +148,9 @@ namespace basecode::compiler {
     namespace_type* element_builder::make_namespace_type(
             compiler::session& session,
             compiler::block* parent_scope) {
-        auto type = new compiler::namespace_type(parent_scope);
+        auto type = new compiler::namespace_type(
+            _program->find_module(_program->current_top_level()),
+            parent_scope);
         if (!type->initialize(session))
             return nullptr;
 
@@ -162,7 +165,10 @@ namespace basecode::compiler {
             bool is_pointer,
             bool is_array,
             size_t array_size) {
-        auto type = new compiler::unknown_type(parent_scope, symbol);
+        auto type = new compiler::unknown_type(
+            _program->find_module(_program->current_top_level()),
+            parent_scope,
+            symbol);
         if (!type->initialize(session))
             return nullptr;
         type->is_array(is_array);
@@ -178,6 +184,7 @@ namespace basecode::compiler {
             compiler::block* block_scope) {
         auto type_name = fmt::format("__proc_{}__", common::id_pool::instance()->allocate());
         auto type = new compiler::procedure_type(
+            _program->find_module(_program->current_top_level()),
             parent_scope,
             block_scope,
             make_symbol(parent_scope, type_name));
@@ -192,6 +199,7 @@ namespace basecode::compiler {
             label_list_t labels,
             element* expr) {
         auto statement = new compiler::statement(
+            _program->find_module(_program->current_top_level()),
             parent_scope,
             expr);
         // XXX: double check this
@@ -208,7 +216,10 @@ namespace basecode::compiler {
     string_literal* element_builder::make_string(
         compiler::block* parent_scope,
         const std::string& value) {
-        auto literal = new compiler::string_literal(parent_scope, value);
+        auto literal = new compiler::string_literal(
+            _program->find_module(_program->current_top_level()),
+            parent_scope,
+            value);
         _program->elements().add(literal);
 
         auto it = _program->_interned_string_literals.find(value);
@@ -229,6 +240,7 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             compiler::type* base_type) {
         auto type = new compiler::pointer_type(
+            _program->find_module(_program->current_top_level()),
             parent_scope,
             base_type);
         if (!type->initialize(session))
@@ -244,6 +256,7 @@ namespace basecode::compiler {
             compiler::type* entry_type,
             size_t size) {
         auto type = new compiler::array_type(
+            _program->find_module(_program->current_top_level()),
             parent_scope,
             scope,
             entry_type,
@@ -258,7 +271,10 @@ namespace basecode::compiler {
     module* element_builder::make_module(
             compiler::block* parent_scope,
             compiler::block* scope) {
-        auto module_element = new compiler::module(parent_scope, scope);
+        auto module_element = new compiler::module(
+            _program->find_module(_program->current_top_level()),
+            parent_scope,
+            scope);
         _program->elements().add(module_element);
         scope->parent_element(module_element);
         return module_element;
@@ -267,7 +283,10 @@ namespace basecode::compiler {
     module_reference* element_builder::make_module_reference(
             compiler::block* parent_scope,
             compiler::element* expr) {
-        auto module_reference = new compiler::module_reference(parent_scope, expr);
+        auto module_reference = new compiler::module_reference(
+            _program->find_module(_program->current_top_level()),
+            parent_scope,
+            expr);
         _program->elements().add(module_reference);
         if (expr != nullptr)
             expr->parent_element(module_reference);
@@ -277,7 +296,10 @@ namespace basecode::compiler {
     compiler::block* element_builder::make_block(
             compiler::block* parent_scope,
             element_type_t type) {
-        auto block_element = new compiler::block(parent_scope, type);
+        auto block_element = new compiler::block(
+            _program->find_module(_program->current_top_level()),
+            parent_scope,
+            type);
         _program->elements().add(block_element);
         return block_element;
     }
@@ -286,7 +308,10 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             compiler::type* type,
             element* expr) {
-        auto cast = new compiler::cast(parent_scope, type, expr);
+        auto cast = new compiler::cast(
+            _program->find_module(_program->current_top_level()),
+            parent_scope,
+            type, expr);
         _program->elements().add(cast);
         if (expr != nullptr)
             expr->parent_element(cast);
@@ -297,7 +322,11 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             compiler::type* type,
             element* expr) {
-        auto transmute = new compiler::transmute(parent_scope, type, expr);
+        auto transmute = new compiler::transmute(
+            _program->find_module(_program->current_top_level()),
+            parent_scope,
+            type,
+            expr);
         _program->elements().add(transmute);
         if (expr != nullptr)
             expr->parent_element(transmute);
@@ -309,6 +338,7 @@ namespace basecode::compiler {
             compiler::type* procedure_type,
             compiler::block* scope) {
         auto instance = new compiler::procedure_instance(
+            _program->find_module(_program->current_top_level()),
             parent_scope,
             procedure_type,
             scope);
@@ -321,7 +351,10 @@ namespace basecode::compiler {
             compiler::session& session,
             compiler::block* parent_scope,
             compiler::block* scope) {
-        auto type = new compiler::tuple_type(parent_scope, scope);
+        auto type = new compiler::tuple_type(
+            _program->find_module(_program->current_top_level()),
+            parent_scope,
+            scope);
         if (!type->initialize(session))
             return nullptr;
         scope->parent_element(type);
@@ -333,7 +366,10 @@ namespace basecode::compiler {
             compiler::session& session,
             compiler::block* parent_scope,
             compiler::block* scope) {
-        auto type = new compiler::module_type(parent_scope, scope);
+        auto type = new compiler::module_type(
+            _program->find_module(_program->current_top_level()),
+            parent_scope,
+            scope);
         if (!type->initialize(session))
             return nullptr;
         scope->parent_element(type);
@@ -345,7 +381,10 @@ namespace basecode::compiler {
             compiler::session& session,
             compiler::block* parent_scope,
             compiler::block* scope) {
-        auto type = new compiler::string_type(parent_scope, scope);
+        auto type = new compiler::string_type(
+            _program->find_module(_program->current_top_level()),
+            parent_scope,
+            scope);
         if (!type->initialize(session))
             return nullptr;
         scope->parent_element(type);
@@ -357,6 +396,7 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             element* expr) {
         auto ns = new compiler::namespace_element(
+            _program->find_module(_program->current_top_level()),
             parent_scope,
             expr);
         if (expr != nullptr)
@@ -372,6 +412,7 @@ namespace basecode::compiler {
         auto type_name = fmt::format("__union_{}__", common::id_pool::instance()->allocate());
         auto symbol = make_symbol(parent_scope, type_name);
         auto type = new compiler::composite_type(
+            _program->find_module(_program->current_top_level()),
             parent_scope,
             composite_types_t::union_type,
             scope,
@@ -389,6 +430,7 @@ namespace basecode::compiler {
         auto type_name = fmt::format("__struct_{}__", common::id_pool::instance()->allocate());
         auto symbol = make_symbol(parent_scope, type_name);
         auto type = new compiler::composite_type(
+            _program->find_module(_program->current_top_level()),
             parent_scope,
             composite_types_t::struct_type,
             scope,
@@ -404,6 +446,7 @@ namespace basecode::compiler {
             compiler::identifier_reference* reference,
             compiler::argument_list* args) {
         auto proc_call = new compiler::procedure_call(
+            _program->find_module(_program->current_top_level()),
             parent_scope,
             reference,
             args);
@@ -414,7 +457,9 @@ namespace basecode::compiler {
     }
 
     argument_list* element_builder::make_argument_list(compiler::block* parent_scope) {
-        auto list = new compiler::argument_list(parent_scope);
+        auto list = new compiler::argument_list(
+            _program->find_module(_program->current_top_level()),
+            parent_scope);
         _program->elements().add(list);
         return list;
     }
@@ -424,6 +469,7 @@ namespace basecode::compiler {
             operator_type_t type,
             element* rhs) {
         auto unary_operator = new compiler::unary_operator(
+            _program->find_module(_program->current_top_level()),
             parent_scope,
             type,
             rhs);
@@ -438,6 +484,7 @@ namespace basecode::compiler {
             element* lhs,
             element* rhs) {
         auto binary_operator = new compiler::binary_operator(
+            _program->find_module(_program->current_top_level()),
             parent_scope,
             type,
             lhs,
@@ -451,7 +498,10 @@ namespace basecode::compiler {
     label* element_builder::make_label(
             compiler::block* parent_scope,
             const std::string& name) {
-        auto label = new compiler::label(parent_scope, name);
+        auto label = new compiler::label(
+            _program->find_module(_program->current_top_level()),
+            parent_scope,
+            name);
         _program->elements().add(label);
         return label;
     }
@@ -459,7 +509,10 @@ namespace basecode::compiler {
     field* element_builder::make_field(
             compiler::block* parent_scope,
             compiler::identifier* identifier) {
-        auto field = new compiler::field(parent_scope, identifier);
+        auto field = new compiler::field(
+            _program->find_module(_program->current_top_level()),
+            parent_scope,
+            identifier);
         identifier->parent_element(field);
         _program->elements().add(field);
         return field;
@@ -468,7 +521,10 @@ namespace basecode::compiler {
     float_literal* element_builder::make_float(
             compiler::block* parent_scope,
             double value) {
-        auto literal = new compiler::float_literal(parent_scope, value);
+        auto literal = new compiler::float_literal(
+            _program->find_module(_program->current_top_level()),
+            parent_scope,
+            value);
         _program->elements().add(literal);
         return literal;
     }
@@ -476,7 +532,10 @@ namespace basecode::compiler {
     boolean_literal* element_builder::make_bool(
             compiler::block* parent_scope,
             bool value) {
-        auto boolean_literal = new compiler::boolean_literal(parent_scope, value);
+        auto boolean_literal = new compiler::boolean_literal(
+            _program->find_module(_program->current_top_level()),
+            parent_scope,
+            value);
         _program->elements().add(boolean_literal);
         return boolean_literal;
     }
@@ -484,7 +543,10 @@ namespace basecode::compiler {
     expression* element_builder::make_expression(
             compiler::block* parent_scope,
             element* expr) {
-        auto expression = new compiler::expression(parent_scope, expr);
+        auto expression = new compiler::expression(
+            _program->find_module(_program->current_top_level()),
+            parent_scope,
+            expr);
         if (expr != nullptr)
             expr->parent_element(expression);
         _program->elements().add(expression);
@@ -494,7 +556,10 @@ namespace basecode::compiler {
     integer_literal* element_builder::make_integer(
             compiler::block* parent_scope,
             uint64_t value) {
-        auto literal = new compiler::integer_literal(parent_scope, value);
+        auto literal = new compiler::integer_literal(
+            _program->find_module(_program->current_top_level()),
+            parent_scope,
+            value);
         _program->elements().add(literal);
         return literal;
     }
@@ -506,6 +571,7 @@ namespace basecode::compiler {
         auto type_name = fmt::format("__enum_{}__", common::id_pool::instance()->allocate());
         auto symbol = make_symbol(parent_scope, type_name);
         auto type = new compiler::composite_type(
+            _program->find_module(_program->current_top_level()),
             parent_scope,
             composite_types_t::enum_type,
             scope,
@@ -520,6 +586,7 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             element* expr) {
         auto initializer = new compiler::initializer(
+            _program->find_module(_program->current_top_level()),
             parent_scope,
             expr);
         if (expr != nullptr)
@@ -529,7 +596,9 @@ namespace basecode::compiler {
     }
 
     return_element* element_builder::make_return(compiler::block* parent_scope) {
-        auto return_element = new compiler::return_element(parent_scope);
+        auto return_element = new compiler::return_element(
+            _program->find_module(_program->current_top_level()),
+            parent_scope);
         _program->elements().add(return_element);
         return return_element;
     }
@@ -543,6 +612,7 @@ namespace basecode::compiler {
             bool is_signed,
             type_number_class_t number_class) {
         auto type = new compiler::numeric_type(
+            _program->find_module(_program->current_top_level()),
             parent_scope,
             make_symbol(parent_scope, name),
             min,
@@ -562,6 +632,7 @@ namespace basecode::compiler {
             element* true_branch,
             element* false_branch) {
         auto if_element = new compiler::if_element(
+            _program->find_module(_program->current_top_level()),
             parent_scope,
             predicate,
             true_branch,
@@ -580,7 +651,11 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             comment_type_t type,
             const std::string& value) {
-        auto comment = new compiler::comment(parent_scope, type, value);
+        auto comment = new compiler::comment(
+            _program->find_module(_program->current_top_level()),
+            parent_scope,
+            type,
+            value);
         _program->elements().add(comment);
         return comment;
     }
@@ -589,7 +664,11 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             const std::string& name,
             element* expr) {
-        auto directive = new compiler::directive(parent_scope, name, expr);
+        auto directive = new compiler::directive(
+            _program->find_module(_program->current_top_level()),
+            parent_scope,
+            name,
+            expr);
         if (expr != nullptr)
             expr->parent_element(directive);
         _program->elements().add(directive);
@@ -600,7 +679,11 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             const std::string& name,
             element* expr) {
-        auto attr = new compiler::attribute(parent_scope, name, expr);
+        auto attr = new compiler::attribute(
+            _program->find_module(_program->current_top_level()),
+            parent_scope,
+            name,
+            expr);
         if (expr != nullptr)
             expr->parent_element(attr);
         _program->elements().add(attr);
@@ -612,6 +695,7 @@ namespace basecode::compiler {
             const std::string& name,
             const string_list_t& namespaces) {
         auto symbol = new compiler::symbol_element(
+            _program->find_module(_program->current_top_level()),
             parent_scope,
             name,
             namespaces);
@@ -625,6 +709,7 @@ namespace basecode::compiler {
             const std::string& name,
             const string_list_t& namespaces) {
         return new compiler::symbol_element(
+            _program->find_module(_program->current_top_level()),
             parent_scope,
             name,
             namespaces);
@@ -635,6 +720,7 @@ namespace basecode::compiler {
             const qualified_symbol_t& symbol,
             compiler::identifier* identifier) {
         auto reference = new compiler::identifier_reference(
+            _program->find_module(_program->current_top_level()),
             parent_scope,
             symbol,
             identifier);
@@ -650,6 +736,7 @@ namespace basecode::compiler {
             compiler::symbol_element* symbol,
             initializer* expr) {
         auto identifier = new compiler::identifier(
+            _program->find_module(_program->current_top_level()),
             parent_scope,
             symbol,
             expr);
@@ -670,7 +757,10 @@ namespace basecode::compiler {
             compiler::session& session,
             compiler::block* parent_scope,
             compiler::block* scope) {
-        auto type = new compiler::type_info(parent_scope, scope);
+        auto type = new compiler::type_info(
+            _program->find_module(_program->current_top_level()),
+            parent_scope,
+            scope);
         if (!type->initialize(session))
             return nullptr;
         scope->parent_element(type);
@@ -681,7 +771,10 @@ namespace basecode::compiler {
     alias* element_builder::make_alias(
             compiler::block* parent_scope,
             element* expr) {
-        auto alias_type = new compiler::alias(parent_scope, expr);
+        auto alias_type = new compiler::alias(
+            _program->find_module(_program->current_top_level()),
+            parent_scope,
+            expr);
         if (expr != nullptr)
             expr->parent_element(alias_type);
         _program->elements().add(alias_type);
@@ -691,7 +784,9 @@ namespace basecode::compiler {
     bool_type* element_builder::make_bool_type(
             compiler::session& session,
             compiler::block* parent_scope) {
-        auto type = new compiler::bool_type(parent_scope);
+        auto type = new compiler::bool_type(
+            _program->find_module(_program->current_top_level()),
+            parent_scope);
         if (!type->initialize(session))
             return nullptr;
         _program->elements().add(type);
@@ -702,7 +797,10 @@ namespace basecode::compiler {
             compiler::session& session,
             compiler::block* parent_scope,
             compiler::block* scope) {
-        auto type = new compiler::any_type(parent_scope, scope);
+        auto type = new compiler::any_type(
+            _program->find_module(_program->current_top_level()),
+            parent_scope,
+            scope);
         if (!type->initialize(session))
             return nullptr;
         scope->parent_element(type);
