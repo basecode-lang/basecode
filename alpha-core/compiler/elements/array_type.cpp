@@ -101,7 +101,6 @@ namespace basecode::compiler {
             builder.make_symbol(block_scope, "data"),
             nullptr);
         data_identifier->type(builder.make_pointer_type(
-            session,
             block_scope,
             u8_type));
         auto data_field = builder.make_field(block_scope, data_identifier);

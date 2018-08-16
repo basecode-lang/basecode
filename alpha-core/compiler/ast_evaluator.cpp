@@ -393,7 +393,6 @@ namespace basecode::compiler {
                             field_identifier->type(u32_type);
                         } else {
                             field_identifier->type(_session.builder().make_unknown_type_from_find_result(
-                                context.session,
                                 type->scope(),
                                 field_identifier,
                                 type_find_result));
@@ -475,7 +474,6 @@ namespace basecode::compiler {
 
             if (type_find_result.type == nullptr) {
                 new_identifier->type(_session.builder().make_unknown_type_from_find_result(
-                    context.session,
                     scope,
                     new_identifier,
                     type_find_result));
@@ -530,9 +528,7 @@ namespace basecode::compiler {
     bool ast_evaluator::symbol(
             evaluator_context_t& context,
             evaluator_result_t& result) {
-        result.element = _session.builder().make_symbol_from_node(
-            context.session,
-            context.node);
+        result.element = _session.builder().make_symbol_from_node(context.node);
         return true;
     }
 
@@ -958,7 +954,6 @@ namespace basecode::compiler {
             evaluator_result_t& result) {
         auto active_scope = _session.scope_manager().current_scope();
         auto enum_type = _session.builder().make_enum_type(
-            context.session,
             active_scope,
             _session.builder().make_block(active_scope, element_type_t::block));
         active_scope->types().add(enum_type);
@@ -978,7 +973,6 @@ namespace basecode::compiler {
             evaluator_result_t& result) {
         auto active_scope = _session.scope_manager().current_scope();
         auto struct_type = _session.builder().make_struct_type(
-            context.session,
             active_scope,
             _session.builder().make_block(active_scope, element_type_t::block));
         active_scope->types().add(struct_type);
@@ -997,7 +991,6 @@ namespace basecode::compiler {
             evaluator_result_t& result) {
         auto active_scope = _session.scope_manager().current_scope();
         auto union_type = _session.builder().make_union_type(
-            context.session,
             active_scope,
             _session.builder().make_block(active_scope, element_type_t::block));
         active_scope->types().add(union_type);

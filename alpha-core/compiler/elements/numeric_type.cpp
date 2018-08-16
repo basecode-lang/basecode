@@ -22,7 +22,6 @@ namespace basecode::compiler {
         auto& builder = session.builder();
         for (const auto& props : s_type_properties) {
             auto type = builder.make_numeric_type(
-                session,
                 parent_scope,
                 props.name,
                 props.min,

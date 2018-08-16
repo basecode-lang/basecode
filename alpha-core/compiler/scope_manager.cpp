@@ -122,14 +122,15 @@ namespace basecode::compiler {
         if (type_node == nullptr)
             return false;
 
-        session.builder().make_qualified_symbol(
+        auto& builder = session.builder();
+        builder.make_qualified_symbol(
             result.type_name,
             type_node->lhs.get());
         result.array_size = 0;
         result.is_array = type_node->is_array();
         result.is_spread = type_node->is_spread();
         result.is_pointer = type_node->is_pointer();
-        session.builder().make_complete_type(session, result, parent_scope);
+        builder.make_complete_type(result, parent_scope);
         return result.type != nullptr;
     }
 

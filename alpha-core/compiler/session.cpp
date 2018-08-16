@@ -41,7 +41,7 @@ namespace basecode::compiler {
     session::session(
             const session_options_t& options,
             const path_list_t& source_files) : _terp(options.heap_size, options.stack_size),
-                                               _builder(this),
+                                               _builder(*this),
                                                _assembler(&_terp),
                                                _ast_evaluator(*this),
                                                _options(options),
@@ -232,26 +232,21 @@ namespace basecode::compiler {
 
         compiler::numeric_type::make_types(*this, parent_scope);
         _scope_manager.add_type_to_scope(_builder.make_module_type(
-            *this,
             parent_scope,
             _builder.make_block(parent_scope, element_type_t::block)));
-        _scope_manager.add_type_to_scope(_builder.make_namespace_type(*this, parent_scope));
-        _scope_manager.add_type_to_scope(_builder.make_bool_type(*this, parent_scope));
+        _scope_manager.add_type_to_scope(_builder.make_namespace_type(parent_scope));
+        _scope_manager.add_type_to_scope(_builder.make_bool_type(parent_scope));
         _scope_manager.add_type_to_scope(_builder.make_string_type(
-            *this,
             parent_scope,
             _builder.make_block(parent_scope, element_type_t::block)));
 
         _scope_manager.add_type_to_scope(_builder.make_type_info_type(
-            *this,
             parent_scope,
             _builder.make_block(parent_scope, element_type_t::block)));
         _scope_manager.add_type_to_scope(_builder.make_tuple_type(
-            *this,
             parent_scope,
             _builder.make_block(parent_scope, element_type_t::block)));
         _scope_manager.add_type_to_scope(_builder.make_any_type(
-            *this,
             parent_scope,
             _builder.make_block(parent_scope, element_type_t::block)));
     }
@@ -287,7 +282,6 @@ namespace basecode::compiler {
                     find_result.array_size = unknown_type->array_size();
 
                     identifier_type = _builder.make_complete_type(
-                        *this,
                         find_result,
                         var->parent_scope());
                     if (identifier_type != nullptr) {
