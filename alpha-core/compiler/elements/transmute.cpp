@@ -26,22 +26,36 @@ namespace basecode::compiler {
                              _type(type) {
     }
 
-    bool transmute::on_emit(compiler::session& session) {
-        if (_expression == nullptr)
-            return true;
-        auto instruction_block = session.assembler().current_block();
-        instruction_block->current_entry()->comment(
-            fmt::format("XXX: transmute<{}> not yet implemented", _type->symbol()->name()),
-            session.emit_context().indent);
-        return _expression->emit(session);
-    }
-
     element* transmute::expression() {
         return _expression;
     }
 
     compiler::type* transmute::type() {
         return _type;
+    }
+
+    bool transmute::on_emit(compiler::session& session) {
+        if (_expression == nullptr)
+            return true;
+
+        auto& assembler = session.assembler();
+        auto target_reg = assembler.current_target_register();
+        auto instruction_block = assembler.current_block();
+
+        auto temp_reg = register_for(session, _expression);
+        if (!temp_reg.valid)
+            return false;
+
+        assembler.push_target_register(temp_reg.reg);
+        _expression->emit(session);
+        assembler.pop_target_register();
+
+        instruction_block->move_reg_to_reg(*target_reg, temp_reg.reg);
+        instruction_block->current_entry()->comment(
+            fmt::format("transmute<{}>", _type->symbol()->name()),
+            session.emit_context().indent);
+
+        return true;
     }
 
     void transmute::on_owned_elements(element_list_t& list) {

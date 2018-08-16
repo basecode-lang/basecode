@@ -45,9 +45,12 @@
 @library "alpha-core";
 #foreign print := proc(format: string, values: ...any) @alias "fmt_print";
 
-2 * 16 + (4 shl 2);
-
 preload := module("preload.bc");
+
+//
+//
+
+2 * 16 + (4 shl 2);
 
 ///////////////////////////////////////////////////////////////////////////////
 // bool
@@ -63,6 +66,7 @@ bool_false_u := false;
 // initialized
 bool_true_i:  bool := true;
 bool_false_i: bool := false;
+
 
 // cast rules
 // from          to          result
@@ -93,6 +97,8 @@ one := cast<u8>(three);
 
 // transmute
 // copy lsb to msb of rhs to lhs based on type specified in transmute<t>
+transmutation_magick: u8;
+transmutation_magick := transmute<u8>(three);
 
 ///////////////////////////////////////////////////////////////////////////////
 // u8
