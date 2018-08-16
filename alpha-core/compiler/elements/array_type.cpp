@@ -45,8 +45,9 @@ namespace basecode::compiler {
     }
 
     bool array_type::on_initialize(compiler::session& session) {
-        auto program = &session.program();
+        auto& scope_manager = session.scope_manager();
         auto& builder = session.builder();
+
         auto type_symbol = builder.make_symbol(
             parent_scope(),
             name_for_array(_entry_type, _size));
@@ -55,9 +56,9 @@ namespace basecode::compiler {
 
         auto block_scope = scope();
 
-        auto u8_type = program->find_type({.name = "u8"});
-        auto u32_type = program->find_type({.name = "u32"});
-        auto type_info_type = program->find_type({.name = "type"});
+        auto u8_type = scope_manager.find_type({.name = "u8"});
+        auto u32_type = scope_manager.find_type({.name = "u32"});
+        auto type_info_type = scope_manager.find_type({.name = "type"});
 
         auto flags_identifier = builder.make_identifier(
             block_scope,

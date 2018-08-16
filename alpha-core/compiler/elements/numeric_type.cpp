@@ -30,7 +30,7 @@ namespace basecode::compiler {
                 props.is_signed,
                 props.number_class);
             type->initialize(session);
-            session.program().add_type_to_scope(type);
+            session.scope_manager().add_type_to_scope(type);
         }
     }
 

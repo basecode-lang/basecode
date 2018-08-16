@@ -50,7 +50,7 @@ namespace basecode::compiler {
     }
 
     compiler::type* integer_literal::on_infer_type(const compiler::session& session) {
-        return session.program().find_type({
+        return session.scope_manager().find_type({
             .name = numeric_type::narrow_to_value(_value)
         });
     }

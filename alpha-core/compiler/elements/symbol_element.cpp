@@ -10,6 +10,7 @@
 // ----------------------------------------------------------------------------
 
 #include <compiler/session.h>
+#include <compiler/scope_manager.h>
 #include "program.h"
 #include "identifier.h"
 #include "symbol_element.h"
@@ -73,7 +74,7 @@ namespace basecode::compiler {
     }
 
     compiler::type* symbol_element::on_infer_type(const compiler::session& session) {
-        auto identifier = session.program().find_identifier(qualified_symbol());
+        auto identifier = session.scope_manager().find_identifier(qualified_symbol());
         if (identifier != nullptr)
             return identifier->type();
         return nullptr;

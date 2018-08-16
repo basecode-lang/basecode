@@ -67,14 +67,15 @@ namespace basecode::compiler {
     // }; 16 bytes
 
     bool string_type::on_initialize(compiler::session& session) {
-        auto program = &session.program();
         auto& builder = session.builder();
+        auto& scope_manager = session.scope_manager();
+
         symbol(builder.make_symbol(parent_scope(), "string"));
 
         auto block_scope = scope();
 
-        auto u32_type = program->find_type({.name = "u32"});
-        auto u8_type = program->find_type({.name = "u8"});
+        auto u32_type = scope_manager.find_type({.name = "u32"});
+        auto u8_type = scope_manager.find_type({.name = "u8"});
 
         auto length_identifier = builder.make_identifier(
             block_scope,

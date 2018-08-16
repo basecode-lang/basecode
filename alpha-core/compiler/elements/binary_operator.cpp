@@ -454,7 +454,7 @@ namespace basecode::compiler {
             case operator_type_t::greater_than:
             case operator_type_t::less_than_or_equal:
             case operator_type_t::greater_than_or_equal: {
-                return session.program().find_type({.name = "bool"});
+                return session.scope_manager().find_type({.name = "bool"});
             }
             default:
                 return nullptr;

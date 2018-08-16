@@ -23,7 +23,8 @@ namespace basecode::compiler {
                                                _builder(this),
                                                _assembler(&_terp),
                                                _ast_evaluator(*this),
-                                               _options(options) {
+                                               _options(options),
+                                               _scope_manager(*this) {
         for (const auto& path : source_files) {
             if (path.is_relative()) {
                 add_source_file(boost::filesystem::absolute(path));
@@ -134,6 +135,10 @@ namespace basecode::compiler {
         return source_file;
     }
 
+    compiler::scope_manager& session::scope_manager() {
+        return _scope_manager;
+    }
+
     const session_options_t& session::options() const {
         return _options;
     }
@@ -154,6 +159,10 @@ namespace basecode::compiler {
             list.push_back(&it.second);
         }
         return list;
+    }
+
+    const compiler::scope_manager& session::scope_manager() const {
+        return _scope_manager;
     }
 
     void session::push_source_file(common::source_file* source_file) {

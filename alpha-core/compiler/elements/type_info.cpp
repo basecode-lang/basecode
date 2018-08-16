@@ -10,6 +10,7 @@
 // ----------------------------------------------------------------------------
 
 #include <compiler/session.h>
+#include <compiler/scope_manager.h>
 #include "program.h"
 #include "type_info.h"
 #include "identifier.h"
@@ -50,13 +51,12 @@ namespace basecode::compiler {
     // };
 
     bool type_info::on_initialize(compiler::session& session) {
-        auto program = &session.program();
         auto& builder = session.builder();
         symbol(builder.make_symbol(parent_scope(), "type"));
 
         auto block_scope = scope();
 
-        auto string_type = program->find_type({.name = "string"});
+        auto string_type = session.scope_manager().find_type({.name = "string"});
 
         auto name_identifier = builder.make_identifier(
             block_scope,

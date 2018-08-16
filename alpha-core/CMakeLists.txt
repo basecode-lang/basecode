@@ -91,6 +91,7 @@ add_library(
     compiler/emit_context.cpp compiler/emit_context.h
     compiler/elements/type.cpp compiler/elements/type.h
     compiler/elements/cast.cpp compiler/elements/cast.h
+    compiler/scope_manager.cpp compiler/scope_manager.h
     compiler/elements/field.cpp compiler/elements/field.h
     compiler/elements/block.cpp compiler/elements/block.h
     compiler/elements/label.cpp compiler/elements/label.h

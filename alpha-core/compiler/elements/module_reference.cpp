@@ -44,7 +44,7 @@ namespace basecode::compiler {
     }
 
     compiler::type* module_reference::on_infer_type(const compiler::session& session) {
-        return session.program().find_type({.name = "module"});
+        return session.scope_manager().find_type({.name = "module"});
     }
 
 };

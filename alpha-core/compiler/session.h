@@ -22,6 +22,7 @@
 #include <parser/parser.h>
 #include <boost/filesystem.hpp>
 #include <common/source_file.h>
+#include "scope_manager.h"
 #include "compiler_types.h"
 #include "elements/program.h"
 #include "elements/element_map.h"
@@ -77,6 +78,8 @@ namespace basecode::compiler {
 
         common::source_file* pop_source_file();
 
+        compiler::scope_manager& scope_manager();
+
         const session_options_t& options() const;
 
         const compiler::program& program() const;
@@ -84,6 +87,8 @@ namespace basecode::compiler {
         common::source_file* current_source_file();
 
         std::vector<common::source_file*> source_files();
+
+        const compiler::scope_manager& scope_manager() const;
 
         void push_source_file(common::source_file* source_file);
 
@@ -112,6 +117,7 @@ namespace basecode::compiler {
         ast_evaluator _ast_evaluator;
         emit_context_t _emit_context;
         session_options_t _options {};
+        compiler::scope_manager _scope_manager;
         std::stack<common::source_file*> _source_file_stack {};
         std::map<std::string, common::source_file> _source_files {};
     };

@@ -10,6 +10,7 @@
 // ----------------------------------------------------------------------------
 
 #include <compiler/session.h>
+#include <compiler/scope_manager.h>
 #include "program.h"
 #include "any_type.h"
 #include "identifier.h"
@@ -42,15 +43,14 @@ namespace basecode::compiler {
     }
 
     bool any_type::on_initialize(compiler::session& session) {
-        auto program = &session.program();
         auto& builder = session.builder();
 
         symbol(builder.make_symbol(parent_scope(), "any"));
 
         auto block_scope = scope();
 
-        auto type_info_type = program->find_type({ .name = "type" });
-        auto u8_type = program->find_type({ .name = "u8" });
+        auto type_info_type = session.scope_manager().find_type({ .name = "type" });
+        auto u8_type = session.scope_manager().find_type({ .name = "u8" });
 
         auto type_info_identifier = builder.make_identifier(
             block_scope,

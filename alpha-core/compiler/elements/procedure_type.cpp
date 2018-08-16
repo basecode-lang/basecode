@@ -76,7 +76,7 @@ namespace basecode::compiler {
 
         offset = 16;
         size_t local_count = 0;
-        session.program().visit_blocks(
+        session.scope_manager().visit_blocks(
             session.result(),
             [&](compiler::block* scope) {
                 if (scope->element_type() == element_type_t::proc_type_block)

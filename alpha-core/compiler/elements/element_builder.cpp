@@ -66,7 +66,7 @@ namespace basecode::compiler {
             compiler::element* from_expr,
             compiler::module* imported_module) {
         auto import_element = new compiler::import(
-            _session->program().current_module(),
+            _session->scope_manager().current_module(),
             parent_scope,
             expr,
             from_expr,
@@ -86,10 +86,12 @@ namespace basecode::compiler {
             compiler::session& session,
             type_find_result_t& result,
             compiler::block* parent_scope) {
-        result.type = _session->program().find_type(result.type_name, parent_scope);
+        result.type = _session->scope_manager().find_type(
+            result.type_name,
+            parent_scope);
         if (result.type != nullptr) {
             if (result.is_array) {
-                auto array_type = _session->program().find_array_type(
+                auto array_type = _session->scope_manager().find_array_type(
                     result.type,
                     result.array_size,
                     parent_scope);
@@ -105,7 +107,7 @@ namespace basecode::compiler {
             }
 
             if (result.is_pointer) {
-                auto pointer_type = _session->program().find_pointer_type(
+                auto pointer_type = _session->scope_manager().find_pointer_type(
                     result.type,
                     parent_scope);
                 if (pointer_type == nullptr) {
@@ -138,7 +140,7 @@ namespace basecode::compiler {
         qualified_symbol_t qualified_symbol {};
         make_qualified_symbol(qualified_symbol, node);
         auto symbol = make_symbol(
-            _session->program().current_scope(),
+            _session->scope_manager().current_scope(),
             qualified_symbol.name,
             qualified_symbol.namespaces);
         symbol->location(node->location);
@@ -150,7 +152,7 @@ namespace basecode::compiler {
             compiler::session& session,
             compiler::block* parent_scope) {
         auto type = new compiler::namespace_type(
-            _session->program().current_module(),
+            _session->scope_manager().current_module(),
             parent_scope);
         if (!type->initialize(session))
             return nullptr;
@@ -167,7 +169,7 @@ namespace basecode::compiler {
             bool is_array,
             size_t array_size) {
         auto type = new compiler::unknown_type(
-            _session->program().current_module(),
+            _session->scope_manager().current_module(),
             parent_scope,
             symbol);
         if (!type->initialize(session))
@@ -185,7 +187,7 @@ namespace basecode::compiler {
             compiler::block* block_scope) {
         auto type_name = fmt::format("__proc_{}__", common::id_pool::instance()->allocate());
         auto type = new compiler::procedure_type(
-            _session->program().current_module(),
+            _session->scope_manager().current_module(),
             parent_scope,
             block_scope,
             make_symbol(parent_scope, type_name));
@@ -200,7 +202,7 @@ namespace basecode::compiler {
             label_list_t labels,
             element* expr) {
         auto statement = new compiler::statement(
-            _session->program().current_module(),
+            _session->scope_manager().current_module(),
             parent_scope,
             expr);
         // XXX: double check this
@@ -215,22 +217,23 @@ namespace basecode::compiler {
     }
 
     string_literal* element_builder::make_string(
-        compiler::block* parent_scope,
-        const std::string& value) {
+            compiler::block* parent_scope,
+            const std::string& value) {
         auto literal = new compiler::string_literal(
-            _session->program().current_module(),
+            _session->scope_manager().current_module(),
             parent_scope,
             value);
         _session->elements().add(literal);
 
-        auto it = _session->program()._interned_string_literals.find(value);
-        if (it != _session->program()._interned_string_literals.end()) {
+        auto& interned_strings = _session->scope_manager().interned_string_literals();
+        auto it = interned_strings.find(value);
+        if (it != interned_strings.end()) {
             auto& list = it->second;
             list.emplace_back(literal);
         } else {
             string_literal_list_t list {};
             list.emplace_back(literal);
-            _session->program()._interned_string_literals.insert(std::make_pair(value, list));
+            interned_strings.insert(std::make_pair(value, list));
         }
 
         return literal;
@@ -241,7 +244,7 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             compiler::type* base_type) {
         auto type = new compiler::pointer_type(
-            _session->program().current_module(),
+            _session->scope_manager().current_module(),
             parent_scope,
             base_type);
         if (!type->initialize(session))
@@ -257,7 +260,7 @@ namespace basecode::compiler {
             compiler::type* entry_type,
             size_t size) {
         auto type = new compiler::array_type(
-            _session->program().current_module(),
+            _session->scope_manager().current_module(),
             parent_scope,
             scope,
             entry_type,
@@ -273,7 +276,7 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             compiler::block* scope) {
         auto module_element = new compiler::module(
-            _session->program().current_module(),
+            _session->scope_manager().current_module(),
             parent_scope,
             scope);
         _session->elements().add(module_element);
@@ -285,7 +288,7 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             compiler::element* expr) {
         auto module_reference = new compiler::module_reference(
-            _session->program().current_module(),
+            _session->scope_manager().current_module(),
             parent_scope,
             expr);
         _session->elements().add(module_reference);
@@ -298,7 +301,7 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             element_type_t type) {
         auto block_element = new compiler::block(
-            _session->program().current_module(),
+            _session->scope_manager().current_module(),
             parent_scope,
             type);
         _session->elements().add(block_element);
@@ -310,7 +313,7 @@ namespace basecode::compiler {
             compiler::type* type,
             element* expr) {
         auto cast = new compiler::cast(
-            _session->program().current_module(),
+            _session->scope_manager().current_module(),
             parent_scope,
             type, expr);
         _session->elements().add(cast);
@@ -324,7 +327,7 @@ namespace basecode::compiler {
             compiler::type* type,
             element* expr) {
         auto transmute = new compiler::transmute(
-            _session->program().current_module(),
+            _session->scope_manager().current_module(),
             parent_scope,
             type,
             expr);
@@ -339,7 +342,7 @@ namespace basecode::compiler {
             compiler::type* procedure_type,
             compiler::block* scope) {
         auto instance = new compiler::procedure_instance(
-            _session->program().current_module(),
+            _session->scope_manager().current_module(),
             parent_scope,
             procedure_type,
             scope);
@@ -353,7 +356,7 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             compiler::block* scope) {
         auto type = new compiler::tuple_type(
-            _session->program().current_module(),
+            _session->scope_manager().current_module(),
             parent_scope,
             scope);
         if (!type->initialize(session))
@@ -368,7 +371,7 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             compiler::block* scope) {
         auto type = new compiler::module_type(
-            _session->program().current_module(),
+            _session->scope_manager().current_module(),
             parent_scope,
             scope);
         if (!type->initialize(session))
@@ -383,7 +386,7 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             compiler::block* scope) {
         auto type = new compiler::string_type(
-            _session->program().current_module(),
+            _session->scope_manager().current_module(),
             parent_scope,
             scope);
         if (!type->initialize(session))
@@ -397,7 +400,7 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             element* expr) {
         auto ns = new compiler::namespace_element(
-            _session->program().current_module(),
+            _session->scope_manager().current_module(),
             parent_scope,
             expr);
         if (expr != nullptr)
@@ -413,7 +416,7 @@ namespace basecode::compiler {
         auto type_name = fmt::format("__union_{}__", common::id_pool::instance()->allocate());
         auto symbol = make_symbol(parent_scope, type_name);
         auto type = new compiler::composite_type(
-            _session->program().current_module(),
+            _session->scope_manager().current_module(),
             parent_scope,
             composite_types_t::union_type,
             scope,
@@ -431,7 +434,7 @@ namespace basecode::compiler {
         auto type_name = fmt::format("__struct_{}__", common::id_pool::instance()->allocate());
         auto symbol = make_symbol(parent_scope, type_name);
         auto type = new compiler::composite_type(
-            _session->program().current_module(),
+            _session->scope_manager().current_module(),
             parent_scope,
             composite_types_t::struct_type,
             scope,
@@ -447,7 +450,7 @@ namespace basecode::compiler {
             compiler::identifier_reference* reference,
             compiler::argument_list* args) {
         auto proc_call = new compiler::procedure_call(
-            _session->program().current_module(),
+            _session->scope_manager().current_module(),
             parent_scope,
             reference,
             args);
@@ -459,7 +462,7 @@ namespace basecode::compiler {
 
     argument_list* element_builder::make_argument_list(compiler::block* parent_scope) {
         auto list = new compiler::argument_list(
-            _session->program().current_module(),
+            _session->scope_manager().current_module(),
             parent_scope);
         _session->elements().add(list);
         return list;
@@ -470,7 +473,7 @@ namespace basecode::compiler {
             operator_type_t type,
             element* rhs) {
         auto unary_operator = new compiler::unary_operator(
-            _session->program().current_module(),
+            _session->scope_manager().current_module(),
             parent_scope,
             type,
             rhs);
@@ -485,7 +488,7 @@ namespace basecode::compiler {
             element* lhs,
             element* rhs) {
         auto binary_operator = new compiler::binary_operator(
-            _session->program().current_module(),
+            _session->scope_manager().current_module(),
             parent_scope,
             type,
             lhs,
@@ -500,7 +503,7 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             const std::string& name) {
         auto label = new compiler::label(
-            _session->program().current_module(),
+            _session->scope_manager().current_module(),
             parent_scope,
             name);
         _session->elements().add(label);
@@ -511,7 +514,7 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             compiler::identifier* identifier) {
         auto field = new compiler::field(
-            _session->program().current_module(),
+            _session->scope_manager().current_module(),
             parent_scope,
             identifier);
         identifier->parent_element(field);
@@ -523,7 +526,7 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             double value) {
         auto literal = new compiler::float_literal(
-            _session->program().current_module(),
+            _session->scope_manager().current_module(),
             parent_scope,
             value);
         _session->elements().add(literal);
@@ -534,7 +537,7 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             bool value) {
         auto boolean_literal = new compiler::boolean_literal(
-            _session->program().current_module(),
+            _session->scope_manager().current_module(),
             parent_scope,
             value);
         _session->elements().add(boolean_literal);
@@ -545,7 +548,7 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             element* expr) {
         auto expression = new compiler::expression(
-            _session->program().current_module(),
+            _session->scope_manager().current_module(),
             parent_scope,
             expr);
         if (expr != nullptr)
@@ -558,7 +561,7 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             uint64_t value) {
         auto literal = new compiler::integer_literal(
-            _session->program().current_module(),
+            _session->scope_manager().current_module(),
             parent_scope,
             value);
         _session->elements().add(literal);
@@ -572,7 +575,7 @@ namespace basecode::compiler {
         auto type_name = fmt::format("__enum_{}__", common::id_pool::instance()->allocate());
         auto symbol = make_symbol(parent_scope, type_name);
         auto type = new compiler::composite_type(
-            _session->program().current_module(),
+            _session->scope_manager().current_module(),
             parent_scope,
             composite_types_t::enum_type,
             scope,
@@ -587,7 +590,7 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             element* expr) {
         auto initializer = new compiler::initializer(
-            _session->program().current_module(),
+            _session->scope_manager().current_module(),
             parent_scope,
             expr);
         if (expr != nullptr)
@@ -598,7 +601,7 @@ namespace basecode::compiler {
 
     return_element* element_builder::make_return(compiler::block* parent_scope) {
         auto return_element = new compiler::return_element(
-            _session->program().current_module(),
+            _session->scope_manager().current_module(),
             parent_scope);
         _session->elements().add(return_element);
         return return_element;
@@ -613,7 +616,7 @@ namespace basecode::compiler {
             bool is_signed,
             type_number_class_t number_class) {
         auto type = new compiler::numeric_type(
-            _session->program().current_module(),
+            _session->scope_manager().current_module(),
             parent_scope,
             make_symbol(parent_scope, name),
             min,
@@ -633,7 +636,7 @@ namespace basecode::compiler {
             element* true_branch,
             element* false_branch) {
         auto if_element = new compiler::if_element(
-            _session->program().current_module(),
+            _session->scope_manager().current_module(),
             parent_scope,
             predicate,
             true_branch,
@@ -653,7 +656,7 @@ namespace basecode::compiler {
             comment_type_t type,
             const std::string& value) {
         auto comment = new compiler::comment(
-            _session->program().current_module(),
+            _session->scope_manager().current_module(),
             parent_scope,
             type,
             value);
@@ -666,7 +669,7 @@ namespace basecode::compiler {
             const std::string& name,
             element* expr) {
         auto directive = new compiler::directive(
-            _session->program().current_module(),
+            _session->scope_manager().current_module(),
             parent_scope,
             name,
             expr);
@@ -681,7 +684,7 @@ namespace basecode::compiler {
             const std::string& name,
             element* expr) {
         auto attr = new compiler::attribute(
-            _session->program().current_module(),
+            _session->scope_manager().current_module(),
             parent_scope,
             name,
             expr);
@@ -696,7 +699,7 @@ namespace basecode::compiler {
             const std::string& name,
             const string_list_t& namespaces) {
         auto symbol = new compiler::symbol_element(
-            _session->program().current_module(),
+            _session->scope_manager().current_module(),
             parent_scope,
             name,
             namespaces);
@@ -710,7 +713,7 @@ namespace basecode::compiler {
             const std::string& name,
             const string_list_t& namespaces) {
         return new compiler::symbol_element(
-            _session->program().current_module(),
+            _session->scope_manager().current_module(),
             parent_scope,
             name,
             namespaces);
@@ -720,14 +723,15 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             const qualified_symbol_t& symbol,
             compiler::identifier* identifier) {
+        auto& unresolveds = _session->scope_manager().unresolved_identifier_references();
         auto reference = new compiler::identifier_reference(
-            _session->program().current_module(),
+            _session->scope_manager().current_module(),
             parent_scope,
             symbol,
             identifier);
         _session->elements().add(reference);
         if (!reference->resolved())
-            _session->program()._unresolved_identifier_references.emplace_back(reference);
+            unresolveds.emplace_back(reference);
         reference->location(symbol.location);
         return reference;
     }
@@ -737,7 +741,7 @@ namespace basecode::compiler {
             compiler::symbol_element* symbol,
             initializer* expr) {
         auto identifier = new compiler::identifier(
-            _session->program().current_module(),
+            _session->scope_manager().current_module(),
             parent_scope,
             symbol,
             expr);
@@ -759,7 +763,7 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             compiler::block* scope) {
         auto type = new compiler::type_info(
-            _session->program().current_module(),
+            _session->scope_manager().current_module(),
             parent_scope,
             scope);
         if (!type->initialize(session))
@@ -773,7 +777,7 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             element* expr) {
         auto alias_type = new compiler::alias(
-            _session->program().current_module(),
+            _session->scope_manager().current_module(),
             parent_scope,
             expr);
         if (expr != nullptr)
@@ -786,7 +790,7 @@ namespace basecode::compiler {
             compiler::session& session,
             compiler::block* parent_scope) {
         auto type = new compiler::bool_type(
-            _session->program().current_module(),
+            _session->scope_manager().current_module(),
             parent_scope);
         if (!type->initialize(session))
             return nullptr;
@@ -799,7 +803,7 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             compiler::block* scope) {
         auto type = new compiler::any_type(
-            _session->program().current_module(),
+            _session->scope_manager().current_module(),
             parent_scope,
             scope);
         if (!type->initialize(session))
@@ -814,6 +818,7 @@ namespace basecode::compiler {
             compiler::block* scope,
             compiler::identifier* identifier,
             const type_find_result_t& result) {
+        auto& identifiers = _session->scope_manager().identifiers_with_unknown_types();
         auto symbol = make_symbol(
             scope,
             result.type_name.name,
@@ -825,7 +830,7 @@ namespace basecode::compiler {
             result.is_pointer,
             result.is_array,
             result.array_size);
-        _session->program()._identifiers_with_unknown_types.push_back(identifier);
+        identifiers.push_back(identifier);
         return unknown_type;
     }
 
