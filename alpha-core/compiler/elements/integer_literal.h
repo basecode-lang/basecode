@@ -33,7 +33,7 @@ namespace basecode::compiler {
 
         bool on_as_integer(uint64_t& value) const override;
 
-        compiler::type* on_infer_type(const compiler::program* program) override;
+        compiler::type* on_infer_type(const compiler::session& session) override;
 
     private:
         uint64_t _value;

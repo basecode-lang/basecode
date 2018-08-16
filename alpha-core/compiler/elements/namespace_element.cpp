@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <compiler/session.h>
 #include "program.h"
 #include "identifier.h"
 #include "initializer.h"
@@ -63,8 +64,8 @@ namespace basecode::compiler {
             list.emplace_back(_expression);
     }
 
-    compiler::type* namespace_element::on_infer_type(const compiler::program* program) {
-        return program->find_type({.name = "namespace" });
+    compiler::type* namespace_element::on_infer_type(const compiler::session& session) {
+        return session.program().find_type({.name = "namespace" });
     }
 
 };

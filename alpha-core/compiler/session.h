@@ -68,6 +68,8 @@ namespace basecode::compiler {
 
         const session_options_t& options() const;
 
+        const compiler::program& program() const;
+
         common::source_file* current_source_file();
 
         std::vector<common::source_file*> source_files();

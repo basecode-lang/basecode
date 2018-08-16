@@ -76,9 +76,9 @@ namespace basecode::compiler {
         _identifier = value;
     }
 
-    compiler::type* identifier_reference::on_infer_type(const compiler::program* program) {
+    compiler::type* identifier_reference::on_infer_type(const compiler::session& session) {
         if (_identifier != nullptr)
-            return _identifier->infer_type(program);
+            return _identifier->infer_type(session);
         return nullptr;
     }
 

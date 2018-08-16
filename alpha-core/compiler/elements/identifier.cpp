@@ -117,7 +117,7 @@ namespace basecode::compiler {
         _initializer = value;
     }
 
-    compiler::type* identifier::on_infer_type(const compiler::program* program) {
+    compiler::type* identifier::on_infer_type(const compiler::session& session) {
         return _type;
     }
 

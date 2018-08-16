@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <compiler/session.h>
 #include "program.h"
 #include "identifier.h"
 #include "symbol_element.h"
@@ -71,8 +72,8 @@ namespace basecode::compiler {
         return _fully_qualified_name == other.fully_qualified_name;
     }
 
-    compiler::type* symbol_element::on_infer_type(const compiler::program* program) {
-        auto identifier = program->find_identifier(qualified_symbol());
+    compiler::type* symbol_element::on_infer_type(const compiler::session& session) {
+        auto identifier = session.program().find_identifier(qualified_symbol());
         if (identifier != nullptr)
             return identifier->type();
         return nullptr;

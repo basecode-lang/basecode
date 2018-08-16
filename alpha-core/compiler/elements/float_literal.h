@@ -33,7 +33,7 @@ namespace basecode::compiler {
 
         bool on_emit(compiler::session& session) override;
 
-        compiler::type* on_infer_type(const compiler::program* program) override;
+        compiler::type* on_infer_type(const compiler::session& session) override;
 
     private:
         double _value;

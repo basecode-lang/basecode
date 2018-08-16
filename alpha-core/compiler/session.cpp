@@ -120,6 +120,10 @@ namespace basecode::compiler {
         return _options;
     }
 
+    const compiler::program& session::program() const {
+        return _program;
+    }
+
     common::source_file* session::current_source_file() {
         if (_source_file_stack.empty())
             return nullptr;

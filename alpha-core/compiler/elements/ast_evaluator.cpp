@@ -367,7 +367,8 @@ namespace basecode::compiler {
                             symbol,
                             init);
                         if (type_find_result.type == nullptr) {
-                            type_find_result.type = init->expression()->infer_type(_program);
+                            type_find_result.type = init->expression()
+                                                        ->infer_type(context.session);
                             field_identifier->inferred_type(type_find_result.type != nullptr);
                         }
                         field_identifier->type(type_find_result.type);
@@ -474,7 +475,7 @@ namespace basecode::compiler {
 
         if (type_find_result.type == nullptr) {
             if (init_expr != nullptr) {
-                type_find_result.type = init_expr->infer_type(_program);
+                type_find_result.type = init_expr->infer_type(context.session);
                 new_identifier->type(type_find_result.type);
                 new_identifier->inferred_type(type_find_result.type != nullptr);
             }

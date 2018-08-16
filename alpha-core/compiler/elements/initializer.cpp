@@ -76,9 +76,9 @@ namespace basecode::compiler {
             list.emplace_back(_expr);
     }
 
-    compiler::type* initializer::on_infer_type(const compiler::program* program) {
+    compiler::type* initializer::on_infer_type(const compiler::session& session) {
         if (_expr != nullptr)
-            return _expr->infer_type(program);
+            return _expr->infer_type(session);
         return nullptr;
     }
 

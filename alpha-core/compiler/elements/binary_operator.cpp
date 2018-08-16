@@ -426,7 +426,7 @@ namespace basecode::compiler {
             list.emplace_back(_rhs);
     }
 
-    compiler::type* binary_operator::on_infer_type(const compiler::program* program) {
+    compiler::type* binary_operator::on_infer_type(const compiler::session& session) {
         switch (operator_type()) {
             case operator_type_t::add:
             case operator_type_t::modulo:
@@ -441,8 +441,8 @@ namespace basecode::compiler {
             case operator_type_t::shift_right:
             case operator_type_t::rotate_left:
             case operator_type_t::rotate_right: {
-                auto lhs_type = _lhs->infer_type(program);
-                auto rhs_type = _rhs->infer_type(program);
+                auto lhs_type = _lhs->infer_type(session);
+                auto rhs_type = _rhs->infer_type(session);
                 // XXX: need to type-check and possibly widen here
                 return lhs_type;
             }
@@ -454,7 +454,7 @@ namespace basecode::compiler {
             case operator_type_t::greater_than:
             case operator_type_t::less_than_or_equal:
             case operator_type_t::greater_than_or_equal: {
-                return program->find_type({.name = "bool"});
+                return session.program().find_type({.name = "bool"});
             }
             default:
                 return nullptr;

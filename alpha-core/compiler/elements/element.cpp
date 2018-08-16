@@ -122,7 +122,7 @@ namespace basecode::compiler {
                 result.reg = result.var->value_reg.reg;
             }
         } else {
-            auto type = e->infer_type(&session.program());
+            auto type = e->infer_type(session);
 
             vm::register_t reg;
             reg.size = vm::op_size_for_byte_size(type->size_in_bytes());
@@ -239,13 +239,13 @@ namespace basecode::compiler {
         _location = location;
     }
 
-    compiler::type* element::infer_type(const compiler::program* program) {
+    compiler::type* element::infer_type(const compiler::session& session) {
         if (is_type())
             return dynamic_cast<compiler::type*>(this);
-        return on_infer_type(program);
+        return on_infer_type(session);
     }
 
-    compiler::type* element::on_infer_type(const compiler::program* program) {
+    compiler::type* element::on_infer_type(const compiler::session& session) {
         return nullptr;
     }
 

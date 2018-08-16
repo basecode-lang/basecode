@@ -57,7 +57,7 @@ namespace basecode::compiler {
 
         void on_owned_elements(element_list_t& list) override;
 
-        compiler::type* on_infer_type(const compiler::program* program) override;
+        compiler::type* on_infer_type(const compiler::session& session) override;
 
     private:
         bool _inferred_type = false;

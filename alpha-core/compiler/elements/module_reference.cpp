@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <compiler/session.h>
 #include "program.h"
 #include "module_reference.h"
 
@@ -42,8 +43,8 @@ namespace basecode::compiler {
             list.emplace_back(_expression);
     }
 
-    compiler::type* module_reference::on_infer_type(const compiler::program* program) {
-        return program->find_type({.name = "module"});
+    compiler::type* module_reference::on_infer_type(const compiler::session& session) {
+        return session.program().find_type({.name = "module"});
     }
 
 };

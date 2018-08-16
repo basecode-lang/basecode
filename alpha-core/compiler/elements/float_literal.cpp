@@ -49,8 +49,8 @@ namespace basecode::compiler {
         return true;
     }
 
-    compiler::type* float_literal::on_infer_type(const compiler::program* program) {
-        return program->find_type({
+    compiler::type* float_literal::on_infer_type(const compiler::session& session) {
+        return session.program().find_type({
             .name = numeric_type::narrow_to_value(_value)
         });
     }

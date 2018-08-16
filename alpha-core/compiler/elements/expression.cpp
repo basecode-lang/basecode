@@ -42,10 +42,10 @@ namespace basecode::compiler {
             list.emplace_back(_root);
     }
 
-    compiler::type* expression::on_infer_type(const compiler::program* program) {
+    compiler::type* expression::on_infer_type(const compiler::session& session) {
         if (_root == nullptr)
             return nullptr;
-        return _root->infer_type(program);
+        return _root->infer_type(session);
     }
 
 };

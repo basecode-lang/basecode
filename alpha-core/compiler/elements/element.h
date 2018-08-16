@@ -80,7 +80,7 @@ namespace basecode::compiler {
 
         void location(const common::source_location& location);
 
-        compiler::type* infer_type(const compiler::program* program);
+        compiler::type* infer_type(const compiler::session& session);
 
     protected:
         virtual bool on_emit(compiler::session& session);
@@ -103,7 +103,7 @@ namespace basecode::compiler {
 
         virtual void on_owned_elements(element_list_t& list);
 
-        virtual compiler::type* on_infer_type(const compiler::program* program);
+        virtual compiler::type* on_infer_type(const compiler::session& program);
 
     private:
         common::id_t _id;

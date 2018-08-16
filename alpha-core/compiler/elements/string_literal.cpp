@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <compiler/session.h>
 #include <vm/instruction_block.h>
 #include "program.h"
 #include "string_literal.h"
@@ -69,8 +70,8 @@ namespace basecode::compiler {
         return true;
     }
 
-    compiler::type* string_literal::on_infer_type(const compiler::program* program) {
-        return program->find_type({.name = "string"});
+    compiler::type* string_literal::on_infer_type(const compiler::session& session) {
+        return session.program().find_type({.name = "string"});
     }
 
 }

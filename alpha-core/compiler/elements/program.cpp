@@ -524,7 +524,7 @@ namespace basecode::compiler {
             auto init = var->initializer();
             if (init == nullptr)
                 continue;
-            auto rhs_type = init->infer_type(this);
+            auto rhs_type = init->infer_type(session);
             if (!var->type()->type_check(rhs_type)) {
                 session.error(
                     init,
@@ -545,7 +545,7 @@ namespace basecode::compiler {
 
             // XXX: revisit this for destructuring/multiple assignment
             auto var = dynamic_cast<compiler::identifier*>(binary_op->lhs());
-            auto rhs_type = binary_op->rhs()->infer_type(this);
+            auto rhs_type = binary_op->rhs()->infer_type(session);
             if (!var->type()->type_check(rhs_type)) {
                 session.error(
                     binary_op,
@@ -580,7 +580,7 @@ namespace basecode::compiler {
             if (var->is_parent_element(element_type_t::binary_operator)) {
                 auto binary_operator = dynamic_cast<compiler::binary_operator*>(var->parent_element());
                 if (binary_operator->operator_type() == operator_type_t::assignment) {
-                    identifier_type = binary_operator->rhs()->infer_type(this);
+                    identifier_type = binary_operator->rhs()->infer_type(session);
                     var->type(identifier_type);
                 }
             } else {
@@ -605,7 +605,7 @@ namespace basecode::compiler {
                     identifier_type = var
                         ->initializer()
                         ->expression()
-                        ->infer_type(this);
+                        ->infer_type(session);
                     var->type(identifier_type);
                 }
             }
