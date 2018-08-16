@@ -442,7 +442,7 @@ namespace basecode::compiler {
             case operator_type_t::rotate_left:
             case operator_type_t::rotate_right: {
                 auto lhs_type = _lhs->infer_type(session);
-                auto rhs_type = _rhs->infer_type(session);
+                //auto rhs_type = _rhs->infer_type(session);
                 // XXX: need to type-check and possibly widen here
                 return lhs_type;
             }

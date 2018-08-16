@@ -72,6 +72,12 @@ namespace basecode::compiler {
             compiler::composite_type* type,
             const syntax::ast_node_t* block);
 
+        bool add_assignments_to_scope(
+            const evaluator_context_t& context,
+            const syntax::ast_node_t* node,
+            element_list_t& identifiers,
+            compiler::block* scope);
+
         compiler::block* add_namespaces_to_scope(
             const evaluator_context_t& context,
             const syntax::ast_node_t* node,
@@ -89,6 +95,11 @@ namespace basecode::compiler {
         compiler::element* resolve_symbol_or_evaluate(
             const evaluator_context_t& context,
             const syntax::ast_node_t* node);
+
+        compiler::identifier* declare_identifier(
+            const evaluator_context_t& context,
+            const syntax::ast_node_t* node,
+            compiler::block* scope);
 
     private:
         bool noop(

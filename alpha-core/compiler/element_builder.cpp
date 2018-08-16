@@ -494,6 +494,7 @@ namespace basecode::compiler {
     }
 
     field* element_builder::make_field(
+            compiler::type* type,
             compiler::block* parent_scope,
             compiler::identifier* identifier) {
         auto field = new compiler::field(
@@ -501,6 +502,7 @@ namespace basecode::compiler {
             parent_scope,
             identifier);
         identifier->parent_element(field);
+        field->parent_element(type);
         _session.elements().add(field);
         return field;
     }

@@ -63,7 +63,10 @@ namespace basecode::compiler {
             builder.make_symbol(parent_scope(), "name"),
             nullptr);
         name_identifier->type(string_type);
-        auto name_field = builder.make_field(block_scope, name_identifier);
+        auto name_field = builder.make_field(
+            this,
+            block_scope,
+            name_identifier);
 
         fields().add(name_field);
 

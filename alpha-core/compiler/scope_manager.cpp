@@ -147,8 +147,8 @@ namespace basecode::compiler {
     }
 
     element* scope_manager::walk_parent_elements(
-        compiler::element* element,
-        const element_visitor_callable& callable) const {
+            compiler::element* element,
+            const element_visitor_callable& callable) const {
         auto current = element;
         while (current != nullptr) {
             auto* result = callable(current);
@@ -223,7 +223,7 @@ namespace basecode::compiler {
         auto block_scope = parent_scope == nullptr ? current_scope() : parent_scope;
         while (block_scope != nullptr) {
             if (block_scope->element_type() == element_type_t::proc_type_block
-                ||  block_scope->element_type() == element_type_t::proc_instance_block)
+            ||  block_scope->element_type() == element_type_t::proc_instance_block)
                 return true;
             block_scope = block_scope->parent_scope();
         }
@@ -231,8 +231,8 @@ namespace basecode::compiler {
     }
 
     compiler::identifier* scope_manager::find_identifier(
-        const qualified_symbol_t& symbol,
-        compiler::block* scope) const {
+            const qualified_symbol_t& symbol,
+            compiler::block* scope) const {
         if (symbol.is_qualified()) {
             return dynamic_cast<compiler::identifier*>(walk_qualified_symbol(
                 symbol,

@@ -66,6 +66,7 @@ namespace basecode::compiler {
             nullptr);
         flags_identifier->type(u8_type);
         auto flags_field = builder.make_field(
+            this,
             block_scope,
             flags_identifier);
 
@@ -75,6 +76,7 @@ namespace basecode::compiler {
             nullptr);
         length_identifier->type(u32_type);
         auto length_field = builder.make_field(
+            this,
             block_scope,
             length_identifier);
 
@@ -84,6 +86,7 @@ namespace basecode::compiler {
             nullptr);
         capacity_identifier->type(u32_type);
         auto capacity_field = builder.make_field(
+            this,
             block_scope,
             capacity_identifier);
 
@@ -93,6 +96,7 @@ namespace basecode::compiler {
             nullptr);
         element_type_identifier->type(type_info_type);
         auto element_type_field = builder.make_field(
+            this,
             block_scope,
             element_type_identifier);
 
@@ -103,7 +107,10 @@ namespace basecode::compiler {
         data_identifier->type(builder.make_pointer_type(
             block_scope,
             u8_type));
-        auto data_field = builder.make_field(block_scope, data_identifier);
+        auto data_field = builder.make_field(
+            this,
+            block_scope,
+            data_identifier);
 
         auto& field_map = fields();
         field_map.add(flags_field);

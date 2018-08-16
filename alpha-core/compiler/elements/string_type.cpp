@@ -82,14 +82,20 @@ namespace basecode::compiler {
             builder.make_symbol(parent_scope(), "length"),
             nullptr);
         length_identifier->type(u32_type);
-        auto length_field = builder.make_field(block_scope, length_identifier);
+        auto length_field = builder.make_field(
+            this,
+            block_scope,
+            length_identifier);
 
         auto capacity_identifier = builder.make_identifier(
             block_scope,
             builder.make_symbol(parent_scope(), "capacity"),
             nullptr);
         capacity_identifier->type(u32_type);
-        auto capacity_field = builder.make_field(block_scope, capacity_identifier);
+        auto capacity_field = builder.make_field(
+            this,
+            block_scope,
+            capacity_identifier);
 
         auto data_identifier = builder.make_identifier(
             block_scope,
@@ -98,7 +104,10 @@ namespace basecode::compiler {
         data_identifier->type(builder.make_pointer_type(
             block_scope,
             u8_type));
-        auto data_field = builder.make_field(block_scope, data_identifier);
+        auto data_field = builder.make_field(
+            this,
+            block_scope,
+            data_identifier);
 
         fields().add(length_field);
         fields().add(capacity_field);

@@ -58,6 +58,7 @@ namespace basecode::compiler {
             nullptr);
         type_info_identifier->type(type_info_type);
         auto type_info_field = builder.make_field(
+            this,
             block_scope,
             type_info_identifier);
 
@@ -69,6 +70,7 @@ namespace basecode::compiler {
             block_scope,
             u8_type));
         auto data_field = builder.make_field(
+            this,
             block_scope,
             data_identifier);
 

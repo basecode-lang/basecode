@@ -32,6 +32,7 @@ namespace basecode::compiler {
             element* expr);
 
         field* make_field(
+            compiler::type* type,
             compiler::block* parent_scope,
             compiler::identifier* identifier);
 
