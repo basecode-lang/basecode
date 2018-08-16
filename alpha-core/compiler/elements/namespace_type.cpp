@@ -26,8 +26,7 @@ namespace basecode::compiler {
     }
 
     bool namespace_type::on_initialize(compiler::session& session) {
-        auto program = &session.program();
-        symbol(program->builder().make_symbol(parent_scope(), "namespace"));
+        symbol(session.builder().make_symbol(parent_scope(), "namespace"));
         return true;
     }
 

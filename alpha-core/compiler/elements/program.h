@@ -34,10 +34,6 @@ namespace basecode::compiler {
 
         ~program() override;
 
-        element_map& elements();
-
-        element_builder& builder();
-
         void disassemble(
             compiler::session& session,
             FILE* file);
@@ -107,7 +103,9 @@ namespace basecode::compiler {
 
         void add_type_to_scope(compiler::type* type);
 
-        compiler::block* push_new_block(element_type_t type = element_type_t::block);
+        compiler::block* push_new_block(
+            compiler::session& session,
+            element_type_t type = element_type_t::block);
 
     private:
         bool find_identifier_type(
@@ -144,9 +142,6 @@ namespace basecode::compiler {
         bool within_procedure_scope(compiler::block* parent_scope = nullptr) const;
 
     private:
-        element_map _elements {};
-        element_builder _builder;
-        ast_evaluator _ast_evaluator;
         compiler::block* _block = nullptr;
         std::stack<compiler::block*> _scope_stack {};
         std::stack<compiler::module*> _module_stack {};

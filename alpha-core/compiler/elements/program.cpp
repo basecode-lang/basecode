@@ -61,9 +61,7 @@
 
 namespace basecode::compiler {
 
-    program::program() : element(nullptr, nullptr, element_type_t::program),
-                         _builder(this),
-                         _ast_evaluator(&_builder, this) {
+    program::program() : element(nullptr, nullptr, element_type_t::program) {
     }
 
     program::~program() {
@@ -81,7 +79,7 @@ namespace basecode::compiler {
         auto data = vars_by_section.insert(std::make_pair(vm::section_t::data,    element_list_t()));
         /* auto text = */vars_by_section.insert(std::make_pair(vm::section_t::text,    element_list_t()));
 
-        auto identifiers = elements().find_by_type(element_type_t::identifier);
+        auto identifiers = session.elements().find_by_type(element_type_t::identifier);
         for (auto identifier : identifiers) {
             auto var = dynamic_cast<compiler::identifier*>(identifier);
             auto var_type = var->type();
@@ -275,7 +273,7 @@ namespace basecode::compiler {
 
         assembler.push_block(instruction_block);
 
-        auto procedure_types = elements().find_by_type(element_type_t::proc_type);
+        auto procedure_types = session.elements().find_by_type(element_type_t::proc_type);
         procedure_type_list_t proc_list {};
         for (auto p : procedure_types) {
             auto procedure_type = dynamic_cast<compiler::procedure_type*>(p);
@@ -302,7 +300,7 @@ namespace basecode::compiler {
         top_level_block->current_entry()->label(top_level_block->make_label("_initializer"));
 
         block_list_t implicit_blocks {};
-        auto module_blocks = elements().find_by_type(element_type_t::module_block);
+        auto module_blocks = session.elements().find_by_type(element_type_t::module_block);
         for (auto block : module_blocks) {
             implicit_blocks.emplace_back(dynamic_cast<compiler::block*>(block));
         }
@@ -328,7 +326,7 @@ namespace basecode::compiler {
         // XXX: temporary!
         auto& r = session.result();
 
-        _block = push_new_block();
+        _block = push_new_block(session);
         _block->parent_element(this);
 
         _top_level_stack.push(_block);
@@ -341,7 +339,7 @@ namespace basecode::compiler {
                 return false;
         }
 
-        auto directives = elements().find_by_type(element_type_t::directive);
+        auto directives = session.elements().find_by_type(element_type_t::directive);
         for (auto directive : directives) {
             auto directive_element = dynamic_cast<compiler::directive*>(directive);
             if (!directive_element->execute(session, this))
@@ -393,9 +391,7 @@ namespace basecode::compiler {
         compiler::module* module = (compiler::module*)nullptr;
         auto module_node = session.parse(source_file);
         if (module_node != nullptr) {
-            module = dynamic_cast<compiler::module*>(_ast_evaluator.evaluate(
-                session,
-                module_node.get()));
+            module = dynamic_cast<compiler::module*>(session.evaluator().evaluate(module_node.get()));
             if (module != nullptr) {
                 module->parent_element(this);
                 module->is_root(is_root);
@@ -403,14 +399,6 @@ namespace basecode::compiler {
         }
 
         return module;
-    }
-
-    element_map& program::elements() {
-        return _elements;
-    }
-
-    element_builder& program::builder() {
-        return _builder;
     }
 
     compiler::block* program::pop_scope() {
@@ -458,34 +446,36 @@ namespace basecode::compiler {
         auto parent_scope = current_scope();
 
         compiler::numeric_type::make_types(session, parent_scope);
-        add_type_to_scope(_builder.make_module_type(
+        add_type_to_scope(session.builder().make_module_type(
             session,
             parent_scope,
-            _builder.make_block(parent_scope, element_type_t::block)));
-        add_type_to_scope(_builder.make_namespace_type(session, parent_scope));
-        add_type_to_scope(_builder.make_bool_type(session, parent_scope));
-        add_type_to_scope(_builder.make_string_type(
+            session.builder().make_block(parent_scope, element_type_t::block)));
+        add_type_to_scope(session.builder().make_namespace_type(session, parent_scope));
+        add_type_to_scope(session.builder().make_bool_type(session, parent_scope));
+        add_type_to_scope(session.builder().make_string_type(
             session,
             parent_scope,
-            _builder.make_block(parent_scope, element_type_t::block)));
+            session.builder().make_block(parent_scope, element_type_t::block)));
 
-        add_type_to_scope(_builder.make_type_info_type(
+        add_type_to_scope(session.builder().make_type_info_type(
             session,
             parent_scope,
-            _builder.make_block(parent_scope, element_type_t::block)));
-        add_type_to_scope(_builder.make_tuple_type(
+            session.builder().make_block(parent_scope, element_type_t::block)));
+        add_type_to_scope(session.builder().make_tuple_type(
             session,
             parent_scope,
-            _builder.make_block(parent_scope, element_type_t::block)));
-        add_type_to_scope(_builder.make_any_type(
+            session.builder().make_block(parent_scope, element_type_t::block)));
+        add_type_to_scope(session.builder().make_any_type(
             session,
             parent_scope,
-            _builder.make_block(parent_scope, element_type_t::block)));
+            session.builder().make_block(parent_scope, element_type_t::block)));
     }
 
-    compiler::block* program::push_new_block(element_type_t type) {
+    compiler::block* program::push_new_block(
+            compiler::session& session,
+            element_type_t type) {
         auto parent_scope = current_scope();
-        auto scope_block = _builder.make_block(parent_scope, type);
+        auto scope_block = session.builder().make_block(parent_scope, type);
 
         if (parent_scope != nullptr) {
             scope_block->parent_element(parent_scope);
@@ -518,7 +508,7 @@ namespace basecode::compiler {
     }
 
     bool program::type_check(compiler::session& session) {
-        auto identifiers = elements().find_by_type(element_type_t::identifier);
+        auto identifiers = session.elements().find_by_type(element_type_t::identifier);
         for (auto identifier : identifiers) {
             auto var = dynamic_cast<compiler::identifier*>(identifier);
             auto init = var->initializer();
@@ -537,7 +527,7 @@ namespace basecode::compiler {
             }
         }
 
-        auto binary_ops = elements().find_by_type(element_type_t::binary_operator);
+        auto binary_ops = session.elements().find_by_type(element_type_t::binary_operator);
         for (auto op : binary_ops) {
             auto binary_op = dynamic_cast<compiler::binary_operator*>(op);
             if (binary_op->operator_type() != operator_type_t::assignment)
@@ -593,13 +583,13 @@ namespace basecode::compiler {
                     find_result.is_pointer = unknown_type->is_pointer();
                     find_result.array_size = unknown_type->array_size();
 
-                    identifier_type = _builder.make_complete_type(
+                    identifier_type = session.builder().make_complete_type(
                         session,
                         find_result,
                         var->parent_scope());
                     if (identifier_type != nullptr) {
                         var->type(identifier_type);
-                        _elements.remove(unknown_type->id());
+                        session.elements().remove(unknown_type->id());
                     }
                 } else {
                     identifier_type = var
@@ -668,12 +658,14 @@ namespace basecode::compiler {
         if (type_node == nullptr)
             return false;
 
-        _builder.make_qualified_symbol(result.type_name, type_node->lhs.get());
+        session.builder().make_qualified_symbol(
+            result.type_name,
+            type_node->lhs.get());
         result.array_size = 0;
         result.is_array = type_node->is_array();
         result.is_spread = type_node->is_spread();
         result.is_pointer = type_node->is_pointer();
-        _builder.make_complete_type(session, result, parent_scope);
+        session.builder().make_complete_type(session, result, parent_scope);
         return result.type != nullptr;
     }
 

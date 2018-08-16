@@ -28,8 +28,7 @@ namespace basecode::compiler {
     }
 
     bool tuple_type::on_initialize(compiler::session& session) {
-        auto program = &session.program();
-        symbol(program->builder().make_symbol(parent_scope(), "tuple"));
+        symbol(session.builder().make_symbol(parent_scope(), "tuple"));
         return true;
     }
 

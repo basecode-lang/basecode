@@ -40,12 +40,9 @@ namespace basecode::compiler {
 
     class ast_evaluator {
     public:
-        ast_evaluator(
-            element_builder* builder,
-            compiler::program* program);
+        explicit ast_evaluator(compiler::session& session);
 
         element* evaluate(
-            compiler::session& session,
             const syntax::ast_node_t* node,
             element_type_t default_block_type = element_type_t::block);
 
@@ -221,8 +218,7 @@ namespace basecode::compiler {
     private:
         static std::unordered_map<syntax::ast_node_types_t, node_evaluator_callable> s_node_evaluators;
 
-        element_builder* _builder = nullptr;
-        compiler::program* _program = nullptr;
+        compiler::session& _session;
     };
 
 };

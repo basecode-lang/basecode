@@ -68,7 +68,7 @@ namespace basecode::compiler {
 
     bool string_type::on_initialize(compiler::session& session) {
         auto program = &session.program();
-        auto& builder = program->builder();
+        auto& builder = session.builder();
         symbol(builder.make_symbol(parent_scope(), "string"));
 
         auto block_scope = scope();

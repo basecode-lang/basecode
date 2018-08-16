@@ -65,6 +65,14 @@ namespace basecode::compiler {
         return _elements_by_id.begin();
     }
 
+    element_by_id_map_t::const_iterator element_map::end() const {
+        return _elements_by_id.end();
+    }
+
+    element_by_id_map_t::const_iterator element_map::begin() const {
+        return _elements_by_id.begin();
+    }
+
     void element_map::add_index_by_type(compiler::element* element) {
         auto it = _elements_by_type.find(element->element_type());
         if (it == _elements_by_type.end()) {

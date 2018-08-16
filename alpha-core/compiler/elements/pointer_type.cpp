@@ -42,8 +42,7 @@ namespace basecode::compiler {
     }
 
     bool pointer_type::on_initialize(compiler::session& session) {
-        auto program = &session.program();
-        auto type_symbol = program->builder().make_symbol(
+        auto type_symbol = session.builder().make_symbol(
             parent_scope(),
             name_for_pointer(_base_type));
         symbol(type_symbol);

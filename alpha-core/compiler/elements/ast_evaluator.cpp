@@ -122,22 +122,18 @@ namespace basecode::compiler {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    ast_evaluator::ast_evaluator(
-            element_builder* builder,
-            compiler::program* program) : _builder(builder),
-                                          _program(program) {
+    ast_evaluator::ast_evaluator(compiler::session& session) : _session(session) {
     }
 
     element* ast_evaluator::evaluate(
-            compiler::session& session,
             const syntax::ast_node_t* node,
             element_type_t default_block_type) {
         if (node == nullptr)
             return nullptr;
 
-        evaluator_context_t context(session);
+        evaluator_context_t context(_session);
         context.node = node;
-        context.scope = _program->current_scope();
+        context.scope = _session.program().current_scope();
         context.default_block_type = default_block_type;
 
         auto it = s_node_evaluators.find(node->type);
@@ -146,7 +142,7 @@ namespace basecode::compiler {
             if (it->second(this, context, result)) {
                 return result.element;
             } else {
-                session.error(
+                _session.error(
                     "P071",
                     fmt::format(
                         "ast node evaluation failed: id = {}, type = {}",
@@ -171,9 +167,7 @@ namespace basecode::compiler {
              ++it) {
             const auto& child_node = *it;
             if (child_node->type == syntax::ast_node_types_t::attribute) {
-                auto attribute = dynamic_cast<compiler::attribute*>(evaluate(
-                    context.session,
-                    child_node.get()));
+                auto attribute = dynamic_cast<compiler::attribute*>(evaluate(child_node.get()));
                 attribute->parent_element(element);
 
                 auto& attributes = element->attributes();
@@ -187,12 +181,11 @@ namespace basecode::compiler {
             const syntax::ast_node_t* node,
             compiler::block* scope,
             element_type_t default_block_type) {
-        _program->push_scope(scope);
+        _session.program().push_scope(scope);
         auto result = evaluate(
-            context.session,
             node,
             default_block_type);
-        _program->pop_scope();
+        _session.program().pop_scope();
         return result;
     }
 
@@ -206,10 +199,10 @@ namespace basecode::compiler {
         for (const auto& child_node : node->children) {
             switch (child_node->type) {
                 case syntax::ast_node_types_t::attribute: {
-                    auto attribute = _builder->make_attribute(
+                    auto attribute = _session.builder().make_attribute(
                         proc_type->scope(),
                         child_node->token.value,
-                        evaluate(context.session, child_node->lhs.get()));
+                        evaluate(child_node->lhs.get()));
                     attribute->parent_element(proc_type);
                     proc_type->attributes().add(attribute);
                     break;
@@ -220,7 +213,7 @@ namespace basecode::compiler {
                         child_node.get(),
                         proc_type->scope(),
                         element_type_t::proc_instance_block));
-                    auto instance = _builder->make_procedure_instance(
+                    auto instance = _session.builder().make_procedure_instance(
                         proc_type->scope(),
                         proc_type,
                         basic_block);
@@ -269,13 +262,13 @@ namespace basecode::compiler {
         if (node != nullptr
         &&  node->type == syntax::ast_node_types_t::symbol) {
             qualified_symbol_t qualified_symbol {};
-            _builder->make_qualified_symbol(qualified_symbol, node);
-            element = _builder->make_identifier_reference(
-                _program->current_scope(),
+            _session.builder().make_qualified_symbol(qualified_symbol, node);
+            element = _session.builder().make_identifier_reference(
+                _session.program().current_scope(),
                 qualified_symbol,
-                _program->find_identifier(qualified_symbol));
+                _session.program().find_identifier(qualified_symbol));
         } else {
-            element = evaluate(context.session, node);
+            element = evaluate(node);
         }
         return element;
     }
@@ -285,7 +278,7 @@ namespace basecode::compiler {
             const syntax::ast_node_t* node,
             compiler::symbol_element* symbol,
             compiler::block* parent_scope) {
-        auto namespace_type = _program->find_type(qualified_symbol_t {
+        auto namespace_type = _session.program().find_type(qualified_symbol_t {
             .name = "namespace"
         });
 
@@ -299,12 +292,12 @@ namespace basecode::compiler {
             namespace_name = namespaces[i];
             auto var = scope->identifiers().find(namespace_name);
             if (var == nullptr) {
-                auto new_scope = _builder->make_block(scope, element_type_t::block);
-                auto ns = _builder->make_namespace(scope, new_scope);
-                auto ns_identifier = _builder->make_identifier(
+                auto new_scope = _session.builder().make_block(scope, element_type_t::block);
+                auto ns = _session.builder().make_namespace(scope, new_scope);
+                auto ns_identifier = _session.builder().make_identifier(
                     scope,
-                    _builder->make_symbol(scope, namespace_name, temp_list),
-                    _builder->make_initializer(scope, ns));
+                    _session.builder().make_symbol(scope, namespace_name, temp_list),
+                    _session.builder().make_initializer(scope, ns));
                 ns_identifier->type(namespace_type);
                 ns_identifier->inferred_type(true);
                 ns_identifier->parent_element(scope->parent_element());
@@ -332,7 +325,7 @@ namespace basecode::compiler {
             const evaluator_context_t& context,
             compiler::composite_type* type,
             const syntax::ast_node_t* block) {
-        auto u32_type = _program->find_type(qualified_symbol_t {.name = "u32"});
+        auto u32_type = _session.program().find_type(qualified_symbol_t {.name = "u32"});
 
         for (const auto& child : block->children) {
             if (child->type != syntax::ast_node_types_t::statement) {
@@ -351,18 +344,18 @@ namespace basecode::compiler {
                             symbol_node.get(),
                             type->scope()));
                         type_find_result_t type_find_result{};
-                        _program->find_identifier_type(
+                        _session.program().find_identifier_type(
                             context.session,
                             type_find_result,
                             source_list->children[i],
                             type->scope());
-                        auto init = _builder->make_initializer(
+                        auto init = _session.builder().make_initializer(
                             type->scope(),
                             evaluate_in_scope(
                                 context,
                                 source_list->children[i].get(),
                                 type->scope()));
-                        auto field_identifier = _builder->make_identifier(
+                        auto field_identifier = _session.builder().make_identifier(
                             type->scope(),
                             symbol,
                             init);
@@ -372,7 +365,7 @@ namespace basecode::compiler {
                             field_identifier->inferred_type(type_find_result.type != nullptr);
                         }
                         field_identifier->type(type_find_result.type);
-                        auto new_field = _builder->make_field(
+                        auto new_field = _session.builder().make_field(
                             type->scope(),
                             field_identifier);
                         new_field->parent_element(type);
@@ -386,12 +379,12 @@ namespace basecode::compiler {
                         expr_node.get(),
                         type->scope()));
                     type_find_result_t type_find_result {};
-                    _program->find_identifier_type(
+                    _session.program().find_identifier_type(
                         context.session,
                         type_find_result,
                         expr_node->rhs,
                         type->scope());
-                    auto field_identifier = _builder->make_identifier(
+                    auto field_identifier = _session.builder().make_identifier(
                         type->scope(),
                         symbol,
                         nullptr);
@@ -399,7 +392,7 @@ namespace basecode::compiler {
                         if (type->type() == composite_types_t::enum_type) {
                             field_identifier->type(u32_type);
                         } else {
-                            field_identifier->type(_builder->make_unknown_type_from_find_result(
+                            field_identifier->type(_session.builder().make_unknown_type_from_find_result(
                                 context.session,
                                 type->scope(),
                                 field_identifier,
@@ -408,7 +401,7 @@ namespace basecode::compiler {
                     } else {
                         field_identifier->type(type_find_result.type);
                     }
-                    auto new_field = _builder->make_field(
+                    auto new_field = _session.builder().make_field(
                         type->scope(),
                         field_identifier);
                     new_field->parent_element(type);
@@ -429,8 +422,8 @@ namespace basecode::compiler {
             size_t source_index,
             compiler::block* parent_scope) {
         auto scope = symbol->is_qualified()
-                     ? _program->current_top_level()
-                     : parent_scope != nullptr ? parent_scope : _program->current_scope();
+                     ? _session.program().current_top_level()
+                     : parent_scope != nullptr ? parent_scope : _session.program().current_scope();
 
         scope = add_namespaces_to_scope(context, node, symbol, scope);
 
@@ -446,18 +439,18 @@ namespace basecode::compiler {
             if (init_expr != nullptr) {
                 if (init_expr->element_type() == element_type_t::symbol) {
                     auto init_symbol = dynamic_cast<compiler::symbol_element*>(init_expr);
-                    init_expr = _builder->make_identifier_reference(
+                    init_expr = _session.builder().make_identifier_reference(
                         scope,
                         init_symbol->qualified_symbol(),
                         nullptr);
                 }
                 if (init_expr->is_constant()) {
-                    init = _builder->make_initializer(scope, init_expr);
+                    init = _session.builder().make_initializer(scope, init_expr);
                 }
             }
         }
 
-        auto new_identifier = _builder->make_identifier(scope, symbol, init);
+        auto new_identifier = _session.builder().make_identifier(scope, symbol, init);
         apply_attributes(context, new_identifier, node);
         if (init_expr != nullptr) {
             if (init == nullptr)
@@ -468,7 +461,7 @@ namespace basecode::compiler {
                     init_expr = folded_expr;
                     auto old_expr = init->expression();
                     init->expression(init_expr);
-                    _program->elements().remove(old_expr->id());
+                    _session.elements().remove(old_expr->id());
                 }
             }
         }
@@ -481,7 +474,7 @@ namespace basecode::compiler {
             }
 
             if (type_find_result.type == nullptr) {
-                new_identifier->type(_builder->make_unknown_type_from_find_result(
+                new_identifier->type(_session.builder().make_unknown_type_from_find_result(
                     context.session,
                     scope,
                     new_identifier,
@@ -511,12 +504,12 @@ namespace basecode::compiler {
             return nullptr;
         } else {
             if (init == nullptr && init_expr != nullptr) {
-                auto assign_bin_op = _builder->make_binary_operator(
+                auto assign_bin_op = _session.builder().make_binary_operator(
                     scope,
                     operator_type_t::assignment,
                     new_identifier,
                     init_expr);
-                auto statement = _builder->make_statement(
+                auto statement = _session.builder().make_statement(
                     scope,
                     label_list_t{},
                     assign_bin_op);
@@ -537,7 +530,7 @@ namespace basecode::compiler {
     bool ast_evaluator::symbol(
             evaluator_context_t& context,
             evaluator_result_t& result) {
-        result.element = _builder->make_symbol_from_node(
+        result.element = _session.builder().make_symbol_from_node(
             context.session,
             context.node);
         return true;
@@ -546,10 +539,10 @@ namespace basecode::compiler {
     bool ast_evaluator::attribute(
             evaluator_context_t& context,
             evaluator_result_t& result) {
-        result.element = _builder->make_attribute(
-            _program->current_scope(),
+        result.element = _session.builder().make_attribute(
+            _session.program().current_scope(),
             context.node->token.value,
-            evaluate(context.session, context.node->lhs.get()));
+            evaluate(context.node->lhs.get()));
         result.element->location(context.node->location);
         return true;
     }
@@ -557,14 +550,14 @@ namespace basecode::compiler {
     bool ast_evaluator::directive(
             evaluator_context_t& context,
             evaluator_result_t& result) {
-        auto expression = evaluate(context.session, context.node->lhs.get());
-        auto directive_element = _builder->make_directive(
-            _program->current_scope(),
+        auto expression = evaluate(context.node->lhs.get());
+        auto directive_element = _session.builder().make_directive(
+            _session.program().current_scope(),
             context.node->token.value,
             expression);
         directive_element->location(context.node->location);
         apply_attributes(context, directive_element, context.node);
-        directive_element->evaluate(context.session, _program);
+        directive_element->evaluate(context.session, &context.session.program());
         result.element = directive_element;
         return true;
     }
@@ -572,22 +565,21 @@ namespace basecode::compiler {
     bool ast_evaluator::module(
             evaluator_context_t& context,
             evaluator_result_t& result) {
-        auto module_block = _builder->make_block(
-            _program->_block,
+        auto module_block = _session.builder().make_block(
+            _session.program()._block,
             element_type_t::module_block);
-        auto module = _builder->make_module(_program->_block, module_block);
+        auto module = _session.builder().make_module(_session.program()._block, module_block);
         module->source_file(context.session.current_source_file());
-        _program->_block->blocks().push_back(module_block);
+        _session.program()._block->blocks().push_back(module_block);
 
-        _program->push_scope(module_block);
-        _program->_top_level_stack.push(module_block);
-        _program->_module_stack.push(module);
+        _session.program().push_scope(module_block);
+        _session.program()._top_level_stack.push(module_block);
+        _session.program()._module_stack.push(module);
 
         for (auto it = context.node->children.begin();
              it != context.node->children.end();
              ++it) {
             auto expr = evaluate(
-                context.session,
                 (*it).get(),
                 context.default_block_type);
             if (expr == nullptr)
@@ -596,8 +588,8 @@ namespace basecode::compiler {
             expr->parent_element(module);
         }
 
-        _program->_top_level_stack.pop();
-        _program->_module_stack.pop();
+        _session.program()._top_level_stack.pop();
+        _session.program()._module_stack.pop();
 
         result.element = module;
 
@@ -608,8 +600,8 @@ namespace basecode::compiler {
             evaluator_context_t& context,
             evaluator_result_t& result) {
         auto expr = resolve_symbol_or_evaluate(context, context.node->rhs.get());
-        auto reference = _builder->make_module_reference(
-            _program->current_scope(),
+        auto reference = _session.builder().make_module_reference(
+            _session.program().current_scope(),
             expr);
 
         std::string path;
@@ -623,7 +615,7 @@ namespace basecode::compiler {
                     current_source_file->path().parent_path());
             }
             auto source_file = context.session.add_source_file(source_path);
-            auto module = _program->compile_module(context.session, source_file);
+            auto module = _session.program().compile_module(context.session, source_file);
             if (module == nullptr) {
                 context.session.error(
                     "C021",
@@ -647,8 +639,8 @@ namespace basecode::compiler {
     bool ast_evaluator::line_comment(
             evaluator_context_t& context,
             evaluator_result_t& result) {
-        result.element = _builder->make_comment(
-            _program->current_scope(),
+        result.element = _session.builder().make_comment(
+            _session.program().current_scope(),
             comment_type_t::line,
             context.node->token.value);
         return true;
@@ -657,8 +649,8 @@ namespace basecode::compiler {
     bool ast_evaluator::block_comment(
             evaluator_context_t& context,
             evaluator_result_t& result) {
-        result.element = _builder->make_comment(
-            _program->current_scope(),
+        result.element = _session.builder().make_comment(
+            _session.program().current_scope(),
             comment_type_t::block,
             context.node->token.value);
         return true;
@@ -667,8 +659,8 @@ namespace basecode::compiler {
     bool ast_evaluator::string_literal(
             evaluator_context_t& context,
             evaluator_result_t& result) {
-        result.element = _builder->make_string(
-            _program->current_scope(),
+        result.element = _session.builder().make_string(
+            _session.program().current_scope(),
             context.node->token.value);
         result.element->location(context.node->location);
         return true;
@@ -682,11 +674,11 @@ namespace basecode::compiler {
                 uint64_t value;
                 if (context.node->token.parse(value) == syntax::conversion_result_t::success) {
                     if (context.node->token.is_signed()) {
-                        result.element = _builder->make_integer(
-                            _program->current_scope(),
+                        result.element = _session.builder().make_integer(
+                            _session.program().current_scope(),
                             common::twos_complement(value));
                     } else {
-                        result.element = _builder->make_integer(_program->current_scope(), value);
+                        result.element = _session.builder().make_integer(_session.program().current_scope(), value);
                     }
                     result.element->location(context.node->location);
                     return true;
@@ -701,8 +693,8 @@ namespace basecode::compiler {
             case syntax::number_types_t::floating_point: {
                 double value;
                 if (context.node->token.parse(value) == syntax::conversion_result_t::success) {
-                    result.element = _builder->make_float(
-                        _program->current_scope(),
+                    result.element = _session.builder().make_float(
+                        _session.program().current_scope(),
                         value);
                     result.element->location(context.node->location);
                     return true;
@@ -724,8 +716,8 @@ namespace basecode::compiler {
     bool ast_evaluator::boolean_literal(
             evaluator_context_t& context,
             evaluator_result_t& result) {
-        result.element = _builder->make_bool(
-            _program->current_scope(),
+        result.element = _session.builder().make_bool(
+            _session.program().current_scope(),
             context.node->token.as_bool());
         result.element->location(context.node->location);
         return true;
@@ -734,18 +726,18 @@ namespace basecode::compiler {
     bool ast_evaluator::namespace_expression(
             evaluator_context_t& context,
             evaluator_result_t& result) {
-        result.element = _builder->make_namespace(
-            _program->current_scope(),
-            evaluate(context.session, context.node->rhs.get(), context.default_block_type));
+        result.element = _session.builder().make_namespace(
+            _session.program().current_scope(),
+            evaluate(context.node->rhs.get(), context.default_block_type));
         return true;
     }
 
     bool ast_evaluator::expression(
             evaluator_context_t& context,
             evaluator_result_t& result) {
-        result.element = _builder->make_expression(
-            _program->current_scope(),
-            evaluate(context.session, context.node->lhs.get()));
+        result.element = _session.builder().make_expression(
+            _session.program().current_scope(),
+            evaluate(context.node->lhs.get()));
         result.element->location(context.node->location);
         return true;
     }
@@ -753,7 +745,7 @@ namespace basecode::compiler {
     bool ast_evaluator::argument_list(
             evaluator_context_t& context,
             evaluator_result_t& result) {
-        auto args = _builder->make_argument_list(_program->current_scope());
+        auto args = _session.builder().make_argument_list(_session.program().current_scope());
         for (const auto& arg_node : context.node->children) {
             auto arg = resolve_symbol_or_evaluate(context, arg_node.get());
             args->add(arg);
@@ -769,8 +761,8 @@ namespace basecode::compiler {
         auto it = s_unary_operators.find(context.node->token.type);
         if (it == s_unary_operators.end())
             return false;
-        result.element = _builder->make_unary_operator(
-            _program->current_scope(),
+        result.element = _session.builder().make_unary_operator(
+            _session.program().current_scope(),
             it->second,
             resolve_symbol_or_evaluate(context, context.node->rhs.get()));
         return true;
@@ -784,8 +776,8 @@ namespace basecode::compiler {
             return false;
         auto lhs = resolve_symbol_or_evaluate(context, context.node->lhs.get());
         auto rhs = resolve_symbol_or_evaluate(context, context.node->rhs.get());
-        result.element = _builder->make_binary_operator(
-            _program->current_scope(),
+        result.element = _session.builder().make_binary_operator(
+            _session.program().current_scope(),
             it->second,
             lhs,
             rhs);
@@ -796,7 +788,7 @@ namespace basecode::compiler {
             evaluator_context_t& context,
             evaluator_result_t& result) {
         auto type_name = context.node->lhs->lhs->children[0]->token.value;
-        auto type = _program->find_type(qualified_symbol_t {.name = type_name});
+        auto type = _session.program().find_type(qualified_symbol_t {.name = type_name});
         if (type == nullptr) {
             context.session.error(
                 "P002",
@@ -804,8 +796,8 @@ namespace basecode::compiler {
                 context.node->lhs->lhs->location);
             return false;
         }
-        result.element = _builder->make_cast(
-            _program->current_scope(),
+        result.element = _session.builder().make_cast(
+            _session.program().current_scope(),
             type,
             resolve_symbol_or_evaluate(context, context.node->rhs.get()));
         result.element->location(context.node->location);
@@ -815,8 +807,8 @@ namespace basecode::compiler {
     bool ast_evaluator::alias_expression(
             evaluator_context_t& context,
             evaluator_result_t& result) {
-        result.element = _builder->make_alias(
-            _program->current_scope(),
+        result.element = _session.builder().make_alias(
+            _session.program().current_scope(),
             resolve_symbol_or_evaluate(context, context.node->lhs.get()));
         result.element->location(context.node->location);
         return true;
@@ -825,7 +817,7 @@ namespace basecode::compiler {
     bool ast_evaluator::return_statement(
             evaluator_context_t& context,
             evaluator_result_t& result) {
-        auto return_element = _builder->make_return(_program->current_scope());
+        auto return_element = _session.builder().make_return(_session.program().current_scope());
         auto& expressions = return_element->expressions();
         for (const auto& arg_node : context.node->rhs->children) {
             auto arg = resolve_symbol_or_evaluate(context, arg_node.get());
@@ -840,7 +832,7 @@ namespace basecode::compiler {
             evaluator_context_t& context,
             evaluator_result_t& result) {
         qualified_symbol_t qualified_symbol {};
-        _builder->make_qualified_symbol(qualified_symbol, context.node->lhs.get());
+        _session.builder().make_qualified_symbol(qualified_symbol, context.node->lhs.get());
 
         compiler::identifier_reference* from_reference = nullptr;
         if (context.node->rhs != nullptr) {
@@ -851,16 +843,16 @@ namespace basecode::compiler {
                 from_reference->symbol().name);
         }
 
-        auto identifier_reference = _builder->make_identifier_reference(
-            _program->current_scope(),
+        auto identifier_reference = _session.builder().make_identifier_reference(
+            _session.program().current_scope(),
             qualified_symbol,
-            _program->find_identifier(qualified_symbol));
-        auto import = _builder->make_import(
-            _program->current_scope(),
+            _session.program().find_identifier(qualified_symbol));
+        auto import = _session.builder().make_import(
+            _session.program().current_scope(),
             identifier_reference,
             from_reference,
-            dynamic_cast<compiler::module*>(_program->current_top_level()->parent_element()));
-        add_expression_to_scope(_program->current_scope(), import);
+            dynamic_cast<compiler::module*>(_session.program().current_top_level()->parent_element()));
+        add_expression_to_scope(_session.program().current_scope(), import);
 
         result.element = import;
 
@@ -870,14 +862,15 @@ namespace basecode::compiler {
     bool ast_evaluator::basic_block(
             evaluator_context_t& context,
             evaluator_result_t& result) {
-        auto active_scope = _program->push_new_block(context.default_block_type);
+        auto active_scope = _session.program().push_new_block(
+            _session,
+            context.default_block_type);
 
         for (auto it = context.node->children.begin();
              it != context.node->children.end();
              ++it) {
             auto current_node = *it;
             auto expr = evaluate(
-                context.session,
                 current_node.get(),
                 context.default_block_type);
             if (expr == nullptr) {
@@ -891,7 +884,7 @@ namespace basecode::compiler {
             expr->parent_element(active_scope);
         }
 
-        result.element = _program->pop_scope();
+        result.element = _session.program().pop_scope();
         return true;
     }
 
@@ -899,18 +892,18 @@ namespace basecode::compiler {
             evaluator_context_t& context,
             evaluator_result_t& result) {
         qualified_symbol_t qualified_symbol {};
-        _builder->make_qualified_symbol(qualified_symbol, context.node->lhs.get());
-        auto proc_identifier = _program->find_identifier(qualified_symbol);
+        _session.builder().make_qualified_symbol(qualified_symbol, context.node->lhs.get());
+        auto proc_identifier = _session.program().find_identifier(qualified_symbol);
 
         compiler::argument_list* args = nullptr;
-        auto expr = evaluate(context.session, context.node->rhs.get());
+        auto expr = evaluate(context.node->rhs.get());
         if (expr != nullptr) {
             args = dynamic_cast<compiler::argument_list*>(expr);
         }
-        result.element = _builder->make_procedure_call(
-            _program->current_scope(),
-            _builder->make_identifier_reference(
-                _program->current_scope(),
+        result.element = _session.builder().make_procedure_call(
+            _session.program().current_scope(),
+            _session.builder().make_identifier_reference(
+                _session.program().current_scope(),
                 qualified_symbol,
                 proc_identifier),
             args);
@@ -926,19 +919,19 @@ namespace basecode::compiler {
 
         if (context.node->lhs != nullptr) {
             for (const auto& label : context.node->lhs->children) {
-                labels.push_back(_builder->make_label(
-                    _program->current_scope(),
+                labels.push_back(_session.builder().make_label(
+                    _session.program().current_scope(),
                     label->token.value));
             }
         }
 
-        auto expr = evaluate(context.session, context.node->rhs.get());
+        auto expr = evaluate(context.node->rhs.get());
         if (expr == nullptr)
             return false;
 
         if (expr->element_type() == element_type_t::symbol) {
             type_find_result_t find_type_result {};
-            _program->find_identifier_type(
+            _session.program().find_identifier_type(
                 context.session,
                 find_type_result,
                 context.node->rhs->rhs);
@@ -950,8 +943,8 @@ namespace basecode::compiler {
                 0);
         }
 
-        result.element = _builder->make_statement(
-            _program->current_scope(),
+        result.element = _session.builder().make_statement(
+            _session.program().current_scope(),
             labels,
             expr);
 
@@ -961,11 +954,11 @@ namespace basecode::compiler {
     bool ast_evaluator::enum_expression(
             evaluator_context_t& context,
             evaluator_result_t& result) {
-        auto active_scope = _program->current_scope();
-        auto enum_type = _builder->make_enum_type(
+        auto active_scope = _session.program().current_scope();
+        auto enum_type = _session.builder().make_enum_type(
             context.session,
             active_scope,
-            _builder->make_block(active_scope, element_type_t::block));
+            _session.builder().make_block(active_scope, element_type_t::block));
         active_scope->types().add(enum_type);
         add_composite_type_fields(
             context,
@@ -981,11 +974,11 @@ namespace basecode::compiler {
     bool ast_evaluator::struct_expression(
             evaluator_context_t& context,
             evaluator_result_t& result) {
-        auto active_scope = _program->current_scope();
-        auto struct_type = _builder->make_struct_type(
+        auto active_scope = _session.program().current_scope();
+        auto struct_type = _session.builder().make_struct_type(
             context.session,
             active_scope,
-            _builder->make_block(active_scope, element_type_t::block));
+            _session.builder().make_block(active_scope, element_type_t::block));
         active_scope->types().add(struct_type);
         add_composite_type_fields(
             context,
@@ -1000,11 +993,11 @@ namespace basecode::compiler {
     bool ast_evaluator::union_expression(
             evaluator_context_t& context,
             evaluator_result_t& result) {
-        auto active_scope = _program->current_scope();
-        auto union_type = _builder->make_union_type(
+        auto active_scope = _session.program().current_scope();
+        auto union_type = _session.builder().make_union_type(
             context.session,
             active_scope,
-            _builder->make_block(active_scope, element_type_t::block));
+            _session.builder().make_block(active_scope, element_type_t::block));
         active_scope->types().add(union_type);
         add_composite_type_fields(
             context,
@@ -1019,18 +1012,18 @@ namespace basecode::compiler {
     bool ast_evaluator::else_expression(
             evaluator_context_t& context,
             evaluator_result_t& result) {
-        result.element = evaluate(context.session, context.node->children[0].get());
+        result.element = evaluate(context.node->children[0].get());
         return true;
     }
 
     bool ast_evaluator::if_expression(
             evaluator_context_t& context,
             evaluator_result_t& result) {
-        auto predicate = evaluate(context.session, context.node->lhs.get());
-        auto true_branch = evaluate(context.session, context.node->children[0].get());
-        auto false_branch = evaluate(context.session, context.node->rhs.get());
-        result.element = _builder->make_if(
-            _program->current_scope(),
+        auto predicate = evaluate(context.node->lhs.get());
+        auto true_branch = evaluate(context.node->children[0].get());
+        auto false_branch = evaluate(context.node->rhs.get());
+        result.element = _session.builder().make_if(
+            _session.program().current_scope(),
             predicate,
             true_branch,
             false_branch);
@@ -1040,26 +1033,26 @@ namespace basecode::compiler {
     bool ast_evaluator::proc_expression(
             evaluator_context_t& context,
             evaluator_result_t& result) {
-        auto active_scope = _program->current_scope();
-        auto block_scope = _builder->make_block(
+        auto active_scope = _session.program().current_scope();
+        auto block_scope = _session.builder().make_block(
             active_scope,
             element_type_t::proc_type_block);
-        auto proc_type = _builder->make_procedure_type(active_scope, block_scope);
+        auto proc_type = _session.builder().make_procedure_type(active_scope, block_scope);
         active_scope->types().add(proc_type);
 
         auto count = 0;
         for (const auto& type_node : context.node->lhs->children) {
             switch (type_node->type) {
                 case syntax::ast_node_types_t::symbol: {
-                    auto return_identifier = _builder->make_identifier(
+                    auto return_identifier = _session.builder().make_identifier(
                         block_scope,
-                        _builder->make_symbol(block_scope, fmt::format("_{}", count++)),
+                        _session.builder().make_symbol(block_scope, fmt::format("_{}", count++)),
                         nullptr);
                     return_identifier->usage(identifier_usage_t::stack);
-                    return_identifier->type(_program->find_type(qualified_symbol_t {
+                    return_identifier->type(_session.program().find_type(qualified_symbol_t {
                         .name = type_node->children[0]->token.value
                     }));
-                    auto new_field = _builder->make_field(block_scope, return_identifier);
+                    auto new_field = _session.builder().make_field(block_scope, return_identifier);
                     proc_type->returns().add(new_field);
                     new_field->parent_element(proc_type);
                     break;
@@ -1080,7 +1073,7 @@ namespace basecode::compiler {
                         first_target.get(),
                         block_scope));
                     type_find_result_t find_type_result {};
-                    _program->find_identifier_type(
+                    _session.program().find_identifier_type(
                         context.session,
                         find_type_result,
                         first_target->rhs,
@@ -1093,7 +1086,7 @@ namespace basecode::compiler {
                         0,
                         block_scope);
                     param_identifier->usage(identifier_usage_t::stack);
-                    auto field = _builder->make_field(block_scope, param_identifier);
+                    auto field = _session.builder().make_field(block_scope, param_identifier);
                     proc_type->parameters().add(field);
                     field->parent_element(proc_type);
                     break;
@@ -1104,7 +1097,7 @@ namespace basecode::compiler {
                         param_node.get(),
                         block_scope));
                     type_find_result_t find_type_result {};
-                    _program->find_identifier_type(
+                    _session.program().find_identifier_type(
                         context.session,
                         find_type_result,
                         param_node->rhs,
@@ -1118,7 +1111,7 @@ namespace basecode::compiler {
                         block_scope);
                     if (param_identifier != nullptr) {
                         param_identifier->usage(identifier_usage_t::stack);
-                        auto field = _builder->make_field(block_scope, param_identifier);
+                        auto field = _session.builder().make_field(block_scope, param_identifier);
                         proc_type->parameters().add(field);
                         field->parent_element(proc_type);
                     } else {
@@ -1161,16 +1154,15 @@ namespace basecode::compiler {
             const auto& symbol_node = target_list->children[i];
 
             qualified_symbol_t qualified_symbol {};
-            _builder->make_qualified_symbol(qualified_symbol, symbol_node.get());
-            auto existing_identifier = _program->find_identifier(qualified_symbol);
+            _session.builder().make_qualified_symbol(qualified_symbol, symbol_node.get());
+            auto existing_identifier = _session.program().find_identifier(qualified_symbol);
             if (existing_identifier != nullptr) {
                 auto rhs = evaluate(
-                    context.session,
                     source_list->children[i].get());
                 if (rhs == nullptr)
                     return false;
-                auto binary_op = _builder->make_binary_operator(
-                    _program->current_scope(),
+                auto binary_op = _session.builder().make_binary_operator(
+                    _session.program().current_scope(),
                     operator_type_t::assignment,
                     existing_identifier,
                     rhs);
@@ -1178,10 +1170,9 @@ namespace basecode::compiler {
                 list.emplace_back(binary_op);
             } else {
                 auto symbol = dynamic_cast<compiler::symbol_element*>(evaluate(
-                    context.session,
                     symbol_node.get()));
                 type_find_result_t find_type_result {};
-                _program->find_identifier_type(
+                _session.program().find_identifier_type(
                     context.session,
                     find_type_result,
                     symbol_node->rhs);
@@ -1206,7 +1197,7 @@ namespace basecode::compiler {
             evaluator_context_t& context,
             evaluator_result_t& result) {
         auto type_name = context.node->lhs->lhs->children[0]->token.value;
-        auto type = _program->find_type(qualified_symbol_t {.name = type_name});
+        auto type = _session.program().find_type(qualified_symbol_t {.name = type_name});
         if (type == nullptr) {
             context.session.error(
                 "P002",
@@ -1214,8 +1205,8 @@ namespace basecode::compiler {
                 context.node->lhs->lhs->location);
             return false;
         }
-        result.element = _builder->make_transmute(
-            _program->current_scope(),
+        result.element = _session.builder().make_transmute(
+            _session.program().current_scope(),
             type,
             resolve_symbol_or_evaluate(context, context.node->rhs.get()));
         result.element->location(context.node->location);

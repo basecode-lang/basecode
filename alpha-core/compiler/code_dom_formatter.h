@@ -14,6 +14,7 @@
 #include <set>
 #include <map>
 #include <cstdio>
+#include "session.h"
 #include "compiler_types.h"
 
 namespace basecode::compiler {
@@ -21,7 +22,7 @@ namespace basecode::compiler {
     class code_dom_formatter {
     public:
         code_dom_formatter(
-            const compiler::program* program_element,
+            const compiler::session& session,
             FILE* output_file);
 
         void format(const std::string& title);
@@ -45,7 +46,7 @@ namespace basecode::compiler {
         FILE* _file = nullptr;
         std::set<std::string> _edges {};
         std::set<std::string> _nodes {};
-        const compiler::program* _program = nullptr;
+        const compiler::session& _session;
     };
 
 };

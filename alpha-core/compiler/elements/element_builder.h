@@ -19,7 +19,7 @@ namespace basecode::compiler {
 
     class element_builder {
     public:
-        explicit element_builder(compiler::program* program);
+        explicit element_builder(compiler::session* session);
 
         compiler::type* make_complete_type(
             compiler::session& session,
@@ -261,7 +261,7 @@ namespace basecode::compiler {
         argument_list* make_argument_list(compiler::block* parent_scope);
 
     private:
-        compiler::program* _program = nullptr;
+        compiler::session* _session = nullptr;
     };
 
 };

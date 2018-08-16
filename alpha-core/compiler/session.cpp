@@ -20,7 +20,9 @@ namespace basecode::compiler {
     session::session(
             const session_options_t& options,
             const path_list_t& source_files) : _terp(options.heap_size, options.stack_size),
+                                               _builder(this),
                                                _assembler(&_terp),
+                                               _ast_evaluator(*this),
                                                _options(options) {
         for (const auto& path : source_files) {
             if (path.is_relative()) {
@@ -72,12 +74,20 @@ namespace basecode::compiler {
         return !_result.is_failed();
     }
 
+    element_map& session::elements() {
+        return _elements;
+    }
+
     common::result& session::result() {
         return _result;
     }
 
     vm::assembler& session::assembler() {
         return _assembler;
+    }
+
+    element_builder& session::builder() {
+        return _builder;
     }
 
     compiler::program& session::program() {
@@ -104,8 +114,16 @@ namespace basecode::compiler {
                 ->error(_result, code, message, location);
     }
 
+    ast_evaluator& session::evaluator() {
+        return _ast_evaluator;
+    }
+
     emit_context_t& session::emit_context() {
         return _emit_context;
+    }
+
+    const element_map& session::elements() const {
+        return _elements;
     }
 
     common::source_file* session::pop_source_file() {
@@ -152,7 +170,7 @@ namespace basecode::compiler {
                 fclose(output_file);
         });
 
-        compiler::code_dom_formatter formatter(&_program, output_file);
+        compiler::code_dom_formatter formatter(*this, output_file);
         formatter.format(fmt::format("Code DOM Graph: {}", path.string()));
     }
 

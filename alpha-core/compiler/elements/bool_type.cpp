@@ -25,8 +25,7 @@ namespace basecode::compiler {
     }
 
     bool bool_type::on_initialize(compiler::session& session) {
-        auto program = &session.program();
-        symbol(program->builder().make_symbol(parent_scope(), "bool"));
+        symbol(session.builder().make_symbol(parent_scope(), "bool"));
         size_in_bytes(1);
         return true;
     }

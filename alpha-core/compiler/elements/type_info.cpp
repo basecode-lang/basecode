@@ -51,7 +51,7 @@ namespace basecode::compiler {
 
     bool type_info::on_initialize(compiler::session& session) {
         auto program = &session.program();
-        auto& builder = program->builder();
+        auto& builder = session.builder();
         symbol(builder.make_symbol(parent_scope(), "type"));
 
         auto block_scope = scope();

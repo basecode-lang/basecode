@@ -46,8 +46,8 @@ namespace basecode::compiler {
 
     bool array_type::on_initialize(compiler::session& session) {
         auto program = &session.program();
-        auto& builder = program->builder();
-        auto type_symbol = program->builder().make_symbol(
+        auto& builder = session.builder();
+        auto type_symbol = builder.make_symbol(
             parent_scope(),
             name_for_array(_entry_type, _size));
         symbol(type_symbol);

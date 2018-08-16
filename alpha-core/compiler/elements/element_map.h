@@ -39,6 +39,10 @@ namespace basecode::compiler {
 
         element_by_id_map_t::iterator begin();
 
+        element_by_id_map_t::const_iterator end() const;
+
+        element_by_id_map_t::const_iterator begin() const;
+
         element_list_t find_by_type(element_type_t type);
 
         element_by_id_map_t::const_iterator cend() const;

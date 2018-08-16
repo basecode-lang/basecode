@@ -29,8 +29,7 @@ namespace basecode::compiler {
     }
 
     bool module_type::on_initialize(compiler::session& session) {
-        auto program = &session.program();
-        symbol(program->builder().make_symbol(parent_scope(), "module"));
+        symbol(session.builder().make_symbol(parent_scope(), "module"));
         return true;
     }
 

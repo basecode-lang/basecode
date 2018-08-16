@@ -19,7 +19,7 @@ namespace basecode::compiler {
     void numeric_type::make_types(
             compiler::session& session,
             compiler::block* parent_scope) {
-        auto& builder = session.program().builder();
+        auto& builder = session.builder();
         for (const auto& props : s_type_properties) {
             auto type = builder.make_numeric_type(
                 session,

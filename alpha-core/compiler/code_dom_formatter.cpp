@@ -59,9 +59,9 @@
 namespace basecode::compiler {
 
     code_dom_formatter::code_dom_formatter(
-            const compiler::program* program_element,
+            const compiler::session& session,
             FILE* output_file) : _file(output_file),
-                                 _program(program_element) {
+                                 _session(session) {
     }
 
     void code_dom_formatter::add_primary_edge(
@@ -623,10 +623,10 @@ namespace basecode::compiler {
         _nodes.clear();
         _edges.clear();
 
-        auto non_const_program = const_cast<compiler::program*>(_program);
+        auto non_const_program = const_cast<compiler::program*>(&_session.program());
         _nodes.insert(format_node(non_const_program));
 
-        for (const auto& pair : non_const_program->elements()) {
+        for (const auto& pair : _session.elements()) {
             auto node_def = format_node(pair.second);
             if (node_def.empty())
                 continue;
