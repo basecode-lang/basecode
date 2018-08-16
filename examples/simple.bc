@@ -67,36 +67,14 @@ bool_false_u := false;
 bool_true_i:  bool := true;
 bool_false_i: bool := false;
 
-
-// cast rules
-// from          to          result
-// ---------------------------------
-// bool          bool        noop
-// bool          any int     1 or 0
-// any int{0, 1} bool        convert
-// s8            u8          widen
-// u8            s8          sign extend/truncate
-// u8            u8          noop
-// s8            s8          noop
-// s8            s16         widen/sign extend
-// u8            s16         widen/truncate
-// s16           s16         noop
-// u16           s16         sign extend/truncate
-// s16           u16         widen
-// ""            ""          ""
-// f32           any int     truncate/range check
-//                           may require actual conversion code
-// f64           any int     truncate/range check
-//                           may require actual conversion code
-// f32           f64         widen
-// f64           f32         truncate
-
+// cast
+//
 one := 2;
 three: u16 := 128;
 one := cast<u8>(three);
 
 // transmute
-// copy lsb to msb of rhs to lhs based on type specified in transmute<t>
+//
 transmutation_magick: u8;
 transmutation_magick := transmute<u8>(three);
 
