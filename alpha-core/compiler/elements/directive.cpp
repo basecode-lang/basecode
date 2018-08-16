@@ -23,13 +23,13 @@
 namespace basecode::compiler {
 
     std::unordered_map<std::string, directive::directive_callable> directive::s_execute_handlers = {
-        {"run",     std::bind(&directive::on_execute_run,     std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {"foreign", std::bind(&directive::on_execute_foreign, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {"run",     std::bind(&directive::on_execute_run,     std::placeholders::_1, std::placeholders::_2)},
+        {"foreign", std::bind(&directive::on_execute_foreign, std::placeholders::_1, std::placeholders::_2)},
     };
 
     std::unordered_map<std::string, directive::directive_callable> directive::s_evaluate_handlers = {
-        {"run",     std::bind(&directive::on_evaluate_run,     std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {"foreign", std::bind(&directive::on_evaluate_foreign, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {"run",     std::bind(&directive::on_evaluate_run,     std::placeholders::_1, std::placeholders::_2)},
+        {"foreign", std::bind(&directive::on_evaluate_foreign, std::placeholders::_1, std::placeholders::_2)},
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -43,30 +43,26 @@ namespace basecode::compiler {
                                    _expression(expression) {
     }
 
-    bool directive::evaluate(
-            compiler::session& session,
-            compiler::program* program) {
-        auto it = s_evaluate_handlers.find(_name);
-        if (it == s_evaluate_handlers.end())
-            return true;
-        return it->second(this, session, program);
-    }
-
-    bool directive::execute(
-            compiler::session& session,
-            compiler::program* program) {
-        auto it = s_execute_handlers.find(_name);
-        if (it == s_execute_handlers.end())
-            return true;
-        return it->second(this, session, program);
-    }
-
     element* directive::expression() {
         return _expression;
     }
 
     std::string directive::name() const {
         return _name;
+    }
+
+    bool directive::execute(compiler::session& session) {
+        auto it = s_execute_handlers.find(_name);
+        if (it == s_execute_handlers.end())
+            return true;
+        return it->second(this, session);
+    }
+
+    bool directive::evaluate(compiler::session& session) {
+        auto it = s_evaluate_handlers.find(_name);
+        if (it == s_evaluate_handlers.end())
+            return true;
+        return it->second(this, session);
     }
 
     void directive::on_owned_elements(element_list_t& list) {
@@ -78,15 +74,11 @@ namespace basecode::compiler {
     //
     // run directive
 
-    bool directive::on_execute_run(
-            compiler::session& session,
-            compiler::program* program) {
+    bool directive::on_execute_run(compiler::session& session) {
         return true;
     }
 
-    bool directive::on_evaluate_run(
-            compiler::session& session,
-            compiler::program* program) {
+    bool directive::on_evaluate_run(compiler::session& session) {
         return true;
     }
 
@@ -94,9 +86,7 @@ namespace basecode::compiler {
     //
     // foreign directive
 
-    bool directive::on_execute_foreign(
-            compiler::session& session,
-            compiler::program* program) {
+    bool directive::on_execute_foreign(compiler::session& session) {
         auto& terp = session.terp();
 
         std::string library_name;
@@ -200,9 +190,7 @@ namespace basecode::compiler {
         return !session.result().is_failed();
     }
 
-    bool directive::on_evaluate_foreign(
-            compiler::session& session,
-            compiler::program* program) {
+    bool directive::on_evaluate_foreign(compiler::session& session) {
         auto proc_identifier = dynamic_cast<compiler::identifier*>(_expression);
         auto proc_type = proc_identifier->initializer()->procedure_type();
         if (proc_type != nullptr) {

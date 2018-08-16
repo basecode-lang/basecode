@@ -21,8 +21,7 @@ namespace basecode::compiler {
     public:
         using directive_callable = std::function<bool (
             compiler::directive*,
-            compiler::session&,
-            compiler::program*)>;
+            compiler::session&)>;
 
         directive(
             compiler::module* module,
@@ -30,17 +29,13 @@ namespace basecode::compiler {
             const std::string& name,
             element* expression);
 
-        bool evaluate(
-            compiler::session& session,
-            compiler::program* program);
-
-        bool execute(
-            compiler::session& session,
-            compiler::program* program);
-
         element* expression();
 
         std::string name() const;
+
+        bool execute(compiler::session& session);
+
+        bool evaluate(compiler::session& session);
 
     protected:
         void on_owned_elements(element_list_t& list) override;
@@ -49,24 +44,16 @@ namespace basecode::compiler {
         // --------------------
         // run directive
         // --------------------
-        bool on_execute_run(
-            compiler::session& session,
-            compiler::program* program);
+        bool on_execute_run(compiler::session& session);
 
-        bool on_evaluate_run(
-            compiler::session& session,
-            compiler::program* program);
+        bool on_evaluate_run(compiler::session& session);
 
         // --------------------
         // run directive
         // --------------------
-        bool on_execute_foreign(
-            compiler::session& session,
-            compiler::program* program);
+        bool on_execute_foreign(compiler::session& session);
 
-        bool on_evaluate_foreign(
-            compiler::session& session,
-            compiler::program* program);
+        bool on_evaluate_foreign(compiler::session& session);
 
     private:
         static std::unordered_map<std::string, directive_callable> s_execute_handlers;

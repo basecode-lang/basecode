@@ -63,10 +63,6 @@ namespace basecode::compiler {
             compiler::block* scope,
             const namespace_visitor_callable& callable) const;
 
-        compiler::block* push_new_block(
-            compiler::session& session,
-            element_type_t type = element_type_t::block);
-
         compiler::type* find_array_type(
             compiler::type* entry_type,
             size_t size,
@@ -101,6 +97,8 @@ namespace basecode::compiler {
         compiler::module* find_module(compiler::element* element) const;
 
         bool within_procedure_scope(compiler::block* parent_scope = nullptr) const;
+
+        compiler::block* push_new_block(element_type_t type = element_type_t::block);
 
     private:
         compiler::session& _session;

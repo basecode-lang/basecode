@@ -557,7 +557,7 @@ namespace basecode::compiler {
             expression);
         directive_element->location(context.node->location);
         apply_attributes(context, directive_element, context.node);
-        directive_element->evaluate(context.session, &context.session.program());
+        directive_element->evaluate(context.session);
         result.element = directive_element;
         return true;
     }
@@ -615,7 +615,7 @@ namespace basecode::compiler {
                     current_source_file->path().parent_path());
             }
             auto source_file = context.session.add_source_file(source_path);
-            auto module = _session.program().compile_module(context.session, source_file);
+            auto module = _session.compile_module(source_file);
             if (module == nullptr) {
                 context.session.error(
                     "C021",
@@ -864,9 +864,9 @@ namespace basecode::compiler {
     bool ast_evaluator::basic_block(
             evaluator_context_t& context,
             evaluator_result_t& result) {
-        auto active_scope = _session.scope_manager().push_new_block(
-            _session,
-            context.default_block_type);
+        auto active_scope = _session
+            .scope_manager()
+            .push_new_block(context.default_block_type);
 
         for (auto it = context.node->children.begin();
              it != context.node->children.end();

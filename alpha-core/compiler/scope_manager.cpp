@@ -93,21 +93,6 @@ namespace basecode::compiler {
         return _scope_stack.top();
     }
 
-    compiler::block* scope_manager::push_new_block(
-            compiler::session& session,
-            element_type_t type) {
-        auto parent_scope = current_scope();
-        auto scope_block = session.builder().make_block(parent_scope, type);
-
-        if (parent_scope != nullptr) {
-            scope_block->parent_element(parent_scope);
-            parent_scope->blocks().push_back(scope_block);
-        }
-
-        push_scope(scope_block);
-        return scope_block;
-    }
-
     bool scope_manager::visit_blocks(
             common::result& r,
             const block_visitor_callable& callable,
@@ -208,6 +193,19 @@ namespace basecode::compiler {
                     return nullptr;
                 }));
         }
+    }
+
+    compiler::block* scope_manager::push_new_block(element_type_t type) {
+        auto parent_scope = current_scope();
+        auto scope_block = _session.builder().make_block(parent_scope, type);
+
+        if (parent_scope != nullptr) {
+            scope_block->parent_element(parent_scope);
+            parent_scope->blocks().push_back(scope_block);
+        }
+
+        push_scope(scope_block);
+        return scope_block;
     }
 
     compiler::module* scope_manager::find_module(compiler::element* element) const {

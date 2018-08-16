@@ -72,6 +72,8 @@ namespace basecode::compiler {
 
         compiler::program& program();
 
+        void disassemble(FILE* file);
+
         emit_context_t& emit_context();
 
         const element_map& elements() const;
@@ -92,6 +94,8 @@ namespace basecode::compiler {
 
         void push_source_file(common::source_file* source_file);
 
+        compiler::module* compile_module(common::source_file* source_file);
+
         syntax::ast_node_shared_ptr parse(common::source_file* source_file);
 
         syntax::ast_node_shared_ptr parse(const boost::filesystem::path& path);
@@ -101,9 +105,17 @@ namespace basecode::compiler {
         common::source_file* find_source_file(const boost::filesystem::path& path);
 
     private:
+        bool type_check();
+
         void raise_phase(
             session_compile_phase_t phase,
             const boost::filesystem::path& source_file);
+
+        bool resolve_unknown_types();
+
+        void initialize_core_types();
+
+        bool resolve_unknown_identifiers();
 
         void write_code_dom_graph(const boost::filesystem::path& path);
 

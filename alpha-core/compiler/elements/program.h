@@ -26,28 +26,12 @@ namespace basecode::compiler {
 
         ~program() override;
 
-        void disassemble(
-            compiler::session& session,
-            FILE* file);
-
         compiler::block* block();
 
-        compiler::module* compile_module(
-            compiler::session& session,
-            common::source_file* source_file);
-
-        bool compile(compiler::session& session);
+        void block(compiler::block* value);
 
     private:
-        bool type_check(compiler::session& session);
-
         bool on_emit(compiler::session& session) override;
-
-        bool resolve_unknown_types(compiler::session& session);
-
-        void initialize_core_types(compiler::session& session);
-
-        bool resolve_unknown_identifiers(compiler::session& session);
 
     private:
         compiler::block* _block = nullptr;

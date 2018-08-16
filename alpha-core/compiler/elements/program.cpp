@@ -19,6 +19,7 @@
 #include "type.h"
 #include "block.h"
 #include "module.h"
+#include "program.h"
 #include "any_type.h"
 #include "directive.h"
 #include "bool_type.h"
@@ -39,12 +40,21 @@
 #include "integer_literal.h"
 #include "identifier_reference.h"
 
+
 namespace basecode::compiler {
 
     program::program() : element(nullptr, nullptr, element_type_t::program) {
     }
 
     program::~program() {
+    }
+
+    compiler::block* program::block() {
+        return _block;
+    }
+
+    void program::block(compiler::block* value) {
+        _block = value;
     }
 
     bool program::on_emit(compiler::session& session) {
@@ -300,275 +310,6 @@ namespace basecode::compiler {
         assembler.pop_block();
 
         return true;
-    }
-
-    bool program::compile(compiler::session& session) {
-        auto& assembler = session.assembler();
-        // XXX: temporary!
-        auto& r = session.result();
-        auto& top_level_stack = session.scope_manager().top_level_stack();
-
-        _block = session.scope_manager().push_new_block(session);
-        _block->parent_element(this);
-
-        top_level_stack.push(_block);
-
-        initialize_core_types(session);
-
-        for (auto source_file : session.source_files()) {
-            auto module = compile_module(session, source_file);
-            if (module == nullptr)
-                return false;
-        }
-
-        auto directives = session.elements().find_by_type(element_type_t::directive);
-        for (auto directive : directives) {
-            auto directive_element = dynamic_cast<compiler::directive*>(directive);
-            if (!directive_element->execute(session, this))
-                return false;
-        }
-
-        if (!resolve_unknown_identifiers(session))
-            return false;
-
-        if (!resolve_unknown_types(session))
-            return false;
-
-        if (!type_check(session))
-            return false;
-
-        if (!r.is_failed()) {
-            auto& listing = assembler.listing();
-            listing.add_source_file("top_level.basm");
-            listing.select_source_file("top_level.basm");
-
-            emit(session);
-
-            assembler.apply_addresses(r);
-            assembler.resolve_labels(r);
-            if (assembler.assemble(r)) {
-                session.run();
-            }
-        }
-
-        top_level_stack.pop();
-
-        return !r.is_failed();
-    }
-
-    compiler::block* program::block() {
-        return _block;
-    }
-
-    compiler::module* program::compile_module(
-            compiler::session& session,
-            common::source_file* source_file) {
-        auto is_root = session.current_source_file() == nullptr;
-
-        session.push_source_file(source_file);
-        defer({
-            session.pop_source_file();
-        });
-
-        compiler::module* module = (compiler::module*)nullptr;
-        auto module_node = session.parse(source_file);
-        if (module_node != nullptr) {
-            module = dynamic_cast<compiler::module*>(session.evaluator().evaluate(module_node.get()));
-            if (module != nullptr) {
-                module->parent_element(this);
-                module->is_root(is_root);
-            }
-        }
-
-        return module;
-    }
-
-    void program::disassemble(
-            compiler::session& session,
-            FILE* file) {
-        auto& assembler = session.assembler();
-
-        auto root_block = assembler.root_block();
-        if (root_block == nullptr)
-            return;
-        root_block->disassemble();
-        if (file != nullptr) {
-            fmt::print(file, "\n");
-            assembler.listing().write(file);
-        }
-    }
-
-    bool program::type_check(compiler::session& session) {
-        auto identifiers = session.elements().find_by_type(element_type_t::identifier);
-        for (auto identifier : identifiers) {
-            auto var = dynamic_cast<compiler::identifier*>(identifier);
-            auto init = var->initializer();
-            if (init == nullptr)
-                continue;
-            auto rhs_type = init->infer_type(session);
-            if (!var->type()->type_check(rhs_type)) {
-                session.error(
-                    init,
-                    "C051",
-                    fmt::format(
-                        "type mismatch: cannot assign {} to {}.",
-                        rhs_type->symbol()->name(),
-                        var->type()->symbol()->name()),
-                    var->location());
-            }
-        }
-
-        auto binary_ops = session.elements().find_by_type(element_type_t::binary_operator);
-        for (auto op : binary_ops) {
-            auto binary_op = dynamic_cast<compiler::binary_operator*>(op);
-            if (binary_op->operator_type() != operator_type_t::assignment)
-                continue;
-
-            // XXX: revisit this for destructuring/multiple assignment
-            auto var = dynamic_cast<compiler::identifier*>(binary_op->lhs());
-            auto rhs_type = binary_op->rhs()->infer_type(session);
-            if (!var->type()->type_check(rhs_type)) {
-                session.error(
-                    binary_op,
-                    "C051",
-                    fmt::format(
-                        "type mismatch: cannot assign {} to {}.",
-                        rhs_type->symbol()->name(),
-                        var->type()->symbol()->name()),
-                    binary_op->rhs()->location());
-            }
-        }
-
-        return !session.result().is_failed();
-    }
-
-    void program::initialize_core_types(compiler::session& session) {
-        auto& builder = session.builder();
-        auto& scope_manager = session.scope_manager();
-        auto parent_scope = scope_manager.current_scope();
-
-        compiler::numeric_type::make_types(session, parent_scope);
-        scope_manager.add_type_to_scope(builder.make_module_type(
-            session,
-            parent_scope,
-            builder.make_block(parent_scope, element_type_t::block)));
-        scope_manager.add_type_to_scope(builder.make_namespace_type(session, parent_scope));
-        scope_manager.add_type_to_scope(builder.make_bool_type(session, parent_scope));
-        scope_manager.add_type_to_scope(builder.make_string_type(
-            session,
-            parent_scope,
-            builder.make_block(parent_scope, element_type_t::block)));
-
-        scope_manager.add_type_to_scope(builder.make_type_info_type(
-            session,
-            parent_scope,
-            builder.make_block(parent_scope, element_type_t::block)));
-        scope_manager.add_type_to_scope(builder.make_tuple_type(
-            session,
-            parent_scope,
-            builder.make_block(parent_scope, element_type_t::block)));
-        scope_manager.add_type_to_scope(builder.make_any_type(
-            session,
-            parent_scope,
-            builder.make_block(parent_scope, element_type_t::block)));
-    }
-
-    bool program::resolve_unknown_types(compiler::session& session) {
-        auto& identifiers = session.scope_manager().identifiers_with_unknown_types();
-
-        auto it = identifiers.begin();
-        while (it != identifiers.end()) {
-            auto var = *it;
-
-            if (var->type() != nullptr
-            &&  var->type()->element_type() != element_type_t::unknown_type) {
-                it = identifiers.erase(it);
-                continue;
-            }
-
-            compiler::type* identifier_type = nullptr;
-            if (var->is_parent_element(element_type_t::binary_operator)) {
-                auto binary_operator = dynamic_cast<compiler::binary_operator*>(var->parent_element());
-                if (binary_operator->operator_type() == operator_type_t::assignment) {
-                    identifier_type = binary_operator->rhs()->infer_type(session);
-                    var->type(identifier_type);
-                }
-            } else {
-                if (var->initializer() == nullptr) {
-                    auto unknown_type = dynamic_cast<compiler::unknown_type*>(var->type());
-
-                    type_find_result_t find_result {};
-                    find_result.type_name = unknown_type->symbol()->qualified_symbol();
-                    find_result.is_array = unknown_type->is_array();
-                    find_result.is_pointer = unknown_type->is_pointer();
-                    find_result.array_size = unknown_type->array_size();
-
-                    identifier_type = session.builder().make_complete_type(
-                        session,
-                        find_result,
-                        var->parent_scope());
-                    if (identifier_type != nullptr) {
-                        var->type(identifier_type);
-                        session.elements().remove(unknown_type->id());
-                    }
-                } else {
-                    identifier_type = var
-                        ->initializer()
-                        ->expression()
-                        ->infer_type(session);
-                    var->type(identifier_type);
-                }
-            }
-
-            if (identifier_type != nullptr) {
-                var->inferred_type(true);
-                it = identifiers.erase(it);
-            } else {
-                ++it;
-                session.error(
-                    var,
-                    "P004",
-                    fmt::format(
-                        "unable to resolve type for identifier: {}",
-                        var->symbol()->name()),
-                    var->symbol()->location());
-            }
-        }
-
-        return identifiers.empty();
-    }
-
-    bool program::resolve_unknown_identifiers(compiler::session& session) {
-        auto& unresolved = session.scope_manager().unresolved_identifier_references();
-        auto it = unresolved.begin();
-        while (it != unresolved.end()) {
-            auto unresolved_reference = *it;
-            if (unresolved_reference->resolved()) {
-                it = unresolved.erase(it);
-                continue;
-            }
-
-            auto identifier = session.scope_manager().find_identifier(
-                unresolved_reference->symbol(),
-                unresolved_reference->parent_scope());
-            if (identifier == nullptr) {
-                ++it;
-                session.error(
-                    unresolved_reference,
-                    "P004",
-                    fmt::format(
-                        "unable to resolve identifier: {}",
-                        unresolved_reference->symbol().name),
-                    unresolved_reference->symbol().location);
-                continue;
-            }
-
-            unresolved_reference->identifier(identifier);
-
-            it = unresolved.erase(it);
-        }
-
-        return unresolved.empty();
     }
 
 };
