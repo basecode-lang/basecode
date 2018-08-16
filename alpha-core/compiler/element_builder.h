@@ -13,7 +13,7 @@
 
 #include <parser/parser.h>
 #include <compiler/compiler_types.h>
-#include "element_types.h"
+#include "elements/element_types.h"
 
 namespace basecode::compiler {
 

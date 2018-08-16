@@ -22,12 +22,12 @@
 #include <parser/parser.h>
 #include <boost/filesystem.hpp>
 #include <common/source_file.h>
+#include "element_map.h"
 #include "scope_manager.h"
+#include "ast_evaluator.h"
 #include "compiler_types.h"
+#include "element_builder.h"
 #include "elements/program.h"
-#include "elements/element_map.h"
-#include "elements/ast_evaluator.h"
-#include "elements/element_builder.h"
 
 namespace basecode::compiler {
 

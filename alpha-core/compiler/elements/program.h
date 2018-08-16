@@ -17,9 +17,6 @@
 #include <common/source_file.h>
 #include <compiler/compiler_types.h>
 #include "element.h"
-#include "element_map.h"
-#include "ast_evaluator.h"
-#include "element_builder.h"
 
 namespace basecode::compiler {
 

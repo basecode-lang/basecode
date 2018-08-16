@@ -88,14 +88,17 @@ add_library(
 
     compiler/compiler_types.h
     compiler/session.cpp compiler/session.h
+    compiler/element_map.cpp compiler/element_map.h
     compiler/emit_context.cpp compiler/emit_context.h
     compiler/elements/type.cpp compiler/elements/type.h
     compiler/elements/cast.cpp compiler/elements/cast.h
     compiler/scope_manager.cpp compiler/scope_manager.h
+    compiler/ast_evaluator.cpp compiler/ast_evaluator.h
     compiler/elements/field.cpp compiler/elements/field.h
     compiler/elements/block.cpp compiler/elements/block.h
     compiler/elements/label.cpp compiler/elements/label.h
     compiler/elements/alias.cpp compiler/elements/alias.h
+    compiler/element_builder.cpp compiler/element_builder.h
     compiler/elements/import.cpp compiler/elements/import.h
     compiler/elements/module.cpp compiler/elements/module.h
     compiler/elements/comment.cpp compiler/elements/comment.h
@@ -114,14 +117,12 @@ add_library(
     compiler/elements/expression.cpp compiler/elements/expression.h
     compiler/elements/array_type.cpp compiler/elements/array_type.h
     compiler/elements/tuple_type.cpp compiler/elements/tuple_type.h
-    compiler/elements/element_map.cpp compiler/elements/element_map.h
     compiler/elements/initializer.cpp compiler/elements/initializer.h
     compiler/elements/string_type.cpp compiler/elements/string_type.h
     compiler/elements/module_type.cpp compiler/elements/module_type.h
     compiler/elements/numeric_type.cpp compiler/elements/numeric_type.h
     compiler/elements/unknown_type.cpp compiler/elements/unknown_type.h
     compiler/elements/pointer_type.cpp compiler/elements/pointer_type.h
-    compiler/elements/ast_evaluator.cpp compiler/elements/ast_evaluator.h
     compiler/elements/operator_base.cpp compiler/elements/operator_base.h
     compiler/elements/float_literal.cpp compiler/elements/float_literal.h
     compiler/elements/element_types.cpp compiler/elements/element_types.h
@@ -134,7 +135,6 @@ add_library(
     compiler/elements/unary_operator.cpp compiler/elements/unary_operator.h
     compiler/elements/return_element.cpp compiler/elements/return_element.h
     compiler/elements/procedure_call.cpp compiler/elements/procedure_call.h
-    compiler/elements/element_builder.cpp compiler/elements/element_builder.h
     compiler/elements/integer_literal.cpp compiler/elements/integer_literal.h
     compiler/elements/binary_operator.cpp compiler/elements/binary_operator.h
     compiler/elements/boolean_literal.cpp compiler/elements/boolean_literal.h

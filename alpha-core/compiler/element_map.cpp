@@ -9,7 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
-#include "element.h"
+#include "compiler/elements/element.h"
 #include "element_map.h"
 
 namespace basecode::compiler {

@@ -14,7 +14,7 @@
 #include <string>
 #include <unordered_map>
 #include <common/id_pool.h>
-#include "element_types.h"
+#include "elements/element_types.h"
 
 namespace basecode::compiler {
 
