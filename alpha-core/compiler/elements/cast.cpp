@@ -13,9 +13,21 @@
 #include <vm/instruction_block.h>
 #include "type.h"
 #include "cast.h"
+#include "numeric_type.h"
 #include "symbol_element.h"
 
 namespace basecode::compiler {
+
+    enum class cast_mode_t : uint8_t {
+        noop,
+        integer_truncate,
+        integer_sign_extend,
+        integer_zero_extend,
+        float_extend,
+        float_truncate,
+        float_to_integer,
+        integer_to_float,
+    };
 
     cast::cast(
             compiler::module* module,
@@ -24,6 +36,14 @@ namespace basecode::compiler {
             element* expr) : element(module, parent_scope, element_type_t::cast),
                              _expression(expr),
                              _type(type) {
+    }
+
+    element* cast::expression() {
+        return _expression;
+    }
+
+    compiler::type* cast::type() {
+        return _type;
     }
 
     //
@@ -42,42 +62,127 @@ namespace basecode::compiler {
     // casting bool to and integer type will yield 1 or 0
     // casting any integer type whose LSB is set will yield true; otherwise, false
     //
+    // pointer casts
+    // ------------------------------------------------------------------------
+    // integer to pointer type:
+    //
     bool cast::on_emit(compiler::session& session) {
         if (_expression == nullptr)
             return true;
+
+        auto source_type = _expression->infer_type(session);
+        if (source_type->number_class() == type_number_class_t::none) {
+            session.error(
+                this,
+                "C073",
+                fmt::format("cannot cast from type: {}", source_type->symbol()->name()),
+                _expression->location());
+            return false;
+        } else if (_type->number_class() == type_number_class_t::none) {
+            session.error(
+                this,
+                "C073",
+                fmt::format("cannot cast to type: {}", _type->symbol()->name()),
+                _type_location);
+            return false;
+        }
 
         auto& assembler = session.assembler();
         auto target_reg = assembler.current_target_register();
         auto instruction_block = assembler.current_block();
 
+        auto mode = cast_mode_t::noop;
+        auto source_number_class = source_type->number_class();
+        auto source_size = source_type->size_in_bytes();
+        auto target_number_class = _type->number_class();
+        auto target_size = _type->size_in_bytes();
+
+        if (source_number_class == type_number_class_t::integer
+        &&  target_number_class == type_number_class_t::integer) {
+            if (source_size == target_size) {
+                mode = cast_mode_t::integer_truncate;
+            } else if (source_size > target_size) {
+                mode = cast_mode_t::integer_truncate;
+            } else {
+                auto source_numeric_type = dynamic_cast<compiler::numeric_type*>(source_type);
+                if (source_numeric_type->is_signed()) {
+                    mode = cast_mode_t::integer_sign_extend;
+                } else {
+                    mode = cast_mode_t::integer_zero_extend;
+                }
+            }
+        } else if (source_number_class == type_number_class_t::floating_point
+               &&  target_number_class == type_number_class_t::floating_point) {
+            if (source_size == target_size) {
+                mode = cast_mode_t::float_truncate;
+            } else if (source_size > target_size) {
+                mode = cast_mode_t::float_truncate;
+            } else {
+                mode = cast_mode_t::float_extend;
+            }
+        } else {
+            if (source_number_class == type_number_class_t::integer) {
+                mode = cast_mode_t::integer_to_float;
+            } else {
+                mode = cast_mode_t::float_to_integer;
+            }
+        }
+
         auto temp_reg = register_for(session, _expression);
         if (!temp_reg.valid)
             return false;
+
+        switch (mode) {
+            case cast_mode_t::integer_sign_extend:
+            case cast_mode_t::integer_zero_extend: {
+                vm::register_t zero_reg;
+                zero_reg.size = target_reg->size;
+                zero_reg.number = temp_reg.reg.number;
+                instruction_block->move_constant_to_reg(
+                    zero_reg,
+                    static_cast<uint64_t>(0));
+                break;
+            }
+            default:
+                break;
+        }
 
         assembler.push_target_register(temp_reg.reg);
         _expression->emit(session);
         assembler.pop_target_register();
 
-        // XXX: this is a placeholder, need to check conditions above
-        instruction_block->move_reg_to_reg(*target_reg, temp_reg.reg);
+        switch (mode) {
+            case cast_mode_t::integer_truncate:
+            case cast_mode_t::integer_sign_extend:
+            case cast_mode_t::integer_zero_extend:
+                instruction_block->move_reg_to_reg(*target_reg, temp_reg.reg);
+                break;
+            case cast_mode_t::float_extend:
+                break;
+            case cast_mode_t::float_truncate:
+                break;
+            case cast_mode_t::float_to_integer:
+                break;
+            case cast_mode_t::integer_to_float:
+                break;
+            default:
+                break;
+        }
 
         instruction_block->current_entry()->comment(
             fmt::format("cast<{}>", _type->symbol()->name()),
             session.emit_context().indent);
+
         return true;
-    }
-
-    element* cast::expression() {
-        return _expression;
-    }
-
-    compiler::type* cast::type() {
-        return _type;
     }
 
     void cast::on_owned_elements(element_list_t& list) {
         if (_expression != nullptr)
             list.emplace_back(_expression);
+    }
+
+    void cast::type_location(const common::source_location& loc) {
+        _type_location = loc;
     }
 
     compiler::type* cast::on_infer_type(const compiler::session& session) {

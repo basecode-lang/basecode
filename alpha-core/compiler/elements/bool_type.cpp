@@ -24,12 +24,6 @@ namespace basecode::compiler {
                                    nullptr) {
     }
 
-    bool bool_type::on_initialize(compiler::session& session) {
-        symbol(session.builder().make_symbol(parent_scope(), "bool"));
-        size_in_bytes(1);
-        return true;
-    }
-
     bool bool_type::on_type_check(compiler::type* other) {
         return other != nullptr
             && other->element_type() == element_type_t::bool_type;
@@ -41,6 +35,12 @@ namespace basecode::compiler {
 
     type_number_class_t bool_type::on_number_class() const {
         return type_number_class_t::integer;
+    }
+
+    bool bool_type::on_initialize(compiler::session& session) {
+        symbol(session.builder().make_symbol(parent_scope(), "bool"));
+        size_in_bytes(1);
+        return true;
     }
 
 };

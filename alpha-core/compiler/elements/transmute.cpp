@@ -38,6 +38,23 @@ namespace basecode::compiler {
         if (_expression == nullptr)
             return true;
 
+        auto source_type = _expression->infer_type(session);
+        if (source_type->number_class() == type_number_class_t::none) {
+            session.error(
+                this,
+                "C073",
+                fmt::format("cannot transmute from type: {}", source_type->symbol()->name()),
+                _expression->location());
+            return false;
+        } else if (_type->number_class() == type_number_class_t::none) {
+            session.error(
+                this,
+                "C073",
+                fmt::format("cannot transmute to type: {}", _type->symbol()->name()),
+                _type_location);
+            return false;
+        }
+
         auto& assembler = session.assembler();
         auto target_reg = assembler.current_target_register();
         auto instruction_block = assembler.current_block();
@@ -61,6 +78,10 @@ namespace basecode::compiler {
     void transmute::on_owned_elements(element_list_t& list) {
         if (_expression != nullptr)
             list.emplace_back(_expression);
+    }
+
+    void transmute::type_location(const common::source_location& loc) {
+        _type_location = loc;
     }
 
     compiler::type* transmute::on_infer_type(const compiler::session& session) {

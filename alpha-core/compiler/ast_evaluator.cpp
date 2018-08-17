@@ -759,20 +759,25 @@ namespace basecode::compiler {
     bool ast_evaluator::cast_expression(
             evaluator_context_t& context,
             evaluator_result_t& result) {
+        auto& builder = _session.builder();
+        auto& scope_manager = _session.scope_manager();
+
         auto type_name = context.node->lhs->lhs->children[0]->token.value;
-        auto type = _session.scope_manager().find_type(qualified_symbol_t {.name = type_name});
+        auto type = scope_manager.find_type(qualified_symbol_t {.name = type_name});
         if (type == nullptr) {
-            context.session.error(
+            _session.error(
                 "P002",
                 fmt::format("unknown type '{}'.", type_name),
                 context.node->lhs->lhs->location);
             return false;
         }
-        result.element = _session.builder().make_cast(
-            _session.scope_manager().current_scope(),
+        auto cast_element = builder.make_cast(
+            scope_manager.current_scope(),
             type,
             resolve_symbol_or_evaluate(context, context.node->rhs.get()));
-        result.element->location(context.node->location);
+        cast_element->location(context.node->location);
+        cast_element->type_location(context.node->lhs->lhs->location);
+        result.element = cast_element;
         return true;
     }
 
@@ -1100,20 +1105,25 @@ namespace basecode::compiler {
     bool ast_evaluator::transmute_expression(
             evaluator_context_t& context,
             evaluator_result_t& result) {
+        auto& builder = _session.builder();
+        auto& scope_manager = _session.scope_manager();
+
         auto type_name = context.node->lhs->lhs->children[0]->token.value;
-        auto type = _session.scope_manager().find_type(qualified_symbol_t {.name = type_name});
+        auto type = scope_manager.find_type(qualified_symbol_t {.name = type_name});
         if (type == nullptr) {
-            context.session.error(
+            _session.error(
                 "P002",
                 fmt::format("unknown type '{}'.", type_name),
                 context.node->lhs->lhs->location);
             return false;
         }
-        result.element = _session.builder().make_transmute(
-            _session.scope_manager().current_scope(),
+        auto transmute_element = builder.make_transmute(
+            scope_manager.current_scope(),
             type,
             resolve_symbol_or_evaluate(context, context.node->rhs.get()));
-        result.element->location(context.node->location);
+        transmute_element->location(context.node->location);
+        transmute_element->type_location(context.node->lhs->lhs->location);
+        result.element = transmute_element;
         return true;
     }
 

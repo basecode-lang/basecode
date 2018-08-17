@@ -69,9 +69,19 @@ bool_false_i: bool := false;
 
 // cast
 //
+//temp_name: u32 := 128;
+//name: string := cast<string>(temp_name);
+
 one := 2;
 three: u16 := 128;
 one := cast<u8>(three);
+
+four: s16;
+four := cast<s16>(three);
+
+zero_extend_src: u8 := $ff;
+zero_extend_dest: u16;
+zero_extend_dest := cast<u16>(zero_extend_src);
 
 // transmute
 //

@@ -23,9 +23,11 @@ namespace basecode::compiler {
             compiler::type* type,
             element* expr);
 
+        element* expression();
+
         compiler::type* type();
 
-        element* expression();
+        void type_location(const common::source_location& loc);
 
     protected:
         bool on_emit(compiler::session& session) override;
@@ -37,6 +39,7 @@ namespace basecode::compiler {
     private:
         element* _expression = nullptr;
         compiler::type* _type = nullptr;
+        common::source_location _type_location {};
     };
 
 };
