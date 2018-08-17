@@ -70,15 +70,21 @@ namespace basecode::compiler {
         if (_expression == nullptr)
             return true;
 
+        cast_mode_t mode;
         auto source_type = _expression->infer_type(session);
-        if (source_type->number_class() == type_number_class_t::none) {
+        auto source_number_class = source_type->number_class();
+        auto source_size = source_type->size_in_bytes();
+        auto target_number_class = _type->number_class();
+        auto target_size = _type->size_in_bytes();
+
+        if (source_number_class == type_number_class_t::none) {
             session.error(
                 this,
                 "C073",
                 fmt::format("cannot cast from type: {}", source_type->symbol()->name()),
                 _expression->location());
             return false;
-        } else if (_type->number_class() == type_number_class_t::none) {
+        } else if (target_number_class == type_number_class_t::none) {
             session.error(
                 this,
                 "C073",
@@ -90,12 +96,6 @@ namespace basecode::compiler {
         auto& assembler = session.assembler();
         auto target_reg = assembler.current_target_register();
         auto instruction_block = assembler.current_block();
-
-        auto mode = cast_mode_t::noop;
-        auto source_number_class = source_type->number_class();
-        auto source_size = source_type->size_in_bytes();
-        auto target_number_class = _type->number_class();
-        auto target_size = _type->size_in_bytes();
 
         if (source_number_class == type_number_class_t::integer
         &&  target_number_class == type_number_class_t::integer) {
@@ -132,45 +132,45 @@ namespace basecode::compiler {
         if (!temp_reg.valid)
             return false;
 
-        switch (mode) {
-            case cast_mode_t::integer_sign_extend:
-            case cast_mode_t::integer_zero_extend: {
-                vm::register_t zero_reg;
-                zero_reg.size = target_reg->size;
-                zero_reg.number = temp_reg.reg.number;
-                instruction_block->move_constant_to_reg(
-                    zero_reg,
-                    static_cast<uint64_t>(0));
-                break;
-            }
-            default:
-                break;
-        }
-
         assembler.push_target_register(temp_reg.reg);
         _expression->emit(session);
         assembler.pop_target_register();
 
         switch (mode) {
-            case cast_mode_t::integer_truncate:
-            case cast_mode_t::integer_sign_extend:
-            case cast_mode_t::integer_zero_extend:
+            case cast_mode_t::integer_truncate: {
                 instruction_block->move_reg_to_reg(*target_reg, temp_reg.reg);
                 break;
-            case cast_mode_t::float_extend:
+            }
+            case cast_mode_t::integer_sign_extend: {
+                instruction_block->moves_reg_to_reg(*target_reg, temp_reg.reg);
                 break;
-            case cast_mode_t::float_truncate:
+            }
+            case cast_mode_t::integer_zero_extend: {
+                instruction_block->movez_reg_to_reg(*target_reg, temp_reg.reg);
                 break;
-            case cast_mode_t::float_to_integer:
+            }
+            case cast_mode_t::float_extend: {
                 break;
-            case cast_mode_t::integer_to_float:
+            }
+            case cast_mode_t::float_truncate: {
                 break;
-            default:
+            }
+            case cast_mode_t::float_to_integer: {
                 break;
+            }
+            case cast_mode_t::integer_to_float: {
+                break;
+            }
+            default: {
+                break;
+            }
         }
 
         instruction_block->current_entry()->comment(
-            fmt::format("cast<{}>", _type->symbol()->name()),
+            fmt::format(
+                "cast<{}> from type {}",
+                _type->symbol()->name(),
+                source_type->symbol()->name()),
             session.emit_context().indent);
 
         return true;

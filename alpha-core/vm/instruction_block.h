@@ -307,6 +307,14 @@ namespace basecode::vm {
             const register_t& dest_reg,
             const register_t& src_reg);
 
+        void moves_reg_to_reg(
+            const register_t& dest_reg,
+            const register_t& src_reg);
+
+        void movez_reg_to_reg(
+            const register_t& dest_reg,
+            const register_t& src_reg);
+
         void move_label_to_reg(
             const register_t& dest_reg,
             const std::string& label_name);
@@ -562,6 +570,7 @@ namespace basecode::vm {
 
         void make_move_instruction(
             op_sizes size,
+            op_codes code,
             const register_t& dest_reg,
             const register_t& src_reg);
 

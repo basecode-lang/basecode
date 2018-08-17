@@ -117,6 +117,12 @@ namespace basecode::common {
         return size;
     }
 
+    inline uint64_t sign_extend(int64_t value, uint32_t bits) {
+        auto shift = sizeof(uint64_t) * CHAR_BIT - bits;
+        auto result = (value << shift) >> shift;
+        return static_cast<uint64_t>(result);
+    }
+
     inline uint8_t set_lower_nybble(uint8_t original, uint8_t value) {
         uint8_t res = original;
         res &= 0xF0;

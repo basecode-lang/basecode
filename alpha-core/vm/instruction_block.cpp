@@ -197,7 +197,19 @@ namespace basecode::vm {
     void instruction_block::move_reg_to_reg(
             const register_t& dest_reg,
             const register_t& src_reg) {
-        make_move_instruction(dest_reg.size, dest_reg, src_reg);
+        make_move_instruction(dest_reg.size, op_codes::move, dest_reg, src_reg);
+    }
+
+    void instruction_block::moves_reg_to_reg(
+            const register_t& dest_reg,
+            const register_t& src_reg) {
+        make_move_instruction(dest_reg.size, op_codes::moves, dest_reg, src_reg);
+    }
+
+    void instruction_block::movez_reg_to_reg(
+            const register_t& dest_reg,
+            const register_t& src_reg) {
+        make_move_instruction(dest_reg.size, op_codes::movez, dest_reg, src_reg);
     }
 
     void instruction_block::move_label_to_reg(
@@ -478,10 +490,11 @@ namespace basecode::vm {
 
     void instruction_block::make_move_instruction(
             op_sizes size,
+            op_codes code,
             const register_t& dest_reg,
             const register_t& src_reg) {
         instruction_t move_op;
-        move_op.op = op_codes::move;
+        move_op.op = code;
         move_op.size = size;
         move_op.operands_count = 2;
         move_op.operands[0].type = operand_encoding_t::flags::reg;
