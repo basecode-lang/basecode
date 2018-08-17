@@ -93,6 +93,14 @@ print("zero_extend_dest := %d (before)\n", zero_extend_dest);
 zero_extend_dest := cast<u16>(zero_extend_src);
 print("zero_extend_dest := %d (after)\n", zero_extend_dest);
 
+E: f32 := 2.7182818284;
+
+PI: f32;
+PI := 3.1415926535;
+
+int_pi: u32;
+int_pi := cast<u32>(PI);
+
 // transmute
 //
 transmutation_magick: u8;

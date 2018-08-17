@@ -109,9 +109,12 @@ namespace basecode::compiler {
         if (symbol()->name() == other_numeric_type->symbol()->name())
             return true;
 
-        if (_number_class == type_number_class_t::floating_point
-        &&  other_numeric_type->number_class() == type_number_class_t::floating_point) {
-            return other_numeric_type->size_in_bytes() < size_in_bytes();
+        if (other_numeric_type->number_class() == type_number_class_t::floating_point) {
+            if (_number_class == type_number_class_t::floating_point) {
+                return other_numeric_type->size_in_bytes() < size_in_bytes();
+            } else {
+                return false;
+            }
         }
 
         if (is_signed() && other_numeric_type->is_signed()) {
