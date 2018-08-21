@@ -40,10 +40,6 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             const std::string& name);
 
-        alias* make_alias(
-            compiler::block* parent_scope,
-            element* expr);
-
         if_element* make_if(
             compiler::block* parent_scope,
             element* predicate,

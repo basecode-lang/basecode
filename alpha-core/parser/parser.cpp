@@ -334,19 +334,6 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    ast_node_shared_ptr constant_prefix_parser::parse(
-            common::result& r,
-            parser* parser,
-            token_t& token) {
-        auto symbol_node = parser->parse_expression(
-            r,
-            static_cast<uint8_t>(precedence_t::assignment));
-        symbol_node->lhs = parser->ast_builder()->constant_node(token);
-        return symbol_node;
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-
     ast_node_shared_ptr with_prefix_parser::parse(
             common::result& r,
             parser* parser,
@@ -579,14 +566,6 @@ namespace basecode::syntax {
             parser* parser,
             token_t& token) {
         switch (token.type) {
-            case token_types_t::alias_literal: {
-                auto alias_node = parser->ast_builder()->alias_node(token);
-                alias_node->lhs = parser->expect_expression(
-                    r,
-                    ast_node_types_t::assignment,
-                    0);
-                return alias_node;
-            }
             case token_types_t::import_literal: {
                 auto import_node = parser->ast_builder()->import_node(token);
                 import_node->lhs = parser->parse_expression(r, 0);

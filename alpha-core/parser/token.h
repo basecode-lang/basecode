@@ -68,7 +68,6 @@ namespace basecode::syntax {
         else_literal,
         cast_literal,
         false_literal,
-        alias_literal,
         break_literal,
         while_literal,
         defer_literal,
@@ -86,7 +85,6 @@ namespace basecode::syntax {
         else_if_literal,
         left_curly_brace,
         continue_literal,
-        constant_literal,
         right_curly_brace,
         character_literal,
         namespace_literal,
@@ -145,7 +143,6 @@ namespace basecode::syntax {
         {token_types_t::enum_literal,           "enum_literal"},
         {token_types_t::true_literal,           "true_literal"},
         {token_types_t::false_literal,          "false_literal"},
-        {token_types_t::alias_literal,          "alias_literal"},
         {token_types_t::break_literal,          "break_literal"},
         {token_types_t::while_literal,          "while_literal"},
         {token_types_t::defer_literal,          "defer_literal"},
@@ -163,7 +160,6 @@ namespace basecode::syntax {
         {token_types_t::else_if_literal,        "else_if_literal"},
         {token_types_t::left_curly_brace,       "left_curly_brace"},
         {token_types_t::continue_literal,       "continue_literal"},
-        {token_types_t::constant_literal,       "constant_literal"},
         {token_types_t::right_curly_brace,      "right_curly_brace"},
         {token_types_t::character_literal,      "character_literal"},
         {token_types_t::namespace_literal,      "namespace_literal"},
@@ -371,11 +367,6 @@ namespace basecode::syntax {
         .value = "while"
     };
 
-    static inline token_t s_alias_literal = {
-        .type = token_types_t::alias_literal,
-        .value = "alias"
-    };
-
     static inline token_t s_union_literal = {
         .type = token_types_t::union_literal,
         .value = "union"
@@ -419,11 +410,6 @@ namespace basecode::syntax {
     static inline token_t s_percent_literal = {
         .type = token_types_t::percent,
         .value = "%"
-    };
-
-    static inline token_t s_constant_literal = {
-        .type = token_types_t::constant_literal,
-        .value = "constant"
     };
 
     static inline token_t s_continue_literal = {

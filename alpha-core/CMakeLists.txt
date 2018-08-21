@@ -97,7 +97,6 @@ add_library(
     compiler/elements/field.cpp compiler/elements/field.h
     compiler/elements/block.cpp compiler/elements/block.h
     compiler/elements/label.cpp compiler/elements/label.h
-    compiler/elements/alias.cpp compiler/elements/alias.h
     compiler/element_builder.cpp compiler/element_builder.h
     compiler/elements/import.cpp compiler/elements/import.h
     compiler/elements/module.cpp compiler/elements/module.h

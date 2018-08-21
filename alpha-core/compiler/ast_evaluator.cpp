@@ -13,7 +13,6 @@
 #include <compiler/elements/type.h>
 #include <compiler/elements/cast.h>
 #include <compiler/elements/label.h>
-#include <compiler/elements/alias.h>
 #include <compiler/elements/import.h>
 #include <compiler/elements/module.h>
 #include <compiler/elements/comment.h>
@@ -89,18 +88,15 @@ namespace basecode::compiler {
         {syntax::ast_node_types_t::enum_expression,         std::bind(&ast_evaluator::enum_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::binary_operator,         std::bind(&ast_evaluator::binary_operator, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::boolean_literal,         std::bind(&ast_evaluator::boolean_literal, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::map_constructor,         std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::else_expression,         std::bind(&ast_evaluator::else_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::while_statement,         std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::break_statement,         std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::with_expression,         std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::type_identifier,         std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::alias_expression,        std::bind(&ast_evaluator::alias_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::defer_expression,        std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::union_expression,        std::bind(&ast_evaluator::union_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::return_statement,        std::bind(&ast_evaluator::return_statement, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::symbol_reference,        std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::extend_statement,        std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::for_in_statement,        std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::switch_expression,       std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::import_expression,       std::bind(&ast_evaluator::import_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
@@ -110,7 +106,6 @@ namespace basecode::compiler {
         {syntax::ast_node_types_t::module_expression,       std::bind(&ast_evaluator::module_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::elseif_expression,       std::bind(&ast_evaluator::if_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::continue_statement,      std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::constant_expression,     std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::transmute_expression,    std::bind(&ast_evaluator::transmute_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::namespace_expression,    std::bind(&ast_evaluator::namespace_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::subscript_expression,    std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
@@ -131,7 +126,7 @@ namespace basecode::compiler {
         if (node == nullptr)
             return nullptr;
 
-        evaluator_context_t context(_session);
+        evaluator_context_t context;
         context.node = node;
         context.scope = _session.scope_manager().current_scope();
         context.default_block_type = default_block_type;
@@ -323,7 +318,7 @@ namespace basecode::compiler {
                     auto ns = dynamic_cast<namespace_element*>(expr);
                     scope = dynamic_cast<compiler::block*>(ns->expression());
                 } else {
-                    context.session.error(
+                    _session.error(
                         "P018",
                         "only a namespace is valid within a qualified name.",
                         node->lhs->location);
@@ -427,7 +422,7 @@ namespace basecode::compiler {
             if (init == nullptr)
                 init_expr->parent_element(new_identifier);
             else {
-                auto folded_expr = init_expr->fold(context.session);
+                auto folded_expr = init_expr->fold(_session);
                 if (folded_expr != nullptr) {
                     init_expr = folded_expr;
                     auto old_expr = init->expression();
@@ -439,7 +434,7 @@ namespace basecode::compiler {
 
         if (type_find_result.type == nullptr) {
             if (init_expr != nullptr) {
-                type_find_result.type = init_expr->infer_type(context.session);
+                type_find_result.type = init_expr->infer_type(_session);
                 new_identifier->type(type_find_result.type);
                 new_identifier->inferred_type(type_find_result.type != nullptr);
             }
@@ -467,7 +462,7 @@ namespace basecode::compiler {
         if (init == nullptr
         &&  init_expr == nullptr
         &&  new_identifier->type() == nullptr) {
-            context.session.error(
+            _session.error(
                 "P019",
                 fmt::format("unable to infer type: {}", new_identifier->symbol()->name()),
                 new_identifier->symbol()->location());
@@ -525,7 +520,7 @@ namespace basecode::compiler {
             expression);
         directive_element->location(context.node->location);
         apply_attributes(context, directive_element, context.node);
-        directive_element->evaluate(context.session);
+        directive_element->evaluate(_session);
         result.element = directive_element;
         return true;
     }
@@ -539,7 +534,7 @@ namespace basecode::compiler {
 
         auto module_block = builder.make_block(program.block(), element_type_t::module_block);
         auto module = builder.make_module(program.block(), module_block);
-        module->source_file(context.session.current_source_file());
+        module->source_file(_session.current_source_file());
         program.block()->blocks().push_back(module_block);
 
         scope_manager.push_scope(module_block);
@@ -577,17 +572,17 @@ namespace basecode::compiler {
         std::string path;
         if (expr->is_constant() && expr->as_string(path)) {
             boost::filesystem::path source_path(path);
-            auto current_source_file = context.session.current_source_file();
+            auto current_source_file = _session.current_source_file();
             if (current_source_file != nullptr
             &&  source_path.is_relative()) {
                 source_path = boost::filesystem::absolute(
                     source_path,
                     current_source_file->path().parent_path());
             }
-            auto source_file = context.session.add_source_file(source_path);
+            auto source_file = _session.add_source_file(source_path);
             auto module = _session.compile_module(source_file);
             if (module == nullptr) {
-                context.session.error(
+                _session.error(
                     "C021",
                     "unable to load module.",
                     context.node->rhs->location);
@@ -596,7 +591,7 @@ namespace basecode::compiler {
             reference->module(module);
             result.element = reference;
         } else {
-            context.session.error(
+            _session.error(
                 "C021",
                 "expected string literal or constant string variable.",
                 context.node->rhs->location);
@@ -655,7 +650,7 @@ namespace basecode::compiler {
                     result.element->location(context.node->location);
                     return true;
                 } else {
-                    context.session.error(
+                    _session.error(
                         "P041",
                         "invalid integer literal",
                         context.node->location);
@@ -671,7 +666,7 @@ namespace basecode::compiler {
                     result.element->location(context.node->location);
                     return true;
                 } else {
-                    context.session.error(
+                    _session.error(
                         "P041",
                         "invalid float literal",
                         context.node->location);
@@ -781,16 +776,6 @@ namespace basecode::compiler {
         return true;
     }
 
-    bool ast_evaluator::alias_expression(
-            evaluator_context_t& context,
-            evaluator_result_t& result) {
-        result.element = _session.builder().make_alias(
-            _session.scope_manager().current_scope(),
-            resolve_symbol_or_evaluate(context, context.node->lhs.get()));
-        result.element->location(context.node->location);
-        return true;
-    }
-
     bool ast_evaluator::return_statement(
             evaluator_context_t& context,
             evaluator_result_t& result) {
@@ -853,7 +838,7 @@ namespace basecode::compiler {
                 current_node.get(),
                 context.default_block_type);
             if (expr == nullptr) {
-                context.session.error(
+                _session.error(
                     "C024",
                     "invalid statement",
                     current_node->location);
@@ -917,7 +902,6 @@ namespace basecode::compiler {
         if (expr->element_type() == element_type_t::symbol) {
             type_find_result_t find_type_result {};
             scope_manager.find_identifier_type(
-                context.session,
                 find_type_result,
                 context.node->rhs->rhs);
             expr = add_identifier_to_scope(
@@ -951,7 +935,7 @@ namespace basecode::compiler {
             context,
             enum_type,
             context.node->rhs.get());
-        if (!enum_type->initialize(context.session))
+        if (!enum_type->initialize(_session))
             return false;
         result.element = enum_type;
 
@@ -973,7 +957,7 @@ namespace basecode::compiler {
             context,
             struct_type,
             context.node->rhs.get());
-        if (!struct_type->initialize(context.session))
+        if (!struct_type->initialize(_session))
             return false;
         result.element = struct_type;
         return true;
@@ -994,7 +978,7 @@ namespace basecode::compiler {
             context,
             union_type,
             context.node->rhs.get());
-        if (!union_type->initialize(context.session))
+        if (!union_type->initialize(_session))
             return false;
         result.element = union_type;
         return true;
@@ -1139,7 +1123,7 @@ namespace basecode::compiler {
         const auto& source_list = node->rhs;
 
         if (target_list->children.size() != source_list->children.size()) {
-            context.session.error(
+            _session.error(
                 "P027",
                 "the number of left-hand-side targets must match"
                 " the number of right-hand-side expressions.",
@@ -1169,7 +1153,6 @@ namespace basecode::compiler {
                 auto symbol = dynamic_cast<compiler::symbol_element*>(lhs);
                 type_find_result_t find_type_result {};
                 scope_manager.find_identifier_type(
-                    context.session,
                     find_type_result,
                     target_symbol->rhs,
                     scope);
@@ -1200,7 +1183,6 @@ namespace basecode::compiler {
 
         type_find_result_t type_find_result {};
         scope_manager.find_identifier_type(
-            context.session,
             type_find_result,
             node->rhs,
             scope);

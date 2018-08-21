@@ -29,7 +29,6 @@ namespace basecode::compiler {
     class field;
     class block;
     class label;
-    class alias;
     class import;
     class module;
     class element;

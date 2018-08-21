@@ -18,10 +18,6 @@
 namespace basecode::compiler {
 
     struct evaluator_context_t {
-        evaluator_context_t(compiler::session& session) : session(session) {
-        }
-
-        compiler::session& session;
         compiler::block* scope = nullptr;
         const syntax::ast_node_t* node = nullptr;
         element_type_t default_block_type = element_type_t::block;
@@ -167,10 +163,6 @@ namespace basecode::compiler {
             evaluator_result_t& result);
 
         bool cast_expression(
-            evaluator_context_t& context,
-            evaluator_result_t& result);
-
-        bool alias_expression(
             evaluator_context_t& context,
             evaluator_result_t& result);
 

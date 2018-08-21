@@ -143,14 +143,9 @@ namespace basecode::syntax {
         {'d', std::bind(&lexer::defer_literal, std::placeholders::_1, std::placeholders::_2)},
 
         // continue literal
-        // constant literal
         // cast literal
         {'c', std::bind(&lexer::continue_literal, std::placeholders::_1, std::placeholders::_2)},
-        {'c', std::bind(&lexer::constant_literal, std::placeholders::_1, std::placeholders::_2)},
         {'c', std::bind(&lexer::cast_literal, std::placeholders::_1, std::placeholders::_2)},
-
-        // alias literal
-        {'a', std::bind(&lexer::alias_literal, std::placeholders::_1, std::placeholders::_2)},
 
         // proc literal
         {'p', std::bind(&lexer::proc_literal, std::placeholders::_1, std::placeholders::_2)},
@@ -350,18 +345,6 @@ namespace basecode::syntax {
             if (!isalnum(ch)) {
                 rewind_one_char();
                 token = s_enum_literal;
-                return true;
-            }
-        }
-        return false;
-    }
-
-    bool lexer::alias_literal(token_t& token) {
-        if (match_literal("alias")) {
-            auto ch = read(false);
-            if (!isalnum(ch)) {
-                rewind_one_char();
-                token = s_alias_literal;
                 return true;
             }
         }
@@ -1063,18 +1046,6 @@ namespace basecode::syntax {
             if (ch == '\'') {
                 token.type = token_types_t::character_literal;
                 token.value = value;
-                return true;
-            }
-        }
-        return false;
-    }
-
-    bool lexer::constant_literal(token_t& token) {
-        if (match_literal("constant")) {
-            auto ch = read(false);
-            if (!isalnum(ch)) {
-                rewind_one_char();
-                token = s_constant_literal;
                 return true;
             }
         }

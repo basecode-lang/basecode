@@ -41,7 +41,6 @@ namespace basecode::compiler {
             compiler::block* scope = nullptr) const;
 
         bool find_identifier_type(
-            compiler::session& session,
             type_find_result_t& result,
             const syntax::ast_node_shared_ptr& type_node,
             compiler::block* parent_scope = nullptr);

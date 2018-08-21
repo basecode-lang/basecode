@@ -123,8 +123,6 @@ namespace basecode::syntax {
 
         bool while_literal(token_t& token);
 
-        bool alias_literal(token_t& token);
-
         bool union_literal(token_t& token);
 
         bool module_literal(token_t& token);
@@ -150,8 +148,6 @@ namespace basecode::syntax {
         bool left_curly_brace(token_t& token);
 
         bool continue_literal(token_t& token);
-
-        bool constant_literal(token_t& token);
 
         bool right_curly_brace(token_t& token);
 

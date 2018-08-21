@@ -11,7 +11,6 @@
 
 #include <fmt/format.h>
 #include <compiler/elements/cast.h>
-#include <compiler/elements/alias.h>
 #include <compiler/elements/block.h>
 #include <compiler/elements/field.h>
 #include <compiler/elements/label.h>
@@ -363,15 +362,6 @@ namespace basecode::compiler {
                 add_primary_edge(element, element->reference());
                 return fmt::format(
                     "{}[shape=record,label=\"proc_call\"{}];",
-                    node_vertex_name,
-                    style);
-            }
-            case element_type_t::alias_type: {
-                auto element = dynamic_cast<alias*>(node);
-                auto style = ", fillcolor=gainsboro, style=\"filled\"";
-                add_primary_edge(element, element->expression());
-                return fmt::format(
-                    "{}[shape=record,label=\"alias_type\"{}];",
                     node_vertex_name,
                     style);
             }

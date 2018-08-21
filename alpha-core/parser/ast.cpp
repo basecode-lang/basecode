@@ -215,12 +215,6 @@ namespace basecode::syntax {
         return node;
     }
 
-    ast_node_shared_ptr ast_builder::alias_node(token_t& token) {
-        auto node = std::make_shared<ast_node_t>();
-        configure_node(node, token, ast_node_types_t::alias_expression);
-        return node;
-    }
-
     ast_node_shared_ptr ast_builder::label_node(token_t& token) {
         auto node = std::make_shared<ast_node_t>();
         configure_node(node, token, ast_node_types_t::label);
@@ -318,12 +312,6 @@ namespace basecode::syntax {
     ast_node_shared_ptr ast_builder::continue_node(const token_t& token) {
         auto node = std::make_shared<ast_node_t>();
         configure_node(node, token, ast_node_types_t::continue_statement);
-        return node;
-    }
-
-    ast_node_shared_ptr ast_builder::constant_node(const token_t& token) {
-        auto node = std::make_shared<ast_node_t>();
-        configure_node(node, token, ast_node_types_t::constant_expression);
         return node;
     }
 

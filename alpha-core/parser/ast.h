@@ -54,8 +54,6 @@ namespace basecode::syntax {
         proc_expression,
         binary_operator,
         boolean_literal,
-        map_constructor,    // XXX: this is probably going away
-                            //      to be replaced by associate operator, e.g. "a" := 2
         else_expression,
         while_statement,
         break_statement,
@@ -64,10 +62,8 @@ namespace basecode::syntax {
         enum_expression,
         cast_expression,
         from_expression,
-        alias_expression,   // XXX: this dies
         symbol_reference,
         return_statement,
-        extend_statement,   // XXX: this dies
         for_in_statement,   // XXX: need to think about how for loops work
         union_expression,
         defer_expression,
@@ -80,7 +76,6 @@ namespace basecode::syntax {
         struct_expression,
         import_expression,
         continue_statement,
-        constant_expression,    // XXX: this dies
         namespace_expression,
         subscript_expression,
         return_argument_list,
@@ -120,18 +115,15 @@ namespace basecode::syntax {
         {ast_node_types_t::enum_expression, "enum_expression"},
         {ast_node_types_t::binary_operator, "binary_operator"},
         {ast_node_types_t::boolean_literal, "boolean_literal"},
-        {ast_node_types_t::map_constructor, "map_constructor"},
         {ast_node_types_t::else_expression, "else_expression"},
         {ast_node_types_t::while_statement, "while_statement"},
         {ast_node_types_t::break_statement, "break_statement"},
         {ast_node_types_t::with_expression, "with_expression"},
         {ast_node_types_t::type_identifier, "type_identifier"},
-        {ast_node_types_t::alias_expression, "alias_expression"},
         {ast_node_types_t::defer_expression, "defer_expression"},
         {ast_node_types_t::union_expression, "union_expression"},
         {ast_node_types_t::return_statement, "return_statement"},
         {ast_node_types_t::symbol_reference, "symbol_reference"},
-        {ast_node_types_t::extend_statement, "extend_statement"},
         {ast_node_types_t::for_in_statement, "for_in_statement"},
         {ast_node_types_t::switch_expression, "switch_statement"},
         {ast_node_types_t::import_expression, "import_expression"},
@@ -141,7 +133,6 @@ namespace basecode::syntax {
         {ast_node_types_t::module_expression, "module_expression"},
         {ast_node_types_t::elseif_expression, "elseif_expression"},
         {ast_node_types_t::continue_statement, "continue_statement"},
-        {ast_node_types_t::constant_expression, "constant_expression"},
         {ast_node_types_t::transmute_expression, "transmute_expression"},
         {ast_node_types_t::namespace_expression, "namespace_expression"},
         {ast_node_types_t::subscript_expression, "subscript_expression"},
@@ -203,11 +194,6 @@ namespace basecode::syntax {
         bool has_type_identifier() const {
             return rhs != nullptr
                 && rhs->type == ast_node_types_t::type_identifier;
-        }
-
-        bool is_constant_expression() const {
-            return lhs != nullptr
-                   && lhs->type == ast_node_types_t::constant_expression;
         }
 
         bool operator != (const ast_node_t& other) const {
@@ -287,8 +273,6 @@ namespace basecode::syntax {
 
         ast_node_shared_ptr label_node(token_t& token);
 
-        ast_node_shared_ptr alias_node(token_t& token);
-
         ast_node_shared_ptr return_argument_list_node();
 
         ast_node_shared_ptr return_node(token_t& token);
@@ -320,8 +304,6 @@ namespace basecode::syntax {
         ast_node_shared_ptr struct_node(const token_t& token);
 
         ast_node_shared_ptr import_node(const token_t& token);
-
-        ast_node_shared_ptr constant_node(const token_t& token);
 
         ast_node_shared_ptr continue_node(const token_t& token);
 

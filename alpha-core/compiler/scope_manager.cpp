@@ -14,7 +14,6 @@
 #include "elements/type.h"
 #include "elements/cast.h"
 #include "elements/label.h"
-#include "elements/alias.h"
 #include "elements/import.h"
 #include "elements/module.h"
 #include "elements/comment.h"
@@ -115,14 +114,13 @@ namespace basecode::compiler {
     }
 
     bool scope_manager::find_identifier_type(
-            compiler::session& session,
             type_find_result_t& result,
             const syntax::ast_node_shared_ptr& type_node,
             compiler::block* parent_scope) {
         if (type_node == nullptr)
             return false;
 
-        auto& builder = session.builder();
+        auto& builder = _session.builder();
         builder.make_qualified_symbol(
             result.type_name,
             type_node->lhs.get());
