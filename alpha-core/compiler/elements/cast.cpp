@@ -150,19 +150,10 @@ namespace basecode::compiler {
                 instruction_block->movez_reg_to_reg(*target_reg, temp_reg.reg);
                 break;
             }
-            case cast_mode_t::float_extend: {
-                instruction_block->convert(*target_reg, temp_reg.reg);
-                break;
-            }
-            case cast_mode_t::float_truncate: {
-                instruction_block->convert(*target_reg, temp_reg.reg);
-                break;
-            }
+            case cast_mode_t::float_extend:
+            case cast_mode_t::float_truncate:
+            case cast_mode_t::integer_to_float:
             case cast_mode_t::float_to_integer: {
-                instruction_block->convert(*target_reg, temp_reg.reg);
-                break;
-            }
-            case cast_mode_t::integer_to_float: {
                 instruction_block->convert(*target_reg, temp_reg.reg);
                 break;
             }

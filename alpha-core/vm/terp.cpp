@@ -1028,6 +1028,7 @@ namespace basecode::vm {
 
                 auto casted_value = value;
 
+                // XXX: how to handle NaN & Inf for integers
                 switch (target_value.type) {
                     case register_type_t::integer: {
                         casted_value.type = register_type_t::integer;
