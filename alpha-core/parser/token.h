@@ -90,6 +90,7 @@ namespace basecode::syntax {
         namespace_literal,
         transmute_literal,
         greater_than_equal,
+        constant_assignment,
         left_square_bracket,
         right_square_bracket,
     };
@@ -165,6 +166,7 @@ namespace basecode::syntax {
         {token_types_t::namespace_literal,      "namespace_literal"},
         {token_types_t::transmute_literal,      "transmute_literal"},
         {token_types_t::greater_than_equal,     "greater_than_equal"},
+        {token_types_t::constant_assignment,    "constant_assignment"},
         {token_types_t::left_square_bracket,    "left_square_bracket"},
         {token_types_t::right_square_bracket,   "right_square_bracket"},
     };
@@ -520,6 +522,11 @@ namespace basecode::syntax {
     static inline token_t s_right_curly_brace_literal = {
         .type = token_types_t::right_curly_brace,
         .value = "}"
+    };
+
+    static inline token_t s_constant_assignment_literal = {
+        .type = token_types_t::constant_assignment,
+        .value = "::="
     };
 
     static inline token_t s_left_square_bracket_literal = {

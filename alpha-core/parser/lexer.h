@@ -165,6 +165,8 @@ namespace basecode::syntax {
 
         bool logical_or_operator(token_t& token);
 
+        bool constant_assignment(token_t& token);
+
         bool logical_and_operator(token_t& token);
 
         bool right_square_bracket(token_t& token);

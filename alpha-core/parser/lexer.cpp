@@ -54,6 +54,7 @@ namespace basecode::syntax {
 
         // assignment, scope operator, colon
         {':', std::bind(&lexer::assignment, std::placeholders::_1, std::placeholders::_2)},
+        {':', std::bind(&lexer::constant_assignment, std::placeholders::_1, std::placeholders::_2)},
         {':', std::bind(&lexer::scope_operator, std::placeholders::_1, std::placeholders::_2)},
         {':', std::bind(&lexer::colon, std::placeholders::_1, std::placeholders::_2)},
 
@@ -619,13 +620,9 @@ namespace basecode::syntax {
     }
 
     bool lexer::assignment(token_t& token) {
-        auto ch = read();
-        if (ch == ':') {
-            ch = read();
-            if (ch == '=') {
-                token = s_assignment_literal;
-                return true;
-            }
+        if (match_literal(":=")) {
+            token = s_assignment_literal;
+            return true;
         }
         return false;
     }
@@ -1159,6 +1156,14 @@ namespace basecode::syntax {
                 token = s_transmute_literal;
                 return true;
             }
+        }
+        return false;
+    }
+
+    bool lexer::constant_assignment(token_t& token) {
+        if (match_literal("::=")) {
+            token = s_constant_assignment_literal;
+            return true;
         }
         return false;
     }

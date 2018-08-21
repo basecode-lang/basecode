@@ -76,6 +76,7 @@ namespace basecode::syntax {
         struct_expression,
         import_expression,
         continue_statement,
+        constant_assignment,
         namespace_expression,
         subscript_expression,
         return_argument_list,
@@ -133,6 +134,7 @@ namespace basecode::syntax {
         {ast_node_types_t::module_expression, "module_expression"},
         {ast_node_types_t::elseif_expression, "elseif_expression"},
         {ast_node_types_t::continue_statement, "continue_statement"},
+        {ast_node_types_t::constant_assignment, "constant_assignment"},
         {ast_node_types_t::transmute_expression, "transmute_expression"},
         {ast_node_types_t::namespace_expression, "namespace_expression"},
         {ast_node_types_t::subscript_expression, "subscript_expression"},
@@ -324,6 +326,8 @@ namespace basecode::syntax {
         ast_node_shared_ptr line_comment_node(const token_t& token);
 
         ast_node_shared_ptr block_comment_node(const token_t& token);
+
+        ast_node_shared_ptr constant_assignment_node(token_t& token);
 
         ast_node_shared_ptr number_literal_node(const token_t& token);
 
