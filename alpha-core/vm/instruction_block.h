@@ -262,6 +262,11 @@ namespace basecode::vm {
 
         void exit();
 
+        // convert
+        void convert(
+            const register_t& dest_reg,
+            const register_t& src_reg);
+
         // interrupts and traps
         void swi(uint8_t index);
 

@@ -131,6 +131,7 @@ namespace basecode::compiler {
         auto temp_reg = register_for(session, _expression);
         if (!temp_reg.valid)
             return false;
+        temp_reg.clean_up = true;
 
         assembler.push_target_register(temp_reg.reg);
         _expression->emit(session);
@@ -150,15 +151,19 @@ namespace basecode::compiler {
                 break;
             }
             case cast_mode_t::float_extend: {
+                instruction_block->convert(*target_reg, temp_reg.reg);
                 break;
             }
             case cast_mode_t::float_truncate: {
+                instruction_block->convert(*target_reg, temp_reg.reg);
                 break;
             }
             case cast_mode_t::float_to_integer: {
+                instruction_block->convert(*target_reg, temp_reg.reg);
                 break;
             }
             case cast_mode_t::integer_to_float: {
+                instruction_block->convert(*target_reg, temp_reg.reg);
                 break;
             }
             default: {

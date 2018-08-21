@@ -1017,6 +1017,86 @@ namespace basecode::vm {
 
                 break;
             }
+            case op_codes::convert: {
+                operand_value_t target_value;
+                if (!get_operand_value(r, inst, 0, target_value))
+                    return false;
+
+                operand_value_t value;
+                if (!get_operand_value(r, inst, 1, value))
+                    return false;
+
+                auto casted_value = value;
+
+                switch (target_value.type) {
+                    case register_type_t::integer: {
+                        casted_value.type = register_type_t::integer;
+                        switch (value.type) {
+                            case register_type_t::floating_point: {
+                                switch (inst.size) {
+                                    case op_sizes::dword:
+                                        casted_value.alias.u = static_cast<uint64_t>(value.alias.f);
+                                        break;
+                                    case op_sizes::qword:
+                                        casted_value.alias.u = static_cast<uint64_t>(value.alias.d);
+                                        break;
+                                    default:
+                                        // XXX: this is an error
+                                        break;
+                                }
+                                break;
+                            }
+                            default:
+                                break;
+                        }
+                        break;
+                    }
+                    case register_type_t::floating_point: {
+                        casted_value.type = register_type_t::floating_point;
+                        switch (value.type) {
+                            case register_type_t::integer: {
+                                switch (inst.size) {
+                                    case op_sizes::dword:
+                                        casted_value.alias.f = static_cast<float>(value.alias.u);
+                                        break;
+                                    case op_sizes::qword:
+                                        casted_value.alias.d = static_cast<double>(value.alias.u);
+                                        break;
+                                    default:
+                                        // XXX: this is an error
+                                        break;
+                                }
+                                break;
+                            }
+                            case register_type_t::floating_point: {
+                                switch (inst.size) {
+                                    case op_sizes::dword:
+                                        casted_value.alias.f = static_cast<float>(value.alias.d);
+                                        break;
+                                    case op_sizes::qword:
+                                        casted_value.alias.d = value.alias.f;
+                                        break;
+                                    default:
+                                        // XXX: this is an error
+                                        break;
+                                }
+                                break;
+                            }
+                            default:
+                                break;
+                        }
+                        break;
+                    }
+                    default: {
+                        break;
+                    }
+                }
+
+                if (!set_target_operand_value(r, inst, 0, casted_value))
+                    return false;
+
+                break;
+            }
             case op_codes::fill: {
                 operand_value_t value;
                 if (!get_operand_value(r, inst, 0, value))

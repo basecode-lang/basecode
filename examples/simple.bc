@@ -100,6 +100,9 @@ PI := 3.1415926535;
 
 int_pi: u32;
 int_pi := cast<u32>(PI);
+print("int_pi := %d\n", int_pi);
+
+pi_from_casted_int := cast<f32>(int_pi);
 
 // transmute
 //
