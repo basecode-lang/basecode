@@ -405,7 +405,7 @@ namespace basecode::vm {
                             offset += sizeof(uint32_t);
                         } else {
                             float* constant_value_ptr = reinterpret_cast<float*>(encoding_ptr + offset);
-                            operands[i].value.d = *constant_value_ptr;
+                            operands[i].value.f = *constant_value_ptr;
                             offset += sizeof(float);
                         }
                         break;
@@ -502,7 +502,7 @@ namespace basecode::vm {
                             encoding_size += sizeof(uint32_t);
                         } else {
                             float* constant_value_ptr = reinterpret_cast<float*>(encoding_ptr + offset);
-                            *constant_value_ptr = static_cast<float>(operands[i].value.d);
+                            *constant_value_ptr = operands[i].value.f;
                             offset += sizeof(float);
                             encoding_size += sizeof(float);
                         }
@@ -1305,10 +1305,17 @@ namespace basecode::vm {
                     return false;
 
                 operand_value_t new_value;
-                if (reg_value.type == register_type_t::floating_point)
-                    new_value.alias.d = reg_value.alias.d + 1.0;
-                else
+                if (reg_value.type == register_type_t::floating_point) {
+                    if (inst.size == op_sizes::dword)
+                        new_value.alias.f = reg_value.alias.f + 1.0;
+                    else
+                        new_value.alias.d = reg_value.alias.d + 1.0;
+                    new_value.type = register_type_t::floating_point;
+                }
+                else {
                     new_value.alias.u = reg_value.alias.u + 1;
+                    new_value.type = register_type_t::integer;
+                }
                 if (set_target_operand_value(r, inst, 0, reg_value))
                     return false;
 
@@ -1332,10 +1339,16 @@ namespace basecode::vm {
                     return false;
 
                 operand_value_t new_value;
-                if (reg_value.type == register_type_t::floating_point)
-                    new_value.alias.d = reg_value.alias.d - 1.0;
-                else
+                if (reg_value.type == register_type_t::floating_point) {
+                    if (inst.size == op_sizes::dword)
+                        new_value.alias.f = reg_value.alias.f - 1.0;
+                    else
+                        new_value.alias.d = reg_value.alias.d - 1.0;
+                    new_value.type = register_type_t::floating_point;
+                } else {
                     new_value.alias.u = reg_value.alias.u - 1;
+                    new_value.type = register_type_t::integer;
+                }
                 if (set_target_operand_value(r, inst, 0, reg_value))
                     return false;
 
@@ -1364,9 +1377,14 @@ namespace basecode::vm {
                 operand_value_t sum_result;
                 if (lhs_value.type == register_type_t::floating_point
                 &&  rhs_value.type == register_type_t::floating_point) {
-                    sum_result.alias.d = lhs_value.alias.d + rhs_value.alias.d;
+                    sum_result.type = register_type_t::floating_point;
+                    if (inst.size == op_sizes::dword)
+                        sum_result.alias.f = lhs_value.alias.f + rhs_value.alias.f;
+                    else
+                        sum_result.alias.d = lhs_value.alias.d + rhs_value.alias.d;
                 } else {
                     sum_result.alias.u = lhs_value.alias.u + rhs_value.alias.u;
+                    sum_result.type = register_type_t::integer;
                 }
                 if (!set_target_operand_value(r, inst, 0, sum_result))
                     return false;
@@ -1396,10 +1414,16 @@ namespace basecode::vm {
 
                 operand_value_t subtraction_result;
                 if (lhs_value.type == register_type_t::floating_point
-                &&  rhs_value.type == register_type_t::floating_point)
-                    subtraction_result.alias.d = lhs_value.alias.d - rhs_value.alias.d;
-                else
+                &&  rhs_value.type == register_type_t::floating_point) {
+                    if (inst.size == op_sizes::dword)
+                        subtraction_result.alias.f = lhs_value.alias.f - rhs_value.alias.f;
+                    else
+                        subtraction_result.alias.d = lhs_value.alias.d - rhs_value.alias.d;
+                    subtraction_result.type = register_type_t::floating_point;
+                } else {
                     subtraction_result.alias.u = lhs_value.alias.u - rhs_value.alias.u;
+                    subtraction_result.type = register_type_t::integer;
+                }
                 if (!set_target_operand_value(r, inst, 0, subtraction_result))
                     return false;
 
@@ -1427,10 +1451,17 @@ namespace basecode::vm {
 
                 operand_value_t product_result;
                 if (lhs_value.type == register_type_t::floating_point
-                &&  rhs_value.type == register_type_t::floating_point)
-                    product_result.alias.d = lhs_value.alias.d * rhs_value.alias.d;
-                else
+                &&  rhs_value.type == register_type_t::floating_point) {
+                    product_result.type = register_type_t::floating_point;
+                    if (inst.size == op_sizes::dword)
+                        product_result.alias.f = lhs_value.alias.f * rhs_value.alias.f;
+                    else
+                        product_result.alias.d = lhs_value.alias.d * rhs_value.alias.d;
+                }
+                else {
+                    product_result.type = register_type_t::integer;
                     product_result.alias.u = lhs_value.alias.u * rhs_value.alias.u;
+                }
                 if (!set_target_operand_value(r, inst, 0, product_result))
                     return false;
 
@@ -1457,10 +1488,18 @@ namespace basecode::vm {
                     return false;
 
                 operand_value_t result;
+                result.type = register_type_t::integer;
+
                 if (lhs_value.type == register_type_t::floating_point
                 &&  rhs_value.type == register_type_t::floating_point) {
-                    if (rhs_value.alias.d != 0) {
-                        result.alias.d = lhs_value.alias.d / rhs_value.alias.d;
+                    if (inst.size == op_sizes::dword) {
+                        if (rhs_value.alias.f != 0) {
+                            result.alias.f = lhs_value.alias.f / rhs_value.alias.f;
+                        }
+                    } else {
+                        if (rhs_value.alias.d != 0) {
+                            result.alias.d = lhs_value.alias.d / rhs_value.alias.d;
+                        }
                     }
                 } else {
                     if (rhs_value.alias.u != 0) {
@@ -1522,10 +1561,15 @@ namespace basecode::vm {
 
                 operand_value_t result;
                 if (value.type == register_type_t::floating_point) {
-                    result.alias.d = value.alias.d * -1.0;
+                    if (inst.size == op_sizes::dword)
+                        result.alias.f = value.alias.f * -1.0;
+                    else
+                        result.alias.d = value.alias.d * -1.0;
+                    result.type = register_type_t::floating_point;
                 } else {
                     int64_t negated_result = -static_cast<int64_t>(value.alias.u);
                     result.alias.u = static_cast<uint64_t>(negated_result);
+                    result.type = register_type_t::integer;
                 }
 
                 if (!set_target_operand_value(r, inst, 0, result))
@@ -2592,7 +2636,11 @@ namespace basecode::vm {
             auto reg_index = register_index(
                 static_cast<registers_t>(operand.value.r),
                 type);
-            set_zoned_value(_registers.r[reg_index], value.alias.u, inst.size);
+            set_zoned_value(
+                type,
+                _registers.r[reg_index],
+                value.alias.u,
+                inst.size);
         } else {
             r.add_message(
                 "B006",
@@ -2711,6 +2759,7 @@ namespace basecode::vm {
     }
 
     void terp::set_zoned_value(
+            register_type_t type,
             register_value_alias_t& reg,
             uint64_t value,
             op_sizes size) {

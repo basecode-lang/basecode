@@ -763,6 +763,7 @@ namespace basecode::vm {
             op_sizes size);
 
         void set_zoned_value(
+            register_type_t type,
             register_value_alias_t& reg,
             uint64_t value,
             op_sizes size);

@@ -484,7 +484,10 @@ namespace basecode::vm {
         move_op.operands[0].type = operand_encoding_t::flags::reg;
         move_op.operands[0].value.r = dest_reg.number;
         move_op.operands[1].type = operand_encoding_t::flags::constant;
-        move_op.operands[1].value.d = value;
+        if (size == op_sizes::dword)
+            move_op.operands[1].value.f = value;
+        else
+            move_op.operands[1].value.d = value;
         make_block_entry(move_op);
     }
 
