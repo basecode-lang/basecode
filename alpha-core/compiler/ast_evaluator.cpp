@@ -406,10 +406,26 @@ namespace basecode::compiler {
             if (init_expr != nullptr) {
                 if (init_expr->element_type() == element_type_t::symbol) {
                     auto init_symbol = dynamic_cast<compiler::symbol_element*>(init_expr);
-                    init_expr = builder.make_identifier_reference(
-                        scope,
-                        init_symbol->qualified_symbol(),
-                        nullptr);
+                    auto identifier = scope_manager.find_identifier(init_symbol->qualified_symbol());
+                    if (identifier != nullptr) {
+                        auto type = identifier->type();
+                        if (type != nullptr && type->is_type()) {
+                            if (symbol->is_constant()) {
+                                init_expr = identifier->type();
+                            } else {
+                                _session.error(
+                                    "P029",
+                                    "only constant assignment (::=) may alias types",
+                                    node->location);
+                                return nullptr;
+                            }
+                        }
+                    } else {
+                        init_expr = builder.make_identifier_reference(
+                            scope,
+                            init_symbol->qualified_symbol(),
+                            nullptr);
+                    }
                 }
                 if (init_expr->is_constant()) {
                     init = builder.make_initializer(scope, init_expr);

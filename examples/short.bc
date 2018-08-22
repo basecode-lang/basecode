@@ -1,16 +1,14 @@
 @library "alpha-core";
 #foreign print := proc(format: string, values: ...any) @alias "fmt_print";
 
-id_t ::= u32;
-
 PI ::= cast<f64>(3.1415926535);
 E  ::= cast<f64>(2.7182818284);
 
 E2 := ((E * cast<f64>(3)) + cast<f64>(1.105)) / cast<f64>(2.0);
 
+id_t ::= u8;
 foo: id_t;
-bar := 8;
-
+bar: s16 := 8;
 foo := cast<id_t>(bar);
 
 // XXX: this only works if i hard code the dcArgDouble right now

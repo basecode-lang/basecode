@@ -104,6 +104,7 @@ add_library(
     compiler/elements/element.cpp compiler/elements/element.h
     compiler/elements/program.cpp compiler/elements/program.h
     compiler/elements/any_type.cpp compiler/elements/any_type.h
+    compiler/elements/intrinsic.cpp compiler/elements/intrinsic.h
     compiler/elements/transmute.cpp compiler/elements/transmute.h
     compiler/elements/bool_type.cpp compiler/elements/bool_type.h
     compiler/elements/attribute.cpp compiler/elements/attribute.h

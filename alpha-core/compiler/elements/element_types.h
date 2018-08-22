@@ -35,6 +35,7 @@ namespace basecode::compiler {
     class program;
     class comment;
     class any_type;
+    class intrinsic;
     class bool_type;
     class directive;
     class attribute;
@@ -126,6 +127,7 @@ namespace basecode::compiler {
         any_type,
         return_e,
         import_e,
+        intrinsic,
         proc_type,
         directive,
         attribute,
@@ -178,6 +180,7 @@ namespace basecode::compiler {
         {element_type_t::any_type, "any_type"},
         {element_type_t::return_e, "return"},
         {element_type_t::import_e, "import"},
+        {element_type_t::intrinsic, "intrinsic"},
         {element_type_t::transmute, "transmute"},
         {element_type_t::proc_type, "proc_type"},
         {element_type_t::directive, "directive"},
