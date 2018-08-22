@@ -91,6 +91,7 @@ namespace basecode::compiler {
         top_level_stack.push(_program.block());
 
         initialize_core_types();
+        initialize_built_in_procedures();
 
         for (auto source_file : source_files()) {
             auto module = compile_module(source_file);
@@ -369,6 +370,11 @@ namespace basecode::compiler {
 
     const element_map& session::elements() const {
         return _elements;
+    }
+
+    void session::initialize_built_in_procedures() {
+        auto parent_scope = _scope_manager.current_scope();
+
     }
 
     common::source_file* session::pop_source_file() {

@@ -20,6 +20,8 @@ namespace basecode::compiler {
             compiler::session& session,
             compiler::block* parent_scope) {
         auto& builder = session.builder();
+        auto& scope_manager = session.scope_manager();
+
         for (const auto& props : s_type_properties) {
             auto type = builder.make_numeric_type(
                 parent_scope,
@@ -29,7 +31,7 @@ namespace basecode::compiler {
                 props.is_signed,
                 props.number_class);
             type->initialize(session);
-            session.scope_manager().add_type_to_scope(type);
+            scope_manager.add_type_to_scope(type);
         }
     }
 

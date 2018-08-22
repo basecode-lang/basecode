@@ -109,10 +109,6 @@ namespace basecode::compiler {
         return recursive_execute(root_block != nullptr ? root_block : _top_level_stack.top());
     }
 
-    void scope_manager::add_type_to_scope(compiler::type* type) {
-        current_scope()->types().add(type);
-    }
-
     bool scope_manager::find_identifier_type(
             type_find_result_t& result,
             const syntax::ast_node_shared_ptr& type_node,
@@ -192,6 +188,17 @@ namespace basecode::compiler {
                     return nullptr;
                 }));
         }
+    }
+
+    void scope_manager::add_type_to_scope(compiler::type* type) {
+        auto scope = current_scope();
+        scope->types().add(type);
+        auto identifier = _session.builder().make_identifier(
+            scope,
+            type->symbol(),
+            nullptr);
+        identifier->type(type);
+        scope->identifiers().add(identifier);
     }
 
     compiler::block* scope_manager::push_new_block(element_type_t type) {

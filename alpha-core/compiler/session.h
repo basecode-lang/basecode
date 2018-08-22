@@ -117,6 +117,8 @@ namespace basecode::compiler {
 
         bool resolve_unknown_identifiers();
 
+        void initialize_built_in_procedures();
+
         void write_code_dom_graph(const boost::filesystem::path& path);
 
     private:

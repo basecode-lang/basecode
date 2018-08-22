@@ -88,9 +88,12 @@ namespace basecode::compiler {
     // XXX: not handling multiple returns yet
     compiler::type* procedure_call::on_infer_type(const compiler::session& session) {
         auto identifier = _reference->identifier();
-        auto proc_type = dynamic_cast<procedure_type*>(identifier->type());
-        auto returns_list = proc_type->returns().as_list();
-        return returns_list.front()->identifier()->type();
+        if (identifier != nullptr) {
+            auto proc_type = dynamic_cast<procedure_type*>(identifier->type());
+            auto returns_list = proc_type->returns().as_list();
+            return returns_list.front()->identifier()->type();
+        }
+        return nullptr;
     }
 
 };

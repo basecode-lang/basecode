@@ -84,12 +84,14 @@ namespace basecode::compiler {
     compiler::type* element_builder::make_complete_type(
             type_find_result_t& result,
             compiler::block* parent_scope) {
-        result.type = _session.scope_manager().find_type(
+        auto& scope_manager = _session.scope_manager();
+
+        result.type = scope_manager.find_type(
             result.type_name,
             parent_scope);
         if (result.type != nullptr) {
             if (result.is_array) {
-                auto array_type = _session.scope_manager().find_array_type(
+                auto array_type = scope_manager.find_array_type(
                     result.type,
                     result.array_size,
                     parent_scope);
@@ -104,7 +106,7 @@ namespace basecode::compiler {
             }
 
             if (result.is_pointer) {
-                auto pointer_type = _session.scope_manager().find_pointer_type(
+                auto pointer_type = scope_manager.find_pointer_type(
                     result.type,
                     parent_scope);
                 if (pointer_type == nullptr) {
