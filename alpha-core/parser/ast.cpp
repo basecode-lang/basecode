@@ -110,6 +110,13 @@ namespace basecode::syntax {
         return node;
     }
 
+    ast_node_shared_ptr ast_builder::label_list_node() {
+        auto node = std::make_shared<ast_node_t>();
+        node->id = ++_id;
+        node->type = ast_node_types_t::label_list;
+        return node;
+    }
+
     ast_node_shared_ptr ast_builder::expression_node() {
         auto node = std::make_shared<ast_node_t>();
         node->id = ++_id;
@@ -147,13 +154,6 @@ namespace basecode::syntax {
         return node;
     }
 
-    ast_node_shared_ptr ast_builder::label_list_node() {
-        auto node = std::make_shared<ast_node_t>();
-        node->id = ++_id;
-        node->type = ast_node_types_t::label_list;
-        return node;
-    }
-
     ast_node_shared_ptr ast_builder::argument_list_node() {
         auto node = std::make_shared<ast_node_t>();
         node->id = ++_id;
@@ -175,64 +175,12 @@ namespace basecode::syntax {
         return node;
     }
 
-    ast_node_shared_ptr ast_builder::if_node(token_t& token) {
-        auto node = std::make_shared<ast_node_t>();
-        configure_node(node, token, ast_node_types_t::if_expression);
-        return node;
-    }
-
-    ast_node_shared_ptr ast_builder::else_node(token_t& token) {
-        auto node = std::make_shared<ast_node_t>();
-        configure_node(node, token, ast_node_types_t::else_expression);
-        return node;
-    }
-
-    ast_node_shared_ptr ast_builder::return_node(token_t& token) {
+    ast_node_shared_ptr ast_builder::constant_assignment_node() {
         auto node = std::make_shared<ast_node_t>();
         node->id = ++_id;
-        node->type = ast_node_types_t::return_statement;
-        node->rhs = return_argument_list_node();
-        node->location = token.location;
-        return node;
-    }
-
-    ast_node_shared_ptr ast_builder::for_in_node(token_t& token) {
-        auto node = std::make_shared<ast_node_t>();
-        configure_node(node, token, ast_node_types_t::for_in_statement);
-        node->location = token.location;
-        return node;
-    }
-
-    ast_node_shared_ptr ast_builder::cast_node(token_t& token) {
-        auto node = std::make_shared<ast_node_t>();
-        configure_node(node, token, ast_node_types_t::cast_expression);
-        return node;
-    }
-
-    ast_node_shared_ptr ast_builder::from_node(token_t& token) {
-        auto node = std::make_shared<ast_node_t>();
-        configure_node(node, token, ast_node_types_t::from_expression);
-        return node;
-    }
-
-    ast_node_shared_ptr ast_builder::label_node(token_t& token) {
-        auto node = std::make_shared<ast_node_t>();
-        configure_node(node, token, ast_node_types_t::label);
-        return node;
-    }
-
-    ast_node_shared_ptr ast_builder::return_argument_list_node() {
-        auto node = std::make_shared<ast_node_t>();
-        node->id = ++_id;
-        node->type = ast_node_types_t::return_argument_list;
-        return node;
-    }
-
-    ast_node_shared_ptr ast_builder::else_if_node(token_t& token) {
-        auto node = std::make_shared<ast_node_t>();
-        node->id = ++_id;
-        node->type = ast_node_types_t::else_expression;
-        node->location = token.location;
+        node->type = ast_node_types_t::constant_assignment;
+        node->lhs = assignment_target_list_node();
+        node->rhs = assignment_source_list_node();
         return node;
     }
 
@@ -240,6 +188,13 @@ namespace basecode::syntax {
         auto node = std::make_shared<ast_node_t>();
         node->id = ++_id;
         node->type = ast_node_types_t::array_subscript_list;
+        return node;
+    }
+
+    ast_node_shared_ptr ast_builder::return_argument_list_node() {
+        auto node = std::make_shared<ast_node_t>();
+        node->id = ++_id;
+        node->type = ast_node_types_t::return_argument_list;
         return node;
     }
 
@@ -261,15 +216,9 @@ namespace basecode::syntax {
         return node;
     }
 
-    ast_node_shared_ptr ast_builder::transmute_node(token_t& token) {
+    ast_node_shared_ptr ast_builder::if_node(const token_t& token) {
         auto node = std::make_shared<ast_node_t>();
-        configure_node(node, token, ast_node_types_t::transmute_expression);
-        return node;
-    }
-
-    ast_node_shared_ptr ast_builder::enum_node(const token_t& token) {
-        auto node = std::make_shared<ast_node_t>();
-        configure_node(node, token, ast_node_types_t::enum_expression);
+        configure_node(node, token, ast_node_types_t::if_expression);
         return node;
     }
 
@@ -279,9 +228,27 @@ namespace basecode::syntax {
         return node;
     }
 
-    ast_node_shared_ptr ast_builder::break_node(const token_t& token) {
+    ast_node_shared_ptr ast_builder::else_node(const token_t& token) {
         auto node = std::make_shared<ast_node_t>();
-        configure_node(node, token, ast_node_types_t::break_statement);
+        configure_node(node, token, ast_node_types_t::else_expression);
+        return node;
+    }
+
+    ast_node_shared_ptr ast_builder::cast_node(const token_t& token) {
+        auto node = std::make_shared<ast_node_t>();
+        configure_node(node, token, ast_node_types_t::cast_expression);
+        return node;
+    }
+
+    ast_node_shared_ptr ast_builder::from_node(const token_t& token) {
+        auto node = std::make_shared<ast_node_t>();
+        configure_node(node, token, ast_node_types_t::from_expression);
+        return node;
+    }
+
+    ast_node_shared_ptr ast_builder::enum_node(const token_t& token) {
+        auto node = std::make_shared<ast_node_t>();
+        configure_node(node, token, ast_node_types_t::enum_expression);
         return node;
     }
 
@@ -297,15 +264,51 @@ namespace basecode::syntax {
         return node;
     }
 
-    ast_node_shared_ptr ast_builder::struct_node(const token_t& token) {
+    ast_node_shared_ptr ast_builder::break_node(const token_t& token) {
         auto node = std::make_shared<ast_node_t>();
-        configure_node(node, token, ast_node_types_t::struct_expression);
+        configure_node(node, token, ast_node_types_t::break_statement);
+        return node;
+    }
+
+    ast_node_shared_ptr ast_builder::label_node(const token_t& token) {
+        auto node = std::make_shared<ast_node_t>();
+        configure_node(node, token, ast_node_types_t::label);
         return node;
     }
 
     ast_node_shared_ptr ast_builder::import_node(const token_t& token) {
         auto node = std::make_shared<ast_node_t>();
         configure_node(node, token, ast_node_types_t::import_expression);
+        return node;
+    }
+
+    ast_node_shared_ptr ast_builder::return_node(const token_t& token) {
+        auto node = std::make_shared<ast_node_t>();
+        node->id = ++_id;
+        node->type = ast_node_types_t::return_statement;
+        node->rhs = return_argument_list_node();
+        node->location = token.location;
+        return node;
+    }
+
+    ast_node_shared_ptr ast_builder::for_in_node(const token_t& token) {
+        auto node = std::make_shared<ast_node_t>();
+        configure_node(node, token, ast_node_types_t::for_in_statement);
+        node->location = token.location;
+        return node;
+    }
+
+    ast_node_shared_ptr ast_builder::struct_node(const token_t& token) {
+        auto node = std::make_shared<ast_node_t>();
+        configure_node(node, token, ast_node_types_t::struct_expression);
+        return node;
+    }
+
+    ast_node_shared_ptr ast_builder::else_if_node(const token_t& token) {
+        auto node = std::make_shared<ast_node_t>();
+        node->id = ++_id;
+        node->type = ast_node_types_t::else_expression;
+        node->location = token.location;
         return node;
     }
 
@@ -343,9 +346,9 @@ namespace basecode::syntax {
         return node;
     }
 
-    ast_node_shared_ptr ast_builder::module_expression_node(token_t& token) {
+    ast_node_shared_ptr ast_builder::transmute_node(const token_t& token) {
         auto node = std::make_shared<ast_node_t>();
-        configure_node(node, token, ast_node_types_t::module_expression);
+        configure_node(node, token, ast_node_types_t::transmute_expression);
         return node;
     }
 
@@ -364,15 +367,6 @@ namespace basecode::syntax {
     ast_node_shared_ptr ast_builder::line_comment_node(const token_t& token) {
         auto node = std::make_shared<ast_node_t>();
         configure_node(node, token, ast_node_types_t::line_comment);
-        return node;
-    }
-
-    ast_node_shared_ptr ast_builder::constant_assignment_node(token_t& token) {
-        auto node = std::make_shared<ast_node_t>();
-        node->id = ++_id;
-        node->type = ast_node_types_t::constant_assignment;
-        node->lhs = assignment_target_list_node();
-        node->rhs = assignment_source_list_node();
         return node;
     }
 
@@ -403,6 +397,12 @@ namespace basecode::syntax {
     ast_node_shared_ptr ast_builder::boolean_literal_node(const token_t& token) {
         auto node = std::make_shared<ast_node_t>();
         configure_node(node, token, ast_node_types_t::boolean_literal);
+        return node;
+    }
+
+    ast_node_shared_ptr ast_builder::module_expression_node(const token_t& token) {
+        auto node = std::make_shared<ast_node_t>();
+        configure_node(node, token, ast_node_types_t::module_expression);
         return node;
     }
 

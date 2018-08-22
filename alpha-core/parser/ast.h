@@ -265,37 +265,31 @@ namespace basecode::syntax {
 
         ast_node_shared_ptr type_identifier_node();
 
-        ast_node_shared_ptr if_node(token_t& token);
-
-        ast_node_shared_ptr else_node(token_t& token);
-
-        ast_node_shared_ptr from_node(token_t& token);
-
-        ast_node_shared_ptr cast_node(token_t& token);
-
-        ast_node_shared_ptr label_node(token_t& token);
+        ast_node_shared_ptr constant_assignment_node();
 
         ast_node_shared_ptr return_argument_list_node();
-
-        ast_node_shared_ptr return_node(token_t& token);
-
-        ast_node_shared_ptr for_in_node(token_t& token);
 
         ast_node_shared_ptr array_subscript_list_node();
 
         void push_scope(const ast_node_shared_ptr& node);
 
-        ast_node_shared_ptr else_if_node(token_t& token);
-
         ast_node_shared_ptr assignment_source_list_node();
 
         ast_node_shared_ptr assignment_target_list_node();
 
-        ast_node_shared_ptr transmute_node(token_t& token);
+        ast_node_shared_ptr if_node(const token_t& token);
+
+        ast_node_shared_ptr else_node(const token_t& token);
+
+        ast_node_shared_ptr from_node(const token_t& token);
+
+        ast_node_shared_ptr cast_node(const token_t& token);
 
         ast_node_shared_ptr with_node(const token_t& token);
 
         ast_node_shared_ptr enum_node(const token_t& token);
+
+        ast_node_shared_ptr label_node(const token_t& token);
 
         ast_node_shared_ptr break_node(const token_t& token);
 
@@ -307,6 +301,12 @@ namespace basecode::syntax {
 
         ast_node_shared_ptr import_node(const token_t& token);
 
+        ast_node_shared_ptr return_node(const token_t& token);
+
+        ast_node_shared_ptr for_in_node(const token_t& token);
+
+        ast_node_shared_ptr else_if_node(const token_t& token);
+
         ast_node_shared_ptr continue_node(const token_t& token);
 
         ast_node_shared_ptr proc_expression_node(token_t& token);
@@ -317,17 +317,15 @@ namespace basecode::syntax {
 
         ast_node_shared_ptr namespace_node(const token_t& token);
 
-        ast_node_shared_ptr symbol_part_node(const token_t& token);
+        ast_node_shared_ptr transmute_node(const token_t& token);
 
-        ast_node_shared_ptr module_expression_node(token_t& token);
+        ast_node_shared_ptr symbol_part_node(const token_t& token);
 
         ast_node_shared_ptr null_literal_node(const token_t& token);
 
         ast_node_shared_ptr line_comment_node(const token_t& token);
 
         ast_node_shared_ptr block_comment_node(const token_t& token);
-
-        ast_node_shared_ptr constant_assignment_node(token_t& token);
 
         ast_node_shared_ptr number_literal_node(const token_t& token);
 
@@ -338,6 +336,8 @@ namespace basecode::syntax {
         ast_node_shared_ptr boolean_literal_node(const token_t& token);
 
         ast_node_shared_ptr character_literal_node(const token_t& token);
+
+        ast_node_shared_ptr module_expression_node(const token_t& token);
 
     private:
         void configure_node(

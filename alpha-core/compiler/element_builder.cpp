@@ -136,8 +136,6 @@ namespace basecode::compiler {
             qualified_symbol.name,
             qualified_symbol.namespaces);
         symbol->location(node->location);
-        // XXX: this is where constant-ness was being handled
-        //symbol->constant(node->is_constant_expression());
         return symbol;
     }
 

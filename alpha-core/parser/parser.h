@@ -158,6 +158,21 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    class constant_assignment_infix_parser : public infix_parser {
+    public:
+        constant_assignment_infix_parser() = default;
+
+        ast_node_shared_ptr parse(
+            common::result& r,
+            parser* parser,
+            const ast_node_shared_ptr& lhs,
+            token_t& token) override;
+
+        precedence_t precedence() const override;
+    };
+
+    ///////////////////////////////////////////////////////////////////////////
+
     class assignment_infix_parser : public infix_parser {
     public:
         assignment_infix_parser() = default;
@@ -684,6 +699,7 @@ namespace basecode::syntax {
         static inline assignment_infix_parser s_assignment_infix_parser {};
         static inline block_comment_infix_parser s_block_comment_infix_parser {};
         static inline type_identifier_infix_parser s_type_identifier_infix_parser {};
+        static inline constant_assignment_infix_parser s_constant_assignment_infix_parser {};
         static inline binary_operator_infix_parser s_sum_binary_op_parser {precedence_t::sum, false};
         static inline binary_operator_infix_parser s_product_binary_op_parser {precedence_t::product, false};
         static inline binary_operator_infix_parser s_bitwise_binary_op_parser {precedence_t::bitwise, false};
@@ -719,6 +735,7 @@ namespace basecode::syntax {
             {token_types_t::greater_than,       &s_relational_binary_op_parser},
             {token_types_t::greater_than_equal, &s_relational_binary_op_parser},
             {token_types_t::colon,              &s_type_identifier_infix_parser},
+            {token_types_t::constant_assignment,&s_constant_assignment_infix_parser},
         };
 
         syntax::lexer _lexer;

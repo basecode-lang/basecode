@@ -48,6 +48,7 @@ namespace basecode::syntax {
     }
 
     ///////////////////////////////////////////////////////////////////////////
+
     static ast_node_shared_ptr create_module_expression_node(
             common::result& r,
             parser* parser,
@@ -281,6 +282,40 @@ namespace basecode::syntax {
             type_node->flags |= ast_node_t::flags_t::pointer;
 
         return type_node;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    static ast_node_shared_ptr create_assignment_node(
+            common::result& r,
+            ast_node_types_t type,
+            parser* parser,
+            const ast_node_shared_ptr& lhs,
+            token_t& token) {
+        ast_node_shared_ptr assignment_node;
+        if (type == ast_node_types_t::assignment)
+            assignment_node = parser->ast_builder()->assignment_node();
+        else if (type == ast_node_types_t::constant_assignment)
+            assignment_node = parser->ast_builder()->constant_assignment_node();
+
+        pairs_to_list(assignment_node->lhs, lhs);
+        auto rhs = parser->parse_expression(
+            r,
+            static_cast<uint8_t>(precedence_t::assignment));
+        if (rhs == nullptr) {
+            parser->error(
+                r,
+                "P019",
+                "assignment expects right-hand-side expression",
+                token.location);
+            return nullptr;
+        }
+        pairs_to_list(assignment_node->rhs, rhs);
+
+        assignment_node->location.start(lhs->location.start());
+        assignment_node->location.end(assignment_node->rhs->location.end());
+
+        return assignment_node;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -814,31 +849,36 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    ast_node_shared_ptr constant_assignment_infix_parser::parse(
+            common::result& r,
+            parser* parser,
+            const ast_node_shared_ptr& lhs,
+            token_t& token) {
+        return create_assignment_node(
+            r,
+            ast_node_types_t::constant_assignment,
+            parser,
+            lhs,
+            token);
+    }
+
+    precedence_t constant_assignment_infix_parser::precedence() const {
+        return precedence_t::assignment;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
     ast_node_shared_ptr assignment_infix_parser::parse(
             common::result& r,
             parser* parser,
             const ast_node_shared_ptr& lhs,
             token_t& token) {
-        auto assignment_node = parser->ast_builder()->assignment_node();
-
-        pairs_to_list(assignment_node->lhs, lhs);
-        auto rhs = parser->parse_expression(
+        return create_assignment_node(
             r,
-            static_cast<uint8_t>(precedence_t::assignment));
-        if (rhs == nullptr) {
-            parser->error(
-                r,
-                "P019",
-                "assignment expects right-hand-side expression",
-                token.location);
-            return nullptr;
-        }
-        pairs_to_list(assignment_node->rhs, rhs);
-
-        assignment_node->location.start(lhs->location.start());
-        assignment_node->location.end(assignment_node->rhs->location.end());
-
-        return assignment_node;
+            ast_node_types_t::assignment,
+            parser,
+            lhs,
+            token);
     }
 
     precedence_t assignment_infix_parser::precedence() const {

@@ -106,6 +106,7 @@ namespace basecode::compiler {
         {syntax::ast_node_types_t::module_expression,       std::bind(&ast_evaluator::module_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::elseif_expression,       std::bind(&ast_evaluator::if_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::continue_statement,      std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::constant_assignment,     std::bind(&ast_evaluator::assignment, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::transmute_expression,    std::bind(&ast_evaluator::transmute_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::namespace_expression,    std::bind(&ast_evaluator::namespace_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::subscript_expression,    std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
@@ -136,15 +137,15 @@ namespace basecode::compiler {
             evaluator_result_t result {};
             if (it->second(this, context, result)) {
                 return result.element;
-            } else {
-                _session.error(
-                    "P071",
-                    fmt::format(
-                        "ast node evaluation failed: id = {}, type = {}",
-                        node->id,
-                        syntax::ast_node_type_name(node->type)),
-                    node->location);
             }
+        } else {
+            _session.error(
+                "P071",
+                fmt::format(
+                    "ast node evaluation failed: id = {}, type = {}",
+                    node->id,
+                    syntax::ast_node_type_name(node->type)),
+                node->location);
         }
 
         return nullptr;
@@ -469,6 +470,15 @@ namespace basecode::compiler {
             return nullptr;
         } else {
             if (init == nullptr && init_expr != nullptr) {
+                // XXX: revisit after type-widening in binary/unary operators is fixed
+                //if (symbol->is_constant()) {
+                //    _session.error(
+                //        "P028",
+                //        "constant variables require constant expressions.",
+                //        symbol->location());
+                //    return nullptr;
+                //}
+
                 auto assign_bin_op = builder.make_binary_operator(
                     scope,
                     operator_type_t::assignment,
@@ -1082,7 +1092,8 @@ namespace basecode::compiler {
             evaluator_result_t& result) {
         element_list_t list {};
         auto success = add_assignments_to_scope(context, context.node, list, nullptr);
-        result.element = list.front();
+        if (success)
+            result.element = list.front();
         return success;
     }
 
@@ -1122,6 +1133,8 @@ namespace basecode::compiler {
         const auto& target_list = node->lhs;
         const auto& source_list = node->rhs;
 
+        const bool is_constant_assignment = node->type == syntax::ast_node_types_t::constant_assignment;
+
         if (target_list->children.size() != source_list->children.size()) {
             _session.error(
                 "P027",
@@ -1138,6 +1151,14 @@ namespace basecode::compiler {
             builder.make_qualified_symbol(qualified_symbol, target_symbol.get());
             auto existing_identifier = scope_manager.find_identifier(qualified_symbol, scope);
             if (existing_identifier != nullptr) {
+                if (existing_identifier->symbol()->is_constant()) {
+                    _session.error(
+                        "P028",
+                        "constant variables cannot be modified.",
+                        target_symbol->location);
+                    return false;
+                }
+
                 auto rhs = evaluate_in_scope(context, source_list->children[i].get(), scope);
                 if (rhs == nullptr)
                     return false;
@@ -1151,6 +1172,8 @@ namespace basecode::compiler {
             } else {
                 auto lhs = evaluate_in_scope(context, target_symbol.get(), scope);
                 auto symbol = dynamic_cast<compiler::symbol_element*>(lhs);
+                symbol->constant(is_constant_assignment);
+
                 type_find_result_t find_type_result {};
                 scope_manager.find_identifier_type(
                     find_type_result,
