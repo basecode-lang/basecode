@@ -29,6 +29,10 @@ namespace basecode::compiler {
 
         virtual ~element();
 
+        bool infer_type(
+            const compiler::session& session,
+            type_inference_result_t& result);
+
         bool is_type() const;
 
         block* parent_scope();
@@ -80,12 +84,10 @@ namespace basecode::compiler {
 
         void location(const common::source_location& location);
 
-        compiler::type* infer_type(const compiler::session& session);
-
     protected:
-        virtual bool on_emit(compiler::session& session);
-
-        virtual element* on_fold(compiler::session& session);
+        virtual bool on_infer_type(
+            const compiler::session& session,
+            type_inference_result_t& result);
 
         element_register_t register_for(
             compiler::session& session,
@@ -97,13 +99,15 @@ namespace basecode::compiler {
 
         virtual bool on_as_float(double& value) const;
 
+        virtual bool on_emit(compiler::session& session);
+
         virtual bool on_as_integer(uint64_t& value) const;
 
         virtual bool on_as_string(std::string& value) const;
 
         virtual void on_owned_elements(element_list_t& list);
 
-        virtual compiler::type* on_infer_type(const compiler::session& program);
+        virtual element* on_fold(compiler::session& session);
 
     private:
         common::id_t _id;

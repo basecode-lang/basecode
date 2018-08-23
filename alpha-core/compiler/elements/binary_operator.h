@@ -31,6 +31,10 @@ namespace basecode::compiler {
         element* rhs();
 
     protected:
+        bool on_infer_type(
+            const compiler::session& session,
+            type_inference_result_t& result) override;
+
         void emit_arithmetic_operator(
             compiler::session& session,
             vm::instruction_block* instruction_block);
@@ -46,8 +50,6 @@ namespace basecode::compiler {
         void on_owned_elements(element_list_t& list) override;
 
         element* on_fold(compiler::session& session) override;
-
-        compiler::type* on_infer_type(const compiler::session& session) override;
 
     private:
         element* _lhs = nullptr;

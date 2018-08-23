@@ -399,8 +399,10 @@ namespace basecode::compiler {
             source_node = node->rhs->children[source_index];
         }
 
+        auto is_type_alias = false;
         auto init_expr = (compiler::element*) nullptr;
         auto init = (compiler::initializer*) nullptr;
+
         if (node != nullptr) {
             init_expr = evaluate_in_scope(context, source_node.get(), scope);
             if (init_expr != nullptr) {
@@ -412,6 +414,7 @@ namespace basecode::compiler {
                         if (type != nullptr && type->is_type()) {
                             if (symbol->is_constant()) {
                                 init_expr = identifier->type();
+                                is_type_alias = true;
                             } else {
                                 _session.error(
                                     "P029",
@@ -434,6 +437,8 @@ namespace basecode::compiler {
         }
 
         auto new_identifier = builder.make_identifier(scope, symbol, init);
+        new_identifier->type_alias(is_type_alias);
+
         apply_attributes(context, new_identifier, node);
         if (init_expr != nullptr) {
             if (init == nullptr)
@@ -451,7 +456,9 @@ namespace basecode::compiler {
 
         if (type_find_result.type == nullptr) {
             if (init_expr != nullptr) {
-                type_find_result.type = init_expr->infer_type(_session);
+                type_inference_result_t inference_result;
+                init_expr->infer_type(_session, inference_result);
+                type_find_result.type = inference_result.type;
                 new_identifier->type(type_find_result.type);
                 new_identifier->inferred_type(type_find_result.type != nullptr);
             }

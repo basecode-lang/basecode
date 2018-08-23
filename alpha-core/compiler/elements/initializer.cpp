@@ -23,6 +23,14 @@ namespace basecode::compiler {
                              _expr(expr) {
     }
 
+    bool initializer::on_infer_type(
+            const compiler::session& session,
+            type_inference_result_t& result) {
+        if (_expr == nullptr)
+            return false;
+        return _expr->infer_type(session, result);
+    }
+
     element* initializer::expression() {
         return _expr;
     }
@@ -74,12 +82,6 @@ namespace basecode::compiler {
     void initializer::on_owned_elements(element_list_t& list) {
         if (_expr != nullptr)
             list.emplace_back(_expr);
-    }
-
-    compiler::type* initializer::on_infer_type(const compiler::session& session) {
-        if (_expr != nullptr)
-            return _expr->infer_type(session);
-        return nullptr;
     }
 
 };

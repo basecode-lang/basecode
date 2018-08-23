@@ -26,7 +26,11 @@ namespace basecode::compiler {
 
         compiler::type* type();
 
+        bool type_alias() const;
+
         bool inferred_type() const;
+
+        void type_alias(bool value);
 
         void type(compiler::type* t);
 
@@ -43,6 +47,10 @@ namespace basecode::compiler {
         void initializer(compiler::initializer* value);
 
     protected:
+        bool on_infer_type(
+            const compiler::session& session,
+            type_inference_result_t& result) override;
+
         bool on_is_constant() const override;
 
         bool on_as_bool(bool& value) const override;
@@ -57,9 +65,8 @@ namespace basecode::compiler {
 
         void on_owned_elements(element_list_t& list) override;
 
-        compiler::type* on_infer_type(const compiler::session& session) override;
-
     private:
+        bool _type_alias = false;
         bool _inferred_type = false;
         compiler::type* _type = nullptr;
         compiler::symbol_element* _symbol;

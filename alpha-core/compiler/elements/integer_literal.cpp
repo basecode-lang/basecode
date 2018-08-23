@@ -25,6 +25,15 @@ namespace basecode::compiler {
                               _value(value) {
     }
 
+    bool integer_literal::on_infer_type(
+            const compiler::session& session,
+            type_inference_result_t& result) {
+        result.type = session.scope_manager().find_type({
+            .name = numeric_type::narrow_to_value(_value)
+        });
+        return result.type != nullptr;
+    }
+
     bool integer_literal::is_signed() const {
         return common::is_sign_bit_set(_value);
     }
@@ -47,12 +56,6 @@ namespace basecode::compiler {
     bool integer_literal::on_as_integer(uint64_t& value) const {
         value = _value;
         return true;
-    }
-
-    compiler::type* integer_literal::on_infer_type(const compiler::session& session) {
-        return session.scope_manager().find_type({
-            .name = numeric_type::narrow_to_value(_value)
-        });
     }
 
 };

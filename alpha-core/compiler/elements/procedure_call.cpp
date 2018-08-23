@@ -31,6 +31,20 @@ namespace basecode::compiler {
                                          _reference(reference) {
     }
 
+    // XXX: not handling multiple returns yet
+    bool procedure_call::on_infer_type(
+            const compiler::session& session,
+            type_inference_result_t& result) {
+        auto identifier = _reference->identifier();
+        if (identifier != nullptr) {
+            auto proc_type = dynamic_cast<procedure_type*>(identifier->type());
+            auto returns_list = proc_type->returns().as_list();
+            result.type = returns_list.front()->identifier()->type();
+            return result.type != nullptr;
+        }
+        return false;
+    }
+
     bool procedure_call::on_emit(compiler::session& session) {
         session.emit_context().indent = 4;
         defer({
@@ -83,17 +97,6 @@ namespace basecode::compiler {
 
     void procedure_call::reference(compiler::identifier_reference* value) {
         _reference = value;
-    }
-
-    // XXX: not handling multiple returns yet
-    compiler::type* procedure_call::on_infer_type(const compiler::session& session) {
-        auto identifier = _reference->identifier();
-        if (identifier != nullptr) {
-            auto proc_type = dynamic_cast<procedure_type*>(identifier->type());
-            auto returns_list = proc_type->returns().as_list();
-            return returns_list.front()->identifier()->type();
-        }
-        return nullptr;
     }
 
 };

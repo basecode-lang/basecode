@@ -21,6 +21,14 @@ namespace basecode::compiler {
                                                _identifier(identifier) {
     }
 
+    bool field::on_infer_type(
+            const compiler::session& session,
+            type_inference_result_t& result) {
+        if (_identifier == nullptr)
+            return false;
+        return _identifier->infer_type(session, result);
+    }
+
     compiler::identifier* field::identifier() {
         return _identifier;
     }

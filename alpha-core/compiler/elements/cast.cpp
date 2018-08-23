@@ -38,6 +38,13 @@ namespace basecode::compiler {
                              _type(type) {
     }
 
+    bool cast::on_infer_type(
+            const compiler::session& session,
+            type_inference_result_t& result) {
+        result.type = _type;
+        return true;
+    }
+
     element* cast::expression() {
         return _expression;
     }
@@ -76,9 +83,11 @@ namespace basecode::compiler {
         });
 
         cast_mode_t mode;
-        auto source_type = _expression->infer_type(session);
-        auto source_number_class = source_type->number_class();
-        auto source_size = source_type->size_in_bytes();
+        type_inference_result_t source_type;
+        _expression->infer_type(session, source_type);
+
+        auto source_number_class = source_type.type->number_class();
+        auto source_size = source_type.type->size_in_bytes();
         auto target_number_class = _type->number_class();
         auto target_size = _type->size_in_bytes();
 
@@ -86,7 +95,7 @@ namespace basecode::compiler {
             session.error(
                 this,
                 "C073",
-                fmt::format("cannot cast from type: {}", source_type->symbol()->name()),
+                fmt::format("cannot cast from type: {}", source_type.name()),
                 _expression->location());
             return false;
         } else if (target_number_class == type_number_class_t::none) {
@@ -109,7 +118,7 @@ namespace basecode::compiler {
             } else if (source_size > target_size) {
                 mode = cast_mode_t::integer_truncate;
             } else {
-                auto source_numeric_type = dynamic_cast<compiler::numeric_type*>(source_type);
+                auto source_numeric_type = dynamic_cast<compiler::numeric_type*>(source_type.type);
                 if (source_numeric_type->is_signed()) {
                     mode = cast_mode_t::integer_sign_extend;
                 } else {
@@ -171,7 +180,7 @@ namespace basecode::compiler {
             fmt::format(
                 "cast<{}> from type {}",
                 _type->symbol()->name(),
-                source_type->symbol()->name()),
+                source_type.name()),
             session.emit_context().indent);
 
         return true;
@@ -184,10 +193,6 @@ namespace basecode::compiler {
 
     void cast::type_location(const common::source_location& loc) {
         _type_location = loc;
-    }
-
-    compiler::type* cast::on_infer_type(const compiler::session& session) {
-        return _type;
     }
 
 };

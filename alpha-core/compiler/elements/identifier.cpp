@@ -27,27 +27,19 @@ namespace basecode::compiler {
                                                   _initializer(initializer) {
     }
 
-    bool identifier::on_emit(compiler::session& session) {
-        if (_type->element_type() == element_type_t::namespace_type)
-            return true;
-
-        auto instruction_block = session.assembler().current_block();
-
-        vm::stack_frame_entry_t* frame_entry = nullptr;
-        auto stack_frame = instruction_block->stack_frame();
-        if (stack_frame != nullptr)
-            frame_entry = stack_frame->find_up(_symbol->name());
-
-        session.emit_context().allocate_variable(
-            _symbol->name(),
-            _type,
-            _usage,
-            frame_entry);
+    bool identifier::on_infer_type(
+            const compiler::session& session,
+            type_inference_result_t& result) {
+        result.type = _type;
         return true;
     }
 
     compiler::type* identifier::type() {
         return _type;
+    }
+
+    bool identifier::type_alias() const {
+        return _type_alias;
     }
 
     bool identifier::inferred_type() const {
@@ -56,6 +48,10 @@ namespace basecode::compiler {
 
     bool identifier::on_is_constant() const {
         return _symbol->is_constant();
+    }
+
+    void identifier::type_alias(bool value) {
+        _type_alias = value;
     }
 
     void identifier::type(compiler::type* t) {
@@ -94,6 +90,25 @@ namespace basecode::compiler {
         return _symbol;
     }
 
+    bool identifier::on_emit(compiler::session& session) {
+        if (_type->element_type() == element_type_t::namespace_type)
+            return true;
+
+        auto instruction_block = session.assembler().current_block();
+
+        vm::stack_frame_entry_t* frame_entry = nullptr;
+        auto stack_frame = instruction_block->stack_frame();
+        if (stack_frame != nullptr)
+            frame_entry = stack_frame->find_up(_symbol->name());
+
+        session.emit_context().allocate_variable(
+            _symbol->name(),
+            _type,
+            _usage,
+            frame_entry);
+        return true;
+    }
+
     bool identifier::on_as_integer(uint64_t& value) const {
         if (_initializer == nullptr)
             return false;
@@ -115,10 +130,6 @@ namespace basecode::compiler {
 
     void identifier::initializer(compiler::initializer* value) {
         _initializer = value;
-    }
-
-    compiler::type* identifier::on_infer_type(const compiler::session& session) {
-        return _type;
     }
 
 };

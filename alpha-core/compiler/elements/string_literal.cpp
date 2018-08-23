@@ -23,6 +23,17 @@ namespace basecode::compiler {
                                         _value(value) {
     }
 
+    bool string_literal::on_infer_type(
+            const compiler::session& session,
+            type_inference_result_t& result) {
+        result.type = session.scope_manager().find_type({.name = "string"});
+        return result.type != nullptr;
+    }
+
+    bool string_literal::on_is_constant() const {
+        return true;
+    }
+
     std::string string_literal::escaped_value() const {
         std::stringstream stream;
         bool escaped = false;
@@ -51,10 +62,6 @@ namespace basecode::compiler {
         return stream.str();
     }
 
-    bool string_literal::on_is_constant() const {
-        return true;
-    }
-
     bool string_literal::on_emit(compiler::session& session) {
 //        auto instruction_block = context.assembler->current_block();
 //        auto target_reg = instruction_block->current_target_register();
@@ -68,10 +75,6 @@ namespace basecode::compiler {
     bool string_literal::on_as_string(std::string& value) const {
         value = _value;
         return true;
-    }
-
-    compiler::type* string_literal::on_infer_type(const compiler::session& session) {
-        return session.scope_manager().find_type({.name = "string"});
     }
 
 }

@@ -165,14 +165,16 @@ namespace basecode::compiler {
             auto init = var->initializer();
             if (init == nullptr)
                 continue;
-            auto rhs_type = init->infer_type(*this);
-            if (!var->type()->type_check(rhs_type)) {
+
+            type_inference_result_t rhs_type;
+            init->infer_type(*this, rhs_type);
+            if (!var->type()->type_check(rhs_type.type)) {
                 error(
                     init,
                     "C051",
                     fmt::format(
                         "type mismatch: cannot assign {} to {}.",
-                        rhs_type->symbol()->name(),
+                        rhs_type.name(),
                         var->type()->symbol()->name()),
                     var->location());
             }
@@ -186,14 +188,15 @@ namespace basecode::compiler {
 
             // XXX: revisit this for destructuring/multiple assignment
             auto var = dynamic_cast<compiler::identifier*>(binary_op->lhs());
-            auto rhs_type = binary_op->rhs()->infer_type(*this);
-            if (!var->type()->type_check(rhs_type)) {
+            type_inference_result_t rhs_type;
+            binary_op->rhs()->infer_type(*this, rhs_type);
+            if (!var->type()->type_check(rhs_type.type)) {
                 error(
                     binary_op,
                     "C051",
                     fmt::format(
                         "type mismatch: cannot assign {} to {}.",
-                        rhs_type->symbol()->name(),
+                        rhs_type.name(),
                         var->type()->symbol()->name()),
                     binary_op->rhs()->location());
             }
@@ -260,16 +263,19 @@ namespace basecode::compiler {
             auto var = *it;
 
             if (var->type() != nullptr
-                &&  var->type()->element_type() != element_type_t::unknown_type) {
+            &&  var->type()->element_type() != element_type_t::unknown_type) {
                 it = identifiers.erase(it);
                 continue;
             }
 
             compiler::type* identifier_type = nullptr;
+            type_inference_result_t inference_result;
+
             if (var->is_parent_element(element_type_t::binary_operator)) {
                 auto binary_operator = dynamic_cast<compiler::binary_operator*>(var->parent_element());
                 if (binary_operator->operator_type() == operator_type_t::assignment) {
-                    identifier_type = binary_operator->rhs()->infer_type(*this);
+                    binary_operator->rhs()->infer_type(*this, inference_result);
+                    identifier_type = inference_result.type;
                     var->type(identifier_type);
                 }
             } else {
@@ -290,10 +296,10 @@ namespace basecode::compiler {
                         _elements.remove(unknown_type->id());
                     }
                 } else {
-                    identifier_type = var
-                        ->initializer()
+                    var->initializer()
                         ->expression()
-                        ->infer_type(*this);
+                        ->infer_type(*this, inference_result);
+                    identifier_type = inference_result.type;
                     var->type(identifier_type);
                 }
             }

@@ -31,6 +31,10 @@ namespace basecode::compiler {
         compiler::identifier* identifier();
 
     protected:
+        bool on_infer_type(
+            const compiler::session& session,
+            type_inference_result_t& result) override;
+
         void on_owned_elements(element_list_t& list) override;
 
     private:

@@ -60,4 +60,11 @@ namespace basecode::compiler {
         std::unordered_map<std::string, std::string> definitions {};
     };
 
+    struct type_inference_result_t {
+        std::string name() const;
+
+        compiler::type* type = nullptr;
+        compiler::identifier* identifier = nullptr;
+    };
+
 }

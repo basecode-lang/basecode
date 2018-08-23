@@ -9,7 +9,7 @@ E2 := ((E * cast<f64>(3)) + cast<f64>(1.105)) / cast<f64>(2.0);
 id_t ::= u8;
 foo: id_t;
 bar: s16 := 8;
-foo := cast<id_t>(bar);
+foo := bar;
 
 // XXX: this only works if i hard code the dcArgDouble right now
 //      need to get type information + any working

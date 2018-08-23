@@ -426,7 +426,11 @@ namespace basecode::compiler {
             list.emplace_back(_rhs);
     }
 
-    compiler::type* binary_operator::on_infer_type(const compiler::session& session) {
+    bool binary_operator::on_infer_type(
+            const compiler::session& session,
+            type_inference_result_t& result) {
+        auto& scope_manager = session.scope_manager();
+
         switch (operator_type()) {
             case operator_type_t::add:
             case operator_type_t::modulo:
@@ -441,10 +445,7 @@ namespace basecode::compiler {
             case operator_type_t::shift_right:
             case operator_type_t::rotate_left:
             case operator_type_t::rotate_right: {
-                auto lhs_type = _lhs->infer_type(session);
-                //auto rhs_type = _rhs->infer_type(session);
-                // XXX: need to type-check and possibly widen here
-                return lhs_type;
+                return _lhs->infer_type(session, result);
             }
             case operator_type_t::equals:
             case operator_type_t::less_than:
@@ -454,10 +455,10 @@ namespace basecode::compiler {
             case operator_type_t::greater_than:
             case operator_type_t::less_than_or_equal:
             case operator_type_t::greater_than_or_equal: {
-                return session.scope_manager().find_type({.name = "bool"});
+                result.type = scope_manager.find_type({.name = "bool"});
             }
             default:
-                return nullptr;
+                return false;
         }
     }
 

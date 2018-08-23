@@ -22,6 +22,13 @@ namespace basecode::compiler {
                                        _expression(expr) {
     }
 
+    bool module_reference::on_infer_type(
+            const compiler::session& session,
+            type_inference_result_t& result) {
+        result.type = session.scope_manager().find_type({.name = "module"});
+        return result.type != nullptr;
+    }
+
     bool module_reference::on_is_constant() const {
         return true;
     }
@@ -41,10 +48,6 @@ namespace basecode::compiler {
     void module_reference::on_owned_elements(element_list_t& list) {
         if (_expression != nullptr)
             list.emplace_back(_expression);
-    }
-
-    compiler::type* module_reference::on_infer_type(const compiler::session& session) {
-        return session.scope_manager().find_type({.name = "module"});
     }
 
 };

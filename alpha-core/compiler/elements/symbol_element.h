@@ -42,9 +42,11 @@ namespace basecode::compiler {
         bool operator== (const qualified_symbol_t& other) const;
 
     protected:
-        bool on_is_constant() const override;
+        bool on_infer_type(
+            const compiler::session& session,
+            type_inference_result_t& result) override;
 
-        compiler::type* on_infer_type(const compiler::session& session) override;
+        bool on_is_constant() const override;
 
     private:
         std::string _name {};

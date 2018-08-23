@@ -30,6 +30,12 @@ namespace basecode::compiler {
                                          _reference(reference) {
     }
 
+    bool intrinsic::on_infer_type(
+            const compiler::session& session,
+            type_inference_result_t& result) {
+        return false;
+    }
+
     compiler::argument_list* intrinsic::arguments() {
         return _arguments;
     }
@@ -45,10 +51,6 @@ namespace basecode::compiler {
 
     void intrinsic::reference(compiler::identifier_reference* value) {
         _reference = value;
-    }
-
-    compiler::type* intrinsic::on_infer_type(const compiler::session& session) {
-        return nullptr;
     }
 
 };

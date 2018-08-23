@@ -25,6 +25,34 @@ namespace basecode::compiler {
                             _rhs(rhs) {
     }
 
+    element* unary_operator::rhs() {
+        return _rhs;
+    }
+
+    // XXX: this requires lots of future love
+    bool unary_operator::on_infer_type(
+            const compiler::session& session,
+            type_inference_result_t& result) {
+        auto& scope_manager = session.scope_manager();
+        switch (operator_type()) {
+            case operator_type_t::negate:
+            case operator_type_t::binary_not: {
+                result.type = scope_manager.find_type({.name = "u64"});
+                return result.type != nullptr;
+            }
+            case operator_type_t::logical_not: {
+                result.type = scope_manager.find_type({.name = "bool"});
+                return result.type != nullptr;
+            }
+            default:
+                return false;
+        }
+    }
+
+    bool unary_operator::on_is_constant() const {
+        return _rhs != nullptr && _rhs->is_constant();
+    }
+
     bool unary_operator::on_emit(compiler::session& session) {
         auto instruction_block = session.assembler().current_block();
         auto target_reg = session.assembler().current_target_register();
@@ -60,14 +88,6 @@ namespace basecode::compiler {
         return true;
     }
 
-    element* unary_operator::rhs() {
-        return _rhs;
-    }
-
-    bool unary_operator::on_is_constant() const {
-        return _rhs != nullptr && _rhs->is_constant();
-    }
-
     element* unary_operator::on_fold(compiler::session& session) {
         switch (operator_type()) {
             case operator_type_t::negate: {
@@ -89,22 +109,6 @@ namespace basecode::compiler {
     void unary_operator::on_owned_elements(element_list_t& list) {
         if (_rhs != nullptr)
             list.emplace_back(_rhs);
-    }
-
-    // XXX: this requires lots of future love
-    compiler::type* unary_operator::on_infer_type(const compiler::session& session) {
-        auto& scope_manager = session.scope_manager();
-        switch (operator_type()) {
-            case operator_type_t::negate:
-            case operator_type_t::binary_not: {
-                return scope_manager.find_type({.name = "u64"});
-            }
-            case operator_type_t::logical_not: {
-                return scope_manager.find_type({.name = "bool"});
-            }
-            default:
-                return nullptr;
-        }
     }
 
 };

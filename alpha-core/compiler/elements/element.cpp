@@ -37,8 +37,20 @@ namespace basecode::compiler {
     element::~element() {
     }
 
-    block* element::parent_scope() {
-        return _parent_scope;
+    bool element::infer_type(
+            const compiler::session& session,
+            type_inference_result_t& result) {
+        if (is_type()) {
+            result.type = dynamic_cast<compiler::type*>(this);
+            return true;
+        }
+        return on_infer_type(session, result);
+    }
+
+    bool element::on_infer_type(
+            const compiler::session& session,
+            type_inference_result_t& result) {
+        return false;
     }
 
     bool element::is_type() const {
@@ -60,6 +72,10 @@ namespace basecode::compiler {
             default:
                 return false;
         }
+    }
+
+    block* element::parent_scope() {
+        return _parent_scope;
     }
 
     common::id_t element::id() const {
@@ -93,10 +109,6 @@ namespace basecode::compiler {
             _id);
     }
 
-    bool element::as_bool(bool& value) const {
-        return on_as_bool(value);
-    }
-
     element_register_t element::register_for(
             compiler::session& session,
             element* e) {
@@ -122,12 +134,13 @@ namespace basecode::compiler {
                 result.reg = result.var->value_reg.reg;
             }
         } else {
-            auto type = e->infer_type(session);
+            type_inference_result_t inference_result;
+            e->infer_type(session, inference_result);
 
             vm::register_t reg;
-            reg.size = vm::op_size_for_byte_size(type->size_in_bytes());
+            reg.size = vm::op_size_for_byte_size(inference_result.type->size_in_bytes());
 
-            if (type->number_class() == type_number_class_t::floating_point)
+            if (inference_result.type->number_class() == type_number_class_t::floating_point)
                 reg.type = vm::register_type_t::floating_point;
             else
                 reg.type = vm::register_type_t::integer;
@@ -146,6 +159,10 @@ namespace basecode::compiler {
         }
 
         return result;
+    }
+
+    bool element::as_bool(bool& value) const {
+        return on_as_bool(value);
     }
 
     bool element::on_as_bool(bool& value) const {
@@ -237,16 +254,6 @@ namespace basecode::compiler {
 
     void element::location(const common::source_location& location) {
         _location = location;
-    }
-
-    compiler::type* element::infer_type(const compiler::session& session) {
-        if (is_type())
-            return dynamic_cast<compiler::type*>(this);
-        return on_infer_type(session);
-    }
-
-    compiler::type* element::on_infer_type(const compiler::session& session) {
-        return nullptr;
     }
 
 };

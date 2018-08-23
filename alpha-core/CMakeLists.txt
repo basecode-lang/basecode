@@ -86,7 +86,6 @@ add_library(
     vm/instruction_block.cpp vm/instruction_block.h
     vm/register_allocator.cpp vm/register_allocator.h
 
-    compiler/compiler_types.h
     compiler/session.cpp compiler/session.h
     compiler/element_map.cpp compiler/element_map.h
     compiler/emit_context.cpp compiler/emit_context.h
@@ -94,6 +93,7 @@ add_library(
     compiler/elements/cast.cpp compiler/elements/cast.h
     compiler/scope_manager.cpp compiler/scope_manager.h
     compiler/ast_evaluator.cpp compiler/ast_evaluator.h
+    compiler/compiler_types.cpp compiler/compiler_types.h
     compiler/elements/field.cpp compiler/elements/field.h
     compiler/elements/block.cpp compiler/elements/block.h
     compiler/elements/label.cpp compiler/elements/label.h

@@ -26,6 +26,13 @@ namespace basecode::compiler {
                              _type(type) {
     }
 
+    bool transmute::on_infer_type(
+            const compiler::session& session,
+            type_inference_result_t& result) {
+        result.type = _type;
+        return result.type != nullptr;
+    }
+
     element* transmute::expression() {
         return _expression;
     }
@@ -38,12 +45,13 @@ namespace basecode::compiler {
         if (_expression == nullptr)
             return true;
 
-        auto source_type = _expression->infer_type(session);
-        if (source_type->number_class() == type_number_class_t::none) {
+        type_inference_result_t source_type;
+        _expression->infer_type(session, source_type);
+        if (source_type.type->number_class() == type_number_class_t::none) {
             session.error(
                 this,
                 "C073",
-                fmt::format("cannot transmute from type: {}", source_type->symbol()->name()),
+                fmt::format("cannot transmute from type: {}", source_type.name()),
                 _expression->location());
             return false;
         } else if (_type->number_class() == type_number_class_t::none) {
@@ -82,10 +90,6 @@ namespace basecode::compiler {
 
     void transmute::type_location(const common::source_location& loc) {
         _type_location = loc;
-    }
-
-    compiler::type* transmute::on_infer_type(const compiler::session& session) {
-        return _type;
     }
 
 };
