@@ -15,6 +15,7 @@
 #include <boost/filesystem.hpp>
 #include "attribute.h"
 #include "directive.h"
+#include "raw_block.h"
 #include "initializer.h"
 #include "string_literal.h"
 #include "procedure_type.h"
@@ -23,13 +24,15 @@
 namespace basecode::compiler {
 
     std::unordered_map<std::string, directive::directive_callable> directive::s_execute_handlers = {
-        {"run",     std::bind(&directive::on_execute_run,     std::placeholders::_1, std::placeholders::_2)},
-        {"foreign", std::bind(&directive::on_execute_foreign, std::placeholders::_1, std::placeholders::_2)},
+        {"run",      std::bind(&directive::on_execute_run,     std::placeholders::_1, std::placeholders::_2)},
+        {"foreign",  std::bind(&directive::on_execute_foreign, std::placeholders::_1, std::placeholders::_2)},
+        {"assembly", std::bind(&directive::on_execute_assembly, std::placeholders::_1, std::placeholders::_2)},
     };
 
     std::unordered_map<std::string, directive::directive_callable> directive::s_evaluate_handlers = {
-        {"run",     std::bind(&directive::on_evaluate_run,     std::placeholders::_1, std::placeholders::_2)},
-        {"foreign", std::bind(&directive::on_evaluate_foreign, std::placeholders::_1, std::placeholders::_2)},
+        {"run",      std::bind(&directive::on_evaluate_run,     std::placeholders::_1, std::placeholders::_2)},
+        {"foreign",  std::bind(&directive::on_evaluate_foreign, std::placeholders::_1, std::placeholders::_2)},
+        {"assembly", std::bind(&directive::on_evaluate_assembly, std::placeholders::_1, std::placeholders::_2)},
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -53,21 +56,49 @@ namespace basecode::compiler {
 
     bool directive::execute(compiler::session& session) {
         auto it = s_execute_handlers.find(_name);
-        if (it == s_execute_handlers.end())
-            return true;
+        if (it == s_execute_handlers.end()) {
+            session.error(
+                "P044",
+                fmt::format("unknown directive: {}", _name),
+                location());
+            return false;
+        }
         return it->second(this, session);
     }
 
     bool directive::evaluate(compiler::session& session) {
         auto it = s_evaluate_handlers.find(_name);
-        if (it == s_evaluate_handlers.end())
-            return true;
+        if (it == s_evaluate_handlers.end()) {
+            session.error(
+                "P044",
+                fmt::format("unknown directive: {}", _name),
+                location());
+            return false;
+        }
         return it->second(this, session);
     }
 
     void directive::on_owned_elements(element_list_t& list) {
         if (_expression != nullptr)
             list.emplace_back(_expression);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    // assembly directive
+
+    bool directive::on_execute_assembly(compiler::session& session) {
+        auto raw_block = dynamic_cast<compiler::raw_block*>(_expression);
+
+        std::stringstream stream;
+        stream << raw_block->value();
+
+        return session.assembler().assemble_from_source(session.result(), stream);
+    }
+
+    bool directive::on_evaluate_assembly(compiler::session& session) {
+        // XXX: assert that _expression is a raw_block
+        return true;
     }
 
     ///////////////////////////////////////////////////////////////////////////

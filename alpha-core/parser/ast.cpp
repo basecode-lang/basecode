@@ -318,6 +318,12 @@ namespace basecode::syntax {
         return node;
     }
 
+    ast_node_shared_ptr ast_builder::raw_block_node(const token_t& token) {
+        auto node = std::make_shared<ast_node_t>();
+        configure_node(node, token, ast_node_types_t::raw_block);
+        return node;
+    }
+
     ast_node_shared_ptr ast_builder::namespace_node(const token_t& token) {
         auto node = std::make_shared<ast_node_t>();
         configure_node(node, token, ast_node_types_t::namespace_expression);

@@ -887,6 +887,15 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    ast_node_shared_ptr raw_block_prefix_parser::parse(
+            common::result& r,
+            parser* parser,
+            token_t& token) {
+        return parser->ast_builder()->raw_block_node(token);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
     ast_node_shared_ptr directive_prefix_parser::parse(
             common::result& r,
             parser* parser,

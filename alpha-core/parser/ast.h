@@ -32,6 +32,7 @@ namespace basecode::syntax {
         label,
         symbol,
         module,
+        raw_block,
         proc_call,
         statement,
         attribute,
@@ -91,6 +92,7 @@ namespace basecode::syntax {
         {ast_node_types_t::label, "label"},
         {ast_node_types_t::module, "module"},
         {ast_node_types_t::symbol,  "symbol"},
+        {ast_node_types_t::raw_block, "raw_block"},
         {ast_node_types_t::type_list, "type_list"},
         {ast_node_types_t::proc_call, "proc_call"},
         {ast_node_types_t::statement, "statement"},
@@ -318,6 +320,8 @@ namespace basecode::syntax {
         ast_node_shared_ptr namespace_node(const token_t& token);
 
         ast_node_shared_ptr transmute_node(const token_t& token);
+
+        ast_node_shared_ptr raw_block_node(const token_t& token);
 
         ast_node_shared_ptr symbol_part_node(const token_t& token);
 

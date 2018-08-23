@@ -106,6 +106,10 @@ namespace basecode::compiler {
             evaluator_context_t& context,
             evaluator_result_t& result);
 
+        bool raw_block(
+            evaluator_context_t& context,
+            evaluator_result_t& result);
+
         bool attribute(
             evaluator_context_t& context,
             evaluator_result_t& result);

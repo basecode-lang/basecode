@@ -1,0 +1,22 @@
+bar := 8;
+
+foo: u8;
+foo := 8;
+
+
+PI ::= cast<f64>(3.1415926535);
+
+
+id_t ::= u32;
+
+vector3 ::= struct {
+    x: f32;
+    y: f32;
+    z: f32;
+};
+
+vector3 ::= 3;
+
+
+
+// does my source formatter have problems at the edges?

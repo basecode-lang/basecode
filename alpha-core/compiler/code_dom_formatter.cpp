@@ -20,6 +20,7 @@
 #include <compiler/elements/comment.h>
 #include <common/graphviz_formatter.h>
 #include <compiler/elements/any_type.h>
+#include <compiler/elements/raw_block.h>
 #include <compiler/elements/transmute.h>
 #include <compiler/elements/bool_type.h>
 #include <compiler/elements/type_info.h>
@@ -115,6 +116,15 @@ namespace basecode::compiler {
                     "{}[shape=record,label=\"module|{}\"{}];",
                     node_vertex_name,
                     element->source_file()->path().string(),
+                    style);
+            }
+            case element_type_t::raw_block: {
+                auto element = dynamic_cast<raw_block*>(node);
+                auto style = ", fillcolor=grey, style=\"filled\"";
+                return fmt::format(
+                    "{}[shape=record,label=\"raw_block|{}\"{}];",
+                    node_vertex_name,
+                    element->value(),
                     style);
             }
             case element_type_t::module_reference: {

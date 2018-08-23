@@ -40,6 +40,7 @@ namespace basecode::syntax {
         attribute,
         directive,
         less_than,
+        raw_block,
         not_equals,
         left_paren,
         semi_colon,
@@ -113,6 +114,7 @@ namespace basecode::syntax {
         {token_types_t::question,               "question"},
         {token_types_t::asterisk,               "asterisk"},
         {token_types_t::less_than,              "less_than"},
+        {token_types_t::raw_block,              "raw_block"},
         {token_types_t::ampersand,              "ampersand"},
         {token_types_t::attribute,              "attribute"},
         {token_types_t::directive,              "directive"},
@@ -217,6 +219,11 @@ namespace basecode::syntax {
     static inline token_t s_invalid = {
         .type = token_types_t::invalid,
         .value = ""
+    };
+
+    static inline token_t s_raw_block = {
+        .type = token_types_t::raw_block,
+        .value = "{{"
     };
 
     static inline token_t s_end_of_file = {

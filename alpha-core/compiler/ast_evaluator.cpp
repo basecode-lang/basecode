@@ -18,6 +18,7 @@
 #include <compiler/elements/comment.h>
 #include <compiler/elements/program.h>
 #include <compiler/elements/any_type.h>
+#include <compiler/elements/raw_block.h>
 #include <compiler/elements/bool_type.h>
 #include <compiler/elements/attribute.h>
 #include <compiler/elements/directive.h>
@@ -68,6 +69,7 @@ namespace basecode::compiler {
         {syntax::ast_node_types_t::statement,               std::bind(&ast_evaluator::statement, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::attribute,               std::bind(&ast_evaluator::attribute, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::directive,               std::bind(&ast_evaluator::directive, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::raw_block,               std::bind(&ast_evaluator::raw_block, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::assignment,              std::bind(&ast_evaluator::assignment, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::expression,              std::bind(&ast_evaluator::expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::label_list,              std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
@@ -522,6 +524,15 @@ namespace basecode::compiler {
             evaluator_context_t& context,
             evaluator_result_t& result) {
         result.element = _session.builder().make_symbol_from_node(context.node);
+        return true;
+    }
+
+    bool ast_evaluator::raw_block(
+            evaluator_context_t& context,
+            evaluator_result_t& result) {
+        result.element = _session.builder().make_raw_block(
+            _session.scope_manager().current_scope(),
+            context.node->token.value);
         return true;
     }
 

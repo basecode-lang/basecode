@@ -84,7 +84,8 @@ namespace basecode::syntax {
         {'|', std::bind(&lexer::logical_or_operator, std::placeholders::_1, std::placeholders::_2)},
         {'|', std::bind(&lexer::pipe_literal, std::placeholders::_1, std::placeholders::_2)},
 
-        // braces
+        // raw block/braces
+        {'{', std::bind(&lexer::raw_block, std::placeholders::_1, std::placeholders::_2)},
         {'{', std::bind(&lexer::left_curly_brace, std::placeholders::_1, std::placeholders::_2)},
         {'}', std::bind(&lexer::right_curly_brace, std::placeholders::_1, std::placeholders::_2)},
 
@@ -575,6 +576,51 @@ namespace basecode::syntax {
         auto ch = read();
         if (ch == '*') {
             token = s_asterisk_literal;
+            return true;
+        }
+        return false;
+    }
+
+    bool lexer::raw_block(token_t& token) {
+        if (match_literal("{{")) {
+            auto block_count = 1;
+            token = s_raw_block;
+
+            std::stringstream stream;
+            while (true) {
+                auto ch = read(false);
+                if (ch == common::rune_eof) {
+                    token = s_end_of_file;
+                    set_token_location(token);
+                    return true;
+                }
+
+                if (ch == '{') {
+                    ch = read(false);
+                    if (ch == '{') {
+                        block_count++;
+                        continue;
+                    } else {
+                        rewind_one_char();
+                        ch = read(false);
+                    }
+                } else if (ch == '}') {
+                    ch = read(false);
+                    if (ch == '}') {
+                        block_count--;
+                        if (block_count == 0)
+                            break;
+                        continue;
+                    } else {
+                        rewind_one_char();
+                        ch = read(false);
+                    }
+                }
+                // XXX: requires utf8 fix
+                stream << static_cast<char>(ch);
+            }
+
+            token.value = stream.str();
             return true;
         }
         return false;

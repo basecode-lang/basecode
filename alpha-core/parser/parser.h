@@ -530,6 +530,18 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    class raw_block_prefix_parser : public prefix_parser {
+    public:
+        raw_block_prefix_parser() = default;
+
+        ast_node_shared_ptr parse(
+            common::result& r,
+            parser* parser,
+            token_t& token) override;
+    };
+
+    ///////////////////////////////////////////////////////////////////////////
+
     class directive_prefix_parser : public prefix_parser {
     public:
         directive_prefix_parser() = default;
@@ -636,6 +648,7 @@ namespace basecode::syntax {
         static inline for_in_prefix_parser s_for_in_prefix_parser {};
         static inline return_prefix_parser s_return_prefix_parser {};
         static inline symbol_prefix_parser s_symbol_prefix_parser {};
+        static inline raw_block_prefix_parser s_raw_block_prefix_parser {};
         static inline namespace_prefix_parser s_namespace_prefix_parser {};
         static inline attribute_prefix_parser s_attribute_prefix_parser {};
         static inline directive_prefix_parser s_directive_prefix_parser {};
@@ -671,6 +684,7 @@ namespace basecode::syntax {
             {token_types_t::return_literal,      &s_return_prefix_parser},
             {token_types_t::identifier,          &s_symbol_prefix_parser},
             {token_types_t::module_literal,      &s_module_prefix_parser},
+            {token_types_t::raw_block,           &s_raw_block_prefix_parser},
             {token_types_t::namespace_literal,   &s_namespace_prefix_parser},
             {token_types_t::attribute,           &s_attribute_prefix_parser},
             {token_types_t::directive,           &s_directive_prefix_parser},

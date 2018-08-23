@@ -67,6 +67,8 @@ namespace basecode::syntax {
 
         bool directive(token_t& token);
 
+        bool raw_block(token_t& token);
+
         bool in_literal(token_t& token);
 
         bool if_literal(token_t& token);

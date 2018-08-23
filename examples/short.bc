@@ -11,6 +11,16 @@ foo: id_t;
 bar: s16 := 8;
 foo := cast<id_t>(bar);
 
+speed_t    ::= f32;
+distance_t ::= f32;
+
+// XXX: assignment is confused about aliased types
+//      isn't folding into segment initialization in this case
+s: speed_t := 1.25;
+d: distance_t := 5.12;
+
+delta := s * d;
+
 // XXX: this only works if i hard code the dcArgDouble right now
 //      need to get type information + any working
 //print("PI := %f\n", PI);

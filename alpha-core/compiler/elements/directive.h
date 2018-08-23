@@ -42,6 +42,13 @@ namespace basecode::compiler {
 
     private:
         // --------------------
+        // assembly directive
+        // --------------------
+        bool on_execute_assembly(compiler::session& session);
+
+        bool on_evaluate_assembly(compiler::session& session);
+
+        // --------------------
         // run directive
         // --------------------
         bool on_execute_run(compiler::session& session);

@@ -1,0 +1,6 @@
+#assembly {{
+start:
+    move.b  i0, #$ff
+    move.b  i1, #$7f
+    sub.b   i2, i0, i1
+}};

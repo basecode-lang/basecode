@@ -18,6 +18,7 @@
 #include <compiler/elements/comment.h>
 #include <compiler/elements/program.h>
 #include <compiler/elements/any_type.h>
+#include <compiler/elements/raw_block.h>
 #include <compiler/elements/bool_type.h>
 #include <compiler/elements/attribute.h>
 #include <compiler/elements/directive.h>
@@ -645,6 +646,17 @@ namespace basecode::compiler {
             value);
         _session.elements().add(comment);
         return comment;
+    }
+
+    raw_block* element_builder::make_raw_block(
+            compiler::block* parent_scope,
+            const std::string& value) {
+        auto raw_block = new compiler::raw_block(
+            _session.scope_manager().current_module(),
+            parent_scope,
+            value);
+        _session.elements().add(raw_block);
+        return raw_block;
     }
 
     compiler::directive* element_builder::make_directive(

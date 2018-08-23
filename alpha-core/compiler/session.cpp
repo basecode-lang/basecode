@@ -102,8 +102,14 @@ namespace basecode::compiler {
         auto directives = _elements.find_by_type(element_type_t::directive);
         for (auto directive : directives) {
             auto directive_element = dynamic_cast<compiler::directive*>(directive);
-            if (!directive_element->execute(*this))
+            if (!directive_element->execute(*this)) {
+                error(
+                    directive_element,
+                    "P044",
+                    fmt::format("directive failed to execute: {}", directive_element->name()),
+                    directive->location());
                 return false;
+            }
         }
 
         if (!resolve_unknown_identifiers())

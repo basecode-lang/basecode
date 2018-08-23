@@ -56,6 +56,10 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             compiler::block* scope);
 
+        raw_block* make_raw_block(
+            compiler::block* parent_scope,
+            const std::string& value);
+
         comment* make_comment(
             compiler::block* parent_scope,
             comment_type_t type,
