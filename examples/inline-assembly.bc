@@ -1,6 +1,7 @@
 #assembly {{
+; this is the first comment
 start:
-    move.b  i0, #$ff
-    move.b  i1, #$7f
+    move.b  i0, #$ff    ; after
+    move.b  i1, #$7f    ; after 2
     sub.b   i2, i0, i1
 }};

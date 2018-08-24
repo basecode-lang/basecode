@@ -89,16 +89,30 @@ namespace basecode::compiler {
 
     bool directive::on_execute_assembly(compiler::session& session) {
         auto raw_block = dynamic_cast<compiler::raw_block*>(_expression);
+        if (raw_block == nullptr) {
+            return false;
+        }
 
-        std::stringstream stream;
-        stream << raw_block->value();
+        common::source_file source_file;
+        if (!source_file.load(session.result(), raw_block->value()))
+            return false;
 
-        return session.assembler().assemble_from_source(session.result(), stream);
+        return session.assembler().assemble_from_source(
+            session.result(),
+            source_file);
     }
 
     bool directive::on_evaluate_assembly(compiler::session& session) {
-        // XXX: assert that _expression is a raw_block
-        return true;
+        auto is_valid = _expression != nullptr
+            && _expression->element_type() == element_type_t::raw_block;
+        if (!is_valid) {
+            session.error(
+                this,
+                "P004",
+                "#assembly expects a valid raw block expression.",
+                location());
+        }
+        return is_valid;
     }
 
     ///////////////////////////////////////////////////////////////////////////

@@ -16,6 +16,7 @@
 #include <unordered_map>
 #include <common/result.h>
 #include <common/id_pool.h>
+#include <common/source_file.h>
 #include "terp.h"
 #include "segment.h"
 #include "assembly_listing.h"
@@ -41,7 +42,7 @@ namespace basecode::vm {
 
         bool assemble_from_source(
             common::result& r,
-            std::istream& source);
+            common::source_file& source_file);
 
         void pop_target_register();
 

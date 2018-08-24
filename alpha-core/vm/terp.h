@@ -381,6 +381,88 @@ namespace basecode::vm {
         return "";
     }
 
+    struct mnemonic_operand_t {
+        enum flags : uint8_t {
+            integer_register,
+            float_register,
+            immediate
+        };
+
+        flags types;
+        bool required = false;
+    };
+
+    struct mnemonic_t {
+        op_codes code;
+        std::vector<mnemonic_operand_t> operands {};
+    };
+
+    inline static std::map<std::string, mnemonic_t> s_mnemonics = {
+        {"NOP",   mnemonic_t{op_codes::nop, {}}},
+        {"ALLOC", mnemonic_t{op_codes::alloc, {}}},
+        {"FREE",  mnemonic_t{op_codes::free, {}}},
+        {"SIZE",  mnemonic_t{op_codes::free, {}}},
+        {"LOAD",  mnemonic_t{op_codes::load, {}}},
+        {"STORE", mnemonic_t{op_codes::store, {}}},
+        {"COPY",  mnemonic_t{op_codes::copy, {}}},
+        {"CVRT",  mnemonic_t{op_codes::convert, {}}},
+        {"FILL",  mnemonic_t{op_codes::fill, {}}},
+        {"MOVE",  mnemonic_t{op_codes::move, {}}},
+        {"MOVES", mnemonic_t{op_codes::moves, {}}},
+        {"MOVEZ", mnemonic_t{op_codes::movez, {}}},
+        {"PUSH",  mnemonic_t{op_codes::push, {}}},
+        {"POP",   mnemonic_t{op_codes::pop, {}}},
+        {"DUP",   mnemonic_t{op_codes::dup, {}}},
+        {"INC",   mnemonic_t{op_codes::inc, {}}},
+        {"DEC",   mnemonic_t{op_codes::dec, {}}},
+        {"ADD",   mnemonic_t{op_codes::add, {}}},
+        {"SUB",   mnemonic_t{op_codes::sub, {}}},
+        {"MUL",   mnemonic_t{op_codes::mul, {}}},
+        {"DIV",   mnemonic_t{op_codes::div, {}}},
+        {"MOD",   mnemonic_t{op_codes::mod, {}}},
+        {"NEG",   mnemonic_t{op_codes::neg, {}}},
+        {"SHR",   mnemonic_t{op_codes::shr, {}}},
+        {"SHL",   mnemonic_t{op_codes::shl, {}}},
+        {"ROR",   mnemonic_t{op_codes::ror, {}}},
+        {"ROL",   mnemonic_t{op_codes::rol, {}}},
+        {"AND",   mnemonic_t{op_codes::and_op, {}}},
+        {"OR",    mnemonic_t{op_codes::or_op, {}}},
+        {"XOR",   mnemonic_t{op_codes::xor_op, {}}},
+        {"NOT",   mnemonic_t{op_codes::not_op, {}}},
+        {"BIS",   mnemonic_t{op_codes::bis, {}}},
+        {"BIC",   mnemonic_t{op_codes::bic, {}}},
+        {"TEST",  mnemonic_t{op_codes::test, {}}},
+        {"CMP",   mnemonic_t{op_codes::cmp, {}}},
+        {"BZ",    mnemonic_t{op_codes::bz, {}}},
+        {"BNZ",   mnemonic_t{op_codes::bnz, {}}},
+        {"TBZ",   mnemonic_t{op_codes::tbz, {}}},
+        {"TBNZ",  mnemonic_t{op_codes::tbnz, {}}},
+        {"BNE",   mnemonic_t{op_codes::bne, {}}},
+        {"BEQ",   mnemonic_t{op_codes::beq, {}}},
+        {"BG",    mnemonic_t{op_codes::bg, {}}},
+        {"BGE",   mnemonic_t{op_codes::bge, {}}},
+        {"BL",    mnemonic_t{op_codes::bl, {}}},
+        {"BLE",   mnemonic_t{op_codes::ble, {}}},
+        {"SETZ",  mnemonic_t{op_codes::setz, {}}},
+        {"SETNZ", mnemonic_t{op_codes::setnz, {}}},
+        {"JSR",   mnemonic_t{op_codes::jsr, {}}},
+        {"RTS",   mnemonic_t{op_codes::rts, {}}},
+        {"JMP",   mnemonic_t{op_codes::jmp, {}}},
+        {"SWI",   mnemonic_t{op_codes::swi, {}}},
+        {"TRAP",  mnemonic_t{op_codes::trap, {}}},
+        {"FFI",   mnemonic_t{op_codes::ffi, {}}},
+        {"META",  mnemonic_t{op_codes::meta, {}}},
+        {"EXIT",  mnemonic_t{op_codes::exit, {}}},
+    };
+
+    inline static mnemonic_t* mnemonic(const std::string& code) {
+        const auto it = s_mnemonics.find(code);
+        if (it != s_mnemonics.end()) {
+            return &it->second;
+        }
+        return nullptr;
+    }
+
     ///////////////////////////////////////////////////////////////////////////
 
     union operand_value_alias_t {

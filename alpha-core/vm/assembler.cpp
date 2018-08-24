@@ -10,6 +10,8 @@
 // ----------------------------------------------------------------------------
 
 #include <common/bytes.h>
+#include <common/string_support.h>
+#include <common/source_location.h>
 #include "assembler.h"
 #include "instruction_block.h"
 
@@ -75,10 +77,207 @@ namespace basecode::vm {
         return segment(name);
     }
 
+    //
+    // comments:   ; ~~~~~~~~~~~~~~~
+    // labels:     name: ~~~~~~~~~~~~~~~~~~~
+    // mnemonics:  name[.b|.w|.dw|.qw]
+    // operands:   register[, register|immediate][, register|immediate]
+    // directives: .[name] [params] [,params]
+    //
     bool assembler::assemble_from_source(
             common::result& r,
-            std::istream& source) {
-        return false;
+            common::source_file& source_file) {
+        enum class assembly_parser_state_t : uint8_t {
+            start,
+            whitespace,
+            comment,
+            label,
+            mnemonic,
+            operand,
+            operand_list,
+            instruction,
+            directive,
+            directive_param,
+            directive_param_list
+        };
+
+        struct mnemonic_wip_t {
+            mnemonic_t* mnemonic = nullptr;
+            op_sizes size = op_sizes::none;
+            std::vector<operand_encoding_t> operands {};
+        };
+
+        auto block = make_basic_block();
+        auto state = assembly_parser_state_t::start;
+        mnemonic_wip_t wip {};
+
+        while (true) {
+            auto pos = source_file.pos();
+            auto start_line = source_file.line_by_index(pos);
+            auto start_column = source_file.column_by_index(pos);
+
+            auto rune = source_file.next(r);
+            if (rune == common::rune_eof)
+                break;
+
+            retry:
+            switch (state) {
+                case assembly_parser_state_t::start: {
+                    state = assembly_parser_state_t::whitespace;
+                    goto retry;
+                }
+                case assembly_parser_state_t::whitespace: {
+                    if (!isspace(rune)) {
+                        if (rune == ';') {
+                            state = assembly_parser_state_t::comment;
+                        } else if (isalpha(rune) || rune == '_') {
+                            source_file.push_mark();
+
+                            state = assembly_parser_state_t::mnemonic;
+
+                            while (true) {
+                                auto next_rune = source_file.next(r);
+                                if (next_rune == ':') {
+                                    state = assembly_parser_state_t::label;
+                                    break;
+                                } else if (next_rune == '\n') {
+                                    break;
+                                }
+                            }
+
+                            source_file.seek(source_file.pop_mark());
+                            goto retry;
+                        }
+                    }
+                    break;
+                }
+                case assembly_parser_state_t::comment: {
+                    std::stringstream stream;
+                    while (true) {
+                        stream << static_cast<char>(rune);
+                        rune = source_file.next(r);
+                        if (rune == '\n')
+                            break;
+                    }
+                    auto entry = block->current_entry();
+                    if (entry == nullptr) {
+                        block->memo();
+                        entry = block->current_entry();
+                    }
+                    entry->comment(stream.str(), 4);
+                    state = assembly_parser_state_t::whitespace;
+                    break;
+                }
+                case assembly_parser_state_t::label: {
+                    std::stringstream stream;
+                    while (true) {
+                        stream << static_cast<char>(rune);
+                        rune = source_file.next(r);
+                        if (rune == ':')
+                            break;
+                    }
+                    auto entry = block->current_entry();
+                    if (entry == nullptr) {
+                        block->memo();
+                        entry = block->current_entry();
+                    }
+                    auto label = block->make_label(stream.str());
+                    entry->label(label);
+                    state = assembly_parser_state_t::whitespace;
+                    break;
+                }
+                case assembly_parser_state_t::mnemonic: {
+                    std::string inst_code;
+                    std::stringstream stream;
+                    while (true) {
+                        stream << static_cast<char>(rune);
+                        rune = source_file.next(r);
+                        if (!isalpha(rune)) {
+                            inst_code = stream.str();
+                            if (rune == '.') {
+                                rune = source_file.next(r);
+                                switch (rune) {
+                                    case 'b': {
+                                        wip.size = op_sizes::byte;
+                                        break;
+                                    }
+                                    case 'w': {
+                                        wip.size = op_sizes::word;
+                                        break;
+                                    }
+                                    case 'd': {
+                                        rune = source_file.next(r);
+                                        if (rune == 'w') {
+                                            wip.size = op_sizes::dword;
+                                            break;
+                                        }
+                                        break;
+                                    }
+                                    case 'q': {
+                                        rune = source_file.next(r);
+                                        if (rune == 'w') {
+                                            wip.size = op_sizes::qword;
+                                            break;
+                                        }
+                                        break;
+                                    }
+                                    default:
+                                        break;
+                                }
+                                break;
+                            }
+                            break;
+                        }
+                    }
+
+                    common::to_upper(inst_code);
+                    wip.mnemonic = mnemonic(inst_code);
+                    if (wip.mnemonic == nullptr) {
+                        pos = source_file.pos();
+                        auto end_line = source_file.line_by_index(pos);
+                        auto end_column = source_file.column_by_index(pos > 0 ? pos - 1 : 0);
+
+                        common::source_location location;
+                        location.start(start_line->line, start_column);
+                        location.end(end_line->line, end_column);
+
+                        source_file.error(
+                            r,
+                            "A003",
+                            "unknown mnemonic.",
+                            location);
+
+                        return false;
+                    }
+
+                    if (wip.mnemonic->operands.size() == 0)
+                        state = assembly_parser_state_t::whitespace;
+                    else
+                        state = assembly_parser_state_t::operand_list;
+                    break;
+                }
+                case assembly_parser_state_t::operand: {
+                    break;
+                }
+                case assembly_parser_state_t::operand_list: {
+                    break;
+                }
+                case assembly_parser_state_t::instruction: {
+                    break;
+                }
+                case assembly_parser_state_t::directive: {
+                    break;
+                }
+                case assembly_parser_state_t::directive_param: {
+                    break;
+                }
+                case assembly_parser_state_t::directive_param_list: {
+                    break;
+                }
+            }
+        }
+
+        return true;
     }
 
     void assembler::pop_target_register() {

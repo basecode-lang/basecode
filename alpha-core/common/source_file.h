@@ -40,9 +40,15 @@ namespace basecode::common {
 
     class source_file {
     public:
+        source_file() = default;
+
         explicit source_file(const boost::filesystem::path& path);
 
         ~source_file();
+
+        bool load(
+            common::result& r,
+            const std::string& buffer);
 
         void error(
             common::result& r,
@@ -87,6 +93,8 @@ namespace basecode::common {
         const source_file_line_t* line_by_index(size_t index) const;
 
     private:
+        void dump_lines();
+
         void build_lines(common::result& r);
 
     private:

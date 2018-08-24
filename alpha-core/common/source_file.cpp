@@ -171,6 +171,34 @@ namespace basecode::common {
         _index = index;
     }
 
+    bool source_file::load(
+            common::result& r,
+            const std::string& buffer) {
+        _buffer.clear();
+        _lines_by_number.clear();
+        _lines_by_index_range.clear();
+
+        std::stringstream stream;
+        stream.unsetf(std::ios::skipws);
+        stream << buffer;
+        stream.seekg(0, std::ios::beg);
+
+        _buffer.reserve(static_cast<size_t>(buffer.length()));
+        _buffer.insert(_buffer.begin(),
+                       std::istream_iterator<uint8_t>(stream),
+                       std::istream_iterator<uint8_t>());
+        build_lines(r);
+
+        return true;
+    }
+
+    void source_file::dump_lines() {
+        for (size_t i = 0; i < number_of_lines(); i++) {
+            auto line = line_by_number(i);
+            fmt::print("{}\n", substring(line->begin, line->end));
+        }
+    }
+
     bool source_file::load(common::result& r) {
         _buffer.clear();
         _lines_by_number.clear();
@@ -189,11 +217,6 @@ namespace basecode::common {
                            std::istream_iterator<uint8_t>(file),
                            std::istream_iterator<uint8_t>());
             build_lines(r);
-
-//            for (size_t i = 0; i < number_of_lines(); i++) {
-//                auto line = line_by_number(i);
-//                fmt::print("{}\n", substring(line->begin, line->end));
-//            }
         } else {
             r.add_message(
                 "S001",
