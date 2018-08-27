@@ -202,9 +202,19 @@ namespace basecode::vm {
 
         std::vector<label_ref_t*> label_references();
 
+        void make_block_entry(const align_t& section);
+
         vm::label* make_label(const std::string& name);
 
         void source_file(listing_source_file_t* value);
+
+        void make_block_entry(const section_t& section);
+
+        void make_block_entry(const instruction_t& inst);
+
+        void make_push_instruction(const register_t& reg);
+
+        void make_block_entry(const data_definition_t& data);
 
         const std::vector<instruction_block*>& blocks() const;
 
@@ -600,16 +610,6 @@ namespace basecode::vm {
         void make_integer_constant_push_instruction(
             op_sizes size,
             uint64_t value);
-
-        void make_block_entry(const align_t& section);
-
-        void make_block_entry(const section_t& section);
-
-        void make_block_entry(const instruction_t& inst);
-
-        void make_push_instruction(const register_t& reg);
-
-        void make_block_entry(const data_definition_t& data);
 
         void make_pop_instruction(const register_t& dest_reg);
 

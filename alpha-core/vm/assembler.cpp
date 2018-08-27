@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <parser/token.h>
 #include <common/bytes.h>
 #include <common/string_support.h>
 #include <common/source_location.h>
@@ -93,15 +94,15 @@ namespace basecode::vm {
             comment,
             label,
             mnemonic,
-            operand,
             operand_list,
             instruction,
             directive,
-            directive_param,
             directive_param_list
         };
 
         struct mnemonic_wip_t {
+            std::string code {};
+            bool is_valid = false;
             mnemonic_t* mnemonic = nullptr;
             op_sizes size = op_sizes::none;
             std::vector<operand_encoding_t> operands {};
@@ -159,13 +160,12 @@ namespace basecode::vm {
                         if (rune == '\n')
                             break;
                     }
-                    auto entry = block->current_entry();
-                    if (entry == nullptr) {
-                        block->memo();
-                        entry = block->current_entry();
-                    }
-                    entry->comment(stream.str(), 4);
-                    state = assembly_parser_state_t::whitespace;
+                    current_entry(block)->comment(stream.str(), 4);
+
+                    if (wip.is_valid)
+                        state = assembly_parser_state_t::instruction;
+                    else
+                        state = assembly_parser_state_t::whitespace;
                     break;
                 }
                 case assembly_parser_state_t::label: {
@@ -176,24 +176,18 @@ namespace basecode::vm {
                         if (rune == ':')
                             break;
                     }
-                    auto entry = block->current_entry();
-                    if (entry == nullptr) {
-                        block->memo();
-                        entry = block->current_entry();
-                    }
                     auto label = block->make_label(stream.str());
-                    entry->label(label);
+                    current_entry(block)->label(label);
                     state = assembly_parser_state_t::whitespace;
                     break;
                 }
                 case assembly_parser_state_t::mnemonic: {
-                    std::string inst_code;
                     std::stringstream stream;
                     while (true) {
                         stream << static_cast<char>(rune);
                         rune = source_file.next(r);
                         if (!isalpha(rune)) {
-                            inst_code = stream.str();
+                            wip.code = stream.str();
                             if (rune == '.') {
                                 rune = source_file.next(r);
                                 switch (rune) {
@@ -230,8 +224,8 @@ namespace basecode::vm {
                         }
                     }
 
-                    common::to_upper(inst_code);
-                    wip.mnemonic = mnemonic(inst_code);
+                    common::to_upper(wip.code);
+                    wip.mnemonic = mnemonic(wip.code);
                     if (wip.mnemonic == nullptr) {
                         pos = source_file.pos();
                         auto end_line = source_file.line_by_index(pos);
@@ -256,19 +250,158 @@ namespace basecode::vm {
                         state = assembly_parser_state_t::operand_list;
                     break;
                 }
-                case assembly_parser_state_t::operand: {
-                    break;
-                }
                 case assembly_parser_state_t::operand_list: {
+                    // registers: PC, SP, FP, Ix, Fx
+                    //
+                    // immediate numeric values: decimal, hex, binary
+                    //  #12435
+                    //  #$ff
+                    //  #%1111_0000
+                    //
+                    // label references
+                    auto required_operand_count = wip.mnemonic->required_operand_count();
+                    auto commas_found = 0;
+                    source_file.push_mark();
+                    auto test_rune = rune;
+                    while (test_rune != '\n' && test_rune != ';') {
+                        if (test_rune == ',')
+                            commas_found++;
+                        test_rune = source_file.next(r);
+                    }
+
+                    if (commas_found < required_operand_count - 1) {
+                        pos = source_file.pos();
+                        auto end_line = source_file.line_by_index(pos);
+                        auto end_column = source_file.column_by_index(pos > 0 ? pos - 1 : 0);
+
+                        common::source_location location;
+                        location.start(start_line->line, start_column);
+                        location.end(end_line->line, end_column);
+                        source_file.error(
+                            r,
+                            "A004",
+                            fmt::format(
+                                "mnemonic '{}' requires '{}' operands.",
+                                wip.code,
+                                required_operand_count),
+                            location);
+
+                        return false;
+                    }
+
+                    source_file.seek(source_file.pop_mark());
+
+                    std::vector<std::string> operand_strings {};
+                    std::stringstream operand_stream;
+                    auto add_operand_to_list = [&]() {
+                        operand_strings.push_back(operand_stream.str());
+                        operand_stream.str("");
+                    };
+
+                    while (true) {
+                        if (!isspace(rune)) {
+                            if (rune == ',') {
+                                add_operand_to_list();
+                            } else if (rune == ';') {
+                                add_operand_to_list();
+                                state = assembly_parser_state_t::comment;
+                                break;
+                            } else {
+                                operand_stream << static_cast<char>(rune);
+                            }
+                        }
+                        if (rune == '\n') {
+                            add_operand_to_list();
+                            state = assembly_parser_state_t::instruction;
+                            break;
+                        }
+                        rune = source_file.next(r);
+                    }
+
+                    for (const auto& operand_string : operand_strings) {
+                        auto first_char = toupper(operand_string[0]);
+                        if (first_char == '#') {
+                            syntax::token_t number;
+                            if (operand_string[1] == '$') {
+                                number.value = operand_string.substr(2);
+                                number.radix = 16;
+                            } else if (operand_string[1] == '%') {
+                                number.value = operand_string.substr(2);
+                                number.radix = 2;
+                            } else if (operand_string[1] == '@') {
+                                number.value = operand_string.substr(2);
+                                number.radix = 8;
+                            } else {
+                                if (isalpha(operand_string[1]) || operand_string[1] == '_') {
+                                    // XXX: label encoding
+                                } else {
+                                    number.value = operand_string.substr(1);
+                                    number.radix = 10;
+                                }
+                            }
+
+                            uint64_t value;
+                            if (number.parse(value) != syntax::conversion_result_t::success) {
+                                pos = source_file.pos();
+                                auto end_line = source_file.line_by_index(pos);
+                                auto end_column = source_file.column_by_index(pos > 0 ? pos - 1 : 0);
+
+                                common::source_location location;
+                                location.start(start_line->line, start_column);
+                                location.end(end_line->line, end_column);
+
+                                source_file.error(
+                                    r,
+                                    "A005",
+                                    "invalid immediate value.",
+                                    location);
+                                return false;
+                            }
+
+                            operand_encoding_t encoding;
+                            encoding.type = operand_encoding_t::flags::integer | operand_encoding_t::flags::constant;
+                            encoding.value.u = value;
+                            wip.operands.push_back(encoding);
+                        } else if (first_char == 'I') {
+                            auto number = std::atoi(operand_string.substr(1).c_str());
+                            operand_encoding_t encoding;
+                            encoding.type = operand_encoding_t::flags::integer | operand_encoding_t::flags::reg;
+                            encoding.value.r = static_cast<uint8_t>(number);
+                            wip.operands.push_back(encoding);
+                        } else if (first_char == 'F') {
+                            auto number = std::atoi(operand_string.substr(1).c_str());
+                            operand_encoding_t encoding;
+                            encoding.type = operand_encoding_t::flags::reg;
+                            encoding.value.r = static_cast<uint8_t>(number);
+                            wip.operands.push_back(encoding);
+                        }
+                    }
+
+                    wip.is_valid = wip.operands.size() == required_operand_count;
                     break;
                 }
                 case assembly_parser_state_t::instruction: {
+                    instruction_t inst;
+                    inst.size = wip.size;
+                    inst.op = wip.mnemonic->code;
+                    inst.operands_count = static_cast<uint8_t>(wip.operands.size());
+
+                    size_t index = 0;
+                    for (const auto& operand : wip.operands)
+                        inst.operands[index++] = operand;
+
+                    block->make_block_entry(inst);
+
+                    wip.is_valid = false;
+                    wip.operands.clear();
+                    wip.mnemonic = nullptr;
+                    wip.size = op_sizes::none;
+                    wip.code.clear();
+
+                    state = assembly_parser_state_t::whitespace;
                     break;
                 }
                 case assembly_parser_state_t::directive: {
-                    break;
-                }
-                case assembly_parser_state_t::directive_param: {
                     break;
                 }
                 case assembly_parser_state_t::directive_param_list: {
@@ -451,6 +584,15 @@ namespace basecode::vm {
 
     void assembler::push_target_register(const register_t& reg) {
         _target_registers.push(reg);
+    }
+
+    block_entry_t* assembler::current_entry(instruction_block* block) {
+        auto entry = block->current_entry();
+        if (entry == nullptr) {
+            block->memo();
+            entry = block->current_entry();
+        }
+        return entry;
     }
 
     instruction_block* assembler::make_basic_block(instruction_block* parent_block) {
