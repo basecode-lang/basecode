@@ -16,6 +16,7 @@
 #include <unordered_map>
 #include <common/result.h>
 #include <common/id_pool.h>
+#include <boost/variant.hpp>
 #include <common/source_file.h>
 #include "terp.h"
 #include "segment.h"
@@ -646,6 +647,151 @@ namespace basecode::vm {
     }
 
     ///////////////////////////////////////////////////////////////////////////
+
+    enum class directive_type_t : uint8_t {
+        section,
+        align,
+        db,
+        dw,
+        dd,
+        dq,
+        rb,
+        rw,
+        rd,
+        rq
+    };
+
+    using directive_param_variant_t = boost::variant<std::string, uint64_t>;
+
+    struct directive_param_t {
+        enum flags : uint8_t {
+            none        = 0b00000000,
+            string      = 0b00000001,
+            number      = 0b00000010,
+            repeating   = 0b10000000,
+        };
+
+        uint8_t type = flags::none;
+        bool required = false;
+    };
+
+    struct directive_t {
+        op_sizes size;
+        directive_type_t type;
+        std::vector<directive_param_t> params {};
+    };
+
+    inline static std::map<std::string, directive_t> s_directives = {
+        {
+            "SECTION",
+            directive_t{
+                op_sizes::none,
+                directive_type_t::section,
+                {
+                    {directive_param_t::flags::string, true},
+                }
+            }
+        },
+        {
+            "ALIGN",
+            directive_t{
+                op_sizes::byte,
+                directive_type_t::align,
+                {
+                    {directive_param_t::flags::number, true},
+                }
+            }
+        },
+        {
+            "DB",
+            directive_t{
+                op_sizes::byte,
+                directive_type_t::db,
+                {
+                    {directive_param_t::flags::number | directive_param_t::flags::repeating, true},
+                }
+            }
+        },
+        {
+            "DW",
+            directive_t{
+                op_sizes::word,
+                directive_type_t::dw,
+                {
+                    {directive_param_t::flags::number | directive_param_t::flags::repeating, true},
+                }
+            }
+        },
+        {
+            "DD",
+            directive_t{
+                op_sizes::dword,
+                directive_type_t::dd,
+                {
+                    {directive_param_t::flags::number | directive_param_t::flags::repeating, true},
+                }
+            }
+        },
+        {
+            "DQ",
+            directive_t{
+                op_sizes::qword,
+                directive_type_t::dq,
+                {
+                    {directive_param_t::flags::number | directive_param_t::flags::repeating, true},
+                }
+            }
+        },
+        {
+            "RB",
+            directive_t{
+                op_sizes::byte,
+                directive_type_t::rb,
+                {
+                    {directive_param_t::flags::number, true},
+                }
+            }
+        },
+        {
+            "RW",
+            directive_t{
+                op_sizes::word,
+                directive_type_t::rw,
+                {
+                    {directive_param_t::flags::number, true},
+                }
+            }
+        },
+        {
+            "RD",
+            directive_t{
+                op_sizes::dword,
+                directive_type_t::rd,
+                {
+                    {directive_param_t::flags::number, true},
+                }
+            }
+        },
+        {
+            "RQ",
+            directive_t{
+                op_sizes::qword,
+                directive_type_t::rq,
+                {
+                    {directive_param_t::flags::number, true},
+                }
+            }
+        },
+
+    };
+
+    inline static directive_t* directive(const std::string& code) {
+        const auto it = s_directives.find(code);
+        if (it != s_directives.end()) {
+            return &it->second;
+        }
+        return nullptr;
+    }
 
     ///////////////////////////////////////////////////////////////////////////
 
