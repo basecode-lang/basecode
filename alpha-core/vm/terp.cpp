@@ -994,10 +994,10 @@ namespace basecode::vm {
             case op_codes::copy: {
                 operand_value_t source_address, target_address;
 
-                if (!get_operand_value(r, inst, 0, source_address))
+                if (!get_operand_value(r, inst, 0, target_address))
                     return false;
 
-                if (!get_operand_value(r, inst, 1, target_address))
+                if (!get_operand_value(r, inst, 1, source_address))
                     return false;
 
                 operand_value_t length;
@@ -1099,12 +1099,12 @@ namespace basecode::vm {
                 break;
             }
             case op_codes::fill: {
-                operand_value_t value;
-                if (!get_operand_value(r, inst, 0, value))
+                operand_value_t address;
+                if (!get_operand_value(r, inst, 0, address))
                     return false;
 
-                operand_value_t address;
-                if (!get_operand_value(r, inst, 1, address))
+                operand_value_t value;
+                if (!get_operand_value(r, inst, 1, value))
                     return false;
 
                 operand_value_t length;
@@ -1308,7 +1308,7 @@ namespace basecode::vm {
                 operand_value_t new_value;
                 if (reg_value.type == register_type_t::floating_point) {
                     if (inst.size == op_sizes::dword)
-                        new_value.alias.f = reg_value.alias.f + 1.0;
+                        new_value.alias.f = static_cast<float>(reg_value.alias.f + 1.0);
                     else
                         new_value.alias.d = reg_value.alias.d + 1.0;
                     new_value.type = register_type_t::floating_point;
@@ -1342,7 +1342,7 @@ namespace basecode::vm {
                 operand_value_t new_value;
                 if (reg_value.type == register_type_t::floating_point) {
                     if (inst.size == op_sizes::dword)
-                        new_value.alias.f = reg_value.alias.f - 1.0;
+                        new_value.alias.f = static_cast<float>(reg_value.alias.f - 1.0);
                     else
                         new_value.alias.d = reg_value.alias.d - 1.0;
                     new_value.type = register_type_t::floating_point;
@@ -1563,7 +1563,7 @@ namespace basecode::vm {
                 operand_value_t result;
                 if (value.type == register_type_t::floating_point) {
                     if (inst.size == op_sizes::dword)
-                        result.alias.f = value.alias.f * -1.0;
+                        result.alias.f = static_cast<float>(value.alias.f * -1.0);
                     else
                         result.alias.d = value.alias.d * -1.0;
                     result.type = register_type_t::floating_point;
