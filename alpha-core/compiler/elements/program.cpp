@@ -131,22 +131,22 @@ namespace basecode::compiler {
         }
 
         for (const auto& section : vars_by_section) {
+            instruction_block->blank_line();
             instruction_block->section(section.first);
-            instruction_block->current_entry()->blank_lines(1);
 
             for (auto e : section.second) {
                 switch (e->element_type()) {
                     case element_type_t::string_literal: {
                         auto string_literal = dynamic_cast<compiler::string_literal*>(e);
-                        instruction_block->memo();
+                        instruction_block->blank_line();
                         instruction_block->align(4);
+
                         auto it = interned_strings.find(string_literal->value());
                         if (it != interned_strings.end()) {
-                            auto current_entry = instruction_block->current_entry();
                             string_literal_list_t& str_list = it->second;
                             for (auto str : str_list) {
                                 auto var_label = assembler.make_label(str->label_name());
-                                current_entry->label(var_label);
+                                instruction_block->label(var_label);
 
                                 auto var = session.emit_context().allocate_variable(
                                     var_label->name(),
@@ -156,9 +156,8 @@ namespace basecode::compiler {
                                 if (var != nullptr)
                                     var->address_offset = 4;
                             }
-                            current_entry->blank_lines(1);
                         }
-                        instruction_block->current_entry()->comment(
+                        instruction_block->comment(
                             fmt::format("\"{}\"", string_literal->value()),
                             session.emit_context().indent);
                         instruction_block->string(string_literal->escaped_value());
@@ -169,14 +168,13 @@ namespace basecode::compiler {
                         auto var = dynamic_cast<compiler::identifier*>(e);
                         auto init = var->initializer();
 
-                        instruction_block->memo();
-                        instruction_block->current_entry()->blank_lines(1);
+                        instruction_block->blank_line();
 
                         auto type_alignment = static_cast<uint8_t>(var->type()->alignment());
                         if (type_alignment > 1)
                             instruction_block->align(type_alignment);
                         auto var_label = assembler.make_label(var->symbol()->name());
-                        instruction_block->current_entry()->label(var_label);
+                        instruction_block->label(var_label);
                         session.emit_context().allocate_variable(
                             var_label->name(),
                             var->type(),
@@ -247,7 +245,7 @@ namespace basecode::compiler {
                                     auto string_literal = dynamic_cast<compiler::string_literal*>(
                                         init->expression());
                                     if (string_literal != nullptr) {
-                                        instruction_block->current_entry()->comment(
+                                        instruction_block->comment(
                                             fmt::format("\"{}\"", string_literal->value()),
                                             session.emit_context().indent);
                                         instruction_block->string(string_literal->value());
@@ -290,10 +288,9 @@ namespace basecode::compiler {
         }
 
         auto top_level_block = assembler.make_basic_block();
+        top_level_block->blank_line();
         top_level_block->align(vm::instruction_t::alignment);
-        top_level_block->current_entry()->blank_lines(1);
-        top_level_block->memo();
-        top_level_block->current_entry()->label(assembler.make_label("_initializer"));
+        top_level_block->label(assembler.make_label("_initializer"));
 
         block_list_t implicit_blocks {};
         auto module_blocks = session.elements().find_by_type(element_type_t::module_block);
@@ -306,10 +303,10 @@ namespace basecode::compiler {
             block->emit(session);
 
         auto finalizer_block = assembler.make_basic_block();
+        finalizer_block->blank_line();
         finalizer_block->align(vm::instruction_t::alignment);
-        finalizer_block->current_entry()->blank_lines(1);
+        finalizer_block->label(assembler.make_label("_finalizer"));
         finalizer_block->exit();
-        finalizer_block->current_entry()->label(assembler.make_label("_finalizer"));
 
         assembler.pop_block();
         assembler.pop_block();

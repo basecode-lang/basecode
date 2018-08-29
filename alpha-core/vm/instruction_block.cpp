@@ -46,18 +46,8 @@ namespace basecode::vm {
         make_block_entry(exit_op);
     }
 
-    void instruction_block::memo() {
-        _entries.push_back(block_entry_t());
-    }
-
     common::id_t instruction_block::id() const {
         return _id;
-    }
-
-    block_entry_t* instruction_block::current_entry() {
-        if (_entries.empty())
-            return nullptr;
-        return &_entries.back();
     }
 
     // sections
@@ -1156,6 +1146,16 @@ namespace basecode::vm {
         make_ror_instruction(dest_reg.size, dest_reg, lhs_reg, rhs_reg);
     }
 
+    void instruction_block::blank_line() {
+        _entries.push_back(block_entry_t());
+    }
+
+    void instruction_block::label(vm::label* value) {
+        make_block_entry(label_t {
+            .instance = value
+        });
+    }
+
     std::vector<block_entry_t>& instruction_block::entries() {
         return _entries;
     }
@@ -1164,12 +1164,20 @@ namespace basecode::vm {
         _entries.push_back(entry);
     }
 
+    void instruction_block::make_block_entry(const label_t& label) {
+        _entries.push_back(block_entry_t(label));
+    }
+
     void instruction_block::make_block_entry(const align_t& align) {
         _entries.push_back(block_entry_t(align));
     }
 
     void instruction_block::source_file(listing_source_file_t* value) {
         _source_file = value;
+    }
+
+    void instruction_block::make_block_entry(const comment_t& comment) {
+        _entries.push_back(block_entry_t(comment));
     }
 
     void instruction_block::make_block_entry(const section_t& section) {
@@ -1182,6 +1190,13 @@ namespace basecode::vm {
 
     void instruction_block::make_block_entry(const data_definition_t& data) {
         _entries.push_back(block_entry_t(data));
+    }
+
+    void instruction_block::comment(const std::string& value, uint8_t indent) {
+        make_block_entry(comment_t {
+            .value = value,
+            .indent = indent
+        });
     }
 
 };

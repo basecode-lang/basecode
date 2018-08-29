@@ -78,11 +78,17 @@ namespace basecode::vm {
         std::string value {};
     };
 
+    struct label_t {
+        vm::label* instance = nullptr;
+    };
+
     using comment_list_t = std::vector<comment_t>;
 
     enum class block_entry_type_t : uint8_t {
         section = 1,
-        memo,
+        comment,
+        label,
+        blank_line,
         align,
         instruction,
         data_definition,
@@ -90,19 +96,24 @@ namespace basecode::vm {
 
     struct block_entry_t {
         block_entry_t() : _data({}),
-                          _type(block_entry_type_t::memo) {
+                          _type(block_entry_type_t::blank_line) {
         }
 
         block_entry_t(const block_entry_t& other) : _data(other._data),
                                                     _address(other._address),
-                                                    _type(other._type),
-                                                    _blank_lines(other._blank_lines),
-                                                    _comments(other._comments),
-                                                    _labels(other._labels) {
+                                                    _type(other._type) {
         }
 
         block_entry_t(const align_t& align) : _data(boost::any(align)),
                                               _type(block_entry_type_t::align) {
+        }
+
+        block_entry_t(const comment_t& comment) : _data(boost::any(comment)),
+                                                  _type(block_entry_type_t::comment) {
+        }
+
+        block_entry_t(const label_t& label) : _data(boost::any(label)),
+                                              _type(block_entry_type_t::label) {
         }
 
         block_entry_t(const section_t& section) : _data(boost::any(section)),
@@ -143,44 +154,16 @@ namespace basecode::vm {
             return _address;
         }
 
-        uint16_t blank_lines() const {
-            return _blank_lines;
-        }
-
         block_entry_type_t type() const {
             return _type;
         }
 
         block_entry_t* address(uint64_t value) {
             _address = value;
-            for (auto label : _labels)
-                label->address(value);
-            return this;
-        }
-
-        const comment_list_t& comments() const {
-            return _comments;
-        }
-
-        block_entry_t* label(vm::label* label) {
-            _labels.push_back(label);
-            return this;
-        }
-
-        block_entry_t* blank_lines(uint16_t count) {
-            _blank_lines += count;
-            return this;
-        }
-
-        const std::vector<vm::label*>& labels() const {
-            return _labels;
-        }
-
-        block_entry_t* comment(const std::string& value, uint8_t indent = 0) {
-            _comments.push_back(comment_t {
-                .indent = indent,
-                .value = value
-            });
+            if (_type == block_entry_type_t::label) {
+                auto label = data<label_t>();
+                label->instance->address(value);
+            }
             return this;
         }
 
@@ -188,9 +171,6 @@ namespace basecode::vm {
         boost::any _data;
         uint64_t _address = 0;
         block_entry_type_t _type;
-        uint16_t _blank_lines = 0;
-        comment_list_t _comments {};
-        std::vector<vm::label*> _labels {};
     };
 
     class instruction_block {
@@ -201,13 +181,13 @@ namespace basecode::vm {
 
     // block support
     public:
-        void memo();
+        void blank_line();
 
         void clear_entries();
 
         common::id_t id() const;
 
-        block_entry_t* current_entry();
+        void label(vm::label* value);
 
         listing_source_file_t* source_file();
 
@@ -217,9 +197,13 @@ namespace basecode::vm {
 
         void add_entry(const block_entry_t& entry);
 
+        void make_block_entry(const label_t& label);
+
         void make_block_entry(const align_t& section);
 
         void source_file(listing_source_file_t* value);
+
+        void make_block_entry(const comment_t& comment);
 
         void make_block_entry(const section_t& section);
 
@@ -229,7 +213,9 @@ namespace basecode::vm {
 
         void make_block_entry(const data_definition_t& data);
 
-    // data definitions
+        void comment(const std::string& value, uint8_t indent);
+
+        // data definitions
     public:
         void align(uint8_t size);
 

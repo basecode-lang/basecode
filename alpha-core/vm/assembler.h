@@ -896,8 +896,6 @@ namespace basecode::vm {
 
         void add_new_block(instruction_block* block);
 
-        block_entry_t* current_entry(instruction_block* block);
-
     private:
         vm::terp* _terp = nullptr;
         uint64_t _location_counter = 0;

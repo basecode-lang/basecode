@@ -68,7 +68,7 @@ namespace basecode::compiler {
         assembler.pop_target_register();
 
         instruction_block->move_reg_to_reg(*target_reg, temp_reg.reg);
-        instruction_block->current_entry()->comment(
+        instruction_block->comment(
             fmt::format("transmute<{}>", _type->symbol()->name()),
             session.emit_context().indent);
 

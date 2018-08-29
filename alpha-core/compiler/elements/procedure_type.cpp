@@ -52,11 +52,8 @@ namespace basecode::compiler {
 
         auto instruction_block = assembler.make_procedure_block();
         instruction_block->align(vm::instruction_t::alignment);
-        instruction_block->current_entry()->blank_lines(1);
-        instruction_block->memo();
-
-        auto proc_label = assembler.make_label(procedure_label);
-        instruction_block->current_entry()->label(proc_label);
+        instruction_block->blank_line();
+        instruction_block->label(assembler.make_label(procedure_label));
 
         int32_t offset = -8;
         for (auto param : _parameters.as_list()) {
@@ -112,9 +109,9 @@ namespace basecode::compiler {
                 size);
         }
 
-        session.assembler().push_block(instruction_block);
+        assembler.push_block(instruction_block);
         _scope->emit(session);
-        session.assembler().pop_block();
+        assembler.pop_block();
 
         return true;
     }

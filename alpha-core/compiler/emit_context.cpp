@@ -55,14 +55,12 @@ namespace basecode::compiler {
             } else {
                 block->move_label_to_reg(address_reg.reg, label_ref);
             }
-            block
-                ->current_entry()
-                ->blank_lines(1)
-                ->comment(
-                    fmt::format(
-                        "identifier '{}' address (global)",
-                        name),
-                    session.emit_context().indent);
+            block->blank_line();
+            block->comment(
+                fmt::format(
+                    "identifier '{}' address (global)",
+                    name),
+                session.emit_context().indent);
         }
 
         value_reg.reg.type = vm::register_type_t::integer;
@@ -101,15 +99,13 @@ namespace basecode::compiler {
                     frame_entry->offset);
             } else {
                 block->load_to_reg(value_reg.reg, address_reg.reg);
-                block
-                    ->current_entry()
-                    ->blank_lines(1)
-                    ->comment(
-                        fmt::format(
-                            "load identifier '{}' value ({})",
-                            name,
-                            type_name),
-                        session.emit_context().indent);
+                block->blank_line();
+                block->comment(
+                    fmt::format(
+                        "load identifier '{}' value ({})",
+                        name,
+                        type_name),
+                    session.emit_context().indent);
             }
 
             requires_read = false;

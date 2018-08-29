@@ -167,7 +167,7 @@ namespace basecode::compiler {
             }
         }
 
-        instruction_block->current_entry()->comment(
+        instruction_block->comment(
             fmt::format(
                 "cast<{}> from type {}",
                 _type->symbol()->name(),

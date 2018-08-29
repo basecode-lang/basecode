@@ -48,43 +48,31 @@ namespace basecode::compiler {
         switch (element_type()) {
             case element_type_t::block: {
                 instruction_block = assembler.make_basic_block();
-                instruction_block->memo();
+                instruction_block->blank_line();
 
                 auto parent_ns = parent_element_as<compiler::namespace_element>();
                 if (parent_ns != nullptr) {
-                    instruction_block->current_entry()->comment(
+                    instruction_block->comment(
                         fmt::format("namespace: {}", parent_ns->name()),
                         session.emit_context().indent);
                 }
-                instruction_block->current_entry()->blank_lines(1);
-
-                auto block_label = assembler.make_label(label_name());
-                instruction_block
-                    ->current_entry()
-                    ->label(block_label);
-
+                instruction_block->label(assembler.make_label(label_name()));
                 assembler.push_block(instruction_block);
                 clean_up = true;
                 break;
             }
             case element_type_t::module_block: {
                 instruction_block = assembler.make_basic_block();
-                instruction_block->memo();
+                instruction_block->blank_line();
 
                 auto parent_module = parent_element_as<compiler::module>();
                 if (parent_module != nullptr) {
-                    instruction_block->current_entry()->comment(
+                    instruction_block->comment(
                         fmt::format("module: {}", parent_module->source_file()->path().string()),
                         session.emit_context().indent);
                     clean_up = !parent_module->is_root();
                 }
-                instruction_block->current_entry()->blank_lines(1);
-
-                auto block_label = assembler.make_label(label_name());
-                instruction_block
-                    ->current_entry()
-                    ->label(block_label);
-
+                instruction_block->label(assembler.make_label(label_name()));
                 assembler.push_block(instruction_block);
                 break;
             }
