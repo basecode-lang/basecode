@@ -22,18 +22,22 @@ namespace basecode::vm {
     }
 
     assembler::~assembler() {
+        for (const auto& it : _labels)
+            delete it.second;
+        _labels.clear();
+
         for (auto block : _blocks)
             delete block;
         _blocks.clear();
     }
 
-    bool assembler::assemble(
-            common::result& r,
-            vm::instruction_block* block) {
-        if (block == nullptr)
-            block = current_block();
+    void assembler::disassemble() {
+        for (auto block : _blocks)
+            disassemble(block);
+    }
 
-        current_block()->walk_blocks([&](instruction_block* block) -> bool {
+    bool assembler::assemble(common::result& r) {
+        for (auto block : _blocks) {
             for (auto& entry : block->entries()) {
                 switch (entry.type()) {
                     case block_entry_type_t::instruction: {
@@ -63,8 +67,7 @@ namespace basecode::vm {
                     }
                 }
             }
-            return true;
-        });
+        }
 
         return !r.is_failed();
     }
@@ -87,7 +90,8 @@ namespace basecode::vm {
     //
     bool assembler::assemble_from_source(
             common::result& r,
-            common::source_file& source_file) {
+            common::source_file& source_file,
+            stack_frame_t* stack_frame) {
         enum class assembly_parser_state_t : uint8_t {
             start,
             whitespace,
@@ -287,7 +291,7 @@ namespace basecode::vm {
                         if (rune == ':')
                             break;
                     }
-                    auto label = block->make_label(stream.str());
+                    auto label = make_label(stream.str());
                     current_entry(block)->label(label);
                     state = assembly_parser_state_t::whitespace;
                     break;
@@ -658,12 +662,6 @@ namespace basecode::vm {
         return list;
     }
 
-    instruction_block* assembler::root_block() {
-        if (_blocks.empty())
-            return nullptr;
-        return _blocks[1];
-    }
-
     bool assembler::initialize(common::result& r) {
         _location_counter = _terp->heap_vector(heap_vectors_t::program_start);
         return true;
@@ -690,20 +688,19 @@ namespace basecode::vm {
     }
 
     bool assembler::resolve_labels(common::result& r) {
-        auto root_block = current_block();
-        root_block->walk_blocks([&](instruction_block* block) -> bool {
-            auto label_refs = block->label_references();
-            for (auto label_ref : label_refs) {
-                label_ref->resolved = root_block->find_label(label_ref->name);
-                if (label_ref->resolved == nullptr) {
-                    r.add_message(
-                        "A001",
-                        fmt::format("unable to resolve label: {}", label_ref->name),
-                        true);
-                    return false;
-                }
+        auto label_refs = label_references();
+        for (auto label_ref : label_refs) {
+            label_ref->resolved = find_label(label_ref->name);
+            if (label_ref->resolved == nullptr) {
+                r.add_message(
+                    "A001",
+                    fmt::format("unable to resolve label: {}", label_ref->name),
+                    true);
+                return false;
             }
+        }
 
+        for (auto block : _blocks) {
             for (auto& entry : block->entries()) {
                 if (entry.type() != block_entry_type_t::instruction)
                     continue;
@@ -712,8 +709,7 @@ namespace basecode::vm {
                 for (size_t i = 0; i < inst->operands_count; i++) {
                     auto& operand = inst->operands[i];
                     if (operand.is_unresolved()) {
-                        auto label_ref = block->find_unresolved_label_up(
-                            static_cast<uint32_t>(operand.value.u));
+                        auto label_ref = find_label_ref(static_cast<uint32_t>(operand.value.u));
                         if (label_ref != nullptr) {
                             operand.value.u = label_ref->resolved->address();
                             operand.clear_unresolved();
@@ -721,15 +717,20 @@ namespace basecode::vm {
                     }
                 }
             }
+        }
 
-            return true;
-        });
         return !r.is_failed();
+    }
+
+    instruction_block* assembler::make_basic_block() {
+        auto block = new instruction_block(instruction_block_type_t::basic);
+        add_new_block(block);
+        return block;
     }
 
     bool assembler::apply_addresses(common::result& r) {
         size_t offset = 0;
-        current_block()->walk_blocks([&](instruction_block* block) -> bool {
+        for (auto block : _blocks) {
             for (auto& entry : block->entries()) {
                 entry.address(_location_counter + offset);
                 switch (entry.type()) {
@@ -769,8 +770,7 @@ namespace basecode::vm {
                         break;
                 }
             }
-            return true;
-        });
+        }
         return !r.is_failed();
     }
 
@@ -784,14 +784,24 @@ namespace basecode::vm {
             _procedure_block_count++;
     }
 
+    instruction_block* assembler::make_procedure_block() {
+        auto block = new instruction_block(instruction_block_type_t::procedure);
+        add_new_block(block);
+        return block;
+    }
+
+    label* assembler::find_label(const std::string& name) {
+        const auto it = _labels.find(name);
+        if (it == _labels.end())
+            return nullptr;
+        return it->second;
+    }
+
     void assembler::add_new_block(instruction_block* block) {
         auto source_file = _listing.current_source_file();
         if (source_file != nullptr)
             block->source_file(source_file);
         _blocks.push_back(block);
-        auto top_block = current_block();
-        if (top_block != nullptr)
-            top_block->add_block(block);
     }
 
     vm::segment* assembler::segment(const std::string& name) {
@@ -805,6 +815,14 @@ namespace basecode::vm {
         _target_registers.push(reg);
     }
 
+    label_ref_t* assembler::find_label_ref(common::id_t id) {
+        auto it = _unresolved_labels.find(id);
+        if (it != _unresolved_labels.end()) {
+            return &it->second;
+        }
+        return nullptr;
+    }
+
     block_entry_t* assembler::current_entry(instruction_block* block) {
         auto entry = block->current_entry();
         if (entry == nullptr) {
@@ -814,20 +832,186 @@ namespace basecode::vm {
         return entry;
     }
 
-    instruction_block* assembler::make_basic_block(instruction_block* parent_block) {
-        auto block = new instruction_block(
-            parent_block != nullptr ? parent_block : current_block(),
-            instruction_block_type_t::basic);
-        add_new_block(block);
-        return block;
+    void assembler::disassemble(instruction_block* block) {
+        auto source_file = block->source_file();
+        if (source_file == nullptr)
+            return;
+
+        size_t index = 0;
+        for (auto& entry : block->entries()) {
+            source_file->add_blank_lines(
+                entry.address(),
+                entry.blank_lines());
+
+            for (const auto& comment : entry.comments()) {
+                std::string indent;
+                if (comment.indent > 0)
+                    indent = std::string(comment.indent, ' ');
+                source_file->add_source_line(
+                    entry.address(),
+                    fmt::format("{}; {}", indent, comment.value));
+            }
+
+            if (entry.type() == block_entry_type_t::align) {
+                auto align = entry.data<align_t>();
+                source_file->add_source_line(
+                    entry.address(),
+                    fmt::format(".align {}", align->size));
+            } else if (entry.type() == block_entry_type_t::section) {
+                auto section = entry.data<section_t>();
+                source_file->add_source_line(
+                    entry.address(),
+                    fmt::format(".section '{}'", section_name(*section)));
+            }
+
+            for (auto label : entry.labels()) {
+                source_file->add_source_line(
+                    entry.address(),
+                    fmt::format("{}:", label->name()));
+            }
+
+            switch (entry.type()) {
+                case block_entry_type_t::memo:
+                case block_entry_type_t::align:
+                case block_entry_type_t::section: {
+                    break;
+                }
+                case block_entry_type_t::instruction: {
+                    auto inst = entry.data<instruction_t>();
+                    auto stream = inst->disassemble([&](uint64_t id) -> std::string {
+                        auto label_ref = find_label_ref(static_cast<common::id_t>(id));
+                        if (label_ref != nullptr) {
+                            if (label_ref->resolved != nullptr) {
+                                return fmt::format(
+                                    "{} (${:08x})",
+                                    label_ref->name,
+                                    label_ref->resolved->address());
+                            } else {
+                                return label_ref->name;
+                            }
+                        }
+                        return fmt::format("unresolved_ref_id({})", id);
+                    });
+                    source_file->add_source_line(
+                        entry.address(),
+                        fmt::format("\t{}", stream));
+                    break;
+                }
+                case block_entry_type_t::data_definition: {
+                    auto definition = entry.data<data_definition_t>();
+                    std::stringstream directive;
+                    std::string format_spec;
+                    switch (definition->type) {
+                        case data_definition_type_t::none: {
+                            break;
+                        }
+                        case data_definition_type_t::initialized: {
+                            switch (definition->size) {
+                                case op_sizes::byte:
+                                    directive << ".db";
+                                    format_spec = "${:02X}";
+                                    break;
+                                case op_sizes::word:
+                                    directive << ".dw";
+                                    format_spec = "${:04X}";
+                                    break;
+                                case op_sizes::dword:
+                                    directive << ".dd";
+                                    format_spec = "${:08X}";
+                                    break;
+                                case op_sizes::qword:
+                                    directive << ".dq";
+                                    format_spec = "${:016X}";
+                                    break;
+                                default: {
+                                    break;
+                                }
+                            }
+                            break;
+                        }
+                        case data_definition_type_t::uninitialized: {
+                            format_spec = "${:04X}";
+                            switch (definition->size) {
+                                case op_sizes::byte:
+                                    directive << ".rb";
+                                    break;
+                                case op_sizes::word:
+                                    directive << ".rw";
+                                    break;
+                                case op_sizes::dword:
+                                    directive << ".rd";
+                                    break;
+                                case op_sizes::qword:
+                                    directive << ".rq";
+                                    break;
+                                default: {
+                                    break;
+                                }
+                            }
+                            break;
+                        }
+                    }
+
+                    auto item_index = 0;
+                    auto item_count = definition->values.size();
+                    std::string items;
+                    while (item_count > 0) {
+                        if (!items.empty())
+                            items += ", ";
+                        items += fmt::format(format_spec, definition->values[item_index++]);
+                        if ((item_index % 8) == 0) {
+                            source_file->add_source_line(
+                                entry.address(),
+                                fmt::format("\t{:<10}{}", directive.str(), items));
+                            items.clear();
+                        }
+                        --item_count;
+                    }
+                    if (!items.empty()) {
+                        source_file->add_source_line(
+                            entry.address(),
+                            fmt::format("\t{:<10}{}", directive.str(), items));
+                    }
+                    break;
+                }
+            }
+            index++;
+        }
     }
 
-    instruction_block* assembler::make_procedure_block(instruction_block* parent_block) {
-        auto block = new instruction_block(
-            parent_block != nullptr ? parent_block : current_block(),
-            instruction_block_type_t::procedure);
-        add_new_block(block);
-        return block;
+    std::vector<label_ref_t*> assembler::label_references() {
+        std::vector<label_ref_t*> refs {};
+        for (auto& kvp : _unresolved_labels) {
+            refs.push_back(&kvp.second);
+        }
+        return refs;
+    }
+
+    vm::label* assembler::make_label(const std::string& name) {
+        auto it = _labels.insert(std::make_pair(name, new vm::label(name)));
+        return it.first->second;
+    }
+
+    label_ref_t* assembler::make_label_ref(const std::string& label_name) {
+        auto it = _label_to_unresolved_ids.find(label_name);
+        if (it != _label_to_unresolved_ids.end()) {
+            auto ref_it = _unresolved_labels.find(it->second);
+            if (ref_it != _unresolved_labels.end())
+                return &ref_it->second;
+        }
+
+        auto label = find_label(label_name);
+        auto ref_id = common::id_pool::instance()->allocate();
+        auto insert_pair = _unresolved_labels.insert(std::make_pair(
+            ref_id,
+            label_ref_t {
+                .id = ref_id,
+                .name = label_name,
+                .resolved = label
+            }));
+        _label_to_unresolved_ids.insert(std::make_pair(label_name, ref_id));
+
+        return &insert_pair.first.operator->()->second;
     }
 
 };

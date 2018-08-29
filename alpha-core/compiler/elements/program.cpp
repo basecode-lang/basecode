@@ -62,7 +62,7 @@ namespace basecode::compiler {
         auto& scope_manager = session.scope_manager();
 
         auto instruction_block = assembler.make_basic_block();
-        instruction_block->jump_direct("_initializer");
+        instruction_block->jump_direct(assembler.make_label_ref("_initializer"));
 
         std::map<vm::section_t, element_list_t> vars_by_section {};
         /* auto bss  = */vars_by_section.insert(std::make_pair(vm::section_t::bss,     element_list_t()));
@@ -145,7 +145,7 @@ namespace basecode::compiler {
                             auto current_entry = instruction_block->current_entry();
                             string_literal_list_t& str_list = it->second;
                             for (auto str : str_list) {
-                                auto var_label = instruction_block->make_label(str->label_name());
+                                auto var_label = assembler.make_label(str->label_name());
                                 current_entry->label(var_label);
 
                                 auto var = session.emit_context().allocate_variable(
@@ -175,7 +175,7 @@ namespace basecode::compiler {
                         auto type_alignment = static_cast<uint8_t>(var->type()->alignment());
                         if (type_alignment > 1)
                             instruction_block->align(type_alignment);
-                        auto var_label = instruction_block->make_label(var->symbol()->name());
+                        auto var_label = assembler.make_label(var->symbol()->name());
                         instruction_block->current_entry()->label(var_label);
                         session.emit_context().allocate_variable(
                             var_label->name(),
@@ -293,7 +293,7 @@ namespace basecode::compiler {
         top_level_block->align(vm::instruction_t::alignment);
         top_level_block->current_entry()->blank_lines(1);
         top_level_block->memo();
-        top_level_block->current_entry()->label(top_level_block->make_label("_initializer"));
+        top_level_block->current_entry()->label(assembler.make_label("_initializer"));
 
         block_list_t implicit_blocks {};
         auto module_blocks = session.elements().find_by_type(element_type_t::module_block);
@@ -309,7 +309,7 @@ namespace basecode::compiler {
         finalizer_block->align(vm::instruction_t::alignment);
         finalizer_block->current_entry()->blank_lines(1);
         finalizer_block->exit();
-        finalizer_block->current_entry()->label(finalizer_block->make_label("_finalizer"));
+        finalizer_block->current_entry()->label(assembler.make_label("_finalizer"));
 
         assembler.pop_block();
         assembler.pop_block();

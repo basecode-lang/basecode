@@ -45,6 +45,7 @@ namespace basecode::compiler {
                                                _assembler(&_terp),
                                                _ast_evaluator(*this),
                                                _options(options),
+                                               _stack_frame(nullptr),
                                                _scope_manager(*this) {
         for (const auto& path : source_files) {
             if (path.is_relative()) {
@@ -327,10 +328,7 @@ namespace basecode::compiler {
     }
 
     void session::disassemble(FILE* file) {
-        auto root_block = _assembler.root_block();
-        if (root_block == nullptr)
-            return;
-        root_block->disassemble();
+        _assembler.disassemble();
         if (file != nullptr) {
             fmt::print(file, "\n");
             _assembler.listing().write(file);
@@ -339,6 +337,10 @@ namespace basecode::compiler {
 
     emit_context_t& session::emit_context() {
         return _emit_context;
+    }
+
+    vm::stack_frame_t* session::stack_frame() {
+        return &_stack_frame;
     }
 
     bool session::resolve_unknown_identifiers() {
@@ -379,8 +381,7 @@ namespace basecode::compiler {
     }
 
     void session::initialize_built_in_procedures() {
-        auto parent_scope = _scope_manager.current_scope();
-
+//        auto parent_scope = _scope_manager.current_scope();
     }
 
     common::source_file* session::pop_source_file() {
@@ -519,5 +520,6 @@ namespace basecode::compiler {
             return nullptr;
         return &it->second;
     }
+
 
 };

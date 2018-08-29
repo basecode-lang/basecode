@@ -31,10 +31,9 @@ namespace basecode::compiler {
         if (_type->element_type() == element_type_t::namespace_type)
             return true;
 
-        auto instruction_block = session.assembler().current_block();
+        auto stack_frame = session.stack_frame();
 
         vm::stack_frame_entry_t* frame_entry = nullptr;
-        auto stack_frame = instruction_block->stack_frame();
         if (stack_frame != nullptr)
             frame_entry = stack_frame->find_up(_symbol->name());
 

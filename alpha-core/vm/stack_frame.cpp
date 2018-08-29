@@ -14,8 +14,7 @@
 
 namespace basecode::vm {
 
-    stack_frame_t::stack_frame_t(
-        instruction_block* parent_block) : parent_block(parent_block) {
+    stack_frame_t::stack_frame_t(stack_frame_t* parent_frame) : parent_frame(parent_frame) {
     }
 
     stack_frame_entry_t* stack_frame_t::add(
@@ -45,9 +44,9 @@ namespace basecode::vm {
             auto entry = current_frame->find(name);
             if (entry != nullptr)
                 return entry;
-            if (current_frame->parent_block == nullptr)
+            if (current_frame->parent_frame == nullptr)
                 break;
-            current_frame = current_frame->parent_block->stack_frame();
+            current_frame = current_frame->parent_frame;
         }
         return nullptr;
     }

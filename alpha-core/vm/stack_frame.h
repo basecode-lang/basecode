@@ -18,8 +18,6 @@
 
 namespace basecode::vm {
 
-    class instruction_block;
-
     enum class stack_frame_entry_type_t : uint8_t {
         local = 1,
         parameter,
@@ -44,8 +42,10 @@ namespace basecode::vm {
         stack_frame_entry_type_t type;
     };
 
+    struct stack_frame_t;
+
     struct stack_frame_t {
-        stack_frame_t(instruction_block* parent_block);
+        stack_frame_t(stack_frame_t* parent_frame);
 
         stack_frame_entry_t* add(
             stack_frame_entry_type_t type,
@@ -56,7 +56,7 @@ namespace basecode::vm {
 
         stack_frame_entry_t* find_up(const std::string& name);
 
-        instruction_block* parent_block = nullptr;
+        stack_frame_t* parent_frame = nullptr;
         std::map<std::string, stack_frame_entry_t> entries {};
     };
 

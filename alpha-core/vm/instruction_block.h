@@ -195,11 +195,7 @@ namespace basecode::vm {
 
     class instruction_block {
     public:
-        using block_predicate_visitor_callable = std::function<bool (instruction_block*)>;
-
-        instruction_block(
-            instruction_block* parent,
-            instruction_block_type_t type);
+        explicit instruction_block(instruction_block_type_t type);
 
         virtual ~instruction_block();
 
@@ -207,15 +203,9 @@ namespace basecode::vm {
     public:
         void memo();
 
-        void disassemble();
-
-        void clear_blocks();
-
         void clear_entries();
 
-        instruction_block* parent();
-
-        stack_frame_t* stack_frame();
+        common::id_t id() const;
 
         block_entry_t* current_entry();
 
@@ -225,21 +215,9 @@ namespace basecode::vm {
 
         std::vector<block_entry_t>& entries();
 
-        void add_block(instruction_block* block);
-
         void add_entry(const block_entry_t& entry);
 
-        label* find_label(const std::string& name);
-
-        void remove_block(instruction_block* block);
-
-        std::vector<label_ref_t*> label_references();
-
-        void parent(instruction_block* parent_block);
-
         void make_block_entry(const align_t& section);
-
-        vm::label* make_label(const std::string& name);
 
         void source_file(listing_source_file_t* value);
 
@@ -250,28 +228,6 @@ namespace basecode::vm {
         void make_push_instruction(const register_t& reg);
 
         void make_block_entry(const data_definition_t& data);
-
-        const std::vector<instruction_block*>& blocks() const;
-
-        label_ref_t* find_unresolved_label_up(common::id_t id);
-
-        bool walk_blocks(const block_predicate_visitor_callable& callable);
-
-        template <typename T>
-        T* find_in_blocks(const std::function<T* (instruction_block*)>& callable) {
-            std::stack<instruction_block*> block_stack {};
-            block_stack.push(this);
-            while (!block_stack.empty()) {
-                auto block = block_stack.top();
-                auto found = callable(block);
-                if (found != nullptr)
-                    return found;
-                block_stack.pop();
-                for (auto child_block : block->blocks())
-                    block_stack.push(child_block);
-            }
-            return nullptr;
-        }
 
     // data definitions
     public:
@@ -367,11 +323,11 @@ namespace basecode::vm {
 
         void move_label_to_reg(
             const register_t& dest_reg,
-            const std::string& label_name);
+            const label_ref_t* label_ref);
 
         void move_label_to_reg_with_offset(
             const register_t& dest_reg,
-            const std::string& label_name,
+            const label_ref_t* label_ref,
             int64_t offset);
 
         // setxx
@@ -380,9 +336,9 @@ namespace basecode::vm {
         void setnz(const register_t& dest_reg);
 
         // branches
-        void bne(const std::string& label_name);
+        void bne(const label_ref_t* label_ref);
 
-        void beq(const std::string& label_name);
+        void beq(const label_ref_t* label_ref);
 
         // inc variations
         void inc(const register_t& reg);
@@ -499,13 +455,13 @@ namespace basecode::vm {
         void pop(const register_t& reg);
 
         // calls & jumps
-        void jump_indirect(const register_t& reg);
-
-        void call(const std::string& proc_name);
+        void call(const label_ref_t* label_ref);
 
         void call_foreign(uint64_t proc_address);
 
-        void jump_direct(const std::string& label_name);
+        void jump_indirect(const register_t& reg);
+
+        void jump_direct(const label_ref_t* label_ref);
 
     private:
         void make_shl_instruction(
@@ -649,22 +605,10 @@ namespace basecode::vm {
         void make_pop_instruction(const register_t& dest_reg);
 
     private:
-        void disassemble(instruction_block* block);
-
-        vm::label* find_label_up(const std::string& label_name);
-
-        label_ref_t* make_unresolved_label_ref(const std::string& label_name);
-
-    private:
-        stack_frame_t _stack_frame;
+        common::id_t _id;
         instruction_block_type_t _type;
-        instruction_block* _parent = nullptr;
         std::vector<block_entry_t> _entries {};
-        std::vector<instruction_block*> _blocks {};
         vm::listing_source_file_t* _source_file = nullptr;
-        std::unordered_map<std::string, vm::label*> _labels {};
-        std::unordered_map<common::id_t, label_ref_t> _unresolved_labels {};
-        std::unordered_map<std::string, common::id_t> _label_to_unresolved_ids {};
     };
 
 };

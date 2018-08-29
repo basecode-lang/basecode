@@ -203,17 +203,19 @@ namespace basecode::compiler {
     void binary_operator::emit_relational_operator(
             compiler::session& session,
             vm::instruction_block* instruction_block) {
+        auto& assembler = session.assembler();
+
         auto lhs_reg = register_for(session, _lhs);
         auto rhs_reg = register_for(session, _rhs);
 
         if (!lhs_reg.valid || !rhs_reg.valid)
             return;
 
-        session.assembler().push_target_register(lhs_reg.reg);
+        assembler.push_target_register(lhs_reg.reg);
         _lhs->emit(session);
-        session.assembler().pop_target_register();
+        assembler.pop_target_register();
 
-        session.assembler().push_target_register(rhs_reg.reg);
+        assembler.push_target_register(rhs_reg.reg);
         _rhs->emit(session);
         session.assembler().pop_target_register();
 
@@ -225,9 +227,9 @@ namespace basecode::compiler {
                     auto parent_op = parent_element_as<compiler::binary_operator>();
                     if (parent_op != nullptr
                     &&  parent_op->operator_type() == operator_type_t::logical_and) {
-                        instruction_block->bne(if_data->false_branch_label);
+                        instruction_block->bne(assembler.make_label_ref(if_data->false_branch_label));
                     } else {
-                        instruction_block->beq(if_data->true_branch_label);
+                        instruction_block->beq(assembler.make_label_ref(if_data->true_branch_label));
                     }
                 } else {
                     auto target_reg = session.assembler().current_target_register();
@@ -244,7 +246,7 @@ namespace basecode::compiler {
             }
             case operator_type_t::logical_or: {
                 if (if_data != nullptr)
-                    instruction_block->jump_direct(if_data->false_branch_label);
+                    instruction_block->jump_direct(assembler.make_label_ref(if_data->false_branch_label));
                 else {
                     auto rhs_target_reg = session.emit_context().pop_scratch_register();
                     auto lhs_target_reg = session.emit_context().pop_scratch_register();
@@ -258,7 +260,7 @@ namespace basecode::compiler {
             }
             case operator_type_t::logical_and: {
                 if (if_data != nullptr)
-                    instruction_block->jump_direct(if_data->true_branch_label);
+                    instruction_block->jump_direct(assembler.make_label_ref(if_data->true_branch_label));
                 else {
                     auto rhs_target_reg = session.emit_context().pop_scratch_register();
                     auto lhs_target_reg = session.emit_context().pop_scratch_register();

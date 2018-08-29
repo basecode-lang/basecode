@@ -46,13 +46,14 @@ namespace basecode::compiler {
             if (!address_reg.reserve(session))
                 return false;
 
+            auto label_ref = session.assembler().make_label_ref(name);
             if (address_offset != 0) {
                 block->move_label_to_reg_with_offset(
                     address_reg.reg,
-                    name,
+                    label_ref,
                     address_offset);
             } else {
-                block->move_label_to_reg(address_reg.reg, name);
+                block->move_label_to_reg(address_reg.reg, label_ref);
             }
             block
                 ->current_entry()

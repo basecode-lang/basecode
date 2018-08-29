@@ -76,6 +76,8 @@ namespace basecode::compiler {
 
         emit_context_t& emit_context();
 
+        vm::stack_frame_t* stack_frame();
+
         const element_map& elements() const;
 
         common::source_file* pop_source_file();
@@ -131,6 +133,7 @@ namespace basecode::compiler {
         ast_evaluator _ast_evaluator;
         emit_context_t _emit_context;
         session_options_t _options {};
+        vm::stack_frame_t _stack_frame;
         compiler::scope_manager _scope_manager;
         std::stack<common::source_file*> _source_file_stack {};
         std::map<std::string, common::source_file> _source_files {};

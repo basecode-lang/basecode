@@ -35,17 +35,19 @@ namespace basecode::compiler {
     }
 
     bool block::on_emit(compiler::session& session) {
+        auto& assembler = session.assembler();
+
         vm::instruction_block* instruction_block = nullptr;
 
         auto clean_up = false;
         defer({
             if (clean_up)
-                session.assembler().pop_block();
+                assembler.pop_block();
         });
 
         switch (element_type()) {
             case element_type_t::block: {
-                instruction_block = session.assembler().make_basic_block();
+                instruction_block = assembler.make_basic_block();
                 instruction_block->memo();
 
                 auto parent_ns = parent_element_as<compiler::namespace_element>();
@@ -56,17 +58,17 @@ namespace basecode::compiler {
                 }
                 instruction_block->current_entry()->blank_lines(1);
 
-                auto block_label = instruction_block->make_label(label_name());
+                auto block_label = assembler.make_label(label_name());
                 instruction_block
                     ->current_entry()
                     ->label(block_label);
 
-                session.assembler().push_block(instruction_block);
+                assembler.push_block(instruction_block);
                 clean_up = true;
                 break;
             }
             case element_type_t::module_block: {
-                instruction_block = session.assembler().make_basic_block();
+                instruction_block = assembler.make_basic_block();
                 instruction_block->memo();
 
                 auto parent_module = parent_element_as<compiler::module>();
@@ -78,12 +80,12 @@ namespace basecode::compiler {
                 }
                 instruction_block->current_entry()->blank_lines(1);
 
-                auto block_label = instruction_block->make_label(label_name());
+                auto block_label = assembler.make_label(label_name());
                 instruction_block
                     ->current_entry()
                     ->label(block_label);
 
-                session.assembler().push_block(instruction_block);
+                assembler.push_block(instruction_block);
                 break;
             }
             case element_type_t::proc_type_block:

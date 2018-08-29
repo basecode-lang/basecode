@@ -14,20 +14,12 @@
 
 namespace basecode::vm {
 
-    instruction_block::instruction_block(
-            instruction_block* parent,
-            instruction_block_type_t type): _stack_frame(parent),
-                                            _type(type),
-                                            _parent(parent) {
+    instruction_block::instruction_block(instruction_block_type_t type): _id(common::id_pool::instance()->allocate()),
+                                                                         _type(type) {
     }
 
     instruction_block::~instruction_block() {
-        clear_blocks();
         clear_entries();
-
-        for (const auto& it : _labels)
-            delete it.second;
-        _labels.clear();
     }
 
     void instruction_block::rts() {
@@ -58,12 +50,8 @@ namespace basecode::vm {
         _entries.push_back(block_entry_t());
     }
 
-    void instruction_block::disassemble() {
-        disassemble(this);
-    }
-
-    void instruction_block::clear_blocks() {
-        _blocks.clear();
+    common::id_t instruction_block::id() const {
+        return _id;
     }
 
     block_entry_t* instruction_block::current_entry() {
@@ -214,9 +202,7 @@ namespace basecode::vm {
 
     void instruction_block::move_label_to_reg(
             const register_t& dest_reg,
-            const std::string& label_name) {
-        auto label_ref = make_unresolved_label_ref(label_name);
-
+            const label_ref_t* label_ref) {
         instruction_t move_op;
         move_op.op = op_codes::move;
         move_op.size = op_sizes::qword;
@@ -235,10 +221,8 @@ namespace basecode::vm {
 
     void instruction_block::move_label_to_reg_with_offset(
             const register_t& dest_reg,
-            const std::string& label_name,
+            const label_ref_t* label_ref,
             int64_t offset) {
-        auto label_ref = make_unresolved_label_ref(label_name);
-
         instruction_t move_op;
         move_op.op = op_codes::move;
         move_op.size = op_sizes::qword;
@@ -590,10 +574,6 @@ namespace basecode::vm {
         make_block_entry(store_op);
     }
 
-    instruction_block* instruction_block::parent() {
-        return _parent;
-    }
-
     void instruction_block::make_add_instruction(
             op_sizes size,
             const register_t& dest_reg,
@@ -677,10 +657,6 @@ namespace basecode::vm {
             const register_t& dest_reg,
             const register_t& src_reg) {
         make_swap_instruction(dest_reg.size, dest_reg, src_reg);
-    }
-
-    stack_frame_t* instruction_block::stack_frame() {
-        return &_stack_frame;
     }
 
     void instruction_block::push(const register_t& reg) {
@@ -821,9 +797,7 @@ namespace basecode::vm {
         return _type;
     }
 
-    void instruction_block::bne(const std::string& label_name) {
-        auto label_ref = make_unresolved_label_ref(label_name);
-
+    void instruction_block::bne(const label_ref_t* label_ref) {
         instruction_t branch_op;
         branch_op.op = op_codes::bne;
         branch_op.size = op_sizes::qword;
@@ -836,9 +810,7 @@ namespace basecode::vm {
         make_block_entry(branch_op);
     }
 
-    void instruction_block::beq(const std::string& label_name) {
-        auto label_ref = make_unresolved_label_ref(label_name);
-
+    void instruction_block::beq(const label_ref_t* label_ref) {
         instruction_t branch_op;
         branch_op.op = op_codes::beq;
         branch_op.size = op_sizes::qword;
@@ -851,9 +823,7 @@ namespace basecode::vm {
         make_block_entry(branch_op);
     }
 
-    void instruction_block::call(const std::string& proc_name) {
-        auto label_ref = make_unresolved_label_ref(proc_name);
-
+    void instruction_block::call(const label_ref_t* label_ref) {
         instruction_t jsr_op;
         jsr_op.op = op_codes::jsr;
         jsr_op.size = op_sizes::qword;
@@ -879,175 +849,6 @@ namespace basecode::vm {
 //        _instructions.push_back(jsr_op);
     }
 
-    void instruction_block::add_block(instruction_block* block) {
-        _blocks.push_back(block);
-    }
-
-    void instruction_block::disassemble(instruction_block* block) {
-        auto source_file = block->source_file();
-        if (source_file == nullptr)
-            return;
-
-        size_t index = 0;
-        for (auto& entry : block->_entries) {
-            source_file->add_blank_lines(
-                entry.address(),
-                entry.blank_lines());
-
-            for (const auto& comment : entry.comments()) {
-                std::string indent;
-                if (comment.indent > 0)
-                    indent = std::string(comment.indent, ' ');
-                source_file->add_source_line(
-                    entry.address(),
-                    fmt::format("{}; {}", indent, comment.value));
-            }
-
-            if (entry.type() == block_entry_type_t::align) {
-                auto align = entry.data<align_t>();
-                source_file->add_source_line(
-                    entry.address(),
-                    fmt::format(".align {}", align->size));
-            } else if (entry.type() == block_entry_type_t::section) {
-                auto section = entry.data<section_t>();
-                source_file->add_source_line(
-                    entry.address(),
-                    fmt::format(".section '{}'", section_name(*section)));
-            }
-
-            for (auto label : entry.labels()) {
-                source_file->add_source_line(
-                    entry.address(),
-                    fmt::format("{}:", label->name()));
-            }
-
-            switch (entry.type()) {
-                case block_entry_type_t::memo:
-                case block_entry_type_t::align:
-                case block_entry_type_t::section: {
-                    break;
-                }
-                case block_entry_type_t::instruction: {
-                    auto inst = entry.data<instruction_t>();
-                    auto stream = inst->disassemble([&](uint64_t id) -> std::string {
-                        auto label_ref = block->find_unresolved_label_up(static_cast<common::id_t>(id));
-                        if (label_ref != nullptr) {
-                            if (label_ref->resolved != nullptr) {
-                                return fmt::format(
-                                    "{} (${:08x})",
-                                    label_ref->name,
-                                    label_ref->resolved->address());
-                            } else {
-                                return label_ref->name;
-                            }
-                        }
-                        return fmt::format("unresolved_ref_id({})", id);
-                    });
-                    source_file->add_source_line(
-                        entry.address(),
-                        fmt::format("\t{}", stream));
-                    break;
-                }
-                case block_entry_type_t::data_definition: {
-                    auto definition = entry.data<data_definition_t>();
-                    std::stringstream directive;
-                    std::string format_spec;
-                    switch (definition->type) {
-                        case data_definition_type_t::none: {
-                            break;
-                        }
-                        case data_definition_type_t::initialized: {
-                            switch (definition->size) {
-                                case op_sizes::byte:
-                                    directive << ".db";
-                                    format_spec = "${:02X}";
-                                    break;
-                                case op_sizes::word:
-                                    directive << ".dw";
-                                    format_spec = "${:04X}";
-                                    break;
-                                case op_sizes::dword:
-                                    directive << ".dd";
-                                    format_spec = "${:08X}";
-                                    break;
-                                case op_sizes::qword:
-                                    directive << ".dq";
-                                    format_spec = "${:016X}";
-                                    break;
-                                default: {
-                                    break;
-                                }
-                            }
-                            break;
-                        }
-                        case data_definition_type_t::uninitialized: {
-                            format_spec = "${:04X}";
-                            switch (definition->size) {
-                                case op_sizes::byte:
-                                    directive << ".rb";
-                                    break;
-                                case op_sizes::word:
-                                    directive << ".rw";
-                                    break;
-                                case op_sizes::dword:
-                                    directive << ".rd";
-                                    break;
-                                case op_sizes::qword:
-                                    directive << ".rq";
-                                    break;
-                                default: {
-                                    break;
-                                }
-                            }
-                            break;
-                        }
-                    }
-
-                    auto item_index = 0;
-                    auto item_count = definition->values.size();
-                    std::string items;
-                    while (item_count > 0) {
-                        if (!items.empty())
-                            items += ", ";
-                        items += fmt::format(format_spec, definition->values[item_index++]);
-                        if ((item_index % 8) == 0) {
-                            source_file->add_source_line(
-                                entry.address(),
-                                fmt::format("\t{:<10}{}", directive.str(), items));
-                            items.clear();
-                        }
-                        --item_count;
-                    }
-                    if (!items.empty()) {
-                        source_file->add_source_line(
-                            entry.address(),
-                            fmt::format("\t{:<10}{}", directive.str(), items));
-                    }
-                    break;
-                }
-            }
-            index++;
-        }
-
-        for (auto child_block : block->_blocks)
-            disassemble(child_block);
-    }
-
-    void instruction_block::remove_block(instruction_block* block) {
-        auto it = std::find_if(
-            _blocks.begin(),
-            _blocks.end(),
-            [&block](auto each) { return each == block; });
-        if (it == _blocks.end())
-            return;
-        _blocks.erase(it);
-    }
-
-    vm::label* instruction_block::make_label(const std::string& name) {
-        auto it = _labels.insert(std::make_pair(name, new vm::label(name)));
-        return it.first->second;
-    }
-
     void instruction_block::call_foreign(uint64_t proc_address) {
         instruction_t ffi_op;
         ffi_op.op = op_codes::ffi;
@@ -1060,9 +861,7 @@ namespace basecode::vm {
         make_block_entry(ffi_op);
     }
 
-    void instruction_block::jump_direct(const std::string& label_name) {
-        auto label_ref = make_unresolved_label_ref(label_name);
-
+    void instruction_block::jump_direct(const label_ref_t* label_ref) {
         instruction_t jmp_op;
         jmp_op.op = op_codes::jmp;
         jmp_op.size = op_sizes::qword;
@@ -1077,30 +876,6 @@ namespace basecode::vm {
 
     listing_source_file_t* instruction_block::source_file() {
         return _source_file;
-    }
-
-    label_ref_t* instruction_block::find_unresolved_label_up(common::id_t id) {
-        auto current_block = this;
-        while (current_block != nullptr) {
-            auto it = current_block->_unresolved_labels.find(id);
-            if (it != current_block->_unresolved_labels.end()) {
-                return &it->second;
-            }
-            current_block = current_block->_parent;
-        }
-        return nullptr;
-    }
-
-    vm::label* instruction_block::find_label_up(const std::string& label_name) {
-        auto current_block = this;
-        while (current_block != nullptr) {
-            auto it = current_block->_labels.find(label_name);
-            if (it != current_block->_labels.end()) {
-                return it->second;
-            }
-            current_block = current_block->_parent;
-        }
-        return nullptr;
     }
 
     void instruction_block::make_inc_instruction(op_sizes size, const register_t& reg) {
@@ -1150,28 +925,6 @@ namespace basecode::vm {
             pop_op.operands[0].type |= operand_encoding_t::flags::integer;
         pop_op.operands[0].value.r = dest_reg.number;
         make_block_entry(pop_op);
-    }
-
-    label_ref_t* instruction_block::make_unresolved_label_ref(const std::string& label_name) {
-        auto it = _label_to_unresolved_ids.find(label_name);
-        if (it != _label_to_unresolved_ids.end()) {
-            auto ref_it = _unresolved_labels.find(it->second);
-            if (ref_it != _unresolved_labels.end())
-                return &ref_it->second;
-        }
-
-        auto label = find_label_up(label_name);
-        auto ref_id = common::id_pool::instance()->allocate();
-        auto insert_pair = _unresolved_labels.insert(std::make_pair(
-            ref_id,
-            label_ref_t {
-                .id = ref_id,
-                .name = label_name,
-                .resolved = label
-            }));
-        _label_to_unresolved_ids.insert(std::make_pair(label_name, ref_id));
-
-        return &insert_pair.first.operator->()->second;
     }
 
     void instruction_block::make_integer_constant_push_instruction(op_sizes size, uint64_t value) {
@@ -1411,29 +1164,8 @@ namespace basecode::vm {
         _entries.push_back(entry);
     }
 
-    label* instruction_block::find_label(const std::string& name) {
-        return find_in_blocks<label>([&](instruction_block* block) -> label* {
-            const auto it = block->_labels.find(name);
-            if (it == block->_labels.end())
-                return nullptr;
-            return it->second;
-        });
-    }
-
     void instruction_block::make_block_entry(const align_t& align) {
         _entries.push_back(block_entry_t(align));
-    }
-
-    void instruction_block::parent(instruction_block* parent_block) {
-        _parent = parent_block;
-    }
-
-    std::vector<label_ref_t*> instruction_block::label_references() {
-        std::vector<label_ref_t*> refs {};
-        for (auto& kvp : _unresolved_labels) {
-            refs.push_back(&kvp.second);
-        }
-        return refs;
     }
 
     void instruction_block::source_file(listing_source_file_t* value) {
@@ -1450,25 +1182,6 @@ namespace basecode::vm {
 
     void instruction_block::make_block_entry(const data_definition_t& data) {
         _entries.push_back(block_entry_t(data));
-    }
-
-    const std::vector<instruction_block*>& instruction_block::blocks() const {
-        return _blocks;
-    }
-
-    bool instruction_block::walk_blocks(
-            const instruction_block::block_predicate_visitor_callable& callable) {
-        std::stack<instruction_block*> block_stack {};
-        block_stack.push(this);
-        while (!block_stack.empty()) {
-            auto block = block_stack.top();
-            if (!callable(block))
-                return false;
-            block_stack.pop();
-            for (auto child_block : block->blocks())
-                block_stack.push(child_block);
-        }
-        return true;
     }
 
 };

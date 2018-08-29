@@ -32,12 +32,14 @@ namespace basecode::compiler {
     }
 
     bool procedure_call::on_emit(compiler::session& session) {
+        auto& assembler = session.assembler();
+
         session.emit_context().indent = 4;
         defer({
             session.emit_context().indent = 0;
         });
 
-        auto instruction_block = session.assembler().current_block();
+        auto instruction_block = assembler.current_block();
         auto identifier = _reference->identifier();
         auto init = identifier->initializer();
         if (init == nullptr)
@@ -55,10 +57,10 @@ namespace basecode::compiler {
                 fmt::format("foreign call: {}", identifier->symbol()->name()),
                 session.emit_context().indent);
         } else {
-            instruction_block->call(identifier->symbol()->name());
+            instruction_block->call(assembler.make_label_ref(identifier->symbol()->name()));
         }
 
-        auto target_reg = session.assembler().current_target_register();
+        auto target_reg = assembler.current_target_register();
         if (target_reg != nullptr) {
             if (!procedure_type->returns().as_list().empty()) {
                 instruction_block->pop(*target_reg);

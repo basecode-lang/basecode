@@ -33,6 +33,8 @@ namespace basecode::compiler {
     }
 
     bool procedure_type::on_emit(compiler::session& session) {
+        auto& assembler = session.assembler();
+
         auto procedure_label = symbol()->name();
         auto parent_init = parent_element_as<compiler::initializer>();
         if (parent_init != nullptr) {
@@ -46,15 +48,16 @@ namespace basecode::compiler {
             return true;
         }
 
-        auto instruction_block = session.assembler().make_procedure_block();
+        auto stack_frame = session.stack_frame();
+
+        auto instruction_block = assembler.make_procedure_block();
         instruction_block->align(vm::instruction_t::alignment);
         instruction_block->current_entry()->blank_lines(1);
         instruction_block->memo();
 
-        auto proc_label = instruction_block->make_label(procedure_label);
+        auto proc_label = assembler.make_label(procedure_label);
         instruction_block->current_entry()->label(proc_label);
 
-        auto stack_frame = instruction_block->stack_frame();
         int32_t offset = -8;
         for (auto param : _parameters.as_list()) {
             stack_frame->add(
