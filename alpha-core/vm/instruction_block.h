@@ -187,6 +187,10 @@ namespace basecode::vm {
 
         common::id_t id() const;
 
+        bool should_emit() const;
+
+        void should_emit(bool value);
+
         void label(vm::label* value);
 
         listing_source_file_t* source_file();
@@ -592,6 +596,7 @@ namespace basecode::vm {
 
     private:
         common::id_t _id;
+        bool _should_emit = true;
         instruction_block_type_t _type;
         std::vector<block_entry_t> _entries {};
         vm::listing_source_file_t* _source_file = nullptr;

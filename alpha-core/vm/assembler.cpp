@@ -38,6 +38,9 @@ namespace basecode::vm {
 
     bool assembler::assemble(common::result& r) {
         for (auto block : _blocks) {
+            if (!block->should_emit())
+                continue;
+
             for (auto& entry : block->entries()) {
                 switch (entry.type()) {
                     case block_entry_type_t::instruction: {
@@ -81,13 +84,6 @@ namespace basecode::vm {
         return segment(name);
     }
 
-    //
-    // comments:   ; ~~~~~~~~~~~~~~~
-    // labels:     name: ~~~~~~~~~~~~~~~~~~~
-    // mnemonics:  name[.b|.w|.dw|.qw]
-    // operands:   register[, register|immediate][, register|immediate]
-    // directives: .[name] [params] [,params]
-    //
     bool assembler::assemble_from_source(
             common::result& r,
             common::source_file& source_file,
@@ -390,21 +386,20 @@ namespace basecode::vm {
                     for (const auto& operand : operands) {
                         operand_encoding_t encoding;
 
-                        auto first_char = toupper(operand[0]);
-                        if (first_char == '#') {
+                        if (operand[0] == '#') {
                             uint64_t value;
                             if (!parse_immediate_number(operand, value))
                                 return false;
                             encoding.type = operand_encoding_t::flags::integer
                                 | operand_encoding_t::flags::constant;
                             encoding.value.u = value;
-                        } else if (first_char == 'I') {
+                        } else if (is_integer_register(operand)) {
                             auto number = std::atoi(operand.substr(1).c_str());
                             encoding.type = operand_encoding_t::flags::integer
                                 | operand_encoding_t::flags::reg;
                             encoding.value.r = static_cast<uint8_t>(number);
-                        } else if (first_char == 'F') {
-                            if (operand[1] == 'P') {
+                        } else if (is_float_register(operand)) {
+                            if (operand[1] == 'P' || operand[1] == 'p') {
                                 encoding.type = operand_encoding_t::flags::reg;
                                 encoding.value.r = static_cast<uint8_t>(registers_t::fp);
                             } else {
@@ -412,12 +407,20 @@ namespace basecode::vm {
                                 encoding.type = operand_encoding_t::flags::reg;
                                 encoding.value.r = static_cast<uint8_t>(number);
                             }
-                        } else if (first_char == 'S' && operand[1] == 'P') {
+                        } else if ((operand[0] == 'S' || operand[0] == 's')
+                                && (operand[1] == 'P' || operand[1] == 'p')) {
                             encoding.type = operand_encoding_t::flags::reg;
                             encoding.value.r = static_cast<uint8_t>(registers_t::sp);
-                        } else if (first_char == 'P' && operand[1] == 'C') {
+                        } else if ((operand[0] == 'P' || operand[0] == 'p')
+                                && (operand[1] == 'C' || operand[1] == 'c')) {
                             encoding.type = operand_encoding_t::flags::reg;
                             encoding.value.r = static_cast<uint8_t>(registers_t::pc);
+                        } else {
+                            encoding.type = operand_encoding_t::flags::integer
+                                            | operand_encoding_t::flags::constant
+                                            | operand_encoding_t::flags::unresolved;
+                            auto label_ref = make_label_ref(operand);
+                            encoding.value.u = label_ref->id;
                         }
 
                         wip.operands.push_back(encoding);
@@ -730,6 +733,9 @@ namespace basecode::vm {
     bool assembler::apply_addresses(common::result& r) {
         size_t offset = 0;
         for (auto block : _blocks) {
+            if (!block->should_emit())
+                continue;
+
             for (auto& entry : block->entries()) {
                 entry.address(_location_counter + offset);
                 switch (entry.type()) {
@@ -824,6 +830,9 @@ namespace basecode::vm {
     }
 
     void assembler::disassemble(instruction_block* block) {
+        if (!block->should_emit())
+            return;
+
         auto source_file = block->source_file();
         if (source_file == nullptr)
             return;
@@ -1002,6 +1011,34 @@ namespace basecode::vm {
         _label_to_unresolved_ids.insert(std::make_pair(label_name, ref_id));
 
         return &insert_pair.first.operator->()->second;
+    }
+
+    bool assembler::is_float_register(const std::string& value) const {
+        if (value.length() > 3)
+            return false;
+
+        if (value[0] != 'f' && value[0] != 'F')
+            return false;
+
+        if (value.length() == 2) {
+            return isdigit(value[1]);
+        } else {
+            return isdigit(value[1]) && isdigit(value[2]);
+        }
+    }
+
+    bool assembler::is_integer_register(const std::string& value) const {
+        if (value.length() > 3)
+            return false;
+
+        if (value[0] != 'i' && value[0] != 'I')
+            return false;
+
+        if (value.length() == 2) {
+            return isdigit(value[1]);
+        } else {
+            return isdigit(value[1]) && isdigit(value[2]);
+        }
     }
 
 };

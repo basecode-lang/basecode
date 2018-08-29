@@ -896,6 +896,10 @@ namespace basecode::vm {
 
         void add_new_block(instruction_block* block);
 
+        bool is_float_register(const std::string& value) const;
+
+        bool is_integer_register(const std::string& value) const;
+
     private:
         vm::terp* _terp = nullptr;
         uint64_t _location_counter = 0;

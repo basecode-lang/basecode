@@ -50,6 +50,14 @@ namespace basecode::vm {
         return _id;
     }
 
+    bool instruction_block::should_emit() const {
+        return _should_emit;
+    }
+
+    void instruction_block::should_emit(bool value) {
+        _should_emit = value;
+    }
+
     // sections
     void instruction_block::section(section_t type) {
         make_block_entry(type);

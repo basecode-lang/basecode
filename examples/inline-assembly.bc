@@ -1,12 +1,16 @@
+@library "alpha-core";
+#foreign print := proc(format: string, values: ...any) @alias "fmt_print";
+
 foo := 128;
 foo := foo * 2;
 
 #assembly {{
-; this is the first comment
-start:
-    move.b  i0, #$ff    ; after
-    move.b  i1, #$7f    ; after 2
+    move.qw i0, foo
+    move.b  i1, #$0a
     sub.b   i2, i0, i1
+    store.b i0, i2
 }};
 
 foo := (foo - 16) shr 2;
+
+print("foo := %hhu\n", foo);

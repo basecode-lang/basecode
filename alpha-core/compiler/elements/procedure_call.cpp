@@ -51,11 +51,11 @@ namespace basecode::compiler {
             _arguments->emit(session);
 
         if (procedure_type->is_foreign()) {
-            instruction_block->push_u16(static_cast<uint16_t>(_arguments->elements().size()));
-            instruction_block->call_foreign(procedure_type->foreign_address());
             instruction_block->comment(
                 fmt::format("foreign call: {}", identifier->symbol()->name()),
                 session.emit_context().indent);
+            instruction_block->push_u16(static_cast<uint16_t>(_arguments->elements().size()));
+            instruction_block->call_foreign(procedure_type->foreign_address());
         } else {
             instruction_block->call(assembler.make_label_ref(identifier->symbol()->name()));
         }

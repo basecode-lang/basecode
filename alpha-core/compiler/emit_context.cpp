@@ -46,6 +46,13 @@ namespace basecode::compiler {
             if (!address_reg.reserve(session))
                 return false;
 
+            block->blank_line();
+            block->comment(
+                fmt::format(
+                    "identifier '{}' address (global)",
+                    name),
+                session.emit_context().indent);
+
             auto label_ref = session.assembler().make_label_ref(name);
             if (address_offset != 0) {
                 block->move_label_to_reg_with_offset(
@@ -55,12 +62,6 @@ namespace basecode::compiler {
             } else {
                 block->move_label_to_reg(address_reg.reg, label_ref);
             }
-            block->blank_line();
-            block->comment(
-                fmt::format(
-                    "identifier '{}' address (global)",
-                    name),
-                session.emit_context().indent);
         }
 
         value_reg.reg.type = vm::register_type_t::integer;
@@ -98,7 +99,6 @@ namespace basecode::compiler {
                     vm::register_t::fp(),
                     frame_entry->offset);
             } else {
-                block->load_to_reg(value_reg.reg, address_reg.reg);
                 block->blank_line();
                 block->comment(
                     fmt::format(
@@ -106,6 +106,7 @@ namespace basecode::compiler {
                         name,
                         type_name),
                     session.emit_context().indent);
+                block->load_to_reg(value_reg.reg, address_reg.reg);
             }
 
             requires_read = false;
