@@ -661,7 +661,7 @@ namespace basecode::vm {
     instruction_block* assembler::root_block() {
         if (_blocks.empty())
             return nullptr;
-        return _blocks.front();
+        return _blocks[1];
     }
 
     bool assembler::initialize(common::result& r) {
@@ -772,6 +772,10 @@ namespace basecode::vm {
             return true;
         });
         return !r.is_failed();
+    }
+
+    std::vector<instruction_block*>& assembler::blocks() {
+        return _blocks;
     }
 
     void assembler::push_block(instruction_block* block) {

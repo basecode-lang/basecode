@@ -12,6 +12,7 @@
 #pragma once
 
 #include <functional>
+#include <vm/instruction_block.h>
 #include <compiler/compiler_types.h>
 #include "block.h"
 
@@ -38,6 +39,8 @@ namespace basecode::compiler {
         bool evaluate(compiler::session& session);
 
     protected:
+        bool on_emit(compiler::session& session) override;
+
         void on_owned_elements(element_list_t& list) override;
 
     private:
@@ -68,6 +71,7 @@ namespace basecode::compiler {
 
         std::string _name;
         element* _expression = nullptr;
+        vm::instruction_block* _instruction_block = nullptr;
     };
 
 };

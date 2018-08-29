@@ -1,12 +1,12 @@
-#assembly {{
-.section 'bss'
-.align #4
-numbers:
-    .db #$04, #$0f, #$ff, #$7f, #$00
+foo := 128;
+foo := foo * 2;
 
+#assembly {{
 ; this is the first comment
 start:
     move.b  i0, #$ff    ; after
     move.b  i1, #$7f    ; after 2
     sub.b   i2, i0, i1
 }};
+
+foo := (foo - 16) shr 2;

@@ -85,6 +85,10 @@ namespace basecode::compiler {
     bool session::compile() {
         auto& top_level_stack = _scope_manager.top_level_stack();
 
+        auto& listing = _assembler.listing();
+        listing.add_source_file("top_level.basm");
+        listing.select_source_file("top_level.basm");
+
         _program.block(_scope_manager.push_new_block());
         _program.block()->parent_element(&_program);
 
@@ -122,10 +126,6 @@ namespace basecode::compiler {
             return false;
 
         if (!_result.is_failed()) {
-            auto& listing = _assembler.listing();
-            listing.add_source_file("top_level.basm");
-            listing.select_source_file("top_level.basm");
-
             _program.emit(*this);
 
             _assembler.apply_addresses(_result);

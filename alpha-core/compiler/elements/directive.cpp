@@ -54,6 +54,15 @@ namespace basecode::compiler {
         return _name;
     }
 
+    bool directive::on_emit(compiler::session& session) {
+        if (_instruction_block != nullptr) {
+            auto current_block = session.assembler().current_block();
+            for (const auto& entry : _instruction_block->entries())
+                current_block->add_entry(entry);
+        }
+        return true;
+    }
+
     bool directive::execute(compiler::session& session) {
         auto it = s_execute_handlers.find(_name);
         if (it == s_execute_handlers.end()) {
@@ -94,12 +103,18 @@ namespace basecode::compiler {
         }
 
         common::source_file source_file;
-        if (!source_file.load(session.result(), raw_block->value()))
+        if (!source_file.load(session.result(), raw_block->value() + "\n"))
             return false;
 
-        return session.assembler().assemble_from_source(
+        auto& assembler = session.assembler();
+        auto success = assembler.assemble_from_source(
             session.result(),
             source_file);
+        if (success) {
+            // XXX:  this is so evil
+            _instruction_block = assembler.blocks().back();
+        }
+        return success;
     }
 
     bool directive::on_evaluate_assembly(compiler::session& session) {

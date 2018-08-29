@@ -1407,6 +1407,10 @@ namespace basecode::vm {
         return _entries;
     }
 
+    void instruction_block::add_entry(const block_entry_t& entry) {
+        _entries.push_back(entry);
+    }
+
     label* instruction_block::find_label(const std::string& name) {
         return find_in_blocks<label>([&](instruction_block* block) -> label* {
             const auto it = block->_labels.find(name);
@@ -1418,6 +1422,10 @@ namespace basecode::vm {
 
     void instruction_block::make_block_entry(const align_t& align) {
         _entries.push_back(block_entry_t(align));
+    }
+
+    void instruction_block::parent(instruction_block* parent_block) {
+        _parent = parent_block;
     }
 
     std::vector<label_ref_t*> instruction_block::label_references() {

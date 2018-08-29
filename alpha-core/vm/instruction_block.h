@@ -93,6 +93,14 @@ namespace basecode::vm {
                           _type(block_entry_type_t::memo) {
         }
 
+        block_entry_t(const block_entry_t& other) : _data(other._data),
+                                                    _address(other._address),
+                                                    _type(other._type),
+                                                    _blank_lines(other._blank_lines),
+                                                    _comments(other._comments),
+                                                    _labels(other._labels) {
+        }
+
         block_entry_t(const align_t& align) : _data(boost::any(align)),
                                               _type(block_entry_type_t::align) {
         }
@@ -111,6 +119,17 @@ namespace basecode::vm {
 
         template <typename T>
         T* data() {
+            if (_data.empty())
+                return nullptr;
+            try {
+                return boost::any_cast<T>(&_data);
+            } catch (const boost::bad_any_cast& e) {
+                return nullptr;
+            }
+        }
+
+        template <typename T>
+        const T* data() const {
             if (_data.empty())
                 return nullptr;
             try {
@@ -208,11 +227,15 @@ namespace basecode::vm {
 
         void add_block(instruction_block* block);
 
+        void add_entry(const block_entry_t& entry);
+
         label* find_label(const std::string& name);
 
         void remove_block(instruction_block* block);
 
         std::vector<label_ref_t*> label_references();
+
+        void parent(instruction_block* parent_block);
 
         void make_block_entry(const align_t& section);
 

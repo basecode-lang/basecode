@@ -121,7 +121,7 @@ namespace basecode::compiler {
             }
         }
 
-        auto& interned_strings = session.scope_manager().interned_string_literals();
+        auto& interned_strings = scope_manager.interned_string_literals();
         auto& ro_list = ro.first->second;
         for (const auto& it : interned_strings) {
             compiler::string_literal* str = it.second.front();

@@ -858,6 +858,8 @@ namespace basecode::vm {
 
         bool apply_addresses(common::result& r);
 
+        std::vector<instruction_block*>& blocks();
+
         void push_block(instruction_block* block);
 
         vm::segment* segment(const std::string& name);
