@@ -1,6 +1,8 @@
 @library "alpha-core";
 #foreign print := proc(format: string, values: ...any) @alias "fmt_print";
 
+print("hello world!\n");
+
 PI ::= cast<f64>(3.1415926535);
 E  ::= cast<f64>(2.7182818284);
 

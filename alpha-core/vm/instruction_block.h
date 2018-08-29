@@ -30,6 +30,7 @@ namespace basecode::vm {
     };
 
     enum class section_t : uint8_t {
+        unknown,
         bss = 1,
         ro_data,
         data,
@@ -42,12 +43,23 @@ namespace basecode::vm {
             case section_t::ro_data:return "ro_data";
             case section_t::data:   return "data";
             case section_t::text:   return "text";
+            default:
+                return "unknown";
         }
         return "unknown";
     }
 
+    inline static section_t section_type(const std::string& name) {
+        if (name == "bss")      return section_t::bss;
+        if (name == "ro_data")  return section_t::ro_data;
+        if (name == "data")     return section_t::data;
+        if (name == "text")     return section_t::text;
+        return section_t::unknown;
+    }
+
     enum data_definition_type_t : uint8_t {
-        initialized = 1,
+        none,
+        initialized,
         uninitialized
     };
 
@@ -57,7 +69,7 @@ namespace basecode::vm {
 
     struct data_definition_t {
         op_sizes size;
-        data_definition_type_t type;
+        data_definition_type_t type = data_definition_type_t::none;
         std::vector<uint64_t> values {};
     };
 

@@ -1,4 +1,9 @@
 #assembly {{
+.section 'bss'
+.align #4
+numbers:
+    .db #$04, #$0f, #$ff, #$7f, #$00
+
 ; this is the first comment
 start:
     move.b  i0, #$ff    ; after

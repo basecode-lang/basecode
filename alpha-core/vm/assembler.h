@@ -671,11 +671,30 @@ namespace basecode::vm {
             repeating   = 0b10000000,
         };
 
+        bool is_number() const {
+            return (type & flags::number) != 0;
+        }
+
+        bool is_string() const {
+            return (type & flags::string) != 0;
+        }
+
+        bool is_repeating() const {
+            return (type & flags::repeating) != 0;
+        }
+
         uint8_t type = flags::none;
         bool required = false;
     };
 
     struct directive_t {
+        size_t required_operand_count() const {
+            size_t count = 0;
+            for (const auto& op : params)
+                count += op.required ? 1 : 0;
+            return count;
+        }
+
         op_sizes size;
         directive_type_t type;
         std::vector<directive_param_t> params {};
