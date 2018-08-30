@@ -816,8 +816,6 @@ namespace basecode::vm {
 
     class assembler {
     public:
-        using block_predicate_visitor_callable = std::function<bool (instruction_block*)>;
-
         explicit assembler(vm::terp* terp);
 
         virtual ~assembler();

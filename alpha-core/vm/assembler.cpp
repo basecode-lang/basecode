@@ -37,11 +37,15 @@ namespace basecode::vm {
     }
 
     bool assembler::assemble(common::result& r) {
+        uint64_t highest_address = 0;
+
         for (auto block : _blocks) {
             if (!block->should_emit())
                 continue;
 
             for (auto& entry : block->entries()) {
+                highest_address = entry.address();
+
                 switch (entry.type()) {
                     case block_entry_type_t::instruction: {
                         auto inst = entry.data<instruction_t>();
@@ -71,6 +75,8 @@ namespace basecode::vm {
                 }
             }
         }
+
+        _terp->heap_free_space_begin(common::align(highest_address, 8));
 
         return !r.is_failed();
     }

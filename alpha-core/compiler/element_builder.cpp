@@ -39,6 +39,7 @@
 #include <compiler/elements/pointer_type.h>
 #include <compiler/elements/argument_list.h>
 #include <compiler/elements/float_literal.h>
+#include <compiler/elements/free_intrinsic.h>
 #include <compiler/elements/string_literal.h>
 #include <compiler/elements/unary_operator.h>
 #include <compiler/elements/composite_type.h>
@@ -47,6 +48,7 @@
 #include <compiler/elements/procedure_call.h>
 #include <compiler/elements/namespace_type.h>
 #include <compiler/elements/symbol_element.h>
+#include <compiler/elements/alloc_intrinsic.h>
 #include <compiler/elements/boolean_literal.h>
 #include <compiler/elements/binary_operator.h>
 #include <compiler/elements/integer_literal.h>
@@ -810,6 +812,30 @@ namespace basecode::compiler {
             result.array_size);
         identifiers.push_back(identifier);
         return unknown_type;
+    }
+
+    intrinsic* element_builder::make_free_intrinsic(
+            compiler::block* parent_scope,
+            compiler::argument_list* args) {
+        auto intrinsic = new compiler::free_intrinsic(
+            _session.scope_manager().current_module(),
+            parent_scope,
+            args);
+        _session.elements().add(intrinsic);
+        args->parent_element(intrinsic);
+        return intrinsic;
+    }
+
+    intrinsic* element_builder::make_alloc_intrinsic(
+            compiler::block* parent_scope,
+            compiler::argument_list* args) {
+        auto intrinsic = new compiler::alloc_intrinsic(
+            _session.scope_manager().current_module(),
+            parent_scope,
+            args);
+        _session.elements().add(intrinsic);
+        args->parent_element(intrinsic);
+        return intrinsic;
     }
 
     intrinsic* element_builder::make_size_of_intrinsic(

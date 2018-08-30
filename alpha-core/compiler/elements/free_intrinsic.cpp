@@ -11,35 +11,37 @@
 
 #include <compiler/session.h>
 #include <compiler/scope_manager.h>
-#include "type.h"
 #include "argument_list.h"
-#include "integer_literal.h"
-#include "size_of_intrinsic.h"
+#include "free_intrinsic.h"
 
 namespace basecode::compiler {
 
-    size_of_intrinsic::size_of_intrinsic(
+    free_intrinsic::free_intrinsic(
             compiler::module* module,
             block* parent_scope,
             argument_list* args) : intrinsic(module, parent_scope, args) {
     }
 
-    bool size_of_intrinsic::on_is_constant() const {
-        return true;
-    }
+    bool free_intrinsic::on_emit(compiler::session& session) {
+        auto& assembler = session.assembler();
+        auto instruction_block = assembler.current_block();
 
-    compiler::element* size_of_intrinsic::on_fold(compiler::session& session) {
         auto args = arguments()->elements();
-        auto arg_type = args[0]->infer_type(session);
-        return session.builder().make_integer(
-            parent_scope(),
-            arg_type->size_in_bytes());
-    }
+        // XXX: needs error handling
+        auto arg = args[0];
 
-    compiler::type* size_of_intrinsic::on_infer_type(const compiler::session& session) {
-        return session.scope_manager().find_type(qualified_symbol_t {
-            .name = "u32"
-        });
+        auto arg_reg = register_for(session, arg);
+        if (arg_reg.var != nullptr) {
+            arg_reg.clean_up = true;
+        }
+
+        assembler.push_target_register(arg_reg.reg);
+        arg->emit(session);
+        assembler.pop_target_register();
+
+        instruction_block->free(arg_reg.reg);
+
+        return true;
     }
 
 };

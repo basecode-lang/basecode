@@ -677,6 +677,32 @@ namespace basecode::vm {
         make_integer_constant_push_instruction(op_sizes::qword, value);
     }
 
+    // alloc/free
+    void instruction_block::alloc(
+            op_sizes size,
+            const register_t& dest_reg,
+            const register_t& size_reg) {
+        instruction_t alloc_op;
+        alloc_op.op = op_codes::alloc;
+        alloc_op.size = size;
+        alloc_op.operands_count = 2;
+        alloc_op.operands[0].value.r = dest_reg.number;
+        alloc_op.operands[0].type = operand_encoding_t::flags::reg | operand_encoding_t::flags::integer;
+        alloc_op.operands[1].value.r = size_reg.number;
+        alloc_op.operands[1].type = operand_encoding_t::flags::reg | operand_encoding_t::flags::integer;
+        make_block_entry(alloc_op);
+    }
+
+    void instruction_block::free(const register_t& addr_reg) {
+        instruction_t free_op;
+        free_op.op = op_codes::free;
+        free_op.size = op_sizes::none;
+        free_op.operands_count = 1;
+        free_op.operands[0].value.r = addr_reg.number;
+        free_op.operands[0].type = operand_encoding_t::flags::reg | operand_encoding_t::flags::integer;
+        make_block_entry(free_op);
+    }
+
     // convert
     void instruction_block::convert(
             const register_t& dest_reg,
@@ -1202,8 +1228,8 @@ namespace basecode::vm {
 
     void instruction_block::comment(const std::string& value, uint8_t indent) {
         make_block_entry(comment_t {
-            .value = value,
-            .indent = indent
+            .indent = indent,
+            .value = value
         });
     }
 

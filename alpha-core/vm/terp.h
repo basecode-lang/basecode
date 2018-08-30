@@ -779,8 +779,8 @@ namespace basecode::vm {
 
         bool set_target_operand_value(
             common::result& r,
-            const instruction_t& inst,
-            uint8_t operand_index,
+            const operand_encoding_t& operand,
+            op_sizes size,
             const operand_value_t& value);
 
         void execute_trap(uint8_t index);

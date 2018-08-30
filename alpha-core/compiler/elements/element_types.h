@@ -57,6 +57,7 @@ namespace basecode::compiler {
     class float_literal;
     class operator_base;
     class argument_list;
+    class free_intrinsic;
     class symbol_element;
     class procedure_type;
     class composite_type;
@@ -68,6 +69,7 @@ namespace basecode::compiler {
     class boolean_literal;
     class integer_literal;
     class binary_operator;
+    class alloc_intrinsic;
     class module_reference;
     class size_of_intrinsic;
     class namespace_element;

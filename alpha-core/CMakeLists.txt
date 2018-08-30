@@ -128,6 +128,7 @@ add_library(
     compiler/elements/float_literal.cpp compiler/elements/float_literal.h
     compiler/elements/element_types.cpp compiler/elements/element_types.h
     compiler/elements/argument_list.cpp compiler/elements/argument_list.h
+    compiler/elements/free_intrinsic.cpp compiler/elements/free_intrinsic.h
     compiler/elements/symbol_element.cpp compiler/elements/symbol_element.h
     compiler/elements/namespace_type.cpp compiler/elements/namespace_type.h
     compiler/elements/composite_type.cpp compiler/elements/composite_type.h
@@ -136,6 +137,7 @@ add_library(
     compiler/elements/unary_operator.cpp compiler/elements/unary_operator.h
     compiler/elements/return_element.cpp compiler/elements/return_element.h
     compiler/elements/procedure_call.cpp compiler/elements/procedure_call.h
+    compiler/elements/alloc_intrinsic.cpp compiler/elements/alloc_intrinsic.h
     compiler/elements/integer_literal.cpp compiler/elements/integer_literal.h
     compiler/elements/binary_operator.cpp compiler/elements/binary_operator.h
     compiler/elements/boolean_literal.cpp compiler/elements/boolean_literal.h

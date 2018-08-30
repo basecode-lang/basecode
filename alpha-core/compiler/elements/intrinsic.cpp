@@ -32,6 +32,14 @@ namespace basecode::compiler {
             return builder.make_size_of_intrinsic(
                 parent_scope,
                 args);
+        } else if (name == "alloc") {
+            return builder.make_alloc_intrinsic(
+                parent_scope,
+                args);
+        } else if (name == "free") {
+            return builder.make_free_intrinsic(
+                parent_scope,
+                args);
         }
 
         return nullptr;

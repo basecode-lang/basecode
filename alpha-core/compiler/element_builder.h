@@ -182,6 +182,14 @@ namespace basecode::compiler {
             const std::string& name,
             element* expr);
 
+        intrinsic* make_free_intrinsic(
+            compiler::block* parent_scope,
+            compiler::argument_list* args);
+
+        intrinsic* make_alloc_intrinsic(
+            compiler::block* parent_scope,
+            compiler::argument_list* args);
+
         intrinsic* make_size_of_intrinsic(
             compiler::block* parent_scope,
             compiler::argument_list* args);

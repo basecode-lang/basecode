@@ -82,8 +82,6 @@ namespace basecode::vm {
         vm::label* instance = nullptr;
     };
 
-    using comment_list_t = std::vector<comment_t>;
-
     enum class block_entry_type_t : uint8_t {
         section = 1,
         comment,
@@ -252,6 +250,14 @@ namespace basecode::vm {
         void nop();
 
         void exit();
+
+        // alloc/free
+        void alloc(
+            op_sizes size,
+            const register_t& dest_reg,
+            const register_t& size_reg);
+
+        void free(const register_t& addr_reg);
 
         // convert
         void convert(

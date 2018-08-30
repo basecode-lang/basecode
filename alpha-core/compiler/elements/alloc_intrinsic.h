@@ -15,17 +15,15 @@
 
 namespace basecode::compiler {
 
-    class size_of_intrinsic : public intrinsic {
+    class alloc_intrinsic : public intrinsic {
     public:
-        size_of_intrinsic(
+        alloc_intrinsic(
             compiler::module* module,
             compiler::block* parent_scope,
             compiler::argument_list* args);
 
     protected:
-        bool on_is_constant() const override;
-
-        compiler::element* on_fold(compiler::session& session) override;
+        bool on_emit(compiler::session& session);
 
         compiler::type* on_infer_type(const compiler::session& session) override;
     };

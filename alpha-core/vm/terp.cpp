@@ -889,7 +889,7 @@ namespace basecode::vm {
                     return false;
                 }
 
-                if (!set_target_operand_value(r, inst, 0, address))
+                if (!set_target_operand_value(r, inst.operands[0], op_sizes::qword, address))
                     return false;
 
                 _registers.flags(register_file_t::flags_t::carry, false);
@@ -924,7 +924,7 @@ namespace basecode::vm {
 
                 operand_value_t block_size;
                 block_size.alias.u = size(address.alias.u);
-                if (!set_target_operand_value(r, inst, 0, block_size))
+                if (!set_target_operand_value(r, inst.operands[0], inst.size, block_size))
                     return false;
 
                 _registers.flags(register_file_t::flags_t::carry, false);
@@ -952,7 +952,7 @@ namespace basecode::vm {
 
                 operand_value_t loaded_data;
                 loaded_data.alias.u = read(inst.size, address.alias.u);
-                if (!set_target_operand_value(r, inst, 0, loaded_data))
+                if (!set_target_operand_value(r, inst.operands[0], inst.size, loaded_data))
                     return false;
 
                 _registers.flags(register_file_t::flags_t::carry, false);
@@ -1093,7 +1093,7 @@ namespace basecode::vm {
                     }
                 }
 
-                if (!set_target_operand_value(r, inst, 0, casted_value))
+                if (!set_target_operand_value(r, inst.operands[0], inst.size, casted_value))
                     return false;
 
                 break;
@@ -1159,7 +1159,7 @@ namespace basecode::vm {
 
                 operand_value_t address;
                 address.alias.u = source_value.alias.u + offset.alias.u;
-                if (!set_target_operand_value(r, inst, 0, address))
+                if (!set_target_operand_value(r, inst.operands[0], inst.size, address))
                     return false;
 
                 _registers.flags(register_file_t::flags_t::carry, false);
@@ -1191,7 +1191,7 @@ namespace basecode::vm {
 
                 operand_value_t address;
                 address.alias.u = source_value.alias.u + offset.alias.u;
-                if (!set_target_operand_value(r, inst, 0, address))
+                if (!set_target_operand_value(r, inst.operands[0], inst.size, address))
                     return false;
 
                 _registers.flags(register_file_t::flags_t::carry, false);
@@ -1237,7 +1237,7 @@ namespace basecode::vm {
 
                 operand_value_t address;
                 address.alias.u = source_value.alias.u + offset.alias.u;
-                if (!set_target_operand_value(r, inst, 0, address))
+                if (!set_target_operand_value(r, inst.operands[0], inst.size, address))
                     return false;
 
                 _registers.flags(register_file_t::flags_t::carry, false);
@@ -1272,7 +1272,7 @@ namespace basecode::vm {
                 operand_value_t top_of_stack;
                 top_of_stack.alias.u = pop();
 
-                if (!set_target_operand_value(r, inst, 0, top_of_stack))
+                if (!set_target_operand_value(r, inst.operands[0], inst.size, top_of_stack))
                     return false;
 
                 _registers.flags(register_file_t::flags_t::zero, top_of_stack.alias.u == 0);
@@ -1317,7 +1317,7 @@ namespace basecode::vm {
                     new_value.alias.u = reg_value.alias.u + 1;
                     new_value.type = register_type_t::integer;
                 }
-                if (set_target_operand_value(r, inst, 0, reg_value))
+                if (set_target_operand_value(r, inst.operands[0], inst.size, reg_value))
                     return false;
 
                 _registers.flags(
@@ -1350,7 +1350,7 @@ namespace basecode::vm {
                     new_value.alias.u = reg_value.alias.u - 1;
                     new_value.type = register_type_t::integer;
                 }
-                if (set_target_operand_value(r, inst, 0, reg_value))
+                if (set_target_operand_value(r, inst.operands[0], inst.size, reg_value))
                     return false;
 
                 _registers.flags(
@@ -1387,7 +1387,7 @@ namespace basecode::vm {
                     sum_result.alias.u = lhs_value.alias.u + rhs_value.alias.u;
                     sum_result.type = register_type_t::integer;
                 }
-                if (!set_target_operand_value(r, inst, 0, sum_result))
+                if (!set_target_operand_value(r, inst.operands[0], inst.size, sum_result))
                     return false;
 
                 _registers.flags(
@@ -1425,7 +1425,7 @@ namespace basecode::vm {
                     subtraction_result.alias.u = lhs_value.alias.u - rhs_value.alias.u;
                     subtraction_result.type = register_type_t::integer;
                 }
-                if (!set_target_operand_value(r, inst, 0, subtraction_result))
+                if (!set_target_operand_value(r, inst.operands[0], inst.size, subtraction_result))
                     return false;
 
                 _registers.flags(
@@ -1463,7 +1463,7 @@ namespace basecode::vm {
                     product_result.type = register_type_t::integer;
                     product_result.alias.u = lhs_value.alias.u * rhs_value.alias.u;
                 }
-                if (!set_target_operand_value(r, inst, 0, product_result))
+                if (!set_target_operand_value(r, inst.operands[0], inst.size, product_result))
                     return false;
 
                 _registers.flags(
@@ -1508,7 +1508,7 @@ namespace basecode::vm {
                     }
                 }
 
-                if (!set_target_operand_value(r, inst, 0, result))
+                if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
                     return false;
 
                 _registers.flags(
@@ -1536,7 +1536,7 @@ namespace basecode::vm {
 
                 operand_value_t result;
                 result.alias.u = lhs_value.alias.u % rhs_value.alias.u;
-                if (!set_target_operand_value(r, inst, 0, result))
+                if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
                     return false;
 
                 _registers.flags(
@@ -1573,7 +1573,7 @@ namespace basecode::vm {
                     result.type = register_type_t::integer;
                 }
 
-                if (!set_target_operand_value(r, inst, 0, result))
+                if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
                     return false;
 
                 _registers.flags(register_file_t::flags_t::carry, false);
@@ -1599,7 +1599,7 @@ namespace basecode::vm {
 
                 operand_value_t result;
                 result.alias.u = lhs_value.alias.u >> rhs_value.alias.u;
-                if (!set_target_operand_value(r, inst, 0, result))
+                if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
                     return false;
 
                 _registers.flags(register_file_t::flags_t::carry, false);
@@ -1624,7 +1624,7 @@ namespace basecode::vm {
 
                 operand_value_t result;
                 result.alias.u = lhs_value.alias.u << rhs_value.alias.u;
-                if (!set_target_operand_value(r, inst, 0, result))
+                if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
                     return false;
 
                 _registers.flags(register_file_t::flags_t::carry, false);
@@ -1652,7 +1652,7 @@ namespace basecode::vm {
                 right_rotated_value.alias.u = rotr(
                     lhs_value.alias.u,
                     static_cast<uint8_t>(rhs_value.alias.u));
-                if (!set_target_operand_value(r, inst, 0, right_rotated_value))
+                if (!set_target_operand_value(r, inst.operands[0], inst.size, right_rotated_value))
                     return false;
 
                 _registers.flags(register_file_t::flags_t::carry, false);
@@ -1680,7 +1680,7 @@ namespace basecode::vm {
                 left_rotated_value.alias.u = rotl(
                     lhs_value.alias.u,
                     static_cast<uint8_t>(rhs_value.alias.u));
-                if (!set_target_operand_value(r, inst, 0, left_rotated_value))
+                if (!set_target_operand_value(r, inst.operands[0], inst.size, left_rotated_value))
                     return false;
 
                 _registers.flags(register_file_t::flags_t::carry, false);
@@ -1706,7 +1706,7 @@ namespace basecode::vm {
 
                 operand_value_t result;
                 result.alias.u = lhs_value.alias.u & rhs_value.alias.u;
-                if (!set_target_operand_value(r, inst, 0, result))
+                if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
                     return false;
 
                 _registers.flags(register_file_t::flags_t::carry, false);
@@ -1732,7 +1732,7 @@ namespace basecode::vm {
 
                 operand_value_t result;
                 result.alias.u = lhs_value.alias.u | rhs_value.alias.u;
-                if (!set_target_operand_value(r, inst, 0, result))
+                if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
                     return false;
 
                 _registers.flags(register_file_t::flags_t::carry, false);
@@ -1758,7 +1758,7 @@ namespace basecode::vm {
 
                 operand_value_t result;
                 result.alias.u = lhs_value.alias.u ^ rhs_value.alias.u;
-                if (!set_target_operand_value(r, inst, 0, result))
+                if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
                     return false;
 
                 _registers.flags(register_file_t::flags_t::carry, false);
@@ -1781,7 +1781,7 @@ namespace basecode::vm {
 
                 operand_value_t not_result;
                 not_result.alias.u = ~value.alias.u;
-                if (!set_target_operand_value(r, inst, 0, not_result))
+                if (!set_target_operand_value(r, inst.operands[0], inst.size, not_result))
                     return false;
 
                 _registers.flags(register_file_t::flags_t::carry, false);
@@ -1808,7 +1808,7 @@ namespace basecode::vm {
                 uint64_t masked_value = static_cast<uint64_t>(1 << bit_number.alias.u);
                 operand_value_t result;
                 result.alias.u = value.alias.u | masked_value;
-                if (!set_target_operand_value(r, inst, 0, result))
+                if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
                     return false;
 
                 _registers.flags(register_file_t::flags_t::zero, false);
@@ -1833,7 +1833,7 @@ namespace basecode::vm {
                 uint64_t masked_value = static_cast<uint64_t>(~(1 << bit_number.alias.u));
                 operand_value_t result;
                 result.alias.u = value.alias.u & masked_value;
-                if (!set_target_operand_value(r, inst, 0, result))
+                if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
                     return false;
 
                 _registers.flags(register_file_t::flags_t::zero, true);
@@ -2096,14 +2096,14 @@ namespace basecode::vm {
             case op_codes::setz: {
                 operand_value_t result;
                 result.alias.u = _registers.flags(register_file_t::flags_t::zero) ? 1 : 0;
-                if (!set_target_operand_value(r, inst, 0, result))
+                if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
                     return false;
                 break;
             }
             case op_codes::setnz: {
                 operand_value_t result;
                 result.alias.u = !_registers.flags(register_file_t::flags_t::zero) ? 1 : 0;
-                if (!set_target_operand_value(r, inst, 0, result))
+                if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
                     return false;
                 break;
             }
@@ -2189,7 +2189,7 @@ namespace basecode::vm {
                         break;
                 }
 
-                if (!set_target_operand_value(r, inst, 0, result))
+                if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
                     return false;
 
                 _registers.flags(register_file_t::flags_t::carry, false);
@@ -2626,10 +2626,9 @@ namespace basecode::vm {
 
     bool terp::set_target_operand_value(
             common::result& r,
-            const instruction_t& inst,
-            uint8_t operand_index,
+            const operand_encoding_t& operand,
+            op_sizes size,
             const operand_value_t& value) {
-        auto& operand = inst.operands[operand_index];
         auto type = operand.is_integer() ?
             register_type_t::integer :
             register_type_t::floating_point;
@@ -2641,7 +2640,7 @@ namespace basecode::vm {
                 type,
                 _registers.r[reg_index],
                 value.alias.u,
-                inst.size);
+                size);
         } else {
             r.add_message(
                 "B006",

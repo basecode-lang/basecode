@@ -14,16 +14,28 @@ foo := foo * 2;
 foo := (foo - 16) shr 2;
 
 bar: u64;
-bar := cast<u64>(512);
+bar := 512;
+
+// XXX: this works because add_identifier_to_scope calls fold for constant rhs
+constant_fold_at_assignment := size_of(bar);
+
+// XXX: this isn't calling fold (binary_op)
+temp: u32;
+temp := size_of(bar);
 
 print("foo := %hhu\n", foo);
 print("size_of(foo) := %d\n", size_of(foo));
 print("size_of(u16) := %d\n", size_of(u16));
 print("size_of(u32) := %d\n", size_of(u32));
 
-// XXX: the compiler needs to zero extend some of these
+// XXX: only applies FFI: the compiler needs to zero extend some of these
 #assembly {{ move.qw i0, #$0 }};
 print("size_of(bar) := %d\n", size_of(bar));
 
 #assembly {{ move.qw i0, #$0 }};
 print("size_of(string) := %d\n", size_of(string));
+
+// alloc & free block of memory
+addr: u64 := alloc(4096);
+print("addr := %ld\n", addr);
+free(addr);
