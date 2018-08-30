@@ -25,24 +25,28 @@ namespace basecode::compiler {
             compiler::session& session,
             compiler::block* parent_scope,
             compiler::argument_list* args,
-            const std::string& name) {
+            const qualified_symbol_t& symbol) {
         auto& builder = session.builder();
 
-        if (name == "size_of") {
-            return builder.make_size_of_intrinsic(
+        intrinsic* element = nullptr;
+        if (symbol.name == "size_of") {
+            element = builder.make_size_of_intrinsic(
                 parent_scope,
                 args);
-        } else if (name == "alloc") {
-            return builder.make_alloc_intrinsic(
+        } else if (symbol.name == "alloc") {
+            element = builder.make_alloc_intrinsic(
                 parent_scope,
                 args);
-        } else if (name == "free") {
-            return builder.make_free_intrinsic(
+        } else if (symbol.name == "free") {
+            element = builder.make_free_intrinsic(
                 parent_scope,
                 args);
         }
 
-        return nullptr;
+        if (element != nullptr)
+            element->location(symbol.location);
+
+        return element;
     }
 
     intrinsic::intrinsic(

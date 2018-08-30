@@ -30,6 +30,15 @@ namespace basecode::compiler {
 
     compiler::element* size_of_intrinsic::on_fold(compiler::session& session) {
         auto args = arguments()->elements();
+        if (args.empty() || args.size() > 1) {
+            session.error(
+                this,
+                "P091",
+                "size_of expects a single argument.",
+                location());
+            return nullptr;
+        }
+
         auto arg_type = args[0]->infer_type(session);
         return session.builder().make_integer(
             parent_scope(),

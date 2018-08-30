@@ -39,3 +39,4 @@ print("size_of(string) := %d\n", size_of(string));
 addr: u64 := alloc(4096);
 print("addr := %ld\n", addr);
 free(addr);
+

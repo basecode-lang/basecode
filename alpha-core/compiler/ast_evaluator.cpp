@@ -444,6 +444,10 @@ namespace basecode::compiler {
                 init_expr->parent_element(new_identifier);
             else {
                 auto folded_expr = init_expr->fold(_session);
+                // XXX: need to refactor fold/on_fold's prototype
+                if (_session.result().is_failed())
+                    return nullptr;
+
                 if (folded_expr != nullptr) {
                     init_expr = folded_expr;
                     auto old_expr = init->expression();
@@ -910,7 +914,7 @@ namespace basecode::compiler {
             _session,
             scope_manager.current_scope(),
             args,
-            qualified_symbol.name);
+            qualified_symbol);
         if (intrinsic != nullptr) {
             result.element = intrinsic;
             return true;

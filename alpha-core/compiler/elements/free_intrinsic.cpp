@@ -11,6 +11,7 @@
 
 #include <compiler/session.h>
 #include <compiler/scope_manager.h>
+#include "type.h"
 #include "argument_list.h"
 #include "free_intrinsic.h"
 
@@ -27,8 +28,26 @@ namespace basecode::compiler {
         auto instruction_block = assembler.current_block();
 
         auto args = arguments()->elements();
-        // XXX: needs error handling
+        if (args.empty() || args.size() > 1) {
+            session.error(
+                this,
+                "P091",
+                "free expects a single integer argument.",
+                location());
+            return false;
+        }
+
         auto arg = args[0];
+        auto arg_type = arg->infer_type(session);
+        if (arg_type == nullptr
+        ||  arg_type->number_class() != type_number_class_t::integer) {
+            session.error(
+                this,
+                "P091",
+                "free expects a single integer argument.",
+                location());
+            return false;
+        }
 
         auto arg_reg = register_for(session, arg);
         if (arg_reg.var != nullptr) {

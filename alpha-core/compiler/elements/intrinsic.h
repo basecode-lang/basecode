@@ -21,7 +21,7 @@ namespace basecode::compiler {
             compiler::session& session,
             compiler::block* parent_scope,
             compiler::argument_list* args,
-            const std::string& name);
+            const qualified_symbol_t& symbol);
 
         intrinsic(
             compiler::module* module,
