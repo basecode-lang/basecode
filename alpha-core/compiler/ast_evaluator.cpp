@@ -18,6 +18,7 @@
 #include <compiler/elements/comment.h>
 #include <compiler/elements/program.h>
 #include <compiler/elements/any_type.h>
+#include <compiler/elements/intrinsic.h>
 #include <compiler/elements/raw_block.h>
 #include <compiler/elements/bool_type.h>
 #include <compiler/elements/attribute.h>
@@ -51,6 +52,7 @@
 #include <compiler/elements/integer_literal.h>
 #include <compiler/elements/module_reference.h>
 #include <compiler/elements/namespace_element.h>
+#include <compiler/elements/size_of_intrinsic.h>
 #include <compiler/elements/procedure_instance.h>
 #include <compiler/elements/identifier_reference.h>
 #include "ast_evaluator.h"
@@ -897,13 +899,24 @@ namespace basecode::compiler {
 
         qualified_symbol_t qualified_symbol {};
         builder.make_qualified_symbol(qualified_symbol, context.node->lhs.get());
-        auto proc_identifier = scope_manager.find_identifier(qualified_symbol);
 
         compiler::argument_list* args = nullptr;
         auto expr = evaluate(context.node->rhs.get());
         if (expr != nullptr) {
             args = dynamic_cast<compiler::argument_list*>(expr);
         }
+
+        auto intrinsic = compiler::intrinsic::intrinsic_for_call(
+            _session,
+            scope_manager.current_scope(),
+            args,
+            qualified_symbol.name);
+        if (intrinsic != nullptr) {
+            result.element = intrinsic;
+            return true;
+        }
+
+        auto proc_identifier = scope_manager.find_identifier(qualified_symbol);
         result.element = builder.make_procedure_call(
             scope_manager.current_scope(),
             builder.make_identifier_reference(

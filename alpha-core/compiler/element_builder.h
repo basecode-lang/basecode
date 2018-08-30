@@ -182,6 +182,10 @@ namespace basecode::compiler {
             const std::string& name,
             element* expr);
 
+        intrinsic* make_size_of_intrinsic(
+            compiler::block* parent_scope,
+            compiler::argument_list* args);
+
         procedure_call* make_procedure_call(
             compiler::block* parent_scope,
             compiler::identifier_reference* reference,

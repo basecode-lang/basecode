@@ -25,6 +25,7 @@
 #include <compiler/elements/statement.h>
 #include <compiler/elements/type_info.h>
 #include <compiler/elements/transmute.h>
+#include <compiler/elements/intrinsic.h>
 #include <compiler/elements/expression.h>
 #include <compiler/elements/identifier.h>
 #include <compiler/elements/if_element.h>
@@ -50,6 +51,7 @@
 #include <compiler/elements/binary_operator.h>
 #include <compiler/elements/integer_literal.h>
 #include <compiler/elements/module_reference.h>
+#include <compiler/elements/size_of_intrinsic.h>
 #include <compiler/elements/namespace_element.h>
 #include <compiler/elements/procedure_instance.h>
 #include <compiler/elements/identifier_reference.h>
@@ -808,6 +810,18 @@ namespace basecode::compiler {
             result.array_size);
         identifiers.push_back(identifier);
         return unknown_type;
+    }
+
+    intrinsic* element_builder::make_size_of_intrinsic(
+            compiler::block* parent_scope,
+            compiler::argument_list* args) {
+        auto intrinsic = new compiler::size_of_intrinsic(
+            _session.scope_manager().current_module(),
+            parent_scope,
+            args);
+        _session.elements().add(intrinsic);
+        args->parent_element(intrinsic);
+        return intrinsic;
     }
 
 };

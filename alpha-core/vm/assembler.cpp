@@ -427,7 +427,7 @@ namespace basecode::vm {
                     }
 
                     wip.is_valid = wip.operands.size() == required_operand_count;
-                    break;
+                    goto retry;
                 }
                 case assembly_parser_state_t::encode_instruction: {
                     if (!wip.is_valid) {
@@ -1021,7 +1021,7 @@ namespace basecode::vm {
             return false;
 
         if (value.length() == 2) {
-            return isdigit(value[1]);
+            return static_cast<bool>(isdigit(value[1]));
         } else {
             return isdigit(value[1]) && isdigit(value[2]);
         }
@@ -1035,7 +1035,7 @@ namespace basecode::vm {
             return false;
 
         if (value.length() == 2) {
-            return isdigit(value[1]);
+            return static_cast<bool>(isdigit(value[1]));
         } else {
             return isdigit(value[1]) && isdigit(value[2]);
         }

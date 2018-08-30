@@ -24,9 +24,21 @@ namespace basecode::compiler {
     }
 
     bool argument_list::on_emit(compiler::session& session) {
-        auto instruction_block = session.assembler().current_block();
+        auto& assembler = session.assembler();
+
+        auto instruction_block = assembler.current_block();
         for (auto it = _elements.rbegin(); it != _elements.rend(); ++it) {
             element* arg = *it;
+
+            if (arg->element_type() == element_type_t::intrinsic) {
+                auto folded_expr = arg->fold(session);
+                if (folded_expr != nullptr) {
+                    instruction_block->blank_line();
+                    instruction_block->comment("intrinsic constant fold", 4);
+                    arg = folded_expr;
+                }
+            }
+
             switch (arg->element_type()) {
                 case element_type_t::proc_call:
                 case element_type_t::expression:
@@ -39,14 +51,11 @@ namespace basecode::compiler {
                 case element_type_t::identifier_reference: {
                     auto arg_reg = register_for(session, arg);
                     if (arg_reg.var != nullptr) {
-//                        push_size = vm::op_size_for_byte_size(
-//                            arg_reg.var->type
-//                                       ->size_in_bytes());
                         arg_reg.clean_up = true;
                     }
-                    session.assembler().push_target_register(arg_reg.reg);
+                    assembler.push_target_register(arg_reg.reg);
                     arg->emit(session);
-                    session.assembler().pop_target_register();
+                    assembler.pop_target_register();
                     instruction_block->push(arg_reg.reg);
                     break;
                 }

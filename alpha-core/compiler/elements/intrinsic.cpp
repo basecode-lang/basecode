@@ -21,34 +21,36 @@
 
 namespace basecode::compiler {
 
+    intrinsic* intrinsic::intrinsic_for_call(
+            compiler::session& session,
+            compiler::block* parent_scope,
+            compiler::argument_list* args,
+            const std::string& name) {
+        auto& builder = session.builder();
+
+        if (name == "size_of") {
+            return builder.make_size_of_intrinsic(
+                parent_scope,
+                args);
+        }
+
+        return nullptr;
+    }
+
     intrinsic::intrinsic(
         compiler::module* module,
         compiler::block* parent_scope,
-        compiler::identifier_reference* reference,
         compiler::argument_list* args) : element(module, parent_scope, element_type_t::intrinsic),
-                                         _arguments(args),
-                                         _reference(reference) {
+                                         _arguments(args) {
     }
 
     compiler::argument_list* intrinsic::arguments() {
         return _arguments;
     }
 
-    compiler::identifier_reference* intrinsic::reference() {
-        return _reference;
-    }
-
     void intrinsic::on_owned_elements(element_list_t& list) {
         if (_arguments != nullptr)
             list.emplace_back(_arguments);
-    }
-
-    void intrinsic::reference(compiler::identifier_reference* value) {
-        _reference = value;
-    }
-
-    compiler::type* intrinsic::on_infer_type(const compiler::session& session) {
-        return nullptr;
     }
 
 };

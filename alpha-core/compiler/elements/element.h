@@ -103,7 +103,7 @@ namespace basecode::compiler {
 
         virtual void on_owned_elements(element_list_t& list);
 
-        virtual compiler::type* on_infer_type(const compiler::session& program);
+        virtual compiler::type* on_infer_type(const compiler::session& session);
 
     private:
         common::id_t _id;

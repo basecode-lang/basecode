@@ -69,6 +69,7 @@ namespace basecode::compiler {
     class integer_literal;
     class binary_operator;
     class module_reference;
+    class size_of_intrinsic;
     class namespace_element;
     class procedure_instance;
     class identifier_reference;

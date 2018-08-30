@@ -47,6 +47,7 @@ namespace basecode::compiler {
             name_for_pointer(_base_type));
         symbol(type_symbol);
         type_symbol->parent_element(this);
+        size_in_bytes(sizeof(uint64_t));
         return true;
     }
 

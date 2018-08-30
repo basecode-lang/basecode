@@ -11,30 +11,21 @@
 
 #pragma once
 
-#include "element.h"
+#include "intrinsic.h"
 
 namespace basecode::compiler {
 
-    class intrinsic  : public element {
+    class size_of_intrinsic : public intrinsic {
     public:
-        static intrinsic* intrinsic_for_call(
-            compiler::session& session,
-            compiler::block* parent_scope,
-            compiler::argument_list* args,
-            const std::string& name);
-
-        intrinsic(
+        size_of_intrinsic(
             compiler::module* module,
             compiler::block* parent_scope,
             compiler::argument_list* args);
 
-        compiler::argument_list* arguments();
-
     protected:
-        void on_owned_elements(element_list_t& list) override;
+        compiler::element* on_fold(compiler::session& session) override;
 
-    private:
-        compiler::argument_list* _arguments = nullptr;
+        compiler::type* on_infer_type(const compiler::session& session) override;
     };
 
 };
