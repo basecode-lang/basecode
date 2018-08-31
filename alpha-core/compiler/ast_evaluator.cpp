@@ -443,13 +443,12 @@ namespace basecode::compiler {
             if (init == nullptr)
                 init_expr->parent_element(new_identifier);
             else {
-                auto folded_expr = init_expr->fold(_session);
-                // XXX: need to refactor fold/on_fold's prototype
-                if (_session.result().is_failed())
+                fold_result_t fold_result {};
+                if (!init_expr->fold(_session, fold_result))
                     return nullptr;
 
-                if (folded_expr != nullptr) {
-                    init_expr = folded_expr;
+                if (fold_result.element != nullptr) {
+                    init_expr = fold_result.element;
                     auto old_expr = init->expression();
                     init->expression(init_expr);
                     _session.elements().remove(old_expr->id());

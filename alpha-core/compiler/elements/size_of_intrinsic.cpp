@@ -24,11 +24,9 @@ namespace basecode::compiler {
             argument_list* args) : intrinsic(module, parent_scope, args) {
     }
 
-    bool size_of_intrinsic::on_is_constant() const {
-        return true;
-    }
-
-    compiler::element* size_of_intrinsic::on_fold(compiler::session& session) {
+    bool size_of_intrinsic::on_fold(
+            compiler::session& session,
+            fold_result_t& result) {
         auto args = arguments()->elements();
         if (args.empty() || args.size() > 1) {
             session.error(
@@ -36,13 +34,18 @@ namespace basecode::compiler {
                 "P091",
                 "size_of expects a single argument.",
                 location());
-            return nullptr;
+            return false;
         }
 
         auto arg_type = args[0]->infer_type(session);
-        return session.builder().make_integer(
+        result.element = session.builder().make_integer(
             parent_scope(),
             arg_type->size_in_bytes());
+        return true;
+    }
+
+    bool size_of_intrinsic::on_is_constant() const {
+        return true;
     }
 
     compiler::type* size_of_intrinsic::on_infer_type(const compiler::session& session) {

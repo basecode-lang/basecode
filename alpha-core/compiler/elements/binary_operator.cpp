@@ -115,7 +115,9 @@ namespace basecode::compiler {
         return true;
     }
 
-    element* binary_operator::on_fold(compiler::session& session) {
+    bool binary_operator::on_fold(
+            compiler::session& session,
+            fold_result_t& result) {
         switch (operator_type()) {
             case operator_type_t::add: {
                 break;
@@ -184,7 +186,7 @@ namespace basecode::compiler {
                 break;
         }
 
-        return nullptr;
+        return true;
     }
 
     element* binary_operator::lhs() {

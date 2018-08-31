@@ -37,6 +37,23 @@ namespace basecode::compiler {
     element::~element() {
     }
 
+    bool element::fold(
+            compiler::session& session,
+            fold_result_t& result) {
+        if (result.allow_no_fold_attribute) {
+            auto no_fold_attribute = find_attribute("no_fold");
+            if (no_fold_attribute != nullptr)
+                return true;
+        }
+        return on_fold(session, result);
+    }
+
+    bool element::on_fold(
+            compiler::session& session,
+            fold_result_t& result) {
+        return true;
+    }
+
     block* element::parent_scope() {
         return _parent_scope;
     }
@@ -188,13 +205,6 @@ namespace basecode::compiler {
         return true;
     }
 
-    element* element::fold(compiler::session& session) {
-        auto no_fold_attribute = find_attribute("no_fold");
-        if (no_fold_attribute != nullptr)
-            return nullptr;
-        return on_fold(session);
-    }
-
     bool element::on_as_integer(uint64_t& value) const {
         return false;
     }
@@ -211,10 +221,6 @@ namespace basecode::compiler {
         if (_parent_element == nullptr)
             return false;
         return _parent_element->element_type() == type;
-    }
-
-    element* element::on_fold(compiler::session& session) {
-        return nullptr;
     }
 
     void element::on_owned_elements(element_list_t& list) {

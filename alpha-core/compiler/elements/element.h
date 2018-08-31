@@ -29,6 +29,10 @@ namespace basecode::compiler {
 
         virtual ~element();
 
+        bool fold(
+            compiler::session& session,
+            fold_result_t& result);
+
         bool is_type() const;
 
         block* parent_scope();
@@ -68,8 +72,6 @@ namespace basecode::compiler {
 
         bool as_string(std::string& value) const;
 
-        element* fold(compiler::session& session);
-
         void owned_elements(element_list_t& list);
 
         bool is_parent_element(element_type_t type);
@@ -83,9 +85,11 @@ namespace basecode::compiler {
         compiler::type* infer_type(const compiler::session& session);
 
     protected:
-        virtual bool on_emit(compiler::session& session);
+        virtual bool on_fold(
+            compiler::session& session,
+            fold_result_t& result);
 
-        virtual element* on_fold(compiler::session& session);
+        virtual bool on_emit(compiler::session& session);
 
         element_register_t register_for(
             compiler::session& session,

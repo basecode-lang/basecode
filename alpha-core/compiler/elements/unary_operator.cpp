@@ -25,6 +25,34 @@ namespace basecode::compiler {
                             _rhs(rhs) {
     }
 
+    bool unary_operator::on_fold(
+            compiler::session& session,
+            fold_result_t& result) {
+        switch (operator_type()) {
+            case operator_type_t::negate: {
+                break;
+            }
+            case operator_type_t::binary_not: {
+                break;
+            }
+            case operator_type_t::logical_not: {
+                break;
+            }
+            default:
+                break;
+        }
+
+        return true;
+    }
+
+    element* unary_operator::rhs() {
+        return _rhs;
+    }
+
+    bool unary_operator::on_is_constant() const {
+        return _rhs != nullptr && _rhs->is_constant();
+    }
+
     bool unary_operator::on_emit(compiler::session& session) {
         auto instruction_block = session.assembler().current_block();
         auto target_reg = session.assembler().current_target_register();
@@ -58,32 +86,6 @@ namespace basecode::compiler {
         }
 
         return true;
-    }
-
-    element* unary_operator::rhs() {
-        return _rhs;
-    }
-
-    bool unary_operator::on_is_constant() const {
-        return _rhs != nullptr && _rhs->is_constant();
-    }
-
-    element* unary_operator::on_fold(compiler::session& session) {
-        switch (operator_type()) {
-            case operator_type_t::negate: {
-                break;
-            }
-            case operator_type_t::binary_not: {
-                break;
-            }
-            case operator_type_t::logical_not: {
-                break;
-            }
-            default:
-                break;
-        }
-
-        return nullptr;
     }
 
     void unary_operator::on_owned_elements(element_list_t& list) {

@@ -23,9 +23,11 @@ namespace basecode::compiler {
             compiler::argument_list* args);
 
     protected:
-        bool on_is_constant() const override;
+        bool on_fold(
+            compiler::session& session,
+            fold_result_t& result) override;
 
-        compiler::element* on_fold(compiler::session& session) override;
+        bool on_is_constant() const override;
 
         compiler::type* on_infer_type(const compiler::session& session) override;
     };

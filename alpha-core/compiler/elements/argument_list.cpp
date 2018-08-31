@@ -31,11 +31,11 @@ namespace basecode::compiler {
             element* arg = *it;
 
             if (arg->element_type() == element_type_t::intrinsic) {
-                auto folded_expr = arg->fold(session);
-                if (folded_expr != nullptr) {
+                fold_result_t fold_result;
+                if (arg->fold(session, fold_result) && fold_result.element != nullptr) {
                     instruction_block->blank_line();
                     instruction_block->comment("intrinsic constant fold", 4);
-                    arg = folded_expr;
+                    arg = fold_result.element;
                 }
             }
 

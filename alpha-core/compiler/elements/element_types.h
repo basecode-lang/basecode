@@ -478,4 +478,10 @@ namespace basecode::compiler {
         compiler::type* type = nullptr;
     };
 
+    ///////////////////////////////////////////////////////////////////////////
+
+    struct fold_result_t {
+        bool allow_no_fold_attribute = true;
+        compiler::element* element = nullptr;
+    };
 };

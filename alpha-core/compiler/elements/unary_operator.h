@@ -27,11 +27,13 @@ namespace basecode::compiler {
         element* rhs();
 
     protected:
+        bool on_fold(
+            compiler::session& session,
+            fold_result_t& result) override;
+
         bool on_is_constant() const override;
 
         bool on_emit(compiler::session& session) override;
-
-        element* on_fold(compiler::session& session) override;
 
         void on_owned_elements(element_list_t& list) override;
 
