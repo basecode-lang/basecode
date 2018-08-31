@@ -41,6 +41,18 @@ namespace basecode::compiler {
             element = builder.make_free_intrinsic(
                 parent_scope,
                 args);
+        } else if (symbol.name == "align_of") {
+            element = builder.make_align_of_intrinsic(
+                parent_scope,
+                args);
+        } else if (symbol.name == "address_of") {
+            element = builder.make_address_of_intrinsic(
+                parent_scope,
+                args);
+        } else if (symbol.name == "type_of") {
+            element = builder.make_type_of_intrinsic(
+                parent_scope,
+                args);
         }
 
         if (element != nullptr)

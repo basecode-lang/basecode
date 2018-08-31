@@ -142,9 +142,12 @@ add_library(
     compiler/elements/binary_operator.cpp compiler/elements/binary_operator.h
     compiler/elements/boolean_literal.cpp compiler/elements/boolean_literal.h
     compiler/elements/module_reference.cpp compiler/elements/module_reference.h
+    compiler/elements/type_of_intrinsic.cpp compiler/elements/type_of_intrinsic.h
     compiler/elements/namespace_element.cpp compiler/elements/namespace_element.h
     compiler/elements/size_of_intrinsic.cpp compiler/elements/size_of_intrinsic.h
+    compiler/elements/align_of_intrinsic.cpp compiler/elements/align_of_intrinsic.h
     compiler/elements/procedure_instance.cpp compiler/elements/procedure_instance.h
+    compiler/elements/address_of_intrinsic.cpp compiler/elements/address_of_intrinsic.h
     compiler/elements/identifier_reference.cpp compiler/elements/identifier_reference.h)
 target_link_libraries(
     ${PROJECT_NAME}

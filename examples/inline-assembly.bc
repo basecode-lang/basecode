@@ -21,12 +21,27 @@ constant_fold_at_assignment := size_of(bar);
 temp: u32;
 temp := size_of(bar);
 
-print("foo := %hhu\n", foo);
-print("size_of(foo) := %d\n", size_of(foo));
-print("size_of(u16) := %d\n", size_of(u16));
-print("size_of(u32) := %d\n", size_of(u32));
-print("size_of(bar) := %d\n", size_of(bar));
-print("size_of(string) := %d\n", size_of(string));
+temp_type_info: ^type;
+temp_type_info := type_of(temp);
+
+print("address_of(temp) := %d\n\n", address_of(temp));
+
+print("foo := %hhu\n\n", foo);
+
+print("size_of(foo)     := %d\n",   size_of(foo));
+print("align_of(foo)    := %d\n\n", align_of(foo));
+
+print("size_of(u16)     := %d\n",   size_of(u16));
+print("align_of(u16)    := %d\n\n", align_of(u16));
+
+print("size_of(u32)     := %d\n",   size_of(u32));
+print("align_of(u32)    := %d\n\n", align_of(u32));
+
+print("size_of(bar)     := %d\n",   size_of(bar));
+print("align_of(bar)    := %d\n\n", align_of(bar));
+
+print("size_of(string)  := %d\n",   size_of(string));
+print("align_of(string) := %d\n\n", align_of(string));
 
 // alloc & free block of memory
 addr: u64 := alloc(4096);

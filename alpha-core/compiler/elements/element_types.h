@@ -73,7 +73,10 @@ namespace basecode::compiler {
     class module_reference;
     class size_of_intrinsic;
     class namespace_element;
+    class type_of_intrinsic;
+    class align_of_intrinsic;
     class procedure_instance;
+    class address_of_intrinsic;
     class identifier_reference;
 
     using type_list_t = std::vector<type*>;

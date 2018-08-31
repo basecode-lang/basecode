@@ -186,11 +186,23 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             compiler::argument_list* args);
 
+        intrinsic* make_type_of_intrinsic(
+            compiler::block* parent_scope,
+            compiler::argument_list* args);
+
         intrinsic* make_alloc_intrinsic(
             compiler::block* parent_scope,
             compiler::argument_list* args);
 
+        intrinsic* make_align_of_intrinsic(
+            compiler::block* parent_scope,
+            compiler::argument_list* args);
+
         intrinsic* make_size_of_intrinsic(
+            compiler::block* parent_scope,
+            compiler::argument_list* args);
+
+        intrinsic* make_address_of_intrinsic(
             compiler::block* parent_scope,
             compiler::argument_list* args);
 

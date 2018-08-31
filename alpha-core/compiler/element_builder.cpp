@@ -55,7 +55,10 @@
 #include <compiler/elements/module_reference.h>
 #include <compiler/elements/size_of_intrinsic.h>
 #include <compiler/elements/namespace_element.h>
+#include <compiler/elements/type_of_intrinsic.h>
+#include <compiler/elements/align_of_intrinsic.h>
 #include <compiler/elements/procedure_instance.h>
+#include <compiler/elements/address_of_intrinsic.h>
 #include <compiler/elements/identifier_reference.h>
 #include "element_builder.h"
 
@@ -838,10 +841,46 @@ namespace basecode::compiler {
         return intrinsic;
     }
 
+    intrinsic* element_builder::make_address_of_intrinsic(
+            compiler::block* parent_scope,
+            compiler::argument_list* args) {
+        auto intrinsic = new compiler::address_of_intrinsic(
+            _session.scope_manager().current_module(),
+            parent_scope,
+            args);
+        _session.elements().add(intrinsic);
+        args->parent_element(intrinsic);
+        return intrinsic;
+    }
+
+    intrinsic* element_builder::make_align_of_intrinsic(
+            compiler::block* parent_scope,
+            compiler::argument_list* args) {
+        auto intrinsic = new compiler::align_of_intrinsic(
+            _session.scope_manager().current_module(),
+            parent_scope,
+            args);
+        _session.elements().add(intrinsic);
+        args->parent_element(intrinsic);
+        return intrinsic;
+    }
+
     intrinsic* element_builder::make_size_of_intrinsic(
             compiler::block* parent_scope,
             compiler::argument_list* args) {
         auto intrinsic = new compiler::size_of_intrinsic(
+            _session.scope_manager().current_module(),
+            parent_scope,
+            args);
+        _session.elements().add(intrinsic);
+        args->parent_element(intrinsic);
+        return intrinsic;
+    }
+
+    intrinsic* element_builder::make_type_of_intrinsic(
+            compiler::block* parent_scope,
+            compiler::argument_list* args) {
+        auto intrinsic = new compiler::type_of_intrinsic(
             _session.scope_manager().current_module(),
             parent_scope,
             args);

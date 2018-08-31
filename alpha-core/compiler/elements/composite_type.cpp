@@ -74,6 +74,7 @@ namespace basecode::compiler {
         for (auto fld : _fields.as_list())
             size += fld->identifier()->type()->size_in_bytes();
         size_in_bytes(size);
+        alignment(sizeof(uint64_t));
         return true;
     }
 

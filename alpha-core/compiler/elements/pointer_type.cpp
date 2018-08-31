@@ -41,6 +41,13 @@ namespace basecode::compiler {
         return type_access_model_t::pointer;
     }
 
+    bool pointer_type::on_type_check(compiler::type* other) {
+        if (other == nullptr || other->element_type() != element_type_t::pointer_type)
+            return false;
+        auto other_pointer_type = dynamic_cast<compiler::pointer_type*>(other);
+        return base_type()->id() == other_pointer_type->base_type()->id();
+    }
+
     bool pointer_type::on_initialize(compiler::session& session) {
         auto type_symbol = session.builder().make_symbol(
             parent_scope(),

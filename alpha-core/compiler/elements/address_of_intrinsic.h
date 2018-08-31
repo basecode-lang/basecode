@@ -11,30 +11,27 @@
 
 #pragma once
 
-#include "type.h"
+#include "intrinsic.h"
 
 namespace basecode::compiler {
 
-    class pointer_type : public compiler::type {
+    class address_of_intrinsic : public intrinsic {
     public:
-        static std::string name_for_pointer(compiler::type* base_type);
-
-        pointer_type(
+        address_of_intrinsic(
             compiler::module* module,
             compiler::block* parent_scope,
-            compiler::type* base_type);
+            compiler::argument_list* args);
 
-        compiler::type* base_type() const;
+        std::string name() const override;
 
     protected:
-        bool on_type_check(compiler::type* other) override;
+        bool on_fold(
+            compiler::session& session,
+            fold_result_t& result) override;
 
-        type_access_model_t on_access_model() const override;
+        bool on_is_constant() const override;
 
-        bool on_initialize(compiler::session& session) override;
-
-    private:
-        compiler::type* _base_type = nullptr;
+        compiler::type* on_infer_type(const compiler::session& session) override;
     };
 
 };

@@ -65,11 +65,11 @@ namespace basecode::compiler {
         compiler::type* find_array_type(
             compiler::type* entry_type,
             size_t size,
-            compiler::block* scope = nullptr);
+            compiler::block* scope = nullptr) const;
 
         compiler::type* find_pointer_type(
             compiler::type* base_type,
-            compiler::block* scope = nullptr);
+            compiler::block* scope = nullptr) const;
 
         block_stack_t& top_level_stack();
 

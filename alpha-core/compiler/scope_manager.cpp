@@ -293,7 +293,7 @@ namespace basecode::compiler {
 
     compiler::type* scope_manager::find_pointer_type(
             compiler::type* base_type,
-            compiler::block* scope) {
+            compiler::block* scope) const {
         return find_type(
             qualified_symbol_t {
                 .name = compiler::pointer_type::name_for_pointer(base_type)
@@ -304,7 +304,7 @@ namespace basecode::compiler {
     compiler::type* scope_manager::find_array_type(
             compiler::type* entry_type,
             size_t size,
-            compiler::block* scope) {
+            compiler::block* scope) const {
         return find_type(
             qualified_symbol_t {
                 .name = compiler::array_type::name_for_array(entry_type, size)
