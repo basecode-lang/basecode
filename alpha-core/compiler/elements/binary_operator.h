@@ -30,6 +30,10 @@ namespace basecode::compiler {
 
         element* rhs();
 
+        void lhs(compiler::element* element);
+
+        void rhs(compiler::element* element);
+
     protected:
         bool on_fold(
             compiler::session& session,

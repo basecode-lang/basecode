@@ -117,6 +117,8 @@ namespace basecode::compiler {
 
         void initialize_core_types();
 
+        bool fold_constant_intrinsics();
+
         bool resolve_unknown_identifiers();
 
         void initialize_built_in_procedures();

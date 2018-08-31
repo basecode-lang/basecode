@@ -28,6 +28,8 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             compiler::argument_list* args);
 
+        virtual std::string name() const;
+
         compiler::argument_list* arguments();
 
     protected:

@@ -23,6 +23,10 @@ namespace basecode::compiler {
             compiler::argument_list* args) : intrinsic(module, parent_scope, args) {
     }
 
+    std::string alloc_intrinsic::name() const {
+        return "alloc";
+    }
+
     bool alloc_intrinsic::on_emit(compiler::session& session) {
         auto& assembler = session.assembler();
         auto instruction_block = assembler.current_block();

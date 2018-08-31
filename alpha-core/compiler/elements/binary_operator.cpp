@@ -423,6 +423,14 @@ namespace basecode::compiler {
         }
     }
 
+    void binary_operator::lhs(compiler::element* element) {
+        _lhs = element;
+    }
+
+    void binary_operator::rhs(compiler::element* element) {
+        _rhs = element;
+    }
+
     void binary_operator::on_owned_elements(element_list_t& list) {
         if (_lhs != nullptr)
             list.emplace_back(_lhs);

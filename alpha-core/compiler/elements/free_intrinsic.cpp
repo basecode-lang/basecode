@@ -23,6 +23,10 @@ namespace basecode::compiler {
             argument_list* args) : intrinsic(module, parent_scope, args) {
     }
 
+    std::string free_intrinsic::name() const {
+        return "free";
+    }
+
     bool free_intrinsic::on_emit(compiler::session& session) {
         auto& assembler = session.assembler();
         auto instruction_block = assembler.current_block();

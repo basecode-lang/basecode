@@ -26,6 +26,8 @@ namespace basecode::compiler {
 
         element* rhs();
 
+        void rhs(compiler::element* element);
+
     protected:
         bool on_fold(
             compiler::session& session,

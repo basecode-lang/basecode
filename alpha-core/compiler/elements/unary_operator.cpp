@@ -53,6 +53,10 @@ namespace basecode::compiler {
         return _rhs != nullptr && _rhs->is_constant();
     }
 
+    void unary_operator::rhs(compiler::element* element) {
+        _rhs = element;
+    }
+
     bool unary_operator::on_emit(compiler::session& session) {
         auto instruction_block = session.assembler().current_block();
         auto target_reg = session.assembler().current_target_register();

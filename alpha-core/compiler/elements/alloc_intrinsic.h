@@ -22,6 +22,8 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             compiler::argument_list* args);
 
+        std::string name() const override;
+
     protected:
         bool on_emit(compiler::session& session);
 

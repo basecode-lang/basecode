@@ -27,7 +27,11 @@ namespace basecode::compiler {
 
         element* find(common::id_t id);
 
+        int32_t find_index(common::id_t id);
+
         const element_list_t& elements() const;
+
+        element* replace(size_t index, element* item);
 
     protected:
         bool on_emit(compiler::session& session) override;

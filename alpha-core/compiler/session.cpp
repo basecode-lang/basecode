@@ -16,6 +16,7 @@
 #include "elements/module.h"
 #include "elements/program.h"
 #include "elements/any_type.h"
+#include "elements/intrinsic.h"
 #include "elements/directive.h"
 #include "elements/bool_type.h"
 #include "elements/type_info.h"
@@ -27,7 +28,9 @@
 #include "elements/module_type.h"
 #include "elements/numeric_type.h"
 #include "elements/unknown_type.h"
+#include "elements/argument_list.h"
 #include "elements/float_literal.h"
+#include "elements/unary_operator.h"
 #include "elements/symbol_element.h"
 #include "elements/string_literal.h"
 #include "elements/procedure_type.h"
@@ -126,11 +129,15 @@ namespace basecode::compiler {
         if (!type_check())
             return false;
 
+        if (!fold_constant_intrinsics())
+            return false;
+
         if (!_result.is_failed()) {
             _program.emit(*this);
 
             _assembler.apply_addresses(_result);
             _assembler.resolve_labels(_result);
+
             if (_assembler.assemble(_result)) {
                 run();
             }
@@ -337,6 +344,68 @@ namespace basecode::compiler {
 
     emit_context_t& session::emit_context() {
         return _emit_context;
+    }
+
+    bool session::fold_constant_intrinsics() {
+        auto intrinsics = _elements.find_by_type(element_type_t::intrinsic);
+        for (auto e : intrinsics) {
+            if (!e->is_constant())
+                continue;
+
+            fold_result_t fold_result {};
+            if (!e->fold(*this, fold_result))
+                return false;
+
+            if (fold_result.element != nullptr) {
+                auto intrinsic = dynamic_cast<compiler::intrinsic*>(e);
+                auto parent = intrinsic->parent_element();
+                if (parent != nullptr) {
+                    fold_result.element->attributes().add(_builder.make_attribute(
+                        _scope_manager.current_scope(),
+                        "intrinsic_substitution",
+                        _builder.make_string(
+                            _scope_manager.current_scope(),
+                            intrinsic->name())));
+                    switch (parent->element_type()) {
+                        case element_type_t::initializer: {
+                            auto initializer = dynamic_cast<compiler::initializer*>(parent);
+                            initializer->expression(fold_result.element);
+                            break;
+                        }
+                        case element_type_t::argument_list: {
+                            auto arg_list = dynamic_cast<compiler::argument_list*>(parent);
+                            auto index = arg_list->find_index(intrinsic->id());
+                            if (index == -1) {
+                                return false;
+                            }
+                            arg_list->replace(static_cast<size_t>(index), fold_result.element);
+                            break;
+                        }
+                        case element_type_t::unary_operator: {
+                            auto unary_op = dynamic_cast<compiler::unary_operator*>(parent);
+                            unary_op->rhs(fold_result.element);
+                            break;
+                        }
+                        case element_type_t::binary_operator: {
+                            auto binary_op = dynamic_cast<compiler::binary_operator*>(parent);
+                            if (binary_op->lhs() == intrinsic) {
+                                binary_op->lhs(fold_result.element);
+                            } else if (binary_op->rhs() == intrinsic) {
+                                binary_op->rhs(fold_result.element);
+                            } else {
+                                // XXX: error
+                            }
+                            break;
+                        }
+                        default:
+                            break;
+                    }
+                    fold_result.element->parent_element(parent);
+                    _elements.remove(intrinsic->id());
+                }
+            }
+        }
+        return true;
     }
 
     vm::stack_frame_t* session::stack_frame() {

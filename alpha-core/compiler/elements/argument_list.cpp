@@ -29,16 +29,6 @@ namespace basecode::compiler {
         auto instruction_block = assembler.current_block();
         for (auto it = _elements.rbegin(); it != _elements.rend(); ++it) {
             element* arg = *it;
-
-            if (arg->element_type() == element_type_t::intrinsic) {
-                fold_result_t fold_result;
-                if (arg->fold(session, fold_result) && fold_result.element != nullptr) {
-                    instruction_block->blank_line();
-                    instruction_block->comment("intrinsic constant fold", 4);
-                    arg = fold_result.element;
-                }
-            }
-
             switch (arg->element_type()) {
                 case element_type_t::proc_call:
                 case element_type_t::expression:
@@ -90,8 +80,22 @@ namespace basecode::compiler {
         return *it;
     }
 
+    int32_t argument_list::find_index(common::id_t id) {
+        for (size_t i = 0; i < _elements.size(); i++) {
+            if (_elements[i]->id() == id)
+                return static_cast<int32_t>(i);
+        }
+        return -1;
+    }
+
     const element_list_t& argument_list::elements() const {
         return _elements;
+    }
+
+    element* argument_list::replace(size_t index, element* item) {
+        auto old = _elements[index];
+        _elements[index] = item;
+        return old;
     }
 
     void argument_list::on_owned_elements(element_list_t& list) {

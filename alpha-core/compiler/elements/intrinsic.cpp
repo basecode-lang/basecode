@@ -56,6 +56,10 @@ namespace basecode::compiler {
                                          _arguments(args) {
     }
 
+    std::string intrinsic::name() const {
+        return "intrinsic";
+    }
+
     compiler::argument_list* intrinsic::arguments() {
         return _arguments;
     }
