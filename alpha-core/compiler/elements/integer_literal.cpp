@@ -38,8 +38,11 @@ namespace basecode::compiler {
     }
 
     bool integer_literal::on_emit(compiler::session& session) {
-        auto instruction_block = session.assembler().current_block();
-        auto target_reg = session.assembler().current_target_register();
+        auto& assembler = session.assembler();
+
+        auto instruction_block = assembler.current_block();
+        auto target_reg = assembler.current_target_register();
+        instruction_block->clr(vm::op_sizes::qword, *target_reg);
         instruction_block->move_constant_to_reg(*target_reg, _value);
         return true;
     }

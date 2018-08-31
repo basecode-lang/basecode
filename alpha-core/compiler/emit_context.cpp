@@ -92,6 +92,17 @@ namespace basecode::compiler {
             if (!value_reg.reserve(session))
                 return false;
 
+            block->blank_line();
+            block->comment(
+                fmt::format(
+                    "load identifier '{}' value ({})",
+                    name,
+                    type_name),
+                session.emit_context().indent);
+
+            if (value_reg.reg.size != vm::op_sizes::qword)
+                block->clr(vm::op_sizes::qword, value_reg.reg);
+
             if (usage == identifier_usage_t::stack) {
                 type_name = stack_frame_entry_type_name(frame_entry->type);
                 block->load_to_reg(
@@ -99,13 +110,6 @@ namespace basecode::compiler {
                     vm::register_t::fp(),
                     frame_entry->offset);
             } else {
-                block->blank_line();
-                block->comment(
-                    fmt::format(
-                        "load identifier '{}' value ({})",
-                        name,
-                        type_name),
-                    session.emit_context().indent);
                 block->load_to_reg(value_reg.reg, address_reg.reg);
             }
 

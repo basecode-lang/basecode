@@ -1145,6 +1145,22 @@ namespace basecode::vm {
 
                 break;
             }
+            case op_codes::clr: {
+                operand_value_t value;
+                value.type = register_type_t::integer;
+                value.alias.u = 0;
+
+                if (!set_target_operand_value(r, inst.operands[0], inst.size, value))
+                    return false;
+
+                _registers.flags(register_file_t::flags_t::carry, false);
+                _registers.flags(register_file_t::flags_t::overflow, false);
+                _registers.flags(register_file_t::flags_t::subtract, false);
+                _registers.flags(register_file_t::flags_t::zero, true);
+                _registers.flags(register_file_t::flags_t::negative, false);
+
+                break;
+            }
             case op_codes::move: {
                 operand_value_t source_value;
                 operand_value_t offset;

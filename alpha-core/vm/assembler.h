@@ -149,6 +149,15 @@ namespace basecode::vm {
             }
         },
         {
+            "CLR",
+            mnemonic_t{
+                op_codes::clr,
+                {
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::float_register, true},
+                }
+            }
+        },
+        {
             "MOVE",
             mnemonic_t{
                 op_codes::move,

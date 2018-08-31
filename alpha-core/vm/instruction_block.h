@@ -251,6 +251,13 @@ namespace basecode::vm {
 
         void exit();
 
+        // clr
+        void clr(
+            op_sizes size,
+            const register_t& dest_reg);
+
+        void clr(const register_t& dest_reg);
+
         // alloc/free
         void alloc(
             op_sizes size,
@@ -460,6 +467,10 @@ namespace basecode::vm {
         void jump_direct(const label_ref_t* label_ref);
 
     private:
+        void make_clr_instruction(
+            op_sizes size,
+            const register_t& dest_reg);
+
         void make_shl_instruction(
             op_sizes size,
             const register_t& dest_reg,

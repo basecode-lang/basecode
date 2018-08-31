@@ -180,6 +180,16 @@ namespace basecode::vm {
         make_move_instruction(dest_reg.size, dest_reg, immediate);
     }
 
+    void instruction_block::clr(
+            op_sizes size,
+            const register_t& dest_reg) {
+        make_clr_instruction(size, dest_reg);
+    }
+
+    void instruction_block::clr(const register_t& dest_reg) {
+        make_clr_instruction(dest_reg.size, dest_reg);
+    }
+
     void instruction_block::move_reg_to_reg(
             const register_t& dest_reg,
             const register_t& src_reg) {
@@ -467,7 +477,7 @@ namespace basecode::vm {
         move_op.operands[0].value.r = dest_reg.number;
         move_op.operands[1].type = operand_encoding_t::flags::constant;
         if (size == op_sizes::dword)
-            move_op.operands[1].value.f = value;
+            move_op.operands[1].value.f = static_cast<float>(value);
         else
             move_op.operands[1].value.d = value;
         make_block_entry(move_op);
@@ -900,6 +910,20 @@ namespace basecode::vm {
 
     listing_source_file_t* instruction_block::source_file() {
         return _source_file;
+    }
+
+    void instruction_block::make_clr_instruction(
+            op_sizes size,
+            const register_t& dest_reg) {
+        instruction_t clr_op;
+        clr_op.op = op_codes::clr;
+        clr_op.size = size;
+        clr_op.operands_count = 1;
+        clr_op.operands[0].value.r = dest_reg.number;
+        clr_op.operands[0].type = operand_encoding_t::flags::reg;
+        if (dest_reg.type == register_type_t::integer)
+            clr_op.operands[0].type |= operand_encoding_t::flags::integer;
+        make_block_entry(clr_op);
     }
 
     void instruction_block::make_inc_instruction(op_sizes size, const register_t& reg) {
