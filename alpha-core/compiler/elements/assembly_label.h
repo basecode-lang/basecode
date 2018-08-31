@@ -15,9 +15,9 @@
 
 namespace basecode::compiler {
 
-    class label : public element {
+    class assembly_label : public element {
     public:
-        label(
+        assembly_label(
             compiler::module* module,
             block* parent_scope,
             const std::string& name);
@@ -28,6 +28,8 @@ namespace basecode::compiler {
         bool on_is_constant() const override;
 
         bool on_emit(compiler::session& session) override;
+
+        compiler::type* on_infer_type(const compiler::session& session) override;
 
     private:
         std::string _name;

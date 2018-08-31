@@ -12,8 +12,12 @@
 #include <compiler/session.h>
 #include <compiler/scope_manager.h>
 #include "type.h"
+#include "identifier.h"
 #include "argument_list.h"
+#include "assembly_label.h"
+#include "symbol_element.h"
 #include "integer_literal.h"
+#include "identifier_reference.h"
 #include "address_of_intrinsic.h"
 
 namespace basecode::compiler {
@@ -47,9 +51,10 @@ namespace basecode::compiler {
             return false;
         }
 
-        result.element = session.builder().make_integer(
+        auto ref = dynamic_cast<compiler::identifier_reference*>(arg);
+        result.element = session.builder().make_assembly_label(
             parent_scope(),
-            0);
+            ref->identifier()->symbol()->name());
         return true;
     }
 

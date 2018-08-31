@@ -46,12 +46,11 @@ namespace basecode::compiler {
             if (!address_reg.reserve(session))
                 return false;
 
-            block->blank_line();
             block->comment(
                 fmt::format(
                     "identifier '{}' address (global)",
                     name),
-                session.emit_context().indent);
+                4);
 
             auto label_ref = session.assembler().make_label_ref(name);
             if (address_offset != 0) {
@@ -95,13 +94,12 @@ namespace basecode::compiler {
             if (!value_reg.reserve(session))
                 return false;
 
-            block->blank_line();
             block->comment(
                 fmt::format(
                     "load identifier '{}' value ({})",
                     name,
                     type_name),
-                session.emit_context().indent);
+                4);
 
             if (value_reg.reg.size != vm::op_sizes::qword)
                 block->clr(vm::op_sizes::qword, value_reg.reg);
@@ -145,7 +143,7 @@ namespace basecode::compiler {
             return;
         live = true;
         address_loaded = false;
-        requires_read = true;
+        requires_read = address_offset == 0;
     }
 
     void variable_t::make_dormant(compiler::session& session) {

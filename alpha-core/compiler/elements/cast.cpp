@@ -70,11 +70,6 @@ namespace basecode::compiler {
         if (_expression == nullptr)
             return true;
 
-        session.emit_context().indent = 4;
-        defer({
-            session.emit_context().indent = 0;
-        });
-
         cast_mode_t mode;
         auto source_type = _expression->infer_type(session);
         auto source_number_class = source_type->number_class();
@@ -172,7 +167,7 @@ namespace basecode::compiler {
                 "cast<{}> from type {}",
                 _type->symbol()->name(),
                 source_type->symbol()->name()),
-            session.emit_context().indent);
+            4);
 
         return true;
     }

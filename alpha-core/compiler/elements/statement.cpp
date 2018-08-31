@@ -21,21 +21,22 @@ namespace basecode::compiler {
                              _expression(expr) {
     }
 
-    bool statement::on_emit(compiler::session& session) {
-        if (_expression == nullptr)
-            return true;
-
-        // XXX: need to loop over labels and add them to the assembler here
-
-        return _expression->emit(session);
-    }
-
     element* statement::expression() {
         return _expression;
     }
 
     label_list_t& statement::labels() {
         return _labels;
+    }
+
+    bool statement::on_emit(compiler::session& session) {
+        for (auto label : _labels)
+            label->emit(session);
+
+        if (_expression == nullptr)
+            return true;
+
+        return _expression->emit(session);
     }
 
     void statement::on_owned_elements(element_list_t& list) {

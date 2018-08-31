@@ -33,11 +33,6 @@ namespace basecode::compiler {
     }
 
     bool binary_operator::on_emit(compiler::session& session) {
-        session.emit_context().indent = 4;
-        defer({
-            session.emit_context().indent = 0;
-        });
-
         auto instruction_block = session.assembler().current_block();
         switch (operator_type()) {
             case operator_type_t::add:

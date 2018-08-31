@@ -140,6 +140,14 @@ namespace basecode::compiler {
             }
         } else {
             auto type = e->infer_type(session);
+            if (type == nullptr) {
+                session.error(
+                    e,
+                    "P052",
+                    "unable to infer type.",
+                    e->location());
+                return result;
+            }
 
             vm::register_t reg;
             reg.size = vm::op_size_for_byte_size(type->size_in_bytes());

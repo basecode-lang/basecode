@@ -220,6 +220,10 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             compiler::block* block_scope);
 
+        assembly_label* make_assembly_label(
+            compiler::block* parent_scope,
+            const std::string& name);
+
         binary_operator* make_binary_operator(
             compiler::block* parent_scope,
             operator_type_t type,

@@ -70,7 +70,7 @@ namespace basecode::compiler {
         instruction_block->move_reg_to_reg(*target_reg, temp_reg.reg);
         instruction_block->comment(
             fmt::format("transmute<{}>", _type->symbol()->name()),
-            session.emit_context().indent);
+            4);
 
         return true;
     }

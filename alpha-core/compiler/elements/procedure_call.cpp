@@ -34,11 +34,6 @@ namespace basecode::compiler {
     bool procedure_call::on_emit(compiler::session& session) {
         auto& assembler = session.assembler();
 
-        session.emit_context().indent = 4;
-        defer({
-            session.emit_context().indent = 0;
-        });
-
         auto instruction_block = assembler.current_block();
         auto identifier = _reference->identifier();
         auto init = identifier->initializer();
@@ -53,7 +48,7 @@ namespace basecode::compiler {
         if (procedure_type->is_foreign()) {
             instruction_block->comment(
                 fmt::format("foreign call: {}", identifier->symbol()->name()),
-                session.emit_context().indent);
+                4);
             instruction_block->push_u16(static_cast<uint16_t>(_arguments->elements().size()));
             instruction_block->call_foreign(procedure_type->foreign_address());
         } else {

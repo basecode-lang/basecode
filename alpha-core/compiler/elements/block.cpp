@@ -54,7 +54,7 @@ namespace basecode::compiler {
                 if (parent_ns != nullptr) {
                     instruction_block->comment(
                         fmt::format("namespace: {}", parent_ns->name()),
-                        session.emit_context().indent);
+                        0);
                 }
                 instruction_block->label(assembler.make_label(label_name()));
                 assembler.push_block(instruction_block);
@@ -69,7 +69,7 @@ namespace basecode::compiler {
                 if (parent_module != nullptr) {
                     instruction_block->comment(
                         fmt::format("module: {}", parent_module->source_file()->path().string()),
-                        session.emit_context().indent);
+                        0);
                     clean_up = !parent_module->is_root();
                 }
                 instruction_block->label(assembler.make_label(label_name()));

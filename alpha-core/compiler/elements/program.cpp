@@ -135,7 +135,7 @@ namespace basecode::compiler {
                         }
                         instruction_block->comment(
                             fmt::format("\"{}\"", string_literal->value()),
-                            session.emit_context().indent);
+                            4);
                         instruction_block->string(string_literal->escaped_value());
 
                         break;
@@ -227,7 +227,7 @@ namespace basecode::compiler {
                                     if (string_literal != nullptr) {
                                         instruction_block->comment(
                                             fmt::format("\"{}\"", string_literal->value()),
-                                            session.emit_context().indent);
+                                            4);
                                         instruction_block->string(string_literal->value());
                                     }
                                 }
@@ -267,10 +267,10 @@ namespace basecode::compiler {
             procedure_type->emit(session);
         }
 
-        auto top_level_block = assembler.make_basic_block();
-        top_level_block->blank_line();
-        top_level_block->align(vm::instruction_t::alignment);
-        top_level_block->label(assembler.make_label("_initializer"));
+        auto initializer_block = assembler.make_basic_block();
+        initializer_block->blank_line();
+        initializer_block->align(vm::instruction_t::alignment);
+        initializer_block->label(assembler.make_label("_initializer"));
 
         block_list_t implicit_blocks {};
         auto module_blocks = session.elements().find_by_type(element_type_t::module_block);
@@ -278,7 +278,7 @@ namespace basecode::compiler {
             implicit_blocks.emplace_back(dynamic_cast<compiler::block*>(block));
         }
 
-        assembler.push_block(top_level_block);
+        assembler.push_block(initializer_block);
         for (auto block : implicit_blocks)
             block->emit(session);
 

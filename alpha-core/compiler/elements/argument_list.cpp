@@ -35,6 +35,7 @@ namespace basecode::compiler {
                 case element_type_t::float_literal:
                 case element_type_t::string_literal:
                 case element_type_t::unary_operator:
+                case element_type_t::assembly_label:
                 case element_type_t::binary_operator:
                 case element_type_t::boolean_literal:
                 case element_type_t::integer_literal:

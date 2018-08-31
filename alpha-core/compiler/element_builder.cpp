@@ -48,6 +48,7 @@
 #include <compiler/elements/procedure_call.h>
 #include <compiler/elements/namespace_type.h>
 #include <compiler/elements/symbol_element.h>
+#include <compiler/elements/assembly_label.h>
 #include <compiler/elements/alloc_intrinsic.h>
 #include <compiler/elements/boolean_literal.h>
 #include <compiler/elements/binary_operator.h>
@@ -494,6 +495,17 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             const std::string& name) {
         auto label = new compiler::label(
+            _session.scope_manager().current_module(),
+            parent_scope,
+            name);
+        _session.elements().add(label);
+        return label;
+    }
+
+    assembly_label* element_builder::make_assembly_label(
+            compiler::block* parent_scope,
+            const std::string& name) {
+        auto label = new compiler::assembly_label(
             _session.scope_manager().current_module(),
             parent_scope,
             name);

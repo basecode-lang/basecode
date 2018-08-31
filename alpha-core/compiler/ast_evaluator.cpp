@@ -490,6 +490,9 @@ namespace basecode::compiler {
                 //    return nullptr;
                 //}
 
+                // XXX: need to refactor this so that the binary_op is returned
+                //      along with the identifier so that the statement function can
+                //      be solely responsible for adding new statements to the scope.
                 auto assign_bin_op = builder.make_binary_operator(
                     scope,
                     operator_type_t::assignment,
