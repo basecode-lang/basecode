@@ -51,4 +51,3 @@ addr: ^u8;
 addr := alloc(size_of(u16) * 4096);
 print("addr := $%08x\n", addr);
 free(addr);
-

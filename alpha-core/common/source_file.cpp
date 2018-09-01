@@ -43,7 +43,7 @@ namespace basecode::common {
 
         auto stop_line = static_cast<int32_t>(location.end().line + 4);
         if (stop_line >= number_of_lines)
-            stop_line = number_of_lines - 1;
+            stop_line = number_of_lines;
 
         for (int32_t i = start_line; i < stop_line; i++) {
             const auto source_line = line_by_number(static_cast<size_t>(i));
