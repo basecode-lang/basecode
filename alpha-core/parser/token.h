@@ -36,6 +36,7 @@ namespace basecode::syntax {
         percent,
         question,
         asterisk,
+        exponent,
         ampersand,
         attribute,
         directive,
@@ -113,6 +114,7 @@ namespace basecode::syntax {
         {token_types_t::percent,                "percent"},
         {token_types_t::question,               "question"},
         {token_types_t::asterisk,               "asterisk"},
+        {token_types_t::exponent,               "exponent"},
         {token_types_t::less_than,              "less_than"},
         {token_types_t::raw_block,              "raw_block"},
         {token_types_t::ampersand,              "ampersand"},
@@ -254,6 +256,11 @@ namespace basecode::syntax {
     static inline token_t s_for_literal = {
         .type = token_types_t::for_literal,
         .value = "for"
+    };
+
+    static inline token_t s_exponent_literal = {
+        .type = token_types_t::exponent,
+        .value = "**"
     };
 
     static inline token_t s_xor_literal = {

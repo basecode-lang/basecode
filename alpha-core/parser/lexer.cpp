@@ -62,7 +62,8 @@ namespace basecode::syntax {
         {'%', std::bind(&lexer::number_literal, std::placeholders::_1, std::placeholders::_2)},
         {'%', std::bind(&lexer::percent, std::placeholders::_1, std::placeholders::_2)},
 
-        // asterisk
+        // exponent/asterisk
+        {'*', std::bind(&lexer::exponent, std::placeholders::_1, std::placeholders::_2)},
         {'*', std::bind(&lexer::asterisk, std::placeholders::_1, std::placeholders::_2)},
 
         // equals
@@ -576,6 +577,14 @@ namespace basecode::syntax {
         auto ch = read();
         if (ch == '*') {
             token = s_asterisk_literal;
+            return true;
+        }
+        return false;
+    }
+
+    bool lexer::exponent(token_t& token) {
+        if (match_literal("**")) {
+            token = s_exponent_literal;
             return true;
         }
         return false;

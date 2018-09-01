@@ -76,6 +76,7 @@ namespace basecode::vm {
             }
         }
 
+        highest_address += 8;
         _terp->heap_free_space_begin(common::align(highest_address, 8));
 
         return !r.is_failed();

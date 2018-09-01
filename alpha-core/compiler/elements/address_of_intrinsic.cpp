@@ -42,7 +42,8 @@ namespace basecode::compiler {
         }
 
         auto arg = args[0];
-        if (arg->element_type() != element_type_t::identifier_reference) {
+        if (arg == nullptr
+        ||  arg->element_type() != element_type_t::identifier_reference) {
             session.error(
                 this,
                 "P091",

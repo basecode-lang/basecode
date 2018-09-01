@@ -1,0 +1,9 @@
+@library "alpha-core";
+#foreign print := proc(format: string, values: ...any) @alias "fmt_print";
+
+// alloc & free block of memory
+'allocate_memory:
+addr: ^u8;
+addr := alloc(size_of(u16) * 4096);
+print("addr := $%08x\n", addr);
+free(addr);

@@ -132,8 +132,9 @@ namespace basecode::compiler {
             result.valid = true;
             result.reg = var->value_reg.reg;
 
-            if (var->address_reg.allocated
-            &&  var->type->access_model() == type_access_model_t::pointer) {
+            // XXX: this if condition is a HACK for literal strings
+            //      need to fix!
+            if (var->address_reg.allocated && var->address_offset != 0) {
                 result.reg = var->address_reg.reg;
             } else {
                 result.reg = result.var->value_reg.reg;

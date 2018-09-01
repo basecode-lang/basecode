@@ -34,6 +34,8 @@ namespace basecode::syntax {
         relational,
         bitwise,
         exponent,
+        dereference,
+        pointer_dereference,
         block_comment,
         prefix,
         postfix,
@@ -92,18 +94,18 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-//    class symbol_infix_parser : public infix_parser {
-//    public:
-//        symbol_infix_parser() = default;
-//
-//        ast_node_shared_ptr parse(
-//            common::result& r,
-//            parser* parser,
-//            const ast_node_shared_ptr& lhs,
-//            token_t& token) override;
-//
-//        precedence_t precedence() const override;
-//    };
+    class pointer_dereference_infix_parser : public infix_parser {
+    public:
+        pointer_dereference_infix_parser() = default;
+
+        ast_node_shared_ptr parse(
+            common::result& r,
+            parser* parser,
+            const ast_node_shared_ptr& lhs,
+            token_t& token) override;
+
+        precedence_t precedence() const override;
+    };
 
     ///////////////////////////////////////////////////////////////////////////
 
@@ -714,12 +716,14 @@ namespace basecode::syntax {
         static inline block_comment_infix_parser s_block_comment_infix_parser {};
         static inline type_identifier_infix_parser s_type_identifier_infix_parser {};
         static inline constant_assignment_infix_parser s_constant_assignment_infix_parser {};
+        static inline pointer_dereference_infix_parser s_pointer_dereference_infix_parser {};
         static inline binary_operator_infix_parser s_sum_binary_op_parser {precedence_t::sum, false};
         static inline binary_operator_infix_parser s_product_binary_op_parser {precedence_t::product, false};
         static inline binary_operator_infix_parser s_bitwise_binary_op_parser {precedence_t::bitwise, false};
         static inline binary_operator_infix_parser s_logical_binary_op_parser {precedence_t::logical, false};
         static inline binary_operator_infix_parser s_exponent_binary_op_parser {precedence_t::exponent, true};
         static inline binary_operator_infix_parser s_relational_binary_op_parser {precedence_t::relational, false};
+        static inline binary_operator_infix_parser s_dereference_binary_op_parser {precedence_t::dereference, false};
 
         static inline std::unordered_map<token_types_t, infix_parser*> s_infix_parsers = {
             {token_types_t::cast_literal,       &s_cast_infix_parser},
@@ -740,7 +744,7 @@ namespace basecode::syntax {
             {token_types_t::ror_literal,        &s_bitwise_binary_op_parser},
             {token_types_t::logical_and,        &s_logical_binary_op_parser},
             {token_types_t::logical_or,         &s_logical_binary_op_parser},
-            {token_types_t::caret,              &s_exponent_binary_op_parser},
+            {token_types_t::exponent,           &s_exponent_binary_op_parser},
             {token_types_t::block_comment,      &s_block_comment_infix_parser},
             {token_types_t::equals,             &s_relational_binary_op_parser},
             {token_types_t::not_equals,         &s_relational_binary_op_parser},
@@ -749,6 +753,8 @@ namespace basecode::syntax {
             {token_types_t::greater_than,       &s_relational_binary_op_parser},
             {token_types_t::greater_than_equal, &s_relational_binary_op_parser},
             {token_types_t::colon,              &s_type_identifier_infix_parser},
+            {token_types_t::period,             &s_dereference_binary_op_parser},
+            {token_types_t::caret,              &s_pointer_dereference_infix_parser},
             {token_types_t::constant_assignment,&s_constant_assignment_infix_parser},
         };
 

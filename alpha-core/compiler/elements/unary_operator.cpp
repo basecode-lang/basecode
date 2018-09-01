@@ -13,7 +13,10 @@
 #include <vm/instruction_block.h>
 #include "type.h"
 #include "program.h"
+#include "identifier.h"
+#include "pointer_type.h"
 #include "unary_operator.h"
+#include "identifier_reference.h"
 
 namespace basecode::compiler {
 
@@ -85,6 +88,11 @@ namespace basecode::compiler {
                     rhs_reg.reg);
                 break;
             }
+            case operator_type_t::pointer_dereference: {
+                instruction_block->comment("XXX: implement pointer dereference", 4);
+                instruction_block->nop();
+                break;
+            }
             default:
                 break;
         }
@@ -97,7 +105,6 @@ namespace basecode::compiler {
             list.emplace_back(_rhs);
     }
 
-    // XXX: this requires lots of future love
     compiler::type* unary_operator::on_infer_type(const compiler::session& session) {
         auto& scope_manager = session.scope_manager();
         switch (operator_type()) {
@@ -107,6 +114,11 @@ namespace basecode::compiler {
             }
             case operator_type_t::logical_not: {
                 return scope_manager.find_type({.name = "bool"});
+            }
+            case operator_type_t::pointer_dereference: {
+                auto identifier_ref = dynamic_cast<compiler::identifier_reference*>(_rhs);
+                auto type = dynamic_cast<compiler::pointer_type*>(identifier_ref->identifier()->type());
+                return type->base_type();
             }
             default:
                 return nullptr;

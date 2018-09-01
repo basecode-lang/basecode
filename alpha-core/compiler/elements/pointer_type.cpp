@@ -11,8 +11,9 @@
 
 #include <compiler/session.h>
 #include "program.h"
-#include "symbol_element.h"
+#include "numeric_type.h"
 #include "pointer_type.h"
+#include "symbol_element.h"
 
 namespace basecode::compiler {
 
@@ -37,15 +38,30 @@ namespace basecode::compiler {
         return _base_type;
     }
 
-    type_access_model_t pointer_type::on_access_model() const {
-        return type_access_model_t::pointer;
+    bool pointer_type::on_type_check(compiler::type* other) {
+        if (other == nullptr)
+            return false;
+
+        switch (other->element_type()) {
+            case element_type_t::numeric_type: {
+                auto numeric_type = dynamic_cast<compiler::numeric_type*>(other);
+                return numeric_type->size_in_bytes() == 8;
+            }
+            case element_type_t::pointer_type: {
+                auto other_pointer_type = dynamic_cast<compiler::pointer_type*>(other);
+                return base_type()->id() == other_pointer_type->base_type()->id();
+            }
+            default:
+                return false;
+        }
     }
 
-    bool pointer_type::on_type_check(compiler::type* other) {
-        if (other == nullptr || other->element_type() != element_type_t::pointer_type)
-            return false;
-        auto other_pointer_type = dynamic_cast<compiler::pointer_type*>(other);
-        return base_type()->id() == other_pointer_type->base_type()->id();
+    type_number_class_t pointer_type::on_number_class() const {
+        return type_number_class_t::integer;
+    }
+
+    type_access_model_t pointer_type::on_access_model() const {
+        return type_access_model_t::pointer;
     }
 
     bool pointer_type::on_initialize(compiler::session& session) {

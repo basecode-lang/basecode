@@ -36,7 +36,7 @@ namespace basecode::compiler {
             session.error(
                 this,
                 "P091",
-                "free expects a single integer argument.",
+                "free expects an u64 or pointer argument.",
                 location());
             return false;
         }
@@ -48,7 +48,7 @@ namespace basecode::compiler {
             session.error(
                 this,
                 "P091",
-                "free expects a single integer argument.",
+                "free expects an u64 or pointer argument.",
                 location());
             return false;
         }

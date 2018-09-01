@@ -33,7 +33,8 @@ namespace basecode::compiler {
     }
 
     bool binary_operator::on_emit(compiler::session& session) {
-        auto instruction_block = session.assembler().current_block();
+        auto& assembler = session.assembler();
+        auto instruction_block = assembler.current_block();
         switch (operator_type()) {
             case operator_type_t::add:
             case operator_type_t::modulo:
@@ -66,6 +67,11 @@ namespace basecode::compiler {
                     instruction_block);
                 break;
             }
+            case operator_type_t::dereference: {
+                instruction_block->comment("XXX: implement . dereference", 4);
+                instruction_block->nop();
+                break;
+            }
             case operator_type_t::assignment: {
                 auto var = session.emit_context().variable_for_element(_lhs);
                 if (var == nullptr) {
@@ -89,7 +95,7 @@ namespace basecode::compiler {
                 rhs_reg.size = var->value_reg.reg.size;
                 rhs_reg.type = var->value_reg.reg.type;
 
-                if (!session.assembler().allocate_reg(rhs_reg)) {
+                if (!assembler.allocate_reg(rhs_reg)) {
                     session.error(
                         _rhs,
                         "P052",
@@ -97,11 +103,11 @@ namespace basecode::compiler {
                         _rhs->location());
                     return false;
                 }
-                session.assembler().push_target_register(rhs_reg);
+                assembler.push_target_register(rhs_reg);
                 _rhs->emit(session);
                 var->write(session, instruction_block);
-                session.assembler().pop_target_register();
-                session.assembler().free_reg(rhs_reg);
+                assembler.pop_target_register();
+                assembler.free_reg(rhs_reg);
                 break;
             }
             default:
@@ -163,6 +169,9 @@ namespace basecode::compiler {
                 break;
             }
             case operator_type_t::rotate_left: {
+                break;
+            }
+            case operator_type_t::dereference: {
                 break;
             }
             case operator_type_t::rotate_right: {
@@ -351,10 +360,10 @@ namespace basecode::compiler {
                 break;
             }
             case operator_type_t::exponent: {
-//                instruction_block->pow_ireg_by_ireg_u64(
-//                    *result_reg,
-//                    lhs_reg.reg,
-//                    rhs_reg.reg);
+                instruction_block->pow_reg_by_reg(
+                    *result_reg,
+                    lhs_reg.reg,
+                    rhs_reg.reg);
                 break;
             }
             case operator_type_t::subtract: {
@@ -448,10 +457,10 @@ namespace basecode::compiler {
             case operator_type_t::shift_right:
             case operator_type_t::rotate_left:
             case operator_type_t::rotate_right: {
-                auto lhs_type = _lhs->infer_type(session);
-                //auto rhs_type = _rhs->infer_type(session);
-                // XXX: need to type-check and possibly widen here
-                return lhs_type;
+                return _lhs->infer_type(session);
+            }
+            case operator_type_t::dereference: {
+                return _rhs->infer_type(session);
             }
             case operator_type_t::equals:
             case operator_type_t::less_than:

@@ -349,6 +349,12 @@ namespace basecode::vm {
         // dec variations
         void dec(const register_t& reg);
 
+        // pow variations
+        void pow_reg_by_reg(
+            const register_t& dest_reg,
+            const register_t& base_reg,
+            const register_t& exponent_reg);
+
         // mul variations
         void mul_reg_by_reg(
             const register_t& dest_reg,

@@ -267,6 +267,17 @@ namespace basecode::vm {
         make_neg_instruction(dest_reg.size, dest_reg, src_reg);
     }
 
+    // pow variations
+    void instruction_block::pow_reg_by_reg(
+            const register_t& dest_reg,
+            const register_t& base_reg,
+            const register_t& multiplier_reg) {
+        make_block_entry(comment_t {
+            .indent = 4,
+            .value = "XXX: implement a POW instruction in terp"
+        });
+    }
+
     // mul variations
     void instruction_block::mul_reg_by_reg(
             const register_t& dest_reg,

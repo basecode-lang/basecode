@@ -263,6 +263,7 @@ namespace basecode::compiler {
         negate,
         binary_not,
         logical_not,
+        pointer_dereference,
 
         // binary
         add,
@@ -286,7 +287,8 @@ namespace basecode::compiler {
         rotate_right,
         rotate_left,
         exponent,
-        assignment
+        assignment,
+        dereference,
     };
 
     static inline std::unordered_map<operator_type_t, std::string> s_operator_type_names = {
@@ -294,6 +296,7 @@ namespace basecode::compiler {
         {operator_type_t::negate,                "negate"},
         {operator_type_t::binary_not,            "binary_not"},
         {operator_type_t::logical_not,           "logical_not"},
+        {operator_type_t::pointer_dereference,   "pointer_deference"},
         {operator_type_t::add,                   "add"},
         {operator_type_t::subtract,              "subtract"},
         {operator_type_t::multiply,              "multiply"},
@@ -315,7 +318,8 @@ namespace basecode::compiler {
         {operator_type_t::rotate_right,          "rotate_right"},
         {operator_type_t::rotate_left,           "rotate_left"},
         {operator_type_t::exponent,              "exponent"},
-        {operator_type_t::assignment,            "assignment"}
+        {operator_type_t::assignment,            "assignment"},
+        {operator_type_t::dereference,           "dereference"},
     };
 
     static inline std::string operator_type_name(operator_type_t type) {
@@ -328,7 +332,8 @@ namespace basecode::compiler {
     static inline std::unordered_map<syntax::token_types_t, operator_type_t> s_unary_operators = {
         {syntax::token_types_t::minus, operator_type_t::negate},
         {syntax::token_types_t::tilde, operator_type_t::binary_not},
-        {syntax::token_types_t::bang,  operator_type_t::logical_not}
+        {syntax::token_types_t::bang,  operator_type_t::logical_not},
+        {syntax::token_types_t::caret, operator_type_t::pointer_dereference},
     };
 
     static inline std::unordered_map<syntax::token_types_t, operator_type_t> s_binary_operators = {
@@ -353,8 +358,9 @@ namespace basecode::compiler {
         {syntax::token_types_t::shr_literal,        operator_type_t::shift_right},
         {syntax::token_types_t::rol_literal,        operator_type_t::rotate_left},
         {syntax::token_types_t::ror_literal,        operator_type_t::rotate_right},
-        {syntax::token_types_t::caret,              operator_type_t::exponent},
+        {syntax::token_types_t::exponent,           operator_type_t::exponent},
         {syntax::token_types_t::assignment,         operator_type_t::assignment},
+        {syntax::token_types_t::caret,              operator_type_t::dereference},
     };
 
     ///////////////////////////////////////////////////////////////////////////

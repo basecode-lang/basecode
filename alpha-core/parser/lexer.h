@@ -63,6 +63,8 @@ namespace basecode::syntax {
 
         bool question(token_t& token);
 
+        bool exponent(token_t& token);
+
         bool attribute(token_t& token);
 
         bool directive(token_t& token);

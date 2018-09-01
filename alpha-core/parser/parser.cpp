@@ -703,6 +703,22 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    ast_node_shared_ptr pointer_dereference_infix_parser::parse(
+            common::result& r,
+            parser* parser,
+            const ast_node_shared_ptr& lhs,
+            token_t& token) {
+        auto node = parser->ast_builder()->unary_operator_node(token);
+        node->rhs = lhs;
+        return node;
+    }
+
+    precedence_t pointer_dereference_infix_parser::precedence() const {
+        return precedence_t::pointer_dereference;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
     ast_node_shared_ptr comma_infix_parser::parse(
             common::result& r,
             parser* parser,

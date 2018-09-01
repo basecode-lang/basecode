@@ -24,8 +24,9 @@ temp := size_of(bar);
 'get_a_type:
 temp_type_info: ^type;
 temp_type_info := type_of(temp);
+huh := temp_type_info^;
 
-print("address_of(temp) := %08x\n\n", address_of(temp));
+print("address_of(temp) := $%08x\n\n", address_of(temp));
 
 print("foo := %hhu\n\n", foo);
 
@@ -46,7 +47,8 @@ print("align_of(string) := %d\n\n", align_of(string));
 
 // alloc & free block of memory
 'allocate_memory:
-addr: u64 := alloc(size_of(u8) * 4096);
-print("addr := %ld\n", addr);
+addr: ^u8;
+addr := alloc(size_of(u16) * 4096);
+print("addr := $%08x\n", addr);
 free(addr);
 
