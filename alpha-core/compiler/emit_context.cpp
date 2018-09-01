@@ -33,9 +33,7 @@ namespace basecode::compiler {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    bool variable_t::init(
-            compiler::session& session,
-            vm::instruction_block* block) {
+    bool variable_t::init(compiler::session& session) {
         if (!live)
             return false;
 
@@ -46,13 +44,16 @@ namespace basecode::compiler {
             if (!address_reg.reserve(session))
                 return false;
 
+            auto& assembler = session.assembler();
+            auto block = assembler.current_block();
+
             block->comment(
                 fmt::format(
                     "identifier '{}' address (global)",
                     name),
                 4);
 
-            auto label_ref = session.assembler().make_label_ref(name);
+            auto label_ref = assembler.make_label_ref(name);
             if (address_offset != 0) {
                 block->move_label_to_reg_with_offset(
                     address_reg.reg,
@@ -80,19 +81,20 @@ namespace basecode::compiler {
         return true;
     }
 
-    bool variable_t::read(
-            compiler::session& session,
-            vm::instruction_block* block) {
+    bool variable_t::read(compiler::session& session) {
         if (!live)
             return false;
 
-        if (!init(session, block))
+        if (!init(session))
             return false;
 
         std::string type_name = "global";
         if (requires_read) {
             if (!value_reg.reserve(session))
                 return false;
+
+            auto& assembler = session.assembler();
+            auto block = assembler.current_block();
 
             block->comment(
                 fmt::format(
@@ -120,10 +122,11 @@ namespace basecode::compiler {
         return true;
     }
 
-    bool variable_t::write(
-            compiler::session& session,
-            vm::instruction_block* block) {
-        auto target_reg = session.assembler().current_target_register();
+    bool variable_t::write(compiler::session& session) {
+        auto& assembler = session.assembler();
+        auto block = assembler.current_block();
+
+        auto target_reg = assembler.current_target_register();
         if (target_reg == nullptr)
             return false;
 

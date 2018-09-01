@@ -39,17 +39,11 @@ namespace basecode::compiler {
     struct emit_context_t;
 
     struct variable_t {
-        bool init(
-            compiler::session& session,
-            vm::instruction_block* block);
+        bool init(compiler::session& session);
 
-        bool read(
-            compiler::session& session,
-            vm::instruction_block* block);
+        bool read(compiler::session& session);
 
-        bool write(
-            compiler::session& session,
-            vm::instruction_block* block);
+        bool write(compiler::session& session);
 
         void make_live(compiler::session& session);
 

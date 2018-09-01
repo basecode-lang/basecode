@@ -89,7 +89,7 @@ namespace basecode::compiler {
                 });
 
                 _lhs->emit(session);
-                var->init(session, instruction_block);
+                var->init(session);
 
                 vm::register_t rhs_reg;
                 rhs_reg.size = var->value_reg.reg.size;
@@ -105,7 +105,7 @@ namespace basecode::compiler {
                 }
                 assembler.push_target_register(rhs_reg);
                 _rhs->emit(session);
-                var->write(session, instruction_block);
+                var->write(session);
                 assembler.pop_target_register();
                 assembler.free_reg(rhs_reg);
                 break;

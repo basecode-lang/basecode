@@ -126,9 +126,7 @@ namespace basecode::compiler {
             var->make_live(session);
 
             result.var = var;
-            result.var->read(
-                session,
-                session.assembler().current_block());
+            result.var->read(session);
             result.valid = true;
             result.reg = var->value_reg.reg;
 
