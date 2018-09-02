@@ -37,6 +37,7 @@
 #include "elements/pointer_type.h"
 #include "elements/argument_list.h"
 #include "elements/float_literal.h"
+#include "elements/type_reference.h"
 #include "elements/string_literal.h"
 #include "elements/unary_operator.h"
 #include "elements/composite_type.h"
@@ -191,12 +192,20 @@ namespace basecode::compiler {
     }
 
     void scope_manager::add_type_to_scope(compiler::type* type) {
+        auto& builder = _session.builder();
+
         auto scope = current_scope();
         scope->types().add(type);
-        auto identifier = _session.builder().make_identifier(
+
+        auto identifier = builder.make_identifier(
             scope,
             type->symbol(),
-            nullptr);
+            builder.make_initializer(
+                scope,
+                builder.make_type_reference(
+                    scope,
+                    type->symbol()->qualified_symbol(),
+                    type)));
         identifier->type(type);
         scope->identifiers().add(identifier);
     }

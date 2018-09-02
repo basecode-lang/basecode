@@ -39,6 +39,7 @@
 #include <compiler/elements/pointer_type.h>
 #include <compiler/elements/argument_list.h>
 #include <compiler/elements/float_literal.h>
+#include <compiler/elements/type_reference.h>
 #include <compiler/elements/free_intrinsic.h>
 #include <compiler/elements/string_literal.h>
 #include <compiler/elements/unary_operator.h>
@@ -733,13 +734,30 @@ namespace basecode::compiler {
             namespaces);
     }
 
+    type_reference* element_builder::make_type_reference(
+            compiler::block* parent_scope,
+            const qualified_symbol_t& symbol,
+            compiler::type* type) {
+        auto& scope_manager = _session.scope_manager();
+        auto reference = new compiler::type_reference(
+            scope_manager.current_module(),
+            parent_scope,
+            symbol,
+            type);
+        _session.elements().add(reference);
+        reference->location(symbol.location);
+        return reference;
+    }
+
     identifier_reference* element_builder::make_identifier_reference(
             compiler::block* parent_scope,
             const qualified_symbol_t& symbol,
             compiler::identifier* identifier) {
-        auto& unresolveds = _session.scope_manager().unresolved_identifier_references();
+        auto& scope_manager = _session.scope_manager();
+
+        auto& unresolveds = scope_manager.unresolved_identifier_references();
         auto reference = new compiler::identifier_reference(
-            _session.scope_manager().current_module(),
+            scope_manager.current_module(),
             parent_scope,
             symbol,
             identifier);

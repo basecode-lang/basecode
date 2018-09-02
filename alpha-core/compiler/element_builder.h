@@ -249,6 +249,11 @@ namespace basecode::compiler {
             compiler::type* procedure_type,
             compiler::block* scope);
 
+        type_reference* make_type_reference(
+            compiler::block* parent_scope,
+            const qualified_symbol_t& symbol,
+            compiler::type* type);
+
         identifier_reference* make_identifier_reference(
             compiler::block* parent_scope,
             const qualified_symbol_t& symbol,

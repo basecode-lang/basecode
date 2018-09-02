@@ -15,40 +15,30 @@
 
 namespace basecode::compiler {
 
-    class identifier_reference : public element {
+    class type_reference : public element {
     public:
-        identifier_reference(
+        type_reference(
             compiler::module* module,
             block* parent_scope,
             const qualified_symbol_t& symbol,
-            compiler::identifier* identifier);
+            compiler::type* type);
 
         bool resolved() const;
 
-        compiler::identifier* identifier();
+        compiler::type* type();
+
+        void type(compiler::type* value);
 
         const qualified_symbol_t& symbol() const;
 
-        void identifier(compiler::identifier* value);
-
     protected:
         bool on_is_constant() const override;
-
-        bool on_as_bool(bool& value) const override;
-
-        bool on_as_float(double& value) const override;
-
-        bool on_emit(compiler::session& session) override;
-
-        bool on_as_integer(uint64_t& value) const override;
-
-        bool on_as_string(std::string& value) const override;
 
         compiler::type* on_infer_type(const compiler::session& session) override;
 
     private:
         qualified_symbol_t _symbol;
-        compiler::identifier* _identifier = nullptr;
+        compiler::type* _type = nullptr;
     };
 
 };

@@ -57,6 +57,7 @@ namespace basecode::compiler {
     class float_literal;
     class operator_base;
     class argument_list;
+    class type_reference;
     class assembly_label;
     class free_intrinsic;
     class symbol_element;
@@ -166,6 +167,7 @@ namespace basecode::compiler {
         composite_type,
         unary_operator,
         namespace_type,
+        type_reference,
         boolean_literal,
         integer_literal,
         binary_operator,
@@ -221,6 +223,7 @@ namespace basecode::compiler {
         {element_type_t::composite_type, "composite_type"},
         {element_type_t::unary_operator, "unary_operator"},
         {element_type_t::assembly_label, "assembly_label"},
+        {element_type_t::type_reference, "type_reference"},
         {element_type_t::boolean_literal, "boolean_literal"},
         {element_type_t::integer_literal, "integer_literal"},
         {element_type_t::binary_operator, "binary_operator"},

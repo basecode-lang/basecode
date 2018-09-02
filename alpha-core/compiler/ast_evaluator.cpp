@@ -39,6 +39,7 @@
 #include <compiler/elements/pointer_type.h>
 #include <compiler/elements/argument_list.h>
 #include <compiler/elements/float_literal.h>
+#include <compiler/elements/type_reference.h>
 #include <compiler/elements/string_literal.h>
 #include <compiler/elements/unary_operator.h>
 #include <compiler/elements/composite_type.h>
@@ -412,10 +413,11 @@ namespace basecode::compiler {
                     auto init_symbol = dynamic_cast<compiler::symbol_element*>(init_expr);
                     auto identifier = scope_manager.find_identifier(init_symbol->qualified_symbol());
                     if (identifier != nullptr) {
-                        auto type = identifier->type();
-                        if (type != nullptr && type->is_type()) {
+                        auto type_initializer = identifier->initializer();
+                        if (type_initializer != nullptr
+                        &&  type_initializer->expression()->element_type() == element_type_t::type_reference) {
                             if (symbol->is_constant()) {
-                                init_expr = identifier->type();
+                                init_expr = type_initializer->expression();
                             } else {
                                 _session.error(
                                     "P029",

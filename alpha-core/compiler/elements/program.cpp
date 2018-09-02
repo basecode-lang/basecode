@@ -85,6 +85,10 @@ namespace basecode::compiler {
                 return false;
             }
 
+            if (var->initializer() != nullptr
+            &&  var->initializer()->expression()->element_type() == element_type_t::type_reference)
+                continue;
+
             if (var_type->element_type() == element_type_t::namespace_type)
                 continue;
 

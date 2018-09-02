@@ -1,0 +1,49 @@
+// ----------------------------------------------------------------------------
+//
+// Basecode Bootstrap Compiler
+// Copyright (C) 2018 Jeff Panici
+// All rights reserved.
+//
+// This software source file is licensed under the terms of MIT license.
+// For details, please read the LICENSE file.
+//
+// ----------------------------------------------------------------------------
+
+#include "type_reference.h"
+
+namespace basecode::compiler {
+
+    type_reference::type_reference(
+            compiler::module* module,
+            block* parent_scope,
+            const qualified_symbol_t& symbol,
+            compiler::type* type) : element(module, parent_scope, element_type_t::type_reference),
+                                    _symbol(symbol),
+                                    _type(type) {
+    }
+
+    bool type_reference::resolved() const {
+        return _type != nullptr;
+    }
+
+    compiler::type* type_reference::type() {
+        return _type;
+    }
+
+    bool type_reference::on_is_constant() const {
+        return true;
+    }
+
+    void type_reference::type(compiler::type* value) {
+        _type = value;
+    }
+
+    const qualified_symbol_t& type_reference::symbol() const {
+        return _symbol;
+    }
+
+    compiler::type* type_reference::on_infer_type(const compiler::session& session) {
+        return _type;
+    }
+
+};
