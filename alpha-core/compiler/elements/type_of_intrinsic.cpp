@@ -38,7 +38,7 @@ namespace basecode::compiler {
             return false;
         }
 
-        auto arg_type = args[0]->infer_type(session);
+//        auto arg_type = args[0]->infer_type(session);
         result.element = session.builder().make_integer(
             parent_scope(),
             0xdeadbeef);

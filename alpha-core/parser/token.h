@@ -92,87 +92,103 @@ namespace basecode::syntax {
         namespace_literal,
         transmute_literal,
         greater_than_equal,
+        plus_equal_literal,
+        minus_equal_literal,
         constant_assignment,
         left_square_bracket,
+        divide_equal_literal,
         right_square_bracket,
+        modulus_equal_literal,
+        multiply_equal_literal,
+        binary_or_equal_literal,
+        binary_not_equal_literal,
+        binary_and_equal_literal,
     };
 
     static inline std::unordered_map<token_types_t, std::string> s_type_to_name = {
-        {token_types_t::invalid,                "invalid"},
-        {token_types_t::plus,                   "plus"},
-        {token_types_t::bang,                   "bang"},
-        {token_types_t::pipe,                   "pipe"},
-        {token_types_t::minus,                  "minus"},
-        {token_types_t::label,                  "label"},
-        {token_types_t::slash,                  "slash"},
-        {token_types_t::caret,                  "caret"},
-        {token_types_t::tilde,                  "tilde"},
-        {token_types_t::comma,                  "comma"},
-        {token_types_t::colon,                  "colon"},
-        {token_types_t::equals,                 "equals"},
-        {token_types_t::period,                 "period"},
-        {token_types_t::percent,                "percent"},
-        {token_types_t::question,               "question"},
-        {token_types_t::asterisk,               "asterisk"},
-        {token_types_t::exponent,               "exponent"},
-        {token_types_t::less_than,              "less_than"},
-        {token_types_t::raw_block,              "raw_block"},
-        {token_types_t::ampersand,              "ampersand"},
-        {token_types_t::attribute,              "attribute"},
-        {token_types_t::directive,              "directive"},
-        {token_types_t::identifier,             "identifier"},
-        {token_types_t::not_equals,             "not_equals"},
-        {token_types_t::assignment,             "assignment"},
-        {token_types_t::left_paren,             "left_paren"},
-        {token_types_t::logical_or,             "logical_or"},
-        {token_types_t::semi_colon,             "semi_colon"},
-        {token_types_t::in_literal,             "in_literal"},
-        {token_types_t::if_literal,             "if_literal"},
-        {token_types_t::for_literal,            "for_literal"},
-        {token_types_t::end_of_file,            "end_of_file"},
-        {token_types_t::right_paren,            "right_paren"},
-        {token_types_t::logical_and,            "logical_and"},
-        {token_types_t::xor_literal,            "xor_literal"},
-        {token_types_t::shl_literal,            "shl_literal"},
-        {token_types_t::shr_literal,            "shr_literal"},
-        {token_types_t::rol_literal,            "rol_literal"},
-        {token_types_t::ror_literal,            "ror_literal"},
-        {token_types_t::from_literal,           "from_literal"},
-        {token_types_t::proc_literal,           "proc_literal"},
-        {token_types_t::null_literal,           "null_literal"},
-        {token_types_t::with_literal,           "with_literal"},
-        {token_types_t::cast_literal,           "cast_literal"},
-        {token_types_t::else_literal,           "else_literal"},
-        {token_types_t::line_comment,           "line_comment"},
-        {token_types_t::greater_than,           "greater_than"},
-        {token_types_t::enum_literal,           "enum_literal"},
-        {token_types_t::true_literal,           "true_literal"},
-        {token_types_t::false_literal,          "false_literal"},
-        {token_types_t::break_literal,          "break_literal"},
-        {token_types_t::while_literal,          "while_literal"},
-        {token_types_t::defer_literal,          "defer_literal"},
-        {token_types_t::union_literal,          "union_literal"},
-        {token_types_t::block_comment,          "block_comment"},
-        {token_types_t::module_literal,         "module_literal"},
-        {token_types_t::struct_literal,         "struct_literal"},
-        {token_types_t::return_literal,         "return_literal"},
-        {token_types_t::number_literal,         "number_literal"},
-        {token_types_t::scope_operator,         "scope_operator"},
-        {token_types_t::string_literal,         "string_literal"},
-        {token_types_t::spread_operator,        "spread_operator"},
-        {token_types_t::import_literal,         "import_literal"},
-        {token_types_t::less_than_equal,        "less_than_equal"},
-        {token_types_t::else_if_literal,        "else_if_literal"},
-        {token_types_t::left_curly_brace,       "left_curly_brace"},
-        {token_types_t::continue_literal,       "continue_literal"},
-        {token_types_t::right_curly_brace,      "right_curly_brace"},
-        {token_types_t::character_literal,      "character_literal"},
-        {token_types_t::namespace_literal,      "namespace_literal"},
-        {token_types_t::transmute_literal,      "transmute_literal"},
-        {token_types_t::greater_than_equal,     "greater_than_equal"},
-        {token_types_t::constant_assignment,    "constant_assignment"},
-        {token_types_t::left_square_bracket,    "left_square_bracket"},
-        {token_types_t::right_square_bracket,   "right_square_bracket"},
+        {token_types_t::invalid,                    "invalid"},
+        {token_types_t::plus,                       "plus"},
+        {token_types_t::bang,                       "bang"},
+        {token_types_t::pipe,                       "pipe"},
+        {token_types_t::minus,                      "minus"},
+        {token_types_t::label,                      "label"},
+        {token_types_t::slash,                      "slash"},
+        {token_types_t::caret,                      "caret"},
+        {token_types_t::tilde,                      "tilde"},
+        {token_types_t::comma,                      "comma"},
+        {token_types_t::colon,                      "colon"},
+        {token_types_t::equals,                     "equals"},
+        {token_types_t::period,                     "period"},
+        {token_types_t::percent,                    "percent"},
+        {token_types_t::question,                   "question"},
+        {token_types_t::asterisk,                   "asterisk"},
+        {token_types_t::exponent,                   "exponent"},
+        {token_types_t::less_than,                  "less_than"},
+        {token_types_t::raw_block,                  "raw_block"},
+        {token_types_t::ampersand,                  "ampersand"},
+        {token_types_t::attribute,                  "attribute"},
+        {token_types_t::directive,                  "directive"},
+        {token_types_t::identifier,                 "identifier"},
+        {token_types_t::not_equals,                 "not_equals"},
+        {token_types_t::assignment,                 "assignment"},
+        {token_types_t::left_paren,                 "left_paren"},
+        {token_types_t::logical_or,                 "logical_or"},
+        {token_types_t::semi_colon,                 "semi_colon"},
+        {token_types_t::in_literal,                 "in_literal"},
+        {token_types_t::if_literal,                 "if_literal"},
+        {token_types_t::for_literal,                "for_literal"},
+        {token_types_t::end_of_file,                "end_of_file"},
+        {token_types_t::right_paren,                "right_paren"},
+        {token_types_t::logical_and,                "logical_and"},
+        {token_types_t::xor_literal,                "xor_literal"},
+        {token_types_t::shl_literal,                "shl_literal"},
+        {token_types_t::shr_literal,                "shr_literal"},
+        {token_types_t::rol_literal,                "rol_literal"},
+        {token_types_t::ror_literal,                "ror_literal"},
+        {token_types_t::from_literal,               "from_literal"},
+        {token_types_t::proc_literal,               "proc_literal"},
+        {token_types_t::null_literal,               "null_literal"},
+        {token_types_t::with_literal,               "with_literal"},
+        {token_types_t::cast_literal,               "cast_literal"},
+        {token_types_t::else_literal,               "else_literal"},
+        {token_types_t::line_comment,               "line_comment"},
+        {token_types_t::greater_than,               "greater_than"},
+        {token_types_t::enum_literal,               "enum_literal"},
+        {token_types_t::true_literal,               "true_literal"},
+        {token_types_t::false_literal,              "false_literal"},
+        {token_types_t::break_literal,              "break_literal"},
+        {token_types_t::while_literal,              "while_literal"},
+        {token_types_t::defer_literal,              "defer_literal"},
+        {token_types_t::union_literal,              "union_literal"},
+        {token_types_t::block_comment,              "block_comment"},
+        {token_types_t::module_literal,             "module_literal"},
+        {token_types_t::struct_literal,             "struct_literal"},
+        {token_types_t::return_literal,             "return_literal"},
+        {token_types_t::number_literal,             "number_literal"},
+        {token_types_t::scope_operator,             "scope_operator"},
+        {token_types_t::string_literal,             "string_literal"},
+        {token_types_t::spread_operator,            "spread_operator"},
+        {token_types_t::import_literal,             "import_literal"},
+        {token_types_t::less_than_equal,            "less_than_equal"},
+        {token_types_t::else_if_literal,            "else_if_literal"},
+        {token_types_t::left_curly_brace,           "left_curly_brace"},
+        {token_types_t::continue_literal,           "continue_literal"},
+        {token_types_t::right_curly_brace,          "right_curly_brace"},
+        {token_types_t::character_literal,          "character_literal"},
+        {token_types_t::namespace_literal,          "namespace_literal"},
+        {token_types_t::transmute_literal,          "transmute_literal"},
+        {token_types_t::plus_equal_literal,         "plus_equal_literal"},
+        {token_types_t::greater_than_equal,         "greater_than_equal"},
+        {token_types_t::minus_equal_literal,        "minus_equal_literal"},
+        {token_types_t::constant_assignment,        "constant_assignment"},
+        {token_types_t::left_square_bracket,        "left_square_bracket"},
+        {token_types_t::right_square_bracket,       "right_square_bracket"},
+        {token_types_t::divide_equal_literal,       "divide_equal_literal"},
+        {token_types_t::modulus_equal_literal,      "modulus_equal_literal"},
+        {token_types_t::multiply_equal_literal,     "multiply_equal_literal"},
+        {token_types_t::binary_or_equal_literal,    "binary_or_equal_literal"},
+        {token_types_t::binary_and_equal_literal,   "binary_and_equal_literal"},
+        {token_types_t::binary_not_equal_literal,   "binary_not_equal_literal"},
     };
 
     enum class conversion_result_t {
@@ -426,6 +442,46 @@ namespace basecode::syntax {
     static inline token_t s_percent_literal = {
         .type = token_types_t::percent,
         .value = "%"
+    };
+
+    static inline token_t s_plus_equal_literal = {
+        .type = token_types_t::plus_equal_literal,
+        .value = "+:="
+    };
+
+    static inline token_t s_minus_equal_literal = {
+        .type = token_types_t::minus_equal_literal,
+        .value = "-:="
+    };
+
+    static inline token_t s_divide_equal_literal = {
+        .type = token_types_t::divide_equal_literal,
+        .value = "/:="
+    };
+
+    static inline token_t s_modulus_equal_literal = {
+        .type = token_types_t::modulus_equal_literal,
+        .value = "%:="
+    };
+
+    static inline token_t s_multiply_equal_literal = {
+        .type = token_types_t::multiply_equal_literal,
+        .value = "*:="
+    };
+
+    static inline token_t s_binary_or_equal_literal = {
+        .type = token_types_t::binary_or_equal_literal,
+        .value = "|:="
+    };
+
+    static inline token_t s_binary_and_equal_literal = {
+        .type = token_types_t::binary_and_equal_literal,
+        .value = "&:="
+    };
+
+    static inline token_t s_binary_not_equal_literal = {
+        .type = token_types_t::binary_not_equal_literal,
+        .value = "~:="
     };
 
     static inline token_t s_continue_literal = {

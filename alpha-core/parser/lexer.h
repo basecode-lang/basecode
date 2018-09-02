@@ -171,13 +171,29 @@ namespace basecode::syntax {
 
         bool constant_assignment(token_t& token);
 
+        bool plus_equal_operator(token_t& token);
+
         bool logical_and_operator(token_t& token);
 
         bool right_square_bracket(token_t& token);
 
+        bool minus_equal_operator(token_t& token);
+
+        bool divide_equal_operator(token_t& token);
+
         bool greater_than_operator(token_t& token);
 
+        bool modulus_equal_operator(token_t& token);
+
+        bool multiply_equal_operator(token_t& token);
+
         bool less_than_equal_operator(token_t& token);
+
+        bool binary_or_equal_operator(token_t& token);
+
+        bool binary_not_equal_operator(token_t& token);
+
+        bool binary_and_equal_operator(token_t& token);
 
         bool greater_than_equal_operator(token_t& token);
 

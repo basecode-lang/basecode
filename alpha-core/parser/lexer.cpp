@@ -23,10 +23,12 @@ namespace basecode::syntax {
         // directive
         {'#', std::bind(&lexer::directive, std::placeholders::_1, std::placeholders::_2)},
 
-        // add
+        // +:=, add
+        {'+', std::bind(&lexer::plus_equal_operator, std::placeholders::_1, std::placeholders::_2)},
         {'+', std::bind(&lexer::plus, std::placeholders::_1, std::placeholders::_2)},
 
-        // block comment, line comment, slash
+        // /:=, block comment, line comment, slash
+        {'/', std::bind(&lexer::divide_equal_operator, std::placeholders::_1, std::placeholders::_2)},
         {'/', std::bind(&lexer::block_comment, std::placeholders::_1, std::placeholders::_2)},
         {'/', std::bind(&lexer::line_comment, std::placeholders::_1, std::placeholders::_2)},
         {'/', std::bind(&lexer::slash, std::placeholders::_1, std::placeholders::_2)},
@@ -49,7 +51,8 @@ namespace basecode::syntax {
         {'.', std::bind(&lexer::period, std::placeholders::_1, std::placeholders::_2)},
         {'.', std::bind(&lexer::spread, std::placeholders::_1, std::placeholders::_2)},
 
-        // tilde
+        // ~:=, tilde
+        {'~', std::bind(&lexer::binary_not_equal_operator, std::placeholders::_1, std::placeholders::_2)},
         {'~', std::bind(&lexer::tilde, std::placeholders::_1, std::placeholders::_2)},
 
         // assignment, scope operator, colon
@@ -58,11 +61,13 @@ namespace basecode::syntax {
         {':', std::bind(&lexer::scope_operator, std::placeholders::_1, std::placeholders::_2)},
         {':', std::bind(&lexer::colon, std::placeholders::_1, std::placeholders::_2)},
 
-        // percent/number literal
+        // %:=, percent, number literal
+        {'%', std::bind(&lexer::modulus_equal_operator, std::placeholders::_1, std::placeholders::_2)},
         {'%', std::bind(&lexer::number_literal, std::placeholders::_1, std::placeholders::_2)},
         {'%', std::bind(&lexer::percent, std::placeholders::_1, std::placeholders::_2)},
 
-        // exponent/asterisk
+        // *:=, exponent, asterisk
+        {'*', std::bind(&lexer::multiply_equal_operator, std::placeholders::_1, std::placeholders::_2)},
         {'*', std::bind(&lexer::exponent, std::placeholders::_1, std::placeholders::_2)},
         {'*', std::bind(&lexer::asterisk, std::placeholders::_1, std::placeholders::_2)},
 
@@ -77,11 +82,13 @@ namespace basecode::syntax {
         {'>', std::bind(&lexer::greater_than_equal_operator, std::placeholders::_1, std::placeholders::_2)},
         {'>', std::bind(&lexer::greater_than_operator, std::placeholders::_1, std::placeholders::_2)},
 
-        // logical and, bitwise and, ampersand
+        // &:=, logical and, bitwise and, ampersand
+        {'&', std::bind(&lexer::binary_not_equal_operator, std::placeholders::_1, std::placeholders::_2)},
         {'&', std::bind(&lexer::logical_and_operator, std::placeholders::_1, std::placeholders::_2)},
         {'&', std::bind(&lexer::ampersand_literal, std::placeholders::_1, std::placeholders::_2)},
 
-        // logical or, bitwise or, pipe
+        // |:=, logical or, bitwise or, pipe
+        {'|', std::bind(&lexer::binary_or_equal_operator, std::placeholders::_1, std::placeholders::_2)},
         {'|', std::bind(&lexer::logical_or_operator, std::placeholders::_1, std::placeholders::_2)},
         {'|', std::bind(&lexer::pipe_literal, std::placeholders::_1, std::placeholders::_2)},
 
@@ -221,7 +228,8 @@ namespace basecode::syntax {
         {'8', std::bind(&lexer::number_literal, std::placeholders::_1, std::placeholders::_2)},
         {'9', std::bind(&lexer::number_literal, std::placeholders::_1, std::placeholders::_2)},
 
-        // minus, negate
+        // -:=, minus, negate
+        {'-', std::bind(&lexer::minus_equal_operator, std::placeholders::_1, std::placeholders::_2)},
         {'-', std::bind(&lexer::minus, std::placeholders::_1, std::placeholders::_2)},
     };
 
@@ -1215,9 +1223,25 @@ namespace basecode::syntax {
         return false;
     }
 
+    bool lexer::plus_equal_operator(token_t& token) {
+        if (match_literal("+:=")) {
+            token = s_plus_equal_literal;
+            return true;
+        }
+        return false;
+    }
+
     bool lexer::constant_assignment(token_t& token) {
         if (match_literal("::=")) {
             token = s_constant_assignment_literal;
+            return true;
+        }
+        return false;
+    }
+
+    bool lexer::minus_equal_operator(token_t& token) {
+        if (match_literal("-:=")) {
+            token = s_minus_equal_literal;
             return true;
         }
         return false;
@@ -1265,10 +1289,42 @@ namespace basecode::syntax {
         return false;
     }
 
+    bool lexer::divide_equal_operator(token_t& token) {
+        if (match_literal("/:=")) {
+            token = s_divide_equal_literal;
+            return true;
+        }
+        return false;
+    }
+
     bool lexer::greater_than_operator(token_t& token) {
         auto ch = read();
         if (ch == '>') {
             token = s_greater_than_literal;
+            return true;
+        }
+        return false;
+    }
+
+    bool lexer::modulus_equal_operator(token_t& token) {
+        if (match_literal("%:=")) {
+            token = s_modulus_equal_literal;
+            return true;
+        }
+        return false;
+    }
+
+    bool lexer::multiply_equal_operator(token_t& token) {
+        if (match_literal("*:=")) {
+            token = s_multiply_equal_literal;
+            return true;
+        }
+        return false;
+    }
+
+    bool lexer::binary_or_equal_operator(token_t& token) {
+        if (match_literal("|:=")) {
+            token = s_binary_or_equal_literal;
             return true;
         }
         return false;
@@ -1282,6 +1338,22 @@ namespace basecode::syntax {
                 token = s_less_than_equal_literal;
                 return true;
             }
+        }
+        return false;
+    }
+
+    bool lexer::binary_not_equal_operator(token_t& token) {
+        if (match_literal("~:=")) {
+            token = s_binary_not_equal_literal;
+            return true;
+        }
+        return false;
+    }
+
+    bool lexer::binary_and_equal_operator(token_t& token) {
+        if (match_literal("&:=")) {
+            token = s_binary_and_equal_literal;
+            return true;
         }
         return false;
     }
