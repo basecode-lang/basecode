@@ -31,6 +31,14 @@ namespace basecode::compiler {
         return _expression;
     }
 
+    bool transmute::on_infer_type(
+            const compiler::session& session,
+            infer_type_result_t& result) {
+        result.inferred_type = _type_ref->type();
+        result.reference = _type_ref;
+        return true;
+    }
+
     compiler::type_reference* transmute::type() {
         return _type_ref;
     }
@@ -39,12 +47,17 @@ namespace basecode::compiler {
         if (_expression == nullptr)
             return true;
 
-        auto source_type = _expression->infer_type(session);
-        if (source_type->number_class() == type_number_class_t::none) {
+        infer_type_result_t infer_type_result {};
+        if (!_expression->infer_type(session, infer_type_result)) {
+            // XXX: error
+            return false;
+        }
+
+        if (infer_type_result.inferred_type->number_class() == type_number_class_t::none) {
             session.error(
                 this,
                 "C073",
-                fmt::format("cannot transmute from type: {}", source_type->symbol()->name()),
+                fmt::format("cannot transmute from type: {}", infer_type_result.type_name()),
                 _expression->location());
             return false;
         } else if (_type_ref->type()->number_class() == type_number_class_t::none) {
@@ -83,10 +96,6 @@ namespace basecode::compiler {
 
     void transmute::type_location(const common::source_location& loc) {
         _type_location = loc;
-    }
-
-    compiler::type* transmute::on_infer_type(const compiler::session& session) {
-        return _type_ref->type();
     }
 
 };

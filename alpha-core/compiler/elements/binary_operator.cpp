@@ -32,6 +32,44 @@ namespace basecode::compiler {
                             _rhs(rhs) {
     }
 
+    bool binary_operator::on_infer_type(
+            const compiler::session& session,
+            infer_type_result_t& result) {
+        switch (operator_type()) {
+            case operator_type_t::add:
+            case operator_type_t::modulo:
+            case operator_type_t::divide:
+            case operator_type_t::subtract:
+            case operator_type_t::multiply:
+            case operator_type_t::exponent:
+            case operator_type_t::binary_or:
+            case operator_type_t::binary_and:
+            case operator_type_t::binary_xor:
+            case operator_type_t::shift_left:
+            case operator_type_t::shift_right:
+            case operator_type_t::rotate_left:
+            case operator_type_t::rotate_right: {
+                return _lhs->infer_type(session, result);
+            }
+            case operator_type_t::dereference: {
+                return _rhs->infer_type(session, result);
+            }
+            case operator_type_t::equals:
+            case operator_type_t::less_than:
+            case operator_type_t::not_equals:
+            case operator_type_t::logical_or:
+            case operator_type_t::logical_and:
+            case operator_type_t::greater_than:
+            case operator_type_t::less_than_or_equal:
+            case operator_type_t::greater_than_or_equal: {
+                result.inferred_type = session.scope_manager().find_type({.name = "bool"});
+                return true;
+            }
+            default:
+                return false;
+        }
+    }
+
     bool binary_operator::on_emit(compiler::session& session) {
         auto& assembler = session.assembler();
         auto instruction_block = assembler.current_block();
@@ -440,41 +478,6 @@ namespace basecode::compiler {
             list.emplace_back(_lhs);
         if( _rhs != nullptr)
             list.emplace_back(_rhs);
-    }
-
-    compiler::type* binary_operator::on_infer_type(const compiler::session& session) {
-        switch (operator_type()) {
-            case operator_type_t::add:
-            case operator_type_t::modulo:
-            case operator_type_t::divide:
-            case operator_type_t::subtract:
-            case operator_type_t::multiply:
-            case operator_type_t::exponent:
-            case operator_type_t::binary_or:
-            case operator_type_t::binary_and:
-            case operator_type_t::binary_xor:
-            case operator_type_t::shift_left:
-            case operator_type_t::shift_right:
-            case operator_type_t::rotate_left:
-            case operator_type_t::rotate_right: {
-                return _lhs->infer_type(session);
-            }
-            case operator_type_t::dereference: {
-                return _rhs->infer_type(session);
-            }
-            case operator_type_t::equals:
-            case operator_type_t::less_than:
-            case operator_type_t::not_equals:
-            case operator_type_t::logical_or:
-            case operator_type_t::logical_and:
-            case operator_type_t::greater_than:
-            case operator_type_t::less_than_or_equal:
-            case operator_type_t::greater_than_or_equal: {
-                return session.scope_manager().find_type({.name = "bool"});
-            }
-            default:
-                return nullptr;
-        }
     }
 
 };

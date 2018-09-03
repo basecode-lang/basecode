@@ -26,6 +26,17 @@ namespace basecode::compiler {
                                                _namespaces(namespaces) {
     }
 
+    bool symbol_element::on_infer_type(
+            const compiler::session& session,
+            infer_type_result_t& result) {
+        auto identifier = session.scope_manager().find_identifier(qualified_symbol());
+        if (identifier != nullptr) {
+            result.inferred_type = identifier->type();
+            return true;
+        }
+        return false;
+    }
+
     std::string symbol_element::name() const {
         return _name;
     }
@@ -71,13 +82,6 @@ namespace basecode::compiler {
 
     bool symbol_element::operator==(const qualified_symbol_t& other) const {
         return _fully_qualified_name == other.fully_qualified_name;
-    }
-
-    compiler::type* symbol_element::on_infer_type(const compiler::session& session) {
-        auto identifier = session.scope_manager().find_identifier(qualified_symbol());
-        if (identifier != nullptr)
-            return identifier->type();
-        return nullptr;
     }
 
 };

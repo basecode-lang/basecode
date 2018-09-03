@@ -29,6 +29,10 @@ namespace basecode::compiler {
         compiler::procedure_type* procedure_type();
 
     protected:
+        bool on_infer_type(
+            const compiler::session& program,
+            infer_type_result_t& result) override;
+
         bool on_as_bool(bool& value) const override;
 
         bool on_as_float(double& value) const override;
@@ -40,8 +44,6 @@ namespace basecode::compiler {
         bool on_as_string(std::string& value) const override;
 
         void on_owned_elements(element_list_t& list) override;
-
-        compiler::type* on_infer_type(const compiler::session& program) override;
 
     private:
         element* _expr = nullptr;

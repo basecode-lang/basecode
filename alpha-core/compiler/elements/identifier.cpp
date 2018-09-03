@@ -27,6 +27,13 @@ namespace basecode::compiler {
                                                   _initializer(initializer) {
     }
 
+    bool identifier::on_infer_type(
+            const compiler::session& session,
+            infer_type_result_t& result) {
+        result.inferred_type = _type;
+        return true;
+    }
+
     bool identifier::on_emit(compiler::session& session) {
         if (_type->element_type() == element_type_t::namespace_type)
             return true;
@@ -114,10 +121,6 @@ namespace basecode::compiler {
 
     void identifier::initializer(compiler::initializer* value) {
         _initializer = value;
-    }
-
-    compiler::type* identifier::on_infer_type(const compiler::session& session) {
-        return _type;
     }
 
 };

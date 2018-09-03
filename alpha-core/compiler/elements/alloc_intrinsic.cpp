@@ -23,6 +23,15 @@ namespace basecode::compiler {
             compiler::argument_list* args) : intrinsic(module, parent_scope, args) {
     }
 
+    bool alloc_intrinsic::on_infer_type(
+            const compiler::session& session,
+            infer_type_result_t& result) {
+        result.inferred_type = session.scope_manager().find_type(qualified_symbol_t {
+            .name = "u64"
+        });
+        return true;
+    }
+
     std::string alloc_intrinsic::name() const {
         return "alloc";
     }
@@ -43,9 +52,13 @@ namespace basecode::compiler {
         }
 
         auto arg = args[0];
-        auto arg_type = arg->infer_type(session);
-        if (arg_type == nullptr
-        ||  arg_type->number_class() != type_number_class_t::integer) {
+        infer_type_result_t infer_type_result {};
+        if (!arg->infer_type(session, infer_type_result)) {
+            // XXX: error
+            return false;
+        }
+
+        if (infer_type_result.inferred_type->number_class() != type_number_class_t::integer) {
             session.error(
                 this,
                 "P091",
@@ -66,12 +79,6 @@ namespace basecode::compiler {
         instruction_block->alloc(vm::op_sizes::byte, *target_reg, arg_reg.reg);
 
         return true;
-    }
-
-    compiler::type* alloc_intrinsic::on_infer_type(const compiler::session& session) {
-        return session.scope_manager().find_type(qualified_symbol_t {
-            .name = "u64"
-        });
     }
 
 };

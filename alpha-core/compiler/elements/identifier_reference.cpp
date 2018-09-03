@@ -24,6 +24,14 @@ namespace basecode::compiler {
                                                 _identifier(identifier) {
     }
 
+    bool identifier_reference::on_infer_type(
+            const compiler::session& session,
+            infer_type_result_t& result) {
+        if (_identifier != nullptr)
+            return _identifier->infer_type(session, result);
+        return false;
+    }
+
     bool identifier_reference::resolved() const {
         return _identifier != nullptr;
     }
@@ -74,12 +82,6 @@ namespace basecode::compiler {
 
     void identifier_reference::identifier(compiler::identifier* value) {
         _identifier = value;
-    }
-
-    compiler::type* identifier_reference::on_infer_type(const compiler::session& session) {
-        if (_identifier != nullptr)
-            return _identifier->infer_type(session);
-        return nullptr;
     }
 
 };

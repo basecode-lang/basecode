@@ -32,9 +32,11 @@ namespace basecode::compiler {
         const qualified_symbol_t& symbol() const;
 
     protected:
-        bool on_is_constant() const override;
+        bool on_infer_type(
+            const compiler::session& session,
+            infer_type_result_t& result) override;
 
-        compiler::type* on_infer_type(const compiler::session& session) override;
+        bool on_is_constant() const override;
 
     private:
         qualified_symbol_t _symbol;

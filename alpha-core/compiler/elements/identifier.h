@@ -43,6 +43,10 @@ namespace basecode::compiler {
         void initializer(compiler::initializer* value);
 
     protected:
+        bool on_infer_type(
+            const compiler::session& session,
+            infer_type_result_t& result) override;
+
         bool on_is_constant() const override;
 
         bool on_as_bool(bool& value) const override;
@@ -56,8 +60,6 @@ namespace basecode::compiler {
         bool on_as_string(std::string& value) const override;
 
         void on_owned_elements(element_list_t& list) override;
-
-        compiler::type* on_infer_type(const compiler::session& session) override;
 
     private:
         bool _inferred_type = false;

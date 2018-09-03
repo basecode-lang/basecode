@@ -448,7 +448,12 @@ namespace basecode::compiler {
 
         if (type_find_result.type == nullptr) {
             if (init_expr != nullptr) {
-                type_find_result.type = init_expr->infer_type(_session);
+                infer_type_result_t infer_type_result {};
+                if (!init_expr->infer_type(_session, infer_type_result)) {
+                    // XXX: error
+                    return nullptr;
+                }
+                type_find_result.type = infer_type_result.inferred_type;
                 new_identifier->type(type_find_result.type);
                 new_identifier->inferred_type(type_find_result.type != nullptr);
             }

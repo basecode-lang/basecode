@@ -59,18 +59,21 @@ namespace basecode::compiler {
         return true;
     }
 
+    bool address_of_intrinsic::on_infer_type(
+            const compiler::session& session,
+            infer_type_result_t& result) {
+        result.inferred_type = session.scope_manager().find_type(qualified_symbol_t {
+            .name = "u64"
+        });
+        return true;
+    }
+
     std::string address_of_intrinsic::name() const {
         return "address_of";
     }
 
     bool address_of_intrinsic::on_is_constant() const {
         return true;
-    }
-
-    compiler::type* address_of_intrinsic::on_infer_type(const compiler::session& session) {
-        return session.scope_manager().find_type(qualified_symbol_t {
-            .name = "u64"
-        });
     }
 
 };

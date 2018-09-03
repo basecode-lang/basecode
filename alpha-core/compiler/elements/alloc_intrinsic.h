@@ -25,9 +25,11 @@ namespace basecode::compiler {
         std::string name() const override;
 
     protected:
-        bool on_emit(compiler::session& session);
+        bool on_infer_type(
+            const compiler::session& session,
+            infer_type_result_t& result) override;
 
-        compiler::type* on_infer_type(const compiler::session& session) override;
+        bool on_emit(compiler::session& session);
     };
 
 };

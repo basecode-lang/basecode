@@ -25,6 +25,14 @@ namespace basecode::compiler {
         return _root;
     }
 
+    bool expression::on_infer_type(
+            const compiler::session& session,
+            infer_type_result_t& result) {
+        if (_root == nullptr)
+            return false;
+        return _root->infer_type(session, result);
+    }
+
     bool expression::on_is_constant() const {
         if (_root == nullptr)
             return false;
@@ -40,12 +48,6 @@ namespace basecode::compiler {
     void expression::on_owned_elements(element_list_t& list) {
         if (_root != nullptr)
             list.emplace_back(_root);
-    }
-
-    compiler::type* expression::on_infer_type(const compiler::session& session) {
-        if (_root == nullptr)
-            return nullptr;
-        return _root->infer_type(session);
     }
 
 };

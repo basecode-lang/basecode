@@ -42,9 +42,12 @@ namespace basecode::compiler {
         }
 
         auto arg = args[0];
-        auto arg_type = arg->infer_type(session);
-        if (arg_type == nullptr
-        ||  arg_type->number_class() != type_number_class_t::integer) {
+        infer_type_result_t infer_type_result {};
+        if (!arg->infer_type(session, infer_type_result)) {
+            // XXX: error
+            return false;
+        }
+        if (infer_type_result.inferred_type->number_class() != type_number_class_t::integer) {
             session.error(
                 this,
                 "P091",

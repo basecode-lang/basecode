@@ -33,13 +33,15 @@ namespace basecode::compiler {
             compiler::session& session,
             fold_result_t& result) override;
 
+        bool on_infer_type(
+            const compiler::session& session,
+            infer_type_result_t& result) override;
+
         bool on_is_constant() const override;
 
         bool on_emit(compiler::session& session) override;
 
         void on_owned_elements(element_list_t& list) override;
-
-        compiler::type* on_infer_type(const compiler::session& session) override;
 
     private:
         element* _rhs = nullptr;

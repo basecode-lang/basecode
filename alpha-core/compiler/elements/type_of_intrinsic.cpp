@@ -45,15 +45,9 @@ namespace basecode::compiler {
         return true;
     }
 
-    std::string type_of_intrinsic::name() const {
-        return "type_of";
-    }
-
-    bool type_of_intrinsic::on_is_constant() const {
-        return true;
-    }
-
-    compiler::type* type_of_intrinsic::on_infer_type(const compiler::session& session) {
+    bool type_of_intrinsic::on_infer_type(
+            const compiler::session& session,
+            infer_type_result_t& result) {
         auto& scope_manager = session.scope_manager();
         qualified_symbol_t type_name = {
             .name = "type"
@@ -67,7 +61,16 @@ namespace basecode::compiler {
                 .builder()
                 .make_pointer_type(parent_scope(), type_name, type_info_type);
         }
-        return ptr_type;
+        result.inferred_type = ptr_type;
+        return true;
+    }
+
+    std::string type_of_intrinsic::name() const {
+        return "type_of";
+    }
+
+    bool type_of_intrinsic::on_is_constant() const {
+        return true;
     }
 
 };

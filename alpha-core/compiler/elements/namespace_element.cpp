@@ -25,6 +25,15 @@ namespace basecode::compiler {
                                        _expression(expr) {
     }
 
+    bool namespace_element::on_infer_type(
+            const compiler::session& session,
+            infer_type_result_t& result) {
+        result.inferred_type = session.scope_manager().find_type({
+            .name = "namespace"
+        });
+        return true;
+    }
+
     std::string namespace_element::name() {
         std::string name("unknown");
         switch (parent_element()->element_type()) {
@@ -62,10 +71,6 @@ namespace basecode::compiler {
     void namespace_element::on_owned_elements(element_list_t& list) {
         if (_expression != nullptr)
             list.emplace_back(_expression);
-    }
-
-    compiler::type* namespace_element::on_infer_type(const compiler::session& session) {
-        return session.scope_manager().find_type({.name = "namespace" });
     }
 
 };

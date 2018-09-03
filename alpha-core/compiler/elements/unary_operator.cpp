@@ -106,23 +106,30 @@ namespace basecode::compiler {
             list.emplace_back(_rhs);
     }
 
-    compiler::type* unary_operator::on_infer_type(const compiler::session& session) {
+    bool unary_operator::on_infer_type(
+            const compiler::session& session,
+            infer_type_result_t& result) {
         auto& scope_manager = session.scope_manager();
         switch (operator_type()) {
             case operator_type_t::negate:
             case operator_type_t::binary_not: {
-                return scope_manager.find_type({.name = "u64"});
+                result.inferred_type = scope_manager.find_type({.name = "u64"});
+                return true;
             }
             case operator_type_t::logical_not: {
-                return scope_manager.find_type({.name = "bool"});
+                result.inferred_type = scope_manager.find_type({.name = "bool"});
+                return true;
             }
             case operator_type_t::pointer_dereference: {
                 auto identifier_ref = dynamic_cast<compiler::identifier_reference*>(_rhs);
                 auto type = dynamic_cast<compiler::pointer_type*>(identifier_ref->identifier()->type());
-                return type->base_type_ref()->type();
+                result.inferred_type = type->base_type_ref()->type();
+                result.reference = type->base_type_ref();
+                return true;
             }
-            default:
-                return nullptr;
+            default: {
+                return false;
+            }
         }
     }
 

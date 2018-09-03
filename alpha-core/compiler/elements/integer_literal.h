@@ -27,13 +27,15 @@ namespace basecode::compiler {
         uint64_t value() const;
 
     protected:
+        bool on_infer_type(
+            const compiler::session& session,
+            infer_type_result_t& result) override;
+
         bool on_is_constant() const override;
 
         bool on_emit(compiler::session& session) override;
 
         bool on_as_integer(uint64_t& value) const override;
-
-        compiler::type* on_infer_type(const compiler::session& session) override;
 
     private:
         uint64_t _value;

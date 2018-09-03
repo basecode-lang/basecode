@@ -54,6 +54,22 @@ namespace basecode::compiler {
         return true;
     }
 
+    bool element::infer_type(
+            const compiler::session& session,
+            infer_type_result_t& result) {
+        if (is_type()) {
+            result.inferred_type = dynamic_cast<compiler::type*>(this);
+            return true;
+        }
+        return on_infer_type(session, result);
+    }
+
+    bool element::on_infer_type(
+            const compiler::session& session,
+            infer_type_result_t& result) {
+        return false;
+    }
+
     block* element::parent_scope() {
         return _parent_scope;
     }
@@ -138,8 +154,8 @@ namespace basecode::compiler {
                 result.reg = result.var->value_reg.reg;
             }
         } else {
-            auto type = e->infer_type(session);
-            if (type == nullptr) {
+            infer_type_result_t infer_type_result;
+            if (!e->infer_type(session, infer_type_result)) {
                 session.error(
                     e,
                     "P052",
@@ -149,9 +165,9 @@ namespace basecode::compiler {
             }
 
             vm::register_t reg;
-            reg.size = vm::op_size_for_byte_size(type->size_in_bytes());
+            reg.size = vm::op_size_for_byte_size(infer_type_result.inferred_type->size_in_bytes());
 
-            if (type->number_class() == type_number_class_t::floating_point)
+            if (infer_type_result.inferred_type->number_class() == type_number_class_t::floating_point)
                 reg.type = vm::register_type_t::floating_point;
             else
                 reg.type = vm::register_type_t::integer;
@@ -250,16 +266,6 @@ namespace basecode::compiler {
 
     void element::location(const common::source_location& location) {
         _location = location;
-    }
-
-    compiler::type* element::infer_type(const compiler::session& session) {
-        if (is_type())
-            return dynamic_cast<compiler::type*>(this);
-        return on_infer_type(session);
-    }
-
-    compiler::type* element::on_infer_type(const compiler::session& session) {
-        return nullptr;
     }
 
 };

@@ -499,4 +499,14 @@ namespace basecode::compiler {
         bool allow_no_fold_attribute = true;
         compiler::element* element = nullptr;
     };
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    struct infer_type_result_t {
+        std::string type_name() const;
+
+        compiler::type* inferred_type = nullptr;
+        compiler::type_reference* reference = nullptr;
+    };
+
 };

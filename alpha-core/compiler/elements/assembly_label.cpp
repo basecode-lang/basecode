@@ -23,6 +23,15 @@ namespace basecode::compiler {
                                        _name(name) {
     }
 
+    bool assembly_label::on_infer_type(
+            const compiler::session& session,
+            infer_type_result_t& result) {
+        result.inferred_type = session.scope_manager().find_type(qualified_symbol_t {
+            .name = "u64"
+        });
+        return true;
+    }
+
     std::string assembly_label::name() const {
         return _name;
     }
@@ -44,12 +53,6 @@ namespace basecode::compiler {
         instruction_block->move_label_to_reg(*target_reg, label_ref);
 
         return true;
-    }
-
-    compiler::type* assembly_label::on_infer_type(const compiler::session& session) {
-        return session.scope_manager().find_type(qualified_symbol_t {
-            .name = "u64"
-        });
     }
 
 };

@@ -23,6 +23,13 @@ namespace basecode::compiler {
                           _value(value) {
     }
 
+    bool boolean_literal::on_infer_type(
+            const compiler::session& session,
+            infer_type_result_t& result) {
+        result.inferred_type = session.scope_manager().find_type({.name = "bool"});
+        return true;
+    }
+
     bool boolean_literal::value() const {
         return _value;
     }
@@ -44,10 +51,6 @@ namespace basecode::compiler {
             *target_reg,
             static_cast<uint64_t>(_value ? 1 : 0));
         return true;
-    }
-
-    compiler::type* boolean_literal::on_infer_type(const compiler::session& session) {
-        return session.scope_manager().find_type({.name = "bool"});
     }
 
 };

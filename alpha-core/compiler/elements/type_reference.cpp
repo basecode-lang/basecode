@@ -22,6 +22,14 @@ namespace basecode::compiler {
                                     _type(type) {
     }
 
+    bool type_reference::on_infer_type(
+            const compiler::session& session,
+            infer_type_result_t& result) {
+        result.inferred_type = _type;
+        result.reference = this;
+        return true;
+    }
+
     bool type_reference::resolved() const {
         return _type != nullptr;
     }
@@ -40,10 +48,6 @@ namespace basecode::compiler {
 
     const qualified_symbol_t& type_reference::symbol() const {
         return _symbol;
-    }
-
-    compiler::type* type_reference::on_infer_type(const compiler::session& session) {
-        return _type;
     }
 
 };

@@ -18,6 +18,7 @@
 #include "identifier.h"
 #include "element_types.h"
 #include "symbol_element.h"
+#include "type_reference.h"
 
 namespace basecode::compiler {
 
@@ -179,5 +180,13 @@ namespace basecode::compiler {
             return vm::op_size_for_byte_size(var->type->size_in_bytes());
         }
         return vm::op_sizes::qword;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    std::string infer_type_result_t::type_name() const {
+        if (reference != nullptr)
+            return reference->symbol().name;
+        return inferred_type->symbol()->name();
     }
 };

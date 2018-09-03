@@ -37,10 +37,22 @@ namespace basecode::compiler {
             return false;
         }
 
-        auto arg_type = args[0]->infer_type(session);
-        result.element = session.builder().make_integer(
-            parent_scope(),
-            arg_type->size_in_bytes());
+        infer_type_result_t infer_type_result {};
+        if (args[0]->infer_type(session, infer_type_result)) {
+            result.element = session.builder().make_integer(
+                parent_scope(),
+                infer_type_result.inferred_type->size_in_bytes());
+            return true;
+        }
+        return false;
+    }
+
+    bool size_of_intrinsic::on_infer_type(
+            const compiler::session& session,
+            infer_type_result_t& result) {
+        result.inferred_type = session.scope_manager().find_type(qualified_symbol_t {
+            .name = "u32"
+        });
         return true;
     }
 
@@ -50,12 +62,6 @@ namespace basecode::compiler {
 
     bool size_of_intrinsic::on_is_constant() const {
         return true;
-    }
-
-    compiler::type* size_of_intrinsic::on_infer_type(const compiler::session& session) {
-        return session.scope_manager().find_type(qualified_symbol_t {
-            .name = "u32"
-        });
     }
 
 };
