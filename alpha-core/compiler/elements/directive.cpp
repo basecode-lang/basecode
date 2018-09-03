@@ -20,6 +20,7 @@
 #include "string_literal.h"
 #include "procedure_type.h"
 #include "symbol_element.h"
+#include "type_reference.h"
 
 namespace basecode::compiler {
 
@@ -220,7 +221,7 @@ namespace basecode::compiler {
         if (proc_type != nullptr) {
             for (auto param : proc_type->parameters().as_list()) {
                 // XXX: need to figure out how to best handle this
-                if (param->identifier()->type()->element_type() == element_type_t::any_type)
+                if (param->identifier()->type_ref()->type()->element_type() == element_type_t::any_type)
                     continue;
                 vm::function_value_t value;
                 value.name = param->identifier()->symbol()->name();

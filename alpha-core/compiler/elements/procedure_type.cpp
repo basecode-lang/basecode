@@ -17,6 +17,7 @@
 #include "program.h"
 #include "procedure_type.h"
 #include "symbol_element.h"
+#include "type_reference.h"
 
 namespace basecode::compiler {
 
@@ -82,7 +83,7 @@ namespace basecode::compiler {
                 if (scope->element_type() == element_type_t::proc_type_block)
                     return true;
                 for (auto var : scope->identifiers().as_list()) {
-                    if (var->type()->element_type() == element_type_t::proc_type)
+                    if (var->type_ref()->type()->element_type() == element_type_t::proc_type)
                         continue;
                     stack_frame->add(
                         vm::stack_frame_entry_type_t::local,

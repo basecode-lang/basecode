@@ -412,15 +412,15 @@ namespace basecode::compiler {
                 auto identifier_element = dynamic_cast<identifier*>(node);
                 auto style = ", fillcolor=deepskyblue1, style=\"filled\"";
                 std::string type_name = "unknown";
-                if (identifier_element->type() != nullptr)
-                    type_name = identifier_element->type()->symbol()->name();
+                if (identifier_element->type_ref() != nullptr)
+                    type_name = identifier_element->type_ref()->symbol().name;
                 auto details = fmt::format(
                     "identifier|{}|{{type: {} | inferred: {} | constant: {} }}",
                     identifier_element->symbol()->name(),
                     type_name,
                     identifier_element->inferred_type(),
                     identifier_element->symbol()->is_constant());
-                add_primary_edge(identifier_element, identifier_element->type());
+                add_primary_edge(identifier_element, identifier_element->type_ref());
                 add_primary_edge(identifier_element, identifier_element->symbol());
                 add_primary_edge(identifier_element, identifier_element->initializer());
                 return fmt::format(

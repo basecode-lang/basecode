@@ -36,6 +36,7 @@
 #include "string_literal.h"
 #include "procedure_type.h"
 #include "namespace_type.h"
+#include "type_reference.h"
 #include "binary_operator.h"
 #include "integer_literal.h"
 #include "identifier_reference.h"
@@ -79,7 +80,7 @@ namespace basecode::compiler {
             if (var->is_parent_element(element_type_t::field))
                 continue;
 
-            auto var_type = var->type();
+            auto var_type = var->type_ref()->type();
             if (var_type == nullptr) {
                 // XXX: this is an error!
                 return false;
@@ -148,21 +149,22 @@ namespace basecode::compiler {
                     }
                     case element_type_t::identifier: {
                         auto var = dynamic_cast<compiler::identifier*>(e);
+                        auto var_type = var->type_ref()->type();
                         auto init = var->initializer();
 
                         instruction_block->blank_line();
 
-                        auto type_alignment = static_cast<uint8_t>(var->type()->alignment());
+                        auto type_alignment = static_cast<uint8_t>(var_type->alignment());
                         if (type_alignment > 1)
                             instruction_block->align(type_alignment);
                         auto var_label = assembler.make_label(var->symbol()->name());
                         instruction_block->label(var_label);
                         session.emit_context().allocate_variable(
                             var_label->name(),
-                            var->type(),
+                            var_type,
                             identifier_usage_t::heap);
 
-                        switch (var->type()->element_type()) {
+                        switch (var_type->element_type()) {
                             case element_type_t::bool_type: {
                                 bool value = false;
                                 var->as_bool(value);
@@ -179,7 +181,7 @@ namespace basecode::compiler {
                             }
                             case element_type_t::numeric_type: {
                                 uint64_t value = 0;
-                                if (var->type()->number_class() == type_number_class_t::integer) {
+                                if (var_type->number_class() == type_number_class_t::integer) {
                                     var->as_integer(value);
                                 } else {
                                     double temp = 0;
@@ -190,8 +192,7 @@ namespace basecode::compiler {
                                     }
                                 }
 
-                                auto symbol_type = vm::integer_symbol_type_for_size(
-                                    var->type()->size_in_bytes());
+                                auto symbol_type = vm::integer_symbol_type_for_size(var_type->size_in_bytes());
                                 switch (symbol_type) {
                                     case vm::symbol_type_t::u8:
                                         if (init == nullptr)

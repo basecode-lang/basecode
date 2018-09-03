@@ -292,9 +292,14 @@ namespace basecode::compiler {
         auto& builder = _session.builder();
         auto& scope_manager = _session.scope_manager();
 
+        // XXX: revisit this
         auto namespace_type = scope_manager.find_type(qualified_symbol_t {
             .name = "namespace"
         });
+        auto namespace_type_ref = builder.make_type_reference(
+            parent_scope,
+            namespace_type->symbol()->qualified_symbol(),
+            namespace_type);
 
         auto namespaces = symbol->namespaces();
         auto scope = parent_scope;
@@ -312,7 +317,7 @@ namespace basecode::compiler {
                     scope,
                     builder.make_symbol(scope, namespace_name, temp_list),
                     builder.make_initializer(scope, ns));
-                ns_identifier->type(namespace_type);
+                ns_identifier->type_ref(namespace_type_ref);
                 ns_identifier->inferred_type(true);
                 ns_identifier->parent_element(scope->parent_element());
                 scope->blocks().push_back(new_scope);
@@ -454,18 +459,29 @@ namespace basecode::compiler {
                     return nullptr;
                 }
                 type_find_result.type = infer_type_result.inferred_type;
-                new_identifier->type(type_find_result.type);
+
+                if (infer_type_result.reference == nullptr) {
+                    infer_type_result.reference = builder.make_type_reference(
+                        scope,
+                        new_identifier->symbol()->qualified_symbol(),
+                        infer_type_result.inferred_type);
+                }
+                new_identifier->type_ref(infer_type_result.reference);
                 new_identifier->inferred_type(type_find_result.type != nullptr);
             }
 
             if (type_find_result.type == nullptr) {
-                new_identifier->type(builder.make_unknown_type_from_find_result(
+                auto unknown_type = builder.make_unknown_type_from_find_result(
                     scope,
                     new_identifier,
-                    type_find_result));
+                    type_find_result);
+                new_identifier->type_ref(builder.make_type_reference(
+                    scope,
+                    unknown_type->symbol()->qualified_symbol(),
+                    unknown_type));
             }
         } else {
-            new_identifier->type(type_find_result.type);
+            new_identifier->type_ref(type_find_result.make_type_reference(builder, scope));
         }
 
         scope->identifiers().add(new_identifier);
@@ -480,7 +496,7 @@ namespace basecode::compiler {
 
         if (init == nullptr
         &&  init_expr == nullptr
-        &&  new_identifier->type() == nullptr) {
+        &&  new_identifier->type_ref() == nullptr) {
             _session.error(
                 "P019",
                 fmt::format("unable to infer type: {}", new_identifier->symbol()->name()),
@@ -1080,9 +1096,13 @@ namespace basecode::compiler {
                         builder.make_symbol(block_scope, fmt::format("_{}", count++)),
                         nullptr);
                     return_identifier->usage(identifier_usage_t::stack);
-                    return_identifier->type(scope_manager.find_type(qualified_symbol_t {
+                    auto type = scope_manager.find_type(qualified_symbol_t {
                         .name = type_node->children[0]->token.value
-                    }));
+                    });
+                    return_identifier->type_ref(builder.make_type_reference(
+                        block_scope,
+                        type->symbol()->qualified_symbol(),
+                        type));
                     auto new_field = builder.make_field(proc_type, block_scope, return_identifier);
                     proc_type->returns().add(new_field);
                     break;

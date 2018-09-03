@@ -14,6 +14,8 @@
 #include "program.h"
 #include "type_info.h"
 #include "identifier.h"
+#include "symbol_element.h"
+#include "type_reference.h"
 
 namespace basecode::compiler {
 
@@ -57,12 +59,16 @@ namespace basecode::compiler {
         auto block_scope = scope();
 
         auto string_type = session.scope_manager().find_type({.name = "string"});
+        auto string_type_ref = builder.make_type_reference(
+            block_scope,
+            string_type->symbol()->qualified_symbol(),
+            string_type);
 
         auto name_identifier = builder.make_identifier(
             block_scope,
             builder.make_symbol(parent_scope(), "name"),
             nullptr);
-        name_identifier->type(string_type);
+        name_identifier->type_ref(string_type_ref);
         auto name_field = builder.make_field(
             this,
             block_scope,

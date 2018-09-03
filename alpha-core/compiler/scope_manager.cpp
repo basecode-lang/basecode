@@ -172,7 +172,7 @@ namespace basecode::compiler {
 
                     auto type_identifier = find_identifier(symbol, scope);
                     if (type_identifier != nullptr)
-                        return type_identifier->type();
+                        return type_identifier->type_ref()->type();
 
                     return nullptr;
                 }));
@@ -185,7 +185,7 @@ namespace basecode::compiler {
                         return type;
                     auto type_identifier = find_identifier(symbol, scope);
                     if (type_identifier != nullptr)
-                        return type_identifier->type();
+                        return type_identifier->type_ref()->type();
                     return nullptr;
                 }));
         }
@@ -197,16 +197,15 @@ namespace basecode::compiler {
         auto scope = current_scope();
         scope->types().add(type);
 
+        auto type_ref = builder.make_type_reference(
+            scope,
+            type->symbol()->qualified_symbol(),
+            type);
         auto identifier = builder.make_identifier(
             scope,
             type->symbol(),
-            builder.make_initializer(
-                scope,
-                builder.make_type_reference(
-                    scope,
-                    type->symbol()->qualified_symbol(),
-                    type)));
-        identifier->type(type);
+            builder.make_initializer(scope, type_ref));
+        identifier->type_ref(type_ref);
         scope->identifiers().add(identifier);
     }
 

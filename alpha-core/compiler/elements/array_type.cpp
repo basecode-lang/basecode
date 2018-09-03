@@ -59,13 +59,34 @@ namespace basecode::compiler {
 
         auto u8_type = scope_manager.find_type({.name = "u8"});
         auto u32_type = scope_manager.find_type({.name = "u32"});
+        auto ptr_type = builder.make_pointer_type(
+            block_scope,
+            qualified_symbol_t { .name = "u8" },
+            u8_type);
         auto type_info_type = scope_manager.find_type({.name = "type"});
+
+        auto u8_type_ref = builder.make_type_reference(
+            block_scope,
+            u8_type->symbol()->qualified_symbol(),
+            u8_type);
+        auto u32_type_ref = builder.make_type_reference(
+            block_scope,
+            u32_type->symbol()->qualified_symbol(),
+            u32_type);
+        auto ptr_type_ref = builder.make_type_reference(
+            block_scope,
+            qualified_symbol_t {.name = "^u8"},
+            ptr_type);
+        auto type_info_ref = builder.make_type_reference(
+            block_scope,
+            type_info_type->symbol()->qualified_symbol(),
+            type_info_type);
 
         auto flags_identifier = builder.make_identifier(
             block_scope,
             builder.make_symbol(block_scope, "flags"),
             nullptr);
-        flags_identifier->type(u8_type);
+        flags_identifier->type_ref(u8_type_ref);
         auto flags_field = builder.make_field(
             this,
             block_scope,
@@ -75,7 +96,7 @@ namespace basecode::compiler {
             block_scope,
             builder.make_symbol(block_scope, "length"),
             nullptr);
-        length_identifier->type(u32_type);
+        length_identifier->type_ref(u32_type_ref);
         auto length_field = builder.make_field(
             this,
             block_scope,
@@ -85,7 +106,7 @@ namespace basecode::compiler {
             block_scope,
             builder.make_symbol(block_scope, "capacity"),
             nullptr);
-        capacity_identifier->type(u32_type);
+        capacity_identifier->type_ref(u32_type_ref);
         auto capacity_field = builder.make_field(
             this,
             block_scope,
@@ -95,7 +116,7 @@ namespace basecode::compiler {
             block_scope,
             builder.make_symbol(block_scope, "element_type"),
             nullptr);
-        element_type_identifier->type(type_info_type);
+        element_type_identifier->type_ref(type_info_ref);
         auto element_type_field = builder.make_field(
             this,
             block_scope,
@@ -105,10 +126,7 @@ namespace basecode::compiler {
             block_scope,
             builder.make_symbol(block_scope, "data"),
             nullptr);
-        data_identifier->type(builder.make_pointer_type(
-            block_scope,
-            qualified_symbol_t { .name = "u8" },
-            u8_type));
+        data_identifier->type_ref(ptr_type_ref);
         auto data_field = builder.make_field(
             this,
             block_scope,

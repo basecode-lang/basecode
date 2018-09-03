@@ -15,6 +15,7 @@
 #include "any_type.h"
 #include "identifier.h"
 #include "pointer_type.h"
+#include "symbol_element.h"
 
 namespace basecode::compiler {
 
@@ -43,25 +44,32 @@ namespace basecode::compiler {
 
         auto type_info_type = session.scope_manager().find_type({ .name = "type" });
         auto u8_type = session.scope_manager().find_type({ .name = "u8" });
+        auto ptr_type = builder.make_pointer_type(
+            block_scope,
+            qualified_symbol_t { .name = "u8" },
+            u8_type);
 
         auto type_info_identifier = builder.make_identifier(
             block_scope,
             builder.make_symbol(parent_scope(), "type_info"),
             nullptr);
-        type_info_identifier->type(type_info_type);
+        type_info_identifier->type_ref(builder.make_type_reference(
+            block_scope,
+            type_info_type->symbol()->qualified_symbol(),
+            type_info_type));
+
         auto type_info_field = builder.make_field(
             this,
             block_scope,
             type_info_identifier);
-
         auto data_identifier = builder.make_identifier(
             block_scope,
             builder.make_symbol(parent_scope(), "data"),
             nullptr);
-        data_identifier->type(builder.make_pointer_type(
+        data_identifier->type_ref(builder.make_type_reference(
             block_scope,
-            qualified_symbol_t { .name = "u8" },
-            u8_type));
+            qualified_symbol_t {.name = "^u8"},
+            ptr_type));
         auto data_field = builder.make_field(
             this,
             block_scope,

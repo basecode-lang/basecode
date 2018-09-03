@@ -15,6 +15,7 @@
 #include "identifier.h"
 #include "initializer.h"
 #include "symbol_element.h"
+#include "type_reference.h"
 
 namespace basecode::compiler {
 
@@ -30,12 +31,13 @@ namespace basecode::compiler {
     bool identifier::on_infer_type(
             const compiler::session& session,
             infer_type_result_t& result) {
-        result.inferred_type = _type;
+        result.inferred_type = _type_ref->type();
+        result.reference = _type_ref;
         return true;
     }
 
     bool identifier::on_emit(compiler::session& session) {
-        if (_type->element_type() == element_type_t::namespace_type)
+        if (_type_ref->type()->element_type() == element_type_t::namespace_type)
             return true;
 
         auto stack_frame = session.stack_frame();
@@ -46,14 +48,10 @@ namespace basecode::compiler {
 
         session.emit_context().allocate_variable(
             _symbol->name(),
-            _type,
+            _type_ref->type(),
             _usage,
             frame_entry);
         return true;
-    }
-
-    compiler::type* identifier::type() {
-        return _type;
     }
 
     bool identifier::inferred_type() const {
@@ -64,16 +62,16 @@ namespace basecode::compiler {
         return _symbol->is_constant();
     }
 
-    void identifier::type(compiler::type* t) {
-        _type = t;
-    }
-
     void identifier::inferred_type(bool value) {
         _inferred_type = value;
     }
 
     identifier_usage_t identifier::usage() const {
         return _usage;
+    }
+
+    compiler::type_reference* identifier::type_ref() {
+        return _type_ref;
     }
 
     bool identifier::on_as_bool(bool& value) const {
@@ -94,6 +92,10 @@ namespace basecode::compiler {
         if (_initializer == nullptr)
             return false;
         return _initializer->as_float(value);
+    }
+
+    void identifier::type_ref(compiler::type_reference* t) {
+        _type_ref = t;
     }
 
     compiler::symbol_element* identifier::symbol() const {

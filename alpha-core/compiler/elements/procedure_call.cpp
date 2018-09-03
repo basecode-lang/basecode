@@ -18,6 +18,7 @@
 #include "symbol_element.h"
 #include "procedure_type.h"
 #include "procedure_call.h"
+#include "type_reference.h"
 #include "identifier_reference.h"
 
 namespace basecode::compiler {
@@ -37,9 +38,11 @@ namespace basecode::compiler {
             infer_type_result_t& result) {
         auto identifier = _reference->identifier();
         if (identifier != nullptr) {
-            auto proc_type = dynamic_cast<procedure_type*>(identifier->type());
+            auto proc_type = dynamic_cast<procedure_type*>(identifier->type_ref()->type());
             auto returns_list = proc_type->returns().as_list();
-            result.inferred_type = returns_list.front()->identifier()->type();
+            auto return_identifier = returns_list.front()->identifier();
+            result.inferred_type = return_identifier->type_ref()->type();
+            result.reference = return_identifier->type_ref();
             return true;
         }
         return false;

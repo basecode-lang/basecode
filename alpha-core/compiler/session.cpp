@@ -185,14 +185,14 @@ namespace basecode::compiler {
                 // XXX: error
                 return false;
             }
-            if (!var->type()->type_check(infer_type_result.inferred_type)) {
+            if (!var->type_ref()->type()->type_check(infer_type_result.inferred_type)) {
                 error(
                     init,
                     "C051",
                     fmt::format(
                         "type mismatch: cannot assign {} to {}.",
                         infer_type_result.type_name(),
-                        var->type()->symbol()->name()),
+                        var->type_ref()->symbol().name),
                     var->location());
             }
         }
@@ -210,14 +210,14 @@ namespace basecode::compiler {
                 // XXX: error
                 return false;
             }
-            if (!var->type()->type_check(infer_type_result.inferred_type)) {
+            if (!var->type_ref()->type()->type_check(infer_type_result.inferred_type)) {
                 error(
                     binary_op,
                     "C051",
                     fmt::format(
                         "type mismatch: cannot assign {} to {}.",
                         infer_type_result.type_name(),
-                        var->type()->symbol()->name()),
+                        var->type_ref()->symbol().name),
                     binary_op->rhs()->location());
             }
         }
@@ -282,13 +282,12 @@ namespace basecode::compiler {
         while (it != identifiers.end()) {
             auto var = *it;
 
-            if (var->type() != nullptr
-            &&  var->type()->element_type() != element_type_t::unknown_type) {
+            if (var->type_ref() != nullptr
+            &&  var->type_ref()->type()->element_type() != element_type_t::unknown_type) {
                 it = identifiers.erase(it);
                 continue;
             }
 
-            // XXX: this needs to be refactored when identifier uses type_reference
             infer_type_result_t infer_type_result {};
 
             if (var->is_parent_element(element_type_t::binary_operator)) {
@@ -296,11 +295,11 @@ namespace basecode::compiler {
                 if (binary_operator->operator_type() == operator_type_t::assignment) {
                     if (!binary_operator->rhs()->infer_type(*this, infer_type_result))
                         return false;
-                    var->type(infer_type_result.inferred_type);
+                    var->type_ref(infer_type_result.reference);
                 }
             } else {
                 if (var->initializer() == nullptr) {
-                    auto unknown_type = dynamic_cast<compiler::unknown_type*>(var->type());
+                    auto unknown_type = dynamic_cast<compiler::unknown_type*>(var->type_ref()->type());
 
                     type_find_result_t find_result {};
                     find_result.type_name = unknown_type->symbol()->qualified_symbol();
@@ -308,21 +307,23 @@ namespace basecode::compiler {
                     find_result.is_pointer = unknown_type->is_pointer();
                     find_result.array_size = unknown_type->array_size();
 
-                    auto type = _builder.make_complete_type(
+                    find_result.type = _builder.make_complete_type(
                         find_result,
                         var->parent_scope());
-                    if (type != nullptr) {
-                        var->type(type);
+                    if (find_result.type != nullptr) {
+                        var->type_ref(find_result.make_type_reference(
+                            _builder,
+                            find_result.type->parent_scope()));
                         _elements.remove(unknown_type->id());
                     }
                 } else {
                     if (!var->initializer()->expression()->infer_type(*this, infer_type_result))
                         return false;
-                    var->type(infer_type_result.inferred_type);
+                    var->type_ref(infer_type_result.reference);
                 }
             }
 
-            if (var->type()->element_type() != element_type_t::unknown_type) {
+            if (var->type_ref()->type()->element_type() != element_type_t::unknown_type) {
                 var->inferred_type(true);
                 it = identifiers.erase(it);
             } else {

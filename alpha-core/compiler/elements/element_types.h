@@ -484,7 +484,13 @@ namespace basecode::compiler {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    class element_builder;
+
     struct type_find_result_t {
+        compiler::type_reference* make_type_reference(
+            element_builder& builder,
+            compiler::block* parent_scope);
+
         qualified_symbol_t type_name;
         bool is_array = false;
         bool is_spread = false;

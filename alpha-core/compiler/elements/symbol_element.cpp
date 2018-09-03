@@ -14,6 +14,7 @@
 #include "program.h"
 #include "identifier.h"
 #include "symbol_element.h"
+#include "type_reference.h"
 
 namespace basecode::compiler {
 
@@ -31,7 +32,8 @@ namespace basecode::compiler {
             infer_type_result_t& result) {
         auto identifier = session.scope_manager().find_identifier(qualified_symbol());
         if (identifier != nullptr) {
-            result.inferred_type = identifier->type();
+            result.inferred_type = identifier->type_ref()->type();
+            result.reference = identifier->type_ref();
             return true;
         }
         return false;

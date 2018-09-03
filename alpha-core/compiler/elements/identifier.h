@@ -24,21 +24,21 @@ namespace basecode::compiler {
             compiler::symbol_element* name,
             compiler::initializer* initializer);
 
-        compiler::type* type();
-
         bool inferred_type() const;
-
-        void type(compiler::type* t);
 
         void inferred_type(bool value);
 
         identifier_usage_t usage() const;
+
+        compiler::type_reference* type_ref();
 
         void usage(identifier_usage_t value);
 
         compiler::initializer* initializer();
 
         compiler::symbol_element* symbol() const;
+
+        void type_ref(compiler::type_reference* t);
 
         void initializer(compiler::initializer* value);
 
@@ -63,9 +63,9 @@ namespace basecode::compiler {
 
     private:
         bool _inferred_type = false;
-        compiler::type* _type = nullptr;
         compiler::symbol_element* _symbol;
         compiler::initializer* _initializer;
+        compiler::type_reference* _type_ref = nullptr;
         identifier_usage_t _usage = identifier_usage_t::heap;
     };
 
