@@ -14,6 +14,7 @@
 #include "identifier.h"
 #include "pointer_type.h"
 #include "symbol_element.h"
+#include "type_reference.h"
 
 namespace basecode::compiler {
 
@@ -32,7 +33,7 @@ namespace basecode::compiler {
             compiler::module* module,
             block* parent_scope,
             compiler::block* scope,
-            compiler::type* entry_type,
+            compiler::type_reference* entry_type,
             size_t size) : compiler::composite_type(
                                 module,
                                 parent_scope,
@@ -50,7 +51,7 @@ namespace basecode::compiler {
 
         auto type_symbol = builder.make_symbol(
             parent_scope(),
-            name_for_array(_entry_type, _size));
+            name_for_array(_entry_type->type(), _size));
         symbol(type_symbol);
         type_symbol->parent_element(this);
 
@@ -106,6 +107,7 @@ namespace basecode::compiler {
             nullptr);
         data_identifier->type(builder.make_pointer_type(
             block_scope,
+            qualified_symbol_t { .name = "u8" },
             u8_type));
         auto data_field = builder.make_field(
             this,
@@ -130,7 +132,7 @@ namespace basecode::compiler {
         _size = value;
     }
 
-    compiler::type* array_type::entry_type() {
+    compiler::type_reference* array_type::entry_type() {
         return _entry_type;
     }
 

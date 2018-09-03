@@ -55,16 +55,17 @@ namespace basecode::compiler {
 
     compiler::type* type_of_intrinsic::on_infer_type(const compiler::session& session) {
         auto& scope_manager = session.scope_manager();
-        auto type_info_type = scope_manager.find_type(qualified_symbol_t {
+        qualified_symbol_t type_name = {
             .name = "type"
-        });
+        };
+        auto type_info_type = scope_manager.find_type(type_name);
         auto ptr_type = scope_manager.find_pointer_type(
             type_info_type,
             parent_scope());
         if (ptr_type == nullptr) {
             ptr_type = const_cast<compiler::session&>(session)
                 .builder()
-                .make_pointer_type(parent_scope(), type_info_type);
+                .make_pointer_type(parent_scope(), type_name, type_info_type);
         }
         return ptr_type;
     }

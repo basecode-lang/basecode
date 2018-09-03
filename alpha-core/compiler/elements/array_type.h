@@ -26,14 +26,14 @@ namespace basecode::compiler {
             compiler::module* module,
             block* parent_scope,
             compiler::block* scope,
-            compiler::type* entry_type,
+            compiler::type_reference* entry_type,
             size_t size);
 
         uint64_t size() const;
 
         void size(uint64_t value);
 
-        compiler::type* entry_type();
+        compiler::type_reference* entry_type();
 
     protected:
         type_access_model_t on_access_model() const override;
@@ -42,7 +42,7 @@ namespace basecode::compiler {
 
     private:
         uint64_t _size = 0;
-        compiler::type* _entry_type = nullptr;
+        compiler::type_reference* _entry_type = nullptr;
     };
 
 };

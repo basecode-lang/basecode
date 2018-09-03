@@ -14,6 +14,7 @@
 #include "numeric_type.h"
 #include "pointer_type.h"
 #include "symbol_element.h"
+#include "type_reference.h"
 
 namespace basecode::compiler {
 
@@ -26,16 +27,12 @@ namespace basecode::compiler {
     pointer_type::pointer_type(
             compiler::module* module,
             compiler::block* parent_scope,
-            compiler::type* base_type) : compiler::type(
-                                            module,
-                                            parent_scope,
-                                            element_type_t::pointer_type,
-                                            nullptr),
-                                         _base_type(base_type) {
-    }
-
-    compiler::type* pointer_type::base_type() const {
-        return _base_type;
+            compiler::type_reference* base_type) : compiler::type(
+                                                        module,
+                                                        parent_scope,
+                                                        element_type_t::pointer_type,
+                                                        nullptr),
+                                                   _base_type_ref(base_type) {
     }
 
     bool pointer_type::on_type_check(compiler::type* other) {
@@ -49,7 +46,7 @@ namespace basecode::compiler {
             }
             case element_type_t::pointer_type: {
                 auto other_pointer_type = dynamic_cast<compiler::pointer_type*>(other);
-                return base_type()->id() == other_pointer_type->base_type()->id();
+                return _base_type_ref->type()->id() == other_pointer_type->base_type_ref()->type()->id();
             }
             default:
                 return false;
@@ -67,11 +64,15 @@ namespace basecode::compiler {
     bool pointer_type::on_initialize(compiler::session& session) {
         auto type_symbol = session.builder().make_symbol(
             parent_scope(),
-            name_for_pointer(_base_type));
+            name_for_pointer(_base_type_ref->type()));
         symbol(type_symbol);
         type_symbol->parent_element(this);
         size_in_bytes(sizeof(uint64_t));
         return true;
+    }
+
+    compiler::type_reference* pointer_type::base_type_ref() const {
+        return _base_type_ref;
     }
 
 };

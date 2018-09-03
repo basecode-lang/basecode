@@ -15,6 +15,7 @@
 #include "cast.h"
 #include "numeric_type.h"
 #include "symbol_element.h"
+#include "type_reference.h"
 
 namespace basecode::compiler {
 
@@ -32,18 +33,18 @@ namespace basecode::compiler {
     cast::cast(
             compiler::module* module,
             block* parent_scope,
-            compiler::type* type,
+            compiler::type_reference* type,
             element* expr) : element(module, parent_scope, element_type_t::cast),
                              _expression(expr),
-                             _type(type) {
+                             _type_ref(type) {
     }
 
     element* cast::expression() {
         return _expression;
     }
 
-    compiler::type* cast::type() {
-        return _type;
+    compiler::type_reference* cast::type() {
+        return _type_ref;
     }
 
     //
@@ -74,8 +75,8 @@ namespace basecode::compiler {
         auto source_type = _expression->infer_type(session);
         auto source_number_class = source_type->number_class();
         auto source_size = source_type->size_in_bytes();
-        auto target_number_class = _type->number_class();
-        auto target_size = _type->size_in_bytes();
+        auto target_number_class = _type_ref->type()->number_class();
+        auto target_size = _type_ref->type()->size_in_bytes();
 
         if (source_number_class == type_number_class_t::none) {
             session.error(
@@ -88,7 +89,7 @@ namespace basecode::compiler {
             session.error(
                 this,
                 "C073",
-                fmt::format("cannot cast to type: {}", _type->symbol()->name()),
+                fmt::format("cannot cast to type: {}", _type_ref->symbol().name),
                 _type_location);
             return false;
         }
@@ -165,7 +166,7 @@ namespace basecode::compiler {
         instruction_block->comment(
             fmt::format(
                 "cast<{}> from type {}",
-                _type->symbol()->name(),
+                _type_ref->symbol().name,
                 source_type->symbol()->name()),
             4);
 
@@ -182,7 +183,7 @@ namespace basecode::compiler {
     }
 
     compiler::type* cast::on_infer_type(const compiler::session& session) {
-        return _type;
+        return _type_ref->type();
     }
 
 };

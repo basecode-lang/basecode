@@ -39,6 +39,7 @@
 #include <compiler/elements/numeric_type.h>
 #include <compiler/elements/float_literal.h>
 #include <compiler/elements/argument_list.h>
+#include <compiler/elements/type_reference.h>
 #include <compiler/elements/procedure_type.h>
 #include <compiler/elements/return_element.h>
 #include <compiler/elements/procedure_call.h>
@@ -166,7 +167,7 @@ namespace basecode::compiler {
                 return fmt::format(
                     "{}[shape=record,label=\"cast|{}\"{}];",
                     node_vertex_name,
-                    element->type()->symbol()->name(),
+                    element->type()->symbol().name,
                     style);
             }
             case element_type_t::transmute: {
@@ -176,7 +177,7 @@ namespace basecode::compiler {
                 return fmt::format(
                     "{}[shape=record,label=\"transmute|{}\"{}];",
                     node_vertex_name,
-                    element->type()->symbol()->name(),
+                    element->type()->symbol().name,
                     style);
             }
             case element_type_t::if_e: {
@@ -379,9 +380,9 @@ namespace basecode::compiler {
                 auto element = dynamic_cast<pointer_type*>(node);
                 auto style = ", fillcolor=gainsboro, style=\"filled\"";
                 std::string base_type_name = "unknown";
-                if (element->base_type() != nullptr)
-                    base_type_name = element->base_type()->symbol()->name();
-                add_primary_edge(element, element->base_type());
+                if (element->base_type_ref() != nullptr)
+                    base_type_name = element->base_type_ref()->symbol().name;
+                add_primary_edge(element, element->base_type_ref());
                 add_primary_edge(element, element->symbol());
                 return fmt::format(
                     "{}[shape=record,label=\"pointer_type|type: {}\"{}];",
@@ -394,7 +395,7 @@ namespace basecode::compiler {
                 auto style = ", fillcolor=gainsboro, style=\"filled\"";
                 std::string entry_type_name = "unknown";
                 if (element->entry_type() != nullptr)
-                    entry_type_name = element->entry_type()->symbol()->name();
+                    entry_type_name = element->entry_type()->symbol().name;
                 add_primary_edge(element, element->entry_type());
                 for (auto fld : element->fields().as_list())
                     add_primary_edge(element, fld);

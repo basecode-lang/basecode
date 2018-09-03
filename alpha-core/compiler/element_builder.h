@@ -23,12 +23,12 @@ namespace basecode::compiler {
 
         cast* make_cast(
             compiler::block* parent_scope,
-            compiler::type* type,
+            compiler::type_reference* type,
             element* expr);
 
         transmute* make_transmute(
             compiler::block* parent_scope,
-            compiler::type* type,
+            compiler::type_reference* type,
             element* expr);
 
         field* make_field(
@@ -104,6 +104,7 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             compiler::block* scope,
             compiler::type* entry_type,
+            const qualified_symbol_t& type_name,
             size_t size);
 
         expression* make_expression(
@@ -136,6 +137,7 @@ namespace basecode::compiler {
 
         pointer_type* make_pointer_type(
             compiler::block* parent_scope,
+            const qualified_symbol_t& type_name,
             compiler::type* base_type);
 
         composite_type* make_enum_type(

@@ -30,14 +30,6 @@ namespace basecode::compiler {
                                     element_type_t::any_type) {
     }
 
-    compiler::type* any_type::underlying_type() {
-        return _underlying_type;
-    }
-
-    void any_type::underlying_type(compiler::type* value) {
-        _underlying_type = value;
-    }
-
     type_access_model_t any_type::on_access_model() const {
         return type_access_model_t::pointer;
     }
@@ -68,6 +60,7 @@ namespace basecode::compiler {
             nullptr);
         data_identifier->type(builder.make_pointer_type(
             block_scope,
+            qualified_symbol_t { .name = "u8" },
             u8_type));
         auto data_field = builder.make_field(
             this,

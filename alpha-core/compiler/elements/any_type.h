@@ -22,17 +22,12 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             compiler::block* scope);
 
-        compiler::type* underlying_type();
-
-        void underlying_type(compiler::type* value);
-
     protected:
         type_access_model_t on_access_model() const override;
 
         bool on_initialize(compiler::session& session) override;
 
     private:
-        compiler::type* _underlying_type = nullptr;
     };
 
 };

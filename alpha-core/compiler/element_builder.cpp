@@ -110,6 +110,7 @@ namespace basecode::compiler {
                         parent_scope,
                         make_block(parent_scope, element_type_t::block),
                         result.type,
+                        result.type_name,
                         result.array_size);
                 }
                 result.type = array_type;
@@ -120,7 +121,10 @@ namespace basecode::compiler {
                     result.type,
                     parent_scope);
                 if (pointer_type == nullptr) {
-                    pointer_type = make_pointer_type(parent_scope, result.type);
+                    pointer_type = make_pointer_type(
+                        parent_scope,
+                        result.type_name,
+                        result.type);
                 }
                 result.type = pointer_type;
             }
@@ -241,11 +245,12 @@ namespace basecode::compiler {
 
     pointer_type* element_builder::make_pointer_type(
             compiler::block* parent_scope,
+            const qualified_symbol_t& type_name,
             compiler::type* base_type) {
         auto type = new compiler::pointer_type(
             _session.scope_manager().current_module(),
             parent_scope,
-            base_type);
+            make_type_reference(parent_scope, type_name, base_type));
         if (!type->initialize(_session))
             return nullptr;
         _session.elements().add(type);
@@ -256,17 +261,23 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             compiler::block* scope,
             compiler::type* entry_type,
+            const qualified_symbol_t& type_name,
             size_t size) {
+        auto& scope_manager = _session.scope_manager();
+
         auto type = new compiler::array_type(
-            _session.scope_manager().current_module(),
+            scope_manager.current_module(),
             parent_scope,
             scope,
-            entry_type,
+            make_type_reference(parent_scope, type_name, entry_type),
             size);
         if (!type->initialize(_session))
             return nullptr;
+
         scope->parent_element(type);
+
         _session.elements().add(type);
+
         return type;
     }
 
@@ -308,12 +319,13 @@ namespace basecode::compiler {
 
     cast* element_builder::make_cast(
             compiler::block* parent_scope,
-            compiler::type* type,
+            compiler::type_reference* type,
             element* expr) {
         auto cast = new compiler::cast(
             _session.scope_manager().current_module(),
             parent_scope,
-            type, expr);
+            type,
+            expr);
         _session.elements().add(cast);
         if (expr != nullptr)
             expr->parent_element(cast);
@@ -322,7 +334,7 @@ namespace basecode::compiler {
 
     transmute* element_builder::make_transmute(
             compiler::block* parent_scope,
-            compiler::type* type,
+            compiler::type_reference* type,
             element* expr) {
         auto transmute = new compiler::transmute(
             _session.scope_manager().current_module(),

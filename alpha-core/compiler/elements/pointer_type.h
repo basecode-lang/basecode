@@ -22,9 +22,9 @@ namespace basecode::compiler {
         pointer_type(
             compiler::module* module,
             compiler::block* parent_scope,
-            compiler::type* base_type);
+            compiler::type_reference* base_type);
 
-        compiler::type* base_type() const;
+        compiler::type_reference* base_type_ref() const;
 
     protected:
         bool on_type_check(compiler::type* other) override;
@@ -36,7 +36,7 @@ namespace basecode::compiler {
         bool on_initialize(compiler::session& session) override;
 
     private:
-        compiler::type* _base_type = nullptr;
+        compiler::type_reference* _base_type_ref = nullptr;
     };
 
 };

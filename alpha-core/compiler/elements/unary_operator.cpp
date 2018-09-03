@@ -16,6 +16,7 @@
 #include "identifier.h"
 #include "pointer_type.h"
 #include "unary_operator.h"
+#include "type_reference.h"
 #include "identifier_reference.h"
 
 namespace basecode::compiler {
@@ -118,7 +119,7 @@ namespace basecode::compiler {
             case operator_type_t::pointer_dereference: {
                 auto identifier_ref = dynamic_cast<compiler::identifier_reference*>(_rhs);
                 auto type = dynamic_cast<compiler::pointer_type*>(identifier_ref->identifier()->type());
-                return type->base_type();
+                return type->base_type_ref()->type();
             }
             default:
                 return nullptr;

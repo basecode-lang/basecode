@@ -103,6 +103,7 @@ namespace basecode::compiler {
             nullptr);
         data_identifier->type(builder.make_pointer_type(
             block_scope,
+            qualified_symbol_t { .name = "u8" },
             u8_type));
         auto data_field = builder.make_field(
             this,

@@ -14,24 +14,25 @@
 #include "type.h"
 #include "transmute.h"
 #include "symbol_element.h"
+#include "type_reference.h"
 
 namespace basecode::compiler {
 
     transmute::transmute(
             compiler::module* module,
             block* parent_scope,
-            compiler::type* type,
+            compiler::type_reference* type,
             element* expr) : element(module, parent_scope, element_type_t::cast),
                              _expression(expr),
-                             _type(type) {
+                             _type_ref(type) {
     }
 
     element* transmute::expression() {
         return _expression;
     }
 
-    compiler::type* transmute::type() {
-        return _type;
+    compiler::type_reference* transmute::type() {
+        return _type_ref;
     }
 
     bool transmute::on_emit(compiler::session& session) {
@@ -46,11 +47,11 @@ namespace basecode::compiler {
                 fmt::format("cannot transmute from type: {}", source_type->symbol()->name()),
                 _expression->location());
             return false;
-        } else if (_type->number_class() == type_number_class_t::none) {
+        } else if (_type_ref->type()->number_class() == type_number_class_t::none) {
             session.error(
                 this,
                 "C073",
-                fmt::format("cannot transmute to type: {}", _type->symbol()->name()),
+                fmt::format("cannot transmute to type: {}", _type_ref->symbol().name),
                 _type_location);
             return false;
         }
@@ -69,7 +70,7 @@ namespace basecode::compiler {
 
         instruction_block->move_reg_to_reg(*target_reg, temp_reg.reg);
         instruction_block->comment(
-            fmt::format("transmute<{}>", _type->symbol()->name()),
+            fmt::format("transmute<{}>", _type_ref->symbol().name),
             4);
 
         return true;
@@ -85,7 +86,7 @@ namespace basecode::compiler {
     }
 
     compiler::type* transmute::on_infer_type(const compiler::session& session) {
-        return _type;
+        return _type_ref->type();
     }
 
 };

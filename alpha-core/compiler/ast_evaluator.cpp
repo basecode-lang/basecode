@@ -792,18 +792,20 @@ namespace basecode::compiler {
         auto& builder = _session.builder();
         auto& scope_manager = _session.scope_manager();
 
-        auto type_name = context.node->lhs->lhs->children[0]->token.value;
-        auto type = scope_manager.find_type(qualified_symbol_t {.name = type_name});
+        qualified_symbol_t type_name {
+            .name = context.node->lhs->lhs->children[0]->token.value
+        };
+        auto type = scope_manager.find_type(type_name);
         if (type == nullptr) {
             _session.error(
                 "P002",
-                fmt::format("unknown type '{}'.", type_name),
+                fmt::format("unknown type '{}'.", type_name.name),
                 context.node->lhs->lhs->location);
             return false;
         }
         auto cast_element = builder.make_cast(
             scope_manager.current_scope(),
-            type,
+            builder.make_type_reference(scope_manager.current_scope(), type_name, type),
             resolve_symbol_or_evaluate(context, context.node->rhs.get()));
         cast_element->location(context.node->location);
         cast_element->type_location(context.node->lhs->lhs->location);
@@ -1139,18 +1141,20 @@ namespace basecode::compiler {
         auto& builder = _session.builder();
         auto& scope_manager = _session.scope_manager();
 
-        auto type_name = context.node->lhs->lhs->children[0]->token.value;
-        auto type = scope_manager.find_type(qualified_symbol_t {.name = type_name});
+        qualified_symbol_t type_name {
+            .name = context.node->lhs->lhs->children[0]->token.value
+        };
+        auto type = scope_manager.find_type(type_name);
         if (type == nullptr) {
             _session.error(
                 "P002",
-                fmt::format("unknown type '{}'.", type_name),
+                fmt::format("unknown type '{}'.", type_name.name),
                 context.node->lhs->lhs->location);
             return false;
         }
         auto transmute_element = builder.make_transmute(
             scope_manager.current_scope(),
-            type,
+            builder.make_type_reference(scope_manager.current_scope(), type_name, type),
             resolve_symbol_or_evaluate(context, context.node->rhs.get()));
         transmute_element->location(context.node->location);
         transmute_element->type_location(context.node->lhs->lhs->location);

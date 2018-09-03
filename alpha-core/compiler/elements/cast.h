@@ -20,12 +20,12 @@ namespace basecode::compiler {
         cast(
             compiler::module* module,
             block* parent_scope,
-            compiler::type* type,
+            compiler::type_reference* type,
             element* expr);
 
         element* expression();
 
-        compiler::type* type();
+        compiler::type_reference* type();
 
         void type_location(const common::source_location& loc);
 
@@ -38,8 +38,8 @@ namespace basecode::compiler {
 
     private:
         element* _expression = nullptr;
-        compiler::type* _type = nullptr;
         common::source_location _type_location {};
+        compiler::type_reference* _type_ref = nullptr;
     };
 
 };
