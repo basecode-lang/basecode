@@ -39,8 +39,8 @@
 #include "type_reference.h"
 #include "binary_operator.h"
 #include "integer_literal.h"
+#include "namespace_element.h"
 #include "identifier_reference.h"
-
 
 namespace basecode::compiler {
 
@@ -48,6 +48,146 @@ namespace basecode::compiler {
     }
 
     program::~program() {
+    }
+
+    bool program::emit_section_variable(
+            compiler::session& session,
+            compiler::element* e,
+            vm::instruction_block* instruction_block) {
+        switch (e->element_type()) {
+            case element_type_t::string_literal: {
+                auto string_literal = dynamic_cast<compiler::string_literal*>(e);
+                instruction_block->blank_line();
+                instruction_block->align(4);
+
+                auto& interned_strings = session.scope_manager().interned_string_literals();
+                auto it = interned_strings.find(string_literal->value());
+                if (it != interned_strings.end()) {
+                    string_literal_list_t& str_list = it->second;
+                    for (auto str : str_list) {
+                        auto var_label = session.assembler().make_label(str->label_name());
+                        instruction_block->label(var_label);
+
+                        auto var = session.emit_context().allocate_variable(
+                            var_label->name(),
+                            session.scope_manager().find_type({.name = "string"}),
+                            identifier_usage_t::heap,
+                            nullptr);
+                        if (var != nullptr)
+                            var->address_offset = 4;
+                    }
+                }
+                instruction_block->comment(
+                    fmt::format("\"{}\"", string_literal->value()),
+                    4);
+                instruction_block->string(string_literal->escaped_value());
+
+                break;
+            }
+            case element_type_t::identifier: {
+                auto var = dynamic_cast<compiler::identifier*>(e);
+                auto var_type = var->type_ref()->type();
+                auto init = var->initializer();
+
+                instruction_block->blank_line();
+
+                auto type_alignment = static_cast<uint8_t>(var_type->alignment());
+                if (type_alignment > 1)
+                    instruction_block->align(type_alignment);
+                auto var_label = session.assembler().make_label(var->symbol()->name());
+                instruction_block->label(var_label);
+                session.emit_context().allocate_variable(
+                    var_label->name(),
+                    var_type,
+                    identifier_usage_t::heap);
+
+                switch (var_type->element_type()) {
+                    case element_type_t::bool_type: {
+                        bool value = false;
+                        var->as_bool(value);
+
+                        if (init == nullptr)
+                            instruction_block->reserve_byte(1);
+                        else
+                            instruction_block->bytes({static_cast<uint8_t>(value ? 1 : 0)});
+                        break;
+                    }
+                    case element_type_t::pointer_type: {
+                        instruction_block->reserve_qword(1);
+                        break;
+                    }
+                    case element_type_t::numeric_type: {
+                        uint64_t value = 0;
+                        if (var_type->number_class() == type_number_class_t::integer) {
+                            var->as_integer(value);
+                        } else {
+                            double temp = 0;
+                            if (var->as_float(temp)) {
+                                vm::register_value_alias_t alias;
+                                alias.qwf = temp;
+                                value = alias.qw;
+                            }
+                        }
+
+                        auto symbol_type = vm::integer_symbol_type_for_size(var_type->size_in_bytes());
+                        switch (symbol_type) {
+                            case vm::symbol_type_t::u8:
+                                if (init == nullptr)
+                                    instruction_block->reserve_byte(1);
+                                else
+                                    instruction_block->bytes({static_cast<uint8_t>(value)});
+                                break;
+                            case vm::symbol_type_t::u16:
+                                if (init == nullptr)
+                                    instruction_block->reserve_word(1);
+                                else
+                                    instruction_block->words({static_cast<uint16_t>(value)});
+                                break;
+                            case vm::symbol_type_t::f32:
+                            case vm::symbol_type_t::u32:
+                                if (init == nullptr)
+                                    instruction_block->reserve_dword(1);
+                                else
+                                    instruction_block->dwords({static_cast<uint32_t>(value)});
+                                break;
+                            case vm::symbol_type_t::f64:
+                            case vm::symbol_type_t::u64:
+                                if (init == nullptr)
+                                    instruction_block->reserve_qword(1);
+                                else
+                                    instruction_block->qwords({value});
+                                break;
+                            case vm::symbol_type_t::bytes:
+                                break;
+                            default:
+                                break;
+                        }
+                        break;
+                    }
+                    case element_type_t::string_type: {
+                        if (init != nullptr) {
+                            auto string_literal = dynamic_cast<compiler::string_literal*>(
+                                init->expression());
+                            if (string_literal != nullptr) {
+                                instruction_block->comment(
+                                    fmt::format("\"{}\"", string_literal->value()),
+                                    4);
+                                instruction_block->string(string_literal->value());
+                            }
+                        }
+                        break;
+                    }
+                    default: {
+                        break;
+                    }
+                }
+                break;
+            }
+            default:
+                break;
+        }
+
+        return true;
     }
 
     compiler::block* program::block() {
@@ -58,18 +198,170 @@ namespace basecode::compiler {
         _block = value;
     }
 
+    void program::initialize_variable_sections() {
+        _vars_by_section.clear();
+        _vars_by_section.insert(std::make_pair(vm::section_t::bss,     element_list_t()));
+        _vars_by_section.insert(std::make_pair(vm::section_t::ro_data, element_list_t()));
+        _vars_by_section.insert(std::make_pair(vm::section_t::data,    element_list_t()));
+        _vars_by_section.insert(std::make_pair(vm::section_t::text,    element_list_t()));
+    }
+
     bool program::on_emit(compiler::session& session) {
+        initialize_variable_sections();
+
+        if (!emit_bootstrap_block(session))
+            return false;
+
+        if (!emit_sections(session))
+            return false;
+
+        if (!emit_initializers(session))
+            return false;
+
+        if (!emit_implicit_blocks(session))
+            return false;
+
+        if (!emit_finalizers(session))
+            return false;
+
+        return true;
+    }
+
+    bool program::emit_sections(compiler::session& session) {
+        if (!group_identifiers_by_section(session))
+            return false;
+
         auto& assembler = session.assembler();
-        auto& scope_manager = session.scope_manager();
+        auto instruction_block = assembler.make_basic_block();
+
+        for (const auto& section : _vars_by_section) {
+            instruction_block->blank_line();
+            instruction_block->section(section.first);
+
+            for (auto e : section.second)
+                emit_section_variable(session, e, instruction_block);
+        }
+
+        return true;
+    }
+
+    bool program::emit_finalizers(compiler::session& session) {
+        auto& assembler = session.assembler();
+
+        auto finalizer_block = assembler.make_basic_block();
+        finalizer_block->blank_line();
+        finalizer_block->align(vm::instruction_t::alignment);
+        finalizer_block->label(assembler.make_label("_finalizer"));
+        finalizer_block->exit();
+
+        return true;
+    }
+
+    bool program::emit_initializers(compiler::session& session) {
+        auto& assembler = session.assembler();
+
+        auto initializer_block = assembler.make_basic_block();
+        initializer_block->blank_line();
+        initializer_block->align(vm::instruction_t::alignment);
+        initializer_block->label(assembler.make_label("_initializer"));
+
+        return true;
+    }
+
+    bool program::emit_bootstrap_block(compiler::session& session) {
+        auto& assembler = session.assembler();
 
         auto instruction_block = assembler.make_basic_block();
         instruction_block->jump_direct(assembler.make_label_ref("_initializer"));
 
-        std::map<vm::section_t, element_list_t> vars_by_section {};
-        /* auto bss  = */vars_by_section.insert(std::make_pair(vm::section_t::bss,     element_list_t()));
-        auto ro   = vars_by_section.insert(std::make_pair(vm::section_t::ro_data, element_list_t()));
-        auto data = vars_by_section.insert(std::make_pair(vm::section_t::data,    element_list_t()));
-        /* auto text = */vars_by_section.insert(std::make_pair(vm::section_t::text,    element_list_t()));
+        return true;
+    }
+
+    bool program::emit_implicit_blocks(compiler::session& session) {
+        auto& assembler = session.assembler();
+
+        block_list_t implicit_blocks {};
+        auto module_blocks = session.elements().find_by_type(element_type_t::module_block);
+        for (auto block : module_blocks) {
+            implicit_blocks.emplace_back(dynamic_cast<compiler::block*>(block));
+        }
+
+        for (auto block : implicit_blocks) {
+            auto implicit_block = assembler.make_basic_block();
+            implicit_block->blank_line();
+
+            auto parent_element = block->parent_element();
+            switch (parent_element->element_type()) {
+                case element_type_t::namespace_e: {
+                    auto parent_ns = dynamic_cast<compiler::namespace_element*>(parent_element);
+                    implicit_block->comment(
+                        fmt::format("namespace: {}", parent_ns->name()),
+                        0);
+                    break;
+                }
+                case element_type_t::module: {
+                    auto parent_module = dynamic_cast<compiler::module*>(parent_element);
+                    implicit_block->comment(
+                        fmt::format("module: {}", parent_module->source_file()->path().string()),
+                        0);
+                    break;
+                }
+                default:
+                    break;
+            }
+
+            implicit_block->label(assembler.make_label(block->label_name()));
+
+            assembler.push_block(implicit_block);
+            block->emit(session);
+            assembler.pop_block();
+        }
+
+        return true;
+    }
+
+    bool program::emit_procedure_types(compiler::session& session) {
+        auto& assembler = session.assembler();
+        procedure_type_list_t proc_list {};
+
+        auto procedure_types = session.elements().find_by_type(element_type_t::proc_type);
+        for (auto p : procedure_types) {
+            auto procedure_type = dynamic_cast<compiler::procedure_type*>(p);
+            if (procedure_type->parent_scope()->element_type() == element_type_t::proc_instance_block) {
+                proc_list.emplace_back(procedure_type);
+            }
+        }
+
+        for (auto p : procedure_types) {
+            auto procedure_type = dynamic_cast<compiler::procedure_type*>(p);
+            if (procedure_type->parent_scope()->element_type() != element_type_t::proc_instance_block) {
+                proc_list.emplace_back(procedure_type);
+            }
+        }
+
+        for (auto procedure_type : proc_list) {
+            auto proc_type_block = assembler.make_basic_block();
+            assembler.push_block(proc_type_block);
+            procedure_type->emit(session);
+            assembler.pop_block();
+        }
+
+        return true;
+    }
+
+    element_list_t* program::variable_section(vm::section_t section) {
+        auto it = _vars_by_section.find(section);
+        if (it == _vars_by_section.end()) {
+            return nullptr;
+        }
+        return &it->second;
+    }
+
+    bool program::group_identifiers_by_section(compiler::session& session) {
+        auto& scope_manager = session.scope_manager();
+
+        auto ro_list = variable_section(vm::section_t::ro_data);
+        auto data_list = variable_section(vm::section_t::data);
 
         auto identifiers = session.elements().find_by_type(element_type_t::identifier);
         for (auto identifier : identifiers) {
@@ -86,9 +378,10 @@ namespace basecode::compiler {
                 return false;
             }
 
-            if (var->initializer() != nullptr
-            &&  (var->initializer()->expression()->element_type() == element_type_t::type_reference
-                || var->initializer()->expression()->element_type() == element_type_t::proc_type)) {
+            auto init = var->initializer();
+            if (init != nullptr
+                &&  (init->expression()->element_type() == element_type_t::type_reference
+                     || init->expression()->element_type() == element_type_t::proc_type)) {
                 continue;
             }
 
@@ -96,207 +389,19 @@ namespace basecode::compiler {
                 continue;
 
             if (var->is_constant()) {
-                auto& list = ro.first->second;
-                list.emplace_back(var);
+                ro_list->emplace_back(var);
             } else {
-                auto& list = data.first->second;
-                list.emplace_back(var);
+                data_list->emplace_back(var);
             }
         }
 
         auto& interned_strings = scope_manager.interned_string_literals();
-        auto& ro_list = ro.first->second;
         for (const auto& it : interned_strings) {
             compiler::string_literal* str = it.second.front();
             if (!str->is_parent_element(element_type_t::argument_list))
                 continue;
-            ro_list.emplace_back(str);
+            ro_list->emplace_back(str);
         }
-
-        for (const auto& section : vars_by_section) {
-            instruction_block->blank_line();
-            instruction_block->section(section.first);
-
-            for (auto e : section.second) {
-                switch (e->element_type()) {
-                    case element_type_t::string_literal: {
-                        auto string_literal = dynamic_cast<compiler::string_literal*>(e);
-                        instruction_block->blank_line();
-                        instruction_block->align(4);
-
-                        auto it = interned_strings.find(string_literal->value());
-                        if (it != interned_strings.end()) {
-                            string_literal_list_t& str_list = it->second;
-                            for (auto str : str_list) {
-                                auto var_label = assembler.make_label(str->label_name());
-                                instruction_block->label(var_label);
-
-                                auto var = session.emit_context().allocate_variable(
-                                    var_label->name(),
-                                    session.scope_manager().find_type({.name = "string"}),
-                                    identifier_usage_t::heap,
-                                    nullptr);
-                                if (var != nullptr)
-                                    var->address_offset = 4;
-                            }
-                        }
-                        instruction_block->comment(
-                            fmt::format("\"{}\"", string_literal->value()),
-                            4);
-                        instruction_block->string(string_literal->escaped_value());
-
-                        break;
-                    }
-                    case element_type_t::identifier: {
-                        auto var = dynamic_cast<compiler::identifier*>(e);
-                        auto var_type = var->type_ref()->type();
-                        auto init = var->initializer();
-
-                        instruction_block->blank_line();
-
-                        auto type_alignment = static_cast<uint8_t>(var_type->alignment());
-                        if (type_alignment > 1)
-                            instruction_block->align(type_alignment);
-                        auto var_label = assembler.make_label(var->symbol()->name());
-                        instruction_block->label(var_label);
-                        session.emit_context().allocate_variable(
-                            var_label->name(),
-                            var_type,
-                            identifier_usage_t::heap);
-
-                        switch (var_type->element_type()) {
-                            case element_type_t::bool_type: {
-                                bool value = false;
-                                var->as_bool(value);
-
-                                if (init == nullptr)
-                                    instruction_block->reserve_byte(1);
-                                else
-                                    instruction_block->bytes({static_cast<uint8_t>(value ? 1 : 0)});
-                                break;
-                            }
-                            case element_type_t::pointer_type: {
-                                instruction_block->reserve_qword(1);
-                                break;
-                            }
-                            case element_type_t::numeric_type: {
-                                uint64_t value = 0;
-                                if (var_type->number_class() == type_number_class_t::integer) {
-                                    var->as_integer(value);
-                                } else {
-                                    double temp = 0;
-                                    if (var->as_float(temp)) {
-                                        vm::register_value_alias_t alias;
-                                        alias.qwf = temp;
-                                        value = alias.qw;
-                                    }
-                                }
-
-                                auto symbol_type = vm::integer_symbol_type_for_size(var_type->size_in_bytes());
-                                switch (symbol_type) {
-                                    case vm::symbol_type_t::u8:
-                                        if (init == nullptr)
-                                            instruction_block->reserve_byte(1);
-                                        else
-                                            instruction_block->bytes({static_cast<uint8_t>(value)});
-                                        break;
-                                    case vm::symbol_type_t::u16:
-                                        if (init == nullptr)
-                                            instruction_block->reserve_word(1);
-                                        else
-                                            instruction_block->words({static_cast<uint16_t>(value)});
-                                        break;
-                                    case vm::symbol_type_t::f32:
-                                    case vm::symbol_type_t::u32:
-                                        if (init == nullptr)
-                                            instruction_block->reserve_dword(1);
-                                        else
-                                            instruction_block->dwords({static_cast<uint32_t>(value)});
-                                        break;
-                                    case vm::symbol_type_t::f64:
-                                    case vm::symbol_type_t::u64:
-                                        if (init == nullptr)
-                                            instruction_block->reserve_qword(1);
-                                        else
-                                            instruction_block->qwords({value});
-                                        break;
-                                    case vm::symbol_type_t::bytes:
-                                        break;
-                                    default:
-                                        break;
-                                }
-                                break;
-                            }
-                            case element_type_t::string_type: {
-                                if (init != nullptr) {
-                                    auto string_literal = dynamic_cast<compiler::string_literal*>(
-                                        init->expression());
-                                    if (string_literal != nullptr) {
-                                        instruction_block->comment(
-                                            fmt::format("\"{}\"", string_literal->value()),
-                                            4);
-                                        instruction_block->string(string_literal->value());
-                                    }
-                                }
-                                break;
-                            }
-                            default: {
-                                break;
-                            }
-                        }
-                        break;
-                    }
-                    default:
-                        break;
-                }
-            }
-        }
-
-        assembler.push_block(instruction_block);
-
-        auto procedure_types = session.elements().find_by_type(element_type_t::proc_type);
-        procedure_type_list_t proc_list {};
-        for (auto p : procedure_types) {
-            auto procedure_type = dynamic_cast<compiler::procedure_type*>(p);
-            if (procedure_type->parent_scope()->element_type() == element_type_t::proc_instance_block) {
-                proc_list.emplace_back(procedure_type);
-            }
-        }
-
-        for (auto p : procedure_types) {
-            auto procedure_type = dynamic_cast<compiler::procedure_type*>(p);
-            if (procedure_type->parent_scope()->element_type() != element_type_t::proc_instance_block) {
-                proc_list.emplace_back(procedure_type);
-            }
-        }
-
-        for (auto procedure_type : proc_list) {
-            procedure_type->emit(session);
-        }
-
-        auto initializer_block = assembler.make_basic_block();
-        initializer_block->blank_line();
-        initializer_block->align(vm::instruction_t::alignment);
-        initializer_block->label(assembler.make_label("_initializer"));
-
-        block_list_t implicit_blocks {};
-        auto module_blocks = session.elements().find_by_type(element_type_t::module_block);
-        for (auto block : module_blocks) {
-            implicit_blocks.emplace_back(dynamic_cast<compiler::block*>(block));
-        }
-
-        assembler.push_block(initializer_block);
-        for (auto block : implicit_blocks)
-            block->emit(session);
-
-        auto finalizer_block = assembler.make_basic_block();
-        finalizer_block->blank_line();
-        finalizer_block->align(vm::instruction_t::alignment);
-        finalizer_block->label(assembler.make_label("_finalizer"));
-        finalizer_block->exit();
-
-        assembler.pop_block();
-        assembler.pop_block();
 
         return true;
     }
