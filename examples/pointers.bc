@@ -1,5 +1,8 @@
 @library "alpha-core";
-#foreign print := proc(format: string, values: ...any) @alias "fmt_print";
+#foreign print ::= proc(format: string, values: ...any) @alias "fmt_print";
+
+//temp ::= ^u8;
+//temp_ptr: ^temp;
 
 // alloc & free block of memory
 'allocate_memory:

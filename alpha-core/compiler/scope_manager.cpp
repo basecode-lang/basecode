@@ -171,7 +171,7 @@ namespace basecode::compiler {
                         return matching_type;
 
                     auto type_identifier = find_identifier(symbol, scope);
-                    if (type_identifier != nullptr)
+                    if (type_identifier != nullptr && type_identifier->is_constant())
                         return type_identifier->type_ref()->type();
 
                     return nullptr;
@@ -184,7 +184,7 @@ namespace basecode::compiler {
                     if (type != nullptr)
                         return type;
                     auto type_identifier = find_identifier(symbol, scope);
-                    if (type_identifier != nullptr)
+                    if (type_identifier != nullptr && type_identifier->is_constant())
                         return type_identifier->type_ref()->type();
                     return nullptr;
                 }));

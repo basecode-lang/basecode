@@ -356,6 +356,16 @@ namespace basecode::compiler {
                     node_vertex_name,
                     style);
             }
+            case element_type_t::type_reference: {
+                auto element = dynamic_cast<type_reference*>(node);
+                auto style = ", fillcolor=yellow, style=\"filled\"";
+                if (element->type() != nullptr)
+                    add_primary_edge(element, element->type());
+                return fmt::format(
+                    "{}[shape=record,label=\"type_reference\"{}];",
+                    node_vertex_name,
+                    style);
+            }
             case element_type_t::identifier_reference: {
                 auto element = dynamic_cast<identifier_reference*>(node);
                 auto style = ", fillcolor=yellow, style=\"filled\"";

@@ -448,6 +448,16 @@ namespace basecode::compiler {
             }
         }
 
+        if (init != nullptr
+        &&  init->expression()->is_type()
+        &&  !symbol->is_constant()) {
+            _session.error(
+                "P029",
+                "constant assignment (::=) is required for types.",
+                node->location);
+            return nullptr;
+        }
+
         auto new_identifier = builder.make_identifier(scope, symbol, init);
         apply_attributes(context, new_identifier, node);
         if (init_expr != nullptr) {
@@ -574,6 +584,9 @@ namespace basecode::compiler {
             evaluator_context_t& context,
             evaluator_result_t& result) {
         auto expression = evaluate(context.node->lhs.get());
+        if (expression == nullptr)
+            return false;
+
         auto directive_element = _session.builder().make_directive(
             _session.scope_manager().current_scope(),
             context.node->token.value,
