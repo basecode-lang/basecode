@@ -90,7 +90,8 @@ namespace basecode::compiler {
         auto flags_field = builder.make_field(
             this,
             block_scope,
-            flags_identifier);
+            flags_identifier,
+            0);
 
         auto length_identifier = builder.make_identifier(
             block_scope,
@@ -100,7 +101,8 @@ namespace basecode::compiler {
         auto length_field = builder.make_field(
             this,
             block_scope,
-            length_identifier);
+            length_identifier,
+            flags_field->end_offset());
 
         auto capacity_identifier = builder.make_identifier(
             block_scope,
@@ -110,7 +112,8 @@ namespace basecode::compiler {
         auto capacity_field = builder.make_field(
             this,
             block_scope,
-            capacity_identifier);
+            capacity_identifier,
+            length_field->end_offset());
 
         auto element_type_identifier = builder.make_identifier(
             block_scope,
@@ -120,7 +123,8 @@ namespace basecode::compiler {
         auto element_type_field = builder.make_field(
             this,
             block_scope,
-            element_type_identifier);
+            element_type_identifier,
+            capacity_field->end_offset());
 
         auto data_identifier = builder.make_identifier(
             block_scope,
@@ -130,7 +134,8 @@ namespace basecode::compiler {
         auto data_field = builder.make_field(
             this,
             block_scope,
-            data_identifier);
+            data_identifier,
+            element_type_field->end_offset());
 
         auto& field_map = fields();
         field_map.add(flags_field);

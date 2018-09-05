@@ -27,6 +27,14 @@ namespace basecode::compiler {
 
         bool packed() const;
 
+        bool emit_finalizer(
+            compiler::session& session,
+            compiler::identifier* var);
+
+        bool emit_initializer(
+            compiler::session& session,
+            compiler::identifier* var);
+
         void packed(bool value);
 
         size_t alignment() const;
@@ -48,6 +56,14 @@ namespace basecode::compiler {
         void symbol(compiler::symbol_element* value);
 
     protected:
+        virtual bool on_emit_finalizer(
+            compiler::session& session,
+            compiler::identifier* var);
+
+        virtual bool on_emit_initializer(
+            compiler::session& session,
+            compiler::identifier* var);
+
         void size_in_bytes(size_t value);
 
         virtual bool on_type_check(compiler::type* other);

@@ -23,6 +23,14 @@ namespace basecode::compiler {
             compiler::block* scope);
 
     protected:
+        bool on_emit_finalizer(
+            compiler::session& session,
+            compiler::identifier* var) override;
+
+        bool on_emit_initializer(
+            compiler::session& session,
+            compiler::identifier* var) override;
+
         type_access_model_t on_access_model() const override;
 
         bool on_initialize(compiler::session& session) override;

@@ -31,27 +31,6 @@ namespace basecode::compiler {
                                     element_type_t::type_info) {
     }
 
-    // type_category := enum {
-    //  numeric,
-    //  string,
-    //  bool,
-    //  array,
-    //
-    // };
-    //
-    //
-    // type_field := struct {
-    //      name:string;
-    //      type_info:type;
-    // };
-    //
-    // type_info_type := struct {
-    //      name:string;
-    //      size_in_bytes:u64;
-    //      type:type_category;
-    //      fields:[]type_field;
-    // };
-
     bool type_info::on_initialize(compiler::session& session) {
         auto& builder = session.builder();
         symbol(builder.make_symbol(parent_scope(), "type"));
@@ -72,7 +51,8 @@ namespace basecode::compiler {
         auto name_field = builder.make_field(
             this,
             block_scope,
-            name_identifier);
+            name_identifier,
+            0);
 
         fields().add(name_field);
 

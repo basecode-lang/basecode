@@ -531,11 +531,15 @@ namespace basecode::compiler {
     field* element_builder::make_field(
             compiler::type* type,
             compiler::block* parent_scope,
-            compiler::identifier* identifier) {
+            compiler::identifier* identifier,
+            uint64_t offset,
+            uint8_t padding) {
         auto field = new compiler::field(
             _session.scope_manager().current_module(),
             parent_scope,
-            identifier);
+            identifier,
+            offset,
+            padding);
         identifier->parent_element(field);
         field->parent_element(type);
         _session.elements().add(field);

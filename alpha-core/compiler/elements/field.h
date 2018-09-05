@@ -26,7 +26,17 @@ namespace basecode::compiler {
         field(
             compiler::module* module,
             block* parent_scope,
-            compiler::identifier* identifier);
+            compiler::identifier* identifier,
+            uint64_t offset,
+            uint8_t padding = 0);
+
+        uint8_t padding() const;
+
+        uint64_t end_offset() const;
+
+        size_t size_in_bytes() const;
+
+        uint64_t start_offset() const;
 
         compiler::identifier* identifier();
 
@@ -34,6 +44,8 @@ namespace basecode::compiler {
         void on_owned_elements(element_list_t& list) override;
 
     private:
+        uint8_t _padding = 0;
+        uint64_t _offset = 0;
         compiler::identifier* _identifier;
     };
 

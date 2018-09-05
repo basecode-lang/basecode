@@ -350,6 +350,8 @@ namespace basecode::compiler {
             if (child->type != syntax::ast_node_types_t::statement) {
                 break;
             }
+
+            compiler::field* new_field = nullptr;
             auto expr_node = child->rhs;
             switch (expr_node->type) {
                 case syntax::ast_node_types_t::assignment: {
@@ -360,10 +362,11 @@ namespace basecode::compiler {
                         list,
                         type->scope());
                     if (success) {
-                        auto new_field = builder.make_field(
+                        new_field = builder.make_field(
                             type,
                             type->scope(),
-                            dynamic_cast<compiler::identifier*>(list.front()));
+                            dynamic_cast<compiler::identifier*>(list.front()),
+                            new_field != nullptr ? new_field->end_offset() : 0);
                         type->fields().add(new_field);
                     }
                     break;
@@ -374,10 +377,11 @@ namespace basecode::compiler {
                         expr_node.get(),
                         type->scope());
                     if (field_identifier != nullptr) {
-                        auto new_field = builder.make_field(
+                        new_field = builder.make_field(
                             type,
                             type->scope(),
-                            field_identifier);
+                            field_identifier,
+                            new_field != nullptr ? new_field->end_offset() : 0);
                         type->fields().add(new_field);
                     }
                     break;
@@ -1088,6 +1092,7 @@ namespace basecode::compiler {
         active_scope->types().add(proc_type);
 
         auto count = 0;
+        compiler::field* return_field = nullptr;
         for (const auto& type_node : context.node->lhs->children) {
             switch (type_node->type) {
                 case syntax::ast_node_types_t::symbol: {
@@ -1103,8 +1108,12 @@ namespace basecode::compiler {
                         block_scope,
                         type->symbol()->qualified_symbol(),
                         type));
-                    auto new_field = builder.make_field(proc_type, block_scope, return_identifier);
-                    proc_type->returns().add(new_field);
+                    return_field = builder.make_field(
+                        proc_type,
+                        block_scope,
+                        return_identifier,
+                        return_field != nullptr ? return_field->end_offset() : 0);
+                    proc_type->returns().add(return_field);
                     break;
                 }
                 default: {
@@ -1113,6 +1122,7 @@ namespace basecode::compiler {
             }
         }
 
+        compiler::field* param_field = nullptr;
         for (const auto& param_node : context.node->rhs->children) {
             switch (param_node->type) {
                 case syntax::ast_node_types_t::assignment: {
@@ -1121,8 +1131,12 @@ namespace basecode::compiler {
                     if (success) {
                         auto param_identifier = dynamic_cast<compiler::identifier*>(list.front());
                         param_identifier->usage(identifier_usage_t::stack);
-                        auto field = builder.make_field(proc_type, block_scope, param_identifier);
-                        proc_type->parameters().add(field);
+                        param_field = builder.make_field(
+                            proc_type,
+                            block_scope,
+                            param_identifier,
+                            param_field != nullptr ? param_field->end_offset() : 0);
+                        proc_type->parameters().add(param_field);
                     } else {
                         return false;
                     }
@@ -1132,8 +1146,12 @@ namespace basecode::compiler {
                     auto param_identifier = declare_identifier(context, param_node.get(), block_scope);
                     if (param_identifier != nullptr) {
                         param_identifier->usage(identifier_usage_t::stack);
-                        auto field = builder.make_field(proc_type, block_scope, param_identifier);
-                        proc_type->parameters().add(field);
+                        param_field = builder.make_field(
+                            proc_type,
+                            block_scope,
+                            param_identifier,
+                            param_field != nullptr ? param_field->end_offset() : 0);
+                        proc_type->parameters().add(param_field);
                     } else {
                         return false;
                     }

@@ -34,7 +34,9 @@ namespace basecode::compiler {
         field* make_field(
             compiler::type* type,
             compiler::block* parent_scope,
-            compiler::identifier* identifier);
+            compiler::identifier* identifier,
+            uint64_t offset,
+            uint8_t padding = 0);
 
         label* make_label(
             compiler::block* parent_scope,

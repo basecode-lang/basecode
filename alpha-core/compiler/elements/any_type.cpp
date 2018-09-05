@@ -44,24 +44,29 @@ namespace basecode::compiler {
 
         auto type_info_type = session.scope_manager().find_type({ .name = "type" });
         auto u8_type = session.scope_manager().find_type({ .name = "u8" });
-        auto ptr_type = builder.make_pointer_type(
+        auto u8_ptr_type = builder.make_pointer_type(
             block_scope,
             qualified_symbol_t { .name = "u8" },
             u8_type);
-
-        auto type_info_identifier = builder.make_identifier(
+        auto type_info_ptr_type = builder.make_pointer_type(
             block_scope,
-            builder.make_symbol(parent_scope(), "type_info"),
+            qualified_symbol_t { .name = "type" },
+            type_info_type);
+
+        auto metadata_identifier = builder.make_identifier(
+            block_scope,
+            builder.make_symbol(parent_scope(), "metadata"),
             nullptr);
-        type_info_identifier->type_ref(builder.make_type_reference(
+        metadata_identifier->type_ref(builder.make_type_reference(
             block_scope,
-            type_info_type->symbol()->qualified_symbol(),
-            type_info_type));
-
-        auto type_info_field = builder.make_field(
+            qualified_symbol_t {.name = "^type"},
+            type_info_ptr_type));
+        auto metadata_field = builder.make_field(
             this,
             block_scope,
-            type_info_identifier);
+            metadata_identifier,
+            0);
+
         auto data_identifier = builder.make_identifier(
             block_scope,
             builder.make_symbol(parent_scope(), "data"),
@@ -69,14 +74,15 @@ namespace basecode::compiler {
         data_identifier->type_ref(builder.make_type_reference(
             block_scope,
             qualified_symbol_t {.name = "^u8"},
-            ptr_type));
+            u8_ptr_type));
         auto data_field = builder.make_field(
             this,
             block_scope,
-            data_identifier);
+            data_identifier,
+            metadata_field->end_offset());
 
         auto& field_map = fields();
-        field_map.add(type_info_field);
+        field_map.add(metadata_field);
         field_map.add(data_field);
 
         return composite_type::on_initialize(session);

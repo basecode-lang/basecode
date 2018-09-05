@@ -11,6 +11,7 @@
 
 #include "type.h"
 #include "field.h"
+#include "identifier.h"
 #include "symbol_element.h"
 
 namespace basecode::compiler {
@@ -25,6 +26,30 @@ namespace basecode::compiler {
 
     bool type::packed() const {
         return _packed;
+    }
+
+    bool type::emit_finalizer(
+            compiler::session& session,
+            compiler::identifier* var) {
+        return on_emit_finalizer(session, var);
+    }
+
+    bool type::emit_initializer(
+            compiler::session& session,
+            compiler::identifier* var) {
+        return on_emit_initializer(session, var);
+    }
+
+    bool type::on_emit_finalizer(
+            compiler::session& session,
+            compiler::identifier* var) {
+        return true;
+    }
+
+    bool type::on_emit_initializer(
+            compiler::session& session,
+            compiler::identifier* var) {
+        return true;
     }
 
     void type::packed(bool value) {

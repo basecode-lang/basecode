@@ -73,7 +73,7 @@ namespace basecode::compiler {
     bool composite_type::on_initialize(compiler::session& session) {
         size_t size = 0;
         for (auto fld : _fields.as_list())
-            size += fld->identifier()->type_ref()->type()->size_in_bytes();
+            size += fld->size_in_bytes();
         size_in_bytes(size);
         alignment(sizeof(uint64_t));
         return true;

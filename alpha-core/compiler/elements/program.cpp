@@ -258,7 +258,22 @@ namespace basecode::compiler {
         finalizer_block->blank_line();
         finalizer_block->align(vm::instruction_t::alignment);
         finalizer_block->label(assembler.make_label("_finalizer"));
-        finalizer_block->exit();
+        assembler.push_block(finalizer_block);
+        defer({
+          finalizer_block->exit();
+          assembler.pop_block();
+        });
+
+        for (const auto& section : _vars_by_section) {
+            for (auto e : section.second) {
+                if (e->element_type() == element_type_t::identifier) {
+                    auto var = dynamic_cast<compiler::identifier*>(e);
+                    auto var_type = var->type_ref()->type();
+                    if (!var_type->emit_finalizer(session, var))
+                        return false;
+                }
+            }
+        }
 
         return true;
     }
@@ -270,6 +285,21 @@ namespace basecode::compiler {
         initializer_block->blank_line();
         initializer_block->align(vm::instruction_t::alignment);
         initializer_block->label(assembler.make_label("_initializer"));
+        assembler.push_block(initializer_block);
+        defer({
+            assembler.pop_block();
+        });
+
+        for (const auto& section : _vars_by_section) {
+            for (auto e : section.second) {
+                if (e->element_type() == element_type_t::identifier) {
+                    auto var = dynamic_cast<compiler::identifier*>(e);
+                    auto var_type = var->type_ref()->type();
+                    if (!var_type->emit_initializer(session, var))
+                        return false;
+                }
+            }
+        }
 
         return true;
     }
