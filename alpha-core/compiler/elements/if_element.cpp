@@ -39,14 +39,6 @@ namespace basecode::compiler {
     }
 
     bool if_element::on_emit(compiler::session& session) {
-        session.emit_context().push_if(
-            _true_branch->label_name(),
-            _false_branch != nullptr ? _false_branch->label_name() : "");
-        _predicate->emit(session);
-        _true_branch->emit(session);
-        if (_false_branch != nullptr)
-            _false_branch->emit(session);
-        session.emit_context().pop();
         return true;
     }
 

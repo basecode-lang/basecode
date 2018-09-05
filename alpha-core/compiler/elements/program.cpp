@@ -71,7 +71,7 @@ namespace basecode::compiler {
                         auto var_label = assembler.make_label(str->label_name());
                         instruction_block->label(var_label);
 
-                        auto var = session.emit_context().allocate_variable(
+                        auto var = session.allocate_variable(
                             var_label->name(),
                             _string_type,
                             identifier_usage_t::heap,
@@ -103,7 +103,7 @@ namespace basecode::compiler {
                     0);
                 auto var_label = assembler.make_label(var->symbol()->name());
                 instruction_block->label(var_label);
-                session.emit_context().allocate_variable(
+                session.allocate_variable(
                     var_label->name(),
                     var_type,
                     identifier_usage_t::heap);

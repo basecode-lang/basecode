@@ -13,6 +13,7 @@
 
 #include <string>
 #include <unordered_map>
+#include <compiler/compiler_types.h>
 #include "element.h"
 
 namespace basecode::compiler {

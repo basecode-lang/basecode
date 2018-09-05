@@ -46,7 +46,7 @@ namespace basecode::compiler {
         if (stack_frame != nullptr)
             frame_entry = stack_frame->find_up(_symbol->name());
 
-        session.emit_context().allocate_variable(
+        session.allocate_variable(
             _symbol->name(),
             _type_ref->type(),
             _usage,

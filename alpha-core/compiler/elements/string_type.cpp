@@ -43,7 +43,7 @@ namespace basecode::compiler {
             fmt::format("finalize identifier: {}", var->symbol()->name()),
             4);
 
-        auto work_var = session.emit_context().variable_for_element(var);
+        auto work_var = session.variable_for_element(var);
         if (work_var == nullptr) {
             session.error(
                 var,
@@ -96,7 +96,7 @@ namespace basecode::compiler {
         if (init != nullptr)
             literal = dynamic_cast<compiler::string_literal*>(init->expression());
 
-        auto work_var = session.emit_context().variable_for_element(var);
+        auto work_var = session.variable_for_element(var);
         if (work_var == nullptr) {
             session.error(
                 var,

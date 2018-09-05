@@ -137,7 +137,7 @@ namespace basecode::compiler {
             .session = &session
         };
 
-        auto var = session.emit_context().variable_for_element(e);
+        auto var = session.variable_for_element(e);
         if (var != nullptr) {
             var->make_live(session);
 

@@ -31,6 +31,48 @@
 
 namespace basecode::compiler {
 
+    struct variable_register_t {
+        bool reserve(compiler::session& session);
+
+        void release(compiler::session& session);
+
+        bool allocated = false;
+        vm::register_t reg;
+    };
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    struct variable_t {
+        bool init(compiler::session& session);
+
+        bool read(compiler::session& session);
+
+        bool write(compiler::session& session);
+
+        void make_live(compiler::session& session);
+
+        void make_dormant(compiler::session& session);
+
+        std::string name;
+        bool live = false;
+        bool written = false;
+        identifier_usage_t usage;
+        int64_t address_offset = 0;
+        bool requires_read = false;
+        bool address_loaded = false;
+        variable_register_t value_reg;
+        compiler::type* type = nullptr;
+        variable_register_t address_reg {
+            .reg = {
+                .size = vm::op_sizes::qword,
+                .type = vm::register_type_t::integer
+            },
+        };
+        vm::stack_frame_entry_t* frame_entry = nullptr;
+    };
+
+    ///////////////////////////////////////////////////////////////////////////
+
     class session {
     public:
         session(
@@ -60,6 +102,10 @@ namespace basecode::compiler {
 
         bool initialize();
 
+        void free_variable(
+            compiler::session& session,
+            const std::string& name);
+
         element_map& elements();
 
         common::result& result();
@@ -74,7 +120,11 @@ namespace basecode::compiler {
 
         void disassemble(FILE* file);
 
-        emit_context_t& emit_context();
+        variable_t* allocate_variable(
+            const std::string& name,
+            compiler::type* type,
+            identifier_usage_t usage,
+            vm::stack_frame_entry_t* frame_entry = nullptr);
 
         vm::stack_frame_t* stack_frame();
 
@@ -90,11 +140,15 @@ namespace basecode::compiler {
 
         common::source_file* current_source_file();
 
+        variable_t* variable(const std::string& name);
+
         std::vector<common::source_file*> source_files();
 
         const compiler::scope_manager& scope_manager() const;
 
         void push_source_file(common::source_file* source_file);
+
+        variable_t* variable_for_element(compiler::element* element);
 
         compiler::module* compile_module(common::source_file* source_file);
 
@@ -133,11 +187,11 @@ namespace basecode::compiler {
         element_map _elements {};
         compiler::program _program;
         ast_evaluator _ast_evaluator;
-        emit_context_t _emit_context;
         session_options_t _options {};
         vm::stack_frame_t _stack_frame;
         compiler::scope_manager _scope_manager;
         std::stack<common::source_file*> _source_file_stack {};
+        std::unordered_map<std::string, variable_t> _variables {};
         std::map<std::string, common::source_file> _source_files {};
     };
 
