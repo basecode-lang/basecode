@@ -223,13 +223,15 @@ namespace basecode::compiler {
     string_literal* element_builder::make_string(
             compiler::block* parent_scope,
             const std::string& value) {
+        auto& scope_manager = _session.scope_manager();
+
         auto literal = new compiler::string_literal(
-            _session.scope_manager().current_module(),
+            scope_manager.current_module(),
             parent_scope,
             value);
         _session.elements().add(literal);
 
-        auto& interned_strings = _session.scope_manager().interned_string_literals();
+        auto& interned_strings = scope_manager.interned_string_literals();
         auto it = interned_strings.find(value);
         if (it != interned_strings.end()) {
             auto& list = it->second;

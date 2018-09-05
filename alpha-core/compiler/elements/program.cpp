@@ -54,23 +54,26 @@ namespace basecode::compiler {
             compiler::session& session,
             compiler::element* e,
             vm::instruction_block* instruction_block) {
+        auto& assembler = session.assembler();
+        auto& scope_manager = session.scope_manager();
+        auto& interned_strings = scope_manager.interned_string_literals();
+
         switch (e->element_type()) {
             case element_type_t::string_literal: {
                 auto string_literal = dynamic_cast<compiler::string_literal*>(e);
                 instruction_block->blank_line();
                 instruction_block->align(4);
 
-                auto& interned_strings = session.scope_manager().interned_string_literals();
                 auto it = interned_strings.find(string_literal->value());
                 if (it != interned_strings.end()) {
                     string_literal_list_t& str_list = it->second;
                     for (auto str : str_list) {
-                        auto var_label = session.assembler().make_label(str->label_name());
+                        auto var_label = assembler.make_label(str->label_name());
                         instruction_block->label(var_label);
 
                         auto var = session.emit_context().allocate_variable(
                             var_label->name(),
-                            session.scope_manager().find_type({.name = "string"}),
+                            _string_type,
                             identifier_usage_t::heap,
                             nullptr);
                         if (var != nullptr)
@@ -94,7 +97,11 @@ namespace basecode::compiler {
                 auto type_alignment = static_cast<uint8_t>(var_type->alignment());
                 if (type_alignment > 1)
                     instruction_block->align(type_alignment);
-                auto var_label = session.assembler().make_label(var->symbol()->name());
+
+                instruction_block->comment(
+                    fmt::format("identifier type: {}", var->type_ref()->symbol().name),
+                    0);
+                auto var_label = assembler.make_label(var->symbol()->name());
                 instruction_block->label(var_label);
                 session.emit_context().allocate_variable(
                     var_label->name(),
@@ -164,17 +171,12 @@ namespace basecode::compiler {
                         }
                         break;
                     }
-                    case element_type_t::string_type: {
-                        if (init != nullptr) {
-                            auto string_literal = dynamic_cast<compiler::string_literal*>(
-                                init->expression());
-                            if (string_literal != nullptr) {
-                                instruction_block->comment(
-                                    fmt::format("\"{}\"", string_literal->value()),
-                                    4);
-                                instruction_block->string(string_literal->value());
-                            }
-                        }
+                    case element_type_t::any_type:
+                    case element_type_t::type_info:
+                    case element_type_t::array_type:
+                    case element_type_t::string_type:
+                    case element_type_t::composite_type: {
+                        instruction_block->reserve_byte(var_type->size_in_bytes());
                         break;
                     }
                     default: {
@@ -207,6 +209,10 @@ namespace basecode::compiler {
     }
 
     bool program::on_emit(compiler::session& session) {
+        _string_type = session.scope_manager().find_type(qualified_symbol_t {
+            .name = "string"
+        });
+
         initialize_variable_sections();
 
         if (!emit_bootstrap_block(session))
@@ -360,6 +366,7 @@ namespace basecode::compiler {
     bool program::group_identifiers_by_section(compiler::session& session) {
         auto& scope_manager = session.scope_manager();
 
+        auto& interned_strings = scope_manager.interned_string_literals();
         auto ro_list = variable_section(vm::section_t::ro_data);
         auto data_list = variable_section(vm::section_t::data);
 
@@ -395,12 +402,8 @@ namespace basecode::compiler {
             }
         }
 
-        auto& interned_strings = scope_manager.interned_string_literals();
         for (const auto& it : interned_strings) {
-            compiler::string_literal* str = it.second.front();
-            if (!str->is_parent_element(element_type_t::argument_list))
-                continue;
-            ro_list->emplace_back(str);
+            ro_list->emplace_back(it.second.front());
         }
 
         return true;

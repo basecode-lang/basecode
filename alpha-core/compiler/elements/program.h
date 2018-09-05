@@ -58,6 +58,7 @@ namespace basecode::compiler {
 
     private:
         compiler::block* _block = nullptr;
+        compiler::type* _string_type = nullptr;
         std::map<vm::section_t, element_list_t> _vars_by_section {};
     };
 
