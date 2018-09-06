@@ -222,6 +222,10 @@ namespace basecode::compiler {
             evaluator_context_t& context,
             evaluator_result_t& result);
 
+        bool type_identifier(
+            evaluator_context_t& context,
+            evaluator_result_t& result);
+
     private:
         static std::unordered_map<syntax::ast_node_types_t, node_evaluator_callable> s_node_evaluators;
 

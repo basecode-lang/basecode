@@ -156,7 +156,10 @@ namespace basecode::compiler {
             block->comment(
                 fmt::format("load string literal address: {}", literal->label_name()),
                 4);
-            block->move_label_to_reg(src_reg, assembler.make_label_ref(literal->label_name()));
+            block->move_label_to_reg_with_offset(
+                src_reg,
+                assembler.make_label_ref(literal->label_name()),
+                4);
             block->copy(vm::op_sizes::byte, temp_reg, src_reg, length);
             assembler.free_reg(src_reg);
         }

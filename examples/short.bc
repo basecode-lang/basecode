@@ -1,5 +1,5 @@
 @library "alpha-core";
-#foreign print := proc(format: string, values: ...any) @alias "fmt_print";
+#foreign print ::= proc(format: string, values: ...any) @alias "fmt_print";
 
 a: string := "hello world\n";
 //print("%s\n", a);
@@ -9,13 +9,13 @@ E  ::= cast<f64>(2.7182818284);
 
 E2 := ((E * cast<f64>(3)) + cast<f64>(1.105)) / cast<f64>(2.0);
 
-id_t ::= u8;
+id_t ::= #type u8;
 foo: id_t;
 bar: s16 := 8;
 foo := cast<id_t>(bar);
 
-speed_t    ::= f32;
-distance_t ::= f32;
+speed_t    ::= #type f32;
+distance_t ::= #type f32;
 
 // XXX: assignment is confused about aliased types
 //      isn't folding into segment initialization in this case

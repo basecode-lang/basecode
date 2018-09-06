@@ -42,7 +42,7 @@ namespace basecode::compiler {
 
         bool find_identifier_type(
             type_find_result_t& result,
-            const syntax::ast_node_shared_ptr& type_node,
+            const syntax::ast_node_t* type_node,
             compiler::block* parent_scope = nullptr);
 
         compiler::block* pop_scope();

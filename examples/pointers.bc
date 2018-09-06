@@ -1,8 +1,15 @@
 @library "alpha-core";
 #foreign print ::= proc(format: string, values: ...any) @alias "fmt_print";
 
-//temp ::= ^u8;
-//temp_ptr: ^temp;
+item ::= struct {
+    n: s32;
+};
+
+id_t ::= #type u32;
+item_ptr_t ::= #type ^item;
+items: ^item_ptr_t;
+
+foo := items^;
 
 // alloc & free block of memory
 'allocate_memory:

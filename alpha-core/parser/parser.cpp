@@ -805,20 +805,6 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-//    ast_node_shared_ptr symbol_infix_parser::parse(
-//            common::result& r,
-//            parser* parser,
-//            const ast_node_shared_ptr& lhs,
-//            token_t& token) {
-//        return create_symbol_node(r, parser, lhs, token);
-//    }
-//
-//    precedence_t symbol_infix_parser::precedence() const {
-//        return precedence_t::variable;
-//    }
-
-    ///////////////////////////////////////////////////////////////////////////
-
     ast_node_shared_ptr type_identifier_infix_parser::parse(
             common::result& r,
             parser* parser,
@@ -920,7 +906,11 @@ namespace basecode::syntax {
         if (parser->peek(token_types_t::semi_colon)) {
             return directive_node;
         }
-        directive_node->lhs = parser->parse_expression(r, 0);
+        if (token.value == "type") {
+            directive_node->lhs = create_type_identifier_node(r, parser, token);
+        } else {
+            directive_node->lhs = parser->parse_expression(r, 0);
+        }
         return directive_node;
     }
 

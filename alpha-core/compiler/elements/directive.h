@@ -39,11 +39,24 @@ namespace basecode::compiler {
         bool evaluate(compiler::session& session);
 
     protected:
+        bool on_is_constant() const override;
+
+        bool on_infer_type(
+            const compiler::session& session,
+            infer_type_result_t& result) override;
+
         bool on_emit(compiler::session& session) override;
 
         void on_owned_elements(element_list_t& list) override;
 
     private:
+        // --------------------
+        // type directive
+        // --------------------
+        bool on_execute_type(compiler::session& session);
+
+        bool on_evaluate_type(compiler::session& session);
+
         // --------------------
         // assembly directive
         // --------------------

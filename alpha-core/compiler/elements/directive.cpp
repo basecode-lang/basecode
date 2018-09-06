@@ -13,6 +13,7 @@
 #include <configure.h>
 #include <compiler/session.h>
 #include <boost/filesystem.hpp>
+#include "type.h"
 #include "attribute.h"
 #include "directive.h"
 #include "raw_block.h"
@@ -26,12 +27,14 @@ namespace basecode::compiler {
 
     std::unordered_map<std::string, directive::directive_callable> directive::s_execute_handlers = {
         {"run",      std::bind(&directive::on_execute_run,     std::placeholders::_1, std::placeholders::_2)},
+        {"type",     std::bind(&directive::on_execute_type,    std::placeholders::_1, std::placeholders::_2)},
         {"foreign",  std::bind(&directive::on_execute_foreign, std::placeholders::_1, std::placeholders::_2)},
         {"assembly", std::bind(&directive::on_execute_assembly, std::placeholders::_1, std::placeholders::_2)},
     };
 
     std::unordered_map<std::string, directive::directive_callable> directive::s_evaluate_handlers = {
         {"run",      std::bind(&directive::on_evaluate_run,     std::placeholders::_1, std::placeholders::_2)},
+        {"type",     std::bind(&directive::on_evaluate_type,    std::placeholders::_1, std::placeholders::_2)},
         {"foreign",  std::bind(&directive::on_evaluate_foreign, std::placeholders::_1, std::placeholders::_2)},
         {"assembly", std::bind(&directive::on_evaluate_assembly, std::placeholders::_1, std::placeholders::_2)},
     };
@@ -47,12 +50,24 @@ namespace basecode::compiler {
                                    _expression(expression) {
     }
 
+    bool directive::on_infer_type(
+            const compiler::session& session,
+            infer_type_result_t& result) {
+        if (_expression != nullptr && _expression->is_type())
+            result.inferred_type = dynamic_cast<compiler::type*>(_expression);
+        return true;
+    }
+
     element* directive::expression() {
         return _expression;
     }
 
     std::string directive::name() const {
         return _name;
+    }
+
+    bool directive::on_is_constant() const {
+        return _expression != nullptr && _expression->is_type();
     }
 
     bool directive::on_emit(compiler::session& session) {
@@ -93,6 +108,18 @@ namespace basecode::compiler {
     void directive::on_owned_elements(element_list_t& list) {
         if (_expression != nullptr)
             list.emplace_back(_expression);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    // type directive
+
+    bool directive::on_execute_type(compiler::session& session) {
+        return true;
+    }
+
+    bool directive::on_evaluate_type(compiler::session& session) {
+        return true;
     }
 
     ///////////////////////////////////////////////////////////////////////////

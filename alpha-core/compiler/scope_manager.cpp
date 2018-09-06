@@ -112,7 +112,7 @@ namespace basecode::compiler {
 
     bool scope_manager::find_identifier_type(
             type_find_result_t& result,
-            const syntax::ast_node_shared_ptr& type_node,
+            const syntax::ast_node_t* type_node,
             compiler::block* parent_scope) {
         if (type_node == nullptr)
             return false;

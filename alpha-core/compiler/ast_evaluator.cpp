@@ -97,7 +97,7 @@ namespace basecode::compiler {
         {syntax::ast_node_types_t::while_statement,         std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::break_statement,         std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::with_expression,         std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::type_identifier,         std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::type_identifier,         std::bind(&ast_evaluator::type_identifier, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::defer_expression,        std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::union_expression,        std::bind(&ast_evaluator::union_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::return_statement,        std::bind(&ast_evaluator::return_statement, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
@@ -420,27 +420,10 @@ namespace basecode::compiler {
             if (init_expr != nullptr) {
                 if (init_expr->element_type() == element_type_t::symbol) {
                     auto init_symbol = dynamic_cast<compiler::symbol_element*>(init_expr);
-                    auto identifier = scope_manager.find_identifier(init_symbol->qualified_symbol());
-                    if (identifier != nullptr) {
-                        auto type_initializer = identifier->initializer();
-                        if (type_initializer != nullptr
-                        &&  type_initializer->expression()->element_type() == element_type_t::type_reference) {
-                            if (symbol->is_constant()) {
-                                init_expr = type_initializer->expression();
-                            } else {
-                                _session.error(
-                                    "P029",
-                                    "only constant assignment (::=) may alias types",
-                                    node->location);
-                                return nullptr;
-                            }
-                        }
-                    } else {
-                        init_expr = builder.make_identifier_reference(
-                            scope,
-                            init_symbol->qualified_symbol(),
-                            nullptr);
-                    }
+                    init_expr = builder.make_identifier_reference(
+                        scope,
+                        init_symbol->qualified_symbol(),
+                        nullptr);
                 }
                 if (init_expr->is_constant()) {
                     init = builder.make_initializer(scope, init_expr);
@@ -448,8 +431,13 @@ namespace basecode::compiler {
             }
         }
 
-        if (init != nullptr
-        &&  init->expression()->is_type()
+        // XXX: clean up
+        auto is_type = init_expr != nullptr && init_expr->is_type();
+        auto is_type_directive = init_expr != nullptr
+            && init_expr->element_type() == element_type_t::directive
+            && dynamic_cast<compiler::directive*>(init_expr)->name() == "type";
+
+        if ((is_type || is_type_directive)
         &&  !symbol->is_constant()) {
             _session.error(
                 "P029",
@@ -469,7 +457,10 @@ namespace basecode::compiler {
             if (init_expr != nullptr) {
                 infer_type_result_t infer_type_result {};
                 if (!init_expr->infer_type(_session, infer_type_result)) {
-                    // XXX: error
+                    _session.error(
+                        "P019",
+                        fmt::format("unable to infer type: {}", new_identifier->symbol()->name()),
+                        new_identifier->symbol()->location());
                     return nullptr;
                 }
                 type_find_result.type = infer_type_result.inferred_type;
@@ -989,7 +980,7 @@ namespace basecode::compiler {
             type_find_result_t find_type_result {};
             scope_manager.find_identifier_type(
                 find_type_result,
-                context.node->rhs->rhs);
+                context.node->rhs->rhs.get());
             expr = add_identifier_to_scope(
                 context,
                 dynamic_cast<compiler::symbol_element*>(expr),
@@ -1185,10 +1176,30 @@ namespace basecode::compiler {
             evaluator_context_t& context,
             evaluator_result_t& result) {
         element_list_t list {};
-        auto success = add_assignments_to_scope(context, context.node, list, nullptr);
+        auto success = add_assignments_to_scope(
+            context,
+            context.node,
+            list,
+            nullptr);
         if (success)
             result.element = list.front();
         return success;
+    }
+
+    bool ast_evaluator::type_identifier(
+            evaluator_context_t& context,
+            evaluator_result_t& result) {
+        auto& scope_manager = _session.scope_manager();
+
+        type_find_result_t find_type_result {};
+        scope_manager.find_identifier_type(
+            find_type_result,
+            context.node,
+            scope_manager.current_scope());
+
+        result.element = find_type_result.type;
+
+        return true;
     }
 
     bool ast_evaluator::transmute_expression(
@@ -1273,7 +1284,7 @@ namespace basecode::compiler {
                 type_find_result_t find_type_result {};
                 scope_manager.find_identifier_type(
                     find_type_result,
-                    target_symbol->rhs,
+                    target_symbol->rhs.get(),
                     scope);
                 auto new_identifier = add_identifier_to_scope(
                     context,
@@ -1303,7 +1314,7 @@ namespace basecode::compiler {
         type_find_result_t type_find_result {};
         scope_manager.find_identifier_type(
             type_find_result,
-            node->rhs,
+            node->rhs.get(),
             scope);
 
         return add_identifier_to_scope(
