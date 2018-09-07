@@ -1,0 +1,20 @@
+// 0. how to handle comment statements?
+// 1. fix ordering of pairs list
+// 2. move comments from pair to node in list
+// 3. update ast_evaluator to handle comments/attributes in new places from AST
+
+/* */ a: /**/ u32 /* */; // bar
+
+@foo_the_bar "frobnoz";
+/**/ @bling "bam" @boom "bomb" foo ::= proc(
+        a: /**/ s8 /* foo */,      /* this is gonna end badly */
+        b: /**/ string /* bar */,  /* yeah! */
+        c: ^any     // I FIXED IT!
+    ): u64 {        // NARF!
+} @alias "green" @disgust "poop";
+
+// procedure calls
+// if statements
+// while
+// for
+// with

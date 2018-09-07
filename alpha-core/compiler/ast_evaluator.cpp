@@ -972,7 +972,7 @@ namespace basecode::compiler {
             }
         }
 
-        auto expr = evaluate(context.node->rhs.get());
+        auto expr = evaluate(context.node->rhs->rhs.get());
         if (expr == nullptr)
             return false;
 
@@ -980,7 +980,7 @@ namespace basecode::compiler {
             type_find_result_t find_type_result {};
             scope_manager.find_identifier_type(
                 find_type_result,
-                context.node->rhs->rhs.get());
+                context.node->rhs->rhs->rhs.get());
             expr = add_identifier_to_scope(
                 context,
                 dynamic_cast<compiler::symbol_element*>(expr),
@@ -1131,7 +1131,11 @@ namespace basecode::compiler {
             switch (param_node->type) {
                 case syntax::ast_node_types_t::assignment: {
                     element_list_t list {};
-                    auto success = add_assignments_to_scope(context, param_node.get(), list, block_scope);
+                    auto success = add_assignments_to_scope(
+                        context,
+                        param_node.get(),
+                        list,
+                        block_scope);
                     if (success) {
                         auto param_identifier = dynamic_cast<compiler::identifier*>(list.front());
                         param_identifier->usage(identifier_usage_t::stack);
@@ -1147,7 +1151,10 @@ namespace basecode::compiler {
                     break;
                 }
                 case syntax::ast_node_types_t::symbol: {
-                    auto param_identifier = declare_identifier(context, param_node.get(), block_scope);
+                    auto param_identifier = declare_identifier(
+                        context,
+                        param_node.get(),
+                        block_scope);
                     if (param_identifier != nullptr) {
                         param_identifier->usage(identifier_usage_t::stack);
                         param_field = builder.make_field(

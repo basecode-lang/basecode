@@ -43,6 +43,7 @@ namespace basecode::syntax {
         label_list,
         basic_block,
         symbol_part,
+        comment_list,
         line_comment,
         null_literal,
         block_comment,
@@ -52,6 +53,7 @@ namespace basecode::syntax {
         number_literal,
         string_literal,
         unary_operator,
+        statement_body,
         proc_expression,
         binary_operator,
         boolean_literal,
@@ -105,10 +107,12 @@ namespace basecode::syntax {
         {ast_node_types_t::symbol_part, "symbol_part"},
         {ast_node_types_t::line_comment, "line_comment"},
         {ast_node_types_t::null_literal, "null_literal"},
+        {ast_node_types_t::comment_list, "comment_list"},
         {ast_node_types_t::block_comment, "block_comment"},
         {ast_node_types_t::argument_list, "argument_list"},
         {ast_node_types_t::if_expression, "if_expression"},
         {ast_node_types_t::parameter_list, "parameter_list"},
+        {ast_node_types_t::statement_body, "statement_body"},
         {ast_node_types_t::number_literal, "number_literal"},
         {ast_node_types_t::string_literal, "string_literal"},
         {ast_node_types_t::unary_operator, "unary_operator"},
@@ -256,6 +260,8 @@ namespace basecode::syntax {
 
         ast_node_shared_ptr basic_block_node();
 
+        ast_node_shared_ptr comment_list_node();
+
         ast_node_shared_ptr argument_list_node();
 
         ast_node_shared_ptr binary_operator_node(
@@ -264,6 +270,8 @@ namespace basecode::syntax {
             const ast_node_shared_ptr& rhs);
 
         ast_node_shared_ptr parameter_list_node();
+
+        ast_node_shared_ptr statement_body_node();
 
         ast_node_shared_ptr type_identifier_node();
 

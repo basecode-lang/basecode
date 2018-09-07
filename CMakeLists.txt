@@ -81,6 +81,6 @@ add_custom_target(alpha-bootstrap-configured DEPENDS dummy-target alpha-core bac
 add_dependencies(alpha-bootstrap-configured all-unit-tests)
 add_custom_command(
         TARGET alpha-bootstrap-configured
-        COMMAND ${CMAKE_COMMAND} -E echo "copy_directory: ${PROJECT_SOURCE_DIR}/examples"
-        COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_SOURCE_DIR}/examples ${PROJECT_BINARY_DIR}/examples
+        COMMAND ${CMAKE_COMMAND} -E echo "copy_directory: ${PROJECT_SOURCE_DIR}/tests"
+        COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_SOURCE_DIR}/tests ${PROJECT_BINARY_DIR}/tests
 )

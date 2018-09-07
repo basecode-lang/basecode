@@ -21,6 +21,42 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    static size_t collect_comments(
+            common::result& r,
+            parser* parser,
+            ast_node_list& target) {
+        size_t count = 0;
+
+        while (parser->peek(token_types_t::line_comment)
+            || parser->peek(token_types_t::block_comment)) {
+
+            token_t token;
+            if (!parser->consume(token))
+                return count;
+
+            ast_node_shared_ptr comment_node;
+            switch (token.type) {
+                case token_types_t::line_comment:
+                    comment_node = parser->ast_builder()->line_comment_node(token);
+                    break;
+                case token_types_t::block_comment:
+                    comment_node = parser->ast_builder()->block_comment_node(token);
+                    break;
+                default:
+                    break;
+            }
+
+            target.push_back(comment_node);
+            ++count;
+        }
+
+        return count;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    // XXX: need to associate comments in the children list to one of the nodes
+    //
     static void pairs_to_list(
             const ast_node_shared_ptr& target,
             const ast_node_shared_ptr& root) {
@@ -226,6 +262,12 @@ namespace basecode::syntax {
             common::result& r,
             parser* parser,
             token_t& token) {
+        auto type_node = parser
+            ->ast_builder()
+            ->type_identifier_node();
+
+        collect_comments(r, parser, type_node->children);
+
         auto is_spread = false;
         auto is_pointer = false;
 
@@ -266,9 +308,6 @@ namespace basecode::syntax {
             parser,
             nullptr,
             type_identifier);
-        auto type_node = parser
-            ->ast_builder()
-            ->type_identifier_node();
         type_node->lhs = symbol_node;
         type_node->rhs = array_subscripts;
 
@@ -280,6 +319,8 @@ namespace basecode::syntax {
 
         if (is_pointer)
             type_node->flags |= ast_node_t::flags_t::pointer;
+
+        collect_comments(r, parser, type_node->children);
 
         return type_node;
     }
@@ -726,6 +767,7 @@ namespace basecode::syntax {
             token_t& token) {
         auto pair_node = parser->ast_builder()->pair_node();
         pair_node->lhs = lhs;
+        collect_comments(r, parser, pair_node->children);
         pair_node->rhs = parser->parse_expression(
             r,
             static_cast<uint8_t>(precedence_t::comma));
@@ -1152,82 +1194,98 @@ namespace basecode::syntax {
         auto scope = _ast_builder.begin_scope();
         scope->location.start(token.location.start());
 
-        while (true) {
+        auto is_end_of_scope = [&]() -> bool {
+            if (peek(token_types_t::end_of_file))
+                return true;
+
             if (peek(token_types_t::right_curly_brace)) {
                 token_t right_curly_brace;
                 current(right_curly_brace);
                 consume();
                 scope->location.end(right_curly_brace.location.end());
-                break;
+                return true;
             }
 
-            auto node = parse_statement(r);
-            if (node == nullptr)
-                break;
-            scope->children.push_back(node);
+            return false;
+        };
 
-            if (node->type == ast_node_types_t::statement) {
-                token_t line_terminator_token;
-                line_terminator_token.type = token_types_t::semi_colon;
-                if (!expect(r, line_terminator_token)) {
+        while (true) {
+            if (is_end_of_scope())
+                break;
+            auto statement = parse_statement(r);
+            if (statement == nullptr) {
+                if (r.is_failed())
                     return nullptr;
-                }
-            }
 
+                if (is_end_of_scope())
+                    break;
+
+                continue;
+            }
             if (!scope->pending_attributes.empty()) {
                 for (const auto& attr_node : scope->pending_attributes)
-                    node->rhs->children.push_back(attr_node);
+                    statement->rhs->rhs->children.push_back(attr_node);
                 scope->pending_attributes.clear();
             }
+            scope->children.push_back(statement);
         }
 
-        if (peek(token_types_t::attribute)) {
-            auto attribute_node = parse_expression(r, 0);
-            scope->children.push_back(attribute_node);
+        while (peek(token_types_t::attribute)) {
+            scope->children.push_back(parse_expression(r, 0));
         }
 
         return _ast_builder.end_scope();
     }
 
     ast_node_shared_ptr parser::parse_statement(common::result& r) {
-        ast_node_list pending_labels {};
+        auto statement_node = _ast_builder.statement_node();
 
-        ast_node_shared_ptr expression;
         while (true) {
-            expression = parse_expression(r, 0);
-            if (expression == nullptr)
+            collect_comments(r, this, statement_node->rhs->lhs->children);
+
+            if (peek(token_types_t::right_curly_brace))
                 return nullptr;
 
-            if (expression->is_comment())
-                return expression;
+            auto expr = parse_expression(r, 0);
+            if (expr == nullptr)
+                return nullptr;
 
-            if (expression->is_attribute()) {
-                _ast_builder.current_scope()->pending_attributes.push_back(expression);
-                token_t line_terminator_token;
-                line_terminator_token.type = token_types_t::semi_colon;
-                if (!expect(r, line_terminator_token))
-                    break;
+            if (expr->is_comment()) {
+                statement_node->rhs->lhs->children.push_back(expr);
                 continue;
             }
 
-            if (expression->is_label()) {
-                pending_labels.push_back(expression);
+            if (expr->is_attribute()) {
+                if (peek(token_types_t::semi_colon)) {
+                    consume();
+                    _ast_builder.current_scope()->pending_attributes.push_back(expr);
+                } else {
+                    statement_node->rhs->children.push_back(expr);
+                }
                 continue;
             }
+
+            if (expr->is_label()) {
+                statement_node->lhs->children.push_back(expr);
+                continue;
+            }
+
+            statement_node->rhs->rhs = expr;
+            statement_node->location = expr->location;
 
             break;
         }
 
-        auto statement_node = _ast_builder.statement_node();
-
-        if (!pending_labels.empty()) {
-            statement_node->lhs = _ast_builder.label_list_node();
-            for (const auto& label_node : pending_labels)
-                statement_node->lhs->children.push_back(label_node);
+        token_t line_terminator_token;
+        line_terminator_token.type = token_types_t::semi_colon;
+        if (!expect(r, line_terminator_token)) {
+            error(
+                r,
+                "B031",
+                "expected semi-colon",
+                statement_node->location);
+            return nullptr;
         }
-
-        statement_node->rhs = expression;
-        statement_node->location = expression->location;
 
         return statement_node;
     }
