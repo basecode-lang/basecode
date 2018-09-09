@@ -1,5 +1,5 @@
 @library "alpha-core";
-#foreign print := proc(format: string, values: ...any) @alias "fmt_print";
+#foreign print ::= proc(format: string, values: ...any) @alias "fmt_print";
 
 foo := 128;
 foo := foo * 2;

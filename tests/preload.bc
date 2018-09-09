@@ -10,12 +10,12 @@
 // ----------------------------------------------------------------------------
 
 basecode::linear := ns {
-    vector3 := struct {
+    vector3 ::= struct {
         x: f64;
         y: f64;
         z: f64;
 
-        transpose := proc(self: ^vector3): vector3 {
+        transpose ::= proc(self: ^vector3): vector3 {
             new_vector: vector3;
             return new_vector;
         };

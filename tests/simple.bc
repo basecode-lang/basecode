@@ -43,7 +43,7 @@
 //     a. transmute<type>()
 
 @library "alpha-core";
-#foreign print := proc(format: string, values: ...any) @alias "fmt_print";
+#foreign print ::= proc(format: string, values: ...any) @alias "fmt_print";
 
 preload := module("preload.bc");
 
