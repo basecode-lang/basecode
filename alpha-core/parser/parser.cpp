@@ -585,7 +585,6 @@ namespace basecode::syntax {
             return nullptr;
 
         if (parser->peek(token_types_t::colon)) {
-            parser->consume();
             pairs_to_list(proc_node->lhs, parser->parse_expression(r, 0));
         }
 

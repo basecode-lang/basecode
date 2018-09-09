@@ -352,9 +352,10 @@ namespace basecode::compiler {
             }
 
             compiler::field* new_field = nullptr;
-            auto expr_node = child->rhs;
+            auto expr_node = child->rhs->rhs;
             switch (expr_node->type) {
-                case syntax::ast_node_types_t::assignment: {
+                case syntax::ast_node_types_t::assignment:
+                case syntax::ast_node_types_t::constant_assignment: {
                     element_list_t list {};
                     auto success = add_assignments_to_scope(
                         context,
@@ -432,18 +433,38 @@ namespace basecode::compiler {
         }
 
         // XXX: clean up
-        auto is_type = init_expr != nullptr && init_expr->is_type();
-        auto is_type_directive = init_expr != nullptr
-            && init_expr->element_type() == element_type_t::directive
-            && dynamic_cast<compiler::directive*>(init_expr)->name() == "type";
+        if (!symbol->is_constant()) {
+            auto is_module = init_expr != nullptr
+                             && init_expr->element_type() == element_type_t::module_reference;
+            if (is_module) {
+                _session.error(
+                    "P029",
+                    "constant assignment (::=) is required for module references.",
+                    node->location);
+                return nullptr;
+            }
 
-        if ((is_type || is_type_directive)
-        &&  !symbol->is_constant()) {
-            _session.error(
-                "P029",
-                "constant assignment (::=) is required for types.",
-                node->location);
-            return nullptr;
+            auto is_ns = init_expr != nullptr
+                         && init_expr->element_type() == element_type_t::namespace_e;
+            if (is_ns) {
+                _session.error(
+                    "P029",
+                    "constant assignment (::=) is required for namespaces.",
+                    node->location);
+                return nullptr;
+            }
+
+            auto is_type = init_expr != nullptr && init_expr->is_type();
+            auto is_type_directive = init_expr != nullptr
+                                     && init_expr->element_type() == element_type_t::directive
+                                     && dynamic_cast<compiler::directive*>(init_expr)->name() == "type";
+            if (is_type || is_type_directive) {
+                _session.error(
+                    "P029",
+                    "constant assignment (::=) is required for types.",
+                    node->location);
+                return nullptr;
+            }
         }
 
         auto new_identifier = builder.make_identifier(scope, symbol, init);
@@ -1097,33 +1118,37 @@ namespace basecode::compiler {
 
         auto count = 0;
         compiler::field* return_field = nullptr;
-        for (const auto& type_node : context.node->lhs->children) {
-            switch (type_node->type) {
-                case syntax::ast_node_types_t::symbol: {
-                    auto return_identifier = builder.make_identifier(
-                        block_scope,
-                        builder.make_symbol(block_scope, fmt::format("_{}", count++)),
-                        nullptr);
-                    return_identifier->usage(identifier_usage_t::stack);
-                    auto type = scope_manager.find_type(qualified_symbol_t {
-                        .name = type_node->children[0]->token.value
-                    });
-                    return_identifier->type_ref(builder.make_type_reference(
-                        block_scope,
-                        type->symbol()->qualified_symbol(),
-                        type));
-                    return_field = builder.make_field(
-                        proc_type,
-                        block_scope,
-                        return_identifier,
-                        return_field != nullptr ? return_field->end_offset() : 0);
-                    proc_type->returns().add(return_field);
-                    break;
-                }
-                default: {
-                    break;
-                }
+        if (!context.node->lhs->children.empty()) {
+            auto return_identifier = builder.make_identifier(
+                block_scope,
+                builder.make_symbol(block_scope, fmt::format("_{}", count++)),
+                nullptr);
+            return_identifier->usage(identifier_usage_t::stack);
+
+            compiler::type* type = nullptr;
+            type_find_result_t type_find_result {};
+            if (!scope_manager.find_identifier_type(
+                    type_find_result,
+                    context.node->lhs->children[0].get(),
+                    block_scope)) {
+                type = builder.make_unknown_type_from_find_result(
+                    block_scope,
+                    return_identifier,
+                    type_find_result);
+            } else {
+                type = type_find_result.type;
             }
+
+            return_identifier->type_ref(builder.make_type_reference(
+                block_scope,
+                type_find_result.type_name,
+                type));
+            return_field = builder.make_field(
+                proc_type,
+                block_scope,
+                return_identifier,
+                return_field != nullptr ? return_field->end_offset() : 0);
+            proc_type->return_type(return_field);
         }
 
         compiler::field* param_field = nullptr;

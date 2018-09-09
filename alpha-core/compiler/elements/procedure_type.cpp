@@ -33,96 +33,16 @@ namespace basecode::compiler {
                                                 _scope(scope) {
     }
 
-    bool procedure_type::on_emit(compiler::session& session) {
-        auto& assembler = session.assembler();
+    field* procedure_type::return_type() {
+        return _return_type;
+    }
 
-        auto procedure_label = symbol()->name();
-        auto parent_init = parent_element_as<compiler::initializer>();
-        if (parent_init != nullptr) {
-            auto parent_var = parent_init->parent_element_as<compiler::identifier>();
-            if (parent_var != nullptr) {
-                procedure_label = parent_var->symbol()->name();
-            }
-        }
-
-        if (is_foreign()) {
-            return true;
-        }
-
-        auto stack_frame = session.stack_frame();
-
-        auto instruction_block = assembler.make_procedure_block();
-        instruction_block->align(vm::instruction_t::alignment);
-        instruction_block->blank_line();
-        instruction_block->label(assembler.make_label(procedure_label));
-
-        int32_t offset = -8;
-        for (auto param : _parameters.as_list()) {
-            stack_frame->add(
-                vm::stack_frame_entry_type_t::parameter,
-                param->identifier()->symbol()->name(),
-                offset);
-            offset -= 8;
-        }
-
-        offset = 8;
-        const auto& returns_list = _returns.as_list();
-        if (!returns_list.empty()) {
-            stack_frame->add(
-                vm::stack_frame_entry_type_t::return_slot,
-                "return_value",
-                offset);
-            offset += 8;
-        }
-
-        offset = 16;
-        size_t local_count = 0;
-        session.scope_manager().visit_blocks(
-            session.result(),
-            [&](compiler::block* scope) {
-                if (scope->element_type() == element_type_t::proc_type_block)
-                    return true;
-                for (auto var : scope->identifiers().as_list()) {
-                    if (var->type_ref()->type()->element_type() == element_type_t::proc_type)
-                        continue;
-                    stack_frame->add(
-                        vm::stack_frame_entry_type_t::local,
-                        var->symbol()->name(),
-                        offset);
-                    var->usage(identifier_usage_t::stack);
-                    offset += 8;
-                    local_count++;
-                }
-                return true;
-            },
-            _scope);
-
-        instruction_block->move_reg_to_reg(
-            vm::register_t::fp(),
-            vm::register_t::sp());
-        auto size = 8 * local_count;
-        if (!returns_list.empty())
-            size += 8;
-        if (size > 0) {
-            instruction_block->sub_reg_by_immediate(
-                vm::register_t::sp(),
-                vm::register_t::sp(),
-                size);
-        }
-
-        assembler.push_block(instruction_block);
-        _scope->emit(session);
-        assembler.pop_block();
-
-        return true;
+    void procedure_type::return_type(field* value) {
+        _return_type = value;
     }
 
     bool procedure_type::is_foreign() const {
         return _is_foreign;
-    }
-
-    field_map_t& procedure_type::returns() {
-        return _returns;
     }
 
     compiler::block* procedure_type::scope() {
@@ -164,6 +84,89 @@ namespace basecode::compiler {
         return symbol()->name() == other->symbol()->name();
     }
 
+    bool procedure_type::on_emit(compiler::session& session) {
+        auto& assembler = session.assembler();
+
+        auto procedure_label = symbol()->name();
+        auto parent_init = parent_element_as<compiler::initializer>();
+        if (parent_init != nullptr) {
+            auto parent_var = parent_init->parent_element_as<compiler::identifier>();
+            if (parent_var != nullptr) {
+                procedure_label = parent_var->symbol()->name();
+            }
+        }
+
+        if (is_foreign()) {
+            return true;
+        }
+
+        auto stack_frame = session.stack_frame();
+
+        auto instruction_block = assembler.make_procedure_block();
+        instruction_block->align(vm::instruction_t::alignment);
+        instruction_block->blank_line();
+        instruction_block->label(assembler.make_label(procedure_label));
+
+        int32_t offset = -8;
+        for (auto param : _parameters.as_list()) {
+            stack_frame->add(
+                vm::stack_frame_entry_type_t::parameter,
+                param->identifier()->symbol()->name(),
+                offset);
+            offset -= 8;
+        }
+
+        offset = 8;
+        if (_return_type != nullptr) {
+            stack_frame->add(
+                vm::stack_frame_entry_type_t::return_slot,
+                "return_value",
+                offset);
+            offset += 8;
+        }
+
+        offset = 16;
+        size_t local_count = 0;
+        session.scope_manager().visit_blocks(
+            session.result(),
+            [&](compiler::block* scope) {
+                if (scope->element_type() == element_type_t::proc_type_block)
+                    return true;
+                for (auto var : scope->identifiers().as_list()) {
+                    if (var->type_ref()->type()->element_type() == element_type_t::proc_type)
+                        continue;
+                    stack_frame->add(
+                        vm::stack_frame_entry_type_t::local,
+                        var->symbol()->name(),
+                        offset);
+                    var->usage(identifier_usage_t::stack);
+                    offset += 8;
+                    local_count++;
+                }
+                return true;
+            },
+            _scope);
+
+        instruction_block->move_reg_to_reg(
+            vm::register_t::fp(),
+            vm::register_t::sp());
+        auto size = 8 * local_count;
+        if (_return_type != nullptr)
+            size += 8;
+        if (size > 0) {
+            instruction_block->sub_reg_by_immediate(
+                vm::register_t::sp(),
+                vm::register_t::sp(),
+                size);
+        }
+
+        assembler.push_block(instruction_block);
+        _scope->emit(session);
+        assembler.pop_block();
+
+        return true;
+    }
+
     type_access_model_t procedure_type::on_access_model() const {
         return type_access_model_t::pointer;
     }
@@ -172,8 +175,8 @@ namespace basecode::compiler {
         if (_scope != nullptr)
             list.emplace_back(_scope);
 
-        for (auto element : _returns.as_list())
-            list.emplace_back(element);
+        if (_return_type != nullptr)
+            list.emplace_back(_return_type);
 
         for (auto element : _parameters.as_list())
             list.emplace_back(element);

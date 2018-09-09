@@ -24,7 +24,7 @@ namespace basecode::compiler {
             compiler::block* scope,
             compiler::symbol_element* symbol);
 
-        field_map_t& returns();
+        field* return_type();
 
         bool is_foreign() const;
 
@@ -35,6 +35,8 @@ namespace basecode::compiler {
         void is_foreign(bool value);
 
         type_map_t& type_parameters();
+
+        void return_type(field* value);
 
         uint64_t foreign_address() const;
 
@@ -56,10 +58,10 @@ namespace basecode::compiler {
         bool on_initialize(compiler::session& session) override;
 
     private:
-        field_map_t _returns {};
         bool _is_foreign = false;
         field_map_t _parameters {};
         uint64_t _foreign_address = 0;
+        field* _return_type = nullptr;
         type_map_t _type_parameters {};
         compiler::block* _scope = nullptr;
         procedure_instance_list_t _instances {};

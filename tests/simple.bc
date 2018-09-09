@@ -10,14 +10,8 @@
 // 2. types
 //    a. type metadata needs to be emitted by the compiler
 //    b. type initializers & finalizers
-//    c. type_of(x)
-//    d. align_of(x)
-//    e. size_of(x)
 
 // 3. finish constant expression folding
-
-// 4. rework constant assignment syntax
-//      x :: "foo";
 
 // 5. array initializer lists
 // 6. dictionary initializer lists
@@ -39,13 +33,10 @@
 
 // 15. assembler label names need to be fully qualified
 
-// 17. cast operator & rules
-//     a. transmute<type>()
-
 @library "alpha-core";
 #foreign print ::= proc(format: string, values: ...any) @alias "fmt_print";
 
-preload := module("preload.bc");
+preload ::= module("preload.bc");
 
 //
 //

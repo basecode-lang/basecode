@@ -256,7 +256,7 @@ namespace basecode::compiler {
                 signature.arguments.push_back(value);
             }
 
-            if (proc_type->returns().size() == 0) {
+            if (proc_type->return_type() == nullptr) {
                 signature.return_value.type = vm::ffi_types_t::void_type;
             }
 

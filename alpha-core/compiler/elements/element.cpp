@@ -80,7 +80,6 @@ namespace basecode::compiler {
             case element_type_t::proc_type:
             case element_type_t::bool_type:
             case element_type_t::type_info:
-            case element_type_t::alias_type:
             case element_type_t::array_type:
             case element_type_t::tuple_type:
             case element_type_t::string_type:

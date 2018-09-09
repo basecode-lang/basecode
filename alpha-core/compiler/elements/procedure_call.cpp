@@ -39,8 +39,7 @@ namespace basecode::compiler {
         auto identifier = _reference->identifier();
         if (identifier != nullptr) {
             auto proc_type = dynamic_cast<procedure_type*>(identifier->type_ref()->type());
-            auto returns_list = proc_type->returns().as_list();
-            auto return_identifier = returns_list.front()->identifier();
+            auto return_identifier = proc_type->return_type()->identifier();
             result.inferred_type = return_identifier->type_ref()->type();
             result.reference = return_identifier->type_ref();
             return true;
@@ -74,7 +73,7 @@ namespace basecode::compiler {
 
         auto target_reg = assembler.current_target_register();
         if (target_reg != nullptr) {
-            if (!procedure_type->returns().as_list().empty()) {
+            if (procedure_type->return_type() != nullptr) {
                 instruction_block->pop(*target_reg);
             }
         }
