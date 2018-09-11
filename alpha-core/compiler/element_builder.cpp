@@ -848,9 +848,7 @@ namespace basecode::compiler {
 
     unknown_type* element_builder::make_unknown_type_from_find_result(
             compiler::block* scope,
-            compiler::identifier* identifier,
             const type_find_result_t& result) {
-        auto& identifiers = _session.scope_manager().identifiers_with_unknown_types();
         auto symbol = make_symbol(
             scope,
             result.type_name.name,
@@ -861,7 +859,6 @@ namespace basecode::compiler {
             result.is_pointer,
             result.is_array,
             result.array_size);
-        identifiers.push_back(identifier);
         return unknown_type;
     }
 

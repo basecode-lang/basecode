@@ -420,7 +420,7 @@ namespace basecode::compiler {
     compiler::identifier* ast_evaluator::add_identifier_to_scope(
             const evaluator_context_t& context,
             compiler::symbol_element* symbol,
-            type_find_result_t& type_find_result,
+            compiler::type_reference* type_ref,
             const syntax::ast_node_t* node,
             size_t source_index,
             compiler::block* parent_scope) {
@@ -497,40 +497,32 @@ namespace basecode::compiler {
                 init_expr->parent_element(new_identifier);
         }
 
-        if (type_find_result.type == nullptr) {
-            if (init_expr != nullptr) {
-                infer_type_result_t infer_type_result {};
-                if (!init_expr->infer_type(_session, infer_type_result)) {
-                    _session.error(
-                        "P019",
-                        fmt::format("unable to infer type: {}", new_identifier->symbol()->name()),
-                        new_identifier->symbol()->location());
-                    return nullptr;
-                }
-                type_find_result.type = infer_type_result.inferred_type;
-
-                if (infer_type_result.reference == nullptr) {
-                    infer_type_result.reference = builder.make_type_reference(
-                        scope,
-                        new_identifier->symbol()->qualified_symbol(),
-                        infer_type_result.inferred_type);
-                }
-                new_identifier->type_ref(infer_type_result.reference);
-                new_identifier->inferred_type(type_find_result.type != nullptr);
+        if (init_expr != nullptr && type_ref == nullptr) {
+            infer_type_result_t infer_type_result {};
+            if (!init_expr->infer_type(_session, infer_type_result)) {
+                _session.error(
+                    "P019",
+                    fmt::format("unable to infer type: {}", new_identifier->symbol()->name()),
+                    new_identifier->symbol()->location());
+                return nullptr;
             }
 
-            if (type_find_result.type == nullptr) {
-                auto unknown_type = builder.make_unknown_type_from_find_result(
+            if (infer_type_result.reference == nullptr) {
+                infer_type_result.reference = builder.make_type_reference(
                     scope,
-                    new_identifier,
-                    type_find_result);
-                new_identifier->type_ref(builder.make_type_reference(
-                    scope,
-                    unknown_type->symbol()->qualified_symbol(),
-                    unknown_type));
+                    new_identifier->symbol()->qualified_symbol(),
+                    infer_type_result.inferred_type);
             }
+
+            new_identifier->type_ref(infer_type_result.reference);
+            new_identifier->inferred_type(infer_type_result.inferred_type != nullptr);
         } else {
-            new_identifier->type_ref(type_find_result.make_type_reference(builder, scope));
+            new_identifier->type_ref(type_ref);
+            if (type_ref->is_unknown_type()) {
+                _session.scope_manager()
+                    .identifiers_with_unknown_types()
+                    .push_back(new_identifier);
+            }
         }
 
         scope->identifiers().add(new_identifier);
@@ -1024,14 +1016,10 @@ namespace basecode::compiler {
                 return false;
 
             if (expr->element_type() == element_type_t::symbol) {
-                type_find_result_t find_type_result{};
-                scope_manager.find_identifier_type(
-                    find_type_result,
-                    context.node->rhs->rhs.get());
                 expr = add_identifier_to_scope(
                     context,
                     dynamic_cast<compiler::symbol_element*>(expr),
-                    find_type_result,
+                    dynamic_cast<compiler::type_reference*>(evaluate(context.node->rhs->rhs.get())),
                     nullptr,
                     0);
             }
@@ -1152,24 +1140,16 @@ namespace basecode::compiler {
                 nullptr);
             return_identifier->usage(identifier_usage_t::stack);
 
-            compiler::type* type = nullptr;
-            type_find_result_t type_find_result {};
-            if (!scope_manager.find_identifier_type(
-                    type_find_result,
-                    context.node->lhs->children[0].get(),
-                    block_scope)) {
-                type = builder.make_unknown_type_from_find_result(
-                    block_scope,
-                    return_identifier,
-                    type_find_result);
-            } else {
-                type = type_find_result.type;
+            auto type_ref = dynamic_cast<compiler::type_reference*>(evaluate_in_scope(
+                context,
+                context.node->lhs->children[0].get(),
+                block_scope));
+            if (type_ref->is_unknown_type()) {
+                _session.scope_manager()
+                    .identifiers_with_unknown_types()
+                    .push_back(return_identifier);
             }
-
-            return_identifier->type_ref(builder.make_type_reference(
-                block_scope,
-                type_find_result.type_name,
-                type));
+            return_identifier->type_ref(type_ref);
             return_field = builder.make_field(
                 proc_type,
                 block_scope,
@@ -1248,15 +1228,30 @@ namespace basecode::compiler {
     bool ast_evaluator::type_identifier(
             evaluator_context_t& context,
             evaluator_result_t& result) {
+        auto& builder = _session.builder();
         auto& scope_manager = _session.scope_manager();
+        auto scope = scope_manager.current_scope();
 
         type_find_result_t find_type_result {};
         scope_manager.find_identifier_type(
             find_type_result,
             context.node,
-            scope_manager.current_scope());
+            scope);
 
-        result.element = find_type_result.type;
+        compiler::type_reference* type_ref = nullptr;
+        if (find_type_result.type == nullptr) {
+            auto unknown_type = builder.make_unknown_type_from_find_result(
+                scope,
+                find_type_result);
+            type_ref = builder.make_type_reference(
+                scope,
+                unknown_type->symbol()->qualified_symbol(),
+                unknown_type);
+        } else {
+            type_ref = find_type_result.make_type_reference(builder, scope);
+        }
+
+        result.element = type_ref;
 
         return true;
     }
@@ -1336,18 +1331,17 @@ namespace basecode::compiler {
                 identifiers.emplace_back(binary_op);
             } else {
                 auto lhs = evaluate_in_scope(context, target_symbol.get(), scope);
+
                 auto symbol = dynamic_cast<compiler::symbol_element*>(lhs);
                 symbol->constant(is_constant_assignment);
 
-                type_find_result_t find_type_result {};
-                scope_manager.find_identifier_type(
-                    find_type_result,
-                    target_symbol->rhs.get(),
-                    scope);
                 auto new_identifier = add_identifier_to_scope(
                     context,
                     symbol,
-                    find_type_result,
+                    dynamic_cast<compiler::type_reference*>(evaluate_in_scope(
+                        context,
+                        target_symbol->rhs.get(),
+                        scope)),
                     node,
                     i,
                     scope);
@@ -1364,21 +1358,16 @@ namespace basecode::compiler {
             const evaluator_context_t& context,
             const syntax::ast_node_t* node,
             compiler::block* scope) {
-        auto& scope_manager = _session.scope_manager();
-
-        auto element = evaluate_in_scope(context, node, scope);
-        auto symbol = dynamic_cast<compiler::symbol_element*>(element);
-
-        type_find_result_t type_find_result {};
-        scope_manager.find_identifier_type(
-            type_find_result,
-            node->rhs.get(),
-            scope);
-
         return add_identifier_to_scope(
             context,
-            symbol,
-            type_find_result,
+            dynamic_cast<compiler::symbol_element*>(evaluate_in_scope(
+                context,
+                node,
+                scope)),
+            dynamic_cast<compiler::type_reference*>(evaluate_in_scope(
+                context,
+                node->rhs.get(),
+                scope)),
             nullptr,
             0,
             scope);

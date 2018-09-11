@@ -265,7 +265,6 @@ namespace basecode::compiler {
 
         unknown_type* make_unknown_type_from_find_result(
             compiler::block* scope,
-            compiler::identifier* identifier,
             const type_find_result_t& result);
 
         bool_type* make_bool_type(compiler::block* parent_scope);

@@ -84,7 +84,7 @@ namespace basecode::compiler {
         compiler::identifier* add_identifier_to_scope(
             const evaluator_context_t& context,
             compiler::symbol_element* symbol,
-            type_find_result_t& find_type_result,
+            compiler::type_reference* type_ref,
             const syntax::ast_node_t* node,
             size_t source_index,
             compiler::block* parent_scope = nullptr);

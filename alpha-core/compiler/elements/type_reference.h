@@ -27,6 +27,8 @@ namespace basecode::compiler {
 
         compiler::type* type();
 
+        bool is_unknown_type() const;
+
         void type(compiler::type* value);
 
         const qualified_symbol_t& symbol() const;

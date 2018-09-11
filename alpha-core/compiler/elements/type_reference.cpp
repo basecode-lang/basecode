@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include "type.h"
 #include "type_reference.h"
 
 namespace basecode::compiler {
@@ -40,6 +41,11 @@ namespace basecode::compiler {
 
     bool type_reference::on_is_constant() const {
         return true;
+    }
+
+    bool type_reference::is_unknown_type() const {
+        return _type != nullptr
+               && _type->element_type() == element_type_t::unknown_type;
     }
 
     void type_reference::type(compiler::type* value) {
