@@ -75,7 +75,6 @@ namespace basecode::compiler {
         {syntax::ast_node_types_t::raw_block,               std::bind(&ast_evaluator::raw_block, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::assignment,              std::bind(&ast_evaluator::assignment, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::expression,              std::bind(&ast_evaluator::expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::label_list,              std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::basic_block,             std::bind(&ast_evaluator::basic_block, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::symbol_part,             std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::line_comment,            std::bind(&ast_evaluator::line_comment, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
@@ -123,6 +122,22 @@ namespace basecode::compiler {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    void evaluator_context_t::apply_comments(compiler::element* element) const {
+        for (auto comment : comments) {
+            comment->parent_element(element);
+            element->comments().emplace_back(comment);
+        }
+    }
+
+    void evaluator_context_t::apply_attributes(compiler::element* element) const {
+        for (auto attribute : attributes.as_list()) {
+            attribute->parent_element(element);
+            element->attributes().add(attribute);
+        }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
     ast_evaluator::ast_evaluator(compiler::session& session) : _session(session) {
     }
 
@@ -132,15 +147,48 @@ namespace basecode::compiler {
         if (node == nullptr)
             return nullptr;
 
+        auto& builder = _session.builder();
+        auto& scope_manager = _session.scope_manager();
+
         evaluator_context_t context;
         context.node = node;
-        context.scope = _session.scope_manager().current_scope();
+        context.scope = scope_manager.current_scope();
         context.default_block_type = default_block_type;
+
+        for (const auto& attribute : node->attributes) {
+            context.attributes.add(builder.make_attribute(
+                scope_manager.current_scope(),
+                attribute->token.value,
+                evaluate(attribute->lhs.get())));
+        }
+
+        for (const auto& comment : node->comments) {
+            switch (comment->type) {
+                case syntax::ast_node_types_t::line_comment: {
+                    context.comments.emplace_back(builder.make_comment(
+                        scope_manager.current_scope(),
+                        comment_type_t::line,
+                        comment->token.value));
+                    break;
+                }
+                case syntax::ast_node_types_t::block_comment: {
+                    context.comments.emplace_back(builder.make_comment(
+                        scope_manager.current_scope(),
+                        comment_type_t::block,
+                        comment->token.value));
+                    break;
+                }
+                default:
+                    break;
+            }
+        }
 
         auto it = s_node_evaluators.find(node->type);
         if (it != s_node_evaluators.end()) {
             evaluator_result_t result {};
             if (it->second(this, context, result)) {
+                context.apply_attributes(result.element);
+                context.apply_comments(result.element);
                 return result.element;
             }
         } else {
@@ -154,27 +202,6 @@ namespace basecode::compiler {
         }
 
         return nullptr;
-    }
-
-    void ast_evaluator::apply_attributes(
-            const evaluator_context_t& context,
-            compiler::element* element,
-            const syntax::ast_node_t* node) {
-        if (node == nullptr)
-            return;
-
-        for (auto it = node->children.begin();
-             it != node->children.end();
-             ++it) {
-            const auto& child_node = *it;
-            if (child_node->type == syntax::ast_node_types_t::attribute) {
-                auto attribute = dynamic_cast<compiler::attribute*>(evaluate(child_node.get()));
-                attribute->parent_element(element);
-
-                auto& attributes = element->attributes();
-                attributes.add(attribute);
-            }
-        }
     }
 
     element* ast_evaluator::evaluate_in_scope(
@@ -201,13 +228,15 @@ namespace basecode::compiler {
             const evaluator_context_t& context,
             compiler::procedure_type* proc_type,
             const syntax::ast_node_t* node) {
+        auto& builder = _session.builder();
+
         if (node->children.empty())
             return;
 
         for (const auto& child_node : node->children) {
             switch (child_node->type) {
                 case syntax::ast_node_types_t::attribute: {
-                    auto attribute = _session.builder().make_attribute(
+                    auto attribute = builder.make_attribute(
                         proc_type->scope(),
                         child_node->token.value,
                         evaluate(child_node->lhs.get()));
@@ -221,7 +250,7 @@ namespace basecode::compiler {
                         child_node.get(),
                         proc_type->scope(),
                         element_type_t::proc_instance_block));
-                    auto instance = _session.builder().make_procedure_instance(
+                    auto instance = builder.make_procedure_instance(
                         proc_type->scope(),
                         proc_type,
                         basic_block);
@@ -238,11 +267,6 @@ namespace basecode::compiler {
             compiler::block* scope,
             compiler::element* expr) {
         switch (expr->element_type()) {
-            case element_type_t::comment: {
-                auto comment = dynamic_cast<compiler::comment*>(expr);
-                scope->comments().emplace_back(comment);
-                break;
-            }
             case element_type_t::import_e: {
                 auto import = dynamic_cast<compiler::import*>(expr);
                 scope->imports().emplace_back(import);
@@ -468,7 +492,6 @@ namespace basecode::compiler {
         }
 
         auto new_identifier = builder.make_identifier(scope, symbol, init);
-        apply_attributes(context, new_identifier, node);
         if (init_expr != nullptr) {
             if (init == nullptr)
                 init_expr->parent_element(new_identifier);
@@ -595,18 +618,21 @@ namespace basecode::compiler {
     bool ast_evaluator::directive(
             evaluator_context_t& context,
             evaluator_result_t& result) {
+        auto& builder = _session.builder();
+        auto& scope_manager = _session.scope_manager();
+
         auto expression = evaluate(context.node->lhs.get());
         if (expression == nullptr)
             return false;
 
-        auto directive_element = _session.builder().make_directive(
-            _session.scope_manager().current_scope(),
+        auto directive_element = builder.make_directive(
+            scope_manager.current_scope(),
             context.node->token.value,
             expression);
         directive_element->location(context.node->location);
-        apply_attributes(context, directive_element, context.node);
         directive_element->evaluate(_session);
         result.element = directive_element;
+
         return true;
     }
 
@@ -985,29 +1011,30 @@ namespace basecode::compiler {
 
         label_list_t labels {};
 
-        if (context.node->lhs != nullptr) {
-            for (const auto& label : context.node->lhs->children) {
-                labels.push_back(builder.make_label(
-                    scope_manager.current_scope(),
-                    label->token.value));
-            }
+        for (const auto& label : context.node->labels) {
+            labels.push_back(builder.make_label(
+                scope_manager.current_scope(),
+                label->token.value));
         }
 
-        auto expr = evaluate(context.node->rhs->rhs.get());
-        if (expr == nullptr)
-            return false;
+        compiler::element* expr = nullptr;
+        if (context.node->rhs != nullptr) {
+            expr = evaluate(context.node->rhs.get());
+            if (expr == nullptr)
+                return false;
 
-        if (expr->element_type() == element_type_t::symbol) {
-            type_find_result_t find_type_result {};
-            scope_manager.find_identifier_type(
-                find_type_result,
-                context.node->rhs->rhs->rhs.get());
-            expr = add_identifier_to_scope(
-                context,
-                dynamic_cast<compiler::symbol_element*>(expr),
-                find_type_result,
-                nullptr,
-                0);
+            if (expr->element_type() == element_type_t::symbol) {
+                type_find_result_t find_type_result{};
+                scope_manager.find_identifier_type(
+                    find_type_result,
+                    context.node->rhs->rhs.get());
+                expr = add_identifier_to_scope(
+                    context,
+                    dynamic_cast<compiler::symbol_element*>(expr),
+                    find_type_result,
+                    nullptr,
+                    0);
+            }
         }
 
         result.element = builder.make_statement(
@@ -1306,7 +1333,6 @@ namespace basecode::compiler {
                     operator_type_t::assignment,
                     existing_identifier,
                     rhs);
-                apply_attributes(context, binary_op, node);
                 identifiers.emplace_back(binary_op);
             } else {
                 auto lhs = evaluate_in_scope(context, target_symbol.get(), scope);

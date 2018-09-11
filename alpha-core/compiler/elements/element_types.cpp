@@ -25,6 +25,9 @@ namespace basecode::compiler {
     ///////////////////////////////////////////////////////////////////////////
 
     void attribute_map_t::add(attribute* value) {
+        auto attr = find(value->name());
+        if (attr != nullptr)
+            return;
         _attrs.insert(std::make_pair(value->name(), value));
     }
 

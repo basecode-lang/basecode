@@ -55,6 +55,8 @@ namespace basecode::compiler {
 
         compiler::module* module();
 
+        comment_list_t& comments();
+
         attribute_map_t& attributes();
 
         bool as_bool(bool& value) const;
@@ -114,6 +116,7 @@ namespace basecode::compiler {
 
     private:
         common::id_t _id;
+        comment_list_t _comments {};
         block* _parent_scope = nullptr;
         attribute_map_t _attributes {};
         element* _parent_element = nullptr;

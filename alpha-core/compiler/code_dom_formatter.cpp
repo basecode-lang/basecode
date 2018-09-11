@@ -108,6 +108,9 @@ namespace basecode::compiler {
         for (auto attr : node->attributes().as_list())
             add_primary_edge(node, attr);
 
+        for (auto comment : node->comments())
+            add_primary_edge(node, comment);
+
         switch (node->element_type()) {
             case element_type_t::module: {
                 auto element = dynamic_cast<module*>(node);
@@ -338,7 +341,8 @@ namespace basecode::compiler {
             case element_type_t::statement: {
                 auto statement_element = dynamic_cast<statement*>(node);
                 auto style = ", fillcolor=azure, style=\"filled\"";
-                add_primary_edge(statement_element, statement_element->expression());
+                if (statement_element->expression() != nullptr)
+                    add_primary_edge(statement_element, statement_element->expression());
                 for (auto lbl : statement_element->labels())
                     add_primary_edge(statement_element, lbl);
                 return fmt::format(

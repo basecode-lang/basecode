@@ -55,8 +55,6 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    // XXX: need to associate comments in the children list to one of the nodes
-    //
     static void pairs_to_list(
             const ast_node_shared_ptr& target,
             const ast_node_shared_ptr& root) {
@@ -266,7 +264,7 @@ namespace basecode::syntax {
             ->ast_builder()
             ->type_identifier_node();
 
-        collect_comments(r, parser, type_node->children);
+        collect_comments(r, parser, type_node->comments);
 
         auto is_spread = false;
         auto is_pointer = false;
@@ -320,7 +318,7 @@ namespace basecode::syntax {
         if (is_pointer)
             type_node->flags |= ast_node_t::flags_t::pointer;
 
-        collect_comments(r, parser, type_node->children);
+        collect_comments(r, parser, type_node->comments);
 
         return type_node;
     }
@@ -765,11 +763,20 @@ namespace basecode::syntax {
             const ast_node_shared_ptr& lhs,
             token_t& token) {
         auto pair_node = parser->ast_builder()->pair_node();
+        ast_node_list comments {};
+        collect_comments(r, parser, comments);
+
         pair_node->lhs = lhs;
-        collect_comments(r, parser, pair_node->children);
         pair_node->rhs = parser->parse_expression(
             r,
             static_cast<uint8_t>(precedence_t::comma));
+
+        if (lhs->type != ast_node_types_t::pair) {
+            lhs->comments = comments;
+        } else {
+            pair_node->rhs->comments = comments;
+        }
+
         return pair_node;
     }
 
@@ -1208,29 +1215,20 @@ namespace basecode::syntax {
             return false;
         };
 
-        while (true) {
-            if (is_end_of_scope())
-                break;
+        while (!is_end_of_scope()) {
             auto statement = parse_statement(r);
-            if (statement == nullptr) {
-                if (r.is_failed())
-                    return nullptr;
-
-                if (is_end_of_scope())
-                    break;
-
-                continue;
-            }
-            if (!scope->pending_attributes.empty()) {
-                for (const auto& attr_node : scope->pending_attributes)
-                    statement->rhs->rhs->children.push_back(attr_node);
-                scope->pending_attributes.clear();
+            if (r.is_failed())
+                return nullptr;
+            if (!scope->attributes.empty()) {
+                for (const auto& attr_node : scope->attributes)
+                    statement->attributes.push_back(attr_node);
+                scope->attributes.clear();
             }
             scope->children.push_back(statement);
         }
 
         while (peek(token_types_t::attribute)) {
-            scope->children.push_back(parse_expression(r, 0));
+            scope->attributes.push_back(parse_expression(r, 0));
         }
 
         return _ast_builder.end_scope();
@@ -1240,36 +1238,31 @@ namespace basecode::syntax {
         auto statement_node = _ast_builder.statement_node();
 
         while (true) {
-            collect_comments(r, this, statement_node->rhs->lhs->children);
+            collect_comments(r, this, statement_node->comments);
 
             if (peek(token_types_t::right_curly_brace))
-                return nullptr;
+                return statement_node;
 
             auto expr = parse_expression(r, 0);
             if (expr == nullptr)
-                return nullptr;
-
-            if (expr->is_comment()) {
-                statement_node->rhs->lhs->children.push_back(expr);
-                continue;
-            }
+                return statement_node;
 
             if (expr->is_attribute()) {
                 if (peek(token_types_t::semi_colon)) {
                     consume();
-                    _ast_builder.current_scope()->pending_attributes.push_back(expr);
+                    _ast_builder.current_scope()->attributes.push_back(expr);
                 } else {
-                    statement_node->rhs->children.push_back(expr);
+                    statement_node->attributes.push_back(expr);
                 }
                 continue;
             }
 
             if (expr->is_label()) {
-                statement_node->lhs->children.push_back(expr);
+                statement_node->labels.push_back(expr);
                 continue;
             }
 
-            statement_node->rhs->rhs = expr;
+            statement_node->rhs = expr;
             statement_node->location = expr->location;
 
             break;

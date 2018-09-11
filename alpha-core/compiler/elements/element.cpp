@@ -110,6 +110,10 @@ namespace basecode::compiler {
         return _module;
     }
 
+    comment_list_t& element::comments() {
+        return _comments;
+    }
+
     bool element::on_is_constant() const {
         return false;
     }

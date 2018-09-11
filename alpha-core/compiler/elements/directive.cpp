@@ -182,7 +182,7 @@ namespace basecode::compiler {
         auto& terp = session.terp();
 
         std::string library_name;
-        auto library_attribute = attributes().find("library");
+        auto library_attribute = find_attribute("library");
         if (library_attribute != nullptr) {
             if (!library_attribute->as_string(library_name)) {
                 session.error(

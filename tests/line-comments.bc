@@ -3,12 +3,15 @@
 // 2. move comments from pair to node in list
 // 3. update ast_evaluator to handle comments/attributes in new places from AST
 
-/* */ a: /**/ u32 /* */; // bar
+/* just before a */ a: /* just before type*/ u32 /* just after type */; // bar
+
+@library "alpha-core";
+#foreign print ::= proc(format: string, values: ...any) @alias "fmt_print";
 
 @foo_the_bar "frobnoz";
 /**/ @bling "bam" @boom "bomb" foo ::= proc(
-        a: /**/ s8 /* foo */,      /* this is gonna end badly */
-        b: /**/ string /* bar */,  /* yeah! */
+        a: /* foo before   */ s8     /* foo after   */,  /* this is gonna end badly */
+        b: /* yeah! before */ string /* yeah! after */,  /* or maybe it works? */
         c: ^any     // I FIXED IT!
     ): u64 {        // NARF!
 } @alias "green" @disgust "poop";

@@ -18,6 +18,12 @@
 namespace basecode::compiler {
 
     struct evaluator_context_t {
+        void apply_comments(compiler::element* element) const;
+
+        void apply_attributes(compiler::element* element) const;
+
+        comment_list_t comments {};
+        attribute_map_t attributes {};
         compiler::block* scope = nullptr;
         const syntax::ast_node_t* node = nullptr;
         element_type_t default_block_type = element_type_t::block;
@@ -48,11 +54,6 @@ namespace basecode::compiler {
             const syntax::ast_node_t* node,
             compiler::block* scope,
             element_type_t default_block_type = element_type_t::block);
-
-        void apply_attributes(
-            const evaluator_context_t& context,
-            compiler::element* element,
-            const syntax::ast_node_t* node);
 
         void add_procedure_instance(
             const evaluator_context_t& context,

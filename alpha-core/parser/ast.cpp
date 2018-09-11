@@ -62,7 +62,6 @@ namespace basecode::syntax {
         auto node = std::make_shared<ast_node_t>();
         node->id = ++_id;
         node->type = ast_node_types_t::symbol;
-        node->lhs = comment_list_node();
         return node;
     }
 
@@ -101,8 +100,6 @@ namespace basecode::syntax {
         auto node = std::make_shared<ast_node_t>();
         node->id = ++_id;
         node->type = ast_node_types_t::statement;
-        node->lhs = label_list_node();
-        node->rhs = statement_body_node();
         return node;
     }
 
@@ -110,13 +107,6 @@ namespace basecode::syntax {
         auto node = std::make_shared<ast_node_t>();
         node->id = ++_id;
         node->type = ast_node_types_t::subscript_expression;
-        return node;
-    }
-
-    ast_node_shared_ptr ast_builder::label_list_node() {
-        auto node = std::make_shared<ast_node_t>();
-        node->id = ++_id;
-        node->type = ast_node_types_t::label_list;
         return node;
     }
 
@@ -157,13 +147,6 @@ namespace basecode::syntax {
         return node;
     }
 
-    ast_node_shared_ptr ast_builder::comment_list_node() {
-        auto node = std::make_shared<ast_node_t>();
-        node->id = ++_id;
-        node->type = ast_node_types_t::comment_list;
-        return node;
-    }
-
     ast_node_shared_ptr ast_builder::argument_list_node() {
         auto node = std::make_shared<ast_node_t>();
         node->id = ++_id;
@@ -175,7 +158,6 @@ namespace basecode::syntax {
         auto node = std::make_shared<ast_node_t>();
         node->id = ++_id;
         node->type = ast_node_types_t::statement_body;
-        node->lhs = comment_list_node();
         return node;
     }
 
@@ -185,6 +167,7 @@ namespace basecode::syntax {
         node->type = ast_node_types_t::parameter_list;
         return node;
     }
+
     ast_node_shared_ptr ast_builder::type_identifier_node() {
         auto node = std::make_shared<ast_node_t>();
         node->id = ++_id;

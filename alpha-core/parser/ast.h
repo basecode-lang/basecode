@@ -40,10 +40,8 @@ namespace basecode::syntax {
         type_list,
         assignment,
         expression,
-        label_list,
         basic_block,
         symbol_part,
-        comment_list,
         line_comment,
         null_literal,
         block_comment,
@@ -102,12 +100,10 @@ namespace basecode::syntax {
         {ast_node_types_t::directive, "directive"},
         {ast_node_types_t::assignment, "assignment"},
         {ast_node_types_t::expression, "expression"},
-        {ast_node_types_t::label_list, "label_list"},
         {ast_node_types_t::basic_block, "basic_block"},
         {ast_node_types_t::symbol_part, "symbol_part"},
         {ast_node_types_t::line_comment, "line_comment"},
         {ast_node_types_t::null_literal, "null_literal"},
-        {ast_node_types_t::comment_list, "comment_list"},
         {ast_node_types_t::block_comment, "block_comment"},
         {ast_node_types_t::argument_list, "argument_list"},
         {ast_node_types_t::if_expression, "if_expression"},
@@ -216,8 +212,10 @@ namespace basecode::syntax {
         token_t token;
         ast_node_types_t type;
         ast_node_list children;
+        ast_node_list labels {};
+        ast_node_list comments {};
+        ast_node_list attributes {};
         common::source_location location {};
-        ast_node_list pending_attributes {};
         ast_node_shared_ptr lhs = nullptr;
         ast_node_shared_ptr rhs = nullptr;
         flags_value_t flags = flags_t::none;
@@ -256,11 +254,7 @@ namespace basecode::syntax {
 
         ast_node_shared_ptr expression_node();
 
-        ast_node_shared_ptr label_list_node();
-
         ast_node_shared_ptr basic_block_node();
-
-        ast_node_shared_ptr comment_list_node();
 
         ast_node_shared_ptr argument_list_node();
 

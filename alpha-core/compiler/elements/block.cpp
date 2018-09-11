@@ -17,7 +17,6 @@
 #include "block.h"
 #include "import.h"
 #include "module.h"
-#include "comment.h"
 #include "statement.h"
 #include "initializer.h"
 #include "numeric_type.h"
@@ -46,10 +45,6 @@ namespace basecode::compiler {
         return _imports;
     }
 
-    comment_list_t& block::comments() {
-        return _comments;
-    }
-
     statement_list_t& block::statements() {
         return _statements;
     }
@@ -70,9 +65,6 @@ namespace basecode::compiler {
             list.emplace_back(element);
 
         for (auto element : _blocks)
-            list.emplace_back(element);
-
-        for (auto element : _comments)
             list.emplace_back(element);
 
         for (auto element : _statements)
