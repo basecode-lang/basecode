@@ -26,7 +26,6 @@ namespace basecode::compiler {
         attribute_map_t attributes {};
         compiler::block* scope = nullptr;
         const syntax::ast_node_t* node = nullptr;
-        element_type_t default_block_type = element_type_t::block;
     };
 
     struct evaluator_result_t {
@@ -44,16 +43,13 @@ namespace basecode::compiler {
     public:
         explicit ast_evaluator(compiler::session& session);
 
-        element* evaluate(
-            const syntax::ast_node_t* node,
-            element_type_t default_block_type = element_type_t::block);
+        element* evaluate(const syntax::ast_node_t* node);
 
     private:
         element* evaluate_in_scope(
             const evaluator_context_t& context,
             const syntax::ast_node_t* node,
-            compiler::block* scope,
-            element_type_t default_block_type = element_type_t::block);
+            compiler::block* scope);
 
         void add_procedure_instance(
             const evaluator_context_t& context,

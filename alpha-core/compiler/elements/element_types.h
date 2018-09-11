@@ -170,23 +170,21 @@ namespace basecode::compiler {
         boolean_literal,
         integer_literal,
         binary_operator,
-        proc_type_block,
         module_reference,
         unknown_identifier,
-        proc_instance_block,
         identifier_reference,
     };
 
     static inline std::unordered_map<element_type_t, std::string> s_element_type_names = {
-        {element_type_t::element, "element"},
-        {element_type_t::cast, "cast"},
         {element_type_t::if_e, "if"},
+        {element_type_t::cast, "cast"},
         {element_type_t::label, "label"},
         {element_type_t::block, "block"},
         {element_type_t::field, "field"},
         {element_type_t::module, "module"},
         {element_type_t::symbol, "symbol"},
         {element_type_t::comment, "comment"},
+        {element_type_t::element, "element"},
         {element_type_t::program, "program"},
         {element_type_t::any_type, "any_type"},
         {element_type_t::return_e, "return"},
@@ -225,10 +223,8 @@ namespace basecode::compiler {
         {element_type_t::boolean_literal, "boolean_literal"},
         {element_type_t::integer_literal, "integer_literal"},
         {element_type_t::binary_operator, "binary_operator"},
-        {element_type_t::proc_type_block, "proc_type_block"},
         {element_type_t::module_reference, "module_reference"},
         {element_type_t::unknown_identifier, "unknown_identifier"},
-        {element_type_t::proc_instance_block, "proc_instance_block"},
         {element_type_t::identifier_reference, "identifier_reference"},
     };
 

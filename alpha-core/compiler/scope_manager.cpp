@@ -235,8 +235,7 @@ namespace basecode::compiler {
     bool scope_manager::within_procedure_scope(compiler::block* parent_scope) const {
         auto block_scope = parent_scope == nullptr ? current_scope() : parent_scope;
         while (block_scope != nullptr) {
-            if (block_scope->element_type() == element_type_t::proc_type_block
-            ||  block_scope->element_type() == element_type_t::proc_instance_block)
+            if (block_scope->is_parent_element(element_type_t::proc_type))
                 return true;
             block_scope = block_scope->parent_scope();
         }

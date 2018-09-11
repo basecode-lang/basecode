@@ -363,14 +363,7 @@ namespace basecode::compiler {
         auto procedure_types = session.elements().find_by_type(element_type_t::proc_type);
         for (auto p : procedure_types) {
             auto procedure_type = dynamic_cast<compiler::procedure_type*>(p);
-            if (procedure_type->parent_scope()->element_type() == element_type_t::proc_instance_block) {
-                proc_list.emplace_back(procedure_type);
-            }
-        }
-
-        for (auto p : procedure_types) {
-            auto procedure_type = dynamic_cast<compiler::procedure_type*>(p);
-            if (procedure_type->parent_scope()->element_type() != element_type_t::proc_instance_block) {
+            if (!procedure_type->instances().empty()) {
                 proc_list.emplace_back(procedure_type);
             }
         }

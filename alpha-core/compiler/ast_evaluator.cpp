@@ -141,9 +141,7 @@ namespace basecode::compiler {
     ast_evaluator::ast_evaluator(compiler::session& session) : _session(session) {
     }
 
-    element* ast_evaluator::evaluate(
-            const syntax::ast_node_t* node,
-            element_type_t default_block_type) {
+    element* ast_evaluator::evaluate(const syntax::ast_node_t* node) {
         if (node == nullptr)
             return nullptr;
 
@@ -153,7 +151,6 @@ namespace basecode::compiler {
         evaluator_context_t context;
         context.node = node;
         context.scope = scope_manager.current_scope();
-        context.default_block_type = default_block_type;
 
         for (const auto& attribute : node->attributes) {
             context.attributes.add(builder.make_attribute(
@@ -207,16 +204,13 @@ namespace basecode::compiler {
     element* ast_evaluator::evaluate_in_scope(
             const evaluator_context_t& context,
             const syntax::ast_node_t* node,
-            compiler::block* scope,
-            element_type_t default_block_type) {
+            compiler::block* scope) {
         auto& scope_manager = _session.scope_manager();
 
         if (scope != nullptr)
             scope_manager.push_scope(scope);
 
-        auto result = evaluate(
-            node,
-            default_block_type);
+        auto result = evaluate(node);
 
         if (scope != nullptr)
             scope_manager.pop_scope();
@@ -248,8 +242,7 @@ namespace basecode::compiler {
                     auto basic_block = dynamic_cast<compiler::block*>(evaluate_in_scope(
                         context,
                         child_node.get(),
-                        proc_type->scope(),
-                        element_type_t::proc_instance_block));
+                        proc_type->scope()));
                     auto instance = builder.make_procedure_instance(
                         proc_type->scope(),
                         proc_type,
@@ -647,9 +640,7 @@ namespace basecode::compiler {
         for (auto it = context.node->children.begin();
                  it != context.node->children.end();
                  ++it) {
-            auto expr = evaluate(
-                (*it).get(),
-                context.default_block_type);
+            auto expr = evaluate((*it).get());
             if (expr == nullptr)
                 return false;
             add_expression_to_scope(module_block, expr);
@@ -798,7 +789,7 @@ namespace basecode::compiler {
             evaluator_result_t& result) {
         result.element = _session.builder().make_namespace(
             _session.scope_manager().current_scope(),
-            evaluate(context.node->rhs.get(), context.default_block_type));
+            evaluate(context.node->rhs.get()));
         return true;
     }
 
@@ -933,15 +924,13 @@ namespace basecode::compiler {
             evaluator_context_t& context,
             evaluator_result_t& result) {
         auto& scope_manager = _session.scope_manager();
-        auto active_scope = scope_manager.push_new_block(context.default_block_type);
+        auto active_scope = scope_manager.push_new_block();
 
         for (auto it = context.node->children.begin();
                  it != context.node->children.end();
                  ++it) {
             auto current_node = *it;
-            auto expr = evaluate(
-                current_node.get(),
-                context.default_block_type);
+            auto expr = evaluate(current_node.get());
             if (expr == nullptr) {
                 _session.error(
                     "C024",
@@ -1125,9 +1114,7 @@ namespace basecode::compiler {
         auto& scope_manager = _session.scope_manager();
 
         auto active_scope = scope_manager.current_scope();
-        auto block_scope = builder.make_block(
-            active_scope,
-            element_type_t::proc_type_block);
+        auto block_scope = builder.make_block(active_scope, element_type_t::block);
         auto proc_type = builder.make_procedure_type(active_scope, block_scope);
         active_scope->types().add(proc_type);
 

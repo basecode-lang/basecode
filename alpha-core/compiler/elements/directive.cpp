@@ -53,9 +53,13 @@ namespace basecode::compiler {
     bool directive::on_infer_type(
             const compiler::session& session,
             infer_type_result_t& result) {
-        if (_expression != nullptr && _expression->is_type())
-            result.inferred_type = dynamic_cast<compiler::type*>(_expression);
-        return true;
+        if (_expression != nullptr) {
+            auto type_ref = dynamic_cast<compiler::type_reference*>(_expression);
+            result.inferred_type = type_ref->type();
+            result.reference = type_ref;
+            return true;
+        }
+        return false;
     }
 
     element* directive::expression() {
