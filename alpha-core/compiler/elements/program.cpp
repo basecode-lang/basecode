@@ -399,7 +399,8 @@ namespace basecode::compiler {
             if (scope_manager.within_procedure_scope(var->parent_scope()))
                 continue;
 
-            if (var->is_parent_element(element_type_t::field))
+            auto var_parent = var->parent_element();
+            if (var_parent != nullptr && var_parent->is_parent_element(element_type_t::field))
                 continue;
 
             auto var_type = var->type_ref()->type();

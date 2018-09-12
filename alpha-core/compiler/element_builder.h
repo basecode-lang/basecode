@@ -34,7 +34,7 @@ namespace basecode::compiler {
         field* make_field(
             compiler::type* type,
             compiler::block* parent_scope,
-            compiler::identifier* identifier,
+            compiler::declaration* declaration,
             uint64_t offset,
             uint8_t padding = 0);
 
@@ -53,6 +53,11 @@ namespace basecode::compiler {
             compiler::element* expr,
             compiler::element* from_expr,
             compiler::module* imported_module);
+
+        declaration* make_declaration(
+            compiler::block* parent_scope,
+            compiler::identifier* identifier,
+            compiler::binary_operator* assignment);
 
         module* make_module(
             compiler::block* parent_scope,

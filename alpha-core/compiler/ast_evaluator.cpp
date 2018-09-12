@@ -31,6 +31,7 @@
 #include <compiler/elements/if_element.h>
 #include <compiler/elements/array_type.h>
 #include <compiler/elements/tuple_type.h>
+#include <compiler/elements/declaration.h>
 #include <compiler/elements/initializer.h>
 #include <compiler/elements/module_type.h>
 #include <compiler/elements/string_type.h>
@@ -383,22 +384,22 @@ namespace basecode::compiler {
                         new_field = builder.make_field(
                             type,
                             type->scope(),
-                            dynamic_cast<compiler::identifier*>(list.front()),
+                            dynamic_cast<compiler::declaration*>(list.front()),
                             new_field != nullptr ? new_field->end_offset() : 0);
                         type->fields().add(new_field);
                     }
                     break;
                 }
                 case syntax::ast_node_types_t::symbol: {
-                    auto field_identifier = declare_identifier(
+                    auto field_decl = declare_identifier(
                         context,
                         expr_node.get(),
                         type->scope());
-                    if (field_identifier != nullptr) {
+                    if (field_decl != nullptr) {
                         new_field = builder.make_field(
                             type,
                             type->scope(),
-                            field_identifier,
+                            field_decl,
                             new_field != nullptr ? new_field->end_offset() : 0);
                         type->fields().add(new_field);
                     }
@@ -410,7 +411,7 @@ namespace basecode::compiler {
         }
     }
 
-    compiler::identifier* ast_evaluator::add_identifier_to_scope(
+    compiler::declaration* ast_evaluator::add_identifier_to_scope(
             const evaluator_context_t& context,
             compiler::symbol_element* symbol,
             compiler::type_reference* type_ref,
@@ -528,6 +529,8 @@ namespace basecode::compiler {
                 source_node.get());
         }
 
+        compiler::binary_operator* assign_bin_op = nullptr;
+
         if (init == nullptr
         &&  init_expr == nullptr
         &&  new_identifier->type_ref() == nullptr) {
@@ -546,25 +549,15 @@ namespace basecode::compiler {
                 //        symbol->location());
                 //    return nullptr;
                 //}
-
-                // XXX: need to refactor this so that the binary_op is returned
-                //      along with the identifier so that the statement function can
-                //      be solely responsible for adding new statements to the scope.
-                auto assign_bin_op = builder.make_binary_operator(
+                assign_bin_op = builder.make_binary_operator(
                     scope,
                     operator_type_t::assignment,
                     new_identifier,
                     init_expr);
-                auto statement = builder.make_statement(
-                    scope,
-                    label_list_t{},
-                    assign_bin_op);
-                add_expression_to_scope(scope, statement);
-                statement->parent_element(scope);
             }
         }
 
-        return new_identifier;
+        return builder.make_declaration(scope, new_identifier, assign_bin_op);
     }
 
     bool ast_evaluator::noop(
@@ -1140,7 +1133,7 @@ namespace basecode::compiler {
             return_field = builder.make_field(
                 proc_type,
                 block_scope,
-                return_identifier,
+                builder.make_declaration(block_scope, return_identifier, nullptr),
                 return_field != nullptr ? return_field->end_offset() : 0);
             proc_type->return_type(return_field);
         }
@@ -1156,12 +1149,12 @@ namespace basecode::compiler {
                         list,
                         block_scope);
                     if (success) {
-                        auto param_identifier = dynamic_cast<compiler::identifier*>(list.front());
-                        param_identifier->usage(identifier_usage_t::stack);
+                        auto param_decl = dynamic_cast<compiler::declaration*>(list.front());
+                        param_decl->identifier()->usage(identifier_usage_t::stack);
                         param_field = builder.make_field(
                             proc_type,
                             block_scope,
-                            param_identifier,
+                            param_decl,
                             param_field != nullptr ? param_field->end_offset() : 0);
                         proc_type->parameters().add(param_field);
                     } else {
@@ -1170,16 +1163,16 @@ namespace basecode::compiler {
                     break;
                 }
                 case syntax::ast_node_types_t::symbol: {
-                    auto param_identifier = declare_identifier(
+                    auto param_decl = declare_identifier(
                         context,
                         param_node.get(),
                         block_scope);
-                    if (param_identifier != nullptr) {
-                        param_identifier->usage(identifier_usage_t::stack);
+                    if (param_decl != nullptr) {
+                        param_decl->identifier()->usage(identifier_usage_t::stack);
                         param_field = builder.make_field(
                             proc_type,
                             block_scope,
-                            param_identifier,
+                            param_decl,
                             param_field != nullptr ? param_field->end_offset() : 0);
                         proc_type->parameters().add(param_field);
                     } else {
@@ -1307,9 +1300,13 @@ namespace basecode::compiler {
                     return false;
                 }
 
-                auto rhs = evaluate_in_scope(context, source_list->children[i].get(), scope);
+                auto rhs = evaluate_in_scope(
+                    context,
+                    source_list->children[i].get(),
+                    scope);
                 if (rhs == nullptr)
                     return false;
+
                 auto binary_op = builder.make_binary_operator(
                     scope_manager.current_scope(),
                     operator_type_t::assignment,
@@ -1317,7 +1314,10 @@ namespace basecode::compiler {
                     rhs);
                 identifiers.emplace_back(binary_op);
             } else {
-                auto lhs = evaluate_in_scope(context, target_symbol.get(), scope);
+                auto lhs = evaluate_in_scope(
+                    context,
+                    target_symbol.get(),
+                    scope);
 
                 auto symbol = dynamic_cast<compiler::symbol_element*>(lhs);
                 symbol->constant(is_constant_assignment);
@@ -1341,7 +1341,7 @@ namespace basecode::compiler {
         return true;
     }
 
-    compiler::identifier* ast_evaluator::declare_identifier(
+    compiler::declaration* ast_evaluator::declare_identifier(
             const evaluator_context_t& context,
             const syntax::ast_node_t* node,
             compiler::block* scope) {

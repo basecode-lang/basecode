@@ -31,6 +31,7 @@
 #include <compiler/elements/if_element.h>
 #include <compiler/elements/array_type.h>
 #include <compiler/elements/tuple_type.h>
+#include <compiler/elements/declaration.h>
 #include <compiler/elements/initializer.h>
 #include <compiler/elements/module_type.h>
 #include <compiler/elements/string_type.h>
@@ -531,16 +532,16 @@ namespace basecode::compiler {
     field* element_builder::make_field(
             compiler::type* type,
             compiler::block* parent_scope,
-            compiler::identifier* identifier,
+            compiler::declaration* declaration,
             uint64_t offset,
             uint8_t padding) {
         auto field = new compiler::field(
             _session.scope_manager().current_module(),
             parent_scope,
-            identifier,
+            declaration,
             offset,
             padding);
-        identifier->parent_element(field);
+        declaration->parent_element(field);
         field->parent_element(type);
         _session.elements().add(field);
         return field;
@@ -932,6 +933,26 @@ namespace basecode::compiler {
         _session.elements().add(intrinsic);
         args->parent_element(intrinsic);
         return intrinsic;
+    }
+
+    declaration* element_builder::make_declaration(
+            compiler::block* parent_scope,
+            compiler::identifier* identifier,
+            compiler::binary_operator* assignment) {
+        auto decl_element = new compiler::declaration(
+            _session.scope_manager().current_module(),
+            parent_scope,
+            identifier,
+            assignment);
+        _session.elements().add(decl_element);
+
+        if (identifier != nullptr)
+            identifier->parent_element(decl_element);
+
+        if (assignment != nullptr)
+            assignment->parent_element(decl_element);
+
+        return decl_element;
     }
 
 };

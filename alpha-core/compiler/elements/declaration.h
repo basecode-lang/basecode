@@ -11,42 +11,31 @@
 
 #pragma once
 
-#include <map>
-#include <string>
-#include <memory>
-#include <unordered_map>
 #include "element.h"
 
 namespace basecode::compiler {
 
-    class field : public element {
+    class declaration : public element {
     public:
-        field(
+        declaration(
             compiler::module* module,
-            block* parent_scope,
-            compiler::declaration* decl,
-            uint64_t offset,
-            uint8_t padding = 0);
-
-        uint8_t padding() const;
-
-        uint64_t end_offset() const;
-
-        size_t size_in_bytes() const;
-
-        uint64_t start_offset() const;
+            compiler::block* parent_scope,
+            compiler::identifier* identifier,
+            compiler::binary_operator* assignment);
 
         compiler::identifier* identifier();
 
-        compiler::declaration* declaration();
+        compiler::binary_operator* assignment();
 
     protected:
+        bool on_emit(compiler::session& session) override;
+
         void on_owned_elements(element_list_t& list) override;
 
     private:
-        uint8_t _padding = 0;
-        uint64_t _offset = 0;
-        compiler::declaration* _declaration;
+        compiler::identifier* _identifier = nullptr;
+        compiler::binary_operator* _assignment = nullptr;
     };
 
 };
+

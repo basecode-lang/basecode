@@ -14,6 +14,7 @@
 #include "program.h"
 #include "any_type.h"
 #include "identifier.h"
+#include "declaration.h"
 #include "pointer_type.h"
 #include "symbol_element.h"
 
@@ -64,7 +65,7 @@ namespace basecode::compiler {
         auto metadata_field = builder.make_field(
             this,
             block_scope,
-            metadata_identifier,
+            builder.make_declaration(block_scope, metadata_identifier, nullptr),
             0);
 
         auto data_identifier = builder.make_identifier(
@@ -78,7 +79,7 @@ namespace basecode::compiler {
         auto data_field = builder.make_field(
             this,
             block_scope,
-            data_identifier,
+            builder.make_declaration(block_scope, data_identifier, nullptr),
             metadata_field->end_offset());
 
         auto& field_map = fields();

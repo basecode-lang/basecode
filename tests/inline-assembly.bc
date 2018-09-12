@@ -47,7 +47,6 @@ print("align_of(string) := %d\n\n", align_of(string));
 
 // alloc & free block of memory
 'allocate_memory:
-addr: ^u8;
-addr := alloc(size_of(u16) * 4096);
+addr: ^u8 := alloc(size_of(u16) * 4096);
 print("addr := $%08x\n", addr);
 free(addr);

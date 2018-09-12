@@ -17,6 +17,7 @@
 #include "attribute.h"
 #include "directive.h"
 #include "raw_block.h"
+#include "declaration.h"
 #include "initializer.h"
 #include "string_literal.h"
 #include "procedure_type.h"
@@ -228,8 +229,8 @@ namespace basecode::compiler {
         }
         library->self_loaded(library_name == COMPILER_LIBRARY_NAME);
 
-        auto ffi_identifier = dynamic_cast<compiler::identifier*>(_expression);
-        std::string symbol_name = ffi_identifier->symbol()->name();
+        auto ffi_decl = dynamic_cast<compiler::declaration*>(_expression);
+        std::string symbol_name = ffi_decl->identifier()->symbol()->name();
         auto alias_attribute = attributes().find("alias");
         if (alias_attribute != nullptr) {
             if (!alias_attribute->as_string(symbol_name)) {
@@ -247,8 +248,7 @@ namespace basecode::compiler {
             .library = library,
         };
 
-        auto proc_identifier = dynamic_cast<compiler::identifier*>(_expression);
-        auto proc_type = proc_identifier->initializer()->procedure_type();
+        auto proc_type = ffi_decl->identifier()->initializer()->procedure_type();
         if (proc_type != nullptr) {
             for (auto param : proc_type->parameters().as_list()) {
                 // XXX: need to figure out how to best handle this
@@ -287,11 +287,11 @@ namespace basecode::compiler {
     }
 
     bool directive::on_evaluate_foreign(compiler::session& session) {
-        auto proc_identifier = dynamic_cast<compiler::identifier*>(_expression);
-        if (proc_identifier == nullptr)
+        auto proc_decl = dynamic_cast<compiler::declaration*>(_expression);
+        if (proc_decl == nullptr)
             return false;
 
-        auto proc_type = proc_identifier->initializer()->procedure_type();
+        auto proc_type = proc_decl->identifier()->initializer()->procedure_type();
         if (proc_type != nullptr) {
             auto attrs = proc_type->attributes().as_list();
             for (auto attr : attrs) {

@@ -15,6 +15,8 @@
 #include "field.h"
 #include "element.h"
 #include "program.h"
+#include "declaration.h"
+#include "initializer.h"
 #include "procedure_type.h"
 #include "symbol_element.h"
 #include "type_reference.h"

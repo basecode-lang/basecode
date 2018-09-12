@@ -48,6 +48,7 @@ namespace basecode::compiler {
     class array_type;
     class if_element;
     class tuple_type;
+    class declaration;
     class module_type;
     class initializer;
     class string_type;
@@ -150,6 +151,7 @@ namespace basecode::compiler {
         identifier,
         expression,
         tuple_type,
+        declaration,
         string_type,
         namespace_e,
         initializer,
@@ -203,6 +205,7 @@ namespace basecode::compiler {
         {element_type_t::array_type, "array_type"},
         {element_type_t::identifier, "identifier"},
         {element_type_t::expression, "expression"},
+        {element_type_t::declaration, "declaration"},
         {element_type_t::module_type, "module_type"},
         {element_type_t::string_type, "string_type"},
         {element_type_t::namespace_e, "namespace"},

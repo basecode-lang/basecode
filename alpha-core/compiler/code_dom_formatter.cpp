@@ -32,6 +32,7 @@
 #include <compiler/elements/array_type.h>
 #include <compiler/elements/identifier.h>
 #include <compiler/elements/if_element.h>
+#include <compiler/elements/declaration.h>
 #include <compiler/elements/module_type.h>
 #include <compiler/elements/initializer.h>
 #include <compiler/elements/string_type.h>
@@ -349,6 +350,18 @@ namespace basecode::compiler {
                     add_primary_edge(element, element->type());
                 return fmt::format(
                     "{}[shape=record,label=\"type_reference\"{}];",
+                    node_vertex_name,
+                    style);
+            }
+            case element_type_t::declaration: {
+                auto element = dynamic_cast<declaration*>(node);
+                auto style = ", fillcolor=brown, style=\"filled\"";
+                if (element->identifier() != nullptr)
+                    add_primary_edge(element, element->identifier());
+                if (element->assignment() != nullptr)
+                    add_primary_edge(element, element->assignment());
+                return fmt::format(
+                    "{}[shape=record,label=\"declaration\"{}];",
                     node_vertex_name,
                     style);
             }

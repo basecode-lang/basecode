@@ -14,6 +14,7 @@
 #include "program.h"
 #include "type_info.h"
 #include "identifier.h"
+#include "declaration.h"
 #include "symbol_element.h"
 #include "type_reference.h"
 
@@ -51,7 +52,7 @@ namespace basecode::compiler {
         auto name_field = builder.make_field(
             this,
             block_scope,
-            name_identifier,
+            builder.make_declaration(block_scope, name_identifier, nullptr),
             0);
 
         fields().add(name_field);

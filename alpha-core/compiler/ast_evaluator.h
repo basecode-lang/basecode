@@ -77,7 +77,7 @@ namespace basecode::compiler {
             compiler::symbol_element* symbol,
             compiler::block* parent_scope);
 
-        compiler::identifier* add_identifier_to_scope(
+        compiler::declaration* add_identifier_to_scope(
             const evaluator_context_t& context,
             compiler::symbol_element* symbol,
             compiler::type_reference* type_ref,
@@ -89,7 +89,7 @@ namespace basecode::compiler {
             const evaluator_context_t& context,
             const syntax::ast_node_t* node);
 
-        compiler::identifier* declare_identifier(
+        compiler::declaration* declare_identifier(
             const evaluator_context_t& context,
             const syntax::ast_node_t* node,
             compiler::block* scope);

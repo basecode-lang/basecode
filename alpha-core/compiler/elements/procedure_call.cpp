@@ -14,6 +14,7 @@
 #include <vm/instruction_block.h>
 #include "program.h"
 #include "identifier.h"
+#include "initializer.h"
 #include "argument_list.h"
 #include "symbol_element.h"
 #include "procedure_type.h"

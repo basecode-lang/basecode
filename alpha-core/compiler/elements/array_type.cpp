@@ -12,6 +12,7 @@
 #include "program.h"
 #include "array_type.h"
 #include "identifier.h"
+#include "declaration.h"
 #include "pointer_type.h"
 #include "symbol_element.h"
 #include "type_reference.h"
@@ -90,7 +91,7 @@ namespace basecode::compiler {
         auto flags_field = builder.make_field(
             this,
             block_scope,
-            flags_identifier,
+            builder.make_declaration(block_scope, flags_identifier, nullptr),
             0);
 
         auto length_identifier = builder.make_identifier(
@@ -101,7 +102,7 @@ namespace basecode::compiler {
         auto length_field = builder.make_field(
             this,
             block_scope,
-            length_identifier,
+            builder.make_declaration(block_scope, length_identifier, nullptr),
             flags_field->end_offset());
 
         auto capacity_identifier = builder.make_identifier(
@@ -112,7 +113,7 @@ namespace basecode::compiler {
         auto capacity_field = builder.make_field(
             this,
             block_scope,
-            capacity_identifier,
+            builder.make_declaration(block_scope, capacity_identifier, nullptr),
             length_field->end_offset());
 
         auto element_type_identifier = builder.make_identifier(
@@ -123,7 +124,7 @@ namespace basecode::compiler {
         auto element_type_field = builder.make_field(
             this,
             block_scope,
-            element_type_identifier,
+            builder.make_declaration(block_scope, element_type_identifier, nullptr),
             capacity_field->end_offset());
 
         auto data_identifier = builder.make_identifier(
@@ -134,7 +135,7 @@ namespace basecode::compiler {
         auto data_field = builder.make_field(
             this,
             block_scope,
-            data_identifier,
+            builder.make_declaration(block_scope, data_identifier, nullptr),
             element_type_field->end_offset());
 
         auto& field_map = fields();
