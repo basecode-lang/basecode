@@ -276,6 +276,8 @@ namespace basecode::compiler {
 
         return_element* make_return(compiler::block* parent_scope);
 
+        assignment* make_assignment(compiler::block* parent_scope);
+
         argument_list* make_argument_list(compiler::block* parent_scope);
 
         namespace_type* make_namespace_type(compiler::block* parent_scope);

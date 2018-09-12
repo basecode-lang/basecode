@@ -13,6 +13,9 @@ foo := foo * 2;
 
 foo := (foo - 16) shr 2;
 
+j, k := cast<u16>(4), 8;
+j, k := k, cast<u8>(j);
+
 bar: u64;
 bar := 512;
 

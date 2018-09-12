@@ -26,6 +26,7 @@
 #include <compiler/elements/statement.h>
 #include <compiler/elements/type_info.h>
 #include <compiler/elements/transmute.h>
+#include <compiler/elements/assignment.h>
 #include <compiler/elements/expression.h>
 #include <compiler/elements/identifier.h>
 #include <compiler/elements/if_element.h>
@@ -1194,14 +1195,15 @@ namespace basecode::compiler {
     bool ast_evaluator::assignment(
             evaluator_context_t& context,
             evaluator_result_t& result) {
-        element_list_t list {};
+        auto assignment = _session
+            .builder()
+            .make_assignment(_session.scope_manager().current_scope());
         auto success = add_assignments_to_scope(
             context,
             context.node,
-            list,
+            assignment->expressions(),
             nullptr);
-        if (success)
-            result.element = list.front();
+        result.element = assignment;
         return success;
     }
 

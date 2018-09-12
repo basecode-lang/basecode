@@ -17,6 +17,7 @@
 #include "attribute.h"
 #include "directive.h"
 #include "raw_block.h"
+#include "assignment.h"
 #include "declaration.h"
 #include "initializer.h"
 #include "string_literal.h"
@@ -229,7 +230,8 @@ namespace basecode::compiler {
         }
         library->self_loaded(library_name == COMPILER_LIBRARY_NAME);
 
-        auto ffi_decl = dynamic_cast<compiler::declaration*>(_expression);
+        auto assignment = dynamic_cast<compiler::assignment*>(_expression);
+        auto ffi_decl = dynamic_cast<compiler::declaration*>(assignment->expressions()[0]);
         std::string symbol_name = ffi_decl->identifier()->symbol()->name();
         auto alias_attribute = attributes().find("alias");
         if (alias_attribute != nullptr) {
@@ -287,7 +289,8 @@ namespace basecode::compiler {
     }
 
     bool directive::on_evaluate_foreign(compiler::session& session) {
-        auto proc_decl = dynamic_cast<compiler::declaration*>(_expression);
+        auto assignment = dynamic_cast<compiler::assignment*>(_expression);
+        auto proc_decl = dynamic_cast<compiler::declaration*>(assignment->expressions()[0]);
         if (proc_decl == nullptr)
             return false;
 

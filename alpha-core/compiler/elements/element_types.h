@@ -43,6 +43,7 @@ namespace basecode::compiler {
     class statement;
     class type_info;
     class transmute;
+    class assignment;
     class identifier;
     class expression;
     class array_type;
@@ -151,6 +152,7 @@ namespace basecode::compiler {
         identifier,
         expression,
         tuple_type,
+        assignment,
         declaration,
         string_type,
         namespace_e,
@@ -201,6 +203,7 @@ namespace basecode::compiler {
         {element_type_t::statement, "statement"},
         {element_type_t::proc_call, "proc_call"},
         {element_type_t::type_info, "type_info"},
+        {element_type_t::assignment, "assignment"},
         {element_type_t::tuple_type, "tuple_type"},
         {element_type_t::array_type, "array_type"},
         {element_type_t::identifier, "identifier"},

@@ -31,6 +31,7 @@
 #include <compiler/elements/if_element.h>
 #include <compiler/elements/array_type.h>
 #include <compiler/elements/tuple_type.h>
+#include <compiler/elements/assignment.h>
 #include <compiler/elements/declaration.h>
 #include <compiler/elements/initializer.h>
 #include <compiler/elements/module_type.h>
@@ -953,6 +954,14 @@ namespace basecode::compiler {
             assignment->parent_element(decl_element);
 
         return decl_element;
+    }
+
+    assignment* element_builder::make_assignment(compiler::block* parent_scope) {
+        auto assignment_element = new compiler::assignment(
+            _session.scope_manager().current_module(),
+            parent_scope);
+        _session.elements().add(assignment_element);
+        return assignment_element;
     }
 
 };
