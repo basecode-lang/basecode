@@ -68,7 +68,7 @@ namespace basecode::compiler {
         bool add_assignments_to_scope(
             const evaluator_context_t& context,
             const syntax::ast_node_t* node,
-            element_list_t& identifiers,
+            element_list_t& expressions,
             compiler::block* scope);
 
         compiler::block* add_namespaces_to_scope(
@@ -87,7 +87,8 @@ namespace basecode::compiler {
 
         compiler::element* resolve_symbol_or_evaluate(
             const evaluator_context_t& context,
-            const syntax::ast_node_t* node);
+            const syntax::ast_node_t* node,
+            compiler::block* scope = nullptr);
 
         compiler::declaration* declare_identifier(
             const evaluator_context_t& context,

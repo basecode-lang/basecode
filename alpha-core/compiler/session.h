@@ -32,6 +32,8 @@
 namespace basecode::compiler {
 
     struct variable_register_t {
+        bool matches(vm::register_t* other_reg);
+
         bool reserve(compiler::session& session);
 
         void release(compiler::session& session);

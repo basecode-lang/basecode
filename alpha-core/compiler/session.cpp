@@ -42,6 +42,12 @@
 
 namespace basecode::compiler {
 
+    bool variable_register_t::matches(vm::register_t* other_reg) {
+        if (other_reg == nullptr)
+            return true;
+        return (*other_reg).number == reg.number;
+    }
+
     bool variable_register_t::reserve(compiler::session& session) {
         allocated = session.assembler().allocate_reg(reg);
         return allocated;

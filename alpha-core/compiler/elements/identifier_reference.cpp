@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <compiler/session.h>
 #include "identifier.h"
 #include "symbol_element.h"
 #include "identifier_reference.h"
@@ -65,7 +66,33 @@ namespace basecode::compiler {
     bool identifier_reference::on_emit(compiler::session& session) {
         if (_identifier == nullptr)
             return false;
-        return _identifier->emit(session);
+        if (_identifier->emit(session)) {
+            auto var = session.variable_for_element(_identifier);
+            if (var == nullptr) {
+                session.error(
+                    _identifier,
+                    "P051",
+                    fmt::format(
+                        "missing assembler variable for {}.",
+                        _identifier->label_name()),
+                    _identifier->location());
+                return false;
+            }
+            defer({
+                var->make_dormant(session);
+            });
+
+            var->make_live(session);
+            if (var->read(session)) {
+                auto target_reg = session.assembler().current_target_register();
+                if (!var->value_reg.matches(target_reg)) {
+                    auto block = session.assembler().current_block();
+                    block->move_reg_to_reg(*target_reg, var->value_reg.reg);
+                }
+                return true;
+            }
+        }
+        return false;
     }
 
     bool identifier_reference::on_as_integer(uint64_t& value) const {

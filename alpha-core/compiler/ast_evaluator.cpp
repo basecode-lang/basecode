@@ -284,7 +284,8 @@ namespace basecode::compiler {
 
     compiler::element* ast_evaluator::resolve_symbol_or_evaluate(
             const evaluator_context_t& context,
-            const syntax::ast_node_t* node) {
+            const syntax::ast_node_t* node,
+            compiler::block* scope) {
         auto& builder = _session.builder();
         auto& scope_manager = _session.scope_manager();
 
@@ -298,7 +299,10 @@ namespace basecode::compiler {
                 qualified_symbol,
                 scope_manager.find_identifier(qualified_symbol));
         } else {
-            element = evaluate(node);
+            if (scope != nullptr)
+                element = evaluate_in_scope(context, node, scope);
+            else
+                element = evaluate(node);
         }
         return element;
     }
@@ -1268,7 +1272,7 @@ namespace basecode::compiler {
     bool ast_evaluator::add_assignments_to_scope(
             const evaluator_context_t& context,
             const syntax::ast_node_t* node,
-            element_list_t& identifiers,
+            element_list_t& expressions,
             compiler::block* scope) {
         auto& builder = _session.builder();
         auto& scope_manager = _session.scope_manager();
@@ -1291,8 +1295,12 @@ namespace basecode::compiler {
             const auto& target_symbol = target_list->children[i];
 
             qualified_symbol_t qualified_symbol {};
-            builder.make_qualified_symbol(qualified_symbol, target_symbol.get());
-            auto existing_identifier = scope_manager.find_identifier(qualified_symbol, scope);
+            builder.make_qualified_symbol(
+                qualified_symbol,
+                target_symbol.get());
+            auto existing_identifier = scope_manager.find_identifier(
+                qualified_symbol,
+                scope);
             if (existing_identifier != nullptr) {
                 if (existing_identifier->symbol()->is_constant()) {
                     _session.error(
@@ -1302,7 +1310,7 @@ namespace basecode::compiler {
                     return false;
                 }
 
-                auto rhs = evaluate_in_scope(
+                auto rhs = resolve_symbol_or_evaluate(
                     context,
                     source_list->children[i].get(),
                     scope);
@@ -1314,7 +1322,7 @@ namespace basecode::compiler {
                     operator_type_t::assignment,
                     existing_identifier,
                     rhs);
-                identifiers.emplace_back(binary_op);
+                expressions.emplace_back(binary_op);
             } else {
                 auto lhs = evaluate_in_scope(
                     context,
@@ -1324,7 +1332,7 @@ namespace basecode::compiler {
                 auto symbol = dynamic_cast<compiler::symbol_element*>(lhs);
                 symbol->constant(is_constant_assignment);
 
-                auto new_identifier = add_identifier_to_scope(
+                auto decl = add_identifier_to_scope(
                     context,
                     symbol,
                     dynamic_cast<compiler::type_reference*>(evaluate_in_scope(
@@ -1334,9 +1342,9 @@ namespace basecode::compiler {
                     node,
                     i,
                     scope);
-                if (new_identifier == nullptr)
+                if (decl == nullptr)
                     return false;
-                identifiers.emplace_back(new_identifier);
+                expressions.emplace_back(decl);
             }
         }
 

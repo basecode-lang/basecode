@@ -51,6 +51,7 @@ namespace basecode::compiler {
             _type_ref->type(),
             _usage,
             frame_entry);
+
         return true;
     }
 
