@@ -338,6 +338,9 @@ namespace basecode::syntax {
             assignment_node = parser->ast_builder()->constant_assignment_node();
 
         pairs_to_list(assignment_node->lhs, lhs);
+
+        collect_comments(r, parser, assignment_node->comments);
+
         auto rhs = parser->parse_expression(
             r,
             static_cast<uint8_t>(precedence_t::assignment));
@@ -794,7 +797,7 @@ namespace basecode::syntax {
         auto block_comment_node = parser
             ->ast_builder()
             ->block_comment_node(token);
-        lhs->children.push_back(block_comment_node);
+        lhs->comments.push_back(block_comment_node);
         return lhs;
     }
 
@@ -969,7 +972,8 @@ namespace basecode::syntax {
             parser* parser,
             token_t& token) {
         auto attribute_node = parser->ast_builder()->attribute_node(token);
-        if (parser->peek(token_types_t::semi_colon)) {
+        if (parser->peek(token_types_t::semi_colon)
+        ||  parser->peek(token_types_t::attribute)) {
             return attribute_node;
         }
         attribute_node->lhs = parser->parse_expression(r, 0);
