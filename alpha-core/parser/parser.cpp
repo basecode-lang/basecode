@@ -510,24 +510,30 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    // XXX: this needs to be broken up
-    //      else_if_literal can only occur in an infix position related to an if
-    //      else_literal can only occur in an infix position related to an if or else if
     ast_node_shared_ptr if_prefix_parser::parse(
             common::result& r,
             parser* parser,
             token_t& token) {
         auto if_node = parser->ast_builder()->if_node(token);
+        collect_comments(r, parser, if_node->comments);
+
         if_node->lhs = parser->parse_expression(r, 0);
+        collect_comments(r, parser, if_node->comments);
+
         if_node->children.push_back(parser->parse_expression(r, 0));
 
         auto current_branch = if_node;
         while (true) {
+            collect_comments(r, parser, current_branch->comments);
+
             if (!parser->peek(token_types_t::else_if_literal))
                 break;
             token_t else_if_token;
             parser->current(else_if_token);
             parser->consume();
+
+            collect_comments(r, parser, current_branch->comments);
+
             current_branch->rhs = parser->ast_builder()->else_if_node(else_if_token);
             current_branch->rhs->lhs = parser->parse_expression(r, 0);
             current_branch->rhs->children.push_back(parser->parse_expression(r, 0));
@@ -538,6 +544,9 @@ namespace basecode::syntax {
             token_t else_token;
             parser->current(else_token);
             parser->consume();
+
+            collect_comments(r, parser, current_branch->comments);
+
             current_branch->rhs = parser->ast_builder()->else_node(else_token);
             current_branch->rhs->children.push_back(parser->parse_expression(r, 0));
         }
