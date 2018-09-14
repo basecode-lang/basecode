@@ -46,7 +46,8 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             element* predicate,
             element* true_branch,
-            element* false_branch);
+            element* false_branch,
+            bool is_else_if);
 
         import* make_import(
             compiler::block* parent_scope,

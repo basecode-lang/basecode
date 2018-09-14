@@ -307,7 +307,7 @@ namespace basecode::syntax {
     ast_node_shared_ptr ast_builder::else_if_node(const token_t& token) {
         auto node = std::make_shared<ast_node_t>();
         node->id = ++_id;
-        node->type = ast_node_types_t::else_expression;
+        node->type = ast_node_types_t::elseif_expression;
         node->location = token.location;
         return node;
     }

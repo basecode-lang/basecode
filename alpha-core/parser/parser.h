@@ -745,7 +745,6 @@ namespace basecode::syntax {
             {token_types_t::ror_literal,        &s_bitwise_binary_op_parser},
             {token_types_t::logical_and,        &s_logical_binary_op_parser},
             {token_types_t::exponent,           &s_exponent_binary_op_parser},
-            {token_types_t::block_comment,      &s_block_comment_infix_parser},
             {token_types_t::equals,             &s_relational_binary_op_parser},
             {token_types_t::less_than,          &s_relational_binary_op_parser},
             {token_types_t::not_equals,         &s_relational_binary_op_parser},

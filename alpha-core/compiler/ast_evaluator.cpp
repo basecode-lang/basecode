@@ -1101,7 +1101,8 @@ namespace basecode::compiler {
             _session.scope_manager().current_scope(),
             predicate,
             true_branch,
-            false_branch);
+            false_branch,
+            context.node->type == syntax::ast_node_types_t::elseif_expression);
         return true;
     }
 

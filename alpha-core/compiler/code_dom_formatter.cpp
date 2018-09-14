@@ -192,8 +192,9 @@ namespace basecode::compiler {
                 add_primary_edge(element, element->true_branch(), "true");
                 add_primary_edge(element, element->false_branch(), "false");
                 return fmt::format(
-                    "{}[shape=record,label=\"if\"{}];",
+                    "{}[shape=record,label=\"{}\"{}];",
                     node_vertex_name,
+                    element->is_else_if() ? "else if" : "if",
                     style);
             }
             case element_type_t::label: {

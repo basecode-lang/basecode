@@ -22,7 +22,8 @@ namespace basecode::compiler {
             block* parent_scope,
             element* predicate,
             element* true_branch,
-            element* false_branch);
+            element* false_branch,
+            bool is_else_if);
 
         element* predicate();
 
@@ -30,12 +31,15 @@ namespace basecode::compiler {
 
         element* false_branch();
 
+        bool is_else_if() const;
+
     protected:
         bool on_emit(compiler::session& session) override;
 
         void on_owned_elements(element_list_t& list) override;
 
     private:
+        bool _is_else_if = false;
         element* _predicate = nullptr;
         element* _true_branch = nullptr;
         element* _false_branch = nullptr;

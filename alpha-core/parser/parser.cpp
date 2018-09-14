@@ -357,6 +357,8 @@ namespace basecode::syntax {
         assignment_node->location.start(lhs->location.start());
         assignment_node->location.end(assignment_node->rhs->location.end());
 
+        collect_comments(r, parser, assignment_node->comments);
+
         return assignment_node;
     }
 
@@ -532,11 +534,15 @@ namespace basecode::syntax {
             parser->current(else_if_token);
             parser->consume();
 
-            collect_comments(r, parser, current_branch->comments);
-
             current_branch->rhs = parser->ast_builder()->else_if_node(else_if_token);
+            collect_comments(r, parser, current_branch->rhs->comments);
+
             current_branch->rhs->lhs = parser->parse_expression(r, 0);
+
+            collect_comments(r, parser, current_branch->rhs->comments);
+
             current_branch->rhs->children.push_back(parser->parse_expression(r, 0));
+
             current_branch = current_branch->rhs;
         }
 
@@ -545,11 +551,18 @@ namespace basecode::syntax {
             parser->current(else_token);
             parser->consume();
 
-            collect_comments(r, parser, current_branch->comments);
-
             current_branch->rhs = parser->ast_builder()->else_node(else_token);
+            collect_comments(r, parser, current_branch->rhs->comments);
+
             current_branch->rhs->children.push_back(parser->parse_expression(r, 0));
         }
+
+        collect_comments(
+            r,
+            parser,
+            current_branch->rhs != nullptr ?
+                current_branch->rhs->comments :
+                current_branch->comments);
 
         return if_node;
     }

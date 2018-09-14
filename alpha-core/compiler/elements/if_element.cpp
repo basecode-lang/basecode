@@ -20,10 +20,12 @@ namespace basecode::compiler {
             block* parent_scope,
             element* predicate,
             element* true_branch,
-            element* false_branch) : element(module, parent_scope, element_type_t::if_e),
-                                     _predicate(predicate),
-                                     _true_branch(true_branch),
-                                     _false_branch(false_branch) {
+            element* false_branch,
+            bool is_else_if) : element(module, parent_scope, element_type_t::if_e),
+                               _is_else_if(is_else_if),
+                               _predicate(predicate),
+                               _true_branch(true_branch),
+                               _false_branch(false_branch) {
     }
 
     element* if_element::predicate() {
@@ -36,6 +38,10 @@ namespace basecode::compiler {
 
     element* if_element::false_branch() {
         return _false_branch;
+    }
+
+    bool if_element::is_else_if() const {
+        return _is_else_if;
     }
 
     bool if_element::on_emit(compiler::session& session) {

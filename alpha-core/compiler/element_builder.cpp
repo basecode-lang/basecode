@@ -658,13 +658,15 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             element* predicate,
             element* true_branch,
-            element* false_branch) {
+            element* false_branch,
+            bool is_else_if) {
         auto if_element = new compiler::if_element(
             _session.scope_manager().current_module(),
             parent_scope,
             predicate,
             true_branch,
-            false_branch);
+            false_branch,
+            is_else_if);
         if (predicate != nullptr)
             predicate->parent_element(if_element);
         if (true_branch != nullptr)
