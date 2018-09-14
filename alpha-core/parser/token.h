@@ -570,7 +570,7 @@ namespace basecode::syntax {
     };
 
     static inline token_t s_less_than_equal_literal = {
-        .type = token_types_t::less_than,
+        .type = token_types_t::less_than_equal,
         .value = "<="
     };
 

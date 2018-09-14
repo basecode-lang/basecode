@@ -1,0 +1,41 @@
+@library "alpha-core";
+#foreign print ::= proc(format: string, values: ...any) @alias "fmt_print";
+
+bong := 0;
+if cast<bool>(bong) {
+    print("musk got in trouble for hitting the weed\n");
+};
+
+is_true := false;
+
+if is_true {
+    print("true!\n");
+} else {
+    print("oh, noes...it's faalllse!\n");
+};
+
+if is_true != true {
+    print("not equals true\n");
+};
+
+if !is_true {
+    print("does this work?\n");
+};
+
+a := 4;
+
+if a == 5 {
+    print("a is 5\n");
+} else if a < 5 {
+    print("a is less than 5\n");
+} else if a > 5 {
+    print("a is greater than 5\n");
+};
+
+if a <= 5 {
+    print("a is less than or equal to 5\n");
+} else if a >= 5 {
+    print("a is greater than or equal to 5\n");
+};
+
+is_a_less_than_five := a < 5;

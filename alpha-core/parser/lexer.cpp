@@ -1331,13 +1331,9 @@ namespace basecode::syntax {
     }
 
     bool lexer::less_than_equal_operator(token_t& token) {
-        auto ch = read();
-        if (ch == '<') {
-            ch = read();
-            if (ch == '=') {
-                token = s_less_than_equal_literal;
-                return true;
-            }
+        if (match_literal("<=")) {
+            token = s_less_than_equal_literal;
+            return true;
         }
         return false;
     }

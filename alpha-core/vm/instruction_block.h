@@ -296,6 +296,11 @@ namespace basecode::vm {
 
         // cmp variations
         void cmp(
+            op_sizes size,
+            const register_t& lhs_reg,
+            uint64_t value);
+
+        void cmp(
             const register_t& lhs_reg,
             const register_t& rhs_reg);
 
@@ -357,9 +362,21 @@ namespace basecode::vm {
         void setnz(const register_t& dest_reg);
 
         // branches
+        void bz(const label_ref_t* label_ref);
+
+        void bg(const label_ref_t* label_ref);
+
+        void bl(const label_ref_t* label_ref);
+
+        void bnz(const label_ref_t* label_ref);
+
         void bne(const label_ref_t* label_ref);
 
         void beq(const label_ref_t* label_ref);
+
+        void bge(const label_ref_t* label_ref);
+
+        void ble(const label_ref_t* label_ref);
 
         // inc variations
         void inc(const register_t& reg);
@@ -491,6 +508,11 @@ namespace basecode::vm {
         void jump_direct(const label_ref_t* label_ref);
 
     private:
+        void make_branch(
+            op_codes code,
+            op_sizes size,
+            const label_ref_t* label_ref);
+
         void make_clr_instruction(
             op_sizes size,
             const register_t& dest_reg);

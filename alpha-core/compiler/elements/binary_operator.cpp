@@ -257,6 +257,7 @@ namespace basecode::compiler {
 
     void binary_operator::emit_relational_operator(compiler::session& session) {
         auto& assembler = session.assembler();
+        auto block = assembler.current_block();
 
         auto lhs_reg = register_for(session, _lhs);
         auto rhs_reg = register_for(session, _rhs);
@@ -264,41 +265,79 @@ namespace basecode::compiler {
         if (!lhs_reg.valid || !rhs_reg.valid)
             return;
 
+        lhs_reg.clean_up = true;
+        rhs_reg.clean_up = true;
+
         assembler.push_target_register(lhs_reg.reg);
         _lhs->emit(session);
         assembler.pop_target_register();
 
         assembler.push_target_register(rhs_reg.reg);
         _rhs->emit(session);
-        session.assembler().pop_target_register();
+        assembler.pop_target_register();
 
-        switch (operator_type()) {
-            case operator_type_t::equals: {
+        block->cmp(lhs_reg.reg, rhs_reg.reg);
+
+        switch (parent_element()->element_type()) {
+            case element_type_t::unary_operator:
+            case element_type_t::binary_operator: {
+                block->comment("XXX: implement relational operators for assignments", 4);
                 break;
             }
-            case operator_type_t::less_than: {
-                break;
-            }
-            case operator_type_t::not_equals: {
-                break;
-            }
-            case operator_type_t::logical_or: {
-                break;
-            }
-            case operator_type_t::logical_and: {
-                break;
-            }
-            case operator_type_t::greater_than: {
-                break;
-            }
-            case operator_type_t::less_than_or_equal: {
-                break;
-            }
-            case operator_type_t::greater_than_or_equal: {
+            case element_type_t::if_e: {
+                auto parent_label_name = parent_element()->label_name();
+                auto true_label_name = fmt::format("{}_true", parent_label_name);
+                auto false_label_name = fmt::format("{}_false", parent_label_name);
+                auto end_label_name = fmt::format("{}_end", parent_label_name);
+
+                auto true_label = assembler.make_label_ref(true_label_name);
+                auto false_label = assembler.make_label_ref(false_label_name);
+
+                switch (operator_type()) {
+                    case operator_type_t::equals: {
+                        block->beq(true_label);
+                        break;
+                    }
+                    case operator_type_t::less_than: {
+                        block->bl(true_label);
+                        break;
+                    }
+                    case operator_type_t::not_equals: {
+                        block->bne(true_label);
+                        break;
+                    }
+                    case operator_type_t::logical_or: {
+                        break;
+                    }
+                    case operator_type_t::logical_and: {
+                        break;
+                    }
+                    case operator_type_t::greater_than: {
+                        block->bg(true_label);
+                        break;
+                    }
+                    case operator_type_t::less_than_or_equal: {
+                        block->ble(true_label);
+                        break;
+                    }
+                    case operator_type_t::greater_than_or_equal: {
+                        block->bge(true_label);
+                        break;
+                    }
+                    default: {
+                        break;
+                    }
+                }
+
+                block->jump_direct(false_label);
                 break;
             }
             default: {
-                break;
+                session.error(
+                    this,
+                    "P052",
+                    "unknown parent context for relational operator.",
+                    location());
             }
         }
     }

@@ -1094,11 +1094,37 @@ namespace basecode::compiler {
     bool ast_evaluator::if_expression(
             evaluator_context_t& context,
             evaluator_result_t& result) {
-        auto predicate = evaluate(context.node->lhs.get());
+        auto& builder = _session.builder();
+        auto scope = _session.scope_manager().current_scope();
+
+        auto predicate = resolve_symbol_or_evaluate(
+            context,
+            context.node->lhs.get(),
+            scope);
+        if (predicate->element_type() != element_type_t::binary_operator) {
+            infer_type_result_t infer_type_result {};
+            if (!predicate->infer_type(_session, infer_type_result))
+                return false;
+
+            if (infer_type_result.inferred_type->element_type() != element_type_t::bool_type) {
+                _session.error(
+                    "P002",
+                    "expected a boolean expression.",
+                    predicate->location());
+                return false;
+            }
+
+            predicate = builder.make_binary_operator(
+                scope,
+                operator_type_t::equals,
+                predicate,
+                builder.make_bool(scope, true));
+        }
+
         auto true_branch = evaluate(context.node->children[0].get());
         auto false_branch = evaluate(context.node->rhs.get());
         result.element = _session.builder().make_if(
-            _session.scope_manager().current_scope(),
+            scope,
             predicate,
             true_branch,
             false_branch,

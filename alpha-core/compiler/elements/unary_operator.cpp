@@ -62,36 +62,36 @@ namespace basecode::compiler {
     }
 
     bool unary_operator::on_emit(compiler::session& session) {
-        auto instruction_block = session.assembler().current_block();
-        auto target_reg = session.assembler().current_target_register();
+        auto& assembler = session.assembler();
+
+        auto block = assembler.current_block();
+        auto target_reg = assembler.current_target_register();
 
         auto rhs_reg = register_for(session, _rhs);
         if (!rhs_reg.valid)
             return false;
 
-        session.assembler().push_target_register(rhs_reg.reg);
+        assembler.push_target_register(rhs_reg.reg);
         _rhs->emit(session);
-        session.assembler().pop_target_register();
+        assembler.pop_target_register();
 
         switch (operator_type()) {
             case operator_type_t::negate: {
-                instruction_block->neg(*target_reg, rhs_reg.reg);
+                block->neg(*target_reg, rhs_reg.reg);
                 break;
             }
             case operator_type_t::binary_not: {
-                instruction_block->not_op(*target_reg, rhs_reg.reg);
+                block->not_op(*target_reg, rhs_reg.reg);
                 break;
             }
             case operator_type_t::logical_not: {
-                instruction_block->xor_reg_by_reg(
-                    *target_reg,
-                    rhs_reg.reg,
-                    rhs_reg.reg);
+                block->cmp(target_reg->size, rhs_reg.reg, 1);
+                block->setnz(*target_reg);
                 break;
             }
             case operator_type_t::pointer_dereference: {
-                instruction_block->comment("XXX: implement pointer dereference", 4);
-                instruction_block->nop();
+                block->comment("XXX: implement pointer dereference", 4);
+                block->nop();
                 break;
             }
             default:

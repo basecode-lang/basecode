@@ -45,6 +45,26 @@ namespace basecode::compiler {
     }
 
     bool if_element::on_emit(compiler::session& session) {
+        auto& assembler = session.assembler();
+        auto block = assembler.current_block();
+
+        auto true_label_name = fmt::format("{}_true", label_name());
+        auto false_label_name = fmt::format("{}_false", label_name());
+        auto end_label_name = fmt::format("{}_end", label_name());
+
+        _predicate->emit(session);
+
+        block->label(assembler.make_label(true_label_name));
+        _true_branch->emit(session);
+        block->jump_direct(assembler.make_label_ref(end_label_name));
+
+        block->label(assembler.make_label(false_label_name));
+        if (_false_branch != nullptr) {
+            _false_branch->emit(session);
+        }
+
+        block->label(assembler.make_label(end_label_name));
+
         return true;
     }
 

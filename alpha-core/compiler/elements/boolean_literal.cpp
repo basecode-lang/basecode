@@ -45,9 +45,10 @@ namespace basecode::compiler {
 
     bool boolean_literal::on_emit(compiler::session& session) {
         auto& assembler = session.assembler();
-        auto instruction_block = assembler.current_block();
+        auto block = assembler.current_block();
         auto target_reg = assembler.current_target_register();
-        instruction_block->move_constant_to_reg(
+        block->clr(vm::op_sizes::qword, *target_reg);
+        block->move_constant_to_reg(
             *target_reg,
             static_cast<uint64_t>(_value ? 1 : 0));
         return true;
