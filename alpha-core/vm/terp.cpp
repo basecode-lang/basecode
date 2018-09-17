@@ -2009,6 +2009,7 @@ namespace basecode::vm {
                 break;
             }
             case op_codes::bne: {
+                // ZF = 0
                 operand_value_t address;
                 auto result = get_constant_address_or_pc_with_offset(
                     r,
@@ -2026,6 +2027,7 @@ namespace basecode::vm {
                 break;
             }
             case op_codes::beq: {
+                // ZF = 1
                 operand_value_t address;
                 auto result = get_constant_address_or_pc_with_offset(
                     r,
@@ -2042,7 +2044,8 @@ namespace basecode::vm {
 
                 break;
             }
-            case op_codes::bg: {
+            case op_codes::bs: {
+                // SF = 1
                 operand_value_t address;
                 auto result = get_constant_address_or_pc_with_offset(
                     r,
@@ -2053,14 +2056,93 @@ namespace basecode::vm {
                 if (!result)
                     return false;
 
-                if (!_registers.flags(register_file_t::flags_t::carry)
-                &&  !_registers.flags(register_file_t::flags_t::zero)) {
+                if (_registers.flags(register_file_t::flags_t::negative)) {
+                    _registers.r[register_pc].qw = address.alias.u;
+                }
+
+                break;
+            }
+            case op_codes::bo: {
+                // OF = 1
+                operand_value_t address;
+                auto result = get_constant_address_or_pc_with_offset(
+                    r,
+                    inst,
+                    0,
+                    inst_size,
+                    address);
+                if (!result)
+                    return false;
+
+                if (_registers.flags(register_file_t::flags_t::overflow)) {
+                    _registers.r[register_pc].qw = address.alias.u;
+                }
+
+                break;
+            }
+            case op_codes::ba: {
+                // CF = 0 and ZF = 0
+                operand_value_t address;
+                auto result = get_constant_address_or_pc_with_offset(
+                    r,
+                    inst,
+                    0,
+                    inst_size,
+                    address);
+                if (!result)
+                    return false;
+
+                if (!_registers.flags(register_file_t::flags_t::zero)
+                &&  !_registers.flags(register_file_t::flags_t::carry)) {
+                    _registers.r[register_pc].qw = address.alias.u;
+                }
+                break;
+            }
+            case op_codes::bg: {
+                // ZF = 0 and SF = OF
+                operand_value_t address;
+                auto result = get_constant_address_or_pc_with_offset(
+                    r,
+                    inst,
+                    0,
+                    inst_size,
+                    address);
+                if (!result)
+                    return false;
+
+                auto sf = _registers.flags(register_file_t::flags_t::negative);
+                auto of = _registers.flags(register_file_t::flags_t::overflow);
+                auto zf = _registers.flags(register_file_t::flags_t::zero);
+
+                if (!zf && sf == of) {
                     _registers.r[register_pc].qw = address.alias.u;
                 }
 
                 break;
             }
             case op_codes::bge: {
+                // SF = OF
+                operand_value_t address;
+                auto result = get_constant_address_or_pc_with_offset(
+                    r,
+                    inst,
+                    0,
+                    inst_size,
+                    address);
+                if (!result)
+                    return false;
+
+                auto sf = _registers.flags(register_file_t::flags_t::negative);
+                auto of = _registers.flags(register_file_t::flags_t::overflow);
+
+                if (sf == of) {
+                    _registers.r[register_pc].qw = address.alias.u;
+                }
+
+                break;
+            }
+            case op_codes::bcc: {
+                // CF = 0
                 operand_value_t address;
                 auto result = get_constant_address_or_pc_with_offset(
                     r,
@@ -2074,9 +2156,31 @@ namespace basecode::vm {
                 if (!_registers.flags(register_file_t::flags_t::carry)) {
                     _registers.r[register_pc].qw = address.alias.u;
                 }
+
                 break;
             }
-            case op_codes::bl: {
+            case op_codes::bae:
+            case op_codes::bcs:
+            case op_codes::bb: {
+                // CF = 1
+                operand_value_t address;
+                auto result = get_constant_address_or_pc_with_offset(
+                    r,
+                    inst,
+                    0,
+                    inst_size,
+                    address);
+                if (!result)
+                    return false;
+
+                if (_registers.flags(register_file_t::flags_t::carry)) {
+                    _registers.r[register_pc].qw = address.alias.u;
+                }
+
+                break;
+            }
+            case op_codes::bbe: {
+                // CF = 1 or ZF = 1
                 operand_value_t address;
                 auto result = get_constant_address_or_pc_with_offset(
                     r,
@@ -2091,9 +2195,11 @@ namespace basecode::vm {
                 ||  _registers.flags(register_file_t::flags_t::zero)) {
                     _registers.r[register_pc].qw = address.alias.u;
                 }
+
                 break;
             }
-            case op_codes::ble: {
+            case op_codes::bl: {
+                // SF <> OF
                 operand_value_t address;
                 auto result = get_constant_address_or_pc_with_offset(
                     r,
@@ -2104,9 +2210,152 @@ namespace basecode::vm {
                 if (!result)
                     return false;
 
-                if (_registers.flags(register_file_t::flags_t::carry)) {
+                auto sf = _registers.flags(register_file_t::flags_t::negative);
+                auto of = _registers.flags(register_file_t::flags_t::overflow);
+
+                if (sf != of) {
                     _registers.r[register_pc].qw = address.alias.u;
                 }
+
+                break;
+            }
+            case op_codes::ble: {
+                // ZF = 1 or SF <> OF
+                operand_value_t address;
+                auto result = get_constant_address_or_pc_with_offset(
+                    r,
+                    inst,
+                    0,
+                    inst_size,
+                    address);
+                if (!result)
+                    return false;
+
+                auto sf = _registers.flags(register_file_t::flags_t::negative);
+                auto of = _registers.flags(register_file_t::flags_t::overflow);
+                auto zf = _registers.flags(register_file_t::flags_t::zero);
+
+                if (zf || sf != of) {
+                    _registers.r[register_pc].qw = address.alias.u;
+                }
+                break;
+            }
+            case op_codes::setb:
+            case op_codes::setnae:
+            case op_codes::setc: {
+                // CF = 1
+                operand_value_t result;
+                result.alias.u = _registers.flags(register_file_t::flags_t::carry) ? 1 : 0;
+                if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
+                    return false;
+                break;
+            }
+            case op_codes::setnb:
+            case op_codes::setae:
+            case op_codes::setnc: {
+                // CF = 0
+                operand_value_t result;
+                result.alias.u = !_registers.flags(register_file_t::flags_t::carry) ? 1 : 0;
+                if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
+                    return false;
+                break;
+            }
+            case op_codes::seta:
+            case op_codes::setnbe: {
+                // CF = 0 and ZF = 0
+                operand_value_t result;
+                result.alias.u = !_registers.flags(register_file_t::flags_t::zero)
+                    && !_registers.flags(register_file_t::flags_t::carry) ? 1 : 0;
+                if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
+                    return false;
+                break;
+            }
+            case op_codes::setna:
+            case op_codes::setbe: {
+                // CF = 1 or ZF = 1
+                operand_value_t result;
+                result.alias.u = _registers.flags(register_file_t::flags_t::zero)
+                    || _registers.flags(register_file_t::flags_t::carry) ? 1 : 0;
+                if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
+                    return false;
+                break;
+            }
+            case op_codes::setg:
+            case op_codes::setnle: {
+                // ZF = 0 and SF = OF
+                auto sf = _registers.flags(register_file_t::flags_t::negative);
+                auto of = _registers.flags(register_file_t::flags_t::overflow);
+                auto zf = _registers.flags(register_file_t::flags_t::zero);
+                operand_value_t result;
+                result.alias.u = !zf && sf == of ? 1 : 0;
+                if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
+                    return false;
+                break;
+            }
+            case op_codes::setnl:
+            case op_codes::setge: {
+                // SF = OF
+                auto sf = _registers.flags(register_file_t::flags_t::negative);
+                auto of = _registers.flags(register_file_t::flags_t::overflow);
+                operand_value_t result;
+                result.alias.u = sf == of ? 1 : 0;
+                if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
+                    return false;
+                break;
+            }
+            case op_codes::setle:
+            case op_codes::setng: {
+                // ZF = 1 or SF != OF
+                auto sf = _registers.flags(register_file_t::flags_t::negative);
+                auto of = _registers.flags(register_file_t::flags_t::overflow);
+                auto zf = _registers.flags(register_file_t::flags_t::zero);
+                operand_value_t result;
+                result.alias.u = zf || sf != of ? 1 : 0;
+                if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
+                    return false;
+                break;
+            }
+            case op_codes::setl:
+            case op_codes::setnge: {
+                // SF != OF
+                auto sf = _registers.flags(register_file_t::flags_t::negative);
+                auto of = _registers.flags(register_file_t::flags_t::overflow);
+                operand_value_t result;
+                result.alias.u = sf != of ? 1 : 0;
+                if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
+                    return false;
+                break;
+            }
+            case op_codes::seto: {
+                // OF = 1
+                operand_value_t result;
+                result.alias.u = _registers.flags(register_file_t::flags_t::overflow) ? 1 : 0;
+                if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
+                    return false;
+                break;
+            }
+            case op_codes::setno: {
+                // OF = 0
+                operand_value_t result;
+                result.alias.u = !_registers.flags(register_file_t::flags_t::overflow) ? 1 : 0;
+                if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
+                    return false;
+                break;
+            }
+            case op_codes::sets: {
+                // SF = 1
+                operand_value_t result;
+                result.alias.u = _registers.flags(register_file_t::flags_t::negative) ? 1 : 0;
+                if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
+                    return false;
+                break;
+            }
+            case op_codes::setns: {
+                // SF = 0
+                operand_value_t result;
+                result.alias.u = !_registers.flags(register_file_t::flags_t::negative) ? 1 : 0;
+                if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
+                    return false;
                 break;
             }
             case op_codes::setz: {
