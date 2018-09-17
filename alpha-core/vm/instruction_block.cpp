@@ -886,26 +886,115 @@ namespace basecode::vm {
             const register_t& address_reg) {
     }
 
+    // setxx
+    void instruction_block::sets(const register_t& dest_reg) {
+        make_set(op_codes::sets, op_sizes::qword, dest_reg);
+    }
+
+    void instruction_block::setns(const register_t& dest_reg) {
+        make_set(op_codes::setns, op_sizes::qword, dest_reg);
+    }
+
+    void instruction_block::seto(const register_t& dest_reg) {
+        make_set(op_codes::seto, op_sizes::qword, dest_reg);
+    }
+
+    void instruction_block::setno(const register_t& dest_reg) {
+        make_set(op_codes::setno, op_sizes::qword, dest_reg);
+    }
+
+    void instruction_block::seta(const register_t& dest_reg) {
+        make_set(op_codes::seta, op_sizes::qword, dest_reg);
+    }
+
+    void instruction_block::setna(const register_t& dest_reg) {
+        make_set(op_codes::setna, op_sizes::qword, dest_reg);
+    }
+
+    void instruction_block::setae(const register_t& dest_reg) {
+        make_set(op_codes::setae, op_sizes::qword, dest_reg);
+    }
+
+    void instruction_block::setnae(const register_t& dest_reg) {
+        make_set(op_codes::setnae, op_sizes::qword, dest_reg);
+    }
+
+    void instruction_block::setb(const register_t& dest_reg) {
+        make_set(op_codes::setb, op_sizes::qword, dest_reg);
+    }
+
+    void instruction_block::setnb(const register_t& dest_reg) {
+        make_set(op_codes::setnb, op_sizes::qword, dest_reg);
+    }
+
+    void instruction_block::setbe(const register_t& dest_reg) {
+        make_set(op_codes::setbe, op_sizes::qword, dest_reg);
+    }
+
+    void instruction_block::setnbe(const register_t& dest_reg) {
+        make_set(op_codes::setnbe, op_sizes::qword, dest_reg);
+    }
+
+    void instruction_block::setc(const register_t& dest_reg) {
+        make_set(op_codes::setc, op_sizes::qword, dest_reg);
+    }
+
+    void instruction_block::setnc(const register_t& dest_reg) {
+        make_set(op_codes::setnc, op_sizes::qword, dest_reg);
+    }
+
+    void instruction_block::setg(const register_t& dest_reg) {
+        make_set(op_codes::setg, op_sizes::qword, dest_reg);
+    }
+
+    void instruction_block::setng(const register_t& dest_reg) {
+        make_set(op_codes::setng, op_sizes::qword, dest_reg);
+    }
+
+    void instruction_block::setge(const register_t& dest_reg) {
+        make_set(op_codes::setge, op_sizes::qword, dest_reg);
+    }
+
+    void instruction_block::setnge(const register_t& dest_reg) {
+        make_set(op_codes::setnge, op_sizes::qword, dest_reg);
+    }
+
+    void instruction_block::setl(const register_t& dest_reg) {
+        make_set(op_codes::setl, op_sizes::qword, dest_reg);
+    }
+
+    void instruction_block::setnl(const register_t& dest_reg) {
+        make_set(op_codes::setnl, op_sizes::qword, dest_reg);
+    }
+
+    void instruction_block::setle(const register_t& dest_reg) {
+        make_set(op_codes::setle, op_sizes::qword, dest_reg);
+    }
+
+    void instruction_block::setnle(const register_t& dest_reg) {
+        make_set(op_codes::setnle, op_sizes::qword, dest_reg);
+    }
+
     void instruction_block::setz(const register_t& dest_reg) {
-        instruction_t setz_op;
-        setz_op.op = op_codes::setz;
-        setz_op.size = op_sizes::qword;
-        setz_op.operands_count = 1;
-        setz_op.operands[0].type = operand_encoding_t::flags::integer
-                                  | operand_encoding_t::flags::reg;
-        setz_op.operands[0].value.r = dest_reg.number;
-        make_block_entry(setz_op);
+        make_set(op_codes::setz, op_sizes::qword, dest_reg);
     }
 
     void instruction_block::setnz(const register_t& dest_reg) {
-        instruction_t setnz_op;
-        setnz_op.op = op_codes::setnz;
-        setnz_op.size = op_sizes::qword;
-        setnz_op.operands_count = 1;
-        setnz_op.operands[0].type = operand_encoding_t::flags::integer
-                                   | operand_encoding_t::flags::reg;
-        setnz_op.operands[0].value.r = dest_reg.number;
-        make_block_entry(setnz_op);
+        make_set(op_codes::setnz, op_sizes::qword, dest_reg);
+    }
+
+    void instruction_block::make_set(
+            op_codes code,
+            op_sizes size,
+            const register_t& dest_reg) {
+        instruction_t set_op;
+        set_op.op = code;
+        set_op.size = size;
+        set_op.operands_count = 1;
+        set_op.operands[0].type = operand_encoding_t::flags::integer
+                                    | operand_encoding_t::flags::reg;
+        set_op.operands[0].value.r = dest_reg.number;
+        make_block_entry(set_op);
     }
 
     void instruction_block::test_mask_branch_if_not_zero(
@@ -930,12 +1019,21 @@ namespace basecode::vm {
         return _type;
     }
 
-    void instruction_block::bne(const label_ref_t* label_ref) {
-        make_branch(op_codes::bne, op_sizes::qword, label_ref);
+
+    void instruction_block::bb(const label_ref_t* label_ref) {
+        make_branch(op_codes::bb, op_sizes::qword, label_ref);
     }
 
-    void instruction_block::bz(const label_ref_t* label_ref) {
-        make_branch(op_codes::bz, op_sizes::qword, label_ref);
+    void instruction_block::ba(const label_ref_t* label_ref) {
+        make_branch(op_codes::ba, op_sizes::qword, label_ref);
+    }
+
+    void instruction_block::bs(const label_ref_t* label_ref) {
+        make_branch(op_codes::bs, op_sizes::qword, label_ref);
+    }
+
+    void instruction_block::bo(const label_ref_t* label_ref) {
+        make_branch(op_codes::bo, op_sizes::qword, label_ref);
     }
 
     void instruction_block::bg(const label_ref_t* label_ref) {
@@ -944,10 +1042,6 @@ namespace basecode::vm {
 
     void instruction_block::bl(const label_ref_t* label_ref) {
         make_branch(op_codes::bl, op_sizes::qword, label_ref);
-    }
-
-    void instruction_block::bnz(const label_ref_t* label_ref) {
-        make_branch(op_codes::bnz, op_sizes::qword, label_ref);
     }
 
     void instruction_block::bge(const label_ref_t* label_ref) {
@@ -960,6 +1054,26 @@ namespace basecode::vm {
 
     void instruction_block::beq(const label_ref_t* label_ref) {
         make_branch(op_codes::beq, op_sizes::qword, label_ref);
+    }
+
+    void instruction_block::bne(const label_ref_t* label_ref) {
+        make_branch(op_codes::bne, op_sizes::qword, label_ref);
+    }
+
+    void instruction_block::bcc(const label_ref_t* label_ref) {
+        make_branch(op_codes::bcc, op_sizes::qword, label_ref);
+    }
+
+    void instruction_block::bcs(const label_ref_t* label_ref) {
+        make_branch(op_codes::bcs, op_sizes::qword, label_ref);
+    }
+
+    void instruction_block::bbe(const label_ref_t* label_ref) {
+        make_branch(op_codes::bbe, op_sizes::qword, label_ref);
+    }
+
+    void instruction_block::bae(const label_ref_t* label_ref) {
+        make_branch(op_codes::bae, op_sizes::qword, label_ref);
     }
 
     void instruction_block::make_branch(
@@ -975,6 +1089,43 @@ namespace basecode::vm {
             | operand_encoding_t::flags::constant
             | operand_encoding_t::flags::unresolved;
         branch_op.operands[0].value.u = label_ref->id;
+        make_block_entry(branch_op);
+    }
+
+    // bz & bnz
+    void instruction_block::bz(
+            const register_t& reg,
+            const label_ref_t* label_ref) {
+        instruction_t branch_op;
+        branch_op.op = op_codes::bz;
+        branch_op.size = op_sizes::qword;
+        branch_op.operands_count = 2;
+        branch_op.operands[0].type = operand_encoding_t::flags::reg
+            | operand_encoding_t::flags::integer;
+        branch_op.operands[0].value.r = reg.number;
+        branch_op.operands[1].type =
+            operand_encoding_t::flags::integer
+            | operand_encoding_t::flags::constant
+            | operand_encoding_t::flags::unresolved;
+        branch_op.operands[1].value.u = label_ref->id;
+        make_block_entry(branch_op);
+    }
+
+    void instruction_block::bnz(
+            const register_t& reg,
+            const label_ref_t* label_ref) {
+        instruction_t branch_op;
+        branch_op.op = op_codes::bnz;
+        branch_op.size = op_sizes::qword;
+        branch_op.operands_count = 2;
+        branch_op.operands[0].type = operand_encoding_t::flags::reg
+                                     | operand_encoding_t::flags::integer;
+        branch_op.operands[0].value.r = reg.number;
+        branch_op.operands[1].type =
+            operand_encoding_t::flags::integer
+            | operand_encoding_t::flags::constant
+            | operand_encoding_t::flags::unresolved;
+        branch_op.operands[1].value.u = label_ref->id;
         make_block_entry(branch_op);
     }
 

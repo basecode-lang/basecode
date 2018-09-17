@@ -1,41 +1,54 @@
 @library "alpha-core";
 #foreign print ::= proc(format: string, values: ...any) @alias "fmt_print";
 
-bong := 0;
-if cast<bool>(bong) {
-    print("musk got in trouble for hitting the weed\n");
+junk: bool;
+junk := (3 == 4 && 4 == 4) || 1 == 1;
+
+if junk {
+    print("junk := true\n");
 };
 
-is_true := false;
-
-if is_true {
-    print("true!\n");
-} else {
-    print("oh, noes...it's faalllse!\n");
-};
-
-if is_true != true {
-    print("not equals true\n");
-};
-
-if !is_true {
-    print("does this work?\n");
-};
-
-a := 4;
-
-if a == 5 {
-    print("a is 5\n");
-} else if a < 5 {
-    print("a is less than 5\n");
-} else if a > 5 {
-    print("a is greater than 5\n");
-};
-
-if a <= 5 {
-    print("a is less than or equal to 5\n");
-} else if a >= 5 {
-    print("a is greater than or equal to 5\n");
-};
-
-is_a_less_than_five := a < 5;
+//bong := 0;
+//if cast<bool>(bong) {
+//    print("musk got in trouble for hitting the weed\n");
+//};
+//
+//is_true := false;
+//
+//if is_true {
+//    print("true!\n");
+//} else {
+//    print("oh, noes...it's faalllse!\n");
+//};
+//
+//if is_true != true {
+//    print("not equals true\n");
+//};
+//
+//if !is_true {
+//    print("does this work?\n");
+//};
+//
+//a := 6;
+//is_a_less_than_five := a < 5;
+//
+//if is_a_less_than_five {
+//    print("yes, a is less than 5.\n");
+//} else {
+//    print("no, it's not!\n");
+//};
+//
+//if a == 5 {
+//    print("a is 5\n");
+//} else if a < 5 {
+//    print("a is less than 5\n");
+//} else if a > 5 {
+//    print("a is greater than 5\n");
+//};
+//
+//if a <= 5 {
+//    print("a is less than or equal to 5\n");
+//} else if a >= 5 {
+//    print("a is greater than or equal to 5\n");
+//};
+//

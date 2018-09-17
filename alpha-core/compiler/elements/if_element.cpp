@@ -52,8 +52,20 @@ namespace basecode::compiler {
         auto false_label_name = fmt::format("{}_false", label_name());
         auto end_label_name = fmt::format("{}_end", label_name());
 
-        _predicate->emit(session);
+        vm::register_t target_reg {
+            .size = vm::op_sizes::byte,
+            .type = vm::register_type_t::integer
+        };
+        assembler.allocate_reg(target_reg);
+        defer({
+            assembler.free_reg(target_reg);
+        });
 
+        assembler.push_target_register(target_reg);
+        _predicate->emit(session);
+        assembler.pop_target_register();
+
+        block->bz(target_reg, assembler.make_label_ref(false_label_name));
         block->label(assembler.make_label(true_label_name));
         _true_branch->emit(session);
         block->jump_direct(assembler.make_label_ref(end_label_name));

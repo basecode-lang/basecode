@@ -259,87 +259,81 @@ namespace basecode::compiler {
         auto& assembler = session.assembler();
         auto block = assembler.current_block();
 
+        auto target_reg = assembler.current_target_register();
+
         auto lhs_reg = register_for(session, _lhs);
-        auto rhs_reg = register_for(session, _rhs);
-
-        if (!lhs_reg.valid || !rhs_reg.valid)
+        if (!lhs_reg.valid)
             return;
-
-        lhs_reg.clean_up = true;
-        rhs_reg.clean_up = true;
 
         assembler.push_target_register(lhs_reg.reg);
         _lhs->emit(session);
         assembler.pop_target_register();
 
+        auto end_label_name = fmt::format("{}_end", label_name());
+        auto end_label_ref = assembler.make_label_ref(end_label_name);
+
+        auto is_short_circuited = false;
+        switch (operator_type()) {
+            case operator_type_t::logical_or: {
+                is_short_circuited = true;
+                block->bnz(lhs_reg.reg, end_label_ref);
+                break;
+            }
+            case operator_type_t::logical_and: {
+                is_short_circuited = true;
+                block->bz(lhs_reg.reg, end_label_ref);
+                break;
+            }
+            default: {
+                break;
+            }
+        }
+
+        auto rhs_reg = register_for(session, _rhs);
+        if (!rhs_reg.valid)
+            return;
+
         assembler.push_target_register(rhs_reg.reg);
         _rhs->emit(session);
         assembler.pop_target_register();
 
-        block->cmp(lhs_reg.reg, rhs_reg.reg);
+        if (!is_short_circuited) {
+            block->cmp(lhs_reg.reg, rhs_reg.reg);
 
-        switch (parent_element()->element_type()) {
-            case element_type_t::unary_operator:
-            case element_type_t::binary_operator: {
-                block->comment("XXX: implement relational operators for assignments", 4);
-                break;
-            }
-            case element_type_t::if_e: {
-                auto parent_label_name = parent_element()->label_name();
-                auto true_label_name = fmt::format("{}_true", parent_label_name);
-                auto false_label_name = fmt::format("{}_false", parent_label_name);
-                auto end_label_name = fmt::format("{}_end", parent_label_name);
-
-                auto true_label = assembler.make_label_ref(true_label_name);
-                auto false_label = assembler.make_label_ref(false_label_name);
-
-                switch (operator_type()) {
-                    case operator_type_t::equals: {
-                        block->beq(true_label);
-                        break;
-                    }
-                    case operator_type_t::less_than: {
-                        block->bl(true_label);
-                        break;
-                    }
-                    case operator_type_t::not_equals: {
-                        block->bne(true_label);
-                        break;
-                    }
-                    case operator_type_t::logical_or: {
-                        break;
-                    }
-                    case operator_type_t::logical_and: {
-                        break;
-                    }
-                    case operator_type_t::greater_than: {
-                        block->bg(true_label);
-                        break;
-                    }
-                    case operator_type_t::less_than_or_equal: {
-                        block->ble(true_label);
-                        break;
-                    }
-                    case operator_type_t::greater_than_or_equal: {
-                        block->bge(true_label);
-                        break;
-                    }
-                    default: {
-                        break;
-                    }
+            switch (operator_type()) {
+                case operator_type_t::equals: {
+                    block->setz(*target_reg);
+                    break;
                 }
-
-                block->jump_direct(false_label);
-                break;
+                case operator_type_t::less_than: {
+                    block->setb(*target_reg);
+                    break;
+                }
+                case operator_type_t::not_equals: {
+                    block->setnz(*target_reg);
+                    break;
+                }
+                case operator_type_t::greater_than: {
+                    block->seta(*target_reg);
+                    break;
+                }
+                case operator_type_t::less_than_or_equal: {
+                    block->setbe(*target_reg);
+                    break;
+                }
+                case operator_type_t::greater_than_or_equal: {
+                    block->setae(*target_reg);
+                    break;
+                }
+                default: {
+                    break;
+                }
             }
-            default: {
-                session.error(
-                    this,
-                    "P052",
-                    "unknown parent context for relational operator.",
-                    location());
-            }
+        } else {
+            block->move_reg_to_reg(*target_reg, rhs_reg.reg);
         }
+
+        block->label(assembler.make_label(end_label_name));
     }
 
     void binary_operator::emit_arithmetic_operator(compiler::session& session) {

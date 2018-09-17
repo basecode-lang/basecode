@@ -357,22 +357,88 @@ namespace basecode::vm {
             int64_t offset);
 
         // setxx
+
+        void sets(const register_t& dest_reg);
+
+        void setns(const register_t& dest_reg);
+
+        void seto(const register_t& dest_reg);
+
+        void setno(const register_t& dest_reg);
+
+        void seta(const register_t& dest_reg);
+
+        void setna(const register_t& dest_reg);
+
+        void setae(const register_t& dest_reg);
+
+        void setnae(const register_t& dest_reg);
+
+        void setb(const register_t& dest_reg);
+
+        void setnb(const register_t& dest_reg);
+
+        void setbe(const register_t& dest_reg);
+
+        void setnbe(const register_t& dest_reg);
+
+        void setc(const register_t& dest_reg);
+
+        void setnc(const register_t& dest_reg);
+
+        void setg(const register_t& dest_reg);
+
+        void setng(const register_t& dest_reg);
+
+        void setge(const register_t& dest_reg);
+
+        void setnge(const register_t& dest_reg);
+
+        void setl(const register_t& dest_reg);
+
+        void setnl(const register_t& dest_reg);
+
+        void setle(const register_t& dest_reg);
+
+        void setnle(const register_t& dest_reg);
+
         void setz(const register_t& dest_reg);
 
         void setnz(const register_t& dest_reg);
 
+        // bz & bnz
+        void bz(
+            const register_t& reg,
+            const label_ref_t* label_ref);
+
+        void bnz(
+            const register_t& reg,
+            const label_ref_t* label_ref);
+
         // branches
-        void bz(const label_ref_t* label_ref);
+        void bb(const label_ref_t* label_ref);
+
+        void ba(const label_ref_t* label_ref);
 
         void bg(const label_ref_t* label_ref);
 
         void bl(const label_ref_t* label_ref);
 
-        void bnz(const label_ref_t* label_ref);
+        void bs(const label_ref_t* label_ref);
+
+        void bo(const label_ref_t* label_ref);
+
+        void bcc(const label_ref_t* label_ref);
+
+        void bcs(const label_ref_t* label_ref);
 
         void bne(const label_ref_t* label_ref);
 
         void beq(const label_ref_t* label_ref);
+
+        void bbe(const label_ref_t* label_ref);
+
+        void bae(const label_ref_t* label_ref);
 
         void bge(const label_ref_t* label_ref);
 
@@ -508,6 +574,11 @@ namespace basecode::vm {
         void jump_direct(const label_ref_t* label_ref);
 
     private:
+        void make_set(
+            op_codes code,
+            op_sizes size,
+            const register_t& dest_reg);
+
         void make_branch(
             op_codes code,
             op_sizes size,
