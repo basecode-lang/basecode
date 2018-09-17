@@ -56,6 +56,10 @@ namespace basecode::compiler {
     private:
         element* _lhs = nullptr;
         element* _rhs = nullptr;
+        vm::register_t _temp_reg {
+            .size = vm::op_sizes::byte,
+            .type = vm::register_type_t::integer
+        };
     };
 
 };

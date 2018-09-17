@@ -259,7 +259,38 @@ namespace basecode::compiler {
         auto& assembler = session.assembler();
         auto block = assembler.current_block();
 
-        auto target_reg = assembler.current_target_register();
+        auto free_target_reg = false;
+        auto clear_target_tag = false;
+        defer({
+            if (!clear_target_tag)
+                return;
+            vm::register_t temp_reg;
+            if (assembler.remove_tagged_register(
+                    register_tags_t::tag_rel_expr_target,
+                    temp_reg)) {
+                if (free_target_reg)
+                    assembler.free_reg(temp_reg);
+            }
+        });
+
+        auto target_reg = assembler.tagged_register(register_tags_t::tag_rel_expr_target);
+        if (target_reg == nullptr) {
+            clear_target_tag = true;
+
+            target_reg = assembler.current_target_register();
+            if (target_reg == nullptr) {
+                if (!assembler.allocate_reg(_temp_reg)) {
+                    // XXX: handle error
+                }
+                target_reg = &_temp_reg;
+                free_target_reg = true;
+            }
+
+            assembler.tag_register(
+                register_tags_t::tag_rel_expr_target,
+                target_reg);
+            block->clr(vm::op_sizes::byte, *target_reg);
+        }
 
         auto lhs_reg = register_for(session, _lhs);
         if (!lhs_reg.valid)
@@ -276,12 +307,12 @@ namespace basecode::compiler {
         switch (operator_type()) {
             case operator_type_t::logical_or: {
                 is_short_circuited = true;
-                block->bnz(lhs_reg.reg, end_label_ref);
+                block->bnz(*target_reg, end_label_ref);
                 break;
             }
             case operator_type_t::logical_and: {
                 is_short_circuited = true;
-                block->bz(lhs_reg.reg, end_label_ref);
+                block->bz(*target_reg, end_label_ref);
                 break;
             }
             default: {
@@ -329,8 +360,6 @@ namespace basecode::compiler {
                     break;
                 }
             }
-        } else {
-            block->move_reg_to_reg(*target_reg, rhs_reg.reg);
         }
 
         block->label(assembler.make_label(end_label_name));

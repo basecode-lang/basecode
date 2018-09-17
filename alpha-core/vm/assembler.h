@@ -842,6 +842,10 @@ namespace basecode::vm {
 
         void pop_target_register();
 
+        bool remove_tagged_register(
+            uint8_t tag,
+            register_t& reg);
+
         instruction_block* pop_block();
 
         vm::assembly_listing& listing();
@@ -882,7 +886,11 @@ namespace basecode::vm {
 
         vm::segment* segment(const std::string& name);
 
+        register_t* tagged_register(uint8_t tag) const;
+
         vm::label* make_label(const std::string& name);
+
+        void tag_register(uint8_t tag, register_t* reg);
 
         void push_target_register(const register_t& reg);
 
@@ -918,6 +926,7 @@ namespace basecode::vm {
         std::stack<instruction_block*> _block_stack {};
         std::unordered_map<std::string, vm::label*> _labels {};
         std::unordered_map<std::string, vm::segment> _segments {};
+        std::unordered_map<uint8_t, register_t*> _tagged_registers {};
         std::unordered_map<common::id_t, label_ref_t> _unresolved_labels {};
         std::unordered_map<std::string, common::id_t> _label_to_unresolved_ids {};
     };

@@ -645,6 +645,16 @@ namespace basecode::vm {
         _target_registers.pop();
     }
 
+    bool assembler::remove_tagged_register(
+            uint8_t tag,
+            register_t& reg) {
+        auto it = _tagged_registers.find(tag);
+        if (it == _tagged_registers.end())
+            return false;
+        reg = *(it->second);
+        return _tagged_registers.erase(tag);
+    }
+
     instruction_block* assembler::pop_block() {
         if (_block_stack.empty())
             return nullptr;
@@ -996,6 +1006,20 @@ namespace basecode::vm {
     vm::label* assembler::make_label(const std::string& name) {
         auto it = _labels.insert(std::make_pair(name, new vm::label(name)));
         return it.first->second;
+    }
+
+    register_t* assembler::tagged_register(uint8_t tag) const {
+        auto it = _tagged_registers.find(tag);
+        if (it == _tagged_registers.end())
+            return nullptr;
+        return it->second;
+    }
+
+    void assembler::tag_register(uint8_t tag, register_t* reg) {
+        auto it = _tagged_registers.find(tag);
+        if (it != _tagged_registers.end())
+            return;
+        _tagged_registers.insert(std::make_pair(tag, reg));
     }
 
     label_ref_t* assembler::make_label_ref(const std::string& label_name) {

@@ -833,10 +833,20 @@ namespace basecode::compiler {
         auto it = s_binary_operators.find(context.node->token.type);
         if (it == s_binary_operators.end())
             return false;
+        auto scope = _session.scope_manager().current_scope();
+
         auto lhs = resolve_symbol_or_evaluate(context, context.node->lhs.get());
         auto rhs = resolve_symbol_or_evaluate(context, context.node->rhs.get());
+
+//        if (is_relational_operator(it->second)) {
+//            if (lhs->element_type() != element_type_t::binary_operator)
+//                lhs = convert_predicate(context, context.node->lhs.get(), scope);
+//            if (rhs->element_type() != element_type_t::binary_operator)
+//                rhs = convert_predicate(context, context.node->rhs.get(), scope);
+//        }
+
         result.element = _session.builder().make_binary_operator(
-            _session.scope_manager().current_scope(),
+            scope,
             it->second,
             lhs,
             rhs);
@@ -1094,33 +1104,9 @@ namespace basecode::compiler {
     bool ast_evaluator::if_expression(
             evaluator_context_t& context,
             evaluator_result_t& result) {
-        auto& builder = _session.builder();
         auto scope = _session.scope_manager().current_scope();
 
-        auto predicate = resolve_symbol_or_evaluate(
-            context,
-            context.node->lhs.get(),
-            scope);
-        if (predicate->element_type() != element_type_t::binary_operator) {
-            infer_type_result_t infer_type_result {};
-            if (!predicate->infer_type(_session, infer_type_result))
-                return false;
-
-            if (infer_type_result.inferred_type->element_type() != element_type_t::bool_type) {
-                _session.error(
-                    "P002",
-                    "expected a boolean expression.",
-                    predicate->location());
-                return false;
-            }
-
-            predicate = builder.make_binary_operator(
-                scope,
-                operator_type_t::equals,
-                predicate,
-                builder.make_bool(scope, true));
-        }
-
+        auto predicate = convert_predicate(context, context.node->lhs.get(), scope);
         auto true_branch = evaluate(context.node->children[0].get());
         auto false_branch = evaluate(context.node->rhs.get());
         result.element = _session.builder().make_if(
@@ -1395,6 +1381,36 @@ namespace basecode::compiler {
             nullptr,
             0,
             scope);
+    }
+
+    element* ast_evaluator::convert_predicate(
+            const evaluator_context_t& context,
+            const syntax::ast_node_t* node,
+            compiler::block* scope) {
+        auto& builder = _session.builder();
+
+        auto predicate = resolve_symbol_or_evaluate(context, node, scope);
+        if (predicate->element_type() != element_type_t::binary_operator) {
+            infer_type_result_t infer_type_result {};
+            if (!predicate->infer_type(_session, infer_type_result))
+                return nullptr;
+
+            if (infer_type_result.inferred_type->element_type() != element_type_t::bool_type) {
+                _session.error(
+                    "P002",
+                    "expected a boolean expression.",
+                    predicate->location());
+                return nullptr;
+            }
+
+            predicate = builder.make_binary_operator(
+                scope,
+                operator_type_t::equals,
+                predicate,
+                builder.make_bool(scope, true));
+        }
+
+        return predicate;
     }
 
 };

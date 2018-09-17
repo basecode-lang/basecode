@@ -366,6 +366,21 @@ namespace basecode::compiler {
         {syntax::token_types_t::caret,              operator_type_t::dereference},
     };
 
+    static inline bool is_relational_operator(operator_type_t op) {
+        switch (op) {
+            case operator_type_t::equals:
+            case operator_type_t::less_than:
+            case operator_type_t::not_equals:
+            case operator_type_t::logical_or:
+            case operator_type_t::logical_and:
+            case operator_type_t::greater_than:
+            case operator_type_t::less_than_or_equal:
+            case operator_type_t::greater_than_or_equal:
+                return true;
+            default: return false;
+        }
+    }
+
     ///////////////////////////////////////////////////////////////////////////
 
     struct attribute_map_t {
@@ -513,6 +528,12 @@ namespace basecode::compiler {
 
         compiler::type* inferred_type = nullptr;
         compiler::type_reference* reference = nullptr;
+    };
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    enum register_tags_t : uint8_t {
+        tag_rel_expr_target = 1
     };
 
 };

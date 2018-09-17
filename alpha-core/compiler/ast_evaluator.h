@@ -46,6 +46,11 @@ namespace basecode::compiler {
         element* evaluate(const syntax::ast_node_t* node);
 
     private:
+        element* convert_predicate(
+            const evaluator_context_t& context,
+            const syntax::ast_node_t* node,
+            compiler::block* scope);
+
         element* evaluate_in_scope(
             const evaluator_context_t& context,
             const syntax::ast_node_t* node,

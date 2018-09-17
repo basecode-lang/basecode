@@ -1,19 +1,12 @@
 @library "alpha-core";
 #foreign print ::= proc(format: string, values: ...any) @alias "fmt_print";
 
-junk: bool;
-junk := (3 == 4 && 4 == 4) || 1 == 1;
-
-if junk {
-    print("junk := true\n");
-};
-
 //bong := 0;
 //if cast<bool>(bong) {
 //    print("musk got in trouble for hitting the weed\n");
 //};
 //
-//is_true := false;
+is_true := true;
 //
 //if is_true {
 //    print("true!\n");
@@ -28,10 +21,17 @@ if junk {
 //if !is_true {
 //    print("does this work?\n");
 //};
-//
-//a := 6;
-//is_a_less_than_five := a < 5;
-//
+
+a := 4;
+is_a_less_than_five := a < 5 && is_true == true;
+
+
+if a < 5 && is_true == true {
+    print("a is < 5 and/or is_true := true\n");
+} else {
+    print("a is > 5 and/or is_true := false\n");
+};
+
 //if is_a_less_than_five {
 //    print("yes, a is less than 5.\n");
 //} else {
@@ -51,4 +51,3 @@ if junk {
 //} else if a >= 5 {
 //    print("a is greater than or equal to 5\n");
 //};
-//
