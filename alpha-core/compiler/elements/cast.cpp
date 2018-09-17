@@ -151,6 +151,14 @@ namespace basecode::compiler {
         _expression->emit(session);
         assembler.pop_target_register();
 
+        instruction_block->comment(
+            fmt::format(
+                "cast<{}> from type {}",
+                _type_ref->symbol().name,
+                infer_type_result.type_name()),
+            4);
+        instruction_block->clr(vm::op_sizes::qword, *target_reg);
+
         switch (mode) {
             case cast_mode_t::integer_truncate: {
                 instruction_block->move_reg_to_reg(*target_reg, temp_reg.reg);
@@ -175,13 +183,6 @@ namespace basecode::compiler {
                 break;
             }
         }
-
-        instruction_block->comment(
-            fmt::format(
-                "cast<{}> from type {}",
-                _type_ref->symbol().name,
-                infer_type_result.type_name()),
-            4);
 
         return true;
     }

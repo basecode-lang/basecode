@@ -835,21 +835,23 @@ namespace basecode::compiler {
             return false;
         auto scope = _session.scope_manager().current_scope();
 
-        auto lhs = resolve_symbol_or_evaluate(context, context.node->lhs.get());
-        auto rhs = resolve_symbol_or_evaluate(context, context.node->rhs.get());
+        compiler::element* lhs = nullptr;
+        compiler::element* rhs = nullptr;
 
-//        if (is_relational_operator(it->second)) {
-//            if (lhs->element_type() != element_type_t::binary_operator)
-//                lhs = convert_predicate(context, context.node->lhs.get(), scope);
-//            if (rhs->element_type() != element_type_t::binary_operator)
-//                rhs = convert_predicate(context, context.node->rhs.get(), scope);
-//        }
+        if (is_logical_conjuction_operator(it->second)) {
+            lhs = convert_predicate(context, context.node->lhs.get(), scope);
+            rhs = convert_predicate(context, context.node->rhs.get(), scope);
+        } else {
+            lhs = resolve_symbol_or_evaluate(context, context.node->lhs.get());
+            rhs = resolve_symbol_or_evaluate(context, context.node->rhs.get());
+        }
 
         result.element = _session.builder().make_binary_operator(
             scope,
             it->second,
             lhs,
             rhs);
+
         return true;
     }
 

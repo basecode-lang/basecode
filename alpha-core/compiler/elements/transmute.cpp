@@ -81,10 +81,10 @@ namespace basecode::compiler {
         _expression->emit(session);
         assembler.pop_target_register();
 
-        instruction_block->move_reg_to_reg(*target_reg, temp_reg.reg);
         instruction_block->comment(
             fmt::format("transmute<{}>", _type_ref->symbol().name),
             4);
+        instruction_block->move_reg_to_reg(*target_reg, temp_reg.reg);
 
         return true;
     }

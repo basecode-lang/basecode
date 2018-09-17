@@ -48,6 +48,7 @@ namespace basecode::compiler {
         auto& assembler = session.assembler();
         auto block = assembler.current_block();
 
+        auto begin_label_name = fmt::format("{}_begin", label_name());
         auto true_label_name = fmt::format("{}_true", label_name());
         auto false_label_name = fmt::format("{}_false", label_name());
         auto end_label_name = fmt::format("{}_end", label_name());
@@ -61,6 +62,7 @@ namespace basecode::compiler {
             assembler.free_reg(target_reg);
         });
 
+        block->label(assembler.make_label(begin_label_name));
         assembler.push_target_register(target_reg);
         _predicate->emit(session);
         assembler.pop_target_register();
@@ -73,6 +75,8 @@ namespace basecode::compiler {
         block->label(assembler.make_label(false_label_name));
         if (_false_branch != nullptr) {
             _false_branch->emit(session);
+        } else {
+            block->nop();
         }
 
         block->label(assembler.make_label(end_label_name));

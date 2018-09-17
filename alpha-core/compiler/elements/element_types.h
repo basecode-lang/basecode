@@ -381,6 +381,15 @@ namespace basecode::compiler {
         }
     }
 
+    static inline bool is_logical_conjuction_operator(operator_type_t op) {
+        switch (op) {
+            case operator_type_t::logical_or:
+            case operator_type_t::logical_and:
+                return true;
+            default: return false;
+        }
+    }
+
     ///////////////////////////////////////////////////////////////////////////
 
     struct attribute_map_t {

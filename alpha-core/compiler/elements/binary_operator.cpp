@@ -72,6 +72,10 @@ namespace basecode::compiler {
 
     bool binary_operator::on_emit(compiler::session& session) {
         auto& assembler = session.assembler();
+
+        auto block = assembler.current_block();
+        block->label(assembler.make_label(fmt::format("{}_begin", label_name())));
+
         switch (operator_type()) {
             case operator_type_t::add:
             case operator_type_t::modulo:
@@ -101,7 +105,6 @@ namespace basecode::compiler {
                 break;
             }
             case operator_type_t::dereference: {
-                auto block = assembler.current_block();
                 block->comment("XXX: implement . dereference", 4);
                 block->nop();
                 break;
@@ -147,6 +150,7 @@ namespace basecode::compiler {
             default:
                 break;
         }
+
         return true;
     }
 
@@ -289,7 +293,7 @@ namespace basecode::compiler {
             assembler.tag_register(
                 register_tags_t::tag_rel_expr_target,
                 target_reg);
-            block->clr(vm::op_sizes::byte, *target_reg);
+            block->clr(vm::op_sizes::qword, *target_reg);
         }
 
         auto lhs_reg = register_for(session, _lhs);
