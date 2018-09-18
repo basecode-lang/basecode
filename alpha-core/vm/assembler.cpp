@@ -356,8 +356,10 @@ namespace basecode::vm {
                         return false;
                     }
 
-                    if (wip.instance.m->operands.size() == 0)
-                        state = assembly_parser_state_t::whitespace;
+                    if (wip.instance.m->operands.size() == 0) {
+                        wip.is_valid = true;
+                        state = assembly_parser_state_t::encode_instruction;
+                    }
                     else
                         state = assembly_parser_state_t::operand_list;
                     break;
@@ -639,6 +641,12 @@ namespace basecode::vm {
         return true;
     }
 
+    void assembler::pop_control_flow() {
+        if (_control_flow_stack.empty())
+            return;
+        _control_flow_stack.pop();
+    }
+
     void assembler::pop_target_register() {
         if (_target_registers.empty())
             return;
@@ -704,6 +712,12 @@ namespace basecode::vm {
         if (_target_registers.empty())
             return nullptr;
         return &_target_registers.top();
+    }
+
+    control_flow_t* assembler::current_control_flow() {
+        if (_control_flow_stack.empty())
+            return nullptr;
+        return &_control_flow_stack.top();
     }
 
     bool assembler::resolve_labels(common::result& r) {
@@ -1070,6 +1084,10 @@ namespace basecode::vm {
         } else {
             return isdigit(value[1]) && isdigit(value[2]);
         }
+    }
+
+    void assembler::push_control_flow(const control_flow_t& control_flow) {
+        _control_flow_stack.push(control_flow);
     }
 
 };

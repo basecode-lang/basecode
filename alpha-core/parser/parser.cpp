@@ -710,10 +710,18 @@ namespace basecode::syntax {
                 return import_node;
             }
             case token_types_t::break_literal: {
-                return parser->ast_builder()->break_node(token);
+                auto break_node = parser->ast_builder()->break_node(token);
+                if (parser->peek(syntax::token_types_t::label)) {
+                    break_node->lhs = parser->parse_expression(r, 0);
+                }
+                return break_node;
             }
             case token_types_t::continue_literal: {
-                return parser->ast_builder()->continue_node(token);
+                auto continue_node = parser->ast_builder()->continue_node(token);
+                if (parser->peek(syntax::token_types_t::label)) {
+                    continue_node->lhs = parser->parse_expression(r, 0);
+                }
+                return continue_node;
             }
             case token_types_t::nil_literal: {
                 return parser->ast_builder()->nil_literal_node(token);

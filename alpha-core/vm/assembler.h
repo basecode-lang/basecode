@@ -30,6 +30,13 @@ namespace basecode::vm {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    struct control_flow_t {
+        label_ref_t* exit_label = nullptr;
+        label_ref_t* continue_label = nullptr;
+    };
+
+    ///////////////////////////////////////////////////////////////////////////
+
     struct mnemonic_operand_t {
         enum flags : uint8_t {
             none             = 0b00000000,
@@ -835,6 +842,8 @@ namespace basecode::vm {
             const std::string& name,
             segment_type_t type);
 
+        void pop_control_flow();
+
         bool assemble_from_source(
             common::result& r,
             common::source_file& source_file,
@@ -868,6 +877,8 @@ namespace basecode::vm {
 
         register_t* current_target_register();
 
+        control_flow_t* current_control_flow();
+
         bool resolve_labels(common::result& r);
 
         bool apply_addresses(common::result& r);
@@ -893,6 +904,8 @@ namespace basecode::vm {
         void tag_register(uint8_t tag, register_t* reg);
 
         void push_target_register(const register_t& reg);
+
+        void push_control_flow(const control_flow_t& control_flow);
 
         label_ref_t* make_label_ref(const std::string& label_name);
 
@@ -924,6 +937,7 @@ namespace basecode::vm {
         register_allocator_t _register_allocator {};
         std::stack<register_t> _target_registers {};
         std::stack<instruction_block*> _block_stack {};
+        std::stack<control_flow_t> _control_flow_stack {};
         std::unordered_map<std::string, vm::label*> _labels {};
         std::unordered_map<std::string, vm::segment> _segments {};
         std::unordered_map<uint8_t, register_t*> _tagged_registers {};

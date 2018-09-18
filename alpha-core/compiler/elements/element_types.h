@@ -57,6 +57,7 @@ namespace basecode::compiler {
     class numeric_type;
     class unknown_type;
     class pointer_type;
+    class break_element;
     class float_literal;
     class operator_base;
     class argument_list;
@@ -76,6 +77,7 @@ namespace basecode::compiler {
     class integer_literal;
     class binary_operator;
     class alloc_intrinsic;
+    class continue_element;
     class module_reference;
     class size_of_intrinsic;
     class namespace_element;
@@ -135,6 +137,7 @@ namespace basecode::compiler {
         field,
         symbol,
         module,
+        break_e,
         comment,
         program,
         while_e,
@@ -151,6 +154,7 @@ namespace basecode::compiler {
         proc_call,
         type_info,
         transmute,
+        continue_e,
         array_type,
         identifier,
         expression,
@@ -192,6 +196,7 @@ namespace basecode::compiler {
         {element_type_t::module, "module"},
         {element_type_t::symbol, "symbol"},
         {element_type_t::while_e, "while"},
+        {element_type_t::break_e, "break"},
         {element_type_t::comment, "comment"},
         {element_type_t::element, "element"},
         {element_type_t::program, "program"},
@@ -208,6 +213,7 @@ namespace basecode::compiler {
         {element_type_t::statement, "statement"},
         {element_type_t::proc_call, "proc_call"},
         {element_type_t::type_info, "type_info"},
+        {element_type_t::continue_e, "continue"},
         {element_type_t::assignment, "assignment"},
         {element_type_t::tuple_type, "tuple_type"},
         {element_type_t::array_type, "array_type"},

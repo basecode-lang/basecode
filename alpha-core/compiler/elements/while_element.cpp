@@ -43,6 +43,14 @@ namespace basecode::compiler {
         auto exit_label_name = fmt::format("{}_exit", label_name());
         auto end_label_name = fmt::format("{}_end", label_name());
 
+        auto begin_label_ref = assembler.make_label_ref(begin_label_name);
+        auto exit_label_ref = assembler.make_label_ref(exit_label_name);
+
+        assembler.push_control_flow(vm::control_flow_t {
+            .exit_label = exit_label_ref,
+            .continue_label = begin_label_ref
+        });
+
         vm::register_t target_reg {
             .size = vm::op_sizes::byte,
             .type = vm::register_type_t::integer
@@ -50,6 +58,7 @@ namespace basecode::compiler {
         assembler.allocate_reg(target_reg);
         defer({
             assembler.free_reg(target_reg);
+            assembler.pop_control_flow();
         });
 
         block->label(assembler.make_label(begin_label_name));
@@ -57,10 +66,10 @@ namespace basecode::compiler {
         _predicate->emit(session);
         assembler.pop_target_register();
 
-        block->bz(target_reg, assembler.make_label_ref(exit_label_name));
+        block->bz(target_reg, exit_label_ref);
         block->label(assembler.make_label(body_label_name));
         _body->emit(session);
-        block->jump_direct(assembler.make_label_ref(begin_label_name));
+        block->jump_direct(begin_label_ref);
 
         block->label(assembler.make_label(exit_label_name));
         block->nop();

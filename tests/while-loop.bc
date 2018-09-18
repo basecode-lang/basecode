@@ -2,7 +2,6 @@
 #foreign print ::= proc(format: string, values: ...any) @alias "fmt_print";
 
 i: u32 := 1;
-
 while i <= 20 {
     print("i := %02d ... ", i);
     if (i % 15) == 0 {
@@ -16,3 +15,37 @@ while i <= 20 {
     };
     i := i + 1;
 };
+
+// XXX: there appears to be a memory layout issue
+//      without this extra nop, things aren't aligned properly?
+#assembly {{
+    nop
+}};
+
+j: u32 := 0;
+k: u32 := 0;
+while true {
+    k := k + 1;
+
+    print("j := %02d\n", j);
+
+    if (k % 4) == 0 {
+        continue;
+    };
+
+    if j == 6 {
+        continue 'double_it:;
+    };
+
+    if j == 20 {
+        break;
+    };
+
+    j := j + 1;
+    continue;
+
+'double_it:
+    j := j + 4;
+};
+
+print("after: j := %02d\n", j);

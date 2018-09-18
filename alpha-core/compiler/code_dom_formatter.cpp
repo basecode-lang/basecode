@@ -40,6 +40,7 @@
 #include <compiler/elements/string_type.h>
 #include <compiler/elements/pointer_type.h>
 #include <compiler/elements/numeric_type.h>
+#include <compiler/elements/break_element.h>
 #include <compiler/elements/while_element.h>
 #include <compiler/elements/float_literal.h>
 #include <compiler/elements/argument_list.h>
@@ -55,6 +56,7 @@
 #include <compiler/elements/integer_literal.h>
 #include <compiler/elements/boolean_literal.h>
 #include <compiler/elements/binary_operator.h>
+#include <compiler/elements/continue_element.h>
 #include <compiler/elements/module_reference.h>
 #include <compiler/elements/namespace_element.h>
 #include <compiler/elements/procedure_instance.h>
@@ -197,6 +199,26 @@ namespace basecode::compiler {
                     "{}[shape=record,label=\"{}\"{}];",
                     node_vertex_name,
                     element->is_else_if() ? "else if" : "if",
+                    style);
+            }
+            case element_type_t::break_e: {
+                auto element = dynamic_cast<break_element*>(node);
+                auto style = ", fillcolor=cornsilk4, style=\"filled\"";
+                if (element->label() != nullptr)
+                    add_primary_edge(element, element->label());
+                return fmt::format(
+                    "{}[shape=record,label=\"break\"{}];",
+                    node_vertex_name,
+                    style);
+            }
+            case element_type_t::continue_e: {
+                auto element = dynamic_cast<continue_element*>(node);
+                auto style = ", fillcolor=cornsilk4, style=\"filled\"";
+                if (element->label() != nullptr)
+                    add_primary_edge(element, element->label());
+                return fmt::format(
+                    "{}[shape=record,label=\"continue\"{}];",
+                    node_vertex_name,
                     style);
             }
             case element_type_t::while_e: {

@@ -131,6 +131,7 @@ add_library(
     compiler/elements/element_types.cpp compiler/elements/element_types.h
     compiler/elements/argument_list.cpp compiler/elements/argument_list.h
     compiler/elements/while_element.cpp compiler/elements/while_element.h
+    compiler/elements/break_element.cpp compiler/elements/break_element.h
     compiler/elements/free_intrinsic.cpp compiler/elements/free_intrinsic.h
     compiler/elements/symbol_element.cpp compiler/elements/symbol_element.h
     compiler/elements/namespace_type.cpp compiler/elements/namespace_type.h
@@ -146,6 +147,7 @@ add_library(
     compiler/elements/integer_literal.cpp compiler/elements/integer_literal.h
     compiler/elements/binary_operator.cpp compiler/elements/binary_operator.h
     compiler/elements/boolean_literal.cpp compiler/elements/boolean_literal.h
+    compiler/elements/continue_element.cpp compiler/elements/continue_element.h
     compiler/elements/module_reference.cpp compiler/elements/module_reference.h
     compiler/elements/type_of_intrinsic.cpp compiler/elements/type_of_intrinsic.h
     compiler/elements/namespace_element.cpp compiler/elements/namespace_element.h

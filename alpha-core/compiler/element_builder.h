@@ -21,6 +21,14 @@ namespace basecode::compiler {
     public:
         explicit element_builder(compiler::session& session);
 
+        break_element* make_break(
+            compiler::block* parent_scope,
+            compiler::label* label);
+
+        continue_element* make_continue(
+            compiler::block* parent_scope,
+            compiler::label* label);
+
         while_element* make_while(
             compiler::block* parent_scope,
             compiler::binary_operator* predicate,

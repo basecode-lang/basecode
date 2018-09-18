@@ -40,6 +40,7 @@
 #include <compiler/elements/numeric_type.h>
 #include <compiler/elements/unknown_type.h>
 #include <compiler/elements/pointer_type.h>
+#include <compiler/elements/break_element.h>
 #include <compiler/elements/while_element.h>
 #include <compiler/elements/argument_list.h>
 #include <compiler/elements/float_literal.h>
@@ -55,6 +56,7 @@
 #include <compiler/elements/boolean_literal.h>
 #include <compiler/elements/binary_operator.h>
 #include <compiler/elements/integer_literal.h>
+#include <compiler/elements/continue_element.h>
 #include <compiler/elements/module_reference.h>
 #include <compiler/elements/namespace_element.h>
 #include <compiler/elements/size_of_intrinsic.h>
@@ -97,7 +99,7 @@ namespace basecode::compiler {
         {syntax::ast_node_types_t::binary_operator,         std::bind(&ast_evaluator::binary_operator, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::boolean_literal,         std::bind(&ast_evaluator::boolean_literal, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::else_expression,         std::bind(&ast_evaluator::else_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::break_statement,         std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::break_statement,         std::bind(&ast_evaluator::break_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::with_expression,         std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::type_identifier,         std::bind(&ast_evaluator::type_identifier, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::while_statement,         std::bind(&ast_evaluator::while_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
@@ -113,7 +115,7 @@ namespace basecode::compiler {
         {syntax::ast_node_types_t::array_constructor,       std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::module_expression,       std::bind(&ast_evaluator::module_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::elseif_expression,       std::bind(&ast_evaluator::if_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::continue_statement,      std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::continue_statement,      std::bind(&ast_evaluator::continue_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::constant_assignment,     std::bind(&ast_evaluator::assignment, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::transmute_expression,    std::bind(&ast_evaluator::transmute_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::namespace_expression,    std::bind(&ast_evaluator::namespace_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
@@ -659,6 +661,40 @@ namespace basecode::compiler {
 
         result.element = module;
 
+        return true;
+    }
+
+    bool ast_evaluator::break_expression(
+            evaluator_context_t& context,
+            evaluator_result_t& result) {
+        auto& builder = _session.builder();
+        auto& scope_manager = _session.scope_manager();
+
+        compiler::label* label = nullptr;
+        if (context.node->lhs != nullptr) {
+            label = builder.make_label(
+                scope_manager.current_scope(),
+                context.node->lhs->token.value);
+        }
+
+        result.element = builder.make_break(scope_manager.current_scope(), label);
+        return true;
+    }
+
+    bool ast_evaluator::continue_expression(
+            evaluator_context_t& context,
+            evaluator_result_t& result) {
+        auto& builder = _session.builder();
+        auto& scope_manager = _session.scope_manager();
+
+        compiler::label* label = nullptr;
+        if (context.node->lhs != nullptr) {
+            label = builder.make_label(
+                scope_manager.current_scope(),
+                context.node->lhs->token.value);
+        }
+
+        result.element = builder.make_continue(scope_manager.current_scope(), label);
         return true;
     }
 

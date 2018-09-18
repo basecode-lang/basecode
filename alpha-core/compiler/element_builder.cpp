@@ -43,6 +43,7 @@
 #include <compiler/elements/argument_list.h>
 #include <compiler/elements/float_literal.h>
 #include <compiler/elements/while_element.h>
+#include <compiler/elements/break_element.h>
 #include <compiler/elements/type_reference.h>
 #include <compiler/elements/free_intrinsic.h>
 #include <compiler/elements/string_literal.h>
@@ -58,6 +59,7 @@
 #include <compiler/elements/boolean_literal.h>
 #include <compiler/elements/binary_operator.h>
 #include <compiler/elements/integer_literal.h>
+#include <compiler/elements/continue_element.h>
 #include <compiler/elements/module_reference.h>
 #include <compiler/elements/size_of_intrinsic.h>
 #include <compiler/elements/namespace_element.h>
@@ -321,6 +323,32 @@ namespace basecode::compiler {
             type);
         _session.elements().add(block_element);
         return block_element;
+    }
+
+    break_element* element_builder::make_break(
+            compiler::block* parent_scope,
+            compiler::label* label) {
+        auto break_e = new compiler::break_element(
+            _session.scope_manager().current_module(),
+            parent_scope,
+            label);
+        _session.elements().add(break_e);
+        if (label != nullptr)
+            label->parent_element(break_e);
+        return break_e;
+    }
+
+    continue_element* element_builder::make_continue(
+            compiler::block* parent_scope,
+            compiler::label* label) {
+        auto continue_e = new compiler::continue_element(
+            _session.scope_manager().current_module(),
+            parent_scope,
+            label);
+        _session.elements().add(continue_e);
+        if (label != nullptr)
+            label->parent_element(continue_e);
+        return continue_e;
     }
 
     while_element* element_builder::make_while(
