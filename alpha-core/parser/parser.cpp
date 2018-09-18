@@ -435,6 +435,7 @@ namespace basecode::syntax {
             parser* parser,
             token_t& token) {
         auto with_node = parser->ast_builder()->with_node(token);
+        with_node->lhs = parser->parse_expression(r, 0);
         with_node->rhs = parser->parse_expression(r, 0);
         return with_node;
     }
@@ -446,7 +447,7 @@ namespace basecode::syntax {
             parser* parser,
             token_t& token) {
         auto defer_node = parser->ast_builder()->defer_node(token);
-        defer_node->rhs = parser->parse_expression(r, 0);
+        defer_node->lhs = parser->parse_expression(r, 0);
         return defer_node;
     }
 

@@ -93,6 +93,7 @@ add_library(
     compiler/elements/cast.cpp compiler/elements/cast.h
     compiler/scope_manager.cpp compiler/scope_manager.h
     compiler/ast_evaluator.cpp compiler/ast_evaluator.h
+    compiler/elements/with.cpp compiler/elements/with.h
     compiler/elements/field.cpp compiler/elements/field.h
     compiler/elements/block.cpp compiler/elements/block.h
     compiler/elements/label.cpp compiler/elements/label.h
@@ -118,6 +119,7 @@ add_library(
     compiler/elements/expression.cpp compiler/elements/expression.h
     compiler/elements/array_type.cpp compiler/elements/array_type.h
     compiler/elements/tuple_type.cpp compiler/elements/tuple_type.h
+    compiler/elements/for_element.cpp compiler/elements/for_element.h
     compiler/elements/nil_literal.cpp compiler/elements/nil_literal.h
     compiler/elements/initializer.cpp compiler/elements/initializer.h
     compiler/elements/string_type.cpp compiler/elements/string_type.h
@@ -132,6 +134,7 @@ add_library(
     compiler/elements/argument_list.cpp compiler/elements/argument_list.h
     compiler/elements/while_element.cpp compiler/elements/while_element.h
     compiler/elements/break_element.cpp compiler/elements/break_element.h
+    compiler/elements/defer_element.cpp compiler/elements/defer_element.h
     compiler/elements/free_intrinsic.cpp compiler/elements/free_intrinsic.h
     compiler/elements/symbol_element.cpp compiler/elements/symbol_element.h
     compiler/elements/namespace_type.cpp compiler/elements/namespace_type.h

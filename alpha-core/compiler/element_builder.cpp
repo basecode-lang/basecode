@@ -12,6 +12,7 @@
 #include <compiler/session.h>
 #include <compiler/elements/type.h>
 #include <compiler/elements/cast.h>
+#include <compiler/elements/with.h>
 #include <compiler/elements/label.h>
 #include <compiler/elements/import.h>
 #include <compiler/elements/module.h>
@@ -37,9 +38,11 @@
 #include <compiler/elements/initializer.h>
 #include <compiler/elements/module_type.h>
 #include <compiler/elements/string_type.h>
+#include <compiler/elements/for_element.h>
 #include <compiler/elements/numeric_type.h>
 #include <compiler/elements/unknown_type.h>
 #include <compiler/elements/pointer_type.h>
+#include <compiler/elements/defer_element.h>
 #include <compiler/elements/argument_list.h>
 #include <compiler/elements/float_literal.h>
 #include <compiler/elements/while_element.h>

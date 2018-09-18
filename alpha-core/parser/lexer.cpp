@@ -883,7 +883,7 @@ namespace basecode::syntax {
             auto ch = read(false);
             if (!isalnum(ch)) {
                 rewind_one_char();
-                token = s_true_literal;
+                token = s_with_literal;
                 return true;
             }
         }

@@ -26,6 +26,7 @@ namespace basecode::compiler {
 
     class cast;
     class type;
+    class with;
     class field;
     class block;
     class label;
@@ -54,9 +55,11 @@ namespace basecode::compiler {
     class initializer;
     class string_type;
     class nil_literal;
+    class for_element;
     class numeric_type;
     class unknown_type;
     class pointer_type;
+    class defer_element;
     class break_element;
     class float_literal;
     class operator_base;
@@ -132,9 +135,12 @@ namespace basecode::compiler {
         element = 1,
         cast,
         if_e,
+        with,
+        for_e,
         label,
         block,
         field,
+        defer,
         symbol,
         module,
         break_e,
@@ -190,9 +196,12 @@ namespace basecode::compiler {
     static inline std::unordered_map<element_type_t, std::string> s_element_type_names = {
         {element_type_t::if_e, "if"},
         {element_type_t::cast, "cast"},
+        {element_type_t::with, "with"},
+        {element_type_t::for_e, "for"},
         {element_type_t::label, "label"},
         {element_type_t::block, "block"},
         {element_type_t::field, "field"},
+        {element_type_t::defer, "defer"},
         {element_type_t::module, "module"},
         {element_type_t::symbol, "symbol"},
         {element_type_t::while_e, "while"},

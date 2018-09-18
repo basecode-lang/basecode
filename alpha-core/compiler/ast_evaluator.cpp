@@ -12,6 +12,7 @@
 #include <compiler/session.h>
 #include <compiler/elements/type.h>
 #include <compiler/elements/cast.h>
+#include <compiler/elements/with.h>
 #include <compiler/elements/label.h>
 #include <compiler/elements/import.h>
 #include <compiler/elements/module.h>
@@ -32,6 +33,7 @@
 #include <compiler/elements/if_element.h>
 #include <compiler/elements/array_type.h>
 #include <compiler/elements/tuple_type.h>
+#include <compiler/elements/for_element.h>
 #include <compiler/elements/declaration.h>
 #include <compiler/elements/initializer.h>
 #include <compiler/elements/module_type.h>
@@ -40,6 +42,7 @@
 #include <compiler/elements/numeric_type.h>
 #include <compiler/elements/unknown_type.h>
 #include <compiler/elements/pointer_type.h>
+#include <compiler/elements/defer_element.h>
 #include <compiler/elements/break_element.h>
 #include <compiler/elements/while_element.h>
 #include <compiler/elements/argument_list.h>
@@ -100,14 +103,14 @@ namespace basecode::compiler {
         {syntax::ast_node_types_t::boolean_literal,         std::bind(&ast_evaluator::boolean_literal, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::else_expression,         std::bind(&ast_evaluator::else_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::break_statement,         std::bind(&ast_evaluator::break_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::with_expression,         std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::with_expression,         std::bind(&ast_evaluator::with_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::type_identifier,         std::bind(&ast_evaluator::type_identifier, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::while_statement,         std::bind(&ast_evaluator::while_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::defer_expression,        std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::defer_expression,        std::bind(&ast_evaluator::defer_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::union_expression,        std::bind(&ast_evaluator::union_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::return_statement,        std::bind(&ast_evaluator::return_statement, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::symbol_reference,        std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::for_in_statement,        std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::for_in_statement,        std::bind(&ast_evaluator::for_in_statement, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::switch_expression,       std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::import_expression,       std::bind(&ast_evaluator::import_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::struct_expression,       std::bind(&ast_evaluator::struct_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
@@ -1124,6 +1127,18 @@ namespace basecode::compiler {
         return true;
     }
 
+    bool ast_evaluator::with_expression(
+            evaluator_context_t& context,
+            evaluator_result_t& result) {
+        return false;
+    }
+
+    bool ast_evaluator::defer_expression(
+            evaluator_context_t& context,
+            evaluator_result_t& result) {
+        return false;
+    }
+
     bool ast_evaluator::struct_expression(
             evaluator_context_t& context,
             evaluator_result_t& result) {
@@ -1325,6 +1340,12 @@ namespace basecode::compiler {
         result.element = type_ref;
 
         return true;
+    }
+
+    bool ast_evaluator::for_in_statement(
+            evaluator_context_t& context,
+            evaluator_result_t& result) {
+        return false;
     }
 
     bool ast_evaluator::transmute_expression(

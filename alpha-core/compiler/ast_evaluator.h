@@ -129,6 +129,14 @@ namespace basecode::compiler {
             evaluator_context_t& context,
             evaluator_result_t& result);
 
+        bool with_expression(
+            evaluator_context_t& context,
+            evaluator_result_t& result);
+
+        bool defer_expression(
+            evaluator_context_t& context,
+            evaluator_result_t& result);
+
         bool break_expression(
             evaluator_context_t& context,
             evaluator_result_t& result);
@@ -242,6 +250,10 @@ namespace basecode::compiler {
             evaluator_result_t& result);
 
         bool type_identifier(
+            evaluator_context_t& context,
+            evaluator_result_t& result);
+
+        bool for_in_statement(
             evaluator_context_t& context,
             evaluator_result_t& result);
 

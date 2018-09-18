@@ -11,6 +11,7 @@
 
 #include <fmt/format.h>
 #include <compiler/elements/cast.h>
+#include <compiler/elements/with.h>
 #include <compiler/elements/block.h>
 #include <compiler/elements/field.h>
 #include <compiler/elements/label.h>
@@ -33,6 +34,7 @@
 #include <compiler/elements/identifier.h>
 #include <compiler/elements/if_element.h>
 #include <compiler/elements/assignment.h>
+#include <compiler/elements/for_element.h>
 #include <compiler/elements/nil_literal.h>
 #include <compiler/elements/declaration.h>
 #include <compiler/elements/module_type.h>
@@ -40,6 +42,7 @@
 #include <compiler/elements/string_type.h>
 #include <compiler/elements/pointer_type.h>
 #include <compiler/elements/numeric_type.h>
+#include <compiler/elements/defer_element.h>
 #include <compiler/elements/break_element.h>
 #include <compiler/elements/while_element.h>
 #include <compiler/elements/float_literal.h>
