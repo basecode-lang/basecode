@@ -327,6 +327,10 @@ namespace basecode::vm {
             int64_t offset = 0);
 
         // move variations
+        void move_sp_to_fp();
+
+        void move_fp_to_sp();
+
         void move_constant_to_reg(
             const register_t& dest_reg,
             uint64_t immediate);

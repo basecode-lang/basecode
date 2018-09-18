@@ -262,6 +262,30 @@ namespace basecode::vm {
         make_clr_instruction(dest_reg.size, dest_reg);
     }
 
+    void instruction_block::move_sp_to_fp() {
+        instruction_t move_op;
+        move_op.op = op_codes::move;
+        move_op.size = op_sizes::qword;
+        move_op.operands_count = 2;
+        move_op.operands[0].type = operand_encoding_t::flags::reg | operand_encoding_t::flags::integer;
+        move_op.operands[0].value.r = registers_t::fp;
+        move_op.operands[1].type = operand_encoding_t::flags::reg | operand_encoding_t::flags::integer;
+        move_op.operands[1].value.r = registers_t::sp;
+        make_block_entry(move_op);
+    }
+
+    void instruction_block::move_fp_to_sp() {
+        instruction_t move_op;
+        move_op.op = op_codes::move;
+        move_op.size = op_sizes::qword;
+        move_op.operands_count = 2;
+        move_op.operands[0].type = operand_encoding_t::flags::reg | operand_encoding_t::flags::integer;
+        move_op.operands[0].value.r = registers_t::sp;
+        move_op.operands[1].type = operand_encoding_t::flags::reg | operand_encoding_t::flags::integer;
+        move_op.operands[1].value.r = registers_t::fp;
+        make_block_entry(move_op);
+    }
+
     void instruction_block::move_reg_to_reg(
             const register_t& dest_reg,
             const register_t& src_reg) {

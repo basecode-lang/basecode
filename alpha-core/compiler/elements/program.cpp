@@ -261,10 +261,12 @@ namespace basecode::compiler {
         finalizer_block->blank_line();
         finalizer_block->align(vm::instruction_t::alignment);
         finalizer_block->label(assembler.make_label("_finalizer"));
+
         assembler.push_block(finalizer_block);
         defer({
-          finalizer_block->exit();
-          assembler.pop_block();
+            finalizer_block->move_fp_to_sp();
+            finalizer_block->exit();
+            assembler.pop_block();
         });
 
         for (const auto& section : _vars_by_section) {
@@ -288,6 +290,8 @@ namespace basecode::compiler {
         initializer_block->blank_line();
         initializer_block->align(vm::instruction_t::alignment);
         initializer_block->label(assembler.make_label("_initializer"));
+        initializer_block->move_sp_to_fp();
+
         assembler.push_block(initializer_block);
         defer({
             assembler.pop_block();
