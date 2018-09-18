@@ -4,6 +4,14 @@ project(bac)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# configure ccache if available
+find_program(CCACHE_FOUND ccache)
+if(CCACHE_FOUND)
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
+    message(STATUS "${PROJECT_NAME} using ccache.")
+endif(CCACHE_FOUND)
+
 if (UNIX AND NOT APPLE)
     set(CMAKE_CXX_FLAGS "-fPIC")
 endif()

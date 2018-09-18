@@ -551,6 +551,7 @@ namespace basecode::vm {
 
     void instruction_block::clear_entries() {
         _entries.clear();
+        _recent_inst_index = -1;
     }
 
     void instruction_block::make_move_instruction(
@@ -1518,6 +1519,19 @@ namespace basecode::vm {
         _entries.push_back(entry);
     }
 
+    bool instruction_block::is_current_instruction(op_codes code) {
+        if (_entries.empty() || _recent_inst_index == -1)
+            return false;
+
+        auto& current_entry = _entries[_recent_inst_index];
+        if (current_entry.type() == block_entry_type_t::instruction) {
+            auto inst = current_entry.data<instruction_t>();
+            return inst != nullptr && inst->op == code;
+        }
+
+        return false;
+    }
+
     void instruction_block::make_block_entry(const label_t& label) {
         _entries.push_back(block_entry_t(label));
     }
@@ -1539,6 +1553,7 @@ namespace basecode::vm {
     }
 
     void instruction_block::make_block_entry(const instruction_t& inst) {
+        _recent_inst_index = static_cast<int64_t>(_entries.size());
         _entries.push_back(block_entry_t(inst));
     }
 

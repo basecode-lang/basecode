@@ -171,6 +171,8 @@ namespace basecode::vm {
         block_entry_type_t _type;
     };
 
+    using block_entry_list_t = std::vector<block_entry_t>;
+
     class instruction_block {
     public:
         explicit instruction_block(instruction_block_type_t type);
@@ -191,11 +193,13 @@ namespace basecode::vm {
 
         void label(vm::label* value);
 
+        block_entry_list_t& entries();
+
         listing_source_file_t* source_file();
 
         instruction_block_type_t type() const;
 
-        std::vector<block_entry_t>& entries();
+        bool is_current_instruction(op_codes code);
 
         void add_entry(const block_entry_t& entry);
 
@@ -736,7 +740,8 @@ namespace basecode::vm {
         common::id_t _id;
         bool _should_emit = true;
         instruction_block_type_t _type;
-        std::vector<block_entry_t> _entries {};
+        block_entry_list_t _entries {};
+        int64_t _recent_inst_index = -1;
         vm::listing_source_file_t* _source_file = nullptr;
     };
 

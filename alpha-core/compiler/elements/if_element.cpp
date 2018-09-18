@@ -70,7 +70,8 @@ namespace basecode::compiler {
         block->bz(target_reg, assembler.make_label_ref(false_label_name));
         block->label(assembler.make_label(true_label_name));
         _true_branch->emit(session);
-        block->jump_direct(assembler.make_label_ref(end_label_name));
+        if (!block->is_current_instruction(vm::op_codes::jmp))
+            block->jump_direct(assembler.make_label_ref(end_label_name));
 
         block->label(assembler.make_label(false_label_name));
         if (_false_branch != nullptr) {
