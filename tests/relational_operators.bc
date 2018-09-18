@@ -1,7 +1,8 @@
 @library "alpha-core";
 #foreign print ::= proc(format: string, values: ...any) @alias "fmt_print";
 
-is_true := true;
+ptr: ^u8 := nil;
+is_true := false;
 
 bong: u8 := 0;
 if !is_true {

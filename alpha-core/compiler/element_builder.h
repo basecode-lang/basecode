@@ -91,10 +91,6 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             double value);
 
-        boolean_literal* make_bool(
-            compiler::block* parent_scope,
-            bool value);
-
         compiler::block* make_block(
             compiler::block* parent_scope,
             element_type_t type);
@@ -264,6 +260,12 @@ namespace basecode::compiler {
             const qualified_symbol_t& symbol,
             compiler::type* type);
 
+        compiler::nil_literal* nil_literal();
+
+        compiler::boolean_literal* true_literal();
+
+        compiler::boolean_literal* false_literal();
+
         identifier_reference* make_identifier_reference(
             compiler::block* parent_scope,
             const qualified_symbol_t& symbol,
@@ -286,7 +288,17 @@ namespace basecode::compiler {
         compiler::symbol_element* make_symbol_from_node(const syntax::ast_node_t* node);
 
     private:
+        compiler::boolean_literal* make_bool(
+            compiler::block* parent_scope,
+            bool value);
+
+        compiler::nil_literal* make_nil(compiler::block* parent_scope);
+
+    private:
         compiler::session& _session;
+        compiler::nil_literal* _nil_literal = nullptr;
+        compiler::boolean_literal* _true_literal = nullptr;
+        compiler::boolean_literal* _false_literal = nullptr;
     };
 
 };

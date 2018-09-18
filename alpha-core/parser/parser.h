@@ -701,7 +701,7 @@ namespace basecode::syntax {
             {token_types_t::colon,               &s_type_identifier_prefix_parser},
             {token_types_t::proc_literal,        &s_proc_expression_prefix_parser},
             {token_types_t::true_literal,        &s_keyword_literal_prefix_parser},
-            {token_types_t::null_literal,        &s_keyword_literal_prefix_parser},
+            {token_types_t::nil_literal,         &s_keyword_literal_prefix_parser},
             {token_types_t::false_literal,       &s_keyword_literal_prefix_parser},
             {token_types_t::break_literal,       &s_keyword_literal_prefix_parser},
             {token_types_t::import_literal,      &s_keyword_literal_prefix_parser},

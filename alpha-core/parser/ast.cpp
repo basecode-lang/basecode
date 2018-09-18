@@ -364,9 +364,9 @@ namespace basecode::syntax {
         return node;
     }
 
-    ast_node_shared_ptr ast_builder::null_literal_node(const token_t& token) {
+    ast_node_shared_ptr ast_builder::nil_literal_node(const token_t& token) {
         auto node = std::make_shared<ast_node_t>();
-        configure_node(node, token, ast_node_types_t::null_literal);
+        configure_node(node, token, ast_node_types_t::nil_literal);
         return node;
     }
 

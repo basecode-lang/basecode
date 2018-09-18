@@ -42,8 +42,8 @@ namespace basecode::syntax {
         expression,
         basic_block,
         symbol_part,
+        nil_literal,
         line_comment,
-        null_literal,
         block_comment,
         argument_list,
         if_expression,
@@ -102,8 +102,8 @@ namespace basecode::syntax {
         {ast_node_types_t::expression, "expression"},
         {ast_node_types_t::basic_block, "basic_block"},
         {ast_node_types_t::symbol_part, "symbol_part"},
+        {ast_node_types_t::nil_literal, "nil_literal"},
         {ast_node_types_t::line_comment, "line_comment"},
-        {ast_node_types_t::null_literal, "null_literal"},
         {ast_node_types_t::block_comment, "block_comment"},
         {ast_node_types_t::argument_list, "argument_list"},
         {ast_node_types_t::if_expression, "if_expression"},
@@ -327,7 +327,7 @@ namespace basecode::syntax {
 
         ast_node_shared_ptr symbol_part_node(const token_t& token);
 
-        ast_node_shared_ptr null_literal_node(const token_t& token);
+        ast_node_shared_ptr nil_literal_node(const token_t& token);
 
         ast_node_shared_ptr line_comment_node(const token_t& token);
 

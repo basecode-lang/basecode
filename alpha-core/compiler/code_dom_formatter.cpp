@@ -33,6 +33,7 @@
 #include <compiler/elements/identifier.h>
 #include <compiler/elements/if_element.h>
 #include <compiler/elements/assignment.h>
+#include <compiler/elements/nil_literal.h>
 #include <compiler/elements/declaration.h>
 #include <compiler/elements/module_type.h>
 #include <compiler/elements/initializer.h>
@@ -587,6 +588,13 @@ namespace basecode::compiler {
                     "{}[shape=record,label=\"unary_operator|{}\"{}];",
                     node_vertex_name,
                     operator_type_name(element->operator_type()),
+                    style);
+            }
+            case element_type_t::nil_literal: {
+                auto style = ", fillcolor=gainsboro, style=\"filled\"";
+                return fmt::format(
+                    "{}[shape=record,label=\"nil_literal|{}\"{}];",
+                    node_vertex_name,
                     style);
             }
             case element_type_t::boolean_literal: {

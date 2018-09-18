@@ -698,8 +698,8 @@ namespace basecode::syntax {
             case token_types_t::continue_literal: {
                 return parser->ast_builder()->continue_node(token);
             }
-            case token_types_t::null_literal: {
-                return parser->ast_builder()->null_literal_node(token);
+            case token_types_t::nil_literal: {
+                return parser->ast_builder()->nil_literal_node(token);
             }
             case token_types_t::true_literal:
             case token_types_t::false_literal: {

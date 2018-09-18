@@ -120,7 +120,10 @@ namespace basecode::compiler {
                         break;
                     }
                     case element_type_t::pointer_type: {
-                        instruction_block->reserve_qword(1);
+                        if (init == nullptr)
+                            instruction_block->reserve_qword(1);
+                        else
+                            instruction_block->qwords({0});
                         break;
                     }
                     case element_type_t::numeric_type: {

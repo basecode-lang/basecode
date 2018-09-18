@@ -53,6 +53,7 @@ namespace basecode::compiler {
     class module_type;
     class initializer;
     class string_type;
+    class nil_literal;
     class numeric_type;
     class unknown_type;
     class pointer_type;
@@ -158,6 +159,7 @@ namespace basecode::compiler {
         namespace_e,
         initializer,
         module_type,
+        nil_literal,
         unknown_type,
         numeric_type,
         module_block,
@@ -208,6 +210,7 @@ namespace basecode::compiler {
         {element_type_t::array_type, "array_type"},
         {element_type_t::identifier, "identifier"},
         {element_type_t::expression, "expression"},
+        {element_type_t::nil_literal, "nil_literal"},
         {element_type_t::declaration, "declaration"},
         {element_type_t::module_type, "module_type"},
         {element_type_t::string_type, "string_type"},

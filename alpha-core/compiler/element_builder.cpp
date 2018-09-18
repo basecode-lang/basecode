@@ -32,6 +32,7 @@
 #include <compiler/elements/array_type.h>
 #include <compiler/elements/tuple_type.h>
 #include <compiler/elements/assignment.h>
+#include <compiler/elements/nil_literal.h>
 #include <compiler/elements/declaration.h>
 #include <compiler/elements/initializer.h>
 #include <compiler/elements/module_type.h>
@@ -964,6 +965,32 @@ namespace basecode::compiler {
             parent_scope);
         _session.elements().add(assignment_element);
         return assignment_element;
+    }
+
+    nil_literal* element_builder::nil_literal() {
+        if (_nil_literal == nullptr)
+            _nil_literal = make_nil(_session.program().block());
+        return _nil_literal;
+    }
+
+    boolean_literal* element_builder::true_literal() {
+        if (_true_literal == nullptr)
+            _true_literal = make_bool(_session.program().block(), true);
+        return _true_literal;
+    }
+
+    boolean_literal* element_builder::false_literal() {
+        if (_false_literal == nullptr)
+            _false_literal = make_bool(_session.program().block(), false);
+        return _false_literal;
+    }
+
+    compiler::nil_literal* element_builder::make_nil(compiler::block* parent_scope) {
+        auto nil_literal = new compiler::nil_literal(
+            _session.scope_manager().current_module(),
+            parent_scope);
+        _session.elements().add(nil_literal);
+        return nil_literal;
     }
 
 };

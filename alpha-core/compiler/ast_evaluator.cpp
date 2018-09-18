@@ -36,6 +36,7 @@
 #include <compiler/elements/initializer.h>
 #include <compiler/elements/module_type.h>
 #include <compiler/elements/string_type.h>
+#include <compiler/elements/nil_literal.h>
 #include <compiler/elements/numeric_type.h>
 #include <compiler/elements/unknown_type.h>
 #include <compiler/elements/pointer_type.h>
@@ -77,10 +78,10 @@ namespace basecode::compiler {
         {syntax::ast_node_types_t::raw_block,               std::bind(&ast_evaluator::raw_block, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::assignment,              std::bind(&ast_evaluator::assignment, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::expression,              std::bind(&ast_evaluator::expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::nil_literal,             std::bind(&ast_evaluator::nil, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::basic_block,             std::bind(&ast_evaluator::basic_block, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::symbol_part,             std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::line_comment,            std::bind(&ast_evaluator::line_comment, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::null_literal,            std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::block_comment,           std::bind(&ast_evaluator::block_comment, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::argument_list,           std::bind(&ast_evaluator::argument_list, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::if_expression,           std::bind(&ast_evaluator::if_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
@@ -509,7 +510,7 @@ namespace basecode::compiler {
             if (infer_type_result.reference == nullptr) {
                 infer_type_result.reference = builder.make_type_reference(
                     scope,
-                    new_identifier->symbol()->qualified_symbol(),
+                    infer_type_result.inferred_type->symbol()->qualified_symbol(),
                     infer_type_result.inferred_type);
             }
 
@@ -563,6 +564,13 @@ namespace basecode::compiler {
         }
 
         return builder.make_declaration(scope, new_identifier, assign_bin_op);
+    }
+
+    bool ast_evaluator::nil(
+            evaluator_context_t& context,
+            evaluator_result_t& result) {
+        result.element = _session.builder().nil_literal();
+        return true;
     }
 
     bool ast_evaluator::noop(
@@ -775,10 +783,14 @@ namespace basecode::compiler {
     bool ast_evaluator::boolean_literal(
             evaluator_context_t& context,
             evaluator_result_t& result) {
-        result.element = _session.builder().make_bool(
-            _session.scope_manager().current_scope(),
-            context.node->token.as_bool());
-        result.element->location(context.node->location);
+        auto& builder = _session.builder();
+        auto bool_value = context.node->token.as_bool();
+
+        result.element = bool_value ?
+            builder.true_literal() :
+            builder.false_literal();
+        //result.element->location(context.node->location);
+
         return true;
     }
 
@@ -1409,7 +1421,7 @@ namespace basecode::compiler {
                 scope,
                 operator_type_t::equals,
                 predicate,
-                builder.make_bool(scope, true));
+                builder.true_literal());
         }
 
         return predicate;

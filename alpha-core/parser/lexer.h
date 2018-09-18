@@ -97,6 +97,8 @@ namespace basecode::syntax {
 
         bool right_paren(token_t& token);
 
+        bool nil_literal(token_t& token);
+
         bool proc_literal(token_t& token);
 
         bool enum_literal(token_t& token);
@@ -106,8 +108,6 @@ namespace basecode::syntax {
         bool line_comment(token_t& token);
 
         bool pipe_literal(token_t& token);
-
-        bool null_literal(token_t& token);
 
         bool cast_literal(token_t& token);
 

@@ -59,6 +59,7 @@ namespace basecode::syntax {
         shr_literal,
         rol_literal,
         ror_literal,
+        nil_literal,
         from_literal,
         proc_literal,
         with_literal,
@@ -66,7 +67,6 @@ namespace basecode::syntax {
         line_comment,
         true_literal,
         enum_literal,
-        null_literal,
         else_literal,
         cast_literal,
         false_literal,
@@ -136,6 +136,7 @@ namespace basecode::syntax {
         {token_types_t::semi_colon,                 "semi_colon"},
         {token_types_t::in_literal,                 "in_literal"},
         {token_types_t::if_literal,                 "if_literal"},
+        {token_types_t::nil_literal,                "nil_literal"},
         {token_types_t::for_literal,                "for_literal"},
         {token_types_t::end_of_file,                "end_of_file"},
         {token_types_t::right_paren,                "right_paren"},
@@ -147,7 +148,6 @@ namespace basecode::syntax {
         {token_types_t::ror_literal,                "ror_literal"},
         {token_types_t::from_literal,               "from_literal"},
         {token_types_t::proc_literal,               "proc_literal"},
-        {token_types_t::null_literal,               "null_literal"},
         {token_types_t::with_literal,               "with_literal"},
         {token_types_t::cast_literal,               "cast_literal"},
         {token_types_t::else_literal,               "else_literal"},
@@ -339,9 +339,9 @@ namespace basecode::syntax {
         .value = "cast"
     };
 
-    static inline token_t s_null_literal = {
-        .type = token_types_t::null_literal,
-        .value = "null"
+    static inline token_t s_nil_literal = {
+        .type = token_types_t::nil_literal,
+        .value = "nil"
     };
 
     static inline token_t s_with_literal = {

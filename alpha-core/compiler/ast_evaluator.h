@@ -101,6 +101,10 @@ namespace basecode::compiler {
             compiler::block* scope);
 
     private:
+        bool nil(
+            evaluator_context_t& context,
+            evaluator_result_t& result);
+
         bool noop(
             evaluator_context_t& context,
             evaluator_result_t& result);
