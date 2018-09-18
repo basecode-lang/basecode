@@ -413,6 +413,23 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    ast_node_shared_ptr while_prefix_parser::parse(
+            common::result& r,
+            parser* parser,
+            token_t& token) {
+        auto while_node = parser->ast_builder()->while_node(token);
+
+        collect_comments(r, parser, while_node->comments);
+        while_node->lhs = parser->parse_expression(r, 0);
+
+        collect_comments(r, parser, while_node->comments);
+        while_node->rhs = parser->parse_expression(r, 0);
+
+        return while_node;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
     ast_node_shared_ptr with_prefix_parser::parse(
             common::result& r,
             parser* parser,

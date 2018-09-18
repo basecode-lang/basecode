@@ -177,6 +177,10 @@ namespace basecode::compiler {
             evaluator_context_t& context,
             evaluator_result_t& result);
 
+        bool while_expression(
+            evaluator_context_t& context,
+            evaluator_result_t& result);
+
         bool return_statement(
             evaluator_context_t& context,
             evaluator_result_t& result);

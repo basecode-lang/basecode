@@ -40,6 +40,7 @@
 #include <compiler/elements/string_type.h>
 #include <compiler/elements/pointer_type.h>
 #include <compiler/elements/numeric_type.h>
+#include <compiler/elements/while_element.h>
 #include <compiler/elements/float_literal.h>
 #include <compiler/elements/argument_list.h>
 #include <compiler/elements/type_reference.h>
@@ -196,6 +197,16 @@ namespace basecode::compiler {
                     "{}[shape=record,label=\"{}\"{}];",
                     node_vertex_name,
                     element->is_else_if() ? "else if" : "if",
+                    style);
+            }
+            case element_type_t::while_e: {
+                auto element = dynamic_cast<while_element*>(node);
+                auto style = ", fillcolor=cornsilk3, style=\"filled\"";
+                add_primary_edge(element, element->predicate(), "predicate");
+                add_primary_edge(element, element->body(), "body");
+                return fmt::format(
+                    "{}[shape=record,label=\"while\"{}];",
+                    node_vertex_name,
                     style);
             }
             case element_type_t::label: {

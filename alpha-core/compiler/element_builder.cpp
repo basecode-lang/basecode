@@ -42,6 +42,7 @@
 #include <compiler/elements/pointer_type.h>
 #include <compiler/elements/argument_list.h>
 #include <compiler/elements/float_literal.h>
+#include <compiler/elements/while_element.h>
 #include <compiler/elements/type_reference.h>
 #include <compiler/elements/free_intrinsic.h>
 #include <compiler/elements/string_literal.h>
@@ -320,6 +321,23 @@ namespace basecode::compiler {
             type);
         _session.elements().add(block_element);
         return block_element;
+    }
+
+    while_element* element_builder::make_while(
+            compiler::block* parent_scope,
+            compiler::binary_operator* predicate,
+            compiler::block* body) {
+        auto while_e = new compiler::while_element(
+            _session.scope_manager().current_module(),
+            parent_scope,
+            predicate,
+            body);
+        _session.elements().add(while_e);
+        if (predicate != nullptr)
+            predicate->parent_element(while_e);
+        if (body != nullptr)
+            body->parent_element(while_e);
+        return while_e;
     }
 
     cast* element_builder::make_cast(

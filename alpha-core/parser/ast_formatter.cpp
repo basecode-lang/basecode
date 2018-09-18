@@ -97,7 +97,7 @@ namespace basecode::syntax {
 
             details = fmt::format(
                 "|{{ token: '{}' ",
-                value);
+                common::graphviz_formatter::escape_chars(value));
 
             if (node->token.is_numeric()) {
                 details += fmt::format("| radix: {}", node->token.radix);

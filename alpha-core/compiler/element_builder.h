@@ -21,6 +21,11 @@ namespace basecode::compiler {
     public:
         explicit element_builder(compiler::session& session);
 
+        while_element* make_while(
+            compiler::block* parent_scope,
+            compiler::binary_operator* predicate,
+            compiler::block* body);
+
         cast* make_cast(
             compiler::block* parent_scope,
             compiler::type_reference* type,

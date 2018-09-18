@@ -60,6 +60,7 @@ namespace basecode::compiler {
     class float_literal;
     class operator_base;
     class argument_list;
+    class while_element;
     class type_reference;
     class assembly_label;
     class free_intrinsic;
@@ -136,6 +137,7 @@ namespace basecode::compiler {
         module,
         comment,
         program,
+        while_e,
         any_type,
         return_e,
         import_e,
@@ -189,6 +191,7 @@ namespace basecode::compiler {
         {element_type_t::field, "field"},
         {element_type_t::module, "module"},
         {element_type_t::symbol, "symbol"},
+        {element_type_t::while_e, "while"},
         {element_type_t::comment, "comment"},
         {element_type_t::element, "element"},
         {element_type_t::program, "program"},

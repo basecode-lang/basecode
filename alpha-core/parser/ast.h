@@ -293,6 +293,8 @@ namespace basecode::syntax {
 
         ast_node_shared_ptr enum_node(const token_t& token);
 
+        ast_node_shared_ptr while_node(const token_t& token);
+
         ast_node_shared_ptr label_node(const token_t& token);
 
         ast_node_shared_ptr break_node(const token_t& token);

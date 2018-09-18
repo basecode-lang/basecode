@@ -40,6 +40,7 @@
 #include <compiler/elements/numeric_type.h>
 #include <compiler/elements/unknown_type.h>
 #include <compiler/elements/pointer_type.h>
+#include <compiler/elements/while_element.h>
 #include <compiler/elements/argument_list.h>
 #include <compiler/elements/float_literal.h>
 #include <compiler/elements/type_reference.h>
@@ -96,10 +97,10 @@ namespace basecode::compiler {
         {syntax::ast_node_types_t::binary_operator,         std::bind(&ast_evaluator::binary_operator, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::boolean_literal,         std::bind(&ast_evaluator::boolean_literal, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::else_expression,         std::bind(&ast_evaluator::else_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::while_statement,         std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::break_statement,         std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::with_expression,         std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::type_identifier,         std::bind(&ast_evaluator::type_identifier, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::while_statement,         std::bind(&ast_evaluator::while_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::defer_expression,        std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::union_expression,        std::bind(&ast_evaluator::union_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::return_statement,        std::bind(&ast_evaluator::return_statement, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
@@ -863,6 +864,27 @@ namespace basecode::compiler {
             it->second,
             lhs,
             rhs);
+
+        return true;
+    }
+
+    bool ast_evaluator::while_expression(
+            evaluator_context_t& context,
+            evaluator_result_t& result) {
+        auto& builder = _session.builder();
+        auto& scope_manager = _session.scope_manager();
+        auto scope = scope_manager.current_scope();
+
+        auto predicate = convert_predicate(
+            context,
+            context.node->lhs.get(),
+            scope);
+        auto body = evaluate(context.node->rhs.get());
+
+        result.element = builder.make_while(
+            scope,
+            dynamic_cast<compiler::binary_operator*>(predicate),
+            dynamic_cast<compiler::block*>(body));
 
         return true;
     }

@@ -130,6 +130,7 @@ add_library(
     compiler/elements/float_literal.cpp compiler/elements/float_literal.h
     compiler/elements/element_types.cpp compiler/elements/element_types.h
     compiler/elements/argument_list.cpp compiler/elements/argument_list.h
+    compiler/elements/while_element.cpp compiler/elements/while_element.h
     compiler/elements/free_intrinsic.cpp compiler/elements/free_intrinsic.h
     compiler/elements/symbol_element.cpp compiler/elements/symbol_element.h
     compiler/elements/namespace_type.cpp compiler/elements/namespace_type.h

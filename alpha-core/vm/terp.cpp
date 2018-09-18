@@ -1551,7 +1551,9 @@ namespace basecode::vm {
                     return false;
 
                 operand_value_t result;
-                result.alias.u = lhs_value.alias.u % rhs_value.alias.u;
+                if (lhs_value.alias.u != 0 && rhs_value.alias.u != 0)
+                    result.alias.u = lhs_value.alias.u % rhs_value.alias.u;
+
                 if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
                     return false;
 
