@@ -20,12 +20,15 @@ namespace basecode::compiler {
         for_element(
             compiler::module* module,
             compiler::block* parent_scope,
-            compiler::identifier_reference* ref,
+            compiler::declaration* induction_decl,
+            compiler::element* expression,
             compiler::block* body);
 
         compiler::block* body();
 
-        compiler::identifier_reference* ref();
+        compiler::element* expression();
+
+        compiler::declaration* induction_decl();
 
     protected:
         bool on_emit(compiler::session& session) override;
@@ -34,7 +37,8 @@ namespace basecode::compiler {
 
     private:
         compiler::block* _body = nullptr;
-        compiler::identifier_reference* _ref = nullptr;
+        compiler::element* _expression = nullptr;
+        compiler::declaration* _induction_decl = nullptr;
     };
 
 };

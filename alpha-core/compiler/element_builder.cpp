@@ -354,6 +354,19 @@ namespace basecode::compiler {
         return continue_e;
     }
 
+    defer_element* element_builder::make_defer(
+            compiler::block* parent_scope,
+            compiler::element* expression) {
+        auto defer_e = new compiler::defer_element(
+            _session.scope_manager().current_module(),
+            parent_scope,
+            expression);
+        _session.elements().add(defer_e);
+        if (expression != nullptr)
+            expression->parent_element(defer_e);
+        return defer_e;
+    }
+
     while_element* element_builder::make_while(
             compiler::block* parent_scope,
             compiler::binary_operator* predicate,
@@ -371,6 +384,23 @@ namespace basecode::compiler {
         return while_e;
     }
 
+    with* element_builder::make_with(
+            compiler::block* parent_scope,
+            compiler::identifier_reference* ref,
+            block* body) {
+        auto with = new compiler::with(
+            _session.scope_manager().current_module(),
+            parent_scope,
+            ref,
+            body);
+        _session.elements().add(with);
+        if (ref != nullptr)
+            ref->parent_element(with);
+        if (body != nullptr)
+            body->parent_element(with);
+        return with;
+    }
+
     cast* element_builder::make_cast(
             compiler::block* parent_scope,
             compiler::type_reference* type,
@@ -384,6 +414,27 @@ namespace basecode::compiler {
         if (expr != nullptr)
             expr->parent_element(cast);
         return cast;
+    }
+
+    for_element* element_builder::make_for(
+            compiler::block* parent_scope,
+            compiler::declaration* induction_decl,
+            compiler::element* expression,
+            compiler::block* body) {
+        auto for_element = new compiler::for_element(
+            _session.scope_manager().current_module(),
+            parent_scope,
+            induction_decl,
+            expression,
+            body);
+        _session.elements().add(for_element);
+        if (induction_decl != nullptr)
+            induction_decl->parent_element(for_element);
+        if (expression != nullptr)
+            expression->parent_element(for_element);
+        if (body != nullptr)
+            body->parent_element(for_element);
+        return for_element;
     }
 
     transmute* element_builder::make_transmute(

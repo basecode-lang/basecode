@@ -435,7 +435,9 @@ namespace basecode::syntax {
             parser* parser,
             token_t& token) {
         auto with_node = parser->ast_builder()->with_node(token);
+        collect_comments(r, parser, with_node->comments);
         with_node->lhs = parser->parse_expression(r, 0);
+        collect_comments(r, parser, with_node->comments);
         with_node->rhs = parser->parse_expression(r, 0);
         return with_node;
     }
@@ -447,6 +449,7 @@ namespace basecode::syntax {
             parser* parser,
             token_t& token) {
         auto defer_node = parser->ast_builder()->defer_node(token);
+        collect_comments(r, parser, defer_node->comments);
         defer_node->lhs = parser->parse_expression(r, 0);
         return defer_node;
     }
@@ -491,6 +494,7 @@ namespace basecode::syntax {
             parser* parser,
             token_t& token) {
         auto enum_node = parser->ast_builder()->enum_node(token);
+        collect_comments(r, parser, enum_node->comments);
         enum_node->rhs = parser->parse_expression(r, 0);
         return enum_node;
     }
@@ -502,14 +506,20 @@ namespace basecode::syntax {
             parser* parser,
             token_t& token) {
         auto for_node = parser->ast_builder()->for_in_node(token);
+
+        collect_comments(r, parser, for_node->comments);
         for_node->lhs = parser->parse_expression(r, 0);
+        collect_comments(r, parser, for_node->comments);
 
         token_t in_token;
         in_token.type = token_types_t::in_literal;
         if (!parser->expect(r, in_token))
             return nullptr;
 
+        collect_comments(r, parser, for_node->comments);
         for_node->rhs = parser->parse_expression(r, 0);
+        collect_comments(r, parser, for_node->comments);
+
         for_node->children.push_back(parser->parse_expression(r, 0));
 
         return for_node;

@@ -21,6 +21,10 @@ namespace basecode::compiler {
     public:
         explicit element_builder(compiler::session& session);
 
+        defer_element* make_defer(
+            compiler::block* parent_scope,
+            compiler::element* expression);
+
         break_element* make_break(
             compiler::block* parent_scope,
             compiler::label* label);
@@ -32,6 +36,17 @@ namespace basecode::compiler {
         while_element* make_while(
             compiler::block* parent_scope,
             compiler::binary_operator* predicate,
+            compiler::block* body);
+
+        with* make_with(
+            compiler::block* parent_scope,
+            compiler::identifier_reference* ref,
+            compiler::block* body);
+
+        for_element* make_for(
+            compiler::block* parent_scope,
+            compiler::declaration* induction_decl,
+            compiler::element* expression,
             compiler::block* body);
 
         cast* make_cast(

@@ -1130,13 +1130,30 @@ namespace basecode::compiler {
     bool ast_evaluator::with_expression(
             evaluator_context_t& context,
             evaluator_result_t& result) {
-        return false;
+        auto& builder = _session.builder();
+        auto& scope_manager = _session.scope_manager();
+
+        result.element = builder.make_with(
+            scope_manager.current_scope(),
+            dynamic_cast<compiler::identifier_reference*>(
+                resolve_symbol_or_evaluate(
+                    context,
+                    context.node->lhs.get())),
+            dynamic_cast<compiler::block*>(evaluate(context.node->rhs.get())));
+        return true;
     }
 
     bool ast_evaluator::defer_expression(
             evaluator_context_t& context,
             evaluator_result_t& result) {
-        return false;
+        auto& builder = _session.builder();
+        auto& scope_manager = _session.scope_manager();
+
+        result.element = builder.make_defer(
+            scope_manager.current_scope(),
+            evaluate(context.node->lhs.get()));
+
+        return true;
     }
 
     bool ast_evaluator::struct_expression(
@@ -1345,7 +1362,46 @@ namespace basecode::compiler {
     bool ast_evaluator::for_in_statement(
             evaluator_context_t& context,
             evaluator_result_t& result) {
-        return false;
+        auto& builder = _session.builder();
+        auto& scope_manager = _session.scope_manager();
+
+        auto rhs = evaluate(context.node->rhs.get());
+        auto body = dynamic_cast<compiler::block*>(evaluate(context.node->children[0].get()));
+
+        auto lhs = evaluate(context.node->lhs.get());
+        if (lhs == nullptr || lhs->element_type() != element_type_t::symbol) {
+            // XXX: error
+            return false;
+        }
+
+        compiler::type_reference* type_ref = nullptr;
+        if (context.node->lhs->rhs != nullptr) {
+            type_ref = dynamic_cast<compiler::type_reference*>(evaluate(context.node->lhs->rhs.get()));
+        } else {
+            infer_type_result_t infer_type_result {};
+            if (rhs->infer_type(_session, infer_type_result)) {
+                type_ref = infer_type_result.reference;
+            } else {
+                // XXX: error
+                return false;
+            }
+        }
+
+        auto induction_decl = add_identifier_to_scope(
+            context,
+            dynamic_cast<compiler::symbol_element*>(lhs),
+            type_ref,
+            nullptr,
+            0,
+            body);
+
+        result.element = builder.make_for(
+            scope_manager.current_scope(),
+            induction_decl,
+            rhs,
+            body);
+
+        return true;
     }
 
     bool ast_evaluator::transmute_expression(

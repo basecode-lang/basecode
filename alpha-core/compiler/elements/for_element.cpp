@@ -13,6 +13,7 @@
 #include <vm/instruction_block.h>
 #include "block.h"
 #include "for_element.h"
+#include "declaration.h"
 #include "identifier_reference.h"
 
 namespace basecode::compiler {
@@ -20,18 +21,24 @@ namespace basecode::compiler {
     for_element::for_element(
             compiler::module* module,
             compiler::block* parent_scope,
-            compiler::identifier_reference* ref,
+            compiler::declaration* induction_decl,
+            compiler::element* expression,
             compiler::block* body) : element(module, parent_scope, element_type_t::for_e),
                                      _body(body),
-                                     _ref(ref) {
+                                     _expression(expression),
+                                     _induction_decl(induction_decl) {
     }
 
     compiler::block* for_element::body() {
         return _body;
     }
 
-    compiler::identifier_reference* for_element::ref() {
-        return _ref;
+    compiler::element* for_element::expression() {
+        return _expression;
+    }
+
+    compiler::declaration* for_element::induction_decl(){
+        return _induction_decl;
     }
 
     bool for_element::on_emit(compiler::session& session) {
@@ -42,11 +49,14 @@ namespace basecode::compiler {
     }
 
     void for_element::on_owned_elements(element_list_t& list) {
-        if (_ref != nullptr)
-            list.emplace_back(_ref);
-
         if (_body != nullptr)
             list.emplace_back(_body);
+
+        if (_expression != nullptr)
+            list.emplace_back(_expression);
+
+        if (_induction_decl != nullptr)
+            list.emplace_back(_induction_decl);
     }
 
 };
