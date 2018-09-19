@@ -799,7 +799,21 @@ namespace basecode::vm {
                     }
                     case block_entry_type_t::data_definition: {
                         auto data_def = entry.data<data_definition_t>();
-                        offset += op_size_in_bytes(data_def->size) * data_def->values.size();
+                        auto size_in_bytes = op_size_in_bytes(data_def->size);
+                        switch (data_def->type) {
+                            case data_definition_type_t::initialized: {
+                                offset += size_in_bytes * data_def->values.size();
+                                break;
+                            }
+                            case data_definition_type_t::uninitialized: {
+                                for (auto size : data_def->values)
+                                    offset += size_in_bytes * size;
+                                break;
+                            }
+                            default: {
+                                break;
+                            }
+                        }
                         break;
                     }
                     default: {

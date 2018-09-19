@@ -16,12 +16,6 @@ while i <= 20 {
     i := i + 1;
 };
 
-// XXX: there appears to be a memory layout issue
-//      without this extra nop, things aren't aligned properly?
-#assembly {{
-    nop
-}};
-
 j: u32 := 0;
 k: u32 := 0;
 while true {
