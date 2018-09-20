@@ -70,6 +70,10 @@ namespace basecode::compiler {
         return _size_in_bytes;
     }
 
+    bool type::is_composite_type() const {
+        return false;
+    }
+
     void type::size_in_bytes(size_t value) {
         _size_in_bytes = value;
     }

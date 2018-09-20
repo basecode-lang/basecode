@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include "block.h"
 #include "program.h"
 #include "array_type.h"
 #include "identifier.h"
@@ -104,6 +105,7 @@ namespace basecode::compiler {
             builder.make_symbol(block_scope, "flags"),
             nullptr);
         flags_identifier->type_ref(u8_type_ref);
+        block_scope->identifiers().add(flags_identifier);
         auto flags_field = builder.make_field(
             this,
             block_scope,
@@ -115,6 +117,7 @@ namespace basecode::compiler {
             builder.make_symbol(block_scope, "length"),
             nullptr);
         length_identifier->type_ref(u32_type_ref);
+        block_scope->identifiers().add(length_identifier);
         auto length_field = builder.make_field(
             this,
             block_scope,
@@ -126,6 +129,7 @@ namespace basecode::compiler {
             builder.make_symbol(block_scope, "capacity"),
             nullptr);
         capacity_identifier->type_ref(u32_type_ref);
+        block_scope->identifiers().add(capacity_identifier);
         auto capacity_field = builder.make_field(
             this,
             block_scope,
@@ -137,6 +141,7 @@ namespace basecode::compiler {
             builder.make_symbol(block_scope, "element_type"),
             nullptr);
         element_type_identifier->type_ref(type_info_ref);
+        block_scope->identifiers().add(element_type_identifier);
         auto element_type_field = builder.make_field(
             this,
             block_scope,
@@ -148,6 +153,7 @@ namespace basecode::compiler {
             builder.make_symbol(block_scope, "data"),
             nullptr);
         data_identifier->type_ref(ptr_type_ref);
+        block_scope->identifiers().add(data_identifier);
         auto data_field = builder.make_field(
             this,
             block_scope,

@@ -46,6 +46,8 @@ namespace basecode::compiler {
 
         bool type_check(compiler::type* other);
 
+        virtual bool is_composite_type() const;
+
         type_access_model_t access_model() const;
 
         type_number_class_t number_class() const;

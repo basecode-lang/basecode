@@ -15,6 +15,7 @@
 #include "element.h"
 #include "program.h"
 #include "identifier.h"
+#include "composite_type.h"
 #include "symbol_element.h"
 #include "binary_operator.h"
 #include "integer_literal.h"
@@ -51,7 +52,7 @@ namespace basecode::compiler {
             case operator_type_t::rotate_right: {
                 return _lhs->infer_type(session, result);
             }
-            case operator_type_t::dereference: {
+            case operator_type_t::member_access: {
                 return _rhs->infer_type(session, result);
             }
             case operator_type_t::equals:
@@ -104,8 +105,8 @@ namespace basecode::compiler {
                 emit_relational_operator(session);
                 break;
             }
-            case operator_type_t::dereference: {
-                block->comment("XXX: implement . dereference", 4);
+            case operator_type_t::member_access: {
+                block->comment("XXX: member access", 4);
                 block->nop();
                 break;
             }
@@ -209,7 +210,7 @@ namespace basecode::compiler {
             case operator_type_t::rotate_left: {
                 break;
             }
-            case operator_type_t::dereference: {
+            case operator_type_t::member_access: {
                 break;
             }
             case operator_type_t::rotate_right: {

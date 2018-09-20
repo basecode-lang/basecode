@@ -34,6 +34,8 @@ namespace basecode::compiler {
 
         composite_types_t type() const;
 
+        bool is_composite_type() const override;
+
     protected:
         bool on_is_constant() const override;
 

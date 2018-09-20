@@ -11,6 +11,7 @@
 
 #include <compiler/session.h>
 #include <compiler/scope_manager.h>
+#include "block.h"
 #include "program.h"
 #include "type_info.h"
 #include "identifier.h"
@@ -49,6 +50,8 @@ namespace basecode::compiler {
             builder.make_symbol(parent_scope(), "name"),
             nullptr);
         name_identifier->type_ref(string_type_ref);
+        block_scope->identifiers().add(name_identifier);
+
         auto name_field = builder.make_field(
             this,
             block_scope,

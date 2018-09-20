@@ -53,6 +53,10 @@ namespace basecode::compiler {
         return _type;
     }
 
+    bool composite_type::is_composite_type() const {
+        return true;
+    }
+
     bool composite_type::on_type_check(compiler::type* other) {
         return other != nullptr
                && other->symbol()->name() == symbol()->name();

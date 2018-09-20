@@ -75,6 +75,14 @@ namespace basecode::compiler {
         return nullptr;
     }
 
+    compiler::field* field_map_t::find_by_name(const std::string& name) {
+        for (const auto& kvp : _fields) {
+            if (kvp.second->identifier()->symbol()->name() == name)
+                return kvp.second;
+        }
+        return nullptr;
+    }
+
     ///////////////////////////////////////////////////////////////////////////
 
     void identifier_map_t::dump() {

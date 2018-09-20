@@ -312,7 +312,7 @@ namespace basecode::compiler {
         rotate_left,
         exponent,
         assignment,
-        dereference,
+        member_access,
     };
 
     static inline std::unordered_map<operator_type_t, std::string> s_operator_type_names = {
@@ -343,7 +343,7 @@ namespace basecode::compiler {
         {operator_type_t::rotate_left,           "rotate_left"},
         {operator_type_t::exponent,              "exponent"},
         {operator_type_t::assignment,            "assignment"},
-        {operator_type_t::dereference,           "dereference"},
+        {operator_type_t::member_access,         "member_access"},
     };
 
     static inline std::string operator_type_name(operator_type_t type) {
@@ -384,7 +384,7 @@ namespace basecode::compiler {
         {syntax::token_types_t::ror_literal,        operator_type_t::rotate_right},
         {syntax::token_types_t::exponent,           operator_type_t::exponent},
         {syntax::token_types_t::assignment,         operator_type_t::assignment},
-        {syntax::token_types_t::period,             operator_type_t::dereference},
+        {syntax::token_types_t::period,             operator_type_t::member_access},
     };
 
     static inline bool is_relational_operator(operator_type_t op) {
@@ -444,6 +444,8 @@ namespace basecode::compiler {
         bool remove(common::id_t id);
 
         compiler::field* find(common::id_t id);
+
+        compiler::field* find_by_name(const std::string& name);
 
     private:
         std::map<common::id_t, field*> _fields {};

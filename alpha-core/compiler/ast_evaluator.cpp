@@ -304,13 +304,14 @@ namespace basecode::compiler {
             element = builder.make_identifier_reference(
                 scope_manager.current_scope(),
                 qualified_symbol,
-                scope_manager.find_identifier(qualified_symbol));
+                scope_manager.find_identifier(qualified_symbol, scope));
         } else {
             if (scope != nullptr)
                 element = evaluate_in_scope(context, node, scope);
             else
                 element = evaluate(node);
         }
+
         return element;
     }
 
@@ -894,8 +895,45 @@ namespace basecode::compiler {
             lhs = convert_predicate(context, context.node->lhs.get(), scope);
             rhs = convert_predicate(context, context.node->rhs.get(), scope);
         } else {
-            lhs = resolve_symbol_or_evaluate(context, context.node->lhs.get());
-            rhs = resolve_symbol_or_evaluate(context, context.node->rhs.get());
+            compiler::block* type_scope = nullptr;
+
+            lhs = resolve_symbol_or_evaluate(
+                context,
+                context.node->lhs.get());
+            infer_type_result_t infer_type_result {};
+            if (!lhs->infer_type(_session, infer_type_result)) {
+                _session.error(
+                    lhs,
+                    "P052",
+                    "unable to infer type.",
+                    lhs->location());
+                return false;
+            }
+
+            if (infer_type_result.inferred_type->is_composite_type()) {
+                compiler::composite_type* composite_type = nullptr;
+                if (infer_type_result.inferred_type->element_type() == element_type_t::pointer_type) {
+                    auto pointer_type = dynamic_cast<compiler::pointer_type*>(infer_type_result.inferred_type);
+                    composite_type = dynamic_cast<compiler::composite_type*>(pointer_type->base_type_ref()->type());
+                } else {
+                    composite_type = dynamic_cast<compiler::composite_type*>(infer_type_result.inferred_type);
+                }
+                type_scope = composite_type->scope();
+            } else {
+                if (it->second == operator_type_t::member_access) {
+                    _session.error(
+                        lhs,
+                        "P053",
+                        "member access requires lhs composite type.",
+                        lhs->location());
+                    return false;
+                }
+            }
+
+            rhs = resolve_symbol_or_evaluate(
+                context,
+                context.node->rhs.get(),
+                type_scope);
         }
 
         result.element = _session.builder().make_binary_operator(

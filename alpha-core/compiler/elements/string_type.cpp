@@ -11,6 +11,7 @@
 
 #include <common/bytes.h>
 #include <compiler/session.h>
+#include "block.h"
 #include "program.h"
 #include "identifier.h"
 #include "initializer.h"
@@ -198,6 +199,7 @@ namespace basecode::compiler {
             builder.make_symbol(parent_scope(), "length"),
             nullptr);
         length_identifier->type_ref(u32_type_ref);
+        block_scope->identifiers().add(length_identifier);
         auto length_field = builder.make_field(
             this,
             block_scope,
@@ -209,6 +211,7 @@ namespace basecode::compiler {
             builder.make_symbol(parent_scope(), "capacity"),
             nullptr);
         capacity_identifier->type_ref(u32_type_ref);
+        block_scope->identifiers().add(capacity_identifier);
         auto capacity_field = builder.make_field(
             this,
             block_scope,
@@ -220,6 +223,7 @@ namespace basecode::compiler {
             builder.make_symbol(parent_scope(), "data"),
             nullptr);
         data_identifier->type_ref(ptr_type_ref);
+        block_scope->identifiers().add(data_identifier);
         auto data_field = builder.make_field(
             this,
             block_scope,

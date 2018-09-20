@@ -365,7 +365,11 @@ namespace basecode::compiler {
             auto var = dynamic_cast<compiler::identifier*>(binary_op->lhs());
             infer_type_result_t infer_type_result {};
             if (!binary_op->rhs()->infer_type(*this, infer_type_result)) {
-                // XXX: error
+                error(
+                    binary_op->rhs(),
+                    "P052",
+                    "unable to infer type.",
+                    binary_op->rhs()->location());
                 return false;
             }
             if (!var->type_ref()->type()->type_check(infer_type_result.inferred_type)) {
