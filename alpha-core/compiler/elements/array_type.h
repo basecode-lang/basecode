@@ -33,7 +33,9 @@ namespace basecode::compiler {
 
         void size(uint64_t value);
 
-        compiler::type_reference* entry_type();
+        compiler::type_reference* entry_type_ref();
+
+        std::string name(const std::string& alias = "") const override;
 
     protected:
         type_access_model_t on_access_model() const override;
@@ -42,7 +44,7 @@ namespace basecode::compiler {
 
     private:
         uint64_t _size = 0;
-        compiler::type_reference* _entry_type = nullptr;
+        compiler::type_reference* _entry_type_ref = nullptr;
     };
 
 };

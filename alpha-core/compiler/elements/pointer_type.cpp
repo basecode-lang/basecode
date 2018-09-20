@@ -75,4 +75,10 @@ namespace basecode::compiler {
         return _base_type_ref;
     }
 
+    std::string pointer_type::name(const std::string& alias) const {
+        return fmt::format(
+            "^{}",
+            !alias.empty() ? alias : _base_type_ref->name());
+    }
+
 };

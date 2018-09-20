@@ -27,6 +27,8 @@ namespace basecode::compiler {
 
         compiler::type* type();
 
+        std::string name() const;
+
         bool is_unknown_type() const;
 
         void type(compiler::type* value);

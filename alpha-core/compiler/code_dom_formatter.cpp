@@ -439,7 +439,7 @@ namespace basecode::compiler {
                 auto style = ", fillcolor=gainsboro, style=\"filled\"";
                 std::string base_type_name = "unknown";
                 if (element->base_type_ref() != nullptr)
-                    base_type_name = element->base_type_ref()->symbol().name;
+                    base_type_name = element->base_type_ref()->name();
                 add_primary_edge(element, element->base_type_ref());
                 add_primary_edge(element, element->symbol());
                 return fmt::format(
@@ -452,9 +452,9 @@ namespace basecode::compiler {
                 auto element = dynamic_cast<array_type*>(node);
                 auto style = ", fillcolor=gainsboro, style=\"filled\"";
                 std::string entry_type_name = "unknown";
-                if (element->entry_type() != nullptr)
-                    entry_type_name = element->entry_type()->symbol().name;
-                add_primary_edge(element, element->entry_type());
+                if (element->entry_type_ref() != nullptr)
+                    entry_type_name = element->entry_type_ref()->name();
+                add_primary_edge(element, element->entry_type_ref());
                 for (auto fld : element->fields().as_list())
                     add_primary_edge(element, fld);
                 add_primary_edge(element, element->scope());

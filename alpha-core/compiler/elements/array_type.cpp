@@ -43,7 +43,23 @@ namespace basecode::compiler {
                                 nullptr,
                                 element_type_t::array_type),
                            _size(size),
-                           _entry_type(entry_type) {
+                           _entry_type_ref(entry_type) {
+    }
+
+    uint64_t array_type::size() const {
+        return _size;
+    }
+
+    void array_type::size(uint64_t value) {
+        _size = value;
+    }
+
+    compiler::type_reference* array_type::entry_type_ref() {
+        return _entry_type_ref;
+    }
+
+    type_access_model_t array_type::on_access_model() const {
+        return type_access_model_t::pointer;
     }
 
     bool array_type::on_initialize(compiler::session& session) {
@@ -52,7 +68,7 @@ namespace basecode::compiler {
 
         auto type_symbol = builder.make_symbol(
             parent_scope(),
-            name_for_array(_entry_type->type(), _size));
+            name_for_array(_entry_type_ref->type(), _size));
         symbol(type_symbol);
         type_symbol->parent_element(this);
 
@@ -148,20 +164,12 @@ namespace basecode::compiler {
         return composite_type::on_initialize(session);
     }
 
-    uint64_t array_type::size() const {
-        return _size;
-    }
-
-    void array_type::size(uint64_t value) {
-        _size = value;
-    }
-
-    compiler::type_reference* array_type::entry_type() {
-        return _entry_type;
-    }
-
-    type_access_model_t array_type::on_access_model() const {
-        return type_access_model_t::pointer;
+    std::string array_type::name(const std::string& alias) const {
+        auto entry_type_name = !alias.empty() ? alias : _entry_type_ref->name();
+        if (_size == 0)
+            return fmt::format("[]{}", entry_type_name);
+        else
+            return fmt::format("[{}]{}", _size, entry_type_name);
     }
 
 };

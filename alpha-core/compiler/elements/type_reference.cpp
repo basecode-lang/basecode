@@ -39,6 +39,10 @@ namespace basecode::compiler {
         return _type;
     }
 
+    std::string type_reference::name() const {
+        return _type->name(_symbol.name);
+    }
+
     bool type_reference::on_is_constant() const {
         return true;
     }

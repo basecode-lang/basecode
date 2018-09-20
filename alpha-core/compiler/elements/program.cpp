@@ -99,7 +99,7 @@ namespace basecode::compiler {
                     instruction_block->align(type_alignment);
 
                 instruction_block->comment(
-                    fmt::format("identifier type: {}", var->type_ref()->symbol().name),
+                    fmt::format("identifier type: {}", var->type_ref()->name()),
                     0);
                 auto var_label = assembler.make_label(var->symbol()->name());
                 instruction_block->label(var_label);

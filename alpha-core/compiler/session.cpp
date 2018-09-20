@@ -350,7 +350,7 @@ namespace basecode::compiler {
                     fmt::format(
                         "type mismatch: cannot assign {} to {}.",
                         infer_type_result.type_name(),
-                        var->type_ref()->symbol().name),
+                        var->type_ref()->name()),
                     var->location());
             }
         }
@@ -375,7 +375,7 @@ namespace basecode::compiler {
                     fmt::format(
                         "type mismatch: cannot assign {} to {}.",
                         infer_type_result.type_name(),
-                        var->type_ref()->symbol().name),
+                        var->type_ref()->name()),
                     binary_op->rhs()->location());
             }
         }
