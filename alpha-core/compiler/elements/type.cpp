@@ -9,6 +9,8 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <compiler/session.h>
+#include <vm/instruction_block.h>
 #include "type.h"
 #include "field.h"
 #include "identifier.h"
@@ -117,10 +119,42 @@ namespace basecode::compiler {
         return true;
     }
 
+    bool type::emit_type_info(compiler::session& session) {
+        auto& assembler = session.assembler();
+        auto block = assembler.current_block();
+
+        auto type_name = name();
+        auto type_name_len = static_cast<uint32_t>(type_name.length());
+        auto label_name = fmt::format("_ti_{}", _symbol->name());
+
+        block->blank_line();
+        block->comment(fmt::format("type: {}", type_name), 0);
+        block->label(assembler.make_label(label_name));
+
+        block->dwords({type_name_len});
+        block->dwords({type_name_len});
+        block->qwords({assembler.make_label_ref(fmt::format(
+            "_ti_name_lit_{}_data",
+            symbol()->name()))});
+
+        if (!on_emit_type_info(session))
+            return false;
+
+        session.type_info_label(
+            this,
+            assembler.make_label_ref(label_name));
+
+        return true;
+    }
+
     std::string type::name(const std::string& alias) const {
         if (!alias.empty())
             return alias;
         return _symbol != nullptr ? _symbol->name() : "unknown";
+    }
+
+    bool type::on_emit_type_info(compiler::session& session) {
+        return true;
     }
 
 };

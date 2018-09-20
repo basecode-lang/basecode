@@ -686,6 +686,13 @@ namespace basecode::compiler {
         return _scope_manager;
     }
 
+    vm::label_ref_t* session::type_info_label(compiler::type* type) {
+        auto it = _type_info_labels.find(type->id());
+        if (it == _type_info_labels.end())
+            return nullptr;
+        return it->second;
+    }
+
     void session::push_source_file(common::source_file* source_file) {
         _source_file_stack.push(source_file);
     }
@@ -744,6 +751,12 @@ namespace basecode::compiler {
         }
 
         return module;
+    }
+
+    void session::type_info_label(compiler::type* type, vm::label_ref_t* label) {
+        if (_type_info_labels.count(type->id()) > 0)
+            return;
+        _type_info_labels.insert(std::make_pair(type->id(), label));
     }
 
     syntax::ast_node_shared_ptr session::parse(common::source_file* source_file) {

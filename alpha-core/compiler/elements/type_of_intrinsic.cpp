@@ -14,6 +14,9 @@
 #include "type.h"
 #include "pointer_type.h"
 #include "argument_list.h"
+#include "symbol_element.h"
+#include "type_reference.h"
+#include "assembly_label.h"
 #include "integer_literal.h"
 #include "type_of_intrinsic.h"
 
@@ -38,10 +41,25 @@ namespace basecode::compiler {
             return false;
         }
 
-//        auto arg_type = args[0]->infer_type(session);
-        result.element = session.builder().make_integer(
+        auto arg = args[0];
+        infer_type_result_t infer_type_result {};
+        if (!arg->infer_type(session, infer_type_result)) {
+            session.error(
+                this,
+                "P091",
+                "type_of unable to infer type.",
+                location());
+            return false;
+        }
+
+        auto label_name = fmt::format(
+            "_ti_{}",
+            infer_type_result.inferred_type->symbol()->name());
+
+        result.element = session.builder().make_assembly_label(
             parent_scope(),
-            0xdeadbeef);
+            label_name);
+
         return true;
     }
 

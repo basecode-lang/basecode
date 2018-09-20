@@ -56,6 +56,8 @@ namespace basecode::compiler {
 
         void symbol(compiler::symbol_element* value);
 
+        bool emit_type_info(compiler::session& session);
+
         virtual std::string name(const std::string& alias = "") const;
 
     protected:
@@ -78,6 +80,8 @@ namespace basecode::compiler {
         void on_owned_elements(element_list_t& list) override;
 
         virtual bool on_initialize(compiler::session& session);
+
+        virtual bool on_emit_type_info(compiler::session& session);
 
     private:
         bool _packed = false;

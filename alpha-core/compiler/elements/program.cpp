@@ -26,6 +26,7 @@
 #include "type_info.h"
 #include "identifier.h"
 #include "tuple_type.h"
+#include "declaration.h"
 #include "string_type.h"
 #include "initializer.h"
 #include "module_type.h"
@@ -80,10 +81,14 @@ namespace basecode::compiler {
                             var->address_offset = 4;
                     }
                 }
+
                 instruction_block->comment(
                     fmt::format("\"{}\"", string_literal->value()),
                     4);
-                instruction_block->string(string_literal->escaped_value());
+                instruction_block->string(
+                    nullptr,
+                    nullptr,
+                    string_literal->escaped_value());
 
                 break;
             }
@@ -221,6 +226,9 @@ namespace basecode::compiler {
         if (!emit_bootstrap_block(session))
             return false;
 
+        if (!emit_type_info(session))
+            return false;
+
         if (!emit_sections(session))
             return false;
 
@@ -249,6 +257,55 @@ namespace basecode::compiler {
 
             for (auto e : section.second)
                 emit_section_variable(session, e, instruction_block);
+        }
+
+        return true;
+    }
+
+    bool program::emit_type_info(compiler::session& session) {
+        auto& assembler = session.assembler();
+
+        auto type_info_block = assembler.make_basic_block();
+        type_info_block->blank_line();
+        type_info_block->section(vm::section_t::ro_data);
+
+        assembler.push_block(type_info_block);
+        defer({
+            assembler.pop_block();
+        });
+
+        std::unordered_map<common::id_t, compiler::type*> used_types {};
+
+        auto declarations = session.elements().find_by_type(element_type_t::declaration);
+        for (auto d : declarations) {
+            auto decl = dynamic_cast<compiler::declaration*>(d);
+            auto decl_type = decl->identifier()->type_ref()->type();
+            if (decl_type == nullptr) {
+                // XXX: this is an error!
+                return false;
+            }
+            if (used_types.count(decl_type->id()) > 0)
+                continue;
+            used_types.insert(std::make_pair(decl_type->id(), decl_type));
+        }
+
+        for (const auto& kvp : used_types) {
+            type_info_block->align(4);
+            auto label_name = fmt::format(
+                "_ti_name_lit_{}",
+                kvp.second->symbol()->name());
+            type_info_block->string(
+                assembler.make_label(label_name),
+                assembler.make_label(label_name + "_data"),
+                kvp.second->name());
+        }
+
+        type_info_block->blank_line();
+        type_info_block->align(8);
+        type_info_block->label(assembler.make_label("_ti_array"));
+        type_info_block->qwords({used_types.size()});
+        for (const auto& kvp : used_types) {
+            kvp.second->emit_type_info(session);
         }
 
         return true;

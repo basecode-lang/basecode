@@ -40,6 +40,8 @@ namespace basecode::compiler {
 
         bool emit_sections(compiler::session& session);
 
+        bool emit_type_info(compiler::session& session);
+
         bool emit_finalizers(compiler::session& session);
 
         bool on_emit(compiler::session& session) override;

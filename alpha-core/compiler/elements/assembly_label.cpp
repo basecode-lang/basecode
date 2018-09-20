@@ -42,15 +42,14 @@ namespace basecode::compiler {
 
     bool assembly_label::on_emit(compiler::session& session) {
         auto& assembler = session.assembler();
-        auto instruction_block = assembler.current_block();
+        auto block = assembler.current_block();
         auto target_reg = assembler.current_target_register();
 
-        instruction_block->blank_line();
-        instruction_block->comment(
+        block->comment(
             fmt::format("assembly_label address: {}", _name),
             4);
         auto label_ref = assembler.make_label_ref(_name);
-        instruction_block->move_label_to_reg(*target_reg, label_ref);
+        block->move_label_to_reg(*target_reg, label_ref);
 
         return true;
     }

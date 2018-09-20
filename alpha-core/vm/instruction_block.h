@@ -16,6 +16,7 @@
 #include <string>
 #include <vector>
 #include <boost/any.hpp>
+#include <boost/variant.hpp>
 #include "terp.h"
 #include "label.h"
 #include "stack_frame.h"
@@ -67,10 +68,11 @@ namespace basecode::vm {
         uint8_t size = 0;
     };
 
+    using data_value_variant_t = boost::variant<uint64_t, label_ref_t*>;
     struct data_definition_t {
         op_sizes size;
         data_definition_type_t type = data_definition_type_t::none;
-        std::vector<uint64_t> values {};
+        std::vector<data_value_variant_t> values {};
     };
 
     struct comment_t {
@@ -223,6 +225,11 @@ namespace basecode::vm {
 
         // data definitions
     public:
+        void string(
+            vm::label* start_label,
+            vm::label* data_label,
+            const std::string& value);
+
         void align(uint8_t size);
 
         void section(section_t type);
@@ -235,15 +242,13 @@ namespace basecode::vm {
 
         void reserve_qword(size_t count);
 
-        void string(const std::string& value);
-
         void bytes(const std::vector<uint8_t>& values);
 
         void words(const std::vector<uint16_t>& values);
 
         void dwords(const std::vector<uint32_t>& values);
 
-        void qwords(const std::vector<uint64_t>& values);
+        void qwords(const std::vector<data_value_variant_t>& values);
 
         // instructions
     public:

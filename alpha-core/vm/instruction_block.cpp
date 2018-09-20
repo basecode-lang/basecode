@@ -174,12 +174,21 @@ namespace basecode::vm {
         });
     }
 
-    void instruction_block::string(const std::string& value) {
+    void instruction_block::string(
+            vm::label* start_label,
+            vm::label* data_label,
+            const std::string& value) {
+        if (start_label != nullptr)
+            label(start_label);
         dwords({static_cast<uint32_t>(value.length())});
+
         std::vector<uint8_t> str_bytes {};
         for (const auto& c : value)
             str_bytes.emplace_back(static_cast<uint8_t>(c));
         str_bytes.emplace_back(0);
+
+        if (data_label != nullptr)
+            label(data_label);
         bytes(str_bytes);
     }
 
@@ -213,7 +222,7 @@ namespace basecode::vm {
         make_block_entry(def);
     }
 
-    void instruction_block::qwords(const std::vector<uint64_t>& values) {
+    void instruction_block::qwords(const std::vector<data_value_variant_t>& values) {
         data_definition_t def {
             .size = op_sizes::qword,
             .type = data_definition_type_t::initialized,

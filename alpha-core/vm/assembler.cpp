@@ -63,7 +63,10 @@ namespace basecode::vm {
                             auto size_in_bytes = op_size_in_bytes(data_def->size);
                             auto offset = 0;
                             for (auto v : data_def->values) {
-                                _terp->write(data_def->size, entry.address() + offset, v);
+                                _terp->write(
+                                    data_def->size,
+                                    entry.address() + offset,
+                                    boost::get<uint64_t>(v));
                                 offset += size_in_bytes;
                             }
                         }
@@ -735,18 +738,38 @@ namespace basecode::vm {
 
         for (auto block : _blocks) {
             for (auto& entry : block->entries()) {
-                if (entry.type() != block_entry_type_t::instruction)
-                    continue;
-
-                auto inst = entry.data<instruction_t>();
-                for (size_t i = 0; i < inst->operands_count; i++) {
-                    auto& operand = inst->operands[i];
-                    if (operand.is_unresolved()) {
-                        auto label_ref = find_label_ref(static_cast<uint32_t>(operand.value.u));
-                        if (label_ref != nullptr) {
-                            operand.value.u = label_ref->resolved->address();
-                            operand.clear_unresolved();
+                switch (entry.type()) {
+                    case block_entry_type_t::instruction: {
+                        auto inst = entry.data<instruction_t>();
+                        for (size_t i = 0; i < inst->operands_count; i++) {
+                            auto& operand = inst->operands[i];
+                            if (operand.is_unresolved()) {
+                                auto label_ref = find_label_ref(static_cast<uint32_t>(operand.value.u));
+                                if (label_ref != nullptr) {
+                                    operand.value.u = label_ref->resolved->address();
+                                    operand.clear_unresolved();
+                                }
+                            }
                         }
+                        break;
+                    }
+                    case block_entry_type_t::data_definition: {
+                        auto data_def = entry.data<data_definition_t>();
+                        if (data_def->type == data_definition_type_t::uninitialized)
+                            break;
+                        for (size_t i = 0; i < data_def->values.size(); i++) {
+                            auto variant = data_def->values[i];
+                            if (variant.which() == 1) {
+                                auto label_ref = boost::get<label_ref_t*>(variant);
+                                if (label_ref != nullptr) {
+                                    data_def->values[i] = label_ref->resolved->address();
+                                }
+                            }
+                        }
+                        break;
+                    }
+                    default: {
+                        break;
                     }
                 }
             }
@@ -806,8 +829,8 @@ namespace basecode::vm {
                                 break;
                             }
                             case data_definition_type_t::uninitialized: {
-                                for (auto size : data_def->values)
-                                    offset += size_in_bytes * size;
+                                for (auto v : data_def->values)
+                                    offset += size_in_bytes * boost::get<uint64_t>(v);
                                 break;
                             }
                             default: {
@@ -1002,7 +1025,11 @@ namespace basecode::vm {
                     while (item_count > 0) {
                         if (!items.empty())
                             items += ", ";
-                        items += fmt::format(format_spec, definition->values[item_index++]);
+                        auto v = definition->values[item_index++];
+                        if (v.which() == 0)
+                            items += fmt::format(format_spec, boost::get<uint64_t>(v));
+                        else
+                            items += boost::get<label_ref_t*>(v)->name;
                         if ((item_index % 8) == 0) {
                             source_file->add_source_line(
                                 entry.address(),

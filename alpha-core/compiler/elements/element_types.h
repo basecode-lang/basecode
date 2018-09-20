@@ -384,7 +384,7 @@ namespace basecode::compiler {
         {syntax::token_types_t::ror_literal,        operator_type_t::rotate_right},
         {syntax::token_types_t::exponent,           operator_type_t::exponent},
         {syntax::token_types_t::assignment,         operator_type_t::assignment},
-        {syntax::token_types_t::caret,              operator_type_t::dereference},
+        {syntax::token_types_t::period,             operator_type_t::dereference},
     };
 
     static inline bool is_relational_operator(operator_type_t op) {

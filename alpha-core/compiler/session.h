@@ -148,9 +148,13 @@ namespace basecode::compiler {
 
         const compiler::scope_manager& scope_manager() const;
 
+        vm::label_ref_t* type_info_label(compiler::type* type);
+
         void push_source_file(common::source_file* source_file);
 
         variable_t* variable_for_element(compiler::element* element);
+
+        void type_info_label(compiler::type* type, vm::label_ref_t* label);
 
         compiler::module* compile_module(common::source_file* source_file);
 
@@ -195,6 +199,7 @@ namespace basecode::compiler {
         std::stack<common::source_file*> _source_file_stack {};
         std::unordered_map<std::string, variable_t> _variables {};
         std::map<std::string, common::source_file> _source_files {};
+        std::unordered_map<common::id_t, vm::label_ref_t*> _type_info_labels {};
     };
 
 };
