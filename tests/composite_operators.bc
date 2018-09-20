@@ -1,0 +1,60 @@
+
+string ::= struct {
+    length: u32;
+    capacity: u32;
+    data: ^u8;
+};
+
+make_string ::= proc(): string {
+    s: string;
+    s.length   := 8;
+    s.capacity := 8;
+    s.data     := alloc(8);
+    return s;
+};
+
+resize_string ::= proc(s: ^string, target_length: u32) {
+
+};
+
+make_shitty_cstring ::= proc(s: ^string): ^u8 {
+    resize_string(s, s.length + 1);
+    s.data[length] = 0;
+    return s.data;
+};
+
+@binary_operator "+";
+string_append ::= proc(lhs: ^string, rhs: string) {
+    resize_string(lhs, lhs.length + rhs.length);
+    copy(lhs.data + lhs.length, rhs, rhs.length);
+};
+
+@binary_operator ":="
+string_assignment ::= proc(lhs: ^utf16_string, rhs: string) {
+};
+
+@binary_operator ":="
+string_assignment ::= proc(lhs: ^utf32_string, rhs: string) {
+};
+
+@binary_operator ":="
+string_assignment ::= proc(lhs: ^string, rhs: utf32_string) {
+};
+
+////////////////////
+
+foo: string := "foo";
+baz: utf16_string := "baz baz baz";
+
+///////////////////
+
+bar := foo + " bar"; /// -> bar := string_append(foo, "bar");
+print("shitty c shit: %s\n", foo.data);
+vector3 ::= struct {
+};
+a: vector3;
+b: vector3;
+c := a + b;
+
+///////////////////
+
