@@ -1,0 +1,6 @@
+a: []string;
+b: [8]u16;
+c: [8][8]u8;
+
+ARRAY_SIZE ::= 200;
+d: [ARRAY_SIZE]bool;

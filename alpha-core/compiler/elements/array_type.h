@@ -20,18 +20,16 @@ namespace basecode::compiler {
     public:
         static std::string name_for_array(
             compiler::type* entry_type,
-            size_t size);
+            const element_list_t& subscripts);
 
         array_type(
             compiler::module* module,
             block* parent_scope,
             compiler::block* scope,
             compiler::type_reference* entry_type,
-            size_t size);
+            const element_list_t& subscripts);
 
-        uint64_t size() const;
-
-        void size(uint64_t value);
+        const element_list_t& subscripts() const;
 
         compiler::type_reference* entry_type_ref();
 
@@ -40,10 +38,12 @@ namespace basecode::compiler {
     protected:
         type_access_model_t on_access_model() const override;
 
+        void on_owned_elements(element_list_t& list) override;
+
         bool on_initialize(compiler::session& session) override;
 
     private:
-        uint64_t _size = 0;
+        element_list_t _subscripts {};
         compiler::type_reference* _entry_type_ref = nullptr;
     };
 

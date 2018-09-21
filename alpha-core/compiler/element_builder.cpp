@@ -16,6 +16,7 @@
 #include <compiler/elements/label.h>
 #include <compiler/elements/import.h>
 #include <compiler/elements/module.h>
+#include <compiler/elements/spread.h>
 #include <compiler/elements/comment.h>
 #include <compiler/elements/program.h>
 #include <compiler/elements/any_type.h>
@@ -112,7 +113,7 @@ namespace basecode::compiler {
             if (result.is_array) {
                 auto array_type = scope_manager.find_array_type(
                     result.type,
-                    result.array_size,
+                    result.array_subscripts,
                     parent_scope);
                 if (array_type == nullptr) {
                     array_type = make_array_type(
@@ -120,7 +121,7 @@ namespace basecode::compiler {
                         make_block(parent_scope, element_type_t::block),
                         result.type,
                         result.type_name,
-                        result.array_size);
+                        result.array_subscripts);
                 }
                 result.type = array_type;
             }
@@ -180,7 +181,7 @@ namespace basecode::compiler {
             compiler::symbol_element* symbol,
             bool is_pointer,
             bool is_array,
-            size_t array_size) {
+            const element_list_t& subscripts) {
         auto type = new compiler::unknown_type(
             _session.scope_manager().current_module(),
             parent_scope,
@@ -189,7 +190,7 @@ namespace basecode::compiler {
             return nullptr;
         type->is_array(is_array);
         type->is_pointer(is_pointer);
-        type->array_size(array_size);
+        type->subscripts(subscripts);
         symbol->parent_element(type);
         _session.elements().add(type);
         return type;
@@ -273,7 +274,7 @@ namespace basecode::compiler {
             compiler::block* scope,
             compiler::type* entry_type,
             const qualified_symbol_t& type_name,
-            size_t size) {
+            const element_list_t& subscripts) {
         auto& scope_manager = _session.scope_manager();
 
         auto type = new compiler::array_type(
@@ -281,11 +282,13 @@ namespace basecode::compiler {
             parent_scope,
             scope,
             make_type_reference(parent_scope, type_name, entry_type),
-            size);
+            subscripts);
         if (!type->initialize(_session))
             return nullptr;
 
         scope->parent_element(type);
+        for (auto s : subscripts)
+            s->parent_element(type);
 
         _session.elements().add(type);
 
@@ -352,6 +355,19 @@ namespace basecode::compiler {
         if (label != nullptr)
             label->parent_element(continue_e);
         return continue_e;
+    }
+
+    spread* element_builder::make_spread_operator(
+            compiler::block* parent_scope,
+            compiler::element* expression) {
+        auto spread_op = new compiler::spread(
+            _session.scope_manager().current_module(),
+            parent_scope,
+            expression);
+        _session.elements().add(spread_op);
+        if (expression != nullptr)
+            expression->parent_element(spread_op);
+        return spread_op;
     }
 
     defer_element* element_builder::make_defer(
@@ -963,7 +979,7 @@ namespace basecode::compiler {
             symbol,
             result.is_pointer,
             result.is_array,
-            result.array_size);
+            result.array_subscripts);
         return unknown_type;
     }
 

@@ -35,20 +35,20 @@ namespace basecode::compiler {
         _is_array = value;
     }
 
-    size_t unknown_type::array_size() const {
-        return _array_size;
-    }
-
     void unknown_type::is_pointer(bool value) {
         _is_pointer = value;
     }
 
-    void unknown_type::array_size(size_t value) {
-        _array_size = value;
+    const element_list_t& unknown_type::subscripts() const {
+        return _subscripts;
     }
 
     bool unknown_type::on_initialize(compiler::session& session) {
         return true;
+    }
+
+    void unknown_type::subscripts(const element_list_t& subscripts) {
+        _subscripts = subscripts;
     }
 
 };

@@ -28,19 +28,19 @@ namespace basecode::compiler {
 
         void is_array(bool value);
 
-        size_t array_size() const;
-
         void is_pointer(bool value);
 
-        void array_size(size_t value);
+        const element_list_t& subscripts() const;
+
+        void subscripts(const element_list_t& subscripts);
 
     protected:
         bool on_initialize(compiler::session& session) override;
 
     private:
-        size_t _array_size = 0;
         bool _is_array = false;
         bool _is_pointer = false;
+        element_list_t _subscripts {};
     };
 
 };

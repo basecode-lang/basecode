@@ -43,6 +43,7 @@ namespace basecode::compiler {
         bool find_identifier_type(
             type_find_result_t& result,
             const syntax::ast_node_t* type_node,
+            const element_list_t& array_subscripts,
             compiler::block* parent_scope = nullptr);
 
         compiler::block* pop_scope();
@@ -64,7 +65,7 @@ namespace basecode::compiler {
 
         compiler::type* find_array_type(
             compiler::type* entry_type,
-            size_t size,
+            const element_list_t& subscripts,
             compiler::block* scope = nullptr) const;
 
         compiler::type* find_pointer_type(

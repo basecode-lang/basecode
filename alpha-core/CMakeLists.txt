@@ -108,6 +108,7 @@ add_library(
     compiler/element_builder.cpp compiler/element_builder.h
     compiler/elements/import.cpp compiler/elements/import.h
     compiler/elements/module.cpp compiler/elements/module.h
+    compiler/elements/spread.cpp compiler/elements/spread.h
     compiler/elements/comment.cpp compiler/elements/comment.h
     compiler/elements/element.cpp compiler/elements/element.h
     compiler/elements/program.cpp compiler/elements/program.h

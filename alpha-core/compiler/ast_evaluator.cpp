@@ -16,6 +16,7 @@
 #include <compiler/elements/label.h>
 #include <compiler/elements/import.h>
 #include <compiler/elements/module.h>
+#include <compiler/elements/spread.h>
 #include <compiler/elements/comment.h>
 #include <compiler/elements/program.h>
 #include <compiler/elements/any_type.h>
@@ -95,6 +96,7 @@ namespace basecode::compiler {
         {syntax::ast_node_types_t::number_literal,          std::bind(&ast_evaluator::number_literal, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::string_literal,          std::bind(&ast_evaluator::string_literal, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::unary_operator,          std::bind(&ast_evaluator::unary_operator, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::spread_operator,         std::bind(&ast_evaluator::spread_operator, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::cast_expression,         std::bind(&ast_evaluator::cast_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::from_expression,         std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::proc_expression,         std::bind(&ast_evaluator::proc_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
@@ -880,6 +882,19 @@ namespace basecode::compiler {
         return true;
     }
 
+    bool ast_evaluator::spread_operator(
+            evaluator_context_t& context,
+            evaluator_result_t& result) {
+        compiler::element* expr = nullptr;
+        if (context.node->lhs != nullptr) {
+            expr = resolve_symbol_or_evaluate(context, context.node->lhs.get());
+        }
+        result.element = _session.builder().make_spread_operator(
+            _session.scope_manager().current_scope(),
+            expr);
+        return true;
+    }
+
     bool ast_evaluator::binary_operator(
             evaluator_context_t& context,
             evaluator_result_t& result) {
@@ -1126,10 +1141,13 @@ namespace basecode::compiler {
                 return false;
 
             if (expr->element_type() == element_type_t::symbol) {
+                auto type_ref = dynamic_cast<compiler::type_reference*>(evaluate(context.node->rhs->rhs.get()));
+                if (type_ref == nullptr)
+                    return false;
                 expr = add_identifier_to_scope(
                     context,
                     dynamic_cast<compiler::symbol_element*>(expr),
-                    dynamic_cast<compiler::type_reference*>(evaluate(context.node->rhs->rhs.get())),
+                    type_ref,
                     nullptr,
                     0);
             }
@@ -1373,10 +1391,39 @@ namespace basecode::compiler {
         auto& scope_manager = _session.scope_manager();
         auto scope = scope_manager.current_scope();
 
+        auto is_dynamic = false;
+        element_list_t array_subscripts {};
+
+        for (const auto& node : context.node->rhs->children) {
+            auto expr = resolve_symbol_or_evaluate(
+                context,
+                node.get());
+            if (expr->element_type() == element_type_t::spread) {
+                is_dynamic = true;
+            } else if (!expr->is_constant()) {
+                _session.error(
+                    "P002",
+                    "subscript size expressions must be constant.",
+                    expr->location());
+                return false;
+            }
+            if (expr != nullptr)
+                array_subscripts.emplace_back(expr);
+        }
+
+        if (is_dynamic && array_subscripts.size() > 1) {
+            _session.error(
+                "P002",
+                "only one subscript is allowed for dynamic arrays.",
+                context.node->location);
+            return false;
+        }
+
         type_find_result_t find_type_result {};
         scope_manager.find_identifier_type(
             find_type_result,
             context.node,
+            array_subscripts,
             scope);
 
         compiler::type_reference* type_ref = nullptr;
@@ -1532,18 +1579,20 @@ namespace basecode::compiler {
                 auto symbol = dynamic_cast<compiler::symbol_element*>(lhs);
                 symbol->constant(is_constant_assignment);
 
+                auto type_ref = dynamic_cast<compiler::type_reference*>(evaluate_in_scope(
+                    context,
+                    target_symbol->rhs.get(),
+                    scope));
                 auto decl = add_identifier_to_scope(
                     context,
                     symbol,
-                    dynamic_cast<compiler::type_reference*>(evaluate_in_scope(
-                        context,
-                        target_symbol->rhs.get(),
-                        scope)),
+                    type_ref,
                     node,
                     i,
                     scope);
                 if (decl == nullptr)
                     return false;
+
                 expressions.emplace_back(decl);
             }
         }

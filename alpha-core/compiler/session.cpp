@@ -467,7 +467,7 @@ namespace basecode::compiler {
                     find_result.type_name = unknown_type->symbol()->qualified_symbol();
                     find_result.is_array = unknown_type->is_array();
                     find_result.is_pointer = unknown_type->is_pointer();
-                    find_result.array_size = unknown_type->array_size();
+                    find_result.array_subscripts = unknown_type->subscripts();
 
                     find_result.type = _builder.make_complete_type(
                         find_result,

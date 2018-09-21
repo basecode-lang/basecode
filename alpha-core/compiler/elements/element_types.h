@@ -32,6 +32,7 @@ namespace basecode::compiler {
     class label;
     class import;
     class module;
+    class spread;
     class element;
     class program;
     class comment;
@@ -143,6 +144,7 @@ namespace basecode::compiler {
         defer,
         symbol,
         module,
+        spread,
         break_e,
         comment,
         program,
@@ -202,6 +204,7 @@ namespace basecode::compiler {
         {element_type_t::block, "block"},
         {element_type_t::field, "field"},
         {element_type_t::defer, "defer"},
+        {element_type_t::spread, "spread"},
         {element_type_t::module, "module"},
         {element_type_t::symbol, "symbol"},
         {element_type_t::while_e, "while"},
@@ -542,8 +545,8 @@ namespace basecode::compiler {
         bool is_array = false;
         bool is_spread = false;
         bool is_pointer = false;
-        size_t array_size = 0;
         compiler::type* type = nullptr;
+        element_list_t array_subscripts {};
     };
 
     ///////////////////////////////////////////////////////////////////////////

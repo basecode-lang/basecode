@@ -22,11 +22,21 @@ namespace basecode::compiler {
 
     std::string array_type::name_for_array(
             compiler::type* entry_type,
-            size_t size) {
-        return fmt::format(
-            "__array_{}_{}__",
-            entry_type->symbol()->name(),
-            size);
+            const element_list_t& subscripts) {
+        std::stringstream stream;
+        stream << fmt::format("__array_{}", entry_type->symbol()->name());
+        for (auto s : subscripts) {
+            if (s->element_type() == element_type_t::spread) {
+                stream << "_SD";
+            } else {
+                uint64_t size = 0;
+                if (s->as_integer(size)) {
+                    stream << fmt::format("_S{}", size);
+                }
+            }
+        }
+        stream << "__";
+        return stream.str();
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -36,23 +46,19 @@ namespace basecode::compiler {
             block* parent_scope,
             compiler::block* scope,
             compiler::type_reference* entry_type,
-            size_t size) : compiler::composite_type(
-                                module,
-                                parent_scope,
-                                composite_types_t::struct_type,
-                                scope,
-                                nullptr,
-                                element_type_t::array_type),
-                           _size(size),
-                           _entry_type_ref(entry_type) {
+            const element_list_t& subscripts) : compiler::composite_type(
+                                                    module,
+                                                    parent_scope,
+                                                    composite_types_t::struct_type,
+                                                    scope,
+                                                    nullptr,
+                                                    element_type_t::array_type),
+                                                _subscripts(subscripts),
+                                                _entry_type_ref(entry_type) {
     }
 
-    uint64_t array_type::size() const {
-        return _size;
-    }
-
-    void array_type::size(uint64_t value) {
-        _size = value;
+    const element_list_t& array_type::subscripts() const {
+        return _subscripts;
     }
 
     compiler::type_reference* array_type::entry_type_ref() {
@@ -63,13 +69,21 @@ namespace basecode::compiler {
         return type_access_model_t::pointer;
     }
 
+    void array_type::on_owned_elements(element_list_t& list) {
+        if (_entry_type_ref != nullptr)
+            list.emplace_back(_entry_type_ref);
+
+        for (auto e : _subscripts)
+            list.emplace_back(e);
+    }
+
     bool array_type::on_initialize(compiler::session& session) {
         auto& scope_manager = session.scope_manager();
         auto& builder = session.builder();
 
         auto type_symbol = builder.make_symbol(
             parent_scope(),
-            name_for_array(_entry_type_ref->type(), _size));
+            name_for_array(_entry_type_ref->type(), _subscripts));
         symbol(type_symbol);
         type_symbol->parent_element(this);
 
@@ -172,10 +186,22 @@ namespace basecode::compiler {
 
     std::string array_type::name(const std::string& alias) const {
         auto entry_type_name = !alias.empty() ? alias : _entry_type_ref->name();
-        if (_size == 0)
-            return fmt::format("[]{}", entry_type_name);
-        else
-            return fmt::format("[{}]{}", _size, entry_type_name);
+        std::stringstream stream;
+
+        for (auto s : _subscripts) {
+            if (s->element_type() == element_type_t::spread) {
+                stream << "[...]";
+                break;
+            } else {
+                uint64_t size = 0;
+                if (s->as_integer(size)) {
+                    stream << fmt::format("[{}]", size);
+                }
+            }
+        }
+
+        stream << entry_type_name;
+        return stream.str();
     }
 
 };

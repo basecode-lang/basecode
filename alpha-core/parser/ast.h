@@ -52,6 +52,7 @@ namespace basecode::syntax {
         string_literal,
         unary_operator,
         statement_body,
+        spread_operator,
         proc_expression,
         binary_operator,
         boolean_literal,
@@ -123,6 +124,7 @@ namespace basecode::syntax {
         {ast_node_types_t::break_statement, "break_statement"},
         {ast_node_types_t::with_expression, "with_expression"},
         {ast_node_types_t::type_identifier, "type_identifier"},
+        {ast_node_types_t::spread_operator, "spread_operator"},
         {ast_node_types_t::defer_expression, "defer_expression"},
         {ast_node_types_t::union_expression, "union_expression"},
         {ast_node_types_t::return_statement, "return_statement"},
@@ -268,6 +270,8 @@ namespace basecode::syntax {
         ast_node_shared_ptr statement_body_node();
 
         ast_node_shared_ptr type_identifier_node();
+
+        ast_node_shared_ptr spread_operator_node();
 
         ast_node_shared_ptr constant_assignment_node();
 

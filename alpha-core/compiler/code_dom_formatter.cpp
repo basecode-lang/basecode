@@ -15,6 +15,7 @@
 #include <compiler/elements/block.h>
 #include <compiler/elements/field.h>
 #include <compiler/elements/label.h>
+#include <compiler/elements/spread.h>
 #include <compiler/elements/import.h>
 #include <compiler/elements/module.h>
 #include <compiler/elements/program.h>
@@ -459,10 +460,12 @@ namespace basecode::compiler {
                     add_primary_edge(element, fld);
                 add_primary_edge(element, element->scope());
                 add_primary_edge(element, element->symbol());
+                for (auto s : element->subscripts())
+                    add_primary_edge(element, s);
                 return fmt::format(
-                    "{}[shape=record,label=\"array_type|size: {}|type: {}\"{}];",
+                    "{}[shape=record,label=\"array_type|{}|type: {}\"{}];",
                     node_vertex_name,
-                    element->size(),
+                    element->name(),
                     entry_type_name,
                     style);
             }
@@ -614,6 +617,16 @@ namespace basecode::compiler {
                     node_vertex_name,
                     composite_type_name(element->type()),
                     element->symbol()->name(),
+                    style);
+            }
+            case element_type_t::spread: {
+                auto spread_element = dynamic_cast<spread*>(node);
+                auto style = ", fillcolor=slateblue2, style=\"filled\"";
+                if (spread_element->expression() != nullptr)
+                    add_primary_edge(spread_element, spread_element->expression());
+                return fmt::format(
+                    "{}[shape=record,label=\"spread\"{}];",
+                    node_vertex_name,
                     style);
             }
             case element_type_t::unary_operator: {

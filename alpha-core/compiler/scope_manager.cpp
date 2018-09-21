@@ -113,6 +113,7 @@ namespace basecode::compiler {
     bool scope_manager::find_identifier_type(
             type_find_result_t& result,
             const syntax::ast_node_t* type_node,
+            const element_list_t& array_subscripts,
             compiler::block* parent_scope) {
         if (type_node == nullptr)
             return false;
@@ -121,11 +122,15 @@ namespace basecode::compiler {
         builder.make_qualified_symbol(
             result.type_name,
             type_node->lhs.get());
-        result.array_size = 0;
+
         result.is_array = type_node->is_array();
         result.is_spread = type_node->is_spread();
         result.is_pointer = type_node->is_pointer();
+        for (auto e : array_subscripts)
+            result.array_subscripts.emplace_back(e);
+
         builder.make_complete_type(result, parent_scope);
+
         return result.type != nullptr;
     }
 
@@ -310,11 +315,11 @@ namespace basecode::compiler {
 
     compiler::type* scope_manager::find_array_type(
             compiler::type* entry_type,
-            size_t size,
+            const element_list_t& subscripts,
             compiler::block* scope) const {
         return find_type(
             qualified_symbol_t {
-                .name = compiler::array_type::name_for_array(entry_type, size)
+                .name = compiler::array_type::name_for_array(entry_type, subscripts)
             },
             scope);
     }

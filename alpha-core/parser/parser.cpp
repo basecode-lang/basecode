@@ -263,6 +263,7 @@ namespace basecode::syntax {
         auto type_node = parser
             ->ast_builder()
             ->type_identifier_node();
+        type_node->location = token.location;
 
         collect_comments(r, parser, type_node->comments);
 
@@ -275,9 +276,30 @@ namespace basecode::syntax {
         while (true) {
             if (!parser->peek(token_types_t::left_square_bracket))
                 break;
-            array_subscripts->children.push_back(parser->parse_expression(
-                r,
-                static_cast<uint8_t>(precedence_t::variable)));
+
+            // left square bracket
+            token_t left_square_bracket;
+            parser->consume(left_square_bracket);
+
+            ast_node_shared_ptr expr;
+            if (!parser->peek(token_types_t::right_square_bracket)) {
+                expr = parser->parse_expression(
+                    r,
+                    static_cast<uint8_t>(precedence_t::variable));
+            } else {
+                expr = parser
+                    ->ast_builder()
+                    ->spread_operator_node();
+            }
+
+            // right square bracket
+            token_t right_square_bracket;
+            parser->consume(right_square_bracket);
+
+            expr->location.start(left_square_bracket.location.start());
+            expr->location.end(right_square_bracket.location.end());
+
+            array_subscripts->children.push_back(expr);
         }
 
         if (parser->peek(token_types_t::caret)) {
@@ -308,6 +330,7 @@ namespace basecode::syntax {
             type_identifier);
         type_node->lhs = symbol_node;
         type_node->rhs = array_subscripts;
+        type_node->location.end(type_identifier.location.end());
 
         if (!array_subscripts->children.empty())
             type_node->flags |= ast_node_t::flags_t::array;
@@ -382,6 +405,15 @@ namespace basecode::syntax {
             parser* parser,
             token_t& token) {
         return create_module_expression_node(r, parser, nullptr, token);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    ast_node_shared_ptr spread_prefix_parser::parse(
+            common::result& r,
+            parser* parser,
+            token_t& token) {
+        return parser->ast_builder()->spread_operator_node();
     }
 
     ///////////////////////////////////////////////////////////////////////////

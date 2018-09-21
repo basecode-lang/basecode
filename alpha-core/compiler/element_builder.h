@@ -21,6 +21,10 @@ namespace basecode::compiler {
     public:
         explicit element_builder(compiler::session& session);
 
+        spread* make_spread_operator(
+            compiler::block* parent_scope,
+            compiler::element* expression);
+
         defer_element* make_defer(
             compiler::block* parent_scope,
             compiler::element* expression);
@@ -137,7 +141,7 @@ namespace basecode::compiler {
             compiler::block* scope,
             compiler::type* entry_type,
             const qualified_symbol_t& type_name,
-            size_t size);
+            const element_list_t& subscripts);
 
         expression* make_expression(
             compiler::block* parent_scope,
@@ -185,7 +189,7 @@ namespace basecode::compiler {
             compiler::symbol_element* symbol,
             bool is_pointer,
             bool is_array,
-            size_t array_size);
+            const element_list_t& subscripts);
 
         composite_type* make_union_type(
             compiler::block* parent_scope,
