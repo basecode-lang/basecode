@@ -63,6 +63,30 @@ namespace basecode::vm {
             op_sizes size,
             const register_t& dest_reg,
             const register_t& src_reg,
+            const register_t& size_reg) {
+        instruction_t copy_op;
+        copy_op.op = op_codes::copy;
+        copy_op.size = size;
+        copy_op.operands_count = 3;
+        copy_op.operands[0].type =
+            operand_encoding_t::flags::integer
+            | operand_encoding_t::flags::reg;
+        copy_op.operands[0].value.r = dest_reg.number;
+        copy_op.operands[1].type =
+            operand_encoding_t::flags::integer
+            | operand_encoding_t::flags::reg;
+        copy_op.operands[1].value.r = src_reg.number;
+        copy_op.operands[2].type =
+            operand_encoding_t::flags::integer
+            | operand_encoding_t::flags::reg;
+        copy_op.operands[2].value.r = size_reg.number;
+        make_block_entry(copy_op);
+    }
+
+    void instruction_block::copy(
+            op_sizes size,
+            const register_t& dest_reg,
+            const register_t& src_reg,
             uint64_t count) {
         instruction_t copy_op;
         copy_op.op = op_codes::copy;
@@ -104,6 +128,30 @@ namespace basecode::vm {
             operand_encoding_t::flags::integer
             | operand_encoding_t::flags::constant;
         fill_op.operands[2].value.u = length;
+        make_block_entry(fill_op);
+    }
+
+    void instruction_block::fill(
+            op_sizes size,
+            const register_t& dest_reg,
+            const register_t& value_reg,
+            const register_t& size_reg) {
+        instruction_t fill_op;
+        fill_op.op = op_codes::fill;
+        fill_op.size = size;
+        fill_op.operands_count = 3;
+        fill_op.operands[0].type =
+            operand_encoding_t::flags::integer
+            | operand_encoding_t::flags::reg;
+        fill_op.operands[0].value.r = dest_reg.number;
+        fill_op.operands[1].type =
+            operand_encoding_t::flags::integer
+            | operand_encoding_t::flags::reg;
+        fill_op.operands[1].value.r = value_reg.number;
+        fill_op.operands[2].type =
+            operand_encoding_t::flags::integer
+            | operand_encoding_t::flags::reg;
+        fill_op.operands[2].value.r = size_reg.number;
         make_block_entry(fill_op);
     }
 

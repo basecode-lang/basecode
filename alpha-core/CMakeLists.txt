@@ -144,6 +144,8 @@ add_library(
     compiler/elements/while_element.cpp compiler/elements/while_element.h
     compiler/elements/break_element.cpp compiler/elements/break_element.h
     compiler/elements/defer_element.cpp compiler/elements/defer_element.h
+    compiler/elements/copy_intrinsic.cpp compiler/elements/copy_intrinsic.h
+    compiler/elements/fill_intrinsic.cpp compiler/elements/fill_intrinsic.h
     compiler/elements/free_intrinsic.cpp compiler/elements/free_intrinsic.h
     compiler/elements/symbol_element.cpp compiler/elements/symbol_element.h
     compiler/elements/namespace_type.cpp compiler/elements/namespace_type.h

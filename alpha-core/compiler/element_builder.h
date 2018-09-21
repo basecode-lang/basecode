@@ -220,6 +220,14 @@ namespace basecode::compiler {
             const std::string& name,
             element* expr);
 
+        intrinsic* make_copy_intrinsic(
+            compiler::block* parent_scope,
+            compiler::argument_list* args);
+
+        intrinsic* make_fill_intrinsic(
+            compiler::block* parent_scope,
+            compiler::argument_list* args);
+
         intrinsic* make_free_intrinsic(
             compiler::block* parent_scope,
             compiler::argument_list* args);

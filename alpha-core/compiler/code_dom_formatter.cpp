@@ -48,6 +48,8 @@
 #include <compiler/elements/while_element.h>
 #include <compiler/elements/float_literal.h>
 #include <compiler/elements/argument_list.h>
+#include <compiler/elements/copy_intrinsic.h>
+#include <compiler/elements/fill_intrinsic.h>
 #include <compiler/elements/type_reference.h>
 #include <compiler/elements/procedure_type.h>
 #include <compiler/elements/return_element.h>

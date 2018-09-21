@@ -21,44 +21,110 @@
 
 namespace basecode::compiler {
 
+    using intrinsic_builder_callable = std::function<compiler::intrinsic* (
+        compiler::element_builder&,
+        compiler::block*,
+        compiler::argument_list*)>;
+
+    std::unordered_map<std::string, intrinsic_builder_callable> s_intrinsics = {
+        {
+            "size_of",
+            [](compiler::element_builder& builder,
+                    auto parent_scope,
+                    auto args) -> compiler::intrinsic* {
+                return builder.make_size_of_intrinsic(
+                    parent_scope,
+                    args);
+            }
+        },
+        {
+            "free",
+            [](compiler::element_builder& builder,
+                    auto parent_scope,
+                    auto args) -> compiler::intrinsic* {
+                return builder.make_free_intrinsic(
+                    parent_scope,
+                    args);
+            }
+        },
+        {
+            "alloc",
+            [](compiler::element_builder& builder,
+                    auto parent_scope,
+                    auto args) -> compiler::intrinsic* {
+                return builder.make_alloc_intrinsic(
+                    parent_scope,
+                    args);
+            }
+        },
+        {
+            "align_of",
+            [](compiler::element_builder& builder,
+                    auto parent_scope,
+                    auto args) -> compiler::intrinsic* {
+                return builder.make_align_of_intrinsic(
+                    parent_scope,
+                    args);
+            }
+        },
+        {
+            "address_of",
+            [](compiler::element_builder& builder,
+                    auto parent_scope,
+                    auto args) -> compiler::intrinsic* {
+                return builder.make_address_of_intrinsic(
+                    parent_scope,
+                    args);
+            }
+        },
+        {
+            "type_of",
+            [](compiler::element_builder& builder,
+                    auto parent_scope,
+                    auto args) -> compiler::intrinsic* {
+                return builder.make_type_of_intrinsic(
+                    parent_scope,
+                    args);
+            }
+        },
+        {
+            "copy",
+            [](compiler::element_builder& builder,
+                    auto parent_scope,
+                    auto args) -> compiler::intrinsic* {
+                return builder.make_copy_intrinsic(
+                    parent_scope,
+                    args);
+            }
+        },
+        {
+            "fill",
+            [](compiler::element_builder& builder,
+                    auto parent_scope,
+                    auto args) -> compiler::intrinsic* {
+                return builder.make_fill_intrinsic(
+                    parent_scope,
+                    args);
+            }
+        },
+    };
+
     intrinsic* intrinsic::intrinsic_for_call(
             compiler::session& session,
             compiler::block* parent_scope,
             compiler::argument_list* args,
             const qualified_symbol_t& symbol) {
-        auto& builder = session.builder();
+        auto it = s_intrinsics.find(symbol.name);
+        if (it == s_intrinsics.end())
+            return nullptr;
 
-        intrinsic* element = nullptr;
-        if (symbol.name == "size_of") {
-            element = builder.make_size_of_intrinsic(
-                parent_scope,
-                args);
-        } else if (symbol.name == "alloc") {
-            element = builder.make_alloc_intrinsic(
-                parent_scope,
-                args);
-        } else if (symbol.name == "free") {
-            element = builder.make_free_intrinsic(
-                parent_scope,
-                args);
-        } else if (symbol.name == "align_of") {
-            element = builder.make_align_of_intrinsic(
-                parent_scope,
-                args);
-        } else if (symbol.name == "address_of") {
-            element = builder.make_address_of_intrinsic(
-                parent_scope,
-                args);
-        } else if (symbol.name == "type_of") {
-            element = builder.make_type_of_intrinsic(
-                parent_scope,
-                args);
-        }
+        auto intrinsic_element = it->second(
+            session.builder(),
+            parent_scope,
+            args);
+        intrinsic_element->location(symbol.location);
 
-        if (element != nullptr)
-            element->location(symbol.location);
-
-        return element;
+        return intrinsic_element;
     }
 
     intrinsic::intrinsic(

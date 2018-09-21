@@ -1,0 +1,38 @@
+// module scope
+
+a: bool := true;
+
+test::namespace::foo ::= ns {
+    // frame
+
+    bar ::= ns {
+        // frame
+        sines: [256]f32;
+
+        make_sine_table ::= proc() {
+            // populate the sine table
+        };
+        make_sine_table();
+
+        simple ::= proc(x: u32, y: u32): u32 {
+            nested1 ::= proc() {
+                // frame + display
+                i: u64;
+
+                nested2 ::= proc() {
+                    // frame + display
+                    i +:= x * y;
+                };
+            };
+
+            // frame + display
+            return x + y;
+        };
+    };
+
+    {
+        // frame
+    };
+
+    bar::sine_stuff::simple();
+};

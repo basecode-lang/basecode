@@ -274,11 +274,23 @@ namespace basecode::vm {
             const register_t& src_reg,
             uint64_t length);
 
+        void copy(
+            op_sizes size,
+            const register_t& dest_reg,
+            const register_t& src_reg,
+            const register_t& size_reg);
+
         void fill(
             op_sizes size,
             const register_t& dest_reg,
             const register_t& value_reg,
             uint64_t length);
+
+        void fill(
+            op_sizes size,
+            const register_t& dest_reg,
+            const register_t& value_reg,
+            const register_t& size_reg);
 
         void zero(
             op_sizes size,

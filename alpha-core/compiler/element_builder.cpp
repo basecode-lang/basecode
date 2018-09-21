@@ -48,6 +48,8 @@
 #include <compiler/elements/float_literal.h>
 #include <compiler/elements/while_element.h>
 #include <compiler/elements/break_element.h>
+#include <compiler/elements/copy_intrinsic.h>
+#include <compiler/elements/fill_intrinsic.h>
 #include <compiler/elements/type_reference.h>
 #include <compiler/elements/free_intrinsic.h>
 #include <compiler/elements/string_literal.h>
@@ -981,6 +983,30 @@ namespace basecode::compiler {
             result.is_array,
             result.array_subscripts);
         return unknown_type;
+    }
+
+    intrinsic* element_builder::make_copy_intrinsic(
+            compiler::block* parent_scope,
+            compiler::argument_list* args) {
+        auto intrinsic = new compiler::copy_intrinsic(
+            _session.scope_manager().current_module(),
+            parent_scope,
+            args);
+        _session.elements().add(intrinsic);
+        args->parent_element(intrinsic);
+        return intrinsic;
+    }
+
+    intrinsic* element_builder::make_fill_intrinsic(
+            compiler::block* parent_scope,
+            compiler::argument_list* args) {
+        auto intrinsic = new compiler::fill_intrinsic(
+            _session.scope_manager().current_module(),
+            parent_scope,
+            args);
+        _session.elements().add(intrinsic);
+        args->parent_element(intrinsic);
+        return intrinsic;
     }
 
     intrinsic* element_builder::make_free_intrinsic(

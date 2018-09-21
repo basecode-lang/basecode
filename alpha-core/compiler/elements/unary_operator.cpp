@@ -77,21 +77,24 @@ namespace basecode::compiler {
 
         switch (operator_type()) {
             case operator_type_t::negate: {
+                block->comment("negate", 4);
                 block->neg(*target_reg, rhs_reg.reg);
                 break;
             }
             case operator_type_t::binary_not: {
+                block->comment("binary not", 4);
                 block->not_op(*target_reg, rhs_reg.reg);
                 break;
             }
             case operator_type_t::logical_not: {
+                block->comment("logical not", 4);
                 block->cmp(target_reg->size, rhs_reg.reg, 1);
                 block->setnz(*target_reg);
                 break;
             }
             case operator_type_t::pointer_dereference: {
-                block->comment("XXX: implement pointer dereference", 4);
-                block->nop();
+                block->comment("pointer dereference", 4);
+                block->load_to_reg(*target_reg, rhs_reg.reg);
                 break;
             }
             default:
@@ -123,7 +126,7 @@ namespace basecode::compiler {
             case operator_type_t::pointer_dereference: {
                 auto identifier_ref = dynamic_cast<compiler::identifier_reference*>(_rhs);
                 auto type_ref = identifier_ref->identifier()->type_ref();
-                if (type_ref->is_pointer_type()) {
+                if (!type_ref->is_pointer_type()) {
                     return false;
                 }
                 auto type = dynamic_cast<compiler::pointer_type*>(type_ref->type());
