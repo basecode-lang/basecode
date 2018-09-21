@@ -1,18 +1,20 @@
 @library "alpha-core";
 #foreign print ::= proc(format: string, values: ...any) @alias "fmt_print";
 
-type_of_string: ^type;
-type_of_string := type_of(#type string);
-
 i: u32 := 1;
-type_of_i: ^type := nil;
-type_of_i := type_of(i);
 
-type_name: string;
-type_name := type_of_i.name;
-
-print("type_name.length   := %d\n", type_name.length);
-print("type_name.capacity := %d\n", type_name.capacity);
+//type_of_string: ^type;
+//type_of_string := type_of(#type string);
+//
+//type_of_i: ^type := nil;
+//type_of_i := type_of(i);
+//
+//type_name: string;
+//type_name := type_of_i.name;
+//len: u32 := type_of_i.name.length;
+//
+//print("type_name.length   := %d\n", type_name.length);
+//print("type_name.capacity := %d\n", type_name.capacity);
 
 while i <= 20 {
     print("i := %02d ... ", i);
@@ -25,13 +27,13 @@ while i <= 20 {
     } else {
         print("zzzzz\n");
     };
-    i := i + 1;
+    i +:= 1;
 };
 
 j: u32 := 0;
 k: u32 := 0;
 while true {
-    k := k + 1;
+    k +:= 1;
 
     print("j := %02d\n", j);
 
@@ -47,11 +49,11 @@ while true {
         break;
     };
 
-    j := j + 1;
+    j +:= 1;
     continue;
 
 'double_it:
-    j := j + 4;
+    j +:= 4;
 };
 
 print("after: j := %02d\n", j);

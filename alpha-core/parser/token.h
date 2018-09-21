@@ -609,4 +609,27 @@ namespace basecode::syntax {
         .value = "]"
     };
 
+    static inline token_t extract_non_assign_operator(const token_t& token) {
+        switch (token.type) {
+            case token_types_t::plus_equal_literal:
+                return s_plus_literal;
+            case token_types_t::minus_equal_literal:
+                return s_minus_literal;
+            case token_types_t::divide_equal_literal:
+                return s_slash_literal;
+            case token_types_t::modulus_equal_literal:
+                return s_percent_literal;
+            case token_types_t::multiply_equal_literal:
+                return s_asterisk_literal;
+            case token_types_t::binary_or_equal_literal:
+                return s_pipe_literal;
+            case token_types_t::binary_and_equal_literal:
+                return s_ampersand_literal;
+            case token_types_t::binary_not_equal_literal:
+                return s_tilde_literal;
+            default:
+                return token;
+        }
+    }
+
 };

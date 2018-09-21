@@ -931,8 +931,10 @@ namespace basecode::syntax {
 
     binary_operator_infix_parser::binary_operator_infix_parser(
             precedence_t precedence,
-            bool is_right_associative) : _precedence(precedence),
-                                         _is_right_associative(is_right_associative) {
+            bool is_right_associative,
+            bool with_assignment) : _precedence(precedence),
+                                    _with_assignment(with_assignment),
+                                    _is_right_associative(is_right_associative) {
     }
 
     ast_node_shared_ptr binary_operator_infix_parser::parse(
@@ -951,7 +953,20 @@ namespace basecode::syntax {
                 token.location);
             return nullptr;
         }
-        return parser->ast_builder()->binary_operator_node(lhs, token, rhs);
+
+        auto bin_op_node = parser
+            ->ast_builder()
+            ->binary_operator_node(lhs, extract_non_assign_operator(token), rhs);
+        if (!_with_assignment)
+            return bin_op_node;
+
+        auto assignment_node = parser->ast_builder()->assignment_node();
+        pairs_to_list(assignment_node->lhs, lhs);
+        pairs_to_list(assignment_node->rhs, bin_op_node);
+        assignment_node->location.start(lhs->location.start());
+        assignment_node->location.end(assignment_node->rhs->location.end());
+
+        return assignment_node;
     }
 
     precedence_t binary_operator_infix_parser::precedence() const {
