@@ -123,7 +123,7 @@ namespace basecode::compiler {
             case operator_type_t::pointer_dereference: {
                 auto identifier_ref = dynamic_cast<compiler::identifier_reference*>(_rhs);
                 auto type_ref = identifier_ref->identifier()->type_ref();
-                if (type_ref->type()->element_type() != element_type_t::pointer_type) {
+                if (type_ref->is_pointer_type()) {
                     return false;
                 }
                 auto type = dynamic_cast<compiler::pointer_type*>(type_ref->type());

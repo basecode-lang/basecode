@@ -26,14 +26,14 @@ namespace basecode::compiler {
                                             _symbol(symbol) {
     }
 
-    bool type::packed() const {
-        return _packed;
-    }
-
     bool type::emit_finalizer(
             compiler::session& session,
             compiler::identifier* var) {
         return on_emit_finalizer(session, var);
+    }
+
+    bool type::packed() const {
+        return _packed;
     }
 
     bool type::emit_initializer(
@@ -48,18 +48,26 @@ namespace basecode::compiler {
         return true;
     }
 
+    void type::packed(bool value) {
+        _packed = value;
+    }
+
     bool type::on_emit_initializer(
             compiler::session& session,
             compiler::identifier* var) {
         return true;
     }
 
-    void type::packed(bool value) {
-        _packed = value;
-    }
-
     size_t type::alignment() const {
         return _alignment;
+    }
+
+    bool type::is_proc_type() const {
+        return false;
+    }
+
+    bool type::is_pointer_type() const {
+        return false;
     }
 
     void type::alignment(size_t value) {

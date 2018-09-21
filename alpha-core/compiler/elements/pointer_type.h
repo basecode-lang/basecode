@@ -24,6 +24,8 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             compiler::type_reference* base_type);
 
+        bool is_pointer_type() const override;
+
         bool is_composite_type() const override;
 
         compiler::type_reference* base_type_ref() const;

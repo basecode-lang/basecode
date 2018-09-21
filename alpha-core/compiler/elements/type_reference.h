@@ -29,7 +29,15 @@ namespace basecode::compiler {
 
         std::string name() const;
 
+        bool is_any_type() const;
+
+        bool is_proc_type() const;
+
+        bool is_pointer_type() const;
+
         bool is_unknown_type() const;
+
+        bool is_composite_type() const;
 
         void type(compiler::type* value);
 

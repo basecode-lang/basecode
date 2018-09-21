@@ -44,6 +44,10 @@ namespace basecode::compiler {
 
         void alignment(size_t value);
 
+        virtual bool is_proc_type() const;
+
+        virtual bool is_pointer_type() const;
+
         bool type_check(compiler::type* other);
 
         virtual bool is_composite_type() const;

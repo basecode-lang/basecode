@@ -39,10 +39,6 @@ namespace basecode::compiler {
         return _return_type;
     }
 
-    void procedure_type::return_type(field* value) {
-        _return_type = value;
-    }
-
     bool procedure_type::is_foreign() const {
         return _is_foreign;
     }
@@ -55,6 +51,10 @@ namespace basecode::compiler {
         return _parameters;
     }
 
+    bool procedure_type::is_proc_type() const {
+        return true;
+    }
+
     void procedure_type::is_foreign(bool value) {
         _is_foreign = value;
     }
@@ -65,6 +65,10 @@ namespace basecode::compiler {
 
     type_map_t& procedure_type::type_parameters() {
         return _type_parameters;
+    }
+
+    void procedure_type::return_type(field* value) {
+        _return_type = value;
     }
 
     uint64_t procedure_type::foreign_address() const {
@@ -135,7 +139,7 @@ namespace basecode::compiler {
                 if (scope->is_parent_element(element_type_t::proc_type))
                     return true;
                 for (auto var : scope->identifiers().as_list()) {
-                    if (var->type_ref()->type()->element_type() == element_type_t::proc_type)
+                    if (var->type_ref()->is_proc_type())
                         continue;
                     stack_frame->add(
                         vm::stack_frame_entry_type_t::local,

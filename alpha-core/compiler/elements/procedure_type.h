@@ -40,6 +40,8 @@ namespace basecode::compiler {
 
         uint64_t foreign_address() const;
 
+        bool is_proc_type() const override;
+
         void foreign_address(uint64_t value);
 
         procedure_instance_list_t& instances();

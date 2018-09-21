@@ -43,13 +43,30 @@ namespace basecode::compiler {
         return _type->name(_symbol.name);
     }
 
+    bool type_reference::is_any_type() const {
+        return _type != nullptr
+               && _type->element_type() == element_type_t::any_type;
+    }
+
+    bool type_reference::is_proc_type() const {
+        return _type != nullptr && _type->is_proc_type();
+    }
+
     bool type_reference::on_is_constant() const {
         return true;
+    }
+
+    bool type_reference::is_pointer_type() const {
+        return _type != nullptr && _type->is_pointer_type();
     }
 
     bool type_reference::is_unknown_type() const {
         return _type != nullptr
                && _type->element_type() == element_type_t::unknown_type;
+    }
+
+    bool type_reference::is_composite_type() const {
+        return _type != nullptr && _type->is_composite_type();
     }
 
     void type_reference::type(compiler::type* value) {

@@ -912,7 +912,7 @@ namespace basecode::compiler {
 
             if (infer_type_result.inferred_type->is_composite_type()) {
                 compiler::composite_type* composite_type = nullptr;
-                if (infer_type_result.inferred_type->element_type() == element_type_t::pointer_type) {
+                if (infer_type_result.inferred_type->is_pointer_type()) {
                     auto pointer_type = dynamic_cast<compiler::pointer_type*>(infer_type_result.inferred_type);
                     composite_type = dynamic_cast<compiler::composite_type*>(pointer_type->base_type_ref()->type());
                 } else {

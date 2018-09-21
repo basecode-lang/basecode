@@ -35,6 +35,10 @@ namespace basecode::compiler {
                                                    _base_type_ref(base_type) {
     }
 
+    bool pointer_type::is_pointer_type() const {
+        return true;
+    }
+
     bool pointer_type::is_composite_type() const {
         return _base_type_ref->type()->is_composite_type();
     }
