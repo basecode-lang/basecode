@@ -294,6 +294,7 @@ namespace basecode::compiler {
 
         // binary
         add,
+        subscript,
         subtract,
         multiply,
         divide,
@@ -323,6 +324,7 @@ namespace basecode::compiler {
         {operator_type_t::negate,                "negate"},
         {operator_type_t::binary_not,            "binary_not"},
         {operator_type_t::logical_not,           "logical_not"},
+        {operator_type_t::subscript,             "subscript"},
         {operator_type_t::pointer_dereference,   "pointer_deference"},
         {operator_type_t::add,                   "add"},
         {operator_type_t::subtract,              "subtract"},

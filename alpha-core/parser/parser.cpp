@@ -148,20 +148,23 @@ namespace basecode::syntax {
             parser* parser,
             const ast_node_shared_ptr& lhs,
             token_t& token) {
-        auto expression_node = parser->ast_builder()->expression_node();
-        expression_node->lhs = parser->parse_expression(r, 0);
+        ast_node_shared_ptr node;
+        auto expr = parser->parse_expression(r, 0);
+
+        if (expr->type != syntax::ast_node_types_t::pair) {
+            node = parser->ast_builder()->expression_node();
+            node->lhs = expr;
+        } else {
+            node = parser->ast_builder()->tuple_expression_node();
+            pairs_to_list(node->lhs, expr);
+        }
 
         token_t right_paren_token;
         right_paren_token.type = token_types_t::right_paren;
         if (!parser->expect(r, right_paren_token))
             return nullptr;
 
-        if (lhs != nullptr
-        &&  lhs->type == ast_node_types_t::block_comment) {
-            expression_node->children.push_back(lhs);
-        }
-
-        return expression_node;
+        return node;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -1087,14 +1090,23 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    ast_node_shared_ptr array_subscript_prefix_parser::parse(
+    ast_node_shared_ptr array_subscript_infix_parser::parse(
             common::result& r,
             parser* parser,
+            const ast_node_shared_ptr& lhs,
             token_t& token) {
-        ast_node_shared_ptr subscript_node = parser->ast_builder()->subscript_node();
-        if (!parser->peek(token_types_t::right_square_bracket)) {
-            subscript_node->lhs = parser->parse_expression(r, 0);
+        ast_node_shared_ptr subscript_node = parser->ast_builder()->subscript_operator_node();
+        if (parser->peek(token_types_t::right_square_bracket)) {
+            parser->error(
+                r,
+                "B027",
+                "subscript index expected.",
+                token.location);
+            return nullptr;
         }
+
+        subscript_node->lhs = lhs;
+        subscript_node->rhs = parser->parse_expression(r, 0);
 
         token_t right_bracket_token;
         right_bracket_token.type = token_types_t::right_square_bracket;
@@ -1102,6 +1114,10 @@ namespace basecode::syntax {
             return nullptr;
 
         return subscript_node;
+    }
+
+    precedence_t array_subscript_infix_parser::precedence() const {
+        return precedence_t::subscript;
     }
 
     ///////////////////////////////////////////////////////////////////////////

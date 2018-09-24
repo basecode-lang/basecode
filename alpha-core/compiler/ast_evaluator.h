@@ -209,6 +209,10 @@ namespace basecode::compiler {
             evaluator_context_t& context,
             evaluator_result_t& result);
 
+        bool subscript_operator(
+            evaluator_context_t& context,
+            evaluator_result_t& result);
+
         bool basic_block(
             evaluator_context_t& context,
             evaluator_result_t& result);
@@ -246,6 +250,10 @@ namespace basecode::compiler {
             evaluator_result_t& result);
 
         bool assignment(
+            evaluator_context_t& context,
+            evaluator_result_t& result);
+
+        bool tuple_expression(
             evaluator_context_t& context,
             evaluator_result_t& result);
 

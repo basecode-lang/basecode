@@ -15,8 +15,11 @@
 #include "element.h"
 #include "program.h"
 #include "identifier.h"
+#include "array_type.h"
+#include "pointer_type.h"
 #include "composite_type.h"
 #include "symbol_element.h"
+#include "type_reference.h"
 #include "binary_operator.h"
 #include "integer_literal.h"
 #include "identifier_reference.h"
@@ -44,6 +47,7 @@ namespace basecode::compiler {
             case operator_type_t::multiply:
             case operator_type_t::exponent:
             case operator_type_t::binary_or:
+            case operator_type_t::subscript:
             case operator_type_t::binary_and:
             case operator_type_t::binary_xor:
             case operator_type_t::shift_left:
@@ -105,8 +109,13 @@ namespace basecode::compiler {
                 emit_relational_operator(session);
                 break;
             }
+            case operator_type_t::subscript: {
+                block->comment("XXX: implement subscript operator", 4);
+                block->nop();
+                break;
+            }
             case operator_type_t::member_access: {
-                block->comment("XXX: member access", 4);
+                block->comment("XXX: implement member access", 4);
                 block->nop();
                 break;
             }

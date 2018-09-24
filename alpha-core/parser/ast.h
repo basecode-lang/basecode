@@ -69,6 +69,7 @@ namespace basecode::syntax {
         for_in_statement,   // XXX: need to think about how for loops work
         union_expression,
         defer_expression,
+        tuple_expression,
         module_expression,
         character_literal,
         array_constructor,  // e.g. [1, 2, 3, 4]
@@ -78,9 +79,9 @@ namespace basecode::syntax {
         struct_expression,
         import_expression,
         continue_statement,
+        subscript_operator,
         constant_assignment,
         namespace_expression,
-        subscript_expression,
         return_argument_list,
         array_subscript_list,
         transmute_expression,
@@ -125,6 +126,7 @@ namespace basecode::syntax {
         {ast_node_types_t::with_expression, "with_expression"},
         {ast_node_types_t::type_identifier, "type_identifier"},
         {ast_node_types_t::spread_operator, "spread_operator"},
+        {ast_node_types_t::tuple_expression, "tuple_expression"},
         {ast_node_types_t::defer_expression, "defer_expression"},
         {ast_node_types_t::union_expression, "union_expression"},
         {ast_node_types_t::return_statement, "return_statement"},
@@ -137,11 +139,11 @@ namespace basecode::syntax {
         {ast_node_types_t::array_constructor, "array_constructor"},
         {ast_node_types_t::module_expression, "module_expression"},
         {ast_node_types_t::elseif_expression, "elseif_expression"},
+        {ast_node_types_t::subscript_operator, "subscript_operator"},
         {ast_node_types_t::continue_statement, "continue_statement"},
         {ast_node_types_t::constant_assignment, "constant_assignment"},
         {ast_node_types_t::transmute_expression, "transmute_expression"},
         {ast_node_types_t::namespace_expression, "namespace_expression"},
-        {ast_node_types_t::subscript_expression, "subscript_expression"},
         {ast_node_types_t::return_argument_list, "return_argument_list"},
         {ast_node_types_t::array_subscript_list, "array_subscript_list"},
         {ast_node_types_t::assignment_source_list, "assignment_source_list"},
@@ -250,8 +252,6 @@ namespace basecode::syntax {
 
         ast_node_shared_ptr statement_node();
 
-        ast_node_shared_ptr subscript_node();
-
         ast_node_shared_ptr assignment_node();
 
         ast_node_shared_ptr expression_node();
@@ -272,6 +272,10 @@ namespace basecode::syntax {
         ast_node_shared_ptr type_identifier_node();
 
         ast_node_shared_ptr spread_operator_node();
+
+        ast_node_shared_ptr tuple_expression_node();
+
+        ast_node_shared_ptr subscript_operator_node();
 
         ast_node_shared_ptr constant_assignment_node();
 

@@ -33,6 +33,8 @@ namespace basecode::compiler {
 
         bool is_proc_type() const;
 
+        bool is_array_type() const;
+
         bool is_pointer_type() const;
 
         bool is_unknown_type() const;

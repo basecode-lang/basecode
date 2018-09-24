@@ -35,6 +35,7 @@ namespace basecode::syntax {
         bitwise,
         exponent,
         member_access,
+        subscript,
         pointer_dereference,
         block_comment,
         prefix,
@@ -127,6 +128,21 @@ namespace basecode::syntax {
     class proc_call_infix_parser : public infix_parser {
     public:
         proc_call_infix_parser() = default;
+
+        ast_node_shared_ptr parse(
+            common::result& r,
+            parser* parser,
+            const ast_node_shared_ptr& lhs,
+            token_t& token) override;
+
+        precedence_t precedence() const override;
+    };
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    class array_subscript_infix_parser : public infix_parser {
+    public:
+        array_subscript_infix_parser() = default;
 
         ast_node_shared_ptr parse(
             common::result& r,
@@ -594,18 +610,6 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    class array_subscript_prefix_parser : public prefix_parser {
-    public:
-        array_subscript_prefix_parser() = default;
-
-        ast_node_shared_ptr parse(
-            common::result& r,
-            parser* parser,
-            token_t& token) override;
-    };
-
-    ///////////////////////////////////////////////////////////////////////////
-
     class parser {
     public:
         explicit parser(common::source_file* source_file);
@@ -691,7 +695,6 @@ namespace basecode::syntax {
         static inline number_literal_prefix_parser s_number_literal_prefix_parser {};
         static inline keyword_literal_prefix_parser s_keyword_literal_prefix_parser {};
         static inline type_identifier_prefix_parser s_type_identifier_prefix_parser {};
-        static inline array_subscript_prefix_parser s_array_subscript_prefix_parser {};
         static inline proc_expression_prefix_parser s_proc_expression_prefix_parser {};
         static inline unary_operator_prefix_parser s_negate_prefix_parser {precedence_t::sum};
         static inline unary_operator_prefix_parser s_not_prefix_parser {precedence_t::prefix};
@@ -736,7 +739,6 @@ namespace basecode::syntax {
             {token_types_t::break_literal,       &s_keyword_literal_prefix_parser},
             {token_types_t::import_literal,      &s_keyword_literal_prefix_parser},
             {token_types_t::continue_literal,    &s_keyword_literal_prefix_parser},
-            {token_types_t::left_square_bracket, &s_array_subscript_prefix_parser},
         };
 
         static inline cast_infix_parser s_cast_infix_parser {};
@@ -745,6 +747,7 @@ namespace basecode::syntax {
         static inline assignment_infix_parser s_assignment_infix_parser {};
         static inline block_comment_infix_parser s_block_comment_infix_parser {};
         static inline type_identifier_infix_parser s_type_identifier_infix_parser {};
+        static inline array_subscript_infix_parser s_array_subscript_infix_parser {};
         static inline constant_assignment_infix_parser s_constant_assignment_infix_parser {};
         static inline pointer_dereference_infix_parser s_pointer_dereference_infix_parser {};
         static inline binary_operator_infix_parser s_sum_bin_op_parser {precedence_t::sum, false};
@@ -785,6 +788,7 @@ namespace basecode::syntax {
             {token_types_t::less_than_equal,        &s_relational_bin_op_parser},
             {token_types_t::greater_than_equal,     &s_relational_bin_op_parser},
             {token_types_t::period,                 &s_member_access_bin_op_parser},
+            {token_types_t::left_square_bracket,    &s_array_subscript_infix_parser},
             {token_types_t::colon,                  &s_type_identifier_infix_parser},
             {token_types_t::plus_equal_literal,     &s_sum_with_assign_bin_op_parser},
             {token_types_t::minus_equal_literal,    &s_sum_with_assign_bin_op_parser},

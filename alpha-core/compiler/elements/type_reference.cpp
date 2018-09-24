@@ -52,6 +52,11 @@ namespace basecode::compiler {
         return _type != nullptr && _type->is_proc_type();
     }
 
+    bool type_reference::is_array_type() const {
+        return _type != nullptr
+               && _type->element_type() == element_type_t::array_type;
+    }
+
     bool type_reference::on_is_constant() const {
         return true;
     }

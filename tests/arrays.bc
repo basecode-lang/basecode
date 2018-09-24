@@ -4,3 +4,6 @@ c: [8][8]u8;
 
 ARRAY_SIZE ::= 200;
 d: [ARRAY_SIZE]bool;
+
+e := b[0];
+f := c[2][2];

@@ -103,10 +103,10 @@ namespace basecode::syntax {
         return node;
     }
 
-    ast_node_shared_ptr ast_builder::subscript_node() {
+    ast_node_shared_ptr ast_builder::subscript_operator_node() {
         auto node = std::make_shared<ast_node_t>();
         node->id = ++_id;
-        node->type = ast_node_types_t::subscript_expression;
+        node->type = ast_node_types_t::subscript_operator;
         return node;
     }
 
@@ -179,6 +179,14 @@ namespace basecode::syntax {
         auto node = std::make_shared<ast_node_t>();
         node->id = ++_id;
         node->type = ast_node_types_t::spread_operator;
+        return node;
+    }
+
+    ast_node_shared_ptr ast_builder::tuple_expression_node() {
+        auto node = std::make_shared<ast_node_t>();
+        node->id = ++_id;
+        node->type = ast_node_types_t::tuple_expression;
+        node->lhs = argument_list_node();
         return node;
     }
 
