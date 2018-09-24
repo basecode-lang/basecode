@@ -24,7 +24,7 @@ namespace basecode::compiler {
     }
 
     bool initializer::on_infer_type(
-            const compiler::session& session,
+            compiler::session& session,
             infer_type_result_t& result) {
         if (_expr != nullptr) {
             return _expr->infer_type(session, result);
@@ -83,6 +83,12 @@ namespace basecode::compiler {
     void initializer::on_owned_elements(element_list_t& list) {
         if (_expr != nullptr)
             list.emplace_back(_expr);
+    }
+
+    bool initializer::on_as_rune(common::rune_t& value) const {
+        if (_expr == nullptr)
+            return false;
+        return _expr->as_rune(value);
     }
 
 };

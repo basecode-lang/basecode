@@ -29,7 +29,7 @@ namespace basecode::compiler {
     }
 
     bool identifier::on_infer_type(
-            const compiler::session& session,
+            compiler::session& session,
             infer_type_result_t& result) {
         result.inferred_type = _type_ref->type();
         result.reference = _type_ref;
@@ -120,6 +120,12 @@ namespace basecode::compiler {
             list.emplace_back(_initializer);
         if( _symbol != nullptr)
             list.emplace_back(_symbol);
+    }
+
+    bool identifier::on_as_rune(common::rune_t& value) const {
+        if (_initializer == nullptr)
+            return false;
+        return _initializer->as_rune(value);
     }
 
     void identifier::initializer(compiler::initializer* value) {

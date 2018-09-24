@@ -19,42 +19,12 @@
 namespace basecode::compiler {
 
     argument_list::argument_list(
-        compiler::module* module,
-        block* parent_scope) : element(module, parent_scope, element_type_t::argument_list) {
+            compiler::module* module,
+            block* parent_scope) : element(module, parent_scope, element_type_t::argument_list) {
     }
 
-    bool argument_list::on_emit(compiler::session& session) {
-        auto& assembler = session.assembler();
-
-        auto instruction_block = assembler.current_block();
-        for (auto it = _elements.rbegin(); it != _elements.rend(); ++it) {
-            element* arg = *it;
-            switch (arg->element_type()) {
-                case element_type_t::proc_call:
-                case element_type_t::expression:
-                case element_type_t::float_literal:
-                case element_type_t::string_literal:
-                case element_type_t::unary_operator:
-                case element_type_t::assembly_label:
-                case element_type_t::binary_operator:
-                case element_type_t::boolean_literal:
-                case element_type_t::integer_literal:
-                case element_type_t::identifier_reference: {
-                    auto arg_reg = register_for(session, arg);
-                    if (arg_reg.var != nullptr) {
-                        arg_reg.clean_up = true;
-                    }
-                    assembler.push_target_register(arg_reg.reg);
-                    arg->emit(session);
-                    assembler.pop_target_register();
-                    instruction_block->push(arg_reg.reg);
-                    break;
-                }
-                default:
-                    break;
-            }
-        }
-        return true;
+    size_t argument_list::size() const {
+        return _elements.size();
     }
 
     void argument_list::add(element* item) {
@@ -93,15 +63,49 @@ namespace basecode::compiler {
         return _elements;
     }
 
-    element* argument_list::replace(size_t index, element* item) {
-        auto old = _elements[index];
-        _elements[index] = item;
-        return old;
+    bool argument_list::on_emit(compiler::session& session) {
+        auto& assembler = session.assembler();
+
+        auto instruction_block = assembler.current_block();
+        for (auto it = _elements.rbegin(); it != _elements.rend(); ++it) {
+            element* arg = *it;
+            switch (arg->element_type()) {
+                case element_type_t::proc_call:
+                case element_type_t::expression:
+                case element_type_t::float_literal:
+                case element_type_t::string_literal:
+                case element_type_t::unary_operator:
+                case element_type_t::assembly_label:
+                case element_type_t::binary_operator:
+                case element_type_t::boolean_literal:
+                case element_type_t::integer_literal:
+                case element_type_t::identifier_reference: {
+                    auto arg_reg = register_for(session, arg);
+                    if (arg_reg.var != nullptr) {
+                        arg_reg.clean_up = true;
+                    }
+                    assembler.push_target_register(arg_reg.reg);
+                    arg->emit(session);
+                    assembler.pop_target_register();
+                    instruction_block->push(arg_reg.reg);
+                    break;
+                }
+                default:
+                    break;
+            }
+        }
+        return true;
     }
 
     void argument_list::on_owned_elements(element_list_t& list) {
         for (auto element : _elements)
             list.emplace_back(element);
+    }
+
+    element* argument_list::replace(size_t index, element* item) {
+        auto old = _elements[index];
+        _elements[index] = item;
+        return old;
     }
 
 };

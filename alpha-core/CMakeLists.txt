@@ -113,6 +113,7 @@ add_library(
     compiler/elements/element.cpp compiler/elements/element.h
     compiler/elements/program.cpp compiler/elements/program.h
     compiler/elements/any_type.cpp compiler/elements/any_type.h
+    compiler/elements/rune_type.cpp compiler/elements/rune_type.h
     compiler/elements/intrinsic.cpp compiler/elements/intrinsic.h
     compiler/elements/transmute.cpp compiler/elements/transmute.h
     compiler/elements/bool_type.cpp compiler/elements/bool_type.h
@@ -163,6 +164,8 @@ add_library(
     compiler/elements/boolean_literal.cpp compiler/elements/boolean_literal.h
     compiler/elements/continue_element.cpp compiler/elements/continue_element.h
     compiler/elements/module_reference.cpp compiler/elements/module_reference.h
+    compiler/elements/character_literal.cpp compiler/elements/character_literal.h
+    compiler/elements/array_constructor.cpp compiler/elements/array_constructor.h
     compiler/elements/type_of_intrinsic.cpp compiler/elements/type_of_intrinsic.h
     compiler/elements/namespace_element.cpp compiler/elements/namespace_element.h
     compiler/elements/size_of_intrinsic.cpp compiler/elements/size_of_intrinsic.h

@@ -37,7 +37,7 @@ namespace basecode::compiler {
     }
 
     bool binary_operator::on_infer_type(
-            const compiler::session& session,
+            compiler::session& session,
             infer_type_result_t& result) {
         switch (operator_type()) {
             case operator_type_t::add:

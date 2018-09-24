@@ -29,6 +29,7 @@
 #include <compiler/elements/attribute.h>
 #include <compiler/elements/directive.h>
 #include <compiler/elements/statement.h>
+#include <compiler/elements/rune_type.h>
 #include <compiler/elements/tuple_type.h>
 #include <compiler/elements/expression.h>
 #include <compiler/elements/array_type.h>
@@ -64,6 +65,8 @@
 #include <compiler/elements/binary_operator.h>
 #include <compiler/elements/continue_element.h>
 #include <compiler/elements/module_reference.h>
+#include <compiler/elements/character_literal.h>
+#include <compiler/elements/array_constructor.h>
 #include <compiler/elements/namespace_element.h>
 #include <compiler/elements/procedure_instance.h>
 #include <compiler/elements/identifier_reference.h>
@@ -293,6 +296,16 @@ namespace basecode::compiler {
                 return fmt::format(
                     "{}[shape=record,label=\"program\"{}];",
                     node_vertex_name,
+                    style);
+            }
+            case element_type_t::rune_type: {
+                auto element = dynamic_cast<rune_type*>(node);
+                auto style = ", fillcolor=gainsboro, style=\"filled\"";
+                add_primary_edge(element, element->symbol());
+                return fmt::format(
+                    "{}[shape=record,label=\"rune_type|{}\"{}];",
+                    node_vertex_name,
+                    element->symbol()->name(),
                     style);
             }
             case element_type_t::any_type: {
@@ -579,6 +592,15 @@ namespace basecode::compiler {
                     "{}[shape=record,label=\"string_literal|{}\"{}];",
                     node_vertex_name,
                     element->value(),
+                    style);
+            }
+            case element_type_t::character_literal: {
+                auto element = dynamic_cast<character_literal*>(node);
+                auto style = ", fillcolor=gainsboro, style=\"filled\"";
+                return fmt::format(
+                    "{}[shape=record,label=\"character_literal|{}\"{}];",
+                    node_vertex_name,
+                    element->rune(),
                     style);
             }
             case element_type_t::module_type: {

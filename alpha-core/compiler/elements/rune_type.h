@@ -11,25 +11,24 @@
 
 #pragma once
 
-#include "intrinsic.h"
+#include "type.h"
 
 namespace basecode::compiler {
 
-    class alloc_intrinsic : public intrinsic {
+    class rune_type : public compiler::type {
     public:
-        alloc_intrinsic(
+        rune_type(
             compiler::module* module,
-            compiler::block* parent_scope,
-            compiler::argument_list* args);
-
-        std::string name() const override;
+            compiler::block* parent_scope);
 
     protected:
-        bool on_infer_type(
-            compiler::session& session,
-            infer_type_result_t& result) override;
+        bool on_type_check(compiler::type* other) override;
 
-        bool on_emit(compiler::session& session);
+        type_number_class_t on_number_class() const override;
+
+        type_access_model_t on_access_model() const override;
+
+        bool on_initialize(compiler::session& session) override;
     };
 
 };

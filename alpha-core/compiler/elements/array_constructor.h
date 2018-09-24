@@ -11,25 +11,32 @@
 
 #pragma once
 
-#include "intrinsic.h"
+#include "element.h"
 
 namespace basecode::compiler {
 
-    class alloc_intrinsic : public intrinsic {
+    class array_constructor : public element {
     public:
-        alloc_intrinsic(
+        array_constructor(
             compiler::module* module,
             compiler::block* parent_scope,
-            compiler::argument_list* args);
+            compiler::argument_list* args,
+            const compiler::element_list_t& subscripts);
 
-        std::string name() const override;
+        compiler::argument_list* args();
 
     protected:
         bool on_infer_type(
             compiler::session& session,
             infer_type_result_t& result) override;
 
-        bool on_emit(compiler::session& session);
+        bool on_is_constant() const override;
+
+        bool on_emit(compiler::session& session) override;
+
+    private:
+        compiler::element_list_t _subscripts {};
+        compiler::argument_list* _args = nullptr;
     };
 
 };

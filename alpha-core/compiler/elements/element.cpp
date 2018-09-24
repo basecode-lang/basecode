@@ -55,7 +55,7 @@ namespace basecode::compiler {
     }
 
     bool element::infer_type(
-            const compiler::session& session,
+            compiler::session& session,
             infer_type_result_t& result) {
         if (is_type()) {
             result.inferred_type = dynamic_cast<compiler::type*>(this);
@@ -65,7 +65,7 @@ namespace basecode::compiler {
     }
 
     bool element::on_infer_type(
-            const compiler::session& session,
+            compiler::session& session,
             infer_type_result_t& result) {
         return false;
     }
@@ -80,6 +80,7 @@ namespace basecode::compiler {
             case element_type_t::proc_type:
             case element_type_t::bool_type:
             case element_type_t::type_info:
+            case element_type_t::rune_type:
             case element_type_t::array_type:
             case element_type_t::tuple_type:
             case element_type_t::string_type:
@@ -231,6 +232,10 @@ namespace basecode::compiler {
         return true;
     }
 
+    bool element::as_rune(common::rune_t& value) const {
+        return on_as_rune(value);
+    }
+
     bool element::on_as_integer(uint64_t& value) const {
         return false;
     }
@@ -247,6 +252,10 @@ namespace basecode::compiler {
         if (_parent_element == nullptr)
             return false;
         return _parent_element->element_type() == type;
+    }
+
+    bool element::on_as_rune(common::rune_t& value) const {
+        return false;
     }
 
     void element::on_owned_elements(element_list_t& list) {

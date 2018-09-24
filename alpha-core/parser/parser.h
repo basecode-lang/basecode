@@ -235,6 +235,18 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    class array_constructor_prefix_parser : public prefix_parser {
+    public:
+        array_constructor_prefix_parser() = default;
+
+        ast_node_shared_ptr parse(
+            common::result& r,
+            parser* parser,
+            token_t& token) override;
+    };
+
+    ///////////////////////////////////////////////////////////////////////////
+
     class spread_prefix_parser : public prefix_parser {
     public:
         spread_prefix_parser() = default;
@@ -696,6 +708,7 @@ namespace basecode::syntax {
         static inline keyword_literal_prefix_parser s_keyword_literal_prefix_parser {};
         static inline type_identifier_prefix_parser s_type_identifier_prefix_parser {};
         static inline proc_expression_prefix_parser s_proc_expression_prefix_parser {};
+        static inline array_constructor_prefix_parser s_array_constructor_prefix_parser {};
         static inline unary_operator_prefix_parser s_negate_prefix_parser {precedence_t::sum};
         static inline unary_operator_prefix_parser s_not_prefix_parser {precedence_t::prefix};
         static inline unary_operator_prefix_parser s_binary_not_prefix_parser {precedence_t::prefix};
@@ -739,6 +752,7 @@ namespace basecode::syntax {
             {token_types_t::break_literal,       &s_keyword_literal_prefix_parser},
             {token_types_t::import_literal,      &s_keyword_literal_prefix_parser},
             {token_types_t::continue_literal,    &s_keyword_literal_prefix_parser},
+            {token_types_t::left_square_bracket, &s_array_constructor_prefix_parser},
         };
 
         static inline cast_infix_parser s_cast_infix_parser {};

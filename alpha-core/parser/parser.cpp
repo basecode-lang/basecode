@@ -412,6 +412,26 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    ast_node_shared_ptr array_constructor_prefix_parser::parse(
+            common::result& r,
+            parser* parser,
+            token_t& token) {
+        auto node = parser->ast_builder()->array_constructor_node();
+        node->location.start(token.location.start());
+
+        pairs_to_list(node->lhs, parser->parse_expression(r, 0));
+
+        token_t right_bracket_token;
+        right_bracket_token.type = token_types_t::right_square_bracket;
+        if (!parser->expect(r, right_bracket_token))
+            return nullptr;
+
+        node->location.end(right_bracket_token.location.end());
+        return node;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
     ast_node_shared_ptr spread_prefix_parser::parse(
             common::result& r,
             parser* parser,

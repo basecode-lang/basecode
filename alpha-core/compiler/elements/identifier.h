@@ -44,7 +44,7 @@ namespace basecode::compiler {
 
     protected:
         bool on_infer_type(
-            const compiler::session& session,
+            compiler::session& session,
             infer_type_result_t& result) override;
 
         bool on_is_constant() const override;
@@ -60,6 +60,8 @@ namespace basecode::compiler {
         bool on_as_string(std::string& value) const override;
 
         void on_owned_elements(element_list_t& list) override;
+
+        bool on_as_rune(common::rune_t& value) const override;
 
     private:
         bool _inferred_type = false;

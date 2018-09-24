@@ -41,6 +41,7 @@
 #include "binary_operator.h"
 #include "integer_literal.h"
 #include "namespace_element.h"
+#include "array_constructor.h"
 #include "identifier_reference.h"
 
 namespace basecode::compiler {
@@ -60,6 +61,15 @@ namespace basecode::compiler {
         auto& interned_strings = scope_manager.interned_string_literals();
 
         switch (e->element_type()) {
+            case element_type_t::array_constructor: {
+                auto array_constructor = dynamic_cast<compiler::array_constructor*>(e);
+                instruction_block->blank_line();
+                instruction_block->align(4);
+                auto var_label = assembler.make_label(array_constructor->label_name());
+                instruction_block->label(var_label);
+                // XXX: emit data
+                break;
+            }
             case element_type_t::string_literal: {
                 auto string_literal = dynamic_cast<compiler::string_literal*>(e);
                 instruction_block->blank_line();
@@ -122,6 +132,16 @@ namespace basecode::compiler {
                             instruction_block->reserve_byte(1);
                         else
                             instruction_block->bytes({static_cast<uint8_t>(value ? 1 : 0)});
+                        break;
+                    }
+                    case element_type_t::rune_type: {
+                        common::rune_t value = common::rune_invalid;
+                        var->as_rune(value);
+
+                        if (init == nullptr)
+                            instruction_block->reserve_byte(4);
+                        else
+                            instruction_block->dwords({static_cast<uint32_t>(value)});
                         break;
                     }
                     case element_type_t::pointer_type: {

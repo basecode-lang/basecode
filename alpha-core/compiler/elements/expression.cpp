@@ -26,7 +26,7 @@ namespace basecode::compiler {
     }
 
     bool expression::on_infer_type(
-            const compiler::session& session,
+            compiler::session& session,
             infer_type_result_t& result) {
         if (_root == nullptr)
             return false;

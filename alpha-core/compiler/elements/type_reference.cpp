@@ -24,7 +24,7 @@ namespace basecode::compiler {
     }
 
     bool type_reference::on_infer_type(
-            const compiler::session& session,
+            compiler::session& session,
             infer_type_result_t& result) {
         result.inferred_type = _type;
         result.reference = this;

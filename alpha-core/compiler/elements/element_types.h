@@ -45,6 +45,7 @@ namespace basecode::compiler {
     class statement;
     class type_info;
     class transmute;
+    class rune_type;
     class assignment;
     class identifier;
     class expression;
@@ -83,9 +84,11 @@ namespace basecode::compiler {
     class alloc_intrinsic;
     class continue_element;
     class module_reference;
+    class array_constructor;
     class size_of_intrinsic;
     class namespace_element;
     class type_of_intrinsic;
+    class character_literal;
     class align_of_intrinsic;
     class procedure_instance;
     class address_of_intrinsic;
@@ -152,6 +155,7 @@ namespace basecode::compiler {
         any_type,
         return_e,
         import_e,
+        rune_type,
         raw_block,
         intrinsic,
         proc_type,
@@ -191,6 +195,8 @@ namespace basecode::compiler {
         integer_literal,
         binary_operator,
         module_reference,
+        array_constructor,
+        character_literal,
         unknown_identifier,
         identifier_reference,
     };
@@ -215,6 +221,7 @@ namespace basecode::compiler {
         {element_type_t::any_type, "any_type"},
         {element_type_t::return_e, "return"},
         {element_type_t::import_e, "import"},
+        {element_type_t::rune_type, "rune_type"},
         {element_type_t::raw_block, "raw_block"},
         {element_type_t::intrinsic, "intrinsic"},
         {element_type_t::transmute, "transmute"},
@@ -254,6 +261,8 @@ namespace basecode::compiler {
         {element_type_t::integer_literal, "integer_literal"},
         {element_type_t::binary_operator, "binary_operator"},
         {element_type_t::module_reference, "module_reference"},
+        {element_type_t::character_literal, "character_literal"},
+        {element_type_t::array_constructor, "array_constructor"},
         {element_type_t::unknown_identifier, "unknown_identifier"},
         {element_type_t::identifier_reference, "identifier_reference"},
     };

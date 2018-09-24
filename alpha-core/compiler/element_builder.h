@@ -136,6 +136,10 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             const std::string& value);
 
+        character_literal* make_character(
+            compiler::block* parent_scope,
+            common::rune_t rune);
+
         array_type* make_array_type(
             compiler::block* parent_scope,
             compiler::block* scope,
@@ -285,6 +289,10 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             compiler::element* expr);
 
+        array_constructor* make_array_constructor(
+            compiler::block* parent_scope,
+            compiler::argument_list* args);
+
         compiler::symbol_element* make_temp_symbol(
             compiler::block* parent_scope,
             const std::string& name,
@@ -316,6 +324,8 @@ namespace basecode::compiler {
             const type_find_result_t& result);
 
         bool_type* make_bool_type(compiler::block* parent_scope);
+
+        rune_type* make_rune_type(compiler::block* parent_scope);
 
         return_element* make_return(compiler::block* parent_scope);
 

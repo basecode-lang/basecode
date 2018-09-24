@@ -47,7 +47,7 @@ namespace basecode::compiler {
 
     protected:
         bool on_infer_type(
-            const compiler::session& session,
+            compiler::session& session,
             infer_type_result_t& result) override;
 
         bool on_is_constant() const override;

@@ -11,25 +11,32 @@
 
 #pragma once
 
-#include "intrinsic.h"
+#include "element.h"
 
 namespace basecode::compiler {
 
-    class alloc_intrinsic : public intrinsic {
+    class character_literal  : public element {
     public:
-        alloc_intrinsic(
+        character_literal(
             compiler::module* module,
-            compiler::block* parent_scope,
-            compiler::argument_list* args);
+            block* parent_scope,
+            common::rune_t rune);
 
-        std::string name() const override;
+        common::rune_t rune() const;
 
     protected:
         bool on_infer_type(
             compiler::session& session,
             infer_type_result_t& result) override;
 
-        bool on_emit(compiler::session& session);
+        bool on_is_constant() const override;
+
+        bool on_emit(compiler::session& session) override;
+
+        bool on_as_rune(common::rune_t& value) const override;
+
+    private:
+        common::rune_t _rune;
     };
 
 };

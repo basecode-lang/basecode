@@ -40,7 +40,7 @@ namespace basecode::compiler {
     }
 
     bool cast::on_infer_type(
-            const compiler::session& session,
+            compiler::session& session,
             infer_type_result_t& result) {
         result.inferred_type = _type_ref->type();
         result.reference = _type_ref;

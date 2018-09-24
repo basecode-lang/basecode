@@ -24,7 +24,7 @@ namespace basecode::compiler {
     }
 
     bool assembly_label::on_infer_type(
-            const compiler::session& session,
+            compiler::session& session,
             infer_type_result_t& result) {
         result.inferred_type = session.scope_manager().find_type(qualified_symbol_t {
             .name = "u64"

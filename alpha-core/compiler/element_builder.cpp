@@ -28,6 +28,7 @@
 #include <compiler/elements/type_info.h>
 #include <compiler/elements/transmute.h>
 #include <compiler/elements/intrinsic.h>
+#include <compiler/elements/rune_type.h>
 #include <compiler/elements/expression.h>
 #include <compiler/elements/identifier.h>
 #include <compiler/elements/if_element.h>
@@ -67,9 +68,11 @@
 #include <compiler/elements/integer_literal.h>
 #include <compiler/elements/continue_element.h>
 #include <compiler/elements/module_reference.h>
+#include <compiler/elements/array_constructor.h>
 #include <compiler/elements/size_of_intrinsic.h>
 #include <compiler/elements/namespace_element.h>
 #include <compiler/elements/type_of_intrinsic.h>
+#include <compiler/elements/character_literal.h>
 #include <compiler/elements/align_of_intrinsic.h>
 #include <compiler/elements/procedure_instance.h>
 #include <compiler/elements/address_of_intrinsic.h>
@@ -230,6 +233,18 @@ namespace basecode::compiler {
         }
         _session.elements().add(statement);
         return statement;
+    }
+
+    character_literal* element_builder::make_character(
+            compiler::block* parent_scope,
+            common::rune_t rune) {
+        auto& scope_manager = _session.scope_manager();
+        auto literal = new compiler::character_literal(
+            scope_manager.current_module(),
+            parent_scope,
+            rune);
+        _session.elements().add(literal);
+        return literal;
     }
 
     string_literal* element_builder::make_string(
@@ -945,16 +960,6 @@ namespace basecode::compiler {
         return type;
     }
 
-    bool_type* element_builder::make_bool_type(compiler::block* parent_scope) {
-        auto type = new compiler::bool_type(
-            _session.scope_manager().current_module(),
-            parent_scope);
-        if (!type->initialize(_session))
-            return nullptr;
-        _session.elements().add(type);
-        return type;
-    }
-
     any_type* element_builder::make_any_type(
             compiler::block* parent_scope,
             compiler::block* scope) {
@@ -1101,14 +1106,6 @@ namespace basecode::compiler {
         return decl_element;
     }
 
-    assignment* element_builder::make_assignment(compiler::block* parent_scope) {
-        auto assignment_element = new compiler::assignment(
-            _session.scope_manager().current_module(),
-            parent_scope);
-        _session.elements().add(assignment_element);
-        return assignment_element;
-    }
-
     nil_literal* element_builder::nil_literal() {
         if (_nil_literal == nullptr)
             _nil_literal = make_nil(_session.program().block());
@@ -1125,6 +1122,55 @@ namespace basecode::compiler {
         if (_false_literal == nullptr)
             _false_literal = make_bool(_session.program().block(), false);
         return _false_literal;
+    }
+
+    array_constructor* element_builder::make_array_constructor(
+            compiler::block* parent_scope,
+            compiler::argument_list* args) {
+        element_list_t subscripts {};
+        subscripts.push_back(make_integer(
+            parent_scope,
+            args->size()));
+
+        auto array_ctor = new compiler::array_constructor(
+            _session.scope_manager().current_module(),
+            parent_scope,
+            args,
+            subscripts);
+        _session.elements().add(array_ctor);
+
+        if (args != nullptr)
+            args->parent_element(array_ctor);
+
+        return array_ctor;
+    }
+
+    rune_type* element_builder::make_rune_type(compiler::block* parent_scope) {
+        auto type = new compiler::rune_type(
+            _session.scope_manager().current_module(),
+            parent_scope);
+        if (!type->initialize(_session))
+            return nullptr;
+        _session.elements().add(type);
+        return type;
+    }
+
+    bool_type* element_builder::make_bool_type(compiler::block* parent_scope) {
+        auto type = new compiler::bool_type(
+            _session.scope_manager().current_module(),
+            parent_scope);
+        if (!type->initialize(_session))
+            return nullptr;
+        _session.elements().add(type);
+        return type;
+    }
+
+    assignment* element_builder::make_assignment(compiler::block* parent_scope) {
+        auto assignment_element = new compiler::assignment(
+            _session.scope_manager().current_module(),
+            parent_scope);
+        _session.elements().add(assignment_element);
+        return assignment_element;
     }
 
     compiler::nil_literal* element_builder::make_nil(compiler::block* parent_scope) {

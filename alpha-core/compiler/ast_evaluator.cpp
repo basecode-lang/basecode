@@ -28,6 +28,7 @@
 #include <compiler/elements/statement.h>
 #include <compiler/elements/type_info.h>
 #include <compiler/elements/transmute.h>
+#include <compiler/elements/rune_type.h>
 #include <compiler/elements/assignment.h>
 #include <compiler/elements/expression.h>
 #include <compiler/elements/identifier.h>
@@ -64,6 +65,8 @@
 #include <compiler/elements/integer_literal.h>
 #include <compiler/elements/continue_element.h>
 #include <compiler/elements/module_reference.h>
+#include <compiler/elements/array_constructor.h>
+#include <compiler/elements/character_literal.h>
 #include <compiler/elements/namespace_element.h>
 #include <compiler/elements/size_of_intrinsic.h>
 #include <compiler/elements/procedure_instance.h>
@@ -119,8 +122,8 @@ namespace basecode::compiler {
         {syntax::ast_node_types_t::switch_expression,       std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::import_expression,       std::bind(&ast_evaluator::import_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::struct_expression,       std::bind(&ast_evaluator::struct_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::character_literal,       std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::array_constructor,       std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::character_literal,       std::bind(&ast_evaluator::character_literal, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::array_constructor,       std::bind(&ast_evaluator::array_constructor, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::module_expression,       std::bind(&ast_evaluator::module_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::elseif_expression,       std::bind(&ast_evaluator::if_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::subscript_operator,      std::bind(&ast_evaluator::subscript_operator, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
@@ -835,8 +838,53 @@ namespace basecode::compiler {
         result.element = bool_value ?
             builder.true_literal() :
             builder.false_literal();
-        //result.element->location(context.node->location);
 
+        return true;
+    }
+
+    bool ast_evaluator::character_literal(
+            evaluator_context_t& context,
+            evaluator_result_t& result) {
+        auto& builder = _session.builder();
+
+        std::vector<uint8_t> _buffer;
+        for (auto c : context.node->token.value)
+            _buffer.push_back(c);
+
+        auto ch = _buffer[0];
+        rune_t rune = ch;
+        if (ch >= 0x80) {
+            auto cp = common::utf8_decode(
+                (char*)(_buffer.data()),
+                _buffer.size());
+            rune = cp.value;
+        }
+
+        result.element = builder.make_character(
+            _session.scope_manager().current_scope(),
+            rune);
+
+        return true;
+    }
+
+    bool ast_evaluator::array_constructor(
+            evaluator_context_t& context,
+            evaluator_result_t& result) {
+        auto args = dynamic_cast<compiler::argument_list*>(evaluate(context.node->lhs.get()));
+        // XXX: walk args and build subscripts
+        //
+        // [1, 2, 3] => [3]
+        //
+        // [[1,2,3], [1,2,3], [1,2,3]] => [1][3]
+        //
+        //
+        // XXX: determine entry type
+        // different type families, use any
+        // integer/float, widen/narrow as needed
+        //
+        result.element = _session.builder().make_array_constructor(
+            _session.scope_manager().current_scope(),
+            args);
         return true;
     }
 

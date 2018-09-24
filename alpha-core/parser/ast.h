@@ -72,8 +72,7 @@ namespace basecode::syntax {
         tuple_expression,
         module_expression,
         character_literal,
-        array_constructor,  // e.g. [1, 2, 3, 4]
-                            // ["a" := 2, "b" := 3]
+        array_constructor,
         elseif_expression,
         switch_expression,
         struct_expression,
@@ -274,6 +273,8 @@ namespace basecode::syntax {
         ast_node_shared_ptr spread_operator_node();
 
         ast_node_shared_ptr tuple_expression_node();
+
+        ast_node_shared_ptr array_constructor_node();
 
         ast_node_shared_ptr subscript_operator_node();
 

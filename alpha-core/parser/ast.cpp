@@ -190,6 +190,14 @@ namespace basecode::syntax {
         return node;
     }
 
+    ast_node_shared_ptr ast_builder::array_constructor_node() {
+        auto node = std::make_shared<ast_node_t>();
+        node->id = ++_id;
+        node->type = ast_node_types_t::array_constructor;
+        node->lhs = argument_list_node();
+        return node;
+    }
+
     ast_node_shared_ptr ast_builder::constant_assignment_node() {
         auto node = std::make_shared<ast_node_t>();
         node->id = ++_id;

@@ -28,7 +28,7 @@ namespace basecode::compiler {
     }
 
     bool symbol_element::on_infer_type(
-            const compiler::session& session,
+            compiler::session& session,
             infer_type_result_t& result) {
         auto identifier = session.scope_manager().find_identifier(qualified_symbol());
         if (identifier != nullptr) {

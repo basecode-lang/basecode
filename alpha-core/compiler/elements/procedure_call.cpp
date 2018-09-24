@@ -35,7 +35,7 @@ namespace basecode::compiler {
 
     // XXX: not handling multiple returns yet
     bool procedure_call::on_infer_type(
-            const compiler::session& session,
+            compiler::session& session,
             infer_type_result_t& result) {
         auto identifier = _reference->identifier();
         if (identifier != nullptr) {

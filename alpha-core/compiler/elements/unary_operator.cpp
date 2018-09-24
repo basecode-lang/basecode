@@ -110,7 +110,7 @@ namespace basecode::compiler {
     }
 
     bool unary_operator::on_infer_type(
-            const compiler::session& session,
+            compiler::session& session,
             infer_type_result_t& result) {
         auto& scope_manager = session.scope_manager();
         switch (operator_type()) {

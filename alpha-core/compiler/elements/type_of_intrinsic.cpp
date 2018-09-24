@@ -64,7 +64,7 @@ namespace basecode::compiler {
     }
 
     bool type_of_intrinsic::on_infer_type(
-            const compiler::session& session,
+            compiler::session& session,
             infer_type_result_t& result) {
         auto& scope_manager = session.scope_manager();
         qualified_symbol_t type_name = {

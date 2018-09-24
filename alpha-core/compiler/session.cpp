@@ -18,6 +18,7 @@
 #include "elements/any_type.h"
 #include "elements/intrinsic.h"
 #include "elements/directive.h"
+#include "elements/rune_type.h"
 #include "elements/bool_type.h"
 #include "elements/type_info.h"
 #include "code_dom_formatter.h"
@@ -422,6 +423,7 @@ namespace basecode::compiler {
             _builder.make_block(parent_scope, element_type_t::block)));
         _scope_manager.add_type_to_scope(_builder.make_namespace_type(parent_scope));
         _scope_manager.add_type_to_scope(_builder.make_bool_type(parent_scope));
+        _scope_manager.add_type_to_scope(_builder.make_rune_type(parent_scope));
         _scope_manager.add_type_to_scope(_builder.make_string_type(
             parent_scope,
             _builder.make_block(parent_scope, element_type_t::block)));

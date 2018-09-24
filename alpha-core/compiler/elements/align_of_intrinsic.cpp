@@ -48,7 +48,7 @@ namespace basecode::compiler {
     }
 
     bool align_of_intrinsic::on_infer_type(
-            const compiler::session& session,
+            compiler::session& session,
             infer_type_result_t& result) {
         result.inferred_type = session.scope_manager().find_type(qualified_symbol_t {
             .name = "u32"

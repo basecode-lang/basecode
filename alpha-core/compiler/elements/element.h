@@ -33,7 +33,7 @@ namespace basecode::compiler {
             fold_result_t& result);
 
         bool infer_type(
-            const compiler::session& session,
+            compiler::session& session,
             infer_type_result_t& result);
 
         bool is_type() const;
@@ -77,6 +77,8 @@ namespace basecode::compiler {
 
         bool as_string(std::string& value) const;
 
+        bool as_rune(common::rune_t& value) const;
+
         void owned_elements(element_list_t& list);
 
         bool is_parent_element(element_type_t type);
@@ -93,7 +95,7 @@ namespace basecode::compiler {
             fold_result_t& result);
 
         virtual bool on_infer_type(
-            const compiler::session& session,
+            compiler::session& session,
             infer_type_result_t& result);
 
         element_register_t register_for(
@@ -113,6 +115,8 @@ namespace basecode::compiler {
         virtual bool on_as_string(std::string& value) const;
 
         virtual void on_owned_elements(element_list_t& list);
+
+        virtual bool on_as_rune(common::rune_t& value) const;
 
     private:
         common::id_t _id;

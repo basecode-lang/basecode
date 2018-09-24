@@ -30,7 +30,7 @@ namespace basecode::compiler {
 
     protected:
         bool on_infer_type(
-            const compiler::session& program,
+            compiler::session& program,
             infer_type_result_t& result) override;
 
         bool on_as_bool(bool& value) const override;
@@ -44,6 +44,8 @@ namespace basecode::compiler {
         bool on_as_string(std::string& value) const override;
 
         void on_owned_elements(element_list_t& list) override;
+
+        bool on_as_rune(common::rune_t& value) const override;
 
     private:
         element* _expr = nullptr;
