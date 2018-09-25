@@ -1,2 +1,13 @@
+@library "alpha-core";
+#foreign print ::= proc(format: string, values: ...any) @alias "fmt_print";
+
 a := 'A';
 b := 'b';
+
+print("a := %c\n", a);
+print("b := %c\n", b);
+
+a_type: ^type;
+a_type := type_of(a);
+
+b_type := type_of(b);

@@ -33,6 +33,10 @@ namespace basecode::compiler {
         std::string name(const std::string& alias = "") const override;
 
     protected:
+        bool on_emit_initializer(
+            compiler::session& session,
+            compiler::identifier* var) override;
+
         bool on_type_check(compiler::type* other) override;
 
         type_number_class_t on_number_class() const override;

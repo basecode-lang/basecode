@@ -66,7 +66,9 @@ namespace basecode::compiler {
     bool type_of_intrinsic::on_infer_type(
             compiler::session& session,
             infer_type_result_t& result) {
+        auto& builder = session.builder();
         auto& scope_manager = session.scope_manager();
+
         qualified_symbol_t type_name = {
             .name = "type"
         };
@@ -75,11 +77,18 @@ namespace basecode::compiler {
             type_info_type,
             parent_scope());
         if (ptr_type == nullptr) {
-            ptr_type = const_cast<compiler::session&>(session)
-                .builder()
-                .make_pointer_type(parent_scope(), type_name, type_info_type);
+            ptr_type = builder.make_pointer_type(
+                parent_scope(),
+                type_name,
+                type_info_type);
         }
+
         result.inferred_type = ptr_type;
+        result.reference = builder.make_type_reference(
+            parent_scope(),
+            type_name,
+            ptr_type);
+
         return true;
     }
 
