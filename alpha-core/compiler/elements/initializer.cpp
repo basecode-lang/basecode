@@ -32,6 +32,11 @@ namespace basecode::compiler {
         return false;
     }
 
+    bool initializer::is_nil() const {
+        return _expr != nullptr
+               && _expr->element_type() == element_type_t::nil_literal;
+    }
+
     element* initializer::expression() {
         return _expr;
     }

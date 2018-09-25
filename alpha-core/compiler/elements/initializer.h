@@ -22,6 +22,8 @@ namespace basecode::compiler {
             block* parent_scope,
             element* expr);
 
+        bool is_nil() const;
+
         element* expression();
 
         void expression(element* value);

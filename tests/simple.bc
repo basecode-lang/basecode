@@ -7,10 +7,6 @@
 // 1. block filtering in program::on_emit isn't strong enough.
 //    a. blocks that belong to procedures should be flagged as such
 
-// 2. types
-//    a. type metadata needs to be emitted by the compiler
-//    b. type initializers & finalizers
-
 // 3. finish constant expression folding
 
 // 5. array initializer lists
@@ -28,8 +24,6 @@
 
 // 12. #if/#elseif/#else
 // 13. assert
-
-// 14. fix multiple assignment/destructuring
 
 // 15. assembler label names need to be fully qualified
 

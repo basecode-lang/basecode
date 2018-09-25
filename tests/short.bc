@@ -17,8 +17,6 @@ foo := cast<id_t>(bar);
 speed_t    ::= #type f32;
 distance_t ::= #type f32;
 
-// XXX: assignment is confused about aliased types
-//      isn't folding into segment initialization in this case
 s: speed_t := 1.25;
 d: distance_t := 5.12;
 

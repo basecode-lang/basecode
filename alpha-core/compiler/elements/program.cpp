@@ -16,6 +16,7 @@
 #include <common/bytes.h>
 #include <compiler/session.h>
 #include <vm/instruction_block.h>
+#include <compiler/assembly_variable.h>
 #include "type.h"
 #include "block.h"
 #include "module.h"

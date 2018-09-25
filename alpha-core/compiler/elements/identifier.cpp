@@ -40,17 +40,17 @@ namespace basecode::compiler {
         if (_type_ref->type()->element_type() == element_type_t::namespace_type)
             return true;
 
-        auto stack_frame = session.stack_frame();
-
-        vm::stack_frame_entry_t* frame_entry = nullptr;
-        if (stack_frame != nullptr)
-            frame_entry = stack_frame->find_up(_symbol->name());
-
-        session.allocate_variable(
-            _symbol->name(),
-            _type_ref->type(),
-            _usage,
-            frame_entry);
+//        auto stack_frame = session.stack_frame();
+//
+//        vm::stack_frame_entry_t* frame_entry = nullptr;
+//        if (stack_frame != nullptr)
+//            frame_entry = stack_frame->find_up(_symbol->name());
+//
+//        session.allocate_variable(
+//            _symbol->name(),
+//            _type_ref->type(),
+//            _usage,
+//            frame_entry);
 
         return true;
     }

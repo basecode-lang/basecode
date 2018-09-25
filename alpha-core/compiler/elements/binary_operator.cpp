@@ -120,41 +120,22 @@ namespace basecode::compiler {
                 break;
             }
             case operator_type_t::assignment: {
-                auto var = session.variable_for_element(_lhs);
-                if (var == nullptr) {
-                    session.error(
-                        _lhs,
-                        "P051",
-                        fmt::format("missing assembler variable for {}.", _lhs->label_name()),
-                        _lhs->location());
+                auto var = session.emit_and_init_element(_lhs);
+                if (var == nullptr)
                     return false;
-                }
-
-                var->make_live(session);
                 defer({
                     var->make_dormant(session);
                 });
 
-                _lhs->emit(session);
-                var->init(session);
-
-                vm::register_t rhs_reg;
-                rhs_reg.size = var->value_reg.reg.size;
-                rhs_reg.type = var->value_reg.reg.type;
-
-                if (!assembler.allocate_reg(rhs_reg)) {
-                    session.error(
+                if (!session.emit_to_temp(
                         _rhs,
-                        "P052",
-                        "assembler registers exhausted.",
-                        _rhs->location());
+                        var->value_reg.reg.size,
+                        var->value_reg.reg.type)) {
                     return false;
                 }
-                assembler.push_target_register(rhs_reg);
-                _rhs->emit(session);
                 var->write(session);
+                assembler.free_reg(*(assembler.current_target_register()));
                 assembler.pop_target_register();
-                assembler.free_reg(rhs_reg);
                 break;
             }
             default:

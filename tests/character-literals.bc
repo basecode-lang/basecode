@@ -11,3 +11,5 @@ a_type: ^type;
 a_type := type_of(a);
 
 b_type := type_of(b);
+
+temp := "hello world!";

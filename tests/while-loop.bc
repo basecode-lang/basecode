@@ -3,7 +3,6 @@
 
 i: u32 := 1;
 
-type_of_string: ^type;
 type_of_string := type_of(#type string);
 
 type_of_i: ^type := nil;

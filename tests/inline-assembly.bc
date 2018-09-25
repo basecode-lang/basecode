@@ -25,8 +25,7 @@ temp: u32;
 temp := size_of(bar);
 
 'get_a_type:
-temp_type_info: ^type;
-temp_type_info := type_of(temp);
+temp_type_info: ^type := type_of(temp);
 huh := temp_type_info^;
 
 print("address_of(temp) := $%08x\n\n", address_of(temp));

@@ -113,6 +113,7 @@ add_library(
     compiler/elements/element.cpp compiler/elements/element.h
     compiler/elements/program.cpp compiler/elements/program.h
     compiler/elements/any_type.cpp compiler/elements/any_type.h
+    compiler/assembly_variable.cpp compiler/assembly_variable.h
     compiler/elements/rune_type.cpp compiler/elements/rune_type.h
     compiler/elements/intrinsic.cpp compiler/elements/intrinsic.h
     compiler/elements/transmute.cpp compiler/elements/transmute.h

@@ -41,7 +41,7 @@ namespace basecode::compiler {
             compiler::identifier* var) {
         compiler::assembly_label* label = nullptr;
         auto init = var->initializer();
-        if (init == nullptr)
+        if (init == nullptr || init->is_nil())
             return true;
 
         label = dynamic_cast<compiler::assembly_label*>(init->expression());
@@ -53,42 +53,24 @@ namespace basecode::compiler {
             fmt::format("initialize identifier: {}", var->symbol()->name()),
             4);
 
-        auto work_var = session.variable_for_element(var);
-        if (work_var == nullptr) {
-            session.error(
-                var,
-                "P051",
-                fmt::format("missing assembler variable for {}.", var->label_name()),
-                var->location());
+        auto avar = session.emit_and_init_element(var);
+        if (avar == nullptr)
             return false;
-        }
-
-        work_var->make_live(session);
         defer({
-            work_var->make_dormant(session);
+            avar->make_dormant(session);
         });
 
-        var->emit(session);
-        work_var->init(session);
-
-        vm::register_t temp_reg;
-        temp_reg.size = vm::op_sizes::qword;
-        temp_reg.type = vm::register_type_t::integer;
-
-        if (!assembler.allocate_reg(temp_reg)) {
-            session.error(
-                var,
-                "P052",
-                "assembler registers exhausted.",
-                var->location());
+        if (!session.emit_to_temp(
+                label,
+                vm::op_sizes::qword,
+                vm::register_type_t::integer)) {
             return false;
         }
 
-        assembler.push_target_register(temp_reg);
-        label->emit(session);
-        assembler.pop_target_register();
+        avar->write(session);
 
-        block->store_from_reg(work_var->address_reg.reg, temp_reg);
+        assembler.free_reg(*(assembler.current_target_register()));
+        assembler.pop_target_register();
 
         return true;
     }

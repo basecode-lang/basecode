@@ -28,52 +28,9 @@
 #include "compiler_types.h"
 #include "element_builder.h"
 #include "elements/program.h"
+#include "assembly_variable.h"
 
 namespace basecode::compiler {
-
-    struct variable_register_t {
-        bool matches(vm::register_t* other_reg);
-
-        bool reserve(compiler::session& session);
-
-        void release(compiler::session& session);
-
-        bool allocated = false;
-        vm::register_t reg;
-    };
-
-    ///////////////////////////////////////////////////////////////////////////
-
-    struct variable_t {
-        bool init(compiler::session& session);
-
-        bool read(compiler::session& session);
-
-        bool write(compiler::session& session);
-
-        void make_live(compiler::session& session);
-
-        void make_dormant(compiler::session& session);
-
-        std::string name;
-        bool live = false;
-        bool written = false;
-        identifier_usage_t usage;
-        int64_t address_offset = 0;
-        bool requires_read = false;
-        bool address_loaded = false;
-        variable_register_t value_reg;
-        compiler::type* type = nullptr;
-        variable_register_t address_reg {
-            .reg = {
-                .size = vm::op_sizes::qword,
-                .type = vm::register_type_t::integer
-            },
-        };
-        vm::stack_frame_entry_t* frame_entry = nullptr;
-    };
-
-    ///////////////////////////////////////////////////////////////////////////
 
     class session {
     public:
@@ -104,6 +61,11 @@ namespace basecode::compiler {
 
         bool initialize();
 
+        bool emit_to_temp(
+            compiler::element* element,
+            vm::op_sizes reg_size,
+            vm::register_type_t reg_type);
+
         void free_variable(
             compiler::session& session,
             const std::string& name);
@@ -127,6 +89,10 @@ namespace basecode::compiler {
             compiler::type* type,
             identifier_usage_t usage,
             vm::stack_frame_entry_t* frame_entry = nullptr);
+
+        bool allocate_reg(
+            vm::register_t& reg,
+            compiler::element* element);
 
         vm::stack_frame_t* stack_frame();
 
@@ -153,6 +119,8 @@ namespace basecode::compiler {
         void push_source_file(common::source_file* source_file);
 
         variable_t* variable_for_element(compiler::element* element);
+
+        variable_t* emit_and_init_element(compiler::element* element);
 
         void type_info_label(compiler::type* type, vm::label_ref_t* label);
 

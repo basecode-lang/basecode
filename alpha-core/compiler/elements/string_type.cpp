@@ -86,6 +86,13 @@ namespace basecode::compiler {
     bool string_type::on_emit_initializer(
             compiler::session& session,
             compiler::identifier* var) {
+        compiler::string_literal* literal = nullptr;
+        auto init = var->initializer();
+        if (init == nullptr || init->is_nil())
+            return true;
+
+        literal = dynamic_cast<compiler::string_literal*>(init->expression());
+
         auto& assembler = session.assembler();
         auto block = assembler.current_block();
 
@@ -93,28 +100,12 @@ namespace basecode::compiler {
             fmt::format("initialize identifier: {}", var->symbol()->name()),
             4);
 
-        compiler::string_literal* literal = nullptr;
-        auto init = var->initializer();
-        if (init != nullptr)
-            literal = dynamic_cast<compiler::string_literal*>(init->expression());
-
-        auto work_var = session.variable_for_element(var);
-        if (work_var == nullptr) {
-            session.error(
-                var,
-                "P051",
-                fmt::format("missing assembler variable for {}.", var->label_name()),
-                var->location());
+        auto work_var = session.emit_and_init_element(var);
+        if (work_var == nullptr)
             return false;
-        }
-
-        work_var->make_live(session);
         defer({
             work_var->make_dormant(session);
         });
-
-        var->emit(session);
-        work_var->init(session);
 
         vm::register_t temp_reg;
         temp_reg.size = vm::op_sizes::dword;
