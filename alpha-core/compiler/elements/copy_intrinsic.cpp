@@ -46,38 +46,38 @@ namespace basecode::compiler {
         auto src_arg = args[1];
         auto size_arg = args[2];
 
-        auto dest_arg_reg = register_for(session, dest_arg);
-        if (dest_arg_reg.var != nullptr) {
-            dest_arg_reg.clean_up = true;
-        }
-
-        assembler.push_target_register(dest_arg_reg.reg);
-        dest_arg->emit(session);
-        assembler.pop_target_register();
-
-        auto src_arg_reg = register_for(session, src_arg);
-        if (src_arg_reg.var != nullptr) {
-            src_arg_reg.clean_up = true;
-        }
-
-        assembler.push_target_register(src_arg_reg.reg);
-        src_arg->emit(session);
-        assembler.pop_target_register();
-
-        auto size_arg_reg = register_for(session, size_arg);
-        if (size_arg_reg.var != nullptr) {
-            size_arg_reg.clean_up = true;
-        }
-
-        assembler.push_target_register(size_arg_reg.reg);
-        size_arg->emit(session);
-        assembler.pop_target_register();
-
-        instruction_block->copy(
-            vm::op_sizes::byte,
-            dest_arg_reg.reg,
-            src_arg_reg.reg,
-            size_arg_reg.reg);
+//        auto dest_arg_reg = register_for(session, dest_arg);
+//        if (dest_arg_reg.var != nullptr) {
+//            dest_arg_reg.clean_up = true;
+//        }
+//
+//        assembler.push_target_register(dest_arg_reg.reg);
+//        dest_arg->emit(session);
+//        assembler.pop_target_register();
+//
+//        auto src_arg_reg = register_for(session, src_arg);
+//        if (src_arg_reg.var != nullptr) {
+//            src_arg_reg.clean_up = true;
+//        }
+//
+//        assembler.push_target_register(src_arg_reg.reg);
+//        src_arg->emit(session);
+//        assembler.pop_target_register();
+//
+//        auto size_arg_reg = register_for(session, size_arg);
+//        if (size_arg_reg.var != nullptr) {
+//            size_arg_reg.clean_up = true;
+//        }
+//
+//        assembler.push_target_register(size_arg_reg.reg);
+//        size_arg->emit(session);
+//        assembler.pop_target_register();
+//
+//        instruction_block->copy(
+//            vm::op_sizes::byte,
+//            dest_arg_reg.reg,
+//            src_arg_reg.reg,
+//            size_arg_reg.reg);
 
         return true;
     }

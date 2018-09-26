@@ -63,6 +63,10 @@ namespace basecode::vm {
                             auto size_in_bytes = op_size_in_bytes(data_def->size);
                             auto offset = 0;
                             for (auto v : data_def->values) {
+                                if (v.which() != 0) {
+                                    r.add_message("A031", "unexpected label_ref_t*", true);
+                                    continue;
+                                }
                                 _terp->write(
                                     data_def->size,
                                     entry.address() + offset,

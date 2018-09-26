@@ -120,22 +120,24 @@ namespace basecode::compiler {
                 break;
             }
             case operator_type_t::assignment: {
-                auto var = session.emit_and_init_element(_lhs);
-                if (var == nullptr)
+                auto lhs_var = session.variable(_lhs);
+                if (lhs_var == nullptr)
                     return false;
+                lhs_var->activate();
                 defer({
-                    var->make_dormant(session);
+                    lhs_var->deactivate();
                 });
 
-                if (!session.emit_to_temp(
-                        _rhs,
-                        var->value_reg.reg.size,
-                        var->value_reg.reg.type)) {
+                auto rhs_var = session.variable(_rhs);
+                if (rhs_var == nullptr)
                     return false;
-                }
-                var->write(session);
-                assembler.free_reg(*(assembler.current_target_register()));
-                assembler.pop_target_register();
+                rhs_var->activate();
+                defer({
+                    rhs_var->deactivate();
+                });
+
+                rhs_var->read();
+                lhs_var->write();
                 break;
             }
             default:
@@ -287,13 +289,13 @@ namespace basecode::compiler {
             block->clr(vm::op_sizes::qword, *target_reg);
         }
 
-        auto lhs_reg = register_for(session, _lhs);
-        if (!lhs_reg.valid)
-            return;
-
-        assembler.push_target_register(lhs_reg.reg);
-        _lhs->emit(session);
-        assembler.pop_target_register();
+//        auto lhs_reg = register_for(session, _lhs);
+//        if (!lhs_reg.valid)
+//            return;
+//
+//        assembler.push_target_register(lhs_reg.reg);
+//        _lhs->emit(session);
+//        assembler.pop_target_register();
 
         auto end_label_name = fmt::format("{}_end", label_name());
         auto end_label_ref = assembler.make_label_ref(end_label_name);
@@ -315,47 +317,47 @@ namespace basecode::compiler {
             }
         }
 
-        auto rhs_reg = register_for(session, _rhs);
-        if (!rhs_reg.valid)
-            return;
-
-        assembler.push_target_register(rhs_reg.reg);
-        _rhs->emit(session);
-        assembler.pop_target_register();
-
-        if (!is_short_circuited) {
-            block->cmp(lhs_reg.reg, rhs_reg.reg);
-
-            switch (operator_type()) {
-                case operator_type_t::equals: {
-                    block->setz(*target_reg);
-                    break;
-                }
-                case operator_type_t::less_than: {
-                    block->setb(*target_reg);
-                    break;
-                }
-                case operator_type_t::not_equals: {
-                    block->setnz(*target_reg);
-                    break;
-                }
-                case operator_type_t::greater_than: {
-                    block->seta(*target_reg);
-                    break;
-                }
-                case operator_type_t::less_than_or_equal: {
-                    block->setbe(*target_reg);
-                    break;
-                }
-                case operator_type_t::greater_than_or_equal: {
-                    block->setae(*target_reg);
-                    break;
-                }
-                default: {
-                    break;
-                }
-            }
-        }
+//        auto rhs_reg = register_for(session, _rhs);
+//        if (!rhs_reg.valid)
+//            return;
+//
+//        assembler.push_target_register(rhs_reg.reg);
+//        _rhs->emit(session);
+//        assembler.pop_target_register();
+//
+//        if (!is_short_circuited) {
+//            block->cmp(lhs_reg.reg, rhs_reg.reg);
+//
+//            switch (operator_type()) {
+//                case operator_type_t::equals: {
+//                    block->setz(*target_reg);
+//                    break;
+//                }
+//                case operator_type_t::less_than: {
+//                    block->setb(*target_reg);
+//                    break;
+//                }
+//                case operator_type_t::not_equals: {
+//                    block->setnz(*target_reg);
+//                    break;
+//                }
+//                case operator_type_t::greater_than: {
+//                    block->seta(*target_reg);
+//                    break;
+//                }
+//                case operator_type_t::less_than_or_equal: {
+//                    block->setbe(*target_reg);
+//                    break;
+//                }
+//                case operator_type_t::greater_than_or_equal: {
+//                    block->setae(*target_reg);
+//                    break;
+//                }
+//                default: {
+//                    break;
+//                }
+//            }
+//        }
 
         block->label(assembler.make_label(end_label_name));
     }
@@ -365,133 +367,133 @@ namespace basecode::compiler {
         auto block = assembler.current_block();
         auto result_reg = assembler.current_target_register();
 
-        auto lhs_reg = register_for(session, _lhs);
-        auto rhs_reg = register_for(session, _rhs);
-
-        if (!lhs_reg.valid || !rhs_reg.valid)
-            return;
-
-        vm::register_t target_reg {
-            .type = vm::register_type_t::none
-        };
-        defer({
-            if (target_reg.type != vm::register_type_t::none) {
-                assembler.free_reg(target_reg);
-            }
-        });
-
-        if (result_reg == nullptr) {
-            result_reg = &target_reg;
-            result_reg->size = lhs_reg.size();
-            result_reg->type = lhs_reg.reg.type;
-            if (!assembler.allocate_reg(*result_reg)) {
-
-            }
-        }
-
-        assembler.push_target_register(lhs_reg.reg);
-        _lhs->emit(session);
-        assembler.pop_target_register();
-
-        assembler.push_target_register(rhs_reg.reg);
-        _rhs->emit(session);
-        assembler.pop_target_register();
-
-        switch (operator_type()) {
-            case operator_type_t::add: {
-                block->add_reg_by_reg(
-                    *result_reg,
-                    lhs_reg.reg,
-                    rhs_reg.reg);
-                break;
-            }
-            case operator_type_t::divide: {
-                block->div_reg_by_reg(
-                    *result_reg,
-                    lhs_reg.reg,
-                    rhs_reg.reg);
-                break;
-            }
-            case operator_type_t::modulo: {
-                block->mod_reg_by_reg(
-                    *result_reg,
-                    lhs_reg.reg,
-                    rhs_reg.reg);
-                break;
-            }
-            case operator_type_t::multiply: {
-                block->mul_reg_by_reg(
-                    *result_reg,
-                    lhs_reg.reg,
-                    rhs_reg.reg);
-                break;
-            }
-            case operator_type_t::exponent: {
-                block->pow_reg_by_reg(
-                    *result_reg,
-                    lhs_reg.reg,
-                    rhs_reg.reg);
-                break;
-            }
-            case operator_type_t::subtract: {
-                block->sub_reg_by_reg(
-                    *result_reg,
-                    lhs_reg.reg,
-                    rhs_reg.reg);
-                break;
-            }
-            case operator_type_t::binary_or: {
-                block->or_reg_by_reg(
-                    *result_reg,
-                    lhs_reg.reg,
-                    rhs_reg.reg);
-                break;
-            }
-            case operator_type_t::shift_left: {
-                block->shl_reg_by_reg(
-                    *result_reg,
-                    lhs_reg.reg,
-                    rhs_reg.reg);
-                break;
-            }
-            case operator_type_t::binary_and: {
-                block->and_reg_by_reg(
-                    *result_reg,
-                    lhs_reg.reg,
-                    rhs_reg.reg);
-                break;
-            }
-            case operator_type_t::binary_xor: {
-                block->xor_reg_by_reg(
-                    *result_reg,
-                    lhs_reg.reg,
-                    rhs_reg.reg);
-                break;
-            }
-            case operator_type_t::rotate_left: {
-                block->rol_reg_by_reg(
-                    *result_reg,
-                    lhs_reg.reg,
-                    rhs_reg.reg);
-                break;
-            }
-            case operator_type_t::shift_right: {
-                block->shr_reg_by_reg(
-                    *result_reg,
-                    lhs_reg.reg,
-                    rhs_reg.reg);
-                break;
-            }
-            case operator_type_t::rotate_right: {
-                block->ror_reg_by_reg(
-                    *result_reg,
-                    lhs_reg.reg,
-                    rhs_reg.reg);
-                break;
-            }
-            default:
-                break;
-        }
+//        auto lhs_reg = register_for(session, _lhs);
+//        auto rhs_reg = register_for(session, _rhs);
+//
+//        if (!lhs_reg.valid || !rhs_reg.valid)
+//            return;
+//
+//        vm::register_t target_reg {
+//            .type = vm::register_type_t::none
+//        };
+//        defer({
+//            if (target_reg.type != vm::register_type_t::none) {
+//                assembler.free_reg(target_reg);
+//            }
+//        });
+//
+//        if (result_reg == nullptr) {
+//            result_reg = &target_reg;
+//            result_reg->size = lhs_reg.size();
+//            result_reg->type = lhs_reg.reg.type;
+//            if (!assembler.allocate_reg(*result_reg)) {
+//
+//            }
+//        }
+//
+//        assembler.push_target_register(lhs_reg.reg);
+//        _lhs->emit(session);
+//        assembler.pop_target_register();
+//
+//        assembler.push_target_register(rhs_reg.reg);
+//        _rhs->emit(session);
+//        assembler.pop_target_register();
+//
+//        switch (operator_type()) {
+//            case operator_type_t::add: {
+//                block->add_reg_by_reg(
+//                    *result_reg,
+//                    lhs_reg.reg,
+//                    rhs_reg.reg);
+//                break;
+//            }
+//            case operator_type_t::divide: {
+//                block->div_reg_by_reg(
+//                    *result_reg,
+//                    lhs_reg.reg,
+//                    rhs_reg.reg);
+//                break;
+//            }
+//            case operator_type_t::modulo: {
+//                block->mod_reg_by_reg(
+//                    *result_reg,
+//                    lhs_reg.reg,
+//                    rhs_reg.reg);
+//                break;
+//            }
+//            case operator_type_t::multiply: {
+//                block->mul_reg_by_reg(
+//                    *result_reg,
+//                    lhs_reg.reg,
+//                    rhs_reg.reg);
+//                break;
+//            }
+//            case operator_type_t::exponent: {
+//                block->pow_reg_by_reg(
+//                    *result_reg,
+//                    lhs_reg.reg,
+//                    rhs_reg.reg);
+//                break;
+//            }
+//            case operator_type_t::subtract: {
+//                block->sub_reg_by_reg(
+//                    *result_reg,
+//                    lhs_reg.reg,
+//                    rhs_reg.reg);
+//                break;
+//            }
+//            case operator_type_t::binary_or: {
+//                block->or_reg_by_reg(
+//                    *result_reg,
+//                    lhs_reg.reg,
+//                    rhs_reg.reg);
+//                break;
+//            }
+//            case operator_type_t::shift_left: {
+//                block->shl_reg_by_reg(
+//                    *result_reg,
+//                    lhs_reg.reg,
+//                    rhs_reg.reg);
+//                break;
+//            }
+//            case operator_type_t::binary_and: {
+//                block->and_reg_by_reg(
+//                    *result_reg,
+//                    lhs_reg.reg,
+//                    rhs_reg.reg);
+//                break;
+//            }
+//            case operator_type_t::binary_xor: {
+//                block->xor_reg_by_reg(
+//                    *result_reg,
+//                    lhs_reg.reg,
+//                    rhs_reg.reg);
+//                break;
+//            }
+//            case operator_type_t::rotate_left: {
+//                block->rol_reg_by_reg(
+//                    *result_reg,
+//                    lhs_reg.reg,
+//                    rhs_reg.reg);
+//                break;
+//            }
+//            case operator_type_t::shift_right: {
+//                block->shr_reg_by_reg(
+//                    *result_reg,
+//                    lhs_reg.reg,
+//                    rhs_reg.reg);
+//                break;
+//            }
+//            case operator_type_t::rotate_right: {
+//                block->ror_reg_by_reg(
+//                    *result_reg,
+//                    lhs_reg.reg,
+//                    rhs_reg.reg);
+//                break;
+//            }
+//            default:
+//                break;
+//        }
     }
 
 };

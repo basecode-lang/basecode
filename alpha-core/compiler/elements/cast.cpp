@@ -142,47 +142,47 @@ namespace basecode::compiler {
             }
         }
 
-        auto temp_reg = register_for(session, _expression);
-        if (!temp_reg.valid)
-            return false;
-        temp_reg.clean_up = true;
-
-        assembler.push_target_register(temp_reg.reg);
-        _expression->emit(session);
-        assembler.pop_target_register();
-
-        instruction_block->comment(
-            fmt::format(
-                "cast<{}> from type {}",
-                _type_ref->symbol().name,
-                infer_type_result.type_name()),
-            4);
-        instruction_block->clr(vm::op_sizes::qword, *target_reg);
-
-        switch (mode) {
-            case cast_mode_t::integer_truncate: {
-                instruction_block->move_reg_to_reg(*target_reg, temp_reg.reg);
-                break;
-            }
-            case cast_mode_t::integer_sign_extend: {
-                instruction_block->moves_reg_to_reg(*target_reg, temp_reg.reg);
-                break;
-            }
-            case cast_mode_t::integer_zero_extend: {
-                instruction_block->movez_reg_to_reg(*target_reg, temp_reg.reg);
-                break;
-            }
-            case cast_mode_t::float_extend:
-            case cast_mode_t::float_truncate:
-            case cast_mode_t::integer_to_float:
-            case cast_mode_t::float_to_integer: {
-                instruction_block->convert(*target_reg, temp_reg.reg);
-                break;
-            }
-            default: {
-                break;
-            }
-        }
+//        auto temp_reg = register_for(session, _expression);
+//        if (!temp_reg.valid)
+//            return false;
+//        temp_reg.clean_up = true;
+//
+//        assembler.push_target_register(temp_reg.reg);
+//        _expression->emit(session);
+//        assembler.pop_target_register();
+//
+//        instruction_block->comment(
+//            fmt::format(
+//                "cast<{}> from type {}",
+//                _type_ref->symbol().name,
+//                infer_type_result.type_name()),
+//            4);
+//        instruction_block->clr(vm::op_sizes::qword, *target_reg);
+//
+//        switch (mode) {
+//            case cast_mode_t::integer_truncate: {
+//                instruction_block->move_reg_to_reg(*target_reg, temp_reg.reg);
+//                break;
+//            }
+//            case cast_mode_t::integer_sign_extend: {
+//                instruction_block->moves_reg_to_reg(*target_reg, temp_reg.reg);
+//                break;
+//            }
+//            case cast_mode_t::integer_zero_extend: {
+//                instruction_block->movez_reg_to_reg(*target_reg, temp_reg.reg);
+//                break;
+//            }
+//            case cast_mode_t::float_extend:
+//            case cast_mode_t::float_truncate:
+//            case cast_mode_t::integer_to_float:
+//            case cast_mode_t::float_to_integer: {
+//                instruction_block->convert(*target_reg, temp_reg.reg);
+//                break;
+//            }
+//            default: {
+//                break;
+//            }
+//        }
 
         return true;
     }

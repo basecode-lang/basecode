@@ -189,16 +189,6 @@ namespace basecode::compiler {
         return true;
     }
 
-    void session::free_variable(
-            compiler::session& session,
-            const std::string& name) {
-        auto var = variable(name);
-        if (var != nullptr) {
-            var->make_dormant(session);
-            _variables.erase(name);
-        }
-    }
-
     bool session::type_check() {
         auto identifiers = _elements.find_by_type(element_type_t::identifier);
         for (auto identifier : identifiers) {
@@ -396,29 +386,6 @@ namespace basecode::compiler {
         return _ast_evaluator;
     }
 
-    variable_t* session::allocate_variable(
-            const std::string& name,
-            compiler::type* type,
-            identifier_usage_t usage,
-            vm::stack_frame_entry_t* frame_entry) {
-        auto var = variable(name);
-        if (var != nullptr)
-            return var;
-
-        auto it = _variables.insert(std::make_pair(
-            name,
-            variable_t {
-                .name = name,
-                .written = false,
-                .usage = usage,
-                .requires_read = false,
-                .address_loaded = false,
-                .type = type,
-                .frame_entry = frame_entry,
-            }));
-        return it.second ? &it.first->second : nullptr;
-    }
-
     void session::disassemble(FILE* file) {
         _assembler.disassemble();
         if (file != nullptr) {
@@ -559,13 +526,6 @@ namespace basecode::compiler {
         return _source_file_stack.top();
     }
 
-    variable_t* session::variable(const std::string& name) {
-        const auto it = _variables.find(name);
-        if (it == _variables.end())
-            return nullptr;
-        return &it->second;
-    }
-
     std::vector<common::source_file*> session::source_files() {
         std::vector<common::source_file*> list {};
         for (auto& it : _source_files) {
@@ -589,49 +549,37 @@ namespace basecode::compiler {
         _source_file_stack.push(source_file);
     }
 
-    variable_t* session::variable_for_element(compiler::element* element) {
-        if (element == nullptr)
-            return nullptr;
+    compiler::variable* session::variable(compiler::element* element) {
+        compiler::element* target_element = element;
+
         switch (element->element_type()) {
-            case element_type_t::identifier: {
-                auto identifier = dynamic_cast<compiler::identifier*>(element);
-                return variable(identifier->symbol()->name());
-            }
-            case element_type_t::string_literal: {
-                auto string_literal = dynamic_cast<compiler::string_literal*>(element);
-                return variable(string_literal->label_name());
-            }
             case element_type_t::identifier_reference: {
-                auto identifier = dynamic_cast<compiler::identifier_reference*>(element)->identifier();
-                return variable(identifier->symbol()->name());
+                auto ref = dynamic_cast<compiler::identifier_reference*>(element);
+                target_element = ref->identifier();
+                break;
             }
-            default:
-                return nullptr;
+            default: {
+                break;
+            }
         }
+
+        auto it = _variables.find(target_element->id());
+        if (it == _variables.end()) {
+            compiler::variable var(*this, target_element);
+            if (!var.initialize())
+                return nullptr;
+
+            auto new_it = _variables.insert(std::make_pair(
+                target_element->id(),
+                var));
+            return &new_it.first->second;
+        }
+
+        return &it->second;
     }
 
     common::id_t session::intern_string(compiler::string_literal* literal) {
         return _interned_strings.intern(literal);
-    }
-
-    variable_t* session::emit_and_init_element(compiler::element* element) {
-        auto var = variable_for_element(element);
-        if (var == nullptr) {
-            error(
-                element,
-                "P051",
-                fmt::format(
-                    "missing assembler variable for {}.",
-                    element->label_name()),
-                element->location());
-            return nullptr;
-        }
-
-        var->make_live(*this);
-        element->emit(*this);
-        var->init(*this);
-
-        return var;
     }
 
     void session::write_code_dom_graph(const boost::filesystem::path& path) {

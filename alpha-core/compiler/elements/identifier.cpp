@@ -36,25 +36,6 @@ namespace basecode::compiler {
         return true;
     }
 
-    bool identifier::on_emit(compiler::session& session) {
-        if (_type_ref->type()->element_type() == element_type_t::namespace_type)
-            return true;
-
-//        auto stack_frame = session.stack_frame();
-//
-//        vm::stack_frame_entry_t* frame_entry = nullptr;
-//        if (stack_frame != nullptr)
-//            frame_entry = stack_frame->find_up(_symbol->name());
-//
-//        session.allocate_variable(
-//            _symbol->name(),
-//            _type_ref->type(),
-//            _usage,
-//            frame_entry);
-
-        return true;
-    }
-
     bool identifier::inferred_type() const {
         return _inferred_type;
     }
@@ -71,10 +52,6 @@ namespace basecode::compiler {
         return _usage;
     }
 
-    compiler::type_reference* identifier::type_ref() {
-        return _type_ref;
-    }
-
     bool identifier::on_as_bool(bool& value) const {
         if (_initializer == nullptr)
             return false;
@@ -89,10 +66,18 @@ namespace basecode::compiler {
         return _initializer;
     }
 
+    compiler::type_reference* identifier::type_ref() {
+        return _type_ref;
+    }
+
     bool identifier::on_as_float(double& value) const {
         if (_initializer == nullptr)
             return false;
         return _initializer->as_float(value);
+    }
+
+    bool identifier::on_emit(compiler::session& session) {
+        return true;
     }
 
     void identifier::type_ref(compiler::type_reference* t) {

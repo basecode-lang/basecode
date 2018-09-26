@@ -98,10 +98,6 @@ namespace basecode::compiler {
             compiler::session& session,
             infer_type_result_t& result);
 
-        element_register_t register_for(
-            compiler::session& session,
-            element* e);
-
         virtual bool on_is_constant() const;
 
         virtual bool on_as_bool(bool& value) const;

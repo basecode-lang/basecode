@@ -527,21 +527,21 @@ namespace basecode::compiler {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    struct variable_t;
+//    struct variable_t;
     class session;
 
     // XXX: need to revisit this for refactoring
-    struct element_register_t {
-        ~element_register_t();
-
-        vm::op_sizes size() const;
-
-        bool valid = false;
-        bool clean_up = false;
-        vm::register_t reg;
-        variable_t* var = nullptr;
-        compiler::session* session = nullptr;
-    };
+//    struct element_register_t {
+//        ~element_register_t();
+//
+//        vm::op_sizes size() const;
+//
+//        bool valid = false;
+//        bool clean_up = false;
+//        vm::register_t reg;
+//        variable_t* var = nullptr;
+//        compiler::session* session = nullptr;
+//    };
 
     ///////////////////////////////////////////////////////////////////////////
 

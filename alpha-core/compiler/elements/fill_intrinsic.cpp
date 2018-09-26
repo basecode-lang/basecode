@@ -46,38 +46,38 @@ namespace basecode::compiler {
         auto value_arg = args[1];
         auto length_arg = args[2];
 
-        auto dest_arg_reg = register_for(session, dest_arg);
-        if (dest_arg_reg.var != nullptr) {
-            dest_arg_reg.clean_up = true;
-        }
-
-        assembler.push_target_register(dest_arg_reg.reg);
-        dest_arg->emit(session);
-        assembler.pop_target_register();
-
-        auto value_arg_reg = register_for(session, value_arg);
-        if (value_arg_reg.var != nullptr) {
-            value_arg_reg.clean_up = true;
-        }
-
-        assembler.push_target_register(value_arg_reg.reg);
-        value_arg->emit(session);
-        assembler.pop_target_register();
-
-        auto length_arg_reg = register_for(session, length_arg);
-        if (length_arg_reg.var != nullptr) {
-            length_arg_reg.clean_up = true;
-        }
-
-        assembler.push_target_register(length_arg_reg.reg);
-        length_arg->emit(session);
-        assembler.pop_target_register();
-
-        instruction_block->fill(
-            vm::op_sizes::byte,
-            dest_arg_reg.reg,
-            value_arg_reg.reg,
-            length_arg_reg.reg);
+//        auto dest_arg_reg = register_for(session, dest_arg);
+//        if (dest_arg_reg.var != nullptr) {
+//            dest_arg_reg.clean_up = true;
+//        }
+//
+//        assembler.push_target_register(dest_arg_reg.reg);
+//        dest_arg->emit(session);
+//        assembler.pop_target_register();
+//
+//        auto value_arg_reg = register_for(session, value_arg);
+//        if (value_arg_reg.var != nullptr) {
+//            value_arg_reg.clean_up = true;
+//        }
+//
+//        assembler.push_target_register(value_arg_reg.reg);
+//        value_arg->emit(session);
+//        assembler.pop_target_register();
+//
+//        auto length_arg_reg = register_for(session, length_arg);
+//        if (length_arg_reg.var != nullptr) {
+//            length_arg_reg.clean_up = true;
+//        }
+//
+//        assembler.push_target_register(length_arg_reg.reg);
+//        length_arg->emit(session);
+//        assembler.pop_target_register();
+//
+//        instruction_block->fill(
+//            vm::op_sizes::byte,
+//            dest_arg_reg.reg,
+//            value_arg_reg.reg,
+//            length_arg_reg.reg);
 
         return true;
     }

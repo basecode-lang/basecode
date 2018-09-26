@@ -62,14 +62,14 @@ namespace basecode::compiler {
 
         bool initialize();
 
+        bool allocate_reg(
+            vm::register_t& reg,
+            compiler::element* element);
+
         bool emit_to_temp(
             compiler::element* element,
             vm::op_sizes reg_size,
             vm::register_type_t reg_type);
-
-        void free_variable(
-            compiler::session& session,
-            const std::string& name);
 
         element_map& elements();
 
@@ -84,16 +84,6 @@ namespace basecode::compiler {
         compiler::program& program();
 
         void disassemble(FILE* file);
-
-        variable_t* allocate_variable(
-            const std::string& name,
-            compiler::type* type,
-            identifier_usage_t usage,
-            vm::stack_frame_entry_t* frame_entry = nullptr);
-
-        bool allocate_reg(
-            vm::register_t& reg,
-            compiler::element* element);
 
         bool emit_interned_strings();
 
@@ -111,8 +101,6 @@ namespace basecode::compiler {
 
         common::source_file* current_source_file();
 
-        variable_t* variable(const std::string& name);
-
         std::vector<common::source_file*> source_files();
 
         const compiler::scope_manager& scope_manager() const;
@@ -121,9 +109,7 @@ namespace basecode::compiler {
 
         void push_source_file(common::source_file* source_file);
 
-        variable_t* variable_for_element(compiler::element* element);
-
-        variable_t* emit_and_init_element(compiler::element* element);
+        compiler::variable* variable(compiler::element* element);
 
         common::id_t intern_string(compiler::string_literal* literal);
 
@@ -142,11 +128,11 @@ namespace basecode::compiler {
         common::source_file* find_source_file(const boost::filesystem::path& path);
 
     private:
-        bool type_check();
-
         void raise_phase(
             session_compile_phase_t phase,
             const boost::filesystem::path& source_file);
+
+        bool type_check();
 
         bool resolve_unknown_types();
 
@@ -173,8 +159,8 @@ namespace basecode::compiler {
         string_intern_map _interned_strings {};
         compiler::scope_manager _scope_manager;
         std::stack<common::source_file*> _source_file_stack {};
-        std::unordered_map<std::string, variable_t> _variables {};
         std::map<std::string, common::source_file> _source_files {};
+        std::unordered_map<common::id_t, compiler::variable> _variables {};
         std::unordered_map<common::id_t, vm::label_ref_t*> _type_info_labels {};
     };
 

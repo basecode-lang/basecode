@@ -80,14 +80,14 @@ namespace basecode::compiler {
                 case element_type_t::boolean_literal:
                 case element_type_t::integer_literal:
                 case element_type_t::identifier_reference: {
-                    auto arg_reg = register_for(session, arg);
-                    if (arg_reg.var != nullptr) {
-                        arg_reg.clean_up = true;
-                    }
-                    assembler.push_target_register(arg_reg.reg);
-                    arg->emit(session);
-                    assembler.pop_target_register();
-                    instruction_block->push(arg_reg.reg);
+//                    auto arg_reg = register_for(session, arg);
+//                    if (arg_reg.var != nullptr) {
+//                        arg_reg.clean_up = true;
+//                    }
+//                    assembler.push_target_register(arg_reg.reg);
+//                    arg->emit(session);
+//                    assembler.pop_target_register();
+//                    instruction_block->push(arg_reg.reg);
                     break;
                 }
                 default:

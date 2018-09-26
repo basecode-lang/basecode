@@ -73,18 +73,18 @@ namespace basecode::compiler {
         auto target_reg = assembler.current_target_register();
         auto instruction_block = assembler.current_block();
 
-        auto temp_reg = register_for(session, _expression);
-        if (!temp_reg.valid)
-            return false;
-
-        assembler.push_target_register(temp_reg.reg);
-        _expression->emit(session);
-        assembler.pop_target_register();
-
-        instruction_block->comment(
-            fmt::format("transmute<{}>", _type_ref->symbol().name),
-            4);
-        instruction_block->move_reg_to_reg(*target_reg, temp_reg.reg);
+//        auto temp_reg = register_for(session, _expression);
+//        if (!temp_reg.valid)
+//            return false;
+//
+//        assembler.push_target_register(temp_reg.reg);
+//        _expression->emit(session);
+//        assembler.pop_target_register();
+//
+//        instruction_block->comment(
+//            fmt::format("transmute<{}>", _type_ref->symbol().name),
+//            4);
+//        instruction_block->move_reg_to_reg(*target_reg, temp_reg.reg);
 
         return true;
     }

@@ -134,64 +134,6 @@ namespace basecode::compiler {
         return on_as_bool(value);
     }
 
-    element_register_t element::register_for(
-            compiler::session& session,
-            element* e) {
-        element_register_t result {
-            .session = &session
-        };
-
-        auto var = session.variable_for_element(e);
-        if (var != nullptr) {
-            var->make_live(session);
-
-            result.var = var;
-            result.var->read(session);
-            result.valid = true;
-            result.reg = var->value_reg.reg;
-
-            // XXX: this if condition is a HACK for literal strings
-            //      need to fix!
-            if (var->address_reg.allocated && var->address_offset != 0) {
-                result.reg = var->address_reg.reg;
-            } else {
-                result.reg = result.var->value_reg.reg;
-            }
-        } else {
-            infer_type_result_t infer_type_result;
-            if (!e->infer_type(session, infer_type_result)) {
-                session.error(
-                    e,
-                    "P052",
-                    "unable to infer type.",
-                    e->location());
-                return result;
-            }
-
-            vm::register_t reg;
-            reg.size = vm::op_size_for_byte_size(infer_type_result.inferred_type->size_in_bytes());
-
-            if (infer_type_result.inferred_type->number_class() == type_number_class_t::floating_point)
-                reg.type = vm::register_type_t::floating_point;
-            else
-                reg.type = vm::register_type_t::integer;
-
-            if (!session.assembler().allocate_reg(reg)) {
-                session.error(
-                    e,
-                    "P052",
-                    "assembler registers exhausted.",
-                    e->location());
-            } else {
-                result.reg = reg;
-                result.valid = true;
-                result.clean_up = true;
-            }
-        }
-
-        return result;
-    }
-
     bool element::on_as_bool(bool& value) const {
         return false;
     }
