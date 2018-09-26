@@ -251,24 +251,11 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             const std::string& value) {
         auto& scope_manager = _session.scope_manager();
-
         auto literal = new compiler::string_literal(
             scope_manager.current_module(),
             parent_scope,
             value);
         _session.elements().add(literal);
-
-        auto& interned_strings = scope_manager.interned_string_literals();
-        auto it = interned_strings.find(value);
-        if (it != interned_strings.end()) {
-            auto& list = it->second;
-            list.emplace_back(literal);
-        } else {
-            string_literal_list_t list {};
-            list.emplace_back(literal);
-            interned_strings.insert(std::make_pair(value, list));
-        }
-
         return literal;
     }
 

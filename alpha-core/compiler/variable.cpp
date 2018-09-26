@@ -9,8 +9,8 @@
 //
 // ----------------------------------------------------------------------------
 
+#include "variable.h"
 #include "elements/type.h"
-#include "assembly_variable.h"
 
 namespace basecode::compiler {
 

@@ -22,13 +22,14 @@
 #include <parser/parser.h>
 #include <boost/filesystem.hpp>
 #include <common/source_file.h>
+#include "variable.h"
 #include "element_map.h"
 #include "scope_manager.h"
 #include "ast_evaluator.h"
 #include "compiler_types.h"
 #include "element_builder.h"
 #include "elements/program.h"
-#include "assembly_variable.h"
+#include "string_intern_map.h"
 
 namespace basecode::compiler {
 
@@ -94,6 +95,8 @@ namespace basecode::compiler {
             vm::register_t& reg,
             compiler::element* element);
 
+        bool emit_interned_strings();
+
         vm::stack_frame_t* stack_frame();
 
         const element_map& elements() const;
@@ -122,6 +125,8 @@ namespace basecode::compiler {
 
         variable_t* emit_and_init_element(compiler::element* element);
 
+        common::id_t intern_string(compiler::string_literal* literal);
+
         void type_info_label(compiler::type* type, vm::label_ref_t* label);
 
         compiler::module* compile_module(common::source_file* source_file);
@@ -129,6 +134,8 @@ namespace basecode::compiler {
         syntax::ast_node_shared_ptr parse(common::source_file* source_file);
 
         syntax::ast_node_shared_ptr parse(const boost::filesystem::path& path);
+
+        std::string intern_data_label(compiler::string_literal* literal) const;
 
         common::source_file* add_source_file(const boost::filesystem::path& path);
 
@@ -163,6 +170,7 @@ namespace basecode::compiler {
         ast_evaluator _ast_evaluator;
         session_options_t _options {};
         vm::stack_frame_t _stack_frame;
+        string_intern_map _interned_strings {};
         compiler::scope_manager _scope_manager;
         std::stack<common::source_file*> _source_file_stack {};
         std::unordered_map<std::string, variable_t> _variables {};

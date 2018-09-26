@@ -56,6 +56,8 @@ namespace basecode::compiler {
 
         element_list_t* variable_section(vm::section_t section);
 
+        void intern_string_literals(compiler::session& session);
+
         bool group_identifiers_by_section(compiler::session& session);
 
     private:

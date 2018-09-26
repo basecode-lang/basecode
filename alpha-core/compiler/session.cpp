@@ -297,6 +297,10 @@ namespace basecode::compiler {
         return _program;
     }
 
+    bool session::emit_interned_strings() {
+        return _interned_strings.emit(*this);
+    }
+
     void session::initialize_core_types() {
         auto parent_scope = _scope_manager.current_scope();
 
@@ -527,7 +531,6 @@ namespace basecode::compiler {
     }
 
     void session::initialize_built_in_procedures() {
-//        auto parent_scope = _scope_manager.current_scope();
     }
 
     common::source_file* session::pop_source_file() {
@@ -605,6 +608,10 @@ namespace basecode::compiler {
             default:
                 return nullptr;
         }
+    }
+
+    common::id_t session::intern_string(compiler::string_literal* literal) {
+        return _interned_strings.intern(literal);
     }
 
     variable_t* session::emit_and_init_element(compiler::element* element) {
@@ -710,6 +717,10 @@ namespace basecode::compiler {
             source_file = add_source_file(path);
         }
         return parse(source_file);
+    }
+
+    std::string session::intern_data_label(compiler::string_literal* literal) const {
+        return _interned_strings.data_label(literal);
     }
 
     common::source_file* session::add_source_file(const boost::filesystem::path& path) {

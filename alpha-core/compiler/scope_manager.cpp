@@ -328,10 +328,6 @@ namespace basecode::compiler {
         return _identifiers_with_unknown_types;
     }
 
-    interned_string_literal_list_t& scope_manager::interned_string_literals() {
-        return _interned_string_literals;
-    }
-
     identifier_reference_list_t& scope_manager::unresolved_identifier_references() {
         return _unresolved_identifier_references;
     }

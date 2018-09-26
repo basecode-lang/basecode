@@ -66,7 +66,7 @@ namespace basecode::compiler {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    class assembly_variable {
+    class variable {
     public:
 
     private:

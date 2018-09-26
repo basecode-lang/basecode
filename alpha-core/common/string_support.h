@@ -77,6 +77,8 @@ namespace basecode::common {
         size_t right_pad = 0,
         const char& fill = ' ');
 
+    std::string escaped_string(const std::string& value);
+
     std::pair<std::string, std::string> size_to_units(size_t size);
 
     std::string list_to_string(const std::vector<std::string>& list, const char& sep = ',');

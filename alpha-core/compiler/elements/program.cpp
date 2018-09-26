@@ -15,8 +15,8 @@
 #include <common/defer.h>
 #include <common/bytes.h>
 #include <compiler/session.h>
+#include <compiler/variable.h>
 #include <vm/instruction_block.h>
-#include <compiler/assembly_variable.h>
 #include "type.h"
 #include "block.h"
 #include "module.h"
@@ -58,8 +58,6 @@ namespace basecode::compiler {
             compiler::element* e,
             vm::instruction_block* instruction_block) {
         auto& assembler = session.assembler();
-        auto& scope_manager = session.scope_manager();
-        auto& interned_strings = scope_manager.interned_string_literals();
 
         switch (e->element_type()) {
             case element_type_t::array_constructor: {
@@ -69,38 +67,6 @@ namespace basecode::compiler {
                 auto var_label = assembler.make_label(array_constructor->label_name());
                 instruction_block->label(var_label);
                 // XXX: emit data
-                break;
-            }
-            case element_type_t::string_literal: {
-                auto string_literal = dynamic_cast<compiler::string_literal*>(e);
-                instruction_block->blank_line();
-                instruction_block->align(4);
-
-                auto it = interned_strings.find(string_literal->value());
-                if (it != interned_strings.end()) {
-                    string_literal_list_t& str_list = it->second;
-                    for (auto str : str_list) {
-                        auto var_label = assembler.make_label(str->label_name());
-                        instruction_block->label(var_label);
-
-                        auto var = session.allocate_variable(
-                            var_label->name(),
-                            _string_type,
-                            identifier_usage_t::heap,
-                            nullptr);
-                        if (var != nullptr)
-                            var->address_offset = 4;
-                    }
-                }
-
-                instruction_block->comment(
-                    fmt::format("\"{}\"", string_literal->value()),
-                    4);
-                instruction_block->string(
-                    nullptr,
-                    nullptr,
-                    string_literal->escaped_value());
-
                 break;
             }
             case element_type_t::identifier: {
@@ -242,12 +208,16 @@ namespace basecode::compiler {
             .name = "string"
         });
 
+        intern_string_literals(session);
         initialize_variable_sections();
 
         if (!emit_bootstrap_block(session))
             return false;
 
         if (!emit_type_info(session))
+            return false;
+
+        if (!session.emit_interned_strings())
             return false;
 
         if (!emit_sections(session))
@@ -311,6 +281,7 @@ namespace basecode::compiler {
         }
 
         for (const auto& kvp : used_types) {
+            type_info_block->blank_line();
             type_info_block->align(4);
             auto label_name = fmt::format(
                 "_ti_name_lit_{}",
@@ -471,10 +442,15 @@ namespace basecode::compiler {
         return &it->second;
     }
 
+    void program::intern_string_literals(compiler::session& session) {
+        auto literals = session.elements().find_by_type(element_type_t::string_literal);
+        for (auto literal : literals)
+            session.intern_string(dynamic_cast<compiler::string_literal*>(literal));
+    }
+
     bool program::group_identifiers_by_section(compiler::session& session) {
         auto& scope_manager = session.scope_manager();
 
-        auto& interned_strings = scope_manager.interned_string_literals();
         auto ro_list = variable_section(vm::section_t::ro_data);
         auto data_list = variable_section(vm::section_t::data);
 
@@ -509,10 +485,6 @@ namespace basecode::compiler {
             } else {
                 data_list->emplace_back(var);
             }
-        }
-
-        for (const auto& it : interned_strings) {
-            ro_list->emplace_back(it.second.front());
         }
 
         return true;

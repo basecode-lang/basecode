@@ -96,6 +96,7 @@ add_library(
 
     compiler/compiler_types.h
     compiler/session.cpp compiler/session.h
+    compiler/variable.cpp compiler/variable.h
     compiler/element_map.cpp compiler/element_map.h
     compiler/elements/type.cpp compiler/elements/type.h
     compiler/elements/cast.cpp compiler/elements/cast.h
@@ -112,8 +113,8 @@ add_library(
     compiler/elements/comment.cpp compiler/elements/comment.h
     compiler/elements/element.cpp compiler/elements/element.h
     compiler/elements/program.cpp compiler/elements/program.h
+    compiler/string_intern_map.cpp compiler/string_intern_map.h
     compiler/elements/any_type.cpp compiler/elements/any_type.h
-    compiler/assembly_variable.cpp compiler/assembly_variable.h
     compiler/elements/rune_type.cpp compiler/elements/rune_type.h
     compiler/elements/intrinsic.cpp compiler/elements/intrinsic.h
     compiler/elements/transmute.cpp compiler/elements/transmute.h

@@ -20,7 +20,6 @@ namespace basecode::compiler {
 
     using block_stack_t = std::stack<compiler::block*>;
     using module_stack_t = std::stack<compiler::module*>;
-    using interned_string_literal_list_t = std::unordered_map<std::string, string_literal_list_t>;
 
     using block_visitor_callable = std::function<bool (compiler::block*)>;
     using scope_visitor_callable = std::function<compiler::element* (compiler::block*)>;
@@ -90,8 +89,6 @@ namespace basecode::compiler {
 
         identifier_list_t& identifiers_with_unknown_types();
 
-        interned_string_literal_list_t& interned_string_literals();
-
         identifier_reference_list_t& unresolved_identifier_references();
 
         compiler::module* find_module(compiler::element* element) const;
@@ -106,9 +103,7 @@ namespace basecode::compiler {
         module_stack_t _module_stack {};
         block_stack_t _top_level_stack {};
         identifier_list_t _identifiers_with_unknown_types {};
-        interned_string_literal_list_t _interned_string_literals {};
         identifier_reference_list_t _unresolved_identifier_references {};
     };
 
 };
-

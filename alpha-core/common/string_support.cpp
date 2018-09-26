@@ -58,6 +58,34 @@ namespace basecode::common {
         return text;
     }
 
+    std::string escaped_string(const std::string& value) {
+        std::stringstream stream;
+        bool escaped = false;
+        for (auto& ch : value) {
+            if (ch == '\\') {
+                escaped = true;
+            } else {
+                if (escaped) {
+                    if (ch == 'n')
+                        stream << "\n";
+                    else if (ch == 'r')
+                        stream << "\r";
+                    else if (ch == 't')
+                        stream << "\t";
+                    else if (ch == '\\')
+                        stream << "\\";
+                    else if (ch == '0')
+                        stream << '\0';
+
+                    escaped = false;
+                } else {
+                    stream << ch;
+                }
+            }
+        }
+        return stream.str();
+    }
+
     std::pair<std::string, std::string> size_to_units(size_t size) {
         auto i = 0;
         const char* units[] = {"bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"};
