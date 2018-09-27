@@ -27,10 +27,7 @@
 
 // 15. assembler label names need to be fully qualified
 
-@library "alpha-core";
-#foreign print ::= proc(format: string, values: ...any) @alias "fmt_print";
-
-preload ::= module("preload.bc");
+support ::= module("support/module.bc");
 
 //
 //

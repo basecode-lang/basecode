@@ -1,3 +1,5 @@
+support ::= module("support/module.bc");
+
 a: []string;
 b: [8]u16;
 c: [8][8]u8;

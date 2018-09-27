@@ -627,9 +627,9 @@ namespace basecode::compiler {
         raise_phase(session_compile_phase_t::start, source_file->path());
         defer({
             if (_result.is_failed()) {
-              raise_phase(session_compile_phase_t::failed, source_file->path());
+                raise_phase(session_compile_phase_t::failed, source_file->path());
             } else {
-              raise_phase(session_compile_phase_t::success, source_file->path());
+                raise_phase(session_compile_phase_t::success, source_file->path());
             }
         });
 

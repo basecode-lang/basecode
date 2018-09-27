@@ -1,3 +1,5 @@
+support ::= module("support/module.bc");
+
 PI ::= cast<f64>(3.1415926535);
 
 bar := 8;

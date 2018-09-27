@@ -64,7 +64,11 @@ namespace basecode::vm {
                             auto offset = 0;
                             for (auto v : data_def->values) {
                                 if (v.which() != 0) {
-                                    r.add_message("A031", "unexpected label_ref_t*", true);
+                                    auto label_ref = boost::get<label_ref_t*>(v);
+                                    r.add_message(
+                                        "A031",
+                                        fmt::format("unexpected label_ref_t*: {}", label_ref->name),
+                                        true);
                                     continue;
                                 }
                                 _terp->write(
@@ -734,9 +738,10 @@ namespace basecode::vm {
             if (label_ref->resolved == nullptr) {
                 r.add_message(
                     "A001",
-                    fmt::format("unable to resolve label: {}", label_ref->name),
+                    fmt::format(
+                        "unable to resolve label: {}",
+                        label_ref->name),
                     true);
-                return false;
             }
         }
 
@@ -749,7 +754,8 @@ namespace basecode::vm {
                             auto& operand = inst->operands[i];
                             if (operand.is_unresolved()) {
                                 auto label_ref = find_label_ref(static_cast<uint32_t>(operand.value.u));
-                                if (label_ref != nullptr) {
+                                if (label_ref != nullptr
+                                &&  label_ref->resolved != nullptr) {
                                     operand.value.u = label_ref->resolved->address();
                                     operand.clear_unresolved();
                                 }

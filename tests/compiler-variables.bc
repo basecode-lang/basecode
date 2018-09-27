@@ -1,1 +1,5 @@
+support ::= module("support/module.bc");
+
 text := "hello world!";
+
+support::print("%s\n", text);

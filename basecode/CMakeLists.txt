@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.11)
-project(alpha-core)
+project(basecode)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -26,12 +26,12 @@ endif()
 
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-unused-private-field -Wno-unknown-pragmas -Wno-inconsistent-missing-override" CACHE STRING "compile flags" FORCE)
-    message(STATUS "alpha-core using clang flags: ${CMAKE_CXX_FLAGS}")
+    message(STATUS "${PROJECT_NAME} using clang flags: ${CMAKE_CXX_FLAGS}")
 elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-unknown-pragmas -Wno-parentheses" CACHE STRING "compile flags" FORCE)
-    message(STATUS "alpha-core using gcc flags: ${CMAKE_CXX_FLAGS}")
+    message(STATUS "${PROJECT_NAME} using gcc flags: ${CMAKE_CXX_FLAGS}")
 else ()
-    message(FATAL_ERROR "alpha-core unknown compiler: ${CMAKE_CXX_COMPILER_ID}")
+    message(FATAL_ERROR "${PROJECT_NAME} unknown compiler: ${CMAKE_CXX_COMPILER_ID}")
 endif()
 
 if (WIN32)
@@ -174,7 +174,7 @@ add_library(
     compiler/elements/align_of_intrinsic.cpp compiler/elements/align_of_intrinsic.h
     compiler/elements/procedure_instance.cpp compiler/elements/procedure_instance.h
     compiler/elements/address_of_intrinsic.cpp compiler/elements/address_of_intrinsic.h
-    compiler/elements/identifier_reference.cpp compiler/elements/identifier_reference.h)
+    compiler/elements/identifier_reference.cpp compiler/elements/identifier_reference.h include/basecode/compiler.h)
 target_link_libraries(
     ${PROJECT_NAME}
     fmt-header-only

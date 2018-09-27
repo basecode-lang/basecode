@@ -1,5 +1,4 @@
-@library "alpha-core";
-#foreign print ::= proc(format: string, values: ...any) @alias "fmt_print";
+support ::= module("support/module.bc");
 
 i: u32 := 1;
 

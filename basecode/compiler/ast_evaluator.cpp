@@ -468,6 +468,9 @@ namespace basecode::compiler {
                 if (init_expr->is_constant()) {
                     init = builder.make_initializer(scope, init_expr);
                 }
+            } else {
+                if (_session.result().is_failed())
+                    return nullptr;
             }
         }
 

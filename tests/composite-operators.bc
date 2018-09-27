@@ -1,3 +1,4 @@
+support ::= module("support/module.bc");
 
 string ::= struct {
     length: u32;

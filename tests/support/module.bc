@@ -9,15 +9,12 @@
 //
 // ----------------------------------------------------------------------------
 
-basecode::linear ::= ns {
-    vector3 ::= struct {
-        x: f64;
-        y: f64;
-        z: f64;
+@library "basecode";
+#foreign print ::= proc(format: string, values: ...any) @alias "fmt_print";
 
-        transpose ::= proc(self: ^vector3): vector3 {
-            new_vector: vector3;
-            return new_vector;
-        };
+assert ::= proc(predicate: bool, message: string) {
+    if !predicate {
+        print("%s\n", message);
+        #assembly {{ exit }};
     };
 };

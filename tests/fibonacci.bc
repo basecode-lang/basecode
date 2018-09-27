@@ -9,10 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
-preload := module("preload.bc");
-
-@library "alpha-core";
-#foreign print := proc(format:string, values:...any) @alias "fmt_print";
+support ::= module("support/module.bc");
 
 print("%s\n", "at the very top!");
 
@@ -69,9 +66,6 @@ alpha::compiler::examples ::= ns {
     print("what the hell am i doing here?");
 
     is_this_true := count == (max == 256) && count == (max / 2);
-
-    import basecode::linear from preload;
-    point: vector3;
 
     bar := proc() {
         bing(256);

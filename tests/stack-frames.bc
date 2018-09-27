@@ -1,4 +1,5 @@
 // module scope
+support ::= module("support/module.bc");
 
 a: bool := true;
 

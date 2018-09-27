@@ -62,8 +62,8 @@ include_directories(ext/utf8proc-2.2.0)
 include_directories(ext/ya_getopt-1.0.0)
 
 # projects
-add_subdirectory(alpha-core)
-add_subdirectory(bac)
+add_subdirectory(basecode)
+add_subdirectory(bc)
 
 # all_unit_tests target
 get_property(test_targets GLOBAL PROPERTY UNIT_TEST_TARGETS)
@@ -77,10 +77,10 @@ add_custom_command(
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
 
 # custom post bulid steps
-add_custom_target(alpha-bootstrap-configured DEPENDS dummy-target alpha-core bac)
-add_dependencies(alpha-bootstrap-configured all-unit-tests)
+add_custom_target(basecode-configured DEPENDS dummy-target basecode bc)
+add_dependencies(basecode-configured all-unit-tests)
 add_custom_command(
-        TARGET alpha-bootstrap-configured
+        TARGET basecode-configured
         COMMAND ${CMAKE_COMMAND} -E echo "copy_directory: ${PROJECT_SOURCE_DIR}/tests"
         COMMAND ${CMAKE_COMMAND} -E copy_directory ${PROJECT_SOURCE_DIR}/tests ${PROJECT_BINARY_DIR}/tests
 )
