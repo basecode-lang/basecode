@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <vm/instruction_block.h>
 #include "session.h"
 #include "variable.h"
 #include "elements/type.h"

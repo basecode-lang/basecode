@@ -11,37 +11,10 @@
 
 #pragma once
 
-#include <string>
-#include <vector>
-#include <unordered_map>
 #include "symbol.h"
+#include "vm_types.h"
 
 namespace basecode::vm {
-
-    class segment;
-
-    using segment_list_t = std::vector<segment*>;
-
-    enum class segment_type_t {
-        code,
-        data,
-        stack,
-        constant,
-    };
-
-    static inline std::unordered_map<segment_type_t, std::string> s_segment_type_names = {
-        {segment_type_t::code,     "code"},
-        {segment_type_t::data,     "data"},
-        {segment_type_t::stack,    "stack"},
-        {segment_type_t::constant, "constant"}
-    };
-
-    static inline std::string segment_type_name(segment_type_t type) {
-        auto it = s_segment_type_names.find(type);
-        if (it == s_segment_type_names.end())
-            return "unknown";
-        return it->second;
-    }
 
     class segment {
     public:

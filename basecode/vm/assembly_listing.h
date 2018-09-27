@@ -11,43 +11,9 @@
 
 #pragma once
 
-#include <stack>
-#include <string>
-#include <vector>
-#include <unordered_map>
-#include <boost/filesystem.hpp>
+#include "vm_types.h"
 
 namespace basecode::vm {
-
-    struct listing_source_line_t {
-        uint64_t address = 0;
-        std::string source {};
-    };
-
-    struct listing_source_file_t {
-        void add_source_line(
-                uint64_t address,
-                const std::string& source) {
-            lines.push_back(listing_source_line_t {
-                .address = address,
-                .source = source
-            });
-        }
-
-        void add_blank_lines(
-                uint64_t address,
-                uint16_t count = 1) {
-            for (uint16_t i = 0; i < count; i++) {
-                lines.push_back(listing_source_line_t {
-                    .address = address,
-                    .source = ""
-                });
-            }
-        }
-
-        boost::filesystem::path path;
-        std::vector<listing_source_line_t> lines {};
-    };
 
     class assembly_listing {
     public:

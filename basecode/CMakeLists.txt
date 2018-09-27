@@ -62,6 +62,8 @@ include_directories(
 add_library(
     ${PROJECT_NAME} SHARED
 
+    include/basecode/compiler.h
+
     configure.in.h
     exports.cpp
 
@@ -88,12 +90,14 @@ add_library(
     vm/label.cpp vm/label.h
     vm/symbol.cpp vm/symbol.h
     vm/segment.cpp vm/segment.h
+    vm/vm_types.h vm/vm_types.cpp
     vm/assembler.cpp vm/assembler.h
     vm/stack_frame.cpp vm/stack_frame.h
     vm/assembly_listing.cpp vm/assembly_listing.h
     vm/instruction_block.cpp vm/instruction_block.h
     vm/register_allocator.cpp vm/register_allocator.h
 
+    compiler/elements.h
     compiler/compiler_types.h
     compiler/session.cpp compiler/session.h
     compiler/variable.cpp compiler/variable.h
@@ -174,7 +178,7 @@ add_library(
     compiler/elements/align_of_intrinsic.cpp compiler/elements/align_of_intrinsic.h
     compiler/elements/procedure_instance.cpp compiler/elements/procedure_instance.h
     compiler/elements/address_of_intrinsic.cpp compiler/elements/address_of_intrinsic.h
-    compiler/elements/identifier_reference.cpp compiler/elements/identifier_reference.h include/basecode/compiler.h)
+    compiler/elements/identifier_reference.cpp compiler/elements/identifier_reference.h)
 target_link_libraries(
     ${PROJECT_NAME}
     fmt-header-only

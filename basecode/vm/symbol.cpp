@@ -14,13 +14,13 @@
 namespace basecode::vm {
 
     symbol::symbol(
-        const std::string& name,
-        symbol_type_t type,
-        uint64_t offset,
-        size_t size) : _size(size),
-                       _offset(offset),
-                       _name(name),
-                       _type(type) {
+            const std::string& name,
+            symbol_type_t type,
+            uint64_t offset,
+            size_t size) : _size(size),
+                           _offset(offset),
+                           _name(name),
+                           _type(type) {
     }
 
     void symbol::value(void* v) {

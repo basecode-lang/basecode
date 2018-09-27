@@ -13,9 +13,9 @@
 
 #include <functional>
 #include <parser/ast.h>
+#include <vm/vm_types.h>
 #include <common/id_pool.h>
 #include <common/source_file.h>
-#include <compiler/compiler_types.h>
 #include "element.h"
 
 namespace basecode::compiler {

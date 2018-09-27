@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include "symbol.h"
 #include "segment.h"
 
 namespace basecode::vm {

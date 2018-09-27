@@ -12,7 +12,6 @@
 #pragma once
 
 #include "operator_base.h"
-#include "element_types.h"
 
 namespace basecode::compiler {
 

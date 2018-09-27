@@ -16,9 +16,7 @@
 #include <vector>
 #include <string>
 #include <memory>
-#include <vm/terp.h>
 #include <unordered_map>
-#include <vm/assembler.h>
 #include <parser/token.h>
 #include <common/id_pool.h>
 
@@ -107,7 +105,6 @@ namespace basecode::compiler {
     using attribute_list_t = std::vector<attribute*>;
     using identifier_list_t = std::vector<identifier*>;
     using directive_map_t = std::map<std::string, directive*>;
-    using string_literal_list_t = std::vector<string_literal*>;
     using procedure_type_list_t = std::vector<procedure_type*>;
     using procedure_instance_list_t = std::vector<procedure_instance*>;
     using identifier_reference_list_t = std::vector<identifier_reference*>;
@@ -416,7 +413,7 @@ namespace basecode::compiler {
         }
     }
 
-    static inline bool is_logical_conjuction_operator(operator_type_t op) {
+    static inline bool is_logical_conjunction_operator(operator_type_t op) {
         switch (op) {
             case operator_type_t::logical_or:
             case operator_type_t::logical_and:
@@ -524,24 +521,6 @@ namespace basecode::compiler {
     std::string make_fully_qualified_name(const symbol_element* symbol);
 
     std::string make_fully_qualified_name(const qualified_symbol_t& symbol);
-
-    ///////////////////////////////////////////////////////////////////////////
-
-//    struct variable_t;
-    class session;
-
-    // XXX: need to revisit this for refactoring
-//    struct element_register_t {
-//        ~element_register_t();
-//
-//        vm::op_sizes size() const;
-//
-//        bool valid = false;
-//        bool clean_up = false;
-//        vm::register_t reg;
-//        variable_t* var = nullptr;
-//        compiler::session* session = nullptr;
-//    };
 
     ///////////////////////////////////////////////////////////////////////////
 

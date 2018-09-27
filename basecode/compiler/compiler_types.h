@@ -11,8 +11,12 @@
 
 #pragma once
 
+#include <cstdint>
 #include <functional>
 #include <unordered_map>
+#include <common/rune.h>
+#include <common/result.h>
+#include <common/id_pool.h>
 #include <boost/filesystem.hpp>
 #include "elements/element_types.h"
 

@@ -13,6 +13,7 @@
 #include <common/bytes.h>
 #include <common/string_support.h>
 #include <common/source_location.h>
+#include "label.h"
 #include "assembler.h"
 #include "instruction_block.h"
 

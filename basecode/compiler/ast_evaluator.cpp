@@ -10,69 +10,8 @@
 // ----------------------------------------------------------------------------
 
 #include <compiler/session.h>
-#include <compiler/elements/type.h>
-#include <compiler/elements/cast.h>
-#include <compiler/elements/with.h>
-#include <compiler/elements/label.h>
-#include <compiler/elements/import.h>
-#include <compiler/elements/module.h>
-#include <compiler/elements/spread.h>
-#include <compiler/elements/comment.h>
-#include <compiler/elements/program.h>
-#include <compiler/elements/any_type.h>
-#include <compiler/elements/intrinsic.h>
-#include <compiler/elements/raw_block.h>
-#include <compiler/elements/bool_type.h>
-#include <compiler/elements/attribute.h>
-#include <compiler/elements/directive.h>
-#include <compiler/elements/statement.h>
-#include <compiler/elements/type_info.h>
-#include <compiler/elements/transmute.h>
-#include <compiler/elements/rune_type.h>
-#include <compiler/elements/assignment.h>
-#include <compiler/elements/expression.h>
-#include <compiler/elements/identifier.h>
-#include <compiler/elements/if_element.h>
-#include <compiler/elements/array_type.h>
-#include <compiler/elements/tuple_type.h>
-#include <compiler/elements/for_element.h>
-#include <compiler/elements/declaration.h>
-#include <compiler/elements/initializer.h>
-#include <compiler/elements/module_type.h>
-#include <compiler/elements/string_type.h>
-#include <compiler/elements/nil_literal.h>
-#include <compiler/elements/numeric_type.h>
-#include <compiler/elements/unknown_type.h>
-#include <compiler/elements/pointer_type.h>
-#include <compiler/elements/defer_element.h>
-#include <compiler/elements/break_element.h>
-#include <compiler/elements/while_element.h>
-#include <compiler/elements/argument_list.h>
-#include <compiler/elements/float_literal.h>
-#include <compiler/elements/copy_intrinsic.h>
-#include <compiler/elements/fill_intrinsic.h>
-#include <compiler/elements/type_reference.h>
-#include <compiler/elements/string_literal.h>
-#include <compiler/elements/unary_operator.h>
-#include <compiler/elements/composite_type.h>
-#include <compiler/elements/procedure_type.h>
-#include <compiler/elements/return_element.h>
-#include <compiler/elements/procedure_call.h>
-#include <compiler/elements/namespace_type.h>
-#include <compiler/elements/symbol_element.h>
-#include <compiler/elements/boolean_literal.h>
-#include <compiler/elements/binary_operator.h>
-#include <compiler/elements/integer_literal.h>
-#include <compiler/elements/continue_element.h>
-#include <compiler/elements/module_reference.h>
-#include <compiler/elements/array_constructor.h>
-#include <compiler/elements/character_literal.h>
-#include <compiler/elements/namespace_element.h>
-#include <compiler/elements/size_of_intrinsic.h>
-#include <compiler/elements/procedure_instance.h>
-#include <compiler/elements/identifier_reference.h>
+#include "elements.h"
 #include "ast_evaluator.h"
-#include "element_builder.h"
 #include "element_builder.h"
 
 namespace basecode::compiler {
@@ -960,7 +899,7 @@ namespace basecode::compiler {
         compiler::element* lhs = nullptr;
         compiler::element* rhs = nullptr;
 
-        if (is_logical_conjuction_operator(it->second)) {
+        if (is_logical_conjunction_operator(it->second)) {
             lhs = convert_predicate(context, context.node->lhs.get(), scope);
             rhs = convert_predicate(context, context.node->rhs.get(), scope);
         } else {

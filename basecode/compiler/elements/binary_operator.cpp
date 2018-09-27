@@ -11,6 +11,7 @@
 
 #include <common/defer.h>
 #include <compiler/session.h>
+#include <vm/instruction_block.h>
 #include "type.h"
 #include "element.h"
 #include "program.h"

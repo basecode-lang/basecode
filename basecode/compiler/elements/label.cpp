@@ -11,6 +11,7 @@
 
 #include <vm/assembler.h>
 #include <compiler/session.h>
+#include <vm/instruction_block.h>
 #include "label.h"
 
 namespace basecode::compiler {
@@ -32,9 +33,9 @@ namespace basecode::compiler {
 
     bool label::on_emit(compiler::session& session) {
         auto& assembler = session.assembler();
-        auto instruction_block = assembler.current_block();
-        instruction_block->blank_line();
-        instruction_block->label(assembler.make_label(_name));
+        auto block = assembler.current_block();
+        block->blank_line();
+        block->label(assembler.make_label(_name));
         return true;
     }
 

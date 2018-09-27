@@ -11,6 +11,7 @@
 
 #include <fmt/format.h>
 #include <compiler/session.h>
+#include <vm/instruction_block.h>
 #include "if_element.h"
 
 namespace basecode::compiler {

@@ -11,10 +11,7 @@
 
 #pragma once
 
-#include <cstdint>
-#include <common/result.h>
-#include <common/id_pool.h>
-#include "element_types.h"
+#include <compiler/compiler_types.h>
 
 namespace basecode::compiler {
 

@@ -11,9 +11,8 @@
 
 #pragma once
 
-#include <vm/instruction_block.h>
+#include <vm/vm_types.h>
 #include "operator_base.h"
-#include "element_types.h"
 
 namespace basecode::compiler {
 

@@ -11,24 +11,14 @@
 
 #pragma once
 
-#include <stack>
-#include <vector>
-#include <unordered_map>
-#include <common/result.h>
-#include <common/id_pool.h>
-#include <boost/variant.hpp>
 #include <common/source_file.h>
-#include "terp.h"
+#include "vm_types.h"
 #include "segment.h"
+#include "stack_frame.h"
 #include "assembly_listing.h"
-#include "instruction_block.h"
 #include "register_allocator.h"
 
 namespace basecode::vm {
-
-    class instruction_block;
-
-    ///////////////////////////////////////////////////////////////////////////
 
     struct control_flow_t {
         label_ref_t* exit_label = nullptr;

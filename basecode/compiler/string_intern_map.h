@@ -11,7 +11,7 @@
 
 #pragma once
 
-#include "elements/element_types.h"
+#include "compiler_types.h"
 
 namespace basecode::compiler {
 
