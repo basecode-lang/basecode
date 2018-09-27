@@ -9,7 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
-#include <vm/terp.h>
+#include <vm/ffi.h>
 #include <configure.h>
 #include <compiler/session.h>
 #include <boost/filesystem.hpp>
@@ -185,7 +185,7 @@ namespace basecode::compiler {
     // foreign directive
 
     bool directive::on_execute_foreign(compiler::session& session) {
-        auto& terp = session.terp();
+        auto& ffi = session.ffi();
 
         std::string library_name;
         auto library_attribute = find_attribute("library");
@@ -215,7 +215,7 @@ namespace basecode::compiler {
             << library_name
             << SHARED_LIBRARY_SUFFIX;
         boost::filesystem::path library_path(platform_name.str());
-        auto library = terp.load_shared_library(session.result(), library_path);
+        auto library = ffi.load_shared_library(session.result(), library_path);
         if (library == nullptr) {
             auto msg = session.result().find_code("B062");
             if (msg != nullptr) {
@@ -272,7 +272,7 @@ namespace basecode::compiler {
             }
         }
 
-        auto result = terp.register_foreign_function(session.result(), signature);
+        auto result = ffi.register_function(session.result(), signature);
         if (!result) {
             session.error(
                 this,

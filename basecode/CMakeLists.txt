@@ -86,6 +86,7 @@ add_library(
     parser/parser.cpp parser/parser.h
     parser/ast_formatter.cpp parser/ast_formatter.h
 
+    vm/ffi.cpp vm/ffi.h
     vm/terp.cpp vm/terp.h
     vm/label.cpp vm/label.h
     vm/symbol.cpp vm/symbol.h
@@ -94,6 +95,7 @@ add_library(
     vm/assembler.cpp vm/assembler.h
     vm/stack_frame.cpp vm/stack_frame.h
     vm/assembly_listing.cpp vm/assembly_listing.h
+    vm/default_allocator.cpp vm/default_allocator.h
     vm/instruction_block.cpp vm/instruction_block.h
     vm/register_allocator.cpp vm/register_allocator.h
 

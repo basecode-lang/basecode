@@ -45,7 +45,8 @@ namespace basecode::compiler {
 
     session::session(
             const session_options_t& options,
-            const path_list_t& source_files) : _terp(options.heap_size, options.stack_size),
+            const path_list_t& source_files) : _ffi(options.ffi_heap_size),
+                                               _terp(&_ffi, options.allocator, options.heap_size, options.stack_size),
                                                _builder(*this),
                                                _assembler(&_terp),
                                                _ast_evaluator(*this),
@@ -86,6 +87,10 @@ namespace basecode::compiler {
         element->module()
             ->source_file()
             ->error(_result, code, message, location);
+    }
+
+    vm::ffi& session::ffi() {
+        return _ffi;
     }
 
     bool session::compile() {
@@ -246,8 +251,10 @@ namespace basecode::compiler {
     }
 
     bool session::initialize() {
+        _ffi.initialize(_result);
         _terp.initialize(_result);
         _assembler.initialize(_result);
+
         return !_result.is_failed();
     }
 
@@ -281,6 +288,10 @@ namespace basecode::compiler {
 
     element_builder& session::builder() {
         return _builder;
+    }
+
+    vm::allocator* session::allocator() {
+        return _options.allocator;
     }
 
     compiler::program& session::program() {

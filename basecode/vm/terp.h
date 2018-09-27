@@ -20,450 +20,10 @@
 #include <fmt/format.h>
 #include <unordered_map>
 #include <common/result.h>
-#include <dyncall/dyncall.h>
-#include <dynload/dynload.h>
 #include <boost/filesystem.hpp>
-#include <dyncall/dyncall_struct.h>
-#include <dyncall/dyncall_signature.h>
 #include "vm_types.h"
 
 namespace basecode::vm {
-
-    enum class op_codes : uint8_t {
-        nop = 1,
-        alloc,
-        free,
-        size,
-        load,
-        store,
-        copy,
-        convert,
-        fill,
-        clr,
-        move,
-        moves,
-        movez,
-        push,
-        pop,
-        dup,
-        inc,
-        dec,
-        add,
-        sub,
-        mul,
-        div,
-        mod,
-        neg,
-        shr,
-        shl,
-        ror,
-        rol,
-        and_op,
-        or_op,
-        xor_op,
-        not_op,
-        bis,
-        bic,
-        test,
-        cmp,
-        bz,
-        bnz,
-        tbz,
-        tbnz,
-        bne,
-        beq,
-        bs,
-        bo,
-        bcc,
-        bcs,
-        ba,
-        bae,
-        bb,
-        bbe,
-        bg,
-        bl,
-        bge,
-        ble,
-        seta,
-        setna,
-        setae,
-        setnae,
-        setb,
-        setnb,
-        setbe,
-        setnbe,
-        setc,
-        setnc,
-        setg,
-        setng,
-        setge,
-        setnge,
-        setl,
-        setnl,
-        setle,
-        setnle,
-        sets,
-        setns,
-        seto,
-        setno,
-        setz,
-        setnz,
-        jsr,
-        rts,
-        jmp,
-        swi,
-        swap,
-        trap,
-        ffi,
-        meta,
-        exit,
-    };
-
-    inline static std::map<op_codes, std::string> s_op_code_names = {
-        {op_codes::nop,    "NOP"},
-        {op_codes::alloc,  "ALLOC"},
-        {op_codes::free,   "FREE"},
-        {op_codes::size,   "SIZE"},
-        {op_codes::load,   "LOAD"},
-        {op_codes::store,  "STORE"},
-        {op_codes::copy,   "COPY"},
-        {op_codes::convert,"CVRT"},
-        {op_codes::fill,   "FILL"},
-        {op_codes::clr,    "CLR"},
-        {op_codes::move,   "MOVE"},
-        {op_codes::moves,  "MOVES"},
-        {op_codes::movez,  "MOVEZ"},
-        {op_codes::push,   "PUSH"},
-        {op_codes::pop,    "POP"},
-        {op_codes::dup,    "DUP"},
-        {op_codes::inc,    "INC"},
-        {op_codes::dec,    "DEC"},
-        {op_codes::add,    "ADD"},
-        {op_codes::sub,    "SUB"},
-        {op_codes::mul,    "MUL"},
-        {op_codes::div,    "DIV"},
-        {op_codes::mod,    "MOD"},
-        {op_codes::neg,    "NEG"},
-        {op_codes::shr,    "SHR"},
-        {op_codes::shl,    "SHL"},
-        {op_codes::ror,    "ROR"},
-        {op_codes::rol,    "ROL"},
-        {op_codes::and_op, "AND"},
-        {op_codes::or_op,  "OR"},
-        {op_codes::xor_op, "XOR"},
-        {op_codes::not_op, "NOT"},
-        {op_codes::bis,    "BIS"},
-        {op_codes::bic,    "BIC"},
-        {op_codes::test,   "TEST"},
-        {op_codes::cmp,    "CMP"},
-        {op_codes::bz,     "BZ"},
-        {op_codes::bnz,    "BNZ"},
-        {op_codes::tbz,    "TBZ"},
-        {op_codes::tbnz,   "TBNZ"},
-        {op_codes::bne,    "BNE"},
-        {op_codes::beq,    "BEQ"},
-        {op_codes::bcc,    "BCC"},
-        {op_codes::bcs,    "BCS"},
-        {op_codes::bs,     "BS"},
-        {op_codes::bo,     "BO"},
-        {op_codes::ba,     "BA"},
-        {op_codes::bae,    "BAE"},
-        {op_codes::bb,     "BB"},
-        {op_codes::bbe,    "BBE"},
-        {op_codes::bg,     "BG"},
-        {op_codes::bge,    "BGE"},
-        {op_codes::bl,     "BL"},
-        {op_codes::ble,    "BLE"},
-        {op_codes::seta,   "SETA"},
-        {op_codes::setna,  "SETNA"},
-        {op_codes::setae,  "SETAE"},
-        {op_codes::setnae, "SETNAE"},
-        {op_codes::setb,   "SETB"},
-        {op_codes::setnb,  "SETNB"},
-        {op_codes::setbe,  "SETBE"},
-        {op_codes::setnbe, "SETNBE"},
-        {op_codes::setc,   "SETC"},
-        {op_codes::setnc,  "SETNC"},
-        {op_codes::setg,   "SETG"},
-        {op_codes::setng,  "SETNG"},
-        {op_codes::setge,  "SETGE"},
-        {op_codes::setnge, "SETNGE"},
-        {op_codes::setl,   "SETL"},
-        {op_codes::setnl,  "SETNL"},
-        {op_codes::setle,  "SETLE"},
-        {op_codes::setnle, "SETNLE"},
-        {op_codes::sets,   "SETS"},
-        {op_codes::setns,  "SETNS"},
-        {op_codes::seto,   "SETO"},
-        {op_codes::setno,  "SETNO"},
-        {op_codes::setz,   "SETZ"},
-        {op_codes::setnz,  "SETNZ"},
-        {op_codes::jsr,    "JSR"},
-        {op_codes::rts,    "RTS"},
-        {op_codes::jmp,    "JMP"},
-        {op_codes::swi,    "SWI"},
-        {op_codes::swap,   "SWAP"},
-        {op_codes::trap,   "TRAP"},
-        {op_codes::ffi,    "FFI"},
-        {op_codes::meta,   "META"},
-        {op_codes::exit,   "EXIT"},
-    };
-
-    inline static std::string op_code_name(op_codes type) {
-        const auto it = s_op_code_names.find(type);
-        if (it != s_op_code_names.end()) {
-            return it->second;
-        }
-        return "";
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-
-    union operand_value_alias_t {
-        uint8_t  r;
-        uint64_t u;
-        int64_t  s;
-        float    f;
-        double   d;
-    };
-
-    struct operand_value_t {
-        register_type_t type;
-        operand_value_alias_t alias {
-            .u = 0
-        };
-    };
-
-    struct operand_encoding_t {
-        using flags_t = uint8_t;
-
-        enum flags : uint8_t {
-            none        = 0b00000000,
-            constant    = 0b00000000,
-            reg         = 0b00000001,
-            integer     = 0b00000010,
-            negative    = 0b00000100,
-            prefix      = 0b00001000,
-            postfix     = 0b00010000,
-            unresolved  = 0b00100000,
-        };
-
-        void clear_unresolved() {
-            type &= ~flags::unresolved;
-        }
-
-        inline bool is_reg() const {
-            return (type & flags::reg) != 0;
-        }
-
-        inline bool is_prefix() const {
-            return (type & flags::prefix) != 0;
-        }
-
-        inline bool is_postfix() const {
-            return (type & flags::postfix) != 0;
-        }
-
-        inline bool is_integer() const {
-            return (type & flags::integer) != 0;
-        }
-
-        inline bool is_negative() const {
-            return (type & flags::negative) != 0;
-        }
-
-        inline bool is_unresolved() const {
-            return (type & flags::unresolved) != 0;
-        }
-
-        flags_t type = flags::reg | flags::integer;
-        operand_value_alias_t value;
-    };
-
-    ///////////////////////////////////////////////////////////////////////////
-
-    using id_resolve_callable = std::function<std::string (uint64_t)>;
-
-    struct instruction_t {
-        static constexpr size_t base_size = 3;
-        static constexpr size_t alignment = 4;
-
-        size_t decode(
-            common::result& r,
-            uint8_t* heap,
-            uint64_t address);
-
-        size_t encode(
-            common::result& r,
-            uint8_t* heap,
-            uint64_t address);
-
-        size_t encoding_size() const;
-
-        size_t align(uint64_t value, size_t size) const;
-
-        void patch_branch_address(uint64_t address, uint8_t index = 0);
-
-        std::string disassemble(const id_resolve_callable& id_resolver = nullptr) const;
-
-        op_codes op = op_codes::nop;
-        op_sizes size = op_sizes::none;
-        uint8_t operands_count = 0;
-        operand_encoding_t operands[4];
-    };
-
-    struct meta_information_t {
-        uint32_t line_number;
-        uint16_t column_number;
-        std::string symbol;
-        std::string source_file;
-    };
-
-    ///////////////////////////////////////////////////////////////////////////
-
-    enum class ffi_calling_mode_t : uint16_t {
-        c_default = 1,
-        c_ellipsis,
-        c_ellipsis_varargs,
-    };
-
-    enum class ffi_types_t : uint16_t {
-        void_type = 1,
-        bool_type,
-        char_type,
-        short_type,
-        int_type,
-        long_type,
-        long_long_type,
-        float_type,
-        double_type,
-        pointer_type,
-        struct_type,
-    };
-
-    ///////////////////////////////////////////////////////////////////////////
-
-    enum class heap_vectors_t : uint8_t {
-        top_of_stack = 0,
-        bottom_of_stack,
-        program_start,
-        free_space_start,
-    };
-
-    struct heap_block_t {
-        enum flags_t : uint8_t {
-            none       = 0b00000000,
-            allocated  = 0b00000001,
-        };
-
-        inline void mark_allocated() {
-            flags |= flags_t::allocated;
-        }
-
-        inline void clear_allocated() {
-            flags &= ~flags_t::allocated;
-        }
-
-        inline bool is_free() const {
-            return (flags & flags_t::allocated) == 0;
-        }
-
-        inline bool is_allocated() const {
-            return (flags & flags_t::allocated) != 0;
-        }
-
-        uint64_t size = 0;
-        uint64_t address = 0;
-        heap_block_t* prev = nullptr;
-        heap_block_t* next = nullptr;
-        uint8_t flags = flags_t::none;
-    };
-
-    ///////////////////////////////////////////////////////////////////////////
-
-    using symbol_address_map = std::unordered_map<std::string, void*>;
-
-    struct shared_library_t {
-        shared_library_t() {
-        }
-
-        ~shared_library_t() {
-            if (_library != nullptr)
-                dlFreeLibrary(_library);
-        }
-
-        bool initialize(
-            common::result& r,
-            const boost::filesystem::path& path);
-
-        bool self_loaded() const {
-            return _self_loaded;
-        }
-
-        void self_loaded(bool value) {
-            _self_loaded = value;
-        }
-
-        bool initialize(common::result& r);
-
-        inline const symbol_address_map& symbols() const {
-            return _symbols;
-        }
-
-        bool exports_symbol(const std::string& symbol_name);
-
-        inline const boost::filesystem::path& path() const {
-            return _path;
-        }
-
-        void* symbol_address(const std::string& symbol_name);
-
-    private:
-        void get_library_path();
-
-        void load_symbols(const char* path);
-
-    private:
-        bool _self_loaded = false;
-        DLLib* _library = nullptr;
-        symbol_address_map _symbols {};
-        boost::filesystem::path _path {};
-    };
-
-    struct function_value_t {
-        ~function_value_t();
-
-        DCstruct* struct_meta_info();
-
-        void push(DCCallVM* vm, uint64_t value);
-
-        std::string name;
-        ffi_types_t type;
-        std::vector<function_value_t> fields {};
-
-    private:
-        void add_struct_fields(DCstruct* s);
-
-    private:
-        DCstruct* _struct_meta_data = nullptr;
-    };
-
-    struct function_signature_t {
-        void apply_calling_convention(DCCallVM* vm);
-
-        uint64_t call(DCCallVM* vm, uint64_t address);
-
-        std::string symbol {};
-        void* func_ptr = nullptr;
-        function_value_t return_value {};
-        shared_library_t* library = nullptr;
-        std::vector<function_value_t> arguments {};
-        ffi_calling_mode_t calling_mode = ffi_calling_mode_t::c_default;
-    };
-
-    ///////////////////////////////////////////////////////////////////////////
-
-    class terp;
 
     struct icache_entry_t {
         size_t size;
@@ -515,6 +75,8 @@ namespace basecode::vm {
         static constexpr uint8_t trap_invalid_ffi_call = 0xfe;
 
         terp(
+            vm::ffi* ffi,
+            vm::allocator* allocator,
             size_t heap_size,
             size_t stack_size);
 
@@ -542,27 +104,11 @@ namespace basecode::vm {
 
         bool step(common::result& r);
 
-        void dump_shared_libraries();
-
-        uint64_t alloc(uint64_t size);
-
-        bool register_foreign_function(
-            common::result& r,
-            function_signature_t& signature);
-
-        uint64_t free(uint64_t address);
-
-        uint64_t size(uint64_t address);
-
         void remove_trap(uint8_t index);
 
         bool initialize(common::result& r);
 
         void dump_state(uint8_t count = 16);
-
-        shared_library_t* load_shared_library(
-            common::result& r,
-            const boost::filesystem::path& path);
 
         std::vector<uint64_t> jump_to_subroutine(
             common::result& r,
@@ -590,8 +136,6 @@ namespace basecode::vm {
 
         void register_trap(uint8_t index, const trap_callable& callable);
 
-        shared_library_t* shared_library(const boost::filesystem::path& path);
-
     private:
         bool has_overflow(
             uint64_t lhs,
@@ -610,8 +154,6 @@ namespace basecode::vm {
             const instruction_t& inst,
             uint8_t operand_index,
             operand_value_t& value) const;
-
-        void free_heap_block_list();
 
         bool set_target_operand_value(
             common::result& r,
@@ -633,19 +175,16 @@ namespace basecode::vm {
         bool is_negative(const operand_value_t& value, op_sizes size);
 
     private:
+        ffi* _ffi = nullptr;
         bool _exited = false;
         size_t _heap_size = 0;
         size_t _stack_size = 0;
         uint8_t* _heap = nullptr;
         instruction_cache _icache;
-        DCCallVM* _call_vm = nullptr;
         register_file_t _registers {};
+        allocator* _allocator = nullptr;
         meta_information_t _meta_information {};
-        heap_block_t* _head_heap_block = nullptr;
         std::unordered_map<uint8_t, trap_callable> _traps {};
-        std::unordered_map<uint64_t, heap_block_t*> _address_blocks {};
-        std::unordered_map<void*, function_signature_t> _foreign_functions {};
-        std::unordered_map<std::string, shared_library_t> _shared_libraries {};
     };
 
 };

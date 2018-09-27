@@ -162,12 +162,14 @@ int main(int argc, char** argv) {
         return 1;
     }
 
+    basecode::vm::default_allocator allocator {};
     basecode::compiler::session_options_t session_options {
         .verbose = verbose_flag,
         .heap_size = heap_size,
         .stack_size = stack_size,
         .output_ast_graphs = output_ast_graphs,
         .dom_graph_file = code_dom_graph_file_name,
+        .allocator = &allocator,
         .compiler_path = boost::filesystem::system_complete(argv[0]).remove_filename(),
         .compile_callback = [](
                 basecode::compiler::session_compile_phase_t phase,

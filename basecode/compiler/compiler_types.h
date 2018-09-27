@@ -13,6 +13,7 @@
 
 #include <cstdint>
 #include <functional>
+#include <vm/vm_types.h>
 #include <unordered_map>
 #include <common/rune.h>
 #include <common/result.h>
@@ -57,7 +58,9 @@ namespace basecode::compiler {
         bool verbose = false;
         size_t heap_size = 0;
         size_t stack_size = 0;
+        size_t ffi_heap_size = 4096;
         bool output_ast_graphs = false;
+        vm::allocator* allocator = nullptr;
         boost::filesystem::path dom_graph_file;
         boost::filesystem::path compiler_path;
         session_compile_callback compile_callback;

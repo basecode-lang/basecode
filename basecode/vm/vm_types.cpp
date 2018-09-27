@@ -9,6 +9,10 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <dyncall/dyncall.h>
+#include <dynload/dynload.h>
+#include <dyncall/dyncall_struct.h>
+#include <dyncall/dyncall_signature.h>
 #include "terp.h"
 #include "label.h"
 #include "vm_types.h"
@@ -83,6 +87,97 @@ namespace basecode::vm {
             label->instance->address(value);
         }
         return this;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    shared_library_t::shared_library_t() {
+    }
+
+    shared_library_t::~shared_library_t() {
+        if (_library != nullptr)
+            dlFreeLibrary(_library);
+    }
+
+    bool shared_library_t::initialize(
+            common::result& r,
+            const boost::filesystem::path& path) {
+        _library = dlLoadLibrary(path.string().c_str());
+        if (_library == nullptr) {
+            r.add_message(
+                "B062",
+                fmt::format("unable to load library image file: {}.", path.string()),
+                true);
+            return false;
+        }
+        get_library_path();
+        return true;
+    }
+
+    bool shared_library_t::initialize(common::result& r) {
+        _library = dlLoadLibrary(nullptr);
+        if (_library == nullptr) {
+            r.add_message(
+                "B062",
+                fmt::format("unable to load library image for self."),
+                true);
+            return false;
+        }
+        get_library_path();
+        return true;
+    }
+
+    void shared_library_t::get_library_path() {
+        if (_library == nullptr)
+            return;
+
+        char library_path[PATH_MAX];
+        dlGetLibraryPath(_library, library_path, PATH_MAX);
+        _path = library_path;
+    }
+
+    void shared_library_t::load_symbols(const char* path) {
+        _symbols.clear();
+        auto symbol_ptr = dlSymsInit(path);
+        if (symbol_ptr != nullptr) {
+            int count = dlSymsCount(symbol_ptr);
+            for (int i = 0; i < count; i++) {
+                const char* symbol_name = dlSymsName(symbol_ptr, i);
+                if (symbol_name != nullptr)
+                    _symbols.insert(std::make_pair(symbol_name, nullptr));
+            }
+            dlSymsCleanup(symbol_ptr);
+        }
+    }
+
+    bool shared_library_t::exports_symbol(const std::string& symbol_name) {
+        return _symbols.count(symbol_name) > 0;
+    }
+
+    void* shared_library_t::symbol_address(const std::string& symbol_name) {
+        DLLib* effective_library = nullptr;
+#if defined(__FreeBSD__)
+        effective_library = _self_loaded ? nullptr : _library;
+#else
+        effective_library = _library;
+#endif
+        auto it = _symbols.find(symbol_name);
+        if (it == _symbols.end()) {
+            auto func_ptr = dlFindSymbol(effective_library, symbol_name.c_str());
+            _symbols.insert(std::make_pair(symbol_name, func_ptr));
+            return func_ptr;
+        }
+
+        if (it->second == nullptr) {
+            it->second = dlFindSymbol(effective_library, symbol_name.c_str());
+        }
+
+        return it->second;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    allocator::~allocator() {
     }
 
 };

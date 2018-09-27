@@ -23,8 +23,13 @@
 #include <boost/variant.hpp>
 #include <boost/filesystem.hpp>
 
+typedef struct DLLib_ DLLib;
+typedef struct DCstruct_ DCstruct;
+typedef struct DCCallVM_ DCCallVM;
+
 namespace basecode::vm {
 
+    class ffi;
     class terp;
     class label;
     class symbol;
@@ -36,6 +41,8 @@ namespace basecode::vm {
     class register_allocator;
 
     using symbol_list_t = std::vector<symbol*>;
+    using symbol_address_map = std::unordered_map<std::string, void*>;
+    using id_resolve_callable = std::function<std::string (uint64_t)>;
 
     ///////////////////////////////////////////////////////////////////////////
 
@@ -260,6 +267,294 @@ namespace basecode::vm {
         }
 
         register_value_alias_t r[number_total_registers];
+    };
+
+    enum class op_codes : uint8_t {
+        nop = 1,
+        alloc,
+        free,
+        size,
+        load,
+        store,
+        copy,
+        convert,
+        fill,
+        clr,
+        move,
+        moves,
+        movez,
+        push,
+        pop,
+        dup,
+        inc,
+        dec,
+        add,
+        sub,
+        mul,
+        div,
+        mod,
+        neg,
+        shr,
+        shl,
+        ror,
+        rol,
+        and_op,
+        or_op,
+        xor_op,
+        not_op,
+        bis,
+        bic,
+        test,
+        cmp,
+        bz,
+        bnz,
+        tbz,
+        tbnz,
+        bne,
+        beq,
+        bs,
+        bo,
+        bcc,
+        bcs,
+        ba,
+        bae,
+        bb,
+        bbe,
+        bg,
+        bl,
+        bge,
+        ble,
+        seta,
+        setna,
+        setae,
+        setnae,
+        setb,
+        setnb,
+        setbe,
+        setnbe,
+        setc,
+        setnc,
+        setg,
+        setng,
+        setge,
+        setnge,
+        setl,
+        setnl,
+        setle,
+        setnle,
+        sets,
+        setns,
+        seto,
+        setno,
+        setz,
+        setnz,
+        jsr,
+        rts,
+        jmp,
+        swi,
+        swap,
+        trap,
+        ffi,
+        meta,
+        exit,
+    };
+
+    inline static std::map<op_codes, std::string> s_op_code_names = {
+        {op_codes::nop,    "NOP"},
+        {op_codes::alloc,  "ALLOC"},
+        {op_codes::free,   "FREE"},
+        {op_codes::size,   "SIZE"},
+        {op_codes::load,   "LOAD"},
+        {op_codes::store,  "STORE"},
+        {op_codes::copy,   "COPY"},
+        {op_codes::convert,"CVRT"},
+        {op_codes::fill,   "FILL"},
+        {op_codes::clr,    "CLR"},
+        {op_codes::move,   "MOVE"},
+        {op_codes::moves,  "MOVES"},
+        {op_codes::movez,  "MOVEZ"},
+        {op_codes::push,   "PUSH"},
+        {op_codes::pop,    "POP"},
+        {op_codes::dup,    "DUP"},
+        {op_codes::inc,    "INC"},
+        {op_codes::dec,    "DEC"},
+        {op_codes::add,    "ADD"},
+        {op_codes::sub,    "SUB"},
+        {op_codes::mul,    "MUL"},
+        {op_codes::div,    "DIV"},
+        {op_codes::mod,    "MOD"},
+        {op_codes::neg,    "NEG"},
+        {op_codes::shr,    "SHR"},
+        {op_codes::shl,    "SHL"},
+        {op_codes::ror,    "ROR"},
+        {op_codes::rol,    "ROL"},
+        {op_codes::and_op, "AND"},
+        {op_codes::or_op,  "OR"},
+        {op_codes::xor_op, "XOR"},
+        {op_codes::not_op, "NOT"},
+        {op_codes::bis,    "BIS"},
+        {op_codes::bic,    "BIC"},
+        {op_codes::test,   "TEST"},
+        {op_codes::cmp,    "CMP"},
+        {op_codes::bz,     "BZ"},
+        {op_codes::bnz,    "BNZ"},
+        {op_codes::tbz,    "TBZ"},
+        {op_codes::tbnz,   "TBNZ"},
+        {op_codes::bne,    "BNE"},
+        {op_codes::beq,    "BEQ"},
+        {op_codes::bcc,    "BCC"},
+        {op_codes::bcs,    "BCS"},
+        {op_codes::bs,     "BS"},
+        {op_codes::bo,     "BO"},
+        {op_codes::ba,     "BA"},
+        {op_codes::bae,    "BAE"},
+        {op_codes::bb,     "BB"},
+        {op_codes::bbe,    "BBE"},
+        {op_codes::bg,     "BG"},
+        {op_codes::bge,    "BGE"},
+        {op_codes::bl,     "BL"},
+        {op_codes::ble,    "BLE"},
+        {op_codes::seta,   "SETA"},
+        {op_codes::setna,  "SETNA"},
+        {op_codes::setae,  "SETAE"},
+        {op_codes::setnae, "SETNAE"},
+        {op_codes::setb,   "SETB"},
+        {op_codes::setnb,  "SETNB"},
+        {op_codes::setbe,  "SETBE"},
+        {op_codes::setnbe, "SETNBE"},
+        {op_codes::setc,   "SETC"},
+        {op_codes::setnc,  "SETNC"},
+        {op_codes::setg,   "SETG"},
+        {op_codes::setng,  "SETNG"},
+        {op_codes::setge,  "SETGE"},
+        {op_codes::setnge, "SETNGE"},
+        {op_codes::setl,   "SETL"},
+        {op_codes::setnl,  "SETNL"},
+        {op_codes::setle,  "SETLE"},
+        {op_codes::setnle, "SETNLE"},
+        {op_codes::sets,   "SETS"},
+        {op_codes::setns,  "SETNS"},
+        {op_codes::seto,   "SETO"},
+        {op_codes::setno,  "SETNO"},
+        {op_codes::setz,   "SETZ"},
+        {op_codes::setnz,  "SETNZ"},
+        {op_codes::jsr,    "JSR"},
+        {op_codes::rts,    "RTS"},
+        {op_codes::jmp,    "JMP"},
+        {op_codes::swi,    "SWI"},
+        {op_codes::swap,   "SWAP"},
+        {op_codes::trap,   "TRAP"},
+        {op_codes::ffi,    "FFI"},
+        {op_codes::meta,   "META"},
+        {op_codes::exit,   "EXIT"},
+    };
+
+    inline static std::string op_code_name(op_codes type) {
+        const auto it = s_op_code_names.find(type);
+        if (it != s_op_code_names.end()) {
+            return it->second;
+        }
+        return "";
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    union operand_value_alias_t {
+        uint8_t  r;
+        uint64_t u;
+        int64_t  s;
+        float    f;
+        double   d;
+    };
+
+    struct operand_value_t {
+        register_type_t type;
+        operand_value_alias_t alias {
+            .u = 0
+        };
+    };
+
+    struct operand_encoding_t {
+        using flags_t = uint8_t;
+
+        enum flags : uint8_t {
+            none        = 0b00000000,
+            constant    = 0b00000000,
+            reg         = 0b00000001,
+            integer     = 0b00000010,
+            negative    = 0b00000100,
+            prefix      = 0b00001000,
+            postfix     = 0b00010000,
+            unresolved  = 0b00100000,
+        };
+
+        void clear_unresolved() {
+            type &= ~flags::unresolved;
+        }
+
+        inline bool is_reg() const {
+            return (type & flags::reg) != 0;
+        }
+
+        inline bool is_prefix() const {
+            return (type & flags::prefix) != 0;
+        }
+
+        inline bool is_postfix() const {
+            return (type & flags::postfix) != 0;
+        }
+
+        inline bool is_integer() const {
+            return (type & flags::integer) != 0;
+        }
+
+        inline bool is_negative() const {
+            return (type & flags::negative) != 0;
+        }
+
+        inline bool is_unresolved() const {
+            return (type & flags::unresolved) != 0;
+        }
+
+        flags_t type = flags::reg | flags::integer;
+        operand_value_alias_t value;
+    };
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    struct instruction_t {
+        static constexpr size_t base_size = 3;
+        static constexpr size_t alignment = 4;
+
+        size_t decode(
+            common::result& r,
+            uint8_t* heap,
+            uint64_t address);
+
+        size_t encode(
+            common::result& r,
+            uint8_t* heap,
+            uint64_t address);
+
+        size_t encoding_size() const;
+
+        size_t align(uint64_t value, size_t size) const;
+
+        void patch_branch_address(uint64_t address, uint8_t index = 0);
+
+        std::string disassemble(const id_resolve_callable& id_resolver = nullptr) const;
+
+        op_codes op = op_codes::nop;
+        op_sizes size = op_sizes::none;
+        uint8_t operands_count = 0;
+        operand_encoding_t operands[4];
+    };
+
+    struct meta_information_t {
+        uint32_t line_number;
+        uint16_t column_number;
+        std::string symbol;
+        std::string source_file;
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -536,5 +831,913 @@ namespace basecode::vm {
                 return symbol_type_t::unknown;
         }
     }
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    struct control_flow_t {
+        label_ref_t* exit_label = nullptr;
+        label_ref_t* continue_label = nullptr;
+    };
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    struct mnemonic_operand_t {
+        enum flags : uint8_t {
+            none             = 0b00000000,
+            integer_register = 0b00000001,
+            float_register   = 0b00000010,
+            immediate        = 0b00000100,
+            pc_register      = 0b00001000,
+            sp_register      = 0b00010000,
+            fp_register      = 0b00100000,
+        };
+
+        uint8_t types = flags::none;
+        bool required = false;
+    };
+
+    struct mnemonic_t {
+        size_t required_operand_count() const {
+            size_t count = 0;
+            for (const auto& op : operands)
+                count += op.required ? 1 : 0;
+            return count;
+        }
+
+        op_codes code;
+        std::vector<mnemonic_operand_t> operands {};
+    };
+
+    inline static std::map<std::string, mnemonic_t> s_mnemonics = {
+        {
+            "NOP",
+            mnemonic_t{
+                op_codes::nop,
+                {}
+            }
+        },
+        {
+            "ALLOC",
+            mnemonic_t{
+                op_codes::alloc,
+                {
+                    {mnemonic_operand_t::flags::integer_register, true},
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::immediate, true},
+                }
+            }
+        },
+        {
+            "FREE",
+            mnemonic_t{
+                op_codes::free,
+                {
+                    {mnemonic_operand_t::flags::integer_register, true},
+                }
+            }
+        },
+        {
+            "SIZE",
+            mnemonic_t{
+                op_codes::size,
+                {
+                    {mnemonic_operand_t::flags::integer_register, true},
+                    {mnemonic_operand_t::flags::integer_register, true},
+                }
+            }
+        },
+        {
+            "LOAD",
+            mnemonic_t{
+                op_codes::load,
+                {
+                    {mnemonic_operand_t::flags::integer_register, true},
+                    {mnemonic_operand_t::flags::integer_register, true},
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::immediate, false},
+                }
+            }
+        },
+        {
+            "STORE",
+            mnemonic_t{
+                op_codes::store,
+                {
+                    {mnemonic_operand_t::flags::integer_register, true},
+                    {mnemonic_operand_t::flags::integer_register, true},
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::immediate, false},
+                }
+            }
+        },
+        {
+            "COPY",
+            mnemonic_t{
+                op_codes::copy,
+                {
+                    {mnemonic_operand_t::flags::integer_register, true},
+                    {mnemonic_operand_t::flags::integer_register, true},
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::immediate, false},
+                }
+            }
+        },
+        {
+            "CVRT",
+            mnemonic_t{
+                op_codes::convert,
+                {
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::float_register, true},
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::float_register, true},
+                }
+            }
+        },
+        {
+            "FILL",
+            mnemonic_t{
+                op_codes::fill,
+                {
+                    {mnemonic_operand_t::flags::integer_register, true},
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::immediate, true},
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::immediate, false},
+                }
+            }
+        },
+        {
+            "CLR",
+            mnemonic_t{
+                op_codes::clr,
+                {
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::float_register, true},
+                }
+            }
+        },
+        {
+            "MOVE",
+            mnemonic_t{
+                op_codes::move,
+                {
+                    {mnemonic_operand_t::flags::integer_register, true},
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::immediate, true},
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::immediate, false},
+                }
+            }
+        },
+        {
+            "MOVES",
+            mnemonic_t{
+                op_codes::moves,
+                {
+                    {mnemonic_operand_t::flags::integer_register, true},
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::immediate, true},
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::immediate, false},
+                }
+            }
+        },
+        {
+            "MOVEZ",
+            mnemonic_t{
+                op_codes::movez,
+                {
+                    {mnemonic_operand_t::flags::integer_register, true},
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::immediate, true},
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::immediate, false},
+                }
+            }
+        },
+        {
+            "PUSH",
+            mnemonic_t{
+                op_codes::push,
+                {
+                    {mnemonic_operand_t::flags::integer_register
+                     | mnemonic_operand_t::flags::float_register
+                     | mnemonic_operand_t::flags::immediate, true},
+                }
+            }
+        },
+        {
+            "POP",
+            mnemonic_t{
+                op_codes::pop,
+                {
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::float_register, true}
+                }
+            }
+        },
+        {
+            "DUP",
+            mnemonic_t{
+                op_codes::dup,
+                {}
+            }
+        },
+        {
+            "INC",
+            mnemonic_t{
+                op_codes::inc,
+                {
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::float_register, true}
+                }
+            }
+        },
+        {
+            "DEC",
+            mnemonic_t{
+                op_codes::dec,
+                {
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::float_register, true}
+                }
+            }
+        },
+        {
+            "ADD",
+            mnemonic_t{
+                op_codes::add,
+                {
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::float_register, true},
+                    {mnemonic_operand_t::flags::integer_register
+                     | mnemonic_operand_t::flags::float_register
+                     | mnemonic_operand_t::flags::immediate, true},
+                    {mnemonic_operand_t::flags::integer_register
+                     | mnemonic_operand_t::flags::float_register
+                     | mnemonic_operand_t::flags::immediate, true},
+                }
+            }
+        },
+        {
+            "SUB",
+            mnemonic_t{
+                op_codes::sub,
+                {
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::float_register, true},
+                    {mnemonic_operand_t::flags::integer_register
+                     | mnemonic_operand_t::flags::float_register
+                     | mnemonic_operand_t::flags::immediate, true},
+                    {mnemonic_operand_t::flags::integer_register
+                     | mnemonic_operand_t::flags::float_register
+                     | mnemonic_operand_t::flags::immediate, true},
+                }
+            }
+        },
+        {
+            "MUL",
+            mnemonic_t{
+                op_codes::mul,
+                {
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::float_register, true},
+                    {mnemonic_operand_t::flags::integer_register
+                     | mnemonic_operand_t::flags::float_register
+                     | mnemonic_operand_t::flags::immediate, true},
+                    {mnemonic_operand_t::flags::integer_register
+                     | mnemonic_operand_t::flags::float_register
+                     | mnemonic_operand_t::flags::immediate, true},
+                }
+            }
+        },
+        {
+            "DIV",
+            mnemonic_t{
+                op_codes::div,
+                {
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::float_register, true},
+                    {mnemonic_operand_t::flags::integer_register
+                     | mnemonic_operand_t::flags::float_register
+                     | mnemonic_operand_t::flags::immediate, true},
+                    {mnemonic_operand_t::flags::integer_register
+                     | mnemonic_operand_t::flags::float_register
+                     | mnemonic_operand_t::flags::immediate, true},
+                }
+            }
+        },
+        {
+            "MOD",
+            mnemonic_t{
+                op_codes::mod,
+                {
+                    {mnemonic_operand_t::flags::integer_register, true},
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::immediate, true},
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::immediate, true},
+                }
+            }
+        },
+        {
+            "NEG",
+            mnemonic_t{
+                op_codes::neg,
+                {
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::float_register, true},
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::float_register | mnemonic_operand_t::flags::immediate, true},
+                }
+            }
+        },
+        {
+            "SHR",
+            mnemonic_t{
+                op_codes::shr,
+                {
+                    {mnemonic_operand_t::flags::integer_register, true},
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::immediate, true},
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::immediate, true},
+                }
+            }
+        },
+        {
+            "SHL",
+            mnemonic_t{
+                op_codes::shl,
+                {
+                    {mnemonic_operand_t::flags::integer_register, true},
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::immediate, true},
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::immediate, true},
+                }
+            }
+        },
+        {
+            "ROR",
+            mnemonic_t{
+                op_codes::ror,
+                {
+                    {mnemonic_operand_t::flags::integer_register, true},
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::immediate, true},
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::immediate, true},
+                }
+            }
+        },
+        {
+            "ROL",
+            mnemonic_t{
+                op_codes::rol,
+                {
+                    {mnemonic_operand_t::flags::integer_register, true},
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::immediate, true},
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::immediate, true},
+                }
+            }
+        },
+        {
+            "AND",
+            mnemonic_t{
+                op_codes::and_op,
+                {
+                    {mnemonic_operand_t::flags::integer_register, true},
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::immediate, true},
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::immediate, true},
+                }
+            }
+        },
+        {
+            "OR",
+            mnemonic_t{
+                op_codes::or_op,
+                {
+                    {mnemonic_operand_t::flags::integer_register, true},
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::immediate, true},
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::immediate, true},
+                }
+            }
+        },
+        {
+            "XOR",
+            mnemonic_t{
+                op_codes::xor_op,
+                {
+                    {mnemonic_operand_t::flags::integer_register, true},
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::immediate, true},
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::immediate, true},
+                }
+            }
+        },
+        {
+            "NOT",
+            mnemonic_t{
+                op_codes::not_op,
+                {
+                    {mnemonic_operand_t::flags::integer_register, true},
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::immediate, true},
+                }
+            }
+        },
+        {
+            "BIS",
+            mnemonic_t{
+                op_codes::bis,
+                {
+                    {mnemonic_operand_t::flags::integer_register, true},
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::immediate, true},
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::immediate, true},
+                }
+            }
+        },
+        {
+            "BIC",
+            mnemonic_t{
+                op_codes::bic,
+                {
+                    {mnemonic_operand_t::flags::integer_register, true},
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::immediate, true},
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::immediate, true},
+                }
+            }
+        },
+        {
+            "TEST",
+            mnemonic_t{
+                op_codes::test,
+                {
+                    {mnemonic_operand_t::flags::integer_register, true},
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::immediate, true},
+                }
+            }
+        },
+        {
+            "CMP",
+            mnemonic_t{
+                op_codes::cmp,
+                {
+                    {mnemonic_operand_t::flags::integer_register, true},
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::immediate, true},
+                }
+            }
+        },
+        {
+            "BZ",
+            mnemonic_t{
+                op_codes::bz,
+                {
+                    {mnemonic_operand_t::flags::integer_register, true},
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::immediate, true},
+                }
+            }
+        },
+        {
+            "BNZ",
+            mnemonic_t{
+                op_codes::bnz,
+                {
+                    {mnemonic_operand_t::flags::integer_register, true},
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::immediate, true},
+                }
+            }
+        },
+        {
+            "TBZ",
+            mnemonic_t{
+                op_codes::tbz,
+                {
+                    {mnemonic_operand_t::flags::integer_register, true},
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::immediate, true},
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::immediate, true},
+                }
+            }
+        },
+        {
+            "TBNZ",
+            mnemonic_t{
+                op_codes::tbnz,
+                {
+                    {mnemonic_operand_t::flags::integer_register, true},
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::immediate, true},
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::immediate, true},
+                }
+            }
+        },
+        {
+            "BNE",
+            mnemonic_t{
+                op_codes::bne,
+                {
+                    {mnemonic_operand_t::flags::pc_register | mnemonic_operand_t::flags::immediate, true},
+                    {mnemonic_operand_t::flags::immediate, false},
+                }
+            }
+        },
+        {
+            "BEQ",
+            mnemonic_t{
+                op_codes::beq,
+                {
+                    {mnemonic_operand_t::flags::pc_register | mnemonic_operand_t::flags::immediate, true},
+                    {mnemonic_operand_t::flags::immediate, false},
+                }
+            }
+        },
+        {
+            "BG",
+            mnemonic_t{
+                op_codes::bg,
+                {
+                    {mnemonic_operand_t::flags::pc_register | mnemonic_operand_t::flags::immediate, true},
+                    {mnemonic_operand_t::flags::immediate, false},
+                }
+            }
+        },
+        {
+            "BGE",
+            mnemonic_t{
+                op_codes::bge,
+                {
+                    {mnemonic_operand_t::flags::pc_register | mnemonic_operand_t::flags::immediate, true},
+                    {mnemonic_operand_t::flags::immediate, false},
+                }
+            }
+        },
+        {
+            "BL",
+            mnemonic_t{
+                op_codes::bl,
+                {
+                    {mnemonic_operand_t::flags::pc_register | mnemonic_operand_t::flags::immediate, true},
+                    {mnemonic_operand_t::flags::immediate, false},
+                }
+            }
+        },
+        {
+            "BLE",
+            mnemonic_t{
+                op_codes::ble,
+                {
+                    {mnemonic_operand_t::flags::pc_register | mnemonic_operand_t::flags::immediate, true},
+                    {mnemonic_operand_t::flags::immediate, false},
+                }
+            }
+        },
+        {
+            "SETZ",
+            mnemonic_t{
+                op_codes::setz,
+                {
+                    {mnemonic_operand_t::flags::integer_register, true},
+                }
+            }
+        },
+        {
+            "SETNZ",
+            mnemonic_t{
+                op_codes::setnz,
+                {
+                    {mnemonic_operand_t::flags::integer_register, true},
+                }
+            }
+        },
+        {
+            "JSR",
+            mnemonic_t{
+                op_codes::jsr,
+                {
+                    {mnemonic_operand_t::flags::pc_register | mnemonic_operand_t::flags::immediate, true},
+                    {mnemonic_operand_t::flags::immediate, false},
+                }
+            }
+        },
+        {
+            "RTS",
+            mnemonic_t{
+                op_codes::rts,
+                {}
+            }
+        },
+        {
+            "JMP",
+            mnemonic_t{
+                op_codes::jmp,
+                {
+                    {mnemonic_operand_t::flags::pc_register | mnemonic_operand_t::flags::immediate, true},
+                    {mnemonic_operand_t::flags::immediate, false},
+                }
+            }
+        },
+        {
+            "SWI",
+            mnemonic_t{
+                op_codes::swi,
+                {
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::immediate, true},
+                }
+            }
+        },
+        {
+            "SWAP",
+            mnemonic_t{
+                op_codes::swap,
+                {
+                    {mnemonic_operand_t::flags::integer_register, true},
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::immediate, true},
+                }
+            }
+        },
+        {
+            "TRAP",
+            mnemonic_t{
+                op_codes::trap,
+                {
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::immediate, true},
+                }
+            }
+        },
+        {
+            "FFI",
+            mnemonic_t{
+                op_codes::ffi,
+                {
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::immediate, true},
+                }
+            }
+        },
+        {
+            "META",
+            mnemonic_t{
+                op_codes::meta,
+                {
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::immediate, true},
+                }
+            }
+        },
+        {
+            "EXIT",
+            mnemonic_t{
+                op_codes::exit,
+                {}
+            }
+        },
+    };
+
+    inline static mnemonic_t* mnemonic(const std::string& code) {
+        const auto it = s_mnemonics.find(code);
+        if (it != s_mnemonics.end()) {
+            return &it->second;
+        }
+        return nullptr;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    enum class directive_type_t : uint8_t {
+        section,
+        align,
+        db,
+        dw,
+        dd,
+        dq,
+        rb,
+        rw,
+        rd,
+        rq
+    };
+
+    using directive_param_variant_t = boost::variant<std::string, uint64_t>;
+
+    struct directive_param_t {
+        enum flags : uint8_t {
+            none        = 0b00000000,
+            string      = 0b00000001,
+            number      = 0b00000010,
+            repeating   = 0b10000000,
+        };
+
+        bool is_number() const {
+            return (type & flags::number) != 0;
+        }
+
+        bool is_string() const {
+            return (type & flags::string) != 0;
+        }
+
+        bool is_repeating() const {
+            return (type & flags::repeating) != 0;
+        }
+
+        uint8_t type = flags::none;
+        bool required = false;
+    };
+
+    struct directive_t {
+        size_t required_operand_count() const {
+            size_t count = 0;
+            for (const auto& op : params)
+                count += op.required ? 1 : 0;
+            return count;
+        }
+
+        op_sizes size;
+        directive_type_t type;
+        std::vector<directive_param_t> params {};
+    };
+
+    inline static std::map<std::string, directive_t> s_directives = {
+        {
+            "SECTION",
+            directive_t{
+                op_sizes::none,
+                directive_type_t::section,
+                {
+                    {directive_param_t::flags::string, true},
+                }
+            }
+        },
+        {
+            "ALIGN",
+            directive_t{
+                op_sizes::byte,
+                directive_type_t::align,
+                {
+                    {directive_param_t::flags::number, true},
+                }
+            }
+        },
+        {
+            "DB",
+            directive_t{
+                op_sizes::byte,
+                directive_type_t::db,
+                {
+                    {directive_param_t::flags::number | directive_param_t::flags::repeating, true},
+                }
+            }
+        },
+        {
+            "DW",
+            directive_t{
+                op_sizes::word,
+                directive_type_t::dw,
+                {
+                    {directive_param_t::flags::number | directive_param_t::flags::repeating, true},
+                }
+            }
+        },
+        {
+            "DD",
+            directive_t{
+                op_sizes::dword,
+                directive_type_t::dd,
+                {
+                    {directive_param_t::flags::number | directive_param_t::flags::repeating, true},
+                }
+            }
+        },
+        {
+            "DQ",
+            directive_t{
+                op_sizes::qword,
+                directive_type_t::dq,
+                {
+                    {directive_param_t::flags::number | directive_param_t::flags::repeating, true},
+                }
+            }
+        },
+        {
+            "RB",
+            directive_t{
+                op_sizes::byte,
+                directive_type_t::rb,
+                {
+                    {directive_param_t::flags::number, true},
+                }
+            }
+        },
+        {
+            "RW",
+            directive_t{
+                op_sizes::word,
+                directive_type_t::rw,
+                {
+                    {directive_param_t::flags::number, true},
+                }
+            }
+        },
+        {
+            "RD",
+            directive_t{
+                op_sizes::dword,
+                directive_type_t::rd,
+                {
+                    {directive_param_t::flags::number, true},
+                }
+            }
+        },
+        {
+            "RQ",
+            directive_t{
+                op_sizes::qword,
+                directive_type_t::rq,
+                {
+                    {directive_param_t::flags::number, true},
+                }
+            }
+        },
+
+    };
+
+    inline static directive_t* directive(const std::string& code) {
+        const auto it = s_directives.find(code);
+        if (it != s_directives.end()) {
+            return &it->second;
+        }
+        return nullptr;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    enum class ffi_calling_mode_t : uint16_t {
+        c_default = 1,
+        c_ellipsis,
+        c_ellipsis_varargs,
+    };
+
+    enum class ffi_types_t : uint16_t {
+        void_type = 1,
+        bool_type,
+        char_type,
+        short_type,
+        int_type,
+        long_type,
+        long_long_type,
+        float_type,
+        double_type,
+        pointer_type,
+        struct_type,
+    };
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    struct shared_library_t {
+        shared_library_t();
+
+        ~shared_library_t();
+
+        bool initialize(
+            common::result& r,
+            const boost::filesystem::path& path);
+
+        bool self_loaded() const {
+            return _self_loaded;
+        }
+
+        void self_loaded(bool value) {
+            _self_loaded = value;
+        }
+
+        bool initialize(common::result& r);
+
+        inline const symbol_address_map& symbols() const {
+            return _symbols;
+        }
+
+        bool exports_symbol(const std::string& symbol_name);
+
+        inline const boost::filesystem::path& path() const {
+            return _path;
+        }
+
+        void* symbol_address(const std::string& symbol_name);
+
+    private:
+        void get_library_path();
+
+        void load_symbols(const char* path);
+
+    private:
+        bool _self_loaded = false;
+        DLLib* _library = nullptr;
+        symbol_address_map _symbols {};
+        boost::filesystem::path _path {};
+    };
+
+    struct function_value_t {
+        std::string name;
+        ffi_types_t type;
+        std::vector<function_value_t> fields {};
+    };
+
+    struct function_signature_t {
+        std::string symbol {};
+        void* func_ptr = nullptr;
+        function_value_t return_value {};
+        shared_library_t* library = nullptr;
+        std::vector<function_value_t> arguments {};
+        ffi_calling_mode_t calling_mode = ffi_calling_mode_t::c_default;
+    };
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    enum class heap_vectors_t : uint8_t {
+        top_of_stack = 0,
+        bottom_of_stack,
+        program_start,
+        free_space_start,
+    };
+
+    class allocator {
+    public:
+        virtual ~allocator();
+
+        virtual void reset() = 0;
+
+        virtual void initialize(
+            uint64_t address,
+            uint64_t size) = 0;
+
+        virtual uint64_t alloc(uint64_t size) = 0;
+
+        virtual uint64_t size(uint64_t address) = 0;
+
+        virtual uint64_t free(uint64_t address) = 0;
+    };
 
 };

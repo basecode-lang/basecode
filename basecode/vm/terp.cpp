@@ -15,6 +15,7 @@
 #include <fmt/format.h>
 #include <common/bytes.h>
 #include <common/hex_formatter.h>
+#include "ffi.h"
 #include "terp.h"
 #include "instruction_block.h"
 
@@ -30,286 +31,6 @@ namespace basecode::vm {
         const unsigned int mask = (CHAR_BIT * sizeof(n) - 1);
         c &= mask;
         return (n >> c) | (n << ((-c) & mask));
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-
-    function_value_t::~function_value_t() {
-        if (_struct_meta_data != nullptr)
-            delete _struct_meta_data;
-    }
-
-    DCstruct* function_value_t::struct_meta_info() {
-        if (_struct_meta_data != nullptr)
-            return _struct_meta_data;
-
-        _struct_meta_data = dcNewStruct(
-            fields.size(),
-            DEFAULT_ALIGNMENT);
-        add_struct_fields(_struct_meta_data);
-        dcCloseStruct(_struct_meta_data);
-
-        return _struct_meta_data;
-    }
-
-    void function_value_t::push(DCCallVM* vm, uint64_t value) {
-        register_value_alias_t alias;
-        alias.qw = value;
-
-        switch (type) {
-            case ffi_types_t::void_type:
-                break;
-            case ffi_types_t::bool_type:
-                dcArgBool(vm, static_cast<DCbool>(value));
-                break;
-            case ffi_types_t::char_type:
-                dcArgChar(vm, static_cast<DCchar>(value));
-                break;
-            case ffi_types_t::short_type:
-                dcArgShort(vm, static_cast<DCshort>(value));
-                break;
-            case ffi_types_t::long_type:
-                dcArgLong(vm, static_cast<DClong>(value));
-                break;
-            case ffi_types_t::long_long_type:
-                dcArgLongLong(vm, static_cast<DClonglong>(value));
-                break;
-            case ffi_types_t::float_type:
-                dcArgFloat(vm, alias.dwf);
-                break;
-            case ffi_types_t::double_type:
-                dcArgDouble(vm, alias.qwf);
-                break;
-            case ffi_types_t::pointer_type:
-                dcArgPointer(vm, reinterpret_cast<DCpointer>(value));
-                break;
-            case ffi_types_t::struct_type: {
-                auto dc_struct = struct_meta_info();
-                dcArgStruct(
-                    vm,
-                    dc_struct,
-                    reinterpret_cast<DCpointer>(value));
-                break;
-            }
-            default:
-            case ffi_types_t::int_type: {
-                dcArgInt(vm, static_cast<DCint>(value));
-                break;
-            }
-        }
-    }
-
-    void function_value_t::add_struct_fields(DCstruct* s) {
-        for (auto& value : fields) {
-            switch (value.type) {
-                case ffi_types_t::void_type:
-                    break;
-                case ffi_types_t::bool_type:
-                    dcStructField(s, DC_SIGCHAR_BOOL, DEFAULT_ALIGNMENT, 1);
-                    break;
-                case ffi_types_t::char_type:
-                    dcStructField(s, DC_SIGCHAR_CHAR, DEFAULT_ALIGNMENT, 1);
-                    break;
-                case ffi_types_t::short_type:
-                    dcStructField(s, DC_SIGCHAR_SHORT, DEFAULT_ALIGNMENT, 1);
-                    break;
-                case ffi_types_t::int_type:
-                    dcStructField(s, DC_SIGCHAR_INT, DEFAULT_ALIGNMENT, 1);
-                    break;
-                case ffi_types_t::long_type:
-                    dcStructField(s, DC_SIGCHAR_LONG, DEFAULT_ALIGNMENT, 1);
-                    break;
-                case ffi_types_t::long_long_type:
-                    dcStructField(s, DC_SIGCHAR_LONGLONG, DEFAULT_ALIGNMENT, 1);
-                    break;
-                case ffi_types_t::float_type:
-                    dcStructField(s, DC_SIGCHAR_FLOAT, DEFAULT_ALIGNMENT, 1);
-                    break;
-                case ffi_types_t::double_type:
-                    dcStructField(s, DC_SIGCHAR_DOUBLE, DEFAULT_ALIGNMENT, 1);
-                    break;
-                case ffi_types_t::pointer_type:
-                    dcStructField(s, DC_SIGCHAR_POINTER, DEFAULT_ALIGNMENT, 1);
-                    break;
-                case ffi_types_t::struct_type: {
-                    dcStructField(s, DC_SIGCHAR_STRUCT, DEFAULT_ALIGNMENT, 1);
-                    dcSubStruct(s, value.fields.size(), DEFAULT_ALIGNMENT, 1);
-                    value.add_struct_fields(s);
-                    dcCloseStruct(s);
-                    break;
-                }
-            }
-        }
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-
-    void function_signature_t::apply_calling_convention(DCCallVM* vm) {
-        switch (calling_mode) {
-            case ffi_calling_mode_t::c_default:
-                dcMode(vm, DC_CALL_C_DEFAULT);
-                break;
-            case ffi_calling_mode_t::c_ellipsis:
-                dcMode(vm, DC_CALL_C_ELLIPSIS);
-                break;
-            case ffi_calling_mode_t::c_ellipsis_varargs:
-                dcMode(vm, DC_CALL_C_ELLIPSIS_VARARGS);
-                break;
-        }
-    }
-
-    uint64_t function_signature_t::call(DCCallVM* vm, uint64_t address) {
-        switch (return_value.type) {
-            case ffi_types_t::void_type:
-                dcCallVoid(vm, reinterpret_cast<DCpointer>(address));
-                break;
-            case ffi_types_t::bool_type: {
-                auto value = static_cast<uint64_t>(dcCallBool(
-                    vm,
-                    reinterpret_cast<DCpointer>(address)));
-                return value;
-            }
-            case ffi_types_t::char_type: {
-                auto value = static_cast<uint64_t>(dcCallChar(
-                    vm,
-                    reinterpret_cast<DCpointer>(address)));
-                return value;
-            }
-            case ffi_types_t::short_type: {
-                auto value = static_cast<uint64_t>(dcCallShort(
-                    vm,
-                    reinterpret_cast<DCpointer>(address)));
-                return value;
-            }
-            case ffi_types_t::int_type: {
-                auto value = static_cast<uint64_t>(dcCallInt(
-                    vm,
-                    reinterpret_cast<DCpointer>(address)));
-                return value;
-            }
-            case ffi_types_t::long_type: {
-                auto value = static_cast<uint64_t>(dcCallLong(
-                    vm,
-                    reinterpret_cast<DCpointer>(address)));
-                return value;
-            }
-            case ffi_types_t::long_long_type: {
-                auto value = static_cast<uint64_t>(dcCallLongLong(
-                    vm,
-                    reinterpret_cast<DCpointer>(address)));
-                return value;
-            }
-            case ffi_types_t::float_type: {
-                auto value = static_cast<uint64_t>(dcCallFloat(
-                    vm,
-                    reinterpret_cast<DCpointer>(address)));
-                return value;
-            }
-            case ffi_types_t::double_type: {
-                auto value = static_cast<uint64_t>(dcCallDouble(
-                    vm,
-                    reinterpret_cast<DCpointer>(address)));
-                return value;
-            }
-            case ffi_types_t::pointer_type: {
-                auto value = reinterpret_cast<uint64_t>(dcCallPointer(
-                    vm,
-                    reinterpret_cast<DCpointer>(address)));
-                return value;
-            }
-            case ffi_types_t::struct_type: {
-                auto dc_struct = return_value.struct_meta_info();
-
-                DCpointer output_value;
-                dcCallStruct(
-                    vm,
-                    reinterpret_cast<DCpointer>(address),
-                    dc_struct,
-                    &output_value);
-
-                return reinterpret_cast<uint64_t>(output_value);
-            }
-        }
-
-        return 0;
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-
-    bool shared_library_t::initialize(
-            common::result& r,
-            const boost::filesystem::path& path) {
-        _library = dlLoadLibrary(path.string().c_str());
-        if (_library == nullptr) {
-            r.add_message(
-                "B062",
-                fmt::format("unable to load library image file: {}.", path.string()),
-                true);
-            return false;
-        }
-        get_library_path();
-        return true;
-    }
-
-    bool shared_library_t::initialize(common::result& r) {
-        _library = dlLoadLibrary(nullptr);
-        if (_library == nullptr) {
-            r.add_message(
-                "B062",
-                fmt::format("unable to load library image for self."),
-                true);
-            return false;
-        }
-        get_library_path();
-        return true;
-    }
-
-    void shared_library_t::get_library_path() {
-        if (_library == nullptr)
-            return;
-
-        char library_path[PATH_MAX];
-        dlGetLibraryPath(_library, library_path, PATH_MAX);
-        _path = library_path;
-    }
-
-    void shared_library_t::load_symbols(const char* path) {
-        _symbols.clear();
-        auto symbol_ptr = dlSymsInit(path);
-        if (symbol_ptr != nullptr) {
-            int count = dlSymsCount(symbol_ptr);
-            for (int i = 0; i < count; i++) {
-                const char* symbol_name = dlSymsName(symbol_ptr, i);
-                if (symbol_name != nullptr)
-                    _symbols.insert(std::make_pair(symbol_name, nullptr));
-            }
-            dlSymsCleanup(symbol_ptr);
-        }
-    }
-
-    bool shared_library_t::exports_symbol(const std::string& symbol_name) {
-        return _symbols.count(symbol_name) > 0;
-    }
-
-    void* shared_library_t::symbol_address(const std::string& symbol_name) {
-        DLLib* effective_library = nullptr;
-#if defined(__FreeBSD__)
-        effective_library = _self_loaded ? nullptr : _library;
-#else
-        effective_library = _library;
-#endif
-        auto it = _symbols.find(symbol_name);
-        if (it == _symbols.end()) {
-            auto func_ptr = dlFindSymbol(effective_library, symbol_name.c_str());
-            _symbols.insert(std::make_pair(symbol_name, func_ptr));
-            return func_ptr;
-        }
-
-        if (it->second == nullptr) {
-            it->second = dlFindSymbol(effective_library, symbol_name.c_str());
-        }
-
-        return it->second;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -725,19 +446,18 @@ namespace basecode::vm {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    terp::terp(size_t heap_size, size_t stack_size) : _heap_size(heap_size),
-                                                      _stack_size(stack_size),
-                                                      _icache(this) {
+    terp::terp(
+        vm::ffi* ffi,
+        vm::allocator* allocator,
+        size_t heap_size,
+        size_t stack_size) : _ffi(ffi),
+                             _heap_size(heap_size),
+                             _stack_size(stack_size),
+                             _icache(this),
+                             _allocator(allocator) {
     }
 
     terp::~terp() {
-        if (_call_vm != nullptr) {
-            dcFree(_call_vm);
-            _call_vm = nullptr;
-        }
-
-        free_heap_block_list();
-
         delete _heap;
         _heap = nullptr;
     }
@@ -753,8 +473,8 @@ namespace basecode::vm {
         }
 
         _icache.reset();
-        dcReset(_call_vm);
-        free_heap_block_list();
+        _ffi->clear();
+        _allocator->reset();
 
         _exited = false;
     }
@@ -767,44 +487,6 @@ namespace basecode::vm {
 
     uint64_t terp::peek() const {
         return read(op_sizes::qword, _registers.r[register_sp].qw);
-    }
-
-    bool terp::register_foreign_function(
-            common::result& r,
-            function_signature_t& signature) {
-        if (signature.func_ptr != nullptr) {
-            auto it = _foreign_functions.find(signature.func_ptr);
-            if (it != _foreign_functions.end())
-                return true;
-        }
-
-        auto func_ptr = signature.library->symbol_address(signature.symbol);
-        if (func_ptr == nullptr) {
-            // XXX: add an error message
-            return false;
-        }
-
-        signature.func_ptr = func_ptr;
-        _foreign_functions.insert(std::make_pair(func_ptr, signature));
-
-        return true;
-    }
-
-    void terp::dump_shared_libraries() {
-        fmt::print("\n{:32}{:64}{:17}\n", "Image Name", "Symbol Name", "Address");
-        fmt::print("{}\n", std::string(180, '-'));
-        for (const auto& kvp : _shared_libraries) {
-            auto index = 0;
-            for (const auto& entry : kvp.second.symbols()) {
-                fmt::print(
-                    "{:32}{:64}${:016X}\n",
-                    index == 0 ? kvp.first.substr(0, std::min<size_t>(32, kvp.first.length())) : "",
-                    entry.first.substr(0, std::min<size_t>(64, entry.first.length())),
-                    reinterpret_cast<uint64_t>(entry.second));
-                ++index;
-            }
-        }
-        fmt::print("\n");
     }
 
     void terp::dump_state(uint8_t count) {
@@ -883,7 +565,7 @@ namespace basecode::vm {
 
                 size.alias.u *= op_size_in_bytes(inst.size);
                 operand_value_t address;
-                address.alias.u = alloc(size.alias.u);
+                address.alias.u = _allocator->alloc(size.alias.u);
                 if (address.alias.u == 0) {
                     execute_trap(trap_out_of_memory);
                     return false;
@@ -907,7 +589,7 @@ namespace basecode::vm {
                 if (!get_operand_value(r, inst, 0, address))
                     return false;
 
-                auto freed_size = free(address.alias.u);
+                auto freed_size = _allocator->free(address.alias.u);
 
                 _registers.flags(register_file_t::flags_t::carry, false);
                 _registers.flags(register_file_t::flags_t::subtract, false);
@@ -923,7 +605,7 @@ namespace basecode::vm {
                     return false;
 
                 operand_value_t block_size;
-                block_size.alias.u = size(address.alias.u);
+                block_size.alias.u = _allocator->size(address.alias.u);
                 if (!set_target_operand_value(r, inst.operands[0], inst.size, block_size))
                     return false;
 
@@ -2482,33 +2164,32 @@ namespace basecode::vm {
                 if (!get_operand_value(r, inst, 0, address))
                     return false;
 
-                auto it = _foreign_functions.find(reinterpret_cast<void*>(address.alias.u));
-                if (it == _foreign_functions.end()) {
+                auto func = _ffi->find_function(address.alias.u);
+                if (func == nullptr) {
                     execute_trap(trap_invalid_ffi_call);
                     break;
                 }
 
-                auto func_signature = &it->second;
-                func_signature->apply_calling_convention(_call_vm);
-                dcReset(_call_vm);
+                _ffi->reset();
+                _ffi->calling_convention(func->calling_mode);
 
                 size_t param_index = 0;
                 auto arg_count = pop();
                 while (arg_count > 0) {
-                    auto& argument = func_signature->arguments[param_index];
+                    auto& argument = func->arguments[param_index];
 
                     auto value = pop();
                     if (argument.type == ffi_types_t::pointer_type)
                         value += reinterpret_cast<uint64_t>(_heap);
-                    argument.push(_call_vm, value);
+                    _ffi->push(argument.type, value);
                     --arg_count;
 
-                    if (param_index < func_signature->arguments.size())
+                    if (param_index < func->arguments.size())
                         ++param_index;
                 }
 
-                uint64_t result_value = func_signature->call(_call_vm, address.alias.u);
-                if (func_signature->return_value.type != ffi_types_t::void_type)
+                auto result_value = _ffi->call(func);
+                if (func->return_value.type != ffi_types_t::void_type)
                     push(result_value);
 
                 break;
@@ -2548,164 +2229,10 @@ namespace basecode::vm {
         return;
     }
 
-    void terp::free_heap_block_list() {
-        _address_blocks.clear();
-
-        if (_head_heap_block == nullptr)
-            return;
-
-        auto current_block = _head_heap_block;
-        while (current_block != nullptr) {
-            auto next_block = current_block->next;
-            delete current_block;
-            current_block = next_block;
-        }
-
-        _head_heap_block = nullptr;
-    }
-
-    uint64_t terp::alloc(uint64_t size) {
-        uint64_t size_delta = size;
-        heap_block_t* best_sized_block = nullptr;
-        auto current_block = _head_heap_block;
-
-        while (current_block != nullptr) {
-            if (current_block->is_free()) {
-                if (current_block->size == size) {
-                    current_block->mark_allocated();
-                    return current_block->address;
-                } else if (current_block->size > size) {
-                    auto local_size_delta = current_block->size - size;
-                    if (best_sized_block == nullptr
-                    ||  local_size_delta < size_delta) {
-                        size_delta = local_size_delta;
-                        best_sized_block = current_block;
-                    }
-                }
-            }
-            current_block = current_block->next;
-        }
-
-        if (best_sized_block != nullptr) {
-            // if the block is over-sized by 64 bytes or less, just use it as-is
-            if (size_delta <= 64) {
-                best_sized_block->mark_allocated();
-                return best_sized_block->address;
-            } else {
-                // otherwise, we need to split the block in two
-                auto new_block = new heap_block_t;
-                new_block->size = size;
-                new_block->mark_allocated();
-                new_block->prev = best_sized_block->prev;
-                if (new_block->prev != nullptr)
-                    new_block->prev->next = new_block;
-                new_block->next = best_sized_block;
-                new_block->address = best_sized_block->address;
-
-                best_sized_block->prev = new_block;
-                best_sized_block->address += size;
-                best_sized_block->size -= size;
-
-                if (new_block->prev == nullptr)
-                    _head_heap_block = new_block;
-
-                _address_blocks[new_block->address] = new_block;
-                _address_blocks[best_sized_block->address] = best_sized_block;
-
-                return best_sized_block->prev->address;
-            }
-        }
-
-        return 0;
-    }
-
-    uint64_t terp::free(uint64_t address) {
-        auto it = _address_blocks.find(address);
-        if (it == _address_blocks.end())
-            return 0;
-
-        heap_block_t* freed_block = it->second;
-        auto freed_size = freed_block->size;
-        freed_block->clear_allocated();
-
-        // coalesce free blocks
-        // first, we walk down the prev chain until we find a non-free block
-        // then, we walk down the next chain until we find a non-free block
-        // because blocks are known to be adjacent to each other in the heap,
-        //          we then coalesce these blocks into one
-
-        std::vector<heap_block_t*> delete_list {};
-        uint64_t new_size = 0;
-
-        auto first_free_block = freed_block;
-        while (true) {
-            auto prev = first_free_block->prev;
-            if (prev == nullptr || !prev->is_free())
-                break;
-            first_free_block = prev;
-        }
-
-        auto last_free_block = freed_block;
-        while (true) {
-            auto next = last_free_block->next;
-            if (next == nullptr || !next->is_free())
-                break;
-            last_free_block = next;
-        }
-
-        auto current_node = first_free_block;
-        while (true) {
-            delete_list.emplace_back(current_node);
-            new_size += current_node->size;
-
-            if (current_node == last_free_block)
-                break;
-
-            current_node = current_node->next;
-        }
-
-        if (first_free_block != last_free_block) {
-            auto new_block = new heap_block_t;
-            new_block->size = new_size;
-
-            new_block->next = last_free_block->next;
-            if (new_block->next != nullptr)
-                new_block->next->prev = new_block;
-
-            new_block->prev = first_free_block->prev;
-            if (new_block->prev != nullptr)
-                new_block->prev->next = new_block;
-
-            new_block->address = first_free_block->address;
-
-            for (auto block : delete_list) {
-                _address_blocks.erase(block->address);
-                delete block;
-            }
-
-            if (new_block->prev == nullptr)
-                _head_heap_block = new_block;
-
-            _address_blocks[new_block->address] = new_block;
-        }
-
-        return freed_size;
-    }
-
-    uint64_t terp::size(uint64_t address) {
-        auto it = _address_blocks.find(address);
-        if (it == _address_blocks.end())
-            return 0;
-        return it->second->size;
-    }
-
     bool terp::initialize(common::result& r) {
         if (_heap != nullptr)
             return true;
 
-        _call_vm = dcNewCallVM(4096);
-
-        _shared_libraries.clear();
         _heap = new uint8_t[_heap_size];
 
         heap_vector(heap_vectors_t::top_of_stack, _heap_size);
@@ -2726,24 +2253,6 @@ namespace basecode::vm {
         if (it == _traps.end())
             return;
         it->second(this);
-    }
-
-    shared_library_t* terp::load_shared_library(
-            common::result& r,
-            const boost::filesystem::path& path) {
-        auto it = _shared_libraries.find(path.string());
-        if (it != _shared_libraries.end())
-            return &it->second;
-
-        shared_library_t shared_library {};
-        if (!shared_library.initialize(r, path))
-            return nullptr;
-
-        auto pair = _shared_libraries.insert(std::make_pair(
-            path.string(),
-            shared_library));
-
-        return &(*pair.first).second;
     }
 
     std::vector<uint64_t> terp::jump_to_subroutine(
@@ -2788,10 +2297,8 @@ namespace basecode::vm {
 
     void terp::heap_free_space_begin(uint64_t address) {
         heap_vector(heap_vectors_t::free_space_start, address);
-        _head_heap_block = new heap_block_t;
-        _head_heap_block->address = address;
-        _head_heap_block->size = heap_vector(heap_vectors_t::bottom_of_stack) - address;
-        _address_blocks.insert(std::make_pair(_head_heap_block->address, _head_heap_block));
+        auto size = heap_vector(heap_vectors_t::bottom_of_stack) - address;
+        _allocator->initialize(address, size);
     }
 
     // XXX: need to add support for both big and little endian
@@ -3012,13 +2519,6 @@ namespace basecode::vm {
                 break;
             }
         }
-    }
-
-    shared_library_t* terp::shared_library(const boost::filesystem::path& path) {
-        auto it = _shared_libraries.find(path.string());
-        if (it == _shared_libraries.end())
-            return nullptr;
-        return &it->second;
     }
 
     void terp::register_trap(uint8_t index, const terp::trap_callable& callable) {

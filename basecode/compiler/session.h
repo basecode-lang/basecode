@@ -15,6 +15,7 @@
 #include <cstdio>
 #include <string>
 #include <vector>
+#include <vm/ffi.h>
 #include <vm/terp.h>
 #include <fmt/format.h>
 #include <vm/assembler.h>
@@ -22,6 +23,7 @@
 #include <parser/parser.h>
 #include <boost/filesystem.hpp>
 #include <common/source_file.h>
+#include <vm/default_allocator.h>
 #include "variable.h"
 #include "element_map.h"
 #include "scope_manager.h"
@@ -54,6 +56,8 @@ namespace basecode::compiler {
             const std::string& message,
             const common::source_location& location);
 
+        vm::ffi& ffi();
+
         bool compile();
 
         void finalize();
@@ -80,6 +84,8 @@ namespace basecode::compiler {
         vm::assembler& assembler();
 
         ast_evaluator& evaluator();
+
+        vm::allocator* allocator();
 
         compiler::program& program();
 
@@ -147,6 +153,7 @@ namespace basecode::compiler {
         void write_code_dom_graph(const boost::filesystem::path& path);
 
     private:
+        vm::ffi _ffi;
         vm::terp _terp;
         common::result _result;
         element_builder _builder;
