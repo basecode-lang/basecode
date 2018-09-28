@@ -1,13 +1,32 @@
 support ::= module("support/module.bc");
 
 //text := "hello world!";
+//support::print("text.length   := %d\n", text.length);
+//support::print("text.capacity := %d\n", text.capacity);
+//support::print("text.data     := $%08x\n", text.data);
 //
-//support::print("%s\n", text);
+//content: ^u8 := text.data;
+//support::print("content       := $%08x\n", content);
+//
+//i: u32 := 0;
+//while i < text.length {
+//    support::print("%c", content^);
+//    content +:= 1;
+//    i +:= 1;
+//};
 
-a: u32;
-a := 2;
+vector3 ::= struct {
+    x: s32;
+    y: s32;
+    z: s32;
+};
 
-b: u32 := ((a * 6) shl 2) + 16;
+entity ::= struct {
+    pos: vector3;
+    dir: vector3;
+};
 
-support::print("a := %d\n", a);
-support::print("b := %d\n", b);
+player: entity;
+support::print("player.pos.x := %d\n", player.pos.x);
+support::print("player.pos.y := %d\n", player.pos.y);
+support::print("player.pos.z := %d\n", player.pos.z);

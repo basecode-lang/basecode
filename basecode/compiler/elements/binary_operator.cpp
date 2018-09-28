@@ -116,8 +116,17 @@ namespace basecode::compiler {
                 break;
             }
             case operator_type_t::member_access: {
-                block->comment("XXX: implement member access", 4);
-                block->nop();
+                variable_handle_t lhs_var;
+                if (!session.variable(_lhs, lhs_var))
+                    return false;
+
+                variable_handle_t field_var;
+                if (!lhs_var->field(_rhs, field_var))
+                    return false;
+                field_var->read();
+
+                auto target_reg = assembler.current_target_register();
+                block->move_reg_to_reg(*target_reg, field_var->value_reg());
                 break;
             }
             case operator_type_t::assignment: {

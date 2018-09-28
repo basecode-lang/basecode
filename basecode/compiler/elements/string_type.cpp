@@ -98,9 +98,12 @@ namespace basecode::compiler {
 
         block->alloc(
             vm::op_sizes::byte,
-            data_field->address_reg(),
+            data_field->value_reg(),
             capacity_field->value_reg());
-        block->zero(vm::op_sizes::byte, data_field->address_reg(), capacity);
+        block->zero(
+            vm::op_sizes::byte,
+            data_field->value_reg(),
+            capacity);
 
         if (literal != nullptr) {
             block->comment(
@@ -116,11 +119,12 @@ namespace basecode::compiler {
 
             block->copy(
                 vm::op_sizes::byte,
-                data_field->address_reg(),
-                literal_var->address_reg(),
+                data_field->value_reg(),
+                literal_var->value_reg(),
                 length);
         }
 
+        data_field->write();
         return true;
     }
 

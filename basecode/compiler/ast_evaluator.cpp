@@ -329,8 +329,8 @@ namespace basecode::compiler {
                 break;
             }
 
-            compiler::field* new_field = nullptr;
-            auto expr_node = child->rhs->rhs;
+            compiler::field* previous_field = nullptr;
+            auto expr_node = child->rhs;
             switch (expr_node->type) {
                 case syntax::ast_node_types_t::assignment:
                 case syntax::ast_node_types_t::constant_assignment: {
@@ -341,12 +341,13 @@ namespace basecode::compiler {
                         list,
                         type->scope());
                     if (success) {
-                        new_field = builder.make_field(
+                        auto new_field = builder.make_field(
                             type,
                             type->scope(),
                             dynamic_cast<compiler::declaration*>(list.front()),
-                            new_field != nullptr ? new_field->end_offset() : 0);
+                            previous_field != nullptr ? previous_field->end_offset() : 0);
                         type->fields().add(new_field);
+                        previous_field = new_field;
                     }
                     break;
                 }
@@ -356,12 +357,13 @@ namespace basecode::compiler {
                         expr_node.get(),
                         type->scope());
                     if (field_decl != nullptr) {
-                        new_field = builder.make_field(
+                        auto new_field = builder.make_field(
                             type,
                             type->scope(),
                             field_decl,
-                            new_field != nullptr ? new_field->end_offset() : 0);
+                            previous_field != nullptr ? previous_field->end_offset() : 0);
                         type->fields().add(new_field);
+                        previous_field = new_field;
                     }
                     break;
                 }

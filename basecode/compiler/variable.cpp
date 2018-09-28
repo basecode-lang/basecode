@@ -160,22 +160,36 @@ namespace basecode::compiler {
 
         address();
 
+        if (_parent != nullptr)
+            _parent->read();
+
         auto& assembler = _session.assembler();
         auto block = assembler.current_block();
 
         switch (_element->element_type()) {
             case element_type_t::identifier: {
                 auto var = dynamic_cast<compiler::identifier*>(_element);
-                block->comment(
-                    fmt::format(
-                        "load global value: {}",
-                        var->symbol()->name()),
-                    4);
+                if (_field == nullptr) {
+                    block->comment(
+                        fmt::format(
+                            "load global value: {}",
+                            var->symbol()->name()),
+                        4);
+                } else {
+                    block->comment(
+                        fmt::format(
+                            "load field value: {}",
+                            var->symbol()->name()),
+                        4);
+                }
 
                 if (_value.reg.size != vm::op_sizes::qword)
                     block->clr(vm::op_sizes::qword, _value.reg);
 
-                block->load_to_reg(_value.reg, _address.reg);
+                block->load_to_reg(
+                    _value.reg,
+                    _field != nullptr ? _parent->_address.reg : _address.reg,
+                    _field != nullptr ? _field->start_offset() : 0);
                 break;
             }
             default: {
@@ -213,6 +227,13 @@ namespace basecode::compiler {
         return false;
     }
 
+    bool variable::field(
+            compiler::element* element,
+            variable_handle_t& handle) {
+        auto var = dynamic_cast<compiler::identifier_reference*>(element);
+        return field(var->symbol().name, handle);
+    }
+
     bool variable::write() {
         if (flag(flags_t::f_written))
             return false;
@@ -227,7 +248,10 @@ namespace basecode::compiler {
             target_register = &_value.reg;
         }
 
-        block->store_from_reg(_address.reg, *target_register);
+        block->store_from_reg(
+            _field != nullptr ? _parent->_address.reg : _address.reg,
+            *target_register,
+            _field != nullptr ? _field->start_offset() : 0);
 
         flag(flags_t::f_written, true);
         flag(flags_t::f_read, false);
@@ -238,24 +262,28 @@ namespace basecode::compiler {
         if (flag(flags_t::f_addressed))
             return false;
 
-        auto& assembler = _session.assembler();
-        auto block = assembler.current_block();
+        if (_parent != nullptr) {
+            _parent->address();
+        } else {
+            auto& assembler = _session.assembler();
+            auto block = assembler.current_block();
 
-        switch (_element->element_type()) {
-            case element_type_t::identifier: {
-                auto var = dynamic_cast<compiler::identifier*>(_element);
-                block->comment(
-                    fmt::format(
-                        "load global address: {}",
-                        var->symbol()->name()),
-                    4);
+            switch (_element->element_type()) {
+                case element_type_t::identifier: {
+                    auto var = dynamic_cast<compiler::identifier*>(_element);
+                    block->comment(
+                        fmt::format(
+                            "load global address: {}",
+                            var->symbol()->name()),
+                        4);
 
-                auto label_ref = assembler.make_label_ref(var->symbol()->name());
-                block->move_label_to_reg(_address.reg, label_ref);
-                break;
+                    auto label_ref = assembler.make_label_ref(var->symbol()->name());
+                    block->move_label_to_reg(_address.reg, label_ref);
+                    break;
+                }
+                default:
+                    break;
             }
-            default:
-                break;
         }
 
         flag(flags_t::f_addressed, true);
@@ -322,9 +350,19 @@ namespace basecode::compiler {
     }
 
     bool variable::write(uint64_t value) {
+        if (flag(flags_t::f_written))
+            return false;
+
+        address();
+
         auto block = _session.assembler().current_block();
         block->move_constant_to_reg(_value.reg, value);
-        block->store_from_reg(_address.reg, _value.reg);
+        block->store_from_reg(
+            _field != nullptr ? _parent->_address.reg : _address.reg,
+            _value.reg,
+            _field != nullptr ? _field->start_offset() : 0);
+
+        flag(flags_t::f_written, true);
         return true;
     }
 

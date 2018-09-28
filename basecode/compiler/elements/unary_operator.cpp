@@ -91,6 +91,7 @@ namespace basecode::compiler {
             }
             case operator_type_t::pointer_dereference: {
                 block->comment("pointer dereference", 4);
+                block->clr(vm::op_sizes::qword, *target_reg);
                 block->load_to_reg(*target_reg, rhs_var->value_reg());
                 break;
             }

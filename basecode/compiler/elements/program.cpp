@@ -479,7 +479,9 @@ namespace basecode::compiler {
                             continue;
                     }
                     case element_type_t::proc_type:
+                    case element_type_t::composite_type:
                     case element_type_t::type_reference:
+                    case element_type_t::module_reference:
                         continue;
                     default:
                         break;

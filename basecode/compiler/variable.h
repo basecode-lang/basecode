@@ -79,6 +79,10 @@ namespace basecode::compiler {
             compiler::element* element);
 
         bool field(
+            compiler::element* element,
+            variable_handle_t& handle);
+
+        bool field(
             const std::string& name,
             variable_handle_t& handle);
 
