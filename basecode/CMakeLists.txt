@@ -100,7 +100,6 @@ add_library(
     vm/register_allocator.cpp vm/register_allocator.h
 
     compiler/elements.h
-    compiler/compiler_types.h
     compiler/session.cpp compiler/session.h
     compiler/variable.cpp compiler/variable.h
     compiler/element_map.cpp compiler/element_map.h
@@ -109,6 +108,7 @@ add_library(
     compiler/scope_manager.cpp compiler/scope_manager.h
     compiler/ast_evaluator.cpp compiler/ast_evaluator.h
     compiler/elements/with.cpp compiler/elements/with.h
+    compiler/compiler_types.cpp compiler/compiler_types.h
     compiler/elements/field.cpp compiler/elements/field.h
     compiler/elements/block.cpp compiler/elements/block.h
     compiler/elements/label.cpp compiler/elements/label.h

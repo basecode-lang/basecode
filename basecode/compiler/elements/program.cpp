@@ -471,14 +471,25 @@ namespace basecode::compiler {
             }
 
             auto init = var->initializer();
-            if (init != nullptr
-                &&  (init->expression()->element_type() == element_type_t::type_reference
-                     || init->expression()->element_type() == element_type_t::proc_type)) {
-                continue;
+            if (init != nullptr) {
+                switch (init->expression()->element_type()) {
+                    case element_type_t::directive: {
+                        auto directive = dynamic_cast<compiler::directive*>(init->expression());
+                        if (directive->name() == "type")
+                            continue;
+                    }
+                    case element_type_t::proc_type:
+                    case element_type_t::type_reference:
+                        continue;
+                    default:
+                        break;
+                }
             }
 
-            if (var_type->element_type() == element_type_t::namespace_type)
+            if (var_type->element_type() == element_type_t::namespace_type
+            ||  var_type->element_type() == element_type_t::module_reference) {
                 continue;
+            }
 
             if (var->is_constant()) {
                 ro_list->emplace_back(var);

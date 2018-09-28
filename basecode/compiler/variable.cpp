@@ -158,25 +158,14 @@ namespace basecode::compiler {
         if (flag(flags_t::f_read))
             return false;
 
+        address();
+
         auto& assembler = _session.assembler();
         auto block = assembler.current_block();
 
         switch (_element->element_type()) {
             case element_type_t::identifier: {
                 auto var = dynamic_cast<compiler::identifier*>(_element);
-                if (!flag(flags_t::f_addressed)) {
-                    block->comment(
-                        fmt::format(
-                            "load global address: {}",
-                            var->symbol()->name()),
-                        4);
-
-                    auto label_ref = assembler.make_label_ref(var->symbol()->name());
-                    block->move_label_to_reg(_address.reg, label_ref);
-
-                    flag(flags_t::f_addressed, true);
-                }
-
                 block->comment(
                     fmt::format(
                         "load global value: {}",
@@ -190,7 +179,7 @@ namespace basecode::compiler {
                 break;
             }
             default: {
-                assembler.push_target_register(_address.reg);
+                assembler.push_target_register(_value.reg);
                 _element->emit(_session);
                 assembler.pop_target_register();
                 break;
@@ -202,17 +191,74 @@ namespace basecode::compiler {
         return true;
     }
 
+    bool variable::field(
+            const std::string& name,
+            variable_handle_t& handle) {
+        if (!_type.inferred_type->is_composite_type())
+            return false;
+
+        auto type = dynamic_cast<compiler::composite_type*>(_type.inferred_type);
+        auto field = type->fields().find_by_name(name);
+        if (field == nullptr)
+            return false;
+
+        if (_session.variable(field->identifier(), handle)) {
+            if (handle->_parent == nullptr) {
+                handle->_parent = this;
+                handle->_field = field;
+            }
+            return true;
+        }
+
+        return false;
+    }
+
     bool variable::write() {
         if (flag(flags_t::f_written))
             return false;
 
+        address();
+
         auto& assembler = _session.assembler();
         auto block = _session.assembler().current_block();
-        block->store_from_reg(
-            _address.reg,
-            *(assembler.current_target_register()));
+
+        auto target_register = assembler.current_target_register();
+        if (target_register == nullptr) {
+            target_register = &_value.reg;
+        }
+
+        block->store_from_reg(_address.reg, *target_register);
+
         flag(flags_t::f_written, true);
         flag(flags_t::f_read, false);
+        return true;
+    }
+
+    bool variable::address() {
+        if (flag(flags_t::f_addressed))
+            return false;
+
+        auto& assembler = _session.assembler();
+        auto block = assembler.current_block();
+
+        switch (_element->element_type()) {
+            case element_type_t::identifier: {
+                auto var = dynamic_cast<compiler::identifier*>(_element);
+                block->comment(
+                    fmt::format(
+                        "load global address: {}",
+                        var->symbol()->name()),
+                    4);
+
+                auto label_ref = assembler.make_label_ref(var->symbol()->name());
+                block->move_label_to_reg(_address.reg, label_ref);
+                break;
+            }
+            default:
+                break;
+        }
+
+        flag(flags_t::f_addressed, true);
         return true;
     }
 
@@ -282,6 +328,17 @@ namespace basecode::compiler {
         return true;
     }
 
+    bool variable::write(variable* value) {
+        auto& assembler = _session.assembler();
+        auto block = assembler.current_block();
+
+        address();
+        value->read();
+        block->store_from_reg(_address.reg, value->value_reg());
+
+        return true;
+    }
+
     compiler::element* variable::element() {
         return _element;
     }
@@ -292,21 +349,6 @@ namespace basecode::compiler {
 
     const vm::register_t& variable::value_reg() const {
         return _value.reg;
-    }
-
-    variable* variable::field(const std::string& name) {
-        if (!_type.inferred_type->is_composite_type())
-            return nullptr;
-        auto type = dynamic_cast<compiler::composite_type*>(_type.inferred_type);
-        auto field = type->fields().find_by_name(name);
-        if (field == nullptr)
-            return nullptr;
-        auto var = _session.variable(field->identifier());
-        if (var->_parent == nullptr) {
-            var->_parent = this;
-            var->_field = field;
-        }
-        return var;
     }
 
     const vm::register_t& variable::address_reg() const {

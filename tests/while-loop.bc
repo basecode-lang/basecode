@@ -1,31 +1,16 @@
 support ::= module("support/module.bc");
 
 i: u32 := 1;
-
-type_of_string := type_of(#type string);
-
-type_of_i: ^type := nil;
-type_of_i := type_of(i);
-
-type_name: string;
-
-//  MOVE.QW I0, type_name
-//  MOVE.QW I1, type_of_i
-//  LOAD.QW I2, I1
-//  MOVE.QW I3, I2, offset(name)        ; == 0
-//  COPY.B  I0, I3, size_of(string)     ; == 16 bytes
-type_name := type_of_i.name;
-
 while i <= 20 {
-    print("i := %02d ... ", i);
+    support::print("i := %02d ... ", i);
     if (i % 15) == 0 {
-        print("fizzbuzz\n");
+        support::print("fizzbuzz\n");
     } else if (i % 5) == 0 {
-        print("buzz\n");
+        support::print("buzz\n");
     } else if (i % 3) == 0 {
-        print("fizz\n");
+        support::print("fizz\n");
     } else {
-        print("zzzzz\n");
+        support::print("zzzzz\n");
     };
     i +:= 1;
 };
@@ -35,7 +20,7 @@ k: u32 := 0;
 while true {
     k +:= 1;
 
-    print("j := %02d\n", j);
+    support::print("j := %02d\n", j);
 
     if (k % 4) == 0 {
         continue;
@@ -56,4 +41,4 @@ while true {
     j +:= 4;
 };
 
-print("after: j := %02d\n", j);
+support::print("after: j := %02d\n", j);

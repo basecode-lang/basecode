@@ -67,39 +67,36 @@ namespace basecode::compiler {
         auto block = assembler.current_block();
         auto target_reg = assembler.current_target_register();
 
-//        auto rhs_reg = register_for(session, _rhs);
-//        if (!rhs_reg.valid)
-//            return false;
-//
-//        assembler.push_target_register(rhs_reg.reg);
-//        _rhs->emit(session);
-//        assembler.pop_target_register();
-//
-//        switch (operator_type()) {
-//            case operator_type_t::negate: {
-//                block->comment("negate", 4);
-//                block->neg(*target_reg, rhs_reg.reg);
-//                break;
-//            }
-//            case operator_type_t::binary_not: {
-//                block->comment("binary not", 4);
-//                block->not_op(*target_reg, rhs_reg.reg);
-//                break;
-//            }
-//            case operator_type_t::logical_not: {
-//                block->comment("logical not", 4);
-//                block->cmp(target_reg->size, rhs_reg.reg, 1);
-//                block->setnz(*target_reg);
-//                break;
-//            }
-//            case operator_type_t::pointer_dereference: {
-//                block->comment("pointer dereference", 4);
-//                block->load_to_reg(*target_reg, rhs_reg.reg);
-//                break;
-//            }
-//            default:
-//                break;
-//        }
+        variable_handle_t rhs_var;
+        if (!session.variable(_rhs, rhs_var))
+            return false;
+        rhs_var->read();
+
+        switch (operator_type()) {
+            case operator_type_t::negate: {
+                block->comment("negate", 4);
+                block->neg(*target_reg, rhs_var->value_reg());
+                break;
+            }
+            case operator_type_t::binary_not: {
+                block->comment("binary not", 4);
+                block->not_op(*target_reg, rhs_var->value_reg());
+                break;
+            }
+            case operator_type_t::logical_not: {
+                block->comment("logical not", 4);
+                block->cmp(target_reg->size, rhs_var->value_reg(), 1);
+                block->setnz(*target_reg);
+                break;
+            }
+            case operator_type_t::pointer_dereference: {
+                block->comment("pointer dereference", 4);
+                block->load_to_reg(*target_reg, rhs_var->value_reg());
+                break;
+            }
+            default:
+                break;
+        }
 
         return true;
     }

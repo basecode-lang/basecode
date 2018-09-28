@@ -52,9 +52,9 @@ namespace basecode::compiler {
     }
 
     bool float_literal::on_emit(compiler::session& session) {
-        auto instruction_block = session.assembler().current_block();
+        auto block = session.assembler().current_block();
         auto target_reg = session.assembler().current_target_register();
-        instruction_block->move_constant_to_reg(*target_reg, _value);
+        block->move_constant_to_reg(*target_reg, _value);
         return true;
     }
 

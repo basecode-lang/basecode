@@ -71,20 +71,17 @@ namespace basecode::compiler {
 
         auto& assembler = session.assembler();
         auto target_reg = assembler.current_target_register();
-        auto instruction_block = assembler.current_block();
+        auto block = assembler.current_block();
 
-//        auto temp_reg = register_for(session, _expression);
-//        if (!temp_reg.valid)
-//            return false;
-//
-//        assembler.push_target_register(temp_reg.reg);
-//        _expression->emit(session);
-//        assembler.pop_target_register();
-//
-//        instruction_block->comment(
-//            fmt::format("transmute<{}>", _type_ref->symbol().name),
-//            4);
-//        instruction_block->move_reg_to_reg(*target_reg, temp_reg.reg);
+        variable_handle_t temp_var;
+        if (!session.variable(_expression, temp_var))
+            return false;
+        temp_var->read();
+
+        block->comment(
+            fmt::format("transmute<{}>", _type_ref->symbol().name),
+            4);
+        block->move_reg_to_reg(*target_reg, temp_var->value_reg());
 
         return true;
     }

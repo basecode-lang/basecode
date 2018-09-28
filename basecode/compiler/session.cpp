@@ -89,6 +89,39 @@ namespace basecode::compiler {
             ->error(_result, code, message, location);
     }
 
+    bool session::variable(
+            compiler::element* element,
+            variable_handle_t& handle) {
+        compiler::element* target_element = element;
+
+        switch (element->element_type()) {
+            case element_type_t::identifier_reference: {
+                auto ref = dynamic_cast<compiler::identifier_reference*>(element);
+                target_element = ref->identifier();
+                break;
+            }
+            default: {
+                break;
+            }
+        }
+
+        auto it = _variables.find(target_element->id());
+        if (it == _variables.end()) {
+            compiler::variable var(*this, target_element);
+            if (!var.initialize())
+                return false;
+
+            auto new_it = _variables.insert(std::make_pair(
+                target_element->id(),
+                var));
+            handle.set(&new_it.first->second);
+        } else {
+            handle.set(&it->second);
+        }
+
+        return true;
+    }
+
     vm::ffi& session::ffi() {
         return _ffi;
     }
@@ -558,35 +591,6 @@ namespace basecode::compiler {
 
     void session::push_source_file(common::source_file* source_file) {
         _source_file_stack.push(source_file);
-    }
-
-    compiler::variable* session::variable(compiler::element* element) {
-        compiler::element* target_element = element;
-
-        switch (element->element_type()) {
-            case element_type_t::identifier_reference: {
-                auto ref = dynamic_cast<compiler::identifier_reference*>(element);
-                target_element = ref->identifier();
-                break;
-            }
-            default: {
-                break;
-            }
-        }
-
-        auto it = _variables.find(target_element->id());
-        if (it == _variables.end()) {
-            compiler::variable var(*this, target_element);
-            if (!var.initialize())
-                return nullptr;
-
-            auto new_it = _variables.insert(std::make_pair(
-                target_element->id(),
-                var));
-            return &new_it.first->second;
-        }
-
-        return &it->second;
     }
 
     common::id_t session::intern_string(compiler::string_literal* literal) {

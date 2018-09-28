@@ -46,29 +46,15 @@ namespace basecode::compiler {
             fmt::format("finalize identifier: {}", var->symbol()->name()),
             4);
 
-        auto compiler_var = session.variable(var);
-        if (compiler_var == nullptr) {
-            session.error(
-                var,
-                "P051",
-                fmt::format("missing compiler variable for {}.", var->label_name()),
-                var->location());
-            return false;
-        }
-
-        compiler_var->activate();
-
-        auto data_var = compiler_var->field("data");
-        data_var->activate();
-        if (!data_var->read())
+        variable_handle_t type_var;
+        if (!session.variable(var, type_var))
             return false;
 
-        defer({
-            compiler_var->deactivate();
-            data_var->deactivate();
-        });
-
-        block->free(data_var->value_reg());
+        variable_handle_t data_field;
+        if (!type_var->field("data", data_field))
+            return false;
+        data_field->read();
+        block->free(data_field->value_reg());
 
         return true;
     }
@@ -90,29 +76,31 @@ namespace basecode::compiler {
             fmt::format("initialize identifier: {}", var->symbol()->name()),
             4);
 
-        auto compiler_var = session.variable(var);
-        if (compiler_var == nullptr)
+        variable_handle_t type_var;
+        if (!session.variable(var, type_var))
             return false;
-        compiler_var->activate();
 
         auto length = static_cast<uint64_t>(literal != nullptr ? literal->value().length() : 0);
-        auto length_var = compiler_var->field("length");
-        length_var->activate();
-        length_var->write(length);
+        variable_handle_t length_field;
+        if (!type_var->field("length", length_field))
+            return false;
+        length_field->write(length);
 
         auto capacity = common::next_power_of_two(std::max<uint64_t>(length, 32));
-        auto capacity_var = compiler_var->field("capacity");
-        capacity_var->activate();
-        capacity_var->write(capacity);
+        variable_handle_t capacity_field;
+        if (!type_var->field("capacity", capacity_field))
+            return false;
+        capacity_field->write(capacity);
 
-        auto data_var = compiler_var->field("data");
-        data_var->activate();
+        variable_handle_t data_field;
+        if (!type_var->field("data", data_field))
+            return false;
 
         block->alloc(
             vm::op_sizes::byte,
-            data_var->address_reg(),
-            capacity_var->value_reg());
-        block->zero(vm::op_sizes::byte, data_var->address_reg(), capacity);
+            data_field->address_reg(),
+            capacity_field->value_reg());
+        block->zero(vm::op_sizes::byte, data_field->address_reg(), capacity);
 
         if (literal != nullptr) {
             block->comment(
@@ -121,22 +109,17 @@ namespace basecode::compiler {
                     literal->label_name()),
                 4);
 
-            auto literal_var = session.variable(literal);
-            literal_var->activate();
-            defer({ literal_var->deactivate(); });
+            variable_handle_t literal_var;
+            if (!session.variable(literal, literal_var))
+                return false;
             literal_var->read();
 
             block->copy(
                 vm::op_sizes::byte,
-                data_var->address_reg(),
+                data_field->address_reg(),
                 literal_var->address_reg(),
                 length);
         }
-
-        data_var->deactivate();
-        length_var->deactivate();
-        capacity_var->deactivate();
-        compiler_var->deactivate();
 
         return true;
     }

@@ -65,8 +65,8 @@ namespace basecode::compiler {
 
     bool argument_list::on_emit(compiler::session& session) {
         auto& assembler = session.assembler();
+        auto block = assembler.current_block();
 
-        auto instruction_block = assembler.current_block();
         for (auto it = _elements.rbegin(); it != _elements.rend(); ++it) {
             element* arg = *it;
             switch (arg->element_type()) {
@@ -80,20 +80,18 @@ namespace basecode::compiler {
                 case element_type_t::boolean_literal:
                 case element_type_t::integer_literal:
                 case element_type_t::identifier_reference: {
-//                    auto arg_reg = register_for(session, arg);
-//                    if (arg_reg.var != nullptr) {
-//                        arg_reg.clean_up = true;
-//                    }
-//                    assembler.push_target_register(arg_reg.reg);
-//                    arg->emit(session);
-//                    assembler.pop_target_register();
-//                    instruction_block->push(arg_reg.reg);
+                    variable_handle_t arg_var;
+                    if (!session.variable(arg, arg_var))
+                        return false;
+                    arg_var->read();
+                    block->push(arg_var->value_reg());
                     break;
                 }
                 default:
                     break;
             }
         }
+
         return true;
     }
 

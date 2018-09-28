@@ -30,7 +30,7 @@ namespace basecode::compiler {
 
     bool copy_intrinsic::on_emit(compiler::session& session) {
         auto& assembler = session.assembler();
-        auto instruction_block = assembler.current_block();
+        auto block = assembler.current_block();
 
         auto args = arguments()->elements();
         if (args.empty() || args.size() < 3 || args.size() > 3) {
@@ -42,42 +42,26 @@ namespace basecode::compiler {
             return false;
         }
 
-        auto dest_arg = args[0];
-        auto src_arg = args[1];
-        auto size_arg = args[2];
+        variable_handle_t dest_var;
+        if (!session.variable(args[0], dest_var))
+            return false;
+        dest_var->read();
 
-//        auto dest_arg_reg = register_for(session, dest_arg);
-//        if (dest_arg_reg.var != nullptr) {
-//            dest_arg_reg.clean_up = true;
-//        }
-//
-//        assembler.push_target_register(dest_arg_reg.reg);
-//        dest_arg->emit(session);
-//        assembler.pop_target_register();
-//
-//        auto src_arg_reg = register_for(session, src_arg);
-//        if (src_arg_reg.var != nullptr) {
-//            src_arg_reg.clean_up = true;
-//        }
-//
-//        assembler.push_target_register(src_arg_reg.reg);
-//        src_arg->emit(session);
-//        assembler.pop_target_register();
-//
-//        auto size_arg_reg = register_for(session, size_arg);
-//        if (size_arg_reg.var != nullptr) {
-//            size_arg_reg.clean_up = true;
-//        }
-//
-//        assembler.push_target_register(size_arg_reg.reg);
-//        size_arg->emit(session);
-//        assembler.pop_target_register();
-//
-//        instruction_block->copy(
-//            vm::op_sizes::byte,
-//            dest_arg_reg.reg,
-//            src_arg_reg.reg,
-//            size_arg_reg.reg);
+        variable_handle_t src_var;
+        if (!session.variable(args[1], src_var))
+            return false;
+        src_var->read();
+
+        variable_handle_t size_var;
+        if (!session.variable(args[2], size_var))
+            return false;
+        size_var->read();
+
+        block->copy(
+            vm::op_sizes::byte,
+            dest_var->value_reg(),
+            src_var->value_reg(),
+            size_var->value_reg());
 
         return true;
     }

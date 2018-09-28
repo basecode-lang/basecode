@@ -78,9 +78,15 @@ namespace basecode::compiler {
             compiler::session& session,
             compiler::element* element);
 
+        bool field(
+            const std::string& name,
+            variable_handle_t& handle);
+
         bool read();
 
         bool write();
+
+        bool address();
 
         bool activate();
 
@@ -96,11 +102,11 @@ namespace basecode::compiler {
 
         bool write(uint64_t value);
 
+        bool write(variable* value);
+
         compiler::element* element();
 
         const vm::register_t& value_reg() const;
-
-        variable* field(const std::string& name);
 
         const vm::register_t& address_reg() const;
 

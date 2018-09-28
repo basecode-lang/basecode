@@ -39,11 +39,11 @@ namespace basecode::compiler {
         bool evaluate(compiler::session& session);
 
     protected:
-        bool on_is_constant() const override;
-
         bool on_infer_type(
             compiler::session& session,
             infer_type_result_t& result) override;
+
+        bool on_is_constant() const override;
 
         bool on_emit(compiler::session& session) override;
 

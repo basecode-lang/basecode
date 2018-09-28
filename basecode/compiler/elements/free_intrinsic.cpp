@@ -10,6 +10,7 @@
 // ----------------------------------------------------------------------------
 
 #include <compiler/session.h>
+#include <vm/instruction_block.h>
 #include <compiler/scope_manager.h>
 #include "type.h"
 #include "argument_list.h"
@@ -29,7 +30,7 @@ namespace basecode::compiler {
 
     bool free_intrinsic::on_emit(compiler::session& session) {
         auto& assembler = session.assembler();
-        auto instruction_block = assembler.current_block();
+        auto block = assembler.current_block();
 
         auto args = arguments()->elements();
         if (args.empty() || args.size() > 1) {
@@ -56,16 +57,12 @@ namespace basecode::compiler {
             return false;
         }
 
-//        auto arg_reg = register_for(session, arg);
-//        if (arg_reg.var != nullptr) {
-//            arg_reg.clean_up = true;
-//        }
-//
-//        assembler.push_target_register(arg_reg.reg);
-//        arg->emit(session);
-//        assembler.pop_target_register();
-//
-//        instruction_block->free(arg_reg.reg);
+        variable_handle_t arg_var;
+        if (!session.variable(arg, arg_var))
+            return false;
+        arg_var->read();
+
+        block->free(arg_var->value_reg());
 
         return true;
     }

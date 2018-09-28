@@ -51,7 +51,7 @@ namespace basecode::compiler {
     bool procedure_call::on_emit(compiler::session& session) {
         auto& assembler = session.assembler();
 
-        auto instruction_block = assembler.current_block();
+        auto block = assembler.current_block();
         auto identifier = _reference->identifier();
         auto init = identifier->initializer();
         if (init == nullptr)
@@ -63,19 +63,19 @@ namespace basecode::compiler {
             _arguments->emit(session);
 
         if (procedure_type->is_foreign()) {
-            instruction_block->comment(
+            block->comment(
                 fmt::format("foreign call: {}", identifier->symbol()->name()),
                 4);
-            instruction_block->push_u16(static_cast<uint16_t>(_arguments->elements().size()));
-            instruction_block->call_foreign(procedure_type->foreign_address());
+            block->push_u16(static_cast<uint16_t>(_arguments->elements().size()));
+            block->call_foreign(procedure_type->foreign_address());
         } else {
-            instruction_block->call(assembler.make_label_ref(identifier->symbol()->name()));
+            block->call(assembler.make_label_ref(identifier->symbol()->name()));
         }
 
         auto target_reg = assembler.current_target_register();
         if (target_reg != nullptr) {
             if (procedure_type->return_type() != nullptr) {
-                instruction_block->pop(*target_reg);
+                block->pop(*target_reg);
             }
         }
 

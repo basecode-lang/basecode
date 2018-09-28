@@ -1,5 +1,13 @@
 support ::= module("support/module.bc");
 
-text := "hello world!";
+//text := "hello world!";
+//
+//support::print("%s\n", text);
 
-support::print("%s\n", text);
+a: u32;
+a := 2;
+
+b: u32 := ((a * 6) shl 2) + 16;
+
+support::print("a := %d\n", a);
+support::print("b := %d\n", b);

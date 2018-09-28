@@ -108,10 +108,10 @@ namespace basecode::compiler {
 
         auto stack_frame = session.stack_frame();
 
-        auto instruction_block = assembler.make_procedure_block();
-        instruction_block->align(vm::instruction_t::alignment);
-        instruction_block->blank_line();
-        instruction_block->label(assembler.make_label(procedure_label));
+        auto block = assembler.make_procedure_block();
+        block->align(vm::instruction_t::alignment);
+        block->blank_line();
+        block->label(assembler.make_label(procedure_label));
 
         int32_t offset = -8;
         for (auto param : _parameters.as_list()) {
@@ -153,20 +153,20 @@ namespace basecode::compiler {
             },
             _scope);
 
-        instruction_block->move_reg_to_reg(
+        block->move_reg_to_reg(
             vm::register_t::fp(),
             vm::register_t::sp());
         auto size = 8 * local_count;
         if (_return_type != nullptr)
             size += 8;
         if (size > 0) {
-            instruction_block->sub_reg_by_immediate(
+            block->sub_reg_by_immediate(
                 vm::register_t::sp(),
                 vm::register_t::sp(),
                 size);
         }
 
-        assembler.push_block(instruction_block);
+        assembler.push_block(block);
         _scope->emit(session);
         assembler.pop_block();
 

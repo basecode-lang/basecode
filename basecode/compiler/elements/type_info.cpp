@@ -53,24 +53,15 @@ namespace basecode::compiler {
             fmt::format("initialize identifier: {}", var->symbol()->name()),
             4);
 
-//        auto compiler_var = session.emit_and_init_element(var);
-//        if (compiler_var == nullptr)
-//            return false;
-//        defer({
-//            compiler_var->make_dormant(session);
-//        });
-//
-//        if (!session.emit_to_temp(
-//                label,
-//                vm::op_sizes::qword,
-//                vm::register_type_t::integer)) {
-//            return false;
-//        }
-//
-//        compiler_var->write(session);
-//
-//        assembler.free_reg(*(assembler.current_target_register()));
-//        assembler.pop_target_register();
+        variable_handle_t temp_var;
+        if (!session.variable(var, temp_var))
+            return false;
+
+        variable_handle_t label_var;
+        if (!session.variable(label, label_var))
+            return false;
+
+        temp_var->write(label_var.get());
 
         return true;
     }

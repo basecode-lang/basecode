@@ -73,7 +73,8 @@ namespace basecode::compiler {
     }
 
     bool directive::on_is_constant() const {
-        return _expression != nullptr && _expression->is_type();
+        return _expression != nullptr
+            && _expression->element_type() == element_type_t::type_reference;
     }
 
     bool directive::on_emit(compiler::session& session) {

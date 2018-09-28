@@ -25,22 +25,23 @@ namespace basecode::compiler {
     }
 
     bool return_element::on_emit(compiler::session& session) {
-        auto instruction_block = session.assembler().current_block();
+        auto& assembler = session.assembler();
+        auto block = assembler.current_block();
         if (!_expressions.empty()) {
             vm::register_t target_reg;
-            if (!session.assembler().allocate_reg(target_reg)) {
+            if (!assembler.allocate_reg(target_reg)) {
             }
-            session.assembler().push_target_register(target_reg);
+            assembler.push_target_register(target_reg);
             // XXX: temporarily, only the first return value
             _expressions.front()->emit(session);
-            instruction_block->store_from_reg(
+            block->store_from_reg(
                 vm::register_t::fp(),
                 target_reg,
                 8);
-            session.assembler().pop_target_register();
-            session.assembler().free_reg(target_reg);
+            assembler.pop_target_register();
+            assembler.free_reg(target_reg);
         }
-        instruction_block->rts();
+        block->rts();
         return true;
     }
 

@@ -24,6 +24,17 @@
 namespace basecode::compiler {
 
     class session;
+    class variable;
+    class element_map;
+    class ast_evaluator;
+    class scope_manager;
+    class element_builder;
+    class string_intern_map;
+    class code_dom_formatter;
+
+    using path_list_t = std::vector<boost::filesystem::path>;
+
+    ///////////////////////////////////////////////////////////////////////////
 
     enum class type_access_model_t {
         none,
@@ -37,12 +48,14 @@ namespace basecode::compiler {
         floating_point,
     };
 
+    ///////////////////////////////////////////////////////////////////////////
+
     enum class identifier_usage_t : uint8_t {
         heap = 1,
         stack
     };
 
-    using path_list_t = std::vector<boost::filesystem::path>;
+    ///////////////////////////////////////////////////////////////////////////
 
     enum class session_compile_phase_t : uint8_t {
         start,
@@ -65,6 +78,27 @@ namespace basecode::compiler {
         boost::filesystem::path compiler_path;
         session_compile_callback compile_callback;
         std::unordered_map<std::string, std::string> definitions {};
+    };
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    struct variable_handle_t {
+        variable_handle_t() = default;
+
+        virtual ~variable_handle_t();
+
+        variable* get() const {
+            return _instance;
+        }
+
+        variable* operator->() const {
+            return _instance;
+        }
+
+        void set(variable* instance);
+
+    private:
+        variable* _instance = nullptr;
     };
 
 }

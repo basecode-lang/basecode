@@ -30,7 +30,7 @@ namespace basecode::compiler {
 
     bool fill_intrinsic::on_emit(compiler::session& session) {
         auto& assembler = session.assembler();
-        auto instruction_block = assembler.current_block();
+        auto block = assembler.current_block();
 
         auto args = arguments()->elements();
         if (args.empty() || args.size() < 3 || args.size() > 3) {
@@ -42,42 +42,26 @@ namespace basecode::compiler {
             return false;
         }
 
-        auto dest_arg = args[0];
-        auto value_arg = args[1];
-        auto length_arg = args[2];
+        variable_handle_t dest_var;
+        if (!session.variable(args[0], dest_var))
+            return false;
+        dest_var->read();
 
-//        auto dest_arg_reg = register_for(session, dest_arg);
-//        if (dest_arg_reg.var != nullptr) {
-//            dest_arg_reg.clean_up = true;
-//        }
-//
-//        assembler.push_target_register(dest_arg_reg.reg);
-//        dest_arg->emit(session);
-//        assembler.pop_target_register();
-//
-//        auto value_arg_reg = register_for(session, value_arg);
-//        if (value_arg_reg.var != nullptr) {
-//            value_arg_reg.clean_up = true;
-//        }
-//
-//        assembler.push_target_register(value_arg_reg.reg);
-//        value_arg->emit(session);
-//        assembler.pop_target_register();
-//
-//        auto length_arg_reg = register_for(session, length_arg);
-//        if (length_arg_reg.var != nullptr) {
-//            length_arg_reg.clean_up = true;
-//        }
-//
-//        assembler.push_target_register(length_arg_reg.reg);
-//        length_arg->emit(session);
-//        assembler.pop_target_register();
-//
-//        instruction_block->fill(
-//            vm::op_sizes::byte,
-//            dest_arg_reg.reg,
-//            value_arg_reg.reg,
-//            length_arg_reg.reg);
+        variable_handle_t value_var;
+        if (!session.variable(args[1], value_var))
+            return false;
+        value_var->read();
+
+        variable_handle_t length_var;
+        if (!session.variable(args[2], length_var))
+            return false;
+        length_var->read();
+
+        block->fill(
+            vm::op_sizes::byte,
+            dest_var->value_reg(),
+            value_var->value_reg(),
+            length_var->value_reg());
 
         return true;
     }

@@ -56,6 +56,10 @@ namespace basecode::compiler {
             const std::string& message,
             const common::source_location& location);
 
+        bool variable(
+            compiler::element* element,
+            variable_handle_t& handle);
+
         vm::ffi& ffi();
 
         bool compile();
@@ -114,8 +118,6 @@ namespace basecode::compiler {
         vm::label_ref_t* type_info_label(compiler::type* type);
 
         void push_source_file(common::source_file* source_file);
-
-        compiler::variable* variable(compiler::element* element);
 
         common::id_t intern_string(compiler::string_literal* literal);
 
