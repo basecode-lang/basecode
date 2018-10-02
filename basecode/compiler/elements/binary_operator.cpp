@@ -119,6 +119,7 @@ namespace basecode::compiler {
                 variable_handle_t lhs_var;
                 if (!session.variable(_lhs, lhs_var))
                     return false;
+                lhs_var->read();
 
                 variable_handle_t field_var;
                 if (!lhs_var->field(_rhs, field_var))

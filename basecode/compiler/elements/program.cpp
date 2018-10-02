@@ -85,10 +85,6 @@ namespace basecode::compiler {
                     0);
                 auto var_label = assembler.make_label(var->symbol()->name());
                 instruction_block->label(var_label);
-//                session.allocate_variable(
-//                    var_label->name(),
-//                    var_type,
-//                    identifier_usage_t::heap);
 
                 switch (var_type->element_type()) {
                     case element_type_t::bool_type: {
@@ -125,7 +121,7 @@ namespace basecode::compiler {
                         } else {
                             double temp = 0;
                             if (var->as_float(temp)) {
-                                vm::register_value_alias_t alias;
+                                vm::register_value_alias_t alias {};
                                 alias.qwf = temp;
                                 value = alias.qw;
                             }

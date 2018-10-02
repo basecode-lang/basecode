@@ -1,32 +1,32 @@
 support ::= module("support/module.bc");
 
-//text := "hello world!";
-//support::print("text.length   := %d\n", text.length);
-//support::print("text.capacity := %d\n", text.capacity);
-//support::print("text.data     := $%08x\n", text.data);
-//
-//content: ^u8 := text.data;
-//support::print("content       := $%08x\n", content);
-//
-//i: u32 := 0;
-//while i < text.length {
-//    support::print("%c", content^);
-//    content +:= 1;
-//    i +:= 1;
+text := "hello world!";
+support::print("text.length   := %d\n", text.length);
+support::print("text.capacity := %d\n", text.capacity);
+support::print("text.data     := $%08x\n", text.data);
+
+content := text.data;
+support::print("content       := $%08x\n", content);
+
+i: u32 := 0;
+while i < text.length {
+    support::print("%c", content^);
+    content +:= 1;
+    i +:= 1;
+};
+
+//vector3 ::= struct {
+//    x: s32;
+//    y: s32;
+//    z: s32;
 //};
-
-vector3 ::= struct {
-    x: s32;
-    y: s32;
-    z: s32;
-};
-
-entity ::= struct {
-    pos: vector3;
-    dir: vector3;
-};
-
-player: entity;
-support::print("player.pos.x := %d\n", player.pos.x);
-support::print("player.pos.y := %d\n", player.pos.y);
-support::print("player.pos.z := %d\n", player.pos.z);
+//
+//entity ::= struct {
+//    pos: vector3;
+//    dir: vector3;
+//};
+//
+//player: entity;
+//support::print("player.pos.x := %d\n", player.pos.x);
+//support::print("player.pos.y := %d\n", player.pos.y);
+//support::print("player.pos.z := %d\n", player.pos.z);

@@ -21,29 +21,6 @@
 
 namespace basecode::compiler {
 
-//    struct variable_t {
-//        bool init(compiler::session& session);
-//
-//        bool read(compiler::session& session);
-//
-//        bool write(compiler::session& session);
-//
-//        void make_live(compiler::session& session);
-//
-//        void make_dormant(compiler::session& session);
-//
-//        std::string name;
-//        bool live = false;
-//        bool written = false;
-//        identifier_usage_t usage;
-//        bool requires_read = false;
-//        bool address_loaded = false;
-//        variable_register_t value_reg;
-//        compiler::type* type = nullptr;
-//        variable_register_t address_reg;
-//        vm::stack_frame_entry_t* frame_entry = nullptr;
-//    };
-
     struct variable_register_t {
         explicit variable_register_t(vm::assembler* assembler);
 
