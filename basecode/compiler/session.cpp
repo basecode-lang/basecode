@@ -231,14 +231,19 @@ namespace basecode::compiler {
         auto identifiers = _elements.find_by_type(element_type_t::identifier);
         for (auto identifier : identifiers) {
             auto var = dynamic_cast<compiler::identifier*>(identifier);
+            if (var == nullptr)
+                continue;
+
             auto init = var->initializer();
             if (init == nullptr)
                 continue;
+
             infer_type_result_t infer_type_result {};
             if (!init->infer_type(*this, infer_type_result)) {
                 // XXX: error
                 return false;
             }
+
             if (!var->type_ref()->type()->type_check(infer_type_result.inferred_type)) {
                 error(
                     init,
@@ -257,26 +262,36 @@ namespace basecode::compiler {
             if (binary_op->operator_type() != operator_type_t::assignment)
                 continue;
 
-            // XXX: revisit this for destructuring/multiple assignment
-            auto var = dynamic_cast<compiler::identifier*>(binary_op->lhs());
-            infer_type_result_t infer_type_result {};
-            if (!binary_op->rhs()->infer_type(*this, infer_type_result)) {
-                error(
-                    binary_op->rhs(),
-                    "P052",
-                    "unable to infer type.",
-                    binary_op->rhs()->location());
-                return false;
-            }
-            if (!var->type_ref()->type()->type_check(infer_type_result.inferred_type)) {
-                error(
-                    binary_op,
-                    "C051",
-                    fmt::format(
-                        "type mismatch: cannot assign {} to {}.",
-                        infer_type_result.type_name(),
-                        var->type_ref()->name()),
-                    binary_op->rhs()->location());
+            switch (binary_op->lhs()->element_type()) {
+                case element_type_t::identifier: {
+                    auto var = dynamic_cast<compiler::identifier*>(binary_op->lhs());
+                    infer_type_result_t infer_type_result {};
+                    if (!binary_op->rhs()->infer_type(*this, infer_type_result)) {
+                        error(
+                            binary_op->rhs(),
+                            "P052",
+                            "unable to infer type.",
+                            binary_op->rhs()->location());
+                        return false;
+                    }
+                    if (!var->type_ref()->type()->type_check(infer_type_result.inferred_type)) {
+                        error(
+                            binary_op,
+                            "C051",
+                            fmt::format(
+                                "type mismatch: cannot assign {} to {}.",
+                                infer_type_result.type_name(),
+                                var->type_ref()->name()),
+                            binary_op->rhs()->location());
+                    }
+                    break;
+                }
+                case element_type_t::binary_operator: {
+                    break;
+                }
+                default: {
+                    break;
+                }
             }
         }
 

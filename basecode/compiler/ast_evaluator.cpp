@@ -1553,22 +1553,28 @@ namespace basecode::compiler {
         for (size_t i = 0; i < target_list->children.size(); i++) {
             const auto& target_symbol = target_list->children[i];
 
-            qualified_symbol_t qualified_symbol {};
-            builder.make_qualified_symbol(
-                qualified_symbol,
-                target_symbol.get());
-            auto existing_identifier = scope_manager.find_identifier(
-                qualified_symbol,
+            auto is_binary_op = true;
+            auto target_element = resolve_symbol_or_evaluate(
+                context,
+                target_symbol.get(),
                 scope);
-            if (existing_identifier != nullptr) {
-                if (existing_identifier->symbol()->is_constant()) {
-                    _session.error(
-                        "P028",
-                        "constant variables cannot be modified.",
-                        target_symbol->location);
-                    return false;
-                }
 
+            if (target_element->element_type() == element_type_t::identifier_reference) {
+                auto identifier_ref = dynamic_cast<compiler::identifier_reference*>(target_element);
+                if (identifier_ref->resolved()) {
+                    if (identifier_ref->identifier()->symbol()->is_constant()) {
+                        _session.error(
+                            "P028",
+                            "constant variables cannot be modified.",
+                            target_symbol->location);
+                        return false;
+                    }
+                } else {
+                    is_binary_op = false;
+                }
+            }
+
+            if (is_binary_op) {
                 auto rhs = resolve_symbol_or_evaluate(
                     context,
                     source_list->children[i].get(),
@@ -1579,10 +1585,12 @@ namespace basecode::compiler {
                 auto binary_op = builder.make_binary_operator(
                     scope_manager.current_scope(),
                     operator_type_t::assignment,
-                    existing_identifier,
+                    target_element,
                     rhs);
                 expressions.emplace_back(binary_op);
             } else {
+                _session.elements().remove(target_element->id());
+
                 auto lhs = evaluate_in_scope(
                     context,
                     target_symbol.get(),
