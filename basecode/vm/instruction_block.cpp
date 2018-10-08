@@ -345,8 +345,9 @@ namespace basecode::vm {
 
     void instruction_block::move_reg_to_reg(
             const register_t& dest_reg,
-            const register_t& src_reg) {
-        make_move_instruction(dest_reg.size, op_codes::move, dest_reg, src_reg);
+            const register_t& src_reg,
+            int64_t offset) {
+        make_move_instruction(dest_reg.size, op_codes::move, dest_reg, src_reg, offset);
     }
 
     void instruction_block::moves_reg_to_reg(
@@ -652,11 +653,12 @@ namespace basecode::vm {
             op_sizes size,
             op_codes code,
             const register_t& dest_reg,
-            const register_t& src_reg) {
+            const register_t& src_reg,
+            int64_t offset) {
         instruction_t move_op;
         move_op.op = code;
         move_op.size = size;
-        move_op.operands_count = 2;
+        move_op.operands_count = offset != 0 ? 3 : 2;
         move_op.operands[0].type = operand_encoding_t::flags::reg;
         move_op.operands[0].value.r = dest_reg.number;
         if (dest_reg.type == register_type_t::integer)
@@ -666,6 +668,15 @@ namespace basecode::vm {
         move_op.operands[1].value.r = src_reg.number;
         if (src_reg.type == register_type_t::integer)
             move_op.operands[1].type |= operand_encoding_t::flags::integer;
+
+        if (offset != 0) {
+            move_op.operands[2].type =
+                operand_encoding_t::flags::integer
+                | operand_encoding_t::flags::constant;
+            if (offset < 0)
+                move_op.operands[2].type |= operand_encoding_t::flags::negative;
+            move_op.operands[2].value.u = static_cast<uint64_t>(offset);
+        }
 
         make_block_entry(move_op);
     }

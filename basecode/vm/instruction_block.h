@@ -207,7 +207,8 @@ namespace basecode::vm {
 
         void move_reg_to_reg(
             const register_t& dest_reg,
-            const register_t& src_reg);
+            const register_t& src_reg,
+            int64_t offset = 0);
 
         void moves_reg_to_reg(
             const register_t& dest_reg,
@@ -572,7 +573,8 @@ namespace basecode::vm {
             op_sizes size,
             op_codes code,
             const register_t& dest_reg,
-            const register_t& src_reg);
+            const register_t& src_reg,
+            int64_t offset = 0);
 
         void make_add_instruction(
             op_sizes size,

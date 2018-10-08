@@ -15,18 +15,36 @@ while i < text.length {
     i +:= 1;
 };
 
-//vector3 ::= struct {
-//    x: s32;
-//    y: s32;
-//    z: s32;
-//};
-//
-//entity ::= struct {
-//    pos: vector3;
-//    dir: vector3;
-//};
-//
-//player: entity;
-//support::print("player.pos.x := %d\n", player.pos.x);
-//support::print("player.pos.y := %d\n", player.pos.y);
-//support::print("player.pos.z := %d\n", player.pos.z);
+support::print("\n");
+
+vector3 ::= struct {
+    x: s32;
+    y: s32;
+    z: s32;
+};
+
+class  ::= struct {
+    name: string;
+};
+
+entity ::= struct {
+    pos: vector3;
+    dir: vector3;
+    cls: class;
+};
+
+player: entity;
+
+// XXX: broken
+//player.pos.x := 10;
+
+support::print("player.pos.x := %d\n", player.pos.x);
+support::print("player.pos.y := %d\n", player.pos.y);
+support::print("player.pos.z := %d\n", player.pos.z);
+
+support::print("player.dir.x := %d\n", player.dir.x);
+support::print("player.dir.y := %d\n", player.dir.y);
+support::print("player.dir.z := %d\n", player.dir.z);
+
+// XXX: broken
+//support::print("player.cls.name.length := %d\n", player.cls.name.length);

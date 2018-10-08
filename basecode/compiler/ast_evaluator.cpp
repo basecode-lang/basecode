@@ -323,13 +323,13 @@ namespace basecode::compiler {
             compiler::composite_type* type,
             const syntax::ast_node_t* block) {
         auto& builder = _session.builder();
+        compiler::field* previous_field = nullptr;
 
         for (const auto& child : block->children) {
             if (child->type != syntax::ast_node_types_t::statement) {
                 break;
             }
 
-            compiler::field* previous_field = nullptr;
             auto expr_node = child->rhs;
             switch (expr_node->type) {
                 case syntax::ast_node_types_t::assignment:

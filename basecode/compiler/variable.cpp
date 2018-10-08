@@ -89,8 +89,9 @@ namespace basecode::compiler {
 
                 block->load_to_reg(
                     _value.reg,
-                    _field != nullptr ? _parent->_address.reg : _address.reg,
-                    _field != nullptr ? _field->start_offset() : 0);
+                    //_field != nullptr ? _parent->_address.reg : _address.reg,
+                    _address.reg);
+                    //_field != nullptr ? _field->start_offset() : 0);
                 break;
             }
             default: {
@@ -118,10 +119,8 @@ namespace basecode::compiler {
             return false;
 
         if (_session.variable(field->identifier(), handle)) {
-            if (handle->_parent == nullptr) {
-                handle->_parent = this;
-                handle->_field = field;
-            }
+            handle->_parent = this;
+            handle->_field = field;
             return true;
         }
 
@@ -150,9 +149,10 @@ namespace basecode::compiler {
         }
 
         block->store_from_reg(
-            _field != nullptr ? _parent->_address.reg : _address.reg,
-            *target_register,
-            _field != nullptr ? _field->start_offset() : 0);
+            _address.reg,
+            //_field != nullptr ? _parent->_address.reg : _address.reg,
+            *target_register);
+            //_field != nullptr ? _field->start_offset() : 0);
 
         flag(flags_t::f_written, true);
         flag(flags_t::f_read, false);
@@ -163,27 +163,34 @@ namespace basecode::compiler {
         if (flag(flags_t::f_addressed))
             return false;
 
+        auto& assembler = _session.assembler();
+        auto block = assembler.current_block();
+
+        compiler::identifier* var = nullptr;
+        if (_element->element_type() == element_type_t::identifier) {
+            var = dynamic_cast<compiler::identifier*>(_element);
+        }
+
         if (_parent != nullptr) {
             _parent->address();
+            block->comment(
+                fmt::format(
+                    "load field address with offset: {}",
+                    var->symbol()->name()),
+                4);
+            block->move_reg_to_reg(
+                _address.reg,
+                _parent->_address.reg,
+                _field->start_offset());
         } else {
-            auto& assembler = _session.assembler();
-            auto block = assembler.current_block();
-
-            switch (_element->element_type()) {
-                case element_type_t::identifier: {
-                    auto var = dynamic_cast<compiler::identifier*>(_element);
-                    block->comment(
-                        fmt::format(
-                            "load global address: {}",
-                            var->symbol()->name()),
-                        4);
-
-                    auto label_ref = assembler.make_label_ref(var->symbol()->name());
-                    block->move_label_to_reg(_address.reg, label_ref);
-                    break;
-                }
-                default:
-                    break;
+            if (var != nullptr) {
+                block->comment(
+                    fmt::format(
+                        "load global address: {}",
+                        var->symbol()->name()),
+                    4);
+                auto label_ref = assembler.make_label_ref(var->symbol()->name());
+                block->move_label_to_reg(_address.reg, label_ref);
             }
         }
 
@@ -232,9 +239,16 @@ namespace basecode::compiler {
     bool variable::deactivate() {
         if (!flag(flags_t::f_activated))
             return false;
+
+        flag(flags_t::f_read, false);
+        flag(flags_t::f_copied, false);
+        flag(flags_t::f_written, false);
         flag(flags_t::f_activated, false);
+        flag(flags_t::f_addressed, false);
+
         _address.release();
         _value.release();
+
         return true;
     }
 
@@ -259,9 +273,10 @@ namespace basecode::compiler {
         auto block = _session.assembler().current_block();
         block->move_constant_to_reg(_value.reg, value);
         block->store_from_reg(
-            _field != nullptr ? _parent->_address.reg : _address.reg,
-            _value.reg,
-            _field != nullptr ? _field->start_offset() : 0);
+            _address.reg,
+            //_field != nullptr ? _parent->_address.reg : _address.reg,
+            _value.reg);
+            //_field != nullptr ? _field->start_offset() : 0);
 
         flag(flags_t::f_written, true);
         return true;

@@ -15,7 +15,8 @@
 namespace basecode::compiler {
 
     variable_handle_t::~variable_handle_t() {
-        _instance->deactivate();
+        if (_instance != nullptr)
+            _instance->deactivate();
     }
 
     void variable_handle_t::set(variable* instance) {

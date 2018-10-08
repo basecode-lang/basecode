@@ -116,12 +116,26 @@ namespace basecode::compiler {
                 break;
             }
             case operator_type_t::member_access: {
-                variable_handle_t lhs_var;
-                if (!session.variable(_lhs, lhs_var))
-                    return false;
-                lhs_var->read();
+                variable_handle_t lhs_var {};
+                variable_handle_t temp_var {};
 
-                variable_handle_t field_var;
+                if (_lhs->element_type() == element_type_t::binary_operator) {
+                    auto bin_op = dynamic_cast<compiler::binary_operator*>(_lhs);
+                    if (bin_op->operator_type() == operator_type_t::member_access) {
+                        if (session.variable(bin_op->lhs(), temp_var)) {
+                            if (!temp_var->field(bin_op->rhs(), lhs_var))
+                                return false;
+                        }
+                    }
+                }
+
+                if (lhs_var.get() == nullptr) {
+                    if (!session.variable(_lhs, lhs_var))
+                        return false;
+                    lhs_var->read();
+                }
+
+                variable_handle_t field_var {};
                 if (!lhs_var->field(_rhs, field_var))
                     return false;
                 field_var->read();
