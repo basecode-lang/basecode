@@ -116,27 +116,45 @@ namespace basecode::compiler {
                 break;
             }
             case operator_type_t::member_access: {
-                variable_handle_t lhs_var {};
-                variable_handle_t temp_var {};
+                std::stack<binary_operator*> member_accesses {};
+                auto current = _lhs;
 
-                if (_lhs->element_type() == element_type_t::binary_operator) {
-                    auto bin_op = dynamic_cast<compiler::binary_operator*>(_lhs);
+                while (current->element_type() == element_type_t::binary_operator) {
+                    auto bin_op = dynamic_cast<compiler::binary_operator*>(current);
                     if (bin_op->operator_type() == operator_type_t::member_access) {
-                        if (session.variable(bin_op->lhs(), temp_var)) {
-                            if (!temp_var->field(bin_op->rhs(), lhs_var))
-                                return false;
-                        }
+                        member_accesses.push(bin_op);
                     }
+                    current = bin_op->lhs();
                 }
 
-                if (lhs_var.get() == nullptr) {
-                    if (!session.variable(_lhs, lhs_var))
+                std::vector<variable_handle_t> vars {};
+                variable_handle_t temp_var {};
+
+                while (!member_accesses.empty()) {
+                    auto bin_op = member_accesses.top();
+                    if (vars.empty()) {
+                        if (session.variable(bin_op->lhs(), temp_var)) {
+                            vars.push_back({});
+                            if (!temp_var->field(bin_op->rhs(), vars.back()))
+                                return false;
+                        }
+                    } else {
+                        auto& previous_var = vars.back();
+                        vars.push_back({});
+                        previous_var->field(bin_op->rhs(), vars.back());
+                    }
+                    member_accesses.pop();
+                }
+
+                if (vars.empty()) {
+                    vars.push_back({});
+                    if (!session.variable(_lhs, vars.back()))
                         return false;
-                    lhs_var->read();
+                    vars.back()->read();
                 }
 
                 variable_handle_t field_var {};
-                if (!lhs_var->field(_rhs, field_var))
+                if (!vars.back()->field(_rhs, field_var))
                     return false;
                 field_var->read();
 

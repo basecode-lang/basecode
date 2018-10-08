@@ -46,5 +46,5 @@ support::print("player.dir.x := %d\n", player.dir.x);
 support::print("player.dir.y := %d\n", player.dir.y);
 support::print("player.dir.z := %d\n", player.dir.z);
 
-// XXX: broken
-//support::print("player.cls.name.length := %d\n", player.cls.name.length);
+support::print("player.cls.name.length   := %d\n", player.cls.name.length);
+support::print("player.cls.name.capacity := %d\n", player.cls.name.capacity);
