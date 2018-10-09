@@ -14,6 +14,7 @@
 #include "variable.h"
 #include "elements/type.h"
 #include "elements/identifier.h"
+#include "elements/pointer_type.h"
 #include "elements/symbol_element.h"
 #include "elements/composite_type.h"
 #include "elements/type_reference.h"
@@ -57,12 +58,6 @@ namespace basecode::compiler {
             return false;
 
         address();
-
-        if (_parent != nullptr) {
-            if (_parent->_type.inferred_type->is_pointer_type()) {
-                _parent->read();
-            }
-        }
 
         auto& assembler = _session.assembler();
         auto block = assembler.current_block();
@@ -109,10 +104,18 @@ namespace basecode::compiler {
             const std::string& name,
             variable_handle_t& handle,
             bool activate) {
-        if (!_type.inferred_type->is_composite_type())
+        compiler::type* base_type = nullptr;
+        if (_type.inferred_type->is_pointer_type()) {
+            auto pointer_type = dynamic_cast<compiler::pointer_type*>(_type.inferred_type);
+            base_type = pointer_type->base_type_ref()->type();
+        } else {
+            base_type = _type.inferred_type;
+        }
+
+        if (!base_type->is_composite_type())
             return false;
 
-        auto type = dynamic_cast<compiler::composite_type*>(_type.inferred_type);
+        auto type = dynamic_cast<compiler::composite_type*>(base_type);
         auto field = type->fields().find_by_name(name);
         if (field == nullptr)
             return false;

@@ -898,6 +898,8 @@ namespace basecode::compiler {
             return false;
         auto scope = _session.scope_manager().current_scope();
 
+        auto is_member_access = it->second == operator_type_t::member_access;
+
         compiler::element* lhs = nullptr;
         compiler::element* rhs = nullptr;
 
@@ -925,12 +927,15 @@ namespace basecode::compiler {
                 if (infer_type_result.inferred_type->is_pointer_type()) {
                     auto pointer_type = dynamic_cast<compiler::pointer_type*>(infer_type_result.inferred_type);
                     composite_type = dynamic_cast<compiler::composite_type*>(pointer_type->base_type_ref()->type());
+                    if (is_member_access) {
+                        // XXX: warp in a pointer dereference
+                    }
                 } else {
                     composite_type = dynamic_cast<compiler::composite_type*>(infer_type_result.inferred_type);
                 }
                 type_scope = composite_type->scope();
             } else {
-                if (it->second == operator_type_t::member_access) {
+                if (is_member_access) {
                     _session.error(
                         lhs,
                         "P053",

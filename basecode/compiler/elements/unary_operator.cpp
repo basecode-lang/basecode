@@ -122,12 +122,11 @@ namespace basecode::compiler {
                 return true;
             }
             case operator_type_t::pointer_dereference: {
-                auto identifier_ref = dynamic_cast<compiler::identifier_reference*>(_rhs);
-                auto type_ref = identifier_ref->identifier()->type_ref();
-                if (!type_ref->is_pointer_type()) {
+                if (!_rhs->infer_type(session, result))
                     return false;
-                }
-                auto type = dynamic_cast<compiler::pointer_type*>(type_ref->type());
+                if (!result.inferred_type->is_pointer_type())
+                    return false;
+                auto type = dynamic_cast<compiler::pointer_type*>(result.inferred_type);
                 result.inferred_type = type->base_type_ref()->type();
                 result.reference = type->base_type_ref();
                 return true;

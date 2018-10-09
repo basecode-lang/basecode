@@ -1,0 +1,12 @@
+support ::= module("support/module.bc");
+
+text := "hello world";
+
+//support::print("text.length     := %d\n",     text.length);
+//support::print("text.capacity   := %d\n",     text.capacity);
+//support::print("text.data       := $%08x\n",  text.data);
+
+text_ptr: ^string;
+text_ptr := address_of(text);
+
+support::print("text_ptr.length := %d\n",     text_ptr.length);

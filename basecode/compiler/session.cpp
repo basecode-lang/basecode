@@ -97,9 +97,6 @@ namespace basecode::compiler {
 
         switch (element->element_type()) {
             case element_type_t::binary_operator: {
-                // XXX: need to add flags to variable to prevent activation for
-                //      intermediate variables
-                //
                 auto child_bin_op = dynamic_cast<compiler::binary_operator*>(element);
                 if (child_bin_op->operator_type() != operator_type_t::member_access)
                     break;
@@ -118,10 +115,14 @@ namespace basecode::compiler {
                 std::vector<variable_handle_t> vars {};
                 variable_handle_t temp_var {};
 
+                // 1. check lhs & rhs, if more complex than identifier/identifier_reference then read
+                // 2. only activate if we're going to read.
+                // 3. register continuity between reads.
                 while (!member_accesses.empty()) {
                     auto bin_op = member_accesses.top();
                     if (vars.empty()) {
-                        if (variable(bin_op->lhs(), temp_var, false)) {
+                        if (variable(bin_op->lhs(), temp_var, true)) {
+                            temp_var->read();
                             vars.push_back({});
                             if (!temp_var->field(bin_op->rhs(), vars.back(), false))
                                 return false;
