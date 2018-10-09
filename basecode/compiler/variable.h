@@ -37,6 +37,13 @@ namespace basecode::compiler {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    struct root_and_offset_t {
+        int64_t offset = 0;
+        std::string path {};
+        variable* root = nullptr;
+        compiler::identifier* identifier = nullptr;
+    };
+
     class session;
 
     class variable {
@@ -99,6 +106,8 @@ namespace basecode::compiler {
         bool flag(variable::flags_t f) const;
 
         void flag(variable::flags_t f, bool value);
+
+        bool walk_to_root_and_calculate_offset(root_and_offset_t& rot);
 
     private:
         variable_register_t _value;

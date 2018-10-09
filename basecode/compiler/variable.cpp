@@ -70,16 +70,18 @@ namespace basecode::compiler {
         switch (_element->element_type()) {
             case element_type_t::identifier: {
                 auto var = dynamic_cast<compiler::identifier*>(_element);
-                if (_field == nullptr) {
+
+                root_and_offset_t rot {};
+                if (walk_to_root_and_calculate_offset(rot)) {
                     block->comment(
                         fmt::format(
-                            "load global value: {}",
-                            var->symbol()->name()),
+                            "load field value: {}",
+                            rot.path),
                         4);
                 } else {
                     block->comment(
                         fmt::format(
-                            "load field value: {}",
+                            "load global value: {}",
                             var->symbol()->name()),
                         4);
                 }
@@ -87,11 +89,7 @@ namespace basecode::compiler {
                 if (_value.reg.size != vm::op_sizes::qword)
                     block->clr(vm::op_sizes::qword, _value.reg);
 
-                block->load_to_reg(
-                    _value.reg,
-                    //_field != nullptr ? _parent->_address.reg : _address.reg,
-                    _address.reg);
-                    //_field != nullptr ? _field->start_offset() : 0);
+                block->load_to_reg(_value.reg, _address.reg, rot.offset);
                 break;
             }
             default: {
@@ -150,11 +148,23 @@ namespace basecode::compiler {
             target_register = &_value.reg;
         }
 
-        block->store_from_reg(
-            _address.reg,
-            //_field != nullptr ? _parent->_address.reg : _address.reg,
-            *target_register);
-            //_field != nullptr ? _field->start_offset() : 0);
+        root_and_offset_t rot {};
+        if (walk_to_root_and_calculate_offset(rot)) {
+            block->comment(
+                fmt::format(
+                    "store field value: {}",
+                    rot.path),
+                4);
+        } else {
+            auto var = dynamic_cast<compiler::identifier*>(_element);
+            block->comment(
+                fmt::format(
+                    "store global value: {}",
+                    var->symbol()->name()),
+                4);
+        }
+
+        block->store_from_reg(_address.reg, *target_register, rot.offset);
 
         flag(flags_t::f_written, true);
         flag(flags_t::f_read, false);
@@ -173,15 +183,9 @@ namespace basecode::compiler {
             var = dynamic_cast<compiler::identifier*>(_element);
         }
 
-        int64_t offset = 0;
-        if (_parent != nullptr) {
-            auto current = this;
-            while (current->_field != nullptr) {
-                offset += current->_field->start_offset();
-                current = current->_parent;
-            }
-
-            var = dynamic_cast<compiler::identifier*>(current->_element);
+        root_and_offset_t rot {};
+        if (walk_to_root_and_calculate_offset(rot)) {
+            var = rot.identifier;
         }
 
         if (var != nullptr) {
@@ -191,7 +195,7 @@ namespace basecode::compiler {
                     var->symbol()->name()),
                 4);
             auto label_ref = assembler.make_label_ref(var->symbol()->name());
-            block->move_label_to_reg(_address.reg, label_ref, offset);
+            block->move_label_to_reg(_address.reg, label_ref);
         }
 
         flag(flags_t::f_addressed, true);
@@ -271,12 +275,25 @@ namespace basecode::compiler {
         address();
 
         auto block = _session.assembler().current_block();
+
+        root_and_offset_t rot {};
+        if (walk_to_root_and_calculate_offset(rot)) {
+            block->comment(
+                fmt::format(
+                    "store field value: {}",
+                    rot.path),
+                4);
+        } else {
+            auto var = dynamic_cast<compiler::identifier*>(_element);
+            block->comment(
+                fmt::format(
+                    "store global value: {}",
+                    var->symbol()->name()),
+                4);
+        }
+
         block->move_constant_to_reg(_value.reg, value);
-        block->store_from_reg(
-            _address.reg,
-            //_field != nullptr ? _parent->_address.reg : _address.reg,
-            _value.reg);
-            //_field != nullptr ? _field->start_offset() : 0);
+        block->store_from_reg(_address.reg, _value.reg, rot.offset);
 
         flag(flags_t::f_written, true);
         return true;
@@ -288,7 +305,24 @@ namespace basecode::compiler {
 
         address();
         value->read();
-        block->store_from_reg(_address.reg, value->value_reg());
+
+        root_and_offset_t rot {};
+        if (walk_to_root_and_calculate_offset(rot)) {
+            block->comment(
+                fmt::format(
+                    "store field value: {}",
+                    rot.path),
+                4);
+        } else {
+            auto var = dynamic_cast<compiler::identifier*>(_element);
+            block->comment(
+                fmt::format(
+                    "store global value: {}",
+                    var->symbol()->name()),
+                4);
+        }
+
+        block->store_from_reg(_address.reg, value->value_reg(), rot.offset);
 
         return true;
     }
@@ -318,6 +352,31 @@ namespace basecode::compiler {
 
     const infer_type_result_t& variable::type_result() const {
         return _type;
+    }
+
+    bool variable::walk_to_root_and_calculate_offset(root_and_offset_t& rot) {
+        if (_parent == nullptr)
+            return false;
+
+        std::stack<std::string> names {};
+
+        auto current = this;
+        while (current->_field != nullptr) {
+            rot.offset += current->_field->start_offset();
+            names.push(current->_field->identifier()->symbol()->name());
+            current = current->_parent;
+        }
+
+        rot.root = current;
+        rot.identifier = dynamic_cast<compiler::identifier*>(current->_element);
+        while (!names.empty()) {
+            if (!rot.path.empty())
+                rot.path += ".";
+            rot.path += names.top();
+            names.pop();
+        }
+
+        return true;
     }
 
 };
