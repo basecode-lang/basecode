@@ -77,54 +77,59 @@ namespace basecode::compiler {
             4);
 
         variable_handle_t type_var;
-        if (!session.variable(var, type_var))
+        if (!session.variable(var, type_var, false))
             return false;
 
         auto length = static_cast<uint64_t>(literal != nullptr ? literal->value().length() : 0);
-        variable_handle_t length_field;
-        if (!type_var->field("length", length_field))
-            return false;
-        length_field->write(length);
-
-        auto capacity = common::next_power_of_two(std::max<uint64_t>(length, 32));
-        variable_handle_t capacity_field;
-        if (!type_var->field("capacity", capacity_field))
-            return false;
-        capacity_field->write(capacity);
-
-        variable_handle_t data_field;
-        if (!type_var->field("data", data_field))
-            return false;
-
-        block->alloc(
-            vm::op_sizes::byte,
-            data_field->value_reg(),
-            capacity_field->value_reg());
-        block->zero(
-            vm::op_sizes::byte,
-            data_field->value_reg(),
-            capacity);
-
-        if (literal != nullptr) {
-            block->comment(
-                fmt::format(
-                    "load string literal address: {}",
-                    literal->label_name()),
-                4);
-
-            variable_handle_t literal_var;
-            if (!session.variable(literal, literal_var))
+        {
+            variable_handle_t length_field;
+            if (!type_var->field("length", length_field))
                 return false;
-            literal_var->read();
-
-            block->copy(
-                vm::op_sizes::byte,
-                data_field->value_reg(),
-                literal_var->value_reg(),
-                length);
+            length_field->write(length);
         }
 
-        data_field->write();
+        {
+            auto capacity = common::next_power_of_two(std::max<uint64_t>(length, 32));
+            variable_handle_t capacity_field;
+            if (!type_var->field("capacity", capacity_field))
+                return false;
+            capacity_field->write(capacity);
+
+            variable_handle_t data_field;
+            if (!type_var->field("data", data_field))
+                return false;
+
+            block->alloc(
+                vm::op_sizes::byte,
+                data_field->value_reg(),
+                capacity_field->value_reg());
+            block->zero(
+                vm::op_sizes::byte,
+                data_field->value_reg(),
+                capacity);
+
+            if (literal != nullptr) {
+                block->comment(
+                    fmt::format(
+                        "load string literal address: {}",
+                        literal->label_name()),
+                    4);
+
+                variable_handle_t literal_var;
+                if (!session.variable(literal, literal_var))
+                    return false;
+                literal_var->read();
+
+                block->copy(
+                    vm::op_sizes::byte,
+                    data_field->value_reg(),
+                    literal_var->value_reg(),
+                    length);
+            }
+
+            data_field->write();
+        }
+
         return true;
     }
 

@@ -87,6 +87,10 @@ namespace basecode::compiler {
 
         virtual ~variable_handle_t();
 
+        void set(
+            variable* instance,
+            bool activate = true);
+
         void skip_deactivate();
 
         variable* get() const {
@@ -96,8 +100,6 @@ namespace basecode::compiler {
         variable* operator->() const {
             return _instance;
         }
-
-        void set(variable* instance);
 
     private:
         bool _skip_deactivate = false;

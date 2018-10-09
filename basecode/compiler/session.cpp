@@ -91,7 +91,8 @@ namespace basecode::compiler {
 
     bool session::variable(
             compiler::element* element,
-            variable_handle_t& handle) {
+            variable_handle_t& handle,
+            bool activate) {
         compiler::element* target_element = element;
 
         switch (element->element_type()) {
@@ -120,21 +121,21 @@ namespace basecode::compiler {
                 while (!member_accesses.empty()) {
                     auto bin_op = member_accesses.top();
                     if (vars.empty()) {
-                        if (variable(bin_op->lhs(), temp_var)) {
+                        if (variable(bin_op->lhs(), temp_var, false)) {
                             vars.push_back({});
-                            if (!temp_var->field(bin_op->rhs(), vars.back()))
+                            if (!temp_var->field(bin_op->rhs(), vars.back(), false))
                                 return false;
                         }
                     } else {
                         auto& previous_var = vars.back();
                         vars.push_back({});
-                        previous_var->field(bin_op->rhs(), vars.back());
+                        previous_var->field(bin_op->rhs(), vars.back(), false);
                     }
                     member_accesses.pop();
                 }
 
                 vars.back().skip_deactivate();
-                handle.set(vars.back().get());
+                handle.set(vars.back().get(), activate);
                 return true;
             }
             case element_type_t::identifier_reference: {
@@ -156,9 +157,9 @@ namespace basecode::compiler {
             auto new_it = _variables.insert(std::make_pair(
                 target_element->id(),
                 var));
-            handle.set(&new_it.first->second);
+            handle.set(&new_it.first->second, activate);
         } else {
-            handle.set(&it->second);
+            handle.set(&it->second, activate);
         }
 
         return true;

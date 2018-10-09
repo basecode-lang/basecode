@@ -58,7 +58,8 @@ namespace basecode::compiler {
 
         bool variable(
             compiler::element* element,
-            variable_handle_t& handle);
+            variable_handle_t& handle,
+            bool activate = true);
 
         vm::ffi& ffi();
 

@@ -220,12 +220,8 @@ namespace basecode::vm {
 
         void move_label_to_reg(
             const register_t& dest_reg,
-            const label_ref_t* label_ref);
-
-        void move_label_to_reg_with_offset(
-            const register_t& dest_reg,
             const label_ref_t* label_ref,
-            int64_t offset);
+            int64_t offset = 0);
 
         // setxx
 

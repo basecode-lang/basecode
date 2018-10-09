@@ -19,13 +19,16 @@ namespace basecode::compiler {
             _instance->deactivate();
     }
 
-    void variable_handle_t::skip_deactivate() {
-        _skip_deactivate = true;
+    void variable_handle_t::set(
+            variable* instance,
+            bool activate) {
+        _instance = instance;
+        if (activate)
+            _instance->activate();
     }
 
-    void variable_handle_t::set(variable* instance) {
-        _instance = instance;
-        _instance->activate();
+    void variable_handle_t::skip_deactivate() {
+        _skip_deactivate = true;
     }
 
 };

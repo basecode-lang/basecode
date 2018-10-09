@@ -109,7 +109,8 @@ namespace basecode::compiler {
 
     bool variable::field(
             const std::string& name,
-            variable_handle_t& handle) {
+            variable_handle_t& handle,
+            bool activate) {
         if (!_type.inferred_type->is_composite_type())
             return false;
 
@@ -118,7 +119,7 @@ namespace basecode::compiler {
         if (field == nullptr)
             return false;
 
-        if (_session.variable(field->identifier(), handle)) {
+        if (_session.variable(field->identifier(), handle, activate)) {
             handle->_parent = this;
             handle->_field = field;
             return true;
@@ -129,9 +130,10 @@ namespace basecode::compiler {
 
     bool variable::field(
             compiler::element* element,
-            variable_handle_t& handle) {
+            variable_handle_t& handle,
+            bool activate) {
         auto var = dynamic_cast<compiler::identifier_reference*>(element);
-        return field(var->symbol().name, handle);
+        return field(var->symbol().name, handle, activate);
     }
 
     bool variable::write() {
@@ -171,27 +173,25 @@ namespace basecode::compiler {
             var = dynamic_cast<compiler::identifier*>(_element);
         }
 
+        int64_t offset = 0;
         if (_parent != nullptr) {
-            _parent->address();
+            auto current = this;
+            while (current->_field != nullptr) {
+                offset += current->_field->start_offset();
+                current = current->_parent;
+            }
+
+            var = dynamic_cast<compiler::identifier*>(current->_element);
+        }
+
+        if (var != nullptr) {
             block->comment(
                 fmt::format(
-                    "load field address with offset: {}",
+                    "load global address: {}",
                     var->symbol()->name()),
                 4);
-            block->move_reg_to_reg(
-                _address.reg,
-                _parent->_address.reg,
-                _field->start_offset());
-        } else {
-            if (var != nullptr) {
-                block->comment(
-                    fmt::format(
-                        "load global address: {}",
-                        var->symbol()->name()),
-                    4);
-                auto label_ref = assembler.make_label_ref(var->symbol()->name());
-                block->move_label_to_reg(_address.reg, label_ref);
-            }
+            auto label_ref = assembler.make_label_ref(var->symbol()->name());
+            block->move_label_to_reg(_address.reg, label_ref, offset);
         }
 
         flag(flags_t::f_addressed, true);

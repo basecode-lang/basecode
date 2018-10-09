@@ -57,11 +57,13 @@ namespace basecode::compiler {
 
         bool field(
             compiler::element* element,
-            variable_handle_t& handle);
+            variable_handle_t& handle,
+            bool activate = true);
 
         bool field(
             const std::string& name,
-            variable_handle_t& handle);
+            variable_handle_t& handle,
+            bool activate = true);
 
         bool read();
 
