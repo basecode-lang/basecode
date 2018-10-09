@@ -95,6 +95,48 @@ namespace basecode::compiler {
         compiler::element* target_element = element;
 
         switch (element->element_type()) {
+            case element_type_t::binary_operator: {
+                // XXX: need to add flags to variable to prevent activation for
+                //      intermediate variables
+                //
+                auto child_bin_op = dynamic_cast<compiler::binary_operator*>(element);
+                if (child_bin_op->operator_type() != operator_type_t::member_access)
+                    break;
+
+                std::stack<binary_operator*> member_accesses {};
+                auto current = element;
+
+                while (current->element_type() == element_type_t::binary_operator) {
+                    auto bin_op = dynamic_cast<compiler::binary_operator*>(current);
+                    if (bin_op->operator_type() == operator_type_t::member_access) {
+                        member_accesses.push(bin_op);
+                    }
+                    current = bin_op->lhs();
+                }
+
+                std::vector<variable_handle_t> vars {};
+                variable_handle_t temp_var {};
+
+                while (!member_accesses.empty()) {
+                    auto bin_op = member_accesses.top();
+                    if (vars.empty()) {
+                        if (variable(bin_op->lhs(), temp_var)) {
+                            vars.push_back({});
+                            if (!temp_var->field(bin_op->rhs(), vars.back()))
+                                return false;
+                        }
+                    } else {
+                        auto& previous_var = vars.back();
+                        vars.push_back({});
+                        previous_var->field(bin_op->rhs(), vars.back());
+                    }
+                    member_accesses.pop();
+                }
+
+                vars.back().skip_deactivate();
+                handle.set(vars.back().get());
+                return true;
+            }
             case element_type_t::identifier_reference: {
                 auto ref = dynamic_cast<compiler::identifier_reference*>(element);
                 target_element = ref->identifier();
@@ -262,31 +304,61 @@ namespace basecode::compiler {
             if (binary_op->operator_type() != operator_type_t::assignment)
                 continue;
 
+            infer_type_result_t rhs_inferred_type {};
+            if (!binary_op->rhs()->infer_type(*this, rhs_inferred_type)) {
+                error(
+                    binary_op->rhs(),
+                    "P052",
+                    "unable to infer type.",
+                    binary_op->rhs()->location());
+                return false;
+            }
+
             switch (binary_op->lhs()->element_type()) {
                 case element_type_t::identifier: {
                     auto var = dynamic_cast<compiler::identifier*>(binary_op->lhs());
-                    infer_type_result_t infer_type_result {};
-                    if (!binary_op->rhs()->infer_type(*this, infer_type_result)) {
-                        error(
-                            binary_op->rhs(),
-                            "P052",
-                            "unable to infer type.",
-                            binary_op->rhs()->location());
-                        return false;
-                    }
-                    if (!var->type_ref()->type()->type_check(infer_type_result.inferred_type)) {
+                    if (!var->type_ref()->type()->type_check(rhs_inferred_type.inferred_type)) {
                         error(
                             binary_op,
                             "C051",
                             fmt::format(
                                 "type mismatch: cannot assign {} to {}.",
-                                infer_type_result.type_name(),
+                                rhs_inferred_type.type_name(),
                                 var->type_ref()->name()),
                             binary_op->rhs()->location());
                     }
                     break;
                 }
+                case element_type_t::unary_operator: {
+                    auto lhs_unary_op = dynamic_cast<compiler::binary_operator*>(binary_op->lhs());
+                    if (lhs_unary_op->operator_type() != operator_type_t::pointer_dereference)
+                        break;
+
+                    // XXX: todo
+                    break;
+                }
                 case element_type_t::binary_operator: {
+                    auto lhs_bin_op = dynamic_cast<compiler::binary_operator*>(binary_op->lhs());
+                    if (lhs_bin_op->operator_type() != operator_type_t::member_access)
+                        break;
+
+                    variable_handle_t field_var {};
+                    if (!variable(lhs_bin_op, field_var)) {
+                        // XXX: error
+                        return false;
+                    }
+
+                    auto type_result = field_var->type_result();
+                    if (!type_result.inferred_type->type_check(rhs_inferred_type.inferred_type)) {
+                        error(
+                            binary_op,
+                            "C051",
+                            fmt::format(
+                                "type mismatch: cannot assign {} to {}.",
+                                rhs_inferred_type.type_name(),
+                                type_result.type_name()),
+                            binary_op->rhs()->location());
+                    }
                     break;
                 }
                 default: {

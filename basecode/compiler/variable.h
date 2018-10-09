@@ -91,6 +91,8 @@ namespace basecode::compiler {
 
         const vm::register_t& address_reg() const;
 
+        const infer_type_result_t& type_result() const;
+
     private:
         bool flag(variable::flags_t f) const;
 

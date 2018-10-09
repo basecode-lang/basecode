@@ -1,21 +1,21 @@
 support ::= module("support/module.bc");
 
-//text := "hello world!";
-//support::print("text.length   := %d\n", text.length);
-//support::print("text.capacity := %d\n", text.capacity);
-//support::print("text.data     := $%08x\n", text.data);
-//
-//content := text.data;
-//support::print("content       := $%08x\n", content);
-//
-//i: u32 := 0;
-//while i < text.length {
-//    support::print("%c", content^);
-//    content +:= 1;
-//    i +:= 1;
-//};
-//
-//support::print("\n");
+text := "hello world!";
+support::print("text.length   := %d\n", text.length);
+support::print("text.capacity := %d\n", text.capacity);
+support::print("text.data     := $%08x\n", text.data);
+
+content := text.data;
+support::print("content       := $%08x\n", content);
+
+i: u32 := 0;
+while i < text.length {
+    support::print("%c", content^);
+    content +:= 1;
+    i +:= 1;
+};
+
+support::print("\n");
 
 vector3 ::= struct {
     x: s32;
@@ -35,14 +35,16 @@ entity ::= struct {
 
 player: entity;
 player.pos.x := 10;
+player.pos.y := 5;
+player.pos.z := -6;
 
-//support::print("player.pos.x := %d\n", player.pos.x);
-//support::print("player.pos.y := %d\n", player.pos.y);
-//support::print("player.pos.z := %d\n", player.pos.z);
-//
-//support::print("player.dir.x := %d\n", player.dir.x);
-//support::print("player.dir.y := %d\n", player.dir.y);
-//support::print("player.dir.z := %d\n", player.dir.z);
-//
-//support::print("player.cls.name.length   := %d\n", player.cls.name.length);
-//support::print("player.cls.name.capacity := %d\n", player.cls.name.capacity);
+support::print("player.pos.x := %d\n", player.pos.x);
+support::print("player.pos.y := %d\n", player.pos.y);
+support::print("player.pos.z := %hhd\n", player.pos.z);
+
+support::print("player.dir.x := %d\n", player.dir.x);
+support::print("player.dir.y := %d\n", player.dir.y);
+support::print("player.dir.z := %d\n", player.dir.z);
+
+support::print("player.cls.name.length   := %d\n", player.cls.name.length);
+support::print("player.cls.name.capacity := %d\n", player.cls.name.capacity);

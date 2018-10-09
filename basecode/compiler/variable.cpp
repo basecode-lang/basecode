@@ -316,4 +316,8 @@ namespace basecode::compiler {
             _flags &= ~f;
     }
 
+    const infer_type_result_t& variable::type_result() const {
+        return _type;
+    }
+
 };

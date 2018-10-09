@@ -116,48 +116,9 @@ namespace basecode::compiler {
                 break;
             }
             case operator_type_t::member_access: {
-                std::stack<binary_operator*> member_accesses {};
-                auto current = _lhs;
-
-                while (current->element_type() == element_type_t::binary_operator) {
-                    auto bin_op = dynamic_cast<compiler::binary_operator*>(current);
-                    if (bin_op->operator_type() == operator_type_t::member_access) {
-                        member_accesses.push(bin_op);
-                    }
-                    current = bin_op->lhs();
-                }
-
-                std::vector<variable_handle_t> vars {};
-                variable_handle_t temp_var {};
-
-                while (!member_accesses.empty()) {
-                    auto bin_op = member_accesses.top();
-                    if (vars.empty()) {
-                        if (session.variable(bin_op->lhs(), temp_var)) {
-                            vars.push_back({});
-                            if (!temp_var->field(bin_op->rhs(), vars.back()))
-                                return false;
-                        }
-                    } else {
-                        auto& previous_var = vars.back();
-                        vars.push_back({});
-                        previous_var->field(bin_op->rhs(), vars.back());
-                    }
-                    member_accesses.pop();
-                }
-
-                if (vars.empty()) {
-                    vars.push_back({});
-                    if (!session.variable(_lhs, vars.back()))
-                        return false;
-                    vars.back()->read();
-                }
-
                 variable_handle_t field_var {};
-                if (!vars.back()->field(_rhs, field_var))
+                if (!session.variable(this, field_var))
                     return false;
-                field_var->read();
-
                 auto target_reg = assembler.current_target_register();
                 block->move_reg_to_reg(*target_reg, field_var->value_reg());
                 break;
