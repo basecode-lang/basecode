@@ -519,8 +519,10 @@ namespace basecode::compiler {
             reference,
             args);
         _session.elements().add(proc_call);
-        args->parent_element(proc_call);
-        reference->parent_element(proc_call);
+        if (args != nullptr)
+            args->parent_element(proc_call);
+        if (reference != nullptr)
+            reference->parent_element(proc_call);
         return proc_call;
     }
 

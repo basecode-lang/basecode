@@ -15,6 +15,7 @@
 #include "elements/type.h"
 #include "elements/identifier.h"
 #include "elements/pointer_type.h"
+#include "elements/unary_operator.h"
 #include "elements/symbol_element.h"
 #include "elements/composite_type.h"
 #include "elements/type_reference.h"
@@ -103,6 +104,7 @@ namespace basecode::compiler {
     bool variable::field(
             const std::string& name,
             variable_handle_t& handle,
+            compiler::element* element,
             bool activate) {
         compiler::type* base_type = nullptr;
         if (_type.inferred_type->is_pointer_type()) {
@@ -120,7 +122,7 @@ namespace basecode::compiler {
         if (field == nullptr)
             return false;
 
-        if (_session.variable(field->identifier(), handle, activate)) {
+        if (_session.variable(element != nullptr ? element : field->identifier(), handle, activate)) {
             handle->_parent = this;
             handle->_field = field;
             return true;
@@ -133,8 +135,26 @@ namespace basecode::compiler {
             compiler::element* element,
             variable_handle_t& handle,
             bool activate) {
-        auto var = dynamic_cast<compiler::identifier_reference*>(element);
-        return field(var->symbol().name, handle, activate);
+        compiler::identifier_reference* var = nullptr;
+        switch (element->element_type()) {
+            case element_type_t::unary_operator: {
+                auto unary_op = dynamic_cast<compiler::unary_operator*>(element);
+                if (unary_op->operator_type() == operator_type_t::pointer_dereference) {
+                    var = dynamic_cast<compiler::identifier_reference*>(unary_op->rhs());
+                }
+                break;
+            }
+            case element_type_t::identifier_reference: {
+                var = dynamic_cast<compiler::identifier_reference*>(element);
+                break;
+            }
+            default: {
+                break;
+            }
+        }
+        return var == nullptr ?
+            false :
+            field(var->symbol().name, handle, element, activate);
     }
 
     bool variable::write() {

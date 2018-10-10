@@ -90,7 +90,12 @@ namespace basecode::compiler {
                 break;
             }
             case operator_type_t::pointer_dereference: {
-                block->comment("pointer dereference", 4);
+                if (rhs_var->type_result().inferred_type->is_composite_type()) {
+                    block->move_reg_to_reg(*target_reg, rhs_var->value_reg());
+                    break;
+                }
+
+                block->comment("load primitive value from pointer", 4);
                 block->clr(vm::op_sizes::qword, *target_reg);
                 block->load_to_reg(*target_reg, rhs_var->value_reg());
                 break;

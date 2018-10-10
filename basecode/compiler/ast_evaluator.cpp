@@ -857,6 +857,8 @@ namespace basecode::compiler {
         auto args = _session.builder().make_argument_list(_session.scope_manager().current_scope());
         for (const auto& arg_node : context.node->children) {
             auto arg = resolve_symbol_or_evaluate(context, arg_node.get());
+            if (arg == nullptr)
+                return false;
             args->add(arg);
             arg->parent_element(args);
         }
@@ -897,6 +899,7 @@ namespace basecode::compiler {
         if (it == s_binary_operators.end())
             return false;
         auto scope = _session.scope_manager().current_scope();
+        auto& builder = _session.builder();
 
         auto is_member_access = it->second == operator_type_t::member_access;
 
@@ -928,7 +931,10 @@ namespace basecode::compiler {
                     auto pointer_type = dynamic_cast<compiler::pointer_type*>(infer_type_result.inferred_type);
                     composite_type = dynamic_cast<compiler::composite_type*>(pointer_type->base_type_ref()->type());
                     if (is_member_access) {
-                        // XXX: warp in a pointer dereference
+                        lhs = builder.make_unary_operator(
+                            scope,
+                            operator_type_t::pointer_dereference,
+                            lhs);
                     }
                 } else {
                     composite_type = dynamic_cast<compiler::composite_type*>(infer_type_result.inferred_type);
@@ -949,9 +955,30 @@ namespace basecode::compiler {
                 context,
                 context.node->rhs.get(),
                 type_scope);
+            if (is_member_access) {
+                infer_type_result_t rhs_type_result {};
+                if (!rhs->infer_type(_session, rhs_type_result)) {
+                    _session.error(
+                        rhs,
+                        "P052",
+                        "unable to infer type.",
+                        rhs->location());
+                    return false;
+                }
+
+                if (rhs_type_result.inferred_type->is_pointer_type()) {
+                    auto pointer_type = dynamic_cast<compiler::pointer_type*>(rhs_type_result.inferred_type);
+                    if (pointer_type->base_type_ref()->is_composite_type()) {
+                        rhs = builder.make_unary_operator(
+                            scope,
+                            operator_type_t::pointer_dereference,
+                            rhs);
+                    }
+                }
+            }
         }
 
-        result.element = _session.builder().make_binary_operator(
+        result.element = builder.make_binary_operator(
             scope,
             it->second,
             lhs,
@@ -1103,10 +1130,10 @@ namespace basecode::compiler {
         builder.make_qualified_symbol(qualified_symbol, context.node->lhs.get());
 
         compiler::argument_list* args = nullptr;
-        auto expr = evaluate(context.node->rhs.get());
-        if (expr != nullptr) {
-            args = dynamic_cast<compiler::argument_list*>(expr);
-        }
+        auto argument_list = evaluate(context.node->rhs.get());
+        if (argument_list == nullptr)
+            return false;
+        args = dynamic_cast<compiler::argument_list*>(argument_list);
 
         auto intrinsic = compiler::intrinsic::intrinsic_for_call(
             _session,

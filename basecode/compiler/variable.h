@@ -70,6 +70,7 @@ namespace basecode::compiler {
         bool field(
             const std::string& name,
             variable_handle_t& handle,
+            compiler::element* element = nullptr,
             bool activate = true);
 
         bool read();

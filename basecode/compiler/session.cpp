@@ -101,9 +101,10 @@ namespace basecode::compiler {
                 if (child_bin_op->operator_type() != operator_type_t::member_access)
                     break;
 
+                std::vector<variable_handle_t> vars {};
                 std::stack<binary_operator*> member_accesses {};
-                auto current = element;
 
+                auto current = element;
                 while (current->element_type() == element_type_t::binary_operator) {
                     auto bin_op = dynamic_cast<compiler::binary_operator*>(current);
                     if (bin_op->operator_type() == operator_type_t::member_access) {
@@ -112,27 +113,25 @@ namespace basecode::compiler {
                     current = bin_op->lhs();
                 }
 
-                std::vector<variable_handle_t> vars {};
-                variable_handle_t temp_var {};
+                auto bin_op = member_accesses.top();
+                auto lhs_read = should_read_variable(bin_op->lhs());
+                vars.push_back({});
+                if (variable(bin_op->lhs(), vars.back(), lhs_read)) {
+                    if (lhs_read)
+                        vars.back()->read();
+                }
 
-                // 1. check lhs & rhs, if more complex than identifier/identifier_reference then read
-                // 2. only activate if we're going to read.
-                // 3. register continuity between reads.
                 while (!member_accesses.empty()) {
-                    auto bin_op = member_accesses.top();
-                    if (vars.empty()) {
-                        if (variable(bin_op->lhs(), temp_var, true)) {
-                            temp_var->read();
-                            vars.push_back({});
-                            if (!temp_var->field(bin_op->rhs(), vars.back(), false))
-                                return false;
-                        }
-                    } else {
-                        auto& previous_var = vars.back();
-                        vars.push_back({});
-                        previous_var->field(bin_op->rhs(), vars.back(), false);
-                    }
+                    bin_op = member_accesses.top();
                     member_accesses.pop();
+
+                    auto& previous_var = vars.back();
+                    vars.push_back({});
+
+                    auto rhs_read = should_read_variable(bin_op->rhs());
+                    previous_var->field(bin_op->rhs(), vars.back(), rhs_read);
+                    if (rhs_read)
+                        vars.back()->read();
                 }
 
                 vars.back().skip_deactivate();
@@ -223,6 +222,11 @@ namespace basecode::compiler {
             _assembler.resolve_labels(_result);
 
             if (_assembler.assemble(_result)) {
+                if (_options.verbose) {
+                    disassemble(stdout);
+                    fmt::print("\n");
+                }
+
                 run();
             }
         }
@@ -247,7 +251,6 @@ namespace basecode::compiler {
     void session::finalize() {
         if (_options.verbose) {
             try {
-                disassemble(stdout);
                 if (!_options.dom_graph_file.empty())
                     write_code_dom_graph(_options.dom_graph_file);
             } catch (const fmt::format_error& e) {
@@ -669,6 +672,18 @@ namespace basecode::compiler {
 
     const compiler::scope_manager& session::scope_manager() const {
         return _scope_manager;
+    }
+
+    bool session::should_read_variable(compiler::element* element) {
+        if (element == nullptr)
+            return false;
+
+        switch (element->element_type()) {
+            case element_type_t::identifier_reference: return false;
+            default: break;
+        }
+
+        return true;
     }
 
     vm::label_ref_t* session::type_info_label(compiler::type* type) {

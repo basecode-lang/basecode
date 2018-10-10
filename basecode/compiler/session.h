@@ -153,6 +153,8 @@ namespace basecode::compiler {
 
         void initialize_built_in_procedures();
 
+        bool should_read_variable(compiler::element* element);
+
         void write_code_dom_graph(const boost::filesystem::path& path);
 
     private:
