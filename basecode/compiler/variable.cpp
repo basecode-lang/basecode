@@ -58,10 +58,12 @@ namespace basecode::compiler {
         if (flag(flags_t::f_read))
             return false;
 
-        address();
-
         auto& assembler = _session.assembler();
         auto block = assembler.current_block();
+        if (block == nullptr)
+            return true;
+
+        address();
 
         switch (_element->element_type()) {
             case element_type_t::identifier: {
@@ -200,6 +202,8 @@ namespace basecode::compiler {
 
         auto& assembler = _session.assembler();
         auto block = assembler.current_block();
+        if (block == nullptr)
+            return true;
 
         compiler::identifier* var = nullptr;
         if (_element->element_type() == element_type_t::identifier) {

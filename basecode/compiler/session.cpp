@@ -348,7 +348,7 @@ namespace basecode::compiler {
                         break;
 
                     variable_handle_t field_var {};
-                    if (!variable(lhs_bin_op, field_var)) {
+                    if (!variable(lhs_bin_op, field_var, false)) {
                         // XXX: error
                         return false;
                     }
