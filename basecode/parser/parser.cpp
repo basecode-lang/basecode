@@ -169,96 +169,6 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    static ast_node_shared_ptr create_cast_node(
-            common::result& r,
-            parser* parser,
-            token_t& token) {
-        auto cast_node = parser
-            ->ast_builder()
-            ->cast_node(token);
-
-        token_t less_than;
-        less_than.type = token_types_t::less_than;
-        if (!parser->expect(r, less_than))
-            return nullptr;
-
-        token_t identifier;
-        identifier.type = token_types_t::identifier;
-        if (!parser->expect(r, identifier))
-            return nullptr;
-
-        cast_node->lhs = parser
-            ->ast_builder()
-            ->type_identifier_node();
-        cast_node->lhs->lhs = create_symbol_node(r, parser, nullptr, identifier);
-
-        token_t greater_than;
-        greater_than.type = token_types_t::greater_than;
-        if (!parser->expect(r, greater_than))
-            return nullptr;
-
-        token_t left_paren;
-        left_paren.type = token_types_t::left_paren;
-        if (!parser->expect(r, left_paren))
-            return nullptr;
-
-        cast_node->rhs = parser->parse_expression(r, 0);
-
-        token_t right_paren;
-        right_paren.type = token_types_t::right_paren;
-        if (!parser->expect(r, right_paren))
-            return nullptr;
-
-        return cast_node;
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-
-    static ast_node_shared_ptr create_transmute_node(
-            common::result& r,
-            parser* parser,
-            token_t& token) {
-        auto transmute_node = parser
-            ->ast_builder()
-            ->transmute_node(token);
-
-        token_t less_than;
-        less_than.type = token_types_t::less_than;
-        if (!parser->expect(r, less_than))
-            return nullptr;
-
-        token_t identifier;
-        identifier.type = token_types_t::identifier;
-        if (!parser->expect(r, identifier))
-            return nullptr;
-
-        transmute_node->lhs = parser
-            ->ast_builder()
-            ->type_identifier_node();
-        transmute_node->lhs->lhs = create_symbol_node(r, parser, nullptr, identifier);
-
-        token_t greater_than;
-        greater_than.type = token_types_t::greater_than;
-        if (!parser->expect(r, greater_than))
-            return nullptr;
-
-        token_t left_paren;
-        left_paren.type = token_types_t::left_paren;
-        if (!parser->expect(r, left_paren))
-            return nullptr;
-
-        transmute_node->rhs = parser->parse_expression(r, 0);
-
-        token_t right_paren;
-        right_paren.type = token_types_t::right_paren;
-        if (!parser->expect(r, right_paren))
-            return nullptr;
-
-        return transmute_node;
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-
     static ast_node_shared_ptr create_type_identifier_node(
             common::result& r,
             parser* parser,
@@ -347,6 +257,80 @@ namespace basecode::syntax {
         collect_comments(r, parser, type_node->comments);
 
         return type_node;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    static ast_node_shared_ptr create_cast_node(
+            common::result& r,
+            parser* parser,
+            token_t& token) {
+        auto cast_node = parser
+            ->ast_builder()
+            ->cast_node(token);
+
+        token_t less_than;
+        less_than.type = token_types_t::less_than;
+        if (!parser->expect(r, less_than))
+            return nullptr;
+
+        cast_node->lhs = create_type_identifier_node(r, parser, less_than);
+
+        token_t greater_than;
+        greater_than.type = token_types_t::greater_than;
+        if (!parser->expect(r, greater_than))
+            return nullptr;
+
+        token_t left_paren;
+        left_paren.type = token_types_t::left_paren;
+        if (!parser->expect(r, left_paren))
+            return nullptr;
+
+        cast_node->rhs = parser->parse_expression(r, 0);
+
+        token_t right_paren;
+        right_paren.type = token_types_t::right_paren;
+        if (!parser->expect(r, right_paren))
+            return nullptr;
+
+        return cast_node;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    static ast_node_shared_ptr create_transmute_node(
+            common::result& r,
+            parser* parser,
+            token_t& token) {
+        auto transmute_node = parser
+            ->ast_builder()
+            ->transmute_node(token);
+
+        token_t less_than;
+        less_than.type = token_types_t::less_than;
+        if (!parser->expect(r, less_than))
+            return nullptr;
+
+        transmute_node->lhs = create_type_identifier_node(r, parser, less_than);
+
+        token_t greater_than;
+        greater_than.type = token_types_t::greater_than;
+        if (!parser->expect(r, greater_than))
+            return nullptr;
+
+        token_t left_paren;
+        left_paren.type = token_types_t::left_paren;
+        if (!parser->expect(r, left_paren))
+            return nullptr;
+
+        transmute_node->rhs = parser->parse_expression(r, 0);
+
+        token_t right_paren;
+        right_paren.type = token_types_t::right_paren;
+        if (!parser->expect(r, right_paren))
+            return nullptr;
+
+        return transmute_node;
     }
 
     ///////////////////////////////////////////////////////////////////////////

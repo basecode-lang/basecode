@@ -92,9 +92,16 @@ namespace basecode::compiler {
     }
 
     std::string pointer_type::name(const std::string& alias) const {
-        if (!alias.empty())
-            return alias;
-        return fmt::format("^{}", _base_type_ref->name());
+        std::stringstream stream {};
+        if (!alias.empty()) {
+            if (alias.find('^') == std::string::npos)
+                stream << "^";
+            stream << alias;
+            return stream.str();
+        } else {
+            stream << "^" << _base_type_ref->name();
+            return stream.str();
+        }
     }
 
 };
