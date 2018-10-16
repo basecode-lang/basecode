@@ -5,9 +5,10 @@ foo := foo * 2;
 
 #assembly {{
     move.qw i0, foo
-    move.b  i1, #$0a
-    sub.b   i2, i0, i1
-    store.b i0, i2
+    load.b  i1, i0
+    move.b  i2, #$0a
+    sub.b   i3, i1, i2
+    store.b i0, i3
 }};
 
 foo := (foo - 16) shr 2;

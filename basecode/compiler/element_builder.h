@@ -316,7 +316,8 @@ namespace basecode::compiler {
         identifier_reference* make_identifier_reference(
             compiler::block* parent_scope,
             const qualified_symbol_t& symbol,
-            compiler::identifier* identifier);
+            compiler::identifier* identifier,
+            bool flag_as_unresolved = true);
 
         unknown_type* make_unknown_type_from_find_result(
             compiler::block* scope,

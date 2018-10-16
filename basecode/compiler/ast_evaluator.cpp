@@ -239,7 +239,8 @@ namespace basecode::compiler {
     compiler::element* ast_evaluator::resolve_symbol_or_evaluate(
             const evaluator_context_t& context,
             const syntax::ast_node_t* node,
-            compiler::block* scope) {
+            compiler::block* scope,
+            bool flag_as_unresolved) {
         auto& builder = _session.builder();
         auto& scope_manager = _session.scope_manager();
 
@@ -251,7 +252,8 @@ namespace basecode::compiler {
             element = builder.make_identifier_reference(
                 scope_manager.current_scope(),
                 qualified_symbol,
-                scope_manager.find_identifier(qualified_symbol, scope));
+                scope_manager.find_identifier(qualified_symbol, scope),
+                flag_as_unresolved);
         } else {
             if (scope != nullptr)
                 element = evaluate_in_scope(context, node, scope);
@@ -1589,7 +1591,8 @@ namespace basecode::compiler {
             auto target_element = resolve_symbol_or_evaluate(
                 context,
                 target_symbol.get(),
-                scope);
+                scope,
+                false);
 
             if (target_element->element_type() == element_type_t::identifier_reference) {
                 auto identifier_ref = dynamic_cast<compiler::identifier_reference*>(target_element);

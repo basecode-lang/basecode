@@ -831,7 +831,8 @@ namespace basecode::compiler {
     identifier_reference* element_builder::make_identifier_reference(
             compiler::block* parent_scope,
             const qualified_symbol_t& symbol,
-            compiler::identifier* identifier) {
+            compiler::identifier* identifier,
+            bool flag_as_unresolved) {
         auto& scope_manager = _session.scope_manager();
 
         auto& unresolveds = scope_manager.unresolved_identifier_references();
@@ -841,7 +842,7 @@ namespace basecode::compiler {
             symbol,
             identifier);
         _session.elements().add(reference);
-        if (!reference->resolved())
+        if (!reference->resolved() && flag_as_unresolved)
             unresolveds.emplace_back(reference);
         reference->location(symbol.location);
         return reference;
