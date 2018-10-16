@@ -68,12 +68,12 @@ namespace basecode::compiler {
         return true;
     }
 
-    std::string address_of_intrinsic::name() const {
-        return "address_of";
+    bool address_of_intrinsic::can_fold() const {
+        return true;
     }
 
-    bool address_of_intrinsic::on_is_constant() const {
-        return true;
+    std::string address_of_intrinsic::name() const {
+        return "address_of";
     }
 
 };

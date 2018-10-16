@@ -92,12 +92,12 @@ namespace basecode::compiler {
         return true;
     }
 
-    std::string type_of_intrinsic::name() const {
-        return "type_of";
+    bool type_of_intrinsic::can_fold() const {
+        return true;
     }
 
-    bool type_of_intrinsic::on_is_constant() const {
-        return true;
+    std::string type_of_intrinsic::name() const {
+        return "type_of";
     }
 
 };

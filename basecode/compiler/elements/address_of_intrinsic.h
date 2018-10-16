@@ -22,6 +22,8 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             compiler::argument_list* args);
 
+        bool can_fold() const override;
+
         std::string name() const override;
 
     protected:
@@ -32,8 +34,6 @@ namespace basecode::compiler {
         bool on_infer_type(
             compiler::session& session,
             infer_type_result_t& result) override;
-
-        bool on_is_constant() const override;
     };
 
 };

@@ -56,6 +56,10 @@ namespace basecode::compiler {
         return true;
     }
 
+    bool size_of_intrinsic::can_fold() const {
+        return true;
+    }
+
     std::string size_of_intrinsic::name() const {
         return "size_of";
     }

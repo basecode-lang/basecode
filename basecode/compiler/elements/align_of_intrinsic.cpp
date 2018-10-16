@@ -56,6 +56,10 @@ namespace basecode::compiler {
         return true;
     }
 
+    bool align_of_intrinsic::can_fold() const {
+        return true;
+    }
+
     std::string align_of_intrinsic::name() const {
         return "align_of";
     }

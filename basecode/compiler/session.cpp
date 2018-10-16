@@ -533,11 +533,12 @@ namespace basecode::compiler {
     bool session::fold_constant_intrinsics() {
         auto intrinsics = _elements.find_by_type(element_type_t::intrinsic);
         for (auto e : intrinsics) {
-            if (!e->is_constant())
+            auto intrinsic = dynamic_cast<compiler::intrinsic*>(e);
+            if (!intrinsic->can_fold())
                 continue;
 
             fold_result_t fold_result {};
-            if (!e->fold(*this, fold_result))
+            if (!intrinsic->fold(*this, fold_result))
                 return false;
 
             if (fold_result.element != nullptr) {

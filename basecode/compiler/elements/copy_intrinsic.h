@@ -25,7 +25,7 @@ namespace basecode::compiler {
         std::string name() const override;
 
     protected:
-        bool on_emit(compiler::session& session);
+        bool on_emit(compiler::session& session) override;
     };
 
 };

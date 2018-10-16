@@ -29,7 +29,7 @@ namespace basecode::compiler {
             compiler::session& session,
             infer_type_result_t& result) override;
 
-        bool on_emit(compiler::session& session);
+        bool on_emit(compiler::session& session) override;
     };
 
 };

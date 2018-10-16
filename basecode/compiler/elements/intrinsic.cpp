@@ -134,6 +134,10 @@ namespace basecode::compiler {
                                          _arguments(args) {
     }
 
+    bool intrinsic::can_fold() const {
+        return false;
+    }
+
     std::string intrinsic::name() const {
         return "intrinsic";
     }

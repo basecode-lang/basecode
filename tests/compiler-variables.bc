@@ -49,8 +49,7 @@ player: entity;
 //support::print("player.cls.name.length   := %d\n", player.cls.name.length);
 //support::print("player.cls.name.capacity := %d\n", player.cls.name.capacity);
 
-player_ptr: ^entity;
-player_ptr := address_of(player);
+player_ptr: ^entity := address_of(player);
 
 //player_ptr.pos.x := 100;
 //player_ptr.pos.y := 55;

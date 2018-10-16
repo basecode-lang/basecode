@@ -22,6 +22,8 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             compiler::argument_list* args);
 
+        bool can_fold() const override;
+
         std::string name() const override;
 
     protected:
