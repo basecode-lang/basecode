@@ -290,6 +290,7 @@ namespace basecode::compiler {
 
         array_constructor* make_array_constructor(
             compiler::block* parent_scope,
+            compiler::type_reference* type_ref,
             compiler::argument_list* args);
 
         compiler::symbol_element* make_temp_symbol(

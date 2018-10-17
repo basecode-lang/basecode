@@ -60,6 +60,7 @@ namespace basecode::syntax {
         rol_literal,
         ror_literal,
         nil_literal,
+        map_literal,
         from_literal,
         proc_literal,
         with_literal,
@@ -75,6 +76,8 @@ namespace basecode::syntax {
         defer_literal,
         union_literal,
         block_comment,
+        array_literal,
+        tuple_literal,
         module_literal,
         struct_literal,
         number_literal,
@@ -146,6 +149,7 @@ namespace basecode::syntax {
         {token_types_t::shr_literal,                "shr_literal"},
         {token_types_t::rol_literal,                "rol_literal"},
         {token_types_t::ror_literal,                "ror_literal"},
+        {token_types_t::map_literal,                "map_literal"},
         {token_types_t::from_literal,               "from_literal"},
         {token_types_t::proc_literal,               "proc_literal"},
         {token_types_t::with_literal,               "with_literal"},
@@ -160,6 +164,8 @@ namespace basecode::syntax {
         {token_types_t::while_literal,              "while_literal"},
         {token_types_t::defer_literal,              "defer_literal"},
         {token_types_t::union_literal,              "union_literal"},
+        {token_types_t::array_literal,              "array_literal"},
+        {token_types_t::tuple_literal,              "tuple_literal"},
         {token_types_t::block_comment,              "block_comment"},
         {token_types_t::module_literal,             "module_literal"},
         {token_types_t::struct_literal,             "struct_literal"},
@@ -344,6 +350,11 @@ namespace basecode::syntax {
         .value = "nil"
     };
 
+    static inline token_t s_map_literal = {
+        .type = token_types_t::map_literal,
+        .value = "map"
+    };
+
     static inline token_t s_with_literal = {
         .type = token_types_t::with_literal,
         .value = "with"
@@ -372,6 +383,16 @@ namespace basecode::syntax {
     static inline token_t s_comma_literal = {
         .type = token_types_t::comma,
         .value = ","
+    };
+
+    static inline token_t s_array_literal = {
+        .type = token_types_t::array_literal,
+        .value = "array"
+    };
+
+    static inline token_t s_tuple_literal = {
+        .type = token_types_t::tuple_literal,
+        .value = "tuple"
     };
 
     static inline token_t s_defer_literal = {

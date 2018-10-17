@@ -20,10 +20,13 @@ namespace basecode::compiler {
         array_constructor(
             compiler::module* module,
             compiler::block* parent_scope,
+            compiler::type_reference* type_ref,
             compiler::argument_list* args,
             const compiler::element_list_t& subscripts);
 
         compiler::argument_list* args();
+
+        compiler::type_reference* type_ref();
 
     protected:
         bool on_infer_type(
@@ -37,6 +40,7 @@ namespace basecode::compiler {
     private:
         compiler::element_list_t _subscripts {};
         compiler::argument_list* _args = nullptr;
+        compiler::type_reference* _type_ref = nullptr;
     };
 
 };

@@ -148,16 +148,8 @@ namespace basecode::syntax {
             parser* parser,
             const ast_node_shared_ptr& lhs,
             token_t& token) {
-        ast_node_shared_ptr node;
-        auto expr = parser->parse_expression(r, 0);
-
-        if (expr->type != syntax::ast_node_types_t::pair) {
-            node = parser->ast_builder()->expression_node();
-            node->lhs = expr;
-        } else {
-            node = parser->ast_builder()->tuple_expression_node();
-            pairs_to_list(node->lhs, expr);
-        }
+        auto node = parser->ast_builder()->expression_node();
+        node->lhs = parser->parse_expression(r, 0);
 
         token_t right_paren_token;
         right_paren_token.type = token_types_t::right_paren;
@@ -396,21 +388,38 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    ast_node_shared_ptr array_constructor_prefix_parser::parse(
+    ast_node_shared_ptr array_expression_prefix_parser::parse(
             common::result& r,
             parser* parser,
             token_t& token) {
-        auto node = parser->ast_builder()->array_constructor_node();
+        auto node = parser->ast_builder()->array_expression_node();
         node->location.start(token.location.start());
 
-        pairs_to_list(node->lhs, parser->parse_expression(r, 0));
-
-        token_t right_bracket_token;
-        right_bracket_token.type = token_types_t::right_square_bracket;
-        if (!parser->expect(r, right_bracket_token))
+        token_t less_than;
+        less_than.type = token_types_t::less_than;
+        if (!parser->expect(r, less_than))
             return nullptr;
 
-        node->location.end(right_bracket_token.location.end());
+        node->lhs = create_type_identifier_node(r, parser, less_than);
+
+        token_t greater_than;
+        greater_than.type = token_types_t::greater_than;
+        if (!parser->expect(r, greater_than))
+            return nullptr;
+
+        token_t left_paren;
+        left_paren.type = token_types_t::left_paren;
+        if (!parser->expect(r, left_paren))
+            return nullptr;
+
+        pairs_to_list(node->rhs, parser->parse_expression(r, 0));
+
+        token_t right_paren;
+        right_paren.type = token_types_t::right_paren;
+        if (!parser->expect(r, right_paren))
+            return nullptr;
+
+        node->location.end(right_paren.location.end());
         return node;
     }
 
@@ -678,8 +687,13 @@ namespace basecode::syntax {
             pairs_to_list(proc_node->lhs, parser->parse_expression(r, 0));
         }
 
-        if (!parser->peek(token_types_t::semi_colon))
+        while (parser->peek(token_types_t::attribute)) {
+            proc_node->attributes.push_back(parser->parse_expression(r, 0));
+        }
+
+        if (!parser->peek(token_types_t::semi_colon)) {
             proc_node->children.push_back(parser->parse_expression(r, 0));
+        }
 
         return proc_node;
     }

@@ -1050,18 +1050,43 @@ namespace basecode::compiler {
 
     array_constructor* element_builder::make_array_constructor(
             compiler::block* parent_scope,
+            compiler::type_reference* type_ref,
             compiler::argument_list* args) {
         element_list_t subscripts {};
-        subscripts.push_back(make_integer(
-            parent_scope,
-            args->size()));
+        if (args != nullptr) {
+            subscripts.push_back(make_integer(
+                parent_scope,
+                args->size()));
+        }
+
+        qualified_symbol_t array_type_name {
+            .name = array_type::name_for_array(type_ref->type(), subscripts)
+        };
+
+        auto array_type = _session.scope_manager().find_type(array_type_name);
+        if (array_type == nullptr) {
+            array_type = make_array_type(
+                parent_scope,
+                make_block(parent_scope, element_type_t::block),
+                type_ref->type(),
+                array_type_name,
+                subscripts);
+            type_ref = make_type_reference(
+                parent_scope,
+                array_type_name,
+                array_type);
+        }
 
         auto array_ctor = new compiler::array_constructor(
             _session.scope_manager().current_module(),
             parent_scope,
+            type_ref,
             args,
             subscripts);
         _session.elements().add(array_ctor);
+
+        if (type_ref != nullptr)
+            type_ref->parent_element(array_ctor);
 
         if (args != nullptr)
             args->parent_element(array_ctor);

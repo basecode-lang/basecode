@@ -182,6 +182,14 @@ namespace basecode::syntax {
         return node;
     }
 
+    ast_node_shared_ptr ast_builder::map_expression_node() {
+        auto node = std::make_shared<ast_node_t>();
+        node->id = ++_id;
+        node->type = ast_node_types_t::map_expression;
+        node->lhs = argument_list_node();
+        return node;
+    }
+
     ast_node_shared_ptr ast_builder::tuple_expression_node() {
         auto node = std::make_shared<ast_node_t>();
         node->id = ++_id;
@@ -190,11 +198,11 @@ namespace basecode::syntax {
         return node;
     }
 
-    ast_node_shared_ptr ast_builder::array_constructor_node() {
+    ast_node_shared_ptr ast_builder::array_expression_node() {
         auto node = std::make_shared<ast_node_t>();
         node->id = ++_id;
-        node->type = ast_node_types_t::array_constructor;
-        node->lhs = argument_list_node();
+        node->type = ast_node_types_t::array_expression;
+        node->rhs = argument_list_node();
         return node;
     }
 

@@ -52,6 +52,7 @@ namespace basecode::syntax {
         string_literal,
         unary_operator,
         statement_body,
+        map_expression,
         spread_operator,
         proc_expression,
         binary_operator,
@@ -66,13 +67,13 @@ namespace basecode::syntax {
         from_expression,
         symbol_reference,
         return_statement,
-        for_in_statement,   // XXX: need to think about how for loops work
+        for_in_statement,
         union_expression,
         defer_expression,
         tuple_expression,
+        array_expression,
         module_expression,
         character_literal,
-        array_constructor,
         elseif_expression,
         switch_expression,
         struct_expression,
@@ -113,6 +114,7 @@ namespace basecode::syntax {
         {ast_node_types_t::number_literal, "number_literal"},
         {ast_node_types_t::string_literal, "string_literal"},
         {ast_node_types_t::unary_operator, "unary_operator"},
+        {ast_node_types_t::map_expression, "map_expression"},
         {ast_node_types_t::cast_expression, "cast_expression"},
         {ast_node_types_t::from_expression, "from_expression"},
         {ast_node_types_t::proc_expression, "proc_expression"},
@@ -132,10 +134,10 @@ namespace basecode::syntax {
         {ast_node_types_t::symbol_reference, "symbol_reference"},
         {ast_node_types_t::for_in_statement, "for_in_statement"},
         {ast_node_types_t::switch_expression, "switch_statement"},
+        {ast_node_types_t::array_expression,  "array_expression"},
         {ast_node_types_t::import_expression, "import_expression"},
         {ast_node_types_t::struct_expression, "struct_expression"},
         {ast_node_types_t::character_literal, "character_literal"},
-        {ast_node_types_t::array_constructor, "array_constructor"},
         {ast_node_types_t::module_expression, "module_expression"},
         {ast_node_types_t::elseif_expression, "elseif_expression"},
         {ast_node_types_t::subscript_operator, "subscript_operator"},
@@ -264,6 +266,8 @@ namespace basecode::syntax {
             const token_t& token,
             const ast_node_shared_ptr& rhs);
 
+        ast_node_shared_ptr map_expression_node();
+
         ast_node_shared_ptr parameter_list_node();
 
         ast_node_shared_ptr statement_body_node();
@@ -274,7 +278,7 @@ namespace basecode::syntax {
 
         ast_node_shared_ptr tuple_expression_node();
 
-        ast_node_shared_ptr array_constructor_node();
+        ast_node_shared_ptr array_expression_node();
 
         ast_node_shared_ptr subscript_operator_node();
 

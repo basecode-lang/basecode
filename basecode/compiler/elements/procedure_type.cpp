@@ -91,7 +91,9 @@ namespace basecode::compiler {
     }
 
     bool procedure_type::on_emit(compiler::session& session) {
-        auto& assembler = session.assembler();
+        if (is_foreign()) {
+            return true;
+        }
 
         auto procedure_label = symbol()->name();
         auto parent_init = parent_element_as<compiler::initializer>();
@@ -102,12 +104,8 @@ namespace basecode::compiler {
             }
         }
 
-        if (is_foreign()) {
-            return true;
-        }
-
+        auto& assembler = session.assembler();
         auto stack_frame = session.stack_frame();
-
         auto block = assembler.make_procedure_block();
         block->align(vm::instruction_t::alignment);
         block->blank_line();

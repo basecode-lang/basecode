@@ -115,6 +115,9 @@ namespace basecode::syntax {
         // string literal
         {'"', std::bind(&lexer::string_literal, std::placeholders::_1, std::placeholders::_2)},
 
+        // array literal
+        {'a', std::bind(&lexer::array_literal, std::placeholders::_1, std::placeholders::_2)},
+
         // return literal
         {'r', std::bind(&lexer::return_literal, std::placeholders::_1, std::placeholders::_2)},
 
@@ -126,8 +129,9 @@ namespace basecode::syntax {
         {'n', std::bind(&lexer::nil_literal, std::placeholders::_1, std::placeholders::_2)},
         {'n', std::bind(&lexer::ns_literal, std::placeholders::_1, std::placeholders::_2)},
 
-        // module literals
+        // module/map literals
         {'m', std::bind(&lexer::module_literal, std::placeholders::_1, std::placeholders::_2)},
+        {'m', std::bind(&lexer::map_literal, std::placeholders::_1, std::placeholders::_2)},
 
         // import literal
         // if literal
@@ -172,8 +176,9 @@ namespace basecode::syntax {
         {'s', std::bind(&lexer::shl_literal, std::placeholders::_1, std::placeholders::_2)},
         {'s', std::bind(&lexer::shr_literal, std::placeholders::_1, std::placeholders::_2)},
 
-        // transmute
+        // transmute/tuple
         {'t', std::bind(&lexer::transmute_literal, std::placeholders::_1, std::placeholders::_2)},
+        {'t', std::bind(&lexer::tuple_literal, std::placeholders::_1, std::placeholders::_2)},
 
         // while literal
         {'w', std::bind(&lexer::while_literal, std::placeholders::_1, std::placeholders::_2)},
@@ -816,6 +821,18 @@ namespace basecode::syntax {
         return false;
     }
 
+    bool lexer::map_literal(token_t& token) {
+        if (match_literal("map")) {
+            auto ch = read(false);
+            if (!isalnum(ch)) {
+                rewind_one_char();
+                token = s_map_literal;
+                return true;
+            }
+        }
+        return false;
+    }
+
     bool lexer::else_literal(token_t& token) {
         if (match_literal("else")) {
             auto ch = read(false);
@@ -939,6 +956,30 @@ namespace basecode::syntax {
             if (!isalnum(ch)) {
                 rewind_one_char();
                 token = s_defer_literal;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    bool lexer::array_literal(token_t& token) {
+        if (match_literal("array")) {
+            auto ch = read(false);
+            if (!isalnum(ch)) {
+                rewind_one_char();
+                token = s_array_literal;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    bool lexer::tuple_literal(token_t& token) {
+        if (match_literal("tuple")) {
+            auto ch = read(false);
+            if (!isalnum(ch)) {
+                rewind_one_char();
+                token = s_tuple_literal;
                 return true;
             }
         }

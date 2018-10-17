@@ -58,11 +58,11 @@ namespace basecode::compiler {
         {syntax::ast_node_types_t::symbol_reference,        std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::for_in_statement,        std::bind(&ast_evaluator::for_in_statement, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::tuple_expression,        std::bind(&ast_evaluator::tuple_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::array_expression,        std::bind(&ast_evaluator::array_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::switch_expression,       std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::import_expression,       std::bind(&ast_evaluator::import_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::struct_expression,       std::bind(&ast_evaluator::struct_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::character_literal,       std::bind(&ast_evaluator::character_literal, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::array_constructor,       std::bind(&ast_evaluator::array_constructor, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::module_expression,       std::bind(&ast_evaluator::module_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::elseif_expression,       std::bind(&ast_evaluator::if_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::subscript_operator,      std::bind(&ast_evaluator::subscript_operator, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
@@ -183,17 +183,17 @@ namespace basecode::compiler {
         if (node->children.empty())
             return;
 
+        for (auto& attr : node->attributes) {
+            auto attribute = builder.make_attribute(
+                proc_type->scope(),
+                attr->token.value,
+                evaluate(attr->lhs.get()));
+            attribute->parent_element(proc_type);
+            proc_type->attributes().add(attribute);
+        }
+
         for (const auto& child_node : node->children) {
             switch (child_node->type) {
-                case syntax::ast_node_types_t::attribute: {
-                    auto attribute = builder.make_attribute(
-                        proc_type->scope(),
-                        child_node->token.value,
-                        evaluate(child_node->lhs.get()));
-                    attribute->parent_element(proc_type);
-                    proc_type->attributes().add(attribute);
-                    break;
-                }
                 case syntax::ast_node_types_t::basic_block: {
                     auto basic_block = dynamic_cast<compiler::block*>(evaluate_in_scope(
                         context,
@@ -821,23 +821,25 @@ namespace basecode::compiler {
         return true;
     }
 
-    bool ast_evaluator::array_constructor(
+    // XXX: walk args and build subscripts
+    //
+    // [1, 2, 3] => [3]
+    //
+    // [[1,2,3], [1,2,3], [1,2,3]] => [1][3]
+    //
+    //
+    // XXX: determine entry type
+    // different type families, use any
+    // integer/float, widen/narrow as needed
+    //
+    bool ast_evaluator::array_expression(
             evaluator_context_t& context,
             evaluator_result_t& result) {
-        auto args = dynamic_cast<compiler::argument_list*>(evaluate(context.node->lhs.get()));
-        // XXX: walk args and build subscripts
-        //
-        // [1, 2, 3] => [3]
-        //
-        // [[1,2,3], [1,2,3], [1,2,3]] => [1][3]
-        //
-        //
-        // XXX: determine entry type
-        // different type families, use any
-        // integer/float, widen/narrow as needed
-        //
+        auto type_ref = dynamic_cast<compiler::type_reference*>(evaluate(context.node->lhs.get()));
+        auto args = dynamic_cast<compiler::argument_list*>(evaluate(context.node->rhs.get()));
         result.element = _session.builder().make_array_constructor(
             _session.scope_manager().current_scope(),
+            type_ref,
             args);
         return true;
     }
@@ -1023,21 +1025,10 @@ namespace basecode::compiler {
             evaluator_result_t& result) {
         auto& builder = _session.builder();
         auto& scope_manager = _session.scope_manager();
-
-        qualified_symbol_t type_name {
-            .name = context.node->lhs->lhs->children[0]->token.value
-        };
-        auto type = scope_manager.find_type(type_name);
-        if (type == nullptr) {
-            _session.error(
-                "P002",
-                fmt::format("unknown type '{}'.", type_name.name),
-                context.node->lhs->lhs->location);
-            return false;
-        }
+        auto type_ref = dynamic_cast<compiler::type_reference*>(evaluate(context.node->lhs.get()));
         auto cast_element = builder.make_cast(
             scope_manager.current_scope(),
-            builder.make_type_reference(scope_manager.current_scope(), type_name, type),
+            type_ref,
             resolve_symbol_or_evaluate(context, context.node->rhs.get()));
         cast_element->location(context.node->location);
         cast_element->type_location(context.node->lhs->lhs->location);
@@ -1548,21 +1539,10 @@ namespace basecode::compiler {
             evaluator_result_t& result) {
         auto& builder = _session.builder();
         auto& scope_manager = _session.scope_manager();
-
-        qualified_symbol_t type_name {
-            .name = context.node->lhs->lhs->children[0]->token.value
-        };
-        auto type = scope_manager.find_type(type_name);
-        if (type == nullptr) {
-            _session.error(
-                "P002",
-                fmt::format("unknown type '{}'.", type_name.name),
-                context.node->lhs->lhs->location);
-            return false;
-        }
+        auto type_ref = dynamic_cast<compiler::type_reference*>(evaluate(context.node->lhs.get()));
         auto transmute_element = builder.make_transmute(
             scope_manager.current_scope(),
-            builder.make_type_reference(scope_manager.current_scope(), type_name, type),
+            type_ref,
             resolve_symbol_or_evaluate(context, context.node->rhs.get()));
         transmute_element->location(context.node->location);
         transmute_element->type_location(context.node->lhs->lhs->location);

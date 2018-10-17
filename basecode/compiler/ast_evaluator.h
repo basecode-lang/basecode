@@ -170,11 +170,11 @@ namespace basecode::compiler {
             evaluator_context_t& context,
             evaluator_result_t& result);
 
-        bool character_literal(
+        bool array_expression(
             evaluator_context_t& context,
             evaluator_result_t& result);
 
-        bool array_constructor(
+        bool character_literal(
             evaluator_context_t& context,
             evaluator_result_t& result);
 
