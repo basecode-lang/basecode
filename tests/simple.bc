@@ -1,32 +1,3 @@
-// Issues
-//
-
-// 0. how to encode the spread operator?
-//
-
-// 1. block filtering in program::on_emit isn't strong enough.
-//    a. blocks that belong to procedures should be flagged as such
-
-// 3. finish constant expression folding
-
-// 5. array initializer lists
-// 6. dictionary initializer lists
-// 7. tuples
-// 8. structs/unions/enums
-//    a. dot defer syntax
-// 9. with syntax for composite types
-// 10. context implicit
-
-// 11. procedure call verification against type
-//     a. named, unordered arguments, e.g. print(a, 2, 10, 3, format := "a = %hhu\n");
-//     b. procedure stack frame
-//     c. return fixes
-
-// 12. #if/#elseif/#else
-// 13. assert
-
-// 15. assembler label names need to be fully qualified
-
 support ::= module("support/module.bc");
 
 //

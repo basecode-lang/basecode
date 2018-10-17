@@ -33,17 +33,18 @@ namespace basecode::compiler {
                                          _reference(reference) {
     }
 
-    // XXX: not handling multiple returns yet
     bool procedure_call::on_infer_type(
             compiler::session& session,
             infer_type_result_t& result) {
         auto identifier = _reference->identifier();
         if (identifier != nullptr) {
             auto proc_type = dynamic_cast<procedure_type*>(identifier->type_ref()->type());
-            auto return_identifier = proc_type->return_type()->identifier();
-            result.inferred_type = return_identifier->type_ref()->type();
-            result.reference = return_identifier->type_ref();
-            return true;
+            if (proc_type != nullptr) {
+                auto return_identifier = proc_type->return_type()->identifier();
+                result.inferred_type = return_identifier->type_ref()->type();
+                result.reference = return_identifier->type_ref();
+                return true;
+            }
         }
         return false;
     }

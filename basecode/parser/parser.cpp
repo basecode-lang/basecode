@@ -925,6 +925,8 @@ namespace basecode::syntax {
             const ast_node_shared_ptr& lhs,
             token_t& token) {
         if (lhs->type == ast_node_types_t::symbol) {
+            // XXX: tuple, array, and map constructors pseudo-functions
+
             auto proc_call_node = parser->ast_builder()->proc_call_node();
             proc_call_node->lhs = lhs;
             proc_call_node->location.start(lhs->location.start());

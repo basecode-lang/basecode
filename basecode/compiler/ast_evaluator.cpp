@@ -478,6 +478,14 @@ namespace basecode::compiler {
             new_identifier->type_ref(infer_type_result.reference);
             new_identifier->inferred_type(infer_type_result.inferred_type != nullptr);
         } else {
+            if (type_ref == nullptr) {
+                _session.error(
+                    "P019",
+                    fmt::format("unable to infer type: {}", new_identifier->symbol()->name()),
+                    new_identifier->symbol()->location());
+                return nullptr;
+            }
+
             new_identifier->type_ref(type_ref);
             if (type_ref->is_unknown_type()) {
                 _session.scope_manager()

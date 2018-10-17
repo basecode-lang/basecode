@@ -1,3 +1,4 @@
 support ::= module("support/module.bc");
 
-t := (1, 2, 3);
+anonymous_tuple := tuple(1, 2, 3);
+named_tuple     := tuple(first := 1, second := 2, third := 3);
