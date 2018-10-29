@@ -425,6 +425,31 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    ast_node_shared_ptr tuple_expression_prefix_parser::parse(
+            common::result& r,
+            parser* parser,
+            token_t& token) {
+        auto node = parser->ast_builder()->tuple_expression_node();
+        node->location.start(token.location.start());
+
+        token_t left_paren;
+        left_paren.type = token_types_t::left_paren;
+        if (!parser->expect(r, left_paren))
+            return nullptr;
+
+        pairs_to_list(node->rhs, parser->parse_expression(r, 0));
+
+        token_t right_paren;
+        right_paren.type = token_types_t::right_paren;
+        if (!parser->expect(r, right_paren))
+            return nullptr;
+
+        node->location.end(right_paren.location.end());
+        return node;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
     ast_node_shared_ptr spread_prefix_parser::parse(
             common::result& r,
             parser* parser,
@@ -1142,11 +1167,11 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    parser::parser(common::source_file* source_file) : _lexer(source_file),
-                                                       _source_file(source_file) {
-    }
-
-    parser::~parser() {
+    parser::parser(
+        common::source_file* source_file,
+        syntax::ast_builder& builder) : _lexer(source_file),
+                                        _ast_builder(builder),
+                                        _source_file(source_file) {
     }
 
     void parser::error(

@@ -1,4 +1,9 @@
 support ::= module("support/module.bc");
 
-anonymous_tuple := tuple(1, 2, 3);
-named_tuple     := tuple(first := 1, second := 2, third := 3);
+anonymous_tuple ::= tuple(1, 2, 3);
+named_tuple     ::= tuple(first := 1, second := 2, third := "foobar");
+
+// TODO
+// 1. need to generate initializers for tuple data
+support::print("anonymous_tuple._1 = %d\n", anonymous_tuple._1);
+support::print("named_tuple.third.length = %d\n", named_tuple.third.length);

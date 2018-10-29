@@ -121,8 +121,9 @@ namespace basecode::syntax {
         // return literal
         {'r', std::bind(&lexer::return_literal, std::placeholders::_1, std::placeholders::_2)},
 
-        // true/false literals
+        // true/tuple/false literals
         {'t', std::bind(&lexer::true_literal, std::placeholders::_1, std::placeholders::_2)},
+        {'t', std::bind(&lexer::tuple_literal, std::placeholders::_1, std::placeholders::_2)},
         {'f', std::bind(&lexer::false_literal, std::placeholders::_1, std::placeholders::_2)},
 
         // nil/ns literals

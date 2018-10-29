@@ -630,6 +630,10 @@ namespace basecode::compiler {
         return unresolved.empty();
     }
 
+    syntax::ast_builder& session::ast_builder() {
+        return _ast_builder;
+    }
+
     const element_map& session::elements() const {
         return _elements;
     }
@@ -758,7 +762,9 @@ namespace basecode::compiler {
                 return nullptr;
         }
 
-        syntax::parser alpha_parser(source_file);
+        _ast_builder.reset();
+        syntax::parser alpha_parser(source_file, _ast_builder);
+
         auto module_node = alpha_parser.parse(_result);
         if (module_node != nullptr && !_result.is_failed()) {
             if (_options.output_ast_graphs) {

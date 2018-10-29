@@ -423,12 +423,15 @@ namespace basecode::compiler {
     tuple_type* element_builder::make_tuple_type(
             compiler::block* parent_scope,
             compiler::block* scope) {
+        auto type_name = fmt::format(
+            "__tuple_{}__",
+            common::id_pool::instance()->allocate());
+        auto symbol = make_symbol(parent_scope, type_name);
         auto type = new compiler::tuple_type(
             _session.scope_manager().current_module(),
             parent_scope,
-            scope);
-        if (!type->initialize(_session))
-            return nullptr;
+            scope,
+            symbol);
         scope->parent_element(type);
         _session.elements().add(type);
         return type;

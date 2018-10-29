@@ -1531,7 +1531,61 @@ namespace basecode::compiler {
     bool ast_evaluator::tuple_expression(
             evaluator_context_t& context,
             evaluator_result_t& result) {
-        return false;
+        auto& builder = _session.builder();
+        auto& ast_builder = _session.ast_builder();
+        auto& scope_manager = _session.scope_manager();
+        auto active_scope = scope_manager.current_scope();
+
+        auto type_scope = builder.make_block(active_scope, element_type_t::block);
+        auto tuple_type = builder.make_tuple_type(active_scope, type_scope);
+        active_scope->types().add(tuple_type);
+
+        // XXX: should mixed named and unnamed fields be allowed?
+
+        size_t index = 0;
+        compiler::field* previous_field = nullptr;
+        for (const auto& arg : context.node->rhs->children) {
+            syntax::ast_node_shared_ptr assignment_node;
+
+            if (arg->type != syntax::ast_node_types_t::assignment) {
+                syntax::token_t field_name;
+                field_name.type = syntax::token_types_t::identifier;
+                field_name.value = fmt::format("_{}", index);
+
+                auto field_symbol = ast_builder.symbol_node();
+                field_symbol->children.push_back(ast_builder.symbol_part_node(field_name));
+
+                assignment_node = ast_builder.assignment_node();
+                assignment_node->lhs->children.push_back(field_symbol);
+                assignment_node->rhs->children.push_back(arg);
+            } else {
+                assignment_node = arg;
+            }
+
+            element_list_t list {};
+            auto success = add_assignments_to_scope(
+                context,
+                assignment_node.get(),
+                list,
+                type_scope);
+            if (success) {
+                auto new_field = builder.make_field(
+                    tuple_type,
+                    type_scope,
+                    dynamic_cast<compiler::declaration*>(list.front()),
+                    previous_field != nullptr ? previous_field->end_offset() : 0);
+                tuple_type->fields().add(new_field);
+                previous_field = new_field;
+            }
+
+            ++index;
+        }
+
+        if (!tuple_type->initialize(_session))
+            return false;
+
+        result.element = tuple_type;
+        return true;
     }
 
     bool ast_evaluator::transmute_expression(

@@ -18,22 +18,23 @@ namespace basecode::compiler {
     tuple_type::tuple_type(
             compiler::module* module,
             compiler::block* parent_scope,
-            compiler::block* scope) : compiler::composite_type(
-                                        module,
-                                        parent_scope,
-                                        composite_types_t::struct_type,
-                                        scope,
-                                        nullptr,
-                                        element_type_t::tuple_type) {
-    }
-
-    bool tuple_type::on_initialize(compiler::session& session) {
-        symbol(session.builder().make_symbol(parent_scope(), "tuple"));
-        return true;
+            compiler::block* scope,
+            compiler::symbol_element* symbol) : compiler::composite_type(
+                                                    module,
+                                                    parent_scope,
+                                                    composite_types_t::struct_type,
+                                                    scope,
+                                                    symbol,
+                                                    element_type_t::tuple_type) {
     }
 
     type_access_model_t tuple_type::on_access_model() const {
         return type_access_model_t::pointer;
+    }
+
+    bool tuple_type::on_initialize(compiler::session& session) {
+        symbol(session.builder().make_symbol(parent_scope(), "tuple"));
+        return composite_type::on_initialize(session);
     }
 
 };

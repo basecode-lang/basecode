@@ -20,7 +20,8 @@ namespace basecode::compiler {
         tuple_type(
             compiler::module* module,
             compiler::block* parent_scope,
-            compiler::block* scope);
+            compiler::block* scope,
+            compiler::symbol_element* symbol);
 
     protected:
         type_access_model_t on_access_model() const override;

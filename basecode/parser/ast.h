@@ -229,9 +229,9 @@ namespace basecode::syntax {
 
     class ast_builder {
     public:
-        ast_builder();
+        ast_builder() = default;
 
-        virtual ~ast_builder();
+        void reset();
 
         ast_node_shared_ptr pair_node();
 

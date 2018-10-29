@@ -15,12 +15,10 @@
 
 namespace basecode::syntax {
 
-    ///////////////////////////////////////////////////////////////////////////
-
-    ast_builder::ast_builder() {
-    }
-
-    ast_builder::~ast_builder() {
+    void ast_builder::reset() {
+        _id = 0;
+        while (!_scope_stack.empty())
+            _scope_stack.pop();
     }
 
     void ast_builder::configure_node(
@@ -186,7 +184,7 @@ namespace basecode::syntax {
         auto node = std::make_shared<ast_node_t>();
         node->id = ++_id;
         node->type = ast_node_types_t::map_expression;
-        node->lhs = argument_list_node();
+        node->rhs = argument_list_node();
         return node;
     }
 
@@ -194,7 +192,7 @@ namespace basecode::syntax {
         auto node = std::make_shared<ast_node_t>();
         node->id = ++_id;
         node->type = ast_node_types_t::tuple_expression;
-        node->lhs = argument_list_node();
+        node->rhs = argument_list_node();
         return node;
     }
 

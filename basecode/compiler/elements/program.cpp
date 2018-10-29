@@ -165,6 +165,7 @@ namespace basecode::compiler {
                     case element_type_t::any_type:
                     case element_type_t::type_info:
                     case element_type_t::array_type:
+                    case element_type_t::tuple_type:
                     case element_type_t::string_type:
                     case element_type_t::composite_type: {
                         instruction_block->reserve_byte(var_type->size_in_bytes());
