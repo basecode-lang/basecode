@@ -52,6 +52,7 @@ namespace basecode::syntax {
         string_literal,
         unary_operator,
         statement_body,
+        new_expression,
         map_expression,
         spread_operator,
         proc_expression,
@@ -114,6 +115,7 @@ namespace basecode::syntax {
         {ast_node_types_t::number_literal, "number_literal"},
         {ast_node_types_t::string_literal, "string_literal"},
         {ast_node_types_t::unary_operator, "unary_operator"},
+        {ast_node_types_t::new_expression, "new_expression"},
         {ast_node_types_t::map_expression, "map_expression"},
         {ast_node_types_t::cast_expression, "cast_expression"},
         {ast_node_types_t::from_expression, "from_expression"},
@@ -265,6 +267,8 @@ namespace basecode::syntax {
             const ast_node_shared_ptr& lhs,
             const token_t& token,
             const ast_node_shared_ptr& rhs);
+
+        ast_node_shared_ptr new_expression_node();
 
         ast_node_shared_ptr map_expression_node();
 

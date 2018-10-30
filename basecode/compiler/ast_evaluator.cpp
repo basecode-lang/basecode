@@ -40,6 +40,7 @@ namespace basecode::compiler {
         {syntax::ast_node_types_t::number_literal,          std::bind(&ast_evaluator::number_literal, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::string_literal,          std::bind(&ast_evaluator::string_literal, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::unary_operator,          std::bind(&ast_evaluator::unary_operator, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::map_expression,          std::bind(&ast_evaluator::map_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::spread_operator,         std::bind(&ast_evaluator::spread_operator, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::cast_expression,         std::bind(&ast_evaluator::cast_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::from_expression,         std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
@@ -821,6 +822,27 @@ namespace basecode::compiler {
         return true;
     }
 
+    bool ast_evaluator::map_expression(
+            evaluator_context_t& context,
+            evaluator_result_t& result) {
+        auto& builder = _session.builder();
+        auto& scope_manager = _session.scope_manager();
+
+        auto key_type_ref = dynamic_cast<compiler::type_reference*>(evaluate(context.node->lhs->children[0].get()));
+        auto value_type_ref = dynamic_cast<compiler::type_reference*>(evaluate(context.node->lhs->children[1].get()));
+        auto map_type = builder.make_map_type(
+            scope_manager.current_scope(),
+            key_type_ref,
+            value_type_ref);
+
+        auto args = dynamic_cast<compiler::argument_list*>(evaluate(context.node->rhs.get()));
+
+        // XXX: this is incorrect!  needs to be a type_literal
+        result.element = map_type;
+
+        return true;
+    }
+
     // XXX: walk args and build subscripts
     //
     // [1, 2, 3] => [3]
@@ -928,12 +950,12 @@ namespace basecode::compiler {
                 context,
                 context.node->lhs.get());
             infer_type_result_t infer_type_result {};
-            if (!lhs->infer_type(_session, infer_type_result)) {
+            if (lhs == nullptr
+            || !lhs->infer_type(_session, infer_type_result)) {
                 _session.error(
-                    lhs,
                     "P052",
                     "unable to infer type.",
-                    lhs->location());
+                    context.node->lhs->location);
                 return false;
             }
 
@@ -1584,6 +1606,7 @@ namespace basecode::compiler {
         if (!tuple_type->initialize(_session))
             return false;
 
+        // XXX: this is incorrect!  this should be a type_literal element
         result.element = tuple_type;
         return true;
     }

@@ -23,6 +23,7 @@
 #include <compiler/elements/comment.h>
 #include <compiler/elements/program.h>
 #include <compiler/elements/any_type.h>
+#include <compiler/elements/map_type.h>
 #include <compiler/elements/intrinsic.h>
 #include <compiler/elements/raw_block.h>
 #include <compiler/elements/bool_type.h>

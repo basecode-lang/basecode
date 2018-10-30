@@ -62,6 +62,11 @@ namespace basecode::compiler {
             compiler::block* scope,
             const namespace_visitor_callable& callable) const;
 
+        compiler::type* find_map_type(
+            compiler::type_reference* key_type,
+            compiler::type_reference* value_type,
+            compiler::block* scope = nullptr) const;
+
         compiler::type* find_array_type(
             compiler::type* entry_type,
             const element_list_t& subscripts,

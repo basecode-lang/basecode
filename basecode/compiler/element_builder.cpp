@@ -207,6 +207,34 @@ namespace basecode::compiler {
         return type;
     }
 
+    map_type* element_builder::make_map_type(
+            compiler::block* parent_scope,
+            compiler::type_reference* key_type,
+            compiler::type_reference* value_type) {
+        auto& scope_manager = _session.scope_manager();
+
+        qualified_symbol_t map_type_name {
+            .name = map_type::name_for_map(key_type, value_type)
+        };
+
+        auto type = dynamic_cast<map_type*>(scope_manager.find_type(map_type_name));
+        if (type == nullptr) {
+            auto scope = make_block(parent_scope, element_type_t::block);
+            type = new compiler::map_type(
+                scope_manager.current_module(),
+                parent_scope,
+                scope,
+                key_type,
+                value_type);
+            if (!type->initialize(_session))
+                return nullptr;
+            scope->parent_element(type);
+            _session.elements().add(type);
+        }
+
+        return type;
+    }
+
     array_type* element_builder::make_array_type(
             compiler::block* parent_scope,
             compiler::block* scope,

@@ -1,7 +1,9 @@
 NOTES
 ------------------------
 
-=================================================================
+TASKS
+-----
+- consolidate array_constructor and tuple, map, and struct/union/enum into type_literal
 
 DONE
 ----

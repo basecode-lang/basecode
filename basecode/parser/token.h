@@ -60,6 +60,7 @@ namespace basecode::syntax {
         rol_literal,
         ror_literal,
         nil_literal,
+        new_literal,
         map_literal,
         from_literal,
         proc_literal,
@@ -149,6 +150,7 @@ namespace basecode::syntax {
         {token_types_t::shr_literal,                "shr_literal"},
         {token_types_t::rol_literal,                "rol_literal"},
         {token_types_t::ror_literal,                "ror_literal"},
+        {token_types_t::new_literal,                "new_literal"},
         {token_types_t::map_literal,                "map_literal"},
         {token_types_t::from_literal,               "from_literal"},
         {token_types_t::proc_literal,               "proc_literal"},
@@ -348,6 +350,11 @@ namespace basecode::syntax {
     static inline token_t s_nil_literal = {
         .type = token_types_t::nil_literal,
         .value = "nil"
+    };
+
+    static inline token_t s_new_literal = {
+        .type = token_types_t::new_literal,
+        .value = "new"
     };
 
     static inline token_t s_map_literal = {

@@ -121,6 +121,7 @@ add_library(
     compiler/elements/program.cpp compiler/elements/program.h
     compiler/string_intern_map.cpp compiler/string_intern_map.h
     compiler/elements/any_type.cpp compiler/elements/any_type.h
+    compiler/elements/map_type.cpp compiler/elements/map_type.h
     compiler/elements/rune_type.cpp compiler/elements/rune_type.h
     compiler/elements/intrinsic.cpp compiler/elements/intrinsic.h
     compiler/elements/transmute.cpp compiler/elements/transmute.h

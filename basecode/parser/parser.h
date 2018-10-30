@@ -235,6 +235,18 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    class map_expression_prefix_parser : public prefix_parser {
+    public:
+        map_expression_prefix_parser() = default;
+
+        ast_node_shared_ptr parse(
+            common::result& r,
+            parser* parser,
+            token_t& token) override;
+    };
+
+    ///////////////////////////////////////////////////////////////////////////
+
     class array_expression_prefix_parser : public prefix_parser {
     public:
         array_expression_prefix_parser() = default;
@@ -717,6 +729,7 @@ namespace basecode::syntax {
         static inline block_comment_prefix_parser s_block_comment_prefix_parser {};
         static inline string_literal_prefix_parser s_string_literal_prefix_parser {};
         static inline number_literal_prefix_parser s_number_literal_prefix_parser {};
+        static inline map_expression_prefix_parser s_map_expression_prefix_parser {};
         static inline keyword_literal_prefix_parser s_keyword_literal_prefix_parser {};
         static inline type_identifier_prefix_parser s_type_identifier_prefix_parser {};
         static inline proc_expression_prefix_parser s_proc_expression_prefix_parser {};
@@ -756,6 +769,7 @@ namespace basecode::syntax {
             {token_types_t::block_comment,       &s_block_comment_prefix_parser},
             {token_types_t::string_literal,      &s_string_literal_prefix_parser},
             {token_types_t::number_literal,      &s_number_literal_prefix_parser},
+            {token_types_t::map_literal,         &s_map_expression_prefix_parser},
             {token_types_t::while_literal,       &s_while_statement_prefix_parser},
             {token_types_t::colon,               &s_type_identifier_prefix_parser},
             {token_types_t::proc_literal,        &s_proc_expression_prefix_parser},

@@ -35,6 +35,7 @@ namespace basecode::compiler {
     class program;
     class comment;
     class any_type;
+    class map_type;
     class raw_block;
     class intrinsic;
     class bool_type;
@@ -152,6 +153,7 @@ namespace basecode::compiler {
         any_type,
         return_e,
         import_e,
+        map_type,
         rune_type,
         raw_block,
         intrinsic,
@@ -215,6 +217,7 @@ namespace basecode::compiler {
         {element_type_t::comment, "comment"},
         {element_type_t::element, "element"},
         {element_type_t::program, "program"},
+        {element_type_t::map_type, "map_type"},
         {element_type_t::any_type, "any_type"},
         {element_type_t::return_e, "return"},
         {element_type_t::import_e, "import"},

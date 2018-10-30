@@ -170,6 +170,10 @@ namespace basecode::compiler {
             evaluator_context_t& context,
             evaluator_result_t& result);
 
+        bool map_expression(
+            evaluator_context_t& context,
+            evaluator_result_t& result);
+
         bool array_expression(
             evaluator_context_t& context,
             evaluator_result_t& result);

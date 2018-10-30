@@ -139,6 +139,11 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             common::rune_t rune);
 
+        map_type* make_map_type(
+            compiler::block* parent_scope,
+            compiler::type_reference* key_type,
+            compiler::type_reference* value_type);
+
         array_type* make_array_type(
             compiler::block* parent_scope,
             compiler::block* scope,

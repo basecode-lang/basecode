@@ -388,6 +388,60 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    ast_node_shared_ptr map_expression_prefix_parser::parse(
+            common::result& r,
+            parser* parser,
+            token_t& token) {
+        auto node = parser->ast_builder()->map_expression_node();
+        node->location.start(token.location.start());
+
+        token_t less_than;
+        less_than.type = token_types_t::less_than;
+        if (!parser->expect(r, less_than))
+            return nullptr;
+
+        // XXX: token isn't correct here; need to fix
+        auto key_type = create_type_identifier_node(
+            r,
+            parser,
+            less_than);
+        node->lhs->children.push_back(key_type);
+
+        token_t comma;
+        comma.type = token_types_t::comma;
+        if (!parser->expect(r, comma))
+            return nullptr;
+
+        // XXX: token isn't correct here; need to fix
+        auto value_type = create_type_identifier_node(
+            r,
+            parser,
+            comma);
+        node->lhs->children.push_back(value_type);
+
+        token_t greater_than;
+        greater_than.type = token_types_t::greater_than;
+        if (!parser->expect(r, greater_than))
+            return nullptr;
+
+        token_t left_paren;
+        left_paren.type = token_types_t::left_paren;
+        if (!parser->expect(r, left_paren))
+            return nullptr;
+
+        pairs_to_list(node->rhs, parser->parse_expression(r, 0));
+
+        token_t right_paren;
+        right_paren.type = token_types_t::right_paren;
+        if (!parser->expect(r, right_paren))
+            return nullptr;
+
+        node->location.end(right_paren.location.end());
+        return node;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
     ast_node_shared_ptr array_expression_prefix_parser::parse(
             common::result& r,
             parser* parser,

@@ -180,10 +180,20 @@ namespace basecode::syntax {
         return node;
     }
 
+    ast_node_shared_ptr ast_builder::new_expression_node() {
+        auto node = std::make_shared<ast_node_t>();
+        node->id = ++_id;
+        node->type = ast_node_types_t::new_expression;
+        node->lhs = type_list_node();
+        node->rhs = argument_list_node();
+        return node;
+    }
+
     ast_node_shared_ptr ast_builder::map_expression_node() {
         auto node = std::make_shared<ast_node_t>();
         node->id = ++_id;
         node->type = ast_node_types_t::map_expression;
+        node->lhs = type_list_node();
         node->rhs = argument_list_node();
         return node;
     }

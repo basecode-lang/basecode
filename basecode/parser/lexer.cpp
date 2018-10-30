@@ -126,7 +126,8 @@ namespace basecode::syntax {
         {'t', std::bind(&lexer::tuple_literal, std::placeholders::_1, std::placeholders::_2)},
         {'f', std::bind(&lexer::false_literal, std::placeholders::_1, std::placeholders::_2)},
 
-        // nil/ns literals
+        // new/nil/ns literals
+        {'n', std::bind(&lexer::new_literal, std::placeholders::_1, std::placeholders::_2)},
         {'n', std::bind(&lexer::nil_literal, std::placeholders::_1, std::placeholders::_2)},
         {'n', std::bind(&lexer::ns_literal, std::placeholders::_1, std::placeholders::_2)},
 
@@ -816,6 +817,18 @@ namespace basecode::syntax {
             if (!isalnum(ch)) {
                 rewind_one_char();
                 token = s_ror_literal;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    bool lexer::new_literal(token_t& token) {
+        if (match_literal("new")) {
+            auto ch = read(false);
+            if (!isalnum(ch)) {
+                rewind_one_char();
+                token = s_new_literal;
                 return true;
             }
         }

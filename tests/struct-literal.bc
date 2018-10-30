@@ -1,0 +1,20 @@
+support ::= module("support/module.bc");
+
+player ::= struct {
+    id: u32;
+    name: string;
+    x: f32 := 0.0;
+    y: f32 := 0.0;
+    lives: u8 := 3;
+};
+
+// OK, though needs to be refactored into type_literal
+threes := array<u8>(1, 2, 3);
+
+// XXX: need to return type_literal instead of types
+pair   ::= tuple(1, 2, 3);
+maps   ::= map<string, u8>("a" := 1, "b" := 2, "c" := 3);
+
+//
+p1     := new<player>(id := id_pool::allocate(), name := "foobar");
+

@@ -95,6 +95,8 @@ namespace basecode::syntax {
 
         bool for_literal(token_t& token);
 
+        bool new_literal(token_t& token);
+
         bool map_literal(token_t& token);
 
         bool right_paren(token_t& token);

@@ -10,49 +10,8 @@
 // ----------------------------------------------------------------------------
 
 #include "session.h"
+#include "elements.h"
 #include "scope_manager.h"
-#include "elements/type.h"
-#include "elements/cast.h"
-#include "elements/label.h"
-#include "elements/import.h"
-#include "elements/module.h"
-#include "elements/comment.h"
-#include "elements/program.h"
-#include "elements/any_type.h"
-#include "elements/bool_type.h"
-#include "elements/attribute.h"
-#include "elements/directive.h"
-#include "elements/statement.h"
-#include "elements/type_info.h"
-#include "elements/expression.h"
-#include "elements/identifier.h"
-#include "elements/if_element.h"
-#include "elements/array_type.h"
-#include "elements/tuple_type.h"
-#include "elements/initializer.h"
-#include "elements/module_type.h"
-#include "elements/string_type.h"
-#include "elements/numeric_type.h"
-#include "elements/unknown_type.h"
-#include "elements/pointer_type.h"
-#include "elements/argument_list.h"
-#include "elements/float_literal.h"
-#include "elements/type_reference.h"
-#include "elements/string_literal.h"
-#include "elements/unary_operator.h"
-#include "elements/composite_type.h"
-#include "elements/procedure_type.h"
-#include "elements/return_element.h"
-#include "elements/procedure_call.h"
-#include "elements/namespace_type.h"
-#include "elements/symbol_element.h"
-#include "elements/boolean_literal.h"
-#include "elements/binary_operator.h"
-#include "elements/integer_literal.h"
-#include "elements/module_reference.h"
-#include "elements/namespace_element.h"
-#include "elements/procedure_instance.h"
-#include "elements/identifier_reference.h"
 
 namespace basecode::compiler {
 
@@ -309,6 +268,17 @@ namespace basecode::compiler {
         return find_type(
             qualified_symbol_t {
                 .name = compiler::pointer_type::name_for_pointer(base_type)
+            },
+            scope);
+    }
+
+    compiler::type* scope_manager::find_map_type(
+            compiler::type_reference* key_type,
+            compiler::type_reference* value_type,
+            compiler::block* scope) const {
+        return find_type(
+            qualified_symbol_t {
+                .name = compiler::map_type::name_for_map(key_type, value_type)
             },
             scope);
     }
