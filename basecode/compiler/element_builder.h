@@ -144,16 +144,25 @@ namespace basecode::compiler {
             compiler::type_reference* key_type,
             compiler::type_reference* value_type);
 
+        type_literal* make_map_literal(
+            compiler::block* parent_scope,
+            compiler::type* map_type,
+            compiler::argument_list* args);
+
         array_type* make_array_type(
             compiler::block* parent_scope,
             compiler::block* scope,
-            compiler::type* entry_type,
-            const qualified_symbol_t& type_name,
+            compiler::type_reference* entry_type,
             const element_list_t& subscripts);
 
         expression* make_expression(
             compiler::block* parent_scope,
             element* expr);
+
+        type_literal* make_tuple_literal(
+            compiler::block* parent_scope,
+            compiler::type* tuple_type,
+            compiler::argument_list* args);
 
         tuple_type* make_tuple_type(
             compiler::block* parent_scope,
@@ -293,24 +302,19 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             compiler::element* expr);
 
-        array_constructor* make_array_constructor(
+        type_literal* make_array_literal(
             compiler::block* parent_scope,
             compiler::type_reference* type_ref,
             compiler::argument_list* args);
 
-        compiler::symbol_element* make_temp_symbol(
-            compiler::block* parent_scope,
-            const std::string& name,
-            const string_list_t& namespaces);
-
-        procedure_instance* make_procedure_instance(
-            compiler::block* parent_scope,
-            compiler::type* procedure_type,
-            compiler::block* scope);
-
         type_reference* make_type_reference(
             compiler::block* parent_scope,
             const qualified_symbol_t& symbol,
+            compiler::type* type);
+
+        type_reference* make_type_reference(
+            compiler::block* parent_scope,
+            const std::string& name,
             compiler::type* type);
 
         compiler::nil_literal* nil_literal();
@@ -318,6 +322,11 @@ namespace basecode::compiler {
         compiler::boolean_literal* true_literal();
 
         compiler::boolean_literal* false_literal();
+
+        procedure_instance* make_procedure_instance(
+            compiler::block* parent_scope,
+            compiler::type* procedure_type,
+            compiler::block* scope);
 
         identifier_reference* make_identifier_reference(
             compiler::block* parent_scope,

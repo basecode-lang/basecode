@@ -60,6 +60,7 @@ namespace basecode::compiler {
     class numeric_type;
     class unknown_type;
     class pointer_type;
+    class type_literal;
     class defer_element;
     class break_element;
     class float_literal;
@@ -83,7 +84,6 @@ namespace basecode::compiler {
     class alloc_intrinsic;
     class continue_element;
     class module_reference;
-    class array_constructor;
     class size_of_intrinsic;
     class namespace_element;
     class type_of_intrinsic;
@@ -106,6 +106,7 @@ namespace basecode::compiler {
     using attribute_list_t = std::vector<attribute*>;
     using identifier_list_t = std::vector<identifier*>;
     using directive_map_t = std::map<std::string, directive*>;
+    using type_reference_list_t = std::vector<type_reference*>;
     using procedure_type_list_t = std::vector<procedure_type*>;
     using procedure_instance_list_t = std::vector<procedure_instance*>;
     using identifier_reference_list_t = std::vector<identifier_reference*>;
@@ -177,6 +178,7 @@ namespace basecode::compiler {
         initializer,
         module_type,
         nil_literal,
+        type_literal,
         unknown_type,
         numeric_type,
         module_block,
@@ -194,7 +196,6 @@ namespace basecode::compiler {
         integer_literal,
         binary_operator,
         module_reference,
-        array_constructor,
         character_literal,
         unknown_identifier,
         identifier_reference,
@@ -244,6 +245,7 @@ namespace basecode::compiler {
         {element_type_t::string_type, "string_type"},
         {element_type_t::namespace_e, "namespace"},
         {element_type_t::initializer, "initializer"},
+        {element_type_t::type_literal, "type_literal"},
         {element_type_t::module_block, "module_block"},
         {element_type_t::unknown_type, "unknown_type"},
         {element_type_t::pointer_type, "pointer_type"},
@@ -262,7 +264,6 @@ namespace basecode::compiler {
         {element_type_t::binary_operator, "binary_operator"},
         {element_type_t::module_reference, "module_reference"},
         {element_type_t::character_literal, "character_literal"},
-        {element_type_t::array_constructor, "array_constructor"},
         {element_type_t::unknown_identifier, "unknown_identifier"},
         {element_type_t::identifier_reference, "identifier_reference"},
     };
@@ -562,6 +563,15 @@ namespace basecode::compiler {
 
     enum register_tags_t : uint8_t {
         tag_rel_expr_target = 1
+    };
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    enum class type_literal_type_t : uint8_t {
+        array = 1,
+        tuple,
+        map,
+        user
     };
 
 };

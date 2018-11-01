@@ -144,6 +144,7 @@ add_library(
     compiler/elements/string_type.cpp compiler/elements/string_type.h
     compiler/elements/module_type.cpp compiler/elements/module_type.h
     compiler/elements/declaration.cpp compiler/elements/declaration.h
+    compiler/elements/type_literal.cpp compiler/elements/type_literal.h
     compiler/elements/numeric_type.cpp compiler/elements/numeric_type.h
     compiler/elements/unknown_type.cpp compiler/elements/unknown_type.h
     compiler/elements/pointer_type.cpp compiler/elements/pointer_type.h
@@ -174,7 +175,6 @@ add_library(
     compiler/elements/continue_element.cpp compiler/elements/continue_element.h
     compiler/elements/module_reference.cpp compiler/elements/module_reference.h
     compiler/elements/character_literal.cpp compiler/elements/character_literal.h
-    compiler/elements/array_constructor.cpp compiler/elements/array_constructor.h
     compiler/elements/type_of_intrinsic.cpp compiler/elements/type_of_intrinsic.h
     compiler/elements/namespace_element.cpp compiler/elements/namespace_element.h
     compiler/elements/size_of_intrinsic.cpp compiler/elements/size_of_intrinsic.h

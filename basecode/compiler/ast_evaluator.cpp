@@ -836,9 +836,7 @@ namespace basecode::compiler {
             value_type_ref);
 
         auto args = dynamic_cast<compiler::argument_list*>(evaluate(context.node->rhs.get()));
-
-        // XXX: this is incorrect!  needs to be a type_literal
-        result.element = map_type;
+        result.element = builder.make_map_literal(scope_manager.current_scope(), map_type, args);
 
         return true;
     }
@@ -859,7 +857,7 @@ namespace basecode::compiler {
             evaluator_result_t& result) {
         auto type_ref = dynamic_cast<compiler::type_reference*>(evaluate(context.node->lhs.get()));
         auto args = dynamic_cast<compiler::argument_list*>(evaluate(context.node->rhs.get()));
-        result.element = _session.builder().make_array_constructor(
+        result.element = _session.builder().make_array_literal(
             _session.scope_manager().current_scope(),
             type_ref,
             args);
@@ -1563,6 +1561,7 @@ namespace basecode::compiler {
         active_scope->types().add(tuple_type);
 
         // XXX: should mixed named and unnamed fields be allowed?
+        auto args = builder.make_argument_list(active_scope);
 
         size_t index = 0;
         compiler::field* previous_field = nullptr;
@@ -1591,10 +1590,13 @@ namespace basecode::compiler {
                 list,
                 type_scope);
             if (success) {
+                auto argument = dynamic_cast<compiler::declaration*>(list.front());
+                args->add(argument);
+
                 auto new_field = builder.make_field(
                     tuple_type,
                     type_scope,
-                    dynamic_cast<compiler::declaration*>(list.front()),
+                    argument,
                     previous_field != nullptr ? previous_field->end_offset() : 0);
                 tuple_type->fields().add(new_field);
                 previous_field = new_field;
@@ -1606,8 +1608,11 @@ namespace basecode::compiler {
         if (!tuple_type->initialize(_session))
             return false;
 
-        // XXX: this is incorrect!  this should be a type_literal element
-        result.element = tuple_type;
+        result.element = builder.make_tuple_literal(
+            active_scope,
+            tuple_type,
+            args);
+
         return true;
     }
 

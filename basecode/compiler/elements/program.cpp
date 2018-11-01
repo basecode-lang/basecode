@@ -31,6 +31,7 @@
 #include "string_type.h"
 #include "initializer.h"
 #include "module_type.h"
+#include "type_literal.h"
 #include "numeric_type.h"
 #include "unknown_type.h"
 #include "float_literal.h"
@@ -42,7 +43,6 @@
 #include "binary_operator.h"
 #include "integer_literal.h"
 #include "namespace_element.h"
-#include "array_constructor.h"
 #include "identifier_reference.h"
 
 namespace basecode::compiler {
@@ -60,11 +60,11 @@ namespace basecode::compiler {
         auto& assembler = session.assembler();
 
         switch (e->element_type()) {
-            case element_type_t::array_constructor: {
-                auto array_constructor = dynamic_cast<compiler::array_constructor*>(e);
+            case element_type_t::type_literal: {
+                auto type_literal = dynamic_cast<compiler::type_literal*>(e);
                 instruction_block->blank_line();
                 instruction_block->align(4);
-                auto var_label = assembler.make_label(array_constructor->label_name());
+                auto var_label = assembler.make_label(type_literal->label_name());
                 instruction_block->label(var_label);
                 // XXX: emit data
                 break;
@@ -163,6 +163,7 @@ namespace basecode::compiler {
                         break;
                     }
                     case element_type_t::any_type:
+                    case element_type_t::map_type:
                     case element_type_t::type_info:
                     case element_type_t::array_type:
                     case element_type_t::tuple_type:

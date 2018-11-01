@@ -262,36 +262,36 @@ namespace basecode::compiler {
         return callable(block_scope);
     }
 
-    compiler::type* scope_manager::find_pointer_type(
+    compiler::pointer_type* scope_manager::find_pointer_type(
             compiler::type* base_type,
             compiler::block* scope) const {
-        return find_type(
+        return dynamic_cast<compiler::pointer_type*>(find_type(
             qualified_symbol_t {
                 .name = compiler::pointer_type::name_for_pointer(base_type)
             },
-            scope);
+            scope));
     }
 
-    compiler::type* scope_manager::find_map_type(
+    compiler::map_type* scope_manager::find_map_type(
             compiler::type_reference* key_type,
             compiler::type_reference* value_type,
             compiler::block* scope) const {
-        return find_type(
+        return dynamic_cast<compiler::map_type*>(find_type(
             qualified_symbol_t {
                 .name = compiler::map_type::name_for_map(key_type, value_type)
             },
-            scope);
+            scope));
     }
 
-    compiler::type* scope_manager::find_array_type(
+    compiler::array_type* scope_manager::find_array_type(
             compiler::type* entry_type,
             const element_list_t& subscripts,
             compiler::block* scope) const {
-        return find_type(
+        return dynamic_cast<compiler::array_type*>(find_type(
             qualified_symbol_t {
                 .name = compiler::array_type::name_for_array(entry_type, subscripts)
             },
-            scope);
+            scope));
     }
 
     identifier_list_t& scope_manager::identifiers_with_unknown_types() {

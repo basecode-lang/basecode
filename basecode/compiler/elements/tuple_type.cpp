@@ -33,7 +33,6 @@ namespace basecode::compiler {
     }
 
     bool tuple_type::on_initialize(compiler::session& session) {
-        symbol(session.builder().make_symbol(parent_scope(), "tuple"));
         return composite_type::on_initialize(session);
     }
 

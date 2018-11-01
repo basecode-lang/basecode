@@ -15,18 +15,23 @@
 
 namespace basecode::compiler {
 
-    class array_constructor : public element {
+    class type_literal : public element {
     public:
-        array_constructor(
+        type_literal(
             compiler::module* module,
             compiler::block* parent_scope,
-            compiler::type_reference* type_ref,
+            type_literal_type_t type,
             compiler::argument_list* args,
-            const compiler::element_list_t& subscripts);
+            const compiler::type_reference_list_t& type_params = {},
+            const compiler::element_list_t& subscripts = {});
 
         compiler::argument_list* args();
 
-        compiler::type_reference* type_ref();
+        type_literal_type_t type() const;
+
+        const compiler::element_list_t& subscripts() const;
+
+        const compiler::type_reference_list_t& type_params() const;
 
     protected:
         bool on_infer_type(
@@ -38,9 +43,10 @@ namespace basecode::compiler {
         bool on_emit(compiler::session& session) override;
 
     private:
+        type_literal_type_t _type;
         compiler::element_list_t _subscripts {};
         compiler::argument_list* _args = nullptr;
-        compiler::type_reference* _type_ref = nullptr;
+        compiler::type_reference_list_t _type_params {};
     };
 
 };

@@ -43,6 +43,7 @@ namespace basecode::compiler {
     compiler::type* element_builder::make_complete_type(
             type_find_result_t& result,
             compiler::block* parent_scope) {
+        auto& builder = _session.builder();
         auto& scope_manager = _session.scope_manager();
 
         result.type = scope_manager.find_type(
@@ -58,8 +59,7 @@ namespace basecode::compiler {
                     array_type = make_array_type(
                         parent_scope,
                         make_block(parent_scope, element_type_t::block),
-                        result.type,
-                        result.type_name,
+                        result.make_type_reference(builder, parent_scope),
                         result.array_subscripts);
                 }
                 result.type = array_type;
@@ -207,17 +207,36 @@ namespace basecode::compiler {
         return type;
     }
 
+    type_literal* element_builder::make_map_literal(
+            compiler::block* parent_scope,
+            compiler::type* map_type,
+            compiler::argument_list* args) {
+        auto type_ref = make_type_reference(
+            parent_scope,
+            map_type->name(),
+            map_type);
+
+        auto type_literal = new compiler::type_literal(
+            _session.scope_manager().current_module(),
+            parent_scope,
+            type_literal_type_t::map,
+            args,
+            {type_ref});
+
+        _session.elements().add(type_literal);
+        type_ref->parent_element(type_literal);
+        args->parent_element(type_literal);
+
+        return type_literal;
+    }
+
     map_type* element_builder::make_map_type(
             compiler::block* parent_scope,
             compiler::type_reference* key_type,
             compiler::type_reference* value_type) {
         auto& scope_manager = _session.scope_manager();
 
-        qualified_symbol_t map_type_name {
-            .name = map_type::name_for_map(key_type, value_type)
-        };
-
-        auto type = dynamic_cast<map_type*>(scope_manager.find_type(map_type_name));
+        auto type = scope_manager.find_map_type(key_type, value_type);
         if (type == nullptr) {
             auto scope = make_block(parent_scope, element_type_t::block);
             type = new compiler::map_type(
@@ -238,8 +257,7 @@ namespace basecode::compiler {
     array_type* element_builder::make_array_type(
             compiler::block* parent_scope,
             compiler::block* scope,
-            compiler::type* entry_type,
-            const qualified_symbol_t& type_name,
+            compiler::type_reference* entry_type,
             const element_list_t& subscripts) {
         auto& scope_manager = _session.scope_manager();
 
@@ -247,7 +265,7 @@ namespace basecode::compiler {
             scope_manager.current_module(),
             parent_scope,
             scope,
-            make_type_reference(parent_scope, type_name, entry_type),
+            entry_type,
             subscripts);
         if (!type->initialize(_session))
             return nullptr;
@@ -446,6 +464,29 @@ namespace basecode::compiler {
         scope->parent_element(instance);
         _session.elements().add(instance);
         return instance;
+    }
+
+    type_literal* element_builder::make_tuple_literal(
+            compiler::block* parent_scope,
+            compiler::type* tuple_type,
+            compiler::argument_list* args) {
+        auto type_ref = make_type_reference(
+            parent_scope,
+            tuple_type->name(),
+            tuple_type);
+
+        auto type_literal = new compiler::type_literal(
+            _session.scope_manager().current_module(),
+            parent_scope,
+            type_literal_type_t::tuple,
+            args,
+            {type_ref});
+
+        _session.elements().add(type_literal);
+        type_ref->parent_element(type_literal);
+        args->parent_element(type_literal);
+
+        return type_literal;
     }
 
     tuple_type* element_builder::make_tuple_type(
@@ -833,15 +874,14 @@ namespace basecode::compiler {
         return symbol;
     }
 
-    compiler::symbol_element* element_builder::make_temp_symbol(
+    type_reference* element_builder::make_type_reference(
             compiler::block* parent_scope,
             const std::string& name,
-            const string_list_t& namespaces) {
-        return new compiler::symbol_element(
-            _session.scope_manager().current_module(),
+            compiler::type* type) {
+        return make_type_reference(
             parent_scope,
-            name,
-            namespaces);
+            qualified_symbol_t {.name = name},
+            type);
     }
 
     type_reference* element_builder::make_type_reference(
@@ -1079,10 +1119,12 @@ namespace basecode::compiler {
         return _false_literal;
     }
 
-    array_constructor* element_builder::make_array_constructor(
+    type_literal* element_builder::make_array_literal(
             compiler::block* parent_scope,
             compiler::type_reference* type_ref,
             compiler::argument_list* args) {
+        auto& scope_manager = _session.scope_manager();
+
         element_list_t subscripts {};
         if (args != nullptr) {
             subscripts.push_back(make_integer(
@@ -1090,39 +1132,37 @@ namespace basecode::compiler {
                 args->size()));
         }
 
-        qualified_symbol_t array_type_name {
-            .name = array_type::name_for_array(type_ref->type(), subscripts)
-        };
-
-        auto array_type = _session.scope_manager().find_type(array_type_name);
+        auto array_type = scope_manager.find_array_type(
+            type_ref->type(),
+            subscripts);
         if (array_type == nullptr) {
             array_type = make_array_type(
                 parent_scope,
                 make_block(parent_scope, element_type_t::block),
-                type_ref->type(),
-                array_type_name,
+                type_ref,
                 subscripts);
             type_ref = make_type_reference(
                 parent_scope,
-                array_type_name,
+                qualified_symbol_t {},
                 array_type);
         }
 
-        auto array_ctor = new compiler::array_constructor(
+        auto type_literal = new compiler::type_literal(
             _session.scope_manager().current_module(),
             parent_scope,
-            type_ref,
+            type_literal_type_t::array,
             args,
+            {type_ref},
             subscripts);
-        _session.elements().add(array_ctor);
+        _session.elements().add(type_literal);
 
         if (type_ref != nullptr)
-            type_ref->parent_element(array_ctor);
+            type_ref->parent_element(type_literal);
 
         if (args != nullptr)
-            args->parent_element(array_ctor);
+            args->parent_element(type_literal);
 
-        return array_ctor;
+        return type_literal;
     }
 
     rune_type* element_builder::make_rune_type(compiler::block* parent_scope) {
