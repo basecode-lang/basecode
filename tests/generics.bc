@@ -1,0 +1,9 @@
+support ::= module('support/module.bc');
+
+foo   ::= struct<T> {
+    bing: T;
+};
+
+adder ::= proc<T>(a: T, B: T): T {
+    return a + b;
+};
