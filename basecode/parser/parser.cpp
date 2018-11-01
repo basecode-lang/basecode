@@ -479,6 +479,43 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    ast_node_shared_ptr new_expression_prefix_parser::parse(
+            common::result& r,
+            parser* parser,
+            token_t& token) {
+        auto node = parser->ast_builder()->new_expression_node();
+        node->location.start(token.location.start());
+
+        token_t less_than;
+        less_than.type = token_types_t::less_than;
+        if (!parser->expect(r, less_than))
+            return nullptr;
+
+        node->lhs = create_type_identifier_node(r, parser, less_than);
+
+        token_t greater_than;
+        greater_than.type = token_types_t::greater_than;
+        if (!parser->expect(r, greater_than))
+            return nullptr;
+
+        token_t left_paren;
+        left_paren.type = token_types_t::left_paren;
+        if (!parser->expect(r, left_paren))
+            return nullptr;
+
+        pairs_to_list(node->rhs, parser->parse_expression(r, 0));
+
+        token_t right_paren;
+        right_paren.type = token_types_t::right_paren;
+        if (!parser->expect(r, right_paren))
+            return nullptr;
+
+        node->location.end(right_paren.location.end());
+        return node;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
     ast_node_shared_ptr tuple_expression_prefix_parser::parse(
             common::result& r,
             parser* parser,
@@ -1519,5 +1556,4 @@ namespace basecode::syntax {
             return nullptr;
         return it->second;
     }
-
 }

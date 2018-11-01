@@ -41,6 +41,7 @@ namespace basecode::compiler {
         {syntax::ast_node_types_t::string_literal,          std::bind(&ast_evaluator::string_literal, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::unary_operator,          std::bind(&ast_evaluator::unary_operator, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::map_expression,          std::bind(&ast_evaluator::map_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::new_expression,          std::bind(&ast_evaluator::new_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::spread_operator,         std::bind(&ast_evaluator::spread_operator, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::cast_expression,         std::bind(&ast_evaluator::cast_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::from_expression,         std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
@@ -1334,6 +1335,18 @@ namespace basecode::compiler {
             true_branch,
             false_branch,
             context.node->type == syntax::ast_node_types_t::elseif_expression);
+        return true;
+    }
+
+    bool ast_evaluator::new_expression(
+            evaluator_context_t& context,
+            evaluator_result_t& result) {
+        auto type_ref = dynamic_cast<compiler::type_reference*>(evaluate(context.node->lhs.get()));
+        auto args = dynamic_cast<compiler::argument_list*>(evaluate(context.node->rhs.get()));
+        result.element = _session.builder().make_user_literal(
+            _session.scope_manager().current_scope(),
+            type_ref,
+            args);
         return true;
     }
 

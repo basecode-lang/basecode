@@ -230,6 +230,27 @@ namespace basecode::compiler {
         return type_literal;
     }
 
+    type_literal* element_builder::make_user_literal(
+            compiler::block* parent_scope,
+            compiler::type_reference* user_type,
+            compiler::argument_list* args) {
+        auto type_literal = new compiler::type_literal(
+            _session.scope_manager().current_module(),
+            parent_scope,
+            type_literal_type_t::user,
+            args,
+            {user_type});
+        _session.elements().add(type_literal);
+
+        if (user_type != nullptr)
+            user_type->parent_element(type_literal);
+
+        if (args != nullptr)
+            args->parent_element(type_literal);
+
+        return type_literal;
+    }
+
     map_type* element_builder::make_map_type(
             compiler::block* parent_scope,
             compiler::type_reference* key_type,

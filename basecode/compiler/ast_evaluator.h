@@ -258,6 +258,10 @@ namespace basecode::compiler {
             evaluator_context_t& context,
             evaluator_result_t& result);
 
+        bool new_expression(
+            evaluator_context_t& context,
+            evaluator_result_t& result);
+
         bool proc_expression(
             evaluator_context_t& context,
             evaluator_result_t& result);

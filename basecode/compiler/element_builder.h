@@ -144,6 +144,11 @@ namespace basecode::compiler {
             compiler::type_reference* key_type,
             compiler::type_reference* value_type);
 
+        type_literal* make_user_literal(
+            compiler::block* parent_scope,
+            compiler::type_reference* user_type,
+            compiler::argument_list* args);
+
         type_literal* make_map_literal(
             compiler::block* parent_scope,
             compiler::type* map_type,
