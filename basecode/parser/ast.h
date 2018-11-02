@@ -40,6 +40,7 @@ namespace basecode::syntax {
         type_list,
         assignment,
         expression,
+        proc_types,
         basic_block,
         symbol_part,
         nil_literal,
@@ -54,6 +55,7 @@ namespace basecode::syntax {
         statement_body,
         new_expression,
         map_expression,
+        type_parameter,
         spread_operator,
         proc_expression,
         binary_operator,
@@ -81,6 +83,7 @@ namespace basecode::syntax {
         import_expression,
         continue_statement,
         subscript_operator,
+        type_parameter_list,
         constant_assignment,
         namespace_expression,
         return_argument_list,
@@ -103,6 +106,7 @@ namespace basecode::syntax {
         {ast_node_types_t::directive, "directive"},
         {ast_node_types_t::assignment, "assignment"},
         {ast_node_types_t::expression, "expression"},
+        {ast_node_types_t::proc_types, "proc_types"},
         {ast_node_types_t::basic_block, "basic_block"},
         {ast_node_types_t::symbol_part, "symbol_part"},
         {ast_node_types_t::nil_literal, "nil_literal"},
@@ -110,6 +114,7 @@ namespace basecode::syntax {
         {ast_node_types_t::block_comment, "block_comment"},
         {ast_node_types_t::argument_list, "argument_list"},
         {ast_node_types_t::if_expression, "if_expression"},
+        {ast_node_types_t::type_parameter, "type_parameter"},
         {ast_node_types_t::parameter_list, "parameter_list"},
         {ast_node_types_t::statement_body, "statement_body"},
         {ast_node_types_t::number_literal, "number_literal"},
@@ -144,6 +149,7 @@ namespace basecode::syntax {
         {ast_node_types_t::elseif_expression, "elseif_expression"},
         {ast_node_types_t::subscript_operator, "subscript_operator"},
         {ast_node_types_t::continue_statement, "continue_statement"},
+        {ast_node_types_t::type_parameter_list, "type_parameter_list"},
         {ast_node_types_t::constant_assignment, "constant_assignment"},
         {ast_node_types_t::transmute_expression, "transmute_expression"},
         {ast_node_types_t::namespace_expression, "namespace_expression"},
@@ -259,6 +265,8 @@ namespace basecode::syntax {
 
         ast_node_shared_ptr expression_node();
 
+        ast_node_shared_ptr proc_types_node();
+
         ast_node_shared_ptr basic_block_node();
 
         ast_node_shared_ptr argument_list_node();
@@ -267,6 +275,8 @@ namespace basecode::syntax {
             const ast_node_shared_ptr& lhs,
             const token_t& token,
             const ast_node_shared_ptr& rhs);
+
+        ast_node_shared_ptr type_parameter_node();
 
         ast_node_shared_ptr new_expression_node();
 
@@ -287,6 +297,8 @@ namespace basecode::syntax {
         ast_node_shared_ptr subscript_operator_node();
 
         ast_node_shared_ptr constant_assignment_node();
+
+        ast_node_shared_ptr type_parameter_list_node();
 
         ast_node_shared_ptr return_argument_list_node();
 

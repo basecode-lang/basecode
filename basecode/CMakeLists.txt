@@ -144,6 +144,7 @@ add_library(
     compiler/elements/string_type.cpp compiler/elements/string_type.h
     compiler/elements/module_type.cpp compiler/elements/module_type.h
     compiler/elements/declaration.cpp compiler/elements/declaration.h
+    compiler/elements/generic_type.cpp compiler/elements/generic_type.h
     compiler/elements/type_literal.cpp compiler/elements/type_literal.h
     compiler/elements/numeric_type.cpp compiler/elements/numeric_type.h
     compiler/elements/unknown_type.cpp compiler/elements/unknown_type.h

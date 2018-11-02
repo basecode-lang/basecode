@@ -217,6 +217,10 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             compiler::block* scope);
 
+        generic_type* make_generic_type(
+            compiler::block* parent_scope,
+            const type_reference_list_t& constraints);
+
         numeric_type* make_numeric_type(
             compiler::block* parent_scope,
             const std::string& name,

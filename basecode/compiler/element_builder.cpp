@@ -782,6 +782,21 @@ namespace basecode::compiler {
         return return_element;
     }
 
+    generic_type* element_builder::make_generic_type(
+            compiler::block* parent_scope,
+            const type_reference_list_t& constraints) {
+        auto type = new compiler::generic_type(
+            _session.scope_manager().current_module(),
+            parent_scope,
+            constraints);
+        for (auto constraint : constraints)
+            constraint->parent_element(type);
+        if (!type->initialize(_session))
+            return nullptr;
+        _session.elements().add(type);
+        return type;
+    }
+
     numeric_type* element_builder::make_numeric_type(
             compiler::block* parent_scope,
             const std::string& name,

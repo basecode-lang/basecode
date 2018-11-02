@@ -21,6 +21,50 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    static bool create_type_parameter_nodes(
+            common::result& r,
+            parser* parser,
+            const ast_node_shared_ptr& type_parameter_list) {
+        if (!parser->peek(token_types_t::less_than))
+            return true;
+
+        parser->consume();
+
+        while (true) {
+            auto type_parameter_node = parser->ast_builder()->type_parameter_node();
+            type_parameter_node->rhs = parser->parse_expression(
+                r,
+                static_cast<uint8_t>(precedence_t::variable));
+
+            if (parser->peek(token_types_t::colon)) {
+                parser->consume();
+                type_parameter_node->lhs = parser->expect_expression(
+                    r,
+                    ast_node_types_t::tuple_expression,
+                    static_cast<uint8_t>(precedence_t::variable));
+                if (r.is_failed())
+                    return false;
+            }
+
+            type_parameter_list->children.push_back(type_parameter_node);
+
+            if (!parser->peek(token_types_t::comma))
+                break;
+
+            parser->consume();
+        }
+
+        token_t greater_than;
+        greater_than.type = token_types_t::greater_than;
+        if (!parser->expect(r, greater_than))
+            return false;
+
+        return true;
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////
+
     static size_t collect_comments(
             common::result& r,
             parser* parser,
@@ -625,6 +669,9 @@ namespace basecode::syntax {
             parser* parser,
             token_t& token) {
         auto union_node = parser->ast_builder()->union_node(token);
+        if (!create_type_parameter_nodes(r, parser, union_node->lhs))
+            return nullptr;
+        collect_comments(r, parser, union_node->comments);
         union_node->rhs = parser->parse_expression(r, 0);
         return union_node;
     }
@@ -647,6 +694,9 @@ namespace basecode::syntax {
             parser* parser,
             token_t& token) {
         auto struct_node = parser->ast_builder()->struct_node(token);
+        if (!create_type_parameter_nodes(r, parser, struct_node->lhs))
+            return nullptr;
+        collect_comments(r, parser, struct_node->comments);
         struct_node->rhs = parser->parse_expression(r, 0);
         return struct_node;
     }
@@ -658,6 +708,8 @@ namespace basecode::syntax {
             parser* parser,
             token_t& token) {
         auto enum_node = parser->ast_builder()->enum_node(token);
+        if (!create_type_parameter_nodes(r, parser, enum_node->lhs))
+            return nullptr;
         collect_comments(r, parser, enum_node->comments);
         enum_node->rhs = parser->parse_expression(r, 0);
         return enum_node;
@@ -785,6 +837,9 @@ namespace basecode::syntax {
             token_t& token) {
         auto proc_node = parser->ast_builder()->proc_expression_node(token);
 
+        if (!create_type_parameter_nodes(r, parser, proc_node->lhs->lhs))
+            return nullptr;
+
         token_t left_paren_token;
         left_paren_token.type = token_types_t::left_paren;
         if (!parser->expect(r, left_paren_token))
@@ -800,7 +855,7 @@ namespace basecode::syntax {
             return nullptr;
 
         if (parser->peek(token_types_t::colon)) {
-            pairs_to_list(proc_node->lhs, parser->parse_expression(r, 0));
+            pairs_to_list(proc_node->lhs->rhs, parser->parse_expression(r, 0));
         }
 
         while (parser->peek(token_types_t::attribute)) {

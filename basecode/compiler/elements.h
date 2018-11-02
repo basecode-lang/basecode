@@ -49,6 +49,7 @@
 #include <compiler/elements/numeric_type.h>
 #include <compiler/elements/unknown_type.h>
 #include <compiler/elements/pointer_type.h>
+#include <compiler/elements/generic_type.h>
 #include <compiler/elements/defer_element.h>
 #include <compiler/elements/break_element.h>
 #include <compiler/elements/while_element.h>

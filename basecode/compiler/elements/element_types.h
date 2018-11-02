@@ -61,6 +61,7 @@ namespace basecode::compiler {
     class unknown_type;
     class pointer_type;
     class type_literal;
+    class generic_type;
     class defer_element;
     class break_element;
     class float_literal;
@@ -183,6 +184,7 @@ namespace basecode::compiler {
         numeric_type,
         module_block,
         pointer_type,
+        generic_type,
         argument_list,
         proc_instance,
         float_literal,
@@ -245,6 +247,7 @@ namespace basecode::compiler {
         {element_type_t::string_type, "string_type"},
         {element_type_t::namespace_e, "namespace"},
         {element_type_t::initializer, "initializer"},
+        {element_type_t::generic_type, "generic_type"},
         {element_type_t::type_literal, "type_literal"},
         {element_type_t::module_block, "module_block"},
         {element_type_t::unknown_type, "unknown_type"},
