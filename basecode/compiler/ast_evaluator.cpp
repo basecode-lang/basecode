@@ -322,6 +322,57 @@ namespace basecode::compiler {
         return scope;
     }
 
+    void ast_evaluator::add_type_parameters(
+            const evaluator_context_t& context,
+            compiler::block* scope,
+            const syntax::ast_node_t* type_parameters_node) {
+        if (type_parameters_node->children.empty())
+            return;
+
+        auto& builder = _session.builder();
+        auto& scope_manager = _session.scope_manager();
+
+        auto open_generic_type = builder.make_generic_type(scope, {});
+        scope->types().add(open_generic_type);
+
+        for (const auto& type_parameter_node : type_parameters_node->children) {
+            compiler::type* generic_type = open_generic_type;
+
+            if (type_parameter_node->lhs != nullptr) {
+                compiler::type_reference_list_t constraints {};
+                for (const auto& symbol : type_parameter_node->lhs->rhs->children) {
+                    // XXX: this is a hack for testing only
+                    qualified_symbol_t qualified_symbol {
+                        .name = symbol->children[0]->token.value
+                    };
+                    auto type = scope_manager.find_type(qualified_symbol, scope);
+                    auto type_ref = builder.make_type_reference(scope, type->name(), type);
+                    constraints.push_back(type_ref);
+                }
+                generic_type = builder.make_generic_type(
+                    scope,
+                    constraints);
+                scope->types().add(generic_type);
+            }
+
+            auto param_symbol = builder.make_symbol(
+                scope,
+                type_parameter_node->rhs->children[0]->token.value);
+            auto param_type_ref = builder.make_type_reference(
+                scope,
+                generic_type->name(),
+                generic_type);
+            auto decl = add_identifier_to_scope(
+                context,
+                param_symbol,
+                param_type_ref,
+                nullptr,
+                0,
+                scope);
+            decl->identifier()->symbol()->constant(true);
+        }
+    }
+
     void ast_evaluator::add_composite_type_fields(
             const evaluator_context_t& context,
             compiler::composite_type* type,
@@ -1228,18 +1279,24 @@ namespace basecode::compiler {
         auto& scope_manager = _session.scope_manager();
 
         auto active_scope = scope_manager.current_scope();
-        auto enum_type = builder.make_enum_type(
-            active_scope,
-            builder.make_block(active_scope, element_type_t::block));
+        auto enum_scope = builder.make_block(active_scope, element_type_t::block);
+        auto enum_type = builder.make_enum_type(active_scope, enum_scope);
         active_scope->types().add(enum_type);
+
+        add_type_parameters(
+            context,
+            enum_scope,
+            context.node->lhs.get());
+
         add_composite_type_fields(
             context,
             enum_type,
             context.node->rhs.get());
+
         if (!enum_type->initialize(_session))
             return false;
-        result.element = enum_type;
 
+        result.element = enum_type;
         return true;
     }
 
@@ -1279,16 +1336,28 @@ namespace basecode::compiler {
         auto& scope_manager = _session.scope_manager();
 
         auto active_scope = scope_manager.current_scope();
+        auto struct_scope = builder.make_block(
+            active_scope,
+            element_type_t::block);
+
         auto struct_type = builder.make_struct_type(
             active_scope,
-            builder.make_block(active_scope, element_type_t::block));
+            struct_scope);
         active_scope->types().add(struct_type);
+
+        add_type_parameters(
+            context,
+            struct_scope,
+            context.node->lhs.get());
+
         add_composite_type_fields(
             context,
             struct_type,
             context.node->rhs.get());
+
         if (!struct_type->initialize(_session))
             return false;
+
         result.element = struct_type;
         return true;
     }
@@ -1300,16 +1369,23 @@ namespace basecode::compiler {
         auto& scope_manager = _session.scope_manager();
 
         auto active_scope = scope_manager.current_scope();
-        auto union_type = builder.make_union_type(
-            active_scope,
-            builder.make_block(active_scope, element_type_t::block));
+        auto union_scope = builder.make_block(active_scope, element_type_t::block);
+        auto union_type = builder.make_union_type(active_scope, union_scope);
         active_scope->types().add(union_type);
+
+        add_type_parameters(
+            context,
+            union_scope,
+            context.node->lhs.get());
+
         add_composite_type_fields(
             context,
             union_type,
             context.node->rhs.get());
+
         if (!union_type->initialize(_session))
             return false;
+
         result.element = union_type;
         return true;
     }
@@ -1360,6 +1436,8 @@ namespace basecode::compiler {
         auto block_scope = builder.make_block(active_scope, element_type_t::block);
         auto proc_type = builder.make_procedure_type(active_scope, block_scope);
         active_scope->types().add(proc_type);
+
+        add_type_parameters(context, block_scope, context.node->lhs->lhs.get());
 
         auto count = 0;
         compiler::field* return_field = nullptr;

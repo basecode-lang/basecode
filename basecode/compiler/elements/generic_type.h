@@ -17,9 +17,12 @@ namespace basecode::compiler {
 
     class generic_type : public compiler::type {
     public:
+        static std::string name_for_generic_type(
+            const type_reference_list_t& constraints);
+
         generic_type(
             compiler::module* module,
-            block* parent_scope,
+            compiler::block* parent_scope,
             const compiler::type_reference_list_t& constraints);
 
         const compiler::type_reference_list_t& constraints() const;

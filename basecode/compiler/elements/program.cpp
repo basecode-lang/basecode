@@ -273,6 +273,8 @@ namespace basecode::compiler {
                 // XXX: this is an error!
                 return false;
             }
+            if (decl_type->element_type() == element_type_t::generic_type)
+                continue;
             if (used_types.count(decl_type->id()) > 0)
                 continue;
             used_types.insert(std::make_pair(decl_type->id(), decl_type));
@@ -467,6 +469,9 @@ namespace basecode::compiler {
                 // XXX: this is an error!
                 return false;
             }
+
+            if (var_type->element_type() == element_type_t::generic_type)
+                continue;
 
             auto init = var->initializer();
             if (init != nullptr) {

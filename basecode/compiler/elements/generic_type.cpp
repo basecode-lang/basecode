@@ -12,12 +12,24 @@
 #include <compiler/session.h>
 #include "program.h"
 #include "generic_type.h"
+#include "type_reference.h"
 
 namespace basecode::compiler {
 
+    std::string generic_type::name_for_generic_type(
+            const type_reference_list_t& constraints) {
+        std::stringstream stream;
+        stream << "__generic";
+        for (auto c : constraints) {
+            stream << "_" << c->name();
+        }
+        stream << "__";
+        return stream.str();
+    }
+
     generic_type::generic_type(
             compiler::module* module,
-            block* parent_scope,
+            compiler::block* parent_scope,
             const compiler::type_reference_list_t& constraints) : compiler::type(
                                                                        module,
                                                                        parent_scope,
@@ -32,6 +44,9 @@ namespace basecode::compiler {
     }
 
     bool generic_type::on_initialize(compiler::session& session) {
+        symbol(session.builder().make_symbol(
+            parent_scope(),
+            name_for_generic_type(_constraints)));
         return true;
     }
 

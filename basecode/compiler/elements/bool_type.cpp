@@ -17,11 +17,11 @@ namespace basecode::compiler {
 
     bool_type::bool_type(
         compiler::module* module,
-        block* parent_scope) : compiler::type(
-                                   module,
-                                   parent_scope,
-                                   element_type_t::bool_type,
-                                   nullptr) {
+        compiler::block* parent_scope) : compiler::type(
+                                             module,
+                                             parent_scope,
+                                             element_type_t::bool_type,
+                                             nullptr) {
     }
 
     bool bool_type::on_type_check(compiler::type* other) {

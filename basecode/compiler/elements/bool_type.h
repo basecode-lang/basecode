@@ -19,7 +19,7 @@ namespace basecode::compiler {
     public:
         bool_type(
             compiler::module* module,
-            block* parent_scope);
+            compiler::block* parent_scope);
 
     protected:
         bool on_type_check(compiler::type* other) override;

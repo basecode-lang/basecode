@@ -65,6 +65,11 @@ namespace basecode::compiler {
             compiler::block* scope,
             compiler::element* expr);
 
+        void add_type_parameters(
+            const evaluator_context_t& context,
+            compiler::block* scope,
+            const syntax::ast_node_t* type_parameters_node);
+
         void add_composite_type_fields(
             const evaluator_context_t& context,
             compiler::composite_type* type,
