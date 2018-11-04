@@ -1,0 +1,6 @@
+support ::= module("support/module.bc");
+
+addr: ^u8 := alloc(size_of(u16) * 4096);
+defer free(addr);
+
+support::print("addr := $%08x\n", addr);
