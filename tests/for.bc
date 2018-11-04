@@ -1,0 +1,5 @@
+support ::= module("support/module.bc");
+
+for x:u8 in array<u8>(1, 2, 3, 4) {
+    support::print("x := %d\n", x);
+};

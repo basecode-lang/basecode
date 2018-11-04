@@ -1603,8 +1603,11 @@ namespace basecode::compiler {
         auto& builder = _session.builder();
         auto& scope_manager = _session.scope_manager();
 
-        auto rhs = evaluate(context.node->rhs.get());
-        auto body = dynamic_cast<compiler::block*>(evaluate(context.node->children[0].get()));
+        auto rhs = resolve_symbol_or_evaluate(
+            context,
+            context.node->rhs.get());
+        auto block = evaluate(context.node->children.front().get());
+        auto body = dynamic_cast<compiler::block*>(block);
 
         auto lhs = evaluate(context.node->lhs.get());
         if (lhs == nullptr || lhs->element_type() != element_type_t::symbol) {
@@ -1614,7 +1617,8 @@ namespace basecode::compiler {
 
         compiler::type_reference* type_ref = nullptr;
         if (context.node->lhs->rhs != nullptr) {
-            type_ref = dynamic_cast<compiler::type_reference*>(evaluate(context.node->lhs->rhs.get()));
+            auto ref = evaluate(context.node->lhs->rhs.get());
+            type_ref = dynamic_cast<compiler::type_reference*>(ref);
         } else {
             infer_type_result_t infer_type_result {};
             if (rhs->infer_type(_session, infer_type_result)) {
