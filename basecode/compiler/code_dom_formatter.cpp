@@ -496,7 +496,6 @@ namespace basecode::compiler {
                     node_vertex_name,
                     element->symbol()->name(),
                     style);
-                break;
             }
             case element_type_t::numeric_type: {
                 auto element = dynamic_cast<numeric_type*>(node);
@@ -651,8 +650,100 @@ namespace basecode::compiler {
                     element->symbol()->name(),
                     style);
             }
-            default:
+            case element_type_t::element:
+            case element_type_t::unknown_identifier: {
                 break;
+            }
+            case element_type_t::with: {
+                auto with_element = dynamic_cast<with*>(node);
+                auto style = ", fillcolor=yellow, style=\"filled\"";
+                add_primary_edge(with_element, with_element->body());
+                add_primary_edge(with_element, with_element->ref());
+                return fmt::format(
+                    "{}[shape=record,label=\"with\"{}];",
+                    node_vertex_name,
+                    style);
+            }
+            case element_type_t::for_e: {
+                auto for_e = dynamic_cast<for_element*>(node);
+                auto style = ", fillcolor=yellow, style=\"filled\"";
+                add_primary_edge(for_e, for_e->body());
+                add_primary_edge(for_e, for_e->expression());
+                add_primary_edge(for_e, for_e->induction_decl());
+                return fmt::format(
+                    "{}[shape=record,label=\"for\"{}];",
+                    node_vertex_name,
+                    style);
+            }
+            case element_type_t::defer: {
+                auto defer_e = dynamic_cast<defer_element*>(node);
+                auto style = ", fillcolor=yellow, style=\"filled\"";
+                add_primary_edge(defer_e, defer_e->expression());
+                return fmt::format(
+                    "{}[shape=record,label=\"defer\"{}];",
+                    node_vertex_name,
+                    style);
+            }
+            case element_type_t::map_type: {
+                auto element = dynamic_cast<map_type*>(node);
+                auto style = ", fillcolor=gainsboro, style=\"filled\"";
+                for (auto fld : element->fields().as_list())
+                    add_primary_edge(element, fld);
+                add_primary_edge(element, element->scope());
+                add_primary_edge(element, element->symbol());
+                return fmt::format(
+                    "{}[shape=record,label=\"map_type|{}\"{}];",
+                    node_vertex_name,
+                    element->symbol()->name(),
+                    style);
+            }
+            case element_type_t::intrinsic: {
+                auto element = dynamic_cast<intrinsic*>(node);
+                auto style = ", fillcolor=darkorchid1, style=\"filled\"";
+                add_primary_edge(element, element->arguments());
+                return fmt::format(
+                    "{}[shape=record,label=\"intrinsic\"{}];",
+                    node_vertex_name,
+                    style);
+            }
+            case element_type_t::type_literal: {
+                auto type_lit = dynamic_cast<type_literal*>(node);
+                auto style = ", fillcolor=yellow, style=\"filled\"";
+                add_primary_edge(type_lit, type_lit->args());
+                return fmt::format(
+                    "{}[shape=record,label=\"type_literal\"{}];",
+                    node_vertex_name,
+                    style);
+            }
+            case element_type_t::unknown_type: {
+                auto element = dynamic_cast<unknown_type*>(node);
+                auto style = ", fillcolor=gainsboro, style=\"filled\"";
+                add_primary_edge(element, element->symbol());
+                return fmt::format(
+                    "{}[shape=record,label=\"unknown_type|{}\"{}];",
+                    node_vertex_name,
+                    element->symbol()->name(),
+                    style);
+            }
+            case element_type_t::generic_type: {
+                auto element = dynamic_cast<generic_type*>(node);
+                auto style = ", fillcolor=gainsboro, style=\"filled\"";
+                add_primary_edge(element, element->symbol());
+                return fmt::format(
+                    "{}[shape=record,label=\"generic_type|{}\"{}];",
+                    node_vertex_name,
+                    element->symbol()->name(),
+                    style);
+            }
+            case element_type_t::assembly_label: {
+                auto element = dynamic_cast<assembly_label*>(node);
+                auto style = ", fillcolor=pink, style=\"filled\"";
+                return fmt::format(
+                    "{}[shape=record,label=\"assembly_label|{}\"{}];",
+                    node_vertex_name,
+                    element->name(),
+                    style);
+            }
         }
 
         return "";

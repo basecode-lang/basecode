@@ -62,25 +62,21 @@ namespace basecode::compiler {
             compiler::block* scope,
             const namespace_visitor_callable& callable) const;
 
+        block_stack_t& top_level_stack();
+
         compiler::map_type* find_map_type(
             compiler::type_reference* key_type,
             compiler::type_reference* value_type,
             compiler::block* scope = nullptr) const;
 
+        compiler::module* current_module();
+
+        compiler::block* current_top_level();
+
         compiler::array_type* find_array_type(
             compiler::type* entry_type,
             const element_list_t& subscripts,
             compiler::block* scope = nullptr) const;
-
-        compiler::pointer_type* find_pointer_type(
-            compiler::type* base_type,
-            compiler::block* scope = nullptr) const;
-
-        block_stack_t& top_level_stack();
-
-        compiler::module* current_module();
-
-        compiler::block* current_top_level();
 
         compiler::block* current_scope() const;
 
@@ -90,9 +86,19 @@ namespace basecode::compiler {
             const qualified_symbol_t& symbol,
             compiler::block* scope = nullptr) const;
 
+        compiler::pointer_type* find_pointer_type(
+            compiler::type* base_type,
+            compiler::block* scope = nullptr) const;
+
+        compiler::generic_type* find_generic_type(
+            const type_reference_list_t& constraints,
+            compiler::block* scope = nullptr) const;
+
         void add_type_to_scope(compiler::type* type);
 
         identifier_list_t& identifiers_with_unknown_types();
+
+        compiler::namespace_type* find_namespace_type() const;
 
         identifier_reference_list_t& unresolved_identifier_references();
 

@@ -93,11 +93,13 @@ namespace basecode::compiler {
         symbol.fully_qualified_name = make_fully_qualified_name(symbol);
     }
 
-    compiler::symbol_element* element_builder::make_symbol_from_node(const syntax::ast_node_t* node) {
+    compiler::symbol_element* element_builder::make_symbol_from_node(
+            const syntax::ast_node_t* node,
+            compiler::block* scope) {
         qualified_symbol_t qualified_symbol {};
         make_qualified_symbol(qualified_symbol, node);
         auto symbol = make_symbol(
-            _session.scope_manager().current_scope(),
+            scope != nullptr ? scope : _session.scope_manager().current_scope(),
             qualified_symbol.name,
             qualified_symbol.namespaces);
         symbol->location(node->location);

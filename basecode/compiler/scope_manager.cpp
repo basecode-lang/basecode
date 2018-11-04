@@ -272,6 +272,16 @@ namespace basecode::compiler {
             scope));
     }
 
+    compiler::generic_type* scope_manager::find_generic_type(
+            const type_reference_list_t& constraints,
+            compiler::block* scope) const {
+        return dynamic_cast<compiler::generic_type*>(find_type(
+            qualified_symbol_t {
+                .name = compiler::generic_type::name_for_generic_type(constraints)
+            },
+            scope));
+    }
+
     compiler::map_type* scope_manager::find_map_type(
             compiler::type_reference* key_type,
             compiler::type_reference* value_type,
@@ -296,6 +306,13 @@ namespace basecode::compiler {
 
     identifier_list_t& scope_manager::identifiers_with_unknown_types() {
         return _identifiers_with_unknown_types;
+    }
+
+    compiler::namespace_type* scope_manager::find_namespace_type() const {
+        return dynamic_cast<compiler::namespace_type*>(find_type(
+            qualified_symbol_t {
+                .name = "namespace"
+            }));
     }
 
     identifier_reference_list_t& scope_manager::unresolved_identifier_references() {

@@ -274,10 +274,7 @@ namespace basecode::compiler {
         auto& builder = _session.builder();
         auto& scope_manager = _session.scope_manager();
 
-        // XXX: revisit this
-        auto namespace_type = scope_manager.find_type(qualified_symbol_t {
-            .name = "namespace"
-        });
+        auto namespace_type = scope_manager.find_namespace_type();
         auto namespace_type_ref = builder.make_type_reference(
             parent_scope,
             namespace_type->symbol()->qualified_symbol(),
@@ -331,33 +328,39 @@ namespace basecode::compiler {
 
         auto& builder = _session.builder();
         auto& scope_manager = _session.scope_manager();
-
-        auto open_generic_type = builder.make_generic_type(scope, {});
-        scope->types().add(open_generic_type);
+        auto open_generic_type = scope_manager.find_generic_type({});
 
         for (const auto& type_parameter_node : type_parameters_node->children) {
             compiler::type* generic_type = open_generic_type;
+            auto param_symbol = builder.make_symbol_from_node(
+                type_parameter_node->rhs.get(),
+                scope);
 
             if (type_parameter_node->lhs != nullptr) {
                 compiler::type_reference_list_t constraints {};
                 for (const auto& symbol : type_parameter_node->lhs->rhs->children) {
-                    // XXX: this is a hack for testing only
-                    qualified_symbol_t qualified_symbol {
-                        .name = symbol->children[0]->token.value
-                    };
+                    qualified_symbol_t qualified_symbol {};
+                    builder.make_qualified_symbol(qualified_symbol, symbol.get());
+
                     auto type = scope_manager.find_type(qualified_symbol, scope);
                     auto type_ref = builder.make_type_reference(scope, type->name(), type);
                     constraints.push_back(type_ref);
                 }
-                generic_type = builder.make_generic_type(
-                    scope,
-                    constraints);
-                scope->types().add(generic_type);
+
+                auto root_scope = _session.program().block();
+                auto constrained_generic_type = scope_manager.find_generic_type(
+                    constraints,
+                    root_scope);
+                if (constrained_generic_type == nullptr) {
+                    generic_type = builder.make_generic_type(
+                        root_scope,
+                        constraints);
+                    scope->types().add(generic_type);
+                } else {
+                    generic_type = constrained_generic_type;
+                }
             }
 
-            auto param_symbol = builder.make_symbol(
-                scope,
-                type_parameter_node->rhs->children[0]->token.value);
             auto param_type_ref = builder.make_type_reference(
                 scope,
                 generic_type->name(),

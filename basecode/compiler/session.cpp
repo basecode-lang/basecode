@@ -27,6 +27,7 @@
 #include "elements/string_type.h"
 #include "elements/initializer.h"
 #include "elements/module_type.h"
+#include "elements/generic_type.h"
 #include "elements/numeric_type.h"
 #include "elements/unknown_type.h"
 #include "elements/argument_list.h"
@@ -450,6 +451,9 @@ namespace basecode::compiler {
         _scope_manager.add_type_to_scope(_builder.make_any_type(
             parent_scope,
             _builder.make_block(parent_scope, element_type_t::block)));
+        _scope_manager.add_type_to_scope(_builder.make_generic_type(
+            parent_scope,
+            {}));
     }
 
     bool session::resolve_unknown_types() {

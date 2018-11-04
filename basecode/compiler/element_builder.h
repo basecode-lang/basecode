@@ -343,6 +343,10 @@ namespace basecode::compiler {
             compiler::identifier* identifier,
             bool flag_as_unresolved = true);
 
+        compiler::symbol_element* make_symbol_from_node(
+            const syntax::ast_node_t* node,
+            compiler::block* scope = nullptr);
+
         unknown_type* make_unknown_type_from_find_result(
             compiler::block* scope,
             const type_find_result_t& result);
@@ -358,8 +362,6 @@ namespace basecode::compiler {
         argument_list* make_argument_list(compiler::block* parent_scope);
 
         namespace_type* make_namespace_type(compiler::block* parent_scope);
-
-        compiler::symbol_element* make_symbol_from_node(const syntax::ast_node_t* node);
 
     private:
         compiler::boolean_literal* make_bool(
