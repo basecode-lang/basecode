@@ -423,6 +423,15 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    ast_node_shared_ptr with_member_access_prefix_parser::parse(
+            common::result& r,
+            parser* parser,
+            token_t& token) {
+        return nullptr;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
     ast_node_shared_ptr module_prefix_parser::parse(
             common::result& r,
             parser* parser,
@@ -1611,4 +1620,5 @@ namespace basecode::syntax {
             return nullptr;
         return it->second;
     }
+
 }
