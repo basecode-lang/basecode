@@ -20,12 +20,12 @@ namespace basecode::compiler {
         with(
             compiler::module* module,
             compiler::block* parent_scope,
-            compiler::identifier_reference* ref,
+            compiler::element* expr,
             compiler::block* body);
 
         compiler::block* body();
 
-        compiler::identifier_reference* ref();
+        compiler::element* expr();
 
     protected:
         bool on_emit(compiler::session& session) override;
@@ -34,7 +34,7 @@ namespace basecode::compiler {
 
     private:
         compiler::block* _body = nullptr;
-        compiler::identifier_reference* _ref = nullptr;
+        compiler::element* _expr = nullptr;
     };
 
 };

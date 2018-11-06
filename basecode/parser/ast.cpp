@@ -17,10 +17,32 @@ namespace basecode::syntax {
 
     void ast_builder::reset() {
         _id = 0;
+        while (!_with_stack.empty())
+            _with_stack.pop();
         while (!_scope_stack.empty())
             _scope_stack.pop();
     }
 
+    // with stack
+    ast_node_shared_ptr ast_builder::pop_with() {
+        if (_with_stack.empty())
+            return nullptr;
+        auto top = _with_stack.top();
+        _with_stack.pop();
+        return top;
+    }
+
+    ast_node_shared_ptr ast_builder::current_with() const {
+        if (_with_stack.empty())
+            return nullptr;
+        return _with_stack.top();
+    }
+
+    void ast_builder::push_with(const ast_node_shared_ptr& node) {
+        _with_stack.push(node);
+    }
+
+    //
     void ast_builder::configure_node(
             const ast_node_shared_ptr& node,
             const token_t& token,
@@ -226,6 +248,13 @@ namespace basecode::syntax {
         node->id = ++_id;
         node->type = ast_node_types_t::array_expression;
         node->rhs = argument_list_node();
+        return node;
+    }
+
+    ast_node_shared_ptr ast_builder::with_member_access_node() {
+        auto node = std::make_shared<ast_node_t>();
+        node->id = ++_id;
+        node->type = ast_node_types_t::with_member_access;
         return node;
     }
 

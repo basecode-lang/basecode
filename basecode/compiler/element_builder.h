@@ -43,7 +43,7 @@ namespace basecode::compiler {
 
         with* make_with(
             compiler::block* parent_scope,
-            compiler::identifier_reference* ref,
+            compiler::element* expr,
             compiler::block* body);
 
         for_element* make_for(

@@ -275,6 +275,10 @@ namespace basecode::compiler {
             evaluator_context_t& context,
             evaluator_result_t& result);
 
+        bool with_member_access(
+            evaluator_context_t& context,
+            evaluator_result_t& result);
+
         bool tuple_expression(
             evaluator_context_t& context,
             evaluator_result_t& result);

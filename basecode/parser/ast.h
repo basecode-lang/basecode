@@ -83,6 +83,7 @@ namespace basecode::syntax {
         import_expression,
         continue_statement,
         subscript_operator,
+        with_member_access,
         type_parameter_list,
         constant_assignment,
         namespace_expression,
@@ -147,6 +148,7 @@ namespace basecode::syntax {
         {ast_node_types_t::character_literal, "character_literal"},
         {ast_node_types_t::module_expression, "module_expression"},
         {ast_node_types_t::elseif_expression, "elseif_expression"},
+        {ast_node_types_t::with_member_access, "with_member_access"},
         {ast_node_types_t::subscript_operator, "subscript_operator"},
         {ast_node_types_t::continue_statement, "continue_statement"},
         {ast_node_types_t::type_parameter_list, "type_parameter_list"},
@@ -241,8 +243,14 @@ namespace basecode::syntax {
 
         void reset();
 
-        ast_node_shared_ptr pair_node();
+        // with stack
+        ast_node_shared_ptr pop_with();
 
+        ast_node_shared_ptr current_with() const;
+
+        void push_with(const ast_node_shared_ptr& node);
+
+        // scope/block stack
         ast_node_shared_ptr end_scope();
 
         ast_node_shared_ptr pop_scope();
@@ -250,6 +258,9 @@ namespace basecode::syntax {
         ast_node_shared_ptr begin_scope();
 
         ast_node_t* current_scope() const;
+
+        //
+        ast_node_shared_ptr pair_node();
 
         ast_node_shared_ptr symbol_node();
 
@@ -295,6 +306,8 @@ namespace basecode::syntax {
         ast_node_shared_ptr array_expression_node();
 
         ast_node_shared_ptr subscript_operator_node();
+
+        ast_node_shared_ptr with_member_access_node();
 
         ast_node_shared_ptr constant_assignment_node();
 
@@ -384,6 +397,7 @@ namespace basecode::syntax {
 
     private:
         uint32_t _id = 0;
+        std::stack<ast_node_shared_ptr> _with_stack {};
         std::stack<ast_node_shared_ptr> _scope_stack {};
     };
 

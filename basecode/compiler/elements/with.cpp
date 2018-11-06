@@ -22,30 +22,27 @@ namespace basecode::compiler {
     with::with(
             compiler::module* module,
             compiler::block* parent_scope,
-            compiler::identifier_reference* ref,
+            compiler::element* expr,
             compiler::block* body) : element(module, parent_scope, element_type_t::with),
                                      _body(body),
-                                     _ref(ref) {
+                                     _expr(expr) {
     }
 
     compiler::block* with::body() {
         return _body;
     }
 
-    compiler::identifier_reference* with::ref() {
-        return _ref;
+    compiler::element* with::expr() {
+        return _expr;
     }
 
     bool with::on_emit(compiler::session& session) {
-        auto& assembler = session.assembler();
-        auto block = assembler.current_block();
-        block->comment("XXX: implement with", 4);
-        return true;
+        return _body->emit(session);
     }
 
     void with::on_owned_elements(element_list_t& list) {
-        if (_ref != nullptr)
-            list.emplace_back(_ref);
+        if (_expr != nullptr)
+            list.emplace_back(_expr);
 
         if (_body != nullptr)
             list.emplace_back(_body);

@@ -427,7 +427,19 @@ namespace basecode::syntax {
             common::result& r,
             parser* parser,
             token_t& token) {
-        return nullptr;
+        auto node = parser->ast_builder()->with_member_access_node();
+        node->location.start(token.location.start());
+
+        token_t symbol_token;
+        symbol_token.type = token_types_t::identifier;
+        if (!parser->expect(r, symbol_token))
+            return nullptr;
+
+        node->lhs = parser->ast_builder()->current_with()->lhs;
+        node->rhs = create_symbol_node(r, parser, nullptr, symbol_token);
+        node->location.end(node->lhs->location.end());
+
+        return node;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -652,10 +664,17 @@ namespace basecode::syntax {
             parser* parser,
             token_t& token) {
         auto with_node = parser->ast_builder()->with_node(token);
+
         collect_comments(r, parser, with_node->comments);
         with_node->lhs = parser->parse_expression(r, 0);
+
+        parser->ast_builder()->push_with(with_node);
+
         collect_comments(r, parser, with_node->comments);
         with_node->rhs = parser->parse_expression(r, 0);
+
+        parser->ast_builder()->pop_with();
+
         return with_node;
     }
 

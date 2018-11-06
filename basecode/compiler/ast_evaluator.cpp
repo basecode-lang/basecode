@@ -68,6 +68,7 @@ namespace basecode::compiler {
         {syntax::ast_node_types_t::module_expression,       std::bind(&ast_evaluator::module_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::elseif_expression,       std::bind(&ast_evaluator::if_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::subscript_operator,      std::bind(&ast_evaluator::subscript_operator, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::with_member_access,      std::bind(&ast_evaluator::with_member_access, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::continue_statement,      std::bind(&ast_evaluator::continue_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::constant_assignment,     std::bind(&ast_evaluator::assignment, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::transmute_expression,    std::bind(&ast_evaluator::transmute_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
@@ -1311,10 +1312,9 @@ namespace basecode::compiler {
 
         result.element = builder.make_with(
             scope_manager.current_scope(),
-            dynamic_cast<compiler::identifier_reference*>(
-                resolve_symbol_or_evaluate(
-                    context,
-                    context.node->lhs.get())),
+            resolve_symbol_or_evaluate(
+                context,
+                context.node->lhs.get()),
             dynamic_cast<compiler::block*>(evaluate(context.node->rhs.get())));
         return true;
     }
@@ -1712,6 +1712,17 @@ namespace basecode::compiler {
             args);
 
         return true;
+    }
+
+    bool ast_evaluator::with_member_access(
+            evaluator_context_t& context,
+            evaluator_result_t& result) {
+        auto member_access_bin_op = _session.ast_builder().binary_operator_node(
+            context.node->lhs,
+            syntax::s_period_literal,
+            context.node->rhs);
+        context.node = member_access_bin_op.get();
+        return binary_operator(context, result);
     }
 
     bool ast_evaluator::transmute_expression(

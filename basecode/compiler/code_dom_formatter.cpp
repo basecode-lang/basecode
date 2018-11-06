@@ -658,7 +658,7 @@ namespace basecode::compiler {
                 auto with_element = dynamic_cast<with*>(node);
                 auto style = ", fillcolor=yellow, style=\"filled\"";
                 add_primary_edge(with_element, with_element->body());
-                add_primary_edge(with_element, with_element->ref());
+                add_primary_edge(with_element, with_element->expr());
                 return fmt::format(
                     "{}[shape=record,label=\"with\"{}];",
                     node_vertex_name,

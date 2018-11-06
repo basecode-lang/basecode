@@ -409,16 +409,16 @@ namespace basecode::compiler {
 
     with* element_builder::make_with(
             compiler::block* parent_scope,
-            compiler::identifier_reference* ref,
+            compiler::element* expr,
             block* body) {
         auto with = new compiler::with(
             _session.scope_manager().current_module(),
             parent_scope,
-            ref,
+            expr,
             body);
         _session.elements().add(with);
-        if (ref != nullptr)
-            ref->parent_element(with);
+        if (expr != nullptr)
+            expr->parent_element(with);
         if (body != nullptr)
             body->parent_element(with);
         return with;

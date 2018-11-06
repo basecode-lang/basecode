@@ -2,21 +2,7 @@ support ::= module("support/module.bc");
 
 temp := "hello world";
 
-item ::= struct {
-    name: string;
-};
-
-player ::= struct {
-    name: string;
-    items: []item;
-};
-
-p: player;
-
-with p {
-    for i in .items {
-        with .i {
-            support::print("player '%s' has item '%s'\n", p.name, .name):
-        };
-    };
+with temp {
+    support::print("temp.length   := %d\n", .length);
+    support::print("temp.capacity := %d\n", .capacity);
 };
