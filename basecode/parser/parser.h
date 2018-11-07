@@ -25,8 +25,8 @@
 namespace basecode::syntax {
 
     enum class precedence_t : uint8_t {
-        comma = 1,
-        assignment,
+        assignment = 1,
+        comma,
         conditional,
         sum,
         product,
@@ -75,7 +75,14 @@ namespace basecode::syntax {
             const ast_node_shared_ptr& lhs,
             token_t& token) override;
 
+        void precedence(precedence_t value) {
+            _precedence = value;
+        }
+
         precedence_t precedence() const override;
+
+    private:
+        precedence_t _precedence = precedence_t::comma;
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -188,7 +195,14 @@ namespace basecode::syntax {
             const ast_node_shared_ptr& lhs,
             token_t& token) override;
 
+        void precedence(precedence_t value) {
+            _precedence = value;
+        }
+
         precedence_t precedence() const override;
+
+    private:
+        precedence_t _precedence = precedence_t::assignment;
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -203,22 +217,14 @@ namespace basecode::syntax {
             const ast_node_shared_ptr& lhs,
             token_t& token) override;
 
-        precedence_t precedence() const override;
-    };
-
-    ///////////////////////////////////////////////////////////////////////////
-
-    class block_comment_infix_parser : public infix_parser {
-    public:
-        block_comment_infix_parser() = default;
-
-        ast_node_shared_ptr parse(
-            common::result& r,
-            parser* parser,
-            const ast_node_shared_ptr& lhs,
-            token_t& token) override;
+        void precedence(precedence_t value) {
+            _precedence = value;
+        }
 
         precedence_t precedence() const override;
+
+    private:
+        precedence_t _precedence = precedence_t::assignment;
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -700,7 +706,15 @@ namespace basecode::syntax {
             common::result& r,
             token_t& token);
 
+        uint8_t comma_precedence() const;
+
         syntax::ast_builder* ast_builder();
+
+        void use_global_comma_precedence();
+
+        void use_default_comma_precedence();
+
+        uint8_t assignment_precedence() const;
 
         ast_node_shared_ptr parse_expression(
             common::result& r,

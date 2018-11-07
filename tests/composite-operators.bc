@@ -31,15 +31,15 @@ string_append :: proc(lhs: ^string, rhs: string) {
 };
 
 @binary_operator ":="
-string_assignment :: proc(lhs: ^utf16_string, rhs: string) {
+string_assignment_1 :: proc(lhs: ^utf16_string, rhs: string) {
 };
 
 @binary_operator ":="
-string_assignment :: proc(lhs: ^utf32_string, rhs: string) {
+string_assignment_2 :: proc(lhs: ^utf32_string, rhs: string) {
 };
 
 @binary_operator ":="
-string_assignment :: proc(lhs: ^string, rhs: utf32_string) {
+string_assignment_3 :: proc(lhs: ^string, rhs: utf32_string) {
 };
 
 ////////////////////

@@ -504,7 +504,9 @@ namespace basecode::compiler {
                 }
             }
 
-            if (var->type_ref()->type()->element_type() != element_type_t::unknown_type) {
+            auto type_ref = var->type_ref();
+            if (type_ref != nullptr
+            &&  type_ref->type()->element_type() != element_type_t::unknown_type) {
                 var->inferred_type(true);
                 it = identifiers.erase(it);
             } else {

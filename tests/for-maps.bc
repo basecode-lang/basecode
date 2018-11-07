@@ -5,4 +5,4 @@ support :: module("support/module.bc");
 for it in map<string, string>("foo" := "bar", "bing" := "baz") {
     support::print("k := %s\n", it.key);
     support::print("v := %d\n", it.value);
-}
+};
