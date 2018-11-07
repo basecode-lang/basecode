@@ -300,6 +300,11 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             const std::string& name);
 
+        argument_pair* make_argument_pair(
+            compiler::block* parent_scope,
+            compiler::element* lhs,
+            compiler::element* rhs);
+
         binary_operator* make_binary_operator(
             compiler::block* parent_scope,
             operator_type_t type,

@@ -28,7 +28,7 @@ namespace basecode::compiler {
     bool argument_pair::on_infer_type(
             compiler::session& session,
             infer_type_result_t& result) {
-        return true;
+        return _rhs->infer_type(session, result);
     }
 
     compiler::element* argument_pair::lhs() {
@@ -41,6 +41,11 @@ namespace basecode::compiler {
 
     bool argument_pair::on_is_constant() const {
         return true;
+    }
+
+    void argument_pair::on_owned_elements(element_list_t& list) {
+        list.emplace_back(_lhs);
+        list.emplace_back(_rhs);
     }
 
 };

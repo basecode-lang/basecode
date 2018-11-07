@@ -671,6 +671,21 @@ namespace basecode::compiler {
         return label;
     }
 
+    argument_pair* element_builder::make_argument_pair(
+            compiler::block* parent_scope,
+            compiler::element* lhs,
+            compiler::element* rhs) {
+        auto pair = new compiler::argument_pair(
+            _session.scope_manager().current_module(),
+            parent_scope,
+            lhs,
+            rhs);
+        lhs->parent_element(pair);
+        rhs->parent_element(pair);
+        _session.elements().add(pair);
+        return pair;
+    }
+
     assembly_label* element_builder::make_assembly_label(
             compiler::block* parent_scope,
             const std::string& name) {

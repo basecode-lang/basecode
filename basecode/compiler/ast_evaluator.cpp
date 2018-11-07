@@ -947,21 +947,30 @@ namespace basecode::compiler {
 
         auto args = builder.make_argument_list(scope_manager.current_scope());
         for (const auto& arg_node : context.node->children) {
+            compiler::element* arg = nullptr;
+
             switch (arg_node->type) {
                 case syntax::ast_node_types_t::assignment: {
+                    auto lhs = evaluate(arg_node->lhs->children.front().get());
+                    auto rhs = resolve_symbol_or_evaluate(
+                        context,
+                        arg_node->rhs->children.front().get());
+                    arg = builder.make_argument_pair(scope_manager.current_scope(), lhs, rhs);
                     break;
                 }
                 default: {
-                    auto arg = resolve_symbol_or_evaluate(context, arg_node.get());
-                    if (arg == nullptr) {
-                        // XXX: error
-                        return false;
-                    }
-                    args->add(arg);
-                    arg->parent_element(args);
+                    arg = resolve_symbol_or_evaluate(context, arg_node.get());
                     break;
                 }
             }
+
+            if (arg == nullptr) {
+                // XXX: error
+                return false;
+            }
+
+            args->add(arg);
+            arg->parent_element(args);
         }
         result.element = args;
         return true;

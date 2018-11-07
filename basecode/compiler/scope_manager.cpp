@@ -196,11 +196,15 @@ namespace basecode::compiler {
             }));
     }
 
-    bool scope_manager::within_procedure_scope(compiler::block* parent_scope) const {
+    bool scope_manager::within_local_scope(compiler::block* parent_scope) const {
         auto block_scope = parent_scope == nullptr ? current_scope() : parent_scope;
         while (block_scope != nullptr) {
-            if (block_scope->is_parent_element(element_type_t::proc_type))
+            if (block_scope->is_parent_element(element_type_t::proc_type)
+            ||  block_scope->is_parent_element(element_type_t::for_e)
+            ||  block_scope->is_parent_element(element_type_t::if_e)
+            ||  block_scope->is_parent_element(element_type_t::while_e)) {
                 return true;
+            }
             block_scope = block_scope->parent_scope();
         }
         return false;

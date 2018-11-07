@@ -104,7 +104,7 @@ namespace basecode::compiler {
 
         compiler::module* find_module(compiler::element* element) const;
 
-        bool within_procedure_scope(compiler::block* parent_scope = nullptr) const;
+        bool within_local_scope(compiler::block* parent_scope = nullptr) const;
 
         compiler::block* push_new_block(element_type_t type = element_type_t::block);
 

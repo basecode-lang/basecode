@@ -457,7 +457,7 @@ namespace basecode::compiler {
         auto identifiers = session.elements().find_by_type(element_type_t::identifier);
         for (auto identifier : identifiers) {
             auto var = dynamic_cast<compiler::identifier*>(identifier);
-            if (scope_manager.within_procedure_scope(var->parent_scope()))
+            if (scope_manager.within_local_scope(var->parent_scope()))
                 continue;
 
             auto var_parent = var->parent_element();
