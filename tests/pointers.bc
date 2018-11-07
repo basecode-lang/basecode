@@ -1,13 +1,17 @@
-support ::= module("support/module.bc");
+support :: module("support/module.bc");
 
-item ::= struct {
+item :: struct {
     n: s32;
 };
 
-id_t ::= #type u32;
-item_ptr_t ::= #type ^item;
-items: ^item_ptr_t;
+// XXX: there's an ordering bug here
+//      defining the type alias before item is defined
+//      causes an error instead of it being resolved later
 
+id_t        :: #type u32;
+item_ptr_t  :: #type ^item;
+
+items: ^item_ptr_t;
 foo := items^;
 
 // alloc & free block of memory

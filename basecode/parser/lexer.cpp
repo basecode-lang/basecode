@@ -56,9 +56,9 @@ namespace basecode::syntax {
         {'~', std::bind(&lexer::tilde, std::placeholders::_1, std::placeholders::_2)},
 
         // assignment, scope operator, colon
-        {':', std::bind(&lexer::assignment, std::placeholders::_1, std::placeholders::_2)},
         {':', std::bind(&lexer::constant_assignment, std::placeholders::_1, std::placeholders::_2)},
         {':', std::bind(&lexer::scope_operator, std::placeholders::_1, std::placeholders::_2)},
+        {':', std::bind(&lexer::assignment, std::placeholders::_1, std::placeholders::_2)},
         {':', std::bind(&lexer::colon, std::placeholders::_1, std::placeholders::_2)},
 
         // %:=, percent, number literal
@@ -1287,9 +1287,13 @@ namespace basecode::syntax {
     }
 
     bool lexer::constant_assignment(token_t& token) {
-        if (match_literal("::=")) {
-            token = s_constant_assignment_literal;
-            return true;
+        if (match_literal("::")) {
+            auto ch = read(false);
+            if (isspace(ch)) {
+                rewind_one_char();
+                token = s_constant_assignment_literal;
+                return true;
+            }
         }
         return false;
     }

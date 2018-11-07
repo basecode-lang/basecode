@@ -3,15 +3,12 @@
 //
 //
 
-support ::= module("support/module.bc");
+support :: module("support/module.bc");
 
 /* just before a */ a: /* just before type*/ u32 /* just after type */; // bar
 
-@library "alpha-core";
-#foreign print ::= proc(format: string, values: ...any) @alias "fmt_print";
-
 @foo_the_bar "frobnoz";
-/**/ @bling @boom _ foo ::= /* before proc */ proc(
+/**/ @bling @boom _ foo :: /* before proc */ proc(
         a: /* foo before   */ s8     /* foo after   */,  /* this is gonna end badly */
         b: /* yeah! before */ string /* yeah! after */,  /* or maybe it works? */
         c: ^any     // I FIXED IT!
@@ -29,9 +26,9 @@ d := /* before integer */ 100 /* after integer */;
 // with
 
 /* before if */ if /* after if */ a == 2 /* after condition */ {
-    print("one\n");
+    support::print("one\n");
 } /* before else if */ else if /* after else if */ a == 4 /* after else if condition */ {
-    print("two\n");
+    support::print("two\n");
 } /* before else */ else /* after else */ {
-    print("three\n");
+    support::print("three\n");
 } /* after ladder */;

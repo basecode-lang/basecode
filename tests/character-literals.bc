@@ -1,10 +1,10 @@
-support ::= module("support/module.bc");
+support :: module("support/module.bc");
 
 a := 'A';
 b := 'b';
 
-print("a := %c\n", a);
-print("b := %c\n", b);
+support::print("a := %c\n", a);
+support::print("b := %c\n", b);
 
 a_type: ^type;
 a_type := type_of(a);

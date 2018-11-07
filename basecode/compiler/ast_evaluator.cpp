@@ -147,15 +147,15 @@ namespace basecode::compiler {
                 context.apply_comments(result.element);
                 return result.element;
             }
-        } else {
-            _session.error(
-                "P071",
-                fmt::format(
-                    "ast node evaluation failed: id = {}, type = {}",
-                    node->id,
-                    syntax::ast_node_type_name(node->type)),
-                node->location);
         }
+
+        _session.error(
+            "P071",
+            fmt::format(
+                "ast node evaluation failed: id = {}, type = {}",
+                node->id,
+                syntax::ast_node_type_name(node->type)),
+            node->location);
 
         return nullptr;
     }
@@ -463,7 +463,7 @@ namespace basecode::compiler {
                     init_expr = builder.make_identifier_reference(
                         scope,
                         init_symbol->qualified_symbol(),
-                        nullptr);
+                        scope_manager.find_identifier(init_symbol->qualified_symbol(), scope));
                 }
                 if (init_expr->is_constant()) {
                     init = builder.make_initializer(scope, init_expr);
@@ -481,7 +481,7 @@ namespace basecode::compiler {
             if (is_module) {
                 _session.error(
                     "P029",
-                    "constant assignment (::=) is required for module references.",
+                    "constant assignment (::) is required for module references.",
                     node->location);
                 return nullptr;
             }
@@ -491,7 +491,7 @@ namespace basecode::compiler {
             if (is_ns) {
                 _session.error(
                     "P029",
-                    "constant assignment (::=) is required for namespaces.",
+                    "constant assignment (::) is required for namespaces.",
                     node->location);
                 return nullptr;
             }
@@ -503,7 +503,7 @@ namespace basecode::compiler {
             if (is_type || is_type_directive) {
                 _session.error(
                     "P029",
-                    "constant assignment (::=) is required for types.",
+                    "constant assignment (::) is required for types.",
                     node->location);
                 return nullptr;
             }
@@ -955,7 +955,11 @@ namespace basecode::compiler {
                     auto rhs = resolve_symbol_or_evaluate(
                         context,
                         arg_node->rhs->children.front().get());
-                    arg = builder.make_argument_pair(scope_manager.current_scope(), lhs, rhs);
+                    if (lhs != nullptr && rhs != nullptr)
+                        arg = builder.make_argument_pair(
+                            scope_manager.current_scope(),
+                            lhs,
+                            rhs);
                     break;
                 }
                 default: {
@@ -1465,8 +1469,9 @@ namespace basecode::compiler {
         add_type_parameters(context, block_scope, context.node->lhs->lhs.get());
 
         auto count = 0;
+        auto return_types_node = context.node->lhs->rhs;
         compiler::field* return_field = nullptr;
-        if (!context.node->lhs->children.empty()) {
+        if (!return_types_node->children.empty()) {
             auto return_identifier = builder.make_identifier(
                 block_scope,
                 builder.make_symbol(block_scope, fmt::format("_{}", count++)),
@@ -1475,7 +1480,7 @@ namespace basecode::compiler {
 
             auto type_ref = dynamic_cast<compiler::type_reference*>(evaluate_in_scope(
                 context,
-                context.node->lhs->children[0].get(),
+                return_types_node->children.front().get(),
                 block_scope));
             if (type_ref->is_unknown_type()) {
                 _session.scope_manager()
@@ -1628,6 +1633,11 @@ namespace basecode::compiler {
         auto rhs = resolve_symbol_or_evaluate(
             context,
             context.node->rhs.get());
+        if (rhs == nullptr) {
+            // XXX: error
+            return false;
+        }
+
         auto block = evaluate(context.node->children.front().get());
         auto body = dynamic_cast<compiler::block*>(block);
 

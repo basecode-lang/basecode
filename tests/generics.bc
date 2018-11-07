@@ -1,13 +1,13 @@
-support ::= module("support/module.bc");
+support :: module("support/module.bc");
 
-key_value_pair ::= struct<K:tuple(string), V> {
+key_value_pair :: struct<K:tuple(string), V> {
     key: K;
     value: V;
 };
 
-adder ::= proc<T:tuple(u32, f32)>(a: T, b: T): T {
+adder :: proc<T:tuple(u32, f32)>(a: T, b: T): T {
     return a + b;
 };
 
-//result ::= adder(cast<s8>(3), cast<s8>(4));
-//result ::= adder("a", "b");
+//result :: adder(cast<s8>(3), cast<s8>(4));
+//result :: adder("a", "b");

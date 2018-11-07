@@ -1,26 +1,26 @@
 // module scope
-support ::= module("support/module.bc");
+support :: module("support/module.bc");
 
 a: bool := true;
 
-test::namespace::foo ::= ns {
+test::namespace::foo :: ns {
     // frame
 
-    bar ::= ns {
+    bar :: ns {
         // frame
         sines: [256]f32;
 
-        make_sine_table ::= proc() {
+        make_sine_table :: proc() {
             // populate the sine table
         };
         make_sine_table();
 
-        simple ::= proc(x: u32, y: u32): u32 {
-            nested1 ::= proc() {
+        simple :: proc(x: u32, y: u32): u32 {
+            nested1 :: proc() {
                 // frame + display
                 i: u64;
 
-                nested2 ::= proc() {
+                nested2 :: proc() {
                     // frame + display
                     i +:= x * y;
                 };
@@ -35,5 +35,5 @@ test::namespace::foo ::= ns {
         // frame
     };
 
-    bar::sine_stuff::simple();
+    bar::simple(0, 360);
 };

@@ -624,7 +624,7 @@ namespace basecode::syntax {
 
     static inline token_t s_constant_assignment_literal = {
         .type = token_types_t::constant_assignment,
-        .value = "::="
+        .value = "::"
     };
 
     static inline token_t s_left_square_bracket_literal = {

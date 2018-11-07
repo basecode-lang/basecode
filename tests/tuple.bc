@@ -1,7 +1,7 @@
-support ::= module("support/module.bc");
+support :: module("support/module.bc");
 
-anonymous_tuple ::= tuple(1, 2, 3);
-named_tuple     ::= tuple(first := 1, second := 2, third := "foobar");
+anonymous_tuple :: tuple(1, 2, 3);
+named_tuple     :: tuple(first := 1, second := 2, third := "foobar");
 
 // TODO
 // 1. need to generate initializers for tuple data

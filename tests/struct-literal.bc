@@ -1,6 +1,6 @@
-support ::= module("support/module.bc");
+support :: module("support/module.bc");
 
-player ::= struct {
+player :: struct {
     id: u32;
     name: string;
     x: f32 := 0.0;

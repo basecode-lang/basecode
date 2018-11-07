@@ -1,4 +1,4 @@
-support ::= module("support/module.bc");
+support :: module("support/module.bc");
 
 text := "hello world!";
 support::print("text.length   := %d\n", text.length);
@@ -17,17 +17,17 @@ while i < text.length {
 
 support::print("\n");
 
-vector3 ::= struct {
+vector3 :: struct {
     x: s32;
     y: s32;
     z: s32;
 };
 
-class  ::= struct {
+class  :: struct {
     name: string;
 };
 
-entity ::= struct {
+entity :: struct {
     pos: vector3;
     dir: vector3;
     cls: class;

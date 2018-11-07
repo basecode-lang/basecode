@@ -1,4 +1,4 @@
-support ::= module("support/module.bc");
+support :: module("support/module.bc");
 
 //some_func ::= proc(p: ^person):u64 {
 //    return 0;
@@ -9,7 +9,7 @@ support ::= module("support/module.bc");
 //    name: string;
 //};
 
-people ::= map<u8, string>(
+people :: map<u8, string>(
       1 := "Jeff",
       2 := "Bob",
       3 := "Mr. Foobar"

@@ -1,8 +1,8 @@
-support ::= module("support/module.bc");
+support :: module("support/module.bc");
 
-COMPARATOR_T ::= proc<T>(lhs: ^T, rhs: ^T):bool;
+COMPARATOR_T :: proc<T>(lhs: ^T, rhs: ^T):bool;
 
-qsort ::= proc<T>(
+qsort :: proc<T>(
         items: ^[]T,
         comparator: COMPARATOR_T<T>) {
     // stuff

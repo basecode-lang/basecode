@@ -40,6 +40,8 @@ namespace basecode::compiler {
         if (identifier != nullptr) {
             auto proc_type = dynamic_cast<procedure_type*>(identifier->type_ref()->type());
             if (proc_type != nullptr) {
+                if (proc_type->return_type() == nullptr)
+                    return false;
                 auto return_identifier = proc_type->return_type()->identifier();
                 result.inferred_type = return_identifier->type_ref()->type();
                 result.reference = return_identifier->type_ref();

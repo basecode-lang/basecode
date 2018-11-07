@@ -10,21 +10,21 @@
 // ----------------------------------------------------------------------------
 
 @library "basecode";
-#foreign print ::= proc(format: string, values: ...any) @alias "fmt_print";
+#foreign print :: proc(format: string, values: ...any) @alias "fmt_print";
 
-range ::= ns {
-    kinds  ::= ns {
-        INCLUSIVE ::= 0;
-        EXCLUSIVE ::= 1;
+range :: ns {
+    kinds  :: ns {
+        INCLUSIVE :: 0;
+        EXCLUSIVE :: 1;
     };
 
-    orders ::= ns {
-        NORMAL    ::= 0;
-        REVERSE   ::= 1;
+    orders :: ns {
+        NORMAL    :: 0;
+        REVERSE   :: 1;
     };
 };
 
-assert ::= proc(predicate: bool, message: string) {
+assert :: proc(predicate: bool, message: string) {
     if !predicate {
         print("%s\n", message);
         #assembly {{ exit }};

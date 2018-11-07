@@ -1,4 +1,4 @@
-support ::= module("support/module.bc");
+support :: module("support/module.bc");
 
 ptr: ^u8 := nil;
 is_true := false;

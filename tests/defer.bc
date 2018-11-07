@@ -1,4 +1,4 @@
-support ::= module("support/module.bc");
+support :: module("support/module.bc");
 
 addr: ^u8 := alloc(size_of(u16) * 4096);
 defer free(addr);
