@@ -1,0 +1,27 @@
+support ::= module("support/module.bc");
+
+import range::kinds from support;
+import range::orders from support;
+
+low  := 0;
+hi   := 10;
+step := 2;
+
+for x in range(low, high) {
+    support::print("x := %d\n", x);
+};
+
+// step by 2
+for x in range(kind := EXCLUSIVE, dir := REVERSE, low, high, step) {
+    support::print("x := %d\n", x);
+};
+
+// reverse
+for x in range(low, high, dir := REVERSE) {
+    support::print("x := %d\n", x);
+};
+
+// reverse with step
+for x in range(low, high, step, dir := REVERSE) {
+    support::print("x := %d\n", x);
+};

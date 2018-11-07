@@ -1,0 +1,8 @@
+support ::= module("support/module.bc");
+
+////////////////////////////////////////////////////////
+// 3. iterating over maps
+for it in map<string, string>("foo" := "bar", "bing" := "baz") {
+    support::print("k := %s\n", k);
+    support::print("v := %d\n", v);
+}

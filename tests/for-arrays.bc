@@ -1,0 +1,7 @@
+support ::= module("support/module.bc");
+
+////////////////////////////////////////////////////////
+// 2. iterating over arrays
+for it in array<u8>(1, 2, 3, 4, 5) {
+    support::print("x := %d\n", x);
+};

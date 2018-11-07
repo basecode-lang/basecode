@@ -942,13 +942,26 @@ namespace basecode::compiler {
     bool ast_evaluator::argument_list(
             evaluator_context_t& context,
             evaluator_result_t& result) {
-        auto args = _session.builder().make_argument_list(_session.scope_manager().current_scope());
+        auto& builder = _session.builder();
+        auto& scope_manager = _session.scope_manager();
+
+        auto args = builder.make_argument_list(scope_manager.current_scope());
         for (const auto& arg_node : context.node->children) {
-            auto arg = resolve_symbol_or_evaluate(context, arg_node.get());
-            if (arg == nullptr)
-                return false;
-            args->add(arg);
-            arg->parent_element(args);
+            switch (arg_node->type) {
+                case syntax::ast_node_types_t::assignment: {
+                    break;
+                }
+                default: {
+                    auto arg = resolve_symbol_or_evaluate(context, arg_node.get());
+                    if (arg == nullptr) {
+                        // XXX: error
+                        return false;
+                    }
+                    args->add(arg);
+                    arg->parent_element(args);
+                    break;
+                }
+            }
         }
         result.element = args;
         return true;

@@ -52,7 +52,7 @@ namespace basecode::compiler {
     }
 
     bool map_type::on_initialize(compiler::session& session) {
-        auto& scope_manager = session.scope_manager();
+//        auto& scope_manager = session.scope_manager();
         auto& builder = session.builder();
 
         auto type_symbol = builder.make_symbol(

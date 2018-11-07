@@ -330,6 +330,16 @@ namespace basecode::compiler {
                     node_vertex_name,
                     style);
             }
+            case element_type_t::argument_pair: {
+                auto arg_pair = dynamic_cast<argument_pair*>(node);
+                auto style = ", fillcolor=azure, style=\"filled\"";
+                add_primary_edge(arg_pair, arg_pair->lhs());
+                add_primary_edge(arg_pair, arg_pair->rhs());
+                return fmt::format(
+                    "{}[shape=record,label=\"argument_pair\"{}];",
+                    node_vertex_name,
+                    style);
+            }
             case element_type_t::argument_list: {
                 auto args = dynamic_cast<argument_list*>(node);
                 auto style = ", fillcolor=azure, style=\"filled\"";

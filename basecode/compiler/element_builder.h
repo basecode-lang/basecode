@@ -250,6 +250,10 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             compiler::argument_list* args);
 
+        intrinsic* make_range_intrinsic(
+            compiler::block* parent_scope,
+            compiler::argument_list* args);
+
         intrinsic* make_fill_intrinsic(
             compiler::block* parent_scope,
             compiler::argument_list* args);

@@ -1035,6 +1035,18 @@ namespace basecode::compiler {
         return intrinsic;
     }
 
+    intrinsic* element_builder::make_range_intrinsic(
+            compiler::block* parent_scope,
+            compiler::argument_list* args) {
+        auto intrinsic = new compiler::range_intrinsic(
+            _session.scope_manager().current_module(),
+            parent_scope,
+            args);
+        _session.elements().add(intrinsic);
+        args->parent_element(intrinsic);
+        return intrinsic;
+    }
+
     intrinsic* element_builder::make_fill_intrinsic(
             compiler::block* parent_scope,
             compiler::argument_list* args) {

@@ -665,6 +665,10 @@ namespace basecode::syntax {
             token_t& token) {
         auto with_node = parser->ast_builder()->with_node(token);
 
+        // XXX: need to check if there's a current_with on the stack
+        //      if true and with_node->lhs is a with_member_access
+        //      then create a binary operator for with_node->lhs instead of
+        //      just assigning the expression
         collect_comments(r, parser, with_node->comments);
         with_node->lhs = parser->parse_expression(r, 0);
 

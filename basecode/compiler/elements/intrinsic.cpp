@@ -107,6 +107,16 @@ namespace basecode::compiler {
                     args);
             }
         },
+        {
+            "range",
+            [](compiler::element_builder& builder,
+                   auto parent_scope,
+                   auto args) -> compiler::intrinsic* {
+                return builder.make_range_intrinsic(
+                    parent_scope,
+                    args);
+            }
+        },
     };
 
     intrinsic* intrinsic::intrinsic_for_call(
@@ -128,10 +138,10 @@ namespace basecode::compiler {
     }
 
     intrinsic::intrinsic(
-        compiler::module* module,
-        compiler::block* parent_scope,
-        compiler::argument_list* args) : element(module, parent_scope, element_type_t::intrinsic),
-                                         _arguments(args) {
+            compiler::module* module,
+            compiler::block* parent_scope,
+            compiler::argument_list* args) : element(module, parent_scope, element_type_t::intrinsic),
+                                             _arguments(args) {
     }
 
     bool intrinsic::can_fold() const {

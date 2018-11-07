@@ -68,6 +68,7 @@ namespace basecode::compiler {
     class operator_base;
     class argument_list;
     class while_element;
+    class argument_pair;
     class type_reference;
     class assembly_label;
     class free_intrinsic;
@@ -79,6 +80,7 @@ namespace basecode::compiler {
     class procedure_call;
     class string_literal;
     class namespace_type;
+    class range_intrinsic;
     class boolean_literal;
     class integer_literal;
     class binary_operator;
@@ -185,6 +187,7 @@ namespace basecode::compiler {
         module_block,
         pointer_type,
         generic_type,
+        argument_pair,
         argument_list,
         proc_instance,
         float_literal,
@@ -256,6 +259,7 @@ namespace basecode::compiler {
         {element_type_t::proc_instance, "proc_instance"},
         {element_type_t::float_literal, "float_literal"},
         {element_type_t::argument_list, "argument_list"},
+        {element_type_t::argument_pair, "argument_pair"},
         {element_type_t::namespace_type, "namespace_type"},
         {element_type_t::string_literal, "string_literal"},
         {element_type_t::composite_type, "composite_type"},
