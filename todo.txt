@@ -3,7 +3,6 @@ NOTES
 
 TASKS
 -----
-- consolidate array_constructor and tuple, map, and struct/union/enum into type_literal
 
 DONE
 ----
@@ -77,3 +76,4 @@ DONE
 - FIX: the AST node graph output option shouldn't take a filename now.  the filename should
         be based on the module compiled.  the option should just be a flag.
 - NEW: add command line flags that are passed into the compiler as definitions
+- consolidate array_constructor and tuple, map, and struct/union/enum into type_literal
