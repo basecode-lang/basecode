@@ -57,12 +57,8 @@ namespace basecode::syntax {
 
         token_t greater_than;
         greater_than.type = token_types_t::greater_than;
-        if (!parser->expect(r, greater_than))
-            return false;
-
-        return true;
+        return parser->expect(r, greater_than);
     }
-
 
     ///////////////////////////////////////////////////////////////////////////
 
@@ -178,6 +174,33 @@ namespace basecode::syntax {
                 return nullptr;
         }
 
+        // XXX: this isn't quite correct
+//        if (parser->peek(token_types_t::less_than)) {
+//            symbol_node->lhs = parser->ast_builder()->type_list_node();
+//
+//            token_t less_than;
+//            parser->consume(less_than);
+//            symbol_node->lhs->location.start(less_than.location.start());
+//
+//            while (true) {
+//                auto type_node = parser->parse_expression(
+//                    r,
+//                    static_cast<uint8_t>(precedence_t::variable));
+//                symbol_node->lhs->children.push_back(type_node);
+//
+//                if (parser->peek(token_types_t::comma)) {
+//                    parser->consume();
+//                } else {
+//                    token_t greater_than;
+//                    greater_than.type = token_types_t::greater_than;
+//                    if (!parser->expect(r, greater_than))
+//                        return nullptr;
+//                    symbol_node->lhs->location.end(greater_than.location.end());
+//                    break;
+//                }
+//            }
+//        }
+
         if (lhs != nullptr
         &&  (lhs->token.is_block_comment() || lhs->token.is_line_comment())) {
             symbol_node->children.push_back(lhs);
@@ -237,9 +260,10 @@ namespace basecode::syntax {
                     r,
                     static_cast<uint8_t>(precedence_t::variable));
             } else {
+                // XXX: this sucks, fix it
                 expr = parser
                     ->ast_builder()
-                    ->spread_operator_node();
+                    ->spread_operator_node(s_spread_operator_literal);
             }
 
             // right square bracket
@@ -620,7 +644,7 @@ namespace basecode::syntax {
             common::result& r,
             parser* parser,
             token_t& token) {
-        return parser->ast_builder()->spread_operator_node();
+        return parser->ast_builder()->spread_operator_node(token);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -775,7 +799,9 @@ namespace basecode::syntax {
             return nullptr;
 
         collect_comments(r, parser, for_node->comments);
-        for_node->rhs = parser->parse_expression(r, 0);
+        for_node->rhs = parser->parse_expression(
+            r,
+            static_cast<uint8_t>(precedence_t::variable));
         collect_comments(r, parser, for_node->comments);
 
         for_node->children.push_back(parser->parse_expression(r, 0));
@@ -1133,30 +1159,30 @@ namespace basecode::syntax {
             parser* parser,
             const ast_node_shared_ptr& lhs,
             token_t& token) {
-        if (lhs->type == ast_node_types_t::symbol) {
-            parser->use_global_comma_precedence();
-            defer(parser->use_default_comma_precedence());
-
-            auto proc_call_node = parser->ast_builder()->proc_call_node();
-            proc_call_node->lhs = lhs;
-            proc_call_node->location.start(lhs->location.start());
-
-            if (!parser->peek(token_types_t::right_paren)) {
-                pairs_to_list(
-                    proc_call_node->rhs,
-                    parser->parse_expression(r, 0));
-            }
-
-            token_t right_paren_token;
-            right_paren_token.type = token_types_t::right_paren;
-            if (!parser->expect(r, right_paren_token))
-                return nullptr;
-            proc_call_node->location.end(right_paren_token.location.end());
-
-            return proc_call_node;
-        } else {
+        if (lhs->type != ast_node_types_t::symbol)
             return create_expression_node(r, parser, lhs, token);
+
+        parser->use_global_comma_precedence();
+        defer(parser->use_default_comma_precedence());
+
+        auto proc_call_node = parser->ast_builder()->proc_call_node();
+        proc_call_node->location.start(lhs->location.start());
+        proc_call_node->lhs->rhs = lhs;
+
+        if (!parser->peek(token_types_t::right_paren)) {
+            pairs_to_list(
+                proc_call_node->rhs,
+                parser->parse_expression(r, 0));
         }
+
+        token_t right_paren_token;
+        right_paren_token.type = token_types_t::right_paren;
+        if (!parser->expect(r, right_paren_token))
+            return nullptr;
+
+        proc_call_node->location.end(right_paren_token.location.end());
+
+        return proc_call_node;
     }
 
     precedence_t proc_call_infix_parser::precedence() const {

@@ -81,6 +81,7 @@ namespace basecode::syntax {
         switch_expression,
         struct_expression,
         import_expression,
+        proc_call_binding,
         continue_statement,
         subscript_operator,
         with_member_access,
@@ -147,6 +148,7 @@ namespace basecode::syntax {
         {ast_node_types_t::struct_expression, "struct_expression"},
         {ast_node_types_t::character_literal, "character_literal"},
         {ast_node_types_t::module_expression, "module_expression"},
+        {ast_node_types_t::proc_call_binding, "proc_call_binding"},
         {ast_node_types_t::elseif_expression, "elseif_expression"},
         {ast_node_types_t::with_member_access, "with_member_access"},
         {ast_node_types_t::subscript_operator, "subscript_operator"},
@@ -299,11 +301,11 @@ namespace basecode::syntax {
 
         ast_node_shared_ptr type_identifier_node();
 
-        ast_node_shared_ptr spread_operator_node();
-
         ast_node_shared_ptr tuple_expression_node();
 
         ast_node_shared_ptr array_expression_node();
+
+        ast_node_shared_ptr proc_call_binding_node();
 
         ast_node_shared_ptr subscript_operator_node();
 
@@ -384,6 +386,8 @@ namespace basecode::syntax {
         ast_node_shared_ptr unary_operator_node(const token_t& token);
 
         ast_node_shared_ptr boolean_literal_node(const token_t& token);
+
+        ast_node_shared_ptr spread_operator_node(const token_t& token);
 
         ast_node_shared_ptr character_literal_node(const token_t& token);
 

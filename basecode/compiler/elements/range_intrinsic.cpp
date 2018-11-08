@@ -35,28 +35,10 @@ namespace basecode::compiler {
     bool range_intrinsic::on_infer_type(
             compiler::session& session,
             infer_type_result_t& result) {
-        auto& builder = session.builder();
         auto& scope_manager = session.scope_manager();
-        auto int_type = scope_manager.find_type(qualified_symbol_t {
-            .name = "s32"
+        result.inferred_type = scope_manager.find_type(qualified_symbol_t {
+            .name = "s64"
         });
-
-        compiler::element_list_t subscripts {};
-        auto array_type = builder.make_array_type(
-            scope_manager.current_scope(),
-            session.program().block(),
-            builder.make_type_reference(
-                scope_manager.current_scope(),
-                int_type->symbol()->qualified_symbol(),
-                int_type),
-            subscripts);
-
-        result.inferred_type = array_type;
-        result.reference = builder.make_type_reference(
-            scope_manager.current_scope(),
-            array_type->symbol()->qualified_symbol(),
-            array_type);
-
         return true;
     }
 

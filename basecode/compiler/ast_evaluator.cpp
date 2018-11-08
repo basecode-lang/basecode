@@ -1230,7 +1230,7 @@ namespace basecode::compiler {
         auto& scope_manager = _session.scope_manager();
 
         qualified_symbol_t qualified_symbol {};
-        builder.make_qualified_symbol(qualified_symbol, context.node->lhs.get());
+        builder.make_qualified_symbol(qualified_symbol, context.node->lhs->rhs.get());
 
         compiler::argument_list* args = nullptr;
         auto argument_list = evaluate(context.node->rhs.get());
@@ -1655,6 +1655,12 @@ namespace basecode::compiler {
             infer_type_result_t infer_type_result {};
             if (rhs->infer_type(_session, infer_type_result)) {
                 type_ref = infer_type_result.reference;
+                if (type_ref == nullptr) {
+                    type_ref = builder.make_type_reference(
+                        scope_manager.current_scope(),
+                        infer_type_result.inferred_type->symbol()->qualified_symbol(),
+                        infer_type_result.inferred_type);
+                }
             } else {
                 // XXX: error
                 return false;

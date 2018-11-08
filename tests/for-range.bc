@@ -7,20 +7,18 @@ low  := 0;
 high := 10;
 step := 2;
 
-support::print("EXCLUSIVE := %d\n", EXCLUSIVE);
-
-for x in range(low, high) {
+for x in range<s32>(low, high) {
     support::print("x := %d\n", x);
 };
 
-for x in range(kind := EXCLUSIVE, dir := REVERSE, low, high, step) {
+for x in range<s32>(kind := EXCLUSIVE, dir := REVERSE, low, high, step) {
     support::print("x := %d\n", x);
 };
 
-for x in range(low, high, dir := REVERSE) {
+for x in range<s32>(low, high, dir := REVERSE) {
     support::print("x := %d\n", x);
 };
 
-for x in range(low, high, step, dir := REVERSE) {
+for x in range<s32>(low, high, step, dir := REVERSE) {
     support::print("x := %d\n", x);
 };
