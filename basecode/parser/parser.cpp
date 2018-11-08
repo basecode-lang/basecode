@@ -35,14 +35,14 @@ namespace basecode::syntax {
             auto type_parameter_node = parser->ast_builder()->type_parameter_node();
             type_parameter_node->rhs = parser->parse_expression(
                 r,
-                static_cast<uint8_t>(precedence_t::variable));
+                precedence_t::variable);
 
             if (parser->peek(token_types_t::colon)) {
                 parser->consume();
                 type_parameter_node->lhs = parser->expect_expression(
                     r,
                     ast_node_types_t::tuple_expression,
-                    static_cast<uint8_t>(precedence_t::variable));
+                    precedence_t::variable);
                 if (r.is_failed())
                     return false;
             }
@@ -138,7 +138,7 @@ namespace basecode::syntax {
         if (!parser->expect(r, left_paren))
             return nullptr;
 
-        module_expression_node->rhs = parser->parse_expression(r, 0);
+        module_expression_node->rhs = parser->parse_expression(r);
 
         token_t right_paren;
         right_paren.type = token_types_t::right_paren;
@@ -185,7 +185,7 @@ namespace basecode::syntax {
 //            while (true) {
 //                auto type_node = parser->parse_expression(
 //                    r,
-//                    static_cast<uint8_t>(precedence_t::variable));
+//                    precedence_t::variable);
 //                symbol_node->lhs->children.push_back(type_node);
 //
 //                if (parser->peek(token_types_t::comma)) {
@@ -217,7 +217,7 @@ namespace basecode::syntax {
             const ast_node_shared_ptr& lhs,
             token_t& token) {
         auto node = parser->ast_builder()->expression_node();
-        node->lhs = parser->parse_expression(r, 0);
+        node->lhs = parser->parse_expression(r);
 
         token_t right_paren_token;
         right_paren_token.type = token_types_t::right_paren;
@@ -258,7 +258,7 @@ namespace basecode::syntax {
             if (!parser->peek(token_types_t::right_square_bracket)) {
                 expr = parser->parse_expression(
                     r,
-                    static_cast<uint8_t>(precedence_t::variable));
+                    precedence_t::variable);
             } else {
                 // XXX: this sucks, fix it
                 expr = parser
@@ -347,7 +347,7 @@ namespace basecode::syntax {
         if (!parser->expect(r, left_paren))
             return nullptr;
 
-        cast_node->rhs = parser->parse_expression(r, 0);
+        cast_node->rhs = parser->parse_expression(r);
 
         token_t right_paren;
         right_paren.type = token_types_t::right_paren;
@@ -384,7 +384,7 @@ namespace basecode::syntax {
         if (!parser->expect(r, left_paren))
             return nullptr;
 
-        transmute_node->rhs = parser->parse_expression(r, 0);
+        transmute_node->rhs = parser->parse_expression(r);
 
         token_t right_paren;
         right_paren.type = token_types_t::right_paren;
@@ -442,7 +442,7 @@ namespace basecode::syntax {
         auto from_node = parser
             ->ast_builder()
             ->from_node(token);
-        from_node->rhs = parser->parse_expression(r, 0);
+        from_node->rhs = parser->parse_expression(r);
         return from_node;
     }
 
@@ -522,7 +522,9 @@ namespace basecode::syntax {
         if (!parser->expect(r, left_paren))
             return nullptr;
 
-        pairs_to_list(node->rhs, parser->parse_expression(r, 0));
+        pairs_to_list(
+            node->rhs,
+            parser->parse_expression(r));
 
         token_t right_paren;
         right_paren.type = token_types_t::right_paren;
@@ -559,7 +561,9 @@ namespace basecode::syntax {
         if (!parser->expect(r, left_paren))
             return nullptr;
 
-        pairs_to_list(node->rhs, parser->parse_expression(r, 0));
+        pairs_to_list(
+            node->rhs,
+            parser->parse_expression(r));
 
         token_t right_paren;
         right_paren.type = token_types_t::right_paren;
@@ -599,7 +603,9 @@ namespace basecode::syntax {
         if (!parser->expect(r, left_paren))
             return nullptr;
 
-        pairs_to_list(node->rhs, parser->parse_expression(r, 0));
+        pairs_to_list(
+            node->rhs,
+            parser->parse_expression(r));
 
         token_t right_paren;
         right_paren.type = token_types_t::right_paren;
@@ -627,7 +633,9 @@ namespace basecode::syntax {
         if (!parser->expect(r, left_paren))
             return nullptr;
 
-        pairs_to_list(node->rhs, parser->parse_expression(r, 0));
+        pairs_to_list(
+            node->rhs,
+            parser->parse_expression(r));
 
         token_t right_paren;
         right_paren.type = token_types_t::right_paren;
@@ -683,10 +691,10 @@ namespace basecode::syntax {
         auto while_node = parser->ast_builder()->while_node(token);
 
         collect_comments(r, parser, while_node->comments);
-        while_node->lhs = parser->parse_expression(r, 0);
+        while_node->lhs = parser->parse_expression(r);
 
         collect_comments(r, parser, while_node->comments);
-        while_node->rhs = parser->parse_expression(r, 0);
+        while_node->rhs = parser->parse_expression(r);
 
         return while_node;
     }
@@ -704,12 +712,12 @@ namespace basecode::syntax {
         //      then create a binary operator for with_node->lhs instead of
         //      just assigning the expression
         collect_comments(r, parser, with_node->comments);
-        with_node->lhs = parser->parse_expression(r, 0);
+        with_node->lhs = parser->parse_expression(r);
 
         parser->ast_builder()->push_with(with_node);
 
         collect_comments(r, parser, with_node->comments);
-        with_node->rhs = parser->parse_expression(r, 0);
+        with_node->rhs = parser->parse_expression(r);
 
         parser->ast_builder()->pop_with();
 
@@ -724,7 +732,7 @@ namespace basecode::syntax {
             token_t& token) {
         auto defer_node = parser->ast_builder()->defer_node(token);
         collect_comments(r, parser, defer_node->comments);
-        defer_node->lhs = parser->parse_expression(r, 0);
+        defer_node->lhs = parser->parse_expression(r);
         return defer_node;
     }
 
@@ -738,7 +746,7 @@ namespace basecode::syntax {
         if (!create_type_parameter_nodes(r, parser, union_node->lhs))
             return nullptr;
         collect_comments(r, parser, union_node->comments);
-        union_node->rhs = parser->parse_expression(r, 0);
+        union_node->rhs = parser->parse_expression(r);
         return union_node;
     }
 
@@ -749,7 +757,7 @@ namespace basecode::syntax {
             parser* parser,
             token_t& token) {
         auto namespace_node = parser->ast_builder()->namespace_node(token);
-        namespace_node->rhs = parser->parse_expression(r, 0);
+        namespace_node->rhs = parser->parse_expression(r);
         return namespace_node;
     }
 
@@ -763,7 +771,7 @@ namespace basecode::syntax {
         if (!create_type_parameter_nodes(r, parser, struct_node->lhs))
             return nullptr;
         collect_comments(r, parser, struct_node->comments);
-        struct_node->rhs = parser->parse_expression(r, 0);
+        struct_node->rhs = parser->parse_expression(r);
         return struct_node;
     }
 
@@ -777,7 +785,7 @@ namespace basecode::syntax {
         if (!create_type_parameter_nodes(r, parser, enum_node->lhs))
             return nullptr;
         collect_comments(r, parser, enum_node->comments);
-        enum_node->rhs = parser->parse_expression(r, 0);
+        enum_node->rhs = parser->parse_expression(r);
         return enum_node;
     }
 
@@ -790,7 +798,7 @@ namespace basecode::syntax {
         auto for_node = parser->ast_builder()->for_in_node(token);
 
         collect_comments(r, parser, for_node->comments);
-        for_node->lhs = parser->parse_expression(r, 0);
+        for_node->lhs = parser->parse_expression(r);
         collect_comments(r, parser, for_node->comments);
 
         token_t in_token;
@@ -801,10 +809,10 @@ namespace basecode::syntax {
         collect_comments(r, parser, for_node->comments);
         for_node->rhs = parser->parse_expression(
             r,
-            static_cast<uint8_t>(precedence_t::variable));
+            precedence_t::variable);
         collect_comments(r, parser, for_node->comments);
 
-        for_node->children.push_back(parser->parse_expression(r, 0));
+        for_node->children.push_back(parser->parse_expression(r));
 
         return for_node;
     }
@@ -818,7 +826,7 @@ namespace basecode::syntax {
         auto return_node = parser->ast_builder()->return_node(token);
         if (parser->peek(token_types_t::semi_colon))
             return return_node;
-        pairs_to_list(return_node->rhs, parser->parse_expression(r, 0));
+        pairs_to_list(return_node->rhs, parser->parse_expression(r));
         return return_node;
     }
 
@@ -831,10 +839,10 @@ namespace basecode::syntax {
         auto if_node = parser->ast_builder()->if_node(token);
         collect_comments(r, parser, if_node->comments);
 
-        if_node->lhs = parser->parse_expression(r, 0);
+        if_node->lhs = parser->parse_expression(r);
         collect_comments(r, parser, if_node->comments);
 
-        if_node->children.push_back(parser->parse_expression(r, 0));
+        if_node->children.push_back(parser->parse_expression(r));
 
         auto current_branch = if_node;
         while (true) {
@@ -849,11 +857,11 @@ namespace basecode::syntax {
             current_branch->rhs = parser->ast_builder()->else_if_node(else_if_token);
             collect_comments(r, parser, current_branch->rhs->comments);
 
-            current_branch->rhs->lhs = parser->parse_expression(r, 0);
+            current_branch->rhs->lhs = parser->parse_expression(r);
 
             collect_comments(r, parser, current_branch->rhs->comments);
 
-            current_branch->rhs->children.push_back(parser->parse_expression(r, 0));
+            current_branch->rhs->children.push_back(parser->parse_expression(r));
 
             current_branch = current_branch->rhs;
         }
@@ -866,7 +874,7 @@ namespace basecode::syntax {
             current_branch->rhs = parser->ast_builder()->else_node(else_token);
             collect_comments(r, parser, current_branch->rhs->comments);
 
-            current_branch->rhs->children.push_back(parser->parse_expression(r, 0));
+            current_branch->rhs->children.push_back(parser->parse_expression(r));
         }
 
         collect_comments(
@@ -914,7 +922,7 @@ namespace basecode::syntax {
             return nullptr;
 
         if (!parser->peek(token_types_t::right_paren)) {
-            pairs_to_list(proc_node->rhs, parser->parse_expression(r, 0));
+            pairs_to_list(proc_node->rhs, parser->parse_expression(r));
         }
 
         token_t right_paren_token;
@@ -923,15 +931,17 @@ namespace basecode::syntax {
             return nullptr;
 
         if (parser->peek(token_types_t::colon)) {
-            pairs_to_list(proc_node->lhs->rhs, parser->parse_expression(r, 0));
+            pairs_to_list(
+                proc_node->lhs->rhs,
+                parser->parse_expression(r));
         }
 
         while (parser->peek(token_types_t::attribute)) {
-            proc_node->attributes.push_back(parser->parse_expression(r, 0));
+            proc_node->attributes.push_back(parser->parse_expression(r));
         }
 
         if (!parser->peek(token_types_t::semi_colon)) {
-            proc_node->children.push_back(parser->parse_expression(r, 0));
+            proc_node->children.push_back(parser->parse_expression(r));
         }
 
         return proc_node;
@@ -949,8 +959,7 @@ namespace basecode::syntax {
     ///////////////////////////////////////////////////////////////////////////
 
     unary_operator_prefix_parser::unary_operator_prefix_parser(
-        precedence_t precedence) : _precedence(precedence) {
-
+            precedence_t precedence) noexcept : _precedence(precedence) {
     }
 
     ast_node_shared_ptr unary_operator_prefix_parser::parse(
@@ -960,9 +969,7 @@ namespace basecode::syntax {
         auto unary_operator_node = parser
             ->ast_builder()
             ->unary_operator_node(token);
-        auto rhs = parser->parse_expression(
-            r,
-            static_cast<uint8_t>(_precedence));
+        auto rhs = parser->parse_expression(r, _precedence);
         if (rhs == nullptr) {
             parser->error(
                 r,
@@ -986,7 +993,7 @@ namespace basecode::syntax {
         switch (token.type) {
             case token_types_t::import_literal: {
                 auto import_node = parser->ast_builder()->import_node(token);
-                import_node->lhs = parser->parse_expression(r, 0);
+                import_node->lhs = parser->parse_expression(r);
                 if (import_node->lhs == nullptr) {
                     parser->error(
                         r,
@@ -999,7 +1006,7 @@ namespace basecode::syntax {
                     token_t from_token;
                     parser->current(from_token);
                     parser->consume();
-                    import_node->rhs = parser->parse_expression(r, 0);
+                    import_node->rhs = parser->parse_expression(r);
                     if (import_node->rhs == nullptr) {
                         parser->error(
                             r,
@@ -1015,14 +1022,14 @@ namespace basecode::syntax {
             case token_types_t::break_literal: {
                 auto break_node = parser->ast_builder()->break_node(token);
                 if (parser->peek(syntax::token_types_t::label)) {
-                    break_node->lhs = parser->parse_expression(r, 0);
+                    break_node->lhs = parser->parse_expression(r);
                 }
                 return break_node;
             }
             case token_types_t::continue_literal: {
                 auto continue_node = parser->ast_builder()->continue_node(token);
                 if (parser->peek(syntax::token_types_t::label)) {
-                    continue_node->lhs = parser->parse_expression(r, 0);
+                    continue_node->lhs = parser->parse_expression(r);
                 }
                 return continue_node;
             }
@@ -1159,9 +1166,6 @@ namespace basecode::syntax {
             parser* parser,
             const ast_node_shared_ptr& lhs,
             token_t& token) {
-        if (lhs->type != ast_node_types_t::symbol)
-            return create_expression_node(r, parser, lhs, token);
-
         parser->use_global_comma_precedence();
         defer(parser->use_default_comma_precedence());
 
@@ -1172,7 +1176,7 @@ namespace basecode::syntax {
         if (!parser->peek(token_types_t::right_paren)) {
             pairs_to_list(
                 proc_call_node->rhs,
-                parser->parse_expression(r, 0));
+                parser->parse_expression(r));
         }
 
         token_t right_paren_token;
@@ -1209,7 +1213,7 @@ namespace basecode::syntax {
     binary_operator_infix_parser::binary_operator_infix_parser(
             precedence_t precedence,
             bool is_right_associative,
-            bool with_assignment) : _precedence(precedence),
+            bool with_assignment) noexcept : _precedence(precedence),
                                     _with_assignment(with_assignment),
                                     _is_right_associative(is_right_associative) {
     }
@@ -1219,7 +1223,7 @@ namespace basecode::syntax {
             parser* parser,
             const ast_node_shared_ptr& lhs,
             token_t& token) {
-        auto associative_precedence = static_cast<uint8_t>(
+        auto associative_precedence = static_cast<precedence_t>(
             static_cast<uint8_t>(_precedence) - (_is_right_associative ? 1 : 0));
         auto rhs = parser->parse_expression(r, associative_precedence);
         if (rhs == nullptr) {
@@ -1310,7 +1314,7 @@ namespace basecode::syntax {
         if (token.value == "type") {
             directive_node->lhs = create_type_identifier_node(r, parser, token);
         } else {
-            directive_node->lhs = parser->parse_expression(r, 0);
+            directive_node->lhs = parser->parse_expression(r);
         }
         return directive_node;
     }
@@ -1326,7 +1330,7 @@ namespace basecode::syntax {
         ||  parser->peek(token_types_t::attribute)) {
             return attribute_node;
         }
-        attribute_node->lhs = parser->parse_expression(r, 0);
+        attribute_node->lhs = parser->parse_expression(r);
         return attribute_node;
     }
 
@@ -1348,7 +1352,7 @@ namespace basecode::syntax {
         }
 
         subscript_node->lhs = lhs;
-        subscript_node->rhs = parser->parse_expression(r, 0);
+        subscript_node->rhs = parser->parse_expression(r);
 
         token_t right_bracket_token;
         right_bracket_token.type = token_types_t::right_square_bracket;
@@ -1440,20 +1444,20 @@ namespace basecode::syntax {
         return !_tokens.empty();
     }
 
-    uint8_t parser::comma_precedence() const {
-        return static_cast<uint8_t>(s_comma_infix_parser.precedence());
+    precedence_t parser::comma_precedence() const {
+        return s_comma_infix_parser.precedence();
     }
 
-    uint8_t parser::current_infix_precedence() {
+    precedence_t parser::current_infix_precedence() {
         if (!look_ahead(0))
-            return 0;
+            return precedence_t::lowest;
 
         auto& token = _tokens.front();
         auto infix_parser = infix_parser_for(token.type);
         if (infix_parser != nullptr)
-            return static_cast<uint8_t>(infix_parser->precedence());
+            return infix_parser->precedence();
 
-        return 0;
+        return precedence_t::lowest;
     }
 
     syntax::ast_builder* parser::ast_builder() {
@@ -1474,7 +1478,7 @@ namespace basecode::syntax {
 
     ast_node_shared_ptr parser::parse_expression(
             common::result& r,
-            uint8_t precedence) {
+            precedence_t precedence) {
         token_t token;
         if (!consume(token))
             return nullptr;
@@ -1528,7 +1532,7 @@ namespace basecode::syntax {
     ast_node_shared_ptr parser::expect_expression(
             common::result& r,
             ast_node_types_t expected_type,
-            uint8_t precedence) {
+            precedence_t precedence) {
         auto node = parse_expression(r, precedence);
         if (node == nullptr)
             return nullptr;
@@ -1548,8 +1552,8 @@ namespace basecode::syntax {
         return node;
     }
 
-    uint8_t parser::assignment_precedence() const {
-        return static_cast<uint8_t>(s_assignment_infix_parser.precedence());
+    precedence_t parser::assignment_precedence() const {
+        return s_assignment_infix_parser.precedence();
     }
 
     ast_node_shared_ptr parser::parse(common::result& r) {
@@ -1615,7 +1619,7 @@ namespace basecode::syntax {
         }
 
         while (peek(token_types_t::attribute)) {
-            scope->attributes.push_back(parse_expression(r, 0));
+            scope->attributes.push_back(parse_expression(r));
         }
 
         return _ast_builder.end_scope();
@@ -1630,7 +1634,7 @@ namespace basecode::syntax {
             if (peek(token_types_t::right_curly_brace))
                 return statement_node;
 
-            auto expr = parse_expression(r, 0);
+            auto expr = parse_expression(r);
             if (expr == nullptr)
                 return statement_node;
 

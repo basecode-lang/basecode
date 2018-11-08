@@ -25,7 +25,8 @@
 namespace basecode::syntax {
 
     enum class precedence_t : uint8_t {
-        assignment = 1,
+        lowest,
+        assignment,
         comma,
         conditional,
         sum,
@@ -167,7 +168,7 @@ namespace basecode::syntax {
         binary_operator_infix_parser(
             precedence_t precedence,
             bool is_right_associative,
-            bool with_assignment = false);
+            bool with_assignment = false) noexcept;
 
         ast_node_shared_ptr parse(
             common::result& r,
@@ -519,7 +520,7 @@ namespace basecode::syntax {
 
     class unary_operator_prefix_parser : public prefix_parser {
     public:
-        explicit unary_operator_prefix_parser(precedence_t precedence);
+        explicit unary_operator_prefix_parser(precedence_t precedence) noexcept;
 
         ast_node_shared_ptr parse(
             common::result& r,
@@ -706,24 +707,24 @@ namespace basecode::syntax {
             common::result& r,
             token_t& token);
 
-        uint8_t comma_precedence() const;
-
         syntax::ast_builder* ast_builder();
 
         void use_global_comma_precedence();
 
         void use_default_comma_precedence();
 
-        uint8_t assignment_precedence() const;
-
         ast_node_shared_ptr parse_expression(
             common::result& r,
-            uint8_t precedence);
+            precedence_t precedence = precedence_t::lowest);
 
         ast_node_shared_ptr expect_expression(
             common::result& r,
             ast_node_types_t expected_type,
-            uint8_t precedence);
+            precedence_t precedence = precedence_t::lowest);
+
+        precedence_t comma_precedence() const;
+
+        precedence_t assignment_precedence() const;
 
         ast_node_shared_ptr parse(common::result& r);
 
@@ -733,7 +734,7 @@ namespace basecode::syntax {
         ast_node_shared_ptr parse_statement(common::result& r);
 
     private:
-        uint8_t current_infix_precedence();
+        precedence_t current_infix_precedence();
 
         infix_parser* infix_parser_for(token_types_t type);
 
