@@ -242,6 +242,30 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    class subscript_declaration_prefix_parser : public prefix_parser {
+    public:
+        subscript_declaration_prefix_parser() = default;
+
+        ast_node_shared_ptr parse(
+            common::result& r,
+            parser* parser,
+            token_t& token) override;
+    };
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    class pointer_declaration_prefix_parser : public prefix_parser {
+    public:
+        pointer_declaration_prefix_parser() = default;
+
+        ast_node_shared_ptr parse(
+            common::result& r,
+            parser* parser,
+            token_t& token) override;
+    };
+
+    ///////////////////////////////////////////////////////////////////////////
+
     class with_member_access_prefix_parser : public prefix_parser {
     public:
         with_member_access_prefix_parser() = default;
@@ -461,18 +485,6 @@ namespace basecode::syntax {
     class if_prefix_parser : public prefix_parser {
     public:
         if_prefix_parser() = default;
-
-        ast_node_shared_ptr parse(
-            common::result& r,
-            parser* parser,
-            token_t& token) override;
-    };
-
-    ///////////////////////////////////////////////////////////////////////////
-
-    class type_identifier_prefix_parser : public prefix_parser {
-    public:
-        type_identifier_prefix_parser() = default;
 
         ast_node_shared_ptr parse(
             common::result& r,
@@ -771,13 +783,14 @@ namespace basecode::syntax {
         static inline map_expression_prefix_parser s_map_expression_prefix_parser {};
         static inline new_expression_prefix_parser s_new_expression_prefix_parser {};
         static inline keyword_literal_prefix_parser s_keyword_literal_prefix_parser {};
-        static inline type_identifier_prefix_parser s_type_identifier_prefix_parser {};
         static inline proc_expression_prefix_parser s_proc_expression_prefix_parser {};
         static inline array_expression_prefix_parser s_array_expression_prefix_parser {};
         static inline tuple_expression_prefix_parser s_tuple_expression_prefix_parser {};
         static inline with_member_access_prefix_parser s_with_member_access_prefix_parser {};
         static inline unary_operator_prefix_parser s_negate_prefix_parser {precedence_t::sum};
         static inline unary_operator_prefix_parser s_not_prefix_parser {precedence_t::prefix};
+        static inline pointer_declaration_prefix_parser s_pointer_declaration_prefix_parser {};
+        static inline subscript_declaration_prefix_parser s_subscript_declaration_prefix_parser {};
         static inline unary_operator_prefix_parser s_binary_not_prefix_parser {precedence_t::prefix};
 
         static inline std::unordered_map<token_types_t, prefix_parser*> s_prefix_parsers = {
@@ -813,7 +826,6 @@ namespace basecode::syntax {
             {token_types_t::map_literal,         &s_map_expression_prefix_parser},
             {token_types_t::new_literal,         &s_new_expression_prefix_parser},
             {token_types_t::while_literal,       &s_while_statement_prefix_parser},
-            {token_types_t::colon,               &s_type_identifier_prefix_parser},
             {token_types_t::proc_literal,        &s_proc_expression_prefix_parser},
             {token_types_t::true_literal,        &s_keyword_literal_prefix_parser},
             {token_types_t::nil_literal,         &s_keyword_literal_prefix_parser},
@@ -824,6 +836,8 @@ namespace basecode::syntax {
             {token_types_t::array_literal,       &s_array_expression_prefix_parser},
             {token_types_t::tuple_literal,       &s_tuple_expression_prefix_parser},
             {token_types_t::period,              &s_with_member_access_prefix_parser},
+            {token_types_t::caret,               &s_pointer_declaration_prefix_parser},
+            {token_types_t::left_square_bracket, &s_subscript_declaration_prefix_parser},
         };
 
         static inline cast_infix_parser s_cast_infix_parser {};

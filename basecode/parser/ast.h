@@ -85,12 +85,14 @@ namespace basecode::syntax {
         continue_statement,
         subscript_operator,
         with_member_access,
+        pointer_declaration,
         type_parameter_list,
         constant_assignment,
         namespace_expression,
         return_argument_list,
         array_subscript_list,
         transmute_expression,
+        subscript_declaration,
         assignment_source_list,
         assignment_target_list,
     };
@@ -153,12 +155,14 @@ namespace basecode::syntax {
         {ast_node_types_t::with_member_access, "with_member_access"},
         {ast_node_types_t::subscript_operator, "subscript_operator"},
         {ast_node_types_t::continue_statement, "continue_statement"},
+        {ast_node_types_t::pointer_declaration, "pointer_declaration"},
         {ast_node_types_t::type_parameter_list, "type_parameter_list"},
         {ast_node_types_t::constant_assignment, "constant_assignment"},
         {ast_node_types_t::transmute_expression, "transmute_expression"},
         {ast_node_types_t::namespace_expression, "namespace_expression"},
         {ast_node_types_t::return_argument_list, "return_argument_list"},
         {ast_node_types_t::array_subscript_list, "array_subscript_list"},
+        {ast_node_types_t::subscript_declaration, "subscript_declaration"},
         {ast_node_types_t::assignment_source_list, "assignment_source_list"},
         {ast_node_types_t::assignment_target_list, "assignment_target_list"},
     };
@@ -171,33 +175,8 @@ namespace basecode::syntax {
     }
 
     struct ast_node_t {
-        using flags_value_t = uint8_t;
-        enum flags_t : uint8_t {
-            none    = 0b00000000,
-            pointer = 0b00000001,
-            array   = 0b00000010,
-            spread  = 0b00000100,
-        };
-
-        bool is_array() const {
-            return ((flags & flags_t::array) != 0);
-        }
-
         bool is_label() const {
             return type == ast_node_types_t::label;
-        }
-
-        bool is_comment() const {
-            return type == ast_node_types_t::line_comment
-                || type == ast_node_types_t::block_comment;
-        }
-
-        bool is_spread() const {
-            return ((flags & flags_t::spread) != 0);
-        }
-
-        bool is_pointer() const {
-            return ((flags & flags_t::pointer) != 0);
         }
 
         std::string name() const {
@@ -235,7 +214,6 @@ namespace basecode::syntax {
         common::source_location location {};
         ast_node_shared_ptr lhs = nullptr;
         ast_node_shared_ptr rhs = nullptr;
-        flags_value_t flags = flags_t::none;
         ast_node_shared_ptr parent = nullptr;
     };
 
@@ -311,6 +289,8 @@ namespace basecode::syntax {
 
         ast_node_shared_ptr with_member_access_node();
 
+        ast_node_shared_ptr pointer_declaration_node();
+
         ast_node_shared_ptr constant_assignment_node();
 
         ast_node_shared_ptr type_parameter_list_node();
@@ -318,6 +298,8 @@ namespace basecode::syntax {
         ast_node_shared_ptr return_argument_list_node();
 
         ast_node_shared_ptr array_subscript_list_node();
+
+        ast_node_shared_ptr subscript_declaration_node();
 
         void push_scope(const ast_node_shared_ptr& node);
 

@@ -229,99 +229,6 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    static ast_node_shared_ptr create_type_identifier_node(
-            common::result& r,
-            parser* parser,
-            token_t& token) {
-        auto type_node = parser
-            ->ast_builder()
-            ->type_identifier_node();
-        type_node->location = token.location;
-
-        collect_comments(r, parser, type_node->comments);
-
-        auto is_spread = false;
-        auto is_pointer = false;
-
-        auto array_subscripts = parser
-            ->ast_builder()
-            ->array_subscript_list_node();
-        while (true) {
-            if (!parser->peek(token_types_t::left_square_bracket))
-                break;
-
-            // left square bracket
-            token_t left_square_bracket;
-            parser->consume(left_square_bracket);
-
-            ast_node_shared_ptr expr;
-            if (!parser->peek(token_types_t::right_square_bracket)) {
-                expr = parser->parse_expression(
-                    r,
-                    precedence_t::variable);
-            } else {
-                // XXX: this sucks, fix it
-                expr = parser
-                    ->ast_builder()
-                    ->spread_operator_node(s_spread_operator_literal);
-            }
-
-            // right square bracket
-            token_t right_square_bracket;
-            parser->consume(right_square_bracket);
-
-            expr->location.start(left_square_bracket.location.start());
-            expr->location.end(right_square_bracket.location.end());
-
-            array_subscripts->children.push_back(expr);
-        }
-
-        if (parser->peek(token_types_t::caret)) {
-            parser->consume();
-            is_pointer = true;
-        }
-
-        if (parser->peek(token_types_t::spread_operator)) {
-            parser->consume();
-            is_spread = true;
-        }
-
-        token_t type_identifier;
-        type_identifier.type = token_types_t::identifier;
-        if (!parser->expect(r, type_identifier)) {
-            parser->error(
-                r,
-                "B027",
-                "type expected.",
-                token.location);
-            return nullptr;
-        }
-
-        auto symbol_node = create_symbol_node(
-            r,
-            parser,
-            nullptr,
-            type_identifier);
-        type_node->lhs = symbol_node;
-        type_node->rhs = array_subscripts;
-        type_node->location.end(type_identifier.location.end());
-
-        if (!array_subscripts->children.empty())
-            type_node->flags |= ast_node_t::flags_t::array;
-
-        if (is_spread)
-            type_node->flags |= ast_node_t::flags_t::spread;
-
-        if (is_pointer)
-            type_node->flags |= ast_node_t::flags_t::pointer;
-
-        collect_comments(r, parser, type_node->comments);
-
-        return type_node;
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-
     static ast_node_shared_ptr create_cast_node(
             common::result& r,
             parser* parser,
@@ -335,7 +242,8 @@ namespace basecode::syntax {
         if (!parser->expect(r, less_than))
             return nullptr;
 
-        cast_node->lhs = create_type_identifier_node(r, parser, less_than);
+// XXX: fix this!
+//        cast_node->lhs = create_type_identifier_node(r, parser, less_than);
 
         token_t greater_than;
         greater_than.type = token_types_t::greater_than;
@@ -372,7 +280,8 @@ namespace basecode::syntax {
         if (!parser->expect(r, less_than))
             return nullptr;
 
-        transmute_node->lhs = create_type_identifier_node(r, parser, less_than);
+        // XXX: fix this!
+        //transmute_node->lhs = create_type_identifier_node(r, parser, less_than);
 
         token_t greater_than;
         greater_than.type = token_types_t::greater_than;
@@ -435,6 +344,46 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    ast_node_shared_ptr subscript_declaration_prefix_parser::parse(
+            common::result& r,
+            parser* parser,
+            token_t& token) {
+        auto decl_node = parser->ast_builder()->subscript_declaration_node();
+        if (!parser->peek(token_types_t::right_square_bracket)) {
+            decl_node->lhs = parser->parse_expression(r);
+        }
+        token_t right_square_bracket;
+        right_square_bracket.type = token_types_t::right_square_bracket;
+        if (!parser->expect(r, right_square_bracket))
+            return nullptr;
+
+        auto current_decl_node = decl_node;
+        while (true) {
+            if (parser->peek(token_types_t::semi_colon))
+                break;
+            auto node = parser->parse_expression(r, precedence_t::type);
+            current_decl_node->rhs = node;
+            if (node->type != ast_node_types_t::subscript_declaration)
+                break;
+            current_decl_node = node;
+        }
+
+        return decl_node;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    ast_node_shared_ptr pointer_declaration_prefix_parser::parse(
+            common::result& r,
+            parser* parser,
+            token_t& token) {
+        auto decl_node = parser->ast_builder()->pointer_declaration_node();
+        decl_node->rhs = parser->parse_expression(r, precedence_t::type);
+        return decl_node;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
     ast_node_shared_ptr from_prefix_parser::parse(
             common::result& r,
             parser* parser,
@@ -493,24 +442,24 @@ namespace basecode::syntax {
         if (!parser->expect(r, less_than))
             return nullptr;
 
-        // XXX: token isn't correct here; need to fix
-        auto key_type = create_type_identifier_node(
-            r,
-            parser,
-            less_than);
-        node->lhs->children.push_back(key_type);
+        // XXX: fix this!
+//        auto key_type = create_type_identifier_node(
+//            r,
+//            parser,
+//            less_than);
+//        node->lhs->children.push_back(key_type);
 
         token_t comma;
         comma.type = token_types_t::comma;
         if (!parser->expect(r, comma))
             return nullptr;
 
-        // XXX: token isn't correct here; need to fix
-        auto value_type = create_type_identifier_node(
-            r,
-            parser,
-            comma);
-        node->lhs->children.push_back(value_type);
+// XXX: fix this!
+//        auto value_type = create_type_identifier_node(
+//            r,
+//            parser,
+//            comma);
+//        node->lhs->children.push_back(value_type);
 
         token_t greater_than;
         greater_than.type = token_types_t::greater_than;
@@ -549,7 +498,8 @@ namespace basecode::syntax {
         if (!parser->expect(r, less_than))
             return nullptr;
 
-        node->lhs = create_type_identifier_node(r, parser, less_than);
+        // XXX: fix this!
+//        node->lhs = create_type_identifier_node(r, parser, less_than);
 
         token_t greater_than;
         greater_than.type = token_types_t::greater_than;
@@ -591,7 +541,8 @@ namespace basecode::syntax {
         if (!parser->expect(r, less_than))
             return nullptr;
 
-        node->lhs = create_type_identifier_node(r, parser, less_than);
+        // XXX: fix this!
+//        node->lhs = create_type_identifier_node(r, parser, less_than);
 
         token_t greater_than;
         greater_than.type = token_types_t::greater_than;
@@ -652,7 +603,9 @@ namespace basecode::syntax {
             common::result& r,
             parser* parser,
             token_t& token) {
-        return parser->ast_builder()->spread_operator_node(token);
+        auto node = parser->ast_builder()->spread_operator_node(token);
+        node->rhs = parser->parse_expression(r, precedence_t::variable);
+        return node;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -885,15 +838,6 @@ namespace basecode::syntax {
                 current_branch->comments);
 
         return if_node;
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-
-    ast_node_shared_ptr type_identifier_prefix_parser::parse(
-            common::result& r,
-            parser* parser,
-            token_t& token) {
-        return create_type_identifier_node(r, parser, token);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -1200,7 +1144,19 @@ namespace basecode::syntax {
             parser* parser,
             const ast_node_shared_ptr& lhs,
             token_t& token) {
-        lhs->rhs = create_type_identifier_node(r, parser, token);
+        auto node = parser->ast_builder()->type_identifier_node();
+        node->location.start(token.location.start());
+
+        collect_comments(r, parser, node->comments);
+
+        node->lhs = parser->parse_expression(r, precedence_t::type);
+//        node->rhs = parser->ast_builder()->array_subscript_list_node();
+        node->location.end(node->lhs->location.end());
+
+        collect_comments(r, parser, node->comments);
+
+        lhs->rhs = node;
+
         return lhs;
     }
 
@@ -1311,11 +1267,11 @@ namespace basecode::syntax {
         if (parser->peek(token_types_t::semi_colon)) {
             return directive_node;
         }
-        if (token.value == "type") {
-            directive_node->lhs = create_type_identifier_node(r, parser, token);
-        } else {
-            directive_node->lhs = parser->parse_expression(r);
-        }
+//        if (token.value == "type") {
+//            directive_node->lhs = create_type_identifier_node(r, parser, token);
+//        } else {
+        directive_node->lhs = parser->parse_expression(r);
+//        }
         return directive_node;
     }
 

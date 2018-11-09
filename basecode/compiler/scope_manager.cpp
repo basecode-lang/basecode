@@ -82,9 +82,10 @@ namespace basecode::compiler {
             result.type_name,
             type_node->lhs.get());
 
-        result.is_array = type_node->is_array();
-        result.is_spread = type_node->is_spread();
-        result.is_pointer = type_node->is_pointer();
+//        result.is_array = type_node->is_array();
+//        result.is_spread = type_node->is_spread();
+//        result.is_pointer = type_node->is_pointer();
+
         for (auto e : array_subscripts)
             result.array_subscripts.emplace_back(e);
 

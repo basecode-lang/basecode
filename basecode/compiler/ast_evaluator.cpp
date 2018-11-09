@@ -1574,30 +1574,30 @@ namespace basecode::compiler {
         auto is_dynamic = false;
         element_list_t array_subscripts {};
 
-        for (const auto& node : context.node->rhs->children) {
-            auto expr = resolve_symbol_or_evaluate(
-                context,
-                node.get());
-            if (expr->element_type() == element_type_t::spread) {
-                is_dynamic = true;
-            } else if (!expr->is_constant()) {
-                _session.error(
-                    "P002",
-                    "subscript size expressions must be constant.",
-                    expr->location());
-                return false;
-            }
-            if (expr != nullptr)
-                array_subscripts.emplace_back(expr);
-        }
+//        for (const auto& node : context.node->rhs->children) {
+//            auto expr = resolve_symbol_or_evaluate(
+//                context,
+//                node.get());
+//            if (expr->element_type() == element_type_t::spread) {
+//                is_dynamic = true;
+//            } else if (!expr->is_constant()) {
+//                _session.error(
+//                    "P002",
+//                    "subscript size expressions must be constant.",
+//                    expr->location());
+//                return false;
+//            }
+//            if (expr != nullptr)
+//                array_subscripts.emplace_back(expr);
+//        }
 
-        if (is_dynamic && array_subscripts.size() > 1) {
-            _session.error(
-                "P002",
-                "only one subscript is allowed for dynamic arrays.",
-                context.node->location);
-            return false;
-        }
+//        if (is_dynamic && array_subscripts.size() > 1) {
+//            _session.error(
+//                "P002",
+//                "only one subscript is allowed for dynamic arrays.",
+//                context.node->location);
+//            return false;
+//        }
 
         type_find_result_t find_type_result {};
         scope_manager.find_identifier_type(

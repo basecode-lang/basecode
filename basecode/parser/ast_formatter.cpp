@@ -103,17 +103,17 @@ namespace basecode::syntax {
                 details += fmt::format("| radix: {}", node->token.radix);
             }
 
-            if (node->is_pointer()) {
-                details += "| ptr:    true ";
-            }
-
-            if (node->is_array()) {
-                details += "| array:  true ";
-            }
-
-            if (node->is_spread()) {
-                details += "| spread: true ";
-            }
+//            if (node->is_pointer()) {
+//                details += "| ptr:    true ";
+//            }
+//
+//            if (node->is_array()) {
+//                details += "| array:  true ";
+//            }
+//
+//            if (node->is_spread()) {
+//                details += "| spread: true ";
+//            }
 
             details += "}";
         }
