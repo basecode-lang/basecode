@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <compiler/session.h>
 #include "spread_type.h"
 
 namespace basecode::compiler {
@@ -39,6 +40,11 @@ namespace basecode::compiler {
     void spread_type::on_owned_elements(element_list_t& list) {
         if (_type_ref != nullptr)
             list.emplace_back(_type_ref);
+    }
+
+    bool spread_type::on_initialize(compiler::session& session) {
+        symbol(session.builder().make_symbol(parent_scope(), "spread"));
+        return true;
     }
 
 };

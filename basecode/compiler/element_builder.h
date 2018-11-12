@@ -22,7 +22,7 @@ namespace basecode::compiler {
 
         spread_type* make_spread_type(
             compiler::block* parent_scope,
-            compiler::type_reference* type);
+            compiler::type_reference* type_ref);
 
         defer_element* make_defer(
             compiler::block* parent_scope,

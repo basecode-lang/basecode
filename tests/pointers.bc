@@ -1,3 +1,5 @@
+support :: module("support/module.bc");
+
 ARRAY_WIDTH  :: 4;
 ARRAY_HEIGHT :: 4;
 
@@ -8,25 +10,23 @@ k: [ARRAY_HEIGHT][ARRAY_WIDTH]s16;
 q: ^[]string;
 z: ^[]^[]^u64;
 
-//support :: module("support/module.bc");
-//
-//item :: struct {
-//    n: s32;
-//};
-//
-//// XXX: there's an ordering bug here
-////      defining the type alias before item is defined
-////      causes an error instead of it being resolved later
-//
-//id_t        :: #type u32;
-//item_ptr_t  :: #type ^item;
-//
-//items: ^item_ptr_t;
-//foo := items^;
-//
-//// alloc & free block of memory
-//'allocate_memory:
-//addr: ^u8;
-//addr := alloc(size_of(u16) * 4096);
-//support::print("addr := $%08x\n", addr);
-//free(addr);
+item :: struct {
+    n: s32;
+};
+
+// XXX: there's an ordering bug here
+//      defining the type alias before item is defined
+//      causes an error instead of it being resolved later
+
+id_t        :: #type u32;
+item_ptr_t  :: #type ^item;
+
+items: ^item_ptr_t;
+foo := items^;
+
+// alloc & free block of memory
+'allocate_memory:
+addr: ^u8;
+addr := alloc(size_of(u16) * 4096);
+support::print("addr := $%08x\n", addr);
+free(addr);

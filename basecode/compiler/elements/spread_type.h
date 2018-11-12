@@ -32,6 +32,8 @@ namespace basecode::compiler {
 
         void on_owned_elements(element_list_t& list) override;
 
+        bool on_initialize(compiler::session& session) override;
+
     private:
         compiler::type_reference* _type_ref = nullptr;
     };
