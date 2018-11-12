@@ -43,15 +43,15 @@ namespace basecode::compiler {
     public:
         explicit ast_evaluator(compiler::session& session);
 
-        element* evaluate(const syntax::ast_node_t* node);
+        compiler::element* evaluate(const syntax::ast_node_t* node);
 
     private:
-        element* convert_predicate(
+        compiler::element* convert_predicate(
             const evaluator_context_t& context,
             const syntax::ast_node_t* node,
             compiler::block* scope);
 
-        element* evaluate_in_scope(
+        compiler::element* evaluate_in_scope(
             const evaluator_context_t& context,
             const syntax::ast_node_t* node,
             compiler::block* scope);
@@ -199,7 +199,7 @@ namespace basecode::compiler {
             evaluator_context_t& context,
             evaluator_result_t& result);
 
-//        bool spread_operator(
+//        bool spread_type(
 //            evaluator_context_t& context,
 //            evaluator_result_t& result);
 

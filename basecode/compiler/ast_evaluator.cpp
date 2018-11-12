@@ -42,7 +42,7 @@ namespace basecode::compiler {
         {syntax::ast_node_types_t::unary_operator,          std::bind(&ast_evaluator::unary_operator, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::map_expression,          std::bind(&ast_evaluator::map_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::new_expression,          std::bind(&ast_evaluator::new_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-//        {syntax::ast_node_types_t::spread_operator,         std::bind(&ast_evaluator::spread_operator, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+//        {syntax::ast_node_types_t::spread_type,         std::bind(&ast_evaluator::spread_type, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::cast_expression,         std::bind(&ast_evaluator::cast_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::from_expression,         std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::proc_expression,         std::bind(&ast_evaluator::proc_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
@@ -160,7 +160,7 @@ namespace basecode::compiler {
         return nullptr;
     }
 
-    element* ast_evaluator::evaluate_in_scope(
+    compiler::element* ast_evaluator::evaluate_in_scope(
             const evaluator_context_t& context,
             const syntax::ast_node_t* node,
             compiler::block* scope) {
@@ -993,7 +993,7 @@ namespace basecode::compiler {
         return true;
     }
 
-//    bool ast_evaluator::spread_operator(
+//    bool ast_evaluator::spread_type(
 //            evaluator_context_t& context,
 //            evaluator_result_t& result) {
 //        compiler::element* expr = nullptr;
@@ -1582,8 +1582,11 @@ namespace basecode::compiler {
             current = current->rhs;
         }
 
+        compiler::element_list_t subscripts {};
         while (!type_nodes.empty()) {
-            auto current = type_nodes.top();
+            current = type_nodes.top();
+            type_nodes.pop();
+
             switch (current->type) {
                 case syntax::ast_node_types_t::symbol: {
                     qualified_symbol_t type_name{};
@@ -1608,7 +1611,7 @@ namespace basecode::compiler {
                     }
                     break;
                 }
-                case syntax::ast_node_types_t::spread_operator: {
+                case syntax::ast_node_types_t::spread_type: {
                     auto type = builder.make_spread_type(scope, type_decl_ref);
                     type_decl_ref = builder.make_type_reference(
                         scope,
@@ -1617,7 +1620,9 @@ namespace basecode::compiler {
                     break;
                 }
                 case syntax::ast_node_types_t::pointer_declaration: {
-                    auto type = scope_manager.find_pointer_type(type_decl_ref->type(), scope);
+                    auto type = scope_manager.find_pointer_type(
+                        type_decl_ref->type(),
+                        scope);
                     if (type == nullptr) {
                         type = builder.make_pointer_type(
                             scope,
@@ -1626,11 +1631,50 @@ namespace basecode::compiler {
                     }
                     type_decl_ref = builder.make_type_reference(
                         scope,
-                        type->symbol()->qualified_symbol(),
+                        qualified_symbol_t {},
                         type);
                     break;
                 }
                 case syntax::ast_node_types_t::subscript_declaration: {
+                    auto is_dynamic = current->lhs == nullptr;
+                    if (!is_dynamic) {
+                        subscripts.push_back(resolve_symbol_or_evaluate(
+                            context,
+                            current->lhs.get()));
+                    }
+
+                    while (!type_nodes.empty()) {
+                        auto subscript_node = type_nodes.top();
+                        if (subscript_node->type != syntax::ast_node_types_t::subscript_declaration)
+                            break;
+
+                        if (is_dynamic) {
+                            // XXX: error
+                            return false;
+                        }
+
+                        subscripts.push_back(resolve_symbol_or_evaluate(
+                            context,
+                            subscript_node->lhs.get()));
+
+                        type_nodes.pop();
+                    }
+
+                    auto type = scope_manager.find_array_type(
+                        type_decl_ref->type(),
+                        subscripts,
+                        scope);
+                    if (type == nullptr) {
+                        type = builder.make_array_type(
+                            scope,
+                            builder.make_block(scope, element_type_t::block),
+                            type_decl_ref,
+                            subscripts);
+                        type_decl_ref = builder.make_type_reference(
+                            scope,
+                            qualified_symbol_t {},
+                            type);
+                    }
                     break;
                 }
                 default: {
@@ -1638,7 +1682,6 @@ namespace basecode::compiler {
                     return false;
                 }
             }
-            type_nodes.pop();
         }
 
         result.element = type_decl_ref;

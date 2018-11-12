@@ -44,6 +44,7 @@ namespace basecode::syntax {
         basic_block,
         symbol_part,
         nil_literal,
+        spread_type,
         line_comment,
         block_comment,
         argument_list,
@@ -56,7 +57,6 @@ namespace basecode::syntax {
         new_expression,
         map_expression,
         type_parameter,
-        spread_operator,
         proc_expression,
         binary_operator,
         boolean_literal,
@@ -114,6 +114,7 @@ namespace basecode::syntax {
         {ast_node_types_t::basic_block, "basic_block"},
         {ast_node_types_t::symbol_part, "symbol_part"},
         {ast_node_types_t::nil_literal, "nil_literal"},
+        {ast_node_types_t::spread_type, "spread_type"},
         {ast_node_types_t::line_comment, "line_comment"},
         {ast_node_types_t::block_comment, "block_comment"},
         {ast_node_types_t::argument_list, "argument_list"},
@@ -136,7 +137,6 @@ namespace basecode::syntax {
         {ast_node_types_t::while_statement, "while_statement"},
         {ast_node_types_t::break_statement, "break_statement"},
         {ast_node_types_t::with_expression, "with_expression"},
-        {ast_node_types_t::spread_operator, "spread_operator"},
         {ast_node_types_t::type_declaration, "type_declaration"},
         {ast_node_types_t::tuple_expression, "tuple_expression"},
         {ast_node_types_t::defer_expression, "defer_expression"},
@@ -185,15 +185,6 @@ namespace basecode::syntax {
 
         bool is_attribute() const {
             return type == ast_node_types_t::attribute;
-        }
-
-        bool is_qualified_symbol() const {
-            return type == ast_node_types_t::symbol && children.size() > 1;
-        }
-
-        bool has_type_identifier() const {
-            return rhs != nullptr
-                && rhs->type == ast_node_types_t::type_declaration;
         }
 
         bool operator != (const ast_node_t& other) const {
@@ -353,6 +344,8 @@ namespace basecode::syntax {
 
         ast_node_shared_ptr raw_block_node(const token_t& token);
 
+        ast_node_shared_ptr spread_type_node(const token_t& token);
+
         ast_node_shared_ptr symbol_part_node(const token_t& token);
 
         ast_node_shared_ptr nil_literal_node(const token_t& token);
@@ -368,8 +361,6 @@ namespace basecode::syntax {
         ast_node_shared_ptr unary_operator_node(const token_t& token);
 
         ast_node_shared_ptr boolean_literal_node(const token_t& token);
-
-        ast_node_shared_ptr spread_operator_node(const token_t& token);
 
         ast_node_shared_ptr character_literal_node(const token_t& token);
 

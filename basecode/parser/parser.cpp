@@ -603,7 +603,7 @@ namespace basecode::syntax {
             common::result& r,
             parser* parser,
             token_t& token) {
-        auto node = parser->ast_builder()->spread_operator_node(token);
+        auto node = parser->ast_builder()->spread_type_node(token);
         node->rhs = parser->parse_expression(r, precedence_t::variable);
         return node;
     }
