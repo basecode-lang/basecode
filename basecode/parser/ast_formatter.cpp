@@ -56,7 +56,7 @@ namespace basecode::syntax {
             case basecode::syntax::ast_node_types_t::symbol_reference:
                 style = ", fillcolor=aquamarine3, style=\"filled\"";
                 break;
-            case basecode::syntax::ast_node_types_t::type_identifier:
+            case basecode::syntax::ast_node_types_t::type_declaration:
                 style = ", fillcolor=gainsboro, style=\"filled\"";
                 break;
             case basecode::syntax::ast_node_types_t::attribute:
@@ -112,7 +112,7 @@ namespace basecode::syntax {
 //            }
 //
 //            if (node->is_spread()) {
-//                details += "| spread: true ";
+//                details += "| spread_type: true ";
 //            }
 
             details += "}";

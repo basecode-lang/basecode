@@ -21,26 +21,6 @@ namespace basecode::compiler {
             compiler::module* module,
             block* parent_scope,
             compiler::symbol_element* symbol);
-
-        bool is_array() const;
-
-        bool is_pointer() const;
-
-        void is_array(bool value);
-
-        void is_pointer(bool value);
-
-        const element_list_t& subscripts() const;
-
-        void subscripts(const element_list_t& subscripts);
-
-    protected:
-        bool on_initialize(compiler::session& session) override;
-
-    private:
-        bool _is_array = false;
-        bool _is_pointer = false;
-        element_list_t _subscripts {};
     };
 
 };

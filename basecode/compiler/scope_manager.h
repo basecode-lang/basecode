@@ -39,12 +39,6 @@ namespace basecode::compiler {
             const qualified_symbol_t& symbol,
             compiler::block* scope = nullptr) const;
 
-        bool find_identifier_type(
-            type_find_result_t& result,
-            const syntax::ast_node_t* type_node,
-            const element_list_t& array_subscripts,
-            compiler::block* parent_scope = nullptr);
-
         compiler::block* pop_scope();
 
         element* walk_parent_scopes(

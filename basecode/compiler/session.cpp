@@ -482,21 +482,22 @@ namespace basecode::compiler {
                 if (var->initializer() == nullptr) {
                     auto unknown_type = dynamic_cast<compiler::unknown_type*>(var->type_ref()->type());
 
-                    type_find_result_t find_result {};
-                    find_result.type_name = unknown_type->symbol()->qualified_symbol();
-                    find_result.is_array = unknown_type->is_array();
-                    find_result.is_pointer = unknown_type->is_pointer();
-                    find_result.array_subscripts = unknown_type->subscripts();
-
-                    find_result.type = _builder.make_complete_type(
-                        find_result,
-                        var->parent_scope());
-                    if (find_result.type != nullptr) {
-                        var->type_ref(find_result.make_type_reference(
-                            _builder,
-                            find_result.type->parent_scope()));
-                        _elements.remove(unknown_type->id());
-                    }
+                    // XXX: rework this with new type declaration structure
+//                    type_find_result_t find_result {};
+//                    find_result.type_name = unknown_type->symbol()->qualified_symbol();
+//                    find_result.is_array = unknown_type->is_array();
+//                    find_result.is_pointer = unknown_type->is_pointer();
+//                    find_result.array_subscripts = unknown_type->subscripts();
+//
+//                    find_result.type = _builder.make_complete_type(
+//                        find_result,
+//                        var->parent_scope());
+//                    if (find_result.type != nullptr) {
+//                        var->type_ref(find_result.make_type_reference(
+//                            _builder,
+//                            find_result.type->parent_scope()));
+//                        _elements.remove(unknown_type->id());
+//                    }
                 } else {
                     if (!var->initializer()->expression()->infer_type(*this, infer_type_result))
                         return false;

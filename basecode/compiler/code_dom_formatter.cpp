@@ -594,13 +594,13 @@ namespace basecode::compiler {
                     element->symbol()->name(),
                     style);
             }
-            case element_type_t::spread: {
-                auto spread_element = dynamic_cast<spread*>(node);
+            case element_type_t::spread_type: {
+                auto spread_element = dynamic_cast<spread_type*>(node);
                 auto style = ", fillcolor=slateblue2, style=\"filled\"";
-                if (spread_element->expression() != nullptr)
-                    add_primary_edge(spread_element, spread_element->expression());
+                if (spread_element->type() != nullptr)
+                    add_primary_edge(spread_element, spread_element->type());
                 return fmt::format(
-                    "{}[shape=record,label=\"spread\"{}];",
+                    "{}[shape=record,label=\"spread_type\"{}];",
                     node_vertex_name,
                     style);
             }

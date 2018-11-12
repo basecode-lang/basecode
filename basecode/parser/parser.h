@@ -88,9 +88,9 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    class type_identifier_infix_parser : public infix_parser {
+    class type_declaration_infix_parser : public infix_parser {
     public:
-        type_identifier_infix_parser() = default;
+        type_declaration_infix_parser() = default;
 
         ast_node_shared_ptr parse(
             common::result& r,
@@ -844,8 +844,8 @@ namespace basecode::syntax {
         static inline comma_infix_parser s_comma_infix_parser {};
         static inline proc_call_infix_parser s_proc_call_infix_parser {};
         static inline assignment_infix_parser s_assignment_infix_parser {};
-        static inline type_identifier_infix_parser s_type_identifier_infix_parser {};
         static inline array_subscript_infix_parser s_array_subscript_infix_parser {};
+        static inline type_declaration_infix_parser s_type_declaration_infix_parser {};
         static inline constant_assignment_infix_parser s_constant_assignment_infix_parser {};
         static inline pointer_dereference_infix_parser s_pointer_dereference_infix_parser {};
         static inline binary_operator_infix_parser s_sum_bin_op_parser {precedence_t::sum, false};
@@ -887,7 +887,7 @@ namespace basecode::syntax {
             {token_types_t::greater_than_equal,     &s_relational_bin_op_parser},
             {token_types_t::period,                 &s_member_access_bin_op_parser},
             {token_types_t::left_square_bracket,    &s_array_subscript_infix_parser},
-            {token_types_t::colon,                  &s_type_identifier_infix_parser},
+            {token_types_t::colon,                  &s_type_declaration_infix_parser},
             {token_types_t::plus_equal_literal,     &s_sum_with_assign_bin_op_parser},
             {token_types_t::minus_equal_literal,    &s_sum_with_assign_bin_op_parser},
             {token_types_t::caret,                  &s_pointer_dereference_infix_parser},

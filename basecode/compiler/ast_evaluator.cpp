@@ -42,7 +42,7 @@ namespace basecode::compiler {
         {syntax::ast_node_types_t::unary_operator,          std::bind(&ast_evaluator::unary_operator, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::map_expression,          std::bind(&ast_evaluator::map_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::new_expression,          std::bind(&ast_evaluator::new_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::spread_operator,         std::bind(&ast_evaluator::spread_operator, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+//        {syntax::ast_node_types_t::spread_operator,         std::bind(&ast_evaluator::spread_operator, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::cast_expression,         std::bind(&ast_evaluator::cast_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::from_expression,         std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::proc_expression,         std::bind(&ast_evaluator::proc_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
@@ -52,8 +52,8 @@ namespace basecode::compiler {
         {syntax::ast_node_types_t::else_expression,         std::bind(&ast_evaluator::else_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::break_statement,         std::bind(&ast_evaluator::break_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::with_expression,         std::bind(&ast_evaluator::with_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::type_identifier,         std::bind(&ast_evaluator::type_identifier, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::while_statement,         std::bind(&ast_evaluator::while_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::type_declaration,        std::bind(&ast_evaluator::type_declaration, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::defer_expression,        std::bind(&ast_evaluator::defer_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::union_expression,        std::bind(&ast_evaluator::union_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::return_statement,        std::bind(&ast_evaluator::return_statement, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
@@ -993,18 +993,18 @@ namespace basecode::compiler {
         return true;
     }
 
-    bool ast_evaluator::spread_operator(
-            evaluator_context_t& context,
-            evaluator_result_t& result) {
-        compiler::element* expr = nullptr;
-        if (context.node->lhs != nullptr) {
-            expr = resolve_symbol_or_evaluate(context, context.node->lhs.get());
-        }
-        result.element = _session.builder().make_spread_operator(
-            _session.scope_manager().current_scope(),
-            expr);
-        return true;
-    }
+//    bool ast_evaluator::spread_operator(
+//            evaluator_context_t& context,
+//            evaluator_result_t& result) {
+//        compiler::element* expr = nullptr;
+//        if (context.node->lhs != nullptr) {
+//            expr = resolve_symbol_or_evaluate(context, context.node->lhs.get());
+//        }
+//        result.element = _session.builder().make_spread_type(
+//            _session.scope_manager().current_scope(),
+//            expr);
+//        return true;
+//    }
 
     bool ast_evaluator::binary_operator(
             evaluator_context_t& context,
@@ -1564,62 +1564,84 @@ namespace basecode::compiler {
         return success;
     }
 
-    bool ast_evaluator::type_identifier(
+    bool ast_evaluator::type_declaration(
             evaluator_context_t& context,
             evaluator_result_t& result) {
         auto& builder = _session.builder();
         auto& scope_manager = _session.scope_manager();
         auto scope = scope_manager.current_scope();
 
-        auto is_dynamic = false;
-        element_list_t array_subscripts {};
+        compiler::type_reference* type_decl_ref = nullptr;
 
-//        for (const auto& node : context.node->rhs->children) {
-//            auto expr = resolve_symbol_or_evaluate(
-//                context,
-//                node.get());
-//            if (expr->element_type() == element_type_t::spread) {
-//                is_dynamic = true;
-//            } else if (!expr->is_constant()) {
-//                _session.error(
-//                    "P002",
-//                    "subscript size expressions must be constant.",
-//                    expr->location());
-//                return false;
-//            }
-//            if (expr != nullptr)
-//                array_subscripts.emplace_back(expr);
-//        }
-
-//        if (is_dynamic && array_subscripts.size() > 1) {
-//            _session.error(
-//                "P002",
-//                "only one subscript is allowed for dynamic arrays.",
-//                context.node->location);
-//            return false;
-//        }
-
-        type_find_result_t find_type_result {};
-        scope_manager.find_identifier_type(
-            find_type_result,
-            context.node,
-            array_subscripts,
-            scope);
-
-        compiler::type_reference* type_ref = nullptr;
-        if (find_type_result.type == nullptr) {
-            auto unknown_type = builder.make_unknown_type_from_find_result(
-                scope,
-                find_type_result);
-            type_ref = builder.make_type_reference(
-                scope,
-                unknown_type->symbol()->qualified_symbol(),
-                unknown_type);
-        } else {
-            type_ref = find_type_result.make_type_reference(builder, scope);
+        std::stack<syntax::ast_node_shared_ptr> type_nodes {};
+        auto current = context.node->lhs;
+        while (true) {
+            type_nodes.push(current);
+            if (current->rhs == nullptr)
+                break;
+            current = current->rhs;
         }
 
-        result.element = type_ref;
+        while (!type_nodes.empty()) {
+            auto current = type_nodes.top();
+            switch (current->type) {
+                case syntax::ast_node_types_t::symbol: {
+                    qualified_symbol_t type_name{};
+                    builder.make_qualified_symbol(
+                        type_name,
+                        current.get());
+                    auto symbol = builder.make_symbol_from_node(current.get(), scope);
+                    auto type = scope_manager.find_type(type_name, scope);
+                    if (type == nullptr) {
+                        auto unknown_type = builder.make_unknown_type(
+                            scope,
+                            symbol);
+                        type_decl_ref = builder.make_type_reference(
+                            scope,
+                            unknown_type->symbol()->qualified_symbol(),
+                            unknown_type);
+                    } else {
+                        type_decl_ref = builder.make_type_reference(
+                            scope,
+                            type->symbol()->qualified_symbol(),
+                            type);
+                    }
+                    break;
+                }
+                case syntax::ast_node_types_t::spread_operator: {
+                    auto type = builder.make_spread_type(scope, type_decl_ref);
+                    type_decl_ref = builder.make_type_reference(
+                        scope,
+                        type->symbol()->qualified_symbol(),
+                        type);
+                    break;
+                }
+                case syntax::ast_node_types_t::pointer_declaration: {
+                    auto type = scope_manager.find_pointer_type(type_decl_ref->type(), scope);
+                    if (type == nullptr) {
+                        type = builder.make_pointer_type(
+                            scope,
+                            type_decl_ref->type()->symbol()->qualified_symbol(),
+                            type_decl_ref->type());
+                    }
+                    type_decl_ref = builder.make_type_reference(
+                        scope,
+                        type->symbol()->qualified_symbol(),
+                        type);
+                    break;
+                }
+                case syntax::ast_node_types_t::subscript_declaration: {
+                    break;
+                }
+                default: {
+                    // XXX: error
+                    return false;
+                }
+            }
+            type_nodes.pop();
+        }
+
+        result.element = type_decl_ref;
 
         return true;
     }

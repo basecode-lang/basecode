@@ -23,32 +23,4 @@ namespace basecode::compiler {
                                                     symbol) {
     }
 
-    bool unknown_type::is_array() const {
-        return _is_array;
-    }
-
-    bool unknown_type::is_pointer() const {
-        return _is_pointer;
-    }
-
-    void unknown_type::is_array(bool value) {
-        _is_array = value;
-    }
-
-    void unknown_type::is_pointer(bool value) {
-        _is_pointer = value;
-    }
-
-    const element_list_t& unknown_type::subscripts() const {
-        return _subscripts;
-    }
-
-    bool unknown_type::on_initialize(compiler::session& session) {
-        return true;
-    }
-
-    void unknown_type::subscripts(const element_list_t& subscripts) {
-        _subscripts = subscripts;
-    }
-
 };

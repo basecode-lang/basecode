@@ -30,7 +30,6 @@ namespace basecode::compiler {
     class label;
     class import;
     class module;
-    class spread;
     class element;
     class program;
     class comment;
@@ -57,6 +56,7 @@ namespace basecode::compiler {
     class string_type;
     class nil_literal;
     class for_element;
+    class spread_type;
     class numeric_type;
     class unknown_type;
     class pointer_type;
@@ -149,7 +149,6 @@ namespace basecode::compiler {
         defer,
         symbol,
         module,
-        spread,
         break_e,
         comment,
         program,
@@ -181,6 +180,7 @@ namespace basecode::compiler {
         initializer,
         module_type,
         nil_literal,
+        spread_type,
         type_literal,
         unknown_type,
         numeric_type,
@@ -215,7 +215,6 @@ namespace basecode::compiler {
         {element_type_t::block, "block"},
         {element_type_t::field, "field"},
         {element_type_t::defer, "defer"},
-        {element_type_t::spread, "spread"},
         {element_type_t::module, "module"},
         {element_type_t::symbol, "symbol"},
         {element_type_t::while_e, "while"},
@@ -250,6 +249,7 @@ namespace basecode::compiler {
         {element_type_t::string_type, "string_type"},
         {element_type_t::namespace_e, "namespace"},
         {element_type_t::initializer, "initializer"},
+        {element_type_t::spread_type, "spread_type"},
         {element_type_t::generic_type, "generic_type"},
         {element_type_t::type_literal, "type_literal"},
         {element_type_t::module_block, "module_block"},
@@ -543,11 +543,7 @@ namespace basecode::compiler {
             compiler::block* parent_scope);
 
         qualified_symbol_t type_name;
-        bool is_array = false;
-        bool is_spread = false;
-        bool is_pointer = false;
         compiler::type* type = nullptr;
-        element_list_t array_subscripts {};
     };
 
     ///////////////////////////////////////////////////////////////////////////

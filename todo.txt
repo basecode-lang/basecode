@@ -6,8 +6,8 @@ TASKS
 - create_type_identifier needs an overhaul:
     * parsing of pointer types and spreads needs to utilize the prefix parsing
     * parsing of array subscripts needs to be folded into the existing subscript parser
-    * specification of a dynamic array [] needs to do something other an generate a fake spread
-    * ast_node_t flags should be removed from array, pointer, spread
+    * specification of a dynamic array [] needs to do something other an generate a fake spread_type
+    * ast_node_t flags should be removed from array, pointer, spread_type
 - proc_call needs to support generic parameters:
     * ast_evaluator should compare parameters to procedure_type and raise
       errors if they don't match.

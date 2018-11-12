@@ -64,10 +64,10 @@ namespace basecode::syntax {
         while_statement,
         break_statement,
         with_expression,
-        type_identifier,
         enum_expression,
         cast_expression,
         from_expression,
+        type_declaration,
         symbol_reference,
         return_statement,
         for_in_statement,
@@ -136,8 +136,8 @@ namespace basecode::syntax {
         {ast_node_types_t::while_statement, "while_statement"},
         {ast_node_types_t::break_statement, "break_statement"},
         {ast_node_types_t::with_expression, "with_expression"},
-        {ast_node_types_t::type_identifier, "type_identifier"},
         {ast_node_types_t::spread_operator, "spread_operator"},
+        {ast_node_types_t::type_declaration, "type_declaration"},
         {ast_node_types_t::tuple_expression, "tuple_expression"},
         {ast_node_types_t::defer_expression, "defer_expression"},
         {ast_node_types_t::union_expression, "union_expression"},
@@ -193,7 +193,7 @@ namespace basecode::syntax {
 
         bool has_type_identifier() const {
             return rhs != nullptr
-                && rhs->type == ast_node_types_t::type_identifier;
+                && rhs->type == ast_node_types_t::type_declaration;
         }
 
         bool operator != (const ast_node_t& other) const {
@@ -277,7 +277,7 @@ namespace basecode::syntax {
 
         ast_node_shared_ptr statement_body_node();
 
-        ast_node_shared_ptr type_identifier_node();
+        ast_node_shared_ptr type_declaration_node();
 
         ast_node_shared_ptr tuple_expression_node();
 

@@ -191,13 +191,6 @@ namespace basecode::syntax {
         return node;
     }
 
-    ast_node_shared_ptr ast_builder::type_identifier_node() {
-        auto node = std::make_shared<ast_node_t>();
-        node->id = ++_id;
-        node->type = ast_node_types_t::type_identifier;
-        return node;
-    }
-
     ast_node_shared_ptr ast_builder::new_expression_node() {
         auto node = std::make_shared<ast_node_t>();
         node->id = ++_id;
@@ -219,6 +212,13 @@ namespace basecode::syntax {
         auto node = std::make_shared<ast_node_t>();
         node->id = ++_id;
         node->type = ast_node_types_t::type_parameter;
+        return node;
+    }
+
+    ast_node_shared_ptr ast_builder::type_declaration_node() {
+        auto node = std::make_shared<ast_node_t>();
+        node->id = ++_id;
+        node->type = ast_node_types_t::type_declaration;
         return node;
     }
 

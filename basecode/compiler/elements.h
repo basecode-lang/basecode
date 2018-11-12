@@ -19,7 +19,6 @@
 #include <compiler/elements/field.h>
 #include <compiler/elements/import.h>
 #include <compiler/elements/module.h>
-#include <compiler/elements/spread.h>
 #include <compiler/elements/comment.h>
 #include <compiler/elements/program.h>
 #include <compiler/elements/any_type.h>
@@ -45,6 +44,7 @@
 #include <compiler/elements/module_type.h>
 #include <compiler/elements/string_type.h>
 #include <compiler/elements/nil_literal.h>
+#include <compiler/elements/spread_type.h>
 #include <compiler/elements/type_literal.h>
 #include <compiler/elements/numeric_type.h>
 #include <compiler/elements/unknown_type.h>
@@ -78,7 +78,6 @@
 #include <compiler/elements/continue_element.h>
 #include <compiler/elements/module_reference.h>
 #include <compiler/elements/type_of_intrinsic.h>
-#include <compiler/elements/type_literal.h>
 #include <compiler/elements/character_literal.h>
 #include <compiler/elements/namespace_element.h>
 #include <compiler/elements/size_of_intrinsic.h>

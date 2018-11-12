@@ -40,47 +40,6 @@ namespace basecode::compiler {
         return import_element;
     }
 
-    compiler::type* element_builder::make_complete_type(
-            type_find_result_t& result,
-            compiler::block* parent_scope) {
-        auto& builder = _session.builder();
-        auto& scope_manager = _session.scope_manager();
-
-        result.type = scope_manager.find_type(
-            result.type_name,
-            parent_scope);
-        if (result.type != nullptr) {
-            if (result.is_array) {
-                auto array_type = scope_manager.find_array_type(
-                    result.type,
-                    result.array_subscripts,
-                    parent_scope);
-                if (array_type == nullptr) {
-                    array_type = make_array_type(
-                        parent_scope,
-                        make_block(parent_scope, element_type_t::block),
-                        result.make_type_reference(builder, parent_scope),
-                        result.array_subscripts);
-                }
-                result.type = array_type;
-            }
-
-            if (result.is_pointer) {
-                auto pointer_type = scope_manager.find_pointer_type(
-                    result.type,
-                    parent_scope);
-                if (pointer_type == nullptr) {
-                    pointer_type = make_pointer_type(
-                        parent_scope,
-                        result.type_name,
-                        result.type);
-                }
-                result.type = pointer_type;
-            }
-        }
-        return result.type;
-    }
-
     void element_builder::make_qualified_symbol(
             qualified_symbol_t& symbol,
             const syntax::ast_node_t* node) {
@@ -119,19 +78,13 @@ namespace basecode::compiler {
 
     unknown_type* element_builder::make_unknown_type(
             compiler::block* parent_scope,
-            compiler::symbol_element* symbol,
-            bool is_pointer,
-            bool is_array,
-            const element_list_t& subscripts) {
+            compiler::symbol_element* symbol) {
         auto type = new compiler::unknown_type(
             _session.scope_manager().current_module(),
             parent_scope,
             symbol);
         if (!type->initialize(_session))
             return nullptr;
-        type->is_array(is_array);
-        type->is_pointer(is_pointer);
-        type->subscripts(subscripts);
         symbol->parent_element(type);
         _session.elements().add(type);
         return type;
@@ -364,17 +317,17 @@ namespace basecode::compiler {
         return continue_e;
     }
 
-    spread* element_builder::make_spread_operator(
+    // XXX: need to revisit this
+    spread_type* element_builder::make_spread_type(
             compiler::block* parent_scope,
-            compiler::element* expression) {
-        auto spread_op = new compiler::spread(
+            compiler::type_reference* type) {
+        auto spread_type = new compiler::spread_type(
             _session.scope_manager().current_module(),
             parent_scope,
-            expression);
-        _session.elements().add(spread_op);
-        if (expression != nullptr)
-            expression->parent_element(spread_op);
-        return spread_op;
+            type);
+        _session.elements().add(spread_type);
+        type->parent_element(spread_type);
+        return spread_type;
     }
 
     defer_element* element_builder::make_defer(
@@ -1029,13 +982,7 @@ namespace basecode::compiler {
             scope,
             result.type_name.name,
             result.type_name.namespaces);
-        auto unknown_type = make_unknown_type(
-            scope,
-            symbol,
-            result.is_pointer,
-            result.is_array,
-            result.array_subscripts);
-        return unknown_type;
+        return make_unknown_type(scope, symbol);
     }
 
     intrinsic* element_builder::make_copy_intrinsic(

@@ -20,9 +20,9 @@ namespace basecode::compiler {
     public:
         explicit element_builder(compiler::session& session);
 
-        spread* make_spread_operator(
+        spread_type* make_spread_type(
             compiler::block* parent_scope,
-            compiler::element* expression);
+            compiler::type_reference* type);
 
         defer_element* make_defer(
             compiler::block* parent_scope,
@@ -208,10 +208,7 @@ namespace basecode::compiler {
 
         unknown_type* make_unknown_type(
             compiler::block* parent_scope,
-            compiler::symbol_element* symbol,
-            bool is_pointer,
-            bool is_array,
-            const element_list_t& subscripts);
+            compiler::symbol_element* symbol);
 
         composite_type* make_union_type(
             compiler::block* parent_scope,
@@ -236,10 +233,6 @@ namespace basecode::compiler {
         namespace_element* make_namespace(
             compiler::block* parent_scope,
             element* expr);
-
-        compiler::type* make_complete_type(
-            type_find_result_t& result,
-            compiler::block* parent_scope = nullptr);
 
         compiler::directive* make_directive(
             compiler::block* parent_scope,

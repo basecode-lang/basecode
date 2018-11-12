@@ -115,7 +115,6 @@ add_library(
     compiler/element_builder.cpp compiler/element_builder.h
     compiler/elements/import.cpp compiler/elements/import.h
     compiler/elements/module.cpp compiler/elements/module.h
-    compiler/elements/spread.cpp compiler/elements/spread.h
     compiler/elements/comment.cpp compiler/elements/comment.h
     compiler/elements/element.cpp compiler/elements/element.h
     compiler/elements/program.cpp compiler/elements/program.h
@@ -138,6 +137,7 @@ add_library(
     compiler/elements/expression.cpp compiler/elements/expression.h
     compiler/elements/array_type.cpp compiler/elements/array_type.h
     compiler/elements/tuple_type.cpp compiler/elements/tuple_type.h
+    compiler/elements/spread_type.cpp compiler/elements/spread_type.h
     compiler/elements/for_element.cpp compiler/elements/for_element.h
     compiler/elements/nil_literal.cpp compiler/elements/nil_literal.h
     compiler/elements/initializer.cpp compiler/elements/initializer.h

@@ -69,31 +69,6 @@ namespace basecode::compiler {
         return recursive_execute(root_block != nullptr ? root_block : _top_level_stack.top());
     }
 
-    bool scope_manager::find_identifier_type(
-            type_find_result_t& result,
-            const syntax::ast_node_t* type_node,
-            const element_list_t& array_subscripts,
-            compiler::block* parent_scope) {
-        if (type_node == nullptr)
-            return false;
-
-        auto& builder = _session.builder();
-        builder.make_qualified_symbol(
-            result.type_name,
-            type_node->lhs.get());
-
-//        result.is_array = type_node->is_array();
-//        result.is_spread = type_node->is_spread();
-//        result.is_pointer = type_node->is_pointer();
-
-        for (auto e : array_subscripts)
-            result.array_subscripts.emplace_back(e);
-
-        builder.make_complete_type(result, parent_scope);
-
-        return result.type != nullptr;
-    }
-
     element* scope_manager::walk_parent_scopes(
             compiler::block* scope,
             const scope_visitor_callable& callable) const {

@@ -1139,18 +1139,17 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    ast_node_shared_ptr type_identifier_infix_parser::parse(
+    ast_node_shared_ptr type_declaration_infix_parser::parse(
             common::result& r,
             parser* parser,
             const ast_node_shared_ptr& lhs,
             token_t& token) {
-        auto node = parser->ast_builder()->type_identifier_node();
+        auto node = parser->ast_builder()->type_declaration_node();
         node->location.start(token.location.start());
 
         collect_comments(r, parser, node->comments);
 
         node->lhs = parser->parse_expression(r, precedence_t::type);
-//        node->rhs = parser->ast_builder()->array_subscript_list_node();
         node->location.end(node->lhs->location.end());
 
         collect_comments(r, parser, node->comments);
@@ -1160,7 +1159,7 @@ namespace basecode::syntax {
         return lhs;
     }
 
-    precedence_t type_identifier_infix_parser::precedence() const {
+    precedence_t type_declaration_infix_parser::precedence() const {
         return precedence_t::type;
     }
 
