@@ -4,7 +4,7 @@ COMPARATOR_T :: proc<T>(lhs: ^T, rhs: ^T):bool;
 
 qsort :: proc<T>(
         items: ^[]T,
-        comparator: COMPARATOR_T) {
+        comparator: COMPARATOR_T<T>) {
     // stuff
 };
 
