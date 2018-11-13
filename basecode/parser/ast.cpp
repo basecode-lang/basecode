@@ -259,6 +259,13 @@ namespace basecode::syntax {
         return node;
     }
 
+    ast_node_shared_ptr ast_builder::type_tagged_symbol_node() {
+        auto node = std::make_shared<ast_node_t>();
+        node->id = ++_id;
+        node->type = ast_node_types_t::type_tagged_symbol;
+        return node;
+    }
+
     ast_node_shared_ptr ast_builder::pointer_declaration_node() {
         auto node = std::make_shared<ast_node_t>();
         node->id = ++_id;

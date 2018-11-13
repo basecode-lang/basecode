@@ -617,6 +617,18 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    class type_tagged_symbol_prefix_parser : public prefix_parser {
+    public:
+        type_tagged_symbol_prefix_parser() = default;
+
+        ast_node_shared_ptr parse(
+            common::result& r,
+            parser* parser,
+            token_t& token) override;
+    };
+
+    ///////////////////////////////////////////////////////////////////////////
+
     class symbol_prefix_parser : public prefix_parser {
     public:
         symbol_prefix_parser() = default;
@@ -786,6 +798,7 @@ namespace basecode::syntax {
         static inline proc_expression_prefix_parser s_proc_expression_prefix_parser {};
         static inline array_expression_prefix_parser s_array_expression_prefix_parser {};
         static inline tuple_expression_prefix_parser s_tuple_expression_prefix_parser {};
+        static inline type_tagged_symbol_prefix_parser s_type_tagged_symbol_prefix_parser {};
         static inline with_member_access_prefix_parser s_with_member_access_prefix_parser {};
         static inline unary_operator_prefix_parser s_negate_prefix_parser {precedence_t::sum};
         static inline unary_operator_prefix_parser s_not_prefix_parser {precedence_t::prefix};
@@ -794,50 +807,51 @@ namespace basecode::syntax {
         static inline unary_operator_prefix_parser s_binary_not_prefix_parser {precedence_t::prefix};
 
         static inline std::unordered_map<token_types_t, prefix_parser*> s_prefix_parsers = {
-            {token_types_t::if_literal,          &s_if_prefix_parser},
-            {token_types_t::bang,                &s_not_prefix_parser},
-            {token_types_t::cast_literal,        &s_cast_prefix_parser},
-            {token_types_t::enum_literal,        &s_enum_prefix_parser},
-            {token_types_t::with_literal,        &s_with_prefix_parser},
-            {token_types_t::from_literal,        &s_from_prefix_parser},
-            {token_types_t::label,               &s_label_prefix_parser},
-            {token_types_t::left_paren,          &s_group_prefix_parser},
-            {token_types_t::union_literal,       &s_union_prefix_parser},
-            {token_types_t::defer_literal,       &s_defer_prefix_parser},
-            {token_types_t::struct_literal,      &s_struct_prefix_parser},
-            {token_types_t::for_literal,         &s_for_in_prefix_parser},
-            {token_types_t::minus,               &s_negate_prefix_parser},
-            {token_types_t::return_literal,      &s_return_prefix_parser},
-            {token_types_t::identifier,          &s_symbol_prefix_parser},
-            {token_types_t::module_literal,      &s_module_prefix_parser},
-            {token_types_t::spread_operator,     &s_spread_prefix_parser},
-            {token_types_t::raw_block,           &s_raw_block_prefix_parser},
-            {token_types_t::namespace_literal,   &s_namespace_prefix_parser},
-            {token_types_t::attribute,           &s_attribute_prefix_parser},
-            {token_types_t::directive,           &s_directive_prefix_parser},
-            {token_types_t::transmute_literal,   &s_transmute_prefix_parser},
-            {token_types_t::tilde,               &s_binary_not_prefix_parser},
-            {token_types_t::left_curly_brace,    &s_basic_block_prefix_parser},
-            {token_types_t::character_literal,   &s_char_literal_prefix_parser},
-            {token_types_t::line_comment,        &s_line_comment_prefix_parser},
-            {token_types_t::block_comment,       &s_block_comment_prefix_parser},
-            {token_types_t::string_literal,      &s_string_literal_prefix_parser},
-            {token_types_t::number_literal,      &s_number_literal_prefix_parser},
-            {token_types_t::map_literal,         &s_map_expression_prefix_parser},
-            {token_types_t::new_literal,         &s_new_expression_prefix_parser},
-            {token_types_t::while_literal,       &s_while_statement_prefix_parser},
-            {token_types_t::proc_literal,        &s_proc_expression_prefix_parser},
-            {token_types_t::true_literal,        &s_keyword_literal_prefix_parser},
-            {token_types_t::nil_literal,         &s_keyword_literal_prefix_parser},
-            {token_types_t::false_literal,       &s_keyword_literal_prefix_parser},
-            {token_types_t::break_literal,       &s_keyword_literal_prefix_parser},
-            {token_types_t::import_literal,      &s_keyword_literal_prefix_parser},
-            {token_types_t::continue_literal,    &s_keyword_literal_prefix_parser},
-            {token_types_t::array_literal,       &s_array_expression_prefix_parser},
-            {token_types_t::tuple_literal,       &s_tuple_expression_prefix_parser},
-            {token_types_t::period,              &s_with_member_access_prefix_parser},
-            {token_types_t::caret,               &s_pointer_declaration_prefix_parser},
-            {token_types_t::left_square_bracket, &s_subscript_declaration_prefix_parser},
+            {token_types_t::if_literal,             &s_if_prefix_parser},
+            {token_types_t::bang,                   &s_not_prefix_parser},
+            {token_types_t::cast_literal,           &s_cast_prefix_parser},
+            {token_types_t::enum_literal,           &s_enum_prefix_parser},
+            {token_types_t::with_literal,           &s_with_prefix_parser},
+            {token_types_t::from_literal,           &s_from_prefix_parser},
+            {token_types_t::label,                  &s_label_prefix_parser},
+            {token_types_t::left_paren,             &s_group_prefix_parser},
+            {token_types_t::union_literal,          &s_union_prefix_parser},
+            {token_types_t::defer_literal,          &s_defer_prefix_parser},
+            {token_types_t::struct_literal,         &s_struct_prefix_parser},
+            {token_types_t::for_literal,            &s_for_in_prefix_parser},
+            {token_types_t::minus,                  &s_negate_prefix_parser},
+            {token_types_t::return_literal,         &s_return_prefix_parser},
+            {token_types_t::identifier,             &s_symbol_prefix_parser},
+            {token_types_t::module_literal,         &s_module_prefix_parser},
+            {token_types_t::spread_operator,        &s_spread_prefix_parser},
+            {token_types_t::raw_block,              &s_raw_block_prefix_parser},
+            {token_types_t::namespace_literal,      &s_namespace_prefix_parser},
+            {token_types_t::attribute,              &s_attribute_prefix_parser},
+            {token_types_t::directive,              &s_directive_prefix_parser},
+            {token_types_t::transmute_literal,      &s_transmute_prefix_parser},
+            {token_types_t::tilde,                  &s_binary_not_prefix_parser},
+            {token_types_t::left_curly_brace,       &s_basic_block_prefix_parser},
+            {token_types_t::character_literal,      &s_char_literal_prefix_parser},
+            {token_types_t::line_comment,           &s_line_comment_prefix_parser},
+            {token_types_t::block_comment,          &s_block_comment_prefix_parser},
+            {token_types_t::string_literal,         &s_string_literal_prefix_parser},
+            {token_types_t::number_literal,         &s_number_literal_prefix_parser},
+            {token_types_t::map_literal,            &s_map_expression_prefix_parser},
+            {token_types_t::new_literal,            &s_new_expression_prefix_parser},
+            {token_types_t::while_literal,          &s_while_statement_prefix_parser},
+            {token_types_t::proc_literal,           &s_proc_expression_prefix_parser},
+            {token_types_t::true_literal,           &s_keyword_literal_prefix_parser},
+            {token_types_t::nil_literal,            &s_keyword_literal_prefix_parser},
+            {token_types_t::false_literal,          &s_keyword_literal_prefix_parser},
+            {token_types_t::break_literal,          &s_keyword_literal_prefix_parser},
+            {token_types_t::import_literal,         &s_keyword_literal_prefix_parser},
+            {token_types_t::continue_literal,       &s_keyword_literal_prefix_parser},
+            {token_types_t::array_literal,          &s_array_expression_prefix_parser},
+            {token_types_t::tuple_literal,          &s_tuple_expression_prefix_parser},
+            {token_types_t::period,                 &s_with_member_access_prefix_parser},
+            {token_types_t::type_tagged_identifier, &s_type_tagged_symbol_prefix_parser},
+            {token_types_t::caret,                  &s_pointer_declaration_prefix_parser},
+            {token_types_t::left_square_bracket,    &s_subscript_declaration_prefix_parser},
         };
 
         static inline cast_infix_parser s_cast_infix_parser {};

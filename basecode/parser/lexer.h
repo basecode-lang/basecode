@@ -157,6 +157,8 @@ namespace basecode::syntax {
 
         bool else_if_literal(token_t& token);
 
+        bool naked_identifier(token_t& token);
+
         bool left_curly_brace(token_t& token);
 
         bool continue_literal(token_t& token);
@@ -192,6 +194,8 @@ namespace basecode::syntax {
         bool greater_than_operator(token_t& token);
 
         bool modulus_equal_operator(token_t& token);
+
+        bool type_tagged_identifier(token_t& token);
 
         bool multiply_equal_operator(token_t& token);
 

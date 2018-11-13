@@ -180,9 +180,11 @@ namespace basecode::syntax {
             parser* parser,
             const ast_node_shared_ptr& lhs,
             token_t& token) {
-        auto symbol_node = parser
-            ->ast_builder()
-            ->symbol_node();
+        ast_node_shared_ptr symbol_node;
+        if (token.type == token_types_t::type_tagged_identifier)
+            symbol_node = parser->ast_builder()->type_tagged_symbol_node();
+        else
+            symbol_node = parser->ast_builder()->symbol_node();
         symbol_node->location.start(token.location.start());
 
         while (true) {
@@ -198,33 +200,6 @@ namespace basecode::syntax {
             if (!parser->expect(r, token))
                 return nullptr;
         }
-
-        // XXX: this isn't quite correct
-//        if (parser->peek(token_types_t::less_than)) {
-//            symbol_node->lhs = parser->ast_builder()->type_list_node();
-//
-//            token_t less_than;
-//            parser->consume(less_than);
-//            symbol_node->lhs->location.start(less_than.location.start());
-//
-//            while (true) {
-//                auto type_node = parser->parse_expression(
-//                    r,
-//                    precedence_t::variable);
-//                symbol_node->lhs->children.push_back(type_node);
-//
-//                if (parser->peek(token_types_t::comma)) {
-//                    parser->consume();
-//                } else {
-//                    token_t greater_than;
-//                    greater_than.type = token_types_t::greater_than;
-//                    if (!parser->expect(r, greater_than))
-//                        return nullptr;
-//                    symbol_node->lhs->location.end(greater_than.location.end());
-//                    break;
-//                }
-//            }
-//        }
 
         if (lhs != nullptr
         &&  (lhs->token.is_block_comment() || lhs->token.is_line_comment())) {
@@ -1075,6 +1050,41 @@ namespace basecode::syntax {
             parser* parser,
             token_t& token) {
         return parser->ast_builder()->block_comment_node(token);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    ast_node_shared_ptr type_tagged_symbol_prefix_parser::parse(
+            common::result& r,
+            parser* parser,
+            token_t& token) {
+        auto symbol_node = create_symbol_node(r, parser, nullptr, token);
+
+        symbol_node->lhs = parser->ast_builder()->type_list_node();
+
+        token_t less_than;
+        parser->consume(less_than);
+        symbol_node->lhs->location.start(less_than.location.start());
+
+        while (true) {
+            auto type_node = parser->parse_expression(
+                r,
+                precedence_t::variable);
+            symbol_node->lhs->children.push_back(type_node);
+
+            if (parser->peek(token_types_t::comma)) {
+                parser->consume();
+            } else {
+                token_t greater_than;
+                greater_than.type = token_types_t::greater_than;
+                if (!parser->expect(r, greater_than))
+                    return nullptr;
+                symbol_node->lhs->location.end(greater_than.location.end());
+                break;
+            }
+        }
+
+        return symbol_node;
     }
 
     ///////////////////////////////////////////////////////////////////////////

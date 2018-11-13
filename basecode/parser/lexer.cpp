@@ -676,17 +676,12 @@ namespace basecode::syntax {
     }
 
     bool lexer::identifier(token_t& token) {
-        auto name = read_identifier();
-
-        if (name.empty())
-            return false;
-
-        rewind_one_char();
-
-        token.value = name;
-        token.type = token_types_t::identifier;
-
-        return true;
+        _source_file->push_mark();
+        defer(_source_file->pop_mark());
+        if (type_tagged_identifier(token))
+            return true;
+        _source_file->restore_top_mark();
+        return naked_identifier(token);
     }
 
     bool lexer::assignment(token_t& token) {
@@ -838,7 +833,7 @@ namespace basecode::syntax {
     bool lexer::map_literal(token_t& token) {
         if (match_literal("map")) {
             auto ch = read(false);
-            if (!isalnum(ch)) {
+            if (ch == '<') {
                 rewind_one_char();
                 token = s_map_literal;
                 return true;
@@ -979,7 +974,7 @@ namespace basecode::syntax {
     bool lexer::array_literal(token_t& token) {
         if (match_literal("array")) {
             auto ch = read(false);
-            if (!isalnum(ch)) {
+            if (ch == '<') {
                 rewind_one_char();
                 token = s_array_literal;
                 return true;
@@ -1151,6 +1146,20 @@ namespace basecode::syntax {
             }
         }
         return false;
+    }
+
+    bool lexer::naked_identifier(token_t& token) {
+        auto name = read_identifier();
+
+        if (name.empty())
+            return false;
+
+        rewind_one_char();
+
+        token.value = name;
+        token.type = token_types_t::identifier;
+
+        return true;
     }
 
     bool lexer::character_literal(token_t& token) {
@@ -1370,6 +1379,47 @@ namespace basecode::syntax {
             token = s_modulus_equal_literal;
             return true;
         }
+        return false;
+    }
+
+    bool lexer::type_tagged_identifier(token_t& token) {
+        auto name = read_identifier();
+
+        if (name.empty())
+            return false;
+
+        rewind_one_char();
+
+        _source_file->push_mark();
+        defer({
+            _source_file->restore_top_mark();
+            _source_file->pop_mark();
+        });
+
+        auto ch = read(false);
+        if (ch == '<') {
+            auto is_tagged = false;
+
+            token_t temp;
+            while (true) {
+                if (!identifier(temp))
+                    break;
+                ch = read();
+                if (ch == '>') {
+                    is_tagged = true;
+                    break;
+                } else if (ch != ',') {
+                    break;
+                }
+            }
+
+            if (is_tagged) {
+                token.value = name;
+                token.type = token_types_t::type_tagged_identifier;
+                return true;
+            }
+        }
+
         return false;
     }
 

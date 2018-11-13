@@ -85,6 +85,7 @@ namespace basecode::syntax {
         continue_statement,
         subscript_operator,
         with_member_access,
+        type_tagged_symbol,
         pointer_declaration,
         type_parameter_list,
         constant_assignment,
@@ -155,6 +156,7 @@ namespace basecode::syntax {
         {ast_node_types_t::with_member_access, "with_member_access"},
         {ast_node_types_t::subscript_operator, "subscript_operator"},
         {ast_node_types_t::continue_statement, "continue_statement"},
+        {ast_node_types_t::type_tagged_symbol, "type_tagged_symbol"},
         {ast_node_types_t::pointer_declaration, "pointer_declaration"},
         {ast_node_types_t::type_parameter_list, "type_parameter_list"},
         {ast_node_types_t::constant_assignment, "constant_assignment"},
@@ -275,6 +277,8 @@ namespace basecode::syntax {
         ast_node_shared_ptr array_expression_node();
 
         ast_node_shared_ptr proc_call_binding_node();
+
+        ast_node_shared_ptr type_tagged_symbol_node();
 
         ast_node_shared_ptr subscript_operator_node();
 
