@@ -56,7 +56,6 @@ namespace basecode::compiler {
     class string_type;
     class nil_literal;
     class for_element;
-    class spread_type;
     class numeric_type;
     class unknown_type;
     class pointer_type;
@@ -80,6 +79,7 @@ namespace basecode::compiler {
     class procedure_call;
     class string_literal;
     class namespace_type;
+    class spread_operator;
     class range_intrinsic;
     class boolean_literal;
     class integer_literal;
@@ -180,7 +180,6 @@ namespace basecode::compiler {
         initializer,
         module_type,
         nil_literal,
-        spread_type,
         type_literal,
         unknown_type,
         numeric_type,
@@ -200,6 +199,7 @@ namespace basecode::compiler {
         boolean_literal,
         integer_literal,
         binary_operator,
+        spread_operator,
         module_reference,
         character_literal,
         unknown_identifier,
@@ -249,7 +249,6 @@ namespace basecode::compiler {
         {element_type_t::string_type, "string_type"},
         {element_type_t::namespace_e, "namespace"},
         {element_type_t::initializer, "initializer"},
-        {element_type_t::spread_type, "spread_type"},
         {element_type_t::generic_type, "generic_type"},
         {element_type_t::type_literal, "type_literal"},
         {element_type_t::module_block, "module_block"},
@@ -266,6 +265,7 @@ namespace basecode::compiler {
         {element_type_t::unary_operator, "unary_operator"},
         {element_type_t::assembly_label, "assembly_label"},
         {element_type_t::type_reference, "type_reference"},
+        {element_type_t::spread_operator, "spread_operator"},
         {element_type_t::boolean_literal, "boolean_literal"},
         {element_type_t::integer_literal, "integer_literal"},
         {element_type_t::binary_operator, "binary_operator"},

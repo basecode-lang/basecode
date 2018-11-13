@@ -93,6 +93,10 @@ namespace basecode::compiler {
 
         void skip_deactivate();
 
+        bool is_valid() const {
+            return _instance != nullptr;
+        }
+
         variable* get() const {
             return _instance;
         }

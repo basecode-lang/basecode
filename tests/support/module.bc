@@ -10,7 +10,7 @@
 // ----------------------------------------------------------------------------
 
 @library "basecode";
-#foreign print :: proc(format: string, values: ...any) @alias "fmt_print";
+#foreign print :: proc(format: string, ...values: any) @alias "fmt_print";
 
 range :: ns {
     kinds  :: ns {

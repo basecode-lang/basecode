@@ -199,9 +199,9 @@ namespace basecode::compiler {
             evaluator_context_t& context,
             evaluator_result_t& result);
 
-//        bool spread_type(
-//            evaluator_context_t& context,
-//            evaluator_result_t& result);
+        bool spread_operator(
+            evaluator_context_t& context,
+            evaluator_result_t& result);
 
         bool unary_operator(
             evaluator_context_t& context,

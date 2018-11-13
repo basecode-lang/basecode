@@ -42,7 +42,7 @@ namespace basecode::compiler {
         {syntax::ast_node_types_t::unary_operator,          std::bind(&ast_evaluator::unary_operator, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::map_expression,          std::bind(&ast_evaluator::map_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::new_expression,          std::bind(&ast_evaluator::new_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-//        {syntax::ast_node_types_t::spread_type,         std::bind(&ast_evaluator::spread_type, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::spread_operator,         std::bind(&ast_evaluator::spread_operator, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::cast_expression,         std::bind(&ast_evaluator::cast_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::from_expression,         std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::proc_expression,         std::bind(&ast_evaluator::proc_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
@@ -993,18 +993,18 @@ namespace basecode::compiler {
         return true;
     }
 
-//    bool ast_evaluator::spread_type(
-//            evaluator_context_t& context,
-//            evaluator_result_t& result) {
-//        compiler::element* expr = nullptr;
-//        if (context.node->lhs != nullptr) {
-//            expr = resolve_symbol_or_evaluate(context, context.node->lhs.get());
-//        }
-//        result.element = _session.builder().make_spread_type(
-//            _session.scope_manager().current_scope(),
-//            expr);
-//        return true;
-//    }
+    bool ast_evaluator::spread_operator(
+            evaluator_context_t& context,
+            evaluator_result_t& result) {
+        compiler::element* expr = nullptr;
+        if (context.node->lhs != nullptr) {
+            expr = resolve_symbol_or_evaluate(context, context.node->lhs.get());
+        }
+        result.element = _session.builder().make_spread_operator(
+            _session.scope_manager().current_scope(),
+            expr);
+        return true;
+    }
 
     bool ast_evaluator::binary_operator(
             evaluator_context_t& context,
@@ -1469,9 +1469,9 @@ namespace basecode::compiler {
         add_type_parameters(context, block_scope, context.node->lhs->lhs.get());
 
         auto count = 0;
-        auto return_types_node = context.node->lhs->rhs;
         compiler::field* return_field = nullptr;
-        if (!return_types_node->children.empty()) {
+        auto return_type_node = context.node->lhs->rhs;
+        if (return_type_node != nullptr) {
             auto return_identifier = builder.make_identifier(
                 block_scope,
                 builder.make_symbol(block_scope, fmt::format("_{}", count++)),
@@ -1480,7 +1480,7 @@ namespace basecode::compiler {
 
             auto type_ref = dynamic_cast<compiler::type_reference*>(evaluate_in_scope(
                 context,
-                return_types_node->children.front().get(),
+                return_type_node.get(),
                 block_scope));
             if (type_ref->is_unknown_type()) {
                 _session.scope_manager()
@@ -1596,23 +1596,10 @@ namespace basecode::compiler {
                     auto symbol = builder.make_symbol_from_node(current.get(), scope);
                     auto type = scope_manager.find_type(type_name, scope);
                     if (type == nullptr) {
-                        auto unknown_type = builder.make_unknown_type(
+                        type = builder.make_unknown_type(
                             scope,
                             symbol);
-                        type_decl_ref = builder.make_type_reference(
-                            scope,
-                            unknown_type->symbol()->qualified_symbol(),
-                            unknown_type);
-                    } else {
-                        type_decl_ref = builder.make_type_reference(
-                            scope,
-                            type->symbol()->qualified_symbol(),
-                            type);
                     }
-                    break;
-                }
-                case syntax::ast_node_types_t::spread_type: {
-                    auto type = builder.make_spread_type(scope, type_decl_ref);
                     type_decl_ref = builder.make_type_reference(
                         scope,
                         type->symbol()->qualified_symbol(),
@@ -1670,11 +1657,11 @@ namespace basecode::compiler {
                             builder.make_block(scope, element_type_t::block),
                             type_decl_ref,
                             subscripts);
-                        type_decl_ref = builder.make_type_reference(
-                            scope,
-                            qualified_symbol_t {},
-                            type);
                     }
+                    type_decl_ref = builder.make_type_reference(
+                        scope,
+                        qualified_symbol_t {},
+                        type);
                     break;
                 }
                 default: {

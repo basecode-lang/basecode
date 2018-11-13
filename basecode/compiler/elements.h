@@ -44,7 +44,6 @@
 #include <compiler/elements/module_type.h>
 #include <compiler/elements/string_type.h>
 #include <compiler/elements/nil_literal.h>
-#include <compiler/elements/spread_type.h>
 #include <compiler/elements/type_literal.h>
 #include <compiler/elements/numeric_type.h>
 #include <compiler/elements/unknown_type.h>
@@ -70,6 +69,7 @@
 #include <compiler/elements/assembly_label.h>
 #include <compiler/elements/copy_intrinsic.h>
 #include <compiler/elements/free_intrinsic.h>
+#include <compiler/elements/spread_operator.h>
 #include <compiler/elements/range_intrinsic.h>
 #include <compiler/elements/alloc_intrinsic.h>
 #include <compiler/elements/boolean_literal.h>

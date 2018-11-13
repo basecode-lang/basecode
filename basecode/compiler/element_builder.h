@@ -20,9 +20,9 @@ namespace basecode::compiler {
     public:
         explicit element_builder(compiler::session& session);
 
-        spread_type* make_spread_type(
+        spread_operator* make_spread_operator(
             compiler::block* parent_scope,
-            compiler::type_reference* type_ref);
+            compiler::element* expr);
 
         defer_element* make_defer(
             compiler::block* parent_scope,

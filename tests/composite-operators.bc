@@ -1,9 +1,15 @@
 support :: module("support/module.bc");
 
-string :: struct {
+utf16_string :: struct {
     length: u32;
     capacity: u32;
-    data: ^u8;
+    data: ^u16;
+};
+
+utf32_string :: struct {
+    length: u32;
+    capacity: u32;
+    data: ^u32;
 };
 
 make_string :: proc(): string {

@@ -11,19 +11,18 @@
 
 #pragma once
 
-#include "type.h"
-#include "type_reference.h"
+#include "element.h"
 
 namespace basecode::compiler {
 
-    class spread_type : public compiler::type {
+    class spread_operator : public compiler::element {
     public:
-        spread_type(
+        spread_operator(
             compiler::module* module,
             compiler::block* parent_scope,
-            compiler::type_reference* type);
+            compiler::element* expr);
 
-        compiler::type_reference* type();
+        compiler::element* expr();
 
     protected:
         bool on_infer_type(
@@ -32,10 +31,8 @@ namespace basecode::compiler {
 
         void on_owned_elements(element_list_t& list) override;
 
-        bool on_initialize(compiler::session& session) override;
-
     private:
-        compiler::type_reference* _type_ref = nullptr;
+        compiler::element* _expr = nullptr;
     };
 
 };

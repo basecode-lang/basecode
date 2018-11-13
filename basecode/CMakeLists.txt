@@ -137,7 +137,6 @@ add_library(
     compiler/elements/expression.cpp compiler/elements/expression.h
     compiler/elements/array_type.cpp compiler/elements/array_type.h
     compiler/elements/tuple_type.cpp compiler/elements/tuple_type.h
-    compiler/elements/spread_type.cpp compiler/elements/spread_type.h
     compiler/elements/for_element.cpp compiler/elements/for_element.h
     compiler/elements/nil_literal.cpp compiler/elements/nil_literal.h
     compiler/elements/initializer.cpp compiler/elements/initializer.h
@@ -170,6 +169,7 @@ add_library(
     compiler/elements/procedure_call.cpp compiler/elements/procedure_call.h
     compiler/elements/assembly_label.cpp compiler/elements/assembly_label.h
     compiler/elements/type_reference.cpp compiler/elements/type_reference.h
+    compiler/elements/spread_operator.cpp compiler/elements/spread_operator.h
     compiler/elements/alloc_intrinsic.cpp compiler/elements/alloc_intrinsic.h
     compiler/elements/integer_literal.cpp compiler/elements/integer_literal.h
     compiler/elements/binary_operator.cpp compiler/elements/binary_operator.h

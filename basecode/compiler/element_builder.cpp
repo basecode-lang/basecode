@@ -317,21 +317,16 @@ namespace basecode::compiler {
         return continue_e;
     }
 
-    // XXX: this isn't correct.  not sure this is even a type
-    //      need to determine how this really needs to work within the
-    //      code dom.
-    spread_type* element_builder::make_spread_type(
+    spread_operator* element_builder::make_spread_operator(
             compiler::block* parent_scope,
-            compiler::type_reference* type_ref) {
-        auto type = new compiler::spread_type(
+            compiler::element* expr) {
+        auto spread_op = new compiler::spread_operator(
             _session.scope_manager().current_module(),
             parent_scope,
-            type_ref);
-        if (!type->initialize(_session))
-            return nullptr;
-        _session.elements().add(type);
-        type->parent_element(type);
-        return type;
+            expr);
+        _session.elements().add(spread_op);
+        spread_op->parent_element(expr);
+        return spread_op;
     }
 
     defer_element* element_builder::make_defer(

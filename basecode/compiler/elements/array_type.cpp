@@ -26,7 +26,7 @@ namespace basecode::compiler {
         std::stringstream stream;
         stream << fmt::format("__array_{}", entry_type->symbol()->name());
         for (auto s : subscripts) {
-            if (s->element_type() == element_type_t::spread_type) {
+            if (s->element_type() == element_type_t::spread_operator) {
                 stream << "_SD";
             } else {
                 uint64_t size = 0;
@@ -189,7 +189,7 @@ namespace basecode::compiler {
         std::stringstream stream;
 
         for (auto s : _subscripts) {
-            if (s->element_type() == element_type_t::spread_type) {
+            if (s->element_type() == element_type_t::spread_operator) {
                 stream << "[...]";
                 break;
             } else {

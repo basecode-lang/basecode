@@ -44,7 +44,6 @@ namespace basecode::syntax {
         basic_block,
         symbol_part,
         nil_literal,
-        spread_type,
         line_comment,
         block_comment,
         argument_list,
@@ -57,6 +56,7 @@ namespace basecode::syntax {
         new_expression,
         map_expression,
         type_parameter,
+        spread_operator,
         proc_expression,
         binary_operator,
         boolean_literal,
@@ -114,7 +114,6 @@ namespace basecode::syntax {
         {ast_node_types_t::basic_block, "basic_block"},
         {ast_node_types_t::symbol_part, "symbol_part"},
         {ast_node_types_t::nil_literal, "nil_literal"},
-        {ast_node_types_t::spread_type, "spread_type"},
         {ast_node_types_t::line_comment, "line_comment"},
         {ast_node_types_t::block_comment, "block_comment"},
         {ast_node_types_t::argument_list, "argument_list"},
@@ -127,6 +126,7 @@ namespace basecode::syntax {
         {ast_node_types_t::unary_operator, "unary_operator"},
         {ast_node_types_t::new_expression, "new_expression"},
         {ast_node_types_t::map_expression, "map_expression"},
+        {ast_node_types_t::spread_operator, "spread_operator"},
         {ast_node_types_t::cast_expression, "cast_expression"},
         {ast_node_types_t::from_expression, "from_expression"},
         {ast_node_types_t::proc_expression, "proc_expression"},
@@ -344,8 +344,6 @@ namespace basecode::syntax {
 
         ast_node_shared_ptr raw_block_node(const token_t& token);
 
-        ast_node_shared_ptr spread_type_node(const token_t& token);
-
         ast_node_shared_ptr symbol_part_node(const token_t& token);
 
         ast_node_shared_ptr nil_literal_node(const token_t& token);
@@ -361,6 +359,8 @@ namespace basecode::syntax {
         ast_node_shared_ptr unary_operator_node(const token_t& token);
 
         ast_node_shared_ptr boolean_literal_node(const token_t& token);
+
+        ast_node_shared_ptr spread_operator_node(const token_t& token);
 
         ast_node_shared_ptr character_literal_node(const token_t& token);
 

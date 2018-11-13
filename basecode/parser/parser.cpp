@@ -96,6 +96,31 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    static ast_node_shared_ptr create_type_declaration_node(
+            common::result& r,
+            parser* parser,
+            const ast_node_shared_ptr& lhs,
+            token_t& token) {
+        auto node = parser->ast_builder()->type_declaration_node();
+        node->location.start(token.location.start());
+
+        collect_comments(r, parser, node->comments);
+
+        node->lhs = parser->parse_expression(r, precedence_t::type);
+        node->location.end(node->lhs->location.end());
+
+        collect_comments(r, parser, node->comments);
+
+        if (lhs != nullptr) {
+            lhs->rhs = node;
+            return lhs;
+        }
+
+        return node;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
     static void pairs_to_list(
             const ast_node_shared_ptr& target,
             const ast_node_shared_ptr& root) {
@@ -242,8 +267,11 @@ namespace basecode::syntax {
         if (!parser->expect(r, less_than))
             return nullptr;
 
-// XXX: fix this!
-//        cast_node->lhs = create_type_identifier_node(r, parser, less_than);
+        cast_node->lhs = create_type_declaration_node(
+            r,
+            parser,
+            nullptr,
+            less_than);
 
         token_t greater_than;
         greater_than.type = token_types_t::greater_than;
@@ -280,8 +308,11 @@ namespace basecode::syntax {
         if (!parser->expect(r, less_than))
             return nullptr;
 
-        // XXX: fix this!
-        //transmute_node->lhs = create_type_identifier_node(r, parser, less_than);
+        transmute_node->lhs = create_type_declaration_node(
+            r,
+            parser,
+            nullptr,
+            less_than);
 
         token_t greater_than;
         greater_than.type = token_types_t::greater_than;
@@ -442,24 +473,24 @@ namespace basecode::syntax {
         if (!parser->expect(r, less_than))
             return nullptr;
 
-        // XXX: fix this!
-//        auto key_type = create_type_identifier_node(
-//            r,
-//            parser,
-//            less_than);
-//        node->lhs->children.push_back(key_type);
+        auto key_type = create_type_declaration_node(
+            r,
+            parser,
+            nullptr,
+            less_than);
+        node->lhs->children.push_back(key_type);
 
         token_t comma;
         comma.type = token_types_t::comma;
         if (!parser->expect(r, comma))
             return nullptr;
 
-// XXX: fix this!
-//        auto value_type = create_type_identifier_node(
-//            r,
-//            parser,
-//            comma);
-//        node->lhs->children.push_back(value_type);
+        auto value_type = create_type_declaration_node(
+            r,
+            parser,
+            nullptr,
+            comma);
+        node->lhs->children.push_back(value_type);
 
         token_t greater_than;
         greater_than.type = token_types_t::greater_than;
@@ -498,8 +529,11 @@ namespace basecode::syntax {
         if (!parser->expect(r, less_than))
             return nullptr;
 
-        // XXX: fix this!
-//        node->lhs = create_type_identifier_node(r, parser, less_than);
+        node->lhs = create_type_declaration_node(
+            r,
+            parser,
+            nullptr,
+            less_than);
 
         token_t greater_than;
         greater_than.type = token_types_t::greater_than;
@@ -541,8 +575,11 @@ namespace basecode::syntax {
         if (!parser->expect(r, less_than))
             return nullptr;
 
-        // XXX: fix this!
-//        node->lhs = create_type_identifier_node(r, parser, less_than);
+        node->lhs = create_type_declaration_node(
+            r,
+            parser,
+            nullptr,
+            less_than);
 
         token_t greater_than;
         greater_than.type = token_types_t::greater_than;
@@ -603,7 +640,7 @@ namespace basecode::syntax {
             common::result& r,
             parser* parser,
             token_t& token) {
-        auto node = parser->ast_builder()->spread_type_node(token);
+        auto node = parser->ast_builder()->spread_operator_node(token);
         node->rhs = parser->parse_expression(r, precedence_t::variable);
         return node;
     }
@@ -874,10 +911,16 @@ namespace basecode::syntax {
         if (!parser->expect(r, right_paren_token))
             return nullptr;
 
+        // XXX: revisit this.  this works but is there a better way?
         if (parser->peek(token_types_t::colon)) {
-            pairs_to_list(
-                proc_node->lhs->rhs,
-                parser->parse_expression(r));
+            token_t colon_token;
+            parser->consume(colon_token);
+
+            proc_node->lhs->rhs = create_type_declaration_node(
+                r,
+                parser,
+                nullptr,
+                colon_token);
         }
 
         while (parser->peek(token_types_t::attribute)) {
@@ -1144,19 +1187,7 @@ namespace basecode::syntax {
             parser* parser,
             const ast_node_shared_ptr& lhs,
             token_t& token) {
-        auto node = parser->ast_builder()->type_declaration_node();
-        node->location.start(token.location.start());
-
-        collect_comments(r, parser, node->comments);
-
-        node->lhs = parser->parse_expression(r, precedence_t::type);
-        node->location.end(node->lhs->location.end());
-
-        collect_comments(r, parser, node->comments);
-
-        lhs->rhs = node;
-
-        return lhs;
+        return create_type_declaration_node(r, parser, lhs, token);
     }
 
     precedence_t type_declaration_infix_parser::precedence() const {
@@ -1266,11 +1297,15 @@ namespace basecode::syntax {
         if (parser->peek(token_types_t::semi_colon)) {
             return directive_node;
         }
-//        if (token.value == "type") {
-//            directive_node->lhs = create_type_identifier_node(r, parser, token);
-//        } else {
-        directive_node->lhs = parser->parse_expression(r);
-//        }
+        if (token.value == "type") {
+            directive_node->lhs = create_type_declaration_node(
+                r,
+                parser,
+                nullptr,
+                token);
+        } else {
+            directive_node->lhs = parser->parse_expression(r);
+        }
         return directive_node;
     }
 
