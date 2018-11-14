@@ -1236,6 +1236,14 @@ namespace basecode::compiler {
             return false;
         args = dynamic_cast<compiler::argument_list*>(argument_list);
 
+        // XXX: Ok, I remember why I was not evaluating this...
+        //      We don't really want another symbol_element instance here.  Because we know we're
+        //      looking to resolve something that should already exist or will be resolved by the
+        //      end of compilation.
+        //
+        //      Need to break out the code in make_symbol_from_node that builds the type parameters
+        //      list so it can be reused from various locations, like here.
+        //
         auto proc_symbol = dynamic_cast<compiler::symbol_element*>(evaluate(context.node->lhs->rhs.get()));
         auto intrinsic = compiler::intrinsic::intrinsic_for_call(
             _session,
