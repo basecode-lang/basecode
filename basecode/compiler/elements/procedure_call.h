@@ -21,13 +21,16 @@ namespace basecode::compiler {
             compiler::module* module,
             compiler::block* parent_scope,
             compiler::identifier_reference* reference,
-            compiler::argument_list* args);
+            compiler::argument_list* args,
+            const compiler::type_reference_list_t& type_params);
 
         compiler::argument_list* arguments();
 
         compiler::identifier_reference* reference();
 
         void reference(compiler::identifier_reference* value);
+
+        const compiler::type_reference_list_t& type_parameters() const;
 
     protected:
         bool on_infer_type(
@@ -40,6 +43,7 @@ namespace basecode::compiler {
 
     private:
         compiler::argument_list* _arguments = nullptr;
+        compiler::type_reference_list_t _type_parameters {};
         compiler::identifier_reference* _reference = nullptr;
     };
 

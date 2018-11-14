@@ -245,7 +245,8 @@ namespace basecode::compiler {
 
         intrinsic* make_range_intrinsic(
             compiler::block* parent_scope,
-            compiler::argument_list* args);
+            compiler::argument_list* args,
+            const compiler::type_reference_list_t& type_params);
 
         intrinsic* make_fill_intrinsic(
             compiler::block* parent_scope,
@@ -278,7 +279,8 @@ namespace basecode::compiler {
         procedure_call* make_procedure_call(
             compiler::block* parent_scope,
             compiler::identifier_reference* reference,
-            compiler::argument_list* args);
+            compiler::argument_list* args,
+            const compiler::type_reference_list_t& type_params = {});
 
         unary_operator* make_unary_operator(
             compiler::block* parent_scope,
@@ -350,9 +352,9 @@ namespace basecode::compiler {
             const syntax::ast_node_t* node,
             compiler::block* scope = nullptr);
 
-        unknown_type* make_unknown_type_from_find_result(
-            compiler::block* scope,
-            const type_find_result_t& result);
+        type_reference_list_t make_tagged_type_list_from_node(
+            const syntax::ast_node_t* node,
+            compiler::block* scope = nullptr);
 
         bool_type* make_bool_type(compiler::block* parent_scope);
 

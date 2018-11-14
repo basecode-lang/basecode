@@ -20,7 +20,8 @@ namespace basecode::compiler {
         size_of_intrinsic(
             compiler::module* module,
             compiler::block* parent_scope,
-            compiler::argument_list* args);
+            compiler::argument_list* args,
+            const compiler::type_reference_list_t& type_params);
 
         bool can_fold() const override;
 

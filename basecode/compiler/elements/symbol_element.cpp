@@ -80,6 +80,11 @@ namespace basecode::compiler {
         return symbol;
     }
 
+    void symbol_element::on_owned_elements(element_list_t& list) {
+        for (auto type_param : _type_parameters)
+            list.emplace_back(type_param);
+    }
+
     bool symbol_element::operator==(const symbol_element& other) const {
         return _fully_qualified_name == other._fully_qualified_name;
     }

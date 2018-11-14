@@ -1236,33 +1236,33 @@ namespace basecode::compiler {
             return false;
         args = dynamic_cast<compiler::argument_list*>(argument_list);
 
-        // XXX: Ok, I remember why I was not evaluating this...
-        //      We don't really want another symbol_element instance here.  Because we know we're
-        //      looking to resolve something that should already exist or will be resolved by the
-        //      end of compilation.
-        //
-        //      Need to break out the code in make_symbol_from_node that builds the type parameters
-        //      list so it can be reused from various locations, like here.
-        //
-        auto proc_symbol = dynamic_cast<compiler::symbol_element*>(evaluate(context.node->lhs->rhs.get()));
+        auto symbol_node = context.node->lhs->rhs.get();
+
+        qualified_symbol_t proc_name {};
+        builder.make_qualified_symbol(proc_name, symbol_node);
+
+        auto type_params = builder.make_tagged_type_list_from_node(symbol_node);
+
         auto intrinsic = compiler::intrinsic::intrinsic_for_call(
             _session,
             scope_manager.current_scope(),
             args,
-            proc_symbol->qualified_symbol());
+            proc_name,
+            type_params);
         if (intrinsic != nullptr) {
             result.element = intrinsic;
             return true;
         }
 
-        auto proc_identifier = scope_manager.find_identifier(proc_symbol->qualified_symbol());
+        auto proc_identifier = scope_manager.find_identifier(proc_name);
         result.element = builder.make_procedure_call(
             scope_manager.current_scope(),
             builder.make_identifier_reference(
                 scope_manager.current_scope(),
-                proc_symbol->qualified_symbol(),
+                proc_name,
                 proc_identifier),
-            args);
+            args,
+            type_params);
         result.element->location(context.node->location);
 
         return true;

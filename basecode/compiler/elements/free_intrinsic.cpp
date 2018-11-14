@@ -21,7 +21,8 @@ namespace basecode::compiler {
     free_intrinsic::free_intrinsic(
             compiler::module* module,
             block* parent_scope,
-            argument_list* args) : intrinsic(module, parent_scope, args) {
+            argument_list* args,
+            const compiler::type_reference_list_t& type_params) : intrinsic(module, parent_scope, args, type_params) {
     }
 
     std::string free_intrinsic::name() const {

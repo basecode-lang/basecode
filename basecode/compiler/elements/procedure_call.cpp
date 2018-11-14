@@ -25,12 +25,14 @@
 namespace basecode::compiler {
 
     procedure_call::procedure_call(
-        compiler::module* module,
-        compiler::block* parent_scope,
-        compiler::identifier_reference* reference,
-        compiler::argument_list* args) : element(module, parent_scope, element_type_t::proc_call),
-                                         _arguments(args),
-                                         _reference(reference) {
+            compiler::module* module,
+            compiler::block* parent_scope,
+            compiler::identifier_reference* reference,
+            compiler::argument_list* args,
+            const compiler::type_reference_list_t& type_params) : element(module, parent_scope, element_type_t::proc_call),
+                                                                  _arguments(args),
+                                                                  _type_parameters(type_params),
+                                                                  _reference(reference) {
     }
 
     bool procedure_call::on_infer_type(
@@ -96,10 +98,18 @@ namespace basecode::compiler {
     void procedure_call::on_owned_elements(element_list_t& list) {
         if (_arguments != nullptr)
             list.emplace_back(_arguments);
+
+        for (auto type_param : _type_parameters) {
+            list.emplace_back(type_param);
+        }
     }
 
     void procedure_call::reference(compiler::identifier_reference* value) {
         _reference = value;
+    }
+
+    const compiler::type_reference_list_t& procedure_call::type_parameters() const {
+        return _type_parameters;
     }
 
 };

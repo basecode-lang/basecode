@@ -21,12 +21,14 @@ namespace basecode::compiler {
             compiler::session& session,
             compiler::block* parent_scope,
             compiler::argument_list* args,
-            const qualified_symbol_t& symbol);
+            const qualified_symbol_t& symbol,
+            const compiler::type_reference_list_t& type_params);
 
         intrinsic(
             compiler::module* module,
             compiler::block* parent_scope,
-            compiler::argument_list* args);
+            compiler::argument_list* args,
+            const compiler::type_reference_list_t& type_params);
 
         virtual bool can_fold() const;
 
@@ -34,11 +36,14 @@ namespace basecode::compiler {
 
         compiler::argument_list* arguments();
 
+        const compiler::type_reference_list_t& type_parameters() const;
+
     protected:
         void on_owned_elements(element_list_t& list) override;
 
     private:
         compiler::argument_list* _arguments = nullptr;
+        compiler::type_reference_list_t _type_parameters {};
     };
 
 };

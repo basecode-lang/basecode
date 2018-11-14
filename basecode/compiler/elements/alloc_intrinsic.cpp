@@ -21,7 +21,8 @@ namespace basecode::compiler {
     alloc_intrinsic::alloc_intrinsic(
             compiler::module* module,
             compiler::block* parent_scope,
-            compiler::argument_list* args) : intrinsic(module, parent_scope, args) {
+            compiler::argument_list* args,
+            const compiler::type_reference_list_t& type_params) : intrinsic(module, parent_scope, args, type_params) {
     }
 
     bool alloc_intrinsic::on_infer_type(

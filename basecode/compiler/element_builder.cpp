@@ -61,7 +61,32 @@ namespace basecode::compiler {
             scope :
             scope_manager.current_scope();
 
+        qualified_symbol_t qualified_symbol {};
+        make_qualified_symbol(qualified_symbol, node);
+
+        auto symbol = make_symbol(
+            active_scope,
+            qualified_symbol.name,
+            qualified_symbol.namespaces,
+            make_tagged_type_list_from_node(node));
+        symbol->location(node->location);
+
+        return symbol;
+    }
+
+    type_reference_list_t element_builder::make_tagged_type_list_from_node(
+            const syntax::ast_node_t* node,
+            block* scope) {
+        auto& scope_manager = _session.scope_manager();
+
+        auto active_scope = scope != nullptr ?
+            scope :
+            scope_manager.current_scope();
+
         type_reference_list_t type_params {};
+        if (node == nullptr)
+            return type_params;
+
         for (const auto& type_node : node->lhs->children) {
             qualified_symbol_t type_name {};
             make_qualified_symbol(type_name, type_node.get());
@@ -80,17 +105,7 @@ namespace basecode::compiler {
                 type));
         }
 
-        qualified_symbol_t qualified_symbol {};
-        make_qualified_symbol(qualified_symbol, node);
-
-        auto symbol = make_symbol(
-            active_scope,
-            qualified_symbol.name,
-            qualified_symbol.namespaces,
-            type_params);
-        symbol->location(node->location);
-
-        return symbol;
+        return type_params;
     }
 
     namespace_type* element_builder::make_namespace_type(compiler::block* parent_scope) {
@@ -587,12 +602,14 @@ namespace basecode::compiler {
     procedure_call* element_builder::make_procedure_call(
             compiler::block* parent_scope,
             compiler::identifier_reference* reference,
-            compiler::argument_list* args) {
+            compiler::argument_list* args,
+            const compiler::type_reference_list_t& type_params) {
         auto proc_call = new compiler::procedure_call(
             _session.scope_manager().current_module(),
             parent_scope,
             reference,
-            args);
+            args,
+            type_params);
         _session.elements().add(proc_call);
         if (args != nullptr)
             args->parent_element(proc_call);
@@ -1004,23 +1021,14 @@ namespace basecode::compiler {
         return type;
     }
 
-    unknown_type* element_builder::make_unknown_type_from_find_result(
-            compiler::block* scope,
-            const type_find_result_t& result) {
-        auto symbol = make_symbol(
-            scope,
-            result.type_name.name,
-            result.type_name.namespaces);
-        return make_unknown_type(scope, symbol);
-    }
-
     intrinsic* element_builder::make_copy_intrinsic(
             compiler::block* parent_scope,
             compiler::argument_list* args) {
         auto intrinsic = new compiler::copy_intrinsic(
             _session.scope_manager().current_module(),
             parent_scope,
-            args);
+            args,
+            {});
         _session.elements().add(intrinsic);
         args->parent_element(intrinsic);
         return intrinsic;
@@ -1028,11 +1036,13 @@ namespace basecode::compiler {
 
     intrinsic* element_builder::make_range_intrinsic(
             compiler::block* parent_scope,
-            compiler::argument_list* args) {
+            compiler::argument_list* args,
+            const compiler::type_reference_list_t& type_params) {
         auto intrinsic = new compiler::range_intrinsic(
             _session.scope_manager().current_module(),
             parent_scope,
-            args);
+            args,
+            type_params);
         _session.elements().add(intrinsic);
         args->parent_element(intrinsic);
         return intrinsic;
@@ -1044,7 +1054,8 @@ namespace basecode::compiler {
         auto intrinsic = new compiler::fill_intrinsic(
             _session.scope_manager().current_module(),
             parent_scope,
-            args);
+            args,
+            {});
         _session.elements().add(intrinsic);
         args->parent_element(intrinsic);
         return intrinsic;
@@ -1056,7 +1067,8 @@ namespace basecode::compiler {
         auto intrinsic = new compiler::free_intrinsic(
             _session.scope_manager().current_module(),
             parent_scope,
-            args);
+            args,
+            {});
         _session.elements().add(intrinsic);
         args->parent_element(intrinsic);
         return intrinsic;
@@ -1068,7 +1080,8 @@ namespace basecode::compiler {
         auto intrinsic = new compiler::alloc_intrinsic(
             _session.scope_manager().current_module(),
             parent_scope,
-            args);
+            args,
+            {});
         _session.elements().add(intrinsic);
         args->parent_element(intrinsic);
         return intrinsic;
@@ -1080,7 +1093,8 @@ namespace basecode::compiler {
         auto intrinsic = new compiler::address_of_intrinsic(
             _session.scope_manager().current_module(),
             parent_scope,
-            args);
+            args,
+            {});
         _session.elements().add(intrinsic);
         args->parent_element(intrinsic);
         return intrinsic;
@@ -1092,7 +1106,8 @@ namespace basecode::compiler {
         auto intrinsic = new compiler::align_of_intrinsic(
             _session.scope_manager().current_module(),
             parent_scope,
-            args);
+            args,
+            {});
         _session.elements().add(intrinsic);
         args->parent_element(intrinsic);
         return intrinsic;
@@ -1104,7 +1119,8 @@ namespace basecode::compiler {
         auto intrinsic = new compiler::size_of_intrinsic(
             _session.scope_manager().current_module(),
             parent_scope,
-            args);
+            args,
+            {});
         _session.elements().add(intrinsic);
         args->parent_element(intrinsic);
         return intrinsic;
@@ -1116,7 +1132,8 @@ namespace basecode::compiler {
         auto intrinsic = new compiler::type_of_intrinsic(
             _session.scope_manager().current_module(),
             parent_scope,
-            args);
+            args,
+            {});
         _session.elements().add(intrinsic);
         args->parent_element(intrinsic);
         return intrinsic;
