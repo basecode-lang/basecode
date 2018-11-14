@@ -55,13 +55,41 @@ namespace basecode::compiler {
     compiler::symbol_element* element_builder::make_symbol_from_node(
             const syntax::ast_node_t* node,
             compiler::block* scope) {
+        auto& scope_manager = _session.scope_manager();
+
+        auto active_scope = scope != nullptr ?
+            scope :
+            scope_manager.current_scope();
+
+        type_reference_list_t type_params {};
+        for (const auto& type_node : node->lhs->children) {
+            qualified_symbol_t type_name {};
+            make_qualified_symbol(type_name, type_node.get());
+
+            auto type = scope_manager.find_type(
+                type_name,
+                active_scope);
+            if (type == nullptr) {
+                type = make_unknown_type(
+                    active_scope,
+                    make_symbol_from_node(type_node.get(), active_scope));
+            }
+            type_params.push_back(make_type_reference(
+                active_scope,
+                type_name,
+                type));
+        }
+
         qualified_symbol_t qualified_symbol {};
         make_qualified_symbol(qualified_symbol, node);
+
         auto symbol = make_symbol(
-            scope != nullptr ? scope : _session.scope_manager().current_scope(),
+            active_scope,
             qualified_symbol.name,
-            qualified_symbol.namespaces);
+            qualified_symbol.namespaces,
+            type_params);
         symbol->location(node->location);
+
         return symbol;
     }
 
@@ -868,12 +896,14 @@ namespace basecode::compiler {
     compiler::symbol_element* element_builder::make_symbol(
             compiler::block* parent_scope,
             const std::string& name,
-            const string_list_t& namespaces) {
+            const string_list_t& namespaces,
+            const type_reference_list_t& type_params) {
         auto symbol = new compiler::symbol_element(
             _session.scope_manager().current_module(),
             parent_scope,
             name,
-            namespaces);
+            namespaces,
+            type_params);
         _session.elements().add(symbol);
         symbol->cache_fully_qualified_name();
         return symbol;

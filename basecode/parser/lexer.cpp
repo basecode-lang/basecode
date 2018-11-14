@@ -1411,6 +1411,8 @@ namespace basecode::syntax {
                 } else if (ch != ',') {
                     break;
                 }
+                read();
+                rewind_one_char();
             }
 
             if (is_tagged) {

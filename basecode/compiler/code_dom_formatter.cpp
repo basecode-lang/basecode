@@ -101,6 +101,8 @@ namespace basecode::compiler {
             case element_type_t::symbol: {
                 auto element = dynamic_cast<symbol_element*>(node);
                 auto style = ", fillcolor=pink, style=\"filled\"";
+                for (auto type_param_ref : element->type_parameters())
+                    add_primary_edge(element, type_param_ref);
                 return fmt::format(
                     "{}[shape=record,label=\"symbol|{}\"{}];",
                     node_vertex_name,

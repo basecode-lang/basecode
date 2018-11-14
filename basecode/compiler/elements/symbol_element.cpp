@@ -22,9 +22,11 @@ namespace basecode::compiler {
             compiler::module* module,
             compiler::block* parent_scope,
             const std::string& name,
-            const string_list_t& namespaces) : element(module, parent_scope, element_type_t::symbol),
-                                               _name(name),
-                                               _namespaces(namespaces) {
+            const string_list_t& namespaces,
+            const type_reference_list_t& type_params) : element(module, parent_scope, element_type_t::symbol),
+                                                        _name(name),
+                                                        _namespaces(namespaces),
+                                                        _type_parameters(type_params) {
     }
 
     bool symbol_element::on_infer_type(
@@ -80,6 +82,10 @@ namespace basecode::compiler {
 
     bool symbol_element::operator==(const symbol_element& other) const {
         return _fully_qualified_name == other._fully_qualified_name;
+    }
+
+    const type_reference_list_t& symbol_element::type_parameters() const {
+        return _type_parameters;
     }
 
     bool symbol_element::operator==(const qualified_symbol_t& other) const {

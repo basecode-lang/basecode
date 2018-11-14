@@ -21,7 +21,8 @@ namespace basecode::compiler {
             compiler::module* module,
             compiler::block* parent_scope,
             const std::string& name,
-            const string_list_t& namespaces);
+            const string_list_t& namespaces,
+            const type_reference_list_t& type_params);
 
         std::string name() const;
 
@@ -39,6 +40,8 @@ namespace basecode::compiler {
 
         bool operator== (const symbol_element& other) const;
 
+        const type_reference_list_t& type_parameters() const;
+
         bool operator== (const qualified_symbol_t& other) const;
 
     protected:
@@ -53,6 +56,7 @@ namespace basecode::compiler {
         bool _is_constant = false;
         string_list_t _namespaces {};
         std::string _fully_qualified_name {};
+        type_reference_list_t _type_parameters {};
     };
 
 };

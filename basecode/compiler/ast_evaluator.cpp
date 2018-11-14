@@ -70,6 +70,7 @@ namespace basecode::compiler {
         {syntax::ast_node_types_t::subscript_operator,      std::bind(&ast_evaluator::subscript_operator, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::with_member_access,      std::bind(&ast_evaluator::with_member_access, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::continue_statement,      std::bind(&ast_evaluator::continue_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::type_tagged_symbol,      std::bind(&ast_evaluator::symbol, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::constant_assignment,     std::bind(&ast_evaluator::assignment, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::transmute_expression,    std::bind(&ast_evaluator::transmute_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::namespace_expression,    std::bind(&ast_evaluator::namespace_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
@@ -1229,31 +1230,29 @@ namespace basecode::compiler {
         auto& builder = _session.builder();
         auto& scope_manager = _session.scope_manager();
 
-        qualified_symbol_t qualified_symbol {};
-        builder.make_qualified_symbol(qualified_symbol, context.node->lhs->rhs.get());
-
         compiler::argument_list* args = nullptr;
         auto argument_list = evaluate(context.node->rhs.get());
         if (argument_list == nullptr)
             return false;
         args = dynamic_cast<compiler::argument_list*>(argument_list);
 
+        auto proc_symbol = dynamic_cast<compiler::symbol_element*>(evaluate(context.node->lhs->rhs.get()));
         auto intrinsic = compiler::intrinsic::intrinsic_for_call(
             _session,
             scope_manager.current_scope(),
             args,
-            qualified_symbol);
+            proc_symbol->qualified_symbol());
         if (intrinsic != nullptr) {
             result.element = intrinsic;
             return true;
         }
 
-        auto proc_identifier = scope_manager.find_identifier(qualified_symbol);
+        auto proc_identifier = scope_manager.find_identifier(proc_symbol->qualified_symbol());
         result.element = builder.make_procedure_call(
             scope_manager.current_scope(),
             builder.make_identifier_reference(
                 scope_manager.current_scope(),
-                qualified_symbol,
+                proc_symbol->qualified_symbol(),
                 proc_identifier),
             args);
         result.element->location(context.node->location);

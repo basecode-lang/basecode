@@ -307,7 +307,8 @@ namespace basecode::compiler {
         compiler::symbol_element* make_symbol(
             compiler::block* parent_scope,
             const std::string& name,
-            const string_list_t& namespaces = {});
+            const string_list_t& namespaces = {},
+            const type_reference_list_t& type_params = {});
 
         module_reference* make_module_reference(
             compiler::block* parent_scope,

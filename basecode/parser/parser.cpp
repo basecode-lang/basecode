@@ -138,8 +138,12 @@ namespace basecode::syntax {
         while (true) {
             if (current_pair->lhs->type != ast_node_types_t::pair) {
                 target->children.push_back(current_pair->lhs);
-                target->children.push_back(current_pair->rhs);
-                target->location.end(current_pair->rhs->location.end());
+                if (current_pair->rhs != nullptr) {
+                    target->children.push_back(current_pair->rhs);
+                    target->location.end(current_pair->rhs->location.end());
+                } else {
+                    target->location.end(current_pair->lhs->location.end());
+                }
                 break;
             }
             target->children.push_back(current_pair->rhs);
@@ -1060,13 +1064,21 @@ namespace basecode::syntax {
             token_t& token) {
         auto symbol_node = create_symbol_node(r, parser, nullptr, token);
 
-        symbol_node->lhs = parser->ast_builder()->type_list_node();
-
         token_t less_than;
         parser->consume(less_than);
         symbol_node->lhs->location.start(less_than.location.start());
 
         while (true) {
+            if (!parser->peek(token_types_t::identifier)
+            &&  !parser->peek(token_types_t::type_tagged_identifier)) {
+                parser->error(
+                    r,
+                    "P019",
+                    "identifier expected",
+                    token.location);
+                return nullptr;
+            }
+
             auto type_node = parser->parse_expression(
                 r,
                 precedence_t::variable);
@@ -1131,7 +1143,8 @@ namespace basecode::syntax {
         if (lhs->type != ast_node_types_t::pair) {
             lhs->comments = comments;
         } else {
-            pair_node->rhs->comments = comments;
+            if (pair_node->rhs != nullptr)
+                pair_node->rhs->comments = comments;
         }
 
         return pair_node;

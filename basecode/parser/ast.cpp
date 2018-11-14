@@ -82,6 +82,7 @@ namespace basecode::syntax {
         auto node = std::make_shared<ast_node_t>();
         node->id = ++_id;
         node->type = ast_node_types_t::symbol;
+        node->lhs = type_list_node();
         return node;
     }
 
@@ -263,6 +264,7 @@ namespace basecode::syntax {
         auto node = std::make_shared<ast_node_t>();
         node->id = ++_id;
         node->type = ast_node_types_t::type_tagged_symbol;
+        node->lhs = type_list_node();
         return node;
     }
 
