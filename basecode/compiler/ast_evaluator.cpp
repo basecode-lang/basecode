@@ -1719,9 +1719,6 @@ namespace basecode::compiler {
             return false;
         }
 
-        auto block = evaluate(context.node->children.front().get());
-        auto body = dynamic_cast<compiler::block*>(block);
-
         auto lhs = evaluate(context.node->lhs.get());
         if (lhs == nullptr || lhs->element_type() != element_type_t::symbol) {
             // XXX: error
@@ -1748,13 +1745,22 @@ namespace basecode::compiler {
             }
         }
 
+        auto for_scope = builder.make_block(
+            scope_manager.current_scope(),
+            element_type_t::block);
         auto induction_decl = add_identifier_to_scope(
             context,
             dynamic_cast<compiler::symbol_element*>(lhs),
             type_ref,
             nullptr,
             0,
-            body);
+            for_scope);
+
+        auto block = evaluate_in_scope(
+            context,
+            context.node->children.front().get(),
+            for_scope);
+        auto body = dynamic_cast<compiler::block*>(block);
 
         result.element = builder.make_for(
             scope_manager.current_scope(),

@@ -10,6 +10,8 @@ d: [ARRAY_SIZE]bool;
 e := b[0];
 f := c[2][2];
 
+// XXX: comma parsing is preventing the nested array literal
+//      from parsing properly.
 g := array<u32>(
     1,
     array<u32>(10, 20, 30),

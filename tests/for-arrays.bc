@@ -1,7 +1,19 @@
 support :: module("support/module.bc");
 
+array_pos_kind :: enum {
+    first:  u8;
+    medial: u8;
+    last:   u8;
+};
+
+array_iterator :: struct {
+    kind: array_pos_kind;
+    index: u32;
+    value: any;
+};
+
 ////////////////////////////////////////////////////////
 // 2. iterating over arrays
-for x in array<u8>(1, 2, 3, 4, 5) {
-    support::print("x := %d\n", x);
+for x: array_iterator in array<u8>(1, 2, 3, 4, 5) {
+    support::print("x := %d\n", x.value);
 };

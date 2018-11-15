@@ -11,6 +11,9 @@ TASKS
 - map_iterator_type
     * key: K   (type of the key)
     * value: V (type of the value)
+- BUG: identifiers not found are returning a type inference error instead.
+- BUG: enum type creation needs to automatically type fields and increment value.
+- BUG: comma precedence needs to be revisited now that everything is vectoring through proc_call_infix_parser.
 
 DONE
 ----
