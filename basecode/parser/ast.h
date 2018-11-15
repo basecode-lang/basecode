@@ -53,8 +53,6 @@ namespace basecode::syntax {
         string_literal,
         unary_operator,
         statement_body,
-        new_expression,
-        map_expression,
         type_parameter,
         spread_operator,
         proc_expression,
@@ -65,7 +63,6 @@ namespace basecode::syntax {
         break_statement,
         with_expression,
         enum_expression,
-        cast_expression,
         from_expression,
         type_declaration,
         symbol_reference,
@@ -73,8 +70,6 @@ namespace basecode::syntax {
         for_in_statement,
         union_expression,
         defer_expression,
-        tuple_expression,
-        array_expression,
         module_expression,
         character_literal,
         elseif_expression,
@@ -92,7 +87,6 @@ namespace basecode::syntax {
         namespace_expression,
         return_argument_list,
         array_subscript_list,
-        transmute_expression,
         subscript_declaration,
         assignment_source_list,
         assignment_target_list,
@@ -125,10 +119,7 @@ namespace basecode::syntax {
         {ast_node_types_t::number_literal, "number_literal"},
         {ast_node_types_t::string_literal, "string_literal"},
         {ast_node_types_t::unary_operator, "unary_operator"},
-        {ast_node_types_t::new_expression, "new_expression"},
-        {ast_node_types_t::map_expression, "map_expression"},
         {ast_node_types_t::spread_operator, "spread_operator"},
-        {ast_node_types_t::cast_expression, "cast_expression"},
         {ast_node_types_t::from_expression, "from_expression"},
         {ast_node_types_t::proc_expression, "proc_expression"},
         {ast_node_types_t::enum_expression, "enum_expression"},
@@ -139,14 +130,12 @@ namespace basecode::syntax {
         {ast_node_types_t::break_statement, "break_statement"},
         {ast_node_types_t::with_expression, "with_expression"},
         {ast_node_types_t::type_declaration, "type_declaration"},
-        {ast_node_types_t::tuple_expression, "tuple_expression"},
         {ast_node_types_t::defer_expression, "defer_expression"},
         {ast_node_types_t::union_expression, "union_expression"},
         {ast_node_types_t::return_statement, "return_statement"},
         {ast_node_types_t::symbol_reference, "symbol_reference"},
         {ast_node_types_t::for_in_statement, "for_in_statement"},
         {ast_node_types_t::switch_expression, "switch_statement"},
-        {ast_node_types_t::array_expression,  "array_expression"},
         {ast_node_types_t::import_expression, "import_expression"},
         {ast_node_types_t::struct_expression, "struct_expression"},
         {ast_node_types_t::character_literal, "character_literal"},
@@ -160,7 +149,6 @@ namespace basecode::syntax {
         {ast_node_types_t::pointer_declaration, "pointer_declaration"},
         {ast_node_types_t::type_parameter_list, "type_parameter_list"},
         {ast_node_types_t::constant_assignment, "constant_assignment"},
-        {ast_node_types_t::transmute_expression, "transmute_expression"},
         {ast_node_types_t::namespace_expression, "namespace_expression"},
         {ast_node_types_t::return_argument_list, "return_argument_list"},
         {ast_node_types_t::array_subscript_list, "array_subscript_list"},
@@ -262,19 +250,11 @@ namespace basecode::syntax {
 
         ast_node_shared_ptr type_parameter_node();
 
-        ast_node_shared_ptr new_expression_node();
-
-        ast_node_shared_ptr map_expression_node();
-
         ast_node_shared_ptr parameter_list_node();
 
         ast_node_shared_ptr statement_body_node();
 
         ast_node_shared_ptr type_declaration_node();
-
-        ast_node_shared_ptr tuple_expression_node();
-
-        ast_node_shared_ptr array_expression_node();
 
         ast_node_shared_ptr proc_call_binding_node();
 
@@ -307,8 +287,6 @@ namespace basecode::syntax {
         ast_node_shared_ptr else_node(const token_t& token);
 
         ast_node_shared_ptr from_node(const token_t& token);
-
-        ast_node_shared_ptr cast_node(const token_t& token);
 
         ast_node_shared_ptr with_node(const token_t& token);
 
@@ -343,8 +321,6 @@ namespace basecode::syntax {
         ast_node_shared_ptr attribute_node(const token_t& token);
 
         ast_node_shared_ptr namespace_node(const token_t& token);
-
-        ast_node_shared_ptr transmute_node(const token_t& token);
 
         ast_node_shared_ptr raw_block_node(const token_t& token);
 

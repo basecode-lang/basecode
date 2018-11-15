@@ -95,10 +95,6 @@ namespace basecode::syntax {
 
         bool for_literal(token_t& token);
 
-        bool new_literal(token_t& token);
-
-        bool map_literal(token_t& token);
-
         bool right_paren(token_t& token);
 
         bool nil_literal(token_t& token);
@@ -113,17 +109,11 @@ namespace basecode::syntax {
 
         bool pipe_literal(token_t& token);
 
-        bool cast_literal(token_t& token);
-
         bool true_literal(token_t& token);
 
         bool with_literal(token_t& token);
 
         bool from_literal(token_t& token);
-
-        bool array_literal(token_t& token);
-
-        bool tuple_literal(token_t& token);
 
         bool block_comment(token_t& token);
 
@@ -168,8 +158,6 @@ namespace basecode::syntax {
         bool ampersand_literal(token_t& token);
 
         bool character_literal(token_t& token);
-
-        bool transmute_literal(token_t& token);
 
         bool less_than_operator(token_t& token);
 

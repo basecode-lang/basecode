@@ -60,8 +60,6 @@ namespace basecode::syntax {
         rol_literal,
         ror_literal,
         nil_literal,
-        new_literal,
-        map_literal,
         from_literal,
         proc_literal,
         with_literal,
@@ -70,15 +68,12 @@ namespace basecode::syntax {
         true_literal,
         enum_literal,
         else_literal,
-        cast_literal,
         false_literal,
         break_literal,
         while_literal,
         defer_literal,
         union_literal,
         block_comment,
-        array_literal,
-        tuple_literal,
         module_literal,
         struct_literal,
         number_literal,
@@ -94,7 +89,6 @@ namespace basecode::syntax {
         right_curly_brace,
         character_literal,
         namespace_literal,
-        transmute_literal,
         greater_than_equal,
         plus_equal_literal,
         minus_equal_literal,
@@ -151,12 +145,9 @@ namespace basecode::syntax {
         {token_types_t::shr_literal,                "shr_literal"},
         {token_types_t::rol_literal,                "rol_literal"},
         {token_types_t::ror_literal,                "ror_literal"},
-        {token_types_t::new_literal,                "new_literal"},
-        {token_types_t::map_literal,                "map_literal"},
         {token_types_t::from_literal,               "from_literal"},
         {token_types_t::proc_literal,               "proc_literal"},
         {token_types_t::with_literal,               "with_literal"},
-        {token_types_t::cast_literal,               "cast_literal"},
         {token_types_t::else_literal,               "else_literal"},
         {token_types_t::line_comment,               "line_comment"},
         {token_types_t::greater_than,               "greater_than"},
@@ -167,8 +158,6 @@ namespace basecode::syntax {
         {token_types_t::while_literal,              "while_literal"},
         {token_types_t::defer_literal,              "defer_literal"},
         {token_types_t::union_literal,              "union_literal"},
-        {token_types_t::array_literal,              "array_literal"},
-        {token_types_t::tuple_literal,              "tuple_literal"},
         {token_types_t::block_comment,              "block_comment"},
         {token_types_t::module_literal,             "module_literal"},
         {token_types_t::struct_literal,             "struct_literal"},
@@ -185,7 +174,6 @@ namespace basecode::syntax {
         {token_types_t::right_curly_brace,          "right_curly_brace"},
         {token_types_t::character_literal,          "character_literal"},
         {token_types_t::namespace_literal,          "namespace_literal"},
-        {token_types_t::transmute_literal,          "transmute_literal"},
         {token_types_t::plus_equal_literal,         "plus_equal_literal"},
         {token_types_t::greater_than_equal,         "greater_than_equal"},
         {token_types_t::minus_equal_literal,        "minus_equal_literal"},
@@ -344,24 +332,9 @@ namespace basecode::syntax {
         .value = "enum"
     };
 
-    static inline token_t s_cast_literal = {
-        .type = token_types_t::cast_literal,
-        .value = "cast"
-    };
-
     static inline token_t s_nil_literal = {
         .type = token_types_t::nil_literal,
         .value = "nil"
-    };
-
-    static inline token_t s_new_literal = {
-        .type = token_types_t::new_literal,
-        .value = "new"
-    };
-
-    static inline token_t s_map_literal = {
-        .type = token_types_t::map_literal,
-        .value = "map"
     };
 
     static inline token_t s_with_literal = {
@@ -392,16 +365,6 @@ namespace basecode::syntax {
     static inline token_t s_comma_literal = {
         .type = token_types_t::comma,
         .value = ","
-    };
-
-    static inline token_t s_array_literal = {
-        .type = token_types_t::array_literal,
-        .value = "array"
-    };
-
-    static inline token_t s_tuple_literal = {
-        .type = token_types_t::tuple_literal,
-        .value = "tuple"
     };
 
     static inline token_t s_defer_literal = {
@@ -527,11 +490,6 @@ namespace basecode::syntax {
     static inline token_t s_question_literal = {
         .type = token_types_t::question,
         .value = "?"
-    };
-
-    static inline token_t s_transmute_literal = {
-        .type = token_types_t::transmute_literal,
-        .value = "transmute"
     };
 
     static inline token_t s_namespace_literal = {

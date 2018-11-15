@@ -115,25 +115,19 @@ namespace basecode::syntax {
         // string literal
         {'"', std::bind(&lexer::string_literal, std::placeholders::_1, std::placeholders::_2)},
 
-        // array literal
-        {'a', std::bind(&lexer::array_literal, std::placeholders::_1, std::placeholders::_2)},
-
         // return literal
         {'r', std::bind(&lexer::return_literal, std::placeholders::_1, std::placeholders::_2)},
 
-        // true/tuple/false literals
+        // true/false literals
         {'t', std::bind(&lexer::true_literal, std::placeholders::_1, std::placeholders::_2)},
-        {'t', std::bind(&lexer::tuple_literal, std::placeholders::_1, std::placeholders::_2)},
         {'f', std::bind(&lexer::false_literal, std::placeholders::_1, std::placeholders::_2)},
 
-        // new/nil/ns literals
-        {'n', std::bind(&lexer::new_literal, std::placeholders::_1, std::placeholders::_2)},
+        // nil/ns literals
         {'n', std::bind(&lexer::nil_literal, std::placeholders::_1, std::placeholders::_2)},
         {'n', std::bind(&lexer::ns_literal, std::placeholders::_1, std::placeholders::_2)},
 
-        // module/map literals
+        // module literals
         {'m', std::bind(&lexer::module_literal, std::placeholders::_1, std::placeholders::_2)},
-        {'m', std::bind(&lexer::map_literal, std::placeholders::_1, std::placeholders::_2)},
 
         // import literal
         // if literal
@@ -159,9 +153,7 @@ namespace basecode::syntax {
         {'d', std::bind(&lexer::defer_literal, std::placeholders::_1, std::placeholders::_2)},
 
         // continue literal
-        // cast literal
         {'c', std::bind(&lexer::continue_literal, std::placeholders::_1, std::placeholders::_2)},
-        {'c', std::bind(&lexer::cast_literal, std::placeholders::_1, std::placeholders::_2)},
 
         // proc literal
         {'p', std::bind(&lexer::proc_literal, std::placeholders::_1, std::placeholders::_2)},
@@ -177,10 +169,6 @@ namespace basecode::syntax {
         {'s', std::bind(&lexer::struct_literal, std::placeholders::_1, std::placeholders::_2)},
         {'s', std::bind(&lexer::shl_literal, std::placeholders::_1, std::placeholders::_2)},
         {'s', std::bind(&lexer::shr_literal, std::placeholders::_1, std::placeholders::_2)},
-
-        // transmute/tuple
-        {'t', std::bind(&lexer::transmute_literal, std::placeholders::_1, std::placeholders::_2)},
-        {'t', std::bind(&lexer::tuple_literal, std::placeholders::_1, std::placeholders::_2)},
 
         // while literal
         {'w', std::bind(&lexer::while_literal, std::placeholders::_1, std::placeholders::_2)},
@@ -818,30 +806,6 @@ namespace basecode::syntax {
         return false;
     }
 
-    bool lexer::new_literal(token_t& token) {
-        if (match_literal("new")) {
-            auto ch = read(false);
-            if (!isalnum(ch)) {
-                rewind_one_char();
-                token = s_new_literal;
-                return true;
-            }
-        }
-        return false;
-    }
-
-    bool lexer::map_literal(token_t& token) {
-        if (match_literal("map")) {
-            auto ch = read(false);
-            if (ch == '<') {
-                rewind_one_char();
-                token = s_map_literal;
-                return true;
-            }
-        }
-        return false;
-    }
-
     bool lexer::else_literal(token_t& token) {
         if (match_literal("else")) {
             auto ch = read(false);
@@ -886,18 +850,6 @@ namespace basecode::syntax {
             if (!isalnum(ch)) {
                 rewind_one_char();
                 token = s_nil_literal;
-                return true;
-            }
-        }
-        return false;
-    }
-
-    bool lexer::cast_literal(token_t& token) {
-        if (match_literal("cast")) {
-            auto ch = read(false);
-            if (!isalnum(ch)) {
-                rewind_one_char();
-                token = s_cast_literal;
                 return true;
             }
         }
@@ -965,30 +917,6 @@ namespace basecode::syntax {
             if (!isalnum(ch)) {
                 rewind_one_char();
                 token = s_defer_literal;
-                return true;
-            }
-        }
-        return false;
-    }
-
-    bool lexer::array_literal(token_t& token) {
-        if (match_literal("array")) {
-            auto ch = read(false);
-            if (ch == '<') {
-                rewind_one_char();
-                token = s_array_literal;
-                return true;
-            }
-        }
-        return false;
-    }
-
-    bool lexer::tuple_literal(token_t& token) {
-        if (match_literal("tuple")) {
-            auto ch = read(false);
-            if (!isalnum(ch)) {
-                rewind_one_char();
-                token = s_tuple_literal;
                 return true;
             }
         }
@@ -1269,18 +1197,6 @@ namespace basecode::syntax {
             if (!isalnum(ch)) {
                 rewind_one_char();
                 token = s_module_literal;
-                return true;
-            }
-        }
-        return false;
-    }
-
-    bool lexer::transmute_literal(token_t& token) {
-        if (match_literal("transmute")) {
-            auto ch = read(false);
-            if (!isalnum(ch)) {
-                rewind_one_char();
-                token = s_transmute_literal;
                 return true;
             }
         }

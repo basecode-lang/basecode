@@ -3,17 +3,7 @@ NOTES
 
 TASKS
 -----
-- create_type_identifier needs an overhaul:
-    * parsing of pointer types and spreads needs to utilize the prefix parsing
-    * parsing of array subscripts needs to be folded into the existing subscript parser
-    * specification of a dynamic array [] needs to do something other an generate a fake spread_type
-    * ast_node_t flags should be removed from array, pointer, spread_type
-- proc_call needs to support generic parameters:
-    * ast_evaluator should compare parameters to procedure_type and raise
-      errors if they don't match.
 - proc_expression needs to support overloaded procedures
-- intrinsic needs to support generic parameters, e.g. for use with range<T>(..)
-- new<type<>> needs to support generic parameters for the embedded type
 - array_iterator_type
     * index:u64
     * value:T (type of the entry)
@@ -95,3 +85,13 @@ DONE
         be based on the module compiled.  the option should just be a flag.
 - NEW: add command line flags that are passed into the compiler as definitions
 - consolidate array_constructor and tuple, map, and struct/union/enum into type_literal
+- create_type_identifier needs an overhaul:
+    * parsing of pointer types and spreads needs to utilize the prefix parsing
+    * parsing of array subscripts needs to be folded into the existing subscript parser
+    * specification of a dynamic array [] needs to do something other an generate a fake spread_type
+    * ast_node_t flags should be removed from array, pointer, spread_type
+- proc_call needs to support generic parameters:
+    * ast_evaluator should compare parameters to procedure_type and raise
+      errors if they don't match.
+- intrinsic needs to support generic parameters, e.g. for use with range<T>(..)
+- new<type<>> needs to support generic parameters for the embedded type

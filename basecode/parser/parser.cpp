@@ -39,9 +39,12 @@ namespace basecode::syntax {
 
             if (parser->peek(token_types_t::colon)) {
                 parser->consume();
+                // XXX: revisit this.  the code was expecting a tuple_expression
+                //      but that node type no longer exists.  need to rework this to
+                //      confirm the proc_call is in fact a tuple literal.
                 type_parameter_node->lhs = parser->expect_expression(
                     r,
-                    ast_node_types_t::tuple_expression,
+                    ast_node_types_t::proc_call,
                     precedence_t::variable);
                 if (r.is_failed())
                     return false;
@@ -233,88 +236,6 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    static ast_node_shared_ptr create_cast_node(
-            common::result& r,
-            parser* parser,
-            token_t& token) {
-        auto cast_node = parser
-            ->ast_builder()
-            ->cast_node(token);
-
-        token_t less_than;
-        less_than.type = token_types_t::less_than;
-        if (!parser->expect(r, less_than))
-            return nullptr;
-
-        cast_node->lhs = create_type_declaration_node(
-            r,
-            parser,
-            nullptr,
-            less_than);
-
-        token_t greater_than;
-        greater_than.type = token_types_t::greater_than;
-        if (!parser->expect(r, greater_than))
-            return nullptr;
-
-        token_t left_paren;
-        left_paren.type = token_types_t::left_paren;
-        if (!parser->expect(r, left_paren))
-            return nullptr;
-
-        cast_node->rhs = parser->parse_expression(r);
-
-        token_t right_paren;
-        right_paren.type = token_types_t::right_paren;
-        if (!parser->expect(r, right_paren))
-            return nullptr;
-
-        return cast_node;
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-
-    static ast_node_shared_ptr create_transmute_node(
-            common::result& r,
-            parser* parser,
-            token_t& token) {
-        auto transmute_node = parser
-            ->ast_builder()
-            ->transmute_node(token);
-
-        token_t less_than;
-        less_than.type = token_types_t::less_than;
-        if (!parser->expect(r, less_than))
-            return nullptr;
-
-        transmute_node->lhs = create_type_declaration_node(
-            r,
-            parser,
-            nullptr,
-            less_than);
-
-        token_t greater_than;
-        greater_than.type = token_types_t::greater_than;
-        if (!parser->expect(r, greater_than))
-            return nullptr;
-
-        token_t left_paren;
-        left_paren.type = token_types_t::left_paren;
-        if (!parser->expect(r, left_paren))
-            return nullptr;
-
-        transmute_node->rhs = parser->parse_expression(r);
-
-        token_t right_paren;
-        right_paren.type = token_types_t::right_paren;
-        if (!parser->expect(r, right_paren))
-            return nullptr;
-
-        return transmute_node;
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-
     static ast_node_shared_ptr create_assignment_node(
             common::result& r,
             ast_node_types_t type,
@@ -437,184 +358,6 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    ast_node_shared_ptr map_expression_prefix_parser::parse(
-            common::result& r,
-            parser* parser,
-            token_t& token) {
-        parser->use_global_comma_precedence();
-        defer(parser->use_default_comma_precedence());
-
-        auto node = parser->ast_builder()->map_expression_node();
-        node->location.start(token.location.start());
-
-        token_t less_than;
-        less_than.type = token_types_t::less_than;
-        if (!parser->expect(r, less_than))
-            return nullptr;
-
-        auto key_type = create_type_declaration_node(
-            r,
-            parser,
-            nullptr,
-            less_than);
-        node->lhs->children.push_back(key_type);
-
-        token_t comma;
-        comma.type = token_types_t::comma;
-        if (!parser->expect(r, comma))
-            return nullptr;
-
-        auto value_type = create_type_declaration_node(
-            r,
-            parser,
-            nullptr,
-            comma);
-        node->lhs->children.push_back(value_type);
-
-        token_t greater_than;
-        greater_than.type = token_types_t::greater_than;
-        if (!parser->expect(r, greater_than))
-            return nullptr;
-
-        token_t left_paren;
-        left_paren.type = token_types_t::left_paren;
-        if (!parser->expect(r, left_paren))
-            return nullptr;
-
-        pairs_to_list(
-            node->rhs,
-            parser->parse_expression(r));
-
-        token_t right_paren;
-        right_paren.type = token_types_t::right_paren;
-        if (!parser->expect(r, right_paren))
-            return nullptr;
-
-        node->location.end(right_paren.location.end());
-        return node;
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-
-    ast_node_shared_ptr array_expression_prefix_parser::parse(
-            common::result& r,
-            parser* parser,
-            token_t& token) {
-        auto node = parser->ast_builder()->array_expression_node();
-        node->location.start(token.location.start());
-
-        token_t less_than;
-        less_than.type = token_types_t::less_than;
-        if (!parser->expect(r, less_than))
-            return nullptr;
-
-        node->lhs = create_type_declaration_node(
-            r,
-            parser,
-            nullptr,
-            less_than);
-
-        token_t greater_than;
-        greater_than.type = token_types_t::greater_than;
-        if (!parser->expect(r, greater_than))
-            return nullptr;
-
-        token_t left_paren;
-        left_paren.type = token_types_t::left_paren;
-        if (!parser->expect(r, left_paren))
-            return nullptr;
-
-        pairs_to_list(
-            node->rhs,
-            parser->parse_expression(r));
-
-        token_t right_paren;
-        right_paren.type = token_types_t::right_paren;
-        if (!parser->expect(r, right_paren))
-            return nullptr;
-
-        node->location.end(right_paren.location.end());
-        return node;
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-
-    ast_node_shared_ptr new_expression_prefix_parser::parse(
-            common::result& r,
-            parser* parser,
-            token_t& token) {
-        parser->use_global_comma_precedence();
-        defer(parser->use_default_comma_precedence());
-
-        auto node = parser->ast_builder()->new_expression_node();
-        node->location.start(token.location.start());
-
-        token_t less_than;
-        less_than.type = token_types_t::less_than;
-        if (!parser->expect(r, less_than))
-            return nullptr;
-
-        node->lhs = create_type_declaration_node(
-            r,
-            parser,
-            nullptr,
-            less_than);
-
-        token_t greater_than;
-        greater_than.type = token_types_t::greater_than;
-        if (!parser->expect(r, greater_than))
-            return nullptr;
-
-        token_t left_paren;
-        left_paren.type = token_types_t::left_paren;
-        if (!parser->expect(r, left_paren))
-            return nullptr;
-
-        pairs_to_list(
-            node->rhs,
-            parser->parse_expression(r));
-
-        token_t right_paren;
-        right_paren.type = token_types_t::right_paren;
-        if (!parser->expect(r, right_paren))
-            return nullptr;
-
-        node->location.end(right_paren.location.end());
-        return node;
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-
-    ast_node_shared_ptr tuple_expression_prefix_parser::parse(
-            common::result& r,
-            parser* parser,
-            token_t& token) {
-        parser->use_global_comma_precedence();
-        defer(parser->use_default_comma_precedence());
-
-        auto node = parser->ast_builder()->tuple_expression_node();
-        node->location.start(token.location.start());
-
-        token_t left_paren;
-        left_paren.type = token_types_t::left_paren;
-        if (!parser->expect(r, left_paren))
-            return nullptr;
-
-        pairs_to_list(
-            node->rhs,
-            parser->parse_expression(r));
-
-        token_t right_paren;
-        right_paren.type = token_types_t::right_paren;
-        if (!parser->expect(r, right_paren))
-            return nullptr;
-
-        node->location.end(right_paren.location.end());
-        return node;
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-
     ast_node_shared_ptr spread_prefix_parser::parse(
             common::result& r,
             parser* parser,
@@ -622,24 +365,6 @@ namespace basecode::syntax {
         auto node = parser->ast_builder()->spread_operator_node(token);
         node->rhs = parser->parse_expression(r, precedence_t::variable);
         return node;
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-
-    ast_node_shared_ptr cast_prefix_parser::parse(
-            common::result& r,
-            parser* parser,
-            token_t& token) {
-        return create_cast_node(r, parser, token);
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-
-    ast_node_shared_ptr transmute_prefix_parser::parse(
-            common::result& r,
-            parser* parser,
-            token_t& token) {
-        return create_transmute_node(r, parser, token);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -1156,21 +881,6 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    ast_node_shared_ptr cast_infix_parser::parse(
-            common::result& r,
-            parser* parser,
-            const ast_node_shared_ptr& lhs,
-            token_t& token) {
-        lhs->rhs = create_cast_node(r, parser, token);
-        return lhs;
-    }
-
-    precedence_t cast_infix_parser::precedence() const {
-        return precedence_t::cast;
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-
     ast_node_shared_ptr proc_call_infix_parser::parse(
             common::result& r,
             parser* parser,
@@ -1179,13 +889,13 @@ namespace basecode::syntax {
         parser->use_global_comma_precedence();
         defer(parser->use_default_comma_precedence());
 
-        auto proc_call_node = parser->ast_builder()->proc_call_node();
-        proc_call_node->location.start(lhs->location.start());
-        proc_call_node->lhs->rhs = lhs;
+        auto node = parser->ast_builder()->proc_call_node();
+        node->location.start(lhs->location.start());
+        node->lhs->rhs = lhs;
 
         if (!parser->peek(token_types_t::right_paren)) {
             pairs_to_list(
-                proc_call_node->rhs,
+                node->rhs,
                 parser->parse_expression(r));
         }
 
@@ -1194,9 +904,9 @@ namespace basecode::syntax {
         if (!parser->expect(r, right_paren_token))
             return nullptr;
 
-        proc_call_node->location.end(right_paren_token.location.end());
+        node->location.end(right_paren_token.location.end());
 
-        return proc_call_node;
+        return node;
     }
 
     precedence_t proc_call_infix_parser::precedence() const {

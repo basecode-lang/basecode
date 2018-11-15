@@ -175,14 +175,6 @@ namespace basecode::compiler {
             evaluator_context_t& context,
             evaluator_result_t& result);
 
-        bool map_expression(
-            evaluator_context_t& context,
-            evaluator_result_t& result);
-
-        bool array_expression(
-            evaluator_context_t& context,
-            evaluator_result_t& result);
-
         bool character_literal(
             evaluator_context_t& context,
             evaluator_result_t& result);
@@ -208,10 +200,6 @@ namespace basecode::compiler {
             evaluator_result_t& result);
 
         bool binary_operator(
-            evaluator_context_t& context,
-            evaluator_result_t& result);
-
-        bool cast_expression(
             evaluator_context_t& context,
             evaluator_result_t& result);
 
@@ -263,10 +251,6 @@ namespace basecode::compiler {
             evaluator_context_t& context,
             evaluator_result_t& result);
 
-        bool new_expression(
-            evaluator_context_t& context,
-            evaluator_result_t& result);
-
         bool proc_expression(
             evaluator_context_t& context,
             evaluator_result_t& result);
@@ -276,14 +260,6 @@ namespace basecode::compiler {
             evaluator_result_t& result);
 
         bool with_member_access(
-            evaluator_context_t& context,
-            evaluator_result_t& result);
-
-        bool tuple_expression(
-            evaluator_context_t& context,
-            evaluator_result_t& result);
-
-        bool transmute_expression(
             evaluator_context_t& context,
             evaluator_result_t& result);
 
