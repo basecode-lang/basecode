@@ -46,15 +46,10 @@ namespace basecode::compiler {
         compiler::element* evaluate(const syntax::ast_node_t* node);
 
     private:
-        compiler::element* convert_predicate(
+        void add_type_parameters(
             const evaluator_context_t& context,
-            const syntax::ast_node_t* node,
-            compiler::block* scope);
-
-        compiler::element* evaluate_in_scope(
-            const evaluator_context_t& context,
-            const syntax::ast_node_t* node,
-            compiler::block* scope);
+            compiler::block* scope,
+            const syntax::ast_node_t* type_parameters_node);
 
         void add_procedure_instance(
             const evaluator_context_t& context,
@@ -65,20 +60,25 @@ namespace basecode::compiler {
             compiler::block* scope,
             compiler::element* expr);
 
-        void add_type_parameters(
+        bool add_assignments_to_scope(
             const evaluator_context_t& context,
-            compiler::block* scope,
-            const syntax::ast_node_t* type_parameters_node);
+            const syntax::ast_node_t* node,
+            element_list_t& expressions,
+            compiler::block* scope);
 
         void add_composite_type_fields(
             const evaluator_context_t& context,
             compiler::composite_type* type,
             const syntax::ast_node_t* block);
 
-        bool add_assignments_to_scope(
+        compiler::element* convert_predicate(
             const evaluator_context_t& context,
             const syntax::ast_node_t* node,
-            element_list_t& expressions,
+            compiler::block* scope);
+
+        compiler::element* evaluate_in_scope(
+            const evaluator_context_t& context,
+            const syntax::ast_node_t* node,
             compiler::block* scope);
 
         compiler::block* add_namespaces_to_scope(
@@ -87,13 +87,14 @@ namespace basecode::compiler {
             compiler::symbol_element* symbol,
             compiler::block* parent_scope);
 
-        compiler::declaration* add_identifier_to_scope(
+        compiler::declaration* declare_identifier(
             const evaluator_context_t& context,
-            compiler::symbol_element* symbol,
-            compiler::type_reference* type_ref,
             const syntax::ast_node_t* node,
-            size_t source_index,
-            compiler::block* parent_scope = nullptr);
+            compiler::block* scope);
+
+        compiler::type_literal* make_tuple_literal(
+            const evaluator_context_t& context,
+            compiler::block* scope);
 
         compiler::element* resolve_symbol_or_evaluate(
             const evaluator_context_t& context,
@@ -101,10 +102,13 @@ namespace basecode::compiler {
             compiler::block* scope = nullptr,
             bool flag_as_unresolved = true);
 
-        compiler::declaration* declare_identifier(
+        compiler::declaration* add_identifier_to_scope(
             const evaluator_context_t& context,
+            compiler::symbol_element* symbol,
+            compiler::type_reference* type_ref,
             const syntax::ast_node_t* node,
-            compiler::block* scope);
+            size_t source_index,
+            compiler::block* parent_scope = nullptr);
 
     private:
         bool nil(
