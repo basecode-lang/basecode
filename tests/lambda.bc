@@ -4,10 +4,10 @@ COMPARATOR_T :: proc<T>(lhs: ^T, rhs: ^T):bool;
 
 qsort :: proc<T>(
         items: ^[]T,
-        comparator: COMPARATOR_T<T>) {
+        comparator: COMPARATOR_T) {
     // stuff
 };
 
 values := array<u32>(16, 3, 5, 110, 4, 3, 9, 19, 21);
 
-//qsort(values, |lhs, rhs| lhs < rhs);
+qsort(values, |lhs, rhs| lhs < rhs);
