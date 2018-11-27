@@ -27,3 +27,4 @@
 ../bin/bc -v -G while-loop.bc
 ../bin/bc -v -G with.bc
 ../bin/bc -v -G precedence.bc
+../bin/bc -v -G switch.bc

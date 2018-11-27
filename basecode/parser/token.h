@@ -60,6 +60,7 @@ namespace basecode::syntax {
         rol_literal,
         ror_literal,
         nil_literal,
+        case_literal,
         from_literal,
         proc_literal,
         with_literal,
@@ -82,6 +83,7 @@ namespace basecode::syntax {
         return_literal,
         import_literal,
         lambda_literal,
+        switch_literal,
         less_than_equal,
         spread_operator,
         else_if_literal,
@@ -92,6 +94,7 @@ namespace basecode::syntax {
         namespace_literal,
         greater_than_equal,
         plus_equal_literal,
+        fallthrough_literal,
         minus_equal_literal,
         constant_assignment,
         left_square_bracket,
@@ -146,6 +149,7 @@ namespace basecode::syntax {
         {token_types_t::shr_literal,                "shr_literal"},
         {token_types_t::rol_literal,                "rol_literal"},
         {token_types_t::ror_literal,                "ror_literal"},
+        {token_types_t::case_literal,               "case_literal"},
         {token_types_t::from_literal,               "from_literal"},
         {token_types_t::proc_literal,               "proc_literal"},
         {token_types_t::with_literal,               "with_literal"},
@@ -167,6 +171,7 @@ namespace basecode::syntax {
         {token_types_t::number_literal,             "number_literal"},
         {token_types_t::scope_operator,             "scope_operator"},
         {token_types_t::string_literal,             "string_literal"},
+        {token_types_t::switch_literal,             "switch_literal"},
         {token_types_t::spread_operator,            "spread_operator"},
         {token_types_t::import_literal,             "import_literal"},
         {token_types_t::less_than_equal,            "less_than_equal"},
@@ -178,6 +183,7 @@ namespace basecode::syntax {
         {token_types_t::namespace_literal,          "namespace_literal"},
         {token_types_t::plus_equal_literal,         "plus_equal_literal"},
         {token_types_t::greater_than_equal,         "greater_than_equal"},
+        {token_types_t::fallthrough_literal,        "fallthrough_literal"},
         {token_types_t::minus_equal_literal,        "minus_equal_literal"},
         {token_types_t::constant_assignment,        "constant_assignment"},
         {token_types_t::left_square_bracket,        "left_square_bracket"},
@@ -244,19 +250,9 @@ namespace basecode::syntax {
         .value = "{{"
     };
 
-    static inline token_t s_end_of_file = {
-        .type = token_types_t::end_of_file,
-        .value = ""
-    };
-
-    static inline token_t s_block_comment = {
-        .type = token_types_t::block_comment,
-        .value = "/*"
-    };
-
-    static inline token_t s_proc_literal = {
-        .type = token_types_t::proc_literal,
-        .value = "proc"
+    static inline token_t s_in_literal = {
+        .type = token_types_t::in_literal,
+        .value = "in"
     };
 
     static inline token_t s_if_literal = {
@@ -264,19 +260,9 @@ namespace basecode::syntax {
         .value = "if"
     };
 
-    static inline token_t s_in_literal = {
-        .type = token_types_t::in_literal,
-        .value = "in"
-    };
-
-    static inline token_t s_for_literal = {
-        .type = token_types_t::for_literal,
-        .value = "for"
-    };
-
-    static inline token_t s_exponent_literal = {
-        .type = token_types_t::exponent,
-        .value = "**"
+    static inline token_t s_nil_literal = {
+        .type = token_types_t::nil_literal,
+        .value = "nil"
     };
 
     static inline token_t s_xor_literal = {
@@ -304,6 +290,21 @@ namespace basecode::syntax {
         .value = "ror"
     };
 
+    static inline token_t s_for_literal = {
+        .type = token_types_t::for_literal,
+        .value = "for"
+    };
+
+    static inline token_t s_end_of_file = {
+        .type = token_types_t::end_of_file,
+        .value = ""
+    };
+
+    static inline token_t s_proc_literal = {
+        .type = token_types_t::proc_literal,
+        .value = "proc"
+    };
+
     static inline token_t s_else_literal = {
         .type = token_types_t::else_literal,
         .value = "else"
@@ -324,19 +325,9 @@ namespace basecode::syntax {
         .value = "|"
     };
 
-    static inline token_t s_colon_literal = {
-        .type = token_types_t::colon,
-        .value = ":"
-    };
-
     static inline token_t s_enum_literal = {
         .type = token_types_t::enum_literal,
         .value = "enum"
-    };
-
-    static inline token_t s_nil_literal = {
-        .type = token_types_t::nil_literal,
-        .value = "nil"
     };
 
     static inline token_t s_with_literal = {
@@ -352,6 +343,21 @@ namespace basecode::syntax {
     static inline token_t s_true_literal = {
         .type = token_types_t::true_literal,
         .value = "true"
+    };
+
+    static inline token_t s_case_literal = {
+        .type = token_types_t::case_literal,
+        .value = "case"
+    };
+
+    static inline token_t s_block_comment = {
+        .type = token_types_t::block_comment,
+        .value = "/*"
+    };
+
+    static inline token_t s_colon_literal = {
+        .type = token_types_t::colon,
+        .value = ":"
     };
 
     static inline token_t s_minus_literal = {
@@ -372,11 +378,6 @@ namespace basecode::syntax {
     static inline token_t s_defer_literal = {
         .type = token_types_t::defer_literal,
         .value = "defer"
-    };
-
-    static inline token_t s_module_literal = {
-        .type = token_types_t::module_literal,
-        .value = "module"
     };
 
     static inline token_t s_break_literal = {
@@ -409,6 +410,11 @@ namespace basecode::syntax {
         .value = "~"
     };
 
+    static inline token_t s_module_literal = {
+        .type = token_types_t::module_literal,
+        .value = "module"
+    };
+
     static inline token_t s_import_literal = {
         .type = token_types_t::import_literal,
         .value = "import"
@@ -429,6 +435,16 @@ namespace basecode::syntax {
         .value = "return"
     };
 
+    static inline token_t s_switch_literal = {
+        .type = token_types_t::switch_literal,
+        .value = "switch"
+    };
+
+    static inline token_t s_equals_literal = {
+        .type = token_types_t::equals,
+        .value = "=="
+    };
+
     static inline token_t s_else_if_literal = {
         .type = token_types_t::else_if_literal,
         .value = "else if"
@@ -439,44 +455,9 @@ namespace basecode::syntax {
         .value = "%"
     };
 
-    static inline token_t s_plus_equal_literal = {
-        .type = token_types_t::plus_equal_literal,
-        .value = "+:="
-    };
-
-    static inline token_t s_minus_equal_literal = {
-        .type = token_types_t::minus_equal_literal,
-        .value = "-:="
-    };
-
-    static inline token_t s_divide_equal_literal = {
-        .type = token_types_t::divide_equal_literal,
-        .value = "/:="
-    };
-
-    static inline token_t s_modulus_equal_literal = {
-        .type = token_types_t::modulus_equal_literal,
-        .value = "%:="
-    };
-
-    static inline token_t s_multiply_equal_literal = {
-        .type = token_types_t::multiply_equal_literal,
-        .value = "*:="
-    };
-
-    static inline token_t s_binary_or_equal_literal = {
-        .type = token_types_t::binary_or_equal_literal,
-        .value = "|:="
-    };
-
-    static inline token_t s_binary_and_equal_literal = {
-        .type = token_types_t::binary_and_equal_literal,
-        .value = "&:="
-    };
-
-    static inline token_t s_binary_not_equal_literal = {
-        .type = token_types_t::binary_not_equal_literal,
-        .value = "~:="
+    static inline token_t s_exponent_literal = {
+        .type = token_types_t::exponent,
+        .value = "**"
     };
 
     static inline token_t s_continue_literal = {
@@ -499,14 +480,14 @@ namespace basecode::syntax {
         .value = "ns"
     };
 
-    static inline token_t s_assignment_literal = {
-        .type = token_types_t::assignment,
-        .value = ":="
-    };
-
     static inline token_t s_ampersand_literal = {
         .type = token_types_t::ampersand,
         .value = "&"
+    };
+
+    static inline token_t s_less_than_literal = {
+        .type = token_types_t::less_than,
+        .value = "<"
     };
 
     static inline token_t s_left_paren_literal = {
@@ -524,6 +505,21 @@ namespace basecode::syntax {
         .value = ";"
     };
 
+    static inline token_t s_assignment_literal = {
+        .type = token_types_t::assignment,
+        .value = ":="
+    };
+
+    static inline token_t s_plus_equal_literal = {
+        .type = token_types_t::plus_equal_literal,
+        .value = "+:="
+    };
+
+    static inline token_t s_not_equals_literal = {
+        .type = token_types_t::not_equals,
+        .value = "!="
+    };
+
     static inline token_t s_right_paren_literal = {
         .type = token_types_t::right_paren,
         .value = ")"
@@ -534,14 +530,14 @@ namespace basecode::syntax {
         .value = "&&"
     };
 
-    static inline token_t s_equals_literal = {
-        .type = token_types_t::equals,
-        .value = "=="
+    static inline token_t s_minus_equal_literal = {
+        .type = token_types_t::minus_equal_literal,
+        .value = "-:="
     };
 
-    static inline token_t s_not_equals_literal = {
-        .type = token_types_t::not_equals,
-        .value = "!="
+    static inline token_t s_fallthrough_literal = {
+        .type = token_types_t::fallthrough_literal,
+        .value = "fallthrough"
     };
 
     static inline token_t s_greater_than_literal = {
@@ -549,19 +545,19 @@ namespace basecode::syntax {
         .value = ">"
     };
 
-    static inline token_t s_less_than_literal = {
-        .type = token_types_t::less_than,
-        .value = "<"
+    static inline token_t s_divide_equal_literal = {
+        .type = token_types_t::divide_equal_literal,
+        .value = "/:="
     };
 
-    static inline token_t s_greater_than_equal_literal = {
-        .type = token_types_t::greater_than_equal,
-        .value = ">="
+    static inline token_t s_modulus_equal_literal = {
+        .type = token_types_t::modulus_equal_literal,
+        .value = "%:="
     };
 
-    static inline token_t s_less_than_equal_literal = {
-        .type = token_types_t::less_than_equal,
-        .value = "<="
+    static inline token_t s_multiply_equal_literal = {
+        .type = token_types_t::multiply_equal_literal,
+        .value = "*:="
     };
 
     static inline token_t s_scope_operator_literal = {
@@ -574,6 +570,26 @@ namespace basecode::syntax {
         .value = "..."
     };
 
+    static inline token_t s_less_than_equal_literal = {
+        .type = token_types_t::less_than_equal,
+        .value = "<="
+    };
+
+    static inline token_t s_binary_or_equal_literal = {
+        .type = token_types_t::binary_or_equal_literal,
+        .value = "|:="
+    };
+
+    static inline token_t s_binary_and_equal_literal = {
+        .type = token_types_t::binary_and_equal_literal,
+        .value = "&:="
+    };
+
+    static inline token_t s_binary_not_equal_literal = {
+        .type = token_types_t::binary_not_equal_literal,
+        .value = "~:="
+    };
+
     static inline token_t s_left_curly_brace_literal = {
         .type = token_types_t::left_curly_brace,
         .value = "{"
@@ -582,6 +598,11 @@ namespace basecode::syntax {
     static inline token_t s_right_curly_brace_literal = {
         .type = token_types_t::right_curly_brace,
         .value = "}"
+    };
+
+    static inline token_t s_greater_than_equal_literal = {
+        .type = token_types_t::greater_than_equal,
+        .value = ">="
     };
 
     static inline token_t s_constant_assignment_literal = {

@@ -99,6 +99,8 @@ namespace basecode::syntax {
 
         bool nil_literal(token_t& token);
 
+        bool case_literal(token_t& token);
+
         bool proc_literal(token_t& token);
 
         bool enum_literal(token_t& token);
@@ -143,6 +145,8 @@ namespace basecode::syntax {
 
         bool lambda_literal(token_t& token);
 
+        bool switch_literal(token_t& token);
+
         bool line_terminator(token_t& token);
 
         bool equals_operator(token_t& token);
@@ -162,6 +166,8 @@ namespace basecode::syntax {
         bool character_literal(token_t& token);
 
         bool less_than_operator(token_t& token);
+
+        bool fallthrough_literal(token_t& token);
 
         bool not_equals_operator(token_t& token);
 

@@ -119,8 +119,9 @@ namespace basecode::syntax {
         // return literal
         {'r', std::bind(&lexer::return_literal, std::placeholders::_1, std::placeholders::_2)},
 
-        // true/false literals
+        // true/fallthrough/false literals
         {'t', std::bind(&lexer::true_literal, std::placeholders::_1, std::placeholders::_2)},
+        {'f', std::bind(&lexer::fallthrough_literal, std::placeholders::_1, std::placeholders::_2)},
         {'f', std::bind(&lexer::false_literal, std::placeholders::_1, std::placeholders::_2)},
 
         // nil/ns literals
@@ -153,8 +154,9 @@ namespace basecode::syntax {
         // defer literal
         {'d', std::bind(&lexer::defer_literal, std::placeholders::_1, std::placeholders::_2)},
 
-        // continue literal
+        // continue/case literal
         {'c', std::bind(&lexer::continue_literal, std::placeholders::_1, std::placeholders::_2)},
+        {'c', std::bind(&lexer::case_literal, std::placeholders::_1, std::placeholders::_2)},
 
         // proc literal
         {'p', std::bind(&lexer::proc_literal, std::placeholders::_1, std::placeholders::_2)},
@@ -166,7 +168,8 @@ namespace basecode::syntax {
         {'r', std::bind(&lexer::rol_literal, std::placeholders::_1, std::placeholders::_2)},
         {'r', std::bind(&lexer::ror_literal, std::placeholders::_1, std::placeholders::_2)},
 
-        // struct/shl/shr literal
+        // switch/struct/shl/shr literal
+        {'s', std::bind(&lexer::switch_literal, std::placeholders::_1, std::placeholders::_2)},
         {'s', std::bind(&lexer::struct_literal, std::placeholders::_1, std::placeholders::_2)},
         {'s', std::bind(&lexer::shl_literal, std::placeholders::_1, std::placeholders::_2)},
         {'s', std::bind(&lexer::shr_literal, std::placeholders::_1, std::placeholders::_2)},
@@ -711,6 +714,18 @@ namespace basecode::syntax {
         return false;
     }
 
+    bool lexer::case_literal(token_t& token) {
+        if (match_literal("case")) {
+            auto ch = read(false);
+            if (isspace(ch)) {
+                rewind_one_char();
+                token = s_case_literal;
+                return true;
+            }
+        }
+        return false;
+    }
+
     bool lexer::proc_literal(token_t& token) {
         if (match_literal("proc")) {
             auto ch = read(false);
@@ -1007,6 +1022,18 @@ namespace basecode::syntax {
         return true;
     }
 
+    bool lexer::switch_literal(token_t& token) {
+        if (match_literal("switch")) {
+            auto ch = read(false);
+            if (isspace(ch)) {
+                rewind_one_char();
+                token = s_switch_literal;
+                return true;
+            }
+        }
+        return false;
+    }
+
     bool lexer::lambda_literal(token_t& token) {
         auto ch = read();
         if (ch != '|')
@@ -1147,6 +1174,18 @@ namespace basecode::syntax {
         if (ch == '<') {
             token = s_less_than_literal;
             return true;
+        }
+        return false;
+    }
+
+    bool lexer::fallthrough_literal(token_t& token) {
+        if (match_literal("fallthrough")) {
+            auto ch = read(false);
+            if (isspace(ch)) {
+                rewind_one_char();
+                token = s_fallthrough_literal;
+                return true;
+            }
         }
         return false;
     }
