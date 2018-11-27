@@ -16,7 +16,6 @@
 ../bin/bc -v -G map.bc
 ../bin/bc -v -G pointers-with-member-access.bc
 ../bin/bc -v -G pointers.bc
-../bin/bc -v -G preload.bc
 ../bin/bc -v -G relational-operators.bc
 ../bin/bc -v -G short.bc
 ../bin/bc -v -G simple.bc
