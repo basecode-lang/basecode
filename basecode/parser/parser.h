@@ -28,17 +28,20 @@ namespace basecode::syntax {
         lowest,
         assignment,
         comma,
-        conditional,
+        logical_or,
+        logical_and,
+        bitwise_or,
+        bitwise_xor,
+        bitwise_and,
+        equality,
+        relational,
+        bitwise_shift_or_roll,
         sum,
         product,
-        logical,
-        relational,
-        bitwise,
         exponent,
         member_access,
-        subscript,
         pointer_dereference,
-        block_comment,
+        subscript,
         prefix,
         postfix,
         cast,
@@ -762,42 +765,76 @@ namespace basecode::syntax {
         static inline type_declaration_infix_parser s_type_declaration_infix_parser {};
         static inline constant_assignment_infix_parser s_constant_assignment_infix_parser {};
         static inline pointer_dereference_infix_parser s_pointer_dereference_infix_parser {};
-        static inline binary_operator_infix_parser s_sum_bin_op_parser {precedence_t::sum, false};
-        static inline binary_operator_infix_parser s_product_bin_op_parser {precedence_t::product, false};
-        static inline binary_operator_infix_parser s_bitwise_bin_op_parser {precedence_t::bitwise, false};
-        static inline binary_operator_infix_parser s_logical_bin_op_parser {precedence_t::logical, false};
-        static inline binary_operator_infix_parser s_exponent_bin_op_parser {precedence_t::exponent, true};
-        static inline binary_operator_infix_parser s_relational_bin_op_parser {precedence_t::relational, false};
-        static inline binary_operator_infix_parser s_sum_with_assign_bin_op_parser {precedence_t::sum, false, true};
-        static inline binary_operator_infix_parser s_member_access_bin_op_parser {precedence_t::member_access, false};
-        static inline binary_operator_infix_parser s_bitwise_with_assign_bin_op_parser {precedence_t::bitwise, false, true};
-        static inline binary_operator_infix_parser s_product_with_assign_bin_op_parser {precedence_t::product, false, true};
+        static inline binary_operator_infix_parser s_sum_bin_op_parser {
+            precedence_t::sum,
+            false};
+        static inline binary_operator_infix_parser s_product_bin_op_parser {
+            precedence_t::product,
+            false};
+        static inline binary_operator_infix_parser s_exponent_bin_op_parser {
+            precedence_t::exponent,
+            true};
+        static inline binary_operator_infix_parser s_equality_bin_op_parser {
+            precedence_t::equality,
+            false};
+        static inline binary_operator_infix_parser s_relational_bin_op_parser {
+            precedence_t::relational,
+            false};
+        static inline binary_operator_infix_parser s_logical_or_bin_op_parser {
+            precedence_t::logical_or,
+            false};
+        static inline binary_operator_infix_parser s_logical_and_bin_op_parser {
+            precedence_t::logical_and,
+            false};
+        static inline binary_operator_infix_parser s_bitwise_or_bin_op_parser {
+            precedence_t::bitwise_or,
+            false};
+        static inline binary_operator_infix_parser s_bitwise_and_bin_op_parser {
+            precedence_t::bitwise_and,
+            false};
+        static inline binary_operator_infix_parser s_bitwise_xor_bin_op_parser {
+            precedence_t::bitwise_xor,
+            false};
+        static inline binary_operator_infix_parser s_sum_with_assign_bin_op_parser {
+            precedence_t::sum,
+            false,
+            true};
+        static inline binary_operator_infix_parser s_member_access_bin_op_parser {
+            precedence_t::member_access,
+            false};
+        static inline binary_operator_infix_parser s_bitwise_with_assign_bin_op_parser {
+            precedence_t::bitwise_and,
+            false,
+            true};
+        static inline binary_operator_infix_parser s_product_with_assign_bin_op_parser {
+            precedence_t::product,
+            false,
+            true};
+        static inline binary_operator_infix_parser s_bitwise_shift_or_roll_bin_op_parser {
+            precedence_t::bitwise_shift_or_roll,
+            false};
 
         static inline std::unordered_map<token_types_t, infix_parser*> s_infix_parsers = {
             {token_types_t::plus,                   &s_sum_bin_op_parser},
             {token_types_t::minus,                  &s_sum_bin_op_parser},
             {token_types_t::comma,                  &s_comma_infix_parser},
-            {token_types_t::pipe,                   &s_bitwise_bin_op_parser},
             {token_types_t::slash,                  &s_product_bin_op_parser},
             {token_types_t::percent,                &s_product_bin_op_parser},
             {token_types_t::asterisk,               &s_product_bin_op_parser},
-            {token_types_t::ampersand,              &s_bitwise_bin_op_parser},
-            {token_types_t::logical_or,             &s_logical_bin_op_parser},
-            {token_types_t::xor_literal,            &s_bitwise_bin_op_parser},
-            {token_types_t::shl_literal,            &s_bitwise_bin_op_parser},
-            {token_types_t::shr_literal,            &s_bitwise_bin_op_parser},
-            {token_types_t::rol_literal,            &s_bitwise_bin_op_parser},
-            {token_types_t::ror_literal,            &s_bitwise_bin_op_parser},
-            {token_types_t::logical_and,            &s_logical_bin_op_parser},
             {token_types_t::exponent,               &s_exponent_bin_op_parser},
             {token_types_t::left_paren,             &s_proc_call_infix_parser},
+            {token_types_t::equals,                 &s_equality_bin_op_parser},
+            {token_types_t::not_equals,             &s_equality_bin_op_parser},
             {token_types_t::assignment,             &s_assignment_infix_parser},
-            {token_types_t::equals,                 &s_relational_bin_op_parser},
             {token_types_t::less_than,              &s_relational_bin_op_parser},
-            {token_types_t::not_equals,             &s_relational_bin_op_parser},
             {token_types_t::greater_than,           &s_relational_bin_op_parser},
             {token_types_t::less_than_equal,        &s_relational_bin_op_parser},
             {token_types_t::greater_than_equal,     &s_relational_bin_op_parser},
+            {token_types_t::logical_or,             &s_logical_or_bin_op_parser},
+            {token_types_t::pipe,                   &s_bitwise_or_bin_op_parser},
+            {token_types_t::ampersand,              &s_bitwise_and_bin_op_parser},
+            {token_types_t::xor_literal,            &s_bitwise_xor_bin_op_parser},
+            {token_types_t::logical_and,            &s_logical_and_bin_op_parser},
             {token_types_t::period,                 &s_member_access_bin_op_parser},
             {token_types_t::left_square_bracket,    &s_array_subscript_infix_parser},
             {token_types_t::colon,                  &s_type_declaration_infix_parser},
@@ -811,6 +848,10 @@ namespace basecode::syntax {
             {token_types_t::divide_equal_literal,   &s_product_with_assign_bin_op_parser},
             {token_types_t::modulus_equal_literal,  &s_product_with_assign_bin_op_parser},
             {token_types_t::multiply_equal_literal, &s_product_with_assign_bin_op_parser},
+            {token_types_t::shl_literal,            &s_bitwise_shift_or_roll_bin_op_parser},
+            {token_types_t::shr_literal,            &s_bitwise_shift_or_roll_bin_op_parser},
+            {token_types_t::rol_literal,            &s_bitwise_shift_or_roll_bin_op_parser},
+            {token_types_t::ror_literal,            &s_bitwise_shift_or_roll_bin_op_parser},
         };
 
         syntax::lexer _lexer;
