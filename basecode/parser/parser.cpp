@@ -640,6 +640,49 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    ast_node_shared_ptr lambda_expression_prefix_parser::parse(
+            common::result& r,
+            parser* parser,
+            token_t& token) {
+        auto lambda_node = parser->ast_builder()->lambda_expression_node(token);
+
+        while (true) {
+            if (parser->peek(token_types_t::pipe)) {
+                parser->consume();
+                break;
+            }
+
+            auto symbol_node = parser->parse_expression(
+                r,
+                precedence_t::variable);
+            lambda_node->rhs->children.push_back(symbol_node);
+
+            if (parser->peek(token_types_t::comma))
+                parser->consume();
+        }
+
+        if (parser->peek(token_types_t::colon)) {
+            token_t colon_token;
+            parser->consume(colon_token);
+
+            lambda_node->lhs->rhs = create_type_declaration_node(
+                r,
+                parser,
+                nullptr,
+                colon_token);
+        }
+
+        while (parser->peek(token_types_t::attribute)) {
+            lambda_node->attributes.push_back(parser->parse_expression(r));
+        }
+
+        lambda_node->children.push_back(parser->parse_expression(r));
+
+        return lambda_node;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
     ast_node_shared_ptr group_prefix_parser::parse(
             common::result& r,
             parser* parser,

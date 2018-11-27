@@ -56,6 +56,7 @@ namespace basecode::compiler {
         {syntax::ast_node_types_t::return_statement,        std::bind(&ast_evaluator::return_statement, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::symbol_reference,        std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::for_in_statement,        std::bind(&ast_evaluator::for_in_statement, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::lambda_expression,       std::bind(&ast_evaluator::lambda_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::switch_expression,       std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::import_expression,       std::bind(&ast_evaluator::import_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::struct_expression,       std::bind(&ast_evaluator::struct_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
@@ -1497,13 +1498,12 @@ namespace basecode::compiler {
 
         add_type_parameters(context, block_scope, context.node->lhs->lhs.get());
 
-        auto count = 0;
         compiler::field* return_field = nullptr;
         auto return_type_node = context.node->lhs->rhs;
         if (return_type_node != nullptr) {
             auto return_identifier = builder.make_identifier(
                 block_scope,
-                builder.make_symbol(block_scope, fmt::format("_{}", count++)),
+                builder.make_symbol(block_scope, "_retval"),
                 nullptr);
             return_identifier->usage(identifier_usage_t::stack);
 
@@ -1521,7 +1521,7 @@ namespace basecode::compiler {
                 proc_type,
                 block_scope,
                 builder.make_declaration(block_scope, return_identifier, nullptr),
-                return_field != nullptr ? return_field->end_offset() : 0);
+                0);
             proc_type->return_type(return_field);
         }
 
@@ -1550,6 +1550,83 @@ namespace basecode::compiler {
                     break;
                 }
                 case syntax::ast_node_types_t::symbol: {
+                    auto param_decl = declare_identifier(
+                        context,
+                        param_node.get(),
+                        block_scope);
+                    if (param_decl != nullptr) {
+                        param_decl->identifier()->usage(identifier_usage_t::stack);
+                        param_field = builder.make_field(
+                            proc_type,
+                            block_scope,
+                            param_decl,
+                            param_field != nullptr ? param_field->end_offset() : 0);
+                        proc_type->parameters().add(param_field);
+                    } else {
+                        return false;
+                    }
+                    break;
+                }
+                default: {
+                    break;
+                }
+            }
+        }
+
+        result.element = proc_type;
+
+        return true;
+    }
+
+    bool ast_evaluator::lambda_expression(
+            evaluator_context_t& context,
+            evaluator_result_t& result) {
+        auto& builder = _session.builder();
+        auto& scope_manager = _session.scope_manager();
+        auto open_generic_type = scope_manager.find_generic_type({});
+
+        auto active_scope = scope_manager.current_scope();
+        auto block_scope = builder.make_block(active_scope, element_type_t::block);
+        auto proc_type = builder.make_procedure_type(active_scope, block_scope);
+        active_scope->types().add(proc_type);
+
+        add_type_parameters(context, block_scope, context.node->lhs->lhs.get());
+
+        compiler::field* return_field = nullptr;
+        auto return_type_node = context.node->lhs->rhs;
+        if (return_type_node != nullptr) {
+            auto return_identifier = builder.make_identifier(
+                block_scope,
+                builder.make_symbol(block_scope, "_retval"),
+                nullptr);
+            return_identifier->usage(identifier_usage_t::stack);
+
+            auto type_ref = dynamic_cast<compiler::type_reference*>(evaluate_in_scope(
+                context,
+                return_type_node.get(),
+                block_scope));
+            if (type_ref->is_unknown_type()) {
+                _session.scope_manager()
+                    .identifiers_with_unknown_types()
+                    .push_back(return_identifier);
+            }
+            return_identifier->type_ref(type_ref);
+            return_field = builder.make_field(
+                proc_type,
+                block_scope,
+                builder.make_declaration(block_scope, return_identifier, nullptr),
+                0);
+            proc_type->return_type(return_field);
+        }
+
+        compiler::field* param_field = nullptr;
+        for (const auto& param_node : context.node->rhs->children) {
+            switch (param_node->type) {
+                case syntax::ast_node_types_t::symbol: {
+                    context.decl_type_ref = builder.make_type_reference(
+                        block_scope,
+                        open_generic_type->name(),
+                        open_generic_type);
                     auto param_decl = declare_identifier(
                         context,
                         param_node.get(),
@@ -1879,16 +1956,21 @@ namespace basecode::compiler {
             const evaluator_context_t& context,
             const syntax::ast_node_t* node,
             compiler::block* scope) {
-        return add_identifier_to_scope(
+        auto identifier = dynamic_cast<compiler::symbol_element*>(evaluate_in_scope(
             context,
-            dynamic_cast<compiler::symbol_element*>(evaluate_in_scope(
-                context,
-                node,
-                scope)),
+            node,
+            scope));
+        auto type_ref = context.decl_type_ref != nullptr ?
+            context.decl_type_ref :
             dynamic_cast<compiler::type_reference*>(evaluate_in_scope(
                 context,
                 node->rhs.get(),
-                scope)),
+                scope));
+
+        return add_identifier_to_scope(
+            context,
+            identifier,
+            type_ref,
             nullptr,
             0,
             scope);

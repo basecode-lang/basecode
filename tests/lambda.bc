@@ -1,13 +1,21 @@
 support :: module("support/module.bc");
 
-COMPARATOR_T :: proc<T>(lhs: ^T, rhs: ^T):bool;
+COMPARATOR :: proc<K>(lhs: ^K, rhs: ^K):bool;
 
+// XXX: need to enhance type resolution for aliases to pass type parameters
 qsort :: proc<T>(
         items: ^[]T,
-        comparator: COMPARATOR_T) {
+        comparator: COMPARATOR) {
     // stuff
 };
 
 values := array<u32>(16, 3, 5, 110, 4, 3, 9, 19, 21);
 
 qsort(values, |lhs, rhs| lhs < rhs);
+
+// XXX: this is temporary so the assembler sees the label for the qsort proc
+#assembly {{
+qsort:
+    nop
+    rts
+}};

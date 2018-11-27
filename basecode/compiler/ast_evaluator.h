@@ -26,6 +26,7 @@ namespace basecode::compiler {
         attribute_map_t attributes {};
         compiler::block* scope = nullptr;
         const syntax::ast_node_t* node = nullptr;
+        compiler::type_reference* decl_type_ref = nullptr;
     };
 
     struct evaluator_result_t {
@@ -260,6 +261,10 @@ namespace basecode::compiler {
             evaluator_result_t& result);
 
         bool assignment(
+            evaluator_context_t& context,
+            evaluator_result_t& result);
+
+        bool lambda_expression(
             evaluator_context_t& context,
             evaluator_result_t& result);
 

@@ -87,7 +87,8 @@ namespace basecode::syntax {
         {'&', std::bind(&lexer::logical_and_operator, std::placeholders::_1, std::placeholders::_2)},
         {'&', std::bind(&lexer::ampersand_literal, std::placeholders::_1, std::placeholders::_2)},
 
-        // |:=, logical or, bitwise or, pipe
+        // lambda literal, |:=, logical or, bitwise or, pipe
+        {'|', std::bind(&lexer::lambda_literal, std::placeholders::_1, std::placeholders::_2)},
         {'|', std::bind(&lexer::binary_or_equal_operator, std::placeholders::_1, std::placeholders::_2)},
         {'|', std::bind(&lexer::logical_or_operator, std::placeholders::_1, std::placeholders::_2)},
         {'|', std::bind(&lexer::pipe_literal, std::placeholders::_1, std::placeholders::_2)},
@@ -1004,6 +1005,34 @@ namespace basecode::syntax {
         rewind_one_char();
 
         return true;
+    }
+
+    bool lexer::lambda_literal(token_t& token) {
+        auto ch = read();
+        if (ch != '|')
+            return false;
+
+        _source_file->push_mark();
+        defer({
+            _source_file->restore_top_mark();
+            _source_file->pop_mark();
+        });
+
+        token_t temp;
+        while (true) {
+            auto has_identifier = identifier(temp);
+            ch = read();
+            if (ch == '|') {
+                token.type = token_types_t::lambda_literal;
+                return true;
+            } else if (ch != ',' && !has_identifier) {
+                break;
+            }
+            read();
+            rewind_one_char();
+        }
+
+        return false;
     }
 
     bool lexer::import_literal(token_t& token) {

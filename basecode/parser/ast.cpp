@@ -426,16 +426,6 @@ namespace basecode::syntax {
         return node;
     }
 
-    ast_node_shared_ptr ast_builder::proc_expression_node(token_t& token) {
-        auto node = std::make_shared<ast_node_t>();
-        node->id = ++_id;
-        node->type = ast_node_types_t::proc_expression;
-        node->lhs = proc_types_node();
-        node->rhs = parameter_list_node();
-        node->location = token.location;
-        return node;
-    }
-
     ast_node_shared_ptr ast_builder::symbol_part_node(const token_t& token) {
         auto node = std::make_shared<ast_node_t>();
         configure_node(node, token, ast_node_types_t::symbol_part);
@@ -478,6 +468,16 @@ namespace basecode::syntax {
         return node;
     }
 
+    ast_node_shared_ptr ast_builder::proc_expression_node(const token_t& token) {
+        auto node = std::make_shared<ast_node_t>();
+        node->id = ++_id;
+        node->type = ast_node_types_t::proc_expression;
+        node->lhs = proc_types_node();
+        node->rhs = parameter_list_node();
+        node->location = token.location;
+        return node;
+    }
+
     ast_node_shared_ptr ast_builder::spread_operator_node(const token_t& token) {
         auto node = std::make_shared<ast_node_t>();
         configure_node(node, token, ast_node_types_t::spread_operator);
@@ -499,6 +499,16 @@ namespace basecode::syntax {
     ast_node_shared_ptr ast_builder::character_literal_node(const token_t& token) {
         auto node = std::make_shared<ast_node_t>();
         configure_node(node, token, ast_node_types_t::character_literal);
+        return node;
+    }
+
+    ast_node_shared_ptr ast_builder::lambda_expression_node(const token_t& token) {
+        auto node = std::make_shared<ast_node_t>();
+        node->id = ++_id;
+        node->type = ast_node_types_t::lambda_expression;
+        node->lhs = proc_types_node();
+        node->rhs = parameter_list_node();
+        node->location = token.location;
         return node;
     }
 

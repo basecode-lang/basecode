@@ -446,6 +446,18 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    class lambda_expression_prefix_parser : public prefix_parser {
+    public:
+        lambda_expression_prefix_parser() = default;
+
+        ast_node_shared_ptr parse(
+            common::result& r,
+            parser* parser,
+            token_t& token) override;
+    };
+
+    ///////////////////////////////////////////////////////////////////////////
+
     class unary_operator_prefix_parser : public prefix_parser {
     public:
         explicit unary_operator_prefix_parser(precedence_t precedence) noexcept;
@@ -708,6 +720,7 @@ namespace basecode::syntax {
         static inline number_literal_prefix_parser s_number_literal_prefix_parser {};
         static inline keyword_literal_prefix_parser s_keyword_literal_prefix_parser {};
         static inline proc_expression_prefix_parser s_proc_expression_prefix_parser {};
+        static inline lambda_expression_prefix_parser s_lambda_expression_prefix_parser {};
         static inline type_tagged_symbol_prefix_parser s_type_tagged_symbol_prefix_parser {};
         static inline with_member_access_prefix_parser s_with_member_access_prefix_parser {};
         static inline unary_operator_prefix_parser s_negate_prefix_parser {precedence_t::sum};
@@ -752,6 +765,7 @@ namespace basecode::syntax {
             {token_types_t::break_literal,          &s_keyword_literal_prefix_parser},
             {token_types_t::import_literal,         &s_keyword_literal_prefix_parser},
             {token_types_t::continue_literal,       &s_keyword_literal_prefix_parser},
+            {token_types_t::lambda_literal,         &s_lambda_expression_prefix_parser},
             {token_types_t::period,                 &s_with_member_access_prefix_parser},
             {token_types_t::type_tagged_identifier, &s_type_tagged_symbol_prefix_parser},
             {token_types_t::caret,                  &s_pointer_declaration_prefix_parser},

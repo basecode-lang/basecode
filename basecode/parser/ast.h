@@ -70,6 +70,7 @@ namespace basecode::syntax {
         for_in_statement,
         union_expression,
         defer_expression,
+        lambda_expression,
         module_expression,
         character_literal,
         elseif_expression,
@@ -136,6 +137,7 @@ namespace basecode::syntax {
         {ast_node_types_t::symbol_reference, "symbol_reference"},
         {ast_node_types_t::for_in_statement, "for_in_statement"},
         {ast_node_types_t::switch_expression, "switch_statement"},
+        {ast_node_types_t::lambda_expression, "lambda_expression"},
         {ast_node_types_t::import_expression, "import_expression"},
         {ast_node_types_t::struct_expression, "struct_expression"},
         {ast_node_types_t::character_literal, "character_literal"},
@@ -314,8 +316,6 @@ namespace basecode::syntax {
 
         ast_node_shared_ptr continue_node(const token_t& token);
 
-        ast_node_shared_ptr proc_expression_node(token_t& token);
-
         ast_node_shared_ptr directive_node(const token_t& token);
 
         ast_node_shared_ptr attribute_node(const token_t& token);
@@ -341,6 +341,10 @@ namespace basecode::syntax {
         ast_node_shared_ptr boolean_literal_node(const token_t& token);
 
         ast_node_shared_ptr spread_operator_node(const token_t& token);
+
+        ast_node_shared_ptr proc_expression_node(const token_t& token);
+
+        ast_node_shared_ptr lambda_expression_node(const token_t& token);
 
         ast_node_shared_ptr character_literal_node(const token_t& token);
 
