@@ -143,11 +143,13 @@ add_library(
     compiler/elements/string_type.cpp compiler/elements/string_type.h
     compiler/elements/module_type.cpp compiler/elements/module_type.h
     compiler/elements/declaration.cpp compiler/elements/declaration.h
+    compiler/elements/fallthrough.cpp compiler/elements/fallthrough.h
     compiler/elements/generic_type.cpp compiler/elements/generic_type.h
     compiler/elements/type_literal.cpp compiler/elements/type_literal.h
     compiler/elements/numeric_type.cpp compiler/elements/numeric_type.h
     compiler/elements/unknown_type.cpp compiler/elements/unknown_type.h
     compiler/elements/pointer_type.cpp compiler/elements/pointer_type.h
+    compiler/elements/case_element.cpp compiler/elements/case_element.h
     compiler/elements/operator_base.cpp compiler/elements/operator_base.h
     compiler/elements/float_literal.cpp compiler/elements/float_literal.h
     compiler/elements/element_types.cpp compiler/elements/element_types.h
@@ -156,6 +158,7 @@ add_library(
     compiler/elements/break_element.cpp compiler/elements/break_element.h
     compiler/elements/defer_element.cpp compiler/elements/defer_element.h
     compiler/elements/argument_pair.cpp compiler/elements/argument_pair.h
+    compiler/elements/switch_element.cpp compiler/elements/switch_element.h
     compiler/elements/copy_intrinsic.cpp compiler/elements/copy_intrinsic.h
     compiler/elements/fill_intrinsic.cpp compiler/elements/fill_intrinsic.h
     compiler/elements/free_intrinsic.cpp compiler/elements/free_intrinsic.h

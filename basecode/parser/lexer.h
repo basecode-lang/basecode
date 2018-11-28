@@ -189,6 +189,8 @@ namespace basecode::syntax {
 
         bool greater_than_operator(token_t& token);
 
+        bool control_flow_operator(token_t& token);
+
         bool modulus_equal_operator(token_t& token);
 
         bool type_tagged_identifier(token_t& token);

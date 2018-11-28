@@ -132,6 +132,35 @@ namespace basecode::compiler {
                     element->type()->symbol().name,
                     style);
             }
+            case element_type_t::case_e: {
+                auto element = dynamic_cast<case_element*>(node);
+                auto style = ", fillcolor=deeppink, style=\"filled\"";
+                add_primary_edge(element, element->expression());
+                add_primary_edge(element, element->scope());
+                return fmt::format(
+                    "{}[shape=record,label=\"case\"{}];",
+                    node_vertex_name,
+                    style);
+            }
+            case element_type_t::switch_e: {
+                auto element = dynamic_cast<switch_element*>(node);
+                auto style = ", fillcolor=purple, style=\"filled\"";
+                add_primary_edge(element, element->expression());
+                add_primary_edge(element, element->scope());
+                return fmt::format(
+                    "{}[shape=record,label=\"switch\"{}];",
+                    node_vertex_name,
+                    style);
+            }
+            case element_type_t::fallthrough: {
+                auto element = dynamic_cast<fallthrough*>(node);
+                auto style = ", fillcolor=red, style=\"filled\"";
+                add_primary_edge(element, element->label());
+                return fmt::format(
+                    "{}[shape=record,label=\"fallthrough\"{}];",
+                    node_vertex_name,
+                    style);
+            }
             case element_type_t::transmute: {
                 auto element = dynamic_cast<cast*>(node);
                 auto style = ", fillcolor=deeppink, style=\"filled\"";

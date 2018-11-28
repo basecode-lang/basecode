@@ -40,6 +40,7 @@ namespace basecode::compiler {
         {syntax::ast_node_types_t::number_literal,          std::bind(&ast_evaluator::number_literal, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::string_literal,          std::bind(&ast_evaluator::string_literal, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::unary_operator,          std::bind(&ast_evaluator::unary_operator, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::case_expression,         std::bind(&ast_evaluator::case_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::spread_operator,         std::bind(&ast_evaluator::spread_operator, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::from_expression,         std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::proc_expression,         std::bind(&ast_evaluator::proc_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
@@ -56,6 +57,7 @@ namespace basecode::compiler {
         {syntax::ast_node_types_t::return_statement,        std::bind(&ast_evaluator::return_statement, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::symbol_reference,        std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::for_in_statement,        std::bind(&ast_evaluator::for_in_statement, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::switch_expression,       std::bind(&ast_evaluator::switch_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::lambda_expression,       std::bind(&ast_evaluator::lambda_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::switch_expression,       std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::import_expression,       std::bind(&ast_evaluator::import_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
@@ -71,6 +73,7 @@ namespace basecode::compiler {
         {syntax::ast_node_types_t::namespace_expression,    std::bind(&ast_evaluator::namespace_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::return_argument_list,    std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::array_subscript_list,    std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_types_t::fallthrough_statement,   std::bind(&ast_evaluator::fallthrough_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::assignment_source_list,  std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_types_t::assignment_target_list,  std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
     };
@@ -1372,6 +1375,25 @@ namespace basecode::compiler {
         return true;
     }
 
+    bool ast_evaluator::case_expression(
+            evaluator_context_t& context,
+            evaluator_result_t& result) {
+        auto& builder = _session.builder();
+        auto& scope_manager = _session.scope_manager();
+
+        compiler::element* expr = nullptr;
+        if (context.node->lhs != nullptr)
+            expr = evaluate(context.node->lhs.get());
+        auto scope = dynamic_cast<compiler::block*>(evaluate(context.node->rhs.get()));
+
+        result.element = builder.make_case(
+            scope_manager.current_scope(),
+            scope,
+            expr);
+
+        return true;
+    }
+
     bool ast_evaluator::with_expression(
             evaluator_context_t& context,
             evaluator_result_t& result) {
@@ -1384,6 +1406,23 @@ namespace basecode::compiler {
                 context,
                 context.node->lhs.get()),
             dynamic_cast<compiler::block*>(evaluate(context.node->rhs.get())));
+        return true;
+    }
+
+    bool ast_evaluator::switch_expression(
+            evaluator_context_t& context,
+            evaluator_result_t& result) {
+        auto& builder = _session.builder();
+        auto& scope_manager = _session.scope_manager();
+
+        auto expr = evaluate(context.node->lhs.get());
+        auto scope = dynamic_cast<compiler::block*>(evaluate(context.node->rhs.get()));
+
+        result.element = builder.make_switch(
+            scope_manager.current_scope(),
+            scope,
+            expr);
+
         return true;
     }
 
@@ -1857,6 +1896,17 @@ namespace basecode::compiler {
             context.node->rhs);
         context.node = member_access_bin_op.get();
         return binary_operator(context, result);
+    }
+
+    bool ast_evaluator::fallthrough_expression(
+            evaluator_context_t& context,
+            evaluator_result_t& result) {
+        result.element = _session
+            .builder()
+            .make_fallthrough(
+                _session.scope_manager().current_scope(),
+                nullptr);
+        return true;
     }
 
     bool ast_evaluator::add_assignments_to_scope(

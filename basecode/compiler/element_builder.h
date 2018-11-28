@@ -20,6 +20,20 @@ namespace basecode::compiler {
     public:
         explicit element_builder(compiler::session& session);
 
+        case_element* make_case(
+            compiler::block* parent_scope,
+            compiler::block* scope,
+            compiler::element* expr);
+
+        switch_element* make_switch(
+            compiler::block* parent_scope,
+            compiler::block* scope,
+            compiler::element* expr);
+
+        fallthrough* make_fallthrough(
+            compiler::block* parent_scope,
+            compiler::label* label);
+
         spread_operator* make_spread_operator(
             compiler::block* parent_scope,
             compiler::element* expr);

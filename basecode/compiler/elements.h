@@ -38,12 +38,14 @@
 #include <compiler/elements/if_element.h>
 #include <compiler/elements/array_type.h>
 #include <compiler/elements/tuple_type.h>
+#include <compiler/elements/fallthrough.h>
 #include <compiler/elements/for_element.h>
 #include <compiler/elements/declaration.h>
 #include <compiler/elements/initializer.h>
 #include <compiler/elements/module_type.h>
 #include <compiler/elements/string_type.h>
 #include <compiler/elements/nil_literal.h>
+#include <compiler/elements/case_element.h>
 #include <compiler/elements/type_literal.h>
 #include <compiler/elements/numeric_type.h>
 #include <compiler/elements/unknown_type.h>
@@ -55,6 +57,7 @@
 #include <compiler/elements/argument_list.h>
 #include <compiler/elements/float_literal.h>
 #include <compiler/elements/argument_pair.h>
+#include <compiler/elements/switch_element.h>
 #include <compiler/elements/copy_intrinsic.h>
 #include <compiler/elements/fill_intrinsic.h>
 #include <compiler/elements/type_reference.h>

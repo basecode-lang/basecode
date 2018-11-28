@@ -64,6 +64,7 @@ namespace basecode::syntax {
         with_expression,
         enum_expression,
         from_expression,
+        case_expression,
         type_declaration,
         symbol_reference,
         return_statement,
@@ -88,6 +89,7 @@ namespace basecode::syntax {
         namespace_expression,
         return_argument_list,
         array_subscript_list,
+        fallthrough_statement,
         subscript_declaration,
         assignment_source_list,
         assignment_target_list,
@@ -130,6 +132,7 @@ namespace basecode::syntax {
         {ast_node_types_t::while_statement, "while_statement"},
         {ast_node_types_t::break_statement, "break_statement"},
         {ast_node_types_t::with_expression, "with_expression"},
+        {ast_node_types_t::case_expression, "case_expression"},
         {ast_node_types_t::type_declaration, "type_declaration"},
         {ast_node_types_t::defer_expression, "defer_expression"},
         {ast_node_types_t::union_expression, "union_expression"},
@@ -154,6 +157,7 @@ namespace basecode::syntax {
         {ast_node_types_t::namespace_expression, "namespace_expression"},
         {ast_node_types_t::return_argument_list, "return_argument_list"},
         {ast_node_types_t::array_subscript_list, "array_subscript_list"},
+        {ast_node_types_t::fallthrough_statement, "fallthrough_statement"},
         {ast_node_types_t::subscript_declaration, "subscript_declaration"},
         {ast_node_types_t::assignment_source_list, "assignment_source_list"},
         {ast_node_types_t::assignment_target_list, "assignment_target_list"},
@@ -212,6 +216,20 @@ namespace basecode::syntax {
         ast_node_shared_ptr current_with() const;
 
         void push_with(const ast_node_shared_ptr& node);
+
+        // case stack
+        ast_node_shared_ptr pop_case();
+
+        ast_node_shared_ptr current_case() const;
+
+        void push_case(const ast_node_shared_ptr& node);
+
+        // switch stack
+        ast_node_shared_ptr pop_switch();
+
+        ast_node_shared_ptr current_switch() const;
+
+        void push_switch(const ast_node_shared_ptr& node);
 
         // scope/block stack
         ast_node_shared_ptr end_scope();
@@ -286,6 +304,8 @@ namespace basecode::syntax {
 
         ast_node_shared_ptr if_node(const token_t& token);
 
+        ast_node_shared_ptr case_node(const token_t& token);
+
         ast_node_shared_ptr else_node(const token_t& token);
 
         ast_node_shared_ptr from_node(const token_t& token);
@@ -301,6 +321,8 @@ namespace basecode::syntax {
         ast_node_shared_ptr break_node(const token_t& token);
 
         ast_node_shared_ptr union_node(const token_t& token);
+
+        ast_node_shared_ptr switch_node(const token_t& token);
 
         ast_node_shared_ptr defer_node(const token_t& token);
 
@@ -323,6 +345,8 @@ namespace basecode::syntax {
         ast_node_shared_ptr namespace_node(const token_t& token);
 
         ast_node_shared_ptr raw_block_node(const token_t& token);
+
+        ast_node_shared_ptr fallthrough_node(const token_t& token);
 
         ast_node_shared_ptr symbol_part_node(const token_t& token);
 
@@ -358,8 +382,10 @@ namespace basecode::syntax {
 
     private:
         uint32_t _id = 0;
+        std::stack<ast_node_shared_ptr> _case_stack {};
         std::stack<ast_node_shared_ptr> _with_stack {};
         std::stack<ast_node_shared_ptr> _scope_stack {};
+        std::stack<ast_node_shared_ptr> _switch_stack {};
     };
 
 }

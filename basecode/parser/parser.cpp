@@ -724,9 +724,11 @@ namespace basecode::syntax {
             common::result& r,
             parser* parser,
             token_t& token) {
+        auto ast_builder = parser->ast_builder();
+
         switch (token.type) {
             case token_types_t::import_literal: {
-                auto import_node = parser->ast_builder()->import_node(token);
+                auto import_node = ast_builder->import_node(token);
                 import_node->lhs = parser->parse_expression(r);
                 if (import_node->lhs == nullptr) {
                     parser->error(
@@ -754,25 +756,70 @@ namespace basecode::syntax {
                 return import_node;
             }
             case token_types_t::break_literal: {
-                auto break_node = parser->ast_builder()->break_node(token);
+                auto break_node = ast_builder->break_node(token);
                 if (parser->peek(syntax::token_types_t::label)) {
                     break_node->lhs = parser->parse_expression(r);
                 }
                 return break_node;
             }
             case token_types_t::continue_literal: {
-                auto continue_node = parser->ast_builder()->continue_node(token);
+                auto continue_node = ast_builder->continue_node(token);
                 if (parser->peek(syntax::token_types_t::label)) {
                     continue_node->lhs = parser->parse_expression(r);
                 }
                 return continue_node;
             }
             case token_types_t::nil_literal: {
-                return parser->ast_builder()->nil_literal_node(token);
+                return ast_builder->nil_literal_node(token);
             }
             case token_types_t::true_literal:
             case token_types_t::false_literal: {
-                return parser->ast_builder()->boolean_literal_node(token);
+                return ast_builder->boolean_literal_node(token);
+            }
+            case token_types_t::switch_literal: {
+                auto switch_node = ast_builder->switch_node(token);
+                ast_builder->push_switch(switch_node);
+                defer(ast_builder->pop_switch());
+                switch_node->lhs = parser->parse_expression(r);
+                switch_node->rhs = parser->parse_expression(r);
+                return switch_node;
+            }
+            case token_types_t::case_literal: {
+                auto switch_node = ast_builder->current_switch();
+                if (switch_node == nullptr) {
+                    parser->error(
+                        r,
+                        "P019",
+                        "case only valid within a switch expression",
+                        token.location);
+                    return nullptr;
+                }
+                auto case_node = ast_builder->case_node(token);
+                ast_builder->push_case(case_node);
+                defer(ast_builder->pop_case());
+                if (parser->peek(token_types_t::control_flow_operator)) {
+                    parser->consume();
+                } else {
+                    case_node->lhs = parser->parse_expression(r);
+                    token_t control_flow_op;
+                    control_flow_op.type = token_types_t::control_flow_operator;
+                    if (!parser->expect(r, control_flow_op))
+                        return nullptr;
+                }
+                case_node->rhs = parser->parse_expression(r);
+                return case_node;
+            }
+            case token_types_t::fallthrough_literal: {
+                auto case_node = ast_builder->current_case();
+                if (case_node == nullptr) {
+                    parser->error(
+                        r,
+                        "P019",
+                        "fallthrough only valid within a case expression",
+                        token.location);
+                    return nullptr;
+                }
+                return ast_builder->fallthrough_node(token);
             }
             default:
                 return nullptr;

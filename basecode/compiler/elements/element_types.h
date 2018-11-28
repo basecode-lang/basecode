@@ -50,6 +50,7 @@ namespace basecode::compiler {
     class array_type;
     class if_element;
     class tuple_type;
+    class fallthrough;
     class declaration;
     class module_type;
     class initializer;
@@ -61,6 +62,7 @@ namespace basecode::compiler {
     class pointer_type;
     class type_literal;
     class generic_type;
+    class case_element;
     class defer_element;
     class break_element;
     class float_literal;
@@ -68,6 +70,7 @@ namespace basecode::compiler {
     class argument_list;
     class while_element;
     class argument_pair;
+    class switch_element;
     class type_reference;
     class assembly_label;
     class free_intrinsic;
@@ -149,6 +152,7 @@ namespace basecode::compiler {
         defer,
         symbol,
         module,
+        case_e,
         break_e,
         comment,
         program,
@@ -157,6 +161,7 @@ namespace basecode::compiler {
         return_e,
         import_e,
         map_type,
+        switch_e,
         rune_type,
         raw_block,
         intrinsic,
@@ -179,6 +184,7 @@ namespace basecode::compiler {
         namespace_e,
         initializer,
         module_type,
+        fallthrough,
         nil_literal,
         type_literal,
         unknown_type,
@@ -215,6 +221,7 @@ namespace basecode::compiler {
         {element_type_t::block, "block"},
         {element_type_t::field, "field"},
         {element_type_t::defer, "defer"},
+        {element_type_t::case_e, "case"},
         {element_type_t::module, "module"},
         {element_type_t::symbol, "symbol"},
         {element_type_t::while_e, "while"},
@@ -226,6 +233,7 @@ namespace basecode::compiler {
         {element_type_t::any_type, "any_type"},
         {element_type_t::return_e, "return"},
         {element_type_t::import_e, "import"},
+        {element_type_t::switch_e, "switch"},
         {element_type_t::rune_type, "rune_type"},
         {element_type_t::raw_block, "raw_block"},
         {element_type_t::intrinsic, "intrinsic"},
@@ -243,6 +251,7 @@ namespace basecode::compiler {
         {element_type_t::array_type, "array_type"},
         {element_type_t::identifier, "identifier"},
         {element_type_t::expression, "expression"},
+        {element_type_t::fallthrough, "fallthrough"},
         {element_type_t::nil_literal, "nil_literal"},
         {element_type_t::declaration, "declaration"},
         {element_type_t::module_type, "module_type"},

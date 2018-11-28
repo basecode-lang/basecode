@@ -144,11 +144,23 @@ namespace basecode::compiler {
             evaluator_context_t& context,
             evaluator_result_t& result);
 
+        bool case_expression(
+            evaluator_context_t& context,
+            evaluator_result_t& result);
+
+        bool switch_expression(
+            evaluator_context_t& context,
+            evaluator_result_t& result);
+
         bool defer_expression(
             evaluator_context_t& context,
             evaluator_result_t& result);
 
         bool break_expression(
+            evaluator_context_t& context,
+            evaluator_result_t& result);
+
+        bool fallthrough_expression(
             evaluator_context_t& context,
             evaluator_result_t& result);
 

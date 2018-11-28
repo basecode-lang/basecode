@@ -19,6 +19,10 @@ namespace basecode::syntax {
         _id = 0;
         while (!_with_stack.empty())
             _with_stack.pop();
+        while (!_case_stack.empty())
+            _case_stack.pop();
+        while (!_switch_stack.empty())
+            _switch_stack.pop();
         while (!_scope_stack.empty())
             _scope_stack.pop();
     }
@@ -40,6 +44,44 @@ namespace basecode::syntax {
 
     void ast_builder::push_with(const ast_node_shared_ptr& node) {
         _with_stack.push(node);
+    }
+
+    // case stack
+    ast_node_shared_ptr ast_builder::pop_case() {
+        if (_case_stack.empty())
+            return nullptr;
+        auto top = _case_stack.top();
+        _case_stack.pop();
+        return top;
+    }
+
+    ast_node_shared_ptr ast_builder::current_case() const {
+        if (_case_stack.empty())
+            return nullptr;
+        return _case_stack.top();
+    }
+
+    void ast_builder::push_case(const ast_node_shared_ptr& node) {
+        _case_stack.push(node);
+    }
+
+    // switch stack
+    ast_node_shared_ptr ast_builder::pop_switch() {
+        if (_switch_stack.empty())
+            return nullptr;
+        auto top = _switch_stack.top();
+        _switch_stack.pop();
+        return top;
+    }
+
+    ast_node_shared_ptr ast_builder::current_switch() const {
+        if (_switch_stack.empty())
+            return nullptr;
+        return _switch_stack.top();
+    }
+
+    void ast_builder::push_switch(const ast_node_shared_ptr& node) {
+        _switch_stack.push(node);
     }
 
     //
@@ -303,6 +345,13 @@ namespace basecode::syntax {
         return node;
     }
 
+    ast_node_shared_ptr ast_builder::case_node(const token_t& token) {
+        auto node = std::make_shared<ast_node_t>();
+        node->id = ++_id;
+        node->type = ast_node_types_t::case_expression;
+        return node;
+    }
+
     ast_node_shared_ptr ast_builder::with_node(const token_t& token) {
         auto node = std::make_shared<ast_node_t>();
         configure_node(node, token, ast_node_types_t::with_expression);
@@ -388,6 +437,12 @@ namespace basecode::syntax {
         return node;
     }
 
+    ast_node_shared_ptr ast_builder::switch_node(const token_t& token) {
+        auto node = std::make_shared<ast_node_t>();
+        configure_node(node, token, ast_node_types_t::switch_expression);
+        return node;
+    }
+
     ast_node_shared_ptr ast_builder::else_if_node(const token_t& token) {
         auto node = std::make_shared<ast_node_t>();
         node->id = ++_id;
@@ -423,6 +478,12 @@ namespace basecode::syntax {
     ast_node_shared_ptr ast_builder::attribute_node(const token_t& token) {
         auto node = std::make_shared<ast_node_t>();
         configure_node(node, token, ast_node_types_t::attribute);
+        return node;
+    }
+
+    ast_node_shared_ptr ast_builder::fallthrough_node(const token_t& token) {
+        auto node = std::make_shared<ast_node_t>();
+        configure_node(node, token, ast_node_types_t::fallthrough_statement);
         return node;
     }
 

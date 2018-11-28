@@ -71,7 +71,8 @@ namespace basecode::syntax {
         {'*', std::bind(&lexer::exponent, std::placeholders::_1, std::placeholders::_2)},
         {'*', std::bind(&lexer::asterisk, std::placeholders::_1, std::placeholders::_2)},
 
-        // equals
+        // =>, equals
+        {'=', std::bind(&lexer::control_flow_operator, std::placeholders::_1, std::placeholders::_2)},
         {'=', std::bind(&lexer::equals_operator, std::placeholders::_1, std::placeholders::_2)},
 
         // less than equal, less than
@@ -1181,7 +1182,7 @@ namespace basecode::syntax {
     bool lexer::fallthrough_literal(token_t& token) {
         if (match_literal("fallthrough")) {
             auto ch = read(false);
-            if (isspace(ch)) {
+            if (!isalnum(ch)) {
                 rewind_one_char();
                 token = s_fallthrough_literal;
                 return true;
@@ -1353,6 +1354,14 @@ namespace basecode::syntax {
         auto ch = read();
         if (ch == '>') {
             token = s_greater_than_literal;
+            return true;
+        }
+        return false;
+    }
+
+    bool lexer::control_flow_operator(token_t& token) {
+        if (match_literal("=>")) {
+            token = s_control_flow_operator;
             return true;
         }
         return false;

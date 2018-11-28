@@ -101,6 +101,7 @@ namespace basecode::syntax {
         divide_equal_literal,
         right_square_bracket,
         modulus_equal_literal,
+        control_flow_operator,
         multiply_equal_literal,
         type_tagged_identifier,
         binary_or_equal_literal,
@@ -189,6 +190,7 @@ namespace basecode::syntax {
         {token_types_t::left_square_bracket,        "left_square_bracket"},
         {token_types_t::right_square_bracket,       "right_square_bracket"},
         {token_types_t::divide_equal_literal,       "divide_equal_literal"},
+        {token_types_t::control_flow_operator,      "control_flow_operator"},
         {token_types_t::modulus_equal_literal,      "modulus_equal_literal"},
         {token_types_t::multiply_equal_literal,     "multiply_equal_literal"},
         {token_types_t::type_tagged_identifier,     "type_tagged_identifier"},
@@ -553,6 +555,11 @@ namespace basecode::syntax {
     static inline token_t s_modulus_equal_literal = {
         .type = token_types_t::modulus_equal_literal,
         .value = "%:="
+    };
+
+    static inline token_t s_control_flow_operator = {
+        .type = token_types_t::control_flow_operator,
+        .value = "=>"
     };
 
     static inline token_t s_multiply_equal_literal = {

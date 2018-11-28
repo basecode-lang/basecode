@@ -3,15 +3,20 @@ support :: module("support/module.bc");
 x := 2;
 
 switch x {
-    case 0 {
+    case 0 => {
         support::print("0\n");
     };
 
-    case 1 {
+    case 1 => {
         support::print("1\n");
     };
 
-    case 2 {
+    case 2 => {
         support::print("2\n");
+        fallthrough;
+    };
+
+    case => {
+        support::print("default\n");
     };
 };

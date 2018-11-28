@@ -419,6 +419,40 @@ namespace basecode::compiler {
         return with;
     }
 
+    case_element* element_builder::make_case(
+            compiler::block* parent_scope,
+            compiler::block* scope,
+            compiler::element* expr) {
+        auto case_e = new compiler::case_element(
+            _session.scope_manager().current_module(),
+            parent_scope,
+            scope,
+            expr);
+        _session.elements().add(case_e);
+        if (expr != nullptr)
+            expr->parent_element(case_e);
+        if (scope != nullptr)
+            scope->parent_element(case_e);
+        return case_e;
+    }
+
+    switch_element* element_builder::make_switch(
+            compiler::block* parent_scope,
+            compiler::block* scope,
+            compiler::element* expr) {
+        auto switch_e = new compiler::switch_element(
+            _session.scope_manager().current_module(),
+            parent_scope,
+            scope,
+            expr);
+        _session.elements().add(switch_e);
+        if (expr != nullptr)
+            expr->parent_element(switch_e);
+        if (scope != nullptr)
+            scope->parent_element(switch_e);
+        return switch_e;
+    }
+
     cast* element_builder::make_cast(
             compiler::block* parent_scope,
             compiler::type_reference* type,
@@ -1221,6 +1255,19 @@ namespace basecode::compiler {
             args->parent_element(type_literal);
 
         return type_literal;
+    }
+
+    fallthrough* element_builder::make_fallthrough(
+        compiler::block* parent_scope,
+        compiler::label* label) {
+        auto fallthrough = new compiler::fallthrough(
+            _session.scope_manager().current_module(),
+            parent_scope,
+            label);
+        _session.elements().add(fallthrough);
+        if (label != nullptr)
+            label->parent_element(fallthrough);
+        return fallthrough;
     }
 
     rune_type* element_builder::make_rune_type(compiler::block* parent_scope) {
