@@ -39,9 +39,6 @@ namespace basecode::syntax {
 
             if (parser->peek(token_types_t::colon)) {
                 parser->consume();
-                // XXX: revisit this.  the code was expecting a tuple_expression
-                //      but that node type no longer exists.  need to rework this to
-                //      confirm the proc_call is in fact a tuple literal.
                 type_parameter_node->lhs = parser->expect_expression(
                     r,
                     ast_node_types_t::proc_call,
@@ -399,14 +396,23 @@ namespace basecode::syntax {
             common::result& r,
             parser* parser,
             token_t& token) {
-        auto with_node = parser->ast_builder()->with_node(token);
+        auto ast_builder = parser->ast_builder();
+        auto current_with = ast_builder->current_with();
 
-        // XXX: need to check if there's a current_with on the stack
-        //      if true and with_node->lhs is a with_member_access
-        //      then create a binary operator for with_node->lhs instead of
-        //      just assigning the expression
+        auto with_node = ast_builder->with_node(token);
+
         collect_comments(r, parser, with_node->comments);
-        with_node->lhs = parser->parse_expression(r);
+
+        auto lhs = parser->parse_expression(r);
+        if (lhs->type == ast_node_types_t::with_member_access
+        &&  current_with != nullptr) {
+            with_node->lhs = ast_builder->binary_operator_node(
+                current_with->lhs,
+                s_period_literal,
+                lhs->rhs);
+        } else {
+            with_node->lhs = lhs;
+        }
 
         parser->ast_builder()->push_with(with_node);
 
@@ -615,7 +621,6 @@ namespace basecode::syntax {
         if (!parser->expect(r, right_paren_token))
             return nullptr;
 
-        // XXX: revisit this.  this works but is there a better way?
         if (parser->peek(token_types_t::colon)) {
             token_t colon_token;
             parser->consume(colon_token);

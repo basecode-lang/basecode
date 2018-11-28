@@ -6,3 +6,37 @@ with temp {
     support::print("temp.length   := %d\n", .length);
     support::print("temp.capacity := %d\n", .capacity);
 };
+
+// XXX: this is a problem....
+//
+// it shouldn't matter what order these types are defined.  the compiler
+// should resolve them at the end.  however, the way the member access binary operator
+// works at the moment, it errors on an unknown_type because it can't resolve the field
+// for the rhs.  somehow, this needs to be added to the deferred type resolution process.
+//
+// for now, ordering them so they're pre-defined solves the issue.  i don't want to
+// leave it like this though.
+three :: struct {
+    c: string;
+};
+
+two :: struct {
+    b: three;
+};
+
+one :: struct {
+    a: two;
+};
+
+x: one;
+
+with x {
+    with .a {
+        with .b {
+            with .c {
+                support::print(".length   := %d\n", .length);
+                support::print(".capacity := %d\n", .capacity);
+            };
+        };
+    };
+};

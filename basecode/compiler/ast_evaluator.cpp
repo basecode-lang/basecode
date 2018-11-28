@@ -996,6 +996,13 @@ namespace basecode::compiler {
                 return false;
             }
 
+            // XXX: there's a bug here and it goes like this...
+            //
+            // member access is expecting a resolved type here; however, it may be an unknown_type and
+            // that is ok.  however, that means the field resolution process here is going to fail
+            // because the lhs type is unknown at this point.  this code needs to be reworked so
+            // we can defer this processing until after all unknown_type instances have been resolved.
+            //
             if (infer_type_result.inferred_type->is_composite_type()) {
                 compiler::composite_type* composite_type = nullptr;
                 if (infer_type_result.inferred_type->is_pointer_type()) {
