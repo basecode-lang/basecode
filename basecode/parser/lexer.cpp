@@ -679,7 +679,9 @@ namespace basecode::syntax {
 
     bool lexer::assignment(token_t& token) {
         if (match_literal(":=")) {
-            token = s_assignment_literal;
+            token = _paren_depth == 0 ?
+                s_assignment_literal :
+                s_key_value_operator;
             return true;
         }
         return false;
@@ -688,6 +690,7 @@ namespace basecode::syntax {
     bool lexer::left_paren(token_t& token) {
         auto ch = read();
         if (ch == '(') {
+            _paren_depth++;
             token = s_left_paren_literal;
             return true;
         }
@@ -709,6 +712,8 @@ namespace basecode::syntax {
     bool lexer::right_paren(token_t& token) {
         auto ch = read();
         if (ch == ')') {
+            if (_paren_depth > 0)
+                _paren_depth--;
             token = s_right_paren_literal;
             return true;
         }

@@ -28,6 +28,7 @@ namespace basecode::syntax {
         lowest,
         assignment,
         comma,
+        key_value,
         logical_or,
         logical_and,
         bitwise_or,
@@ -69,6 +70,21 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    class key_value_infix_parser : public infix_parser {
+    public:
+        key_value_infix_parser() = default;
+
+        ast_node_shared_ptr parse(
+            common::result& r,
+            parser* parser,
+            const ast_node_shared_ptr& lhs,
+            token_t& token) override;
+
+        precedence_t precedence() const override;
+    };
+
+    ///////////////////////////////////////////////////////////////////////////
+
     class comma_infix_parser : public infix_parser {
     public:
         comma_infix_parser() = default;
@@ -79,14 +95,7 @@ namespace basecode::syntax {
             const ast_node_shared_ptr& lhs,
             token_t& token) override;
 
-        void precedence(precedence_t value) {
-            _precedence = value;
-        }
-
         precedence_t precedence() const override;
-
-    private:
-        precedence_t _precedence = precedence_t::comma;
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -206,14 +215,7 @@ namespace basecode::syntax {
             const ast_node_shared_ptr& lhs,
             token_t& token) override;
 
-        void precedence(precedence_t value) {
-            _precedence = value;
-        }
-
         precedence_t precedence() const override;
-
-    private:
-        precedence_t _precedence = precedence_t::assignment;
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -661,10 +663,6 @@ namespace basecode::syntax {
 
         syntax::ast_builder* ast_builder();
 
-        void use_global_comma_precedence();
-
-        void use_default_comma_precedence();
-
         ast_node_shared_ptr parse_expression(
             common::result& r,
             precedence_t precedence = precedence_t::lowest);
@@ -673,10 +671,6 @@ namespace basecode::syntax {
             common::result& r,
             ast_node_types_t expected_type,
             precedence_t precedence = precedence_t::lowest);
-
-        precedence_t comma_precedence() const;
-
-        precedence_t assignment_precedence() const;
 
         ast_node_shared_ptr parse(common::result& r);
 
@@ -776,6 +770,7 @@ namespace basecode::syntax {
         };
 
         static inline comma_infix_parser s_comma_infix_parser {};
+        static inline key_value_infix_parser s_key_value_infix_parser {};
         static inline proc_call_infix_parser s_proc_call_infix_parser {};
         static inline assignment_infix_parser s_assignment_infix_parser {};
         static inline array_subscript_infix_parser s_array_subscript_infix_parser {};
@@ -838,6 +833,7 @@ namespace basecode::syntax {
             {token_types_t::slash,                  &s_product_bin_op_parser},
             {token_types_t::percent,                &s_product_bin_op_parser},
             {token_types_t::asterisk,               &s_product_bin_op_parser},
+            {token_types_t::key_value_operator,     &s_key_value_infix_parser},
             {token_types_t::exponent,               &s_exponent_bin_op_parser},
             {token_types_t::left_paren,             &s_proc_call_infix_parser},
             {token_types_t::equals,                 &s_equality_bin_op_parser},

@@ -226,6 +226,7 @@ namespace basecode::syntax {
         static std::multimap<common::rune_t, lexer_case_callable> s_cases;
 
         bool _has_next = true;
+        uint32_t _paren_depth = 0;
         common::result _result {};
         common::source_file* _source_file = nullptr;
         std::set<std::istream::pos_type> _line_breaks {};

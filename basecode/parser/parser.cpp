@@ -251,7 +251,7 @@ namespace basecode::syntax {
 
         auto rhs = parser->parse_expression(
             r,
-            parser->assignment_precedence());
+            precedence_t::assignment);
         if (rhs == nullptr) {
             parser->error(
                 r,
@@ -946,6 +946,44 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    ast_node_shared_ptr key_value_infix_parser::parse(
+            common::result& r,
+            parser* parser,
+            const ast_node_shared_ptr& lhs,
+            token_t& token) {
+        auto assignment_node = parser->ast_builder()->assignment_node();
+
+        pairs_to_list(assignment_node->lhs, lhs);
+
+        collect_comments(r, parser, assignment_node->comments);
+
+        auto rhs = parser->parse_expression(
+            r,
+            precedence_t::key_value);
+        if (rhs == nullptr) {
+            parser->error(
+                r,
+                "P019",
+                "key-value expects right-hand-side expression",
+                token.location);
+            return nullptr;
+        }
+        pairs_to_list(assignment_node->rhs, rhs);
+
+        assignment_node->location.start(lhs->location.start());
+        assignment_node->location.end(assignment_node->rhs->location.end());
+
+        collect_comments(r, parser, assignment_node->comments);
+
+        return assignment_node;
+    }
+
+    precedence_t key_value_infix_parser::precedence() const {
+        return precedence_t::key_value;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
     ast_node_shared_ptr comma_infix_parser::parse(
             common::result& r,
             parser* parser,
@@ -958,7 +996,7 @@ namespace basecode::syntax {
         pair_node->lhs = lhs;
         pair_node->rhs = parser->parse_expression(
             r,
-            parser->comma_precedence());
+            precedence_t::comma);
 
         if (lhs->type != ast_node_types_t::pair) {
             lhs->comments = comments;
@@ -971,7 +1009,7 @@ namespace basecode::syntax {
     }
 
     precedence_t comma_infix_parser::precedence() const {
-        return _precedence;
+        return precedence_t::comma;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -981,9 +1019,6 @@ namespace basecode::syntax {
             parser* parser,
             const ast_node_shared_ptr& lhs,
             token_t& token) {
-        parser->use_global_comma_precedence();
-        defer(parser->use_default_comma_precedence());
-
         auto node = parser->ast_builder()->proc_call_node();
         node->location.start(lhs->location.start());
         node->lhs->rhs = lhs;
@@ -1103,7 +1138,7 @@ namespace basecode::syntax {
     }
 
     precedence_t assignment_infix_parser::precedence() const {
-        return _precedence;
+        return precedence_t::assignment;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -1262,10 +1297,6 @@ namespace basecode::syntax {
         return !_tokens.empty();
     }
 
-    precedence_t parser::comma_precedence() const {
-        return s_comma_infix_parser.precedence();
-    }
-
     precedence_t parser::current_infix_precedence() {
         if (!look_ahead(0))
             return precedence_t::lowest;
@@ -1280,18 +1311,6 @@ namespace basecode::syntax {
 
     syntax::ast_builder* parser::ast_builder() {
         return &_ast_builder;
-    }
-
-    void parser::use_global_comma_precedence() {
-        s_comma_infix_parser.precedence(precedence_t::assignment);
-        s_assignment_infix_parser.precedence(precedence_t::comma);
-        s_constant_assignment_infix_parser.precedence(precedence_t::comma);
-    }
-
-    void parser::use_default_comma_precedence() {
-        s_comma_infix_parser.precedence(precedence_t::comma);
-        s_assignment_infix_parser.precedence(precedence_t::assignment);
-        s_constant_assignment_infix_parser.precedence(precedence_t::assignment);
     }
 
     ast_node_shared_ptr parser::parse_expression(
@@ -1368,10 +1387,6 @@ namespace basecode::syntax {
         }
 
         return node;
-    }
-
-    precedence_t parser::assignment_precedence() const {
-        return s_assignment_infix_parser.precedence();
     }
 
     ast_node_shared_ptr parser::parse(common::result& r) {

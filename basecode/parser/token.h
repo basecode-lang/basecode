@@ -92,6 +92,7 @@ namespace basecode::syntax {
         right_curly_brace,
         character_literal,
         namespace_literal,
+        key_value_operator,
         greater_than_equal,
         plus_equal_literal,
         fallthrough_literal,
@@ -182,6 +183,7 @@ namespace basecode::syntax {
         {token_types_t::right_curly_brace,          "right_curly_brace"},
         {token_types_t::character_literal,          "character_literal"},
         {token_types_t::namespace_literal,          "namespace_literal"},
+        {token_types_t::key_value_operator,         "key_value_operator"},
         {token_types_t::plus_equal_literal,         "plus_equal_literal"},
         {token_types_t::greater_than_equal,         "greater_than_equal"},
         {token_types_t::fallthrough_literal,        "fallthrough_literal"},
@@ -509,6 +511,11 @@ namespace basecode::syntax {
 
     static inline token_t s_assignment_literal = {
         .type = token_types_t::assignment,
+        .value = ":="
+    };
+
+    static inline token_t s_key_value_operator = {
+        .type = token_types_t::key_value_operator,
         .value = ":="
     };
 
