@@ -30,9 +30,6 @@ namespace basecode::compiler {
     }
 
     bool statement::on_emit(compiler::session& session) {
-        for (auto label : _labels)
-            label->emit(session);
-
         if (_expression == nullptr)
             return true;
 
@@ -45,6 +42,12 @@ namespace basecode::compiler {
 
         for (auto element : _labels)
             list.emplace_back(element);
+    }
+
+    bool statement::emit_labels(compiler::session& session) {
+        for (auto label : _labels)
+            label->emit(session);
+        return true;
     }
 
 };

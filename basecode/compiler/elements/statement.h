@@ -26,6 +26,8 @@ namespace basecode::compiler {
 
         label_list_t& labels();
 
+        bool emit_labels(compiler::session& session);
+
     protected:
         bool on_emit(compiler::session& session) override;
 

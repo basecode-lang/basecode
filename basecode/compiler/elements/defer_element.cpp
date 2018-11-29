@@ -27,10 +27,7 @@ namespace basecode::compiler {
     }
 
     bool defer_element::on_emit(compiler::session& session) {
-        auto& assembler = session.assembler();
-        auto block = assembler.current_block();
-        block->comment("XXX: implement defer", 4);
-        return true;
+        return _expression->emit(session);
     }
 
     void defer_element::on_owned_elements(element_list_t& list) {

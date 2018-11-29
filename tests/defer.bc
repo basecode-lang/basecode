@@ -1,6 +1,13 @@
 support :: module("support/module.bc");
 
 addr: ^u8 := alloc(size_of(u16) * 4096);
+'label:
 defer free(addr);
 
 support::print("addr := $%08x\n", addr);
+
+{
+    defer support::print("a\n");
+    defer support::print("b\n");
+    defer support::print("c\n");
+};

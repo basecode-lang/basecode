@@ -5,11 +5,3 @@ type_of_string := type_of(#type string);
 i: u32;
 type_of_i: ^type := nil;
 type_of_i := type_of(i);
-
-//type_name: string;
-//  MOVE.QW I0, type_name
-//  MOVE.QW I1, type_of_i
-//  LOAD.QW I2, I1
-//  MOVE.QW I3, I2, offset(name)        ; == 0
-//  COPY.B  I0, I3, size_of(string)     ; == 16 bytes
-//type_name := type_of_i.name;

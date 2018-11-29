@@ -13,6 +13,7 @@
 
 #include <set>
 #include <map>
+#include <stack>
 #include <vector>
 #include <string>
 #include <memory>
@@ -108,6 +109,7 @@ namespace basecode::compiler {
     using element_list_t = std::vector<element*>;
     using comment_list_t = std::vector<comment*>;
     using string_list_t = std::vector<std::string>;
+    using defer_stack_t = std::stack<defer_element*>;
     using statement_list_t = std::vector<statement*>;
     using attribute_list_t = std::vector<attribute*>;
     using identifier_list_t = std::vector<identifier*>;

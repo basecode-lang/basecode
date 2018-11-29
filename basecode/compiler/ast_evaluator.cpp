@@ -1439,9 +1439,12 @@ namespace basecode::compiler {
         auto& builder = _session.builder();
         auto& scope_manager = _session.scope_manager();
 
-        result.element = builder.make_defer(
+        auto defer_e = builder.make_defer(
             scope_manager.current_scope(),
             evaluate(context.node->lhs.get()));
+        scope_manager.current_scope()->defer_stack().push(defer_e);
+
+        result.element = defer_e;
 
         return true;
     }

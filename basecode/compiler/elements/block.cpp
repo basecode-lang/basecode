@@ -20,6 +20,7 @@
 #include "statement.h"
 #include "initializer.h"
 #include "numeric_type.h"
+#include "defer_element.h"
 #include "symbol_element.h"
 #include "procedure_type.h"
 #include "string_literal.h"
@@ -45,6 +46,10 @@ namespace basecode::compiler {
         return _imports;
     }
 
+    defer_stack_t& block::defer_stack() {
+        return _defer_stack;
+    }
+
     statement_list_t& block::statements() {
         return _statements;
     }
@@ -54,8 +59,25 @@ namespace basecode::compiler {
     }
 
     bool block::on_emit(compiler::session& session) {
-        for (auto stmt : _statements)
-            stmt->emit(session);
+        for (auto stmt : _statements) {
+            stmt->emit_labels(session);
+            auto expr = stmt->expression();
+            if (expr != nullptr
+            &&  expr->element_type() == element_type_t::defer)
+                continue;
+            auto result = stmt->emit(session);
+            if (!result)
+                return false;
+        }
+
+        defer_stack_t working_stack = _defer_stack;
+        while (!working_stack.empty()) {
+            auto deferred = working_stack.top();
+            auto result = deferred->emit(session);
+            if (!result)
+                return false;
+            working_stack.pop();
+        }
 
         return !session.result().is_failed();
     }
