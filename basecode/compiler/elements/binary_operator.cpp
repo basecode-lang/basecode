@@ -124,6 +124,40 @@ namespace basecode::compiler {
                 break;
             }
             case operator_type_t::assignment: {
+                infer_type_result_t lhs_type {};
+                if (!_lhs->infer_type(session, lhs_type))
+                    return false;
+
+                infer_type_result_t rhs_type {};
+                if (!_rhs->infer_type(session, rhs_type))
+                    return false;
+
+                auto copy_required = false;
+                auto lhs_is_composite = lhs_type.inferred_type->is_composite_type();
+                auto rhs_is_composite = rhs_type.inferred_type->is_composite_type();
+
+                if (!lhs_type.inferred_type->is_pointer_type()) {
+                    if (lhs_is_composite && !rhs_is_composite) {
+                        session.error(
+                            _rhs,
+                            "X000",
+                            "cannot assign scalar to composite type.",
+                            _rhs->location());
+                        return false;
+                    }
+
+                    if (!lhs_is_composite && rhs_is_composite) {
+                        session.error(
+                            _rhs,
+                            "X000",
+                            "cannot assign composite type to scalar.",
+                            _rhs->location());
+                        return false;
+                    }
+
+                    copy_required = lhs_is_composite && rhs_is_composite;
+                }
+
                 variable_handle_t lhs_var;
                 if (!session.variable(_lhs, lhs_var))
                     return false;
@@ -132,7 +166,13 @@ namespace basecode::compiler {
                 if (!session.variable(_rhs, rhs_var))
                     return false;
 
-                lhs_var->write(rhs_var.get());
+                if (copy_required) {
+                    lhs_var->copy(
+                        rhs_var.get(),
+                        rhs_type.inferred_type->size_in_bytes());
+                } else {
+                    lhs_var->write(rhs_var.get());
+                }
                 break;
             }
             default:

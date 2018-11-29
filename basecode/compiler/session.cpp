@@ -153,6 +153,7 @@ namespace basecode::compiler {
             }
         }
 
+        // XXX: this appears to be bugged, returning the wrong instances
         auto it = _variables.find(target_element->id());
         if (it == _variables.end()) {
             compiler::variable var(*this, target_element);

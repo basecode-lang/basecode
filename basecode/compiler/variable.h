@@ -77,8 +77,6 @@ namespace basecode::compiler {
 
         bool write();
 
-        bool address();
-
         bool activate();
 
         bool deactivate();
@@ -99,9 +97,13 @@ namespace basecode::compiler {
 
         const vm::register_t& value_reg() const;
 
+        bool address(bool include_offset = false);
+
         const vm::register_t& address_reg() const;
 
         const infer_type_result_t& type_result() const;
+
+        bool copy(variable* value, uint64_t size_in_bytes);
 
     private:
         bool flag(variable::flags_t f) const;

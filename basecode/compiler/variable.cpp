@@ -196,7 +196,7 @@ namespace basecode::compiler {
         return true;
     }
 
-    bool variable::address() {
+    bool variable::address(bool include_offset) {
         if (flag(flags_t::f_addressed))
             return false;
 
@@ -222,7 +222,10 @@ namespace basecode::compiler {
                     var->symbol()->name()),
                 4);
             auto label_ref = assembler.make_label_ref(var->symbol()->name());
-            block->move_label_to_reg(_address.reg, label_ref);
+            block->move_label_to_reg(
+                _address.reg,
+                label_ref,
+                !include_offset ? 0 : rot.offset);
         }
 
         flag(flags_t::f_addressed, true);
@@ -323,6 +326,38 @@ namespace basecode::compiler {
         block->store_from_reg(_address.reg, _value.reg, rot.offset);
 
         flag(flags_t::f_written, true);
+        return true;
+    }
+
+    bool variable::copy(variable* value, uint64_t size_in_bytes) {
+        auto& assembler = _session.assembler();
+        auto block = assembler.current_block();
+
+        address(true);
+        value->address(true);
+
+//        root_and_offset_t rot {};
+//        if (walk_to_root_and_calculate_offset(rot)) {
+//            block->comment(
+//                fmt::format(
+//                    "copy field value: {}",
+//                    rot.path),
+//                4);
+//        } else {
+//            auto var = dynamic_cast<compiler::identifier*>(_element);
+//            block->comment(
+//                fmt::format(
+//                    "copy global value: {}",
+//                    var->symbol()->name()),
+//                4);
+//        }
+
+        block->copy(
+            vm::op_sizes::byte,
+            _address.reg,
+            value->address_reg(),
+            size_in_bytes);
+
         return true;
     }
 

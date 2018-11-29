@@ -719,9 +719,10 @@ namespace basecode::compiler {
 
     assembly_label* element_builder::make_assembly_label(
             compiler::block* parent_scope,
-            const std::string& name) {
+            const std::string& name,
+            compiler::module* module) {
         auto label = new compiler::assembly_label(
-            _session.scope_manager().current_module(),
+            module != nullptr ? module : _session.scope_manager().current_module(),
             parent_scope,
             name);
         _session.elements().add(label);

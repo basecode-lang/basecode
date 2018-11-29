@@ -56,7 +56,9 @@ namespace basecode::compiler {
         auto ref = dynamic_cast<compiler::identifier_reference*>(arg);
         result.element = session.builder().make_assembly_label(
             parent_scope(),
-            ref->identifier()->symbol()->name());
+            ref->identifier()->symbol()->name(),
+            module());
+        result.element->location(location());
         return true;
     }
 

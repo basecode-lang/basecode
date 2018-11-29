@@ -307,7 +307,8 @@ namespace basecode::compiler {
 
         assembly_label* make_assembly_label(
             compiler::block* parent_scope,
-            const std::string& name);
+            const std::string& name,
+            compiler::module* module = nullptr);
 
         argument_pair* make_argument_pair(
             compiler::block* parent_scope,
