@@ -1715,6 +1715,8 @@ namespace basecode::compiler {
             context.node,
             assignment->expressions(),
             nullptr);
+        for (auto expr : assignment->expressions())
+            expr->parent_element(assignment);
         result.element = assignment;
         return success;
     }

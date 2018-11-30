@@ -11,40 +11,8 @@
 
 #include <fstream>
 #include "session.h"
-#include "elements/type.h"
-#include "elements/block.h"
-#include "elements/module.h"
-#include "elements/program.h"
-#include "elements/any_type.h"
-#include "elements/intrinsic.h"
-#include "elements/directive.h"
-#include "elements/rune_type.h"
-#include "elements/bool_type.h"
-#include "elements/type_info.h"
+#include "elements.h"
 #include "code_dom_formatter.h"
-#include "elements/identifier.h"
-#include "elements/tuple_type.h"
-#include "elements/if_element.h"
-#include "elements/expression.h"
-#include "elements/string_type.h"
-#include "elements/initializer.h"
-#include "elements/module_type.h"
-#include "elements/generic_type.h"
-#include "elements/numeric_type.h"
-#include "elements/unknown_type.h"
-#include "elements/while_element.h"
-#include "elements/argument_list.h"
-#include "elements/float_literal.h"
-#include "elements/unary_operator.h"
-#include "elements/symbol_element.h"
-#include "elements/string_literal.h"
-#include "elements/procedure_type.h"
-#include "elements/namespace_type.h"
-#include "elements/type_reference.h"
-#include "elements/unary_operator.h"
-#include "elements/binary_operator.h"
-#include "elements/integer_literal.h"
-#include "elements/identifier_reference.h"
 
 namespace basecode::compiler {
 
@@ -438,6 +406,11 @@ namespace basecode::compiler {
             case element_type_t::expression: {
                 auto expr = dynamic_cast<compiler::expression*>(parent);
                 expr->root(result.element);
+                break;
+            }
+            case element_type_t::statement: {
+                auto stmt = dynamic_cast<compiler::statement*>(parent);
+                stmt->expression(result.element);
                 break;
             }
             case element_type_t::initializer: {

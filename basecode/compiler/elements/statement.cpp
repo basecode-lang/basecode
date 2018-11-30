@@ -21,12 +21,12 @@ namespace basecode::compiler {
                              _expression(expr) {
     }
 
-    element* statement::expression() {
-        return _expression;
-    }
-
     label_list_t& statement::labels() {
         return _labels;
+    }
+
+    compiler::element* statement::expression() {
+        return _expression;
     }
 
     bool statement::on_emit(compiler::session& session) {
@@ -34,6 +34,10 @@ namespace basecode::compiler {
             return true;
 
         return _expression->emit(session);
+    }
+
+    void statement::expression(compiler::element* value) {
+        _expression = value;
     }
 
     void statement::on_owned_elements(element_list_t& list) {

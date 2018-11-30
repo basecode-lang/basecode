@@ -33,7 +33,13 @@ namespace basecode::compiler {
 
         bool on_is_constant() const override;
 
+        bool on_as_bool(bool& value) const override;
+
+        bool on_as_float(double& value) const override;
+
         bool on_emit(compiler::session& session) override;
+
+        bool on_as_integer(uint64_t& value) const override;
 
         void on_owned_elements(element_list_t& list) override;
 

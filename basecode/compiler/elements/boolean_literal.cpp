@@ -47,10 +47,12 @@ namespace basecode::compiler {
         auto& assembler = session.assembler();
         auto block = assembler.current_block();
         auto target_reg = assembler.current_target_register();
-        block->clr(vm::op_sizes::qword, *target_reg);
-        block->move_constant_to_reg(
-            *target_reg,
-            static_cast<uint64_t>(_value ? 1 : 0));
+        if (target_reg != nullptr) {
+            block->clr(vm::op_sizes::qword, *target_reg);
+            block->move_constant_to_reg(
+                *target_reg,
+                static_cast<uint64_t>(_value ? 1 : 0));
+        }
         return true;
     }
 

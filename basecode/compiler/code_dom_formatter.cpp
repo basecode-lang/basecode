@@ -162,7 +162,7 @@ namespace basecode::compiler {
                     style);
             }
             case element_type_t::transmute: {
-                auto element = dynamic_cast<cast*>(node);
+                auto element = dynamic_cast<transmute*>(node);
                 auto style = ", fillcolor=deeppink, style=\"filled\"";
                 add_primary_edge(element, element->expression());
                 return fmt::format(

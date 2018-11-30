@@ -54,7 +54,9 @@ namespace basecode::compiler {
     bool float_literal::on_emit(compiler::session& session) {
         auto block = session.assembler().current_block();
         auto target_reg = session.assembler().current_target_register();
-        block->move_constant_to_reg(*target_reg, _value);
+        if (target_reg != nullptr) {
+            block->move_constant_to_reg(*target_reg, _value);
+        }
         return true;
     }
 

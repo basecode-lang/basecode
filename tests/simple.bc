@@ -21,10 +21,6 @@ bool_true_i:  bool := true;
 bool_false_i: bool := false;
 
 // cast
-//
-//temp_name: u32 := 128;
-//name: string := cast<string>(temp_name);
-
 one := 2;
 three: u16 := 128;
 one := cast<u8>(three);

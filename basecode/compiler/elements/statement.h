@@ -19,12 +19,14 @@ namespace basecode::compiler {
     public:
         statement(
             compiler::module* module,
-            block* parent_scope,
-            element* expr);
-
-        element* expression();
+            compiler::block* parent_scope,
+            compiler::element* expr);
 
         label_list_t& labels();
+
+        compiler::element* expression();
+
+        void expression(compiler::element* value);
 
         bool emit_labels(compiler::session& session);
 

@@ -1,6 +1,6 @@
 support :: module("support/module.bc");
 
-SIXES :: 6;
+FOURS :: 4;
 
 logical_not := !true;
 
@@ -14,7 +14,15 @@ flag6 := 1 == 0 || 2 == 2;
 negativity_sucks: s32 := -65536;
 inverted: u8 := ~%1111_0000;
 
-// XXX: parentage is messed up
-//      declaration isn't being hooked back up to statement/block/module
+// the code dom will retain the full expression
+// for this variable declaration's initializer
 @no_fold;
-j := 2 * 2 + SIXES;
+j := 2 * 2 + FOURS;
+
+// this will be folded to the integer_literal 8
+k := 2 * 2 + FOURS;
+
+// this will generate a folded binary_operator that
+// is assigned via byte code
+h: u16;
+h := (16 * 16) / FOURS;

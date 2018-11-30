@@ -22,7 +22,7 @@ namespace basecode::compiler {
             compiler::module* module,
             block* parent_scope,
             compiler::type_reference* type,
-            element* expr) : element(module, parent_scope, element_type_t::cast),
+            element* expr) : element(module, parent_scope, element_type_t::transmute),
                              _expression(expr),
                              _type_ref(type) {
     }

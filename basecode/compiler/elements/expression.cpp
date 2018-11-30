@@ -39,14 +39,32 @@ namespace basecode::compiler {
         return _root->is_constant();
     }
 
+    bool expression::on_as_bool(bool& value) const {
+        if (_root == nullptr)
+            return false;
+        return _root->as_bool(value);
+    }
+
     void expression::root(compiler::element* value) {
         _root = value;
+    }
+
+    bool expression::on_as_float(double& value) const {
+        if (_root == nullptr)
+            return false;
+        return _root->as_float(value);
     }
 
     bool expression::on_emit(compiler::session& session) {
         if (_root == nullptr)
             return true;
         return _root->emit(session);
+    }
+
+    bool expression::on_as_integer(uint64_t& value) const {
+        if (_root == nullptr)
+            return false;
+        return _root->as_integer(value);
     }
 
     void expression::on_owned_elements(element_list_t& list) {
