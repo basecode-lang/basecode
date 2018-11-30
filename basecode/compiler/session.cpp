@@ -419,6 +419,64 @@ namespace basecode::compiler {
         return _result;
     }
 
+    bool session::apply_folded_element(
+            const fold_result_t& result,
+            compiler::element* e,
+            compiler::element* parent) {
+        result.element->parent_element(parent);
+        switch (parent->element_type()) {
+            case element_type_t::if_e: {
+                auto if_e = dynamic_cast<compiler::if_element*>(parent);
+                if_e->predicate(result.element);
+                break;
+            }
+            case element_type_t::while_e: {
+                auto while_e = dynamic_cast<compiler::while_element*>(parent);
+                while_e->predicate(result.element);
+                break;
+            }
+            case element_type_t::expression: {
+                auto expr = dynamic_cast<compiler::expression*>(parent);
+                expr->root(result.element);
+                break;
+            }
+            case element_type_t::initializer: {
+                auto initializer = dynamic_cast<compiler::initializer*>(parent);
+                initializer->expression(result.element);
+                break;
+            }
+            case element_type_t::argument_list: {
+                auto arg_list = dynamic_cast<compiler::argument_list*>(parent);
+                auto index = arg_list->find_index(e->id());
+                if (index == -1) {
+                    return false;
+                }
+                arg_list->replace(static_cast<size_t>(index), result.element);
+                break;
+            }
+            case element_type_t::unary_operator: {
+                auto unary_op = dynamic_cast<compiler::unary_operator*>(parent);
+                unary_op->rhs(result.element);
+                break;
+            }
+            case element_type_t::binary_operator: {
+                auto binary_op = dynamic_cast<compiler::binary_operator*>(parent);
+                if (binary_op->lhs() == e) {
+                    binary_op->lhs(result.element);
+                } else if (binary_op->rhs() == e) {
+                    binary_op->rhs(result.element);
+                } else {
+                    // XXX: error
+                }
+                break;
+            }
+            default:
+                break;
+        }
+
+        return true;
+    }
+
     vm::assembler& session::assembler() {
         return _assembler;
     }
@@ -542,148 +600,12 @@ namespace basecode::compiler {
     }
 
     bool session::fold_constant_intrinsics() {
-        auto intrinsics = _elements.find_by_type(element_type_t::intrinsic);
-        for (auto e : intrinsics) {
-            auto intrinsic = dynamic_cast<compiler::intrinsic*>(e);
-            if (!intrinsic->can_fold())
-                continue;
-
-            fold_result_t fold_result {};
-            if (!intrinsic->fold(*this, fold_result))
-                return false;
-
-            if (fold_result.element != nullptr) {
-                auto intrinsic = dynamic_cast<compiler::intrinsic*>(e);
-                auto parent = intrinsic->parent_element();
-                if (parent != nullptr) {
-                    fold_result.element->attributes().add(_builder.make_attribute(
-                        _scope_manager.current_scope(),
-                        "intrinsic_substitution",
-                        _builder.make_string(
-                            _scope_manager.current_scope(),
-                            intrinsic->name())));
-                    switch (parent->element_type()) {
-                        case element_type_t::initializer: {
-                            auto initializer = dynamic_cast<compiler::initializer*>(parent);
-                            initializer->expression(fold_result.element);
-                            break;
-                        }
-                        case element_type_t::argument_list: {
-                            auto arg_list = dynamic_cast<compiler::argument_list*>(parent);
-                            auto index = arg_list->find_index(intrinsic->id());
-                            if (index == -1) {
-                                return false;
-                            }
-                            arg_list->replace(static_cast<size_t>(index), fold_result.element);
-                            break;
-                        }
-                        case element_type_t::unary_operator: {
-                            auto unary_op = dynamic_cast<compiler::unary_operator*>(parent);
-                            unary_op->rhs(fold_result.element);
-                            break;
-                        }
-                        case element_type_t::binary_operator: {
-                            auto binary_op = dynamic_cast<compiler::binary_operator*>(parent);
-                            if (binary_op->lhs() == intrinsic) {
-                                binary_op->lhs(fold_result.element);
-                            } else if (binary_op->rhs() == intrinsic) {
-                                binary_op->rhs(fold_result.element);
-                            } else {
-                                // XXX: error
-                            }
-                            break;
-                        }
-                        default:
-                            break;
-                    }
-                    fold_result.element->parent_element(parent);
-                    _elements.remove(intrinsic->id());
-                }
-            }
-        }
-        return true;
+        return fold_elements_of_type(element_type_t::intrinsic);
     }
 
     bool session::fold_constant_expressions() {
-        std::vector<common::id_t> to_remove {};
-
-        auto binary_ops = _elements.find_by_type(element_type_t::binary_operator);
-        for (auto e : binary_ops) {
-            auto bin_op = dynamic_cast<compiler::binary_operator*>(e);
-
-            fold_result_t fold_result {};
-            if (!bin_op->fold(*this, fold_result))
-                continue;
-
-            if (fold_result.element != nullptr) {
-                auto parent = bin_op->parent_element();
-                if (parent != nullptr) {
-                    // XXX: need to revisit this to determine best home for the attribute
-//                    parent->attributes().add(_builder.make_attribute(
-//                        parent->parent_scope(),
-//                        "expression_fold",
-//                        _builder.make_string(
-//                            parent->parent_scope(),
-//                            bin_op->label_name())));
-                    switch (parent->element_type()) {
-                        case element_type_t::if_e: {
-                            auto if_e = dynamic_cast<compiler::if_element*>(parent);
-                            if_e->predicate(fold_result.element);
-                            break;
-                        }
-                        case element_type_t::while_e: {
-                            auto while_e = dynamic_cast<compiler::while_element*>(parent);
-                            while_e->predicate(fold_result.element);
-                            break;
-                        }
-                        case element_type_t::expression: {
-                            auto expr = dynamic_cast<compiler::expression*>(parent);
-                            expr->root(fold_result.element);
-                            break;
-                        }
-                        case element_type_t::initializer: {
-                            auto initializer = dynamic_cast<compiler::initializer*>(parent);
-                            initializer->expression(fold_result.element);
-                            break;
-                        }
-                        case element_type_t::argument_list: {
-                            auto arg_list = dynamic_cast<compiler::argument_list*>(parent);
-                            auto index = arg_list->find_index(bin_op->id());
-                            if (index == -1) {
-                                return false;
-                            }
-                            arg_list->replace(static_cast<size_t>(index), fold_result.element);
-                            break;
-                        }
-                        case element_type_t::unary_operator: {
-                            auto unary_op = dynamic_cast<compiler::unary_operator*>(parent);
-                            unary_op->rhs(fold_result.element);
-                            break;
-                        }
-                        case element_type_t::binary_operator: {
-                            auto binary_op = dynamic_cast<compiler::binary_operator*>(parent);
-                            if (binary_op->lhs() == bin_op) {
-                                binary_op->lhs(fold_result.element);
-                            } else if (binary_op->rhs() == bin_op) {
-                                binary_op->rhs(fold_result.element);
-                            } else {
-                                // XXX: error
-                            }
-                            break;
-                        }
-                        default:
-                            break;
-                    }
-                    fold_result.element->parent_element(parent);
-                    to_remove.push_back(bin_op->id());
-                }
-            }
-        }
-
-        for (auto id : to_remove)
-            _elements.remove(id);
-
-        return true;
+        return fold_elements_of_type(element_type_t::unary_operator)
+            && fold_elements_of_type(element_type_t::binary_operator);
     }
 
     vm::stack_frame_t* session::stack_frame() {
@@ -740,6 +662,54 @@ namespace basecode::compiler {
         auto source_file = _source_file_stack.top();
         _source_file_stack.pop();
         return source_file;
+    }
+
+    bool session::fold_elements_of_type(element_type_t type) {
+        std::vector<common::id_t> to_remove {};
+
+        auto elements = _elements.find_by_type(type);
+        for (auto e : elements) {
+            if (e->element_type() == element_type_t::intrinsic) {
+                auto intrinsic = dynamic_cast<compiler::intrinsic*>(e);
+                if (!intrinsic->can_fold())
+                    continue;
+            }
+
+            fold_result_t fold_result {};
+            if (!e->fold(*this, fold_result))
+                continue;
+
+            if (fold_result.element == nullptr)
+                continue;
+
+            auto parent = e->parent_element();
+            if (parent != nullptr) {
+                switch (e->element_type()) {
+                    case element_type_t::intrinsic: {
+                        auto intrinsic = dynamic_cast<compiler::intrinsic*>(e);
+                        fold_result.element->attributes().add(_builder.make_attribute(
+                            _scope_manager.current_scope(),
+                            "intrinsic_substitution",
+                            _builder.make_string(
+                                _scope_manager.current_scope(),
+                                intrinsic->name())));
+                        break;
+                    }
+                    default:
+                        break;
+                }
+
+                if (!apply_folded_element(fold_result, e, parent))
+                    return false;
+
+                to_remove.push_back(e->id());
+            }
+        }
+
+        for (auto id : to_remove)
+            _elements.remove(id);
+
+        return true;
     }
 
     compiler::scope_manager& session::scope_manager() {
@@ -821,7 +791,7 @@ namespace basecode::compiler {
             pop_source_file();
         });
 
-        compiler::module* module = (compiler::module*)nullptr;
+        compiler::module* module = nullptr;
         auto module_node = parse(source_file);
         if (module_node != nullptr) {
             module = dynamic_cast<compiler::module*>(_ast_evaluator.evaluate(module_node.get()));
