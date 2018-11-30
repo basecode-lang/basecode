@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <common/bytes.h>
 #include <common/defer.h>
 #include <compiler/session.h>
 #include <vm/instruction_block.h>
@@ -18,23 +19,25 @@
 #include "identifier.h"
 #include "array_type.h"
 #include "pointer_type.h"
+#include "float_literal.h"
 #include "composite_type.h"
 #include "symbol_element.h"
 #include "type_reference.h"
 #include "binary_operator.h"
 #include "integer_literal.h"
+#include "boolean_literal.h"
 #include "identifier_reference.h"
 
 namespace basecode::compiler {
 
     binary_operator::binary_operator(
             compiler::module* module,
-            block* parent_scope,
-            operator_type_t type,
-            element* lhs,
-            element* rhs) : operator_base(module, parent_scope, element_type_t::binary_operator, type),
-                            _lhs(lhs),
-                            _rhs(rhs) {
+            compiler::block* parent_scope,
+            compiler::operator_type_t type,
+            compiler::element* lhs,
+            compiler::element* rhs) : operator_base(module, parent_scope, element_type_t::binary_operator, type),
+                                      _lhs(lhs),
+                                      _rhs(rhs) {
     }
 
     bool binary_operator::on_infer_type(
@@ -185,85 +188,50 @@ namespace basecode::compiler {
     bool binary_operator::on_fold(
             compiler::session& session,
             fold_result_t& result) {
-        switch (operator_type()) {
-            case operator_type_t::add: {
-                break;
+        if (!is_constant())
+            return false;
+
+        auto builder = session.builder();
+        auto scope_manager = session.scope_manager();
+
+        infer_type_result_t type_result {};
+        if (!infer_type(session, type_result))
+            return false;
+
+        if (type_result.inferred_type->number_class() == type_number_class_t::integer) {
+            uint64_t value;
+            if (as_integer(value)) {
+                result.element = builder.make_integer(
+                    scope_manager.current_scope(),
+                    value);
+                return true;
             }
-            case operator_type_t::divide: {
-                break;
+        } else if (type_result.inferred_type->number_class() == type_number_class_t::floating_point) {
+            double float_value;
+            if (as_float(float_value)) {
+                result.element = builder.make_float(
+                    scope_manager.current_scope(),
+                    float_value);
+                return true;
             }
-            case operator_type_t::modulo: {
-                break;
-            }
-            case operator_type_t::equals: {
-                break;
-            }
-            case operator_type_t::subtract: {
-                break;
-            }
-            case operator_type_t::exponent: {
-                break;
-            }
-            case operator_type_t::multiply: {
-                break;
-            }
-            case operator_type_t::binary_or: {
-                break;
-            }
-            case operator_type_t::less_than: {
-                break;
-            }
-            case operator_type_t::not_equals: {
-                break;
-            }
-            case operator_type_t::logical_or: {
-                break;
-            }
-            case operator_type_t::binary_and: {
-                break;
-            }
-            case operator_type_t::binary_xor: {
-                break;
-            }
-            case operator_type_t::shift_left: {
-                break;
-            }
-            case operator_type_t::logical_and: {
-                break;
-            }
-            case operator_type_t::shift_right: {
-                break;
-            }
-            case operator_type_t::rotate_left: {
-                break;
-            }
-            case operator_type_t::member_access: {
-                break;
-            }
-            case operator_type_t::rotate_right: {
-                break;
-            }
-            case operator_type_t::greater_than: {
-                break;
-            }
-            case operator_type_t::less_than_or_equal: {
-                break;
-            }
-            case operator_type_t::greater_than_or_equal: {
-                break;
-            }
-            default:
-                break;
         }
 
-        return true;
+        bool bool_value;
+        if (as_bool(bool_value)) {
+            result.element = bool_value ?
+                builder.true_literal() :
+                builder.false_literal();
+            return true;
+        }
+
+        return false;
     }
 
-    element* binary_operator::lhs() {
+    compiler::element* binary_operator::lhs() {
         return _lhs;
     }
 
-    element* binary_operator::rhs() {
+    compiler::element* binary_operator::rhs() {
         return _rhs;
     }
 
@@ -272,12 +240,164 @@ namespace basecode::compiler {
             && (_rhs != nullptr && _rhs->is_constant());
     }
 
+    bool binary_operator::on_as_bool(bool& value) const {
+        value = false;
+
+        switch (operator_type()) {
+            case operator_type_t::equals: {
+                value = *_lhs == *_rhs;
+                break;
+            }
+            case operator_type_t::less_than: {
+                value = *_lhs < *_rhs;
+                break;
+            }
+            case operator_type_t::logical_or: {
+                bool lhs, rhs;
+                if (!_lhs->as_bool(lhs)) return false;
+                if (!_rhs->as_bool(rhs)) return false;
+                value = lhs || rhs;
+                break;
+            }
+            case operator_type_t::logical_and: {
+                bool lhs, rhs;
+                if (!_lhs->as_bool(lhs)) return false;
+                if (!_rhs->as_bool(rhs)) return false;
+                value = lhs && rhs;
+                break;
+            }
+            case operator_type_t::not_equals: {
+                value = *_lhs != *_rhs;
+                break;
+            }
+            case operator_type_t::greater_than: {
+                value = *_lhs > *_rhs;
+                break;
+            }
+            case operator_type_t::less_than_or_equal: {
+                value = *_lhs <= *_rhs;
+                break;
+            }
+            case operator_type_t::greater_than_or_equal: {
+                value = *_lhs >= *_rhs;
+                break;
+            }
+            default: return false;
+        }
+
+        return true;
+    }
+
     void binary_operator::lhs(compiler::element* element) {
         _lhs = element;
     }
 
     void binary_operator::rhs(compiler::element* element) {
         _rhs = element;
+    }
+
+    bool binary_operator::on_as_float(double& value) const {
+        double lhs_value, rhs_value;
+        if (!_lhs->as_float(lhs_value)) return false;
+        if (!_rhs->as_float(rhs_value)) return false;
+        value = 0.0;
+
+        switch (operator_type()) {
+            case operator_type_t::add: {
+                value = lhs_value + rhs_value;
+                break;
+            }
+            case operator_type_t::divide: {
+                value = lhs_value / rhs_value;
+                break;
+            }
+            case operator_type_t::subtract: {
+                value = lhs_value - rhs_value;
+                break;
+            }
+            case operator_type_t::exponent: {
+                // XXX: need to add a pow function to common/bytes.h
+                //      also update the assembler and terp!
+                break;
+            }
+            case operator_type_t::multiply: {
+                value = lhs_value * rhs_value;
+                break;
+            }
+            default: return false;
+        }
+
+        return true;
+    }
+
+    bool binary_operator::on_as_integer(uint64_t& value) const {
+        uint64_t lhs_value, rhs_value;
+        if (!_lhs->as_integer(lhs_value)) return false;
+        if (!_rhs->as_integer(rhs_value)) return false;
+        value = 0;
+
+        switch (operator_type()) {
+            case operator_type_t::add: {
+                value = lhs_value + rhs_value;
+                break;
+            }
+            case operator_type_t::divide: {
+                value = lhs_value / rhs_value;
+                break;
+            }
+            case operator_type_t::modulo: {
+                value = lhs_value % rhs_value;
+                break;
+            }
+            case operator_type_t::subtract: {
+                value = lhs_value - rhs_value;
+                break;
+            }
+            case operator_type_t::exponent: {
+                // XXX: need to add a pow function to common/bytes.h
+                //      also update the assembler and terp!
+                break;
+            }
+            case operator_type_t::multiply: {
+                value = lhs_value * rhs_value;
+                break;
+            }
+            case operator_type_t::binary_or: {
+                value = lhs_value | rhs_value;
+                break;
+            }
+            case operator_type_t::binary_and: {
+                value = lhs_value & rhs_value;
+                break;
+            }
+            case operator_type_t::binary_xor: {
+                value = lhs_value ^ rhs_value;
+                break;
+            }
+            case operator_type_t::shift_left: {
+                value = lhs_value << rhs_value;
+                break;
+            }
+            case operator_type_t::shift_right: {
+                value = lhs_value >> rhs_value;
+                break;
+            }
+            case operator_type_t::rotate_left: {
+                value = common::rotl(
+                    lhs_value,
+                    static_cast<uint8_t>(rhs_value));
+                break;
+            }
+            case operator_type_t::rotate_right: {
+                value = common::rotr(
+                    lhs_value,
+                    static_cast<uint8_t>(rhs_value));
+                break;
+            }
+            default: return false;
+        }
+
+        return true;
     }
 
     void binary_operator::on_owned_elements(element_list_t& list) {

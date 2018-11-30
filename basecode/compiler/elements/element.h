@@ -80,7 +80,43 @@ namespace basecode::compiler {
 
         bool is_parent_element(element_type_t type);
 
+        bool operator> (const element& other) const {
+            return on_greater_than(other);
+        }
+
+        bool operator< (const element& other) const {
+            return on_less_than(other);
+        }
+
+        bool operator== (const element& other) const {
+            return on_equals(other);
+        }
+
+        bool operator!= (const element& other) const {
+            return on_not_equals(other);
+        }
+
+        bool operator>= (const element& other) const {
+            return on_greater_than_or_equal(other);
+        }
+
+        bool operator<= (const element& other) const {
+            return on_less_than_or_equal(other);
+        }
+
         const common::source_location& location() const;
+
+        uint64_t operator+ (const element& other) const {
+            return on_add(other);
+        }
+
+        uint64_t operator- (const element& other) const {
+            return on_subtract(other);
+        }
+
+        uint64_t operator* (const element& other) const {
+            return on_multiply(other);
+        }
 
         attribute* find_attribute(const std::string& name);
 
@@ -105,11 +141,29 @@ namespace basecode::compiler {
 
         virtual bool on_as_integer(uint64_t& value) const;
 
+        virtual bool on_equals(const element& other) const;
+
         virtual bool on_as_string(std::string& value) const;
+
+        virtual uint64_t on_add(const element& other) const;
 
         virtual void on_owned_elements(element_list_t& list);
 
         virtual bool on_as_rune(common::rune_t& value) const;
+
+        virtual bool on_less_than(const element& other) const;
+
+        virtual bool on_not_equals(const element& other) const;
+
+        virtual uint64_t on_subtract(const element& other) const;
+
+        virtual uint64_t on_multiply(const element& other) const;
+
+        virtual bool on_greater_than(const element& other) const;
+
+        virtual bool on_less_than_or_equal(const element& other) const;
+
+        virtual bool on_greater_than_or_equal(const element& other) const;
 
     private:
         common::id_t _id;

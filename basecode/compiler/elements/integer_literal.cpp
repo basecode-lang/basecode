@@ -60,4 +60,49 @@ namespace basecode::compiler {
         return true;
     }
 
+    bool integer_literal::on_equals(const compiler::element& other) const {
+        auto other_int = dynamic_cast<const compiler::integer_literal*>(&other);
+        return _value == other_int->_value;
+    }
+
+    uint64_t integer_literal::on_add(const compiler::element& other) const {
+        auto other_int = dynamic_cast<const compiler::integer_literal*>(&other);
+        return _value + other_int->_value;
+    }
+
+    bool integer_literal::on_less_than(const compiler::element& other) const {
+        auto other_int = dynamic_cast<const compiler::integer_literal*>(&other);
+        return _value < other_int->_value;
+    }
+
+    bool integer_literal::on_not_equals(const compiler::element& other) const {
+        auto other_int = dynamic_cast<const compiler::integer_literal*>(&other);
+        return _value != other_int->_value;
+    }
+
+    uint64_t integer_literal::on_subtract(const compiler::element& other) const {
+        auto other_int = dynamic_cast<const compiler::integer_literal*>(&other);
+        return _value - other_int->_value;
+    }
+
+    uint64_t integer_literal::on_multiply(const compiler::element& other) const {
+        auto other_int = dynamic_cast<const compiler::integer_literal*>(&other);
+        return _value * other_int->_value;
+    }
+
+    bool integer_literal::on_greater_than(const compiler::element& other) const {
+        auto other_int = dynamic_cast<const compiler::integer_literal*>(&other);
+        return _value > other_int->_value;
+    }
+
+    bool integer_literal::on_less_than_or_equal(const compiler::element& other) const {
+        auto other_int = dynamic_cast<const compiler::integer_literal*>(&other);
+        return _value <= other_int->_value;
+    }
+
+    bool integer_literal::on_greater_than_or_equal(const compiler::element& other) const {
+        auto other_int = dynamic_cast<const compiler::integer_literal*>(&other);
+        return _value >= other_int->_value;
+    }
+
 };

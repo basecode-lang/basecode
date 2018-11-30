@@ -36,8 +36,14 @@ namespace basecode::compiler {
         element_list_t owned_elements {};
         element->owned_elements(owned_elements);
 
-        for (auto owned : owned_elements)
+        for (auto owned : owned_elements) {
+            // XXX: find a better way to do this.  probably a can_remove on element
+            if (owned->element_type() == element_type_t::boolean_literal
+            ||  owned->element_type() == element_type_t::nil_literal) {
+                continue;
+            }
             remove(owned->id());
+        }
 
         remove_index_by_type(element);
         _elements_by_id.erase(id);

@@ -54,4 +54,14 @@ namespace basecode::compiler {
         return true;
     }
 
+    bool boolean_literal::on_equals(const compiler::element& other) const {
+        auto other_bool = dynamic_cast<const compiler::boolean_literal*>(&other);
+        return _value == other_bool->_value;
+    }
+
+    bool boolean_literal::on_not_equals(const compiler::element& other) const {
+        auto other_bool = dynamic_cast<const compiler::boolean_literal*>(&other);
+        return _value != other_bool->_value;
+    }
+
 };

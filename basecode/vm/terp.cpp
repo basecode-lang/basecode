@@ -21,20 +21,6 @@
 
 namespace basecode::vm {
 
-    static inline uint64_t rotl(uint64_t n, uint8_t c) {
-        const unsigned int mask = (CHAR_BIT * sizeof(n) - 1);
-        c &= mask;
-        return (n << c) | (n >> ((-c) & mask));
-    }
-
-    static inline uint64_t rotr(uint64_t n, uint8_t c) {
-        const unsigned int mask = (CHAR_BIT * sizeof(n) - 1);
-        c &= mask;
-        return (n >> c) | (n << ((-c) & mask));
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-
     size_t instruction_t::encoding_size() const {
         size_t encoding_size = base_size;
 
@@ -1349,7 +1335,7 @@ namespace basecode::vm {
                     return false;
 
                 operand_value_t right_rotated_value;
-                right_rotated_value.alias.u = rotr(
+                right_rotated_value.alias.u = common::rotr(
                     lhs_value.alias.u,
                     static_cast<uint8_t>(rhs_value.alias.u));
                 if (!set_target_operand_value(r, inst.operands[0], inst.size, right_rotated_value))
@@ -1377,7 +1363,7 @@ namespace basecode::vm {
                     return false;
 
                 operand_value_t left_rotated_value;
-                left_rotated_value.alias.u = rotl(
+                left_rotated_value.alias.u = common::rotl(
                     lhs_value.alias.u,
                     static_cast<uint8_t>(rhs_value.alias.u));
                 if (!set_target_operand_value(r, inst.operands[0], inst.size, left_rotated_value))

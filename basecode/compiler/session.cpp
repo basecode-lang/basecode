@@ -221,6 +221,9 @@ namespace basecode::compiler {
         if (!fold_constant_intrinsics())
             return false;
 
+        if (!fold_constant_expressions())
+            return false;
+
         if (!_result.is_failed()) {
             _program.emit(*this);
 
@@ -595,6 +598,73 @@ namespace basecode::compiler {
                 }
             }
         }
+        return true;
+    }
+
+    bool session::fold_constant_expressions() {
+        std::vector<common::id_t> to_remove {};
+
+        auto binary_ops = _elements.find_by_type(element_type_t::binary_operator);
+        for (auto e : binary_ops) {
+            auto bin_op = dynamic_cast<compiler::binary_operator*>(e);
+
+            fold_result_t fold_result {};
+            if (!bin_op->fold(*this, fold_result))
+                continue;
+
+            if (fold_result.element != nullptr) {
+                auto parent = bin_op->parent_element();
+                if (parent != nullptr) {
+                    // XXX: need to revisit this to determine best home for the attribute
+//                    parent->attributes().add(_builder.make_attribute(
+//                        parent->parent_scope(),
+//                        "expression_fold",
+//                        _builder.make_string(
+//                            parent->parent_scope(),
+//                            bin_op->label_name())));
+                    switch (parent->element_type()) {
+                        case element_type_t::initializer: {
+                            auto initializer = dynamic_cast<compiler::initializer*>(parent);
+                            initializer->expression(fold_result.element);
+                            break;
+                        }
+                        case element_type_t::argument_list: {
+                            auto arg_list = dynamic_cast<compiler::argument_list*>(parent);
+                            auto index = arg_list->find_index(bin_op->id());
+                            if (index == -1) {
+                                return false;
+                            }
+                            arg_list->replace(static_cast<size_t>(index), fold_result.element);
+                            break;
+                        }
+                        case element_type_t::unary_operator: {
+                            auto unary_op = dynamic_cast<compiler::unary_operator*>(parent);
+                            unary_op->rhs(fold_result.element);
+                            break;
+                        }
+                        case element_type_t::binary_operator: {
+                            auto binary_op = dynamic_cast<compiler::binary_operator*>(parent);
+                            if (binary_op->lhs() == bin_op) {
+                                binary_op->lhs(fold_result.element);
+                            } else if (binary_op->rhs() == bin_op) {
+                                binary_op->rhs(fold_result.element);
+                            } else {
+                                // XXX: error
+                            }
+                            break;
+                        }
+                        default:
+                            break;
+                    }
+                    fold_result.element->parent_element(parent);
+                    to_remove.push_back(bin_op->id());
+                }
+            }
+        }
+
+        for (auto id : to_remove)
+            _elements.remove(id);
+
         return true;
     }
 

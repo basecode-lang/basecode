@@ -37,6 +37,18 @@ namespace basecode::common {
         return (*(char*)&n) == 1;
     }
 
+    inline uint64_t rotl(uint64_t n, uint8_t c) {
+        const unsigned int mask = (CHAR_BIT * sizeof(n) - 1);
+        c &= mask;
+        return (n << c) | (n >> ((-c) & mask));
+    }
+
+    inline uint64_t rotr(uint64_t n, uint8_t c) {
+        const unsigned int mask = (CHAR_BIT * sizeof(n) - 1);
+        c &= mask;
+        return (n >> c) | (n << ((-c) & mask));
+    }
+
     inline uint8_t get_upper_nybble(uint8_t value) {
         return static_cast<uint8_t>((value & 0xf0) >> 4);
     }

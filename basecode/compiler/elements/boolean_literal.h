@@ -35,6 +35,10 @@ namespace basecode::compiler {
 
         bool on_emit(compiler::session& session) override;
 
+        bool on_equals(const compiler::element& other) const override;
+
+        bool on_not_equals(const compiler::element& other) const override;
+
     private:
         bool _value = false;
     };

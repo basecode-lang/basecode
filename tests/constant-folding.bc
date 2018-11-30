@@ -1,3 +1,20 @@
 support :: module("support/module.bc");
 
-j := 2 * 2 + 6;
+SIXES :: 6;
+
+logical_not := !true;
+
+flag1 := 2 == 2;
+flag2 := 4 > 3;
+flag3 := 2 < 5;
+flag4 := 2 >= 2;
+flag5 := 1 == 0 && 2 == 2;
+flag6 := 1 == 0 || 2 == 2;
+
+negativity_sucks: s32 := -65536;
+inverted: u8 := ~%1111_0000;
+
+// XXX: parentage is messed up
+//      declaration isn't being hooked back up to statement/block/module
+@no_fold;
+j := 2 * 2 + SIXES;

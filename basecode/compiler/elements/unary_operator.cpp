@@ -15,8 +15,11 @@
 #include "program.h"
 #include "identifier.h"
 #include "pointer_type.h"
+#include "float_literal.h"
 #include "unary_operator.h"
 #include "type_reference.h"
+#include "integer_literal.h"
+#include "boolean_literal.h"
 #include "identifier_reference.h"
 
 namespace basecode::compiler {
@@ -32,21 +35,43 @@ namespace basecode::compiler {
     bool unary_operator::on_fold(
             compiler::session& session,
             fold_result_t& result) {
-        switch (operator_type()) {
-            case operator_type_t::negate: {
-                break;
+        if (!is_constant())
+            return false;
+
+        auto builder = session.builder();
+        auto scope_manager = session.scope_manager();
+
+        infer_type_result_t type_result {};
+        if (!infer_type(session, type_result))
+            return false;
+
+        if (type_result.inferred_type->number_class() == type_number_class_t::integer) {
+            uint64_t value;
+            if (as_integer(value)) {
+                result.element = builder.make_integer(
+                    scope_manager.current_scope(),
+                    value);
+                return true;
             }
-            case operator_type_t::binary_not: {
-                break;
+        } else if (type_result.inferred_type->number_class() == type_number_class_t::floating_point) {
+            double value;
+            if (as_float(value)) {
+                result.element = builder.make_float(
+                    scope_manager.current_scope(),
+                    value);
+                return true;
             }
-            case operator_type_t::logical_not: {
-                break;
-            }
-            default:
-                break;
         }
 
-        return true;
+        bool bool_value;
+        if (as_bool(bool_value)) {
+            result.element = bool_value ?
+                builder.true_literal() :
+                builder.false_literal();
+            return true;
+        }
+
+        return false;
     }
 
     compiler::element* unary_operator::rhs() {
@@ -55,6 +80,21 @@ namespace basecode::compiler {
 
     bool unary_operator::on_is_constant() const {
         return _rhs != nullptr && _rhs->is_constant();
+    }
+
+    bool unary_operator::on_as_bool(bool& value) const {
+        value = false;
+        switch (operator_type()) {
+            case operator_type_t::logical_not: {
+                bool rhs_value;
+                _rhs->as_bool(rhs_value);
+                value = !rhs_value;
+                break;
+            }
+            default:
+                return false;
+        }
+        return true;
     }
 
     void unary_operator::rhs(compiler::element* element) {
@@ -107,6 +147,48 @@ namespace basecode::compiler {
         return true;
     }
 
+    bool unary_operator::on_as_float(double& value) const {
+        double rhs_value;
+        if (!_rhs->as_float(rhs_value))
+            return false;
+
+        value = 0;
+
+        switch (operator_type()) {
+            case operator_type_t::negate: {
+                value = -rhs_value;
+                break;
+            }
+            default:
+                return false;
+        }
+
+        return true;
+    }
+
+    bool unary_operator::on_as_integer(uint64_t& value) const {
+        uint64_t rhs_value;
+        if (!_rhs->as_integer(rhs_value))
+            return false;
+
+        value = 0;
+
+        switch (operator_type()) {
+            case operator_type_t::negate: {
+                value = static_cast<uint64_t>(-static_cast<int64_t>(rhs_value));
+                break;
+            }
+            case operator_type_t::binary_not: {
+                value = ~rhs_value;
+                break;
+            }
+            default:
+                return false;
+        }
+
+        return true;
+    }
+
     void unary_operator::on_owned_elements(element_list_t& list) {
         if (_rhs != nullptr)
             list.emplace_back(_rhs);
@@ -119,8 +201,7 @@ namespace basecode::compiler {
         switch (operator_type()) {
             case operator_type_t::negate:
             case operator_type_t::binary_not: {
-                result.inferred_type = scope_manager.find_type({.name = "u64"});
-                return true;
+                return _rhs->infer_type(session, result);
             }
             case operator_type_t::logical_not: {
                 result.inferred_type = scope_manager.find_type({.name = "bool"});

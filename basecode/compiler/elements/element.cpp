@@ -188,6 +188,10 @@ namespace basecode::compiler {
         on_owned_elements(list);
     }
 
+    bool element::on_equals(const element& other) const {
+        return false;
+    }
+
     bool element::on_as_string(std::string& value) const {
         return false;
     }
@@ -198,6 +202,10 @@ namespace basecode::compiler {
         return _parent_element->element_type() == type;
     }
 
+    uint64_t element::on_add(const element& other) const {
+        return 0;
+    }
+
     bool element::on_as_rune(common::rune_t& value) const {
         return false;
     }
@@ -205,8 +213,28 @@ namespace basecode::compiler {
     void element::on_owned_elements(element_list_t& list) {
     }
 
+    bool element::on_less_than(const element& other) const {
+        return false;
+    }
+
+    bool element::on_not_equals(const element& other) const {
+        return false;
+    }
+
     const common::source_location& element::location() const {
         return _location;
+    }
+
+    uint64_t element::on_subtract(const element& other) const {
+        return 0;
+    }
+
+    uint64_t element::on_multiply(const element& other) const {
+        return 0;
+    }
+
+    bool element::on_greater_than(const element& other) const {
+        return false;
     }
 
     attribute* element::find_attribute(const std::string& name) {
@@ -220,8 +248,16 @@ namespace basecode::compiler {
         return nullptr;
     }
 
+    bool element::on_less_than_or_equal(const element& other) const {
+        return false;
+    }
+
     void element::location(const common::source_location& location) {
         _location = location;
+    }
+
+    bool element::on_greater_than_or_equal(const element& other) const {
+        return false;
     }
 
 };

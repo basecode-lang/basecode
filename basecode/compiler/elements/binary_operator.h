@@ -20,14 +20,14 @@ namespace basecode::compiler {
     public:
         binary_operator(
             compiler::module* module,
-            block* parent_scope,
-            operator_type_t type,
-            element* lhs,
-            element* rhs);
+            compiler::block* parent_scope,
+            compiler::operator_type_t type,
+            compiler::element* lhs,
+            compiler::element* rhs);
 
-        element* lhs();
+        compiler::element* lhs();
 
-        element* rhs();
+        compiler::element* rhs();
 
         void lhs(compiler::element* element);
 
@@ -44,7 +44,13 @@ namespace basecode::compiler {
 
         bool on_is_constant() const override;
 
+        bool on_as_bool(bool& value) const override;
+
+        bool on_as_float(double& value) const override;
+
         bool on_emit(compiler::session& session) override;
+
+        bool on_as_integer(uint64_t& value) const override;
 
         void on_owned_elements(element_list_t& list) override;
 
@@ -53,8 +59,8 @@ namespace basecode::compiler {
         void emit_relational_operator(compiler::session& session);
 
     private:
-        element* _lhs = nullptr;
-        element* _rhs = nullptr;
+        compiler::element* _lhs = nullptr;
+        compiler::element* _rhs = nullptr;
         vm::register_t _temp_reg {
             .size = vm::op_sizes::byte,
             .type = vm::register_type_t::integer

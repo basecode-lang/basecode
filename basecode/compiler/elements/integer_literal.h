@@ -37,6 +37,24 @@ namespace basecode::compiler {
 
         bool on_as_integer(uint64_t& value) const override;
 
+        bool on_equals(const compiler::element& other) const override;
+
+        uint64_t on_add(const compiler::element& other) const override;
+
+        bool on_less_than(const compiler::element& other) const override;
+
+        bool on_not_equals(const compiler::element& other) const override;
+
+        uint64_t on_subtract(const compiler::element& other) const override;
+
+        uint64_t on_multiply(const compiler::element& other) const override;
+
+        bool on_greater_than(const compiler::element& other) const override;
+
+        bool on_less_than_or_equal(const compiler::element& other) const override;
+
+        bool on_greater_than_or_equal(const compiler::element& other) const override;
+
     private:
         uint64_t _value;
     };

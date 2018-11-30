@@ -151,6 +151,8 @@ namespace basecode::compiler {
 
         bool fold_constant_intrinsics();
 
+        bool fold_constant_expressions();
+
         bool resolve_unknown_identifiers();
 
         void initialize_built_in_procedures();
