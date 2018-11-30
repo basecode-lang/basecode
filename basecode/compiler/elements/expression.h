@@ -19,10 +19,12 @@ namespace basecode::compiler {
     public:
         expression(
             compiler::module* module,
-            block* parent_scope,
-            element* root);
+            compiler::block* parent_scope,
+            compiler::element* root);
 
-        element* root();
+        compiler::element* root();
+
+        void root(compiler::element* value);
 
     protected:
         bool on_infer_type(
@@ -36,7 +38,7 @@ namespace basecode::compiler {
         void on_owned_elements(element_list_t& list) override;
 
     private:
-        element* _root = nullptr;
+        compiler::element* _root = nullptr;
     };
 
 };

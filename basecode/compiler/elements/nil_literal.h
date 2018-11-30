@@ -21,6 +21,10 @@ namespace basecode::compiler {
             compiler::module* module,
             block* parent_scope);
 
+        bool is_singleton() const override {
+            return true;
+        }
+
     protected:
         bool on_infer_type(
             compiler::session& session,

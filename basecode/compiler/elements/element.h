@@ -58,6 +58,8 @@ namespace basecode::compiler {
 
         bool as_bool(bool& value) const;
 
+        virtual bool is_singleton() const;
+
         bool as_float(double& value) const;
 
         element_type_t element_type() const;

@@ -19,19 +19,21 @@ namespace basecode::compiler {
     public:
         if_element(
             compiler::module* module,
-            block* parent_scope,
-            element* predicate,
-            element* true_branch,
-            element* false_branch,
+            compiler::block* parent_scope,
+            compiler::element* predicate,
+            compiler::element* true_branch,
+            compiler::element* false_branch,
             bool is_else_if);
 
-        element* predicate();
-
-        element* true_branch();
-
-        element* false_branch();
-
         bool is_else_if() const;
+
+        compiler::element* predicate();
+
+        compiler::element* true_branch();
+
+        compiler::element* false_branch();
+
+        void predicate(compiler::element* value);
 
     protected:
         bool on_emit(compiler::session& session) override;
@@ -40,9 +42,9 @@ namespace basecode::compiler {
 
     private:
         bool _is_else_if = false;
-        element* _predicate = nullptr;
-        element* _true_branch = nullptr;
-        element* _false_branch = nullptr;
+        compiler::element* _predicate = nullptr;
+        compiler::element* _true_branch = nullptr;
+        compiler::element* _false_branch = nullptr;
     };
 
 };

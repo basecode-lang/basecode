@@ -25,7 +25,9 @@ namespace basecode::compiler {
 
         compiler::block* body();
 
-        compiler::binary_operator* predicate();
+        compiler::element* predicate();
+
+        void predicate(compiler::element* value);
 
     protected:
         bool on_emit(compiler::session& session) override;
@@ -34,7 +36,7 @@ namespace basecode::compiler {
 
     private:
         compiler::block* _body = nullptr;
-        compiler::binary_operator* _predicate = nullptr;
+        compiler::element* _predicate = nullptr;
     };
 
 };

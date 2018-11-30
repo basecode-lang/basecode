@@ -37,11 +37,7 @@ namespace basecode::compiler {
         element->owned_elements(owned_elements);
 
         for (auto owned : owned_elements) {
-            // XXX: find a better way to do this.  probably a can_remove on element
-            if (owned->element_type() == element_type_t::boolean_literal
-            ||  owned->element_type() == element_type_t::nil_literal) {
-                continue;
-            }
+            if (owned->is_singleton()) continue;
             remove(owned->id());
         }
 

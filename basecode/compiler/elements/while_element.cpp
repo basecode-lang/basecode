@@ -30,8 +30,15 @@ namespace basecode::compiler {
         return _body;
     }
 
-    compiler::binary_operator* while_element::predicate() {
+    compiler::element* while_element::predicate() {
         return _predicate;
+    }
+
+    void while_element::predicate(compiler::element* value) {
+        // XXX: this new pointer is going to leak
+        //      need to use a different collection that makes it easy
+        //      to swap values.
+        _predicate = value;
     }
 
     bool while_element::on_emit(compiler::session& session) {

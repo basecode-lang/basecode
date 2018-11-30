@@ -109,6 +109,10 @@ namespace basecode::compiler {
         return _parent_element;
     }
 
+    bool element::is_singleton() const {
+        return false;
+    }
+
     compiler::module* element::module() {
         return _module;
     }

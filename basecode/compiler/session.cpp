@@ -24,12 +24,15 @@
 #include "code_dom_formatter.h"
 #include "elements/identifier.h"
 #include "elements/tuple_type.h"
+#include "elements/if_element.h"
+#include "elements/expression.h"
 #include "elements/string_type.h"
 #include "elements/initializer.h"
 #include "elements/module_type.h"
 #include "elements/generic_type.h"
 #include "elements/numeric_type.h"
 #include "elements/unknown_type.h"
+#include "elements/while_element.h"
 #include "elements/argument_list.h"
 #include "elements/float_literal.h"
 #include "elements/unary_operator.h"
@@ -623,6 +626,21 @@ namespace basecode::compiler {
 //                            parent->parent_scope(),
 //                            bin_op->label_name())));
                     switch (parent->element_type()) {
+                        case element_type_t::if_e: {
+                            auto if_e = dynamic_cast<compiler::if_element*>(parent);
+                            if_e->predicate(fold_result.element);
+                            break;
+                        }
+                        case element_type_t::while_e: {
+                            auto while_e = dynamic_cast<compiler::while_element*>(parent);
+                            while_e->predicate(fold_result.element);
+                            break;
+                        }
+                        case element_type_t::expression: {
+                            auto expr = dynamic_cast<compiler::expression*>(parent);
+                            expr->root(fold_result.element);
+                            break;
+                        }
                         case element_type_t::initializer: {
                             auto initializer = dynamic_cast<compiler::initializer*>(parent);
                             initializer->expression(fold_result.element);

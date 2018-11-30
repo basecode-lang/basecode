@@ -39,6 +39,10 @@ namespace basecode::compiler {
         return _root->is_constant();
     }
 
+    void expression::root(compiler::element* value) {
+        _root = value;
+    }
+
     bool expression::on_emit(compiler::session& session) {
         if (_root == nullptr)
             return true;

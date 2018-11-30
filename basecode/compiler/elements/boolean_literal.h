@@ -24,6 +24,10 @@ namespace basecode::compiler {
 
         bool value() const;
 
+        bool is_singleton() const override {
+            return true;
+        }
+
     protected:
         bool on_infer_type(
             compiler::session& session,
