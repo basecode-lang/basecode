@@ -14,6 +14,7 @@
 #include "variable.h"
 #include "elements/type.h"
 #include "elements/identifier.h"
+#include "elements/declaration.h"
 #include "elements/pointer_type.h"
 #include "elements/unary_operator.h"
 #include "elements/symbol_element.h"
@@ -124,7 +125,36 @@ namespace basecode::compiler {
         if (field == nullptr)
             return false;
 
-        if (_session.variable(element != nullptr ? element : field->identifier(), handle, activate)) {
+        // XXX: think on this... not super happy with how pointer deref is being handled
+        //      in this scenario.  also, what happens if we have multiple derefs?
+        auto result = false;
+        if (element != nullptr) {
+            if (_session.variable(element, handle, activate)) {
+                compiler::element* var = field->identifier();
+                if (element->element_type() == element_type_t::unary_operator) {
+                    auto unary_op = dynamic_cast<compiler::unary_operator*>(element);
+                    if (unary_op->operator_type() == operator_type_t::pointer_dereference) {
+                        var = unary_op->rhs();
+                    } else {
+                        // XXX: error!
+                    }
+                }
+
+                variable_handle_t temp_handle{};
+                result = _session.variable(var, temp_handle, false);
+                if (result) {
+                    temp_handle->_parent = this;
+                    temp_handle->_field = field;
+                }
+            }
+        } else {
+            result = _session.variable(
+                field->identifier(),
+                handle,
+                activate);
+        }
+
+        if (result) {
             handle->_parent = this;
             handle->_field = field;
             return true;

@@ -21,8 +21,6 @@ foobar :: struct {
 a := "hello world!";
 b := a;
 
-// XXX: session::variable appears to be returning the wrong
-//      instances in this scenario.  i suspect the cache.
 c: foobar;
 d: foobar;
 c.f1 := d.f1;

@@ -38,6 +38,7 @@
 #include "elements/procedure_type.h"
 #include "elements/namespace_type.h"
 #include "elements/type_reference.h"
+#include "elements/unary_operator.h"
 #include "elements/binary_operator.h"
 #include "elements/integer_literal.h"
 #include "elements/identifier_reference.h"
@@ -95,6 +96,7 @@ namespace basecode::compiler {
             variable_handle_t& handle,
             bool activate) {
         compiler::element* target_element = element;
+        auto id = target_element->id();
 
         switch (element->element_type()) {
             case element_type_t::binary_operator: {
@@ -146,6 +148,7 @@ namespace basecode::compiler {
             case element_type_t::identifier_reference: {
                 auto ref = dynamic_cast<compiler::identifier_reference*>(element);
                 target_element = ref->identifier();
+                id = ref->id();
                 break;
             }
             default: {
@@ -153,16 +156,13 @@ namespace basecode::compiler {
             }
         }
 
-        // XXX: this appears to be bugged, returning the wrong instances
-        auto it = _variables.find(target_element->id());
+        auto it = _variables.find(id);
         if (it == _variables.end()) {
             compiler::variable var(*this, target_element);
             if (!var.initialize())
                 return false;
 
-            auto new_it = _variables.insert(std::make_pair(
-                target_element->id(),
-                var));
+            auto new_it = _variables.insert(std::make_pair(id, var));
             handle.set(&new_it.first->second, activate);
         } else {
             handle.set(&it->second, activate);

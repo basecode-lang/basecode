@@ -23,10 +23,10 @@ namespace basecode::compiler {
 
     unary_operator::unary_operator(
             compiler::module* module,
-            block* parent_scope,
-            operator_type_t type,
-            element* rhs) : operator_base(module, parent_scope, element_type_t::unary_operator, type),
-                            _rhs(rhs) {
+            compiler::block* parent_scope,
+            compiler::operator_type_t type,
+            compiler::element* rhs) : operator_base(module, parent_scope, element_type_t::unary_operator, type),
+                                      _rhs(rhs) {
     }
 
     bool unary_operator::on_fold(
@@ -49,7 +49,7 @@ namespace basecode::compiler {
         return true;
     }
 
-    element* unary_operator::rhs() {
+    compiler::element* unary_operator::rhs() {
         return _rhs;
     }
 

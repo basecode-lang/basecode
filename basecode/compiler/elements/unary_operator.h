@@ -19,11 +19,11 @@ namespace basecode::compiler {
     public:
         unary_operator(
             compiler::module* module,
-            block* parent_scope,
-            operator_type_t type,
-            element* rhs);
+            compiler::block* parent_scope,
+            compiler::operator_type_t type,
+            compiler::element* rhs);
 
-        element* rhs();
+        compiler::element* rhs();
 
         void rhs(compiler::element* element);
 
@@ -43,7 +43,7 @@ namespace basecode::compiler {
         void on_owned_elements(element_list_t& list) override;
 
     private:
-        element* _rhs = nullptr;
+        compiler::element* _rhs = nullptr;
     };
 
 };
