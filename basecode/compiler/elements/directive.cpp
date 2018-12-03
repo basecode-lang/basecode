@@ -253,7 +253,8 @@ namespace basecode::compiler {
 
         auto proc_type = ffi_decl->identifier()->initializer()->procedure_type();
         if (proc_type != nullptr) {
-            for (auto param : proc_type->parameters().as_list()) {
+            auto params_list = proc_type->parameters().as_list();
+            for (auto param : params_list) {
                 // XXX: need to figure out how to best handle this
                 if (param->identifier()->type_ref()->is_any_type())
                     continue;

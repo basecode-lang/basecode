@@ -33,13 +33,13 @@ namespace basecode::compiler {
         if (element == nullptr)
             return;
 
+        if (element->is_singleton()) return;
+
         element_list_t owned_elements {};
         element->owned_elements(owned_elements);
 
-        for (auto owned : owned_elements) {
-            if (owned->is_singleton()) continue;
+        for (auto owned : owned_elements)
             remove(owned->id());
-        }
 
         remove_index_by_type(element);
         _elements_by_id.erase(id);

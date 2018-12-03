@@ -24,7 +24,7 @@ namespace basecode::compiler {
 
         std::string name();
 
-        element* expression();
+        compiler::element* expression();
 
     protected:
         bool on_infer_type(
@@ -38,7 +38,7 @@ namespace basecode::compiler {
         void on_owned_elements(element_list_t& list) override;
 
     private:
-        element* _expression = nullptr;
+        compiler::element* _expression = nullptr;
     };
 
 };

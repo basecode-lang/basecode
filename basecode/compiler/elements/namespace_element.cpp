@@ -54,12 +54,12 @@ namespace basecode::compiler {
         return name;
     }
 
-    element* namespace_element::expression() {
-        return _expression;
-    }
-
     bool namespace_element::on_is_constant() const {
         return true;
+    }
+
+    compiler::element* namespace_element::expression() {
+        return _expression;
     }
 
     bool namespace_element::on_emit(compiler::session& session) {

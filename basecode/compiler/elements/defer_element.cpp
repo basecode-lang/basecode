@@ -27,6 +27,8 @@ namespace basecode::compiler {
     }
 
     bool defer_element::on_emit(compiler::session& session) {
+        if (_expression == nullptr)
+            return false;
         return _expression->emit(session);
     }
 

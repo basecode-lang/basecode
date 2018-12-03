@@ -5,6 +5,7 @@ b := 'b';
 
 support::print("a := %c\n", a);
 support::print("b := %c\n", b);
+support::print("%c\n", 'Z');
 
 a_type: ^type;
 a_type := type_of(a);

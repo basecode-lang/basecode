@@ -60,6 +60,12 @@ namespace basecode::compiler {
         return _declaration;
     }
 
+    bool field::on_emit(compiler::session& session) {
+        if (_declaration == nullptr)
+            return false;
+        return _declaration->emit(session);
+    }
+
     void field::on_owned_elements(element_list_t& list) {
         if (_declaration != nullptr)
             list.emplace_back(_declaration);

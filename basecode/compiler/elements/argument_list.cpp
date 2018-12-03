@@ -79,6 +79,7 @@ namespace basecode::compiler {
                 case element_type_t::binary_operator:
                 case element_type_t::boolean_literal:
                 case element_type_t::integer_literal:
+                case element_type_t::character_literal:
                 case element_type_t::identifier_reference: {
                     variable_handle_t arg_var;
                     if (!session.variable(arg, arg_var))

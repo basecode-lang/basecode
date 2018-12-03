@@ -61,6 +61,7 @@ namespace basecode::compiler {
         if (_expr == nullptr)
             return true;
 
+        // XXX: why this condition?
         if (_expr->element_type() == element_type_t::namespace_e)
             _expr->emit(session);
 

@@ -64,7 +64,9 @@ namespace basecode::compiler {
     }
 
     bool identifier_reference::on_emit(compiler::session& session) {
-        return true;
+        if (_identifier == nullptr)
+            return false;
+        return _identifier->emit(session);
     }
 
     bool identifier_reference::on_as_integer(uint64_t& value) const {

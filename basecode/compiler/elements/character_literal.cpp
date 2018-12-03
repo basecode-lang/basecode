@@ -39,6 +39,15 @@ namespace basecode::compiler {
     }
 
     bool character_literal::on_emit(compiler::session& session) {
+        auto& assembler = session.assembler();
+        auto block = assembler.current_block();
+        auto target_reg = assembler.current_target_register();
+        if (target_reg != nullptr) {
+            block->clr(vm::op_sizes::dword, *target_reg);
+            block->move_constant_to_reg(
+                *target_reg,
+                static_cast<uint64_t>(_rune));
+        }
         return true;
     }
 

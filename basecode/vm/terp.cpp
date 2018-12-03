@@ -2162,16 +2162,18 @@ namespace basecode::vm {
                 size_t param_index = 0;
                 auto arg_count = pop();
                 while (arg_count > 0) {
-                    auto& argument = func->arguments[param_index];
-
                     auto value = pop();
-                    if (argument.type == ffi_types_t::pointer_type)
-                        value += reinterpret_cast<uint64_t>(_heap);
-                    _ffi->push(argument.type, value);
                     --arg_count;
 
-                    if (param_index < func->arguments.size())
+                    if (param_index < func->arguments.size()) {
+                        auto& argument = func->arguments[param_index];
+                        if (argument.type == ffi_types_t::pointer_type)
+                            value += reinterpret_cast<uint64_t>(_heap);
+                        _ffi->push(argument.type, value);
                         ++param_index;
+                    } else {
+                        _ffi->push(ffi_types_t::int_type, value);
+                    }
                 }
 
                 auto result_value = _ffi->call(func);

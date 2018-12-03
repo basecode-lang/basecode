@@ -41,6 +41,8 @@ namespace basecode::compiler {
         compiler::declaration* declaration();
 
     protected:
+        bool on_emit(compiler::session& session) override;
+
         void on_owned_elements(element_list_t& list) override;
 
     private:
