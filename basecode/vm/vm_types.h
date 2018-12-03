@@ -834,9 +834,13 @@ namespace basecode::vm {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    using control_flow_value_map_t = std::unordered_map<uint16_t, boost::any>;
+
     struct control_flow_t {
+        bool fallthrough = false;
         label_ref_t* exit_label = nullptr;
         label_ref_t* continue_label = nullptr;
+        control_flow_value_map_t values {};
     };
 
     ///////////////////////////////////////////////////////////////////////////

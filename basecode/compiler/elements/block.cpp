@@ -59,12 +59,31 @@ namespace basecode::compiler {
     }
 
     bool block::on_emit(compiler::session& session) {
-        for (auto stmt : _statements) {
+        auto flow_control = session.assembler().current_control_flow();
+
+        for (size_t index = 0; index < _statements.size(); ++index) {
+            auto stmt = _statements[index];
+
             stmt->emit_labels(session);
             auto expr = stmt->expression();
             if (expr != nullptr
             &&  expr->element_type() == element_type_t::defer)
                 continue;
+
+            if (flow_control != nullptr) {
+                compiler::element* prev = nullptr;
+                compiler::element* next = nullptr;
+
+                if (index > 0)
+                    prev = _statements[index - 1];
+                if (index < _statements.size() - 1)
+                    next = _statements[index + 1];
+
+                auto& values_map = flow_control->values;
+                values_map[next_element] = next;
+                values_map[previous_element] = prev;
+            }
+
             auto result = stmt->emit(session);
             if (!result)
                 return false;

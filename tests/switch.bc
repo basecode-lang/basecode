@@ -1,6 +1,6 @@
 support :: module("support/module.bc");
 
-x := 2;
+x := 1;
 
 switch x {
     case 0 => {

@@ -29,32 +29,12 @@ namespace basecode::compiler {
 
     bool fallthrough::on_emit(compiler::session& session) {
         auto& assembler = session.assembler();
-        auto block = assembler.current_block();
-
-        vm::label_ref_t* label_ref = nullptr;
-
-        std::string label_name;
-        if (_label != nullptr) {
-            label_name = _label->name();
-            label_ref = assembler.make_label_ref(_label->name());
-        } else {
-            auto control_flow = assembler.current_control_flow();
-            if (control_flow == nullptr
-            ||  control_flow->exit_label == nullptr) {
-                session.error(
-                    this,
-                    "P081",
-                    "no valid exit label on stack.",
-                    location());
-                return false;
-            }
-            label_ref = control_flow->exit_label;
-            label_name = label_ref->name;
+        auto control_flow = assembler.current_control_flow();
+        if (control_flow == nullptr) {
+            // XXX: error
+            return false;
         }
-
-        block->comment(fmt::format("fallthrough to label: {}", label_name), 4);
-        block->jump_direct(label_ref);
-
+        control_flow->fallthrough = true;
         return true;
     }
 

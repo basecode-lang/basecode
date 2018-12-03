@@ -38,7 +38,37 @@ namespace basecode::compiler {
         auto& assembler = session.assembler();
         auto block = assembler.current_block();
 
-        block->comment("XXX: switch", 4);
+        auto begin_label_name = fmt::format("{}_begin", label_name());
+        auto exit_label_name = fmt::format("{}_exit", label_name());
+        auto end_label_name = fmt::format("{}_end", label_name());
+
+        auto exit_label_ref = assembler.make_label_ref(exit_label_name);
+
+        vm::control_flow_t flow_control {
+            .exit_label = exit_label_ref,
+        };
+        flow_control.values.insert(std::make_pair(switch_expression, _expr));
+        assembler.push_control_flow(flow_control);
+
+        vm::register_t target_reg {
+            .size = vm::op_sizes::byte,
+            .type = vm::register_type_t::integer
+        };
+        assembler.allocate_reg(target_reg);
+        defer({
+            assembler.free_reg(target_reg);
+            assembler.pop_control_flow();
+        });
+
+        block->label(assembler.make_label(begin_label_name));
+
+        assembler.push_target_register(target_reg);
+        _scope->emit(session);
+        assembler.pop_target_register();
+
+        block->label(assembler.make_label(exit_label_name));
+        block->nop();
+        block->label(assembler.make_label(end_label_name));
 
         return true;
     }

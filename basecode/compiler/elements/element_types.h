@@ -588,4 +588,9 @@ namespace basecode::compiler {
         user
     };
 
+    ///////////////////////////////////////////////////////////////////////////
+
+    static const constexpr uint16_t switch_expression = 1;
+    static const constexpr uint16_t previous_element = 2;
+    static const constexpr uint16_t next_element = 3;
 };

@@ -1422,7 +1422,7 @@ namespace basecode::compiler {
         auto& builder = _session.builder();
         auto& scope_manager = _session.scope_manager();
 
-        auto expr = evaluate(context.node->lhs.get());
+        auto expr = resolve_symbol_or_evaluate(context, context.node->lhs.get());
         auto scope = dynamic_cast<compiler::block*>(evaluate(context.node->rhs.get()));
 
         result.element = builder.make_switch(
