@@ -322,7 +322,8 @@ namespace basecode::compiler {
     void ast_evaluator::add_type_parameters(
             const evaluator_context_t& context,
             compiler::block* scope,
-            const syntax::ast_node_t* type_parameters_node) {
+            const syntax::ast_node_t* type_parameters_node,
+            type_map_t& type_parameters) {
         if (type_parameters_node->children.empty())
             return;
 
@@ -363,7 +364,7 @@ namespace basecode::compiler {
 
             auto param_type_ref = builder.make_type_reference(
                 scope,
-                generic_type->name(),
+                param_symbol->name(),
                 generic_type);
             auto decl = add_identifier_to_scope(
                 context,
@@ -373,6 +374,7 @@ namespace basecode::compiler {
                 0,
                 scope);
             decl->identifier()->symbol()->constant(true);
+            type_parameters.add(param_symbol, generic_type);
         }
     }
 
@@ -1371,7 +1373,8 @@ namespace basecode::compiler {
         add_type_parameters(
             context,
             enum_scope,
-            context.node->lhs.get());
+            context.node->lhs.get(),
+            enum_type->type_parameters());
 
         add_composite_type_fields(
             context,
@@ -1471,7 +1474,8 @@ namespace basecode::compiler {
         add_type_parameters(
             context,
             struct_scope,
-            context.node->lhs.get());
+            context.node->lhs.get(),
+            struct_type->type_parameters());
 
         add_composite_type_fields(
             context,
@@ -1499,7 +1503,8 @@ namespace basecode::compiler {
         add_type_parameters(
             context,
             union_scope,
-            context.node->lhs.get());
+            context.node->lhs.get(),
+            union_type->type_parameters());
 
         add_composite_type_fields(
             context,
@@ -1548,7 +1553,11 @@ namespace basecode::compiler {
         auto proc_type = builder.make_procedure_type(active_scope, block_scope);
         active_scope->types().add(proc_type);
 
-        add_type_parameters(context, block_scope, context.node->lhs->lhs.get());
+        add_type_parameters(
+            context,
+            block_scope,
+            context.node->lhs->lhs.get(),
+            proc_type->type_parameters());
 
         compiler::field* return_field = nullptr;
         auto return_type_node = context.node->lhs->rhs;
@@ -1578,6 +1587,8 @@ namespace basecode::compiler {
         }
 
         compiler::field* param_field = nullptr;
+        auto& parameter_map = proc_type->parameters();
+
         for (const auto& param_node : context.node->rhs->children) {
             switch (param_node->type) {
                 case syntax::ast_node_types_t::assignment: {
@@ -1595,7 +1606,7 @@ namespace basecode::compiler {
                             block_scope,
                             param_decl,
                             param_field != nullptr ? param_field->end_offset() : 0);
-                        proc_type->parameters().add(param_field);
+                        parameter_map.add(param_field);
                     } else {
                         return false;
                     }
@@ -1613,7 +1624,7 @@ namespace basecode::compiler {
                             block_scope,
                             param_decl,
                             param_field != nullptr ? param_field->end_offset() : 0);
-                        proc_type->parameters().add(param_field);
+                        parameter_map.add(param_field);
                     } else {
                         return false;
                     }
@@ -1642,7 +1653,11 @@ namespace basecode::compiler {
         auto proc_type = builder.make_procedure_type(active_scope, block_scope);
         active_scope->types().add(proc_type);
 
-        add_type_parameters(context, block_scope, context.node->lhs->lhs.get());
+        add_type_parameters(
+            context,
+            block_scope,
+            context.node->lhs->lhs.get(),
+            proc_type->type_parameters());
 
         compiler::field* return_field = nullptr;
         auto return_type_node = context.node->lhs->rhs;
@@ -1672,6 +1687,8 @@ namespace basecode::compiler {
         }
 
         compiler::field* param_field = nullptr;
+        auto& parameter_map = proc_type->parameters();
+
         for (const auto& param_node : context.node->rhs->children) {
             switch (param_node->type) {
                 case syntax::ast_node_types_t::symbol: {
@@ -1690,7 +1707,7 @@ namespace basecode::compiler {
                             block_scope,
                             param_decl,
                             param_field != nullptr ? param_field->end_offset() : 0);
-                        proc_type->parameters().add(param_field);
+                        parameter_map.add(param_field);
                     } else {
                         return false;
                     }

@@ -72,11 +72,18 @@ namespace basecode::compiler {
         bool on_evaluate_run(compiler::session& session);
 
         // --------------------
-        // run directive
+        // foreign directive
         // --------------------
         bool on_execute_foreign(compiler::session& session);
 
         bool on_evaluate_foreign(compiler::session& session);
+
+        // --------------------
+        // intrinsic directive
+        // --------------------
+        bool on_execute_intrinsic(compiler::session& session);
+
+        bool on_evaluate_intrinsic(compiler::session& session);
 
     private:
         static std::unordered_map<std::string, directive_callable> s_execute_handlers;

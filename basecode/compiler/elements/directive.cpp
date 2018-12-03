@@ -14,6 +14,7 @@
 #include <compiler/session.h>
 #include <boost/filesystem.hpp>
 #include "type.h"
+#include "intrinsic.h"
 #include "attribute.h"
 #include "directive.h"
 #include "raw_block.h"
@@ -28,17 +29,19 @@
 namespace basecode::compiler {
 
     std::unordered_map<std::string, directive::directive_callable> directive::s_execute_handlers = {
-        {"run",      std::bind(&directive::on_execute_run,     std::placeholders::_1, std::placeholders::_2)},
-        {"type",     std::bind(&directive::on_execute_type,    std::placeholders::_1, std::placeholders::_2)},
-        {"foreign",  std::bind(&directive::on_execute_foreign, std::placeholders::_1, std::placeholders::_2)},
-        {"assembly", std::bind(&directive::on_execute_assembly, std::placeholders::_1, std::placeholders::_2)},
+        {"run",         std::bind(&directive::on_execute_run,     std::placeholders::_1, std::placeholders::_2)},
+        {"type",        std::bind(&directive::on_execute_type,    std::placeholders::_1, std::placeholders::_2)},
+        {"foreign",     std::bind(&directive::on_execute_foreign, std::placeholders::_1, std::placeholders::_2)},
+        {"assembly",    std::bind(&directive::on_execute_assembly, std::placeholders::_1, std::placeholders::_2)},
+        {"intrinsic",   std::bind(&directive::on_execute_intrinsic, std::placeholders::_1, std::placeholders::_2)},
     };
 
     std::unordered_map<std::string, directive::directive_callable> directive::s_evaluate_handlers = {
-        {"run",      std::bind(&directive::on_evaluate_run,     std::placeholders::_1, std::placeholders::_2)},
-        {"type",     std::bind(&directive::on_evaluate_type,    std::placeholders::_1, std::placeholders::_2)},
-        {"foreign",  std::bind(&directive::on_evaluate_foreign, std::placeholders::_1, std::placeholders::_2)},
-        {"assembly", std::bind(&directive::on_evaluate_assembly, std::placeholders::_1, std::placeholders::_2)},
+        {"run",         std::bind(&directive::on_evaluate_run,     std::placeholders::_1, std::placeholders::_2)},
+        {"type",        std::bind(&directive::on_evaluate_type,    std::placeholders::_1, std::placeholders::_2)},
+        {"foreign",     std::bind(&directive::on_evaluate_foreign, std::placeholders::_1, std::placeholders::_2)},
+        {"assembly",    std::bind(&directive::on_evaluate_assembly, std::placeholders::_1, std::placeholders::_2)},
+        {"intrinsic",   std::bind(&directive::on_evaluate_intrinsic, std::placeholders::_1, std::placeholders::_2)},
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -307,6 +310,53 @@ namespace basecode::compiler {
             return true;
         }
         return false;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    // intrinsic directive
+
+    bool directive::on_execute_intrinsic(compiler::session& session) {
+        auto assignment = dynamic_cast<compiler::assignment*>(_expression);
+        auto proc_decl = dynamic_cast<compiler::declaration*>(assignment->expressions()[0]);
+        if (proc_decl == nullptr)
+            return false;
+
+        auto proc_type = proc_decl->identifier()->initializer()->procedure_type();
+
+        std::string intrinsic_name;
+        auto attr = find_attribute("intrinsic_name");
+        if (attr != nullptr) {
+            if (!attr->as_string(intrinsic_name)) {
+                session.error(
+                    this,
+                    "P004",
+                    "unable to convert intrinsic name.",
+                    location());
+                return false;
+            }
+        }
+
+        if (intrinsic_name.empty()) {
+            session.error(
+                this,
+                "P005",
+                "intrinsic_name attribute required for intrinsic directive.",
+                location());
+            return false;
+        }
+
+        if (!compiler::intrinsic::register_intrinsic_procedure_type(
+                intrinsic_name,
+                proc_type)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    bool directive::on_evaluate_intrinsic(compiler::session& session) {
+        return true;
     }
 
 };

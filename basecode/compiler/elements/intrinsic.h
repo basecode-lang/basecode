@@ -17,6 +17,10 @@ namespace basecode::compiler {
 
     class intrinsic  : public element {
     public:
+        static bool register_intrinsic_procedure_type(
+            const std::string& name,
+            compiler::procedure_type* procedure_type);
+
         static intrinsic* intrinsic_for_call(
             compiler::session& session,
             compiler::block* parent_scope,
@@ -36,9 +40,9 @@ namespace basecode::compiler {
 
         compiler::argument_list* arguments();
 
-        compiler::procedure_type* proc_type();
+        compiler::procedure_type* procedure_type();
 
-        void proc_type(compiler::procedure_type* value);
+        void procedure_type(compiler::procedure_type* value);
 
         const compiler::type_reference_list_t& type_parameters() const;
 
@@ -47,7 +51,7 @@ namespace basecode::compiler {
 
     private:
         compiler::argument_list* _arguments = nullptr;
-        compiler::procedure_type* _proc_type = nullptr;
+        compiler::procedure_type* _procedure_type = nullptr;
         compiler::type_reference_list_t _type_parameters {};
     };
 

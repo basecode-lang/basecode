@@ -11,14 +11,14 @@ for x in range<s32>(low, high) {
     support::print("x := %d\n", x);
 };
 
-for x in range<s32>(kind := EXCLUSIVE, dir := REVERSE, low, high, step) {
-    support::print("x := %d\n", x);
-};
-
-for x in range<s32>(low, high, dir := REVERSE) {
-    support::print("x := %d\n", x);
-};
-
-for x in range<s32>(low, high, step, dir := REVERSE) {
-    support::print("x := %d\n", x);
-};
+//for x in range<s32>(kind := EXCLUSIVE, dir := REVERSE, low, high, step) {
+//    support::print("x := %d\n", x);
+//};
+//
+//for x in range<s32>(low, high, dir := REVERSE) {
+//    support::print("x := %d\n", x);
+//};
+//
+//for x in range<s32>(low, high, step, dir := REVERSE) {
+//    support::print("x := %d\n", x);
+//};

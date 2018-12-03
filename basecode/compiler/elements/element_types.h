@@ -512,6 +512,10 @@ namespace basecode::compiler {
     ///////////////////////////////////////////////////////////////////////////
 
     struct type_map_t {
+        void add(
+            compiler::symbol_element* symbol,
+            compiler::type* type);
+
         size_t size() const {
             return _types.size();
         }

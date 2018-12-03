@@ -50,7 +50,8 @@ namespace basecode::compiler {
         void add_type_parameters(
             const evaluator_context_t& context,
             compiler::block* scope,
-            const syntax::ast_node_t* type_parameters_node);
+            const syntax::ast_node_t* type_parameters_node,
+            type_map_t& type_parameters);
 
         void add_procedure_instance(
             const evaluator_context_t& context,

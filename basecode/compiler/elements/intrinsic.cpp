@@ -115,6 +115,12 @@ namespace basecode::compiler {
         },
     };
 
+    bool intrinsic::register_intrinsic_procedure_type(
+            const std::string& name,
+            compiler::procedure_type* procedure_type) {
+        return true;
+    }
+
     intrinsic* intrinsic::intrinsic_for_call(
             compiler::session& session,
             compiler::block* parent_scope,
@@ -156,8 +162,8 @@ namespace basecode::compiler {
         return _arguments;
     }
 
-    compiler::procedure_type* intrinsic::proc_type() {
-        return _proc_type;
+    compiler::procedure_type* intrinsic::procedure_type() {
+        return _procedure_type;
     }
 
     void intrinsic::on_owned_elements(element_list_t& list) {
@@ -168,8 +174,8 @@ namespace basecode::compiler {
             list.emplace_back(type_param);
     }
 
-    void intrinsic::proc_type(compiler::procedure_type* value) {
-        _proc_type = value;
+    void intrinsic::procedure_type(compiler::procedure_type* value) {
+        _procedure_type = value;
     }
 
     const compiler::type_reference_list_t& intrinsic::type_parameters() const {

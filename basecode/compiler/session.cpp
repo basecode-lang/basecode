@@ -598,6 +598,13 @@ namespace basecode::compiler {
             auto identifier = _scope_manager.find_identifier(
                 unresolved_reference->symbol(),
                 unresolved_reference->parent_scope());
+            if (identifier == nullptr
+            &&  unresolved_reference->symbol().is_qualified()) {
+                identifier = _scope_manager.find_identifier(
+                    unresolved_reference->symbol(),
+                    unresolved_reference->module()->scope());
+            }
+
             if (identifier == nullptr) {
                 ++it;
                 error(

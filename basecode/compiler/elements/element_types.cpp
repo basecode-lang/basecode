@@ -117,6 +117,12 @@ namespace basecode::compiler {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    void type_map_t::add(
+            compiler::symbol_element* symbol,
+            compiler::type* type) {
+        _types.insert(std::make_pair(symbol->name(), type));
+    }
+
     type_list_t type_map_t::as_list() const {
         type_list_t list {};
         for (const auto& it : _types) {
