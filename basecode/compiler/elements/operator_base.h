@@ -25,6 +25,11 @@ namespace basecode::compiler {
 
         operator_type_t operator_type() const;
 
+    protected:
+        bool constant_fold_strategy(
+            compiler::session& session,
+            fold_result_t& result);
+
     private:
         operator_type_t _operator_type;
     };
