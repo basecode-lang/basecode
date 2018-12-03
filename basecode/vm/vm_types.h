@@ -298,6 +298,7 @@ namespace basecode::vm {
         shl,
         ror,
         rol,
+        pow,
         and_op,
         or_op,
         xor_op,
@@ -388,6 +389,7 @@ namespace basecode::vm {
         {op_codes::shl,    "SHL"},
         {op_codes::ror,    "ROR"},
         {op_codes::rol,    "ROL"},
+        {op_codes::pow,    "POW"},
         {op_codes::and_op, "AND"},
         {op_codes::or_op,  "OR"},
         {op_codes::xor_op, "XOR"},
@@ -1168,6 +1170,17 @@ namespace basecode::vm {
             "ROL",
             mnemonic_t{
                 op_codes::rol,
+                {
+                    {mnemonic_operand_t::flags::integer_register, true},
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::immediate, true},
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::immediate, true},
+                }
+            }
+        },
+        {
+            "POW",
+            mnemonic_t{
+                op_codes::pow,
                 {
                     {mnemonic_operand_t::flags::integer_register, true},
                     {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::immediate, true},

@@ -412,11 +412,24 @@ namespace basecode::vm {
     void instruction_block::pow_reg_by_reg(
             const register_t& dest_reg,
             const register_t& base_reg,
-            const register_t& multiplier_reg) {
-        make_block_entry(comment_t {
-            .indent = 4,
-            .value = "XXX: implement a POW instruction in terp"
-        });
+            const register_t& exponent_reg) {
+        instruction_t pow_op;
+        pow_op.op = op_codes::pow;
+        pow_op.size = dest_reg.size;
+        pow_op.operands_count = 3;
+        pow_op.operands[0].type = operand_encoding_t::flags::reg;
+        if (dest_reg.type == register_type_t::integer)
+            pow_op.operands[0].type |= operand_encoding_t::flags::integer;
+        pow_op.operands[0].value.r = dest_reg.number;
+        pow_op.operands[1].type = operand_encoding_t::flags::reg;
+        if (base_reg.type == register_type_t::integer)
+            pow_op.operands[1].type |= operand_encoding_t::flags::integer;
+        pow_op.operands[1].value.r = base_reg.number;
+        pow_op.operands[2].type = operand_encoding_t::flags::reg;
+        if (exponent_reg.type == register_type_t::integer)
+            pow_op.operands[2].type |= operand_encoding_t::flags::integer;
+        pow_op.operands[2].value.r = exponent_reg.number;
+        make_block_entry(pow_op);
     }
 
     // mul variations

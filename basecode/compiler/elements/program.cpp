@@ -116,18 +116,22 @@ namespace basecode::compiler {
                     }
                     case element_type_t::numeric_type: {
                         uint64_t value = 0;
+                        auto symbol_type = vm::integer_symbol_type_for_size(var_type->size_in_bytes());
+
                         if (var_type->number_class() == type_number_class_t::integer) {
                             var->as_integer(value);
                         } else {
                             double temp = 0;
                             if (var->as_float(temp)) {
                                 vm::register_value_alias_t alias {};
-                                alias.qwf = temp;
+                                if (symbol_type == vm::symbol_type_t::u32)
+                                    alias.dwf = static_cast<float>(temp);
+                                else
+                                    alias.qwf = temp;
                                 value = alias.qw;
                             }
                         }
 
-                        auto symbol_type = vm::integer_symbol_type_for_size(var_type->size_in_bytes());
                         switch (symbol_type) {
                             case vm::symbol_type_t::u8:
                                 if (init == nullptr)

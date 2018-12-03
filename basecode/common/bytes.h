@@ -80,6 +80,17 @@ namespace basecode::common {
         return n;
     }
 
+    inline uint64_t power(uint64_t x, uint64_t n) {
+        uint64_t pow = 1;
+        while (n) {
+            if (n & 1)
+                pow *= x;
+            n = n >> 1;
+            x = x * x;
+        }
+        return pow;
+    }
+
     inline uint16_t endian_swap_word(uint16_t value) {
         return (value >> 8) | (value << 8);
     }

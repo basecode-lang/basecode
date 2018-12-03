@@ -277,8 +277,7 @@ namespace basecode::compiler {
                 break;
             }
             case operator_type_t::exponent: {
-                // XXX: need to add a pow function to common/bytes.h
-                //      also update the assembler and terp!
+                value = std::pow(lhs_value, rhs_value);
                 break;
             }
             case operator_type_t::multiply: {
@@ -315,8 +314,7 @@ namespace basecode::compiler {
                 break;
             }
             case operator_type_t::exponent: {
-                // XXX: need to add a pow function to common/bytes.h
-                //      also update the assembler and terp!
+                value = common::power(lhs_value, rhs_value);
                 break;
             }
             case operator_type_t::multiply: {

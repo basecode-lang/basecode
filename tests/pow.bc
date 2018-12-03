@@ -1,0 +1,19 @@
+support :: module("support/module.bc");
+
+x: u32 := 2 ** 4;
+
+support::print("x := %d\n", x);
+
+y: u32;
+
+@no_fold;
+y := 2 ** 4;
+
+support::print("y := %d\n", y);
+
+w: f32 := 2.0 ** 4.0;
+
+z: f32;
+
+@no_fold;
+z := 2.0 ** 4.0;

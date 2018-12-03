@@ -1381,6 +1381,48 @@ namespace basecode::vm {
 
                 break;
             }
+            case op_codes::pow: {
+                operand_value_t lhs_value, rhs_value;
+
+                if (!get_operand_value(r, inst, 1, lhs_value))
+                    return false;
+
+                if (!get_operand_value(r, inst, 2, rhs_value))
+                    return false;
+
+                operand_value_t power_value;
+                if (lhs_value.type == register_type_t::floating_point
+                &&  rhs_value.type == register_type_t::floating_point) {
+                    if (inst.size == op_sizes::dword) {
+                        power_value.alias.f = std::pow(
+                            lhs_value.alias.f,
+                            rhs_value.alias.f);
+                    } else {
+                        power_value.alias.f = std::pow(
+                            lhs_value.alias.d,
+                            rhs_value.alias.d);
+                    }
+                } else {
+                    power_value.alias.u = common::power(
+                        lhs_value.alias.u,
+                        rhs_value.alias.u);
+                }
+
+                if (!set_target_operand_value(r, inst.operands[0], inst.size, power_value))
+                    return false;
+
+                _registers.flags(register_file_t::flags_t::carry, false);
+                _registers.flags(register_file_t::flags_t::subtract, false);
+                _registers.flags(register_file_t::flags_t::overflow, false);
+                _registers.flags(
+                    register_file_t::flags_t::zero,
+                    power_value.alias.u == 0);
+                _registers.flags(
+                    register_file_t::flags_t::negative,
+                    is_negative(power_value, inst.size));
+
+                break;
+            }
             case op_codes::and_op: {
                 operand_value_t lhs_value, rhs_value;
 

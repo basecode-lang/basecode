@@ -26,7 +26,7 @@ namespace basecode::vm {
 
         virtual ~instruction_block();
 
-    // block support
+        // block support
     public:
         void blank_line();
 
