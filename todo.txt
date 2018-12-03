@@ -6,7 +6,6 @@ TASKS
 
 BYTE CODE EMIT
 --------------
-- switch, case, fallthrough
 - for_element
 
 EVERYTHING ELSE
@@ -112,3 +111,4 @@ DONE
 - intrinsic needs to support generic parameters, e.g. for use with range<T>(..)
 - new<type<>> needs to support generic parameters for the embedded type
 - BUG: comma precedence needs to be revisited now that everything is vectoring through proc_call_infix_parser.
+- byte code emit for: switch, case, fallthrough

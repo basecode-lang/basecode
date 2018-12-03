@@ -933,7 +933,10 @@ namespace basecode::compiler {
             args->add(arg);
             arg->parent_element(args);
         }
+
+        // XXX: the order of args is not correct.  maybe pairs in parser is reordering items.
         result.element = args;
+
         return true;
     }
 

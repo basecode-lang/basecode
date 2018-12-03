@@ -12,6 +12,9 @@
 @library "basecode";
 #foreign print :: proc(format: string, ...values: any) @alias "fmt_print";
 
+//@intrinsic_name "";
+//#intrinsic range :: proc<T>(low: s32, high: s32, step: s32 := 1, kind: u8 := INCLUSIVE, dir: u8 := FORWARD):T;
+
 range :: ns {
     kinds  :: ns {
         INCLUSIVE :: 0;

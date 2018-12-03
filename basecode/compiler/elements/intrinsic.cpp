@@ -156,12 +156,20 @@ namespace basecode::compiler {
         return _arguments;
     }
 
+    compiler::procedure_type* intrinsic::proc_type() {
+        return _proc_type;
+    }
+
     void intrinsic::on_owned_elements(element_list_t& list) {
         if (_arguments != nullptr)
             list.emplace_back(_arguments);
 
         for (auto type_param : _type_parameters)
             list.emplace_back(type_param);
+    }
+
+    void intrinsic::proc_type(compiler::procedure_type* value) {
+        _proc_type = value;
     }
 
     const compiler::type_reference_list_t& intrinsic::type_parameters() const {

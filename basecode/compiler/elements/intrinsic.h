@@ -36,6 +36,10 @@ namespace basecode::compiler {
 
         compiler::argument_list* arguments();
 
+        compiler::procedure_type* proc_type();
+
+        void proc_type(compiler::procedure_type* value);
+
         const compiler::type_reference_list_t& type_parameters() const;
 
     protected:
@@ -43,6 +47,7 @@ namespace basecode::compiler {
 
     private:
         compiler::argument_list* _arguments = nullptr;
+        compiler::procedure_type* _proc_type = nullptr;
         compiler::type_reference_list_t _type_parameters {};
     };
 

@@ -36,10 +36,8 @@ namespace basecode::compiler {
     bool range_intrinsic::on_infer_type(
             compiler::session& session,
             infer_type_result_t& result) {
-        auto& scope_manager = session.scope_manager();
-        result.inferred_type = scope_manager.find_type(qualified_symbol_t {
-            .name = "s64"
-        });
+        result.reference = type_parameters().front();
+        result.inferred_type = type_parameters().front()->type();
         return true;
     }
 

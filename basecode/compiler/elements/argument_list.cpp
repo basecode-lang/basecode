@@ -28,6 +28,13 @@ namespace basecode::compiler {
     }
 
     void argument_list::add(element* item) {
+        // XXX: need to enhance this function to index the item being added
+        //      so it matches up with a prototype argument list.
+        //
+        // if the item coming in is an argument_pair, the key/name is given to us.
+        // otherwise we need to look at the insertion index and determine the name
+        // based on the prototype list.
+        //
         _elements.emplace_back(item);
     }
 
@@ -40,6 +47,8 @@ namespace basecode::compiler {
             _elements.end(),
             item);
     }
+
+    // XXX: add find_by_name which consults the index by name
 
     element* argument_list::find(common::id_t id) {
         auto it = std::find_if(
