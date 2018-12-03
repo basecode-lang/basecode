@@ -21,6 +21,8 @@ namespace basecode::compiler {
             compiler::module* module,
             block* parent_scope);
 
+        void reverse();
+
         size_t size() const;
 
         void add(element* item);

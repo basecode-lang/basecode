@@ -23,6 +23,10 @@ namespace basecode::compiler {
             block* parent_scope) : element(module, parent_scope, element_type_t::argument_list) {
     }
 
+    void argument_list::reverse() {
+        std::reverse(std::begin(_elements), std::end(_elements));
+    }
+
     size_t argument_list::size() const {
         return _elements.size();
     }

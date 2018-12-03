@@ -936,7 +936,8 @@ namespace basecode::compiler {
             arg->parent_element(args);
         }
 
-        // XXX: the order of args is not correct.  maybe pairs in parser is reordering items.
+        args->reverse();
+
         result.element = args;
 
         return true;

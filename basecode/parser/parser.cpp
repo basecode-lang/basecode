@@ -137,13 +137,10 @@ namespace basecode::syntax {
         target->location.start(current_pair->location.start());
         while (true) {
             if (current_pair->lhs->type != ast_node_types_t::pair) {
-                target->children.push_back(current_pair->lhs);
-                if (current_pair->rhs != nullptr) {
+                if (current_pair->rhs != nullptr)
                     target->children.push_back(current_pair->rhs);
-                    target->location.end(current_pair->rhs->location.end());
-                } else {
-                    target->location.end(current_pair->lhs->location.end());
-                }
+                target->children.push_back(current_pair->lhs);
+                target->location.end(current_pair->lhs->location.end());
                 break;
             }
             target->children.push_back(current_pair->rhs);
