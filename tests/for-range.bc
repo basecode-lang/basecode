@@ -5,11 +5,14 @@ import range::orders from support;
 
 low  := 0;
 high := 10;
-step := 2;
+step := 1;
+y: u32 := 0;
 
-for x in range<s32>(low, high) {
+for x in range<s32>(low, high, step) {
     support::print("x := %d\n", x);
+    y +:= 1;
 };
+support::print("y := %d\n", y);
 
 //for x in range<s32>(kind := EXCLUSIVE, dir := REVERSE, low, high, step) {
 //    support::print("x := %d\n", x);

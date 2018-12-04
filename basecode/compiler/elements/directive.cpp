@@ -351,8 +351,8 @@ namespace basecode::compiler {
         }
 
         if (!compiler::intrinsic::register_intrinsic_procedure_type(
-            intrinsic_name,
-            proc_type)) {
+                intrinsic_name,
+                proc_type)) {
             return false;
         }
 

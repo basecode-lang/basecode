@@ -20,7 +20,9 @@ namespace basecode::compiler {
 
     argument_list::argument_list(
             compiler::module* module,
-            block* parent_scope) : element(module, parent_scope, element_type_t::argument_list) {
+            compiler::block* parent_scope) : element(module,
+                                                     parent_scope,
+                                                     element_type_t::argument_list) {
     }
 
     void argument_list::reverse() {
@@ -31,15 +33,12 @@ namespace basecode::compiler {
         return _elements.size();
     }
 
-    void argument_list::add(element* item) {
-        // XXX: need to enhance this function to index the item being added
-        //      so it matches up with a prototype argument list.
-        //
-        // if the item coming in is an argument_pair, the key/name is given to us.
-        // otherwise we need to look at the insertion index and determine the name
-        // based on the prototype list.
-        //
-        _elements.emplace_back(item);
+    compiler::element* argument_list::replace(
+            size_t index,
+            compiler::element* item) {
+        auto old = _elements[index];
+        _elements[index] = item;
+        return old;
     }
 
     void argument_list::remove(common::id_t id) {
@@ -52,16 +51,15 @@ namespace basecode::compiler {
             item);
     }
 
-    // XXX: add find_by_name which consults the index by name
+    bool argument_list::index_to_procedure_type(
+            common::result& r,
+            compiler::procedure_type* proc_type) {
+        _param_index.clear();
+        return true;
+    }
 
-    element* argument_list::find(common::id_t id) {
-        auto it = std::find_if(
-            _elements.begin(),
-            _elements.end(),
-            [&id](auto item) { return item->id() == id; });
-        if (it == _elements.end())
-            return nullptr;
-        return *it;
+    void argument_list::add(compiler::element* item) {
+        _elements.emplace_back(item);
     }
 
     int32_t argument_list::find_index(common::id_t id) {
@@ -74,6 +72,16 @@ namespace basecode::compiler {
 
     const element_list_t& argument_list::elements() const {
         return _elements;
+    }
+
+    compiler::element* argument_list::find(common::id_t id) {
+        auto it = std::find_if(
+            _elements.begin(),
+            _elements.end(),
+            [&id](auto item) { return item->id() == id; });
+        if (it == _elements.end())
+            return nullptr;
+        return *it;
     }
 
     bool argument_list::on_emit(compiler::session& session) {
@@ -114,10 +122,17 @@ namespace basecode::compiler {
             list.emplace_back(element);
     }
 
-    element* argument_list::replace(size_t index, element* item) {
-        auto old = _elements[index];
-        _elements[index] = item;
-        return old;
+    compiler::element* argument_list::param_at_index(size_t index) {
+        if (index < _elements.size())
+            return _elements[index];
+        return nullptr;
+    }
+
+    compiler::element* argument_list::param_by_name(const std::string& name) {
+        auto it = _param_index.find(name);
+        if (it == _param_index.end())
+            return nullptr;
+        return _elements[it->second];
     }
 
 };

@@ -101,7 +101,7 @@ namespace basecode::compiler {
 
                 block->load_to_reg(
                     _value.reg,
-                    on_stack ? vm::register_t::fp() : _address.reg,
+                    on_stack ? vm::register_t::sp() : _address.reg,
                     rot.offset);
                 break;
             }
@@ -241,7 +241,7 @@ namespace basecode::compiler {
         }
 
         block->store_from_reg(
-            on_stack ? vm::register_t::fp() : _address.reg,
+            on_stack ? vm::register_t::sp() : _address.reg,
             *target_register,
             rot.offset);
 
@@ -430,6 +430,9 @@ namespace basecode::compiler {
         address();
         value->read();
 
+        auto var = dynamic_cast<compiler::identifier*>(_element);
+        auto on_stack = var->usage() == identifier_usage_t::stack;
+
         root_and_offset_t rot {};
         if (walk_to_root_and_calculate_offset(rot)) {
             block->comment(
@@ -438,7 +441,6 @@ namespace basecode::compiler {
                     rot.path),
                 4);
         } else {
-            auto var = dynamic_cast<compiler::identifier*>(_element);
             block->comment(
                 fmt::format(
                     "store global value: {}",
@@ -446,7 +448,15 @@ namespace basecode::compiler {
                 4);
         }
 
-        block->store_from_reg(_address.reg, value->value_reg(), rot.offset);
+        // XXX: total hack, do not keep!
+        if (on_stack) {
+            rot.offset += 4;
+        }
+
+        block->store_from_reg(
+            on_stack ? vm::register_t::sp() : _address.reg,
+            value->value_reg(),
+            rot.offset);
 
         return true;
     }

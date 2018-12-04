@@ -19,23 +19,33 @@ namespace basecode::compiler {
     public:
         argument_list(
             compiler::module* module,
-            block* parent_scope);
+            compiler::block* parent_scope);
 
         void reverse();
 
         size_t size() const;
 
-        void add(element* item);
+        compiler::element* replace(
+            size_t index,
+            compiler::element* item);
 
         void remove(common::id_t id);
 
-        element* find(common::id_t id);
+        bool index_to_procedure_type(
+            common::result& r,
+            compiler::procedure_type* proc_type);
+
+        void add(compiler::element* item);
 
         int32_t find_index(common::id_t id);
 
         const element_list_t& elements() const;
 
-        element* replace(size_t index, element* item);
+        compiler::element* find(common::id_t id);
+
+        compiler::element* param_at_index(size_t index);
+
+        compiler::element* param_by_name(const std::string& name);
 
     protected:
         bool on_emit(compiler::session& session) override;
@@ -43,7 +53,8 @@ namespace basecode::compiler {
         void on_owned_elements(element_list_t& list) override;
 
     private:
-        element_list_t _elements {};
+        compiler::element_list_t _elements {};
+        std::unordered_map<std::string, size_t> _param_index {};
     };
 
 };

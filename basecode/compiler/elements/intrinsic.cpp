@@ -175,6 +175,13 @@ namespace basecode::compiler {
             return nullptr;
         }
 
+        if (!args->index_to_procedure_type(
+                session.result(),
+                proc_type_it->second)) {
+            // XXX: error
+            return nullptr;
+        }
+
         auto intrinsic_element = it->second(
             session.builder(),
             parent_scope,
