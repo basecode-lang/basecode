@@ -1915,6 +1915,7 @@ namespace basecode::compiler {
             nullptr,
             0,
             for_scope);
+        induction_decl->identifier()->usage(identifier_usage_t::stack);
 
         auto block = evaluate_in_scope(
             context,
@@ -1927,6 +1928,7 @@ namespace basecode::compiler {
             induction_decl,
             rhs,
             body);
+        for_scope->parent_element(result.element);
 
         return true;
     }

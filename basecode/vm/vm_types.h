@@ -179,21 +179,21 @@ namespace basecode::vm {
         static register_t pc() {
             return register_t {
                 .number = registers_t::pc,
-                .type = register_type_t::pc,
+                .type = register_type_t::integer,
             };
         }
 
         static register_t sp() {
             return register_t {
                 .number = registers_t::sp,
-                .type = register_type_t::sp,
+                .type = register_type_t::integer,
             };
         }
 
         static register_t fp() {
             return register_t {
                 .number = registers_t::fp,
-                .type = register_type_t::fp,
+                .type = register_type_t::integer,
             };
         }
 

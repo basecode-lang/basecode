@@ -13,6 +13,12 @@ EVERYTHING ELSE
 - REVIEW: type check should enforce scalar/composite type rules.
 - REFACTOR: variable to improve how walk_to_root_and_calculate_offset is used.
 - proc_expression needs to support overloaded procedures
+- BUG: identifiers not found are returning a type inference error instead.
+- BUG: enum type creation needs to automatically type fields and increment value.
+- BUG: procedure_type, procedure_call need lots of love:
+    * return_element
+    * procedure_call
+    * argument_list
 - array_iterator_type
     * index:u64
     * value:T (type of the entry)
@@ -20,12 +26,6 @@ EVERYTHING ELSE
 - map_iterator_type
     * key: K   (type of the key)
     * value: V (type of the value)
-- BUG: identifiers not found are returning a type inference error instead.
-- BUG: enum type creation needs to automatically type fields and increment value.
-- BUG: procedure_type, procedure_call need lots of love:
-    * return_element
-    * procedure_call
-    * argument_list
 
 DONE
 ----

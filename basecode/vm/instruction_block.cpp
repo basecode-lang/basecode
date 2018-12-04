@@ -472,6 +472,31 @@ namespace basecode::vm {
         make_add_instruction(dest_reg.size, dest_reg, augend_reg, addened_reg);
     }
 
+    void instruction_block::add_reg_by_immediate(
+            const register_t& dest_reg,
+            const register_t& augend_reg,
+            uint64_t addened_immediate) {
+        instruction_t add_op;
+        add_op.op = op_codes::add;
+        add_op.size = dest_reg.size;
+        add_op.operands_count = 3;
+        add_op.operands[0].type = operand_encoding_t::flags::reg;
+        add_op.operands[0].value.r = dest_reg.number;
+        if (dest_reg.type == register_type_t::integer)
+            add_op.operands[0].type |= operand_encoding_t::flags::integer;
+
+        add_op.operands[1].type = operand_encoding_t::flags::reg;
+        add_op.operands[1].value.r = augend_reg.number;
+        if (augend_reg.type == register_type_t::integer)
+            add_op.operands[1].type |= operand_encoding_t::flags::integer;
+
+        add_op.operands[2].type = operand_encoding_t::flags::constant
+            | operand_encoding_t::flags::integer;
+        add_op.operands[2].value.u = addened_immediate;
+
+        make_block_entry(add_op);
+    }
+
     // sub variations
     void instruction_block::sub_reg_by_reg(
             const register_t& dest_reg,

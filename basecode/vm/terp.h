@@ -163,6 +163,13 @@ namespace basecode::vm {
 
         void execute_trap(uint8_t index);
 
+        bool get_address_with_offset(
+            common::result& r,
+            const instruction_t& inst,
+            uint8_t address_index,
+            uint8_t offset_index,
+            operand_value_t& address);
+
         bool get_constant_address_or_pc_with_offset(
             common::result& r,
             const instruction_t& inst,

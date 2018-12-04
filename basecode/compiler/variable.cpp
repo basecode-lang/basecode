@@ -69,6 +69,7 @@ namespace basecode::compiler {
         switch (_element->element_type()) {
             case element_type_t::identifier: {
                 auto var = dynamic_cast<compiler::identifier*>(_element);
+                auto on_stack = var->usage() == identifier_usage_t::stack;
 
                 root_and_offset_t rot {};
                 if (walk_to_root_and_calculate_offset(rot)) {
@@ -78,17 +79,30 @@ namespace basecode::compiler {
                             rot.path),
                         4);
                 } else {
-                    block->comment(
-                        fmt::format(
-                            "load global value: {}",
-                            var->symbol()->name()),
-                        4);
+                    if (on_stack) {
+                        block->comment(
+                            fmt::format(
+                                "load stack local: {}",
+                                var->symbol()->name()),
+                            4);
+                        // XXX: total hack, do not keep!
+                        rot.offset += 4;
+                    } else {
+                        block->comment(
+                            fmt::format(
+                                "load global value: {}",
+                                var->symbol()->name()),
+                            4);
+                    }
                 }
 
                 if (_value.reg.size != vm::op_sizes::qword)
                     block->clr(vm::op_sizes::qword, _value.reg);
 
-                block->load_to_reg(_value.reg, _address.reg, rot.offset);
+                block->load_to_reg(
+                    _value.reg,
+                    on_stack ? vm::register_t::fp() : _address.reg,
+                    rot.offset);
                 break;
             }
             default: {
@@ -203,6 +217,9 @@ namespace basecode::compiler {
             target_register = &_value.reg;
         }
 
+        auto var = dynamic_cast<compiler::identifier*>(_element);
+        auto on_stack = var->usage() == identifier_usage_t::stack;
+
         root_and_offset_t rot {};
         if (walk_to_root_and_calculate_offset(rot)) {
             block->comment(
@@ -211,7 +228,6 @@ namespace basecode::compiler {
                     rot.path),
                 4);
         } else {
-            auto var = dynamic_cast<compiler::identifier*>(_element);
             block->comment(
                 fmt::format(
                     "store global value: {}",
@@ -219,7 +235,15 @@ namespace basecode::compiler {
                 4);
         }
 
-        block->store_from_reg(_address.reg, *target_register, rot.offset);
+        // XXX: total hack, do not keep!
+        if (on_stack) {
+            rot.offset += 4;
+        }
+
+        block->store_from_reg(
+            on_stack ? vm::register_t::fp() : _address.reg,
+            *target_register,
+            rot.offset);
 
         flag(flags_t::f_written, true);
         flag(flags_t::f_read, false);
@@ -246,16 +270,24 @@ namespace basecode::compiler {
         }
 
         if (var != nullptr) {
-            block->comment(
-                fmt::format(
-                    "load global address: {}",
-                    var->symbol()->name()),
-                4);
-            auto label_ref = assembler.make_label_ref(var->symbol()->name());
-            block->move_label_to_reg(
-                _address.reg,
-                label_ref,
-                !include_offset ? 0 : rot.offset);
+            if (var->usage() == identifier_usage_t::stack) {
+                block->comment(
+                    fmt::format(
+                        "stack local: {}",
+                        var->symbol()->name()),
+                    4);
+            } else {
+                block->comment(
+                    fmt::format(
+                        "load global address: {}",
+                        var->symbol()->name()),
+                    4);
+                auto label_ref = assembler.make_label_ref(var->symbol()->name());
+                block->move_label_to_reg(
+                    _address.reg,
+                    label_ref,
+                    !include_offset ? 0 : rot.offset);
+            }
         }
 
         flag(flags_t::f_addressed, true);

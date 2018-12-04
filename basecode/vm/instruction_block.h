@@ -377,6 +377,11 @@ namespace basecode::vm {
             const register_t& augend_reg,
             const register_t& addened_reg);
 
+        void add_reg_by_immediate(
+            const register_t& dest_reg,
+            const register_t& augend_reg,
+            uint64_t addened_immediate);
+
         // sub variations
         void sub_reg_by_reg(
             const register_t& dest_reg,

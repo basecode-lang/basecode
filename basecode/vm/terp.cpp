@@ -451,6 +451,7 @@ namespace basecode::vm {
     void terp::reset() {
         _registers.r[register_pc].qw = heap_vector(heap_vectors_t::program_start);
         _registers.r[register_sp].qw = heap_vector(heap_vectors_t::top_of_stack);
+        _registers.r[register_fp].qw = 0;
         _registers.r[register_fr].qw = 0;
         _registers.r[register_sr].qw = 0;
 
@@ -608,15 +609,8 @@ namespace basecode::vm {
             case op_codes::load: {
                 operand_value_t address;
 
-                if (!get_operand_value(r, inst, 1, address))
+                if (!get_address_with_offset(r, inst, 1, 2, address))
                     return false;
-
-                if (inst.operands_count > 2) {
-                    operand_value_t offset;
-                    if (!get_operand_value(r, inst, 2, offset))
-                        return false;
-                    address.alias.u += offset.alias.u;
-                }
 
                 operand_value_t loaded_data;
                 loaded_data.alias.u = read(inst.size, address.alias.u);
@@ -634,19 +628,12 @@ namespace basecode::vm {
             }
             case op_codes::store: {
                 operand_value_t address;
-                if (!get_operand_value(r, inst, 0, address))
+                if (!get_address_with_offset(r, inst, 0, 2, address))
                     return false;
 
                 operand_value_t data;
                 if (!get_operand_value(r, inst, 1, data))
                     return false;
-
-                if (inst.operands_count > 2) {
-                    operand_value_t offset;
-                    if (!get_operand_value(r, inst, 2, offset))
-                        return false;
-                    address.alias.u += offset.alias.u;
-                }
 
                 write(inst.size, address.alias.u, data.alias.u);
 
@@ -831,19 +818,14 @@ namespace basecode::vm {
             }
             case op_codes::move: {
                 operand_value_t source_value;
-                operand_value_t offset;
-
-                if (inst.operands_count > 2) {
-                    if (!get_operand_value(r, inst, 2, offset))
-                        return false;
-                }
-
                 if (!get_operand_value(r, inst, 1, source_value))
                     return false;
 
-                operand_value_t address;
-                address.alias.u = source_value.alias.u + offset.alias.u;
-                if (!set_target_operand_value(r, inst.operands[0], inst.size, address))
+                operand_value_t offset_value;
+                if (!get_address_with_offset(r, inst, 1, 2, offset_value))
+                    return false;
+
+                if (!set_target_operand_value(r, inst.operands[0], inst.size, offset_value))
                     return false;
 
                 _registers.flags(register_file_t::flags_t::carry, false);
@@ -858,24 +840,19 @@ namespace basecode::vm {
             }
             case op_codes::moves: {
                 operand_value_t source_value;
-                operand_value_t offset;
-
-                if (inst.operands_count > 2) {
-                    if (!get_operand_value(r, inst, 2, offset))
-                        return false;
-                }
-
                 if (!get_operand_value(r, inst, 1, source_value))
                     return false;
 
+                operand_value_t offset_value;
+                if (!get_address_with_offset(r, inst, 1, 2, offset_value))
+                    return false;
+
                 auto previous_size = static_cast<op_sizes>(static_cast<uint8_t>(inst.size) - 1);
-                source_value.alias.u = common::sign_extend(
-                    source_value.alias.u,
+                offset_value.alias.u = common::sign_extend(
+                    offset_value.alias.u,
                     static_cast<uint32_t>(op_size_in_bytes(previous_size) * 8));
 
-                operand_value_t address;
-                address.alias.u = source_value.alias.u + offset.alias.u;
-                if (!set_target_operand_value(r, inst.operands[0], inst.size, address))
+                if (!set_target_operand_value(r, inst.operands[0], inst.size, offset_value))
                     return false;
 
                 _registers.flags(register_file_t::flags_t::carry, false);
@@ -890,14 +867,11 @@ namespace basecode::vm {
             }
             case op_codes::movez: {
                 operand_value_t source_value;
-                operand_value_t offset;
-
-                if (inst.operands_count > 2) {
-                    if (!get_operand_value(r, inst, 2, offset))
-                        return false;
-                }
-
                 if (!get_operand_value(r, inst, 1, source_value))
+                    return false;
+
+                operand_value_t offset_value;
+                if (!get_address_with_offset(r, inst, 1, 2, offset_value))
                     return false;
 
                 switch (inst.size) {
@@ -906,22 +880,20 @@ namespace basecode::vm {
                         break;
                     }
                     case op_sizes::word: {
-                        source_value.alias.u &= 0b0000000000000000000000000000000000000000000000000000000011111111;
+                        offset_value.alias.u &= 0b0000000000000000000000000000000000000000000000000000000011111111;
                         break;
                     }
                     case op_sizes::dword: {
-                        source_value.alias.u &= 0b0000000000000000000000000000000000000000000000001111111111111111;
+                        offset_value.alias.u &= 0b0000000000000000000000000000000000000000000000001111111111111111;
                         break;
                     }
                     case op_sizes::qword: {
-                        source_value.alias.u &= 0b0000000000000000000000000000000011111111111111111111111111111111;
+                        offset_value.alias.u &= 0b0000000000000000000000000000000011111111111111111111111111111111;
                         break;
                     }
                 }
 
-                operand_value_t address;
-                address.alias.u = source_value.alias.u + offset.alias.u;
-                if (!set_target_operand_value(r, inst.operands[0], inst.size, address))
+                if (!set_target_operand_value(r, inst.operands[0], inst.size, offset_value))
                     return false;
 
                 _registers.flags(register_file_t::flags_t::carry, false);
@@ -1219,6 +1191,8 @@ namespace basecode::vm {
                     return false;
 
                 operand_value_t result;
+                result.alias.u = 0;
+
                 if (lhs_value.alias.u != 0 && rhs_value.alias.u != 0)
                     result.alias.u = lhs_value.alias.u % rhs_value.alias.u;
 
@@ -1398,7 +1372,7 @@ namespace basecode::vm {
                             lhs_value.alias.f,
                             rhs_value.alias.f);
                     } else {
-                        power_value.alias.f = std::pow(
+                        power_value.alias.d = std::pow(
                             lhs_value.alias.d,
                             rhs_value.alias.d);
                     }
@@ -1533,7 +1507,7 @@ namespace basecode::vm {
                 if (!get_operand_value(r, inst, 2, bit_number))
                     return false;
 
-                uint64_t masked_value = static_cast<uint64_t>(1 << bit_number.alias.u);
+                auto masked_value = static_cast<uint64_t>(1) << bit_number.alias.u;
                 operand_value_t result;
                 result.alias.u = value.alias.u | masked_value;
                 if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
@@ -1558,7 +1532,7 @@ namespace basecode::vm {
                 if (!get_operand_value(r, inst, 2, bit_number))
                     return false;
 
-                uint64_t masked_value = static_cast<uint64_t>(~(1 << bit_number.alias.u));
+                auto masked_value = ~(static_cast<uint64_t>(1) << bit_number.alias.u);
                 operand_value_t result;
                 result.alias.u = value.alias.u & masked_value;
                 if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
@@ -2147,7 +2121,7 @@ namespace basecode::vm {
 
                 switch (inst.size) {
                     case op_sizes::byte: {
-                        uint8_t byte_value = static_cast<uint8_t>(value.alias.u);
+                        auto byte_value = static_cast<uint8_t>(value.alias.u);
                         uint8_t upper_nybble = common::get_upper_nybble(byte_value);
                         uint8_t lower_nybble = common::get_lower_nybble(byte_value);
                         byte_value = common::set_upper_nybble(byte_value, lower_nybble);
@@ -2456,6 +2430,31 @@ namespace basecode::vm {
         return true;
     }
 
+    bool terp::get_address_with_offset(
+            common::result& r,
+            const instruction_t& inst,
+            uint8_t address_index,
+            uint8_t offset_index,
+            operand_value_t& address) {
+        if (!get_operand_value(r, inst, address_index, address))
+            return false;
+
+        if (inst.operands_count > 2) {
+            operand_value_t offset;
+
+            if (!get_operand_value(r, inst, offset_index, offset))
+                return false;
+
+            if (inst.operands[offset_index].is_negative()) {
+                address.alias.u -= offset.alias.u;
+            } else {
+                address.alias.u += offset.alias.u;
+            }
+        }
+
+        return true;
+    }
+
     bool terp::get_constant_address_or_pc_with_offset(
             common::result& r,
             const instruction_t& inst,
@@ -2468,7 +2467,7 @@ namespace basecode::vm {
         if (inst.operands_count >= 2) {
             operand_value_t offset;
 
-            uint8_t offset_index = static_cast<uint8_t>(operand_index + 1);
+            auto offset_index = static_cast<uint8_t>(operand_index + 1);
             if (!get_operand_value(r, inst, offset_index, offset))
                 return false;
 
