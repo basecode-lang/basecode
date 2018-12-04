@@ -26,7 +26,10 @@ namespace basecode::compiler {
         compiler::element_builder&,
         compiler::block*,
         compiler::argument_list*,
+        compiler::procedure_type*,
         const compiler::type_reference_list_t& type_params)>;
+
+    std::unordered_map<std::string, compiler::procedure_type*> s_proc_types {};
 
     std::unordered_map<std::string, intrinsic_builder_callable> s_intrinsics = {
         {
@@ -34,8 +37,12 @@ namespace basecode::compiler {
             [](compiler::element_builder& builder,
                     auto parent_scope,
                     auto args,
+                    auto proc_type,
                     auto type_params) -> compiler::intrinsic* {
-                return builder.make_size_of_intrinsic(parent_scope, args);
+                return builder.make_size_of_intrinsic(
+                    parent_scope,
+                    args,
+                    proc_type);
             }
         },
         {
@@ -43,8 +50,12 @@ namespace basecode::compiler {
             [](compiler::element_builder& builder,
                     auto parent_scope,
                     auto args,
+                    auto proc_type,
                     auto type_params) -> compiler::intrinsic* {
-                return builder.make_free_intrinsic(parent_scope, args);
+                return builder.make_free_intrinsic(
+                    parent_scope,
+                    args,
+                    proc_type);
             }
         },
         {
@@ -52,8 +63,12 @@ namespace basecode::compiler {
             [](compiler::element_builder& builder,
                     auto parent_scope,
                     auto args,
+                    auto proc_type,
                     auto type_params) -> compiler::intrinsic* {
-                return builder.make_alloc_intrinsic(parent_scope, args);
+                return builder.make_alloc_intrinsic(
+                    parent_scope,
+                    args,
+                    proc_type);
             }
         },
         {
@@ -61,8 +76,12 @@ namespace basecode::compiler {
             [](compiler::element_builder& builder,
                     auto parent_scope,
                     auto args,
+                    auto proc_type,
                     auto type_params) -> compiler::intrinsic* {
-                return builder.make_align_of_intrinsic(parent_scope, args);
+                return builder.make_align_of_intrinsic(
+                    parent_scope,
+                    args,
+                    proc_type);
             }
         },
         {
@@ -70,8 +89,12 @@ namespace basecode::compiler {
             [](compiler::element_builder& builder,
                     auto parent_scope,
                     auto args,
+                    auto proc_type,
                     auto type_params) -> compiler::intrinsic* {
-                return builder.make_address_of_intrinsic(parent_scope, args);
+                return builder.make_address_of_intrinsic(
+                    parent_scope,
+                    args,
+                    proc_type);
             }
         },
         {
@@ -79,8 +102,12 @@ namespace basecode::compiler {
             [](compiler::element_builder& builder,
                     auto parent_scope,
                     auto args,
+                    auto proc_type,
                     auto type_params) -> compiler::intrinsic* {
-                return builder.make_type_of_intrinsic(parent_scope, args);
+                return builder.make_type_of_intrinsic(
+                    parent_scope,
+                    args,
+                    proc_type);
             }
         },
         {
@@ -88,8 +115,12 @@ namespace basecode::compiler {
             [](compiler::element_builder& builder,
                     auto parent_scope,
                     auto args,
+                    auto proc_type,
                     auto type_params) -> compiler::intrinsic* {
-                return builder.make_copy_intrinsic(parent_scope, args);
+                return builder.make_copy_intrinsic(
+                    parent_scope,
+                    args,
+                    proc_type);
             }
         },
         {
@@ -97,8 +128,12 @@ namespace basecode::compiler {
             [](compiler::element_builder& builder,
                     auto parent_scope,
                     auto args,
+                    auto proc_type,
                     auto type_params) -> compiler::intrinsic* {
-                return builder.make_fill_intrinsic(parent_scope, args);
+                return builder.make_fill_intrinsic(
+                    parent_scope,
+                    args,
+                    proc_type);
             }
         },
         {
@@ -106,10 +141,12 @@ namespace basecode::compiler {
             [](compiler::element_builder& builder,
                    auto parent_scope,
                    auto args,
+                   auto proc_type,
                    auto type_params) -> compiler::intrinsic* {
                 return builder.make_range_intrinsic(
                     parent_scope,
                     args,
+                    proc_type,
                     type_params);
             }
         },
@@ -118,6 +155,7 @@ namespace basecode::compiler {
     bool intrinsic::register_intrinsic_procedure_type(
             const std::string& name,
             compiler::procedure_type* procedure_type) {
+        s_proc_types[name] = procedure_type;
         return true;
     }
 
@@ -131,10 +169,17 @@ namespace basecode::compiler {
         if (it == s_intrinsics.end())
             return nullptr;
 
+        auto proc_type_it = s_proc_types.find(symbol.name);
+        if (proc_type_it == s_proc_types.end()) {
+            // XXX: error
+            return nullptr;
+        }
+
         auto intrinsic_element = it->second(
             session.builder(),
             parent_scope,
             args,
+            proc_type_it->second,
             type_params);
         intrinsic_element->location(symbol.location);
 
@@ -145,8 +190,10 @@ namespace basecode::compiler {
             compiler::module* module,
             compiler::block* parent_scope,
             compiler::argument_list* args,
+            compiler::procedure_type* proc_type,
             const compiler::type_reference_list_t& type_params) : element(module, parent_scope, element_type_t::intrinsic),
                                                                   _arguments(args),
+                                                                  _procedure_type(proc_type),
                                                                   _type_parameters(type_params) {
     }
 
@@ -172,10 +219,6 @@ namespace basecode::compiler {
 
         for (auto type_param : _type_parameters)
             list.emplace_back(type_param);
-    }
-
-    void intrinsic::procedure_type(compiler::procedure_type* value) {
-        _procedure_type = value;
     }
 
     const compiler::type_reference_list_t& intrinsic::type_parameters() const {

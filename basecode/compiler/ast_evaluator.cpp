@@ -144,6 +144,17 @@ namespace basecode::compiler {
             if (it->second(this, context, result)) {
                 context.apply_attributes(result.element);
                 context.apply_comments(result.element);
+
+                if (result.element->element_type() == element_type_t::statement) {
+                    auto stmt = dynamic_cast<compiler::statement*>(result.element);
+                    auto expr = stmt->expression();
+                    if (expr != nullptr
+                    &&  expr->element_type() == element_type_t::directive) {
+                        auto directive_element = dynamic_cast<compiler::directive*>(expr);
+                        directive_element->evaluate(_session);
+                    }
+                }
+
                 return result.element;
             }
         }
@@ -648,7 +659,7 @@ namespace basecode::compiler {
             context.node->token.value,
             expression);
         directive_element->location(context.node->location);
-        directive_element->evaluate(_session);
+
         result.element = directive_element;
 
         return true;

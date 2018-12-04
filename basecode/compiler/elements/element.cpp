@@ -70,10 +70,6 @@ namespace basecode::compiler {
         return false;
     }
 
-    block* element::parent_scope() {
-        return _parent_scope;
-    }
-
     bool element::is_type() const {
         switch (_element_type) {
             case element_type_t::any_type:
@@ -95,6 +91,18 @@ namespace basecode::compiler {
             default:
                 return false;
         }
+    }
+
+    block* element::parent_scope() {
+        return _parent_scope;
+    }
+
+    void element::make_non_owning() {
+        _non_owning = true;
+    }
+
+    bool element::non_owning() const {
+        return _non_owning;
     }
 
     common::id_t element::id() const {

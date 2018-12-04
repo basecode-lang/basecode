@@ -1058,11 +1058,13 @@ namespace basecode::compiler {
 
     intrinsic* element_builder::make_copy_intrinsic(
             compiler::block* parent_scope,
-            compiler::argument_list* args) {
+            compiler::argument_list* args,
+            compiler::procedure_type* proc_type) {
         auto intrinsic = new compiler::copy_intrinsic(
             _session.scope_manager().current_module(),
             parent_scope,
             args,
+            proc_type,
             {});
         _session.elements().add(intrinsic);
         args->parent_element(intrinsic);
@@ -1072,11 +1074,13 @@ namespace basecode::compiler {
     intrinsic* element_builder::make_range_intrinsic(
             compiler::block* parent_scope,
             compiler::argument_list* args,
+            compiler::procedure_type* proc_type,
             const compiler::type_reference_list_t& type_params) {
         auto intrinsic = new compiler::range_intrinsic(
             _session.scope_manager().current_module(),
             parent_scope,
             args,
+            proc_type,
             type_params);
         _session.elements().add(intrinsic);
         args->parent_element(intrinsic);
@@ -1085,11 +1089,13 @@ namespace basecode::compiler {
 
     intrinsic* element_builder::make_fill_intrinsic(
             compiler::block* parent_scope,
-            compiler::argument_list* args) {
+            compiler::argument_list* args,
+            compiler::procedure_type* proc_type) {
         auto intrinsic = new compiler::fill_intrinsic(
             _session.scope_manager().current_module(),
             parent_scope,
             args,
+            proc_type,
             {});
         _session.elements().add(intrinsic);
         args->parent_element(intrinsic);
@@ -1098,11 +1104,13 @@ namespace basecode::compiler {
 
     intrinsic* element_builder::make_free_intrinsic(
             compiler::block* parent_scope,
-            compiler::argument_list* args) {
+            compiler::argument_list* args,
+            compiler::procedure_type* proc_type) {
         auto intrinsic = new compiler::free_intrinsic(
             _session.scope_manager().current_module(),
             parent_scope,
             args,
+            proc_type,
             {});
         _session.elements().add(intrinsic);
         args->parent_element(intrinsic);
@@ -1111,11 +1119,13 @@ namespace basecode::compiler {
 
     intrinsic* element_builder::make_alloc_intrinsic(
             compiler::block* parent_scope,
-            compiler::argument_list* args) {
+            compiler::argument_list* args,
+            compiler::procedure_type* proc_type) {
         auto intrinsic = new compiler::alloc_intrinsic(
             _session.scope_manager().current_module(),
             parent_scope,
             args,
+            proc_type,
             {});
         _session.elements().add(intrinsic);
         args->parent_element(intrinsic);
@@ -1124,11 +1134,13 @@ namespace basecode::compiler {
 
     intrinsic* element_builder::make_address_of_intrinsic(
             compiler::block* parent_scope,
-            compiler::argument_list* args) {
+            compiler::argument_list* args,
+            compiler::procedure_type* proc_type) {
         auto intrinsic = new compiler::address_of_intrinsic(
             _session.scope_manager().current_module(),
             parent_scope,
             args,
+            proc_type,
             {});
         _session.elements().add(intrinsic);
         args->parent_element(intrinsic);
@@ -1137,11 +1149,13 @@ namespace basecode::compiler {
 
     intrinsic* element_builder::make_align_of_intrinsic(
             compiler::block* parent_scope,
-            compiler::argument_list* args) {
+            compiler::argument_list* args,
+            compiler::procedure_type* proc_type) {
         auto intrinsic = new compiler::align_of_intrinsic(
             _session.scope_manager().current_module(),
             parent_scope,
             args,
+            proc_type,
             {});
         _session.elements().add(intrinsic);
         args->parent_element(intrinsic);
@@ -1150,11 +1164,13 @@ namespace basecode::compiler {
 
     intrinsic* element_builder::make_size_of_intrinsic(
             compiler::block* parent_scope,
-            compiler::argument_list* args) {
+            compiler::argument_list* args,
+            compiler::procedure_type* proc_type) {
         auto intrinsic = new compiler::size_of_intrinsic(
             _session.scope_manager().current_module(),
             parent_scope,
             args,
+            proc_type,
             {});
         _session.elements().add(intrinsic);
         args->parent_element(intrinsic);
@@ -1163,11 +1179,13 @@ namespace basecode::compiler {
 
     intrinsic* element_builder::make_type_of_intrinsic(
             compiler::block* parent_scope,
-            compiler::argument_list* args) {
+            compiler::argument_list* args,
+            compiler::procedure_type* proc_type) {
         auto intrinsic = new compiler::type_of_intrinsic(
             _session.scope_manager().current_module(),
             parent_scope,
             args,
+            proc_type,
             {});
         _session.elements().add(intrinsic);
         args->parent_element(intrinsic);

@@ -35,11 +35,12 @@ namespace basecode::compiler {
 
         if (element->is_singleton()) return;
 
-        element_list_t owned_elements {};
-        element->owned_elements(owned_elements);
-
-        for (auto owned : owned_elements)
-            remove(owned->id());
+        if (!element->non_owning()) {
+            element_list_t owned_elements{};
+            element->owned_elements(owned_elements);
+            for (auto owned : owned_elements)
+                remove(owned->id());
+        }
 
         remove_index_by_type(element);
         _elements_by_id.erase(id);

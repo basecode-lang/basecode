@@ -20,9 +20,10 @@ namespace basecode::compiler {
 
     size_of_intrinsic::size_of_intrinsic(
             compiler::module* module,
-            block* parent_scope,
-            argument_list* args,
-            const compiler::type_reference_list_t& type_params) : intrinsic(module, parent_scope, args, type_params) {
+            compiler::block* parent_scope,
+            compiler::argument_list* args,
+            compiler::procedure_type* proc_type,
+            const compiler::type_reference_list_t& type_params) : intrinsic(module, parent_scope, args, proc_type, type_params) {
     }
 
     bool size_of_intrinsic::on_fold(

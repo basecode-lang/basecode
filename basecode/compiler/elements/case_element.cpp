@@ -80,7 +80,8 @@ namespace basecode::compiler {
                 operator_type_t::equals,
                 switch_expr,
                 _expr);
-            //defer(session.elements().remove(equals_op->id()));
+            equals_op->make_non_owning();
+            defer(session.elements().remove(equals_op->id()));
             equals_op->emit(session);
             block->bz(*target_reg, assembler.make_label_ref(false_label_name));
         }

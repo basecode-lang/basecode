@@ -37,6 +37,8 @@ namespace basecode::compiler {
 
         block* parent_scope();
 
+        void make_non_owning();
+
         common::id_t id() const;
 
         template <typename T>
@@ -45,6 +47,8 @@ namespace basecode::compiler {
                 return nullptr;
             return dynamic_cast<T*>(_parent_element);
         }
+
+        bool non_owning() const;
 
         bool is_constant() const;
 
@@ -169,6 +173,7 @@ namespace basecode::compiler {
 
     private:
         common::id_t _id;
+        bool _non_owning = false;
         comment_list_t _comments {};
         block* _parent_scope = nullptr;
         attribute_map_t _attributes {};

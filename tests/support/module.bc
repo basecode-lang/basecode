@@ -10,9 +10,21 @@
 // ----------------------------------------------------------------------------
 
 @library "basecode";
-#foreign print   :: proc(
+#foreign print :: proc(
     format: string,
     ...values: any) @alias "fmt_print";
+
+@intrinsic_name "copy";
+#intrinsic copy_proc :: proc<T>(
+    dest: ^T,
+    src:  ^T,
+    size: u64);
+
+@intrinsic_name "fill";
+#intrinsic fill_proc :: proc<T>(
+    dest:   ^T,
+    value:  u8,
+    length: u64);
 
 @intrinsic_name "range";
 #intrinsic range_proc :: proc<T>(
@@ -21,6 +33,24 @@
     step: s32 := 1,
     kind: u8  := range::kinds::INCLUSIVE,
     dir:  u8  := range::orders::NORMAL):T;
+
+@intrinsic_name "free";
+#intrinsic free_proc :: proc<T>(expr: T);
+
+@intrinsic_name "alloc";
+#intrinsic alloc_proc :: proc<T>(size: u64):^T;
+
+@intrinsic_name "size_of";
+#intrinsic size_of_proc :: proc<T>(expr: T):u32;
+
+@intrinsic_name "align_of";
+#intrinsic align_of_proc :: proc<T>(expr: T):u32;
+
+@intrinsic_name "type_of";
+#intrinsic type_of_proc :: proc<T>(expr: T):^type;
+
+@intrinsic_name "address_of";
+#intrinsic address_of_proc :: proc<T>(expr: T):u64;
 
 range :: ns {
     kinds  :: ns {

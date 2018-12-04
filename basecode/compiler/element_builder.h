@@ -255,40 +255,49 @@ namespace basecode::compiler {
 
         intrinsic* make_copy_intrinsic(
             compiler::block* parent_scope,
-            compiler::argument_list* args);
+            compiler::argument_list* args,
+            compiler::procedure_type* proc_type);
 
         intrinsic* make_range_intrinsic(
             compiler::block* parent_scope,
             compiler::argument_list* args,
+            compiler::procedure_type* proc_type,
             const compiler::type_reference_list_t& type_params);
 
         intrinsic* make_fill_intrinsic(
             compiler::block* parent_scope,
-            compiler::argument_list* args);
+            compiler::argument_list* args,
+            compiler::procedure_type* proc_type);
 
         intrinsic* make_free_intrinsic(
             compiler::block* parent_scope,
-            compiler::argument_list* args);
+            compiler::argument_list* args,
+            compiler::procedure_type* proc_type);
 
         intrinsic* make_type_of_intrinsic(
             compiler::block* parent_scope,
-            compiler::argument_list* args);
+            compiler::argument_list* args,
+            compiler::procedure_type* proc_type);
 
         intrinsic* make_alloc_intrinsic(
             compiler::block* parent_scope,
-            compiler::argument_list* args);
+            compiler::argument_list* args,
+            compiler::procedure_type* proc_type);
 
         intrinsic* make_align_of_intrinsic(
             compiler::block* parent_scope,
-            compiler::argument_list* args);
+            compiler::argument_list* args,
+            compiler::procedure_type* proc_type);
 
         intrinsic* make_size_of_intrinsic(
             compiler::block* parent_scope,
-            compiler::argument_list* args);
+            compiler::argument_list* args,
+            compiler::procedure_type* proc_type);
 
         intrinsic* make_address_of_intrinsic(
             compiler::block* parent_scope,
-            compiler::argument_list* args);
+            compiler::argument_list* args,
+            compiler::procedure_type* proc_type);
 
         procedure_call* make_procedure_call(
             compiler::block* parent_scope,

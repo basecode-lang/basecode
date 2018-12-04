@@ -32,6 +32,7 @@ namespace basecode::compiler {
             compiler::module* module,
             compiler::block* parent_scope,
             compiler::argument_list* args,
+            compiler::procedure_type* proc_type,
             const compiler::type_reference_list_t& type_params);
 
         virtual bool can_fold() const;
@@ -41,8 +42,6 @@ namespace basecode::compiler {
         compiler::argument_list* arguments();
 
         compiler::procedure_type* procedure_type();
-
-        void procedure_type(compiler::procedure_type* value);
 
         const compiler::type_reference_list_t& type_parameters() const;
 

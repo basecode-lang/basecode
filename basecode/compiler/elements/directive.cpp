@@ -317,6 +317,10 @@ namespace basecode::compiler {
     // intrinsic directive
 
     bool directive::on_execute_intrinsic(compiler::session& session) {
+        return true;
+    }
+
+    bool directive::on_evaluate_intrinsic(compiler::session& session) {
         auto assignment = dynamic_cast<compiler::assignment*>(_expression);
         auto proc_decl = dynamic_cast<compiler::declaration*>(assignment->expressions()[0]);
         if (proc_decl == nullptr)
@@ -347,15 +351,11 @@ namespace basecode::compiler {
         }
 
         if (!compiler::intrinsic::register_intrinsic_procedure_type(
-                intrinsic_name,
-                proc_type)) {
+            intrinsic_name,
+            proc_type)) {
             return false;
         }
 
-        return true;
-    }
-
-    bool directive::on_evaluate_intrinsic(compiler::session& session) {
         return true;
     }
 
