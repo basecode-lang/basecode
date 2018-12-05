@@ -16,11 +16,14 @@ namespace basecode::compiler {
     unknown_type::unknown_type(
             compiler::module* module,
             block* parent_scope,
-            compiler::symbol_element* symbol) : compiler::type(
-                                                    module,
-                                                    parent_scope,
-                                                    element_type_t::unknown_type,
-                                                    symbol) {
+            compiler::symbol_element* symbol) : compiler::type(module,
+                                                               parent_scope,
+                                                               element_type_t::unknown_type,
+                                                               symbol) {
+    }
+
+    bool unknown_type::is_unknown_type() const {
+        return true;
     }
 
 };

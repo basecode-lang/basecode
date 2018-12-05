@@ -46,6 +46,8 @@ namespace basecode::compiler {
 
         virtual bool is_proc_type() const;
 
+        virtual bool is_unknown_type() const;
+
         virtual bool is_pointer_type() const;
 
         bool type_check(compiler::type* other);

@@ -67,7 +67,7 @@ namespace basecode::compiler {
 
     bool type_reference::is_unknown_type() const {
         return _type != nullptr
-               && _type->element_type() == element_type_t::unknown_type;
+            && _type->is_unknown_type();
     }
 
     bool type_reference::is_composite_type() const {

@@ -21,6 +21,8 @@ namespace basecode::compiler {
             compiler::module* module,
             block* parent_scope,
             compiler::symbol_element* symbol);
+
+        bool is_unknown_type() const override;
     };
 
 };

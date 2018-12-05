@@ -26,9 +26,13 @@ namespace basecode::compiler {
 
         bool is_pointer_type() const override;
 
+        bool is_unknown_type() const override;
+
         bool is_composite_type() const override;
 
         compiler::type_reference* base_type_ref() const;
+
+        void base_type_ref(compiler::type_reference* value);
 
         std::string name(const std::string& alias = "") const override;
 

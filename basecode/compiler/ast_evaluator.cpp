@@ -546,6 +546,12 @@ namespace basecode::compiler {
 
             new_identifier->type_ref(infer_type_result.reference);
             new_identifier->inferred_type(infer_type_result.inferred_type != nullptr);
+
+            if (infer_type_result.reference->is_unknown_type()) {
+                _session.scope_manager()
+                    .identifiers_with_unknown_types()
+                    .push_back(new_identifier);
+            }
         } else {
             if (type_ref == nullptr) {
                 _session.error(
@@ -943,6 +949,7 @@ namespace basecode::compiler {
                 return false;
             }
 
+            arg->location(arg_node->location);
             args->add(arg);
             arg->parent_element(args);
         }
@@ -1785,9 +1792,7 @@ namespace basecode::compiler {
                     auto symbol = builder.make_symbol_from_node(current.get(), scope);
                     auto type = scope_manager.find_type(type_name, scope);
                     if (type == nullptr) {
-                        type = builder.make_unknown_type(
-                            scope,
-                            symbol);
+                        type = builder.make_unknown_type(scope, symbol);
                     }
                     type_decl_ref = builder.make_type_reference(
                         scope,

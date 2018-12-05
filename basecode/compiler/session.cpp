@@ -506,11 +506,12 @@ namespace basecode::compiler {
             auto var = *it;
 
             if (var->type_ref() != nullptr
-            &&  var->type_ref()->type()->element_type() != element_type_t::unknown_type) {
+            && !var->type_ref()->is_unknown_type()) {
                 it = identifiers.erase(it);
                 continue;
             }
 
+            auto is_pointer = var->type_ref()->is_pointer_type();
             infer_type_result_t infer_type_result {};
 
             if (var->is_parent_element(element_type_t::binary_operator)) {
@@ -521,28 +522,42 @@ namespace basecode::compiler {
                     var->type_ref(infer_type_result.reference);
                 }
             } else {
-                if (var->initializer() == nullptr) {
-                    auto unknown_type = dynamic_cast<compiler::unknown_type*>(var->type_ref()->type());
+                auto init = var->initializer();
+                compiler::pointer_type* pointer = nullptr;
+                compiler::unknown_type* unknown_type = nullptr;
+
+                if (is_pointer) {
+                    pointer = dynamic_cast<compiler::pointer_type*>(var->type_ref()->type());
+                    unknown_type = dynamic_cast<compiler::unknown_type*>(pointer->base_type_ref()->type());
+                } else {
+                    unknown_type = dynamic_cast<compiler::unknown_type*>(var->type_ref()->type());
+                }
+
+                if (init == nullptr || is_pointer) {
                     auto type = _scope_manager.find_type(
                         unknown_type->symbol()->qualified_symbol(),
                         var->parent_scope());
                     if (type != nullptr) {
-                        var->type_ref(_builder.make_type_reference(
+                        auto type_ref = _builder.make_type_reference(
                             type->parent_scope(),
-                            qualified_symbol_t {},
-                            type));
+                            qualified_symbol_t{},
+                            type);
+                        if (is_pointer) {
+                            pointer->base_type_ref(type_ref);
+                        } else {
+                            var->type_ref(type_ref);
+                        }
                         _elements.remove(unknown_type->id());
                     }
                 } else {
-                    if (!var->initializer()->expression()->infer_type(*this, infer_type_result))
+                    if (!init->expression()->infer_type(*this, infer_type_result))
                         return false;
                     var->type_ref(infer_type_result.reference);
                 }
             }
 
             auto type_ref = var->type_ref();
-            if (type_ref != nullptr
-            &&  type_ref->type()->element_type() != element_type_t::unknown_type) {
+            if (type_ref != nullptr && !type_ref->is_unknown_type()) {
                 var->inferred_type(true);
                 it = identifiers.erase(it);
             } else {

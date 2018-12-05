@@ -72,22 +72,34 @@ namespace basecode::compiler {
                 fld->identifier()->symbol()->name(),
                 index));
             if (index < _elements.size()) {
+                // XXX: type checking will need to be deferred if one of the
+                //      types is unknown
                 auto param = _elements[index];
                 infer_type_result_t type_result {};
                 if (!param->infer_type(session, type_result)) {
-                    // XXX: error
+                    session.error(
+                        "P019",
+                        fmt::format(
+                            "unable to infer type for parameter: {}",
+                            fld->identifier()->symbol()->name()),
+                        param->location());
                     return false;
                 }
 
                 auto type_ref = fld->identifier()->type_ref();
                 if (!type_ref->type()->type_check(type_result.inferred_type)) {
-                    // XXX: error
+                    session.error(
+                        "C051",
+                        fmt::format(
+                            "type mismatch: cannot assign {} to parameter {}.",
+                            type_result.type_name(),
+                            fld->identifier()->symbol()->name()),
+                        param->location());
                     return false;
                 }
             } else {
                 auto init = fld->identifier()->initializer();
                 if (init == nullptr) {
-                    // XXX: refactor this so it's common with ast_evaluator::resolve_symbol_or_evaluate
                     auto decl = fld->declaration();
                     if (decl != nullptr) {
                         auto assignment = decl->assignment();
@@ -96,7 +108,13 @@ namespace basecode::compiler {
                             goto _next;
                         }
                     }
-                    // XXX: required field not provided
+
+                    session.error(
+                        "P019",
+                        fmt::format(
+                            "missing required parameter: {}",
+                            fld->identifier()->symbol()->name()),
+                        location());
                     return false;
                 }
 

@@ -33,7 +33,7 @@ make_shitty_cstring :: proc(s: ^string): ^u8 {
 @binary_operator "+";
 string_append :: proc(lhs: ^string, rhs: string) {
     resize_string(lhs, lhs.length + rhs.length);
-    copy(lhs.data + lhs.length, rhs, rhs.length);
+    copy(lhs.data + lhs.length, address_of(rhs), rhs.length);
 };
 
 @binary_operator ":="
@@ -50,18 +50,18 @@ string_assignment_3 :: proc(lhs: ^string, rhs: utf32_string) {
 
 ////////////////////
 
-foo: string := "foo";
-baz: utf16_string := "baz baz baz";
+//foo: string := "foo";
+//baz: utf16_string := "baz baz baz";
 
 ///////////////////
 
-bar := foo + " bar"; /// -> bar := string_append(foo, "bar");
-support::print("shitty c shit: %s\n", foo.data);
-vector3 :: struct {
-};
-a: vector3;
-b: vector3;
-c := a + b;
+//bar := foo + " bar"; /// -> bar := string_append(foo, "bar");
+//support::print("shitty c shit: %s\n", foo.data);
+//vector3 :: struct {
+//};
+//a: vector3;
+//b: vector3;
+//c := a + b;
 
 ///////////////////
 

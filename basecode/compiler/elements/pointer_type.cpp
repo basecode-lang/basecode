@@ -47,6 +47,10 @@ namespace basecode::compiler {
         return true;
     }
 
+    bool pointer_type::is_unknown_type() const {
+        return _base_type_ref != nullptr && _base_type_ref->is_unknown_type();
+    }
+
     bool pointer_type::is_composite_type() const {
         return _base_type_ref->type()->is_composite_type();
     }
@@ -62,7 +66,7 @@ namespace basecode::compiler {
             }
             case element_type_t::pointer_type: {
                 auto other_pointer_type = dynamic_cast<compiler::pointer_type*>(other);
-                return _base_type_ref->type()->id() == other_pointer_type->base_type_ref()->type()->id();
+                return _base_type_ref->type()->type_check(other_pointer_type->base_type_ref()->type());
             }
             default:
                 return false;
@@ -102,6 +106,10 @@ namespace basecode::compiler {
             stream << "^" << _base_type_ref->name();
             return stream.str();
         }
+    }
+
+    void pointer_type::base_type_ref(compiler::type_reference* value) {
+        _base_type_ref = value;
     }
 
 };

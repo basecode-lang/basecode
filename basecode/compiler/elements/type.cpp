@@ -74,6 +74,10 @@ namespace basecode::compiler {
         _alignment = value;
     }
 
+    bool type::is_unknown_type() const {
+        return false;
+    }
+
     size_t type::size_in_bytes() const {
         return _size_in_bytes;
     }
