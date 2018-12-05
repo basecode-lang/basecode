@@ -71,6 +71,11 @@ namespace basecode::compiler {
         return _namespaces;
     }
 
+    bool symbol_element::on_as_string(std::string& value) const {
+        value = _name;
+        return true;
+    }
+
     qualified_symbol_t symbol_element::qualified_symbol() const {
         qualified_symbol_t symbol {};
         symbol.name = _name;

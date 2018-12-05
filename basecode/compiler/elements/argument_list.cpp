@@ -16,6 +16,7 @@
 #include "identifier.h"
 #include "initializer.h"
 #include "declaration.h"
+#include "argument_pair.h"
 #include "argument_list.h"
 #include "symbol_element.h"
 #include "procedure_type.h"
@@ -58,24 +59,56 @@ namespace basecode::compiler {
             item);
     }
 
+    // XXX: type checking will need to be deferred if one of the
+    //      types is unknown
     bool argument_list::index_to_procedure_type(
             compiler::session& session,
             compiler::procedure_type* proc_type) {
         _param_index.clear();
 
-        auto index = 0;
         auto& param_map = proc_type->parameters();
         auto field_list = param_map.as_list();
-        std::reverse(std::begin(field_list), std::end(field_list));
+
+        if (_elements.size() < field_list.size()) {
+            _elements.resize(field_list.size());
+        }
+
+        size_t index = 0;
         for (auto fld : field_list) {
             _param_index.insert(std::make_pair(
                 fld->identifier()->symbol()->name(),
-                index));
-            if (index < _elements.size()) {
-                // XXX: type checking will need to be deferred if one of the
-                //      types is unknown
-                auto param = _elements[index];
-                infer_type_result_t type_result {};
+                index++));
+        }
+
+        element_list_t temp {};
+        temp.resize(_elements.size());
+
+        for (index = 0; index < _elements.size(); index++) {
+        _retry:
+            auto param = _elements[index];
+            if (param == nullptr)
+                continue;
+
+            if (param->element_type() == element_type_t::argument_pair) {
+                auto arg_pair = dynamic_cast<compiler::argument_pair*>(param);
+                std::string key;
+                if (arg_pair->lhs()->as_string(key)) {
+                    auto it = _param_index.find(key);
+                    if (it != _param_index.end()) {
+                        temp[it->second] = arg_pair->rhs();
+                        _elements.erase(_elements.begin() + index);
+                        _elements.emplace_back(nullptr);
+                        goto _retry;
+                    }
+                }
+            }
+        }
+
+        index = 0;
+        for (auto fld : field_list) {
+            auto param = _elements[index];
+            if (param != nullptr) {
+                infer_type_result_t type_result{};
                 if (!param->infer_type(session, type_result)) {
                     session.error(
                         "P019",
@@ -98,13 +131,18 @@ namespace basecode::compiler {
                     return false;
                 }
             } else {
+                if (temp[index] != nullptr) {
+                    _elements[index] = temp[index];
+                    goto _next;
+                }
+
                 auto init = fld->identifier()->initializer();
                 if (init == nullptr) {
                     auto decl = fld->declaration();
                     if (decl != nullptr) {
                         auto assignment = decl->assignment();
                         if (assignment != nullptr) {
-                            _elements.push_back(assignment->rhs());
+                            _elements[index] = assignment->rhs();
                             goto _next;
                         }
                     }
@@ -118,8 +156,9 @@ namespace basecode::compiler {
                     return false;
                 }
 
-                _elements.push_back(init->expression());
+                _elements[index] = init->expression();
             }
+
         _next:
             index++;
         }

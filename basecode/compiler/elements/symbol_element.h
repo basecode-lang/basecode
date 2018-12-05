@@ -51,6 +51,8 @@ namespace basecode::compiler {
 
         bool on_is_constant() const override;
 
+        bool on_as_string(std::string& value) const override;
+
         void on_owned_elements(element_list_t& list) override;
 
     private:
