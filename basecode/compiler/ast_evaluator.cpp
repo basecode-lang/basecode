@@ -100,7 +100,7 @@ namespace basecode::compiler {
     }
 
     element* ast_evaluator::evaluate(const syntax::ast_node_t* node) {
-        if (node == nullptr)
+        if (node == nullptr || _session.result().is_failed())
             return nullptr;
 
         auto& builder = _session.builder();
@@ -159,13 +159,15 @@ namespace basecode::compiler {
             }
         }
 
-        _session.error(
-            "P071",
-            fmt::format(
-                "ast node evaluation failed: id = {}, type = {}",
-                node->id,
-                syntax::ast_node_type_name(node->type)),
-            node->location);
+//        if (!_session.result().has_code("P071")) {
+//            _session.error(
+//                "P071",
+//                fmt::format(
+//                    "ast node evaluation failed: id = {}, type = {}",
+//                    node->id,
+//                    syntax::ast_node_type_name(node->type)),
+//                node->location);
+//        }
 
         return nullptr;
     }
@@ -955,6 +957,7 @@ namespace basecode::compiler {
         }
 
         args->reverse();
+        args->location(context.node->location);
 
         result.element = args;
 

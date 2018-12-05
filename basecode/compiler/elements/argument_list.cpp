@@ -99,6 +99,12 @@ namespace basecode::compiler {
                         _elements.erase(_elements.begin() + index);
                         _elements.emplace_back(nullptr);
                         goto _retry;
+                    } else {
+                        session.error(
+                            "P019",
+                            fmt::format("invalid procedure parameter: {}", key),
+                            param->location());
+                        return false;
                     }
                 }
             }
@@ -152,7 +158,7 @@ namespace basecode::compiler {
                         fmt::format(
                             "missing required parameter: {}",
                             fld->identifier()->symbol()->name()),
-                        location());
+                        parent_element()->location());
                     return false;
                 }
 

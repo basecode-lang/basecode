@@ -1019,6 +1019,7 @@ namespace basecode::syntax {
         auto node = parser->ast_builder()->proc_call_node();
         node->location.start(lhs->location.start());
         node->lhs->rhs = lhs;
+        node->rhs->location.start(token.location.start());
 
         if (!parser->peek(token_types_t::right_paren)) {
             pairs_to_list(
