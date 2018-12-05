@@ -68,8 +68,9 @@ namespace basecode::compiler {
                 auto other_pointer_type = dynamic_cast<compiler::pointer_type*>(other);
                 return _base_type_ref->type()->type_check(other_pointer_type->base_type_ref()->type());
             }
-            default:
-                return false;
+            default: {
+                return _base_type_ref->type()->type_check(other);
+            }
         }
     }
 
@@ -92,7 +93,13 @@ namespace basecode::compiler {
     }
 
     compiler::type_reference* pointer_type::base_type_ref() const {
-        return _base_type_ref;
+        auto current = this;
+        while (true) {
+            if (!current->_base_type_ref->is_pointer_type())
+                break;
+            current = dynamic_cast<compiler::pointer_type*>(current->_base_type_ref->type());
+        }
+        return current->_base_type_ref;
     }
 
     std::string pointer_type::name(const std::string& alias) const {
@@ -109,7 +116,14 @@ namespace basecode::compiler {
     }
 
     void pointer_type::base_type_ref(compiler::type_reference* value) {
-        _base_type_ref = value;
+        auto current = this;
+        while (true) {
+            if (!current->_base_type_ref->is_pointer_type())
+                break;
+            current = dynamic_cast<compiler::pointer_type*>(current->_base_type_ref->type());
+        }
+        current->_base_type_ref = value;
+        current->_base_type_ref->parent_element(this);
     }
 
 };

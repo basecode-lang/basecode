@@ -500,6 +500,7 @@ namespace basecode::compiler {
 
     bool session::resolve_unknown_types() {
         auto& identifiers = _scope_manager.identifiers_with_unknown_types();
+        std::set<common::id_t> to_remove {};
 
         auto it = identifiers.begin();
         while (it != identifiers.end()) {
@@ -547,7 +548,7 @@ namespace basecode::compiler {
                         } else {
                             var->type_ref(type_ref);
                         }
-                        _elements.remove(unknown_type->id());
+                        to_remove.insert(unknown_type->id());
                     }
                 } else {
                     if (!init->expression()->infer_type(*this, infer_type_result))
@@ -571,6 +572,9 @@ namespace basecode::compiler {
                     var->symbol()->location());
             }
         }
+
+        for (auto id : to_remove)
+            _elements.remove(id);
 
         return identifiers.empty();
     }

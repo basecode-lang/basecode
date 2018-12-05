@@ -10,8 +10,9 @@ k: [ARRAY_HEIGHT][ARRAY_WIDTH]s16;
 q: ^[]string;
 z: ^[]^[]^u64;
 
-id_t        :: #type u32;
-item_ptr_t  :: #type ^item;
+id_t           :: #type u32;
+item_ptr_t     :: #type ^item;
+item_ptr_ptr_t :: #type ^^item;
 
 item :: struct {
     n: s32;
