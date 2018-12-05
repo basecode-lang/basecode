@@ -39,8 +39,36 @@ namespace basecode::compiler {
     }
 
     bool generic_type::on_type_check(compiler::type* other) {
-        return other != nullptr
-               && other->element_type() == element_type_t::generic_type;
+        if (other != nullptr
+        &&  other->element_type() == element_type_t::generic_type) {
+            auto other_generic = dynamic_cast<compiler::generic_type*>(other);
+            if (is_open() && other_generic->is_open())
+                return true;
+            else {
+                // XXX: very tentative equality logic
+                auto other_constraints = other_generic->constraints();
+
+                if (other_constraints.size() != _constraints.size())
+                    return false;
+
+                for (size_t i = 0; i < _constraints.size(); i++) {
+                    if (_constraints[i]->type() != other_constraints[i]->type())
+                        return false;
+                }
+
+                return true;
+            }
+        }
+
+        if (is_open())
+            return true;
+
+        for (auto constraint : _constraints) {
+            if (constraint->type() == other)
+                return true;
+        }
+
+        return false;
     }
 
     bool generic_type::on_initialize(compiler::session& session) {

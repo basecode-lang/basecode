@@ -32,7 +32,7 @@ namespace basecode::compiler {
         void remove(common::id_t id);
 
         bool index_to_procedure_type(
-            common::result& r,
+            compiler::session& session,
             compiler::procedure_type* proc_type);
 
         void add(compiler::element* item);
@@ -54,7 +54,7 @@ namespace basecode::compiler {
 
     private:
         compiler::element_list_t _elements {};
-        std::unordered_map<std::string, size_t> _param_index {};
+        std::map<std::string, size_t> _param_index {};
     };
 
 };

@@ -8,7 +8,7 @@ high := 10;
 step := 1;
 y: u32 := 0;
 
-for x in range<s32>(low, high, step) {
+for x in range<s32>(low, high) {
     support::print("x := %d\n", x);
     y +:= 1;
 };

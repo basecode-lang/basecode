@@ -25,6 +25,10 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             const compiler::type_reference_list_t& constraints);
 
+        inline bool is_open() const {
+            return _constraints.empty();
+        }
+
         const compiler::type_reference_list_t& constraints() const;
 
     protected:

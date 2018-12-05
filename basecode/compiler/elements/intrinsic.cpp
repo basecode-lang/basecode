@@ -176,7 +176,7 @@ namespace basecode::compiler {
         }
 
         if (!args->index_to_procedure_type(
-                session.result(),
+                session,
                 proc_type_it->second)) {
             // XXX: error
             return nullptr;

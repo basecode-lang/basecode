@@ -14,7 +14,14 @@
 #include "type.h"
 #include "program.h"
 #include "identifier.h"
+#include "initializer.h"
+#include "declaration.h"
 #include "argument_list.h"
+#include "symbol_element.h"
+#include "procedure_type.h"
+#include "type_reference.h"
+#include "binary_operator.h"
+#include "identifier_reference.h"
 
 namespace basecode::compiler {
 
@@ -52,9 +59,53 @@ namespace basecode::compiler {
     }
 
     bool argument_list::index_to_procedure_type(
-            common::result& r,
+            compiler::session& session,
             compiler::procedure_type* proc_type) {
         _param_index.clear();
+
+        auto index = 0;
+        auto& param_map = proc_type->parameters();
+        auto field_list = param_map.as_list();
+        std::reverse(std::begin(field_list), std::end(field_list));
+        for (auto fld : field_list) {
+            _param_index.insert(std::make_pair(
+                fld->identifier()->symbol()->name(),
+                index));
+            if (index < _elements.size()) {
+                auto param = _elements[index];
+                infer_type_result_t type_result {};
+                if (!param->infer_type(session, type_result)) {
+                    // XXX: error
+                    return false;
+                }
+
+                auto type_ref = fld->identifier()->type_ref();
+                if (!type_ref->type()->type_check(type_result.inferred_type)) {
+                    // XXX: error
+                    return false;
+                }
+            } else {
+                auto init = fld->identifier()->initializer();
+                if (init == nullptr) {
+                    // XXX: refactor this so it's common with ast_evaluator::resolve_symbol_or_evaluate
+                    auto decl = fld->declaration();
+                    if (decl != nullptr) {
+                        auto assignment = decl->assignment();
+                        if (assignment != nullptr) {
+                            _elements.push_back(assignment->rhs());
+                            goto _next;
+                        }
+                    }
+                    // XXX: required field not provided
+                    return false;
+                }
+
+                _elements.push_back(init->expression());
+            }
+        _next:
+            index++;
+        }
+
         return true;
     }
 

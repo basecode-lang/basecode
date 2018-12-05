@@ -57,12 +57,6 @@ namespace basecode::compiler {
         auto body_label_name = fmt::format("{}_body", label_name());
         auto exit_label_name = fmt::format("{}_exit", label_name());
 
-//        auto induction_var_size_in_bytes = _induction_decl
-//            ->identifier()
-//            ->type_ref()
-//            ->type()
-//            ->size_in_bytes();
-
         switch (_expression->element_type()) {
             case element_type_t::intrinsic: {
                 auto intrinsic = dynamic_cast<compiler::intrinsic*>(_expression);
@@ -92,7 +86,7 @@ namespace basecode::compiler {
                         vm::register_t::sp(),
                         8);
 
-                    auto low_param = range->arguments()->param_at_index(0);
+                    auto low_param = range->arguments()->param_by_name("low");
                     auto induction_init = builder.make_binary_operator(
                         parent_scope(),
                         operator_type_t::assignment,
@@ -103,7 +97,7 @@ namespace basecode::compiler {
                     induction_init->emit(session);
 
                     assembler.push_target_register(target_reg);
-                    auto high_param = range->arguments()->param_at_index(1);
+                    auto high_param = range->arguments()->param_by_name("high");
                     block->label(assembler.make_label(begin_label_name));
                     auto comparison_op = builder.make_binary_operator(
                         parent_scope(),
@@ -119,10 +113,7 @@ namespace basecode::compiler {
                     block->label(assembler.make_label(body_label_name));
                     _body->emit(session);
 
-                    auto step_param = range->arguments()->param_at_index(2);
-                    if (step_param == nullptr) {
-                        step_param = builder.make_integer(parent_scope(), 1);
-                    }
+                    auto step_param = range->arguments()->param_by_name("step");
                     auto induction_step = builder.make_binary_operator(
                         parent_scope(),
                         operator_type_t::add,
