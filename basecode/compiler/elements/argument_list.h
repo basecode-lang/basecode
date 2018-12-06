@@ -21,8 +21,6 @@ namespace basecode::compiler {
             compiler::module* module,
             compiler::block* parent_scope);
 
-        void reverse();
-
         size_t size() const;
 
         compiler::element* replace(
@@ -48,6 +46,11 @@ namespace basecode::compiler {
         compiler::element* param_by_name(const std::string& name);
 
     protected:
+        bool emit_elements(
+            compiler::session& session,
+            vm::instruction_block* block,
+            const compiler::element_list_t& elements);
+
         bool on_emit(compiler::session& session) override;
 
         void on_owned_elements(element_list_t& list) override;

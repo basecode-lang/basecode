@@ -734,13 +734,15 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             compiler::declaration* declaration,
             uint64_t offset,
-            uint8_t padding) {
+            uint8_t padding,
+            bool is_variadic) {
         auto field = new compiler::field(
             _session.scope_manager().current_module(),
             parent_scope,
             declaration,
             offset,
-            padding);
+            padding,
+            is_variadic);
         declaration->parent_element(field);
         field->parent_element(type);
         _session.elements().add(field);

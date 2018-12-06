@@ -26,9 +26,12 @@ namespace basecode::compiler {
             block* parent_scope,
             compiler::declaration* decl,
             uint64_t offset,
-            uint8_t padding = 0);
+            uint8_t padding = 0,
+            bool is_variadic = false);
 
         uint8_t padding() const;
+
+        bool is_variadic() const;
 
         uint64_t end_offset() const;
 
@@ -48,6 +51,7 @@ namespace basecode::compiler {
     private:
         uint8_t _padding = 0;
         uint64_t _offset = 0;
+        bool _is_variadic = false;
         compiler::declaration* _declaration;
     };
 

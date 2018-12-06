@@ -23,14 +23,20 @@ namespace basecode::compiler {
             block* parent_scope,
             compiler::declaration* decl,
             uint64_t offset,
-            uint8_t padding): element(module, parent_scope, element_type_t::field),
-                              _padding(padding),
-                              _offset(offset),
-                              _declaration(decl) {
+            uint8_t padding,
+            bool is_variadic): element(module, parent_scope, element_type_t::field),
+                               _padding(padding),
+                               _offset(offset),
+                               _is_variadic(is_variadic),
+                               _declaration(decl) {
     }
 
     uint8_t field::padding() const {
         return _padding;
+    }
+
+    bool field::is_variadic() const {
+        return _is_variadic;
     }
 
     uint64_t field::end_offset() const {

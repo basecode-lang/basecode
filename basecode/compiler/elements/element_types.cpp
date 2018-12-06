@@ -61,7 +61,6 @@ namespace basecode::compiler {
         for (const auto& it : _fields) {
             list.push_back(it.second);
         }
-        std::reverse(std::begin(list), std::end(list));
         return list;
     }
 

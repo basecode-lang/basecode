@@ -146,6 +146,8 @@ namespace basecode::syntax {
             target->children.push_back(current_pair->rhs);
             current_pair = current_pair->lhs;
         }
+
+        std::reverse(std::begin(target->children), std::end(target->children));
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -357,7 +359,7 @@ namespace basecode::syntax {
             parser* parser,
             token_t& token) {
         auto node = parser->ast_builder()->spread_operator_node(token);
-        node->rhs = parser->parse_expression(r, precedence_t::variable);
+        node->rhs = parser->parse_expression(r, precedence_t::cast);
         return node;
     }
 

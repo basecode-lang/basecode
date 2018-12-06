@@ -33,12 +33,50 @@ namespace basecode::compiler {
                                                      element_type_t::argument_list) {
     }
 
-    void argument_list::reverse() {
-        std::reverse(std::begin(_elements), std::end(_elements));
-    }
-
     size_t argument_list::size() const {
         return _elements.size();
+    }
+
+    bool argument_list::emit_elements(
+            compiler::session& session,
+            vm::instruction_block* block,
+            const compiler::element_list_t& elements) {
+        for (auto it = elements.rbegin(); it != elements.rend(); ++it) {
+            element* arg = *it;
+            switch (arg->element_type()) {
+                case element_type_t::argument_list: {
+                    auto result = emit_elements(
+                        session,
+                        block,
+                        dynamic_cast<compiler::argument_list*>(arg)->_elements);
+                    if (!result)
+                        return false;
+                    break;
+                }
+                case element_type_t::proc_call:
+                case element_type_t::expression:
+                case element_type_t::float_literal:
+                case element_type_t::string_literal:
+                case element_type_t::unary_operator:
+                case element_type_t::assembly_label:
+                case element_type_t::binary_operator:
+                case element_type_t::boolean_literal:
+                case element_type_t::integer_literal:
+                case element_type_t::character_literal:
+                case element_type_t::identifier_reference: {
+                    variable_handle_t arg_var;
+                    if (!session.variable(arg, arg_var))
+                        return false;
+                    arg_var->read();
+                    block->push(arg_var->value_reg());
+                    break;
+                }
+                default:
+                    break;
+            }
+        }
+
+        return true;
     }
 
     compiler::element* argument_list::replace(
@@ -64,6 +102,8 @@ namespace basecode::compiler {
     bool argument_list::index_to_procedure_type(
             compiler::session& session,
             compiler::procedure_type* proc_type) {
+        auto& builder = session.builder();
+
         _param_index.clear();
 
         auto& param_map = proc_type->parameters();
@@ -73,24 +113,58 @@ namespace basecode::compiler {
             _elements.resize(field_list.size());
         }
 
-        size_t index = 0;
-        for (auto fld : field_list) {
-            _param_index.insert(std::make_pair(
-                fld->identifier()->symbol()->name(),
-                index++));
-        }
-
         element_list_t temp {};
-        temp.resize(_elements.size());
+        temp.resize(field_list.size());
+        compiler::argument_list* variadic_args = nullptr;
+
+        size_t index = 0;
+        for (index = 0; index < field_list.size(); index++) {
+            auto fld = field_list[index];
+            auto fld_name = fld->identifier()->symbol()->name();
+            if (fld->is_variadic()) {
+                if (index < field_list.size() - 1) {
+                    session.error(
+                        "P019",
+                        fmt::format(
+                            "variadic parameter only valid in final position: {}",
+                            fld_name),
+                        parent_element()->location());
+                    return false;
+                } else {
+                    variadic_args = builder.make_argument_list(parent_scope());
+                    temp[index] = variadic_args;
+                }
+            }
+            _param_index.insert(std::make_pair(fld_name, index));
+        }
 
         for (index = 0; index < _elements.size(); index++) {
         _retry:
-            auto param = _elements[index];
-            if (param == nullptr)
+            auto arg = _elements[index];
+            if (arg == nullptr)
                 continue;
 
-            if (param->element_type() == element_type_t::argument_pair) {
-                auto arg_pair = dynamic_cast<compiler::argument_pair*>(param);
+            if (index >= field_list.size() - 1) {
+                if (variadic_args == nullptr) {
+                    session.error(
+                        "P019",
+                        "no variadic parameter defined.",
+                        parent_element()->location());
+                    return false;
+                }
+
+                variadic_args->add(arg);
+                if (index == field_list.size() - 1) {
+                    _elements[index] = nullptr;
+                } else {
+                    _elements.erase(_elements.begin() + index);
+                }
+                goto _retry;
+            } else {
+                if (arg->element_type() != element_type_t::argument_pair)
+                    continue;
+
+                auto arg_pair = dynamic_cast<compiler::argument_pair*>(arg);
                 std::string key;
                 if (arg_pair->lhs()->as_string(key)) {
                     auto it = _param_index.find(key);
@@ -103,7 +177,7 @@ namespace basecode::compiler {
                         session.error(
                             "P019",
                             fmt::format("invalid procedure parameter: {}", key),
-                            param->location());
+                            arg->location());
                         return false;
                     }
                 }
@@ -201,34 +275,7 @@ namespace basecode::compiler {
     bool argument_list::on_emit(compiler::session& session) {
         auto& assembler = session.assembler();
         auto block = assembler.current_block();
-
-        for (auto it = _elements.rbegin(); it != _elements.rend(); ++it) {
-            element* arg = *it;
-            switch (arg->element_type()) {
-                case element_type_t::proc_call:
-                case element_type_t::expression:
-                case element_type_t::float_literal:
-                case element_type_t::string_literal:
-                case element_type_t::unary_operator:
-                case element_type_t::assembly_label:
-                case element_type_t::binary_operator:
-                case element_type_t::boolean_literal:
-                case element_type_t::integer_literal:
-                case element_type_t::character_literal:
-                case element_type_t::identifier_reference: {
-                    variable_handle_t arg_var;
-                    if (!session.variable(arg, arg_var))
-                        return false;
-                    arg_var->read();
-                    block->push(arg_var->value_reg());
-                    break;
-                }
-                default:
-                    break;
-            }
-        }
-
-        return true;
+        return emit_elements(session, block, _elements);
     }
 
     void argument_list::on_owned_elements(element_list_t& list) {

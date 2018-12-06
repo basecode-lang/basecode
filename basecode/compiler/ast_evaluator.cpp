@@ -956,7 +956,6 @@ namespace basecode::compiler {
             arg->parent_element(args);
         }
 
-        args->reverse();
         args->location(context.node->location);
 
         result.element = args;
@@ -1334,7 +1333,12 @@ namespace basecode::compiler {
                     proc_identifier),
                 args,
                 type_params);
-            result.element->location(context.node->location);
+            result.element->location(symbol_node->location);
+            if (!args->index_to_procedure_type(
+                    _session,
+                    dynamic_cast<compiler::procedure_type*>(proc_identifier->type_ref()->type()))) {
+                return false;
+            }
         }
 
         return true;
@@ -1573,6 +1577,7 @@ namespace basecode::compiler {
         auto active_scope = scope_manager.current_scope();
         auto block_scope = builder.make_block(active_scope, element_type_t::block);
         auto proc_type = builder.make_procedure_type(active_scope, block_scope);
+        proc_type->location(context.node->location);
         active_scope->types().add(proc_type);
 
         add_type_parameters(
@@ -1581,81 +1586,18 @@ namespace basecode::compiler {
             context.node->lhs->lhs.get(),
             proc_type->type_parameters());
 
-        compiler::field* return_field = nullptr;
-        auto return_type_node = context.node->lhs->rhs;
-        if (return_type_node != nullptr) {
-            auto return_identifier = builder.make_identifier(
-                block_scope,
-                builder.make_symbol(block_scope, "_retval"),
-                nullptr);
-            return_identifier->usage(identifier_usage_t::stack);
+        add_procedure_type_return_field(
+            context,
+            proc_type,
+            block_scope,
+            context.node->lhs->rhs.get());
 
-            auto type_ref = dynamic_cast<compiler::type_reference*>(evaluate_in_scope(
+        if (!add_procedure_type_parameter_fields(
                 context,
-                return_type_node.get(),
-                block_scope));
-            if (type_ref->is_unknown_type()) {
-                _session.scope_manager()
-                    .identifiers_with_unknown_types()
-                    .push_back(return_identifier);
-            }
-            return_identifier->type_ref(type_ref);
-            return_field = builder.make_field(
                 proc_type,
                 block_scope,
-                builder.make_declaration(block_scope, return_identifier, nullptr),
-                0);
-            proc_type->return_type(return_field);
-        }
-
-        compiler::field* param_field = nullptr;
-        auto& parameter_map = proc_type->parameters();
-
-        for (const auto& param_node : context.node->rhs->children) {
-            switch (param_node->type) {
-                case syntax::ast_node_types_t::assignment: {
-                    element_list_t list {};
-                    auto success = add_assignments_to_scope(
-                        context,
-                        param_node.get(),
-                        list,
-                        block_scope);
-                    if (success) {
-                        auto param_decl = dynamic_cast<compiler::declaration*>(list.front());
-                        param_decl->identifier()->usage(identifier_usage_t::stack);
-                        param_field = builder.make_field(
-                            proc_type,
-                            block_scope,
-                            param_decl,
-                            param_field != nullptr ? param_field->end_offset() : 0);
-                        parameter_map.add(param_field);
-                    } else {
-                        return false;
-                    }
-                    break;
-                }
-                case syntax::ast_node_types_t::symbol: {
-                    auto param_decl = declare_identifier(
-                        context,
-                        param_node.get(),
-                        block_scope);
-                    if (param_decl != nullptr) {
-                        param_decl->identifier()->usage(identifier_usage_t::stack);
-                        param_field = builder.make_field(
-                            proc_type,
-                            block_scope,
-                            param_decl,
-                            param_field != nullptr ? param_field->end_offset() : 0);
-                        parameter_map.add(param_field);
-                    } else {
-                        return false;
-                    }
-                    break;
-                }
-                default: {
-                    break;
-                }
-            }
+                context.node->rhs.get())) {
+            return false;
         }
 
         result.element = proc_type;
@@ -1668,7 +1610,6 @@ namespace basecode::compiler {
             evaluator_result_t& result) {
         auto& builder = _session.builder();
         auto& scope_manager = _session.scope_manager();
-        auto open_generic_type = scope_manager.find_generic_type({});
 
         auto active_scope = scope_manager.current_scope();
         auto block_scope = builder.make_block(active_scope, element_type_t::block);
@@ -1681,64 +1622,24 @@ namespace basecode::compiler {
             context.node->lhs->lhs.get(),
             proc_type->type_parameters());
 
-        compiler::field* return_field = nullptr;
-        auto return_type_node = context.node->lhs->rhs;
-        if (return_type_node != nullptr) {
-            auto return_identifier = builder.make_identifier(
-                block_scope,
-                builder.make_symbol(block_scope, "_retval"),
-                nullptr);
-            return_identifier->usage(identifier_usage_t::stack);
+        add_procedure_type_return_field(
+            context,
+            proc_type,
+            block_scope,
+            context.node->lhs->rhs.get());
 
-            auto type_ref = dynamic_cast<compiler::type_reference*>(evaluate_in_scope(
+        auto open_generic_type = scope_manager.find_generic_type({});
+        context.decl_type_ref = builder.make_type_reference(
+            block_scope,
+            open_generic_type->name(),
+            open_generic_type);
+
+        if (!add_procedure_type_parameter_fields(
                 context,
-                return_type_node.get(),
-                block_scope));
-            if (type_ref->is_unknown_type()) {
-                _session.scope_manager()
-                    .identifiers_with_unknown_types()
-                    .push_back(return_identifier);
-            }
-            return_identifier->type_ref(type_ref);
-            return_field = builder.make_field(
                 proc_type,
                 block_scope,
-                builder.make_declaration(block_scope, return_identifier, nullptr),
-                0);
-            proc_type->return_type(return_field);
-        }
-
-        compiler::field* param_field = nullptr;
-        auto& parameter_map = proc_type->parameters();
-
-        for (const auto& param_node : context.node->rhs->children) {
-            switch (param_node->type) {
-                case syntax::ast_node_types_t::symbol: {
-                    context.decl_type_ref = builder.make_type_reference(
-                        block_scope,
-                        open_generic_type->name(),
-                        open_generic_type);
-                    auto param_decl = declare_identifier(
-                        context,
-                        param_node.get(),
-                        block_scope);
-                    if (param_decl != nullptr) {
-                        param_decl->identifier()->usage(identifier_usage_t::stack);
-                        param_field = builder.make_field(
-                            proc_type,
-                            block_scope,
-                            param_decl,
-                            param_field != nullptr ? param_field->end_offset() : 0);
-                        parameter_map.add(param_field);
-                    } else {
-                        return false;
-                    }
-                    break;
-                }
-                default: {
-                    break;
-                }
-            }
+                context.node->rhs.get())) {
+            return false;
         }
 
         result.element = proc_type;
@@ -2054,6 +1955,130 @@ namespace basecode::compiler {
         }
 
         return true;
+    }
+
+    bool ast_evaluator::add_procedure_type_parameter_fields(
+            const evaluator_context_t& context,
+            compiler::procedure_type* proc_type,
+            compiler::block* block_scope,
+            const syntax::ast_node_t* parameters_node) {
+        auto& builder = _session.builder();
+
+        compiler::field* param_field = nullptr;
+        auto& parameter_map = proc_type->parameters();
+
+        auto index = 0;
+        for (const auto& param_node : parameters_node->children) {
+            switch (param_node->type) {
+                case syntax::ast_node_types_t::symbol: {
+                    auto param_decl = declare_identifier(
+                        context,
+                        param_node.get(),
+                        block_scope);
+                    if (param_decl != nullptr) {
+                        param_decl->identifier()->usage(identifier_usage_t::stack);
+                        param_field = builder.make_field(
+                            proc_type,
+                            block_scope,
+                            param_decl,
+                            param_field != nullptr ? param_field->end_offset() : 0);
+                        parameter_map.add(param_field);
+                    } else {
+                        return false;
+                    }
+                    break;
+                }
+                case syntax::ast_node_types_t::assignment: {
+                    element_list_t list {};
+                    auto success = add_assignments_to_scope(
+                        context,
+                        param_node.get(),
+                        list,
+                        block_scope);
+                    if (success) {
+                        auto param_decl = dynamic_cast<compiler::declaration*>(list.front());
+                        param_decl->identifier()->usage(identifier_usage_t::stack);
+                        param_field = builder.make_field(
+                            proc_type,
+                            block_scope,
+                            param_decl,
+                            param_field != nullptr ? param_field->end_offset() : 0);
+                        parameter_map.add(param_field);
+                    } else {
+                        return false;
+                    }
+                    break;
+                }
+                case syntax::ast_node_types_t::spread_operator: {
+                    auto param_decl = declare_identifier(
+                        context,
+                        param_node->rhs.get(),
+                        block_scope);
+                    if (param_decl != nullptr) {
+                        if (index != parameters_node->children.size() - 1) {
+                            _session.error(
+                                "P019",
+                                fmt::format(
+                                    "variadic parameter only valid in final position: {}",
+                                    param_decl->identifier()->symbol()->name()),
+                                proc_type->location());
+                            return false;
+                        }
+
+                        param_decl->identifier()->usage(identifier_usage_t::stack);
+                        param_field = builder.make_field(
+                            proc_type,
+                            block_scope,
+                            param_decl,
+                            param_field != nullptr ? param_field->end_offset() : 0,
+                            0,
+                            true);
+                        parameter_map.add(param_field);
+                    } else {
+                        return false;
+                    }
+                    break;
+                }
+                default: {
+                    break;
+                }
+            }
+            ++index;
+        }
+
+        return true;
+    }
+
+    void ast_evaluator::add_procedure_type_return_field(
+            const evaluator_context_t& context,
+            compiler::procedure_type* proc_type,
+            compiler::block* block_scope,
+            const syntax::ast_node_t* return_type_node) {
+        if (return_type_node == nullptr)
+            return;
+        auto& builder = _session.builder();
+        auto return_identifier = builder.make_identifier(
+            block_scope,
+            builder.make_symbol(block_scope, "_retval"),
+            nullptr);
+        return_identifier->usage(identifier_usage_t::stack);
+
+        auto type_ref = dynamic_cast<compiler::type_reference*>(evaluate_in_scope(
+            context,
+            return_type_node,
+            block_scope));
+        if (type_ref->is_unknown_type()) {
+            _session.scope_manager()
+                .identifiers_with_unknown_types()
+                .push_back(return_identifier);
+        }
+        return_identifier->type_ref(type_ref);
+        auto return_field = builder.make_field(
+            proc_type,
+            block_scope,
+            builder.make_declaration(block_scope, return_identifier, nullptr),
+            0);
+        proc_type->return_type(return_field);
     }
 
     compiler::declaration* ast_evaluator::declare_identifier(

@@ -81,7 +81,8 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             compiler::declaration* declaration,
             uint64_t offset,
-            uint8_t padding = 0);
+            uint8_t padding = 0,
+            bool is_variadic = false);
 
         label* make_label(
             compiler::block* parent_scope,
