@@ -442,7 +442,10 @@ namespace basecode::compiler {
                     break;
                 }
                 case operator_type_t::less_than: {
-                    block->setb(*target_reg);
+                    if (lhs_var->type_result().inferred_type->is_signed())
+                        block->setl(*target_reg);
+                    else
+                        block->setb(*target_reg);
                     break;
                 }
                 case operator_type_t::not_equals: {
@@ -450,15 +453,24 @@ namespace basecode::compiler {
                     break;
                 }
                 case operator_type_t::greater_than: {
-                    block->seta(*target_reg);
+                    if (lhs_var->type_result().inferred_type->is_signed())
+                        block->setg(*target_reg);
+                    else
+                        block->seta(*target_reg);
                     break;
                 }
                 case operator_type_t::less_than_or_equal: {
-                    block->setbe(*target_reg);
+                    if (lhs_var->type_result().inferred_type->is_signed())
+                        block->setbe(*target_reg);
+                    else
+                        block->setle(*target_reg);
                     break;
                 }
                 case operator_type_t::greater_than_or_equal: {
-                    block->setae(*target_reg);
+                    if (lhs_var->type_result().inferred_type->is_signed())
+                        block->setge(*target_reg);
+                    else
+                        block->setae(*target_reg);
                     break;
                 }
                 default: {

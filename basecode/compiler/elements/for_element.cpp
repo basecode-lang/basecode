@@ -86,28 +86,69 @@ namespace basecode::compiler {
                         vm::register_t::sp(),
                         8);
 
-                    auto low_param = range->arguments()->param_by_name("low");
+                    auto start_arg = range->arguments()->param_by_name("start");
                     auto induction_init = builder.make_binary_operator(
                         parent_scope(),
                         operator_type_t::assignment,
                         _induction_decl->identifier(),
-                        low_param);
+                        start_arg);
                     induction_init->make_non_owning();
                     defer(session.elements().remove(induction_init->id()));
                     induction_init->emit(session);
 
                     assembler.push_target_register(target_reg);
-                    auto high_param = range->arguments()->param_by_name("high");
+
+                    auto dir_arg = range->arguments()->param_by_name("dir");
+                    uint64_t dir_value;
+                    if (!dir_arg->as_integer(dir_value))
+                        return false;
+
+                    auto kind_arg = range->arguments()->param_by_name("kind");
+                    uint64_t kind_value;
+                    if (!kind_arg->as_integer(kind_value))
+                        return false;
+
+                    auto step_op_type = dir_value == 0 ?
+                        operator_type_t::add :
+                        operator_type_t::subtract;
+                    auto cmp_op_type = operator_type_t::less_than;
+                    switch (kind_value) {
+                        case 0: {
+                            switch (dir_value) {
+                                case 0:
+                                    cmp_op_type = operator_type_t::less_than_or_equal;
+                                    break;
+                                case 1:
+                                    cmp_op_type = operator_type_t::greater_than_or_equal;
+                                    break;
+                            }
+                            break;
+                        }
+                        case 1: {
+                            switch (dir_value) {
+                                case 0:
+                                    cmp_op_type = operator_type_t::less_than;
+                                    break;
+                                case 1:
+                                    cmp_op_type = operator_type_t::greater_than;
+                                    break;
+                            }
+                            break;
+                        }
+                    }
+
+                    auto stop_arg = range->arguments()->param_by_name("stop");
                     block->label(assembler.make_label(begin_label_name));
                     auto comparison_op = builder.make_binary_operator(
                         parent_scope(),
-                        operator_type_t::less_than,
+                        cmp_op_type,
                         _induction_decl->identifier(),
-                        high_param);
+                        stop_arg);
                     comparison_op->make_non_owning();
                     defer(session.elements().remove(comparison_op->id()));
                     comparison_op->emit(session);
                     block->bz(target_reg, exit_label_ref);
+
                     assembler.pop_target_register();
 
                     block->label(assembler.make_label(body_label_name));
@@ -116,7 +157,7 @@ namespace basecode::compiler {
                     auto step_param = range->arguments()->param_by_name("step");
                     auto induction_step = builder.make_binary_operator(
                         parent_scope(),
-                        operator_type_t::add,
+                        step_op_type,
                         _induction_decl->identifier(),
                         step_param);
                     auto induction_assign = builder.make_binary_operator(

@@ -51,7 +51,7 @@ namespace basecode::compiler {
 
         uint64_t max() const;
 
-        bool is_signed() const;
+        bool is_signed() const override;
 
     protected:
         static inline std::vector<numeric_type_properties_t> s_type_properties = {

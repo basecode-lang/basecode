@@ -1334,10 +1334,15 @@ namespace basecode::compiler {
                 args,
                 type_params);
             result.element->location(symbol_node->location);
-            if (!args->index_to_procedure_type(
+
+            // XXX: if we can't find the proc_identifier, we need to defer the argument list
+            //      indexing to such a time as the identifier is found.
+            if (proc_identifier != nullptr) {
+                if (!args->index_to_procedure_type(
                     _session,
                     dynamic_cast<compiler::procedure_type*>(proc_identifier->type_ref()->type()))) {
-                return false;
+                    return false;
+                }
             }
         }
 

@@ -34,7 +34,11 @@ namespace basecode::compiler {
     }
 
     size_t argument_list::size() const {
-        return _elements.size();
+        auto size = _elements.size();
+        auto variadic_args = variadic_arguments();
+        if (variadic_args != nullptr)
+            size += (variadic_args->size() - 1);
+        return size;
     }
 
     bool argument_list::emit_elements(
@@ -102,12 +106,22 @@ namespace basecode::compiler {
     bool argument_list::index_to_procedure_type(
             compiler::session& session,
             compiler::procedure_type* proc_type) {
-        auto& builder = session.builder();
-
         _param_index.clear();
 
         auto& param_map = proc_type->parameters();
         auto field_list = param_map.as_list();
+        if (field_list.empty()) {
+            if (!_elements.empty()) {
+                session.error(
+                    "P019",
+                    "procedure declares no parameters.",
+                    parent_element()->location());
+                return false;
+            }
+            return true;
+        }
+
+        auto& builder = session.builder();
 
         if (_elements.size() < field_list.size()) {
             _elements.resize(field_list.size());
@@ -138,13 +152,15 @@ namespace basecode::compiler {
             _param_index.insert(std::make_pair(fld_name, index));
         }
 
+        auto last_field = field_list.back();
         for (index = 0; index < _elements.size(); index++) {
         _retry:
             auto arg = _elements[index];
             if (arg == nullptr)
                 continue;
 
-            if (index >= field_list.size() - 1) {
+            if (last_field->is_variadic()
+            &&  index >= field_list.size() - 1) {
                 if (variadic_args == nullptr) {
                     session.error(
                         "P019",
@@ -286,6 +302,17 @@ namespace basecode::compiler {
     compiler::element* argument_list::param_at_index(size_t index) {
         if (index < _elements.size())
             return _elements[index];
+        return nullptr;
+    }
+
+    compiler::argument_list* argument_list::variadic_arguments() const {
+        if (_elements.empty())
+            return nullptr;
+        auto last_arg = _elements.back();
+        if (last_arg != nullptr
+        &&  last_arg->element_type() == element_type_t::argument_list) {
+            return dynamic_cast<compiler::argument_list*>(last_arg);
+        }
         return nullptr;
     }
 

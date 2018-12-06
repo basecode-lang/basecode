@@ -71,7 +71,7 @@ namespace basecode::compiler {
             block->comment(
                 fmt::format("foreign call: {}", identifier->symbol()->name()),
                 4);
-            block->push_u16(static_cast<uint16_t>(_arguments->elements().size()));
+            block->push_u16(static_cast<uint16_t>(_arguments->size()));
             block->call_foreign(procedure_type->foreign_address());
         } else {
             block->call(assembler.make_label_ref(identifier->symbol()->name()));

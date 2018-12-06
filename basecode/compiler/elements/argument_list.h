@@ -43,6 +43,8 @@ namespace basecode::compiler {
 
         compiler::element* param_at_index(size_t index);
 
+        compiler::argument_list* variadic_arguments() const;
+
         compiler::element* param_by_name(const std::string& name);
 
     protected:

@@ -44,6 +44,8 @@ namespace basecode::compiler {
 
         void alignment(size_t value);
 
+        virtual bool is_signed() const;
+
         virtual bool is_proc_type() const;
 
         virtual bool is_unknown_type() const;

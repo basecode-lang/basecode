@@ -3,25 +3,22 @@ support :: module("support/module.bc");
 import range::kinds from support;
 import range::orders from support;
 
-low  := 0;
-high := 10;
-step := 2;
-y: u32 := 0;
-
-for x in range<s32>(low, high) {
+support::print("\n1\n");
+for x in range<s32>(0, 10, 2) {
     support::print("x := %d\n", x);
-    y +:= 1;
 };
-support::print("y := %d\n", y);
 
-//for x in range<s32>(dir := REVERSE, low, kind := EXCLUSIVE, high, step) {
-//    support::print("x := %d\n", x);
-//};
+support::print("\n2\n");
+for x in range<s32>(dir := REVERSE, 10, kind := EXCLUSIVE, 0, 1) {
+    support::print("x := %d\n", x);
+};
 
-//for x in range<s32>(low, high, dir := REVERSE) {
-//    support::print("x := %d\n", x);
-//};
-//
-//for x in range<s32>(low, high, step, dir := REVERSE) {
-//    support::print("x := %d\n", x);
-//};
+support::print("\n3\n");
+for x in range<s32>(20, 0, dir := REVERSE) {
+    support::print("x := %d\n", x);
+};
+
+support::print("\n4\n");
+for x in range<s32>(20, 10, 3, dir := REVERSE) {
+    support::print("x := %d\n", x);
+};

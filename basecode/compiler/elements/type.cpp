@@ -48,6 +48,10 @@ namespace basecode::compiler {
         return true;
     }
 
+    bool type::is_signed() const {
+        return false;
+    }
+
     void type::packed(bool value) {
         _packed = value;
     }

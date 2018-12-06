@@ -10,6 +10,8 @@ BYTE CODE EMIT
 
 EVERYTHING ELSE
 ---------------
+- BUG: syntax like: support: print("hello!");
+  causes the compiler to end silently.
 - REVIEW: type check should enforce scalar/composite type rules.
 - REFACTOR: variable to improve how walk_to_root_and_calculate_offset is used.
 - proc_expression needs to support overloaded procedures

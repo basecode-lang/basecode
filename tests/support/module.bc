@@ -28,11 +28,11 @@
 
 @intrinsic_name "range";
 #intrinsic range_proc :: proc<T>(
-    low:  T,
-    high: T,
-    step: s32 := 1,
-    kind: u8  := range::kinds::INCLUSIVE,
-    dir:  u8  := range::orders::NORMAL):T;
+    start: T,
+    stop:  T,
+    step:  s32 := 1,
+    kind:  u8  := range::kinds::INCLUSIVE,
+    dir:   u8  := range::orders::NORMAL):T;
 
 @intrinsic_name "free";
 #intrinsic free_proc :: proc<T>(expr: T);

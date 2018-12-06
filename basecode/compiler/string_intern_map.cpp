@@ -65,8 +65,15 @@ namespace basecode::compiler {
 
     common::id_t string_intern_map::intern(compiler::string_literal* literal) {
         auto it = _interned_strings.find(literal->value());
-        if (it != _interned_strings.end())
+        if (it != _interned_strings.end()) {
+            auto eit = _element_to_intern_ids.find(literal->id());
+            if (eit == _element_to_intern_ids.end()) {
+                _element_to_intern_ids.insert(std::make_pair(
+                    literal->id(),
+                    it->second));
+            }
             return it->second;
+        }
 
         auto id = common::id_pool::instance()->allocate();
         _interned_strings.insert(std::make_pair(literal->value(), id));
