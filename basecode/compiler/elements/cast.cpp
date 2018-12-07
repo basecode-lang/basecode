@@ -32,11 +32,11 @@ namespace basecode::compiler {
 
     cast::cast(
             compiler::module* module,
-            block* parent_scope,
+            compiler::block* parent_scope,
             compiler::type_reference* type,
-            element* expr) : element(module, parent_scope, element_type_t::cast),
-                             _expression(expr),
-                             _type_ref(type) {
+            compiler::element* expr) : element(module, parent_scope, element_type_t::cast),
+                                       _expression(expr),
+                                       _type_ref(type) {
     }
 
     bool cast::on_infer_type(
@@ -47,12 +47,16 @@ namespace basecode::compiler {
         return true;
     }
 
-    element* cast::expression() {
+    compiler::element* cast::expression() {
         return _expression;
     }
 
     compiler::type_reference* cast::type() {
         return _type_ref;
+    }
+
+    void cast::expression(compiler::element* value) {
+        _expression = value;
     }
 
     //

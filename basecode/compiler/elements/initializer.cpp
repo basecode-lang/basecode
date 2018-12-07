@@ -9,18 +9,55 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <compiler/session.h>
 #include <vm/instruction_block.h>
 #include "initializer.h"
+#include "float_literal.h"
 #include "procedure_type.h"
 #include "binary_operator.h"
+#include "integer_literal.h"
 
 namespace basecode::compiler {
 
     initializer::initializer(
             compiler::module* module,
-            block* parent_scope,
-            element* expr) : element(module, parent_scope, element_type_t::initializer),
-                             _expr(expr) {
+            compiler::block* parent_scope,
+            compiler::element* expr) : element(module, parent_scope, element_type_t::initializer),
+                                       _expr(expr) {
+    }
+
+    bool initializer::on_fold(
+            compiler::session& session,
+            fold_result_t& result) {
+        if (_expr == nullptr)
+            return false;
+
+        auto& builder = session.builder();
+
+        switch (_expr->element_type()) {
+            case element_type_t::nil_literal:
+            case element_type_t::boolean_literal: {
+                result.element = _expr;
+                break;
+            }
+            case element_type_t::float_literal: {
+                result.element = builder.make_float(
+                    _expr->parent_scope(),
+                    dynamic_cast<compiler::float_literal*>(_expr)->value());
+                break;
+            }
+            case element_type_t::integer_literal: {
+                result.element = builder.make_integer(
+                    _expr->parent_scope(),
+                    dynamic_cast<compiler::integer_literal*>(_expr)->value());
+                break;
+            }
+            default: {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     bool initializer::on_infer_type(
@@ -37,12 +74,8 @@ namespace basecode::compiler {
                && _expr->element_type() == element_type_t::nil_literal;
     }
 
-    element* initializer::expression() {
+    compiler::element* initializer::expression() {
         return _expr;
-    }
-
-    void initializer::expression(element* value) {
-        _expr = value;
     }
 
     bool initializer::on_as_bool(bool& value) const {
@@ -72,6 +105,10 @@ namespace basecode::compiler {
         if (_expr == nullptr)
             return false;
         return _expr->as_integer(value);
+    }
+
+    void initializer::expression(compiler::element* value) {
+        _expr = value;
     }
 
     compiler::procedure_type* initializer::procedure_type() {

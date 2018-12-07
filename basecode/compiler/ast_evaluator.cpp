@@ -604,7 +604,10 @@ namespace basecode::compiler {
                 assign_bin_op = builder.make_binary_operator(
                     scope,
                     operator_type_t::assignment,
-                    new_identifier,
+                    builder.make_identifier_reference(
+                        parent_scope,
+                        new_identifier->symbol()->qualified_symbol(),
+                        new_identifier),
                     init_expr);
             }
         }
@@ -1334,16 +1337,6 @@ namespace basecode::compiler {
                 args,
                 type_params);
             result.element->location(symbol_node->location);
-
-            // XXX: if we can't find the proc_identifier, we need to defer the argument list
-            //      indexing to such a time as the identifier is found.
-            if (proc_identifier != nullptr) {
-                if (!args->index_to_procedure_type(
-                    _session,
-                    dynamic_cast<compiler::procedure_type*>(proc_identifier->type_ref()->type()))) {
-                    return false;
-                }
-            }
         }
 
         return true;

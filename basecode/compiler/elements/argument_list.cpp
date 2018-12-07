@@ -33,6 +33,11 @@ namespace basecode::compiler {
                                                      element_type_t::argument_list) {
     }
 
+    void argument_list::clear() {
+        _elements.clear();
+        _param_index.clear();
+    }
+
     size_t argument_list::size() const {
         auto size = _elements.size();
         auto variadic_args = variadic_arguments();

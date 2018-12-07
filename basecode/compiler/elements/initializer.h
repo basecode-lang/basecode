@@ -19,18 +19,22 @@ namespace basecode::compiler {
     public:
         initializer(
             compiler::module* module,
-            block* parent_scope,
-            element* expr);
+            compiler::block* parent_scope,
+            compiler::element* expr);
 
         bool is_nil() const;
 
-        element* expression();
+        compiler::element* expression();
 
         void expression(element* value);
 
         compiler::procedure_type* procedure_type();
 
     protected:
+        bool on_fold(
+            compiler::session& session,
+            fold_result_t& result) override;
+
         bool on_infer_type(
             compiler::session& program,
             infer_type_result_t& result) override;
@@ -50,7 +54,7 @@ namespace basecode::compiler {
         bool on_as_rune(common::rune_t& value) const override;
 
     private:
-        element* _expr = nullptr;
+        compiler::element* _expr = nullptr;
     };
 
 };

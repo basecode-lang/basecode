@@ -25,6 +25,14 @@ namespace basecode::compiler {
                                                 _identifier(identifier) {
     }
 
+    bool identifier_reference::on_fold(
+            compiler::session& session,
+            fold_result_t& result) {
+        if (_identifier == nullptr)
+            return false;
+        return _identifier->fold(session, result);
+    }
+
     bool identifier_reference::on_infer_type(
             compiler::session& session,
             infer_type_result_t& result) {

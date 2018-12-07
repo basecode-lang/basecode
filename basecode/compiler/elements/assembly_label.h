@@ -19,10 +19,13 @@ namespace basecode::compiler {
     public:
         assembly_label(
             compiler::module* module,
-            block* parent_scope,
+            compiler::block* parent_scope,
+            compiler::identifier_reference* ref,
             const std::string& name);
 
         std::string name() const;
+
+        compiler::identifier_reference* reference();
 
     protected:
         bool on_infer_type(
@@ -35,6 +38,7 @@ namespace basecode::compiler {
 
     private:
         std::string _name;
+        compiler::identifier_reference* _ref = nullptr;
     };
 
 };

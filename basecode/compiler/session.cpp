@@ -186,13 +186,13 @@ namespace basecode::compiler {
         if (!resolve_unknown_types())
             return false;
 
-        if (!type_check())
-            return false;
-
         if (!fold_constant_intrinsics())
             return false;
 
         if (!fold_constant_expressions())
+            return false;
+
+        if (!type_check())
             return false;
 
         if (!_result.is_failed()) {
@@ -255,6 +255,31 @@ namespace basecode::compiler {
     }
 
     bool session::type_check() {
+        auto intrinsics = _elements.find_by_type(element_type_t::intrinsic);
+        for (auto i : intrinsics) {
+            auto intrinsic = dynamic_cast<compiler::intrinsic*>(i);
+            if (!intrinsic->arguments()->index_to_procedure_type(
+                    *this,
+                    intrinsic->procedure_type())) {
+                return false;
+            }
+        }
+
+        auto proc_calls = _elements.find_by_type(element_type_t::proc_call);
+        for (auto p : proc_calls) {
+            auto proc_call = dynamic_cast<compiler::procedure_call*>(p);
+            auto proc_type = dynamic_cast<compiler::procedure_type*>(proc_call
+                ->reference()
+                ->identifier()
+                ->type_ref()
+                ->type());
+            if (!proc_call->arguments()->index_to_procedure_type(
+                    *this,
+                    proc_type)) {
+                return false;
+            }
+        }
+
         auto identifiers = _elements.find_by_type(element_type_t::identifier);
         for (auto identifier : identifiers) {
             auto var = dynamic_cast<compiler::identifier*>(identifier);
@@ -398,6 +423,25 @@ namespace basecode::compiler {
                 if_e->predicate(result.element);
                 break;
             }
+            case element_type_t::cast: {
+                auto cast = dynamic_cast<compiler::cast*>(parent);
+                cast->expression(result.element);
+                break;
+            }
+            case element_type_t::transmute: {
+                auto transmute = dynamic_cast<compiler::transmute*>(parent);
+                transmute->expression(result.element);
+                break;
+            }
+            case element_type_t::array_type: {
+                auto array_type = dynamic_cast<compiler::array_type*>(parent);
+                auto index = array_type->find_index(e->id());
+                if (index == -1) {
+                    return false;
+                }
+                array_type->replace(static_cast<size_t>(index), result.element);
+                break;
+            }
             case element_type_t::while_e: {
                 auto while_e = dynamic_cast<compiler::while_element*>(parent);
                 while_e->predicate(result.element);
@@ -416,6 +460,11 @@ namespace basecode::compiler {
             case element_type_t::initializer: {
                 auto initializer = dynamic_cast<compiler::initializer*>(parent);
                 initializer->expression(result.element);
+                break;
+            }
+            case element_type_t::argument_pair: {
+                auto arg_pair = dynamic_cast<compiler::argument_pair*>(parent);
+                arg_pair->rhs(result.element);
                 break;
             }
             case element_type_t::argument_list: {
@@ -596,7 +645,8 @@ namespace basecode::compiler {
     }
 
     bool session::fold_constant_expressions() {
-        return fold_elements_of_type(element_type_t::unary_operator)
+        return fold_elements_of_type(element_type_t::identifier_reference)
+            && fold_elements_of_type(element_type_t::unary_operator)
             && fold_elements_of_type(element_type_t::binary_operator);
     }
 

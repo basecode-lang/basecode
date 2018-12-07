@@ -27,6 +27,8 @@ namespace basecode::compiler {
 
         compiler::element* rhs();
 
+        void rhs(compiler::element* value);
+
     protected:
         bool on_infer_type(
             compiler::session& session,

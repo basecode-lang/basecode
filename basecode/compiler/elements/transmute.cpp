@@ -20,15 +20,11 @@ namespace basecode::compiler {
 
     transmute::transmute(
             compiler::module* module,
-            block* parent_scope,
+            compiler::block* parent_scope,
             compiler::type_reference* type,
-            element* expr) : element(module, parent_scope, element_type_t::transmute),
-                             _expression(expr),
-                             _type_ref(type) {
-    }
-
-    element* transmute::expression() {
-        return _expression;
+            compiler::element* expr) : element(module, parent_scope, element_type_t::transmute),
+                                       _expression(expr),
+                                       _type_ref(type) {
     }
 
     bool transmute::on_infer_type(
@@ -37,6 +33,10 @@ namespace basecode::compiler {
         result.inferred_type = _type_ref->type();
         result.reference = _type_ref;
         return true;
+    }
+
+    compiler::element* transmute::expression() {
+        return _expression;
     }
 
     compiler::type_reference* transmute::type() {
@@ -84,6 +84,10 @@ namespace basecode::compiler {
         block->move_reg_to_reg(*target_reg, temp_var->value_reg());
 
         return true;
+    }
+
+    void transmute::expression(compiler::element* value) {
+        _expression = value;
     }
 
     void transmute::on_owned_elements(element_list_t& list) {

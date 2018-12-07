@@ -13,14 +13,19 @@
 #include <compiler/session.h>
 #include <vm/instruction_block.h>
 #include "assembly_label.h"
+#include "identifier.h"
+#include "symbol_element.h"
+#include "identifier_reference.h"
 
 namespace basecode::compiler {
 
     assembly_label::assembly_label(
             compiler::module* module,
-            block* parent_scope,
+            compiler::block* parent_scope,
+            compiler::identifier_reference* ref,
             const std::string& name) : element(module, parent_scope, element_type_t::assembly_label),
-                                       _name(name) {
+                                       _name(name),
+                                       _ref(ref) {
     }
 
     bool assembly_label::on_infer_type(
@@ -48,10 +53,19 @@ namespace basecode::compiler {
         block->comment(
             fmt::format("assembly_label address: {}", _name),
             4);
-        auto label_ref = assembler.make_label_ref(_name);
+        vm::label_ref_t* label_ref = nullptr;
+        if (_ref != nullptr) {
+            label_ref = assembler.make_label_ref(_ref->identifier()->symbol()->name());
+        } else {
+            label_ref = assembler.make_label_ref(_name);
+        }
         block->move_label_to_reg(*target_reg, label_ref);
 
         return true;
+    }
+
+    compiler::identifier_reference* assembly_label::reference() {
+        return _ref;
     }
 
 };

@@ -28,6 +28,14 @@ namespace basecode::compiler {
                                                   _initializer(initializer) {
     }
 
+    bool identifier::on_fold(
+            compiler::session& session,
+            fold_result_t& result) {
+        if (!is_constant() || _initializer == nullptr)
+            return false;
+        return _initializer->fold(session, result);
+    }
+
     bool identifier::on_infer_type(
             compiler::session& session,
             infer_type_result_t& result) {

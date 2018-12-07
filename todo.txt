@@ -3,13 +3,6 @@ NOTES
 
 TASKS
 -----
-
-BYTE CODE EMIT
---------------
-- for_element
-
-EVERYTHING ELSE
----------------
 - BUG: syntax like: support: print("hello!");
   causes the compiler to end silently.
 - REVIEW: type check should enforce scalar/composite type rules.
@@ -114,3 +107,4 @@ DONE
 - new<type<>> needs to support generic parameters for the embedded type
 - BUG: comma precedence needs to be revisited now that everything is vectoring through proc_call_infix_parser.
 - byte code emit for: switch, case, fallthrough
+- byte code emit: for_element

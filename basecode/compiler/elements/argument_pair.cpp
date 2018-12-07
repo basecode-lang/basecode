@@ -43,6 +43,10 @@ namespace basecode::compiler {
         return true;
     }
 
+    void argument_pair::rhs(compiler::element* value) {
+        _rhs = value;
+    }
+
     void argument_pair::on_owned_elements(element_list_t& list) {
         list.emplace_back(_lhs);
         list.emplace_back(_rhs);

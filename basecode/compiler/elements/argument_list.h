@@ -21,6 +21,8 @@ namespace basecode::compiler {
             compiler::module* module,
             compiler::block* parent_scope);
 
+        void clear();
+
         size_t size() const;
 
         compiler::element* replace(

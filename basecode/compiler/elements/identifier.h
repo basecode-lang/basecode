@@ -43,6 +43,10 @@ namespace basecode::compiler {
         void initializer(compiler::initializer* value);
 
     protected:
+        bool on_fold(
+            compiler::session& session,
+            fold_result_t& result) override;
+
         bool on_infer_type(
             compiler::session& session,
             infer_type_result_t& result) override;

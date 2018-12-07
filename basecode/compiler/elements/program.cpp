@@ -458,9 +458,17 @@ namespace basecode::compiler {
         auto ro_list = variable_section(vm::section_t::ro_data);
         auto data_list = variable_section(vm::section_t::data);
 
-        auto identifiers = session.elements().find_by_type(element_type_t::identifier);
-        for (auto identifier : identifiers) {
-            auto var = dynamic_cast<compiler::identifier*>(identifier);
+        std::set<common::id_t> processed_identifiers {};
+
+        auto identifier_refs = session.elements().find_by_type(element_type_t::identifier_reference);
+        for (auto r : identifier_refs) {
+            auto ref = dynamic_cast<compiler::identifier_reference*>(r);
+            auto var = ref->identifier();
+            if (processed_identifiers.count(var->id()) > 0)
+                continue;
+
+            processed_identifiers.insert(var->id());
+
             if (scope_manager.within_local_scope(var->parent_scope()))
                 continue;
 

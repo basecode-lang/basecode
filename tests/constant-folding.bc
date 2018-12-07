@@ -12,7 +12,10 @@ flag5 := 1 == 0 && 2 == 2;
 flag6 := 1 == 0 || 2 == 2;
 
 negativity_sucks: s32 := -65536;
-inverted: u8 := ~%1111_0000;
+
+// XXX: the unary_operator constant evaluator should take
+//      the size of the integer value into account and narrow to that size
+inverted: u8 := cast<u8>(~%1111_0000);
 
 // the code dom will retain the full expression
 // for this variable declaration's initializer

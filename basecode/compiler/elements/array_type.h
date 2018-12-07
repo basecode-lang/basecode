@@ -29,9 +29,17 @@ namespace basecode::compiler {
             compiler::type_reference* entry_type,
             const element_list_t& subscripts);
 
+        compiler::element* replace(
+            size_t index,
+            compiler::element* item);
+
+        int32_t find_index(common::id_t id);
+
         const element_list_t& subscripts() const;
 
         compiler::type_reference* entry_type_ref();
+
+        compiler::element* find_subscript(common::id_t id);
 
         std::string name(const std::string& alias = "") const override;
 

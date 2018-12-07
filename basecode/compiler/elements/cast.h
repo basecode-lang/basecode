@@ -19,13 +19,15 @@ namespace basecode::compiler {
     public:
         cast(
             compiler::module* module,
-            block* parent_scope,
+            compiler::block* parent_scope,
             compiler::type_reference* type,
-            element* expr);
+            compiler::element* expr);
 
-        element* expression();
+        compiler::element* expression();
 
         compiler::type_reference* type();
+
+        void expression(compiler::element* value);
 
         void type_location(const common::source_location& loc);
 
@@ -39,7 +41,7 @@ namespace basecode::compiler {
         void on_owned_elements(element_list_t& list) override;
 
     private:
-        element* _expression = nullptr;
+        compiler::element* _expression = nullptr;
         common::source_location _type_location {};
         compiler::type_reference* _type_ref = nullptr;
     };

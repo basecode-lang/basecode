@@ -37,15 +37,14 @@ alpha::compiler::examples :: ns {
     is_this_true := count == (max == 256) && count == (max / 2);
 
     bar :: proc() {
+        bing(256);
+
         bing :: proc(z: u64): u64 {
             if z == 0 {
                 return 0;
             };
             return z / 2;
         };
-
-        // XXX: need to fix deferred argument_list resolution
-        bing(256);
 
         return;
     };

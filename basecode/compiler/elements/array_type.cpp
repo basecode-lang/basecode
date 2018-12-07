@@ -57,6 +57,22 @@ namespace basecode::compiler {
                                                 _entry_type_ref(entry_type) {
     }
 
+    compiler::element* array_type::replace(
+            size_t index,
+            compiler::element* item) {
+        auto old = _subscripts[index];
+        _subscripts[index] = item;
+        return old;
+    }
+
+    int32_t array_type::find_index(common::id_t id) {
+        for (size_t i = 0; i < _subscripts.size(); i++) {
+            if (_subscripts[i]->id() == id)
+                return static_cast<int32_t>(i);
+        }
+        return -1;
+    }
+
     const element_list_t& array_type::subscripts() const {
         return _subscripts;
     }
@@ -202,6 +218,16 @@ namespace basecode::compiler {
 
         stream << entry_type_name;
         return stream.str();
+    }
+
+    compiler::element* array_type::find_subscript(common::id_t id) {
+        auto it = std::find_if(
+            _subscripts.begin(),
+            _subscripts.end(),
+            [&id](auto item) { return item->id() == id; });
+        if (it == _subscripts.end())
+            return nullptr;
+        return *it;
     }
 
 };
