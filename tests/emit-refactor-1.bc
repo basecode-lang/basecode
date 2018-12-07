@@ -1,0 +1,24 @@
+// ----------------------------------------------------------------------------
+//
+// Basecode Bootstrap Compiler
+// Copyright (C) 2018 Jeff Panici
+// All rights reserved.
+//
+// This software source file is licensed under the terms of MIT license.
+// For details, please read the LICENSE file.
+//
+// ----------------------------------------------------------------------------
+
+support :: module("support/module.bc");
+
+a := true;
+
+@no_fold;
+b := !a;
+
+z: u32;
+
+@no_fold;
+z := (16 * (2 shl 4)) * (6 + 4);
+
+support::print("z := %d\n", z);

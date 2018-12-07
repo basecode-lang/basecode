@@ -47,6 +47,16 @@ namespace basecode::compiler {
             compiler::session& session,
             infer_type_result_t& result) override;
 
+        void emit_arithmetic_operator(
+            compiler::session& session,
+            emit_context_t& context,
+            emit_result_t& result);
+
+        void emit_relational_operator(
+            compiler::session& session,
+            emit_context_t& context,
+            emit_result_t& result);
+
         bool on_is_constant() const override;
 
         bool on_as_bool(bool& value) const override;
@@ -56,10 +66,6 @@ namespace basecode::compiler {
         bool on_as_integer(uint64_t& value) const override;
 
         void on_owned_elements(element_list_t& list) override;
-
-        void emit_arithmetic_operator(compiler::session& session);
-
-        void emit_relational_operator(compiler::session& session);
 
     private:
         compiler::element* _lhs = nullptr;

@@ -99,17 +99,18 @@ namespace basecode::compiler {
             },
             _scope);
 
-        block->move_reg_to_reg(
-            vm::register_t::fp(),
-            vm::register_t::sp());
-        auto size = 8 * local_count;
+        block->move(
+            vm::instruction_operand_t::fp(),
+            vm::instruction_operand_t::sp(),
+            vm::instruction_operand_t::empty());
+        uint64_t size = 8 * local_count;
         if (_return_type != nullptr)
             size += 8;
         if (size > 0) {
-            block->sub_reg_by_immediate(
-                vm::register_t::sp(),
-                vm::register_t::sp(),
-                size);
+            block->sub(
+                vm::instruction_operand_t::sp(),
+                vm::instruction_operand_t::sp(),
+                vm::instruction_operand_t(size, vm::op_sizes::dword));
         }
 
         assembler.push_block(block);

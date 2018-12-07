@@ -320,7 +320,10 @@ namespace basecode::compiler {
 
         assembler.push_block(finalizer_block);
         defer({
-            finalizer_block->move_fp_to_sp();
+            finalizer_block->move(
+                vm::instruction_operand_t::sp(),
+                vm::instruction_operand_t::fp(),
+                vm::instruction_operand_t::empty());
             finalizer_block->exit();
             assembler.pop_block();
         });
@@ -346,7 +349,10 @@ namespace basecode::compiler {
         initializer_block->blank_line();
         initializer_block->align(vm::instruction_t::alignment);
         initializer_block->label(assembler.make_label("_initializer"));
-        initializer_block->move_sp_to_fp();
+        initializer_block->move(
+            vm::instruction_operand_t::fp(),
+            vm::instruction_operand_t::sp(),
+            vm::instruction_operand_t::empty());
 
         assembler.push_block(initializer_block);
         defer({

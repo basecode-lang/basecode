@@ -31,4 +31,10 @@ namespace basecode::compiler {
         _skip_deactivate = true;
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+
+    void emit_result_t::clear(vm::assembler& assembler) {
+        for (auto& op : operands)
+            op.free(assembler);
+    }
 };

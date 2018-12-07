@@ -29,11 +29,10 @@ namespace basecode::compiler {
             compiler::session& session,
             compiler::emit_context_t& context,
             compiler::emit_result_t& result) {
-        auto block = session.assembler().current_block();
-        auto target_reg = session.assembler().current_target_register();
-        if (target_reg != nullptr) {
-            block->move_constant_to_reg(*target_reg, _value);
-        }
+        result.operands.emplace_back(vm::instruction_operand_t(
+            numeric_type::narrow_to_value(_value) == "f32" ?
+                static_cast<float>(_value) :
+                _value));
         return true;
     }
 

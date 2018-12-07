@@ -359,33 +359,27 @@ namespace basecode::vm {
                         else
                             operands_stream << id_resolver(operand.value.u);
                     } else {
-                        if (i == 2) {
-                            operands_stream << fmt::format(
-                                offset_spec,
-                                static_cast<int64_t>(operand.value.u));
-                        } else {
-                            operands_stream << prefix;
+                        operands_stream << prefix;
 
-                            switch (size) {
-                                case op_sizes::byte:
-                                    operands_stream << fmt::format(format_spec, alias.b);
-                                    break;
-                                case op_sizes::word:
-                                    operands_stream << fmt::format(format_spec, alias.w);
-                                    break;
-                                case op_sizes::dword:
-                                    operands_stream << fmt::format(format_spec, alias.dw);
-                                    break;
-                                case op_sizes::qword:
-                                    operands_stream << fmt::format(format_spec, alias.qw);
-                                    break;
-                                default: {
-                                    break;
-                                }
+                        switch (size) {
+                            case op_sizes::byte:
+                                operands_stream << fmt::format(format_spec, alias.b);
+                                break;
+                            case op_sizes::word:
+                                operands_stream << fmt::format(format_spec, alias.w);
+                                break;
+                            case op_sizes::dword:
+                                operands_stream << fmt::format(format_spec, alias.dw);
+                                break;
+                            case op_sizes::qword:
+                                operands_stream << fmt::format(format_spec, alias.qw);
+                                break;
+                            default: {
+                                break;
                             }
-
-                            operands_stream << postfix;
                         }
+
+                        operands_stream << postfix;
                     }
                 }
             }

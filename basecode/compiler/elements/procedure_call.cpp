@@ -56,7 +56,10 @@ namespace basecode::compiler {
             block->comment(
                 fmt::format("foreign call: {}", identifier->symbol()->name()),
                 4);
-            block->push_u16(static_cast<uint16_t>(_arguments->size()));
+            vm::instruction_operand_t arg_count(
+                static_cast<uint64_t>(_arguments->size()),
+                vm::op_sizes::word);
+            block->push(arg_count);
             block->call_foreign(procedure_type->foreign_address());
         } else {
             block->call(assembler.make_label_ref(identifier->symbol()->name()));

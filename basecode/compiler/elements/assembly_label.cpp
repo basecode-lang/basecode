@@ -33,19 +33,14 @@ namespace basecode::compiler {
             compiler::emit_context_t& context,
             compiler::emit_result_t& result) {
         auto& assembler = session.assembler();
-        auto block = assembler.current_block();
-        auto target_reg = assembler.current_target_register();
 
-        block->comment(
-            fmt::format("assembly_label address: {}", _name),
-            4);
         vm::label_ref_t* label_ref = nullptr;
         if (_ref != nullptr) {
             label_ref = assembler.make_label_ref(_ref->identifier()->symbol()->name());
         } else {
             label_ref = assembler.make_label_ref(_name);
         }
-        block->move_label_to_reg(*target_reg, label_ref);
+        result.operands.emplace_back(vm::instruction_operand_t(label_ref));
 
         return true;
     }

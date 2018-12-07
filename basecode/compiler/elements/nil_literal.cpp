@@ -24,10 +24,7 @@ namespace basecode::compiler {
             compiler::session& session,
             compiler::emit_context_t& context,
             compiler::emit_result_t& result) {
-        auto& assembler = session.assembler();
-        auto block = assembler.current_block();
-        auto target_reg = assembler.current_target_register();
-        block->clr(vm::op_sizes::qword, *target_reg);
+        result.operands.emplace_back(vm::instruction_operand_t(static_cast<uint64_t>(0)));
         return true;
     }
 

@@ -16,6 +16,7 @@
 #include "terp.h"
 #include "label.h"
 #include "vm_types.h"
+#include "assembler.h"
 
 namespace basecode::vm {
 
@@ -182,31 +183,79 @@ namespace basecode::vm {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    bool instruction_operand_t::allocate(
+            vm::assembler& assembler,
+            instruction_operand_t& operand,
+            op_sizes size,
+            register_type_t type) {
+        register_t reg {
+            .size = size,
+            .type = type
+        };
+        auto success = assembler.allocate_reg(reg);
+        if (success) {
+            operand._data = reg;
+            operand._size = size;
+            operand._type = instruction_operand_type_t::reg;
+        }
+        return success;
+    }
+
+    instruction_operand_t instruction_operand_t::fp() {
+        return instruction_operand_t(register_t::fp());
+    }
+
+    instruction_operand_t instruction_operand_t::sp() {
+        return instruction_operand_t(register_t::sp());
+    }
+
+    instruction_operand_t instruction_operand_t::pc() {
+        return instruction_operand_t(register_t::pc());
+    }
+
+    instruction_operand_t instruction_operand_t::empty() {
+        return instruction_operand_t {};
+    }
+
     instruction_operand_t::instruction_operand_t() : _type(instruction_operand_type_t::empty) {
+    }
+
+    instruction_operand_t::instruction_operand_t(
+            int64_t immediate,
+            op_sizes size) : _data(immediate),
+                             _size(size),
+                             _type(instruction_operand_type_t::imm_sint) {
     }
 
     instruction_operand_t::instruction_operand_t(
             uint64_t immediate,
             op_sizes size) : _data(immediate),
                              _size(size),
-                             _type(instruction_operand_type_t::imm_integer) {
+                             _type(instruction_operand_type_t::imm_uint) {
     }
 
     instruction_operand_t::instruction_operand_t(register_t reg) : _data(reg),
-                                                                   _size(reg.size),
-                                                                   _type(instruction_operand_type_t::reg) {
+                              _size(reg.size),
+                              _type(instruction_operand_type_t::reg) {
     }
 
     instruction_operand_t::instruction_operand_t(float immediate) : _data(immediate),
-                                                                    _type(instruction_operand_type_t::imm_f32) {
+                               _type(instruction_operand_type_t::imm_f32) {
     }
 
     instruction_operand_t::instruction_operand_t(double immediate) : _data(immediate),
-                                                                     _type(instruction_operand_type_t::imm_f64) {
+                                _type(instruction_operand_type_t::imm_f64) {
     }
 
     instruction_operand_t::instruction_operand_t(label_ref_t* label_ref): _data(label_ref),
-                                                                         _type(instruction_operand_type_t::label_ref) {
+                                     _type(instruction_operand_type_t::label_ref) {
+    }
+
+    void instruction_operand_t::free(vm::assembler& assembler) {
+        if (_type != instruction_operand_type_t::reg)
+            return;
+
+        assembler.free_reg(*data<register_t>());
     }
 
 };

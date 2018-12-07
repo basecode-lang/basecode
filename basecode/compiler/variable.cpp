@@ -96,20 +96,23 @@ namespace basecode::compiler {
                     }
                 }
 
-                if (_value.reg.size != vm::op_sizes::qword)
-                    block->clr(vm::op_sizes::qword, _value.reg);
+                vm::instruction_operand_t result_operand(_value.reg);
+                _result.operands.emplace_back(result_operand);
 
-                block->load_to_reg(
-                    _value.reg,
-                    on_stack ? vm::register_t::sp() : _address.reg,
-                    rot.offset);
+                if (_value.reg.size != vm::op_sizes::qword)
+                    block->clr(vm::op_sizes::qword, result_operand);
+
+                block->load(
+                    result_operand,
+                    vm::instruction_operand_t(on_stack ? vm::register_t::sp() : _address.reg),
+                    rot.offset != 0 ?
+                        vm::instruction_operand_t(rot.offset, vm::op_sizes::qword) :
+                        vm::instruction_operand_t::empty());
                 break;
             }
             default: {
                 assembler.push_target_register(_value.reg);
-                emit_context_t context {};
-                emit_result_t result {};
-                _element->emit(_session, context, result);
+                _element->emit(_session, _context, _result);
                 assembler.pop_target_register();
                 break;
             }
@@ -211,13 +214,7 @@ namespace basecode::compiler {
 
         address();
 
-        auto& assembler = _session.assembler();
         auto block = _session.assembler().current_block();
-
-        auto target_register = assembler.current_target_register();
-        if (target_register == nullptr) {
-            target_register = &_value.reg;
-        }
 
         auto var = dynamic_cast<compiler::identifier*>(_element);
         auto on_stack = var->usage() == identifier_usage_t::stack;
@@ -242,10 +239,14 @@ namespace basecode::compiler {
             rot.offset += 4;
         }
 
-        block->store_from_reg(
-            on_stack ? vm::register_t::sp() : _address.reg,
-            *target_register,
-            rot.offset);
+        vm::instruction_operand_t dest_operand(
+            on_stack ? vm::register_t::sp() : _address.reg);
+        vm::instruction_operand_t offset_operand(rot.offset);
+
+        block->store(
+            dest_operand,
+            emit_result().operands.back(),
+            rot.offset != 0 ? offset_operand : vm::instruction_operand_t::empty());
 
         flag(flags_t::f_written, true);
         flag(flags_t::f_read, false);
@@ -284,11 +285,12 @@ namespace basecode::compiler {
                         "load global address: {}",
                         var->symbol()->name()),
                     4);
-                auto label_ref = assembler.make_label_ref(var->symbol()->name());
-                block->move_label_to_reg(
-                    _address.reg,
-                    label_ref,
-                    !include_offset ? 0 : rot.offset);
+                vm::instruction_operand_t offset_operand(rot.offset);
+
+                block->move(
+                    vm::instruction_operand_t(_address.reg),
+                    vm::instruction_operand_t(assembler.make_label_ref(var->symbol()->name())),
+                    !include_offset ? vm::instruction_operand_t::empty() : offset_operand);
             }
         }
 
@@ -347,6 +349,8 @@ namespace basecode::compiler {
         _address.release();
         _value.release();
 
+        _result.clear(_session.assembler());
+
         return true;
     }
 
@@ -368,7 +372,8 @@ namespace basecode::compiler {
 
         address();
 
-        auto block = _session.assembler().current_block();
+        auto& assembler = _session.assembler();
+        auto block = assembler.current_block();
 
         root_and_offset_t rot {};
         if (walk_to_root_and_calculate_offset(rot)) {
@@ -386,8 +391,12 @@ namespace basecode::compiler {
                 4);
         }
 
-        block->move_constant_to_reg(_value.reg, value);
-        block->store_from_reg(_address.reg, _value.reg, rot.offset);
+        vm::instruction_operand_t offset_operand(rot.offset);
+
+        block->store(
+            vm::instruction_operand_t(_address.reg),
+            vm::instruction_operand_t(static_cast<uint64_t>(value), vm::op_sizes::qword),
+            rot.offset != 0 ? offset_operand : vm::instruction_operand_t::empty());
 
         flag(flags_t::f_written, true);
         return true;
@@ -399,22 +408,6 @@ namespace basecode::compiler {
 
         address(true);
         value->address(true);
-
-//        root_and_offset_t rot {};
-//        if (walk_to_root_and_calculate_offset(rot)) {
-//            block->comment(
-//                fmt::format(
-//                    "copy field value: {}",
-//                    rot.path),
-//                4);
-//        } else {
-//            auto var = dynamic_cast<compiler::identifier*>(_element);
-//            block->comment(
-//                fmt::format(
-//                    "copy global value: {}",
-//                    var->symbol()->name()),
-//                4);
-//        }
 
         block->copy(
             vm::op_sizes::byte,
@@ -455,10 +448,15 @@ namespace basecode::compiler {
             rot.offset += 4;
         }
 
-        block->store_from_reg(
-            on_stack ? vm::register_t::sp() : _address.reg,
-            value->value_reg(),
-            rot.offset);
+        vm::instruction_operand_t dest_operand(on_stack ?
+            vm::register_t::sp() :
+            _address.reg);
+        vm::instruction_operand_t offset_operand(rot.offset);
+
+        block->store(
+            dest_operand,
+            value->emit_result().operands.back(),
+            rot.offset != 0 ? offset_operand : vm::instruction_operand_t::empty());
 
         return true;
     }
@@ -467,12 +465,20 @@ namespace basecode::compiler {
         return _element;
     }
 
+    emit_context_t& variable::emit_context() {
+        return _context;
+    }
+
     bool variable::flag(variable::flags_t f) const {
         return (_flags & f) != 0;
     }
 
     const vm::register_t& variable::value_reg() const {
         return _value.reg;
+    }
+
+    const emit_result_t& variable::emit_result() const {
+        return _result;
     }
 
     const vm::register_t& variable::address_reg() const {

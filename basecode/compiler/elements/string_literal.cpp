@@ -29,13 +29,8 @@ namespace basecode::compiler {
             compiler::emit_context_t& context,
             compiler::emit_result_t& result) {
         auto& assembler = session.assembler();
-        auto block = assembler.current_block();
-        auto target_reg = assembler.current_target_register();
-        if (target_reg != nullptr) {
-            block->move_label_to_reg(
-                *target_reg,
-                assembler.make_label_ref(session.intern_data_label(this)));
-        }
+        result.operands.emplace_back(vm::instruction_operand_t(
+            assembler.make_label_ref(session.intern_data_label(this))));
         return true;
     }
 

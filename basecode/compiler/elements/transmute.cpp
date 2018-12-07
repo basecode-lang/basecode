@@ -56,8 +56,10 @@ namespace basecode::compiler {
             return false;
         }
 
+        auto target_number_class = _type_ref->type()->number_class();
+        auto target_size = _type_ref->type()->size_in_bytes();
+
         auto& assembler = session.assembler();
-        auto target_reg = assembler.current_target_register();
         auto block = assembler.current_block();
 
         variable_handle_t temp_var;
@@ -68,7 +70,25 @@ namespace basecode::compiler {
         block->comment(
             fmt::format("transmute<{}>", _type_ref->symbol().name),
             4);
-        block->move_reg_to_reg(*target_reg, temp_var->value_reg());
+
+        vm::instruction_operand_t target_operand;
+        auto target_type = target_number_class == type_number_class_t::integer ?
+                           vm::register_type_t::integer :
+                           vm::register_type_t::floating_point;
+        if (!vm::instruction_operand_t::allocate(
+                assembler,
+                target_operand,
+                vm::op_size_for_byte_size(target_size),
+                target_type)) {
+            return false;
+        }
+
+        result.operands.emplace_back(target_operand);
+
+        block->move(
+            target_operand,
+            temp_var->emit_result().operands.back(),
+            vm::instruction_operand_t {});
 
         return true;
     }

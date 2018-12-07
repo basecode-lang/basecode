@@ -95,7 +95,12 @@ namespace basecode::compiler {
 
         compiler::element* element();
 
+        emit_context_t& emit_context();
+
         const vm::register_t& value_reg() const;
+
+        // XXX: temporary for testing
+        const emit_result_t& emit_result() const;
 
         bool address(bool include_offset = false);
 
@@ -113,6 +118,8 @@ namespace basecode::compiler {
         bool walk_to_root_and_calculate_offset(root_and_offset_t& rot);
 
     private:
+        emit_result_t _result {};
+        emit_context_t _context {};
         variable_register_t _value;
         variable* _parent = nullptr;
         compiler::session& _session;

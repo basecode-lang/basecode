@@ -34,41 +34,63 @@ namespace basecode::compiler {
             compiler::emit_context_t& context,
             compiler::emit_result_t& result) {
         auto& assembler = session.assembler();
-
         auto block = assembler.current_block();
-        auto target_reg = assembler.current_target_register();
 
         variable_handle_t rhs_var;
         if (!session.variable(_rhs, rhs_var))
             return false;
         rhs_var->read();
 
+        vm::instruction_operand_t result_operand;
+        if (!vm::instruction_operand_t::allocate(
+                assembler,
+                result_operand,
+                context.target_size,
+                rhs_var->value_reg().type)) {
+            return false;
+        }
+
+        result.operands.emplace_back(result_operand);
+
         switch (operator_type()) {
             case operator_type_t::negate: {
                 block->comment("negate", 4);
-                block->neg(*target_reg, rhs_var->value_reg());
+                block->neg(
+                    result_operand,
+                    rhs_var->emit_result().operands.back());
                 break;
             }
             case operator_type_t::binary_not: {
                 block->comment("binary not", 4);
-                block->not_op(*target_reg, rhs_var->value_reg());
+                block->not_op(
+                    result_operand,
+                    rhs_var->emit_result().operands.back());
                 break;
             }
             case operator_type_t::logical_not: {
                 block->comment("logical not", 4);
-                block->cmp(target_reg->size, rhs_var->value_reg(), 1);
-                block->setnz(*target_reg);
+                block->cmp(
+                    result_operand.size(),
+                    rhs_var->emit_result().operands.back(),
+                    vm::instruction_operand_t(static_cast<uint64_t>(1), vm::op_sizes::byte));
+                block->setnz(result_operand);
                 break;
             }
             case operator_type_t::pointer_dereference: {
                 if (rhs_var->type_result().inferred_type->is_composite_type()) {
-                    block->move_reg_to_reg(*target_reg, rhs_var->value_reg());
+                    block->move(
+                        result_operand,
+                        rhs_var->emit_result().operands.back(),
+                        vm::instruction_operand_t::empty());
                     break;
                 }
 
                 block->comment("load primitive value from pointer", 4);
-                block->clr(vm::op_sizes::qword, *target_reg);
-                block->load_to_reg(*target_reg, rhs_var->value_reg());
+                block->clr(vm::op_sizes::qword, result_operand);
+                block->load(
+                    result_operand,
+                    rhs_var->emit_result().operands.back(),
+                    vm::instruction_operand_t::empty());
                 break;
             }
             default:

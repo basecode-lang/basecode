@@ -60,7 +60,10 @@ namespace basecode::compiler {
             case operator_type_t::shift_right:
             case operator_type_t::rotate_left:
             case operator_type_t::rotate_right: {
-                emit_arithmetic_operator(session);
+                emit_arithmetic_operator(
+                    session,
+                    context,
+                    result);
                 break;
             }
             case operator_type_t::equals:
@@ -71,7 +74,10 @@ namespace basecode::compiler {
             case operator_type_t::greater_than:
             case operator_type_t::less_than_or_equal:
             case operator_type_t::greater_than_or_equal: {
-                emit_relational_operator(session);
+                emit_relational_operator(
+                    session,
+                    context,
+                    result);
                 break;
             }
             case operator_type_t::subscript: {
@@ -83,8 +89,8 @@ namespace basecode::compiler {
                 variable_handle_t field_var {};
                 if (!session.variable(this, field_var))
                     return false;
-                auto target_reg = assembler.current_target_register();
-                block->move_reg_to_reg(*target_reg, field_var->value_reg());
+//                auto target_reg = assembler.current_target_register();
+//                block->move_reg_to_reg(*target_reg, field_var->value_reg());
                 break;
             }
             case operator_type_t::assignment: {
@@ -129,6 +135,9 @@ namespace basecode::compiler {
                 variable_handle_t rhs_var;
                 if (!session.variable(_rhs, rhs_var))
                     return false;
+
+                rhs_var->emit_context().target_size = vm::op_size_for_byte_size(
+                    lhs_type.inferred_type->size_in_bytes());
 
                 if (copy_required) {
                     lhs_var->copy(
@@ -369,7 +378,10 @@ namespace basecode::compiler {
             list.emplace_back(_rhs);
     }
 
-    void binary_operator::emit_relational_operator(compiler::session& session) {
+    void binary_operator::emit_relational_operator(
+            compiler::session& session,
+            emit_context_t& context,
+            emit_result_t& result) {
         auto& assembler = session.assembler();
         auto block = assembler.current_block();
 
@@ -403,7 +415,7 @@ namespace basecode::compiler {
             assembler.tag_register(
                 register_tags_t::tag_rel_expr_target,
                 target_reg);
-            block->clr(vm::op_sizes::qword, *target_reg);
+//            block->clr(vm::op_sizes::qword, *target_reg);
         }
 
         variable_handle_t lhs_var;
@@ -437,43 +449,43 @@ namespace basecode::compiler {
         rhs_var->read();
 
         if (!is_short_circuited) {
-            block->cmp(lhs_var->value_reg(), rhs_var->value_reg());
+//            block->cmp(lhs_var->value_reg(), rhs_var->value_reg());
 
             switch (operator_type()) {
                 case operator_type_t::equals: {
-                    block->setz(*target_reg);
+//                    block->setz(*target_reg);
                     break;
                 }
                 case operator_type_t::less_than: {
-                    if (lhs_var->type_result().inferred_type->is_signed())
-                        block->setl(*target_reg);
-                    else
-                        block->setb(*target_reg);
+//                    if (lhs_var->type_result().inferred_type->is_signed())
+//                        block->setl(*target_reg);
+//                    else
+//                        block->setb(*target_reg);
                     break;
                 }
                 case operator_type_t::not_equals: {
-                    block->setnz(*target_reg);
+//                    block->setnz(*target_reg);
                     break;
                 }
                 case operator_type_t::greater_than: {
-                    if (lhs_var->type_result().inferred_type->is_signed())
-                        block->setg(*target_reg);
-                    else
-                        block->seta(*target_reg);
+//                    if (lhs_var->type_result().inferred_type->is_signed())
+//                        block->setg(*target_reg);
+//                    else
+//                        block->seta(*target_reg);
                     break;
                 }
                 case operator_type_t::less_than_or_equal: {
-                    if (lhs_var->type_result().inferred_type->is_signed())
-                        block->setbe(*target_reg);
-                    else
-                        block->setle(*target_reg);
+//                    if (lhs_var->type_result().inferred_type->is_signed())
+//                        block->setbe(*target_reg);
+//                    else
+//                        block->setle(*target_reg);
                     break;
                 }
                 case operator_type_t::greater_than_or_equal: {
-                    if (lhs_var->type_result().inferred_type->is_signed())
-                        block->setge(*target_reg);
-                    else
-                        block->setae(*target_reg);
+//                    if (lhs_var->type_result().inferred_type->is_signed())
+//                        block->setge(*target_reg);
+//                    else
+//                        block->setae(*target_reg);
                     break;
                 }
                 default: {
@@ -485,131 +497,126 @@ namespace basecode::compiler {
         block->label(assembler.make_label(end_label_name));
     }
 
-    void binary_operator::emit_arithmetic_operator(compiler::session& session) {
+    void binary_operator::emit_arithmetic_operator(
+            compiler::session& session,
+            emit_context_t& context,
+            emit_result_t& result) {
         auto& assembler = session.assembler();
         auto block = assembler.current_block();
-        auto result_reg = assembler.current_target_register();
-
-        vm::register_t target_reg {
-            .type = vm::register_type_t::none
-        };
-        defer({
-            if (target_reg.type != vm::register_type_t::none) {
-                assembler.free_reg(target_reg);
-            }
-        });
 
         variable_handle_t lhs_var;
         if (!session.variable(_lhs, lhs_var))
             return;
-
+        lhs_var->emit_context().target_size = context.target_size;
         lhs_var->read();
 
         variable_handle_t rhs_var;
         if (!session.variable(_rhs, rhs_var))
             return;
-
+        rhs_var->emit_context().target_size = context.target_size;
         rhs_var->read();
 
-        if (result_reg == nullptr) {
-            result_reg = &target_reg;
-            result_reg->size = lhs_var->value_reg().size;
-            result_reg->type = lhs_var->value_reg().type;
-            if (!assembler.allocate_reg(*result_reg)) {
-
-            }
+        vm::instruction_operand_t result_operand;
+        if (!vm::instruction_operand_t::allocate(
+                assembler,
+                result_operand,
+                context.target_size,
+                lhs_var->value_reg().type)) {
+            return;
         }
+
+        result.operands.emplace_back(result_operand);
 
         switch (operator_type()) {
             case operator_type_t::add: {
-                block->add_reg_by_reg(
-                    *result_reg,
-                    lhs_var->value_reg(),
-                    rhs_var->value_reg());
+                block->add(
+                    result_operand,
+                    lhs_var->emit_result().operands.back(),
+                    rhs_var->emit_result().operands.back());
                 break;
             }
             case operator_type_t::divide: {
-                block->div_reg_by_reg(
-                    *result_reg,
-                    lhs_var->value_reg(),
-                    rhs_var->value_reg());
+                block->div(
+                    result_operand,
+                    lhs_var->emit_result().operands.back(),
+                    rhs_var->emit_result().operands.back());
                 break;
             }
             case operator_type_t::modulo: {
-                block->mod_reg_by_reg(
-                    *result_reg,
-                    lhs_var->value_reg(),
-                    rhs_var->value_reg());
+                block->mod(
+                    result_operand,
+                    lhs_var->emit_result().operands.back(),
+                    rhs_var->emit_result().operands.back());
                 break;
             }
             case operator_type_t::multiply: {
-                block->mul_reg_by_reg(
-                    *result_reg,
-                    lhs_var->value_reg(),
-                    rhs_var->value_reg());
+                block->mul(
+                    result_operand,
+                    lhs_var->emit_result().operands.back(),
+                    rhs_var->emit_result().operands.back());
                 break;
             }
             case operator_type_t::exponent: {
-                block->pow_reg_by_reg(
-                    *result_reg,
-                    lhs_var->value_reg(),
-                    rhs_var->value_reg());
+                block->pow(
+                    result_operand,
+                    lhs_var->emit_result().operands.back(),
+                    rhs_var->emit_result().operands.back());
                 break;
             }
             case operator_type_t::subtract: {
-                block->sub_reg_by_reg(
-                    *result_reg,
-                    lhs_var->value_reg(),
-                    rhs_var->value_reg());
+                block->sub(
+                    result_operand,
+                    lhs_var->emit_result().operands.back(),
+                    rhs_var->emit_result().operands.back());
                 break;
             }
             case operator_type_t::binary_or: {
-                block->or_reg_by_reg(
-                    *result_reg,
-                    lhs_var->value_reg(),
-                    rhs_var->value_reg());
+                block->or_op(
+                    result_operand,
+                    lhs_var->emit_result().operands.back(),
+                    rhs_var->emit_result().operands.back());
                 break;
             }
             case operator_type_t::shift_left: {
-                block->shl_reg_by_reg(
-                    *result_reg,
-                    lhs_var->value_reg(),
-                    rhs_var->value_reg());
+                block->shl(
+                    result_operand,
+                    lhs_var->emit_result().operands.back(),
+                    rhs_var->emit_result().operands.back());
                 break;
             }
             case operator_type_t::binary_and: {
-                block->and_reg_by_reg(
-                    *result_reg,
-                    lhs_var->value_reg(),
-                    rhs_var->value_reg());
+                block->and_op(
+                    result_operand,
+                    lhs_var->emit_result().operands.back(),
+                    rhs_var->emit_result().operands.back());
                 break;
             }
             case operator_type_t::binary_xor: {
-                block->xor_reg_by_reg(
-                    *result_reg,
-                    lhs_var->value_reg(),
-                    rhs_var->value_reg());
+                block->xor_op(
+                    result_operand,
+                    lhs_var->emit_result().operands.back(),
+                    rhs_var->emit_result().operands.back());
                 break;
             }
             case operator_type_t::rotate_left: {
-                block->rol_reg_by_reg(
-                    *result_reg,
-                    lhs_var->value_reg(),
-                    rhs_var->value_reg());
+                block->rol(
+                    result_operand,
+                    lhs_var->emit_result().operands.back(),
+                    rhs_var->emit_result().operands.back());
                 break;
             }
             case operator_type_t::shift_right: {
-                block->shr_reg_by_reg(
-                    *result_reg,
-                    lhs_var->value_reg(),
-                    rhs_var->value_reg());
+                block->shr(
+                    result_operand,
+                    lhs_var->emit_result().operands.back(),
+                    rhs_var->emit_result().operands.back());
                 break;
             }
             case operator_type_t::rotate_right: {
-                block->ror_reg_by_reg(
-                    *result_reg,
-                    lhs_var->value_reg(),
-                    rhs_var->value_reg());
+                block->ror(
+                    result_operand,
+                    lhs_var->emit_result().operands.back(),
+                    rhs_var->emit_result().operands.back());
                 break;
             }
             default:

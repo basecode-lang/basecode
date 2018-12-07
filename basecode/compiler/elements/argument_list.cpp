@@ -86,7 +86,7 @@ namespace basecode::compiler {
                     if (!session.variable(arg, arg_var))
                         return false;
                     arg_var->read();
-                    block->push(arg_var->value_reg());
+                    block->push(arg_var->emit_result().operands.back());
                     break;
                 }
                 default:

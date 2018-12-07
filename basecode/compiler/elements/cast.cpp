@@ -115,7 +115,6 @@ namespace basecode::compiler {
         }
 
         auto& assembler = session.assembler();
-        auto target_reg = assembler.current_target_register();
         auto block = assembler.current_block();
 
         if (source_number_class == type_number_class_t::integer
@@ -160,29 +159,55 @@ namespace basecode::compiler {
                 _type_ref->symbol().name,
                 infer_type_result.type_name()),
             4);
-        block->clr(vm::op_sizes::qword, *target_reg);
+
+        vm::instruction_operand_t target_operand;
+        auto target_type = target_number_class == type_number_class_t::integer ?
+                           vm::register_type_t::integer :
+                           vm::register_type_t::floating_point;
+        if (!vm::instruction_operand_t::allocate(
+                assembler,
+                target_operand,
+                vm::op_size_for_byte_size(target_size),
+                target_type)) {
+            return false;
+        }
+
+        result.operands.emplace_back(target_operand);
+
+        block->clr(vm::op_sizes::qword, target_operand);
 
         switch (mode) {
+            case cast_mode_t::noop: {
+                break;
+            }
             case cast_mode_t::integer_truncate: {
-                block->move_reg_to_reg(*target_reg, temp_var->value_reg());
+                block->move(
+                    target_operand,
+                    temp_var->emit_result().operands.back(),
+                    vm::instruction_operand_t {});
                 break;
             }
             case cast_mode_t::integer_sign_extend: {
-                block->moves_reg_to_reg(*target_reg, temp_var->value_reg());
+                block->moves(
+                    target_operand,
+                    temp_var->emit_result().operands.back(),
+                    vm::instruction_operand_t {});
                 break;
             }
             case cast_mode_t::integer_zero_extend: {
-                block->movez_reg_to_reg(*target_reg, temp_var->value_reg());
+                block->movez(
+                    target_operand,
+                    temp_var->emit_result().operands.back(),
+                    vm::instruction_operand_t {});
                 break;
             }
             case cast_mode_t::float_extend:
             case cast_mode_t::float_truncate:
             case cast_mode_t::integer_to_float:
             case cast_mode_t::float_to_integer: {
-                block->convert(*target_reg, temp_var->value_reg());
-                break;
-            }
-            default: {
+                block->convert(
+                    target_operand,
+                    temp_var->emit_result().operands.back());
                 break;
             }
         }

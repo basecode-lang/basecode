@@ -750,11 +750,30 @@ namespace basecode::vm {
         label_ref,
         imm_f32,
         imm_f64,
-        imm_integer,
+        imm_uint,
+        imm_sint,
     };
 
     struct instruction_operand_t {
+        static bool allocate(
+            vm::assembler& assembler,
+            instruction_operand_t& operand,
+            op_sizes size,
+            register_type_t type = register_type_t::integer);
+
+        static instruction_operand_t fp();
+
+        static instruction_operand_t sp();
+
+        static instruction_operand_t pc();
+
+        static instruction_operand_t empty();
+
         instruction_operand_t();
+
+        instruction_operand_t(
+            int64_t immediate,
+            op_sizes size = op_sizes::qword);
 
         instruction_operand_t(
             uint64_t immediate,
@@ -768,6 +787,10 @@ namespace basecode::vm {
 
         explicit instruction_operand_t(label_ref_t* label_ref);
 
+        bool is_empty() const {
+            return _type == instruction_operand_type_t::empty;
+        }
+
         op_sizes size() const {
             return _size;
         }
@@ -775,6 +798,8 @@ namespace basecode::vm {
         void size(op_sizes size) {
             _size = size;
         }
+
+        void free(vm::assembler& assembler);
 
         instruction_operand_type_t type() const {
             return _type;
