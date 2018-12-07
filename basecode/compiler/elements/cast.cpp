@@ -79,7 +79,10 @@ namespace basecode::compiler {
     // ------------------------------------------------------------------------
     // integer to pointer type:
     //
-    bool cast::on_emit(compiler::session& session) {
+    bool cast::on_emit(
+            compiler::session& session,
+            compiler::emit_context_t& context,
+            compiler::emit_result_t& result) {
         if (_expression == nullptr)
             return true;
 

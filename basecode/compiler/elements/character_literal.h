@@ -25,13 +25,16 @@ namespace basecode::compiler {
         common::rune_t rune() const;
 
     protected:
+        bool on_emit(
+            compiler::session& session,
+            compiler::emit_context_t& context,
+            compiler::emit_result_t& result) override;
+
         bool on_infer_type(
             compiler::session& session,
             infer_type_result_t& result) override;
 
         bool on_is_constant() const override;
-
-        bool on_emit(compiler::session& session) override;
 
         bool on_as_rune(common::rune_t& value) const override;
 

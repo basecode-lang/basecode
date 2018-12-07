@@ -744,6 +744,70 @@ namespace basecode::vm {
 
     using block_entry_list_t = std::vector<block_entry_t>;
 
+    enum class instruction_operand_type_t : uint8_t {
+        empty,
+        reg,
+        label_ref,
+        imm_f32,
+        imm_f64,
+        imm_integer,
+    };
+
+    struct instruction_operand_t {
+        instruction_operand_t();
+
+        instruction_operand_t(
+            uint64_t immediate,
+            op_sizes size = op_sizes::qword);
+
+        explicit instruction_operand_t(register_t reg);
+
+        explicit instruction_operand_t(float immediate);
+
+        explicit instruction_operand_t(double immediate);
+
+        explicit instruction_operand_t(label_ref_t* label_ref);
+
+        op_sizes size() const {
+            return _size;
+        }
+
+        void size(op_sizes size) {
+            _size = size;
+        }
+
+        instruction_operand_type_t type() const {
+            return _type;
+        }
+
+        template <typename T>
+        T* data() {
+            if (_data.empty())
+                return nullptr;
+            try {
+                return boost::any_cast<T>(&_data);
+            } catch (const boost::bad_any_cast& e) {
+                return nullptr;
+            }
+        }
+
+        template <typename T>
+        const T* data() const {
+            if (_data.empty())
+                return nullptr;
+            try {
+                return boost::any_cast<T>(&_data);
+            } catch (const boost::bad_any_cast& e) {
+                return nullptr;
+            }
+        }
+
+    private:
+        boost::any _data;
+        op_sizes _size = op_sizes::qword;
+        instruction_operand_type_t _type;
+    };
+
     ///////////////////////////////////////////////////////////////////////////
 
     struct listing_source_line_t {

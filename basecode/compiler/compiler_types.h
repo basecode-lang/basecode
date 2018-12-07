@@ -110,4 +110,13 @@ namespace basecode::compiler {
         variable* _instance = nullptr;
     };
 
+    ///////////////////////////////////////////////////////////////////////////
+
+    struct emit_context_t {
+        vm::control_flow_t* flow_control = nullptr;
+    };
+
+    struct emit_result_t {
+        std::vector<vm::instruction_operand_t> operands {};
+    };
 }

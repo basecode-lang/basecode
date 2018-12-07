@@ -23,11 +23,10 @@ namespace basecode::compiler {
                                       _label(label) {
     }
 
-    compiler::label* continue_element::label() {
-        return _label;
-    }
-
-    bool continue_element::on_emit(compiler::session& session) {
+    bool continue_element::on_emit(
+            compiler::session& session,
+            compiler::emit_context_t& context,
+            compiler::emit_result_t& result) {
         auto& assembler = session.assembler();
         auto block = assembler.current_block();
 
@@ -40,7 +39,7 @@ namespace basecode::compiler {
         } else {
             auto control_flow = assembler.current_control_flow();
             if (control_flow == nullptr
-            ||  control_flow->continue_label == nullptr) {
+                ||  control_flow->continue_label == nullptr) {
                 session.error(
                     this,
                     "P081",
@@ -56,6 +55,10 @@ namespace basecode::compiler {
         block->jump_direct(label_ref);
 
         return true;
+    }
+
+    compiler::label* continue_element::label() {
+        return _label;
     }
 
     void continue_element::on_owned_elements(element_list_t& list) {

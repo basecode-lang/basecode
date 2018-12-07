@@ -30,20 +30,10 @@ namespace basecode::compiler {
                                                                             type_params) {
     }
 
-    bool alloc_intrinsic::on_infer_type(
+    bool alloc_intrinsic::on_emit(
             compiler::session& session,
-            infer_type_result_t& result) {
-        result.inferred_type = session.scope_manager().find_type(qualified_symbol_t {
-            .name = "u64"
-        });
-        return true;
-    }
-
-    std::string alloc_intrinsic::name() const {
-        return "alloc";
-    }
-
-    bool alloc_intrinsic::on_emit(compiler::session& session) {
+            compiler::emit_context_t& context,
+            compiler::emit_result_t& result) {
         auto& assembler = session.assembler();
         auto block = assembler.current_block();
         auto target_reg = assembler.current_target_register();
@@ -82,6 +72,19 @@ namespace basecode::compiler {
         block->alloc(vm::op_sizes::byte, *target_reg, arg_var->value_reg());
 
         return true;
+    }
+
+    bool alloc_intrinsic::on_infer_type(
+            compiler::session& session,
+            infer_type_result_t& result) {
+        result.inferred_type = session.scope_manager().find_type(qualified_symbol_t {
+            .name = "u64"
+        });
+        return true;
+    }
+
+    std::string alloc_intrinsic::name() const {
+        return "alloc";
     }
 
 };

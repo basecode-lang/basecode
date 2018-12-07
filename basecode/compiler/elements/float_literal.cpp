@@ -25,6 +25,18 @@ namespace basecode::compiler {
                             _value(value) {
     }
 
+    bool float_literal::on_emit(
+            compiler::session& session,
+            compiler::emit_context_t& context,
+            compiler::emit_result_t& result) {
+        auto block = session.assembler().current_block();
+        auto target_reg = session.assembler().current_target_register();
+        if (target_reg != nullptr) {
+            block->move_constant_to_reg(*target_reg, _value);
+        }
+        return true;
+    }
+
     bool float_literal::on_infer_type(
             compiler::session& session,
             infer_type_result_t& result) {
@@ -48,15 +60,6 @@ namespace basecode::compiler {
 
     bool float_literal::on_as_float(double& value) const {
         value = _value;
-        return true;
-    }
-
-    bool float_literal::on_emit(compiler::session& session) {
-        auto block = session.assembler().current_block();
-        auto target_reg = session.assembler().current_target_register();
-        if (target_reg != nullptr) {
-            block->move_constant_to_reg(*target_reg, _value);
-        }
         return true;
     }
 

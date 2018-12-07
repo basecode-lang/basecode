@@ -23,19 +23,22 @@ namespace basecode::compiler {
                                        _name(name) {
     }
 
+    bool label::on_emit(
+            compiler::session& session,
+            compiler::emit_context_t& context,
+            compiler::emit_result_t& result) {
+        auto& assembler = session.assembler();
+        auto block = assembler.current_block();
+        block->blank_line();
+        block->label(assembler.make_label(_name));
+        return true;
+    }
+
     std::string label::name() const {
         return _name;
     }
 
     bool label::on_is_constant() const {
-        return true;
-    }
-
-    bool label::on_emit(compiler::session& session) {
-        auto& assembler = session.assembler();
-        auto block = assembler.current_block();
-        block->blank_line();
-        block->label(assembler.make_label(_name));
         return true;
     }
 

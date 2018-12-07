@@ -26,7 +26,7 @@ namespace basecode::vm {
 
         virtual ~instruction_block();
 
-        // block support
+    // block support
     public:
         void blank_line();
 
@@ -68,7 +68,7 @@ namespace basecode::vm {
 
         void comment(const std::string& value, uint8_t indent);
 
-        // data definitions
+    // data definitions
     public:
         void string(
             vm::label* start_label,
@@ -95,7 +95,7 @@ namespace basecode::vm {
 
         void qwords(const std::vector<data_value_variant_t>& values);
 
-        // instructions
+    // instructions
     public:
         void rts();
 

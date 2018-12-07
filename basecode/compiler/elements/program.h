@@ -31,6 +31,11 @@ namespace basecode::compiler {
         void block(compiler::block* value);
 
     private:
+        bool on_emit(
+            compiler::session& session,
+            compiler::emit_context_t& context,
+            compiler::emit_result_t& result) override;
+
         bool emit_section_variable(
             compiler::session& session,
             compiler::element* e,
@@ -43,8 +48,6 @@ namespace basecode::compiler {
         bool emit_type_info(compiler::session& session);
 
         bool emit_finalizers(compiler::session& session);
-
-        bool on_emit(compiler::session& session) override;
 
         bool emit_initializers(compiler::session& session);
 

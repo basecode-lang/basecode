@@ -30,11 +30,10 @@ namespace basecode::compiler {
                                                                             type_params) {
     }
 
-    std::string free_intrinsic::name() const {
-        return "free";
-    }
-
-    bool free_intrinsic::on_emit(compiler::session& session) {
+    bool free_intrinsic::on_emit(
+            compiler::session& session,
+            compiler::emit_context_t& context,
+            compiler::emit_result_t& result) {
         auto& assembler = session.assembler();
         auto block = assembler.current_block();
 
@@ -71,6 +70,10 @@ namespace basecode::compiler {
         block->free(arg_var->value_reg());
 
         return true;
+    }
+
+    std::string free_intrinsic::name() const {
+        return "free";
     }
 
 };

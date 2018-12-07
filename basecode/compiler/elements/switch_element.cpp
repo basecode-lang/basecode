@@ -26,15 +26,10 @@ namespace basecode::compiler {
                                          _expr(expression) {
     }
 
-    compiler::block* switch_element::scope() {
-        return _scope;
-    }
-
-    compiler::element* switch_element::expression() {
-        return _expr;
-    }
-
-    bool switch_element::on_emit(compiler::session& session) {
+    bool switch_element::on_emit(
+            compiler::session& session,
+            compiler::emit_context_t& context,
+            compiler::emit_result_t& result) {
         auto& assembler = session.assembler();
         auto block = assembler.current_block();
 
@@ -63,7 +58,7 @@ namespace basecode::compiler {
         block->label(assembler.make_label(begin_label_name));
 
         assembler.push_target_register(target_reg);
-        _scope->emit(session);
+        _scope->emit(session, context, result);
         assembler.pop_target_register();
 
         block->label(assembler.make_label(exit_label_name));
@@ -71,6 +66,14 @@ namespace basecode::compiler {
         block->label(assembler.make_label(end_label_name));
 
         return true;
+    }
+
+    compiler::block* switch_element::scope() {
+        return _scope;
+    }
+
+    compiler::element* switch_element::expression() {
+        return _expr;
     }
 
     void switch_element::on_owned_elements(element_list_t& list) {

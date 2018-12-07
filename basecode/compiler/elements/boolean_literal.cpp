@@ -23,6 +23,22 @@ namespace basecode::compiler {
                           _value(value) {
     }
 
+    bool boolean_literal::on_emit(
+            compiler::session& session,
+            compiler::emit_context_t& context,
+            compiler::emit_result_t& result) {
+        auto& assembler = session.assembler();
+        auto block = assembler.current_block();
+        auto target_reg = assembler.current_target_register();
+        if (target_reg != nullptr) {
+            block->clr(vm::op_sizes::qword, *target_reg);
+            block->move_constant_to_reg(
+                *target_reg,
+                static_cast<uint64_t>(_value ? 1 : 0));
+        }
+        return true;
+    }
+
     bool boolean_literal::on_infer_type(
             compiler::session& session,
             infer_type_result_t& result) {
@@ -40,19 +56,6 @@ namespace basecode::compiler {
 
     bool boolean_literal::on_as_bool(bool& value) const {
         value = _value;
-        return true;
-    }
-
-    bool boolean_literal::on_emit(compiler::session& session) {
-        auto& assembler = session.assembler();
-        auto block = assembler.current_block();
-        auto target_reg = assembler.current_target_register();
-        if (target_reg != nullptr) {
-            block->clr(vm::op_sizes::qword, *target_reg);
-            block->move_constant_to_reg(
-                *target_reg,
-                static_cast<uint64_t>(_value ? 1 : 0));
-        }
         return true;
     }
 

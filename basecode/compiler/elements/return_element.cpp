@@ -20,11 +20,10 @@ namespace basecode::compiler {
         block* parent_scope) : element(module, parent_scope, element_type_t::return_e) {
     }
 
-    element_list_t& return_element::expressions() {
-        return _expressions;
-    }
-
-    bool return_element::on_emit(compiler::session& session) {
+    bool return_element::on_emit(
+            compiler::session& session,
+            compiler::emit_context_t& context,
+            compiler::emit_result_t& result) {
         auto& assembler = session.assembler();
         auto block = assembler.current_block();
         if (!_expressions.empty()) {
@@ -33,7 +32,7 @@ namespace basecode::compiler {
             }
             assembler.push_target_register(target_reg);
             // XXX: temporarily, only the first return value
-            _expressions.front()->emit(session);
+            _expressions.front()->emit(session, context, result);
             block->store_from_reg(
                 vm::register_t::fp(),
                 target_reg,
@@ -43,6 +42,10 @@ namespace basecode::compiler {
         }
         block->rts();
         return true;
+    }
+
+    element_list_t& return_element::expressions() {
+        return _expressions;
     }
 
     void return_element::on_owned_elements(element_list_t& list) {

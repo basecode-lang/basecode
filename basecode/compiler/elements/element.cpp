@@ -168,8 +168,11 @@ namespace basecode::compiler {
         _module = value;
     }
 
-    bool element::emit(compiler::session& session) {
-        return on_emit(session);
+    bool element::emit(
+            compiler::session& session,
+            compiler::emit_context_t& context,
+            compiler::emit_result_t& result) {
+        return on_emit(session, context, result);
     }
 
     bool element::on_as_float(double& value) const {
@@ -184,7 +187,10 @@ namespace basecode::compiler {
         return on_as_string(value);
     }
 
-    bool element::on_emit(compiler::session& session) {
+    bool element::on_emit(
+            compiler::session& session,
+            compiler::emit_context_t& context,
+            compiler::emit_result_t& result) {
         return true;
     }
 

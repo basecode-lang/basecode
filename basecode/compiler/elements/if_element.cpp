@@ -29,27 +29,10 @@ namespace basecode::compiler {
                                _false_branch(false_branch) {
     }
 
-    bool if_element::is_else_if() const {
-        return _is_else_if;
-    }
-
-    compiler::element* if_element::predicate() {
-        return _predicate;
-    }
-
-    compiler::element* if_element::true_branch() {
-        return _true_branch;
-    }
-
-    compiler::element* if_element::false_branch() {
-        return _false_branch;
-    }
-
-    void if_element::predicate(compiler::element* value) {
-        _predicate = value;
-    }
-
-    bool if_element::on_emit(compiler::session& session) {
+    bool if_element::on_emit(
+            compiler::session& session,
+            compiler::emit_context_t& context,
+            compiler::emit_result_t& result) {
         auto& assembler = session.assembler();
         auto block = assembler.current_block();
 
@@ -69,18 +52,18 @@ namespace basecode::compiler {
 
         block->label(assembler.make_label(begin_label_name));
         assembler.push_target_register(target_reg);
-        _predicate->emit(session);
+        _predicate->emit(session, context, result);
         assembler.pop_target_register();
 
         block->bz(target_reg, assembler.make_label_ref(false_label_name));
         block->label(assembler.make_label(true_label_name));
-        _true_branch->emit(session);
+        _true_branch->emit(session, context, result);
         if (!block->is_current_instruction(vm::op_codes::jmp))
             block->jump_direct(assembler.make_label_ref(end_label_name));
 
         block->label(assembler.make_label(false_label_name));
         if (_false_branch != nullptr) {
-            _false_branch->emit(session);
+            _false_branch->emit(session, context, result);
         } else {
             block->nop();
         }
@@ -88,6 +71,26 @@ namespace basecode::compiler {
         block->label(assembler.make_label(end_label_name));
 
         return true;
+    }
+
+    bool if_element::is_else_if() const {
+        return _is_else_if;
+    }
+
+    compiler::element* if_element::predicate() {
+        return _predicate;
+    }
+
+    compiler::element* if_element::true_branch() {
+        return _true_branch;
+    }
+
+    compiler::element* if_element::false_branch() {
+        return _false_branch;
+    }
+
+    void if_element::predicate(compiler::element* value) {
+        _predicate = value;
     }
 
     void if_element::on_owned_elements(element_list_t& list) {

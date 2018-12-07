@@ -27,23 +27,10 @@ namespace basecode::compiler {
                                        _type_ref(type) {
     }
 
-    bool transmute::on_infer_type(
+    bool transmute::on_emit(
             compiler::session& session,
-            infer_type_result_t& result) {
-        result.inferred_type = _type_ref->type();
-        result.reference = _type_ref;
-        return true;
-    }
-
-    compiler::element* transmute::expression() {
-        return _expression;
-    }
-
-    compiler::type_reference* transmute::type() {
-        return _type_ref;
-    }
-
-    bool transmute::on_emit(compiler::session& session) {
+            compiler::emit_context_t& context,
+            compiler::emit_result_t& result) {
         if (_expression == nullptr)
             return true;
 
@@ -84,6 +71,22 @@ namespace basecode::compiler {
         block->move_reg_to_reg(*target_reg, temp_var->value_reg());
 
         return true;
+    }
+
+    bool transmute::on_infer_type(
+            compiler::session& session,
+            infer_type_result_t& result) {
+        result.inferred_type = _type_ref->type();
+        result.reference = _type_ref;
+        return true;
+    }
+
+    compiler::element* transmute::expression() {
+        return _expression;
+    }
+
+    compiler::type_reference* transmute::type() {
+        return _type_ref;
     }
 
     void transmute::expression(compiler::element* value) {

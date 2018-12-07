@@ -16,13 +16,18 @@ namespace basecode::compiler {
 
     expression::expression(
             compiler::module* module,
-            block* parent_scope,
-            element* root) : element(module, parent_scope, element_type_t::expression),
-                             _root(root) {
+            compiler::block* parent_scope,
+            compiler::element* root) : element(module, parent_scope, element_type_t::expression),
+                                       _root(root) {
     }
 
-    element* expression::root() {
-        return _root;
+    bool expression::on_emit(
+            compiler::session& session,
+            compiler::emit_context_t& context,
+            compiler::emit_result_t& result) {
+        if (_root == nullptr)
+            return true;
+        return _root->emit(session, context, result);
     }
 
     bool expression::on_infer_type(
@@ -31,6 +36,10 @@ namespace basecode::compiler {
         if (_root == nullptr)
             return false;
         return _root->infer_type(session, result);
+    }
+
+    compiler::element* expression::root() {
+        return _root;
     }
 
     bool expression::on_is_constant() const {
@@ -53,12 +62,6 @@ namespace basecode::compiler {
         if (_root == nullptr)
             return false;
         return _root->as_float(value);
-    }
-
-    bool expression::on_emit(compiler::session& session) {
-        if (_root == nullptr)
-            return true;
-        return _root->emit(session);
     }
 
     bool expression::on_as_integer(uint64_t& value) const {

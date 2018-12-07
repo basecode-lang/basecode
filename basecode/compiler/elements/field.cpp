@@ -31,6 +31,15 @@ namespace basecode::compiler {
                                _declaration(decl) {
     }
 
+    bool field::on_emit(
+            compiler::session& session,
+            compiler::emit_context_t& context,
+            compiler::emit_result_t& result) {
+        if (_declaration == nullptr)
+            return false;
+        return _declaration->emit(session, context, result);
+    }
+
     uint8_t field::padding() const {
         return _padding;
     }
@@ -64,12 +73,6 @@ namespace basecode::compiler {
 
     compiler::declaration* field::declaration() {
         return _declaration;
-    }
-
-    bool field::on_emit(compiler::session& session) {
-        if (_declaration == nullptr)
-            return false;
-        return _declaration->emit(session);
     }
 
     void field::on_owned_elements(element_list_t& list) {

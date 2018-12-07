@@ -196,7 +196,9 @@ namespace basecode::compiler {
             return false;
 
         if (!_result.is_failed()) {
-            _program.emit(*this);
+            emit_context_t context {};
+            emit_result_t result {};
+            _program.emit(*this, context, result);
 
             _assembler.apply_addresses(_result);
             _assembler.resolve_labels(_result);
@@ -398,8 +400,10 @@ namespace basecode::compiler {
         if (!allocate_reg(temp_reg, element))
             return false;
 
+        emit_context_t context {};
+        emit_result_t result {};
         _assembler.push_target_register(temp_reg);
-        element->emit(*this);
+        element->emit(*this, context, result);
 
         return true;
     }

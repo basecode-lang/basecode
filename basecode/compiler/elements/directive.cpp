@@ -55,6 +55,20 @@ namespace basecode::compiler {
                                    _expression(expression) {
     }
 
+    bool directive::on_emit(
+            compiler::session& session,
+            compiler::emit_context_t& context,
+            compiler::emit_result_t& result) {
+        if (_instruction_block != nullptr) {
+            auto current_block = session.assembler().current_block();
+            current_block->comment("*** begin: inline assembly block", 4);
+            for (const auto& entry : _instruction_block->entries())
+                current_block->add_entry(entry);
+            current_block->comment("*** end: inline assembly block", 4);
+        }
+        return true;
+    }
+
     bool directive::on_infer_type(
             compiler::session& session,
             infer_type_result_t& result) {
@@ -78,17 +92,6 @@ namespace basecode::compiler {
     bool directive::on_is_constant() const {
         return _expression != nullptr
             && _expression->element_type() == element_type_t::type_reference;
-    }
-
-    bool directive::on_emit(compiler::session& session) {
-        if (_instruction_block != nullptr) {
-            auto current_block = session.assembler().current_block();
-            current_block->comment("*** begin: inline assembly block", 4);
-            for (const auto& entry : _instruction_block->entries())
-                current_block->add_entry(entry);
-            current_block->comment("*** end: inline assembly block", 4);
-        }
-        return true;
     }
 
     bool directive::execute(compiler::session& session) {

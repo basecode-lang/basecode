@@ -28,15 +28,10 @@ namespace basecode::compiler {
                                        _expr(expr) {
     }
 
-    compiler::block* case_element::scope() {
-        return _scope;
-    }
-
-    compiler::element* case_element::expression() {
-        return _expr;
-    }
-
-    bool case_element::on_emit(compiler::session& session) {
+    bool case_element::on_emit(
+            compiler::session& session,
+            compiler::emit_context_t& context,
+            compiler::emit_result_t& result) {
         auto& builder = session.builder();
         auto& assembler = session.assembler();
         auto block = assembler.current_block();
@@ -82,12 +77,12 @@ namespace basecode::compiler {
                 _expr);
             equals_op->make_non_owning();
             defer(session.elements().remove(equals_op->id()));
-            equals_op->emit(session);
+            equals_op->emit(session, context, result);
             block->bz(*target_reg, assembler.make_label_ref(false_label_name));
         }
 
         block->label(assembler.make_label(true_label_name));
-        _scope->emit(session);
+        _scope->emit(session, context, result);
 
         if (!is_default_case) {
             if (control_flow->fallthrough) {
@@ -100,6 +95,14 @@ namespace basecode::compiler {
         block->label(assembler.make_label(false_label_name));
 
         return true;
+    }
+
+    compiler::block* case_element::scope() {
+        return _scope;
+    }
+
+    compiler::element* case_element::expression() {
+        return _expr;
     }
 
     void case_element::on_owned_elements(element_list_t& list) {

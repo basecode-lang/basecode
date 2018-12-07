@@ -50,12 +50,15 @@ namespace basecode::compiler {
         compiler::element* param_by_name(const std::string& name);
 
     protected:
+        bool on_emit(
+            compiler::session& session,
+            compiler::emit_context_t& context,
+            compiler::emit_result_t& result) override;
+
         bool emit_elements(
             compiler::session& session,
             vm::instruction_block* block,
             const compiler::element_list_t& elements);
-
-        bool on_emit(compiler::session& session) override;
 
         void on_owned_elements(element_list_t& list) override;
 

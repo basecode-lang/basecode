@@ -25,6 +25,15 @@ namespace basecode::compiler {
                                                 _identifier(identifier) {
     }
 
+    bool identifier_reference::on_emit(
+            compiler::session& session,
+            compiler::emit_context_t& context,
+            compiler::emit_result_t& result) {
+        if (_identifier == nullptr)
+            return false;
+        return _identifier->emit(session, context, result);
+    }
+
     bool identifier_reference::on_fold(
             compiler::session& session,
             fold_result_t& result) {
@@ -69,12 +78,6 @@ namespace basecode::compiler {
 
     const qualified_symbol_t& identifier_reference::symbol() const {
         return _symbol;
-    }
-
-    bool identifier_reference::on_emit(compiler::session& session) {
-        if (_identifier == nullptr)
-            return false;
-        return _identifier->emit(session);
     }
 
     bool identifier_reference::on_as_integer(uint64_t& value) const {

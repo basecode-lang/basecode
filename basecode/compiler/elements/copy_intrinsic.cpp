@@ -30,11 +30,10 @@ namespace basecode::compiler {
                                                                             type_params) {
     }
 
-    std::string copy_intrinsic::name() const {
-        return "copy";
-    }
-
-    bool copy_intrinsic::on_emit(compiler::session& session) {
+    bool copy_intrinsic::on_emit(
+            compiler::session& session,
+            compiler::emit_context_t& context,
+            compiler::emit_result_t& result) {
         auto& assembler = session.assembler();
         auto block = assembler.current_block();
 
@@ -70,6 +69,10 @@ namespace basecode::compiler {
             size_var->value_reg());
 
         return true;
+    }
+
+    std::string copy_intrinsic::name() const {
+        return "copy";
     }
 
 };

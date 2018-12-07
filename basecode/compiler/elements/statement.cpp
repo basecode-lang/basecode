@@ -21,19 +21,22 @@ namespace basecode::compiler {
                              _expression(expr) {
     }
 
+    bool statement::on_emit(
+            compiler::session& session,
+            compiler::emit_context_t& context,
+            compiler::emit_result_t& result) {
+        if (_expression == nullptr)
+            return true;
+
+        return _expression->emit(session, context, result);
+    }
+
     label_list_t& statement::labels() {
         return _labels;
     }
 
     compiler::element* statement::expression() {
         return _expression;
-    }
-
-    bool statement::on_emit(compiler::session& session) {
-        if (_expression == nullptr)
-            return true;
-
-        return _expression->emit(session);
     }
 
     void statement::expression(compiler::element* value) {
@@ -49,8 +52,10 @@ namespace basecode::compiler {
     }
 
     bool statement::emit_labels(compiler::session& session) {
+        emit_context_t context {};
+        emit_result_t result {};
         for (auto label : _labels)
-            label->emit(session);
+            label->emit(session, context, result);
         return true;
     }
 

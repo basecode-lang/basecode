@@ -29,40 +29,10 @@ namespace basecode::compiler {
                                       _rhs(rhs) {
     }
 
-    bool unary_operator::on_fold(
+    bool unary_operator::on_emit(
             compiler::session& session,
-            fold_result_t& result) {
-        return constant_fold_strategy(session, result);
-    }
-
-    compiler::element* unary_operator::rhs() {
-        return _rhs;
-    }
-
-    bool unary_operator::on_is_constant() const {
-        return _rhs != nullptr && _rhs->is_constant();
-    }
-
-    bool unary_operator::on_as_bool(bool& value) const {
-        value = false;
-        switch (operator_type()) {
-            case operator_type_t::logical_not: {
-                bool rhs_value;
-                _rhs->as_bool(rhs_value);
-                value = !rhs_value;
-                break;
-            }
-            default:
-                return false;
-        }
-        return true;
-    }
-
-    void unary_operator::rhs(compiler::element* element) {
-        _rhs = element;
-    }
-
-    bool unary_operator::on_emit(compiler::session& session) {
+            compiler::emit_context_t& context,
+            compiler::emit_result_t& result) {
         auto& assembler = session.assembler();
 
         auto block = assembler.current_block();
@@ -106,6 +76,39 @@ namespace basecode::compiler {
         }
 
         return true;
+    }
+
+    bool unary_operator::on_fold(
+            compiler::session& session,
+            fold_result_t& result) {
+        return constant_fold_strategy(session, result);
+    }
+
+    compiler::element* unary_operator::rhs() {
+        return _rhs;
+    }
+
+    bool unary_operator::on_is_constant() const {
+        return _rhs != nullptr && _rhs->is_constant();
+    }
+
+    bool unary_operator::on_as_bool(bool& value) const {
+        value = false;
+        switch (operator_type()) {
+            case operator_type_t::logical_not: {
+                bool rhs_value;
+                _rhs->as_bool(rhs_value);
+                value = !rhs_value;
+                break;
+            }
+            default:
+                return false;
+        }
+        return true;
+    }
+
+    void unary_operator::rhs(compiler::element* element) {
+        _rhs = element;
     }
 
     bool unary_operator::on_as_float(double& value) const {

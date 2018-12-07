@@ -28,6 +28,11 @@ namespace basecode::compiler {
         void rhs(compiler::element* element);
 
     protected:
+        bool on_emit(
+            compiler::session& session,
+            compiler::emit_context_t& context,
+            compiler::emit_result_t& result) override;
+
         bool on_fold(
             compiler::session& session,
             fold_result_t& result) override;
@@ -41,8 +46,6 @@ namespace basecode::compiler {
         bool on_as_bool(bool& value) const override;
 
         bool on_as_float(double& value) const override;
-
-        bool on_emit(compiler::session& session) override;
 
         bool on_as_integer(uint64_t& value) const override;
 

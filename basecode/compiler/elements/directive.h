@@ -39,13 +39,16 @@ namespace basecode::compiler {
         bool evaluate(compiler::session& session);
 
     protected:
+        bool on_emit(
+            compiler::session& session,
+            compiler::emit_context_t& context,
+            compiler::emit_result_t& result) override;
+
         bool on_infer_type(
             compiler::session& session,
             infer_type_result_t& result) override;
 
         bool on_is_constant() const override;
-
-        bool on_emit(compiler::session& session) override;
 
         void on_owned_elements(element_list_t& list) override;
 

@@ -33,6 +33,15 @@ namespace basecode::compiler {
                                                      element_type_t::argument_list) {
     }
 
+    bool argument_list::on_emit(
+            compiler::session& session,
+            compiler::emit_context_t& context,
+            compiler::emit_result_t& result) {
+        auto& assembler = session.assembler();
+        auto block = assembler.current_block();
+        return emit_elements(session, block, _elements);
+    }
+
     void argument_list::clear() {
         _elements.clear();
         _param_index.clear();
@@ -291,12 +300,6 @@ namespace basecode::compiler {
         if (it == _elements.end())
             return nullptr;
         return *it;
-    }
-
-    bool argument_list::on_emit(compiler::session& session) {
-        auto& assembler = session.assembler();
-        auto block = assembler.current_block();
-        return emit_elements(session, block, _elements);
     }
 
     void argument_list::on_owned_elements(element_list_t& list) {

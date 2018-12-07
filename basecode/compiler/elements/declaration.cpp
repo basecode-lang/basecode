@@ -24,18 +24,21 @@ namespace basecode::compiler {
                                                  _assignment(assignment) {
     }
 
+    bool declaration::on_emit(
+            compiler::session& session,
+            compiler::emit_context_t& context,
+            compiler::emit_result_t& result) {
+        if (_assignment != nullptr)
+            return _assignment->emit(session, context, result);
+        return true;
+    }
+
     compiler::identifier* declaration::identifier() {
         return _identifier;
     }
 
     compiler::binary_operator* declaration::assignment() {
         return _assignment;
-    }
-
-    bool declaration::on_emit(compiler::session& session) {
-        if (_assignment != nullptr)
-            return _assignment->emit(session);
-        return true;
     }
 
     void declaration::on_owned_elements(element_list_t& list) {

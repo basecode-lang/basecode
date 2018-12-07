@@ -22,14 +22,17 @@ namespace basecode::compiler {
                                              _expression(expression) {
     }
 
-    compiler::element* defer_element::expression() {
-        return _expression;
-    }
-
-    bool defer_element::on_emit(compiler::session& session) {
+    bool defer_element::on_emit(
+            compiler::session& session,
+            compiler::emit_context_t& context,
+            compiler::emit_result_t& result) {
         if (_expression == nullptr)
             return false;
-        return _expression->emit(session);
+        return _expression->emit(session, context, result);
+    }
+
+    compiler::element* defer_element::expression() {
+        return _expression;
     }
 
     void defer_element::on_owned_elements(element_list_t& list) {

@@ -30,11 +30,10 @@ namespace basecode::compiler {
                                                                             type_params) {
     }
 
-    std::string fill_intrinsic::name() const {
-        return "fill";
-    }
-
-    bool fill_intrinsic::on_emit(compiler::session& session) {
+    bool fill_intrinsic::on_emit(
+            compiler::session& session,
+            compiler::emit_context_t& context,
+            compiler::emit_result_t& result) {
         auto& assembler = session.assembler();
         auto block = assembler.current_block();
 
@@ -71,5 +70,9 @@ namespace basecode::compiler {
 
         return true;
     }
-    
+
+    std::string fill_intrinsic::name() const {
+        return "fill";
+    }
+
 };

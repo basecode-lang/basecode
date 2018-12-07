@@ -26,22 +26,10 @@ namespace basecode::compiler {
                                      _predicate(predicate) {
     }
 
-    compiler::block* while_element::body() {
-        return _body;
-    }
-
-    compiler::element* while_element::predicate() {
-        return _predicate;
-    }
-
-    void while_element::predicate(compiler::element* value) {
-        // XXX: this new pointer is going to leak
-        //      need to use a different collection that makes it easy
-        //      to swap values.
-        _predicate = value;
-    }
-
-    bool while_element::on_emit(compiler::session& session) {
+    bool while_element::on_emit(
+            compiler::session& session,
+            compiler::emit_context_t& context,
+            compiler::emit_result_t& result) {
         auto& assembler = session.assembler();
         auto block = assembler.current_block();
 
@@ -70,12 +58,12 @@ namespace basecode::compiler {
 
         block->label(assembler.make_label(begin_label_name));
         assembler.push_target_register(target_reg);
-        _predicate->emit(session);
+        _predicate->emit(session, context, result);
         assembler.pop_target_register();
 
         block->bz(target_reg, exit_label_ref);
         block->label(assembler.make_label(body_label_name));
-        _body->emit(session);
+        _body->emit(session, context, result);
         block->jump_direct(begin_label_ref);
 
         block->label(assembler.make_label(exit_label_name));
@@ -83,6 +71,21 @@ namespace basecode::compiler {
         block->label(assembler.make_label(end_label_name));
 
         return true;
+    }
+
+    compiler::block* while_element::body() {
+        return _body;
+    }
+
+    compiler::element* while_element::predicate() {
+        return _predicate;
+    }
+
+    void while_element::predicate(compiler::element* value) {
+        // XXX: this new pointer is going to leak
+        //      need to use a different collection that makes it easy
+        //      to swap values.
+        _predicate = value;
     }
 
     void while_element::on_owned_elements(element_list_t& list) {

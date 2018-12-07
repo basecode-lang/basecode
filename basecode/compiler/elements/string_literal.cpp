@@ -24,6 +24,21 @@ namespace basecode::compiler {
                                         _value(value) {
     }
 
+    bool string_literal::on_emit(
+            compiler::session& session,
+            compiler::emit_context_t& context,
+            compiler::emit_result_t& result) {
+        auto& assembler = session.assembler();
+        auto block = assembler.current_block();
+        auto target_reg = assembler.current_target_register();
+        if (target_reg != nullptr) {
+            block->move_label_to_reg(
+                *target_reg,
+                assembler.make_label_ref(session.intern_data_label(this)));
+        }
+        return true;
+    }
+
     bool string_literal::on_infer_type(
             compiler::session& session,
             infer_type_result_t& result) {
@@ -37,16 +52,6 @@ namespace basecode::compiler {
 
     std::string string_literal::escaped_value() const {
         return common::escaped_string(_value);
-    }
-
-    bool string_literal::on_emit(compiler::session& session) {
-        auto& assembler = session.assembler();
-        auto block = assembler.current_block();
-        auto target_reg = assembler.current_target_register();
-        block->move_label_to_reg(
-            *target_reg,
-            assembler.make_label_ref(session.intern_data_label(this)));
-        return true;
     }
 
     bool string_literal::on_as_string(std::string& value) const {

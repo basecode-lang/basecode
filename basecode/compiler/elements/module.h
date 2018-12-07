@@ -34,7 +34,10 @@ namespace basecode::compiler {
         void source_file(common::source_file* source_file);
 
     protected:
-        bool on_emit(compiler::session& session) override;
+        bool on_emit(
+            compiler::session& session,
+            compiler::emit_context_t& context,
+            compiler::emit_result_t& result) override;
 
         void on_owned_elements(element_list_t& list) override;
 

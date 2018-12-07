@@ -53,6 +53,41 @@ namespace basecode::compiler {
     program::~program() {
     }
 
+    bool program::on_emit(
+            compiler::session& session,
+            compiler::emit_context_t& context,
+            compiler::emit_result_t& result) {
+        _string_type = session.scope_manager().find_type(qualified_symbol_t {
+            .name = "string"
+        });
+
+        intern_string_literals(session);
+        initialize_variable_sections();
+
+        if (!emit_bootstrap_block(session))
+            return false;
+
+        if (!emit_type_info(session))
+            return false;
+
+        if (!session.emit_interned_strings())
+            return false;
+
+        if (!emit_sections(session))
+            return false;
+
+        if (!emit_initializers(session))
+            return false;
+
+        if (!emit_implicit_blocks(session))
+            return false;
+
+        if (!emit_finalizers(session))
+            return false;
+
+        return true;
+    }
+
     bool program::emit_section_variable(
             compiler::session& session,
             compiler::element* e,
@@ -203,38 +238,6 @@ namespace basecode::compiler {
         _vars_by_section.insert(std::make_pair(vm::section_t::ro_data, element_list_t()));
         _vars_by_section.insert(std::make_pair(vm::section_t::data,    element_list_t()));
         _vars_by_section.insert(std::make_pair(vm::section_t::text,    element_list_t()));
-    }
-
-    bool program::on_emit(compiler::session& session) {
-        _string_type = session.scope_manager().find_type(qualified_symbol_t {
-            .name = "string"
-        });
-
-        intern_string_literals(session);
-        initialize_variable_sections();
-
-        if (!emit_bootstrap_block(session))
-            return false;
-
-        if (!emit_type_info(session))
-            return false;
-
-        if (!session.emit_interned_strings())
-            return false;
-
-        if (!emit_sections(session))
-            return false;
-
-        if (!emit_initializers(session))
-            return false;
-
-        if (!emit_implicit_blocks(session))
-            return false;
-
-        if (!emit_finalizers(session))
-            return false;
-
-        return true;
     }
 
     bool program::emit_sections(compiler::session& session) {
@@ -409,7 +412,9 @@ namespace basecode::compiler {
             implicit_block->label(assembler.make_label(block->label_name()));
 
             assembler.push_block(implicit_block);
-            block->emit(session);
+            emit_context_t context {};
+            emit_result_t result {};
+            block->emit(session, context, result);
             assembler.pop_block();
         }
 
@@ -431,7 +436,9 @@ namespace basecode::compiler {
         for (auto procedure_type : proc_list) {
             auto proc_type_block = assembler.make_basic_block();
             assembler.push_block(proc_type_block);
-            procedure_type->emit(session);
+            emit_context_t context {};
+            emit_result_t result {};
+            procedure_type->emit(session, context, result);
             assembler.pop_block();
         }
 

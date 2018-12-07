@@ -25,7 +25,7 @@ namespace basecode::compiler {
 
     procedure_type::procedure_type(
             compiler::module* module,
-            block* parent_scope,
+            compiler::block* parent_scope,
             compiler::block* scope,
             compiler::symbol_element* symbol) : compiler::type(
                                                       module,
@@ -35,62 +35,10 @@ namespace basecode::compiler {
                                                 _scope(scope) {
     }
 
-    field* procedure_type::return_type() {
-        return _return_type;
-    }
-
-    bool procedure_type::is_foreign() const {
-        return _is_foreign;
-    }
-
-    compiler::block* procedure_type::scope() {
-        return _scope;
-    }
-
-    field_map_t& procedure_type::parameters() {
-        return _parameters;
-    }
-
-    bool procedure_type::is_proc_type() const {
-        return true;
-    }
-
-    void procedure_type::is_foreign(bool value) {
-        _is_foreign = value;
-    }
-
-    bool procedure_type::on_is_constant() const {
-        return true;
-    }
-
-    type_map_t& procedure_type::type_parameters() {
-        return _type_parameters;
-    }
-
-    void procedure_type::return_type(field* value) {
-        _return_type = value;
-    }
-
-    uint64_t procedure_type::foreign_address() const {
-        return _foreign_address;
-    }
-
-    void procedure_type::foreign_address(uint64_t value) {
-        _foreign_address = value;
-    }
-
-    procedure_instance_list_t& procedure_type::instances() {
-        return _instances;
-    }
-
-    bool procedure_type::on_type_check(compiler::type* other) {
-        if (other == nullptr)
-            return false;
-
-        return symbol()->name() == other->symbol()->name();
-    }
-
-    bool procedure_type::on_emit(compiler::session& session) {
+    bool procedure_type::on_emit(
+            compiler::session& session,
+            compiler::emit_context_t& context,
+            compiler::emit_result_t& result) {
         if (is_foreign()) {
             return true;
         }
@@ -165,10 +113,65 @@ namespace basecode::compiler {
         }
 
         assembler.push_block(block);
-        _scope->emit(session);
+        _scope->emit(session, context, result);
         assembler.pop_block();
 
         return true;
+    }
+
+    bool procedure_type::is_foreign() const {
+        return _is_foreign;
+    }
+
+    compiler::block* procedure_type::scope() {
+        return _scope;
+    }
+
+    field_map_t& procedure_type::parameters() {
+        return _parameters;
+    }
+
+    bool procedure_type::is_proc_type() const {
+        return true;
+    }
+
+    void procedure_type::is_foreign(bool value) {
+        _is_foreign = value;
+    }
+
+    bool procedure_type::on_is_constant() const {
+        return true;
+    }
+
+    type_map_t& procedure_type::type_parameters() {
+        return _type_parameters;
+    }
+
+    compiler::field* procedure_type::return_type() {
+        return _return_type;
+    }
+
+    void procedure_type::return_type(field* value) {
+        _return_type = value;
+    }
+
+    uint64_t procedure_type::foreign_address() const {
+        return _foreign_address;
+    }
+
+    void procedure_type::foreign_address(uint64_t value) {
+        _foreign_address = value;
+    }
+
+    procedure_instance_list_t& procedure_type::instances() {
+        return _instances;
+    }
+
+    bool procedure_type::on_type_check(compiler::type* other) {
+        if (other == nullptr)
+            return false;
+
+        return symbol()->name() == other->symbol()->name();
     }
 
     type_access_model_t procedure_type::on_access_model() const {

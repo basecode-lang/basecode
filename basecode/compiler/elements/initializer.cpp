@@ -26,6 +26,20 @@ namespace basecode::compiler {
                                        _expr(expr) {
     }
 
+    bool initializer::on_emit(
+            compiler::session& session,
+            compiler::emit_context_t& context,
+            compiler::emit_result_t& result) {
+        if (_expr == nullptr)
+            return true;
+
+        // XXX: why this condition?
+        if (_expr->element_type() == element_type_t::namespace_e)
+            _expr->emit(session, context, result);
+
+        return true;
+    }
+
     bool initializer::on_fold(
             compiler::session& session,
             fold_result_t& result) {
@@ -88,17 +102,6 @@ namespace basecode::compiler {
         if (_expr == nullptr)
             return false;
         return _expr->as_float(value);
-    }
-
-    bool initializer::on_emit(compiler::session& session) {
-        if (_expr == nullptr)
-            return true;
-
-        // XXX: why this condition?
-        if (_expr->element_type() == element_type_t::namespace_e)
-            _expr->emit(session);
-
-        return true;
     }
 
     bool initializer::on_as_integer(uint64_t& value) const {

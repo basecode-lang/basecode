@@ -23,11 +23,10 @@ namespace basecode::compiler {
                                       _label(label) {
     }
 
-    compiler::label* fallthrough::label() {
-        return _label;
-    }
-
-    bool fallthrough::on_emit(compiler::session& session) {
+    bool fallthrough::on_emit(
+            compiler::session& session,
+            compiler::emit_context_t& context,
+            compiler::emit_result_t& result) {
         auto& assembler = session.assembler();
         auto control_flow = assembler.current_control_flow();
         if (control_flow == nullptr) {
@@ -36,6 +35,10 @@ namespace basecode::compiler {
         }
         control_flow->fallthrough = true;
         return true;
+    }
+
+    compiler::label* fallthrough::label() {
+        return _label;
     }
 
     void fallthrough::on_owned_elements(element_list_t& list) {

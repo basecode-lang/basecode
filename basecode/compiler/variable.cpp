@@ -107,7 +107,9 @@ namespace basecode::compiler {
             }
             default: {
                 assembler.push_target_register(_value.reg);
-                _element->emit(_session);
+                emit_context_t context {};
+                emit_result_t result {};
+                _element->emit(_session, context, result);
                 assembler.pop_target_register();
                 break;
             }

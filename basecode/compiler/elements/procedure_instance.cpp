@@ -16,23 +16,26 @@ namespace basecode::compiler {
 
     procedure_instance::procedure_instance(
             compiler::module* module,
-            block* parent_scope,
+            compiler::block* parent_scope,
             compiler::type* procedure_type,
-            block* scope) : element(module, parent_scope, element_type_t::proc_instance),
-                            _scope(scope),
-                            _procedure_type(procedure_type) {
+            compiler::block* scope) : element(module, parent_scope, element_type_t::proc_instance),
+                                      _scope(scope),
+                                      _procedure_type(procedure_type) {
     }
 
-    block* procedure_instance::scope() {
+    bool procedure_instance::on_emit(
+            compiler::session& session,
+            compiler::emit_context_t& context,
+            compiler::emit_result_t& result) {
+        return _scope->emit(session, context, result);
+    }
+
+    compiler::block* procedure_instance::scope() {
         return _scope;
     }
 
     compiler::type* procedure_instance::procedure_type() {
         return _procedure_type;
-    }
-
-    bool procedure_instance::on_emit(compiler::session& session) {
-        return _scope->emit(session);
     }
 
     void procedure_instance::on_owned_elements(element_list_t& list) {

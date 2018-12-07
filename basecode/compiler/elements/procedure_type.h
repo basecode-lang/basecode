@@ -20,11 +20,9 @@ namespace basecode::compiler {
     public:
         procedure_type(
             compiler::module* module,
-            block* parent_scope,
+            compiler::block* parent_scope,
             compiler::block* scope,
             compiler::symbol_element* symbol);
-
-        field* return_type();
 
         bool is_foreign() const;
 
@@ -38,6 +36,8 @@ namespace basecode::compiler {
 
         void return_type(field* value);
 
+        compiler::field* return_type();
+
         uint64_t foreign_address() const;
 
         bool is_proc_type() const override;
@@ -47,9 +47,12 @@ namespace basecode::compiler {
         procedure_instance_list_t& instances();
 
     protected:
-        bool on_is_constant() const override;
+        bool on_emit(
+            compiler::session& session,
+            compiler::emit_context_t& context,
+            compiler::emit_result_t& result) override;
 
-        bool on_emit(compiler::session& session) override;
+        bool on_is_constant() const override;
 
         bool on_type_check(compiler::type* other) override;
 

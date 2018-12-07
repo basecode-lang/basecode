@@ -36,19 +36,10 @@ namespace basecode::compiler {
                                      _induction_decl(induction_decl) {
     }
 
-    compiler::block* for_element::body() {
-        return _body;
-    }
-
-    compiler::element* for_element::expression() {
-        return _expression;
-    }
-
-    compiler::declaration* for_element::induction_decl() {
-        return _induction_decl;
-    }
-
-    bool for_element::on_emit(compiler::session& session) {
+    bool for_element::on_emit(
+            compiler::session& session,
+            compiler::emit_context_t& context,
+            compiler::emit_result_t& result) {
         auto& builder = session.builder();
         auto& assembler = session.assembler();
         auto block = assembler.current_block();
@@ -94,7 +85,7 @@ namespace basecode::compiler {
                         start_arg);
                     induction_init->make_non_owning();
                     defer(session.elements().remove(induction_init->id()));
-                    induction_init->emit(session);
+                    induction_init->emit(session, context, result);
 
                     assembler.push_target_register(target_reg);
 
@@ -109,8 +100,8 @@ namespace basecode::compiler {
                         return false;
 
                     auto step_op_type = dir_value == 0 ?
-                        operator_type_t::add :
-                        operator_type_t::subtract;
+                                        operator_type_t::add :
+                                        operator_type_t::subtract;
                     auto cmp_op_type = operator_type_t::less_than;
                     switch (kind_value) {
                         case 0: {
@@ -146,13 +137,13 @@ namespace basecode::compiler {
                         stop_arg);
                     comparison_op->make_non_owning();
                     defer(session.elements().remove(comparison_op->id()));
-                    comparison_op->emit(session);
+                    comparison_op->emit(session, context, result);
                     block->bz(target_reg, exit_label_ref);
 
                     assembler.pop_target_register();
 
                     block->label(assembler.make_label(body_label_name));
-                    _body->emit(session);
+                    _body->emit(session, context, result);
 
                     auto step_param = range->arguments()->param_by_name("step");
                     auto induction_step = builder.make_binary_operator(
@@ -171,7 +162,7 @@ namespace basecode::compiler {
                         session.elements().remove(induction_assign->id());
                         session.elements().remove(induction_step->id());
                     });
-                    induction_assign->emit(session);
+                    induction_assign->emit(session, context, result);
 
                     block->jump_direct(begin_label_ref);
 
@@ -190,6 +181,18 @@ namespace basecode::compiler {
         }
 
         return true;
+    }
+
+    compiler::block* for_element::body() {
+        return _body;
+    }
+
+    compiler::element* for_element::expression() {
+        return _expression;
+    }
+
+    compiler::declaration* for_element::induction_decl() {
+        return _induction_decl;
     }
 
     void for_element::on_owned_elements(element_list_t& list) {

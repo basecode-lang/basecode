@@ -28,24 +28,10 @@ namespace basecode::compiler {
                                        _ref(ref) {
     }
 
-    bool assembly_label::on_infer_type(
+    bool assembly_label::on_emit(
             compiler::session& session,
-            infer_type_result_t& result) {
-        result.inferred_type = session.scope_manager().find_type(qualified_symbol_t {
-            .name = "u64"
-        });
-        return true;
-    }
-
-    std::string assembly_label::name() const {
-        return _name;
-    }
-
-    bool assembly_label::on_is_constant() const {
-        return true;
-    }
-
-    bool assembly_label::on_emit(compiler::session& session) {
+            compiler::emit_context_t& context,
+            compiler::emit_result_t& result) {
         auto& assembler = session.assembler();
         auto block = assembler.current_block();
         auto target_reg = assembler.current_target_register();
@@ -61,6 +47,23 @@ namespace basecode::compiler {
         }
         block->move_label_to_reg(*target_reg, label_ref);
 
+        return true;
+    }
+
+    bool assembly_label::on_infer_type(
+            compiler::session& session,
+            infer_type_result_t& result) {
+        result.inferred_type = session.scope_manager().find_type(qualified_symbol_t {
+            .name = "u64"
+        });
+        return true;
+    }
+
+    std::string assembly_label::name() const {
+        return _name;
+    }
+
+    bool assembly_label::on_is_constant() const {
         return true;
     }
 

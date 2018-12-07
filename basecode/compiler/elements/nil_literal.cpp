@@ -20,6 +20,17 @@ namespace basecode::compiler {
             block* parent_scope) : element(module, parent_scope, element_type_t::nil_literal) {
     }
 
+    bool nil_literal::on_emit(
+            compiler::session& session,
+            compiler::emit_context_t& context,
+            compiler::emit_result_t& result) {
+        auto& assembler = session.assembler();
+        auto block = assembler.current_block();
+        auto target_reg = assembler.current_target_register();
+        block->clr(vm::op_sizes::qword, *target_reg);
+        return true;
+    }
+
     bool nil_literal::on_infer_type(
             compiler::session& session,
             infer_type_result_t& result) {
@@ -28,14 +39,6 @@ namespace basecode::compiler {
     }
 
     bool nil_literal::on_is_constant() const {
-        return true;
-    }
-
-    bool nil_literal::on_emit(compiler::session& session) {
-        auto& assembler = session.assembler();
-        auto block = assembler.current_block();
-        auto target_reg = assembler.current_target_register();
-        block->clr(vm::op_sizes::qword, *target_reg);
         return true;
     }
 

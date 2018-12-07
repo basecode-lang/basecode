@@ -19,21 +19,24 @@ namespace basecode::compiler {
     public:
         procedure_instance(
             compiler::module* module,
-            block* parent_scope,
+            compiler::block* parent_scope,
             compiler::type* procedure_type,
-            block* scope);
+            compiler::block* scope);
 
-        block* scope();
+        compiler::block* scope();
 
         compiler::type* procedure_type();
 
     protected:
-        bool on_emit(compiler::session& session) override;
+        bool on_emit(
+            compiler::session& session,
+            compiler::emit_context_t& context,
+            compiler::emit_result_t& result) override;
 
         void on_owned_elements(element_list_t& list) override;
 
     private:
-        block* _scope = nullptr;
+        compiler::block* _scope = nullptr;
         compiler::type* _procedure_type = nullptr;
     };
 

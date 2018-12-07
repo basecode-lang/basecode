@@ -35,25 +35,10 @@ namespace basecode::compiler {
                                                                   _reference(reference) {
     }
 
-    bool procedure_call::on_infer_type(
+    bool procedure_call::on_emit(
             compiler::session& session,
-            infer_type_result_t& result) {
-        auto identifier = _reference->identifier();
-        if (identifier != nullptr) {
-            auto proc_type = dynamic_cast<procedure_type*>(identifier->type_ref()->type());
-            if (proc_type != nullptr) {
-                if (proc_type->return_type() == nullptr)
-                    return false;
-                auto return_identifier = proc_type->return_type()->identifier();
-                result.inferred_type = return_identifier->type_ref()->type();
-                result.reference = return_identifier->type_ref();
-                return true;
-            }
-        }
-        return false;
-    }
-
-    bool procedure_call::on_emit(compiler::session& session) {
+            compiler::emit_context_t& context,
+            compiler::emit_result_t& result) {
         auto& assembler = session.assembler();
 
         auto block = assembler.current_block();
@@ -65,7 +50,7 @@ namespace basecode::compiler {
         auto procedure_type = init->procedure_type();
 
         if (_arguments != nullptr)
-            _arguments->emit(session);
+            _arguments->emit(session, context, result);
 
         if (procedure_type->is_foreign()) {
             block->comment(
@@ -85,6 +70,24 @@ namespace basecode::compiler {
         }
 
         return true;
+    }
+
+    bool procedure_call::on_infer_type(
+            compiler::session& session,
+            infer_type_result_t& result) {
+        auto identifier = _reference->identifier();
+        if (identifier != nullptr) {
+            auto proc_type = dynamic_cast<procedure_type*>(identifier->type_ref()->type());
+            if (proc_type != nullptr) {
+                if (proc_type->return_type() == nullptr)
+                    return false;
+                auto return_identifier = proc_type->return_type()->identifier();
+                result.inferred_type = return_identifier->type_ref()->type();
+                result.reference = return_identifier->type_ref();
+                return true;
+            }
+        }
+        return false;
     }
 
     compiler::argument_list* procedure_call::arguments() {

@@ -28,6 +28,13 @@ namespace basecode::compiler {
                                                   _initializer(initializer) {
     }
 
+    bool identifier::on_emit(
+            compiler::session& session,
+            compiler::emit_context_t& context,
+            compiler::emit_result_t& result) {
+        return true;
+    }
+
     bool identifier::on_fold(
             compiler::session& session,
             fold_result_t& result) {
@@ -82,10 +89,6 @@ namespace basecode::compiler {
         if (_initializer == nullptr)
             return false;
         return _initializer->as_float(value);
-    }
-
-    bool identifier::on_emit(compiler::session& session) {
-        return true;
     }
 
     void identifier::type_ref(compiler::type_reference* t) {
