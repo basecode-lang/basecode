@@ -79,7 +79,7 @@ namespace basecode::vm {
         uint8_t* encoding_ptr = heap + address;
         uint8_t encoding_size = *encoding_ptr;
         op = static_cast<op_codes>(*(encoding_ptr + 1));
-        uint8_t op_size_and_operands_count = static_cast<uint8_t>(*(encoding_ptr + 2));
+        auto op_size_and_operands_count = static_cast<uint8_t>(*(encoding_ptr + 2));
         size = static_cast<op_sizes>(common::get_upper_nybble(op_size_and_operands_count));
         operands_count = common::get_lower_nybble(op_size_and_operands_count);
 
@@ -100,18 +100,18 @@ namespace basecode::vm {
                         break;
                     }
                     case op_sizes::word: {
-                        uint16_t* constant_value_ptr = reinterpret_cast<uint16_t*>(encoding_ptr + offset);
+                        auto constant_value_ptr = reinterpret_cast<uint16_t*>(encoding_ptr + offset);
                         operands[i].value.u = *constant_value_ptr;
                         offset += sizeof(uint16_t);
                         break;
                     }
                     case op_sizes::dword: {
                         if (operands[i].is_integer()) {
-                            uint32_t* constant_value_ptr = reinterpret_cast<uint32_t*>(encoding_ptr + offset);
+                            auto constant_value_ptr = reinterpret_cast<uint32_t*>(encoding_ptr + offset);
                             operands[i].value.u = *constant_value_ptr;
                             offset += sizeof(uint32_t);
                         } else {
-                            float* constant_value_ptr = reinterpret_cast<float*>(encoding_ptr + offset);
+                            auto constant_value_ptr = reinterpret_cast<float*>(encoding_ptr + offset);
                             operands[i].value.f = *constant_value_ptr;
                             offset += sizeof(float);
                         }
@@ -119,11 +119,11 @@ namespace basecode::vm {
                     }
                     case op_sizes::qword: {
                         if (operands[i].is_integer()) {
-                            uint64_t* constant_value_ptr = reinterpret_cast<uint64_t*>(encoding_ptr + offset);
+                            auto constant_value_ptr = reinterpret_cast<uint64_t*>(encoding_ptr + offset);
                             operands[i].value.u = *constant_value_ptr;
                             offset += sizeof(uint64_t);
                         } else {
-                            double* constant_value_ptr = reinterpret_cast<double*>(encoding_ptr + offset);
+                            auto constant_value_ptr = reinterpret_cast<double*>(encoding_ptr + offset);
                             operands[i].value.d = *constant_value_ptr;
                             offset += sizeof(double);
                         }
@@ -195,7 +195,7 @@ namespace basecode::vm {
                         break;
                     }
                     case op_sizes::word: {
-                        uint16_t* constant_value_ptr = reinterpret_cast<uint16_t*>(encoding_ptr + offset);
+                        auto constant_value_ptr = reinterpret_cast<uint16_t*>(encoding_ptr + offset);
                         *constant_value_ptr = static_cast<uint16_t>(operands[i].value.u);
                         offset += sizeof(uint16_t);
                         encoding_size += sizeof(uint16_t);
@@ -203,12 +203,12 @@ namespace basecode::vm {
                     }
                     case op_sizes::dword: {
                         if (operands[i].is_integer()) {
-                            uint32_t* constant_value_ptr = reinterpret_cast<uint32_t*>(encoding_ptr + offset);
+                            auto constant_value_ptr = reinterpret_cast<uint32_t*>(encoding_ptr + offset);
                             *constant_value_ptr = static_cast<uint32_t>(operands[i].value.u);
                             offset += sizeof(uint32_t);
                             encoding_size += sizeof(uint32_t);
                         } else {
-                            float* constant_value_ptr = reinterpret_cast<float*>(encoding_ptr + offset);
+                            auto constant_value_ptr = reinterpret_cast<float*>(encoding_ptr + offset);
                             *constant_value_ptr = operands[i].value.f;
                             offset += sizeof(float);
                             encoding_size += sizeof(float);
@@ -217,12 +217,12 @@ namespace basecode::vm {
                     }
                     case op_sizes::qword: {
                         if (operands[i].is_integer()) {
-                            uint64_t* constant_value_ptr = reinterpret_cast<uint64_t*>(encoding_ptr + offset);
+                            auto constant_value_ptr = reinterpret_cast<uint64_t*>(encoding_ptr + offset);
                             *constant_value_ptr = operands[i].value.u;
                             offset += sizeof(uint64_t);
                             encoding_size += sizeof(uint64_t);
                         } else {
-                            double* constant_value_ptr = reinterpret_cast<double*>(encoding_ptr + offset);
+                            auto constant_value_ptr = reinterpret_cast<double*>(encoding_ptr + offset);
                             *constant_value_ptr = operands[i].value.d;
                             offset += sizeof(double);
                             encoding_size += sizeof(double);
@@ -1599,7 +1599,30 @@ namespace basecode::vm {
                 if (!get_operand_value(r, inst, 1, address))
                     return false;
 
-                if (value.alias.u == 0)
+                auto is_zero = false;
+                register_value_alias_t alias {
+                    .qw = value.alias.u
+                };
+
+                switch (inst.size) {
+                    case op_sizes::byte:
+                        is_zero = alias.b == 0;
+                        break;
+                    case op_sizes::word:
+                        is_zero = alias.w == 0;
+                        break;
+                    case op_sizes::dword:
+                        is_zero = alias.dw == 0;
+                        break;
+                    case op_sizes::qword:
+                        is_zero = alias.qw == 0;
+                        break;
+                    default:
+                        is_zero = false;
+                        break;
+                }
+
+                if (is_zero)
                     _registers.r[register_pc].qw = address.alias.u;
 
                 _registers.flags(register_file_t::flags_t::zero, value.alias.u == 0);

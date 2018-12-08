@@ -32,18 +32,10 @@ namespace basecode::vm {
             const std::string& name,
             segment_type_t type);
 
-        void pop_control_flow();
-
         bool assemble_from_source(
             common::result& r,
             common::source_file& source_file,
             stack_frame_t* stack_frame);
-
-        void pop_target_register();
-
-        bool remove_tagged_register(
-            uint8_t tag,
-            register_t& reg);
 
         instruction_block* pop_block();
 
@@ -65,10 +57,6 @@ namespace basecode::vm {
 
         instruction_block* make_basic_block();
 
-        register_t* current_target_register();
-
-        control_flow_t* current_control_flow();
-
         bool resolve_labels(common::result& r);
 
         bool apply_addresses(common::result& r);
@@ -87,15 +75,7 @@ namespace basecode::vm {
 
         vm::segment* segment(const std::string& name);
 
-        register_t* tagged_register(uint8_t tag) const;
-
         vm::label* make_label(const std::string& name);
-
-        void tag_register(uint8_t tag, register_t* reg);
-
-        void push_target_register(const register_t& reg);
-
-        void push_control_flow(const control_flow_t& control_flow);
 
         label_ref_t* make_label_ref(const std::string& label_name);
 
@@ -125,12 +105,9 @@ namespace basecode::vm {
         uint32_t _procedure_block_count = 0;
         std::vector<instruction_block*> _blocks {};
         register_allocator_t _register_allocator {};
-        std::stack<register_t> _target_registers {};
         std::stack<instruction_block*> _block_stack {};
-        std::stack<control_flow_t> _control_flow_stack {};
         std::unordered_map<std::string, vm::label*> _labels {};
         std::unordered_map<std::string, vm::segment> _segments {};
-        std::unordered_map<uint8_t, register_t*> _tagged_registers {};
         std::unordered_map<common::id_t, label_ref_t> _unresolved_labels {};
         std::unordered_map<std::string, common::id_t> _label_to_unresolved_ids {};
     };

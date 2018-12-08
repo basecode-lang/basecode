@@ -112,41 +112,24 @@ namespace basecode::vm {
 
         // copy & fill
         void copy(
-            op_sizes size,
-            const register_t& dest_reg,
-            const register_t& src_reg,
-            uint64_t length);
-
-        void copy(
-            op_sizes size,
-            const register_t& dest_reg,
-            const register_t& src_reg,
-            const register_t& size_reg);
+            op_sizes inst_size,
+            const instruction_operand_t& dest,
+            const instruction_operand_t& src,
+            const instruction_operand_t& size);
 
         void fill(
-            op_sizes size,
-            const register_t& dest_reg,
-            const register_t& value_reg,
-            uint64_t length);
-
-        void fill(
-            op_sizes size,
-            const register_t& dest_reg,
-            const register_t& value_reg,
-            const register_t& size_reg);
-
-        void zero(
-            op_sizes size,
-            const register_t& dest_reg,
-            uint64_t length);
+            op_sizes inst_size,
+            const instruction_operand_t& dest,
+            const instruction_operand_t& value,
+            const instruction_operand_t& size);
 
         // alloc/free
         void alloc(
-            op_sizes size,
-            const register_t& dest_reg,
-            const register_t& size_reg);
+            op_sizes inst_size,
+            const instruction_operand_t& dest,
+            const instruction_operand_t& size);
 
-        void free(const register_t& addr_reg);
+        void free(const instruction_operand_t& addr);
 
         // convert
         void convert(
@@ -257,41 +240,41 @@ namespace basecode::vm {
 
         // bz & bnz
         void bz(
-            const register_t& reg,
-            const label_ref_t* label_ref);
+            const instruction_operand_t& src,
+            const instruction_operand_t& dest);
 
         void bnz(
-            const register_t& reg,
-            const label_ref_t* label_ref);
+            const instruction_operand_t& src,
+            const instruction_operand_t& dest);
 
         // branches
-        void bb(const label_ref_t* label_ref);
+        void bb(const instruction_operand_t& dest);
 
-        void ba(const label_ref_t* label_ref);
+        void ba(const instruction_operand_t& dest);
 
-        void bg(const label_ref_t* label_ref);
+        void bg(const instruction_operand_t& dest);
 
-        void bl(const label_ref_t* label_ref);
+        void bl(const instruction_operand_t& dest);
 
-        void bs(const label_ref_t* label_ref);
+        void bs(const instruction_operand_t& dest);
 
-        void bo(const label_ref_t* label_ref);
+        void bo(const instruction_operand_t& dest);
 
-        void bcc(const label_ref_t* label_ref);
+        void bcc(const instruction_operand_t& dest);
 
-        void bcs(const label_ref_t* label_ref);
+        void bcs(const instruction_operand_t& dest);
 
-        void bne(const label_ref_t* label_ref);
+        void bne(const instruction_operand_t& dest);
 
-        void beq(const label_ref_t* label_ref);
+        void beq(const instruction_operand_t& dest);
 
-        void bbe(const label_ref_t* label_ref);
+        void bbe(const instruction_operand_t& dest);
 
-        void bae(const label_ref_t* label_ref);
+        void bae(const instruction_operand_t& dest);
 
-        void bge(const label_ref_t* label_ref);
+        void bge(const instruction_operand_t& dest);
 
-        void ble(const label_ref_t* label_ref);
+        void ble(const instruction_operand_t& dest);
 
         // inc variations
         void inc(const register_t& reg);
@@ -398,7 +381,7 @@ namespace basecode::vm {
         void push(const instruction_operand_t& operand);
 
         // pop variations
-        void pop(const register_t& reg);
+        void pop(const instruction_operand_t& dest);
 
         // calls & jumps
         void call(const label_ref_t* label_ref);
@@ -415,22 +398,20 @@ namespace basecode::vm {
             op_sizes size,
             const instruction_operand_t& dest);
 
+        void make_branch(
+            op_codes code,
+            op_sizes size,
+            const instruction_operand_t& dest);
+
         bool apply_operand(
             const instruction_operand_t& operand,
             instruction_t& encoding,
             size_t operand_index);
 
-        void make_branch(
-            op_codes code,
-            op_sizes size,
-            const label_ref_t* label_ref);
-
         void make_swap_instruction(
             op_sizes size,
             const register_t& dest_reg,
             const register_t& src_reg);
-
-        void make_pop_instruction(const register_t& dest_reg);
 
     private:
         common::id_t _id;

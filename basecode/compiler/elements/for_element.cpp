@@ -55,20 +55,13 @@ namespace basecode::compiler {
                     auto begin_label_ref = assembler.make_label_ref(begin_label_name);
                     auto exit_label_ref = assembler.make_label_ref(exit_label_name);
 
-                    assembler.push_control_flow(vm::control_flow_t {
+                    emit_context_t for_context {};
+
+                    vm::control_flow_t flow_control {
                         .exit_label = exit_label_ref,
                         .continue_label = begin_label_ref
-                    });
-
-                    vm::register_t target_reg {
-                        .size = vm::op_sizes::byte,
-                        .type = vm::register_type_t::integer
                     };
-                    assembler.allocate_reg(target_reg);
-                    defer({
-                        assembler.free_reg(target_reg);
-                        assembler.pop_control_flow();
-                    });
+                    for_context.flow_control = &flow_control;
 
                     auto range = dynamic_cast<compiler::range_intrinsic*>(intrinsic);
 
@@ -85,9 +78,7 @@ namespace basecode::compiler {
                         start_arg);
                     induction_init->make_non_owning();
                     defer(session.elements().remove(induction_init->id()));
-                    induction_init->emit(session, context, result);
-
-                    assembler.push_target_register(target_reg);
+                    induction_init->emit(session, for_context, result);
 
                     auto dir_arg = range->arguments()->param_by_name("dir");
                     uint64_t dir_value;
@@ -137,13 +128,15 @@ namespace basecode::compiler {
                         stop_arg);
                     comparison_op->make_non_owning();
                     defer(session.elements().remove(comparison_op->id()));
-                    comparison_op->emit(session, context, result);
-                    block->bz(target_reg, exit_label_ref);
 
-                    assembler.pop_target_register();
+                    emit_result_t cmp_result {};
+                    comparison_op->emit(session, for_context, cmp_result);
+                    block->bz(
+                        cmp_result.operands.back(),
+                        vm::instruction_operand_t(exit_label_ref));
 
                     block->label(assembler.make_label(body_label_name));
-                    _body->emit(session, context, result);
+                    _body->emit(session, for_context, result);
 
                     auto step_param = range->arguments()->param_by_name("step");
                     auto induction_step = builder.make_binary_operator(
@@ -162,7 +155,7 @@ namespace basecode::compiler {
                         session.elements().remove(induction_assign->id());
                         session.elements().remove(induction_step->id());
                     });
-                    induction_assign->emit(session, context, result);
+                    induction_assign->emit(session, for_context, result);
 
                     block->jump_direct(begin_label_ref);
 

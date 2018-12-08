@@ -64,9 +64,9 @@ namespace basecode::compiler {
 
         block->copy(
             vm::op_sizes::byte,
-            dest_var->value_reg(),
-            src_var->value_reg(),
-            size_var->value_reg());
+            dest_var->emit_result().operands.back(),
+            src_var->emit_result().operands.back(),
+            size_var->emit_result().operands.back());
 
         return true;
     }

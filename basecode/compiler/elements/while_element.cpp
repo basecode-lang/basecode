@@ -41,29 +41,24 @@ namespace basecode::compiler {
         auto begin_label_ref = assembler.make_label_ref(begin_label_name);
         auto exit_label_ref = assembler.make_label_ref(exit_label_name);
 
-        assembler.push_control_flow(vm::control_flow_t {
+        emit_context_t while_context {};
+        vm::control_flow_t flow_control {
             .exit_label = exit_label_ref,
             .continue_label = begin_label_ref
-        });
-
-        vm::register_t target_reg {
-            .size = vm::op_sizes::byte,
-            .type = vm::register_type_t::integer
         };
-        assembler.allocate_reg(target_reg);
-        defer({
-            assembler.free_reg(target_reg);
-            assembler.pop_control_flow();
-        });
+        while_context.flow_control = &flow_control;
 
         block->label(assembler.make_label(begin_label_name));
-        assembler.push_target_register(target_reg);
-        _predicate->emit(session, context, result);
-        assembler.pop_target_register();
 
-        block->bz(target_reg, exit_label_ref);
+        emit_result_t predicate_result {};
+        _predicate->emit(session, while_context, predicate_result);
+
+        block->bz(
+            predicate_result.operands.back(),
+            vm::instruction_operand_t(exit_label_ref));
+
         block->label(assembler.make_label(body_label_name));
-        _body->emit(session, context, result);
+        _body->emit(session, while_context, result);
         block->jump_direct(begin_label_ref);
 
         block->label(assembler.make_label(exit_label_name));

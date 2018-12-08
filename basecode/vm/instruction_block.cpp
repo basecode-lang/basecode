@@ -124,122 +124,33 @@ namespace basecode::vm {
 
     // copy & fill
     void instruction_block::copy(
-            op_sizes size,
-            const register_t& dest_reg,
-            const register_t& src_reg,
-            const register_t& size_reg) {
-        instruction_t copy_op;
-        copy_op.op = op_codes::copy;
-        copy_op.size = size;
-        copy_op.operands_count = 3;
-        copy_op.operands[0].type =
-            operand_encoding_t::flags::integer
-            | operand_encoding_t::flags::reg;
-        copy_op.operands[0].value.r = dest_reg.number;
-        copy_op.operands[1].type =
-            operand_encoding_t::flags::integer
-            | operand_encoding_t::flags::reg;
-        copy_op.operands[1].value.r = src_reg.number;
-        copy_op.operands[2].type =
-            operand_encoding_t::flags::integer
-            | operand_encoding_t::flags::reg;
-        copy_op.operands[2].value.r = size_reg.number;
-        make_block_entry(copy_op);
-    }
-
-    void instruction_block::copy(
-            op_sizes size,
-            const register_t& dest_reg,
-            const register_t& src_reg,
-            uint64_t count) {
-        instruction_t copy_op;
-        copy_op.op = op_codes::copy;
-        copy_op.size = size;
-        copy_op.operands_count = 3;
-        copy_op.operands[0].type =
-            operand_encoding_t::flags::integer
-            | operand_encoding_t::flags::reg;
-        copy_op.operands[0].value.r = dest_reg.number;
-        copy_op.operands[1].type =
-            operand_encoding_t::flags::integer
-            | operand_encoding_t::flags::reg;
-        copy_op.operands[1].value.r = src_reg.number;
-        copy_op.operands[2].type =
-            operand_encoding_t::flags::integer
-            | operand_encoding_t::flags::constant;
-        copy_op.operands[2].value.u = count;
-        make_block_entry(copy_op);
+            op_sizes inst_size,
+            const instruction_operand_t& dest,
+            const instruction_operand_t& src,
+            const instruction_operand_t& size) {
+        instruction_t op;
+        op.size = inst_size;
+        op.op = op_codes::copy;
+        op.operands_count = 3;
+        apply_operand(dest, op, 0);
+        apply_operand(src, op, 1);
+        apply_operand(size, op, 2);
+        make_block_entry(op);
     }
 
     void instruction_block::fill(
-            op_sizes size,
-            const register_t& dest_reg,
-            const register_t& value_reg,
-            uint64_t length) {
-        instruction_t fill_op;
-        fill_op.op = op_codes::fill;
-        fill_op.size = size;
-        fill_op.operands_count = 3;
-        fill_op.operands[0].type =
-            operand_encoding_t::flags::integer
-            | operand_encoding_t::flags::reg;
-        fill_op.operands[0].value.r = dest_reg.number;
-        fill_op.operands[1].type =
-            operand_encoding_t::flags::integer
-            | operand_encoding_t::flags::reg;
-        fill_op.operands[1].value.r = value_reg.number;
-        fill_op.operands[2].type =
-            operand_encoding_t::flags::integer
-            | operand_encoding_t::flags::constant;
-        fill_op.operands[2].value.u = length;
-        make_block_entry(fill_op);
-    }
-
-    void instruction_block::fill(
-            op_sizes size,
-            const register_t& dest_reg,
-            const register_t& value_reg,
-            const register_t& size_reg) {
-        instruction_t fill_op;
-        fill_op.op = op_codes::fill;
-        fill_op.size = size;
-        fill_op.operands_count = 3;
-        fill_op.operands[0].type =
-            operand_encoding_t::flags::integer
-            | operand_encoding_t::flags::reg;
-        fill_op.operands[0].value.r = dest_reg.number;
-        fill_op.operands[1].type =
-            operand_encoding_t::flags::integer
-            | operand_encoding_t::flags::reg;
-        fill_op.operands[1].value.r = value_reg.number;
-        fill_op.operands[2].type =
-            operand_encoding_t::flags::integer
-            | operand_encoding_t::flags::reg;
-        fill_op.operands[2].value.r = size_reg.number;
-        make_block_entry(fill_op);
-    }
-
-    void instruction_block::zero(
-            op_sizes size,
-            const register_t& dest_reg,
-            uint64_t length) {
-        instruction_t fill_op;
-        fill_op.op = op_codes::fill;
-        fill_op.size = size;
-        fill_op.operands_count = 3;
-        fill_op.operands[0].type =
-            operand_encoding_t::flags::integer
-            | operand_encoding_t::flags::reg;
-        fill_op.operands[0].value.r = dest_reg.number;
-        fill_op.operands[1].type =
-            operand_encoding_t::flags::integer
-            | operand_encoding_t::flags::constant;
-        fill_op.operands[1].value.u = 0;
-        fill_op.operands[2].type =
-            operand_encoding_t::flags::integer
-            | operand_encoding_t::flags::constant;
-        fill_op.operands[2].value.u = length;
-        make_block_entry(fill_op);
+            op_sizes inst_size,
+            const instruction_operand_t& dest,
+            const instruction_operand_t& src,
+            const instruction_operand_t& size) {
+        instruction_t op;
+        op.size = inst_size;
+        op.op = op_codes::fill;
+        op.operands_count = 3;
+        apply_operand(dest, op, 0);
+        apply_operand(src, op, 1);
+        apply_operand(size, op, 2);
+        make_block_entry(op);
     }
 
     // sections
@@ -352,7 +263,7 @@ namespace basecode::vm {
         instruction_t op;
         op.size = dest.size();
         op.op = op_codes::load;
-        op.operands_count = offset.is_empty() ? 2 : 3;
+        op.operands_count = static_cast<uint8_t>(offset.is_empty() ? 2 : 3);
         apply_operand(dest, op, 0);
         apply_operand(src, op, 1);
         apply_operand(offset, op, 2);
@@ -367,7 +278,7 @@ namespace basecode::vm {
         instruction_t op;
         op.size = src.size();
         op.op = op_codes::store;
-        op.operands_count = offset.is_empty() ? 2 : 3;
+        op.operands_count = static_cast<uint8_t>(offset.is_empty() ? 2 : 3);
         apply_operand(dest, op, 0);
         apply_operand(src, op, 1);
         apply_operand(offset, op, 2);
@@ -381,7 +292,7 @@ namespace basecode::vm {
         instruction_t op;
         op.size = src.size();
         op.op = op_codes::move;
-        op.operands_count = offset.is_empty() ? 2 : 3;
+        op.operands_count = static_cast<uint8_t>(offset.is_empty() ? 2 : 3);
         apply_operand(dest, op, 0);
         apply_operand(src, op, 1);
         apply_operand(offset, op, 2);
@@ -395,7 +306,7 @@ namespace basecode::vm {
         instruction_t op;
         op.size = src.size();
         op.op = op_codes::moves;
-        op.operands_count = offset.is_empty() ? 2 : 3;
+        op.operands_count = static_cast<uint8_t>(offset.is_empty() ? 2 : 3);
         apply_operand(dest, op, 0);
         apply_operand(src, op, 1);
         apply_operand(offset, op, 2);
@@ -409,7 +320,7 @@ namespace basecode::vm {
         instruction_t op;
         op.size = src.size();
         op.op = op_codes::movez;
-        op.operands_count = offset.is_empty() ? 2 : 3;
+        op.operands_count = static_cast<uint8_t>(offset.is_empty() ? 2 : 3);
         apply_operand(dest, op, 0);
         apply_operand(src, op, 1);
         apply_operand(offset, op, 2);
@@ -609,28 +520,25 @@ namespace basecode::vm {
 
     // alloc/free
     void instruction_block::alloc(
-            op_sizes size,
-            const register_t& dest_reg,
-            const register_t& size_reg) {
-        instruction_t alloc_op;
-        alloc_op.op = op_codes::alloc;
-        alloc_op.size = size;
-        alloc_op.operands_count = 2;
-        alloc_op.operands[0].value.r = dest_reg.number;
-        alloc_op.operands[0].type = operand_encoding_t::flags::reg | operand_encoding_t::flags::integer;
-        alloc_op.operands[1].value.r = size_reg.number;
-        alloc_op.operands[1].type = operand_encoding_t::flags::reg | operand_encoding_t::flags::integer;
-        make_block_entry(alloc_op);
+            op_sizes inst_size,
+            const instruction_operand_t& dest,
+            const instruction_operand_t& size) {
+        instruction_t op;
+        op.size = inst_size;
+        op.operands_count = 2;
+        op.op = op_codes::alloc;
+        apply_operand(dest, op, 0);
+        apply_operand(size, op, 1);
+        make_block_entry(op);
     }
 
-    void instruction_block::free(const register_t& addr_reg) {
-        instruction_t free_op;
-        free_op.op = op_codes::free;
-        free_op.size = op_sizes::none;
-        free_op.operands_count = 1;
-        free_op.operands[0].value.r = addr_reg.number;
-        free_op.operands[0].type = operand_encoding_t::flags::reg | operand_encoding_t::flags::integer;
-        make_block_entry(free_op);
+    void instruction_block::free(const instruction_operand_t& addr) {
+        instruction_t op;
+        op.size = addr.size();
+        op.operands_count = 1;
+        op.op = op_codes::free;
+        apply_operand(addr, op, 0);
+        make_block_entry(op);
     }
 
     // convert
@@ -700,8 +608,13 @@ namespace basecode::vm {
     }
 
     // pop variations
-    void instruction_block::pop(const register_t& reg) {
-        make_pop_instruction(reg);
+    void instruction_block::pop(const instruction_operand_t& dest) {
+        instruction_t op;
+        op.size = dest.size();
+        op.op = op_codes::pop;
+        op.operands_count = 1;
+        apply_operand(dest, op, 0);
+        make_block_entry(op);
     }
 
     // test & branch
@@ -842,114 +755,97 @@ namespace basecode::vm {
         return _type;
     }
 
-
-    void instruction_block::bb(const label_ref_t* label_ref) {
-        make_branch(op_codes::bb, op_sizes::qword, label_ref);
+    void instruction_block::bb(const instruction_operand_t& dest) {
+        make_branch(op_codes::bb, op_sizes::qword, dest);
     }
 
-    void instruction_block::ba(const label_ref_t* label_ref) {
-        make_branch(op_codes::ba, op_sizes::qword, label_ref);
+    void instruction_block::ba(const instruction_operand_t& dest) {
+        make_branch(op_codes::ba, op_sizes::qword, dest);
     }
 
-    void instruction_block::bs(const label_ref_t* label_ref) {
-        make_branch(op_codes::bs, op_sizes::qword, label_ref);
+    void instruction_block::bs(const instruction_operand_t& dest) {
+        make_branch(op_codes::bs, op_sizes::qword, dest);
     }
 
-    void instruction_block::bo(const label_ref_t* label_ref) {
-        make_branch(op_codes::bo, op_sizes::qword, label_ref);
+    void instruction_block::bo(const instruction_operand_t& dest) {
+        make_branch(op_codes::bo, op_sizes::qword, dest);
     }
 
-    void instruction_block::bg(const label_ref_t* label_ref) {
-        make_branch(op_codes::bg, op_sizes::qword, label_ref);
+    void instruction_block::bg(const instruction_operand_t& dest) {
+        make_branch(op_codes::bg, op_sizes::qword, dest);
     }
 
-    void instruction_block::bl(const label_ref_t* label_ref) {
-        make_branch(op_codes::bl, op_sizes::qword, label_ref);
+    void instruction_block::bl(const instruction_operand_t& dest) {
+        make_branch(op_codes::bl, op_sizes::qword, dest);
     }
 
-    void instruction_block::bge(const label_ref_t* label_ref) {
-        make_branch(op_codes::bge, op_sizes::qword, label_ref);
+    void instruction_block::bge(const instruction_operand_t& dest) {
+        make_branch(op_codes::bge, op_sizes::qword, dest);
     }
 
-    void instruction_block::ble(const label_ref_t* label_ref) {
-        make_branch(op_codes::ble, op_sizes::qword, label_ref);
+    void instruction_block::ble(const instruction_operand_t& dest) {
+        make_branch(op_codes::ble, op_sizes::qword, dest);
     }
 
-    void instruction_block::beq(const label_ref_t* label_ref) {
-        make_branch(op_codes::beq, op_sizes::qword, label_ref);
+    void instruction_block::beq(const instruction_operand_t& dest) {
+        make_branch(op_codes::beq, op_sizes::qword, dest);
     }
 
-    void instruction_block::bne(const label_ref_t* label_ref) {
-        make_branch(op_codes::bne, op_sizes::qword, label_ref);
+    void instruction_block::bne(const instruction_operand_t& dest) {
+        make_branch(op_codes::bne, op_sizes::qword, dest);
     }
 
-    void instruction_block::bcc(const label_ref_t* label_ref) {
-        make_branch(op_codes::bcc, op_sizes::qword, label_ref);
+    void instruction_block::bcc(const instruction_operand_t& dest) {
+        make_branch(op_codes::bcc, op_sizes::qword, dest);
     }
 
-    void instruction_block::bcs(const label_ref_t* label_ref) {
-        make_branch(op_codes::bcs, op_sizes::qword, label_ref);
+    void instruction_block::bcs(const instruction_operand_t& dest) {
+        make_branch(op_codes::bcs, op_sizes::qword, dest);
     }
 
-    void instruction_block::bbe(const label_ref_t* label_ref) {
-        make_branch(op_codes::bbe, op_sizes::qword, label_ref);
+    void instruction_block::bbe(const instruction_operand_t& dest) {
+        make_branch(op_codes::bbe, op_sizes::qword, dest);
     }
 
-    void instruction_block::bae(const label_ref_t* label_ref) {
-        make_branch(op_codes::bae, op_sizes::qword, label_ref);
+    void instruction_block::bae(const instruction_operand_t& dest) {
+        make_branch(op_codes::bae, op_sizes::qword, dest);
     }
 
     void instruction_block::make_branch(
             op_codes code,
             op_sizes size,
-            const label_ref_t* label_ref) {
-        instruction_t branch_op;
-        branch_op.op = code;
-        branch_op.size = size;
-        branch_op.operands_count = 1;
-        branch_op.operands[0].type =
-            operand_encoding_t::flags::integer
-            | operand_encoding_t::flags::constant
-            | operand_encoding_t::flags::unresolved;
-        branch_op.operands[0].value.u = label_ref->id;
-        make_block_entry(branch_op);
+            const instruction_operand_t& dest) {
+        instruction_t op;
+        op.op = code;
+        op.size = size;
+        op.operands_count = 1;
+        apply_operand(dest, op, 0);
+        make_block_entry(op);
     }
 
     // bz & bnz
     void instruction_block::bz(
-            const register_t& reg,
-            const label_ref_t* label_ref) {
-        instruction_t branch_op;
-        branch_op.op = op_codes::bz;
-        branch_op.size = op_sizes::qword;
-        branch_op.operands_count = 2;
-        branch_op.operands[0].type = operand_encoding_t::flags::reg
-            | operand_encoding_t::flags::integer;
-        branch_op.operands[0].value.r = reg.number;
-        branch_op.operands[1].type =
-            operand_encoding_t::flags::integer
-            | operand_encoding_t::flags::constant
-            | operand_encoding_t::flags::unresolved;
-        branch_op.operands[1].value.u = label_ref->id;
-        make_block_entry(branch_op);
+            const instruction_operand_t& src,
+            const instruction_operand_t& dest) {
+        instruction_t op;
+        op.op = op_codes::bz;
+        op.operands_count = 2;
+        op.size = op_sizes::qword;
+        apply_operand(src, op, 0);
+        apply_operand(dest, op, 1);
+        make_block_entry(op);
     }
 
     void instruction_block::bnz(
-            const register_t& reg,
-            const label_ref_t* label_ref) {
-        instruction_t branch_op;
-        branch_op.op = op_codes::bnz;
-        branch_op.size = op_sizes::qword;
-        branch_op.operands_count = 2;
-        branch_op.operands[0].type = operand_encoding_t::flags::reg
-                                     | operand_encoding_t::flags::integer;
-        branch_op.operands[0].value.r = reg.number;
-        branch_op.operands[1].type =
-            operand_encoding_t::flags::integer
-            | operand_encoding_t::flags::constant
-            | operand_encoding_t::flags::unresolved;
-        branch_op.operands[1].value.u = label_ref->id;
-        make_block_entry(branch_op);
+            const instruction_operand_t& src,
+            const instruction_operand_t& dest) {
+        instruction_t op;
+        op.op = op_codes::bnz;
+        op.operands_count = 2;
+        op.size = op_sizes::qword;
+        apply_operand(src, op, 0);
+        apply_operand(dest, op, 1);
+        make_block_entry(op);
     }
 
     void instruction_block::call(const label_ref_t* label_ref) {
@@ -1005,18 +901,6 @@ namespace basecode::vm {
 
     listing_source_file_t* instruction_block::source_file() {
         return _source_file;
-    }
-
-    void instruction_block::make_pop_instruction(const register_t& dest_reg) {
-        instruction_t pop_op;
-        pop_op.op = op_codes::pop;
-        pop_op.size = dest_reg.size;
-        pop_op.operands_count = 1;
-        pop_op.operands[0].type = operand_encoding_t::flags::reg;
-        if (dest_reg.type == register_type_t::integer)
-            pop_op.operands[0].type |= operand_encoding_t::flags::integer;
-        pop_op.operands[0].value.r = dest_reg.number;
-        make_block_entry(pop_op);
     }
 
     void instruction_block::or_op(

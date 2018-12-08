@@ -390,24 +390,6 @@ namespace basecode::compiler {
         return !_result.is_failed();
     }
 
-    bool session::emit_to_temp(
-            compiler::element* element,
-            vm::op_sizes reg_size,
-            vm::register_type_t reg_type) {
-        vm::register_t temp_reg;
-        temp_reg.size = reg_size;
-        temp_reg.type = reg_type;
-        if (!allocate_reg(temp_reg, element))
-            return false;
-
-        emit_context_t context {};
-        emit_result_t result {};
-        _assembler.push_target_register(temp_reg);
-        element->emit(*this, context, result);
-
-        return true;
-    }
-
     element_map& session::elements() {
         return _elements;
     }

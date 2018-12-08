@@ -39,23 +39,18 @@ namespace basecode::compiler {
         auto true_label_name = fmt::format("{}_true", label_name());
         auto false_label_name = fmt::format("{}_false", label_name());
 
-        auto target_reg = assembler.current_target_register();
-        if (target_reg == nullptr) {
+        if (context.flow_control == nullptr) {
             // XXX: error
             return false;
         }
 
-        auto control_flow = assembler.current_control_flow();
-        if (control_flow == nullptr) {
-            // XXX: error
-            return false;
-        }
-        control_flow->fallthrough = false;
+        context.flow_control->fallthrough = false;
+
         auto is_default_case = _expr == nullptr;
 
         vm::label_ref_t* fallthrough_label = nullptr;
         if (!is_default_case) {
-            auto next = boost::any_cast<compiler::element*>(control_flow->values[next_element]);
+            auto next = boost::any_cast<compiler::element*>(context.flow_control->values[next_element]);
             if (next != nullptr
             && next->element_type() == element_type_t::statement) {
                 auto stmt = dynamic_cast<compiler::statement*>(next);
@@ -69,7 +64,7 @@ namespace basecode::compiler {
         }
 
         if (!is_default_case) {
-            auto switch_expr = boost::any_cast<compiler::element*>(control_flow->values[switch_expression]);
+            auto switch_expr = boost::any_cast<compiler::element*>(context.flow_control->values[switch_expression]);
             auto equals_op = builder.make_binary_operator(
                 parent_scope(),
                 operator_type_t::equals,
@@ -77,18 +72,22 @@ namespace basecode::compiler {
                 _expr);
             equals_op->make_non_owning();
             defer(session.elements().remove(equals_op->id()));
-            equals_op->emit(session, context, result);
-            block->bz(*target_reg, assembler.make_label_ref(false_label_name));
+
+            emit_result_t equals_result {};
+            equals_op->emit(session, context, equals_result);
+            block->bz(
+                equals_result.operands.back(),
+                vm::instruction_operand_t(assembler.make_label_ref(false_label_name)));
         }
 
         block->label(assembler.make_label(true_label_name));
         _scope->emit(session, context, result);
 
         if (!is_default_case) {
-            if (control_flow->fallthrough) {
+            if (context.flow_control->fallthrough) {
                 block->jump_direct(fallthrough_label);
             } else {
-                block->jump_direct(control_flow->exit_label);
+                block->jump_direct(context.flow_control->exit_label);
             }
         }
 

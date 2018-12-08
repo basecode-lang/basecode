@@ -7,12 +7,9 @@ the_foo_t :: struct {
     w: f32;
 };
 
-// this one is ok
-x :: range<s32>(0, 10);
-
-
 u :: new<the_foo_t>(x := 1.0, y := 1.0, z := 1.0, w := 1.0);
 v :: tuple(name := "jeff", status := "old");
+//x :: range<s32>(0, 10);
 y :: array<s8>(-1, -2, -3, -4);
 z :: map<string, u16>("test" := 2, "foo" := 3, "bar" := 1);
 

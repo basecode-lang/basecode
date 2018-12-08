@@ -36,7 +36,6 @@ namespace basecode::compiler {
             compiler::emit_result_t& result) {
         auto& assembler = session.assembler();
         auto block = assembler.current_block();
-        auto target_reg = assembler.current_target_register();
 
         auto args = arguments()->elements();
         if (args.empty() || args.size() > 1) {
@@ -69,7 +68,21 @@ namespace basecode::compiler {
             return false;
         arg_var->read();
 
-        block->alloc(vm::op_sizes::byte, *target_reg, arg_var->value_reg());
+        vm::instruction_operand_t result_operand;
+        if (!vm::instruction_operand_t::allocate(
+                assembler,
+                result_operand,
+                vm::op_sizes::qword,
+                vm::register_type_t::integer)) {
+            return false;
+        }
+
+        result.operands.emplace_back(result_operand);
+
+        block->alloc(
+            vm::op_sizes::byte,
+            result_operand,
+            arg_var->emit_result().operands.back());
 
         return true;
     }

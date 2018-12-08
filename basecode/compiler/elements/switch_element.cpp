@@ -39,27 +39,15 @@ namespace basecode::compiler {
 
         auto exit_label_ref = assembler.make_label_ref(exit_label_name);
 
+        emit_context_t switch_context {};
         vm::control_flow_t flow_control {
             .exit_label = exit_label_ref,
         };
         flow_control.values.insert(std::make_pair(switch_expression, _expr));
-        assembler.push_control_flow(flow_control);
-
-        vm::register_t target_reg {
-            .size = vm::op_sizes::byte,
-            .type = vm::register_type_t::integer
-        };
-        assembler.allocate_reg(target_reg);
-        defer({
-            assembler.free_reg(target_reg);
-            assembler.pop_control_flow();
-        });
+        switch_context.flow_control = &flow_control;
 
         block->label(assembler.make_label(begin_label_name));
-
-        assembler.push_target_register(target_reg);
-        _scope->emit(session, context, result);
-        assembler.pop_target_register();
+        _scope->emit(session, switch_context, result);
 
         block->label(assembler.make_label(exit_label_name));
         block->nop();

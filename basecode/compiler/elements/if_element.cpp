@@ -41,29 +41,35 @@ namespace basecode::compiler {
         auto false_label_name = fmt::format("{}_false", label_name());
         auto end_label_name = fmt::format("{}_end", label_name());
 
-        vm::register_t target_reg {
-            .size = vm::op_sizes::byte,
-            .type = vm::register_type_t::integer
-        };
-        assembler.allocate_reg(target_reg);
-        defer({
-            assembler.free_reg(target_reg);
-        });
+        vm::instruction_operand_t result_operand;
+        if (!vm::instruction_operand_t::allocate(
+                assembler,
+                result_operand,
+                vm::op_sizes::byte,
+                vm::register_type_t::integer)) {
+            return false;
+        }
+        result.operands.emplace_back(result_operand);
 
         block->label(assembler.make_label(begin_label_name));
-        assembler.push_target_register(target_reg);
-        _predicate->emit(session, context, result);
-        assembler.pop_target_register();
 
-        block->bz(target_reg, assembler.make_label_ref(false_label_name));
+        emit_result_t predicate_result {};
+        _predicate->emit(session, context, predicate_result);
+
+        block->bz(
+            predicate_result.operands.back(),
+            vm::instruction_operand_t(assembler.make_label_ref(false_label_name)));
+
         block->label(assembler.make_label(true_label_name));
-        _true_branch->emit(session, context, result);
+        emit_result_t true_result {};
+        _true_branch->emit(session, context, true_result);
         if (!block->is_current_instruction(vm::op_codes::jmp))
             block->jump_direct(assembler.make_label_ref(end_label_name));
 
         block->label(assembler.make_label(false_label_name));
         if (_false_branch != nullptr) {
-            _false_branch->emit(session, context, result);
+            emit_result_t false_result {};
+            _false_branch->emit(session, context, false_result);
         } else {
             block->nop();
         }

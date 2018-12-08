@@ -37,9 +37,8 @@ namespace basecode::compiler {
             label_name = _label->name();
             label_ref = assembler.make_label_ref(_label->name());
         } else {
-            auto control_flow = assembler.current_control_flow();
-            if (control_flow == nullptr
-                ||  control_flow->exit_label == nullptr) {
+            if (context.flow_control == nullptr
+            ||  context.flow_control->exit_label == nullptr) {
                 session.error(
                     this,
                     "P081",
@@ -47,7 +46,7 @@ namespace basecode::compiler {
                     location());
                 return false;
             }
-            label_ref = control_flow->exit_label;
+            label_ref = context.flow_control->exit_label;
             label_name = label_ref->name;
         }
 

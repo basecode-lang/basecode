@@ -653,28 +653,6 @@ namespace basecode::vm {
         return true;
     }
 
-    void assembler::pop_control_flow() {
-        if (_control_flow_stack.empty())
-            return;
-        _control_flow_stack.pop();
-    }
-
-    void assembler::pop_target_register() {
-        if (_target_registers.empty())
-            return;
-        _target_registers.pop();
-    }
-
-    bool assembler::remove_tagged_register(
-            uint8_t tag,
-            register_t& reg) {
-        auto it = _tagged_registers.find(tag);
-        if (it == _tagged_registers.end())
-            return false;
-        reg = *(it->second);
-        return _tagged_registers.erase(tag);
-    }
-
     instruction_block* assembler::pop_block() {
         if (_block_stack.empty())
             return nullptr;
@@ -718,18 +696,6 @@ namespace basecode::vm {
 
     void assembler::free_reg(const register_t& reg) {
         _register_allocator.free(reg);
-    }
-
-    register_t* assembler::current_target_register() {
-        if (_target_registers.empty())
-            return nullptr;
-        return &_target_registers.top();
-    }
-
-    control_flow_t* assembler::current_control_flow() {
-        if (_control_flow_stack.empty())
-            return nullptr;
-        return &_control_flow_stack.top();
     }
 
     bool assembler::resolve_labels(common::result& r) {
@@ -894,10 +860,6 @@ namespace basecode::vm {
         if (it == _segments.end())
             return nullptr;
         return &it->second;
-    }
-
-    void assembler::push_target_register(const register_t& reg) {
-        _target_registers.push(reg);
     }
 
     label_ref_t* assembler::find_label_ref(common::id_t id) {
@@ -1074,20 +1036,6 @@ namespace basecode::vm {
         return it.first->second;
     }
 
-    register_t* assembler::tagged_register(uint8_t tag) const {
-        auto it = _tagged_registers.find(tag);
-        if (it == _tagged_registers.end())
-            return nullptr;
-        return it->second;
-    }
-
-    void assembler::tag_register(uint8_t tag, register_t* reg) {
-        auto it = _tagged_registers.find(tag);
-        if (it != _tagged_registers.end())
-            return;
-        _tagged_registers.insert(std::make_pair(tag, reg));
-    }
-
     label_ref_t* assembler::make_label_ref(const std::string& label_name) {
         auto it = _label_to_unresolved_ids.find(label_name);
         if (it != _label_to_unresolved_ids.end()) {
@@ -1136,10 +1084,6 @@ namespace basecode::vm {
         } else {
             return isdigit(value[1]) && isdigit(value[2]);
         }
-    }
-
-    void assembler::push_control_flow(const control_flow_t& control_flow) {
-        _control_flow_stack.push(control_flow);
     }
 
 };

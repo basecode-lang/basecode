@@ -27,18 +27,12 @@ namespace basecode::compiler {
         auto& assembler = session.assembler();
         auto block = assembler.current_block();
         if (!_expressions.empty()) {
-            vm::register_t target_reg;
-            if (!assembler.allocate_reg(target_reg)) {
-            }
-            assembler.push_target_register(target_reg);
-            // XXX: temporarily, only the first return value
-            _expressions.front()->emit(session, context, result);
+            emit_result_t return_result {};
+            _expressions.front()->emit(session, context, return_result);
             block->store(
                 vm::instruction_operand_t::fp(),
-                result.operands.back(),
+                return_result.operands.back(),
                 vm::instruction_operand_t(static_cast<uint64_t>(8), vm::op_sizes::byte));
-            assembler.pop_target_register();
-            assembler.free_reg(target_reg);
         }
         block->rts();
         return true;

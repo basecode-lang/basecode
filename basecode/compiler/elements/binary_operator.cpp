@@ -89,8 +89,28 @@ namespace basecode::compiler {
                 variable_handle_t field_var {};
                 if (!session.variable(this, field_var))
                     return false;
-//                auto target_reg = assembler.current_target_register();
-//                block->move_reg_to_reg(*target_reg, field_var->value_reg());
+
+                auto type = field_var->type_result().inferred_type;
+                auto target_number_class = type->number_class();
+                auto target_size = type->size_in_bytes();
+                auto target_type = target_number_class == type_number_class_t::integer ?
+                                   vm::register_type_t::integer :
+                                   vm::register_type_t::floating_point;
+
+                vm::instruction_operand_t result_operand;
+                if (!vm::instruction_operand_t::allocate(
+                        assembler,
+                        result_operand,
+                        vm::op_size_for_byte_size(target_size),
+                        target_type)) {
+                    return false;
+                }
+                result.operands.emplace_back(result_operand);
+
+                block->move(
+                    result_operand,
+                    field_var->emit_result().operands.back(),
+                    vm::instruction_operand_t::empty());
                 break;
             }
             case operator_type_t::assignment: {
@@ -385,44 +405,12 @@ namespace basecode::compiler {
         auto& assembler = session.assembler();
         auto block = assembler.current_block();
 
-        auto free_target_reg = false;
-        auto clear_target_tag = false;
-        defer({
-            if (!clear_target_tag)
-                return;
-            vm::register_t temp_reg;
-            if (assembler.remove_tagged_register(
-                    register_tags_t::tag_rel_expr_target,
-                    temp_reg)) {
-                if (free_target_reg)
-                    assembler.free_reg(temp_reg);
-            }
-        });
-
-        auto target_reg = assembler.tagged_register(register_tags_t::tag_rel_expr_target);
-        if (target_reg == nullptr) {
-            clear_target_tag = true;
-
-            target_reg = assembler.current_target_register();
-            if (target_reg == nullptr) {
-                if (!assembler.allocate_reg(_temp_reg)) {
-                    // XXX: handle error
-                }
-                target_reg = &_temp_reg;
-                free_target_reg = true;
-            }
-
-            assembler.tag_register(
-                register_tags_t::tag_rel_expr_target,
-                target_reg);
-//            block->clr(vm::op_sizes::qword, *target_reg);
-        }
-
         variable_handle_t lhs_var;
         if (!session.variable(_lhs, lhs_var))
             return;
         lhs_var->read();
 
+        auto is_signed = lhs_var->type_result().inferred_type->is_signed();
         auto end_label_name = fmt::format("{}_end", label_name());
         auto end_label_ref = assembler.make_label_ref(end_label_name);
 
@@ -430,12 +418,16 @@ namespace basecode::compiler {
         switch (operator_type()) {
             case operator_type_t::logical_or: {
                 is_short_circuited = true;
-                block->bnz(*target_reg, end_label_ref);
+                block->bnz(
+                    lhs_var->emit_result().operands.back(),
+                    vm::instruction_operand_t(end_label_ref));
                 break;
             }
             case operator_type_t::logical_and: {
                 is_short_circuited = true;
-                block->bz(*target_reg, end_label_ref);
+                block->bz(
+                    lhs_var->emit_result().operands.back(),
+                    vm::instruction_operand_t(end_label_ref));
                 break;
             }
             default: {
@@ -448,44 +440,57 @@ namespace basecode::compiler {
             return;
         rhs_var->read();
 
+        vm::instruction_operand_t result_operand;
+        if (!vm::instruction_operand_t::allocate(
+                assembler,
+                result_operand,
+                vm::op_sizes::byte,
+                vm::register_type_t::integer)) {
+            return;
+        }
+        result.operands.emplace_back(result_operand);
+        block->clr(vm::op_sizes::qword, result_operand);
+
         if (!is_short_circuited) {
-//            block->cmp(lhs_var->value_reg(), rhs_var->value_reg());
+            block->cmp(
+                lhs_var->emit_result().operands.back(),
+                rhs_var->emit_result().operands.back());
 
             switch (operator_type()) {
                 case operator_type_t::equals: {
-//                    block->setz(*target_reg);
+                    block->setz(result_operand);
                     break;
                 }
                 case operator_type_t::less_than: {
-//                    if (lhs_var->type_result().inferred_type->is_signed())
-//                        block->setl(*target_reg);
-//                    else
-//                        block->setb(*target_reg);
+                    if (is_signed)
+                        block->setl(result_operand);
+                    else
+                        block->setb(result_operand);
                     break;
                 }
                 case operator_type_t::not_equals: {
-//                    block->setnz(*target_reg);
+                    block->setnz(result_operand);
                     break;
                 }
                 case operator_type_t::greater_than: {
-//                    if (lhs_var->type_result().inferred_type->is_signed())
-//                        block->setg(*target_reg);
-//                    else
-//                        block->seta(*target_reg);
+                    if (is_signed)
+                        block->setg(result_operand);
+                    else
+                        block->seta(result_operand);
                     break;
                 }
                 case operator_type_t::less_than_or_equal: {
-//                    if (lhs_var->type_result().inferred_type->is_signed())
-//                        block->setbe(*target_reg);
-//                    else
-//                        block->setle(*target_reg);
+                    if (is_signed)
+                        block->setbe(result_operand);
+                    else
+                        block->setle(result_operand);
                     break;
                 }
                 case operator_type_t::greater_than_or_equal: {
-//                    if (lhs_var->type_result().inferred_type->is_signed())
-//                        block->setge(*target_reg);
-//                    else
-//                        block->setae(*target_reg);
+                    if (is_signed)
+                        block->setge(result_operand);
+                    else
+                        block->setae(result_operand);
                     break;
                 }
                 default: {

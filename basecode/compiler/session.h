@@ -75,11 +75,6 @@ namespace basecode::compiler {
             vm::register_t& reg,
             compiler::element* element);
 
-        bool emit_to_temp(
-            compiler::element* element,
-            vm::op_sizes reg_size,
-            vm::register_type_t reg_type);
-
         element_map& elements();
 
         common::result& result();

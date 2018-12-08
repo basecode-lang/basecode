@@ -111,9 +111,7 @@ namespace basecode::compiler {
                 break;
             }
             default: {
-                assembler.push_target_register(_value.reg);
                 _element->emit(_session, _context, _result);
-                assembler.pop_target_register();
                 break;
             }
         }
@@ -411,9 +409,9 @@ namespace basecode::compiler {
 
         block->copy(
             vm::op_sizes::byte,
-            _address.reg,
-            value->address_reg(),
-            size_in_bytes);
+            vm::instruction_operand_t(_address.reg),
+            vm::instruction_operand_t(value->_address.reg),
+            vm::instruction_operand_t(static_cast<uint64_t>(size_in_bytes)));
 
         return true;
     }

@@ -235,20 +235,20 @@ namespace basecode::vm {
     }
 
     instruction_operand_t::instruction_operand_t(register_t reg) : _data(reg),
-                              _size(reg.size),
-                              _type(instruction_operand_type_t::reg) {
+                                                                   _size(reg.size),
+                                                                   _type(instruction_operand_type_t::reg) {
     }
 
     instruction_operand_t::instruction_operand_t(float immediate) : _data(immediate),
-                               _type(instruction_operand_type_t::imm_f32) {
+                                                                    _type(instruction_operand_type_t::imm_f32) {
     }
 
     instruction_operand_t::instruction_operand_t(double immediate) : _data(immediate),
-                                _type(instruction_operand_type_t::imm_f64) {
+                                                                     _type(instruction_operand_type_t::imm_f64) {
     }
 
     instruction_operand_t::instruction_operand_t(label_ref_t* label_ref): _data(label_ref),
-                                     _type(instruction_operand_type_t::label_ref) {
+                                                                          _type(instruction_operand_type_t::label_ref) {
     }
 
     void instruction_operand_t::free(vm::assembler& assembler) {

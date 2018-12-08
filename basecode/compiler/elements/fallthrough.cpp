@@ -27,13 +27,11 @@ namespace basecode::compiler {
             compiler::session& session,
             compiler::emit_context_t& context,
             compiler::emit_result_t& result) {
-        auto& assembler = session.assembler();
-        auto control_flow = assembler.current_control_flow();
-        if (control_flow == nullptr) {
+        if (context.flow_control == nullptr) {
             // XXX: error
             return false;
         }
-        control_flow->fallthrough = true;
+        context.flow_control->fallthrough = true;
         return true;
     }
 

@@ -67,7 +67,7 @@ namespace basecode::compiler {
             return false;
         arg_var->read();
 
-        block->free(arg_var->value_reg());
+        block->free(arg_var->emit_result().operands.back());
 
         return true;
     }

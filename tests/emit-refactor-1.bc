@@ -11,7 +11,10 @@
 
 support :: module("support/module.bc");
 
-a := true;
+a: bool;
+
+@no_fold;
+a := 2 > 1;
 
 @no_fold;
 b := !a;
