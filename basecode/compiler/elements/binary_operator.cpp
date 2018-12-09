@@ -407,40 +407,8 @@ namespace basecode::compiler {
         auto& assembler = session.assembler();
         auto block = assembler.current_block();
 
-        variable_handle_t lhs_var;
-        if (!session.variable(_lhs, lhs_var))
-            return;
-        lhs_var->read();
-
-        auto is_signed = lhs_var->type_result().inferred_type->is_signed();
         auto end_label_name = fmt::format("{}_end", label_name());
         auto end_label_ref = assembler.make_label_ref(end_label_name);
-
-        auto is_short_circuited = false;
-        switch (operator_type()) {
-            case operator_type_t::logical_or: {
-                is_short_circuited = true;
-                block->bnz(
-                    lhs_var->emit_result().operands.back(),
-                    vm::instruction_operand_t(end_label_ref));
-                break;
-            }
-            case operator_type_t::logical_and: {
-                is_short_circuited = true;
-                block->bz(
-                    lhs_var->emit_result().operands.back(),
-                    vm::instruction_operand_t(end_label_ref));
-                break;
-            }
-            default: {
-                break;
-            }
-        }
-
-        variable_handle_t rhs_var;
-        if (!session.variable(_rhs, rhs_var))
-            return;
-        rhs_var->read();
 
         vm::instruction_operand_t result_operand;
         if (!vm::instruction_operand_t::allocate(
@@ -453,7 +421,44 @@ namespace basecode::compiler {
         result.operands.emplace_back(result_operand);
         block->clr(vm::op_sizes::qword, result_operand);
 
-        if (!is_short_circuited) {
+        variable_handle_t lhs_var;
+        if (!session.variable(_lhs, lhs_var))
+            return;
+        lhs_var->read();
+
+        variable_handle_t rhs_var;
+        if (!session.variable(_rhs, rhs_var))
+            return;
+
+        auto is_signed = lhs_var->type_result().inferred_type->is_signed();
+
+        if (is_logical_conjunction_operator(operator_type())) {
+            switch (operator_type()) {
+                case operator_type_t::logical_or: {
+                    block->bnz(
+                        lhs_var->emit_result().operands.back(),
+                        vm::instruction_operand_t(end_label_ref));
+                    break;
+                }
+                case operator_type_t::logical_and: {
+                    block->bz(
+                        lhs_var->emit_result().operands.back(),
+                        vm::instruction_operand_t(end_label_ref));
+                    break;
+                }
+                default: {
+                    break;
+                }
+            }
+            rhs_var->read();
+
+            // XXX: this works but i'd like to eliminate the extra instruction
+            block->move(
+                result_operand,
+                rhs_var->emit_result().operands.back());
+        } else {
+            rhs_var->read();
+
             block->cmp(
                 lhs_var->emit_result().operands.back(),
                 rhs_var->emit_result().operands.back());

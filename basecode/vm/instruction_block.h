@@ -165,29 +165,29 @@ namespace basecode::vm {
         void load(
             const instruction_operand_t& dest,
             const instruction_operand_t& src,
-            const instruction_operand_t& offset);
+            const instruction_operand_t& offset = {});
 
         // store variations
         void store(
             const instruction_operand_t& dest,
             const instruction_operand_t& src,
-            const instruction_operand_t& offset);
+            const instruction_operand_t& offset = {});
 
         // move variations
         void move(
             const instruction_operand_t& dest,
             const instruction_operand_t& src,
-            const instruction_operand_t& offset);
+            const instruction_operand_t& offset = {});
 
         void moves(
             const instruction_operand_t& dest,
             const instruction_operand_t& src,
-            const instruction_operand_t& offset);
+            const instruction_operand_t& offset = {});
 
         void movez(
             const instruction_operand_t& dest,
             const instruction_operand_t& src,
-            const instruction_operand_t& offset);
+            const instruction_operand_t& offset = {});
 
         // setxx
         void sets(const instruction_operand_t& dest);
