@@ -481,9 +481,9 @@ namespace basecode::compiler {
                 }
                 case operator_type_t::less_than_or_equal: {
                     if (is_signed)
-                        block->setbe(result_operand);
-                    else
                         block->setle(result_operand);
+                    else
+                        block->setbe(result_operand);
                     break;
                 }
                 case operator_type_t::greater_than_or_equal: {
