@@ -76,7 +76,9 @@ namespace basecode::compiler {
 
         auto block_scope = scope();
 
-        auto string_type = session.scope_manager().find_type({.name = "string"});
+        auto string_type = session
+            .scope_manager()
+            .find_type(qualified_symbol_t("string"));
         auto string_type_ref = builder.make_type_reference(
             block_scope,
             string_type->symbol()->qualified_symbol(),

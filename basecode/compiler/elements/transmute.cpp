@@ -88,7 +88,7 @@ namespace basecode::compiler {
         block->move(
             target_operand,
             temp_var->emit_result().operands.back(),
-            vm::instruction_operand_t {});
+            vm::instruction_operand_t::empty());
 
         return true;
     }

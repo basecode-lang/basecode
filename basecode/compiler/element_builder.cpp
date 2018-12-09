@@ -973,7 +973,7 @@ namespace basecode::compiler {
             compiler::type* type) {
         return make_type_reference(
             parent_scope,
-            qualified_symbol_t {.name = name},
+            qualified_symbol_t(name),
             type);
     }
 
@@ -1260,7 +1260,7 @@ namespace basecode::compiler {
                 subscripts);
             type_ref = make_type_reference(
                 parent_scope,
-                qualified_symbol_t {},
+                qualified_symbol_t(),
                 array_type);
         }
 

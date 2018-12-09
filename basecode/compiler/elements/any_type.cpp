@@ -43,15 +43,15 @@ namespace basecode::compiler {
 
         auto block_scope = scope();
 
-        auto type_info_type = session.scope_manager().find_type({ .name = "type" });
-        auto u8_type = session.scope_manager().find_type({ .name = "u8" });
+        auto type_info_type = session.scope_manager().find_type(qualified_symbol_t("type"));
+        auto u8_type = session.scope_manager().find_type(qualified_symbol_t("u8"));
         auto u8_ptr_type = builder.make_pointer_type(
             block_scope,
-            qualified_symbol_t { .name = "u8" },
+            qualified_symbol_t("u8"),
             u8_type);
         auto type_info_ptr_type = builder.make_pointer_type(
             block_scope,
-            qualified_symbol_t { .name = "type" },
+            qualified_symbol_t("type"),
             type_info_type);
 
         auto metadata_identifier = builder.make_identifier(
@@ -60,7 +60,7 @@ namespace basecode::compiler {
             nullptr);
         metadata_identifier->type_ref(builder.make_type_reference(
             block_scope,
-            qualified_symbol_t {.name = "^type"},
+            qualified_symbol_t("^type"),
             type_info_ptr_type));
         auto metadata_field = builder.make_field(
             this,
@@ -74,7 +74,7 @@ namespace basecode::compiler {
             nullptr);
         data_identifier->type_ref(builder.make_type_reference(
             block_scope,
-            qualified_symbol_t {.name = "^u8"},
+            qualified_symbol_t("^u8"),
             u8_ptr_type));
         auto data_field = builder.make_field(
             this,

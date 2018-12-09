@@ -1714,7 +1714,7 @@ namespace basecode::compiler {
                     }
                     type_decl_ref = builder.make_type_reference(
                         scope,
-                        qualified_symbol_t {},
+                        qualified_symbol_t(),
                         type);
                     break;
                 }
@@ -1756,7 +1756,7 @@ namespace basecode::compiler {
                     }
                     type_decl_ref = builder.make_type_reference(
                         scope,
-                        qualified_symbol_t {},
+                        qualified_symbol_t(),
                         type);
                     break;
                 }

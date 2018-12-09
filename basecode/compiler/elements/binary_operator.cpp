@@ -206,7 +206,9 @@ namespace basecode::compiler {
             case operator_type_t::greater_than:
             case operator_type_t::less_than_or_equal:
             case operator_type_t::greater_than_or_equal: {
-                result.inferred_type = session.scope_manager().find_type({.name = "bool"});
+                result.inferred_type = session
+                    .scope_manager()
+                    .find_type(qualified_symbol_t("bool"));
                 return true;
             }
             default:

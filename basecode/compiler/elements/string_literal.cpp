@@ -37,7 +37,9 @@ namespace basecode::compiler {
     bool string_literal::on_infer_type(
             compiler::session& session,
             infer_type_result_t& result) {
-        result.inferred_type = session.scope_manager().find_type({.name = "string"});
+        result.inferred_type = session
+            .scope_manager()
+            .find_type(qualified_symbol_t("string"));
         return true;
     }
 

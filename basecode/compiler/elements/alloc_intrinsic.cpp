@@ -90,9 +90,9 @@ namespace basecode::compiler {
     bool alloc_intrinsic::on_infer_type(
             compiler::session& session,
             infer_type_result_t& result) {
-        result.inferred_type = session.scope_manager().find_type(qualified_symbol_t {
-            .name = "u64"
-        });
+        result.inferred_type = session
+            .scope_manager()
+            .find_type(qualified_symbol_t("u64"));
         return true;
     }
 

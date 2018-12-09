@@ -190,7 +190,7 @@ namespace basecode::compiler {
                 return _rhs->infer_type(session, result);
             }
             case operator_type_t::logical_not: {
-                result.inferred_type = scope_manager.find_type({.name = "bool"});
+                result.inferred_type = scope_manager.find_type(qualified_symbol_t("bool"));
                 return true;
             }
             case operator_type_t::pointer_dereference: {

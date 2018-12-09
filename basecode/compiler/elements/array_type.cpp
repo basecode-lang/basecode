@@ -105,13 +105,13 @@ namespace basecode::compiler {
 
         auto block_scope = scope();
 
-        auto u8_type = scope_manager.find_type({.name = "u8"});
-        auto u32_type = scope_manager.find_type({.name = "u32"});
+        auto u8_type = scope_manager.find_type(qualified_symbol_t("u8"));
+        auto u32_type = scope_manager.find_type(qualified_symbol_t("u32"));
         auto ptr_type = builder.make_pointer_type(
             block_scope,
-            qualified_symbol_t { .name = "u8" },
+            qualified_symbol_t("u8"),
             u8_type);
-        auto type_info_type = scope_manager.find_type({.name = "type"});
+        auto type_info_type = scope_manager.find_type(qualified_symbol_t("type"));
 
         auto u8_type_ref = builder.make_type_reference(
             block_scope,
@@ -123,7 +123,7 @@ namespace basecode::compiler {
             u32_type);
         auto ptr_type_ref = builder.make_type_reference(
             block_scope,
-            qualified_symbol_t {.name = "^u8"},
+            qualified_symbol_t("^u8"),
             ptr_type);
         auto type_info_ref = builder.make_type_reference(
             block_scope,

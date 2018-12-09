@@ -246,9 +246,7 @@ namespace basecode::compiler {
             compiler::type* base_type,
             compiler::block* scope) const {
         return dynamic_cast<compiler::pointer_type*>(find_type(
-            qualified_symbol_t {
-                .name = compiler::pointer_type::name_for_pointer(base_type)
-            },
+            qualified_symbol_t(compiler::pointer_type::name_for_pointer(base_type)),
             scope));
     }
 
@@ -256,9 +254,7 @@ namespace basecode::compiler {
             const type_reference_list_t& constraints,
             compiler::block* scope) const {
         return dynamic_cast<compiler::generic_type*>(find_type(
-            qualified_symbol_t {
-                .name = compiler::generic_type::name_for_generic_type(constraints)
-            },
+            qualified_symbol_t(compiler::generic_type::name_for_generic_type(constraints)),
             scope));
     }
 
@@ -267,9 +263,7 @@ namespace basecode::compiler {
             compiler::type_reference* value_type,
             compiler::block* scope) const {
         return dynamic_cast<compiler::map_type*>(find_type(
-            qualified_symbol_t {
-                .name = compiler::map_type::name_for_map(key_type, value_type)
-            },
+            qualified_symbol_t(compiler::map_type::name_for_map(key_type, value_type)),
             scope));
     }
 
@@ -278,9 +272,7 @@ namespace basecode::compiler {
             const element_list_t& subscripts,
             compiler::block* scope) const {
         return dynamic_cast<compiler::array_type*>(find_type(
-            qualified_symbol_t {
-                .name = compiler::array_type::name_for_array(entry_type, subscripts)
-            },
+            qualified_symbol_t(compiler::array_type::name_for_array(entry_type, subscripts)),
             scope));
     }
 
@@ -290,9 +282,7 @@ namespace basecode::compiler {
 
     compiler::namespace_type* scope_manager::find_namespace_type() const {
         return dynamic_cast<compiler::namespace_type*>(find_type(
-            qualified_symbol_t {
-                .name = "namespace"
-            }));
+            qualified_symbol_t("namespace")));
     }
 
     identifier_reference_list_t& scope_manager::unresolved_identifier_references() {

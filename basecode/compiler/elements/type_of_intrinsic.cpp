@@ -78,9 +78,7 @@ namespace basecode::compiler {
         auto& builder = session.builder();
         auto& scope_manager = session.scope_manager();
 
-        qualified_symbol_t type_name = {
-            .name = "type"
-        };
+        qualified_symbol_t type_name("type");
         auto type_info_type = scope_manager.find_type(type_name);
         auto ptr_type = scope_manager.find_pointer_type(
             type_info_type,

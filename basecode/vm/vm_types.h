@@ -178,6 +178,7 @@ namespace basecode::vm {
     struct register_t {
         static register_t pc() {
             return register_t {
+                .size = op_sizes::qword,
                 .number = registers_t::pc,
                 .type = register_type_t::integer,
             };
@@ -185,6 +186,7 @@ namespace basecode::vm {
 
         static register_t sp() {
             return register_t {
+                .size = op_sizes::qword,
                 .number = registers_t::sp,
                 .type = register_type_t::integer,
             };
@@ -192,6 +194,7 @@ namespace basecode::vm {
 
         static register_t fp() {
             return register_t {
+                .size = op_sizes::qword,
                 .number = registers_t::fp,
                 .type = register_type_t::integer,
             };
@@ -199,6 +202,7 @@ namespace basecode::vm {
 
         static register_t empty() {
             return register_t {
+                .size = op_sizes::qword,
                 .number = registers_t::r0,
                 .type = register_type_t::none,
             };
@@ -694,19 +698,19 @@ namespace basecode::vm {
     struct block_entry_t {
         block_entry_t();
 
-        block_entry_t(const label_t& label);
-
-        block_entry_t(const align_t& align);
-
-        block_entry_t(const comment_t& comment);
-
-        block_entry_t(const section_t& section);
-
         block_entry_t(const block_entry_t& other);
 
-        block_entry_t(const data_definition_t& data);
+        explicit block_entry_t(const label_t& label);
 
-        block_entry_t(const instruction_t& instruction);
+        explicit block_entry_t(const align_t& align);
+
+        explicit block_entry_t(const comment_t& comment);
+
+        explicit block_entry_t(const section_t& section);
+
+        explicit block_entry_t(const data_definition_t& data);
+
+        explicit block_entry_t(const instruction_t& instruction);
 
         template <typename T>
         T* data() {
@@ -771,11 +775,11 @@ namespace basecode::vm {
 
         instruction_operand_t();
 
-        instruction_operand_t(
+        explicit instruction_operand_t(
             int64_t immediate,
             op_sizes size = op_sizes::qword);
 
-        instruction_operand_t(
+        explicit instruction_operand_t(
             uint64_t immediate,
             op_sizes size = op_sizes::qword);
 

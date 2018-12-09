@@ -535,6 +535,11 @@ namespace basecode::compiler {
     ///////////////////////////////////////////////////////////////////////////
 
     struct qualified_symbol_t {
+        qualified_symbol_t() = default;
+
+        explicit qualified_symbol_t(const std::string& name) : name(name) {
+        }
+
         bool is_qualified() const {
             return !namespaces.empty();
         }

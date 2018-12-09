@@ -184,21 +184,21 @@ namespace basecode::compiler {
                 block->move(
                     target_operand,
                     temp_var->emit_result().operands.back(),
-                    vm::instruction_operand_t {});
+                    vm::instruction_operand_t::empty());
                 break;
             }
             case cast_mode_t::integer_sign_extend: {
                 block->moves(
                     target_operand,
                     temp_var->emit_result().operands.back(),
-                    vm::instruction_operand_t {});
+                    vm::instruction_operand_t::empty());
                 break;
             }
             case cast_mode_t::integer_zero_extend: {
                 block->movez(
                     target_operand,
                     temp_var->emit_result().operands.back(),
-                    vm::instruction_operand_t {});
+                    vm::instruction_operand_t::empty());
                 break;
             }
             case cast_mode_t::float_extend:

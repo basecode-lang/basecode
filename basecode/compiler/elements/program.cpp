@@ -57,9 +57,9 @@ namespace basecode::compiler {
             compiler::session& session,
             compiler::emit_context_t& context,
             compiler::emit_result_t& result) {
-        _string_type = session.scope_manager().find_type(qualified_symbol_t {
-            .name = "string"
-        });
+        _string_type = session
+            .scope_manager()
+            .find_type(qualified_symbol_t("string"));
 
         intern_string_literals(session);
         initialize_variable_sections();
