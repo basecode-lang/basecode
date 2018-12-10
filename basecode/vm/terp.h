@@ -137,10 +137,14 @@ namespace basecode::vm {
         void register_trap(uint8_t index, const trap_callable& callable);
 
     private:
+        bool is_zero(
+            op_sizes size,
+            const operand_value_t& value);
+
         bool has_overflow(
-            uint64_t lhs,
-            uint64_t rhs,
-            uint64_t result,
+            const register_value_alias_t& lhs,
+            const register_value_alias_t& rhs,
+            const register_value_alias_t& result,
             op_sizes size);
 
         void set_zoned_value(

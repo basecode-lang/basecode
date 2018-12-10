@@ -174,8 +174,6 @@ namespace basecode::compiler {
 
         result.operands.emplace_back(target_operand);
 
-        block->clr(vm::op_sizes::qword, target_operand);
-
         switch (mode) {
             case cast_mode_t::noop: {
                 break;

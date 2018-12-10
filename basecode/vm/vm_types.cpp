@@ -201,6 +201,14 @@ namespace basecode::vm {
         return success;
     }
 
+    instruction_operand_t instruction_operand_t::offset(
+            int64_t value,
+            op_sizes size) {
+        return value == 0 ?
+               instruction_operand_t() :
+               instruction_operand_t(value, size);
+    }
+
     instruction_operand_t instruction_operand_t::fp() {
         return instruction_operand_t(register_t::fp());
     }

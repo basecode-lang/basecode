@@ -85,7 +85,7 @@ namespace basecode::compiler {
             variable_handle_t length_field;
             if (!type_var->field("length", length_field))
                 return false;
-            length_field->write(length);
+            length_field->write(vm::op_sizes::dword, length);
         }
 
         {
@@ -93,7 +93,7 @@ namespace basecode::compiler {
             variable_handle_t capacity_field;
             if (!type_var->field("capacity", capacity_field))
                 return false;
-            capacity_field->write(capacity);
+            capacity_field->write(vm::op_sizes::dword, capacity);
 
             variable_handle_t data_field;
             if (!type_var->field("data", data_field))
@@ -103,12 +103,12 @@ namespace basecode::compiler {
             block->alloc(
                 vm::op_sizes::byte,
                 data_field->emit_result().operands.back(),
-                vm::instruction_operand_t(capacity));
+                vm::instruction_operand_t(capacity, vm::op_sizes::dword));
             block->fill(
                 vm::op_sizes::byte,
                 data_field->emit_result().operands.back(),
-                vm::instruction_operand_t(static_cast<uint64_t>(0)),
-                vm::instruction_operand_t(capacity));
+                vm::instruction_operand_t(static_cast<uint64_t>(0), vm::op_sizes::byte),
+                vm::instruction_operand_t(capacity, vm::op_sizes::dword));
 
             if (literal != nullptr) {
                 block->comment(
@@ -126,7 +126,9 @@ namespace basecode::compiler {
                     vm::op_sizes::byte,
                     data_field->emit_result().operands.back(),
                     literal_var->emit_result().operands.back(),
-                    vm::instruction_operand_t(static_cast<uint64_t>(length)));
+                    vm::instruction_operand_t(
+                        static_cast<uint64_t>(length),
+                        vm::op_sizes::dword));
             }
 
             data_field->write();

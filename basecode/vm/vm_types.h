@@ -54,6 +54,20 @@ namespace basecode::vm {
         qword
     };
 
+    static inline std::string op_size_format_spec(op_sizes size) {
+        switch (size) {
+            case op_sizes::byte:
+                return "#${:02X}";
+            case op_sizes::word:
+                return "#${:04X}";
+            case op_sizes::dword:
+                return "#${:08X}";
+            default:
+            case op_sizes::qword:
+                return "#${:016X}";
+        }
+    }
+
     static inline uint8_t op_size_in_bytes(op_sizes size) {
         switch (size) {
             case op_sizes::byte:  return 1;
@@ -474,6 +488,12 @@ namespace basecode::vm {
     };
 
     struct operand_value_t {
+        register_value_alias_t as_register_alias() const {
+            register_value_alias_t reg {};
+            reg.qw = alias.u;
+            return reg;
+        }
+
         register_type_t type;
         operand_value_alias_t alias {
             .u = 0
@@ -492,10 +512,41 @@ namespace basecode::vm {
             prefix      = 0b00001000,
             postfix     = 0b00010000,
             unresolved  = 0b00100000,
+            dword       = 0b01000000,
+            word        = 0b10000000,
+            byte        = 0b11000000,
         };
 
         void clear_unresolved() {
             type &= ~flags::unresolved;
+        }
+
+        void size_to_flags() {
+            switch (size) {
+                case op_sizes::byte:
+                    type |= operand_encoding_t::flags::byte;
+                    break;
+                case op_sizes::word:
+                    type |= operand_encoding_t::flags::word;
+                    break;
+                case op_sizes::dword:
+                    type |= operand_encoding_t::flags::dword;
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        void size_from_flags() {
+            if ((type & flags::word) != 0
+            &&  (type & flags::dword) != 0)
+                size = op_sizes::byte;
+            else if ((type & flags::word) != 0)
+                size = op_sizes::word;
+            else if ((type & flags::dword) != 0)
+                size = op_sizes::dword;
+            else
+                size = op_sizes::qword;
         }
 
         inline bool is_reg() const {
@@ -522,8 +573,9 @@ namespace basecode::vm {
             return (type & flags::unresolved) != 0;
         }
 
+        op_sizes size = op_sizes::qword;
         flags_t type = flags::reg | flags::integer;
-        operand_value_alias_t value;
+        operand_value_alias_t value {};
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -772,6 +824,10 @@ namespace basecode::vm {
         static instruction_operand_t pc();
 
         static instruction_operand_t empty();
+
+        static instruction_operand_t offset(
+            int64_t value,
+            op_sizes size = op_sizes::byte);
 
         instruction_operand_t();
 

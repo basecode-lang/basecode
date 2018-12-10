@@ -99,15 +99,10 @@ namespace basecode::compiler {
                 vm::instruction_operand_t result_operand(_value.reg);
                 _result.operands.emplace_back(result_operand);
 
-                if (_value.reg.size != vm::op_sizes::qword)
-                    block->clr(vm::op_sizes::qword, result_operand);
-
                 block->load(
                     result_operand,
                     vm::instruction_operand_t(on_stack ? vm::register_t::sp() : _address.reg),
-                    rot.offset != 0 ?
-                        vm::instruction_operand_t(rot.offset, vm::op_sizes::qword) :
-                        vm::instruction_operand_t::empty());
+                    vm::instruction_operand_t::offset(rot.offset));
                 break;
             }
             default: {
@@ -237,14 +232,17 @@ namespace basecode::compiler {
             rot.offset += 4;
         }
 
-        vm::instruction_operand_t dest_operand(
-            on_stack ? vm::register_t::sp() : _address.reg);
-        vm::instruction_operand_t offset_operand(rot.offset);
+        vm::instruction_operand_t dest_operand(on_stack ?
+            vm::register_t::sp() :
+            _address.reg);
+
+        auto value_operand = emit_result().operands.back();
+        value_operand.size(_value.reg.size);
 
         block->store(
             dest_operand,
-            emit_result().operands.back(),
-            rot.offset != 0 ? offset_operand : vm::instruction_operand_t::empty());
+            value_operand,
+            vm::instruction_operand_t::offset(rot.offset));
 
         flag(flags_t::f_written, true);
         flag(flags_t::f_read, false);
@@ -283,12 +281,10 @@ namespace basecode::compiler {
                         "load global address: {}",
                         var->symbol()->name()),
                     4);
-                vm::instruction_operand_t offset_operand(rot.offset);
-
                 block->move(
                     vm::instruction_operand_t(_address.reg),
                     vm::instruction_operand_t(assembler.make_label_ref(var->symbol()->name())),
-                    !include_offset ? vm::instruction_operand_t::empty() : offset_operand);
+                    vm::instruction_operand_t::offset(!include_offset ? 0 : rot.offset));
             }
         }
 
@@ -364,7 +360,9 @@ namespace basecode::compiler {
         return flag(flags_t::f_activated);
     }
 
-    bool variable::write(uint64_t value) {
+    bool variable::write(
+            vm::op_sizes size,
+            uint64_t value) {
         if (flag(flags_t::f_written))
             return false;
 
@@ -389,12 +387,10 @@ namespace basecode::compiler {
                 4);
         }
 
-        vm::instruction_operand_t offset_operand(rot.offset);
-
         block->store(
             vm::instruction_operand_t(_address.reg),
-            vm::instruction_operand_t(static_cast<uint64_t>(value), vm::op_sizes::qword),
-            rot.offset != 0 ? offset_operand : vm::instruction_operand_t::empty());
+            vm::instruction_operand_t(static_cast<uint64_t>(value), size),
+            vm::instruction_operand_t::offset(rot.offset));
 
         flag(flags_t::f_written, true);
         return true;
@@ -449,12 +445,14 @@ namespace basecode::compiler {
         vm::instruction_operand_t dest_operand(on_stack ?
             vm::register_t::sp() :
             _address.reg);
-        vm::instruction_operand_t offset_operand(rot.offset);
+
+        auto value_operand = value->emit_result().operands.back();
+        value_operand.size(_value.reg.size);
 
         block->store(
             dest_operand,
-            value->emit_result().operands.back(),
-            rot.offset != 0 ? offset_operand : vm::instruction_operand_t::empty());
+            value_operand,
+            vm::instruction_operand_t::offset(rot.offset));
 
         return true;
     }

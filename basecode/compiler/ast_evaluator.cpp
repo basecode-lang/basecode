@@ -532,11 +532,25 @@ namespace basecode::compiler {
         if (init_expr != nullptr && type_ref == nullptr) {
             infer_type_result_t infer_type_result {};
             if (!init_expr->infer_type(_session, infer_type_result)) {
-                _session.error(
-                    "P019",
-                    fmt::format("unable to infer type: {}", new_identifier->symbol()->name()),
-                    new_identifier->symbol()->location());
-                return nullptr;
+                // XXX: need to refactor this code to recursively determine if there
+                //      are unresolved identifier_reference instances and flag them as
+                //      appropriate.
+                if (init_expr->element_type() == element_type_t::identifier_reference) {
+                    auto ref = dynamic_cast<compiler::identifier_reference*>(init_expr);
+                    if (!ref->resolved()) {
+                        _session.error(
+                            "P004",
+                            fmt::format("unable to resolve identifier: {}", ref->symbol().name),
+                            ref->symbol().location);
+                    }
+                    return nullptr;
+                } else {
+                    _session.error(
+                        "P019",
+                        fmt::format("unable to infer type: {}", new_identifier->symbol()->name()),
+                        new_identifier->symbol()->location());
+                    return nullptr;
+                }
             }
 
             if (infer_type_result.reference == nullptr) {

@@ -29,7 +29,12 @@ namespace basecode::compiler {
             compiler::session& session,
             compiler::emit_context_t& context,
             compiler::emit_result_t& result) {
-        result.operands.emplace_back(vm::instruction_operand_t(_value));
+        infer_type_result_t type_result {};
+        if (!infer_type(session, type_result))
+            return false;
+        result.operands.emplace_back(vm::instruction_operand_t(
+            _value,
+            vm::op_size_for_byte_size(type_result.inferred_type->size_in_bytes())));
         return true;
     }
 

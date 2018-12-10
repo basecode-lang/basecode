@@ -56,50 +56,56 @@ namespace basecode::vm {
         if (operand_index >= encoding.operands_count)
             return false;
 
+        auto& op = encoding.operands[operand_index];
         switch (operand.type()) {
             case instruction_operand_type_t::reg: {
                 auto reg = *operand.data<register_t>();
-                encoding.operands[operand_index].value.r = reg.number;
-                encoding.operands[operand_index].type = operand_encoding_t::flags::reg;
+                op.size = reg.size;
+                op.value.r = reg.number;
+                op.type = operand_encoding_t::flags::reg;
                 if (reg.type == register_type_t::integer)
-                    encoding.operands[operand_index].type |= operand_encoding_t::flags::integer;
+                    op.type |= operand_encoding_t::flags::integer;
                 break;
             }
             case instruction_operand_type_t::empty: {
                 break;
             }
             case instruction_operand_type_t::imm_f32: {
-                encoding.operands[operand_index].type = operand_encoding_t::flags::constant;
-                encoding.operands[operand_index].value.d = *operand.data<float>();
+                op.size = op_sizes::dword;
+                op.value.d = *operand.data<float>();
+                op.type = operand_encoding_t::flags::constant;
                 break;
             }
             case instruction_operand_type_t::imm_f64: {
-                encoding.operands[operand_index].type = operand_encoding_t::flags::constant;
-                encoding.operands[operand_index].value.d = *operand.data<double>();
+                op.size = op_sizes::qword;
+                op.type = operand_encoding_t::flags::constant;
+                op.value.d = *operand.data<double>();
                 break;
             }
             case instruction_operand_type_t::label_ref: {
-                encoding.operands[operand_index].type = operand_encoding_t::flags::integer
-                                                        | operand_encoding_t::flags::constant
-                                                        | operand_encoding_t::flags::unresolved;
-                encoding.operands[operand_index].value.u = (*operand.data<label_ref_t*>())->id;
+                op.size = op_sizes::qword;
+                op.type = operand_encoding_t::flags::integer
+                    | operand_encoding_t::flags::constant
+                    | operand_encoding_t::flags::unresolved;
+                op.value.u = (*operand.data<label_ref_t*>())->id;
                 break;
             }
             case instruction_operand_type_t::imm_sint: {
                 auto imm_value = *operand.data<int64_t>();
-                encoding.operands[operand_index].type = operand_encoding_t::flags::integer
-                                                        | operand_encoding_t::flags::constant;
+                op.size = operand.size();
+                op.type = operand_encoding_t::flags::integer
+                    | operand_encoding_t::flags::constant;
                 if (imm_value < 0)
-                    encoding.operands[operand_index].type |= operand_encoding_t::flags::negative;
-
-                encoding.operands[operand_index].value.u = static_cast<uint64_t>(imm_value);
+                    op.type |= operand_encoding_t::flags::negative;
+                op.value.u = static_cast<uint64_t>(imm_value);
                 break;
             }
             case instruction_operand_type_t::imm_uint: {
                 auto imm_value = *operand.data<uint64_t>();
-                encoding.operands[operand_index].type = operand_encoding_t::flags::integer
-                                                        | operand_encoding_t::flags::constant;
-                encoding.operands[operand_index].value.u = imm_value;
+                op.size = operand.size();
+                op.type = operand_encoding_t::flags::integer
+                    | operand_encoding_t::flags::constant;
+                op.value.u = imm_value;
                 break;
             }
             default: {
@@ -828,9 +834,9 @@ namespace basecode::vm {
             const instruction_operand_t& src,
             const instruction_operand_t& dest) {
         instruction_t op;
+        op.size = src.size();
         op.op = op_codes::bz;
         op.operands_count = 2;
-        op.size = op_sizes::qword;
         apply_operand(src, op, 0);
         apply_operand(dest, op, 1);
         make_block_entry(op);
@@ -840,9 +846,9 @@ namespace basecode::vm {
             const instruction_operand_t& src,
             const instruction_operand_t& dest) {
         instruction_t op;
+        op.size = src.size();
         op.op = op_codes::bnz;
         op.operands_count = 2;
-        op.size = op_sizes::qword;
         apply_operand(src, op, 0);
         apply_operand(dest, op, 1);
         make_block_entry(op);

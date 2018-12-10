@@ -80,17 +80,14 @@ namespace basecode::compiler {
                 if (rhs_var->type_result().inferred_type->is_composite_type()) {
                     block->move(
                         result_operand,
-                        rhs_var->emit_result().operands.back(),
-                        vm::instruction_operand_t::empty());
+                        rhs_var->emit_result().operands.back());
                     break;
                 }
 
                 block->comment("load primitive value from pointer", 4);
-                block->clr(vm::op_sizes::qword, result_operand);
                 block->load(
                     result_operand,
-                    rhs_var->emit_result().operands.back(),
-                    vm::instruction_operand_t::empty());
+                    rhs_var->emit_result().operands.back());
                 break;
             }
             default:

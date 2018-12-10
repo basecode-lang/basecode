@@ -419,7 +419,6 @@ namespace basecode::compiler {
             return;
         }
         result.operands.emplace_back(result_operand);
-        block->clr(vm::op_sizes::qword, result_operand);
 
         variable_handle_t lhs_var;
         if (!session.variable(_lhs, lhs_var))

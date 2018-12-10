@@ -75,6 +75,10 @@ namespace basecode::compiler {
 
         bool read();
 
+        bool write(
+            vm::op_sizes size,
+            uint64_t value);
+
         bool write();
 
         bool activate();
@@ -88,8 +92,6 @@ namespace basecode::compiler {
         compiler::field* field();
 
         bool is_activated() const;
-
-        bool write(uint64_t value);
 
         bool write(variable* value);
 
