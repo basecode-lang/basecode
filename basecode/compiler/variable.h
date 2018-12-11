@@ -32,6 +32,7 @@ namespace basecode::compiler {
 
         vm::register_t reg;
         bool allocated = false;
+        bool no_release = false;
         vm::assembler* assembler = nullptr;
     };
 

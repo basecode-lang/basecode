@@ -76,6 +76,9 @@ namespace basecode::compiler {
         if (!emit_sections(session))
             return false;
 
+        if (!emit_start_block(session))
+            return false;
+
         if (!emit_initializers(session))
             return false;
 
@@ -85,7 +88,7 @@ namespace basecode::compiler {
         if (!emit_finalizers(session))
             return false;
 
-        return true;
+        return emit_end_block(session);
     }
 
     bool program::emit_section_variable(
@@ -106,6 +109,10 @@ namespace basecode::compiler {
             }
             case element_type_t::identifier: {
                 auto var = dynamic_cast<compiler::identifier*>(e);
+
+                if (!session.allocate_address_register(var->id()))
+                    return false;
+
                 auto var_type = var->type_ref()->type();
                 auto init = var->initializer();
 
@@ -118,7 +125,7 @@ namespace basecode::compiler {
                 instruction_block->comment(
                     fmt::format("identifier type: {}", var->type_ref()->name()),
                     0);
-                auto var_label = assembler.make_label(var->symbol()->name());
+                auto var_label = assembler.make_label(var->label_name());
                 instruction_block->label(var_label);
 
                 switch (var_type->element_type()) {
@@ -258,6 +265,21 @@ namespace basecode::compiler {
         return true;
     }
 
+    bool program::emit_end_block(compiler::session& session) {
+        auto& assembler = session.assembler();
+
+        auto end_block = assembler.make_basic_block();
+        end_block->blank_line();
+        end_block->align(vm::instruction_t::alignment);
+        end_block->label(assembler.make_label("_end"));
+        assembler.push_block(end_block);
+        defer(assembler.pop_block());
+
+        end_block->exit();
+
+        return true;
+    }
+
     bool program::emit_type_info(compiler::session& session) {
         auto& assembler = session.assembler();
 
@@ -319,14 +341,7 @@ namespace basecode::compiler {
         finalizer_block->label(assembler.make_label("_finalizer"));
 
         assembler.push_block(finalizer_block);
-        defer({
-            finalizer_block->move(
-                vm::instruction_operand_t::sp(),
-                vm::instruction_operand_t::fp(),
-                vm::instruction_operand_t::empty());
-            finalizer_block->exit();
-            assembler.pop_block();
-        });
+        defer(assembler.pop_block());
 
         for (const auto& section : _vars_by_section) {
             for (auto e : section.second) {
@@ -342,6 +357,27 @@ namespace basecode::compiler {
         return true;
     }
 
+    bool program::emit_start_block(compiler::session& session) {
+        auto& assembler = session.assembler();
+
+        auto start_block = assembler.make_basic_block();
+        start_block->blank_line();
+        start_block->align(vm::instruction_t::alignment);
+        start_block->label(assembler.make_label("_start"));
+        assembler.push_block(start_block);
+        defer(assembler.pop_block());
+
+        auto address_registers = session.address_registers();
+        for (auto kvp : address_registers) {
+            auto var = session.elements().find(kvp.first);
+            start_block->move(
+                vm::instruction_operand_t(kvp.second),
+                vm::instruction_operand_t(assembler.make_label_ref(var->label_name())));
+        }
+
+        return true;
+    }
+
     bool program::emit_initializers(compiler::session& session) {
         auto& assembler = session.assembler();
 
@@ -349,15 +385,9 @@ namespace basecode::compiler {
         initializer_block->blank_line();
         initializer_block->align(vm::instruction_t::alignment);
         initializer_block->label(assembler.make_label("_initializer"));
-        initializer_block->move(
-            vm::instruction_operand_t::fp(),
-            vm::instruction_operand_t::sp(),
-            vm::instruction_operand_t::empty());
 
         assembler.push_block(initializer_block);
-        defer({
-            assembler.pop_block();
-        });
+        defer(assembler.pop_block());
 
         for (const auto& section : _vars_by_section) {
             for (auto e : section.second) {
@@ -377,7 +407,7 @@ namespace basecode::compiler {
         auto& assembler = session.assembler();
 
         auto instruction_block = assembler.make_basic_block();
-        instruction_block->jump_direct(assembler.make_label_ref("_initializer"));
+        instruction_block->jump_direct(assembler.make_label_ref("_start"));
 
         return true;
     }

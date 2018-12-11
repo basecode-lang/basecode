@@ -35,6 +35,8 @@ namespace basecode::compiler {
     void variable_register_t::release() {
         if (!allocated)
             return;
+        if (no_release)
+            return;
         assembler->free_reg(reg);
         allocated = false;
     }
@@ -269,22 +271,33 @@ namespace basecode::compiler {
         }
 
         if (var != nullptr) {
-            if (var->usage() == identifier_usage_t::stack) {
-                block->comment(
-                    fmt::format(
-                        "stack local: {}",
-                        var->symbol()->name()),
-                    4);
+            auto address_reg = _session.get_address_register(var->id());
+            if (address_reg == nullptr) {
+                _address.reg.size = vm::op_sizes::qword;
+                _address.reg.type = vm::register_type_t::integer;
+                _address.reserve();
+
+                if (var->usage() == identifier_usage_t::stack) {
+                    block->comment(
+                        fmt::format(
+                            "stack local: {}",
+                            var->symbol()->name()),
+                        4);
+                } else {
+                    block->comment(
+                        fmt::format(
+                            "load global address: {}",
+                            var->symbol()->name()),
+                        4);
+                    block->move(
+                        vm::instruction_operand_t(_address.reg),
+                        vm::instruction_operand_t(assembler.make_label_ref(var->symbol()->name())),
+                        vm::instruction_operand_t::offset(!include_offset ? 0 : rot.offset));
+                }
             } else {
-                block->comment(
-                    fmt::format(
-                        "load global address: {}",
-                        var->symbol()->name()),
-                    4);
-                block->move(
-                    vm::instruction_operand_t(_address.reg),
-                    vm::instruction_operand_t(assembler.make_label_ref(var->symbol()->name())),
-                    vm::instruction_operand_t::offset(!include_offset ? 0 : rot.offset));
+                _address.reg = *address_reg;
+                _address.allocated = true;
+                _address.no_release = true;
             }
         }
 
@@ -301,10 +314,6 @@ namespace basecode::compiler {
         flag(flags_t::f_written, false);
         flag(flags_t::f_activated, true);
         flag(flags_t::f_addressed, false);
-
-        _address.reg.size = vm::op_sizes::qword;
-        _address.reg.type = vm::register_type_t::integer;
-        _address.reserve();
 
         _value.reg.type = vm::register_type_t::integer;
         if (_type.inferred_type != nullptr) {

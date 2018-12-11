@@ -538,8 +538,7 @@ namespace basecode::vm {
         }
 
         void size_from_flags() {
-            if ((type & flags::word) != 0
-            &&  (type & flags::dword) != 0)
+            if ((type & flags::byte) == flags::byte)
                 size = op_sizes::byte;
             else if ((type & flags::word) != 0)
                 size = op_sizes::word;

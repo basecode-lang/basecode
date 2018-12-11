@@ -33,6 +33,7 @@ namespace basecode::compiler {
     class code_dom_formatter;
 
     using path_list_t = std::vector<boost::filesystem::path>;
+    using address_register_map_t = std::unordered_map<common::id_t, vm::register_t>;
 
     ///////////////////////////////////////////////////////////////////////////
 

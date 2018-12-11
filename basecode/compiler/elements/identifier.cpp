@@ -59,6 +59,10 @@ namespace basecode::compiler {
         return _symbol->is_constant();
     }
 
+    std::string identifier::label_name() const {
+        return _symbol->name();
+    }
+
     void identifier::inferred_type(bool value) {
         _inferred_type = value;
     }

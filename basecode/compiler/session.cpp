@@ -765,6 +765,25 @@ namespace basecode::compiler {
         return _source_file_stack.top();
     }
 
+    bool session::allocate_address_register(common::id_t id) {
+        auto it = _address_registers.find(id);
+        if (it != _address_registers.end())
+            return true;
+
+        vm::register_t reg {};
+        reg.size = vm::op_sizes::qword;
+        reg.type = vm::register_type_t::integer;
+
+        if (!_assembler.allocate_reg(reg)) {
+            // XXX: error
+            return false;
+        }
+
+        _address_registers.insert(std::make_pair(id, reg));
+
+        return true;
+    }
+
     std::vector<common::source_file*> session::source_files() {
         std::vector<common::source_file*> list {};
         for (auto& it : _source_files) {
@@ -800,6 +819,10 @@ namespace basecode::compiler {
         _source_file_stack.push(source_file);
     }
 
+    const address_register_map_t& session::address_registers() const {
+        return _address_registers;
+    }
+
     common::id_t session::intern_string(compiler::string_literal* literal) {
         return _interned_strings.intern(literal);
     }
@@ -816,6 +839,14 @@ namespace basecode::compiler {
 
         compiler::code_dom_formatter formatter(*this, output_file);
         formatter.format(fmt::format("Code DOM Graph: {}", path.string()));
+    }
+
+    vm::register_t* session::get_address_register(common::id_t id) {
+        auto it = _address_registers.find(id);
+        if (it != _address_registers.end())
+            return &it->second;
+
+        return nullptr;
     }
 
     compiler::module* session::compile_module(common::source_file* source_file) {

@@ -109,13 +109,19 @@ namespace basecode::compiler {
 
         common::source_file* current_source_file();
 
+        bool allocate_address_register(common::id_t id);
+
         std::vector<common::source_file*> source_files();
 
         const compiler::scope_manager& scope_manager() const;
 
+        vm::register_t* get_address_register(common::id_t id);
+
         vm::label_ref_t* type_info_label(compiler::type* type);
 
         void push_source_file(common::source_file* source_file);
+
+        const address_register_map_t& address_registers() const;
 
         common::id_t intern_string(compiler::string_literal* literal);
 
@@ -177,6 +183,7 @@ namespace basecode::compiler {
         syntax::ast_builder _ast_builder;
         string_intern_map _interned_strings {};
         compiler::scope_manager _scope_manager;
+        address_register_map_t _address_registers {};
         std::stack<common::source_file*> _source_file_stack {};
         std::map<std::string, common::source_file> _source_files {};
         std::unordered_map<common::id_t, compiler::variable> _variables {};

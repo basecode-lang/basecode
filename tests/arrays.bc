@@ -7,6 +7,7 @@ c: [8][8]u8;
 ARRAY_SIZE :: 200;
 d: [ARRAY_SIZE]bool;
 
+// XXX: assignment here is doing the wrong thing
 e := b[0];
 f := c[2][2];
 

@@ -36,6 +36,8 @@ namespace basecode::compiler {
 
         compiler::initializer* initializer();
 
+        std::string label_name() const override;
+
         compiler::symbol_element* symbol() const;
 
         void type_ref(compiler::type_reference* t);
