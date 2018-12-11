@@ -18,6 +18,38 @@
 
 namespace basecode::compiler {
 
+    std::string type::make_info_label_name(compiler::type* type) {
+        std::stringstream stream;
+
+        auto type_name = type->symbol()->name();
+        stream << "_ti";
+        if (type_name[0] != '_')
+            stream << "_";
+        stream << type_name;
+
+        return stream.str();
+    }
+
+    std::string type::make_literal_label_name(compiler::type* type) {
+        std::stringstream stream;
+
+        auto type_name = type->symbol()->name();
+        stream << "_ti_lit";
+        if (type_name[0] != '_')
+            stream << "_";
+        stream << type_name;
+
+        return stream.str();
+    }
+
+    std::string type::make_literal_data_label_name(compiler::type* type) {
+        auto label_name = make_literal_label_name(type);
+        if (label_name[label_name.length() - 1] != '_')
+            label_name += "_";
+        label_name += "data";
+        return label_name;
+    }
+
     type::type(
         compiler::module* module,
         block* parent_scope,
@@ -145,7 +177,7 @@ namespace basecode::compiler {
 
         auto type_name = name();
         auto type_name_len = static_cast<uint32_t>(type_name.length());
-        auto label_name = fmt::format("_ti_{}", _symbol->name());
+        auto label_name = make_info_label_name(this);
 
         block->blank_line();
         block->comment(fmt::format("type: {}", type_name), 0);
@@ -153,9 +185,7 @@ namespace basecode::compiler {
 
         block->dwords({type_name_len});
         block->dwords({type_name_len});
-        block->qwords({assembler.make_label_ref(fmt::format(
-            "_ti_name_lit_{}_data",
-            symbol()->name()))});
+        block->qwords({assembler.make_label_ref(make_literal_data_label_name(this))});
 
         if (!on_emit_type_info(session))
             return false;

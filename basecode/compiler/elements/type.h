@@ -20,6 +20,12 @@ namespace basecode::compiler {
 
     class type : public element {
     public:
+        static std::string make_info_label_name(compiler::type* type);
+
+        static std::string make_literal_label_name(compiler::type* type);
+
+        static std::string make_literal_data_label_name(compiler::type* type);
+
         type(
             compiler::module* module,
             block* parent_scope,

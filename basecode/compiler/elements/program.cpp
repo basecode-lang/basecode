@@ -288,9 +288,7 @@ namespace basecode::compiler {
         type_info_block->section(vm::section_t::ro_data);
 
         assembler.push_block(type_info_block);
-        defer({
-            assembler.pop_block();
-        });
+        defer(assembler.pop_block());
 
         std::unordered_map<common::id_t, compiler::type*> used_types {};
 
@@ -312,12 +310,9 @@ namespace basecode::compiler {
         for (const auto& kvp : used_types) {
             type_info_block->blank_line();
             type_info_block->align(4);
-            auto label_name = fmt::format(
-                "_ti_name_lit_{}",
-                kvp.second->symbol()->name());
             type_info_block->string(
-                assembler.make_label(label_name),
-                assembler.make_label(label_name + "_data"),
+                assembler.make_label(compiler::type::make_literal_label_name(kvp.second)),
+                assembler.make_label(compiler::type::make_literal_data_label_name(kvp.second)),
                 kvp.second->name());
         }
 

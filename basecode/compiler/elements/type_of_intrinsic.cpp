@@ -58,10 +58,7 @@ namespace basecode::compiler {
             return false;
         }
 
-        auto label_name = fmt::format(
-            "_ti_{}",
-            infer_type_result.inferred_type->symbol()->name());
-
+        auto label_name = compiler::type::make_info_label_name(infer_type_result.inferred_type);
         result.element = session.builder().make_assembly_label(
             parent_scope(),
             nullptr,

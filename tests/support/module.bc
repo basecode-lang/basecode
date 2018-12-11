@@ -64,9 +64,18 @@ range :: ns {
     };
 };
 
+exit   :: proc(level: s32) {
+    #assembly {{
+        ;how to reference a local stack variable
+        ;move.qw  i63, $level  -> move.qw i63, sp, {offset of $label}
+        ;push     i63
+        exit
+    }};
+};
+
 assert :: proc(predicate: bool, message: string) {
     if !predicate {
         print("%s\n", message);
-        #assembly {{ exit }};
+        exit(1);
     };
 };

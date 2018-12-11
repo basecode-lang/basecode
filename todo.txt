@@ -3,10 +3,11 @@ NOTES
 
 TASKS
 -----
-- BUG: syntax like: support: print("hello!");
-  causes the compiler to end silently.
-- REVIEW: type check should enforce scalar/composite type rules.
 - REFACTOR: variable to improve how walk_to_root_and_calculate_offset is used.
+- BUG: tuple.bc -- the type_reference's symbol isn't being updated to match
+        the constant identifier's symbol.
+- BUG: syntax like: support: print("hello!"); causes the compiler to end silently.
+- REVIEW: type check should enforce scalar/composite type rules.
 - proc_expression needs to support overloaded procedures
 - BUG: enum type creation needs to automatically type fields and increment value.
 - BUG: procedure_type, procedure_call need lots of love:
