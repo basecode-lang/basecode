@@ -122,6 +122,7 @@ namespace basecode::compiler {
 
     private:
         emit_result_t _result {};
+        root_and_offset_t _rot {};
         emit_context_t _context {};
         variable_register_t _value;
         variable* _parent = nullptr;

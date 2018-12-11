@@ -73,23 +73,19 @@ namespace basecode::compiler {
                 auto var = dynamic_cast<compiler::identifier*>(_element);
                 auto on_stack = var->usage() == identifier_usage_t::stack;
 
-                root_and_offset_t rot {};
-                if (walk_to_root_and_calculate_offset(rot)) {
-                    block->comment(
-                        rot.path,
-                        vm::comment_location_t::after_instruction);
-                } else {
-                    if (on_stack) {
-                        block->comment(
-                            fmt::format("stack: {}", var->symbol()->name()),
-                            vm::comment_location_t::after_instruction);
-                        // XXX: total hack, do not keep!
-                        rot.offset += 4;
-                    } else {
-                        block->comment(
-                            var->symbol()->name(),
-                            vm::comment_location_t::after_instruction);
-                    }
+                auto fmt = "{}";
+                if (on_stack)
+                    fmt = "stack: {}";
+
+                block->comment(
+                    fmt::format(fmt, _rot.path),
+                    vm::comment_location_t::after_instruction);
+
+                auto offset = _rot.offset;
+
+                // XXX: total hack, do not keep!
+                if (on_stack) {
+                    offset += 4;
                 }
 
                 vm::instruction_operand_t result_operand(_value.reg);
@@ -98,7 +94,7 @@ namespace basecode::compiler {
                 block->load(
                     result_operand,
                     vm::instruction_operand_t(on_stack ? vm::register_t::sp() : _address.reg),
-                    vm::instruction_operand_t::offset(rot.offset));
+                    vm::instruction_operand_t::offset(offset));
                 break;
             }
             default: {
@@ -208,20 +204,19 @@ namespace basecode::compiler {
         auto var = dynamic_cast<compiler::identifier*>(_element);
         auto on_stack = var->usage() == identifier_usage_t::stack;
 
-        root_and_offset_t rot {};
-        if (walk_to_root_and_calculate_offset(rot)) {
-            block->comment(
-                rot.path,
-                vm::comment_location_t::after_instruction);
-        } else {
-            block->comment(
-                var->symbol()->name(),
-                vm::comment_location_t::after_instruction);
-        }
+        auto fmt = "{}";
+        if (on_stack)
+            fmt = "stack: {}";
+
+        block->comment(
+            fmt::format(fmt, _rot.path),
+            vm::comment_location_t::after_instruction);
+
+        auto offset = _rot.offset;
 
         // XXX: total hack, do not keep!
         if (on_stack) {
-            rot.offset += 4;
+            offset += 4;
         }
 
         vm::instruction_operand_t dest_operand(on_stack ?
@@ -234,7 +229,7 @@ namespace basecode::compiler {
         block->store(
             dest_operand,
             value_operand,
-            vm::instruction_operand_t::offset(rot.offset));
+            vm::instruction_operand_t::offset(offset));
 
         flag(flags_t::f_written, true);
         flag(flags_t::f_read, false);
@@ -251,13 +246,27 @@ namespace basecode::compiler {
             return true;
 
         compiler::identifier* var = nullptr;
-        if (_element->element_type() == element_type_t::identifier) {
-            var = dynamic_cast<compiler::identifier*>(_element);
+        switch (_element->element_type()) {
+            case element_type_t::identifier: {
+                var = dynamic_cast<compiler::identifier*>(_element);
+                break;
+            }
+            case element_type_t::unary_operator: {
+                auto unary_op = dynamic_cast<compiler::unary_operator*>(_element);
+                if (unary_op->operator_type() == operator_type_t::pointer_dereference) {
+                    auto ref = dynamic_cast<compiler::identifier_reference*>(unary_op->rhs());
+                    if (ref != nullptr)
+                        var = ref->identifier();
+                }
+                break;
+            }
+            default: {
+                break;
+            }
         }
 
-        root_and_offset_t rot {};
-        if (walk_to_root_and_calculate_offset(rot)) {
-            var = rot.identifier;
+        if (walk_to_root_and_calculate_offset(_rot)) {
+            var = _rot.identifier;
         }
 
         if (var != nullptr) {
@@ -267,19 +276,14 @@ namespace basecode::compiler {
                 _address.reg.type = vm::register_type_t::integer;
                 _address.reserve();
 
-                if (var->usage() == identifier_usage_t::stack) {
-                    block->comment(
-                        fmt::format("stack: {}", var->symbol()->name()),
-                        vm::comment_location_t::after_instruction);
-                } else {
-                    block->comment(
-                        var->symbol()->name(),
-                        vm::comment_location_t::after_instruction);
-                    block->move(
-                        vm::instruction_operand_t(_address.reg),
-                        vm::instruction_operand_t(assembler.make_label_ref(var->symbol()->name())),
-                        vm::instruction_operand_t::offset(!include_offset ? 0 : rot.offset));
-                }
+                block->comment(
+                    var->symbol()->name(),
+                    vm::comment_location_t::after_instruction);
+
+                block->move(
+                    vm::instruction_operand_t(_address.reg),
+                    vm::instruction_operand_t(assembler.make_label_ref(var->symbol()->name())),
+                    vm::instruction_operand_t::offset(!include_offset ? 0 : _rot.offset));
             } else {
                 _address.reg = *address_reg;
                 _address.allocated = true;
@@ -319,10 +323,7 @@ namespace basecode::compiler {
     }
 
     bool variable::initialize() {
-        if (!_element->infer_type(_session, _type))
-            return false;
-
-        return true;
+        return _element->infer_type(_session, _type);
     }
 
     bool variable::deactivate() {
@@ -366,22 +367,14 @@ namespace basecode::compiler {
         auto& assembler = _session.assembler();
         auto block = assembler.current_block();
 
-        root_and_offset_t rot {};
-        if (walk_to_root_and_calculate_offset(rot)) {
-            block->comment(
-                rot.path,
-                vm::comment_location_t::after_instruction);
-        } else {
-            auto var = dynamic_cast<compiler::identifier*>(_element);
-            block->comment(
-                var->symbol()->name(),
-                vm::comment_location_t::after_instruction);
-        }
+        block->comment(
+            _rot.path,
+            vm::comment_location_t::after_instruction);
 
         block->store(
             vm::instruction_operand_t(_address.reg),
             vm::instruction_operand_t(static_cast<uint64_t>(value), size),
-            vm::instruction_operand_t::offset(rot.offset));
+            vm::instruction_operand_t::offset(_rot.offset));
 
         flag(flags_t::f_written, true);
         return true;
@@ -393,6 +386,10 @@ namespace basecode::compiler {
 
         address(true);
         value->address(true);
+
+        block->comment(
+            _rot.path,
+            vm::comment_location_t::after_instruction);
 
         block->copy(
             vm::op_sizes::byte,
@@ -413,20 +410,19 @@ namespace basecode::compiler {
         auto var = dynamic_cast<compiler::identifier*>(_element);
         auto on_stack = var->usage() == identifier_usage_t::stack;
 
-        root_and_offset_t rot {};
-        if (walk_to_root_and_calculate_offset(rot)) {
-            block->comment(
-                rot.path,
-                vm::comment_location_t::after_instruction);
-        } else {
-            block->comment(
-                var->symbol()->name(),
-                vm::comment_location_t::after_instruction);
-        }
+        auto fmt = "{}";
+        if (on_stack)
+            fmt = "stack: {}";
+
+        block->comment(
+            fmt::format(fmt, _rot.path),
+            vm::comment_location_t::after_instruction);
+
+        auto offset = _rot.offset;
 
         // XXX: total hack, do not keep!
         if (on_stack) {
-            rot.offset += 4;
+            offset += 4;
         }
 
         vm::instruction_operand_t dest_operand(on_stack ?
@@ -439,7 +435,7 @@ namespace basecode::compiler {
         block->store(
             dest_operand,
             value_operand,
-            vm::instruction_operand_t::offset(rot.offset));
+            vm::instruction_operand_t::offset(offset));
 
         return true;
     }
@@ -480,20 +476,46 @@ namespace basecode::compiler {
     }
 
     bool variable::walk_to_root_and_calculate_offset(root_and_offset_t& rot) {
-        if (_parent == nullptr)
-            return false;
-
         std::stack<std::string> names {};
 
+        _rot.offset = 0;
+        _rot.path.clear();
+        _rot.root = nullptr;
+        _rot.identifier = nullptr;
+
         auto current = this;
-        while (current->_field != nullptr) {
-            rot.offset += current->_field->start_offset();
-            names.push(current->_field->identifier()->symbol()->name());
-            current = current->_parent;
+        if (_parent != nullptr) {
+            while (current->_field != nullptr) {
+                rot.offset += current->_field->start_offset();
+                names.push(current->_field->identifier()->symbol()->name());
+                current = current->_parent;
+            }
         }
 
         rot.root = current;
-        rot.identifier = dynamic_cast<compiler::identifier*>(current->_element);
+        switch (current->_element->element_type()) {
+            case element_type_t::identifier: {
+                rot.identifier = dynamic_cast<compiler::identifier*>(current->_element);
+                break;
+            }
+            case element_type_t::unary_operator: {
+                auto unary_op = dynamic_cast<compiler::unary_operator*>(current->_element);
+                if (unary_op->operator_type() == operator_type_t::pointer_dereference) {
+                    auto ref = dynamic_cast<compiler::identifier_reference*>(unary_op->rhs());
+                    if (ref != nullptr)
+                        rot.identifier = ref->identifier();
+                }
+                break;
+            }
+            default: {
+                break;
+            }
+        }
+
+        if (rot.identifier != nullptr) {
+            names.push(rot.identifier->symbol()->name());
+        }
+
         while (!names.empty()) {
             if (!rot.path.empty())
                 rot.path += ".";

@@ -203,14 +203,14 @@ namespace basecode::compiler {
             _assembler.apply_addresses(_result);
             _assembler.resolve_labels(_result);
 
-            if (_assembler.assemble(_result)) {
-                if (_options.verbose) {
-                    disassemble(stdout);
-                    fmt::print("\n");
-                }
-
-                run();
+            auto success =_assembler.assemble(_result);
+            if (_options.verbose) {
+                disassemble(stdout);
+                fmt::print("\n");
             }
+
+            if (success)
+                run();
         }
 
         top_level_stack.pop();
@@ -354,22 +354,25 @@ namespace basecode::compiler {
                     if (lhs_bin_op->operator_type() != operator_type_t::member_access)
                         break;
 
-                    variable_handle_t field_var {};
-                    if (!variable(lhs_bin_op, field_var, false)) {
-                        // XXX: error
+                    infer_type_result_t lhs_inferred_type {};
+                    if (!lhs_bin_op->infer_type(*this, lhs_inferred_type)) {
+                        error(
+                            lhs_bin_op,
+                            "P052",
+                            "unable to infer type.",
+                            lhs_bin_op->location());
                         return false;
                     }
 
-                    auto type_result = field_var->type_result();
-                    if (!type_result.inferred_type->type_check(rhs_inferred_type.inferred_type)) {
+                    if (!lhs_inferred_type.inferred_type->type_check(rhs_inferred_type.inferred_type)) {
                         error(
                             binary_op,
                             "C051",
                             fmt::format(
                                 "type mismatch: cannot assign {} to {}.",
                                 rhs_inferred_type.type_name(),
-                                type_result.type_name()),
-                            binary_op->rhs()->location());
+                                lhs_inferred_type.type_name()),
+                            lhs_bin_op->location());
                     }
                     break;
                 }

@@ -53,7 +53,6 @@ namespace basecode::compiler {
                 rhs_var->value_reg().type)) {
             return false;
         }
-
         result.operands.emplace_back(result_operand);
 
         switch (operator_type()) {
@@ -81,14 +80,7 @@ namespace basecode::compiler {
                 break;
             }
             case operator_type_t::pointer_dereference: {
-                if (rhs_var->type_result().inferred_type->is_composite_type()) {
-                    block->move(
-                        result_operand,
-                        rhs_var->emit_result().operands.back());
-                    break;
-                }
-
-                block->comment("load value", vm::comment_location_t::after_instruction);
+                block->comment("dereference", vm::comment_location_t::after_instruction);
                 block->load(
                     result_operand,
                     rhs_var->emit_result().operands.back());
@@ -197,12 +189,7 @@ namespace basecode::compiler {
             case operator_type_t::pointer_dereference: {
                 if (!_rhs->infer_type(session, result))
                     return false;
-                if (!result.inferred_type->is_pointer_type())
-                    return false;
-                auto type = dynamic_cast<compiler::pointer_type*>(result.inferred_type);
-                result.inferred_type = type->base_type_ref()->type();
-                result.reference = type->base_type_ref();
-                return true;
+                return result.inferred_type->is_pointer_type();
             }
             default: {
                 return false;
