@@ -214,6 +214,13 @@ namespace basecode::compiler {
                         context,
                         child_node.get(),
                         proc_type->scope()));
+                    if (basic_block == nullptr) {
+                        _session.error(
+                            "X000",
+                            "unable to evaluate procedure instance block.",
+                            child_node->location);
+                        return;
+                    }
                     auto instance = builder.make_procedure_instance(
                         proc_type->scope(),
                         proc_type,
@@ -1907,6 +1914,13 @@ namespace basecode::compiler {
                 target_symbol.get(),
                 scope,
                 false);
+            if (target_element == nullptr) {
+                _session.error(
+                    "X000",
+                    "unable to evaluate target element.",
+                    target_symbol->location);
+                return false;
+            }
 
             if (target_element->element_type() == element_type_t::identifier_reference) {
                 auto identifier_ref = dynamic_cast<compiler::identifier_reference*>(target_element);

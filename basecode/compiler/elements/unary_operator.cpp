@@ -36,6 +36,10 @@ namespace basecode::compiler {
         auto& assembler = session.assembler();
         auto block = assembler.current_block();
 
+        infer_type_result_t type_result {};
+        if (!infer_type(session, type_result))
+            return false;
+
         variable_handle_t rhs_var;
         if (!session.variable(_rhs, rhs_var))
             return false;
@@ -45,7 +49,7 @@ namespace basecode::compiler {
         if (!vm::instruction_operand_t::allocate(
                 assembler,
                 result_operand,
-                context.target_size,
+                vm::op_size_for_byte_size(type_result.inferred_type->size_in_bytes()),
                 rhs_var->value_reg().type)) {
             return false;
         }

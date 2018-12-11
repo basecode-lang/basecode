@@ -60,11 +60,10 @@ namespace basecode::compiler {
             case operator_type_t::shift_right:
             case operator_type_t::rotate_left:
             case operator_type_t::rotate_right: {
-                emit_arithmetic_operator(
+                return emit_arithmetic_operator(
                     session,
                     context,
                     result);
-                break;
             }
             case operator_type_t::equals:
             case operator_type_t::less_than:
@@ -156,9 +155,6 @@ namespace basecode::compiler {
                 if (!session.variable(_rhs, rhs_var))
                     return false;
 
-                rhs_var->emit_context().target_size = vm::op_size_for_byte_size(
-                    lhs_type.inferred_type->size_in_bytes());
-
                 if (copy_required) {
                     lhs_var->copy(
                         rhs_var.get(),
@@ -193,7 +189,24 @@ namespace basecode::compiler {
             case operator_type_t::shift_right:
             case operator_type_t::rotate_left:
             case operator_type_t::rotate_right: {
-                return _lhs->infer_type(session, result);
+                infer_type_result_t lhs_type_result {};
+                if (!_lhs->infer_type(session, lhs_type_result))
+                    return false;
+
+                infer_type_result_t rhs_type_result {};
+                if (!_rhs->infer_type(session, rhs_type_result))
+                    return false;
+
+                auto lhs_size_in_bytes = lhs_type_result.inferred_type->size_in_bytes();
+                auto rhs_size_in_bytes = rhs_type_result.inferred_type->size_in_bytes();
+
+                if (rhs_size_in_bytes > lhs_size_in_bytes) {
+                    result = rhs_type_result;
+                } else {
+                    result = lhs_type_result;
+                }
+
+                return true;
             }
             case operator_type_t::member_access: {
                 return _rhs->infer_type(session, result);
@@ -508,32 +521,34 @@ namespace basecode::compiler {
         block->label(assembler.make_label(end_label_name));
     }
 
-    void binary_operator::emit_arithmetic_operator(
+    bool binary_operator::emit_arithmetic_operator(
             compiler::session& session,
             emit_context_t& context,
             emit_result_t& result) {
         auto& assembler = session.assembler();
         auto block = assembler.current_block();
 
+        infer_type_result_t type_result {};
+        if (!infer_type(session, type_result))
+            return false;
+
         variable_handle_t lhs_var;
         if (!session.variable(_lhs, lhs_var))
-            return;
-        lhs_var->emit_context().target_size = context.target_size;
+            return false;
         lhs_var->read();
 
         variable_handle_t rhs_var;
         if (!session.variable(_rhs, rhs_var))
-            return;
-        rhs_var->emit_context().target_size = context.target_size;
+            return false;
         rhs_var->read();
 
         vm::instruction_operand_t result_operand;
         if (!vm::instruction_operand_t::allocate(
                 assembler,
                 result_operand,
-                context.target_size,
+                vm::op_size_for_byte_size(type_result.inferred_type->size_in_bytes()),
                 lhs_var->value_reg().type)) {
-            return;
+            return false;
         }
 
         result.operands.emplace_back(result_operand);
@@ -633,6 +648,8 @@ namespace basecode::compiler {
             default:
                 break;
         }
+
+        return true;
     }
 
 };

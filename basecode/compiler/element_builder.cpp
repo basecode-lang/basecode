@@ -513,7 +513,8 @@ namespace basecode::compiler {
             parent_scope,
             procedure_type,
             scope);
-        scope->parent_element(instance);
+        if (scope != nullptr)
+            scope->parent_element(instance);
         _session.elements().add(instance);
         return instance;
     }

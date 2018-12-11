@@ -47,7 +47,7 @@ namespace basecode::compiler {
             compiler::session& session,
             infer_type_result_t& result) override;
 
-        void emit_arithmetic_operator(
+        bool emit_arithmetic_operator(
             compiler::session& session,
             emit_context_t& context,
             emit_result_t& result);

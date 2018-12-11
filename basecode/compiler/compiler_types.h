@@ -115,7 +115,6 @@ namespace basecode::compiler {
 
     struct emit_context_t {
         vm::control_flow_t* flow_control = nullptr;
-        vm::op_sizes target_size = vm::op_sizes::qword;
     };
 
     struct emit_result_t {
