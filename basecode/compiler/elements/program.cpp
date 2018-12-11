@@ -122,9 +122,9 @@ namespace basecode::compiler {
                 if (type_alignment > 1)
                     instruction_block->align(type_alignment);
 
-                instruction_block->comment(
-                    fmt::format("identifier type: {}", var->type_ref()->name()),
-                    0);
+                instruction_block->comment(fmt::format(
+                    "identifier type: {}",
+                    var->type_ref()->name()));
                 auto var_label = assembler.make_label(var->label_name());
                 instruction_block->label(var_label);
 
@@ -369,7 +369,10 @@ namespace basecode::compiler {
 
         auto address_registers = session.address_registers();
         for (auto kvp : address_registers) {
-            auto var = session.elements().find(kvp.first);
+            auto var = dynamic_cast<compiler::identifier*>(session.elements().find(kvp.first));
+            start_block->comment(
+                var->symbol()->name(),
+                vm::comment_location_t::after_instruction);
             start_block->move(
                 vm::instruction_operand_t(kvp.second),
                 vm::instruction_operand_t(assembler.make_label_ref(var->label_name())));
@@ -429,16 +432,16 @@ namespace basecode::compiler {
             switch (parent_element->element_type()) {
                 case element_type_t::namespace_e: {
                     auto parent_ns = dynamic_cast<compiler::namespace_element*>(parent_element);
-                    implicit_block->comment(
-                        fmt::format("namespace: {}", parent_ns->name()),
-                        0);
+                    implicit_block->comment(fmt::format(
+                        "namespace: {}",
+                        parent_ns->name()));
                     break;
                 }
                 case element_type_t::module: {
                     auto parent_module = dynamic_cast<compiler::module*>(parent_element);
-                    implicit_block->comment(
-                        fmt::format("module: {}", parent_module->source_file()->path().string()),
-                        0);
+                    implicit_block->comment(fmt::format(
+                        "module: {}",
+                        parent_module->source_file()->path().string()));
                     break;
                 }
                 default:

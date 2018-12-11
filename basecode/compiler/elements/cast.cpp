@@ -158,7 +158,7 @@ namespace basecode::compiler {
                 "cast<{}> from type {}",
                 _type_ref->symbol().name,
                 infer_type_result.type_name()),
-            4);
+            vm::comment_location_t::after_instruction);
 
         vm::instruction_operand_t target_operand;
         auto target_type = target_number_class == type_number_class_t::integer ?

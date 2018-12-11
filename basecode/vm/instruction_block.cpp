@@ -1007,6 +1007,26 @@ namespace basecode::vm {
         make_block_entry(op);
     }
 
+    void instruction_block::comment(
+            const std::string& value,
+            uint8_t indent,
+            comment_location_t location) {
+        comment_t comment {};
+        comment.indent = indent;
+        comment.value = value;
+        comment.location = location;
+        make_block_entry(comment);
+    }
+
+    void instruction_block::comment(
+            const std::string& value,
+            comment_location_t location) {
+        comment_t comment {};
+        comment.value = value;
+        comment.location = location;
+        make_block_entry(comment);
+    }
+
     void instruction_block::blank_line() {
         _entries.push_back(block_entry_t());
     }
@@ -1065,13 +1085,6 @@ namespace basecode::vm {
 
     void instruction_block::make_block_entry(const data_definition_t& data) {
         _entries.push_back(block_entry_t(data));
-    }
-
-    void instruction_block::comment(const std::string& value, uint8_t indent) {
-        make_block_entry(comment_t {
-            .indent = indent,
-            .value = value
-        });
     }
 
 };

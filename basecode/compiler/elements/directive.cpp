@@ -61,10 +61,10 @@ namespace basecode::compiler {
             compiler::emit_result_t& result) {
         if (_instruction_block != nullptr) {
             auto current_block = session.assembler().current_block();
-            current_block->comment("*** begin: inline assembly block", 4);
+            current_block->comment("inline begin", vm::comment_location_t::after_instruction);
             for (const auto& entry : _instruction_block->entries())
                 current_block->add_entry(entry);
-            current_block->comment("*** end: inline assembly block", 4);
+            current_block->comment("inline end", vm::comment_location_t::after_instruction);
         }
         return true;
     }

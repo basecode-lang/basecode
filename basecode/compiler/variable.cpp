@@ -76,25 +76,19 @@ namespace basecode::compiler {
                 root_and_offset_t rot {};
                 if (walk_to_root_and_calculate_offset(rot)) {
                     block->comment(
-                        fmt::format(
-                            "load field value: {}",
-                            rot.path),
-                        4);
+                        rot.path,
+                        vm::comment_location_t::after_instruction);
                 } else {
                     if (on_stack) {
                         block->comment(
-                            fmt::format(
-                                "load stack local: {}",
-                                var->symbol()->name()),
-                            4);
+                            fmt::format("stack: {}", var->symbol()->name()),
+                            vm::comment_location_t::after_instruction);
                         // XXX: total hack, do not keep!
                         rot.offset += 4;
                     } else {
                         block->comment(
-                            fmt::format(
-                                "load global value: {}",
-                                var->symbol()->name()),
-                            4);
+                            var->symbol()->name(),
+                            vm::comment_location_t::after_instruction);
                     }
                 }
 
@@ -217,16 +211,12 @@ namespace basecode::compiler {
         root_and_offset_t rot {};
         if (walk_to_root_and_calculate_offset(rot)) {
             block->comment(
-                fmt::format(
-                    "store field value: {}",
-                    rot.path),
-                4);
+                rot.path,
+                vm::comment_location_t::after_instruction);
         } else {
             block->comment(
-                fmt::format(
-                    "store global value: {}",
-                    var->symbol()->name()),
-                4);
+                var->symbol()->name(),
+                vm::comment_location_t::after_instruction);
         }
 
         // XXX: total hack, do not keep!
@@ -279,16 +269,12 @@ namespace basecode::compiler {
 
                 if (var->usage() == identifier_usage_t::stack) {
                     block->comment(
-                        fmt::format(
-                            "stack local: {}",
-                            var->symbol()->name()),
-                        4);
+                        fmt::format("stack: {}", var->symbol()->name()),
+                        vm::comment_location_t::after_instruction);
                 } else {
                     block->comment(
-                        fmt::format(
-                            "load global address: {}",
-                            var->symbol()->name()),
-                        4);
+                        var->symbol()->name(),
+                        vm::comment_location_t::after_instruction);
                     block->move(
                         vm::instruction_operand_t(_address.reg),
                         vm::instruction_operand_t(assembler.make_label_ref(var->symbol()->name())),
@@ -383,17 +369,13 @@ namespace basecode::compiler {
         root_and_offset_t rot {};
         if (walk_to_root_and_calculate_offset(rot)) {
             block->comment(
-                fmt::format(
-                    "store field value: {}",
-                    rot.path),
-                4);
+                rot.path,
+                vm::comment_location_t::after_instruction);
         } else {
             auto var = dynamic_cast<compiler::identifier*>(_element);
             block->comment(
-                fmt::format(
-                    "store global value: {}",
-                    var->symbol()->name()),
-                4);
+                var->symbol()->name(),
+                vm::comment_location_t::after_instruction);
         }
 
         block->store(
@@ -434,16 +416,12 @@ namespace basecode::compiler {
         root_and_offset_t rot {};
         if (walk_to_root_and_calculate_offset(rot)) {
             block->comment(
-                fmt::format(
-                    "store field value: {}",
-                    rot.path),
-                4);
+                rot.path,
+                vm::comment_location_t::after_instruction);
         } else {
             block->comment(
-                fmt::format(
-                    "store global value: {}",
-                    var->symbol()->name()),
-                4);
+                var->symbol()->name(),
+                vm::comment_location_t::after_instruction);
         }
 
         // XXX: total hack, do not keep!

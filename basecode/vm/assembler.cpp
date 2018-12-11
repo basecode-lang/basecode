@@ -878,6 +878,8 @@ namespace basecode::vm {
         if (source_file == nullptr)
             return;
 
+        std::stack<vm::comment_t> post_inst_comments {};
+
         size_t index = 0;
         for (auto& entry : block->entries()) {
             switch (entry.type()) {
@@ -894,12 +896,16 @@ namespace basecode::vm {
                 }
                 case block_entry_type_t::comment: {
                     auto comment = entry.data<comment_t>();
-                    std::string indent;
-                    if (comment->indent > 0)
-                        indent = std::string(comment->indent, ' ');
-                    source_file->add_source_line(
-                        entry.address(),
-                        fmt::format("{}; {}", indent, comment->value));
+                    if (comment->location == comment_location_t::after_instruction) {
+                        post_inst_comments.push(*comment);
+                    } else {
+                        std::string indent;
+                        if (comment->indent > 0)
+                            indent = std::string(comment->indent, ' ');
+                        source_file->add_source_line(
+                            entry.address(),
+                            fmt::format("{}; {}", indent, comment->value));
+                    }
                     break;
                 }
                 case block_entry_type_t::align: {
@@ -932,6 +938,11 @@ namespace basecode::vm {
                         }
                         return fmt::format("unresolved_ref_id({})", id);
                     });
+                    while (!post_inst_comments.empty()) {
+                        auto& top = post_inst_comments.top();
+                        stream += fmt::format("\t\t; {}", top.value);
+                        post_inst_comments.pop();
+                    }
                     source_file->add_source_line(
                         entry.address(),
                         fmt::format("\t{}", stream));

@@ -28,6 +28,15 @@ namespace basecode::vm {
 
     // block support
     public:
+        void comment(
+            const std::string& value,
+            uint8_t indent,
+            comment_location_t location = comment_location_t::new_line);
+
+        void comment(
+            const std::string& value,
+            comment_location_t location = comment_location_t::new_line);
+
         void blank_line();
 
         void clear_entries();
@@ -63,8 +72,6 @@ namespace basecode::vm {
         void make_block_entry(const instruction_t& inst);
 
         void make_block_entry(const data_definition_t& data);
-
-        void comment(const std::string& value, uint8_t indent);
 
     // data definitions
     public:

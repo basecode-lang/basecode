@@ -54,21 +54,21 @@ namespace basecode::compiler {
 
         switch (operator_type()) {
             case operator_type_t::negate: {
-                block->comment("negate", 4);
+                block->comment("unary_op: negate", vm::comment_location_t::after_instruction);
                 block->neg(
                     result_operand,
                     rhs_var->emit_result().operands.back());
                 break;
             }
             case operator_type_t::binary_not: {
-                block->comment("binary not", 4);
+                block->comment("unary_op: binary not", vm::comment_location_t::after_instruction);
                 block->not_op(
                     result_operand,
                     rhs_var->emit_result().operands.back());
                 break;
             }
             case operator_type_t::logical_not: {
-                block->comment("logical not", 4);
+                block->comment("unary_op: logical not", vm::comment_location_t::after_instruction);
                 block->cmp(
                     result_operand.size(),
                     rhs_var->emit_result().operands.back(),
@@ -84,7 +84,7 @@ namespace basecode::compiler {
                     break;
                 }
 
-                block->comment("load primitive value from pointer", 4);
+                block->comment("load value", vm::comment_location_t::after_instruction);
                 block->load(
                     result_operand,
                     rhs_var->emit_result().operands.back());

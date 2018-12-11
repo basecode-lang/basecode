@@ -50,8 +50,8 @@ namespace basecode::compiler {
         auto block = assembler.current_block();
 
         block->comment(
-            fmt::format("initialize identifier: {}", var->symbol()->name()),
-            4);
+            var->symbol()->name(),
+            vm::comment_location_t::after_instruction);
 
         variable_handle_t temp_var;
         if (!session.variable(var, temp_var))

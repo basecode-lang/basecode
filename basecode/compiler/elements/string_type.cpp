@@ -42,9 +42,9 @@ namespace basecode::compiler {
         auto& assembler = session.assembler();
         auto block = assembler.current_block();
 
-        block->comment(
-            fmt::format("finalize identifier: {}", var->symbol()->name()),
-            4);
+        block->comment(fmt::format(
+            "finalize: {}", var->symbol()->name()),
+            vm::comment_location_t::after_instruction);
 
         variable_handle_t type_var;
         if (!session.variable(var, type_var))
@@ -73,8 +73,8 @@ namespace basecode::compiler {
         auto block = assembler.current_block();
 
         block->comment(
-            fmt::format("initialize identifier: {}", var->symbol()->name()),
-            4);
+            fmt::format("initialize: {}", var->symbol()->name()),
+            vm::comment_location_t::after_instruction);
 
         variable_handle_t type_var;
         if (!session.variable(var, type_var, false))
@@ -112,10 +112,8 @@ namespace basecode::compiler {
 
             if (literal != nullptr) {
                 block->comment(
-                    fmt::format(
-                        "load string literal address: {}",
-                        literal->label_name()),
-                    4);
+                    fmt::format("literal: {}", literal->label_name()),
+                    vm::comment_location_t::after_instruction);
 
                 variable_handle_t literal_var;
                 if (!session.variable(literal, literal_var))

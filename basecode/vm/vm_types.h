@@ -725,9 +725,15 @@ namespace basecode::vm {
         std::vector<data_value_variant_t> values {};
     };
 
+    enum class comment_location_t : uint8_t {
+        new_line,
+        after_instruction
+    };
+
     struct comment_t {
         uint8_t indent {};
         std::string value {};
+        comment_location_t location = comment_location_t::new_line;
     };
 
     struct label_t {

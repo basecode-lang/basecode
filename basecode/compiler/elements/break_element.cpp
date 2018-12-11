@@ -50,7 +50,9 @@ namespace basecode::compiler {
             label_name = label_ref->name;
         }
 
-        block->comment(fmt::format("break to label: {}", label_name), 4);
+        block->comment(
+            fmt::format("break: {}", label_name),
+            vm::comment_location_t::after_instruction);
         block->jump_direct(label_ref);
 
         return true;

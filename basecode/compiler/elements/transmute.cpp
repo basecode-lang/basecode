@@ -69,7 +69,7 @@ namespace basecode::compiler {
 
         block->comment(
             fmt::format("transmute<{}>", _type_ref->symbol().name),
-            4);
+            vm::comment_location_t::after_instruction);
 
         vm::instruction_operand_t target_operand;
         auto target_type = target_number_class == type_number_class_t::integer ?

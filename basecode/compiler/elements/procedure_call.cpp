@@ -54,13 +54,13 @@ namespace basecode::compiler {
             _arguments->emit(session, context, result);
 
         if (procedure_type->is_foreign()) {
-            block->comment(
-                fmt::format("foreign call: {}", identifier->symbol()->name()),
-                4);
             vm::instruction_operand_t arg_count(
                 static_cast<uint64_t>(_arguments->size()),
                 vm::op_sizes::word);
             block->push(arg_count);
+            block->comment(
+                fmt::format("call: {}", identifier->symbol()->name()),
+                vm::comment_location_t::after_instruction);
             block->call_foreign(procedure_type->foreign_address());
         } else {
             block->call(assembler.make_label_ref(identifier->symbol()->name()));
