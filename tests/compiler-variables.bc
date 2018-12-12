@@ -51,10 +51,14 @@ support::print("player.cls.name.capacity := %d\n", player.cls.name.capacity);
 
 player_ptr: ^entity := address_of(player);
 
+support::print("before: player_ptr.pos.x := %d\n", player_ptr.pos.x);
+support::print("before: player_ptr.pos.y := %d\n", player_ptr.pos.y);
+support::print("before: player_ptr.pos.z := %hhd\n", player_ptr.pos.z);
+
 player_ptr.pos.x := 100;
 player_ptr.pos.y := 55;
 player_ptr.pos.z := -106;
 
-support::print("player_ptr.pos.x := %d\n", player_ptr.pos.x);
-support::print("player_ptr.pos.y := %d\n", player_ptr.pos.y);
-support::print("player_ptr.pos.z := %hhd\n", player_ptr.pos.z);
+support::print("after: player_ptr.pos.x := %d\n", player_ptr.pos.x);
+support::print("after: player_ptr.pos.y := %d\n", player_ptr.pos.y);
+support::print("after: player_ptr.pos.z := %hhd\n", player_ptr.pos.z);

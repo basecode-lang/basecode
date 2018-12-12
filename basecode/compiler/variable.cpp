@@ -81,13 +81,6 @@ namespace basecode::compiler {
                     fmt::format(fmt, _rot.path),
                     vm::comment_location_t::after_instruction);
 
-                auto offset = _rot.offset;
-
-                // XXX: total hack, do not keep!
-                if (on_stack) {
-                    offset += 4;
-                }
-
                 vm::instruction_operand_t result_operand(_value.reg);
                 _result.operands.emplace_back(result_operand);
 
@@ -95,8 +88,8 @@ namespace basecode::compiler {
                 auto address_reg = temp_address_reg != nullptr ? *temp_address_reg : _address.reg;
                 block->load(
                     result_operand,
-                    vm::instruction_operand_t(on_stack ? vm::register_t::sp() : address_reg),
-                    vm::instruction_operand_t::offset(offset));
+                    vm::instruction_operand_t(address_reg),
+                    vm::instruction_operand_t::offset(_rot.offset));
                 break;
             }
             default: {
@@ -218,27 +211,16 @@ namespace basecode::compiler {
             fmt::format(fmt, _rot.path),
             vm::comment_location_t::after_instruction);
 
-        auto offset = _rot.offset;
-
-        // XXX: total hack, do not keep!
-        if (on_stack) {
-            offset += 4;
-        }
-
         auto temp_address_reg = find_temp_address_reg();
         auto address_reg = temp_address_reg != nullptr ? *temp_address_reg : _address.reg;
-
-        vm::instruction_operand_t dest_operand(on_stack ?
-            vm::register_t::sp() :
-            address_reg);
 
         auto value_operand = emit_result().operands.back();
         value_operand.size(_value.reg.size);
 
         block->store(
-            dest_operand,
+            vm::instruction_operand_t(address_reg),
             value_operand,
-            vm::instruction_operand_t::offset(offset));
+            vm::instruction_operand_t::offset(_rot.offset));
 
         flag(flags_t::f_written, true);
         flag(flags_t::f_read, false);
@@ -279,22 +261,29 @@ namespace basecode::compiler {
         }
 
         if (var != nullptr) {
-            auto address_reg = _session.get_address_register(var->id());
-            if (address_reg == nullptr) {
-                _address.reg.size = vm::op_sizes::qword;
-                _address.reg.type = vm::register_type_t::integer;
-                _address.reserve();
+            auto on_stack = var->usage() == identifier_usage_t::stack;
+            if (!on_stack) {
+                auto address_reg = _session.get_address_register(var->id());
+                if (address_reg == nullptr) {
+                    _address.reg.size = vm::op_sizes::qword;
+                    _address.reg.type = vm::register_type_t::integer;
+                    _address.reserve();
 
-                block->comment(
-                    var->symbol()->name(),
-                    vm::comment_location_t::after_instruction);
+                    block->comment(
+                        var->symbol()->name(),
+                        vm::comment_location_t::after_instruction);
 
-                block->move(
-                    vm::instruction_operand_t(_address.reg),
-                    vm::instruction_operand_t(assembler.make_label_ref(var->symbol()->name())),
-                    vm::instruction_operand_t::offset(!include_offset ? 0 : _rot.offset));
+                    block->move(
+                        vm::instruction_operand_t(_address.reg),
+                        vm::instruction_operand_t(assembler.make_label_ref(var->symbol()->name())),
+                        vm::instruction_operand_t::offset(!include_offset ? 0 : _rot.offset));
+                } else {
+                    _address.reg = *address_reg;
+                    _address.allocated = true;
+                    _address.no_release = true;
+                }
             } else {
-                _address.reg = *address_reg;
+                _address.reg = vm::register_t::fp();
                 _address.allocated = true;
                 _address.no_release = true;
             }
@@ -434,27 +423,16 @@ namespace basecode::compiler {
             fmt::format(fmt, _rot.path),
             vm::comment_location_t::after_instruction);
 
-        auto offset = _rot.offset;
-
-        // XXX: total hack, do not keep!
-        if (on_stack) {
-            offset += 4;
-        }
-
         auto temp_address_reg = find_temp_address_reg();
         auto address_reg = temp_address_reg != nullptr ? *temp_address_reg : _address.reg;
-
-        vm::instruction_operand_t dest_operand(on_stack ?
-            vm::register_t::sp() :
-            address_reg);
 
         auto value_operand = value->emit_result().operands.back();
         value_operand.size(_value.reg.size);
 
         block->store(
-            dest_operand,
+            vm::instruction_operand_t(address_reg),
             value_operand,
-            vm::instruction_operand_t::offset(offset));
+            vm::instruction_operand_t::offset(_rot.offset));
 
         return true;
     }
@@ -469,6 +447,16 @@ namespace basecode::compiler {
 
     bool variable::flag(variable::flags_t f) const {
         return (_flags & f) != 0;
+    }
+
+    vm::register_t* variable::find_temp_address_reg() {
+        auto current = this;
+        while (current != nullptr) {
+            if (current->_temp_address.type != vm::register_type_t::none)
+                return &current->_temp_address;
+            current = current->_parent;
+        }
+        return nullptr;
     }
 
     const vm::register_t& variable::value_reg() const {
@@ -543,16 +531,6 @@ namespace basecode::compiler {
         }
 
         return true;
-    }
-
-    vm::register_t* variable::find_temp_address_reg() {
-        auto current = this;
-        while (current != nullptr) {
-            if (current->_temp_address.type != vm::register_type_t::none)
-                return &current->_temp_address;
-            current = current->_parent;
-        }
-        return nullptr;
     }
 
 };

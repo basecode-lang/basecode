@@ -3,7 +3,6 @@ NOTES
 
 TASKS
 -----
-- REFACTOR: variable to improve how walk_to_root_and_calculate_offset is used.
 - BUG: tuple.bc -- the type_reference's symbol isn't being updated to match
         the constant identifier's symbol.
 - BUG: syntax like: support: print("hello!"); causes the compiler to end silently.
@@ -109,3 +108,4 @@ DONE
 - byte code emit for: switch, case, fallthrough
 - byte code emit: for_element
 - BUG: identifiers not found are returning a type inference error instead.
+- REFACTOR: variable to improve how walk_to_root_and_calculate_offset is used.
