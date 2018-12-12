@@ -91,14 +91,20 @@ namespace basecode::compiler {
                 vm::instruction_operand_t result_operand(_value.reg);
                 _result.operands.emplace_back(result_operand);
 
+                auto temp_address_reg = find_temp_address_reg();
+                auto address_reg = temp_address_reg != nullptr ? *temp_address_reg : _address.reg;
                 block->load(
                     result_operand,
-                    vm::instruction_operand_t(on_stack ? vm::register_t::sp() : _address.reg),
+                    vm::instruction_operand_t(on_stack ? vm::register_t::sp() : address_reg),
                     vm::instruction_operand_t::offset(offset));
                 break;
             }
             default: {
                 _element->emit(_session, _context, _result);
+                if (_element->is_pointer_dereference()
+                && !_result.operands.empty()) {
+                    _temp_address = *(_result.operands.back().data<vm::register_t>());
+                }
                 break;
             }
         }
@@ -219,9 +225,12 @@ namespace basecode::compiler {
             offset += 4;
         }
 
+        auto temp_address_reg = find_temp_address_reg();
+        auto address_reg = temp_address_reg != nullptr ? *temp_address_reg : _address.reg;
+
         vm::instruction_operand_t dest_operand(on_stack ?
             vm::register_t::sp() :
-            _address.reg);
+            address_reg);
 
         auto value_operand = emit_result().operands.back();
         value_operand.size(_value.reg.size);
@@ -339,6 +348,10 @@ namespace basecode::compiler {
         _address.release();
         _value.release();
 
+        if (_temp_address.type != vm::register_type_t::none) {
+            _session.assembler().free_reg(_temp_address);
+        }
+
         _result.clear(_session.assembler());
 
         return true;
@@ -371,8 +384,11 @@ namespace basecode::compiler {
             _rot.path,
             vm::comment_location_t::after_instruction);
 
+        auto temp_address_reg = find_temp_address_reg();
+        auto address_reg = temp_address_reg != nullptr ? *temp_address_reg : _address.reg;
+
         block->store(
-            vm::instruction_operand_t(_address.reg),
+            vm::instruction_operand_t(address_reg),
             vm::instruction_operand_t(static_cast<uint64_t>(value), size),
             vm::instruction_operand_t::offset(_rot.offset));
 
@@ -425,9 +441,12 @@ namespace basecode::compiler {
             offset += 4;
         }
 
+        auto temp_address_reg = find_temp_address_reg();
+        auto address_reg = temp_address_reg != nullptr ? *temp_address_reg : _address.reg;
+
         vm::instruction_operand_t dest_operand(on_stack ?
             vm::register_t::sp() :
-            _address.reg);
+            address_reg);
 
         auto value_operand = value->emit_result().operands.back();
         value_operand.size(_value.reg.size);
@@ -524,6 +543,16 @@ namespace basecode::compiler {
         }
 
         return true;
+    }
+
+    vm::register_t* variable::find_temp_address_reg() {
+        auto current = this;
+        while (current != nullptr) {
+            if (current->_temp_address.type != vm::register_type_t::none)
+                return &current->_temp_address;
+            current = current->_parent;
+        }
+        return nullptr;
     }
 
 };

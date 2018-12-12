@@ -17,6 +17,7 @@
 #include "program.h"
 #include "attribute.h"
 #include "float_literal.h"
+#include "unary_operator.h"
 #include "string_literal.h"
 #include "integer_literal.h"
 #include "boolean_literal.h"
@@ -34,9 +35,6 @@ namespace basecode::compiler {
                                        _element_type(type) {
     }
 
-    element::~element() {
-    }
-
     bool element::fold(
             compiler::session& session,
             fold_result_t& result) {
@@ -46,6 +44,13 @@ namespace basecode::compiler {
                 return true;
         }
         return on_fold(session, result);
+    }
+
+    bool element::on_emit(
+            compiler::session& session,
+            compiler::emit_context_t& context,
+            compiler::emit_result_t& result) {
+        return true;
     }
 
     bool element::on_fold(
@@ -175,6 +180,14 @@ namespace basecode::compiler {
         return on_emit(session, context, result);
     }
 
+    bool element::is_pointer_dereference() const {
+        if (_element_type != element_type_t::unary_operator)
+            return false;
+
+        auto unary_op = dynamic_cast<compiler::unary_operator*>(const_cast<compiler::element*>(this));
+        return unary_op->operator_type() == operator_type_t::pointer_dereference;
+    }
+
     bool element::on_as_float(double& value) const {
         return false;
     }
@@ -185,13 +198,6 @@ namespace basecode::compiler {
 
     bool element::as_string(std::string& value) const {
         return on_as_string(value);
-    }
-
-    bool element::on_emit(
-            compiler::session& session,
-            compiler::emit_context_t& context,
-            compiler::emit_result_t& result) {
-        return true;
     }
 
     bool element::as_rune(common::rune_t& value) const {

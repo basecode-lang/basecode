@@ -80,10 +80,15 @@ namespace basecode::compiler {
                 break;
             }
             case operator_type_t::pointer_dereference: {
-                block->comment("dereference", vm::comment_location_t::after_instruction);
-                block->load(
-                    result_operand,
-                    rhs_var->emit_result().operands.back());
+                if (!rhs_var->type_result().inferred_type->is_composite_type()) {
+                    block->comment("dereference", vm::comment_location_t::after_instruction);
+                    block->load(
+                        result_operand,
+                        rhs_var->emit_result().operands.back());
+                } else {
+                    result.operands.pop_back();
+                    result.operands.emplace_back(rhs_var->emit_result().operands.back());
+                }
                 break;
             }
             default:

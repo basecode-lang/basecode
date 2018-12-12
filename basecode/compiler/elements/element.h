@@ -23,7 +23,7 @@ namespace basecode::compiler {
             element_type_t type,
             element* parent_element = nullptr);
 
-        virtual ~element();
+        virtual ~element() = default;
 
         bool fold(
             compiler::session& session,
@@ -74,6 +74,8 @@ namespace basecode::compiler {
         element_type_t element_type() const;
 
         void parent_element(element* value);
+
+        bool is_pointer_dereference() const;
 
         void module(compiler::module* value);
 

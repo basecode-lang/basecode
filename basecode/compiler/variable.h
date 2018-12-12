@@ -116,6 +116,8 @@ namespace basecode::compiler {
     private:
         bool flag(variable::flags_t f) const;
 
+        vm::register_t* find_temp_address_reg();
+
         void flag(variable::flags_t f, bool value);
 
         bool walk_to_root_and_calculate_offset(root_and_offset_t& rot);
@@ -129,6 +131,7 @@ namespace basecode::compiler {
         compiler::session& _session;
         variable_register_t _address;
         infer_type_result_t _type {};
+        vm::register_t _temp_address;
         compiler::field* _field = nullptr;
         compiler::element* _element = nullptr;
         flags_value_t _flags = flags_t::f_none;

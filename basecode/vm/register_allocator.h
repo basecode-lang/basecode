@@ -18,58 +18,66 @@
 
 namespace basecode::vm {
 
+    struct allocation_status_t {
+        bool live = false;
+        registers_t reg {};
+    };
+
     struct register_allocator_t {
         register_allocator_t() {
             reset();
         }
 
         void reset() {
-            used.clear();
-
-            while (!available_float.empty())
-                available_float.pop();
-
-            while (!available_integer.empty())
-                available_integer.pop();
-
-            for (int8_t r = 63; r >= 0; r--) {
-                available_float.push(static_cast<registers_t>(r));
-                available_integer.push(static_cast<registers_t>(r));
+            for (int8_t i = 0; i < 64; i++) {
+                _ints[i] = allocation_status_t{false, static_cast<registers_t>(i)};
+                _floats[i] = allocation_status_t{false, static_cast<registers_t>(i)};
             }
+        }
+
+        int8_t find_next_free_float() {
+            for (int8_t i = 0; i < 64; i++)
+                if (!_floats[i].live)
+                    return i;
+
+            return -1;
         }
 
         bool allocate(register_t& reg) {
             if (reg.type == register_type_t::integer) {
-                if (available_integer.empty())
+                auto index = find_next_free_integer();
+                if (index == -1)
                     return false;
-                auto next_reg = available_integer.top();
-                reg.number = next_reg;
-                available_integer.pop();
+                _ints[index].live = true;
+                reg.number = _ints[index].reg;
             } else {
-                if (available_float.empty())
+                auto index = find_next_free_float();
+                if (index == -1)
                     return false;
-                auto next_reg = available_float.top();
-                reg.number = next_reg;
-                available_float.pop();
+                _floats[index].live = true;
+                reg.number = _floats[index].reg;
             }
-            used.insert(register_index(reg.number, reg.type));
             return true;
         }
 
         void free(const register_t& reg) {
-            auto removed = used.erase(register_index(reg.number, reg.type)) > 0;
-            if (removed) {
-                if (reg.type == register_type_t::integer) {
-                    available_integer.push(reg.number);
-                } else {
-                    available_float.push(reg.number);
-                }
+            if (reg.type == register_type_t::integer) {
+                _ints[reg.number].live = false;
+            } else {
+                _floats[reg.number].live = false;
             }
         }
 
-        std::set<size_t> used {};
-        std::stack<registers_t> available_float {};
-        std::stack<registers_t> available_integer {};
+        int8_t find_next_free_integer() {
+            for (int8_t i = 0; i < 64; i++)
+                if (!_ints[i].live)
+                    return i;
+
+            return -1;
+        }
+
+        allocation_status_t _ints[64];
+        allocation_status_t _floats[64];
     };
 
 };
