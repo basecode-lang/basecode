@@ -95,8 +95,10 @@ namespace basecode::vm {
                 op.size = operand.size();
                 op.type = operand_encoding_t::flags::integer
                     | operand_encoding_t::flags::constant;
-                if (imm_value < 0)
+                if (imm_value < 0) {
                     op.type |= operand_encoding_t::flags::negative;
+                    imm_value = -imm_value;
+                }
                 op.value.u = static_cast<uint64_t>(imm_value);
                 break;
             }

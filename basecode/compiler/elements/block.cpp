@@ -75,6 +75,18 @@ namespace basecode::compiler {
             working_stack.pop();
         }
 
+        if (context.recurse_blocks) {
+            for (auto block : _blocks) {
+                emit_context_t block_context {};
+                auto success = block->emit(
+                    session,
+                    block_context,
+                    result);
+                if (!success)
+                    return false;
+            }
+        }
+
         return !session.result().is_failed();
     }
 

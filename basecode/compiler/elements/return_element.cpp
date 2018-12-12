@@ -34,7 +34,6 @@ namespace basecode::compiler {
                 return_result.operands.back(),
                 vm::instruction_operand_t(static_cast<uint64_t>(8), vm::op_sizes::byte));
         }
-        block->rts();
         return true;
     }
 

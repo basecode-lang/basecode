@@ -114,6 +114,7 @@ namespace basecode::compiler {
     ///////////////////////////////////////////////////////////////////////////
 
     struct emit_context_t {
+        bool recurse_blocks = false;
         vm::control_flow_t* flow_control = nullptr;
     };
 

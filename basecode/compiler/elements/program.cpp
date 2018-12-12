@@ -15,35 +15,9 @@
 #include <common/defer.h>
 #include <common/bytes.h>
 #include <compiler/session.h>
+#include <compiler/elements.h>
 #include <compiler/variable.h>
 #include <vm/instruction_block.h>
-#include "type.h"
-#include "block.h"
-#include "module.h"
-#include "program.h"
-#include "any_type.h"
-#include "directive.h"
-#include "bool_type.h"
-#include "type_info.h"
-#include "identifier.h"
-#include "tuple_type.h"
-#include "declaration.h"
-#include "string_type.h"
-#include "initializer.h"
-#include "module_type.h"
-#include "type_literal.h"
-#include "numeric_type.h"
-#include "unknown_type.h"
-#include "float_literal.h"
-#include "symbol_element.h"
-#include "string_literal.h"
-#include "procedure_type.h"
-#include "namespace_type.h"
-#include "type_reference.h"
-#include "binary_operator.h"
-#include "integer_literal.h"
-#include "namespace_element.h"
-#include "identifier_reference.h"
 
 namespace basecode::compiler {
 
@@ -74,6 +48,9 @@ namespace basecode::compiler {
             return false;
 
         if (!emit_sections(session))
+            return false;
+
+        if (!emit_procedure_types(session))
             return false;
 
         if (!emit_start_block(session))
@@ -457,22 +434,33 @@ namespace basecode::compiler {
 
     bool program::emit_procedure_types(compiler::session& session) {
         auto& assembler = session.assembler();
-        procedure_type_list_t proc_list {};
+        procedure_instance_set_t proc_instance_set {};
 
-        auto procedure_types = session.elements().find_by_type(element_type_t::proc_type);
-        for (auto p : procedure_types) {
-            auto procedure_type = dynamic_cast<compiler::procedure_type*>(p);
-            if (!procedure_type->instances().empty()) {
-                proc_list.emplace_back(procedure_type);
-            }
+        auto proc_calls = session.elements().find_by_type(element_type_t::proc_call);
+        for (auto call : proc_calls) {
+            auto proc_call = dynamic_cast<compiler::procedure_call*>(call);
+            auto type = proc_call->reference()->identifier()->type_ref()->type();
+
+            auto procedure_type = dynamic_cast<compiler::procedure_type*>(type);
+            if (procedure_type->is_foreign())
+                continue;
+
+            auto instance = procedure_type->instance_for(session, proc_call);
+            if (instance != nullptr)
+                proc_instance_set.insert(instance);
         }
 
-        for (auto procedure_type : proc_list) {
+        if (session.result().is_failed())
+            return false;
+
+        for (auto instance : proc_instance_set) {
             auto proc_type_block = assembler.make_basic_block();
             assembler.push_block(proc_type_block);
+
             emit_context_t context {};
             emit_result_t result {};
-            procedure_type->emit(session, context, result);
+            instance->procedure_type()->emit(session, context, result);
+
             assembler.pop_block();
         }
 

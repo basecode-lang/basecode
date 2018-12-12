@@ -46,6 +46,10 @@ namespace basecode::compiler {
 
         procedure_instance_list_t& instances();
 
+        compiler::procedure_instance* instance_for(
+            compiler::session& session,
+            compiler::procedure_call* call);
+
     protected:
         bool on_emit(
             compiler::session& session,

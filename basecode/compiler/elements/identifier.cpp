@@ -51,6 +51,10 @@ namespace basecode::compiler {
         return true;
     }
 
+    compiler::field* identifier::field() {
+        return _field;
+    }
+
     bool identifier::inferred_type() const {
         return _inferred_type;
     }
@@ -69,6 +73,10 @@ namespace basecode::compiler {
 
     identifier_usage_t identifier::usage() const {
         return _usage;
+    }
+
+    void identifier::field(compiler::field* value) {
+        _field = value;
     }
 
     bool identifier::on_as_bool(bool& value) const {

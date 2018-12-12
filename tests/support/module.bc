@@ -65,6 +65,7 @@ range :: ns {
 };
 
 exit   :: proc(level: s32) {
+    print("exit level := %d\n", level);
     #assembly {{
         ;how to reference a local stack variable
         ;move.qw  i63, $level  -> move.qw i63, sp, {offset of $label}
@@ -73,9 +74,21 @@ exit   :: proc(level: s32) {
     }};
 };
 
-assert :: proc(predicate: bool, message: string) {
+content: ^u8;
+i: u32;
+
+assert :: proc(predicate: bool, message: ^string) {
     if !predicate {
-        print("%s\n", message);
+        // XXX: temporary hack!
+        //print("message.length := %d\n", message.length);
+        content := message.data;
+        i := 0;
+        while i < message.length {
+            print("%c", content^);
+            content +:= 1;
+            i +:= 1;
+        };
+        print("\n");
         exit(1);
     };
 };

@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <common/bytes.h>
 #include <vm/instruction_block.h>
 #include "session.h"
 #include "variable.h"
@@ -521,6 +522,17 @@ namespace basecode::compiler {
 
         if (rot.identifier != nullptr) {
             names.push(rot.identifier->symbol()->name());
+            auto field = rot.identifier->field();
+            if (field != nullptr) {
+                rot.offset += field->start_offset();
+                if (rot.identifier->usage() == identifier_usage_t::stack) {
+                    if (!current->_element->is_pointer_dereference()) {
+                        rot.offset = common::align(rot.offset, 8);
+                    } else {
+                        rot.offset--;
+                    }
+                }
+            }
         }
 
         while (!names.empty()) {

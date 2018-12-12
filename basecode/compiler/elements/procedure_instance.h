@@ -20,12 +20,12 @@ namespace basecode::compiler {
         procedure_instance(
             compiler::module* module,
             compiler::block* parent_scope,
-            compiler::type* procedure_type,
+            compiler::procedure_type* procedure_type,
             compiler::block* scope);
 
         compiler::block* scope();
 
-        compiler::type* procedure_type();
+        compiler::procedure_type* procedure_type();
 
     protected:
         bool on_emit(
@@ -37,7 +37,7 @@ namespace basecode::compiler {
 
     private:
         compiler::block* _scope = nullptr;
-        compiler::type* _procedure_type = nullptr;
+        compiler::procedure_type* _procedure_type = nullptr;
     };
 
 };

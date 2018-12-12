@@ -421,12 +421,14 @@ namespace basecode::compiler {
                         list,
                         type->scope());
                     if (success) {
+                        auto decl = dynamic_cast<compiler::declaration*>(list.front());
                         auto new_field = builder.make_field(
                             type,
                             type->scope(),
-                            dynamic_cast<compiler::declaration*>(list.front()),
+                            decl,
                             previous_field != nullptr ? previous_field->end_offset() : 0);
                         type->fields().add(new_field);
+                        decl->identifier()->field(new_field);
                         previous_field = new_field;
                     }
                     break;
@@ -443,6 +445,7 @@ namespace basecode::compiler {
                             field_decl,
                             previous_field != nullptr ? previous_field->end_offset() : 0);
                         type->fields().add(new_field);
+                        field_decl->identifier()->field(new_field);
                         previous_field = new_field;
                     }
                     break;
@@ -2009,6 +2012,7 @@ namespace basecode::compiler {
                             param_decl,
                             param_field != nullptr ? param_field->end_offset() : 0);
                         parameter_map.add(param_field);
+                        param_decl->identifier()->field(param_field);
                     } else {
                         return false;
                     }
@@ -2030,6 +2034,7 @@ namespace basecode::compiler {
                             param_decl,
                             param_field != nullptr ? param_field->end_offset() : 0);
                         parameter_map.add(param_field);
+                        param_decl->identifier()->field(param_field);
                     } else {
                         return false;
                     }
@@ -2060,6 +2065,7 @@ namespace basecode::compiler {
                             0,
                             true);
                         parameter_map.add(param_field);
+                        param_decl->identifier()->field(param_field);
                     } else {
                         return false;
                     }
@@ -2105,6 +2111,7 @@ namespace basecode::compiler {
             builder.make_declaration(block_scope, return_identifier, nullptr),
             0);
         proc_type->return_type(return_field);
+        return_identifier->field(return_field);
     }
 
     compiler::declaration* ast_evaluator::declare_identifier(
@@ -2213,6 +2220,7 @@ namespace basecode::compiler {
                     argument,
                     previous_field != nullptr ? previous_field->end_offset() : 0);
                 tuple_type->fields().add(new_field);
+                argument->identifier()->field(new_field);
                 previous_field = new_field;
             }
 

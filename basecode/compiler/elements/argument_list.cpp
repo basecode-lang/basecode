@@ -85,8 +85,33 @@ namespace basecode::compiler {
                     variable_handle_t arg_var;
                     if (!session.variable(arg, arg_var))
                         return false;
-                    arg_var->read();
-                    block->push(arg_var->emit_result().operands.back());
+                    auto type = arg_var->type_result().inferred_type;
+                    if (!type->is_composite_type()
+                    ||   arg->element_type() == element_type_t::string_literal) {
+                        arg_var->read();
+                        block->push(arg_var->emit_result().operands.back());
+                    } else {
+                        arg_var->address();
+                        block->push(vm::instruction_operand_t(arg_var->address_reg()));
+//                        vm::register_t temp {};
+//                        temp.type = vm::register_type_t::integer;
+//                        session.assembler().allocate_reg(temp);
+//                        defer(session.assembler().free_reg(temp));
+//
+//                        auto size = static_cast<uint64_t>(type->size_in_bytes());
+//                        block->move(
+//                            vm::instruction_operand_t(temp),
+//                            vm::instruction_operand_t::sp());
+//                        block->sub(
+//                            vm::instruction_operand_t::sp(),
+//                            vm::instruction_operand_t::sp(),
+//                            vm::instruction_operand_t(size, vm::op_sizes::word));
+//                        block->copy(
+//                            vm::op_sizes::byte,
+//                            vm::instruction_operand_t(temp),
+//                            vm::instruction_operand_t(arg_var->address_reg()),
+//                            vm::instruction_operand_t(size, vm::op_sizes::word));
+                    }
                     break;
                 }
                 default:

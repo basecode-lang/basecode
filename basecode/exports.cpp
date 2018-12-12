@@ -9,7 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
-#include <stdarg.h>
+#include <cstdarg>
 #include <cstdio>
 
 extern "C" {

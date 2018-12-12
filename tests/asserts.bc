@@ -1,0 +1,7 @@
+support :: module("support/module.bc");
+
+s1 := "hello world!";
+s2 := "oh, noes!  what did you DO!?";
+
+support::assert(true,  address_of(s1));
+support::assert(false, address_of(s2));

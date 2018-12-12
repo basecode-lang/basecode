@@ -9,12 +9,14 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <common/bytes.h>
 #include <compiler/session.h>
 #include <vm/instruction_block.h>
 #include "block.h"
 #include "field.h"
 #include "element.h"
 #include "program.h"
+#include "identifier.h"
 #include "declaration.h"
 #include "initializer.h"
 #include "procedure_type.h"
@@ -35,7 +37,48 @@ namespace basecode::compiler {
                                                 _scope(scope) {
     }
 
-    bool procedure_type::on_emit(
+//    int32_t offset = -8;
+//    for (auto param : _parameters.as_list()) {
+//    stack_frame->add(
+//        vm::stack_frame_entry_type_t::parameter,
+//        param->identifier()->symbol()->name(),
+//        offset);
+//    offset -= 8;
+//}
+//
+//offset = 8;
+//if (_return_type != nullptr) {
+//stack_frame->add(
+//    vm::stack_frame_entry_type_t::return_slot,
+//"return_value",
+//offset);
+//offset += 8;
+//}
+//
+//offset = 16;
+//size_t local_count = 0;
+//session.scope_manager().visit_blocks(
+//    session.result(),
+//[&](compiler::block* scope) {
+//if (scope->is_parent_element(element_type_t::proc_type))
+//return true;
+//for (auto var : scope->identifiers().as_list()) {
+//if (var->type_ref()->is_proc_type())
+//continue;
+//stack_frame->add(
+//    vm::stack_frame_entry_type_t::local,
+//    var->symbol()->name(),
+//offset);
+//var->usage(identifier_usage_t::stack);
+//offset += 8;
+//local_count++;
+//}
+//return true;
+//},
+//_scope);
+
+
+bool procedure_type::on_emit(
             compiler::session& session,
             compiler::emit_context_t& context,
             compiler::emit_result_t& result) {
@@ -53,59 +96,32 @@ namespace basecode::compiler {
         }
 
         auto& assembler = session.assembler();
-        auto stack_frame = session.stack_frame();
+
         auto block = assembler.make_procedure_block();
-        block->align(vm::instruction_t::alignment);
         block->blank_line();
+        block->align(vm::instruction_t::alignment);
         block->label(assembler.make_label(procedure_label));
 
-        int32_t offset = -8;
-        for (auto param : _parameters.as_list()) {
-            stack_frame->add(
-                vm::stack_frame_entry_type_t::parameter,
-                param->identifier()->symbol()->name(),
-                offset);
-            offset -= 8;
-        }
-
-        offset = 8;
-        if (_return_type != nullptr) {
-            stack_frame->add(
-                vm::stack_frame_entry_type_t::return_slot,
-                "return_value",
-                offset);
-            offset += 8;
-        }
-
-        offset = 16;
-        size_t local_count = 0;
-        session.scope_manager().visit_blocks(
-            session.result(),
-            [&](compiler::block* scope) {
-                if (scope->is_parent_element(element_type_t::proc_type))
-                    return true;
-                for (auto var : scope->identifiers().as_list()) {
-                    if (var->type_ref()->is_proc_type())
-                        continue;
-                    stack_frame->add(
-                        vm::stack_frame_entry_type_t::local,
-                        var->symbol()->name(),
-                        offset);
-                    var->usage(identifier_usage_t::stack);
-                    offset += 8;
-                    local_count++;
-                }
-                return true;
-            },
-            _scope);
-
+        block->push(vm::instruction_operand_t::fp());
         block->move(
             vm::instruction_operand_t::fp(),
             vm::instruction_operand_t::sp(),
-            vm::instruction_operand_t::empty());
-        uint64_t size = 8 * local_count;
+            vm::instruction_operand_t::offset(16, vm::op_sizes::byte));
+
+        uint64_t size = 0;
+        for (auto var : _scope->identifiers().as_list()) {
+            auto field = _parameters.find_by_name(var->symbol()->name());
+            if (field != nullptr)
+                continue;
+            auto type = var->type_ref()->type();
+            size += type->size_in_bytes();
+        }
+
+        size = common::align(size, 8);
+
         if (_return_type != nullptr)
             size += 8;
+
         if (size > 0) {
             block->sub(
                 vm::instruction_operand_t::sp(),
@@ -114,7 +130,17 @@ namespace basecode::compiler {
         }
 
         assembler.push_block(block);
+
+        context.recurse_blocks = true;
         _scope->emit(session, context, result);
+
+        block->move(
+            vm::instruction_operand_t::sp(),
+            vm::instruction_operand_t::fp(),
+            vm::instruction_operand_t::offset(-16, vm::op_sizes::byte));
+        block->pop(vm::instruction_operand_t::fp());
+        block->rts();
+
         assembler.pop_block();
 
         return true;
@@ -166,6 +192,15 @@ namespace basecode::compiler {
 
     procedure_instance_list_t& procedure_type::instances() {
         return _instances;
+    }
+
+    compiler::procedure_instance* procedure_type::instance_for(
+            compiler::session& session,
+            compiler::procedure_call* call) {
+        // XXX: this is not complete.  for testing only
+        if (_instances.empty())
+            return nullptr;
+        return _instances.back();
     }
 
     bool procedure_type::on_type_check(compiler::type* other) {

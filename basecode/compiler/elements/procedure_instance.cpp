@@ -17,7 +17,7 @@ namespace basecode::compiler {
     procedure_instance::procedure_instance(
             compiler::module* module,
             compiler::block* parent_scope,
-            compiler::type* procedure_type,
+            compiler::procedure_type* procedure_type,
             compiler::block* scope) : element(module, parent_scope, element_type_t::proc_instance),
                                       _scope(scope),
                                       _procedure_type(procedure_type) {
@@ -34,7 +34,7 @@ namespace basecode::compiler {
         return _scope;
     }
 
-    compiler::type* procedure_instance::procedure_type() {
+    compiler::procedure_type* procedure_instance::procedure_type() {
         return _procedure_type;
     }
 

@@ -365,7 +365,7 @@ namespace basecode::compiler {
 
         procedure_instance* make_procedure_instance(
             compiler::block* parent_scope,
-            compiler::type* procedure_type,
+            compiler::procedure_type* procedure_type,
             compiler::block* scope);
 
         identifier_reference* make_identifier_reference(

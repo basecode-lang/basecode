@@ -3,6 +3,18 @@ NOTES
 
 TASKS
 -----
+
+procedures
+----------
+- BUG: procedure_type is not allocating space on stack for locals
+       also: need to emit initializers for locals
+- BUG: variable lookup isn't seeing locals as stack things
+- BUG: variable offset management for stack + structs is a mess
+- BUG: passing a string by-value on stack isn't working
+        need to clean up large stack allocations after JSR
+
+everything else
+---------------
 - BUG: tuple.bc -- the type_reference's symbol isn't being updated to match
         the constant identifier's symbol.
 - BUG: syntax like: support: print("hello!"); causes the compiler to end silently.

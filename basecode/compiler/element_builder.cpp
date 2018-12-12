@@ -506,7 +506,7 @@ namespace basecode::compiler {
 
     procedure_instance* element_builder::make_procedure_instance(
             compiler::block* parent_scope,
-            compiler::type* procedure_type,
+            compiler::procedure_type* procedure_type,
             compiler::block* scope) {
         auto instance = new compiler::procedure_instance(
             _session.scope_manager().current_module(),
