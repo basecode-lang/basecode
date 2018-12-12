@@ -23,20 +23,6 @@
 #include "symbol_element.h"
 #include "type_reference.h"
 
-namespace basecode::compiler {
-
-    procedure_type::procedure_type(
-            compiler::module* module,
-            compiler::block* parent_scope,
-            compiler::block* scope,
-            compiler::symbol_element* symbol) : compiler::type(
-                                                      module,
-                                                      parent_scope,
-                                                      element_type_t::proc_type,
-                                                      symbol),
-                                                _scope(scope) {
-    }
-
 //    int32_t offset = -8;
 //    for (auto param : _parameters.as_list()) {
 //    stack_frame->add(
@@ -77,14 +63,49 @@ namespace basecode::compiler {
 //},
 //_scope);
 
+namespace basecode::compiler {
 
-bool procedure_type::on_emit(
-            compiler::session& session,
-            compiler::emit_context_t& context,
-            compiler::emit_result_t& result) {
-        if (is_foreign()) {
+    procedure_type::procedure_type(
+            compiler::module* module,
+            compiler::block* parent_scope,
+            compiler::block* scope,
+            compiler::symbol_element* symbol) : compiler::type(
+                                                      module,
+                                                      parent_scope,
+                                                      element_type_t::proc_type,
+                                                      symbol),
+                                                _scope(scope) {
+    }
+
+    bool procedure_type::emit_epilogue(
+            session& session,
+            emit_context_t& context,
+            emit_result_t& result) {
+        if (is_foreign())
             return true;
-        }
+
+        auto& assembler = session.assembler();
+        auto block = assembler.current_block();
+
+        block->move(
+            vm::instruction_operand_t::sp(),
+            vm::instruction_operand_t::fp(),
+            vm::instruction_operand_t::offset(-16, vm::op_sizes::byte));
+        block->pop(vm::instruction_operand_t::fp());
+        block->rts();
+
+        return false;
+    }
+
+    bool procedure_type::emit_prologue(
+            session& session,
+            emit_context_t& context,
+            emit_result_t& result) {
+        if (is_foreign())
+            return true;
+
+        auto& assembler = session.assembler();
+        auto block = assembler.current_block();
 
         auto procedure_label = symbol()->name();
         auto parent_init = parent_element_as<compiler::initializer>();
@@ -95,9 +116,6 @@ bool procedure_type::on_emit(
             }
         }
 
-        auto& assembler = session.assembler();
-
-        auto block = assembler.make_procedure_block();
         block->blank_line();
         block->align(vm::instruction_t::alignment);
         block->label(assembler.make_label(procedure_label));
@@ -128,20 +146,6 @@ bool procedure_type::on_emit(
                 vm::instruction_operand_t::sp(),
                 vm::instruction_operand_t(size, vm::op_sizes::dword));
         }
-
-        assembler.push_block(block);
-
-        context.recurse_blocks = true;
-        _scope->emit(session, context, result);
-
-        block->move(
-            vm::instruction_operand_t::sp(),
-            vm::instruction_operand_t::fp(),
-            vm::instruction_operand_t::offset(-16, vm::op_sizes::byte));
-        block->pop(vm::instruction_operand_t::fp());
-        block->rts();
-
-        assembler.pop_block();
 
         return true;
     }

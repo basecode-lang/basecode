@@ -24,6 +24,16 @@ namespace basecode::compiler {
             compiler::block* scope,
             compiler::symbol_element* symbol);
 
+        bool emit_prologue(
+            compiler::session& session,
+            compiler::emit_context_t& context,
+            compiler::emit_result_t& result);
+
+        bool emit_epilogue(
+            compiler::session& session,
+            compiler::emit_context_t& context,
+            compiler::emit_result_t& result);
+
         bool is_foreign() const;
 
         compiler::block* scope();
@@ -51,11 +61,6 @@ namespace basecode::compiler {
             compiler::procedure_call* call);
 
     protected:
-        bool on_emit(
-            compiler::session& session,
-            compiler::emit_context_t& context,
-            compiler::emit_result_t& result) override;
-
         bool on_is_constant() const override;
 
         bool on_type_check(compiler::type* other) override;

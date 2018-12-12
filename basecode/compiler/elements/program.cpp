@@ -459,7 +459,7 @@ namespace basecode::compiler {
 
             emit_context_t context {};
             emit_result_t result {};
-            instance->procedure_type()->emit(session, context, result);
+            instance->emit(session, context, result);
 
             assembler.pop_block();
         }
