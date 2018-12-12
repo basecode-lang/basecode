@@ -527,10 +527,16 @@ namespace basecode::compiler {
                 rot.offset += field->start_offset();
                 if (rot.identifier->usage() == identifier_usage_t::stack) {
                     if (!current->_element->is_pointer_dereference()) {
-                        rot.offset = common::align(rot.offset, 8);
+                        rot.offset = common::align(
+                            static_cast<uint64_t>(rot.offset) + rot.identifier->offset(),
+                            8);
                     } else {
                         rot.offset--;
                     }
+                }
+            } else {
+                if (rot.identifier->offset() != 0) {
+                    rot.offset = rot.identifier->offset() + -rot.offset;
                 }
             }
         }

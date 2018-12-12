@@ -212,10 +212,14 @@ namespace basecode::compiler {
                 }
 
                 variadic_args->add(arg);
-                if (index == field_list.size() - 1) {
+                if (_elements.size() == field_list.size()) {
                     _elements[index] = nullptr;
                 } else {
-                    _elements.erase(_elements.begin() + index);
+                    if (index < _elements.size()) {
+                        _elements.erase(_elements.begin() + index);
+                    } else {
+                        continue;
+                    }
                 }
                 goto _retry;
             } else {

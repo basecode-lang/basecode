@@ -22,46 +22,8 @@
 #include "procedure_type.h"
 #include "symbol_element.h"
 #include "type_reference.h"
-
-//    int32_t offset = -8;
-//    for (auto param : _parameters.as_list()) {
-//    stack_frame->add(
-//        vm::stack_frame_entry_type_t::parameter,
-//        param->identifier()->symbol()->name(),
-//        offset);
-//    offset -= 8;
-//}
-//
-//offset = 8;
-//if (_return_type != nullptr) {
-//stack_frame->add(
-//    vm::stack_frame_entry_type_t::return_slot,
-//"return_value",
-//offset);
-//offset += 8;
-//}
-//
-//offset = 16;
-//size_t local_count = 0;
-//session.scope_manager().visit_blocks(
-//    session.result(),
-//[&](compiler::block* scope) {
-//if (scope->is_parent_element(element_type_t::proc_type))
-//return true;
-//for (auto var : scope->identifiers().as_list()) {
-//if (var->type_ref()->is_proc_type())
-//continue;
-//stack_frame->add(
-//    vm::stack_frame_entry_type_t::local,
-//    var->symbol()->name(),
-//offset);
-//var->usage(identifier_usage_t::stack);
-//offset += 8;
-//local_count++;
-//}
-//return true;
-//},
-//_scope);
+#include "integer_literal.h"
+#include "binary_operator.h"
 
 namespace basecode::compiler {
 
@@ -89,9 +51,7 @@ namespace basecode::compiler {
 
         block->move(
             vm::instruction_operand_t::sp(),
-            vm::instruction_operand_t::fp(),
-            vm::instruction_operand_t::offset(-16, vm::op_sizes::byte));
-        block->pop(vm::instruction_operand_t::fp());
+            vm::instruction_operand_t::fp());
         block->rts();
 
         return false;
@@ -120,31 +80,73 @@ namespace basecode::compiler {
         block->align(vm::instruction_t::alignment);
         block->label(assembler.make_label(procedure_label));
 
-        block->push(vm::instruction_operand_t::fp());
         block->move(
             vm::instruction_operand_t::fp(),
-            vm::instruction_operand_t::sp(),
-            vm::instruction_operand_t::offset(16, vm::op_sizes::byte));
+            vm::instruction_operand_t::sp());
 
         uint64_t size = 0;
         for (auto var : _scope->identifiers().as_list()) {
             auto field = _parameters.find_by_name(var->symbol()->name());
-            if (field != nullptr)
+            if (field != nullptr) {
+                if (_return_type != nullptr)
+                    var->offset(16);
+                else
+                    var->offset(8);
                 continue;
+            }
             auto type = var->type_ref()->type();
             size += type->size_in_bytes();
         }
 
-        size = common::align(size, 8);
+        int64_t offset = 0;
+        identifier_list_t locals {};
+        session.scope_manager().visit_blocks(
+            session.result(),
+            [&](compiler::block* scope) {
+                if (scope->is_parent_element(element_type_t::proc_type))
+                    return true;
+                for (auto var : scope->identifiers().as_list()) {
+                    auto type = var->type_ref()->type();
+                    if (type->is_proc_type())
+                        continue;
 
-        if (_return_type != nullptr)
-            size += 8;
+                    auto size_in_bytes = type->size_in_bytes();
+                    size += common::align(size_in_bytes, 8);
+                    offset -= size_in_bytes;
+
+                    var->usage(identifier_usage_t::stack);
+                    var->offset(offset);
+
+                    locals.emplace_back(var);
+                }
+                return true;
+            },
+            _scope);
+
+        size = common::align(size, 8);
 
         if (size > 0) {
             block->sub(
                 vm::instruction_operand_t::sp(),
                 vm::instruction_operand_t::sp(),
                 vm::instruction_operand_t(size, vm::op_sizes::dword));
+        }
+
+        auto& builder = session.builder();
+        for (auto var : locals) {
+            compiler::element* init = var->initializer();
+            if (init == nullptr || !init->is_constant()) {
+                init = builder.make_integer(var->parent_scope(), 0);
+            }
+
+            auto assign = builder.make_binary_operator(
+                parent_scope(),
+                operator_type_t::assignment,
+                var,
+                init);
+            assign->make_non_owning();
+            defer(session.elements().remove(assign->id()));
+            assign->emit(session, context, result);
         }
 
         return true;

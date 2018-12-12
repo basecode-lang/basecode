@@ -27,12 +27,22 @@ namespace basecode::compiler {
         auto& assembler = session.assembler();
         auto block = assembler.current_block();
         if (!_expressions.empty()) {
-            emit_result_t return_result {};
-            _expressions.front()->emit(session, context, return_result);
+            variable_handle_t expr_var {};
+            if (!session.variable(_expressions.front(), expr_var))
+                return false;
+            expr_var->read();
+
+            block->comment(
+                "return slot",
+                vm::comment_location_t::after_instruction);
             block->store(
                 vm::instruction_operand_t::fp(),
-                return_result.operands.back(),
+                expr_var->emit_result().operands.back(),
                 vm::instruction_operand_t(static_cast<uint64_t>(8), vm::op_sizes::byte));
+            block->move(
+                vm::instruction_operand_t::sp(),
+                vm::instruction_operand_t::fp());
+            block->rts();
         }
         return true;
     }

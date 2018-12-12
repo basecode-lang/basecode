@@ -53,9 +53,8 @@ namespace basecode::compiler {
 
         block->label(assembler.make_label(begin_label_name));
 
-        emit_context_t if_context {};
         emit_result_t predicate_result {};
-        _predicate->emit(session, if_context, predicate_result);
+        _predicate->emit(session, context, predicate_result);
 
         block->bz(
             predicate_result.operands.back(),
@@ -63,14 +62,14 @@ namespace basecode::compiler {
 
         block->label(assembler.make_label(true_label_name));
         emit_result_t true_result {};
-        _true_branch->emit(session, if_context, true_result);
+        _true_branch->emit(session, context, true_result);
         if (!block->is_current_instruction(vm::op_codes::jmp))
             block->jump_direct(assembler.make_label_ref(end_label_name));
 
         block->label(assembler.make_label(false_label_name));
         if (_false_branch != nullptr) {
             emit_result_t false_result {};
-            _false_branch->emit(session, if_context, false_result);
+            _false_branch->emit(session, context, false_result);
         } else {
             block->nop();
         }

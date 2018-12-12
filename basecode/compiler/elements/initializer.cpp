@@ -32,12 +32,7 @@ namespace basecode::compiler {
             compiler::emit_result_t& result) {
         if (_expr == nullptr)
             return true;
-
-        // XXX: why this condition?
-        if (_expr->element_type() == element_type_t::namespace_e)
-            _expr->emit(session, context, result);
-
-        return true;
+        return _expr->emit(session, context, result);
     }
 
     bool initializer::on_fold(
@@ -86,6 +81,12 @@ namespace basecode::compiler {
     bool initializer::is_nil() const {
         return _expr != nullptr
                && _expr->element_type() == element_type_t::nil_literal;
+    }
+
+    bool initializer::on_is_constant() const {
+        if (_expr == nullptr)
+            return false;
+        return _expr->is_constant();
     }
 
     compiler::element* initializer::expression() {

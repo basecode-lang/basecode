@@ -50,6 +50,25 @@ namespace basecode::compiler {
 
         auto procedure_type = init->procedure_type();
 
+        compiler::type* return_type = nullptr;
+        auto return_type_field = procedure_type->return_type();
+        if (return_type_field != nullptr)
+            return_type = return_type_field->identifier()->type_ref()->type();
+
+        size_t target_size = 8;
+        type_number_class_t target_number_class;
+        auto target_type = vm::register_type_t::integer;
+        if (return_type != nullptr) {
+            target_number_class = return_type->number_class();
+            target_size = return_type->size_in_bytes();
+            target_type = target_number_class == type_number_class_t::integer ?
+                          vm::register_type_t::integer :
+                          vm::register_type_t::floating_point;
+        }
+
+        if (!procedure_type->is_foreign())
+            block->push(vm::instruction_operand_t::fp());
+
         if (_arguments != nullptr)
             _arguments->emit(session, context, result);
 
@@ -63,18 +82,19 @@ namespace basecode::compiler {
                 vm::comment_location_t::after_instruction);
             block->call_foreign(procedure_type->foreign_address());
         } else {
+            if (return_type != nullptr) {
+                block->comment(
+                    "return slot",
+                    vm::comment_location_t::after_instruction);
+                block->sub(
+                    vm::instruction_operand_t::sp(),
+                    vm::instruction_operand_t::sp(),
+                    vm::instruction_operand_t(static_cast<uint64_t>(8), vm::op_sizes::byte));
+            }
             block->call(assembler.make_label_ref(identifier->symbol()->name()));
         }
 
-        auto return_type_field = procedure_type->return_type();
         if (return_type_field != nullptr) {
-            auto return_type = return_type_field->identifier()->type_ref()->type();
-            auto target_number_class = return_type->number_class();
-            auto target_size = return_type->size_in_bytes();
-            auto target_type = target_number_class == type_number_class_t::integer ?
-                               vm::register_type_t::integer :
-                               vm::register_type_t::floating_point;
-
             vm::instruction_operand_t result_operand;
             if (!vm::instruction_operand_t::allocate(
                     assembler,
@@ -83,11 +103,12 @@ namespace basecode::compiler {
                     target_type)) {
                 return false;
             }
-
             result.operands.emplace_back(result_operand);
-
             block->pop(result_operand);
         }
+
+        if (!procedure_type->is_foreign())
+            block->pop(vm::instruction_operand_t::fp());
 
         return true;
     }

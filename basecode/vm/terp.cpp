@@ -479,11 +479,11 @@ namespace basecode::vm {
     void terp::dump_state(uint8_t count) {
         fmt::print("\n-------------------------------------------------------------\n");
         fmt::print(
-            "PC =${:08x} | SP =${:08x} | FR =${:08x} | SR =${:08x}\n",
+            "PC =${:08x} | SP =${:08x} | FP =${:08x} | FR =${:08x}\n",
             _registers.r[register_pc].qw,
             _registers.r[register_sp].qw,
-            _registers.r[register_fr].qw,
-            _registers.r[register_sr].qw);
+            _registers.r[register_fp].qw,
+            _registers.r[register_fr].qw);
 
         fmt::print("-------------------------------------------------------------\n");
 
@@ -530,10 +530,6 @@ namespace basecode::vm {
     }
 
     bool terp::step(common::result& r) {
-//        if (_registers.pc == 0x340) {
-//            fmt::print("BRK\n");
-//        }
-
         instruction_t inst;
         auto inst_size = _icache.fetch(r, inst);
         if (inst_size == 0)
@@ -614,13 +610,14 @@ namespace basecode::vm {
 
                 operand_value_t loaded_data;
                 loaded_data.alias.u = read(inst.size, address.alias.u);
+                auto zero_flag = is_zero(inst.size, loaded_data);
                 if (!set_target_operand_value(r, inst.operands[0], inst.size, loaded_data))
                     return false;
 
                 _registers.flags(register_file_t::flags_t::carry, false);
                 _registers.flags(register_file_t::flags_t::subtract, false);
                 _registers.flags(register_file_t::flags_t::overflow, false);
-                _registers.flags(register_file_t::flags_t::zero, loaded_data.alias.u == 0);
+                _registers.flags(register_file_t::flags_t::zero, zero_flag);
                 _registers.flags(
                     register_file_t::flags_t::negative,
                     is_negative(loaded_data, inst.size));
@@ -635,12 +632,13 @@ namespace basecode::vm {
                 if (!get_operand_value(r, inst, 1, data))
                     return false;
 
+                auto zero_flag = is_zero(inst.size, data);
                 write(inst.size, address.alias.u, data.alias.u);
 
                 _registers.flags(register_file_t::flags_t::carry, false);
                 _registers.flags(register_file_t::flags_t::subtract, false);
                 _registers.flags(register_file_t::flags_t::overflow, false);
-                _registers.flags(register_file_t::flags_t::zero, data.alias.u == 0);
+                _registers.flags(register_file_t::flags_t::zero, zero_flag);
                 _registers.flags(
                     register_file_t::flags_t::negative,
                     is_negative(data, inst.size));
@@ -2363,7 +2361,7 @@ namespace basecode::vm {
                 break;
             }
             case op_sizes::byte: {
-                result = *relative_heap_ptr;
+                *(result_ptr + 0) = *relative_heap_ptr;
                 break;
             }
             case op_sizes::word: {

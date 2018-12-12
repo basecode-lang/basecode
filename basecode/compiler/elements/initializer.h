@@ -44,6 +44,8 @@ namespace basecode::compiler {
             compiler::session& program,
             infer_type_result_t& result) override;
 
+        bool on_is_constant() const override;
+
         bool on_as_bool(bool& value) const override;
 
         bool on_as_float(double& value) const override;

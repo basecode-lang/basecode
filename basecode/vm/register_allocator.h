@@ -40,10 +40,12 @@ namespace basecode::vm {
                 move_to_next_available_int();
                 _ints[_available_int].live = true;
                 reg.number = _ints[_available_int].reg;
+                _available_int++;
             } else {
                 move_to_next_available_float();
                 _floats[_available_float].live = true;
                 reg.number = _floats[_available_float].reg;
+                _available_float++;
             }
             return true;
         }

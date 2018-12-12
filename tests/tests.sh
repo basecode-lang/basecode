@@ -30,5 +30,6 @@
 ../bin/bc -v -G types.bc
 ../bin/bc -v -G while-loop.bc
 ../bin/bc -v -G with.bc
+../bin/bc -v -G asserts.bc
 
 
