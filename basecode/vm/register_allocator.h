@@ -35,27 +35,15 @@ namespace basecode::vm {
             }
         }
 
-        int8_t find_next_free_float() {
-            for (int8_t i = 0; i < 64; i++)
-                if (!_floats[i].live)
-                    return i;
-
-            return -1;
-        }
-
         bool allocate(register_t& reg) {
             if (reg.type == register_type_t::integer) {
-                auto index = find_next_free_integer();
-                if (index == -1)
-                    return false;
-                _ints[index].live = true;
-                reg.number = _ints[index].reg;
+                move_to_next_available_int();
+                _ints[_available_int].live = true;
+                reg.number = _ints[_available_int].reg;
             } else {
-                auto index = find_next_free_float();
-                if (index == -1)
-                    return false;
-                _floats[index].live = true;
-                reg.number = _floats[index].reg;
+                move_to_next_available_float();
+                _floats[_available_float].live = true;
+                reg.number = _floats[_available_float].reg;
             }
             return true;
         }
@@ -63,19 +51,27 @@ namespace basecode::vm {
         void free(const register_t& reg) {
             if (reg.type == register_type_t::integer) {
                 _ints[reg.number].live = false;
+                if (reg.number < _available_int)
+                    _available_int = reg.number;
             } else {
                 _floats[reg.number].live = false;
+                if (reg.number < _available_float)
+                    _available_float = reg.number;
             }
         }
 
-        int8_t find_next_free_integer() {
-            for (int8_t i = 0; i < 64; i++)
-                if (!_ints[i].live)
-                    return i;
-
-            return -1;
+        void move_to_next_available_int() {
+            while (_ints[_available_int].live)
+                _available_int++;
         }
 
+        void move_to_next_available_float() {
+            while (_ints[_available_float].live)
+                _available_float++;
+        }
+
+        size_t _available_int = 0;
+        size_t _available_float = 0;
         allocation_status_t _ints[64];
         allocation_status_t _floats[64];
     };
