@@ -13,6 +13,7 @@ support :: module("support/module.bc");
         b: /* yeah! before */ string /* yeah! after */,  /* or maybe it works? */
         c: ^any     // I FIXED IT!
     ): u64 /* after proc */ {        // NARF!
+    return 0;
 } @alias "green" @disgust "poop" /* after attribute disgust */;
 
 b := /* before string */ "string" /* after string */;

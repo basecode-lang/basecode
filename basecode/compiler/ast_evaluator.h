@@ -65,7 +65,7 @@ namespace basecode::compiler {
             compiler::block* block_scope,
             const syntax::ast_node_t* parameters_node);
 
-        void add_procedure_instance(
+        bool add_procedure_instance(
             const evaluator_context_t& context,
             compiler::procedure_type* proc_type,
             const syntax::ast_node_t* node);

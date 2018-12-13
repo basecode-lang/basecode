@@ -34,6 +34,8 @@ namespace basecode::compiler {
             compiler::emit_context_t& context,
             compiler::emit_result_t& result);
 
+        bool has_return() const;
+
         bool is_foreign() const;
 
         compiler::block* scope();
@@ -41,6 +43,8 @@ namespace basecode::compiler {
         field_map_t& parameters();
 
         void is_foreign(bool value);
+
+        void has_return(bool value);
 
         type_map_t& type_parameters();
 
@@ -72,12 +76,13 @@ namespace basecode::compiler {
         bool on_initialize(compiler::session& session) override;
 
     private:
+        bool _has_return = false;
         bool _is_foreign = false;
         field_map_t _parameters {};
         uint64_t _foreign_address = 0;
-        field* _return_type = nullptr;
         type_map_t _type_parameters {};
         compiler::block* _scope = nullptr;
+        compiler::field* _return_type = nullptr;
         procedure_instance_list_t _instances {};
     };
 

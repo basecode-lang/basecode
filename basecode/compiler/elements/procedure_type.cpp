@@ -49,13 +49,15 @@ namespace basecode::compiler {
         auto& assembler = session.assembler();
         auto block = assembler.current_block();
 
-        block->move(
-            vm::instruction_operand_t::sp(),
-            vm::instruction_operand_t::fp());
-        block->pop(vm::instruction_operand_t::fp());
-        block->rts();
+        if (!_has_return) {
+            block->move(
+                vm::instruction_operand_t::sp(),
+                vm::instruction_operand_t::fp());
+            block->pop(vm::instruction_operand_t::fp());
+            block->rts();
+        }
 
-        return false;
+        return true;
     }
 
     bool procedure_type::emit_prologue(
@@ -154,6 +156,10 @@ namespace basecode::compiler {
         return true;
     }
 
+    bool procedure_type::has_return() const {
+        return _has_return;
+    }
+
     bool procedure_type::is_foreign() const {
         return _is_foreign;
     }
@@ -174,6 +180,10 @@ namespace basecode::compiler {
         _is_foreign = value;
     }
 
+    void procedure_type::has_return(bool value) {
+        _has_return = value;
+    }
+
     bool procedure_type::on_is_constant() const {
         return true;
     }
@@ -186,10 +196,6 @@ namespace basecode::compiler {
         return _return_type;
     }
 
-    void procedure_type::return_type(field* value) {
-        _return_type = value;
-    }
-
     uint64_t procedure_type::foreign_address() const {
         return _foreign_address;
     }
@@ -200,6 +206,10 @@ namespace basecode::compiler {
 
     procedure_instance_list_t& procedure_type::instances() {
         return _instances;
+    }
+
+    void procedure_type::return_type(compiler::field* value) {
+        _return_type = value;
     }
 
     compiler::procedure_instance* procedure_type::instance_for(

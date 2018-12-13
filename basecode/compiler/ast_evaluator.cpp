@@ -189,14 +189,15 @@ namespace basecode::compiler {
         return result;
     }
 
-    void ast_evaluator::add_procedure_instance(
+    bool ast_evaluator::add_procedure_instance(
             const evaluator_context_t& context,
             compiler::procedure_type* proc_type,
             const syntax::ast_node_t* node) {
         auto& builder = _session.builder();
+        auto& scope_manager = _session.scope_manager();
 
         if (node->children.empty())
-            return;
+            return true;
 
         for (auto& attr : node->attributes) {
             auto attribute = builder.make_attribute(
@@ -219,8 +220,39 @@ namespace basecode::compiler {
                             "X000",
                             "unable to evaluate procedure instance block.",
                             child_node->location);
-                        return;
+                        return false;
                     }
+
+                    if (proc_type->return_type() != nullptr) {
+                        auto has_return = false;
+                        scope_manager.visit_blocks(
+                            _session.result(),
+                            [&](compiler::block* scope) {
+                                if (has_return)
+                                    return true;
+                                for (auto stmt : scope->statements()) {
+                                    auto expression = stmt->expression();
+                                    if (expression != nullptr
+                                    &&  expression->element_type() == element_type_t::return_e
+                                    && !has_return) {
+                                        has_return = true;
+                                    }
+                                }
+                                return true;
+                            },
+                            basic_block);
+
+                        if (!has_return) {
+                            _session.error(
+                                "X000",
+                                "procedure declares return type but has no return statement.",
+                                proc_type->location());
+                            return false;
+                        }
+
+                        proc_type->has_return(true);
+                    }
+
                     auto instance = builder.make_procedure_instance(
                         proc_type->scope(),
                         proc_type,
@@ -232,6 +264,8 @@ namespace basecode::compiler {
                     break;
             }
         }
+
+        return true;
     }
 
     void ast_evaluator::add_expression_to_scope(
@@ -599,10 +633,12 @@ namespace basecode::compiler {
 
         if (init != nullptr
         &&  init->expression()->element_type() == element_type_t::proc_type) {
-            add_procedure_instance(
-                context,
-                dynamic_cast<procedure_type*>(init->expression()),
-                source_node.get());
+            if (!add_procedure_instance(
+                    context,
+                    dynamic_cast<procedure_type*>(init->expression()),
+                    source_node.get())) {
+                return nullptr;
+            }
         }
 
         compiler::binary_operator* assign_bin_op = nullptr;
