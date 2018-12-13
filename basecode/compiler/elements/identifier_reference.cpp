@@ -10,8 +10,11 @@
 // ----------------------------------------------------------------------------
 
 #include <compiler/session.h>
+#include "type.h"
 #include "identifier.h"
+#include "initializer.h"
 #include "symbol_element.h"
+#include "type_reference.h"
 #include "identifier_reference.h"
 
 namespace basecode::compiler {
@@ -86,6 +89,37 @@ namespace basecode::compiler {
         return _identifier->as_integer(value);
     }
 
+    bool identifier_reference::on_equals(const element& other) const {
+        if (!_identifier->is_constant())
+            return false;
+
+        switch (_identifier->initializer()->expression()->element_type()) {
+            case element_type_t::float_literal: {
+                double lhs_value, rhs_value;
+                if (!as_float(lhs_value)) return false;
+                if (!other.as_float(rhs_value)) return false;
+                return lhs_value == rhs_value;
+            }
+            case element_type_t::integer_literal: {
+                uint64_t lhs_value, rhs_value;
+                if (!as_integer(lhs_value)) return false;
+                if (!other.as_integer(rhs_value)) return false;
+                return lhs_value == rhs_value;
+            }
+            case element_type_t::boolean_literal: {
+                bool lhs_value, rhs_value;
+                if (!as_bool(lhs_value)) return false;
+                if (!other.as_bool(rhs_value)) return false;
+                return lhs_value == rhs_value;
+            }
+            default: {
+                break;
+            }
+        }
+
+        return false;
+    }
+
     bool identifier_reference::on_as_string(std::string& value) const {
         if (_identifier == nullptr)
             return false;
@@ -100,6 +134,68 @@ namespace basecode::compiler {
         if (_identifier == nullptr)
             return false;
         return _identifier->as_rune(value);
+    }
+
+    bool identifier_reference::on_less_than(const element& other) const {
+        if (!_identifier->is_constant())
+            return false;
+
+        switch (_identifier->initializer()->expression()->element_type()) {
+            case element_type_t::float_literal: {
+                double lhs_value, rhs_value;
+                if (!as_float(lhs_value)) return false;
+                if (!other.as_float(rhs_value)) return false;
+                return lhs_value < rhs_value;
+            }
+            case element_type_t::integer_literal: {
+                uint64_t lhs_value, rhs_value;
+                if (!as_integer(lhs_value)) return false;
+                if (!other.as_integer(rhs_value)) return false;
+                return lhs_value < rhs_value;
+            }
+            default: {
+                break;
+            }
+        }
+
+        return false;
+    }
+
+    bool identifier_reference::on_not_equals(const element& other) const {
+        return !on_equals(other);
+    }
+
+    bool identifier_reference::on_greater_than(const element& other) const {
+        if (!_identifier->is_constant())
+            return false;
+
+        switch (_identifier->initializer()->expression()->element_type()) {
+            case element_type_t::float_literal: {
+                double lhs_value, rhs_value;
+                if (!as_float(lhs_value)) return false;
+                if (!other.as_float(rhs_value)) return false;
+                return lhs_value > rhs_value;
+            }
+            case element_type_t::integer_literal: {
+                uint64_t lhs_value, rhs_value;
+                if (!as_integer(lhs_value)) return false;
+                if (!other.as_integer(rhs_value)) return false;
+                return lhs_value > rhs_value;
+            }
+            default: {
+                break;
+            }
+        }
+
+        return false;
+    }
+
+    bool identifier_reference::on_less_than_or_equal(const element& other) const {
+        return on_less_than(other) || on_equals(other);
+    }
+
+    bool identifier_reference::on_greater_than_or_equal(const element& other) const {
+        return on_greater_than(other) || on_equals(other);
     }
 
 };

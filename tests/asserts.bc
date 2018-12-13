@@ -1,5 +1,19 @@
 support :: module("support/module.bc");
 
+MODE :: 2;
+
+#assert true;
+#assert MODE == 2;
+//#assert 2 == 1;
+
+#if MODE == 1 {
+    support::print("mode 1\n");
+} #elif MODE == 2 {
+    support::print("mode 2\n");
+} #else {
+    support::print("unknown mode\n");
+};
+
 s2 := "oh, noes!  what did you DO!?";
 
 factorial :: proc(n: u64 := 12): u64 {

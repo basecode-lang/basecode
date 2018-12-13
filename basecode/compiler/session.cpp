@@ -170,6 +170,9 @@ namespace basecode::compiler {
         auto directives = _elements.find_by_type(element_type_t::directive);
         for (auto directive : directives) {
             auto directive_element = dynamic_cast<compiler::directive*>(directive);
+            if (directive_element->is_parent_element(element_type_t::directive))
+                continue;
+
             if (!directive_element->execute(*this)) {
                 error(
                     directive_element,

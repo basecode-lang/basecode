@@ -685,14 +685,35 @@ namespace basecode::compiler {
         auto& builder = _session.builder();
         auto& scope_manager = _session.scope_manager();
 
-        auto expression = evaluate(context.node->lhs.get());
-        if (expression == nullptr)
-            return false;
+        compiler::element* lhs = nullptr;
+        compiler::element* rhs = nullptr;
+        compiler::element* body = nullptr;
+
+        if (context.node->lhs != nullptr) {
+            lhs = evaluate(context.node->lhs.get());
+            if (lhs != nullptr)
+                lhs->location(context.node->lhs->location);
+        }
+
+        if (context.node->rhs != nullptr) {
+            rhs = evaluate(context.node->rhs.get());
+            if (rhs != nullptr)
+                rhs->location(context.node->rhs->location);
+        }
+
+        if (!context.node->children.empty()) {
+            const auto& body_node = context.node->children.front();
+            body = evaluate(body_node.get());
+            if (body != nullptr)
+                body->location(body_node->location);
+        }
 
         auto directive_element = builder.make_directive(
             scope_manager.current_scope(),
             context.node->token.value,
-            expression);
+            lhs,
+            rhs,
+            body);
         directive_element->location(context.node->location);
 
         result.element = directive_element;

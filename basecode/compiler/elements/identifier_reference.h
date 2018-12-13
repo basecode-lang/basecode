@@ -53,9 +53,21 @@ namespace basecode::compiler {
 
         bool on_as_integer(uint64_t& value) const override;
 
+        bool on_equals(const element& other) const override;
+
         bool on_as_string(std::string& value) const override;
 
         bool on_as_rune(common::rune_t& value) const override;
+
+        bool on_less_than(const element& other) const override;
+
+        bool on_not_equals(const element& other) const override;
+
+        bool on_greater_than(const element& other) const override;
+
+        bool on_less_than_or_equal(const element& other) const override;
+
+        bool on_greater_than_or_equal(const element& other) const override;
 
     private:
         qualified_symbol_t _symbol;

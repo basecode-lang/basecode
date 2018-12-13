@@ -1157,6 +1157,8 @@ namespace basecode::syntax {
             parser* parser,
             token_t& token) {
         auto directive_node = parser->ast_builder()->directive_node(token);
+        collect_comments(r, parser, directive_node->comments);
+
         if (parser->peek(token_types_t::semi_colon)) {
             return directive_node;
         }
@@ -1166,9 +1168,38 @@ namespace basecode::syntax {
                 parser,
                 nullptr,
                 token);
+        } else if (token.value == "if") {
+            directive_node->lhs = parser->parse_expression(r);
+            directive_node->children.push_back(parser->parse_expression(r));
+
+            auto current_node = directive_node;
+            if (!parser->peek(token_types_t::semi_colon)) {
+                while (parser->peek(token_types_t::directive)) {
+                    token_t directive_token;
+                    parser->consume(directive_token);
+
+                    collect_comments(r, parser, directive_node->comments);
+
+                    if (directive_token.value == "elif") {
+                        auto elif_node = parser->ast_builder()->directive_node(directive_token);
+                        elif_node->lhs = parser->parse_expression(r);
+                        elif_node->children.push_back(parser->parse_expression(r));
+                        current_node->rhs = elif_node;
+                        current_node = elif_node;
+                    } else if (directive_token.value == "else") {
+                        auto else_node = parser->ast_builder()->directive_node(directive_token);
+                        else_node->children.push_back(parser->parse_expression(r));
+                        current_node->rhs = else_node;
+                        break;
+                    }
+                }
+            }
         } else {
             directive_node->lhs = parser->parse_expression(r);
         }
+
+        collect_comments(r, parser, directive_node->comments);
+
         return directive_node;
     }
 

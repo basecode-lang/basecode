@@ -26,13 +26,19 @@ namespace basecode::compiler {
 
         directive(
             compiler::module* module,
-            block* parent_scope,
+            compiler::block* parent_scope,
             const std::string& name,
-            element* expression);
+            compiler::element* lhs,
+            compiler::element* rhs,
+            compiler::element* body);
 
-        element* expression();
+        compiler::element* lhs();
+
+        compiler::element* rhs();
 
         std::string name() const;
+
+        compiler::element* body();
 
         bool execute(compiler::session& session);
 
@@ -54,11 +60,25 @@ namespace basecode::compiler {
 
     private:
         // --------------------
+        // if/elif/else directive
+        // --------------------
+        bool on_execute_if(compiler::session& session);
+
+        bool on_evaluate_if(compiler::session& session);
+
+        // --------------------
         // type directive
         // --------------------
         bool on_execute_type(compiler::session& session);
 
         bool on_evaluate_type(compiler::session& session);
+
+        // --------------------
+        // assert directive
+        // --------------------
+        bool on_execute_assert(compiler::session& session);
+
+        bool on_evaluate_assert(compiler::session& session);
 
         // --------------------
         // assembly directive
@@ -93,7 +113,10 @@ namespace basecode::compiler {
         static std::unordered_map<std::string, directive_callable> s_evaluate_handlers;
 
         std::string _name;
-        element* _expression = nullptr;
+        compiler::element* _lhs = nullptr;
+        compiler::element* _rhs = nullptr;
+        compiler::element* _body = nullptr;
+        compiler::element* _true_body = nullptr;
         vm::instruction_block* _instruction_block = nullptr;
     };
 

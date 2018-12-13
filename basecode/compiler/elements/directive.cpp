@@ -29,16 +29,20 @@
 namespace basecode::compiler {
 
     std::unordered_map<std::string, directive::directive_callable> directive::s_execute_handlers = {
+        {"if",          std::bind(&directive::on_execute_if,     std::placeholders::_1, std::placeholders::_2)},
         {"run",         std::bind(&directive::on_execute_run,     std::placeholders::_1, std::placeholders::_2)},
         {"type",        std::bind(&directive::on_execute_type,    std::placeholders::_1, std::placeholders::_2)},
+        {"assert",      std::bind(&directive::on_execute_assert, std::placeholders::_1, std::placeholders::_2)},
         {"foreign",     std::bind(&directive::on_execute_foreign, std::placeholders::_1, std::placeholders::_2)},
         {"assembly",    std::bind(&directive::on_execute_assembly, std::placeholders::_1, std::placeholders::_2)},
         {"intrinsic",   std::bind(&directive::on_execute_intrinsic, std::placeholders::_1, std::placeholders::_2)},
     };
 
     std::unordered_map<std::string, directive::directive_callable> directive::s_evaluate_handlers = {
+        {"if",          std::bind(&directive::on_evaluate_if,     std::placeholders::_1, std::placeholders::_2)},
         {"run",         std::bind(&directive::on_evaluate_run,     std::placeholders::_1, std::placeholders::_2)},
         {"type",        std::bind(&directive::on_evaluate_type,    std::placeholders::_1, std::placeholders::_2)},
+        {"assert",      std::bind(&directive::on_evaluate_assert, std::placeholders::_1, std::placeholders::_2)},
         {"foreign",     std::bind(&directive::on_evaluate_foreign, std::placeholders::_1, std::placeholders::_2)},
         {"assembly",    std::bind(&directive::on_evaluate_assembly, std::placeholders::_1, std::placeholders::_2)},
         {"intrinsic",   std::bind(&directive::on_evaluate_intrinsic, std::placeholders::_1, std::placeholders::_2)},
@@ -48,11 +52,15 @@ namespace basecode::compiler {
 
     directive::directive(
             compiler::module* module,
-            block* parent_scope,
+            compiler::block* parent_scope,
             const std::string& name,
-            element* expression) : element(module, parent_scope, element_type_t::directive),
-                                   _name(name),
-                                   _expression(expression) {
+            compiler::element* lhs,
+            compiler::element* rhs,
+            compiler::element* body) : element(module, parent_scope, element_type_t::directive),
+                                       _name(name),
+                                       _lhs(lhs),
+                                       _rhs(rhs),
+                                       _body(body) {
     }
 
     bool directive::on_emit(
@@ -66,14 +74,19 @@ namespace basecode::compiler {
                 current_block->add_entry(entry);
             current_block->comment("inline end", vm::comment_location_t::after_instruction);
         }
+
+        if (_true_body != nullptr) {
+            _true_body->emit(session, context, result);
+        }
+
         return true;
     }
 
     bool directive::on_infer_type(
             compiler::session& session,
             infer_type_result_t& result) {
-        if (_expression != nullptr) {
-            auto type_ref = dynamic_cast<compiler::type_reference*>(_expression);
+        if (_lhs != nullptr) {
+            auto type_ref = dynamic_cast<compiler::type_reference*>(_lhs);
             result.inferred_type = type_ref->type();
             result.reference = type_ref;
             return true;
@@ -81,17 +94,25 @@ namespace basecode::compiler {
         return false;
     }
 
-    element* directive::expression() {
-        return _expression;
-    }
-
     std::string directive::name() const {
         return _name;
     }
 
     bool directive::on_is_constant() const {
-        return _expression != nullptr
-            && _expression->element_type() == element_type_t::type_reference;
+        return _lhs != nullptr
+            && _lhs->element_type() == element_type_t::type_reference;
+    }
+
+    compiler::element* directive::lhs() {
+        return _lhs;
+    }
+
+    compiler::element* directive::rhs() {
+        return _rhs;
+    }
+
+    compiler::element* directive::body() {
+        return _body;
     }
 
     bool directive::execute(compiler::session& session) {
@@ -119,8 +140,47 @@ namespace basecode::compiler {
     }
 
     void directive::on_owned_elements(element_list_t& list) {
-        if (_expression != nullptr)
-            list.emplace_back(_expression);
+        if (_lhs != nullptr)
+            list.emplace_back(_lhs);
+
+        if (_rhs != nullptr)
+            list.emplace_back(_rhs);
+
+        if (_body != nullptr)
+            list.emplace_back(_body);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    // if/elif/if directive
+
+    bool directive::on_execute_if(compiler::session& session) {
+        return true;
+    }
+
+    bool directive::on_evaluate_if(compiler::session& session) {
+        auto value = false;
+        auto next_branch = this;
+        while (!value && next_branch != nullptr) {
+            if (next_branch->_lhs == nullptr) {
+                _true_body = next_branch->_body;
+                break;
+            }
+            if (!next_branch->_lhs->as_bool(value)) {
+                session.error(
+                    this,
+                    "X000",
+                    "#if/#elif requires constant boolean expression.",
+                    location());
+                return false;
+            }
+            if (value) {
+                _true_body = next_branch->_body;
+                break;
+            }
+            next_branch = dynamic_cast<compiler::directive*>(next_branch->_rhs);
+        }
+        return true;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -140,7 +200,7 @@ namespace basecode::compiler {
     // assembly directive
 
     bool directive::on_execute_assembly(compiler::session& session) {
-        auto raw_block = dynamic_cast<compiler::raw_block*>(_expression);
+        auto raw_block = dynamic_cast<compiler::raw_block*>(_lhs);
         if (raw_block == nullptr) {
             return false;
         }
@@ -163,8 +223,8 @@ namespace basecode::compiler {
     }
 
     bool directive::on_evaluate_assembly(compiler::session& session) {
-        auto is_valid = _expression != nullptr
-            && _expression->element_type() == element_type_t::raw_block;
+        auto is_valid = _lhs != nullptr
+            && _lhs->element_type() == element_type_t::raw_block;
         if (!is_valid) {
             session.error(
                 this,
@@ -173,6 +233,36 @@ namespace basecode::compiler {
                 location());
         }
         return is_valid;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    //
+    // assert directive
+
+    bool directive::on_execute_assert(compiler::session& session) {
+        return true;
+    }
+
+    bool directive::on_evaluate_assert(compiler::session& session) {
+        bool value;
+        if (_lhs == nullptr
+        || !_lhs->as_bool(value)) {
+            session.error(
+                this,
+                "X000",
+                "compile time assert requires constant boolean expression.",
+                location());
+            return false;
+        }
+        if (!value) {
+            session.error(
+                this,
+                "X000",
+                "compile time assertion failed.",
+                _lhs->location());
+            return false;
+        }
+        return true;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -237,7 +327,7 @@ namespace basecode::compiler {
         }
         library->self_loaded(library_name == COMPILER_LIBRARY_NAME);
 
-        auto assignment = dynamic_cast<compiler::assignment*>(_expression);
+        auto assignment = dynamic_cast<compiler::assignment*>(_lhs);
         auto ffi_decl = dynamic_cast<compiler::declaration*>(assignment->expressions()[0]);
         std::string symbol_name = ffi_decl->identifier()->symbol()->name();
         auto alias_attribute = attributes().find("alias");
@@ -297,7 +387,7 @@ namespace basecode::compiler {
     }
 
     bool directive::on_evaluate_foreign(compiler::session& session) {
-        auto assignment = dynamic_cast<compiler::assignment*>(_expression);
+        auto assignment = dynamic_cast<compiler::assignment*>(_lhs);
         auto proc_decl = dynamic_cast<compiler::declaration*>(assignment->expressions()[0]);
         if (proc_decl == nullptr)
             return false;
@@ -324,7 +414,7 @@ namespace basecode::compiler {
     }
 
     bool directive::on_evaluate_intrinsic(compiler::session& session) {
-        auto assignment = dynamic_cast<compiler::assignment*>(_expression);
+        auto assignment = dynamic_cast<compiler::assignment*>(_lhs);
         auto proc_decl = dynamic_cast<compiler::declaration*>(assignment->expressions()[0]);
         if (proc_decl == nullptr)
             return false;
@@ -356,6 +446,11 @@ namespace basecode::compiler {
         if (!compiler::intrinsic::register_intrinsic_procedure_type(
                 intrinsic_name,
                 proc_type)) {
+            session.error(
+                this,
+                "X000",
+                "unable to register intrinsic procedure type.",
+                location());
             return false;
         }
 
