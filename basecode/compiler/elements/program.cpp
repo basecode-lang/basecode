@@ -339,6 +339,10 @@ namespace basecode::compiler {
         assembler.push_block(start_block);
         defer(assembler.pop_block());
 
+        start_block->move(
+            vm::instruction_operand_t::fp(),
+            vm::instruction_operand_t::sp());
+
         auto address_registers = session.address_registers();
         for (auto kvp : address_registers) {
             auto var = dynamic_cast<compiler::identifier*>(session.elements().find(kvp.first));

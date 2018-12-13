@@ -1839,6 +1839,8 @@ namespace basecode::compiler {
         auto for_scope = builder.make_block(
             scope_manager.current_scope(),
             element_type_t::block);
+        scope_manager.current_scope()->blocks().emplace_back(for_scope);
+
         auto induction_decl = add_identifier_to_scope(
             context,
             dynamic_cast<compiler::symbol_element*>(lhs),

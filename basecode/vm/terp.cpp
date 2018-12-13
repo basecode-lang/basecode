@@ -2000,8 +2000,16 @@ namespace basecode::vm {
             case op_codes::setbe: {
                 // CF = 1 or ZF = 1
                 operand_value_t result;
-                result.alias.u = _registers.flags(register_file_t::flags_t::zero)
-                    || _registers.flags(register_file_t::flags_t::carry) ? 1 : 0;
+                auto subtract_flag = _registers.flags(register_file_t::flags_t::subtract);
+                auto overflow_flag = _registers.flags(register_file_t::flags_t::overflow);
+
+                auto zero_flag = _registers.flags(register_file_t::flags_t::zero);
+                auto carry_flag = _registers.flags(register_file_t::flags_t::carry);
+
+                // XXX: using subtract_flag & overflow_flag is not a permanent solution
+                result.alias.u = (zero_flag || carry_flag)
+                    || (subtract_flag && overflow_flag) ? 1 : 0;
+
                 if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
                     return false;
                 break;
@@ -2099,7 +2107,9 @@ namespace basecode::vm {
                 break;
             }
             case op_codes::jsr: {
-                push(_registers.r[register_pc].qw);
+                auto pc = _registers.r[register_pc].qw;
+//                fmt::print("jsr: return pc = ${:08X}\n", pc);
+                push(pc);
 
                 operand_value_t address;
                 auto result = get_constant_address_or_pc_with_offset(
@@ -2115,7 +2125,8 @@ namespace basecode::vm {
                 break;
             }
             case op_codes::rts: {
-                uint64_t address = pop();
+                auto address = pop();
+//                fmt::print("rts: return pc = ${:08X}\n", address);
                 _registers.r[register_pc].qw = address;
                 break;
             }

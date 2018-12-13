@@ -52,6 +52,7 @@ namespace basecode::compiler {
         block->move(
             vm::instruction_operand_t::sp(),
             vm::instruction_operand_t::fp());
+        block->pop(vm::instruction_operand_t::fp());
         block->rts();
 
         return false;
@@ -80,6 +81,7 @@ namespace basecode::compiler {
         block->align(vm::instruction_t::alignment);
         block->label(assembler.make_label(procedure_label));
 
+        block->push(vm::instruction_operand_t::fp());
         block->move(
             vm::instruction_operand_t::fp(),
             vm::instruction_operand_t::sp());
@@ -89,9 +91,9 @@ namespace basecode::compiler {
             auto field = _parameters.find_by_name(var->symbol()->name());
             if (field != nullptr) {
                 if (_return_type != nullptr)
-                    var->offset(16);
+                    var->offset(24);
                 else
-                    var->offset(8);
+                    var->offset(16);
                 continue;
             }
             auto type = var->type_ref()->type();

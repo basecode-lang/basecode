@@ -66,9 +66,6 @@ namespace basecode::compiler {
                           vm::register_type_t::floating_point;
         }
 
-        if (!procedure_type->is_foreign())
-            block->push(vm::instruction_operand_t::fp());
-
         if (_arguments != nullptr)
             _arguments->emit(session, context, result);
 
@@ -91,6 +88,9 @@ namespace basecode::compiler {
                     vm::instruction_operand_t::sp(),
                     vm::instruction_operand_t(static_cast<uint64_t>(8), vm::op_sizes::byte));
             }
+            block->comment(
+                fmt::format("call: {}", identifier->symbol()->name()),
+                vm::comment_location_t::after_instruction);
             block->call(assembler.make_label_ref(identifier->symbol()->name()));
         }
 
@@ -106,9 +106,6 @@ namespace basecode::compiler {
             result.operands.emplace_back(result_operand);
             block->pop(result_operand);
         }
-
-        if (!procedure_type->is_foreign())
-            block->pop(vm::instruction_operand_t::fp());
 
         return true;
     }

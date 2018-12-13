@@ -2,16 +2,26 @@ support :: module("support/module.bc");
 
 s2 := "oh, noes!  what did you DO!?";
 
+factorial :: proc(n: u64 := 12): u64 {
+    r: u64 := 1;
+    for i in range<u64>(1, n) {
+        r *:= i;
+    };
+    return r;
+};
+
 fib :: proc(n: u64 := 10): u64 {
     if n == 0 || n == 1 {
         return n;
     } else {
-        value := fib((n - 1) + fib(n - 2));
-        support::print("value := %d\n", value);
-        return value;
+        return fib((n - 1) + fib(n - 2));
     };
 };
 
-//result := fib();
-result := 0;
-support::assert(result == 1 || result == 0,  address_of(s2));
+result := fib(20);
+support::print("fib       := %d\n", result);
+support::assert(result == 1,  address_of(s2));
+
+result := factorial();
+support::print("factorial := %d\n", result);
+support::assert(result == 479001600,  address_of(s2));

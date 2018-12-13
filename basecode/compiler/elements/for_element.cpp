@@ -65,15 +65,6 @@ namespace basecode::compiler {
 
                     auto range = dynamic_cast<compiler::range_intrinsic*>(intrinsic);
 
-                    block->push(vm::instruction_operand_t::fp());
-                    block->move(
-                        vm::instruction_operand_t::fp(),
-                        vm::instruction_operand_t::sp());
-                    block->sub(
-                        vm::instruction_operand_t::sp(),
-                        vm::instruction_operand_t::sp(),
-                        vm::instruction_operand_t(static_cast<uint64_t>(8), vm::op_sizes::byte));
-
                     auto start_arg = range->arguments()->param_by_name("start");
                     auto induction_init = builder.make_binary_operator(
                         parent_scope(),
@@ -164,10 +155,6 @@ namespace basecode::compiler {
                     block->jump_direct(begin_label_ref);
 
                     block->label(assembler.make_label(exit_label_name));
-                    block->move(
-                        vm::instruction_operand_t::sp(),
-                        vm::instruction_operand_t::fp());
-                    block->pop(vm::instruction_operand_t::fp());
                 }
                 break;
             }

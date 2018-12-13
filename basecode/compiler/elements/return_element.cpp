@@ -38,10 +38,13 @@ namespace basecode::compiler {
             block->store(
                 vm::instruction_operand_t::fp(),
                 expr_var->emit_result().operands.back(),
-                vm::instruction_operand_t(static_cast<uint64_t>(8), vm::op_sizes::byte));
+                vm::instruction_operand_t(
+                    static_cast<uint64_t>(16),
+                    vm::op_sizes::byte));
             block->move(
                 vm::instruction_operand_t::sp(),
                 vm::instruction_operand_t::fp());
+            block->pop(vm::instruction_operand_t::fp());
             block->rts();
         }
         return true;

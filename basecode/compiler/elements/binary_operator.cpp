@@ -445,16 +445,20 @@ namespace basecode::compiler {
         auto is_signed = lhs_var->type_result().inferred_type->is_signed();
 
         if (is_logical_conjunction_operator(operator_type())) {
+            block->move(
+                result_operand,
+                lhs_var->emit_result().operands.back());
+
             switch (operator_type()) {
                 case operator_type_t::logical_or: {
                     block->bnz(
-                        lhs_var->emit_result().operands.back(),
+                        result_operand,
                         vm::instruction_operand_t(end_label_ref));
                     break;
                 }
                 case operator_type_t::logical_and: {
                     block->bz(
-                        lhs_var->emit_result().operands.back(),
+                        result_operand,
                         vm::instruction_operand_t(end_label_ref));
                     break;
                 }
@@ -462,9 +466,8 @@ namespace basecode::compiler {
                     break;
                 }
             }
-            rhs_var->read();
 
-            // XXX: this works but i'd like to eliminate the extra instruction
+            rhs_var->read();
             block->move(
                 result_operand,
                 rhs_var->emit_result().operands.back());

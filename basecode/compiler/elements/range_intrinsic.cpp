@@ -41,6 +41,9 @@ namespace basecode::compiler {
     bool range_intrinsic::on_infer_type(
             compiler::session& session,
             infer_type_result_t& result) {
+        if (type_parameters().empty())
+            return false;
+
         result.reference = type_parameters().front();
         result.inferred_type = type_parameters().front()->type();
         return true;
