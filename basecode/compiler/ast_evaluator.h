@@ -80,8 +80,8 @@ namespace basecode::compiler {
             element_list_t& expressions,
             compiler::block* scope);
 
-        void add_composite_type_fields(
-            const evaluator_context_t& context,
+        bool add_composite_type_fields(
+            evaluator_context_t& context,
             compiler::composite_type* type,
             const syntax::ast_node_t* block);
 

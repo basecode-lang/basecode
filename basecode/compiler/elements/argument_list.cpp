@@ -18,6 +18,7 @@
 #include "declaration.h"
 #include "argument_pair.h"
 #include "argument_list.h"
+#include "composite_type.h"
 #include "symbol_element.h"
 #include "procedure_type.h"
 #include "type_reference.h"
@@ -85,6 +86,7 @@ namespace basecode::compiler {
                     variable_handle_t arg_var;
                     if (!session.variable(arg, arg_var))
                         return false;
+
                     auto type = arg_var->type_result().inferred_type;
                     if (!type->is_composite_type()
                     ||   arg->element_type() == element_type_t::string_literal) {

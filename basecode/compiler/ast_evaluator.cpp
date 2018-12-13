@@ -432,12 +432,24 @@ namespace basecode::compiler {
         }
     }
 
-    void ast_evaluator::add_composite_type_fields(
-            const evaluator_context_t& context,
+    bool ast_evaluator::add_composite_type_fields(
+            evaluator_context_t& context,
             compiler::composite_type* type,
             const syntax::ast_node_t* block) {
         auto& builder = _session.builder();
         compiler::field* previous_field = nullptr;
+
+        uint64_t value = 0;
+        auto is_enum = type->is_enum();
+        auto u32_type = _session
+            .scope_manager()
+            .find_type(qualified_symbol_t("u32"));
+        if (is_enum) {
+            context.decl_type_ref = builder.make_type_reference(
+                type->scope(),
+                u32_type->symbol()->qualified_symbol(),
+                u32_type);
+        }
 
         for (const auto& child : block->children) {
             if (child->type != syntax::ast_node_types_t::statement) {
@@ -463,6 +475,27 @@ namespace basecode::compiler {
                             previous_field != nullptr ? previous_field->end_offset() : 0);
                         type->fields().add(new_field);
                         decl->identifier()->field(new_field);
+                        if (is_enum) {
+                            uint64_t init_value;
+                            if (!decl->identifier()->as_integer(init_value)) {
+                                _session.error(
+                                    "X000",
+                                    "enum field initializers must be constant integer expressions.",
+                                    expr_node->location);
+                                return false;
+                            }
+
+                            if (init_value < value) {
+                                _session.error(
+                                    "X000",
+                                    "enum field initializers must be equal to or greater than implicit values.",
+                                    expr_node->location);
+                                return false;
+                            }
+
+                            value = ++init_value;
+                            decl->identifier()->symbol()->constant(true);
+                        }
                         previous_field = new_field;
                     }
                     break;
@@ -473,6 +506,13 @@ namespace basecode::compiler {
                         expr_node.get(),
                         type->scope());
                     if (field_decl != nullptr) {
+                        if (is_enum) {
+                            auto value_expr = builder.make_integer(type->scope(), value++);
+                            field_decl->identifier()->initializer(builder.make_initializer(
+                                type->scope(),
+                                value_expr));
+                            field_decl->identifier()->symbol()->constant(true);
+                        }
                         auto new_field = builder.make_field(
                             type,
                             type->scope(),
@@ -488,6 +528,8 @@ namespace basecode::compiler {
                     break;
             }
         }
+
+        return true;
     }
 
     compiler::declaration* ast_evaluator::add_identifier_to_scope(
@@ -1481,10 +1523,12 @@ namespace basecode::compiler {
             context.node->lhs.get(),
             enum_type->type_parameters());
 
-        add_composite_type_fields(
+        auto success = add_composite_type_fields(
             context,
             enum_type,
             context.node->rhs.get());
+        if (!success)
+            return false;
 
         if (!enum_type->initialize(_session))
             return false;
@@ -1582,10 +1626,12 @@ namespace basecode::compiler {
             context.node->lhs.get(),
             struct_type->type_parameters());
 
-        add_composite_type_fields(
+        auto success = add_composite_type_fields(
             context,
             struct_type,
             context.node->rhs.get());
+        if (!success)
+            return false;
 
         if (!struct_type->initialize(_session))
             return false;
@@ -1611,10 +1657,12 @@ namespace basecode::compiler {
             context.node->lhs.get(),
             union_type->type_parameters());
 
-        add_composite_type_fields(
+        auto success = add_composite_type_fields(
             context,
             union_type,
             context.node->rhs.get());
+        if (!success)
+            return false;
 
         if (!union_type->initialize(_session))
             return false;
@@ -2181,12 +2229,14 @@ namespace basecode::compiler {
             context,
             node,
             scope));
-        auto type_ref = context.decl_type_ref != nullptr ?
-            context.decl_type_ref :
-            dynamic_cast<compiler::type_reference*>(evaluate_in_scope(
-                context,
-                node->rhs.get(),
-                scope));
+
+        auto declared_type_ref = dynamic_cast<compiler::type_reference*>(evaluate_in_scope(
+            context,
+            node->rhs.get(),
+            scope));
+        auto type_ref = declared_type_ref != nullptr ?
+            declared_type_ref :
+            context.decl_type_ref;
 
         return add_identifier_to_scope(
             context,

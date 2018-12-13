@@ -26,6 +26,8 @@ namespace basecode::compiler {
             compiler::symbol_element* symbol,
             element_type_t element_type = element_type_t::composite_type);
 
+        bool is_enum() const;
+
         field_map_t& fields();
 
         compiler::block* scope();

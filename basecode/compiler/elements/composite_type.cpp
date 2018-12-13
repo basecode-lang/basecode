@@ -33,6 +33,10 @@ namespace basecode::compiler {
                                            _scope(scope) {
     }
 
+    bool composite_type::is_enum() const {
+        return _type == composite_types_t::enum_type;
+    }
+
     field_map_t& composite_type::fields() {
         return _fields;
     }

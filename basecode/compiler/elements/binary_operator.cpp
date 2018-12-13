@@ -339,8 +339,21 @@ namespace basecode::compiler {
 
     bool binary_operator::on_as_integer(uint64_t& value) const {
         uint64_t lhs_value, rhs_value;
-        if (!_lhs->as_integer(lhs_value)) return false;
         if (!_rhs->as_integer(rhs_value)) return false;
+
+        if (operator_type() == operator_type_t::member_access) {
+            if (_lhs->element_type() == element_type_t::identifier_reference) {
+                auto ref = dynamic_cast<compiler::identifier_reference*>(_lhs);
+                auto composite_type = dynamic_cast<compiler::composite_type*>(ref->identifier()->type_ref()->type());
+                if (composite_type->is_enum()) {
+                    value = rhs_value;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        if (!_lhs->as_integer(lhs_value)) return false;
         value = 0;
 
         switch (operator_type()) {

@@ -45,7 +45,7 @@ namespace basecode::compiler {
         void packed(bool value);
 
         size_t alignment() const;
-
+        
         size_t size_in_bytes() const;
 
         void alignment(size_t value);
