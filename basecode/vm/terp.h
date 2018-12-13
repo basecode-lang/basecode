@@ -141,6 +141,11 @@ namespace basecode::vm {
             op_sizes size,
             const operand_value_t& value);
 
+        bool has_carry(
+            uint64_t lhs,
+            uint64_t rhs,
+            op_sizes size);
+
         bool has_overflow(
             const register_value_alias_t& lhs,
             const register_value_alias_t& rhs,
@@ -180,8 +185,6 @@ namespace basecode::vm {
             uint8_t operand_index,
             uint64_t inst_size,
             operand_value_t& address);
-
-        bool has_carry(const operand_value_t& value, op_sizes size);
 
         bool is_negative(const operand_value_t& value, op_sizes size);
 
