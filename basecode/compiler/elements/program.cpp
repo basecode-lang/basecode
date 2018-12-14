@@ -397,8 +397,8 @@ namespace basecode::compiler {
         block_list_t implicit_blocks {};
         auto module_refs = session.elements().find_by_type(element_type_t::module_reference);
         for (auto ref : module_refs) {
-            auto module_ref = dynamic_cast<compiler::module_reference*>(ref);
-            auto block = module_ref->module()->scope();
+            auto mod_ref = dynamic_cast<compiler::module_reference*>(ref);
+            auto block = mod_ref->reference()->scope();
             // XXX: how can we check a block to determine if it will emit byte code?
             //      if it won't, then don't add it here
             implicit_blocks.emplace_back(block);

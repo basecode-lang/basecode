@@ -44,6 +44,10 @@ namespace basecode::compiler {
     public:
         explicit ast_evaluator(compiler::session& session);
 
+        bool compile_module(
+            const syntax::ast_node_t* node,
+            compiler::module* module);
+
         compiler::element* evaluate(const syntax::ast_node_t* node);
 
     private:

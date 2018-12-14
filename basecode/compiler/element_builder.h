@@ -99,7 +99,7 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             compiler::element* expr,
             compiler::element* from_expr,
-            compiler::module* imported_module);
+            compiler::module_reference* imported_module);
 
         declaration* make_declaration(
             compiler::block* parent_scope,

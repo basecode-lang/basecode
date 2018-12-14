@@ -18,18 +18,14 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             compiler::element* expr,
             compiler::element* from_expr,
-            compiler::module* imported_module) : element(module, parent_scope, element_type_t::import_e),
-                                                 _expression(expr),
-                                                 _imported_module(imported_module),
-                                                 _from_expression(from_expr) {
+            compiler::module_reference* imported_module) : element(module, parent_scope, element_type_t::import_e),
+                                                           _expression(expr),
+                                                           _from_expression(from_expr),
+                                                           _imported_module(imported_module) {
     }
 
     compiler::element* import::expression() {
         return _expression;
-    }
-
-    compiler::module* import::imported_module() {
-        return _imported_module;
     }
 
     compiler::element* import::from_expression() {
@@ -41,6 +37,10 @@ namespace basecode::compiler {
             list.emplace_back(_expression);
         if (_from_expression != nullptr)
             list.emplace_back(_from_expression);
+    }
+
+    compiler::module_reference* import::imported_module() {
+        return _imported_module;
     }
 
 };

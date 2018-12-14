@@ -186,37 +186,94 @@ namespace basecode::compiler {
         return false;
     }
 
-    // XXX: need to rewrite this so fully or partially qualified identifiers can be found
     compiler::identifier* scope_manager::find_identifier(
             const qualified_symbol_t& symbol,
             compiler::block* scope) const {
-        if (symbol.is_qualified()) {
-            return dynamic_cast<compiler::identifier*>(walk_qualified_symbol(
-                symbol,
-                scope,
-                [&symbol](compiler::block* scope) {
-                    return scope->identifiers().find(symbol.name);
-                }));
-        } else {
-            return dynamic_cast<compiler::identifier*>(walk_parent_scopes(
-                scope != nullptr ? scope : current_scope(),
+        std::stack<std::string> parts {};
+        parts.push(symbol.name);
+        for (auto it = symbol.namespaces.rbegin();
+                it != symbol.namespaces.rend();
+                ++it) {
+            parts.push(*it);
+        }
+
+        auto block_scope = scope != nullptr ? scope : current_scope();
+        compiler::identifier* result = nullptr;
+        while (!parts.empty()) {
+            auto& part = parts.top();
+
+            import_set_t imports {};
+            result = dynamic_cast<compiler::identifier*>(walk_parent_scopes(
+                block_scope,
                 [&](compiler::block* scope) -> compiler::element* {
-                    auto var = scope->identifiers().find(symbol.name);
+                    auto var = scope->identifiers().find(part);
                     if (var != nullptr)
                         return var;
-                    for (auto import : scope->imports()) {
-                        auto ref = dynamic_cast<compiler::identifier_reference*>(import->expression());
-                        auto qualified_symbol = ref->symbol();
-                        qualified_symbol.namespaces.push_back(qualified_symbol.name);
-                        qualified_symbol.name = symbol.name;
-                        qualified_symbol.fully_qualified_name = make_fully_qualified_name(qualified_symbol);
-                        var = find_identifier(qualified_symbol, import->module()->scope());
-                        if (var != nullptr)
-                            return var;
-                    }
+                    for (auto import : scope->imports())
+                        imports.insert(import);
                     return nullptr;
                 }));
+
+            if (result == nullptr) {
+                for (auto import : imports) {
+                    auto ref = dynamic_cast<compiler::identifier_reference*>(import->expression());
+
+                    qualified_symbol_t import_symbol{};
+                    import_symbol.name = part;
+                    auto& namespaces = ref->symbol().namespaces;
+                    if (import->imported_module() != nullptr) {
+                        for (size_t i = 1; i < namespaces.size(); i++)
+                            import_symbol.namespaces.push_back(namespaces[i]);
+                    } else {
+                        import_symbol.namespaces = ref->symbol().namespaces;
+                    }
+                    import_symbol.namespaces.push_back(ref->symbol().name);
+
+                    compiler::block* import_scope = nullptr;
+                    if (import->imported_module() != nullptr) {
+                        import_scope = import->imported_module()->reference()->scope();
+                    } else {
+                        import_scope = import->module()->scope();
+                    }
+                    result = dynamic_cast<compiler::identifier*>(walk_qualified_symbol(
+                        import_symbol,
+                        import_scope,
+                        [&part](compiler::block* scope) {
+                            return scope->identifiers().find(part);
+                        }));
+                    if (result != nullptr)
+                        break;
+                }
+
+                if(result == nullptr)
+                    break;
+            }
+
+            auto init = result->initializer();
+            if (init == nullptr)
+                break;
+
+            auto expr = init->expression();
+            switch (expr->element_type()) {
+                case element_type_t::namespace_e: {
+                    auto ns = dynamic_cast<namespace_element*>(expr);
+                    block_scope = dynamic_cast<compiler::block*>(ns->expression());
+                    break;
+                }
+                case element_type_t::module_reference: {
+                    auto mod_ref = dynamic_cast<compiler::module_reference*>(expr);
+                    block_scope = mod_ref->reference()->scope();
+                    break;
+                }
+                default: {
+                    return result;
+                }
+            }
+
+            parts.pop();
         }
+
+        return result;
     }
 
     element* scope_manager::walk_qualified_symbol(
@@ -234,8 +291,8 @@ namespace basecode::compiler {
                 auto ns = dynamic_cast<namespace_element*>(expr);
                 block_scope = dynamic_cast<compiler::block*>(ns->expression());
             } else if (expr->element_type() == element_type_t::module_reference) {
-                auto module_reference = dynamic_cast<compiler::module_reference*>(expr);
-                block_scope = module_reference->module()->scope();
+                auto mod_ref = dynamic_cast<compiler::module_reference*>(expr);
+                block_scope = mod_ref->reference()->scope();
             } else {
                 return nullptr;
             }

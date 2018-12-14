@@ -773,19 +773,25 @@ namespace basecode::compiler {
         auto is_root = current_source_file() == nullptr;
 
         push_source_file(source_file);
-        defer({
-            pop_source_file();
-        });
+        defer(pop_source_file());
 
         compiler::module* module = nullptr;
         auto module_node = parse(source_file);
         if (module_node != nullptr) {
-            module = dynamic_cast<compiler::module*>(_ast_evaluator.evaluate(module_node.get()));
+            auto node = module_node.get();
+            module = dynamic_cast<compiler::module*>(_ast_evaluator.evaluate(node));
             if (module != nullptr) {
-                module->parent_element(&_program);
+                module->source_file(source_file);
+                auto current_module = _scope_manager.current_module();
+                if (current_module == nullptr)
+                    module->parent_element(&_program);
+                else
+                    module->parent_element(current_module);
                 module->is_root(is_root);
                 if (is_root)
                     _program.module(module);
+                if (!_ast_evaluator.compile_module(node,module))
+                    return nullptr;
             }
         }
 

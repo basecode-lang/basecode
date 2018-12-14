@@ -847,34 +847,14 @@ namespace basecode::compiler {
             evaluator_context_t& context,
             evaluator_result_t& result) {
         auto& builder = _session.builder();
-        auto& program = _session.program();
         auto& scope_manager = _session.scope_manager();
 
-        auto module_block = builder.make_block(
-            scope_manager.current_scope(),
-            element_type_t::module_block);
         auto module = builder.make_module(
             scope_manager.current_scope(),
-            module_block);
-        module->source_file(_session.current_source_file());
-        program.block()->blocks().push_back(module_block);
-
-        scope_manager.push_scope(module_block);
-        scope_manager.top_level_stack().push(module_block);
-        scope_manager.module_stack().push(module);
-
-        for (auto it = context.node->children.begin();
-                 it != context.node->children.end();
-                 ++it) {
-            auto expr = evaluate((*it).get());
-            if (expr == nullptr)
-                return false;
-            add_expression_to_scope(module_block, expr);
-            expr->parent_element(module);
-        }
-
-        scope_manager.top_level_stack().pop();
-        scope_manager.module_stack().pop();
+            builder.make_block(
+                scope_manager.current_scope(),
+                element_type_t::module_block));
+        scope_manager.current_scope()->blocks().push_back(module->scope());
 
         result.element = module;
 
@@ -923,7 +903,7 @@ namespace basecode::compiler {
             evaluator_context_t& context,
             evaluator_result_t& result) {
         auto expr = resolve_symbol_or_evaluate(context, context.node->rhs.get());
-        auto reference = _session.builder().make_module_reference(
+        auto mod_ref = _session.builder().make_module_reference(
             _session.scope_manager().current_scope(),
             expr);
 
@@ -950,8 +930,8 @@ namespace basecode::compiler {
                     context.node->rhs->location);
                 return false;
             }
-            reference->module(module);
-            result.element = reference;
+            mod_ref->reference(module);
+            result.element = mod_ref;
         } else {
             _session.error(
                 _session.scope_manager().current_module(),
@@ -1321,24 +1301,32 @@ namespace basecode::compiler {
         qualified_symbol_t qualified_symbol {};
         builder.make_qualified_symbol(qualified_symbol, context.node->lhs.get());
 
-        compiler::identifier_reference* from_reference = nullptr;
+        compiler::identifier_reference* from_ref = nullptr;
         if (context.node->rhs != nullptr) {
-            from_reference = dynamic_cast<compiler::identifier_reference*>(
+            from_ref = dynamic_cast<compiler::identifier_reference*>(
                 resolve_symbol_or_evaluate(context, context.node->rhs.get()));
             qualified_symbol.namespaces.insert(
                 qualified_symbol.namespaces.begin(),
-                from_reference->symbol().name);
+                from_ref->symbol().name);
         }
 
-        auto identifier_reference = builder.make_identifier_reference(
+        compiler::module_reference* mod_ref = nullptr;
+        auto symbol_ref = builder.make_identifier_reference(
             scope_manager.current_scope(),
             qualified_symbol,
             scope_manager.find_identifier(qualified_symbol));
+        if (from_ref != nullptr) {
+            mod_ref = dynamic_cast<compiler::module_reference*>(from_ref
+                ->identifier()
+                ->initializer()
+                ->expression());
+        }
+
         auto import = builder.make_import(
             scope_manager.current_scope(),
-            identifier_reference,
-            from_reference,
-            dynamic_cast<compiler::module*>(scope_manager.current_top_level()->parent_element()));
+            symbol_ref,
+            from_ref,
+            mod_ref);
         add_expression_to_scope(scope_manager.current_scope(), import);
 
         result.element = import;
@@ -2416,6 +2404,33 @@ namespace basecode::compiler {
             active_scope,
             tuple_type,
             args);
+    }
+
+    bool ast_evaluator::compile_module(
+            const syntax::ast_node_t* node,
+            compiler::module* module) {
+        auto& scope_manager = _session.scope_manager();
+
+        scope_manager.push_scope(module->scope());
+        scope_manager.top_level_stack().push(module->scope());
+        scope_manager.module_stack().push(module);
+
+        for (auto it = node->children.begin();
+             it != node->children.end();
+             ++it) {
+            auto expr = evaluate((*it).get());
+            if (expr == nullptr)
+                return false;
+            add_expression_to_scope(
+                module->scope(),
+                expr);
+            expr->parent_element(module);
+        }
+
+        scope_manager.top_level_stack().pop();
+        scope_manager.module_stack().pop();
+
+        return true;
     }
 
 };

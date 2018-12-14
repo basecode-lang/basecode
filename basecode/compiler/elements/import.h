@@ -22,21 +22,21 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             compiler::element* expr,
             compiler::element* from_expr,
-            compiler::module* imported_module);
+            compiler::module_reference* imported_module);
 
         compiler::element* expression();
 
-        compiler::module* imported_module();
-
         compiler::element* from_expression();
+
+        compiler::module_reference* imported_module();
 
     protected:
         void on_owned_elements(element_list_t& list) override;
 
     private:
         compiler::element* _expression = nullptr;
-        compiler::module* _imported_module = nullptr;
         compiler::element* _from_expression = nullptr;
+        compiler::module_reference* _imported_module = nullptr;
     };
 
 };

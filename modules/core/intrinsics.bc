@@ -36,13 +36,16 @@ internal :: ns {
         value:  u8,
         length: u64);
 
+    import public::ranges::kinds;
+    import public::ranges::orders;
+
     @intrinsic_name "range";
     #intrinsic range_proc :: proc<T>(
         start: T,
         stop:  T,
         step:  s32 := 1,
-        kind:  u8  := public::ranges::kinds::INCLUSIVE,
-        dir:   u8  := public::ranges::orders::NORMAL):T;
+        kind:  u8  := INCLUSIVE,
+        dir:   u8  := NORMAL):T;
 
     @intrinsic_name "free";
     #intrinsic free_proc :: proc<T>(expr: T);

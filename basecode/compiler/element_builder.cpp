@@ -22,7 +22,7 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             compiler::element* expr,
             compiler::element* from_expr,
-            compiler::module* imported_module) {
+            compiler::module_reference* imported_module) {
         auto import_element = new compiler::import(
             _session.scope_manager().current_module(),
             parent_scope,
