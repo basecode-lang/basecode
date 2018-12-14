@@ -165,7 +165,7 @@ namespace basecode::compiler {
         if (field_list.empty()) {
             if (!_elements.empty()) {
                 session.error(
-                    this,
+                    module(),
                     "P019",
                     "procedure declares no parameters.",
                     parent_element()->location());
@@ -191,7 +191,7 @@ namespace basecode::compiler {
             if (fld->is_variadic()) {
                 if (index < field_list.size() - 1) {
                     session.error(
-                        this,
+                        module(),
                         "P019",
                         fmt::format(
                             "variadic parameter only valid in final position: {}",
@@ -217,7 +217,7 @@ namespace basecode::compiler {
             &&  index >= field_list.size() - 1) {
                 if (variadic_args == nullptr) {
                     session.error(
-                        this,
+                        module(),
                         "P019",
                         "no variadic parameter defined.",
                         parent_element()->location());
@@ -250,7 +250,7 @@ namespace basecode::compiler {
                         goto _retry;
                     } else {
                         session.error(
-                            this,
+                            module(),
                             "P019",
                             fmt::format("invalid procedure parameter: {}", key),
                             arg->location());
@@ -267,7 +267,7 @@ namespace basecode::compiler {
                 infer_type_result_t type_result{};
                 if (!param->infer_type(session, type_result)) {
                     session.error(
-                        this,
+                        module(),
                         "P019",
                         fmt::format(
                             "unable to infer type for parameter: {}",
@@ -279,7 +279,7 @@ namespace basecode::compiler {
                 auto type_ref = fld->identifier()->type_ref();
                 if (!type_ref->type()->type_check(type_result.inferred_type)) {
                     session.error(
-                        this,
+                        module(),
                         "C051",
                         fmt::format(
                             "type mismatch: cannot assign {} to parameter {}.",
@@ -306,7 +306,7 @@ namespace basecode::compiler {
                     }
 
                     session.error(
-                        this,
+                        module(),
                         "P019",
                         fmt::format(
                             "missing required parameter: {}",

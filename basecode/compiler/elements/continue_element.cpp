@@ -40,7 +40,7 @@ namespace basecode::compiler {
             if (context.flow_control == nullptr
             ||  context.flow_control->continue_label == nullptr) {
                 session.error(
-                    this,
+                    module(),
                     "P081",
                     "no valid continue label on stack.",
                     location());

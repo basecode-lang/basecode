@@ -128,7 +128,7 @@ namespace basecode::compiler {
                 if (!lhs_type.inferred_type->is_pointer_type()) {
                     if (lhs_is_composite && !rhs_is_composite) {
                         session.error(
-                            _rhs,
+                            module(),
                             "X000",
                             "cannot assign scalar to composite type.",
                             _rhs->location());
@@ -137,7 +137,7 @@ namespace basecode::compiler {
 
                     if (!lhs_is_composite && rhs_is_composite) {
                         session.error(
-                            _rhs,
+                            module(),
                             "X000",
                             "cannot assign composite type to scalar.",
                             _rhs->location());

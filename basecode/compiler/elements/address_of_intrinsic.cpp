@@ -40,7 +40,7 @@ namespace basecode::compiler {
         auto args = arguments()->elements();
         if (args.empty() || args.size() > 1) {
             session.error(
-                this,
+                module(),
                 "P091",
                 "address_of expects a single argument.",
                 location());
@@ -51,7 +51,7 @@ namespace basecode::compiler {
         if (arg == nullptr
         ||  arg->element_type() != element_type_t::identifier_reference) {
             session.error(
-                this,
+                module(),
                 "P091",
                 "address_of expects an identifier reference parameter.",
                 location());

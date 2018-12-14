@@ -40,7 +40,7 @@ namespace basecode::compiler {
         auto args = arguments()->elements();
         if (args.empty() || args.size() > 1) {
             session.error(
-                this,
+                module(),
                 "P091",
                 "alloc expects a single integer argument.",
                 location());
@@ -56,7 +56,7 @@ namespace basecode::compiler {
 
         if (infer_type_result.inferred_type->number_class() != type_number_class_t::integer) {
             session.error(
-                this,
+                module(),
                 "P091",
                 "alloc expects a single integer argument.",
                 location());

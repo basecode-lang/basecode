@@ -528,6 +528,8 @@ namespace basecode::compiler {
 
         void add(compiler::type* type);
 
+        string_list_t name_list() const;
+
         bool remove(const std::string& name);
 
         compiler::type* find(const std::string& name);

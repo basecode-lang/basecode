@@ -46,12 +46,7 @@ namespace basecode::compiler {
         bool run();
 
         void error(
-            const std::string& code,
-            const std::string& message,
-            const common::source_location& location);
-
-        void error(
-            compiler::element* element,
+            compiler::module* module,
             const std::string& code,
             const std::string& message,
             const common::source_location& location);

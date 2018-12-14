@@ -161,6 +161,7 @@ namespace basecode::compiler {
 
 //        if (!_session.result().has_code("P071")) {
 //            _session.error(
+//                scope_manager.current_module(),
 //                "P071",
 //                fmt::format(
 //                    "ast node evaluation failed: id = {}, type = {}",
@@ -217,6 +218,7 @@ namespace basecode::compiler {
                         proc_type->scope()));
                     if (basic_block == nullptr) {
                         _session.error(
+                            scope_manager.current_module(),
                             "X000",
                             "unable to evaluate procedure instance block.",
                             child_node->location);
@@ -244,6 +246,7 @@ namespace basecode::compiler {
 
                         if (!has_return) {
                             _session.error(
+                                scope_manager.current_module(),
                                 "X000",
                                 "procedure declares return type but has no return statement.",
                                 proc_type->location());
@@ -363,6 +366,7 @@ namespace basecode::compiler {
                     scope = dynamic_cast<compiler::block*>(ns->expression());
                 } else {
                     _session.error(
+                        scope_manager.current_module(),
                         "P018",
                         "only a namespace is valid within a qualified name.",
                         node->lhs->location);
@@ -390,8 +394,10 @@ namespace basecode::compiler {
             auto param_symbol = builder.make_symbol_from_node(
                 type_parameter_node->rhs.get(),
                 scope);
+            auto known_type = scope_manager.find_type(param_symbol->qualified_symbol());
 
-            if (type_parameter_node->lhs != nullptr) {
+            if (known_type == nullptr
+            &&  type_parameter_node->lhs != nullptr) {
                 compiler::type_reference_list_t constraints {};
                 for (const auto& symbol : type_parameter_node->lhs->rhs->children) {
                     qualified_symbol_t qualified_symbol {};
@@ -416,10 +422,11 @@ namespace basecode::compiler {
                 }
             }
 
+            auto type = known_type != nullptr ? known_type : generic_type;
             auto param_type_ref = builder.make_type_reference(
                 scope,
                 param_symbol->name(),
-                generic_type);
+                type);
             auto decl = add_identifier_to_scope(
                 context,
                 param_symbol,
@@ -428,7 +435,7 @@ namespace basecode::compiler {
                 0,
                 scope);
             decl->identifier()->symbol()->constant(true);
-            type_parameters.add(param_symbol, generic_type);
+            type_parameters.add(param_symbol, type);
         }
     }
 
@@ -441,14 +448,31 @@ namespace basecode::compiler {
 
         uint64_t value = 0;
         auto is_enum = type->is_enum();
-        auto u32_type = _session
-            .scope_manager()
-            .find_type(qualified_symbol_t("u32"));
+        std::string value_type_name = "u32";
+        compiler::numeric_type* value_type = nullptr;
         if (is_enum) {
+            if (type->type_parameters().size() == 1) {
+                auto names = type->type_parameters().name_list();
+                value_type_name = names[0];
+                value_type = dynamic_cast<compiler::numeric_type*>(type->type_parameters().find(value_type_name));
+            } else {
+                value_type = dynamic_cast<compiler::numeric_type*>(_session
+                    .scope_manager()
+                    .find_type(qualified_symbol_t(value_type_name)));
+            }
+            if (value_type == nullptr) {
+                _session.error(
+                    type->module(),
+                    "X000",
+                    fmt::format("invalid numeric type: {}", value_type_name),
+                    type->location());
+                return false;
+            }
+
             context.decl_type_ref = builder.make_type_reference(
                 type->scope(),
-                u32_type->symbol()->qualified_symbol(),
-                u32_type);
+                value_type->symbol()->qualified_symbol(),
+                value_type);
         }
 
         for (const auto& child : block->children) {
@@ -457,6 +481,16 @@ namespace basecode::compiler {
             }
 
             auto expr_node = child->rhs;
+
+            if (is_enum && value > value_type->max()) {
+                _session.error(
+                    _session.scope_manager().current_module(),
+                    "X000",
+                    fmt::format("enum field value exceeds range, type: {}.", value_type_name),
+                    expr_node->location);
+                return false;
+            }
+
             switch (expr_node->type) {
                 case syntax::ast_node_types_t::assignment:
                 case syntax::ast_node_types_t::constant_assignment: {
@@ -479,6 +513,7 @@ namespace basecode::compiler {
                             uint64_t init_value;
                             if (!decl->identifier()->as_integer(init_value)) {
                                 _session.error(
+                                    _session.scope_manager().current_module(),
                                     "X000",
                                     "enum field initializers must be constant integer expressions.",
                                     expr_node->location);
@@ -487,6 +522,7 @@ namespace basecode::compiler {
 
                             if (init_value < value) {
                                 _session.error(
+                                    _session.scope_manager().current_module(),
                                     "X000",
                                     "enum field initializers must be equal to or greater than implicit values.",
                                     expr_node->location);
@@ -580,6 +616,7 @@ namespace basecode::compiler {
                              && init_expr->element_type() == element_type_t::module_reference;
             if (is_module) {
                 _session.error(
+                    _session.scope_manager().current_module(),
                     "P029",
                     "constant assignment (::) is required for module references.",
                     node->location);
@@ -590,6 +627,7 @@ namespace basecode::compiler {
                          && init_expr->element_type() == element_type_t::namespace_e;
             if (is_ns) {
                 _session.error(
+                    _session.scope_manager().current_module(),
                     "P029",
                     "constant assignment (::) is required for namespaces.",
                     node->location);
@@ -602,6 +640,7 @@ namespace basecode::compiler {
                                      && dynamic_cast<compiler::directive*>(init_expr)->name() == "type";
             if (is_type || is_type_directive) {
                 _session.error(
+                    _session.scope_manager().current_module(),
                     "P029",
                     "constant assignment (::) is required for types.",
                     node->location);
@@ -625,6 +664,7 @@ namespace basecode::compiler {
                     auto ref = dynamic_cast<compiler::identifier_reference*>(init_expr);
                     if (!ref->resolved()) {
                         _session.error(
+                            scope_manager.current_module(),
                             "P004",
                             fmt::format("unable to resolve identifier: {}", ref->symbol().name),
                             ref->symbol().location);
@@ -632,6 +672,7 @@ namespace basecode::compiler {
                     return nullptr;
                 } else {
                     _session.error(
+                        scope_manager.current_module(),
                         "P019",
                         fmt::format("unable to infer type: {}", new_identifier->symbol()->name()),
                         new_identifier->symbol()->location());
@@ -657,6 +698,7 @@ namespace basecode::compiler {
         } else {
             if (type_ref == nullptr) {
                 _session.error(
+                    scope_manager.current_module(),
                     "P019",
                     fmt::format("unable to infer type: {}", new_identifier->symbol()->name()),
                     new_identifier->symbol()->location());
@@ -689,6 +731,7 @@ namespace basecode::compiler {
         &&  init_expr == nullptr
         &&  new_identifier->type_ref() == nullptr) {
             _session.error(
+                scope_manager.current_module(),
                 "P019",
                 fmt::format("unable to infer type: {}", new_identifier->symbol()->name()),
                 new_identifier->symbol()->location());
@@ -698,6 +741,7 @@ namespace basecode::compiler {
                 // XXX: revisit after type-widening in binary/unary operators is fixed
                 //if (symbol->is_constant()) {
                 //    _session.error(
+                //        scope_manager.current_module(),
                 //        "P028",
                 //        "constant variables require constant expressions.",
                 //        symbol->location());
@@ -900,6 +944,7 @@ namespace basecode::compiler {
             auto module = _session.compile_module(source_file);
             if (module == nullptr) {
                 _session.error(
+                    _session.scope_manager().current_module(),
                     "C021",
                     "unable to load module.",
                     context.node->rhs->location);
@@ -909,6 +954,7 @@ namespace basecode::compiler {
             result.element = reference;
         } else {
             _session.error(
+                _session.scope_manager().current_module(),
                 "C021",
                 "expected string literal or constant string variable.",
                 context.node->rhs->location);
@@ -968,6 +1014,7 @@ namespace basecode::compiler {
                     return true;
                 } else {
                     _session.error(
+                        _session.scope_manager().current_module(),
                         "P041",
                         "invalid integer literal",
                         context.node->location);
@@ -984,6 +1031,7 @@ namespace basecode::compiler {
                     return true;
                 } else {
                     _session.error(
+                        _session.scope_manager().current_module(),
                         "P041",
                         "invalid float literal",
                         context.node->location);
@@ -1153,6 +1201,7 @@ namespace basecode::compiler {
             if (lhs == nullptr
             || !lhs->infer_type(_session, infer_type_result)) {
                 _session.error(
+                    _session.scope_manager().current_module(),
                     "P052",
                     "unable to infer type.",
                     context.node->lhs->location);
@@ -1184,7 +1233,7 @@ namespace basecode::compiler {
             } else {
                 if (is_member_access) {
                     _session.error(
-                        lhs,
+                        _session.scope_manager().current_module(),
                         "P053",
                         "member access requires lhs composite type.",
                         lhs->location());
@@ -1200,7 +1249,7 @@ namespace basecode::compiler {
                 infer_type_result_t rhs_type_result {};
                 if (!rhs->infer_type(_session, rhs_type_result)) {
                     _session.error(
-                        rhs,
+                        _session.scope_manager().current_module(),
                         "P052",
                         "unable to infer type.",
                         rhs->location());
@@ -1321,6 +1370,7 @@ namespace basecode::compiler {
             auto expr = evaluate(current_node.get());
             if (expr == nullptr) {
                 _session.error(
+                    _session.scope_manager().current_module(),
                     "C024",
                     "invalid statement",
                     current_node->location);
@@ -1498,8 +1548,14 @@ namespace basecode::compiler {
 
             if (expr->element_type() == element_type_t::symbol) {
                 auto type_ref = dynamic_cast<compiler::type_reference*>(evaluate(context.node->rhs->rhs.get()));
-                if (type_ref == nullptr)
+                if (type_ref == nullptr) {
+                    _session.error(
+                        _session.scope_manager().current_module(),
+                        "X000",
+                        "invalid type expression.",
+                        context.node->rhs->rhs->location);
                     return false;
+                }
                 expr = add_identifier_to_scope(
                     context,
                     dynamic_cast<compiler::symbol_element*>(expr),
@@ -1526,6 +1582,7 @@ namespace basecode::compiler {
         auto active_scope = scope_manager.current_scope();
         auto enum_scope = builder.make_block(active_scope, element_type_t::block);
         auto enum_type = builder.make_enum_type(active_scope, enum_scope);
+        enum_type->location(context.node->location);
         active_scope->types().add(enum_type);
 
         add_type_parameters(
@@ -2019,6 +2076,7 @@ namespace basecode::compiler {
 
         if (target_list->children.size() != source_list->children.size()) {
             _session.error(
+                _session.scope_manager().current_module(),
                 "P027",
                 "the number of left-hand-side targets must match"
                 " the number of right-hand-side expressions.",
@@ -2037,6 +2095,7 @@ namespace basecode::compiler {
                 false);
             if (target_element == nullptr) {
                 _session.error(
+                    _session.scope_manager().current_module(),
                     "X000",
                     "unable to evaluate target element.",
                     target_symbol->location);
@@ -2048,6 +2107,7 @@ namespace basecode::compiler {
                 if (identifier_ref->resolved()) {
                     if (identifier_ref->identifier()->symbol()->is_constant()) {
                         _session.error(
+                            _session.scope_manager().current_module(),
                             "P028",
                             "constant variables cannot be modified.",
                             target_symbol->location);
@@ -2166,6 +2226,7 @@ namespace basecode::compiler {
                     if (param_decl != nullptr) {
                         if (index != parameters_node->children.size() - 1) {
                             _session.error(
+                                _session.scope_manager().current_module(),
                                 "P019",
                                 fmt::format(
                                     "variadic parameter only valid in final position: {}",
@@ -2272,6 +2333,7 @@ namespace basecode::compiler {
 
             if (infer_type_result.inferred_type->element_type() != element_type_t::bool_type) {
                 _session.error(
+                    _session.scope_manager().current_module(),
                     "P002",
                     "expected a boolean expression.",
                     predicate->location());

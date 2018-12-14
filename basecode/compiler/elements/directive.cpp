@@ -115,10 +115,22 @@ namespace basecode::compiler {
         return _body;
     }
 
+    bool directive::on_apply_fold_result(
+            compiler::element* e,
+            const fold_result_t& fold_result) {
+        if (_name == "if"
+        ||  _name == "elif"
+        ||  _name == "assert") {
+            _lhs = fold_result.element;
+        }
+        return true;
+    }
+
     bool directive::execute(compiler::session& session) {
         auto it = s_execute_handlers.find(_name);
         if (it == s_execute_handlers.end()) {
             session.error(
+                module(),
                 "P044",
                 fmt::format("unknown directive: {}", _name),
                 location());
@@ -131,6 +143,7 @@ namespace basecode::compiler {
         auto it = s_evaluate_handlers.find(_name);
         if (it == s_evaluate_handlers.end()) {
             session.error(
+                module(),
                 "P044",
                 fmt::format("unknown directive: {}", _name),
                 location());
@@ -168,7 +181,7 @@ namespace basecode::compiler {
             }
             if (!next_branch->_lhs->as_bool(value)) {
                 session.error(
-                    this,
+                    module(),
                     "X000",
                     "#if/#elif requires constant boolean expression.",
                     location());
@@ -227,7 +240,7 @@ namespace basecode::compiler {
             && _lhs->element_type() == element_type_t::raw_block;
         if (!is_valid) {
             session.error(
-                this,
+                module(),
                 "P004",
                 "#assembly expects a valid raw block expression.",
                 location());
@@ -248,7 +261,7 @@ namespace basecode::compiler {
         if (_lhs == nullptr
         || !_lhs->as_bool(value)) {
             session.error(
-                this,
+                module(),
                 "X000",
                 "compile time assert requires constant boolean expression.",
                 location());
@@ -256,7 +269,7 @@ namespace basecode::compiler {
         }
         if (!value) {
             session.error(
-                this,
+                module(),
                 "X000",
                 "compile time assertion failed.",
                 _lhs->location());
@@ -289,7 +302,7 @@ namespace basecode::compiler {
         if (library_attribute != nullptr) {
             if (!library_attribute->as_string(library_name)) {
                 session.error(
-                    this,
+                    module(),
                     "P004",
                     "unable to convert library name.",
                     location());
@@ -299,7 +312,7 @@ namespace basecode::compiler {
 
         if (library_name.empty()) {
             session.error(
-                this,
+                module(),
                 "P005",
                 "library attribute required for foreign directive.",
                 location());
@@ -317,7 +330,7 @@ namespace basecode::compiler {
             auto msg = session.result().find_code("B062");
             if (msg != nullptr) {
                 session.error(
-                    this,
+                    module(),
                     "P006",
                     msg->message(),
                     location());
@@ -334,7 +347,7 @@ namespace basecode::compiler {
         if (alias_attribute != nullptr) {
             if (!alias_attribute->as_string(symbol_name)) {
                 session.error(
-                    this,
+                    module(),
                     "P004",
                     "unable to convert alias attribute's name.",
                     location());
@@ -373,7 +386,7 @@ namespace basecode::compiler {
         auto result = ffi.register_function(session.result(), signature);
         if (!result) {
             session.error(
-                this,
+                module(),
                 "P004",
                 fmt::format("unable to find foreign function symbol: {}", symbol_name),
                 location());
@@ -426,7 +439,7 @@ namespace basecode::compiler {
         if (attr != nullptr) {
             if (!attr->as_string(intrinsic_name)) {
                 session.error(
-                    this,
+                    module(),
                     "P004",
                     "unable to convert intrinsic name.",
                     location());
@@ -436,7 +449,7 @@ namespace basecode::compiler {
 
         if (intrinsic_name.empty()) {
             session.error(
-                this,
+                module(),
                 "P005",
                 "intrinsic_name attribute required for intrinsic directive.",
                 location());
@@ -447,7 +460,7 @@ namespace basecode::compiler {
                 intrinsic_name,
                 proc_type)) {
             session.error(
-                this,
+                module(),
                 "X000",
                 "unable to register intrinsic procedure type.",
                 location());

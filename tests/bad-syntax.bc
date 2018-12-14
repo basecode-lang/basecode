@@ -1,0 +1,3 @@
+support :: module("support");
+
+support:print("crap!");

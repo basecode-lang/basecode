@@ -40,7 +40,7 @@ namespace basecode::compiler {
         auto args = arguments()->elements();
         if (args.empty() || args.size() < 3 || args.size() > 3) {
             session.error(
-                this,
+                module(),
                 "P091",
                 "fill expects destination, value, and length arguments.",
                 location());

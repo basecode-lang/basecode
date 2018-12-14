@@ -40,7 +40,7 @@ namespace basecode::compiler {
         auto args = arguments()->elements();
         if (args.empty() || args.size() > 1) {
             session.error(
-                this,
+                module(),
                 "P091",
                 "type_of expects a single argument.",
                 location());
@@ -51,7 +51,7 @@ namespace basecode::compiler {
         infer_type_result_t infer_type_result {};
         if (!arg->infer_type(session, infer_type_result)) {
             session.error(
-                this,
+                module(),
                 "P091",
                 "type_of unable to infer type.",
                 location());

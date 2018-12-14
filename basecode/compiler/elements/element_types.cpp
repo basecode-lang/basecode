@@ -135,6 +135,14 @@ namespace basecode::compiler {
         _types.insert(std::make_pair(type->symbol()->name(), type));
     }
 
+    string_list_t type_map_t::name_list() const {
+        string_list_t names {};
+        for (const auto& it : _types) {
+            names.push_back(it.first);
+        }
+        return names;
+    }
+
     bool type_map_t::remove(const std::string& name) {
         return _types.erase(name) > 0;
     }

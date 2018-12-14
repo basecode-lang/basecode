@@ -107,14 +107,14 @@ namespace basecode::compiler {
 
         if (source_number_class == type_number_class_t::none) {
             session.error(
-                this,
+                module(),
                 "C073",
                 fmt::format("cannot cast from type: {}", infer_type_result.type_name()),
                 _expression->location());
             return false;
         } else if (target_number_class == type_number_class_t::none) {
             session.error(
-                this,
+                module(),
                 "C073",
                 fmt::format("cannot cast to type: {}", _type_ref->symbol().name),
                 _type_location);

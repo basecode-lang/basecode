@@ -395,10 +395,15 @@ namespace basecode::compiler {
         auto& assembler = session.assembler();
 
         block_list_t implicit_blocks {};
-        auto module_blocks = session.elements().find_by_type(element_type_t::module_block);
-        for (auto block : module_blocks) {
-            implicit_blocks.emplace_back(dynamic_cast<compiler::block*>(block));
+        auto module_refs = session.elements().find_by_type(element_type_t::module_reference);
+        for (auto ref : module_refs) {
+            auto module_ref = dynamic_cast<compiler::module_reference*>(ref);
+            auto block = module_ref->module()->scope();
+            // XXX: how can we check a block to determine if it will emit byte code?
+            //      if it won't, then don't add it here
+            implicit_blocks.emplace_back(block);
         }
+        implicit_blocks.emplace_back(module()->scope());
 
         for (auto block : implicit_blocks) {
             auto implicit_block = assembler.make_basic_block();

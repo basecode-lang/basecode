@@ -43,23 +43,13 @@ namespace basecode::compiler {
     }
 
     void session::error(
+            compiler::module* module,
             const std::string& code,
             const std::string& message,
             const common::source_location& location) {
-        auto source_file = current_source_file();
-        if (source_file == nullptr)
-            return;
-        source_file->error(_result, code, message, location);
-    }
-
-    void session::error(
-            compiler::element* element,
-            const std::string& code,
-            const std::string& message,
-            const common::source_location& location) {
-        element->module()
-            ->source_file()
-            ->error(_result, code, message, location);
+        auto file = module->source_file();
+        if (file != nullptr)
+            file->error(_result, code, message, location);
     }
 
     bool session::variable(
@@ -175,7 +165,7 @@ namespace basecode::compiler {
 
             if (!directive_element->execute(*this)) {
                 error(
-                    directive_element,
+                    directive_element->module(),
                     "P044",
                     fmt::format("directive failed to execute: {}", directive_element->name()),
                     directive->location());
@@ -250,7 +240,7 @@ namespace basecode::compiler {
             compiler::element* element) {
         if (!_assembler.allocate_reg(reg)) {
             error(
-                element,
+                element->module(),
                 "P052",
                 "assembler registers exhausted.",
                 element->location());
@@ -304,7 +294,7 @@ namespace basecode::compiler {
 
             if (!var->type_ref()->type()->type_check(infer_type_result.inferred_type)) {
                 error(
-                    init,
+                    init->module(),
                     "C051",
                     fmt::format(
                         "type mismatch: cannot assign {} to {}.",
@@ -323,7 +313,7 @@ namespace basecode::compiler {
             infer_type_result_t rhs_inferred_type {};
             if (!binary_op->rhs()->infer_type(*this, rhs_inferred_type)) {
                 error(
-                    binary_op->rhs(),
+                    binary_op->rhs()->module(),
                     "P052",
                     "unable to infer type.",
                     binary_op->rhs()->location());
@@ -335,7 +325,7 @@ namespace basecode::compiler {
                     auto var = dynamic_cast<compiler::identifier*>(binary_op->lhs());
                     if (!var->type_ref()->type()->type_check(rhs_inferred_type.inferred_type)) {
                         error(
-                            binary_op,
+                            binary_op->module(),
                             "C051",
                             fmt::format(
                                 "type mismatch: cannot assign {} to {}.",
@@ -361,7 +351,7 @@ namespace basecode::compiler {
                     infer_type_result_t lhs_inferred_type {};
                     if (!lhs_bin_op->infer_type(*this, lhs_inferred_type)) {
                         error(
-                            lhs_bin_op,
+                            lhs_bin_op->module(),
                             "P052",
                             "unable to infer type.",
                             lhs_bin_op->location());
@@ -370,7 +360,7 @@ namespace basecode::compiler {
 
                     if (!lhs_inferred_type.inferred_type->type_check(rhs_inferred_type.inferred_type)) {
                         error(
-                            binary_op,
+                            binary_op->module(),
                             "C051",
                             fmt::format(
                                 "type mismatch: cannot assign {} to {}.",
@@ -519,7 +509,7 @@ namespace basecode::compiler {
             } else {
                 ++it;
                 error(
-                    var,
+                    var->module(),
                     "P004",
                     fmt::format(
                         "unable to resolve type for identifier: {}",
@@ -584,7 +574,7 @@ namespace basecode::compiler {
             if (identifier == nullptr) {
                 ++it;
                 error(
-                    unresolved_reference,
+                    unresolved_reference->module(),
                     "P004",
                     fmt::format(
                         "unable to resolve identifier: {}",
@@ -656,8 +646,16 @@ namespace basecode::compiler {
                 }
 
                 fold_result.element->parent_element(parent);
-                if (!parent->apply_fold_result(e, fold_result))
+                if (!parent->apply_fold_result(e, fold_result)) {
+                    error(
+                        e->module(),
+                        "X000",
+                        fmt::format(
+                            "element does not implement apply_fold_result: {}",
+                            element_type_name(e->element_type())),
+                        e->location());
                     return false;
+                }
 
                 to_remove.push_back(e->id());
             }
@@ -786,6 +784,8 @@ namespace basecode::compiler {
             if (module != nullptr) {
                 module->parent_element(&_program);
                 module->is_root(is_root);
+                if (is_root)
+                    _program.module(module);
             }
         }
 

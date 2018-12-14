@@ -42,14 +42,14 @@ namespace basecode::compiler {
 
         if (infer_type_result.inferred_type->number_class() == type_number_class_t::none) {
             session.error(
-                this,
+                module(),
                 "C073",
                 fmt::format("cannot transmute from type: {}", infer_type_result.type_name()),
                 _expression->location());
             return false;
         } else if (_type_ref->type()->number_class() == type_number_class_t::none) {
             session.error(
-                this,
+                module(),
                 "C073",
                 fmt::format("cannot transmute to type: {}", _type_ref->symbol().name),
                 _type_location);
