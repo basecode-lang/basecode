@@ -631,6 +631,16 @@ namespace basecode::compiler {
                     element->symbol()->name(),
                     style);
             }
+            case element_type_t::label_reference: {
+                auto label_ref = dynamic_cast<label_reference*>(node);
+                auto style = ", fillcolor=slateblue2, style=\"filled\"";
+                return fmt::format(
+                    "{}[shape=record,label=\"label_reference|{}\"{}];",
+                    node_vertex_name,
+                    label_ref->label(),
+                    style);
+                break;
+            }
             case element_type_t::spread_operator: {
                 auto spread_element = dynamic_cast<spread_operator*>(node);
                 auto style = ", fillcolor=slateblue2, style=\"filled\"";

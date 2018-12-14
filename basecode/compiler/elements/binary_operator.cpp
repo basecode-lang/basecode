@@ -235,6 +235,20 @@ namespace basecode::compiler {
         return constant_fold_strategy(session, result);
     }
 
+    bool binary_operator::on_apply_fold_result(
+            compiler::element* e,
+            const fold_result_t& fold_result) {
+        if (_lhs == e) {
+            _lhs = fold_result.element;
+        } else if (_rhs == e) {
+            _rhs = fold_result.element;
+        } else {
+            // XXX: error
+            return false;
+        }
+        return true;
+    }
+
     compiler::element* binary_operator::lhs() {
         return _lhs;
     }

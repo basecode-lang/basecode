@@ -404,93 +404,6 @@ namespace basecode::compiler {
         return _result;
     }
 
-    bool session::apply_folded_element(
-            const fold_result_t& result,
-            compiler::element* e,
-            compiler::element* parent) {
-        result.element->parent_element(parent);
-        switch (parent->element_type()) {
-            case element_type_t::if_e: {
-                auto if_e = dynamic_cast<compiler::if_element*>(parent);
-                if_e->predicate(result.element);
-                break;
-            }
-            case element_type_t::cast: {
-                auto cast = dynamic_cast<compiler::cast*>(parent);
-                cast->expression(result.element);
-                break;
-            }
-            case element_type_t::transmute: {
-                auto transmute = dynamic_cast<compiler::transmute*>(parent);
-                transmute->expression(result.element);
-                break;
-            }
-            case element_type_t::array_type: {
-                auto array_type = dynamic_cast<compiler::array_type*>(parent);
-                auto index = array_type->find_index(e->id());
-                if (index == -1) {
-                    return false;
-                }
-                array_type->replace(static_cast<size_t>(index), result.element);
-                break;
-            }
-            case element_type_t::while_e: {
-                auto while_e = dynamic_cast<compiler::while_element*>(parent);
-                while_e->predicate(result.element);
-                break;
-            }
-            case element_type_t::expression: {
-                auto expr = dynamic_cast<compiler::expression*>(parent);
-                expr->root(result.element);
-                break;
-            }
-            case element_type_t::statement: {
-                auto stmt = dynamic_cast<compiler::statement*>(parent);
-                stmt->expression(result.element);
-                break;
-            }
-            case element_type_t::initializer: {
-                auto initializer = dynamic_cast<compiler::initializer*>(parent);
-                initializer->expression(result.element);
-                break;
-            }
-            case element_type_t::argument_pair: {
-                auto arg_pair = dynamic_cast<compiler::argument_pair*>(parent);
-                arg_pair->rhs(result.element);
-                break;
-            }
-            case element_type_t::argument_list: {
-                auto arg_list = dynamic_cast<compiler::argument_list*>(parent);
-                auto index = arg_list->find_index(e->id());
-                if (index == -1) {
-                    return false;
-                }
-                arg_list->replace(static_cast<size_t>(index), result.element);
-                break;
-            }
-            case element_type_t::unary_operator: {
-                auto unary_op = dynamic_cast<compiler::unary_operator*>(parent);
-                unary_op->rhs(result.element);
-                break;
-            }
-            case element_type_t::binary_operator: {
-                auto binary_op = dynamic_cast<compiler::binary_operator*>(parent);
-                if (binary_op->lhs() == e) {
-                    binary_op->lhs(result.element);
-                } else if (binary_op->rhs() == e) {
-                    binary_op->rhs(result.element);
-                } else {
-                    // XXX: error
-                }
-                break;
-            }
-            default:
-                break;
-        }
-
-        return true;
-    }
-
     vm::assembler& session::assembler() {
         return _assembler;
     }
@@ -639,7 +552,8 @@ namespace basecode::compiler {
     bool session::fold_constant_expressions() {
         return fold_elements_of_type(element_type_t::identifier_reference)
             && fold_elements_of_type(element_type_t::unary_operator)
-            && fold_elements_of_type(element_type_t::binary_operator);
+            && fold_elements_of_type(element_type_t::binary_operator)
+            && fold_elements_of_type(element_type_t::label_reference);
     }
 
     vm::stack_frame_t* session::stack_frame() {
@@ -740,7 +654,8 @@ namespace basecode::compiler {
                         break;
                 }
 
-                if (!apply_folded_element(fold_result, e, parent))
+                fold_result.element->parent_element(parent);
+                if (!parent->apply_fold_result(e, fold_result))
                     return false;
 
                 to_remove.push_back(e->id());

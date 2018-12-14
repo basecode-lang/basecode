@@ -38,6 +38,13 @@ namespace basecode::compiler {
         return _root->infer_type(session, result);
     }
 
+    bool expression::on_apply_fold_result(
+            compiler::element* e,
+            const fold_result_t& fold_result) {
+        _root = fold_result.element;
+        return true;
+    }
+
     compiler::element* expression::root() {
         return _root;
     }

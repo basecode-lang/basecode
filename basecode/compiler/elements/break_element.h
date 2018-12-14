@@ -20,9 +20,9 @@ namespace basecode::compiler {
         break_element(
             compiler::module* module,
             compiler::block* parent_scope,
-            compiler::label* label);
+            compiler::element* label);
 
-        compiler::label* label();
+        compiler::element* label();
 
     protected:
         bool on_emit(
@@ -30,10 +30,14 @@ namespace basecode::compiler {
             compiler::emit_context_t& context,
             compiler::emit_result_t& result) override;
 
+        bool on_apply_fold_result(
+            compiler::element* e,
+            const fold_result_t& fold_result) override;
+
         void on_owned_elements(element_list_t& list) override;
 
     private:
-        compiler::label* _label = nullptr;
+        compiler::element* _label = nullptr;
     };
 
 };

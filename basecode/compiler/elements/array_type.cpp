@@ -57,6 +57,17 @@ namespace basecode::compiler {
                                                 _entry_type_ref(entry_type) {
     }
 
+    bool array_type::on_apply_fold_result(
+            compiler::element* e,
+            const fold_result_t& fold_result) {
+        auto index = find_index(e->id());
+        if (index == -1) {
+            return false;
+        }
+        replace(static_cast<size_t>(index), fold_result.element);
+        return true;
+    }
+
     compiler::element* array_type::replace(
             size_t index,
             compiler::element* item) {

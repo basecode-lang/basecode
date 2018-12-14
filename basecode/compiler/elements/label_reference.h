@@ -15,29 +15,24 @@
 
 namespace basecode::compiler {
 
-    class continue_element : public element {
+    class label_reference : public element {
     public:
-        continue_element(
+        label_reference(
             compiler::module* module,
             compiler::block* parent_scope,
-            compiler::element* label);
+            const std::string& label);
 
-        compiler::element* label();
+        std::string label() const;
 
     protected:
-        bool on_emit(
+        bool on_fold(
             compiler::session& session,
-            compiler::emit_context_t& context,
-            compiler::emit_result_t& result) override;
+            fold_result_t& result) override;
 
-        bool on_apply_fold_result(
-            compiler::element* e,
-            const fold_result_t& fold_result) override;
-
-        void on_owned_elements(element_list_t& list) override;
+        bool on_is_constant() const override;
 
     private:
-        compiler::element* _label = nullptr;
+        std::string _label;
     };
 
 };

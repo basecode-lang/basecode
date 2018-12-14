@@ -44,6 +44,10 @@ namespace basecode::compiler {
 
         void make_non_owning();
 
+        bool apply_fold_result(
+            compiler::element* e,
+            const fold_result_t& fold_result);
+
         common::id_t id() const;
 
         template <typename T>
@@ -146,6 +150,10 @@ namespace basecode::compiler {
         virtual bool on_infer_type(
             compiler::session& session,
             infer_type_result_t& result);
+
+        virtual bool on_apply_fold_result(
+            compiler::element* e,
+            const fold_result_t& fold_result);
 
         virtual bool on_is_constant() const;
 

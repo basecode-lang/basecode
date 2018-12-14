@@ -75,7 +75,7 @@ namespace basecode::compiler {
                 vm::op_sizes::word);
             block->push(arg_count);
             block->comment(
-                fmt::format("call: {}", identifier->symbol()->name()),
+                fmt::format("call: {}", identifier->label_name()),
                 vm::comment_location_t::after_instruction);
             block->call_foreign(procedure_type->foreign_address());
         } else {
@@ -89,9 +89,9 @@ namespace basecode::compiler {
                     vm::instruction_operand_t(static_cast<uint64_t>(8), vm::op_sizes::byte));
             }
             block->comment(
-                fmt::format("call: {}", identifier->symbol()->name()),
+                fmt::format("call: {}", identifier->label_name()),
                 vm::comment_location_t::after_instruction);
-            block->call(assembler.make_label_ref(identifier->symbol()->name()));
+            block->call(assembler.make_label_ref(identifier->label_name()));
         }
 
         if (return_type_field != nullptr) {

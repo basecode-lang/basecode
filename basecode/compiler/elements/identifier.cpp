@@ -64,7 +64,7 @@ namespace basecode::compiler {
     }
 
     std::string identifier::label_name() const {
-        return _symbol->name();
+        return fmt::format("{}_{}", _symbol->name(), id());
     }
 
     void identifier::inferred_type(bool value) {

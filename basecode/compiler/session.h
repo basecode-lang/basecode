@@ -146,11 +146,6 @@ namespace basecode::compiler {
 
         bool type_check();
 
-        bool apply_folded_element(
-            const fold_result_t& result,
-            compiler::element* e,
-            compiler::element* parent);
-
         bool resolve_unknown_types();
 
         void initialize_core_types();

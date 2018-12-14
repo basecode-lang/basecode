@@ -73,6 +73,7 @@
 #include <compiler/elements/copy_intrinsic.h>
 #include <compiler/elements/free_intrinsic.h>
 #include <compiler/elements/spread_operator.h>
+#include <compiler/elements/label_reference.h>
 #include <compiler/elements/range_intrinsic.h>
 #include <compiler/elements/alloc_intrinsic.h>
 #include <compiler/elements/boolean_literal.h>

@@ -44,11 +44,11 @@ namespace basecode::compiler {
 
         break_element* make_break(
             compiler::block* parent_scope,
-            compiler::label* label);
+            compiler::element* label);
 
         continue_element* make_continue(
             compiler::block* parent_scope,
-            compiler::label* label);
+            compiler::element* label);
 
         while_element* make_while(
             compiler::block* parent_scope,
@@ -360,6 +360,10 @@ namespace basecode::compiler {
             compiler::type* type);
 
         compiler::nil_literal* nil_literal();
+
+        label_reference* make_label_reference(
+            compiler::block* parent_scope,
+            const std::string& name);
 
         compiler::boolean_literal* true_literal();
 

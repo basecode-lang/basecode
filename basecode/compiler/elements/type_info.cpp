@@ -50,7 +50,7 @@ namespace basecode::compiler {
         auto block = assembler.current_block();
 
         block->comment(
-            var->symbol()->name(),
+            var->label_name(),
             vm::comment_location_t::after_instruction);
 
         variable_handle_t temp_var;

@@ -72,6 +72,13 @@ namespace basecode::compiler {
         return _body;
     }
 
+    bool while_element::on_apply_fold_result(
+            compiler::element* e,
+            const fold_result_t& fold_result) {
+        _predicate = fold_result.element;
+        return true;
+    }
+
     compiler::element* while_element::predicate() {
         return _predicate;
     }

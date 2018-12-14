@@ -46,6 +46,13 @@ namespace basecode::compiler {
         return on_fold(session, result);
     }
 
+    bool element::emit(
+            compiler::session& session,
+            compiler::emit_context_t& context,
+            compiler::emit_result_t& result) {
+        return on_emit(session, context, result);
+    }
+
     bool element::on_emit(
             compiler::session& session,
             compiler::emit_context_t& context,
@@ -102,6 +109,12 @@ namespace basecode::compiler {
         return _parent_scope;
     }
 
+    bool element::apply_fold_result(
+            compiler::element* e,
+            const fold_result_t& fold_result) {
+        return on_apply_fold_result(e, fold_result);
+    }
+
     void element::make_non_owning() {
         _non_owning = true;
     }
@@ -112,6 +125,12 @@ namespace basecode::compiler {
 
     common::id_t element::id() const {
         return _id;
+    }
+
+    bool element::on_apply_fold_result(
+            compiler::element* e,
+            const fold_result_t& fold_result) {
+        return false;
     }
 
     bool element::is_constant() const {
@@ -171,13 +190,6 @@ namespace basecode::compiler {
 
     void element::module(compiler::module* value) {
         _module = value;
-    }
-
-    bool element::emit(
-            compiler::session& session,
-            compiler::emit_context_t& context,
-            compiler::emit_result_t& result) {
-        return on_emit(session, context, result);
     }
 
     bool element::is_pointer_dereference() const {

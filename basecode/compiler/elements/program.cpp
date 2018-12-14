@@ -347,7 +347,7 @@ namespace basecode::compiler {
         for (auto kvp : address_registers) {
             auto var = dynamic_cast<compiler::identifier*>(session.elements().find(kvp.first));
             start_block->comment(
-                var->symbol()->name(),
+                var->label_name(),
                 vm::comment_location_t::after_instruction);
             start_block->move(
                 vm::instruction_operand_t(kvp.second),

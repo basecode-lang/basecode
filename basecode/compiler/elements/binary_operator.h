@@ -47,6 +47,10 @@ namespace basecode::compiler {
             compiler::session& session,
             infer_type_result_t& result) override;
 
+        bool on_apply_fold_result(
+            compiler::element* e,
+            const fold_result_t& fold_result) override;
+
         bool emit_arithmetic_operator(
             compiler::session& session,
             emit_context_t& context,

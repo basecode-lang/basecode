@@ -271,12 +271,12 @@ namespace basecode::compiler {
                     _address.reserve();
 
                     block->comment(
-                        var->symbol()->name(),
+                        var->label_name(),
                         vm::comment_location_t::after_instruction);
 
                     block->move(
                         vm::instruction_operand_t(_address.reg),
-                        vm::instruction_operand_t(assembler.make_label_ref(var->symbol()->name())),
+                        vm::instruction_operand_t(assembler.make_label_ref(var->label_name())),
                         vm::instruction_operand_t::offset(!include_offset ? 0 : _rot.offset));
                 } else {
                     _address.reg = *address_reg;

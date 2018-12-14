@@ -83,6 +83,13 @@ namespace basecode::compiler {
                && _expr->element_type() == element_type_t::nil_literal;
     }
 
+    bool initializer::on_apply_fold_result(
+            compiler::element* e,
+            const fold_result_t& fold_result) {
+        _expr = fold_result.element;
+        return true;
+    }
+
     bool initializer::on_is_constant() const {
         if (_expr == nullptr)
             return false;

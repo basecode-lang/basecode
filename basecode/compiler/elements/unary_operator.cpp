@@ -108,6 +108,13 @@ namespace basecode::compiler {
         return _rhs;
     }
 
+    bool unary_operator::on_apply_fold_result(
+            compiler::element* e,
+            const fold_result_t& fold_result) {
+        _rhs = fold_result.element;
+        return true;
+    }
+
     bool unary_operator::on_is_constant() const {
         return _rhs != nullptr && _rhs->is_constant();
     }

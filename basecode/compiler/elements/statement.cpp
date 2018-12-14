@@ -35,6 +35,13 @@ namespace basecode::compiler {
         return _labels;
     }
 
+    bool statement::on_apply_fold_result(
+            compiler::element* e,
+            const fold_result_t& fold_result) {
+        _expression = fold_result.element;
+        return true;
+    }
+
     compiler::element* statement::expression() {
         return _expression;
     }

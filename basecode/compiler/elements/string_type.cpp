@@ -43,7 +43,7 @@ namespace basecode::compiler {
         auto block = assembler.current_block();
 
         block->comment(fmt::format(
-            "finalize: {}", var->symbol()->name()),
+            "finalize: {}", var->label_name()),
             vm::comment_location_t::after_instruction);
 
         variable_handle_t type_var;
@@ -73,7 +73,7 @@ namespace basecode::compiler {
         auto block = assembler.current_block();
 
         block->comment(
-            fmt::format("initialize: {}", var->symbol()->name()),
+            fmt::format("initialize: {}", var->label_name()),
             vm::comment_location_t::after_instruction);
 
         variable_handle_t type_var;

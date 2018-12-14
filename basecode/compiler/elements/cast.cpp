@@ -47,6 +47,13 @@ namespace basecode::compiler {
         return true;
     }
 
+    bool cast::on_apply_fold_result(
+            compiler::element* e,
+            const fold_result_t& fold_result) {
+        _expression = fold_result.element;
+        return true;
+    }
+
     compiler::element* cast::expression() {
         return _expression;
     }

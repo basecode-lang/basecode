@@ -44,6 +44,10 @@ namespace basecode::compiler {
         std::string name(const std::string& alias = "") const override;
 
     protected:
+        bool on_apply_fold_result(
+            compiler::element* e,
+            const fold_result_t& fold_result) override;
+
         type_access_model_t on_access_model() const override;
 
         void on_owned_elements(element_list_t& list) override;

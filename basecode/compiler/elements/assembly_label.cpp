@@ -36,7 +36,7 @@ namespace basecode::compiler {
 
         vm::label_ref_t* label_ref = nullptr;
         if (_ref != nullptr) {
-            label_ref = assembler.make_label_ref(_ref->identifier()->symbol()->name());
+            label_ref = assembler.make_label_ref(_ref->identifier()->label_name());
         } else {
             label_ref = assembler.make_label_ref(_name);
         }

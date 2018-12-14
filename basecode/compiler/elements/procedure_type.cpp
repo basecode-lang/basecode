@@ -75,7 +75,7 @@ namespace basecode::compiler {
         if (parent_init != nullptr) {
             auto parent_var = parent_init->parent_element_as<compiler::identifier>();
             if (parent_var != nullptr) {
-                procedure_label = parent_var->symbol()->name();
+                procedure_label = parent_var->label_name();
             }
         }
 

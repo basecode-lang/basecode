@@ -44,6 +44,10 @@ namespace basecode::compiler {
             compiler::session& program,
             infer_type_result_t& result) override;
 
+        bool on_apply_fold_result(
+            compiler::element* e,
+            const fold_result_t& fold_result) override;
+
         bool on_is_constant() const override;
 
         bool on_as_bool(bool& value) const override;

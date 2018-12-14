@@ -30,7 +30,7 @@ namespace basecode::compiler {
         auto& assembler = session.assembler();
         auto block = assembler.current_block();
         block->blank_line();
-        block->label(assembler.make_label(_name));
+        block->label(assembler.make_label(label_name()));
         return true;
     }
 
@@ -40,6 +40,10 @@ namespace basecode::compiler {
 
     bool label::on_is_constant() const {
         return true;
+    }
+
+    std::string label::label_name() const {
+        return fmt::format("{}_{}", _name, id());
     }
 
 };

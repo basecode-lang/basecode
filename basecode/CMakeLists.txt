@@ -172,6 +172,7 @@ add_library(
     compiler/elements/procedure_call.cpp compiler/elements/procedure_call.h
     compiler/elements/assembly_label.cpp compiler/elements/assembly_label.h
     compiler/elements/type_reference.cpp compiler/elements/type_reference.h
+    compiler/elements/label_reference.cpp compiler/elements/label_reference.h
     compiler/elements/spread_operator.cpp compiler/elements/spread_operator.h
     compiler/elements/alloc_intrinsic.cpp compiler/elements/alloc_intrinsic.h
     compiler/elements/integer_literal.cpp compiler/elements/integer_literal.h

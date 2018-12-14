@@ -839,14 +839,16 @@ namespace basecode::compiler {
         auto& builder = _session.builder();
         auto& scope_manager = _session.scope_manager();
 
-        compiler::label* label = nullptr;
+        compiler::label_reference* label = nullptr;
         if (context.node->lhs != nullptr) {
-            label = builder.make_label(
+            label = builder.make_label_reference(
                 scope_manager.current_scope(),
                 context.node->lhs->token.value);
         }
 
-        result.element = builder.make_break(scope_manager.current_scope(), label);
+        result.element = builder.make_break(
+            scope_manager.current_scope(),
+            label);
         return true;
     }
 
@@ -856,14 +858,16 @@ namespace basecode::compiler {
         auto& builder = _session.builder();
         auto& scope_manager = _session.scope_manager();
 
-        compiler::label* label = nullptr;
+        compiler::label_reference* label = nullptr;
         if (context.node->lhs != nullptr) {
-            label = builder.make_label(
+            label = builder.make_label_reference(
                 scope_manager.current_scope(),
                 context.node->lhs->token.value);
         }
 
-        result.element = builder.make_continue(scope_manager.current_scope(), label);
+        result.element = builder.make_continue(
+            scope_manager.current_scope(),
+            label);
         return true;
     }
 

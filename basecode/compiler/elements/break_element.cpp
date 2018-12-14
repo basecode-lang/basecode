@@ -19,8 +19,8 @@ namespace basecode::compiler {
     break_element::break_element(
             compiler::module* module,
             compiler::block* parent_scope,
-            compiler::label* label) : element(module, parent_scope, element_type_t::break_e),
-                                      _label(label) {
+            compiler::element* label) : element(module, parent_scope, element_type_t::break_e),
+                                        _label(label) {
     }
 
     bool break_element::on_emit(
@@ -34,8 +34,8 @@ namespace basecode::compiler {
 
         std::string label_name;
         if (_label != nullptr) {
-            label_name = _label->name();
-            label_ref = assembler.make_label_ref(_label->name());
+            label_name = _label->label_name();
+            label_ref = assembler.make_label_ref(label_name);
         } else {
             if (context.flow_control == nullptr
             ||  context.flow_control->exit_label == nullptr) {
@@ -58,7 +58,14 @@ namespace basecode::compiler {
         return true;
     }
 
-    compiler::label* break_element::label() {
+    bool break_element::on_apply_fold_result(
+            compiler::element* e,
+            const fold_result_t& fold_result) {
+        _label = fold_result.element;
+        return true;
+    }
+
+    compiler::element* break_element::label() {
         return _label;
     }
 

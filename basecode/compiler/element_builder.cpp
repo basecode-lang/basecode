@@ -336,7 +336,7 @@ namespace basecode::compiler {
 
     break_element* element_builder::make_break(
             compiler::block* parent_scope,
-            compiler::label* label) {
+            compiler::element* label) {
         auto break_e = new compiler::break_element(
             _session.scope_manager().current_module(),
             parent_scope,
@@ -349,7 +349,7 @@ namespace basecode::compiler {
 
     continue_element* element_builder::make_continue(
             compiler::block* parent_scope,
-            compiler::label* label) {
+            compiler::element* label) {
         auto continue_e = new compiler::continue_element(
             _session.scope_manager().current_module(),
             parent_scope,
@@ -732,6 +732,17 @@ namespace basecode::compiler {
             ref->parent_element(label);
         _session.elements().add(label);
         return label;
+    }
+
+    label_reference* element_builder::make_label_reference(
+        compiler::block* parent_scope,
+        const std::string& name) {
+        auto label_ref = new compiler::label_reference(
+            _session.scope_manager().current_module(),
+            parent_scope,
+            name);
+        _session.elements().add(label_ref);
+        return label_ref;
     }
 
     field* element_builder::make_field(

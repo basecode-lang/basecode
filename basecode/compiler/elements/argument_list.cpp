@@ -124,6 +124,17 @@ namespace basecode::compiler {
         return true;
     }
 
+    bool argument_list::on_apply_fold_result(
+            compiler::element* e,
+            const fold_result_t& fold_result) {
+        auto index = find_index(e->id());
+        if (index == -1) {
+            return false;
+        }
+        replace(static_cast<size_t>(index), fold_result.element);
+        return true;
+    }
+
     compiler::element* argument_list::replace(
             size_t index,
             compiler::element* item) {

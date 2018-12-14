@@ -83,6 +83,13 @@ namespace basecode::compiler {
         return _is_else_if;
     }
 
+    bool if_element::on_apply_fold_result(
+            compiler::element* e,
+            const fold_result_t& fold_result) {
+        _predicate = fold_result.element;
+        return true;
+    }
+
     compiler::element* if_element::predicate() {
         return _predicate;
     }

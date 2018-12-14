@@ -83,6 +83,7 @@ namespace basecode::compiler {
     class procedure_call;
     class string_literal;
     class namespace_type;
+    class label_reference;
     class spread_operator;
     class range_intrinsic;
     class boolean_literal;
@@ -209,6 +210,7 @@ namespace basecode::compiler {
         integer_literal,
         binary_operator,
         spread_operator,
+        label_reference,
         module_reference,
         character_literal,
         unknown_identifier,
@@ -278,6 +280,7 @@ namespace basecode::compiler {
         {element_type_t::assembly_label, "assembly_label"},
         {element_type_t::type_reference, "type_reference"},
         {element_type_t::spread_operator, "spread_operator"},
+        {element_type_t::label_reference, "label_reference"},
         {element_type_t::boolean_literal, "boolean_literal"},
         {element_type_t::integer_literal, "integer_literal"},
         {element_type_t::binary_operator, "binary_operator"},

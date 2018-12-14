@@ -60,6 +60,10 @@ namespace basecode::compiler {
             vm::instruction_block* block,
             const compiler::element_list_t& elements);
 
+        bool on_apply_fold_result(
+            compiler::element* e,
+            const fold_result_t& fold_result) override;
+
         void on_owned_elements(element_list_t& list) override;
 
     private:
