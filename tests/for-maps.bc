@@ -1,4 +1,4 @@
-support :: module("support/module.bc");
+support :: module("support");
 
 map_iterator :: struct {
     key: string;
@@ -8,8 +8,13 @@ map_iterator :: struct {
 ////////////////////////////////////////////////////////
 // 3. iterating over maps
 
-// XXX: type declaration should be supported but isn't
-for it: map_iterator in map<string, string>("foo" := "bar", "bing" := "baz") {
-    support::print("k := %s\n", it.key);
-    support::print("v := %d\n", it.value);
+test :: proc() {
+    // XXX: type declaration should be supported but isn't
+    for it: map_iterator in map<string, string>("foo" := "bar", "bing" := "baz") {
+        support::print("k := %s\n", it.key);
+        support::print("v := %d\n", it.value);
+    };
 };
+
+// XXX: implement support for this
+//test();

@@ -1,4 +1,4 @@
-support :: module("support/module.bc");
+support :: module("support");
 
 key_value_pair :: struct<K:tuple(string), V> {
     key: K;

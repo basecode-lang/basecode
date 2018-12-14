@@ -1,6 +1,6 @@
 // ----------------------------------------------------------------------------
 //
-// Basecode Bootstrap Compiler
+// Basecode Compiler
 // Copyright (C) 2018 Jeff Panici
 // All rights reserved.
 //
@@ -9,20 +9,17 @@
 //
 // ----------------------------------------------------------------------------
 
-core :: module("../modules/core");
+intrinsics_module :: module("intrinsics.bc");
+import public from intrinsics_module;
 
-a: bool;
+print("intrinsics\n");
 
-@no_fold;
-a := 2 > 1;
+compiler_module   :: module("compiler.bc");
+import public from compiler_module;
 
-@no_fold;
-b := !a;
+print("compiler\n");
 
-z: u32;
+assert_module     :: module("assert.bc");
+import public from assert_module;
 
-@no_fold;
-z := (cast<u32>(16) * (2 shl 4)) * (6 + 4);
-
-error_message := "expected z == 5120";
-assert(z == 5120, address_of(error_message));
+print("assert\n");

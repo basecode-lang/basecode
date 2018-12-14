@@ -1,0 +1,64 @@
+// ----------------------------------------------------------------------------
+//
+// Basecode Compiler
+// Copyright (C) 2018 Jeff Panici
+// All rights reserved.
+//
+// This software source file is licensed under the terms of MIT license.
+// For details, please read the LICENSE file.
+//
+// ----------------------------------------------------------------------------
+
+public :: ns {
+    ranges :: ns {
+        kinds  :: ns {
+            INCLUSIVE :: 0;
+            EXCLUSIVE :: 1;
+        };
+
+        orders :: ns {
+            NORMAL    :: 0;
+            REVERSE   :: 1;
+        };
+    };
+};
+
+internal :: ns {
+    @intrinsic_name "copy";
+    #intrinsic copy_proc :: proc<T>(
+        dest: ^T,
+        src:  ^T,
+        size: u64);
+
+    @intrinsic_name "fill";
+    #intrinsic fill_proc :: proc<T>(
+        dest:   ^T,
+        value:  u8,
+        length: u64);
+
+    @intrinsic_name "range";
+    #intrinsic range_proc :: proc<T>(
+        start: T,
+        stop:  T,
+        step:  s32 := 1,
+        kind:  u8  := public::ranges::kinds::INCLUSIVE,
+        dir:   u8  := public::ranges::orders::NORMAL):T;
+
+    @intrinsic_name "free";
+    #intrinsic free_proc :: proc<T>(expr: T);
+
+    @intrinsic_name "alloc";
+    #intrinsic alloc_proc :: proc<T>(size: u64):^T;
+
+    @intrinsic_name "size_of";
+    #intrinsic size_of_proc :: proc<T>(expr: T):u32;
+
+    @intrinsic_name "align_of";
+    #intrinsic align_of_proc :: proc<T>(expr: T):u32;
+
+    @intrinsic_name "type_of";
+    #intrinsic type_of_proc :: proc<T>(expr: T):^type;
+
+    @intrinsic_name "address_of";
+    #intrinsic address_of_proc :: proc<T>(expr: T):u64;
+};

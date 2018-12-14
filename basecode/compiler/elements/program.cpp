@@ -446,6 +446,9 @@ namespace basecode::compiler {
             auto type = proc_call->reference()->identifier()->type_ref()->type();
 
             auto procedure_type = dynamic_cast<compiler::procedure_type*>(type);
+            if (procedure_type == nullptr)
+                return false;
+
             if (procedure_type->is_foreign())
                 continue;
 

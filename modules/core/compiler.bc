@@ -1,6 +1,6 @@
 // ----------------------------------------------------------------------------
 //
-// Basecode Bootstrap Compiler
+// Basecode Compiler
 // Copyright (C) 2018 Jeff Panici
 // All rights reserved.
 //
@@ -9,20 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
-core :: module("../modules/core");
-
-a: bool;
-
-@no_fold;
-a := 2 > 1;
-
-@no_fold;
-b := !a;
-
-z: u32;
-
-@no_fold;
-z := (cast<u32>(16) * (2 shl 4)) * (6 + 4);
-
-error_message := "expected z == 5120";
-assert(z == 5120, address_of(error_message));
+public :: ns {
+    @library "basecode";
+    #foreign print :: proc(format: string, ...values: any) @alias "fmt_print";
+};

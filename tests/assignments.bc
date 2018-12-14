@@ -1,4 +1,4 @@
-support :: module("support/module.bc");
+support :: module("support");
 
 id_t :: #type u32;
 PI   :: cast<f64>(3.1415926535);

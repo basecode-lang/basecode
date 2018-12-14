@@ -186,6 +186,7 @@ namespace basecode::compiler {
         return false;
     }
 
+    // XXX: need to rewrite this so fully or partially qualified identifiers can be found
     compiler::identifier* scope_manager::find_identifier(
             const qualified_symbol_t& symbol,
             compiler::block* scope) const {
@@ -204,8 +205,8 @@ namespace basecode::compiler {
                     if (var != nullptr)
                         return var;
                     for (auto import : scope->imports()) {
-                        auto identifier_reference = dynamic_cast<compiler::identifier_reference*>(import->expression());
-                        auto qualified_symbol = identifier_reference->symbol();
+                        auto ref = dynamic_cast<compiler::identifier_reference*>(import->expression());
+                        auto qualified_symbol = ref->symbol();
                         qualified_symbol.namespaces.push_back(qualified_symbol.name);
                         qualified_symbol.name = symbol.name;
                         qualified_symbol.fully_qualified_name = make_fully_qualified_name(qualified_symbol);

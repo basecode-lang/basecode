@@ -3,7 +3,7 @@
 //
 //
 
-support :: module("support/module.bc");
+support :: module("support");
 
 /* just before a */ a: /* just before type*/ u32 /* just after type */; // bar
 

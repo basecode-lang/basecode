@@ -1,4 +1,4 @@
-support :: module("support/module.bc");
+support :: module("support");
 
 is_true1: bool;
 is_true1 := true && true || false && true;

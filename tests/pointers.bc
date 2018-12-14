@@ -1,4 +1,4 @@
-support :: module("support/module.bc");
+support :: module("support");
 
 ARRAY_WIDTH  :: 4;
 ARRAY_HEIGHT :: 4;

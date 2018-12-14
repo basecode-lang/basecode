@@ -9,7 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
-support :: module("support/module.bc");
+support :: module("support");
 
 support::print("at the very top!\n");
 

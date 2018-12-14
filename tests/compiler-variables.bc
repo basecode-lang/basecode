@@ -1,4 +1,4 @@
-support :: module("support/module.bc");
+support :: module("support");
 
 text := "hello world!";
 support::print("text.length   := %d\n", text.length);

@@ -1,24 +1,28 @@
-support :: module("support/module.bc");
+support :: module("support");
 
 import range::kinds from support;
 import range::orders from support;
 
-support::print("\n1\n");
-for x in range<s32>(0, 10, 2) {
-    support::print("x := %d\n", x);
+test :: proc() {
+    support::print("\n1\n");
+    for x in range<s32>(0, 10, 2) {
+        support::print("x := %d\n", x);
+    };
+
+    support::print("\n2\n");
+    for x in range<s32>(dir := REVERSE, 10, kind := EXCLUSIVE, 0, 1) {
+        support::print("x := %d\n", x);
+    };
+
+    support::print("\n3\n");
+    for x in range<s32>(20, 0, dir := REVERSE) {
+        support::print("x := %d\n", x);
+    };
+
+    support::print("\n4\n");
+    for x in range<s32>(20, 10, 3, dir := REVERSE) {
+        support::print("x := %d\n", x);
+    };
 };
 
-support::print("\n2\n");
-for x in range<s32>(dir := REVERSE, 10, kind := EXCLUSIVE, 0, 1) {
-    support::print("x := %d\n", x);
-};
-
-support::print("\n3\n");
-for x in range<s32>(20, 0, dir := REVERSE) {
-    support::print("x := %d\n", x);
-};
-
-support::print("\n4\n");
-for x in range<s32>(20, 10, 3, dir := REVERSE) {
-    support::print("x := %d\n", x);
-};
+test();

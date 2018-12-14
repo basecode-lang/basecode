@@ -806,8 +806,12 @@ namespace basecode::compiler {
         auto& program = _session.program();
         auto& scope_manager = _session.scope_manager();
 
-        auto module_block = builder.make_block(program.block(), element_type_t::module_block);
-        auto module = builder.make_module(program.block(), module_block);
+        auto module_block = builder.make_block(
+            scope_manager.current_scope(),
+            element_type_t::module_block);
+        auto module = builder.make_module(
+            scope_manager.current_scope(),
+            module_block);
         module->source_file(_session.current_source_file());
         program.block()->blocks().push_back(module_block);
 
@@ -882,6 +886,9 @@ namespace basecode::compiler {
         std::string path;
         if (expr->is_constant() && expr->as_string(path)) {
             boost::filesystem::path source_path(path);
+            if (source_path.extension() != ".bc") {
+                source_path.append("module.bc");
+            }
             auto current_source_file = _session.current_source_file();
             if (current_source_file != nullptr
             &&  source_path.is_relative()) {

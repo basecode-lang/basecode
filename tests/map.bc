@@ -1,4 +1,4 @@
-support :: module("support/module.bc");
+support :: module("support");
 
 //some_func ::= proc(p: ^person):u64 {
 //    return 0;

@@ -1,4 +1,4 @@
-support :: module("support/module.bc");
+support :: module("support");
 
 anonymous_tuple :: tuple(1, 2, 3);
 named_tuple     :: tuple(first := 1, second := 2, third := "foobar");

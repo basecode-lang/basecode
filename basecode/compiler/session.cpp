@@ -278,7 +278,8 @@ namespace basecode::compiler {
                 ->identifier()
                 ->type_ref()
                 ->type());
-            if (!proc_call->arguments()->index_to_procedure_type(
+            if (proc_type != nullptr
+            && !proc_call->arguments()->index_to_procedure_type(
                     *this,
                     proc_type)) {
                 return false;
