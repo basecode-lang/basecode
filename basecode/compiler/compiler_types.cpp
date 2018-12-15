@@ -33,7 +33,7 @@ namespace basecode::compiler {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    void emit_result_t::clear(vm::assembler& assembler) {
+    void emit_result_t::clear() {
         for (auto& op : operands)
             op.free(assembler);
     }

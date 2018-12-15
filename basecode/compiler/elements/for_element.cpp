@@ -124,7 +124,7 @@ namespace basecode::compiler {
                     comparison_op->make_non_owning();
                     defer(session.elements().remove(comparison_op->id()));
 
-                    emit_result_t cmp_result {};
+                    emit_result_t cmp_result(assembler);
                     comparison_op->emit(session, for_context, cmp_result);
                     block->bz(
                         cmp_result.operands.back(),

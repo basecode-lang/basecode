@@ -61,7 +61,8 @@ namespace basecode::compiler {
                 values_map[previous_element] = prev;
             }
 
-            auto success = stmt->emit(session, context, result);
+            emit_result_t stmt_result(session.assembler());
+            auto success = stmt->emit(session, context, stmt_result);
             if (!success)
                 return false;
         }

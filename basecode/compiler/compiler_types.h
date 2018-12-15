@@ -118,8 +118,16 @@ namespace basecode::compiler {
     };
 
     struct emit_result_t {
-        void clear(vm::assembler& assembler);
+        explicit emit_result_t(vm::assembler& assembler) : assembler(assembler) {
+        }
 
+        ~emit_result_t() {
+            clear();
+        }
+
+        void clear();
+
+        vm::assembler& assembler;
         std::vector<vm::instruction_operand_t> operands {};
     };
 }

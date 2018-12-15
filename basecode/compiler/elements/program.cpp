@@ -433,7 +433,7 @@ namespace basecode::compiler {
 
             assembler.push_block(implicit_block);
             emit_context_t context {};
-            emit_result_t result {};
+            emit_result_t result(assembler);
             block->emit(session, context, result);
             assembler.pop_block();
         }
@@ -470,7 +470,7 @@ namespace basecode::compiler {
             assembler.push_block(proc_type_block);
 
             emit_context_t context {};
-            emit_result_t result {};
+            emit_result_t result(assembler);
             instance->emit(session, context, result);
 
             assembler.pop_block();

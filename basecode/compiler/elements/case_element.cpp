@@ -73,7 +73,7 @@ namespace basecode::compiler {
             equals_op->make_non_owning();
             defer(session.elements().remove(equals_op->id()));
 
-            emit_result_t equals_result {};
+            emit_result_t equals_result(assembler);
             equals_op->emit(session, context, equals_result);
             block->bz(
                 equals_result.operands.back(),

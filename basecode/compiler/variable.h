@@ -123,7 +123,7 @@ namespace basecode::compiler {
         bool walk_to_root_and_calculate_offset(root_and_offset_t& rot);
 
     private:
-        emit_result_t _result {};
+        emit_result_t _result;
         root_and_offset_t _rot {};
         emit_context_t _context {};
         variable_register_t _value;

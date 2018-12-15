@@ -190,7 +190,7 @@ namespace basecode::compiler {
 
         if (!_result.is_failed()) {
             emit_context_t context {};
-            emit_result_t result {};
+            emit_result_t result(_assembler);
             _program.emit(*this, context, result);
 
             _assembler.apply_addresses(_result);

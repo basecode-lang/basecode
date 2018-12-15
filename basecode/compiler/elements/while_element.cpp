@@ -50,7 +50,7 @@ namespace basecode::compiler {
 
         block->label(assembler.make_label(begin_label_name));
 
-        emit_result_t predicate_result {};
+        emit_result_t predicate_result(assembler);
         _predicate->emit(session, while_context, predicate_result);
 
         block->bz(

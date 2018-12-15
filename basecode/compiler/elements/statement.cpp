@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <compiler/session.h>
 #include "label.h"
 #include "statement.h"
 
@@ -60,7 +61,7 @@ namespace basecode::compiler {
 
     bool statement::emit_labels(compiler::session& session) {
         emit_context_t context {};
-        emit_result_t result {};
+        emit_result_t result(session.assembler());
         for (auto label : _labels)
             label->emit(session, context, result);
         return true;

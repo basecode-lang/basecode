@@ -52,7 +52,8 @@ namespace basecode::compiler {
 
     variable::variable(
         compiler::session& session,
-        compiler::element* element) : _value(&session.assembler()),
+        compiler::element* element) : _result(session.assembler()),
+                                      _value(&session.assembler()),
                                       _session(session),
                                       _address(&session.assembler()),
                                       _element(element) {
@@ -337,12 +338,11 @@ namespace basecode::compiler {
 
         _address.release();
         _value.release();
+        _result.clear();
 
         if (_temp_address.type != vm::register_type_t::none) {
             _session.assembler().free_reg(_temp_address);
         }
-
-        _result.clear(_session.assembler());
 
         return true;
     }
