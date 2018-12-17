@@ -39,7 +39,7 @@ namespace basecode::compiler {
     protected:
         bool on_emit_initializer(
             compiler::session& session,
-            compiler::identifier* var) override;
+            compiler::variable* var) override;
 
         bool on_type_check(compiler::type* other) override;
 

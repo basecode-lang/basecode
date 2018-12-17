@@ -60,7 +60,7 @@ namespace basecode::compiler {
 
     bool type::emit_finalizer(
             compiler::session& session,
-            compiler::identifier* var) {
+            compiler::variable* var) {
         return on_emit_finalizer(session, var);
     }
 
@@ -70,13 +70,13 @@ namespace basecode::compiler {
 
     bool type::emit_initializer(
             compiler::session& session,
-            compiler::identifier* var) {
+            compiler::variable* var) {
         return on_emit_initializer(session, var);
     }
 
     bool type::on_emit_finalizer(
             compiler::session& session,
-            compiler::identifier* var) {
+            compiler::variable* var) {
         return true;
     }
 
@@ -90,7 +90,7 @@ namespace basecode::compiler {
 
     bool type::on_emit_initializer(
             compiler::session& session,
-            compiler::identifier* var) {
+            compiler::variable* var) {
         return true;
     }
 

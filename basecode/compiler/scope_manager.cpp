@@ -220,6 +220,9 @@ namespace basecode::compiler {
 
                     qualified_symbol_t import_symbol{};
                     import_symbol.name = part;
+
+                    // XXX: i thought this could be simplified to one case
+                    //      but now i'm not sure.  review.
                     auto& namespaces = ref->symbol().namespaces;
                     if (import->imported_module() != nullptr) {
                         for (size_t i = 1; i < namespaces.size(); i++)

@@ -320,7 +320,12 @@ namespace basecode::compiler {
                 if (e->element_type() == element_type_t::identifier) {
                     auto var = dynamic_cast<compiler::identifier*>(e);
                     auto var_type = var->type_ref()->type();
-                    if (!var_type->emit_finalizer(session, var))
+
+                    variable_handle_t temp_var {};
+                    if (!session.variable(var, temp_var))
+                        return false;
+
+                    if (!var_type->emit_finalizer(session, temp_var.get()))
                         return false;
                 }
             }
@@ -373,7 +378,12 @@ namespace basecode::compiler {
                 if (e->element_type() == element_type_t::identifier) {
                     auto var = dynamic_cast<compiler::identifier*>(e);
                     auto var_type = var->type_ref()->type();
-                    if (!var_type->emit_initializer(session, var))
+
+                    variable_handle_t temp_var {};
+                    if (!session.variable(var, temp_var))
+                        return false;
+
+                    if (!var_type->emit_initializer(session, temp_var.get()))
                         return false;
                 }
             }

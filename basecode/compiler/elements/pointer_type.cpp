@@ -37,7 +37,7 @@ namespace basecode::compiler {
 
     bool pointer_type::on_emit_initializer(
             compiler::session& session,
-            compiler::identifier* var) {
+            compiler::variable* var) {
         if (_base_type_ref == nullptr)
             return true;
         return _base_type_ref->type()->emit_initializer(session, var);

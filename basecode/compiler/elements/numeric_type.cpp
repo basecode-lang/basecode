@@ -10,9 +10,15 @@
 // ----------------------------------------------------------------------------
 
 #include <compiler/session.h>
+#include <vm/instruction_block.h>
 #include "program.h"
+#include "identifier.h"
+#include "initializer.h"
 #include "numeric_type.h"
+#include "float_literal.h"
 #include "symbol_element.h"
+#include "integer_literal.h"
+#include "binary_operator.h"
 
 namespace basecode::compiler {
 
@@ -101,6 +107,28 @@ namespace basecode::compiler {
 
     bool numeric_type::is_signed() const {
         return _is_signed;
+    }
+
+    bool numeric_type::on_emit_initializer(
+            compiler::session& session,
+            compiler::variable* var) {
+        auto& assembler = session.assembler();
+        auto block = assembler.current_block();
+
+        auto var_ident = dynamic_cast<compiler::identifier*>(var->element());
+        auto init = var_ident->initializer();
+
+        block->comment("initializer", vm::comment_location_t::after_instruction);
+        if (init != nullptr) {
+            variable_handle_t init_var{};
+            if (!session.variable(init, init_var))
+                return false;
+            var->write(init_var.get());
+        } else {
+            var->write(var->value_reg().size, 0);
+        }
+
+        return true;
     }
 
     bool numeric_type::on_type_check(compiler::type* other) {

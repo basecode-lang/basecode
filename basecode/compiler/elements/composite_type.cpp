@@ -9,6 +9,8 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <compiler/session.h>
+#include <vm/instruction_block.h>
 #include "field.h"
 #include "block.h"
 #include "identifier.h"
@@ -39,6 +41,28 @@ namespace basecode::compiler {
 
     field_map_t& composite_type::fields() {
         return _fields;
+    }
+
+    bool composite_type::on_emit_initializer(
+            compiler::session& session,
+            compiler::variable* var) {
+        auto block = session.assembler().current_block();
+
+        auto field_list = _fields.as_list();
+        for (auto fld: field_list) {
+            variable_handle_t field_var {};
+            if (!var->field(fld->identifier()->symbol()->name(), field_var)) {
+                // XXX: error
+                return false;
+            }
+            block->comment("initializer", vm::comment_location_t::after_instruction);
+            if (!field_var->initializer()) {
+                // XXX: error
+                return false;
+            }
+        }
+
+        return true;
     }
 
     compiler::block* composite_type::scope() {

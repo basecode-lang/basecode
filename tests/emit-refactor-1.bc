@@ -11,6 +11,22 @@
 
 core :: module("../modules/core");
 
+vector3 :: struct {
+    x: f32 := 1;
+    y: f32;
+    z: f32;
+};
+
+temp :: proc() {
+    pos: vector3;
+    for i in range<u32>(0, 10) {
+        x := i * 6;
+        y := 16 * x;
+    };
+};
+
+temp();
+
 a: bool;
 
 @no_fold;

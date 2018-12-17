@@ -68,7 +68,7 @@ namespace basecode::vm {
         }
 
         void move_to_next_available_float() {
-            while (_ints[_available_float].live)
+            while (_floats[_available_float].live)
                 _available_float++;
         }
 

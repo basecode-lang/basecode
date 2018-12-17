@@ -326,6 +326,14 @@ namespace basecode::compiler {
         return _element->infer_type(_session, _type);
     }
 
+    bool variable::finalizer() {
+        return _type.inferred_type->emit_finalizer(_session, this);
+    }
+
+    bool variable::initializer() {
+        return _type.inferred_type->emit_initializer(_session, this);
+    }
+
     bool variable::deactivate() {
         if (!flag(flags_t::f_activated))
             return false;

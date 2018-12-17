@@ -136,21 +136,15 @@ namespace basecode::compiler {
                 vm::instruction_operand_t(size, vm::op_sizes::dword));
         }
 
-        auto& builder = session.builder();
         for (auto var : locals) {
-            compiler::element* init = var->initializer();
-            if (init == nullptr || !init->is_constant()) {
-                init = builder.make_integer(var->parent_scope(), 0);
-            }
+            auto var_type = var->type_ref()->type();
 
-            auto assign = builder.make_binary_operator(
-                parent_scope(),
-                operator_type_t::assignment,
-                var,
-                init);
-            assign->make_non_owning();
-            defer(session.elements().remove(assign->id()));
-            assign->emit(session, context, result);
+            variable_handle_t temp_var {};
+            if (!session.variable(var, temp_var))
+                return false;
+
+            if (!var_type->emit_initializer(session, temp_var.get()))
+                return false;
         }
 
         return true;

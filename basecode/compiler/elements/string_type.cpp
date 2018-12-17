@@ -38,20 +38,14 @@ namespace basecode::compiler {
 
     bool string_type::on_emit_finalizer(
             compiler::session& session,
-            compiler::identifier* var) {
+            compiler::variable* var) {
         auto& assembler = session.assembler();
         auto block = assembler.current_block();
 
-        block->comment(fmt::format(
-            "finalize: {}", var->label_name()),
-            vm::comment_location_t::after_instruction);
-
-        variable_handle_t type_var;
-        if (!session.variable(var, type_var))
-            return false;
+        block->comment("finalizer", vm::comment_location_t::after_instruction);
 
         variable_handle_t data_field;
-        if (!type_var->field("data", data_field))
+        if (!var->field("data", data_field))
             return false;
         data_field->read();
         block->free(data_field->emit_result().operands.back());
@@ -61,9 +55,11 @@ namespace basecode::compiler {
 
     bool string_type::on_emit_initializer(
             compiler::session& session,
-            compiler::identifier* var) {
+            compiler::variable* var) {
         compiler::string_literal* literal = nullptr;
-        auto init = var->initializer();
+
+        auto var_ident = dynamic_cast<compiler::identifier*>(var->element());
+        auto init = var_ident->initializer();
         if (init == nullptr || init->is_nil())
             return true;
 
@@ -73,17 +69,13 @@ namespace basecode::compiler {
         auto block = assembler.current_block();
 
         block->comment(
-            fmt::format("initialize: {}", var->label_name()),
+            "initializer",
             vm::comment_location_t::after_instruction);
-
-        variable_handle_t type_var;
-        if (!session.variable(var, type_var, false))
-            return false;
 
         auto length = static_cast<uint64_t>(literal != nullptr ? literal->value().length() : 0);
         {
             variable_handle_t length_field;
-            if (!type_var->field("length", length_field))
+            if (!var->field("length", length_field))
                 return false;
             length_field->write(vm::op_sizes::dword, length);
         }
@@ -91,12 +83,12 @@ namespace basecode::compiler {
         {
             auto capacity = common::next_power_of_two(std::max<uint64_t>(length, 32));
             variable_handle_t capacity_field;
-            if (!type_var->field("capacity", capacity_field))
+            if (!var->field("capacity", capacity_field))
                 return false;
             capacity_field->write(vm::op_sizes::dword, capacity);
 
             variable_handle_t data_field;
-            if (!type_var->field("data", data_field))
+            if (!var->field("data", data_field))
                 return false;
             data_field->read();
 

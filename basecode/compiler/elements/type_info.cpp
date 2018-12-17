@@ -38,9 +38,11 @@ namespace basecode::compiler {
 
     bool type_info::on_emit_initializer(
             compiler::session& session,
-            compiler::identifier* var) {
+            compiler::variable* var) {
         compiler::assembly_label* label = nullptr;
-        auto init = var->initializer();
+
+        auto var_ident = dynamic_cast<compiler::identifier*>(var->element());
+        auto init = var_ident->initializer();
         if (init == nullptr || init->is_nil())
             return true;
 
@@ -50,18 +52,14 @@ namespace basecode::compiler {
         auto block = assembler.current_block();
 
         block->comment(
-            var->label_name(),
+            "initializer",
             vm::comment_location_t::after_instruction);
-
-        variable_handle_t temp_var;
-        if (!session.variable(var, temp_var))
-            return false;
 
         variable_handle_t label_var;
         if (!session.variable(label, label_var))
             return false;
 
-        temp_var->write(label_var.get());
+        var->write(label_var.get());
 
         return true;
     }

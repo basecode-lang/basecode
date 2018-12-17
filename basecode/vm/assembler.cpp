@@ -880,46 +880,43 @@ namespace basecode::vm {
 
         std::stack<vm::comment_t> post_inst_comments {};
 
-        size_t index = 0;
+        size_t last_indent = 0;
+        auto indent_four_spaces = std::string(4, ' ');
+
         for (auto& entry : block->entries()) {
+            std::stringstream line {};
+
             switch (entry.type()) {
                 case block_entry_type_t::label: {
                     auto label = entry.data<label_t>();
-                    source_file->add_source_line(
-                        entry.address(),
-                        fmt::format("{}:", label->instance->name()));
+                    line << fmt::format("{}:", label->instance->name());
                     break;
                 }
                 case block_entry_type_t::blank_line: {
                     source_file->add_blank_lines(entry.address(), 1);
-                    break;
+                    continue;
                 }
                 case block_entry_type_t::comment: {
                     auto comment = entry.data<comment_t>();
                     if (comment->location == comment_location_t::after_instruction) {
                         post_inst_comments.push(*comment);
+                        continue;
                     } else {
                         std::string indent;
                         if (comment->indent > 0)
                             indent = std::string(comment->indent, ' ');
-                        source_file->add_source_line(
-                            entry.address(),
-                            fmt::format("{}; {}", indent, comment->value));
+                        line << fmt::format("{}; {}", indent, comment->value);
                     }
                     break;
                 }
                 case block_entry_type_t::align: {
                     auto align = entry.data<align_t>();
-                    source_file->add_source_line(
-                        entry.address(),
-                        fmt::format(".align {}", align->size));
+                    line << fmt::format(".align {}", align->size);
                     break;
                 }
                 case block_entry_type_t::section: {
                     auto section = entry.data<section_t>();
-                    source_file->add_source_line(
-                        entry.address(),
-                        fmt::format(".section '{}'", section_name(*section)));
+                    line << fmt::format(".section '{}'", section_name(*section));
                     break;
                 }
                 case block_entry_type_t::instruction: {
@@ -938,14 +935,7 @@ namespace basecode::vm {
                         }
                         return fmt::format("unresolved_ref_id({})", id);
                     });
-                    while (!post_inst_comments.empty()) {
-                        auto& top = post_inst_comments.top();
-                        stream += fmt::format("\t\t; {}", top.value);
-                        post_inst_comments.pop();
-                    }
-                    source_file->add_source_line(
-                        entry.address(),
-                        fmt::format("\t{}", stream));
+                    line << fmt::format("{}{}", indent_four_spaces, stream);
                     break;
                 }
                 case block_entry_type_t::data_definition: {
@@ -1017,20 +1007,37 @@ namespace basecode::vm {
                         if ((item_index % 8) == 0) {
                             source_file->add_source_line(
                                 entry.address(),
-                                fmt::format("\t{:<10}{}", directive.str(), items));
+                                fmt::format("{}{:<10}{}", indent_four_spaces, directive.str(), items));
                             items.clear();
                         }
                         --item_count;
                     }
                     if (!items.empty()) {
-                        source_file->add_source_line(
-                            entry.address(),
-                            fmt::format("\t{:<10}{}", directive.str(), items));
+                        line << fmt::format(
+                            "{}{:<10}{}",
+                            indent_four_spaces,
+                            directive.str(),
+                            items);
                     }
                     break;
                 }
             }
-            index++;
+
+            if (!post_inst_comments.empty()) {
+                auto& top = post_inst_comments.top();
+                auto len = line.str().length();
+                size_t indent_len;
+                if (len == 0)
+                    indent_len = last_indent;
+                else
+                    indent_len = std::max<int64_t>(0, 60 - len);
+                std::string indent(indent_len, ' ');
+                line << fmt::format("{}; {}", indent, top.value);
+                last_indent = len + indent_len;
+                post_inst_comments.pop();
+            }
+
+            source_file->add_source_line(entry.address(), line.str());
         }
     }
 

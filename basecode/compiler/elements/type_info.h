@@ -26,7 +26,7 @@ namespace basecode::compiler {
     protected:
         bool on_emit_initializer(
             compiler::session& session,
-            compiler::identifier* var) override;
+            compiler::variable* var) override;
 
         type_access_model_t on_access_model() const override;
 

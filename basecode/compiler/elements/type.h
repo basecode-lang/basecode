@@ -36,11 +36,11 @@ namespace basecode::compiler {
 
         bool emit_finalizer(
             compiler::session& session,
-            compiler::identifier* var);
+            compiler::variable* var);
 
         bool emit_initializer(
             compiler::session& session,
-            compiler::identifier* var);
+            compiler::variable* var);
 
         void packed(bool value);
 
@@ -79,11 +79,11 @@ namespace basecode::compiler {
     protected:
         virtual bool on_emit_finalizer(
             compiler::session& session,
-            compiler::identifier* var);
+            compiler::variable* var);
 
         virtual bool on_emit_initializer(
             compiler::session& session,
-            compiler::identifier* var);
+            compiler::variable* var);
 
         void size_in_bytes(size_t value);
 
