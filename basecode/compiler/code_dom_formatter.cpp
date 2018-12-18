@@ -792,6 +792,13 @@ namespace basecode::compiler {
                     element->name(),
                     style);
             }
+            case element_type_t::uninitialized_literal: {
+                auto style = ", fillcolor=pink, style=\"filled\"";
+                return fmt::format(
+                    "{}[shape=record,label=\"uninitialized_literal\"{}];",
+                    node_vertex_name,
+                    style);
+            }
         }
 
         return "";

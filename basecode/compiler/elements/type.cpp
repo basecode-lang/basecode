@@ -14,6 +14,7 @@
 #include "type.h"
 #include "field.h"
 #include "identifier.h"
+#include "initializer.h"
 #include "symbol_element.h"
 
 namespace basecode::compiler {

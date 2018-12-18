@@ -189,7 +189,8 @@ add_library(
     compiler/elements/align_of_intrinsic.cpp compiler/elements/align_of_intrinsic.h
     compiler/elements/procedure_instance.cpp compiler/elements/procedure_instance.h
     compiler/elements/address_of_intrinsic.cpp compiler/elements/address_of_intrinsic.h
-    compiler/elements/identifier_reference.cpp compiler/elements/identifier_reference.h)
+    compiler/elements/identifier_reference.cpp compiler/elements/identifier_reference.h
+    compiler/elements/uninitialized_literal.cpp compiler/elements/uninitialized_literal.h)
 target_link_libraries(
     ${PROJECT_NAME}
     fmt-header-only

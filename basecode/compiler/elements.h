@@ -89,3 +89,4 @@
 #include <compiler/elements/procedure_instance.h>
 #include <compiler/elements/identifier_reference.h>
 #include <compiler/elements/address_of_intrinsic.h>
+#include <compiler/elements/uninitialized_literal.h>

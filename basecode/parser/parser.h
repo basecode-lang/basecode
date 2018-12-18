@@ -762,6 +762,7 @@ namespace basecode::syntax {
             {token_types_t::switch_literal,         &s_keyword_literal_prefix_parser},
             {token_types_t::case_literal,           &s_keyword_literal_prefix_parser},
             {token_types_t::fallthrough_literal,    &s_keyword_literal_prefix_parser},
+            {token_types_t::question,               &s_keyword_literal_prefix_parser},
             {token_types_t::lambda_literal,         &s_lambda_expression_prefix_parser},
             {token_types_t::period,                 &s_with_member_access_prefix_parser},
             {token_types_t::type_tagged_identifier, &s_type_tagged_symbol_prefix_parser},

@@ -384,6 +384,8 @@ namespace basecode::compiler {
             const syntax::ast_node_t* node,
             compiler::block* scope = nullptr);
 
+        compiler::uninitialized_literal* uninitialized_literal();
+
         bool_type* make_bool_type(compiler::block* parent_scope);
 
         rune_type* make_rune_type(compiler::block* parent_scope);
@@ -405,11 +407,14 @@ namespace basecode::compiler {
 
         compiler::nil_literal* make_nil(compiler::block* parent_scope);
 
+        compiler::uninitialized_literal* make_uninitialized_literal(compiler::block* parent_scope);
+
     private:
         compiler::session& _session;
         compiler::nil_literal* _nil_literal = nullptr;
         compiler::boolean_literal* _true_literal = nullptr;
         compiler::boolean_literal* _false_literal = nullptr;
+        compiler::uninitialized_literal* _uninitialized_literal = nullptr;
     };
 
 };

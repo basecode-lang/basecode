@@ -5,7 +5,6 @@ TASKS
 -----
 - NEW: for_element stack frame support
 - NEW: family expressions
-- NEW: uninitialized operator
 - NEW: finish terp::jump_to_subroutine
 - NEW: add terp trap for putc/getc for any file handle
 - NEW: implement the #run directive
@@ -152,3 +151,4 @@ DONE
             stack_frame instance should live off compiler::block
 - REFACTOR: remove unnecessary block types from element_type_t
 - NEW: anonymous block stack frame support
+- NEW: uninitialized operator

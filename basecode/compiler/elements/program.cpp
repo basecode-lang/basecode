@@ -379,6 +379,12 @@ namespace basecode::compiler {
                     auto var = dynamic_cast<compiler::identifier*>(e);
                     auto var_type = var->type_ref()->type();
 
+                    auto init = var->initializer();
+                    if (init != nullptr) {
+                        if (init->expression()->element_type() == element_type_t::uninitialized_literal)
+                            continue;
+                    }
+
                     variable_handle_t temp_var {};
                     if (!session.variable(var, temp_var))
                         return false;

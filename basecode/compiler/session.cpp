@@ -285,6 +285,12 @@ namespace basecode::compiler {
             if (init == nullptr)
                 continue;
 
+            auto expr = init->expression();
+            if (expr != nullptr
+            &&  expr->element_type() == element_type_t::uninitialized_literal) {
+                continue;
+            }
+
             infer_type_result_t infer_type_result {};
             if (!init->infer_type(*this, infer_type_result)) {
                 // XXX: error

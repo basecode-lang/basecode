@@ -573,4 +573,10 @@ namespace basecode::syntax {
         return node;
     }
 
+    ast_node_shared_ptr ast_builder::uninitialized_literal_node(const token_t& token) {
+        auto node = std::make_shared<ast_node_t>();
+        configure_node(node, token, ast_node_types_t::uninitialized_literal);
+        return node;
+    }
+
 };

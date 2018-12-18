@@ -1284,8 +1284,8 @@ namespace basecode::compiler {
     }
 
     fallthrough* element_builder::make_fallthrough(
-        compiler::block* parent_scope,
-        compiler::label* label) {
+            compiler::block* parent_scope,
+            compiler::label* label) {
         auto fallthrough = new compiler::fallthrough(
             _session.scope_manager().current_module(),
             parent_scope,
@@ -1294,6 +1294,12 @@ namespace basecode::compiler {
         if (label != nullptr)
             label->parent_element(fallthrough);
         return fallthrough;
+    }
+
+    compiler::uninitialized_literal* element_builder::uninitialized_literal() {
+        if (_uninitialized_literal == nullptr)
+            _uninitialized_literal = make_uninitialized_literal(_session.program().block());
+        return _uninitialized_literal;
     }
 
     rune_type* element_builder::make_rune_type(compiler::block* parent_scope) {
@@ -1347,6 +1353,14 @@ namespace basecode::compiler {
             parent_scope);
         _session.elements().add(nil_literal);
         return nil_literal;
+    }
+
+    compiler::uninitialized_literal* element_builder::make_uninitialized_literal(compiler::block* parent_scope) {
+        auto uninit_literal = new compiler::uninitialized_literal(
+            _session.scope_manager().current_module(),
+            parent_scope);
+        _session.elements().add(uninit_literal);
+        return uninit_literal;
     }
 
 };

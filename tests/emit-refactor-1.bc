@@ -31,7 +31,11 @@ temp :: proc() {
 };
 
 {
+    value: u32 := ?;
+    value := 33;
+
     temp();
+    print("\n");
 
     a: bool;
 
@@ -44,7 +48,7 @@ temp :: proc() {
     z: u32;
 
     @no_fold;
-    z := (cast<u32>(15) * (2 shl 4)) * (6 + 4);
+    z := (cast<u32>(16) * (2 shl 4)) * (6 + 4);
 
     error_message := "expected z == 5120";
     assert(z == 5120, address_of(error_message));

@@ -100,6 +100,7 @@ namespace basecode::compiler {
     class procedure_instance;
     class address_of_intrinsic;
     class identifier_reference;
+    class uninitialized_literal;
 
     using type_list_t = std::vector<type*>;
     using import_set_t = std::set<import*>;
@@ -215,6 +216,7 @@ namespace basecode::compiler {
         character_literal,
         unknown_identifier,
         identifier_reference,
+        uninitialized_literal,
     };
 
     static inline std::unordered_map<element_type_t, std::string> s_element_type_names = {
@@ -287,6 +289,7 @@ namespace basecode::compiler {
         {element_type_t::character_literal, "character_literal"},
         {element_type_t::unknown_identifier, "unknown_identifier"},
         {element_type_t::identifier_reference, "identifier_reference"},
+        {element_type_t::uninitialized_literal, "uninitialized_literal"},
     };
 
     static inline std::string element_type_name(element_type_t type) {

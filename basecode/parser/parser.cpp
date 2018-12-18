@@ -731,6 +731,9 @@ namespace basecode::syntax {
         auto ast_builder = parser->ast_builder();
 
         switch (token.type) {
+            case token_types_t::question: {
+                return ast_builder->uninitialized_literal_node(token);
+            }
             case token_types_t::import_literal: {
                 auto import_node = ast_builder->import_node(token);
                 import_node->lhs = parser->parse_expression(r);

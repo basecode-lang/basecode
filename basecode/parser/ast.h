@@ -89,6 +89,7 @@ namespace basecode::syntax {
         namespace_expression,
         return_argument_list,
         array_subscript_list,
+        uninitialized_literal,
         fallthrough_statement,
         subscript_declaration,
         assignment_source_list,
@@ -157,6 +158,7 @@ namespace basecode::syntax {
         {ast_node_types_t::namespace_expression, "namespace_expression"},
         {ast_node_types_t::return_argument_list, "return_argument_list"},
         {ast_node_types_t::array_subscript_list, "array_subscript_list"},
+        {ast_node_types_t::uninitialized_literal, "uninitialized_literal"},
         {ast_node_types_t::fallthrough_statement, "fallthrough_statement"},
         {ast_node_types_t::subscript_declaration, "subscript_declaration"},
         {ast_node_types_t::assignment_source_list, "assignment_source_list"},
@@ -373,6 +375,8 @@ namespace basecode::syntax {
         ast_node_shared_ptr character_literal_node(const token_t& token);
 
         ast_node_shared_ptr module_expression_node(const token_t& token);
+
+        ast_node_shared_ptr uninitialized_literal_node(const token_t& token);
 
     private:
         void configure_node(
