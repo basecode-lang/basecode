@@ -84,9 +84,6 @@ namespace basecode::compiler {
     }
 
     void while_element::predicate(compiler::element* value) {
-        // XXX: this new pointer is going to leak
-        //      need to use a different collection that makes it easy
-        //      to swap values.
         _predicate = value;
     }
 

@@ -93,7 +93,6 @@ add_library(
     vm/segment.cpp vm/segment.h
     vm/vm_types.h vm/vm_types.cpp
     vm/assembler.cpp vm/assembler.h
-    vm/stack_frame.cpp vm/stack_frame.h
     vm/assembly_listing.cpp vm/assembly_listing.h
     vm/default_allocator.cpp vm/default_allocator.h
     vm/instruction_block.cpp vm/instruction_block.h
@@ -103,6 +102,7 @@ add_library(
     compiler/session.cpp compiler/session.h
     compiler/variable.cpp compiler/variable.h
     compiler/element_map.cpp compiler/element_map.h
+    compiler/stack_frame.cpp compiler/stack_frame.h
     compiler/elements/type.cpp compiler/elements/type.h
     compiler/elements/cast.cpp compiler/elements/cast.h
     compiler/scope_manager.cpp compiler/scope_manager.h
@@ -118,6 +118,7 @@ add_library(
     compiler/elements/comment.cpp compiler/elements/comment.h
     compiler/elements/element.cpp compiler/elements/element.h
     compiler/elements/program.cpp compiler/elements/program.h
+    compiler/stack_frame_entry.cpp compiler/stack_frame_entry.h
     compiler/string_intern_map.cpp compiler/string_intern_map.h
     compiler/elements/any_type.cpp compiler/elements/any_type.h
     compiler/elements/map_type.cpp compiler/elements/map_type.h

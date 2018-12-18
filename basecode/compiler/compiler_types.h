@@ -130,4 +130,32 @@ namespace basecode::compiler {
         vm::assembler& assembler;
         std::vector<vm::instruction_operand_t> operands {};
     };
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    enum class stack_frame_entry_type_t : uint8_t {
+        local = 1,
+        parameter,
+        return_slot
+    };
+
+    struct stack_frame_base_offsets_t {
+        int32_t locals = 0;
+        int32_t parameters = 0;
+        int32_t return_slot = 0;
+    };
+
+    inline static std::string stack_frame_entry_type_name(stack_frame_entry_type_t type) {
+        switch (type) {
+            case stack_frame_entry_type_t::local:
+                return "local";
+            case stack_frame_entry_type_t::parameter:
+                return "parameter";
+            case stack_frame_entry_type_t::return_slot:
+                return "return_slot";
+            default:
+                return "unknown";
+        }
+    }
+
 }

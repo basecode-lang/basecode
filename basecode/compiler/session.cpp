@@ -24,7 +24,6 @@ namespace basecode::compiler {
                                                _assembler(&_terp),
                                                _ast_evaluator(*this),
                                                _options(options),
-                                               _stack_frame(nullptr),
                                                _scope_manager(*this) {
         for (const auto& path : source_files) {
             if (path.is_relative()) {
@@ -545,10 +544,6 @@ namespace basecode::compiler {
             && fold_elements_of_type(element_type_t::unary_operator)
             && fold_elements_of_type(element_type_t::binary_operator)
             && fold_elements_of_type(element_type_t::label_reference);
-    }
-
-    vm::stack_frame_t* session::stack_frame() {
-        return &_stack_frame;
     }
 
     bool session::resolve_unknown_identifiers() {

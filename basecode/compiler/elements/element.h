@@ -93,8 +93,6 @@ namespace basecode::compiler {
 
         void owned_elements(element_list_t& list);
 
-        bool is_parent_element(element_type_t type);
-
         bool operator> (const element& other) const {
             return on_greater_than(other);
         }
@@ -132,6 +130,8 @@ namespace basecode::compiler {
         uint64_t operator* (const element& other) const {
             return on_multiply(other);
         }
+
+        bool is_parent_element(element_type_t type) const;
 
         attribute* find_attribute(const std::string& name);
 

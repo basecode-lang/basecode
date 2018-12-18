@@ -105,8 +105,7 @@ namespace basecode::vm {
 
     bool assembler::assemble_from_source(
             common::result& r,
-            common::source_file& source_file,
-            stack_frame_t* stack_frame) {
+            common::source_file& source_file) {
         enum class assembly_parser_state_t : uint8_t {
             start,
             whitespace,

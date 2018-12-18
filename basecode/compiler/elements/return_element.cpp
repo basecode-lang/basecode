@@ -11,6 +11,7 @@
 
 #include <compiler/session.h>
 #include <vm/instruction_block.h>
+#include "block.h"
 #include "return_element.h"
 
 namespace basecode::compiler {
@@ -32,6 +33,7 @@ namespace basecode::compiler {
                 return false;
             expr_var->read();
 
+            auto& frame = parent_scope()->stack_frame();
             block->comment(
                 "return slot",
                 vm::comment_location_t::after_instruction);
@@ -39,7 +41,7 @@ namespace basecode::compiler {
                 vm::instruction_operand_t::fp(),
                 expr_var->emit_result().operands.back(),
                 vm::instruction_operand_t(
-                    static_cast<uint64_t>(16),
+                    static_cast<uint64_t>(16 /*frame.offsets().return_slot*/),
                     vm::op_sizes::byte));
             block->move(
                 vm::instruction_operand_t::sp(),

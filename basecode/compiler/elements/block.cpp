@@ -24,6 +24,7 @@
 #include "symbol_element.h"
 #include "procedure_type.h"
 #include "string_literal.h"
+#include "type_reference.h"
 #include "namespace_element.h"
 
 namespace basecode::compiler {
@@ -31,13 +32,17 @@ namespace basecode::compiler {
     block::block(
             compiler::module* module,
             block* parent_scope,
-            element_type_t type) : element(module, parent_scope, type) {
+            element_type_t type) : element(module, parent_scope, type),
+                                   _stack_frame(parent_scope != nullptr ? &parent_scope->stack_frame() : nullptr) {
     }
 
     bool block::on_emit(
             compiler::session& session,
             compiler::emit_context_t& context,
             compiler::emit_result_t& result) {
+        if (!begin_stack_frame(session))
+            return false;
+
         for (size_t index = 0; index < _statements.size(); ++index) {
             auto stmt = _statements[index];
 
@@ -76,6 +81,8 @@ namespace basecode::compiler {
             working_stack.pop();
         }
 
+        end_stack_frame(session);
+
         return !session.result().is_failed();
     }
 
@@ -91,6 +98,11 @@ namespace basecode::compiler {
         return _imports;
     }
 
+    bool block::has_stack_frame() const {
+        return is_parent_element(element_type_t::proc_type)
+               || is_parent_element(element_type_t::proc_instance);
+    }
+
     defer_stack_t& block::defer_stack() {
         return _defer_stack;
     }
@@ -101,6 +113,10 @@ namespace basecode::compiler {
 
     identifier_map_t& block::identifiers() {
         return _identifiers;
+    }
+
+    compiler::stack_frame& block::stack_frame() {
+        return _stack_frame;
     }
 
     void block::on_owned_elements(element_list_t& list) {
@@ -118,6 +134,82 @@ namespace basecode::compiler {
 
         for (auto element : _imports)
             list.emplace_back(element);
+    }
+
+    bool block::end_stack_frame(compiler::session& session) {
+        if (!has_stack_frame())
+            return true;
+
+        auto& assembler = session.assembler();
+        auto block = assembler.current_block();
+
+        block->move(
+            vm::instruction_operand_t::sp(),
+            vm::instruction_operand_t::fp());
+        block->pop(vm::instruction_operand_t::fp());
+
+        return true;
+    }
+
+    bool block::begin_stack_frame(compiler::session& session) {
+        if (!has_stack_frame())
+            return true;
+
+        auto& assembler = session.assembler();
+        auto block = assembler.current_block();
+
+        block->push(vm::instruction_operand_t::fp());
+        block->move(
+            vm::instruction_operand_t::fp(),
+            vm::instruction_operand_t::sp());
+
+        auto& scope_manager = session.scope_manager();
+
+        identifier_list_t locals {};
+        scope_manager.visit_blocks(
+            session.result(),
+            [&](compiler::block* scope) {
+                if (scope->is_parent_element(element_type_t::proc_type))
+                    return true;
+
+                for (auto var : scope->identifiers().as_list()) {
+                    auto type = var->type_ref()->type();
+                    if (type->is_proc_type())
+                        continue;
+
+                    auto entry = _stack_frame.add(
+                        stack_frame_entry_type_t::local,
+                        var->symbol()->name(),
+                        type->size_in_bytes());
+                    var->stack_frame_entry(entry);
+
+                    locals.emplace_back(var);
+                }
+
+                return true;
+            },
+            this);
+
+        auto locals_size = _stack_frame.type_size_in_bytes(stack_frame_entry_type_t::local);
+        if (locals_size > 0) {
+            block->sub(
+                vm::instruction_operand_t::sp(),
+                vm::instruction_operand_t::sp(),
+                vm::instruction_operand_t(static_cast<uint64_t>(locals_size), vm::op_sizes::dword));
+        }
+
+        for (auto var : locals) {
+            auto var_type = var->type_ref()->type();
+
+            variable_handle_t temp_var {};
+            if (!session.variable(var, temp_var))
+                return false;
+
+            if (!var_type->emit_initializer(session, temp_var.get()))
+                return false;
+        }
+
+        return true;
     }
 
 };

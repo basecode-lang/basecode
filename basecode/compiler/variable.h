@@ -39,7 +39,7 @@ namespace basecode::compiler {
     ///////////////////////////////////////////////////////////////////////////
 
     struct root_and_offset_t {
-        int64_t offset = 0;
+        int32_t offset = 0;
         std::string path {};
         variable* root = nullptr;
         compiler::identifier* identifier = nullptr;
@@ -124,7 +124,7 @@ namespace basecode::compiler {
 
         void flag(variable::flags_t f, bool value);
 
-        bool walk_to_root_and_calculate_offset(root_and_offset_t& rot);
+        bool walk_to_root_and_calculate_offset();
 
     private:
         emit_result_t _result;

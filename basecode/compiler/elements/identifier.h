@@ -12,6 +12,7 @@
 #pragma once
 
 #include <compiler/compiler_types.h>
+#include <compiler/stack_frame_entry.h>
 #include "element.h"
 
 namespace basecode::compiler {
@@ -24,17 +25,9 @@ namespace basecode::compiler {
             compiler::symbol_element* name,
             compiler::initializer* initializer);
 
-        int64_t offset() const {
-            return _offset;
-        }
-
         compiler::field* field();
 
         bool inferred_type() const;
-
-        void offset(int64_t value) {
-            _offset = value;
-        }
 
         void inferred_type(bool value);
 
@@ -55,6 +48,10 @@ namespace basecode::compiler {
         void type_ref(compiler::type_reference* t);
 
         void initializer(compiler::initializer* value);
+
+        compiler::stack_frame_entry* stack_frame_entry() const;
+
+        void stack_frame_entry(compiler::stack_frame_entry* value);
 
     protected:
         bool on_emit(
@@ -85,13 +82,13 @@ namespace basecode::compiler {
         bool on_as_rune(common::rune_t& value) const override;
 
     private:
-        int64_t _offset = 0;
         bool _inferred_type = false;
         compiler::field* _field = nullptr;
         compiler::symbol_element* _symbol;
         compiler::initializer* _initializer;
         compiler::type_reference* _type_ref = nullptr;
         identifier_usage_t _usage = identifier_usage_t::heap;
+        compiler::stack_frame_entry* _stack_frame_entry = nullptr;
     };
 
 };

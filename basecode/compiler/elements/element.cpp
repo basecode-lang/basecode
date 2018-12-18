@@ -232,12 +232,6 @@ namespace basecode::compiler {
         return false;
     }
 
-    bool element::is_parent_element(element_type_t type) {
-        if (_parent_element == nullptr)
-            return false;
-        return _parent_element->element_type() == type;
-    }
-
     uint64_t element::on_add(const element& other) const {
         return 0;
     }
@@ -271,6 +265,12 @@ namespace basecode::compiler {
 
     bool element::on_greater_than(const element& other) const {
         return false;
+    }
+
+    bool element::is_parent_element(element_type_t type) const {
+        if (_parent_element == nullptr)
+            return false;
+        return _parent_element->element_type() == type;
     }
 
     attribute* element::find_attribute(const std::string& name) {

@@ -641,32 +641,6 @@ namespace basecode::vm {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    enum class stack_frame_entry_type_t : uint8_t {
-        local = 1,
-        parameter,
-        return_slot
-    };
-
-    inline static std::string stack_frame_entry_type_name(stack_frame_entry_type_t type) {
-        switch (type) {
-            case stack_frame_entry_type_t::local:
-                return "local";
-            case stack_frame_entry_type_t::parameter:
-                return "parameter";
-            case stack_frame_entry_type_t::return_slot:
-                return "return_slot";
-        }
-        return "unknown";
-    }
-
-    struct stack_frame_entry_t {
-        int32_t offset;
-        std::string name;
-        stack_frame_entry_type_t type;
-    };
-
-    ///////////////////////////////////////////////////////////////////////////
-
     struct label_ref_t {
         common::id_t id;
         std::string name;

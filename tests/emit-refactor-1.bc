@@ -22,7 +22,12 @@ temp :: proc() {
     for i in range<u32>(0, 10) {
         x := i * 6;
         y := 16 * x;
+        print("x := %d, y:= %d\n", x, y);
     };
+
+    pos.x := 2.0;
+    pos.y := 3.0;
+    pos.z := 11.65;
 };
 
 temp();

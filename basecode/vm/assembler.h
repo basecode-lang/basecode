@@ -14,7 +14,6 @@
 #include <common/source_file.h>
 #include "vm_types.h"
 #include "segment.h"
-#include "stack_frame.h"
 #include "assembly_listing.h"
 #include "register_allocator.h"
 
@@ -34,8 +33,7 @@ namespace basecode::vm {
 
         bool assemble_from_source(
             common::result& r,
-            common::source_file& source_file,
-            stack_frame_t* stack_frame);
+            common::source_file& source_file);
 
         instruction_block* pop_block();
 

@@ -3,27 +3,53 @@ NOTES
 
 TASKS
 -----
+- NEW: family expressions
+- NEW: uninitialized operator
+- NEW: finish terp::jump_to_subroutine
+- NEW: add terp trap for putc/getc for any file handle
+- NEW: implement the #run directive
+        remove the automatic execution of code during compilation and replace with #run
+- NEW: implement procedure instance baking
+- NEW: implement mechanism to identify the type of symbol for inline assembly, e.g.
+        local(foo)  (local variable on the stack frame, would return offset)
+        module(foo) (module variable in the image/on the heap, would return address)
+        label(foo)  (a basecode label reference, would return address)
+        foo         (an assembler identifier only, would return address)
+- NEW: convert multiple/named parameters in procedure return into a tuple
+- NEW: finish array subscript operator
+- NEW: struct/union instance baking
+- NEW: DFA graph coloring
+- NEW: UFCS
 
-types
-----------
-- array_iterator_type
-    * index:u64
-    * value:T (type of the entry)
-    * kind    (first, last, medial)
-- map_iterator_type
-    * key: K   (type of the key)
-    * value: V (type of the value)
-
-procedures
-----------
+- BUG: fix utf8 streaming issues in lexer/source_file
+- BUG: the unary_operator constant evaluator should take
+       the size of the integer value into account and narrow to that size
+- BUG: unary_operator case not implemented in session::type_check
+- BUG: rework ast_evaluator::proc_call to clean up the various types of "procedure"
+- BUG: ordering issues between types; requires deferred type checking
+        (see ast_evaluator::binary_operator)
+- BUG: add missing errors
+- BUG: fix location for elements
+- BUG: FFI stack frame requires additional data to work
+- BUG: composite_type offsets incorrect within stack frame.
 - BUG: passing a string by-value on stack isn't working
         need to clean up large stack allocations after JSR
-
-everything else
----------------
 - BUG: tuple.bc -- the type_reference's symbol isn't being updated to match
         the constant identifier's symbol.
-- proc_expression needs to support overloaded procedures
+- BUG: proc_expression needs to support overloaded procedures
+- BUG: lambda procedure type checking
+- BUG: type parameter propagation
+
+- REFACTOR: session/variable combination, again
+            merge concept of register_allocator + variable
+            DFA graph coloring
+- REFACTOR: remove unnecessary block types from element_type_t
+- REFACTOR: rework stack_frame (move to compiler)
+            refactor procedure_type & procedure_instance to utilize stack_frame
+            stack_frame instance should live off compiler::block
+- REFACTOR: assembler::assemble_from_source should take a result-like object
+            which has a pointer to the new instruction_block it creates.
+- REFACTOR: ast_evaluator::add_identifier_to_scope
 
 DONE
 ----

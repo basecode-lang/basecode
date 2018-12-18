@@ -50,10 +50,6 @@ namespace basecode::compiler {
         auto block = assembler.current_block();
 
         if (!_has_return) {
-            block->move(
-                vm::instruction_operand_t::sp(),
-                vm::instruction_operand_t::fp());
-            block->pop(vm::instruction_operand_t::fp());
             block->rts();
         }
 
@@ -83,68 +79,37 @@ namespace basecode::compiler {
         block->align(vm::instruction_t::alignment);
         block->label(assembler.make_label(procedure_label));
 
-        block->push(vm::instruction_operand_t::fp());
-        block->move(
-            vm::instruction_operand_t::fp(),
-            vm::instruction_operand_t::sp());
+        auto& stack_offsets = _scope->stack_frame().offsets();
+        stack_offsets.locals = 0;
+        if (_return_type != nullptr) {
+            auto entry = _scope->stack_frame().add(
+                stack_frame_entry_type_t::return_slot,
+                _return_type->identifier()->symbol()->name(),
+                8);
+            _return_type->identifier()->stack_frame_entry(entry);
 
-        uint64_t size = 0;
-        for (auto var : _scope->identifiers().as_list()) {
-            auto field = _parameters.find_by_name(var->symbol()->name());
-            if (field != nullptr) {
-                if (_return_type != nullptr)
-                    var->offset(24);
-                else
-                    var->offset(16);
-                continue;
-            }
+            stack_offsets.return_slot = 16;
+            stack_offsets.parameters = 16;
+        } else {
+            stack_offsets.parameters = 8;
+        }
+
+        auto fields = parameters().as_list();
+        for (auto fld : fields) {
+            auto var = fld->identifier();
             auto type = var->type_ref()->type();
-            size += type->size_in_bytes();
-        }
-
-        int64_t offset = 0;
-        identifier_list_t locals {};
-        session.scope_manager().visit_blocks(
-            session.result(),
-            [&](compiler::block* scope) {
-                if (scope->is_parent_element(element_type_t::proc_type))
-                    return true;
-                for (auto var : scope->identifiers().as_list()) {
-                    auto type = var->type_ref()->type();
-                    if (type->is_proc_type())
-                        continue;
-
-                    auto size_in_bytes = type->size_in_bytes();
-                    size += common::align(size_in_bytes, 8);
-                    offset -= size_in_bytes;
-
-                    var->usage(identifier_usage_t::stack);
-                    var->offset(offset);
-
-                    locals.emplace_back(var);
-                }
-                return true;
-            },
-            _scope);
-
-        size = common::align(size, 8);
-
-        if (size > 0) {
-            block->sub(
-                vm::instruction_operand_t::sp(),
-                vm::instruction_operand_t::sp(),
-                vm::instruction_operand_t(size, vm::op_sizes::dword));
-        }
-
-        for (auto var : locals) {
-            auto var_type = var->type_ref()->type();
-
-            variable_handle_t temp_var {};
-            if (!session.variable(var, temp_var))
-                return false;
-
-            if (!var_type->emit_initializer(session, temp_var.get()))
-                return false;
+            // XXX: if we change procedure_call to
+            //      sub.qw sp, sp, {size}
+            //
+            //      and then store.x sp, {value}, offset
+            //      we can use truer sizes within
+            //      the 8-byte aligned stack block.
+            //
+            auto entry = _scope->stack_frame().add(
+                stack_frame_entry_type_t::parameter,
+                var->symbol()->name(),
+                common::align(type->size_in_bytes(), 8));
+            var->stack_frame_entry(entry);
         }
 
         return true;

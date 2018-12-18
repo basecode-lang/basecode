@@ -2010,6 +2010,12 @@ namespace basecode::compiler {
             0,
             for_scope);
         induction_decl->identifier()->usage(identifier_usage_t::stack);
+// XXX: this code is probably ok, but need to adjust block
+//        auto entry = for_scope->stack_frame().add(
+//            stack_frame_entry_type_t::local,
+//            induction_decl->identifier()->symbol()->name(),
+//            type_ref->type()->size_in_bytes());
+//        induction_decl->identifier()->stack_frame_entry(entry);
 
         auto block = evaluate_in_scope(
             context,

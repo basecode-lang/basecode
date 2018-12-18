@@ -88,8 +88,6 @@ namespace basecode::compiler {
 
         bool emit_interned_strings();
 
-        vm::stack_frame_t* stack_frame();
-
         syntax::ast_builder& ast_builder();
 
         const element_map& elements() const;
@@ -169,7 +167,6 @@ namespace basecode::compiler {
         compiler::program _program;
         ast_evaluator _ast_evaluator;
         session_options_t _options {};
-        vm::stack_frame_t _stack_frame;
         syntax::ast_builder _ast_builder;
         string_intern_map _interned_strings {};
         compiler::scope_manager _scope_manager;

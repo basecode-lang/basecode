@@ -225,8 +225,7 @@ namespace basecode::compiler {
         auto& assembler = session.assembler();
         auto success = assembler.assemble_from_source(
             session.result(),
-            source_file,
-            session.stack_frame());
+            source_file);
         if (success) {
             // XXX:  this is so evil
             _instruction_block = assembler.blocks().back();

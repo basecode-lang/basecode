@@ -11,6 +11,7 @@
 
 #pragma once
 
+#include <compiler/stack_frame.h>
 #include "type.h"
 #include "element.h"
 #include "identifier.h"
@@ -36,6 +37,8 @@ namespace basecode::compiler {
 
         identifier_map_t& identifiers();
 
+        compiler::stack_frame& stack_frame();
+
     protected:
         bool on_emit(
             compiler::session& session,
@@ -45,12 +48,20 @@ namespace basecode::compiler {
         void on_owned_elements(element_list_t& list) override;
 
     private:
+        bool has_stack_frame() const;
+
+        bool end_stack_frame(compiler::session& session);
+
+        bool begin_stack_frame(compiler::session& session);
+
+    private:
         type_map_t _types {};
         block_list_t _blocks {};
         import_list_t _imports {};
         defer_stack_t _defer_stack {};
         statement_list_t _statements {};
         identifier_map_t _identifiers {};
+        compiler::stack_frame _stack_frame;
     };
 
 };

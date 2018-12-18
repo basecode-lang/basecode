@@ -14,6 +14,7 @@
 #include "session.h"
 #include "variable.h"
 #include "elements/type.h"
+#include "elements/block.h"
 #include "elements/identifier.h"
 #include "elements/declaration.h"
 #include "elements/pointer_type.h"
@@ -258,7 +259,7 @@ namespace basecode::compiler {
             }
         }
 
-        if (walk_to_root_and_calculate_offset(_rot)) {
+        if (walk_to_root_and_calculate_offset()) {
             var = _rot.identifier;
         }
 
@@ -491,7 +492,7 @@ namespace basecode::compiler {
         return _type;
     }
 
-    bool variable::walk_to_root_and_calculate_offset(root_and_offset_t& rot) {
+    bool variable::walk_to_root_and_calculate_offset() {
         std::stack<std::string> names {};
 
         _rot.offset = 0;
@@ -502,16 +503,16 @@ namespace basecode::compiler {
         auto current = this;
         if (_parent != nullptr) {
             while (current->_field != nullptr) {
-                rot.offset += current->_field->start_offset();
+                _rot.offset += current->_field->start_offset();
                 names.push(current->_field->identifier()->symbol()->name());
                 current = current->_parent;
             }
         }
 
-        rot.root = current;
+        _rot.root = current;
         switch (current->_element->element_type()) {
             case element_type_t::identifier: {
-                rot.identifier = dynamic_cast<compiler::identifier*>(current->_element);
+                _rot.identifier = dynamic_cast<compiler::identifier*>(current->_element);
                 break;
             }
             case element_type_t::unary_operator: {
@@ -519,7 +520,7 @@ namespace basecode::compiler {
                 if (unary_op->operator_type() == operator_type_t::pointer_dereference) {
                     auto ref = dynamic_cast<compiler::identifier_reference*>(unary_op->rhs());
                     if (ref != nullptr)
-                        rot.identifier = ref->identifier();
+                        _rot.identifier = ref->identifier();
                 }
                 break;
             }
@@ -528,31 +529,47 @@ namespace basecode::compiler {
             }
         }
 
-        if (rot.identifier != nullptr) {
-            names.push(rot.identifier->symbol()->name());
-            auto field = rot.identifier->field();
-            if (field != nullptr) {
-                rot.offset += field->start_offset();
-                if (rot.identifier->usage() == identifier_usage_t::stack) {
-                    if (!current->_element->is_pointer_dereference()) {
-                        rot.offset = common::align(
-                            static_cast<uint64_t>(rot.offset) + rot.identifier->offset(),
-                            8);
-                    } else {
-                        rot.offset--;
+        // +-------------+
+        // | i           | -$10
+        // | pos         |
+        // |    x        | -$0c
+        // |    y        | -$08
+        // |    z        | -$04
+        // | fp          | 0
+        // | return addr | +offsets
+        // | return slot |
+        // | param 1     |
+        // | param 2     |
+        // +-------------+
+        if (_rot.identifier != nullptr) {
+            names.push(_rot.identifier->symbol()->name());
+            auto frame_entry = _rot.identifier->stack_frame_entry();
+            if (frame_entry != nullptr) {
+                const auto& offsets = frame_entry->owning_frame()->offsets();
+                switch (frame_entry->type()) {
+                    case stack_frame_entry_type_t::local: {
+                        if (!current->_element->is_pointer_dereference())
+                            _rot.offset = (frame_entry->offset() + -offsets.locals) + _rot.offset;
+                        break;
                     }
-                }
-            } else {
-                if (rot.identifier->offset() != 0) {
-                    rot.offset = rot.identifier->offset() + -rot.offset;
+                    case stack_frame_entry_type_t::parameter: {
+                        if (!current->_element->is_pointer_dereference())
+                            _rot.offset += (frame_entry->offset() + offsets.parameters);
+                        break;
+                    }
+                    case stack_frame_entry_type_t::return_slot: {
+                        // XXX: beware pointer deref here!
+                        _rot.offset += offsets.return_slot;
+                        break;
+                    }
                 }
             }
         }
 
         while (!names.empty()) {
-            if (!rot.path.empty())
-                rot.path += ".";
-            rot.path += names.top();
+            if (!_rot.path.empty())
+                _rot.path += ".";
+            _rot.path += names.top();
             names.pop();
         }
 

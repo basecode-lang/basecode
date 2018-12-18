@@ -153,8 +153,6 @@ namespace basecode::compiler {
             item);
     }
 
-    // XXX: type checking will need to be deferred if one of the
-    //      types is unknown
     bool argument_list::index_to_procedure_type(
             compiler::session& session,
             compiler::procedure_type* proc_type) {
