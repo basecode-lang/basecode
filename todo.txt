@@ -3,6 +3,8 @@ NOTES
 
 TASKS
 -----
+- NEW: for_element stack frame support
+- NEW: anonymous block stack frame support
 - NEW: family expressions
 - NEW: uninitialized operator
 - NEW: finish terp::jump_to_subroutine
@@ -44,9 +46,6 @@ TASKS
             merge concept of register_allocator + variable
             DFA graph coloring
 - REFACTOR: remove unnecessary block types from element_type_t
-- REFACTOR: rework stack_frame (move to compiler)
-            refactor procedure_type & procedure_instance to utilize stack_frame
-            stack_frame instance should live off compiler::block
 - REFACTOR: assembler::assemble_from_source should take a result-like object
             which has a pointer to the new instruction_block it creates.
 - REFACTOR: ast_evaluator::add_identifier_to_scope
@@ -150,3 +149,6 @@ DONE
 - BUG: enum type creation needs to automatically type fields and increment value.
 - REVIEW: type check should enforce scalar/composite type rules.
 - BUG: syntax like: support: print("hello!"); causes the compiler to end silently.
+- REFACTOR: rework stack_frame (move to compiler)
+            refactor procedure_type & procedure_instance to utilize stack_frame
+            stack_frame instance should live off compiler::block
