@@ -347,7 +347,7 @@ namespace basecode::compiler {
             namespace_name = namespaces[i];
             auto var = scope->identifiers().find(namespace_name);
             if (var == nullptr) {
-                auto new_scope = builder.make_block(scope, element_type_t::block);
+                auto new_scope = builder.make_block(scope);
                 auto ns = builder.make_namespace(scope, new_scope);
                 auto ns_identifier = builder.make_identifier(
                     scope,
@@ -851,9 +851,7 @@ namespace basecode::compiler {
 
         auto module = builder.make_module(
             scope_manager.current_scope(),
-            builder.make_block(
-                scope_manager.current_scope(),
-                element_type_t::module_block));
+            builder.make_block(scope_manager.current_scope()));
         scope_manager.current_scope()->blocks().push_back(module->scope());
 
         result.element = module;
@@ -1568,7 +1566,7 @@ namespace basecode::compiler {
         auto& scope_manager = _session.scope_manager();
 
         auto active_scope = scope_manager.current_scope();
-        auto enum_scope = builder.make_block(active_scope, element_type_t::block);
+        auto enum_scope = builder.make_block(active_scope);
         auto enum_type = builder.make_enum_type(active_scope, enum_scope);
         enum_type->location(context.node->location);
         active_scope->types().add(enum_type);
@@ -1667,9 +1665,7 @@ namespace basecode::compiler {
         auto& scope_manager = _session.scope_manager();
 
         auto active_scope = scope_manager.current_scope();
-        auto struct_scope = builder.make_block(
-            active_scope,
-            element_type_t::block);
+        auto struct_scope = builder.make_block(active_scope);
 
         auto struct_type = builder.make_struct_type(
             active_scope,
@@ -1703,7 +1699,7 @@ namespace basecode::compiler {
         auto& scope_manager = _session.scope_manager();
 
         auto active_scope = scope_manager.current_scope();
-        auto union_scope = builder.make_block(active_scope, element_type_t::block);
+        auto union_scope = builder.make_block(active_scope);
         auto union_type = builder.make_union_type(active_scope, union_scope);
         active_scope->types().add(union_type);
 
@@ -1758,7 +1754,7 @@ namespace basecode::compiler {
         auto& scope_manager = _session.scope_manager();
 
         auto active_scope = scope_manager.current_scope();
-        auto block_scope = builder.make_block(active_scope, element_type_t::block);
+        auto block_scope = builder.make_block(active_scope);
         auto proc_type = builder.make_procedure_type(active_scope, block_scope);
         proc_type->location(context.node->location);
         active_scope->types().add(proc_type);
@@ -1795,7 +1791,7 @@ namespace basecode::compiler {
         auto& scope_manager = _session.scope_manager();
 
         auto active_scope = scope_manager.current_scope();
-        auto block_scope = builder.make_block(active_scope, element_type_t::block);
+        auto block_scope = builder.make_block(active_scope);
         auto proc_type = builder.make_procedure_type(active_scope, block_scope);
         active_scope->types().add(proc_type);
 
@@ -1935,7 +1931,7 @@ namespace basecode::compiler {
                     if (type == nullptr) {
                         type = builder.make_array_type(
                             scope,
-                            builder.make_block(scope, element_type_t::block),
+                            builder.make_block(scope),
                             type_decl_ref,
                             subscripts);
                     }
@@ -1997,9 +1993,7 @@ namespace basecode::compiler {
             }
         }
 
-        auto for_scope = builder.make_block(
-            scope_manager.current_scope(),
-            element_type_t::block);
+        auto for_scope = builder.make_block(scope_manager.current_scope());
         scope_manager.current_scope()->blocks().emplace_back(for_scope);
 
         auto induction_decl = add_identifier_to_scope(
@@ -2353,7 +2347,7 @@ namespace basecode::compiler {
 
         auto active_scope = scope_manager.current_scope();
 
-        auto type_scope = builder.make_block(active_scope, element_type_t::block);
+        auto type_scope = builder.make_block(active_scope);
         auto tuple_type = builder.make_tuple_type(active_scope, type_scope);
         active_scope->types().add(tuple_type);
 

@@ -58,6 +58,8 @@ namespace basecode::compiler {
 
         block_stack_t& top_level_stack();
 
+        compiler::block* push_new_block();
+
         compiler::map_type* find_map_type(
             compiler::type_reference* key_type,
             compiler::type_reference* value_type,
@@ -99,8 +101,6 @@ namespace basecode::compiler {
         compiler::module* find_module(compiler::element* element) const;
 
         bool within_local_scope(compiler::block* parent_scope = nullptr) const;
-
-        compiler::block* push_new_block(element_type_t type = element_type_t::block);
 
     private:
         compiler::session& _session;

@@ -86,6 +86,8 @@ namespace basecode::compiler {
 
         bool finalizer();
 
+        bool address_of();
+
         bool deactivate();
 
         bool initialize();

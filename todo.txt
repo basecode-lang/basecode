@@ -4,7 +4,6 @@ NOTES
 TASKS
 -----
 - NEW: for_element stack frame support
-- NEW: anonymous block stack frame support
 - NEW: family expressions
 - NEW: uninitialized operator
 - NEW: finish terp::jump_to_subroutine
@@ -45,7 +44,6 @@ TASKS
 - REFACTOR: session/variable combination, again
             merge concept of register_allocator + variable
             DFA graph coloring
-- REFACTOR: remove unnecessary block types from element_type_t
 - REFACTOR: assembler::assemble_from_source should take a result-like object
             which has a pointer to the new instruction_block it creates.
 - REFACTOR: ast_evaluator::add_identifier_to_scope
@@ -152,3 +150,5 @@ DONE
 - REFACTOR: rework stack_frame (move to compiler)
             refactor procedure_type & procedure_instance to utilize stack_frame
             stack_frame instance should live off compiler::block
+- REFACTOR: remove unnecessary block types from element_type_t
+- NEW: anonymous block stack frame support

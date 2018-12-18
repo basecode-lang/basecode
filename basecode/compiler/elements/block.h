@@ -31,6 +31,8 @@ namespace basecode::compiler {
 
         import_list_t& imports();
 
+        bool has_stack_frame() const;
+
         defer_stack_t& defer_stack();
 
         statement_list_t& statements();
@@ -48,8 +50,6 @@ namespace basecode::compiler {
         void on_owned_elements(element_list_t& list) override;
 
     private:
-        bool has_stack_frame() const;
-
         bool end_stack_frame(compiler::session& session);
 
         bool begin_stack_frame(compiler::session& session);
@@ -58,6 +58,7 @@ namespace basecode::compiler {
         type_map_t _types {};
         block_list_t _blocks {};
         import_list_t _imports {};
+        identifier_list_t _locals {};
         defer_stack_t _defer_stack {};
         statement_list_t _statements {};
         identifier_map_t _identifiers {};

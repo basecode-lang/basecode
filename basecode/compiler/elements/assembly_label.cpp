@@ -34,13 +34,17 @@ namespace basecode::compiler {
             compiler::emit_result_t& result) {
         auto& assembler = session.assembler();
 
-        vm::label_ref_t* label_ref = nullptr;
         if (_ref != nullptr) {
-            label_ref = assembler.make_label_ref(_ref->identifier()->label_name());
+            variable_handle_t temp_var {};
+            if (!session.variable(_ref->identifier(), temp_var))
+                return false;
+            if (!temp_var->address_of())
+                return false;
+            result.operands.emplace_back(temp_var->emit_result().operands.front());
         } else {
-            label_ref = assembler.make_label_ref(_name);
+            auto label_ref = assembler.make_label_ref(_name);
+            result.operands.emplace_back(vm::instruction_operand_t(label_ref));
         }
-        result.operands.emplace_back(vm::instruction_operand_t(label_ref));
 
         return true;
     }

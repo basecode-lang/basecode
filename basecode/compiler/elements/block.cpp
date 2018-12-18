@@ -100,7 +100,8 @@ namespace basecode::compiler {
 
     bool block::has_stack_frame() const {
         return is_parent_element(element_type_t::proc_type)
-               || is_parent_element(element_type_t::proc_instance);
+               || is_parent_element(element_type_t::proc_instance)
+               || is_parent_element(element_type_t::block);
     }
 
     defer_stack_t& block::defer_stack() {
@@ -143,6 +144,17 @@ namespace basecode::compiler {
         auto& assembler = session.assembler();
         auto block = assembler.current_block();
 
+        for (auto var : _locals) {
+            auto var_type = var->type_ref()->type();
+
+            variable_handle_t temp_var {};
+            if (!session.variable(var, temp_var))
+                return false;
+
+            if (!var_type->emit_finalizer(session, temp_var.get()))
+                return false;
+        }
+
         block->move(
             vm::instruction_operand_t::sp(),
             vm::instruction_operand_t::fp());
@@ -165,7 +177,6 @@ namespace basecode::compiler {
 
         auto& scope_manager = session.scope_manager();
 
-        identifier_list_t locals {};
         scope_manager.visit_blocks(
             session.result(),
             [&](compiler::block* scope) {
@@ -183,7 +194,7 @@ namespace basecode::compiler {
                         type->size_in_bytes());
                     var->stack_frame_entry(entry);
 
-                    locals.emplace_back(var);
+                    _locals.emplace_back(var);
                 }
 
                 return true;
@@ -198,7 +209,7 @@ namespace basecode::compiler {
                 vm::instruction_operand_t(static_cast<uint64_t>(locals_size), vm::op_sizes::dword));
         }
 
-        for (auto var : locals) {
+        for (auto var : _locals) {
             auto var_type = var->type_ref()->type();
 
             variable_handle_t temp_var {};

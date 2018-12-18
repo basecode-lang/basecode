@@ -149,9 +149,9 @@ namespace basecode::compiler {
         scope->identifiers().add(identifier);
     }
 
-    compiler::block* scope_manager::push_new_block(element_type_t type) {
+    compiler::block* scope_manager::push_new_block() {
         auto parent_scope = current_scope();
-        auto scope_block = _session.builder().make_block(parent_scope, type);
+        auto scope_block = _session.builder().make_block(parent_scope);
 
         if (parent_scope != nullptr) {
             scope_block->parent_element(parent_scope);
@@ -175,12 +175,8 @@ namespace basecode::compiler {
     bool scope_manager::within_local_scope(compiler::block* parent_scope) const {
         auto block_scope = parent_scope == nullptr ? current_scope() : parent_scope;
         while (block_scope != nullptr) {
-            if (block_scope->is_parent_element(element_type_t::proc_type)
-            ||  block_scope->is_parent_element(element_type_t::for_e)
-            ||  block_scope->is_parent_element(element_type_t::if_e)
-            ||  block_scope->is_parent_element(element_type_t::while_e)) {
+            if (block_scope->has_stack_frame())
                 return true;
-            }
             block_scope = block_scope->parent_scope();
         }
         return false;

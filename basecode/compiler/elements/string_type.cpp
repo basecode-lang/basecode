@@ -106,7 +106,6 @@ namespace basecode::compiler {
                 block->comment(
                     fmt::format("literal: {}", literal->label_name()),
                     vm::comment_location_t::after_instruction);
-                block->nop();
 
                 variable_handle_t literal_var;
                 if (!session.variable(literal, literal_var))

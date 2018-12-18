@@ -46,8 +46,6 @@ namespace basecode::compiler {
     bool composite_type::on_emit_initializer(
             compiler::session& session,
             compiler::variable* var) {
-        auto block = session.assembler().current_block();
-
         auto field_list = _fields.as_list();
         for (auto fld: field_list) {
             variable_handle_t field_var {};
@@ -55,7 +53,6 @@ namespace basecode::compiler {
                 // XXX: error
                 return false;
             }
-            block->comment("initializer", vm::comment_location_t::after_instruction);
             if (!field_var->initializer()) {
                 // XXX: error
                 return false;

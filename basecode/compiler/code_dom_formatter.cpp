@@ -243,15 +243,6 @@ namespace basecode::compiler {
                     element->id(),
                     style);
             }
-            case element_type_t::module_block: {
-                auto element = dynamic_cast<block*>(node);
-                auto style = ", fillcolor=floralwhite, style=\"filled\"";
-                return fmt::format(
-                    "{}[shape=record,label=\"block|module|{}\"{}];",
-                    node_vertex_name,
-                    element->id(),
-                    style);
-            }
             case element_type_t::field: {
                 auto element = dynamic_cast<field*>(node);
                 auto style = ", fillcolor=gainsboro, style=\"filled\"";

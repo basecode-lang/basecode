@@ -257,7 +257,7 @@ namespace basecode::compiler {
 
         auto type = scope_manager.find_map_type(key_type, value_type);
         if (type == nullptr) {
-            auto scope = make_block(parent_scope, element_type_t::block);
+            auto scope = make_block(parent_scope);
             type = new compiler::map_type(
                 scope_manager.current_module(),
                 parent_scope,
@@ -321,17 +321,6 @@ namespace basecode::compiler {
         if (expr != nullptr)
             expr->parent_element(module_reference);
         return module_reference;
-    }
-
-    compiler::block* element_builder::make_block(
-            compiler::block* parent_scope,
-            element_type_t type) {
-        auto block_element = new compiler::block(
-            _session.scope_manager().current_module(),
-            parent_scope,
-            type);
-        _session.elements().add(block_element);
-        return block_element;
     }
 
     break_element* element_builder::make_break(
@@ -841,14 +830,6 @@ namespace basecode::compiler {
         return initializer;
     }
 
-    return_element* element_builder::make_return(compiler::block* parent_scope) {
-        auto return_element = new compiler::return_element(
-            _session.scope_manager().current_module(),
-            parent_scope);
-        _session.elements().add(return_element);
-        return return_element;
-    }
-
     generic_type* element_builder::make_generic_type(
             compiler::block* parent_scope,
             const type_reference_list_t& constraints) {
@@ -1275,7 +1256,7 @@ namespace basecode::compiler {
         if (array_type == nullptr) {
             array_type = make_array_type(
                 parent_scope,
-                make_block(parent_scope, element_type_t::block),
+                make_block(parent_scope),
                 type_ref,
                 subscripts);
             type_ref = make_type_reference(
@@ -1341,6 +1322,23 @@ namespace basecode::compiler {
             parent_scope);
         _session.elements().add(assignment_element);
         return assignment_element;
+    }
+
+    compiler::block* element_builder::make_block(compiler::block* parent_scope) {
+        auto block_element = new compiler::block(
+            _session.scope_manager().current_module(),
+            parent_scope,
+            element_type_t::block);
+        _session.elements().add(block_element);
+        return block_element;
+    }
+
+    return_element* element_builder::make_return(compiler::block* parent_scope) {
+        auto return_element = new compiler::return_element(
+            _session.scope_manager().current_module(),
+            parent_scope);
+        _session.elements().add(return_element);
+        return return_element;
     }
 
     compiler::nil_literal* element_builder::make_nil(compiler::block* parent_scope) {

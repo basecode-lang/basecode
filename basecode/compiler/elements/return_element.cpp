@@ -33,7 +33,6 @@ namespace basecode::compiler {
                 return false;
             expr_var->read();
 
-            auto& frame = parent_scope()->stack_frame();
             block->comment(
                 "return slot",
                 vm::comment_location_t::after_instruction);

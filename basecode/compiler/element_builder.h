@@ -137,10 +137,6 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             double value);
 
-        compiler::block* make_block(
-            compiler::block* parent_scope,
-            element_type_t type);
-
         identifier* make_identifier(
             compiler::block* parent_scope,
             compiler::symbol_element* symbol,
@@ -391,6 +387,8 @@ namespace basecode::compiler {
         bool_type* make_bool_type(compiler::block* parent_scope);
 
         rune_type* make_rune_type(compiler::block* parent_scope);
+
+        compiler::block* make_block(compiler::block* parent_scope);
 
         return_element* make_return(compiler::block* parent_scope);
 

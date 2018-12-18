@@ -331,6 +331,44 @@ namespace basecode::compiler {
         return _type.inferred_type->emit_finalizer(_session, this);
     }
 
+    bool variable::address_of() {
+        auto& assembler = _session.assembler();
+        auto block = assembler.current_block();
+
+        address();
+
+        if (_rot.identifier != nullptr) {
+            if (_rot.identifier->usage() == identifier_usage_t::stack) {
+                vm::instruction_operand_t result_operand;
+                if (!vm::instruction_operand_t::allocate(
+                    assembler,
+                    result_operand,
+                    vm::op_sizes::qword,
+                    vm::register_type_t::integer)) {
+                    return false;
+                }
+
+                _result.operands.emplace_back(result_operand);
+
+                block->comment(
+                    fmt::format(
+                        "address_of({})",
+                        _rot.identifier->symbol()->fully_qualified_name()),
+                    vm::comment_location_t::after_instruction);
+                block->move(
+                    vm::instruction_operand_t(result_operand),
+                    vm::instruction_operand_t::fp(),
+                    vm::instruction_operand_t::offset(_rot.offset));
+            } else {
+                auto label_ref = assembler.make_label_ref(_rot.identifier->label_name());
+                _result.operands.emplace_back(vm::instruction_operand_t(label_ref));
+            }
+            return true;
+        }
+
+        return false;
+    }
+
     bool variable::initializer() {
         return _type.inferred_type->emit_initializer(_session, this);
     }
@@ -477,21 +515,6 @@ namespace basecode::compiler {
         return _result;
     }
 
-    const vm::register_t& variable::address_reg() const {
-        return _address.reg;
-    }
-
-    void variable::flag(variable::flags_t f, bool value) {
-        if (value)
-            _flags |= f;
-        else
-            _flags &= ~f;
-    }
-
-    const infer_type_result_t& variable::type_result() const {
-        return _type;
-    }
-
     bool variable::walk_to_root_and_calculate_offset() {
         std::stack<std::string> names {};
 
@@ -574,6 +597,21 @@ namespace basecode::compiler {
         }
 
         return true;
+    }
+
+    const vm::register_t& variable::address_reg() const {
+        return _address.reg;
+    }
+
+    void variable::flag(variable::flags_t f, bool value) {
+        if (value)
+            _flags |= f;
+        else
+            _flags &= ~f;
+    }
+
+    const infer_type_result_t& variable::type_result() const {
+        return _type;
     }
 
 };

@@ -420,23 +420,23 @@ namespace basecode::compiler {
         compiler::numeric_type::make_types(*this, parent_scope);
         _scope_manager.add_type_to_scope(_builder.make_module_type(
             parent_scope,
-            _builder.make_block(parent_scope, element_type_t::block)));
+            _builder.make_block(parent_scope)));
         _scope_manager.add_type_to_scope(_builder.make_namespace_type(parent_scope));
         _scope_manager.add_type_to_scope(_builder.make_bool_type(parent_scope));
         _scope_manager.add_type_to_scope(_builder.make_rune_type(parent_scope));
         _scope_manager.add_type_to_scope(_builder.make_string_type(
             parent_scope,
-            _builder.make_block(parent_scope, element_type_t::block)));
+            _builder.make_block(parent_scope)));
 
         _scope_manager.add_type_to_scope(_builder.make_type_info_type(
             parent_scope,
-            _builder.make_block(parent_scope, element_type_t::block)));
+            _builder.make_block(parent_scope)));
         _scope_manager.add_type_to_scope(_builder.make_tuple_type(
             parent_scope,
-            _builder.make_block(parent_scope, element_type_t::block)));
+            _builder.make_block(parent_scope)));
         _scope_manager.add_type_to_scope(_builder.make_any_type(
             parent_scope,
-            _builder.make_block(parent_scope, element_type_t::block)));
+            _builder.make_block(parent_scope)));
         _scope_manager.add_type_to_scope(_builder.make_generic_type(
             parent_scope,
             {}));

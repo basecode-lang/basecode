@@ -1037,6 +1037,15 @@ namespace basecode::vm {
             }
 
             source_file->add_source_line(entry.address(), line.str());
+
+            while (!post_inst_comments.empty()) {
+                std::stringstream temp {};
+                auto& top = post_inst_comments.top();
+                std::string indent(last_indent, ' ');
+                temp << fmt::format("{}; {}", indent, top.value);
+                post_inst_comments.pop();
+                source_file->add_source_line(entry.address(), temp.str());
+            }
         }
     }
 
