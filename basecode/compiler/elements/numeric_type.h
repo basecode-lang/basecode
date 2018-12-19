@@ -30,13 +30,15 @@ namespace basecode::compiler {
 
     class numeric_type : public compiler::type {
     public:
+        static void make_types(
+            compiler::session& session,
+            compiler::block* parent_scope);
+
         static std::string narrow_to_value(double value);
 
         static std::string narrow_to_value(uint64_t value);
 
-        static void make_types(
-            compiler::session& session,
-            compiler::block* parent_scope);
+        static numeric_type_properties_t* type_properties_for_value(uint64_t value);
 
         numeric_type(
             compiler::module* module,

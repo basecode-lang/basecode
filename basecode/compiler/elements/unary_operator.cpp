@@ -15,6 +15,7 @@
 #include "program.h"
 #include "identifier.h"
 #include "pointer_type.h"
+#include "numeric_type.h"
 #include "unary_operator.h"
 #include "type_reference.h"
 #include "identifier_reference.h"
@@ -158,19 +159,70 @@ namespace basecode::compiler {
     }
 
     bool unary_operator::on_as_integer(uint64_t& value) const {
+        value = 0;
+
         uint64_t rhs_value;
         if (!_rhs->as_integer(rhs_value))
             return false;
 
-        value = 0;
+        auto numeric_type_props = numeric_type::type_properties_for_value(rhs_value);
+        if (numeric_type_props == nullptr)
+            return false;
+
+        vm::register_value_alias_t alias {};
+        alias.qw = rhs_value;
+
+        auto size = vm::op_size_for_byte_size(numeric_type_props->size_in_bytes);
 
         switch (operator_type()) {
             case operator_type_t::negate: {
-                value = static_cast<uint64_t>(-static_cast<int64_t>(rhs_value));
+                switch (size) {
+                    case vm::op_sizes::byte: {
+                        auto temp = static_cast<uint8_t>(-alias.b);
+                        value = temp;
+                        break;
+                    }
+                    case vm::op_sizes::word: {
+                        auto temp = static_cast<uint16_t>(-alias.w);
+                        value = temp;
+                        break;
+                    }
+                    case vm::op_sizes::dword: {
+                        auto temp = static_cast<uint32_t>(-alias.dw);
+                        value = temp;
+                        break;
+                    }
+                    default:
+                    case vm::op_sizes::qword: {
+                        value = static_cast<uint64_t>(-alias.qw);
+                        break;
+                    }
+                }
                 break;
             }
             case operator_type_t::binary_not: {
-                value = ~rhs_value;
+                switch (size) {
+                    case vm::op_sizes::byte: {
+                        auto temp = static_cast<uint8_t>(~alias.b);
+                        value = temp;
+                        break;
+                    }
+                    case vm::op_sizes::word: {
+                        auto temp = static_cast<uint16_t>(~alias.w);
+                        value = temp;
+                        break;
+                    }
+                    case vm::op_sizes::dword: {
+                        auto temp = static_cast<uint32_t>(~alias.dw);
+                        value = temp;
+                        break;
+                    }
+                    default:
+                    case vm::op_sizes::qword: {
+                        value = ~alias.qw;
+                        break;
+                    }
+                }
                 break;
             }
             default:

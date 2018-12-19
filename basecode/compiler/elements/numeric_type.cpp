@@ -77,6 +77,16 @@ namespace basecode::compiler {
         return "unknown";
     }
 
+    numeric_type_properties_t* numeric_type::type_properties_for_value(uint64_t value) {
+        auto type_name = numeric_type::narrow_to_value(value);
+        if (type_name == "unknown")
+            return nullptr;
+        auto it = s_types_map.find(type_name);
+        if (it == s_types_map.end())
+            return nullptr;
+        return it->second;
+    }
+
     ///////////////////////////////////////////////////////////////////////////
 
     numeric_type::numeric_type(
