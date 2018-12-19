@@ -30,7 +30,6 @@ TASKS
         (see ast_evaluator::binary_operator)
 - BUG: add missing errors
 - BUG: fix location for elements
-- BUG: FFI stack frame requires additional data to work
 - BUG: composite_type offsets incorrect within stack frame.
 - BUG: passing a string by-value on stack isn't working
         need to clean up large stack allocations after JSR
@@ -152,3 +151,4 @@ DONE
 - REFACTOR: remove unnecessary block types from element_type_t
 - NEW: anonymous block stack frame support
 - NEW: uninitialized operator
+- BUG: FFI stack frame requires additional data to work

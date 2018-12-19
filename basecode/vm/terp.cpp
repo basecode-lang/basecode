@@ -2232,30 +2232,38 @@ namespace basecode::vm {
                 if (!get_operand_value(r, inst, 0, address))
                     return false;
 
+                operand_value_t signature_id {};
+                if (inst.operands_count > 1) {
+                    if (!get_operand_value(r, inst, 1, signature_id))
+                        return false;
+                }
+
                 auto func = _ffi->find_function(address.alias.u);
                 if (func == nullptr) {
                     execute_trap(trap_invalid_ffi_call);
-                    break;
+                    return false;
                 }
 
                 _ffi->reset();
                 _ffi->calling_convention(func->calling_mode);
 
-                size_t param_index = 0;
-                auto arg_count = pop();
-                while (arg_count > 0) {
-                    auto value = pop();
-                    --arg_count;
-
-                    if (param_index < func->arguments.size()) {
-                        auto& argument = func->arguments[param_index];
-                        if (argument.type == ffi_types_t::pointer_type)
-                            value += reinterpret_cast<uint64_t>(_heap);
-                        _ffi->push(argument.type, value);
-                        ++param_index;
-                    } else {
-                        _ffi->push(ffi_types_t::int_type, value);
+                vm::function_value_list_t* arguments = nullptr;
+                if (func->calling_mode == vm::ffi_calling_mode_t::c_ellipsis) {
+                    auto it = func->call_site_arguments.find(signature_id.alias.u);
+                    if (it == func->call_site_arguments.end()) {
+                        execute_trap(trap_invalid_ffi_call);
+                        return false;
                     }
+                    arguments = &it->second;
+                } else {
+                    arguments = &func->arguments;
+                }
+
+                for (auto arg : *arguments) {
+                    auto value = pop();
+                    if (arg.type == ffi_types_t::pointer_type)
+                        value += reinterpret_cast<uint64_t>(_heap);
+                    _ffi->push(arg.type, value);
                 }
 
                 auto result_value = _ffi->call(func);

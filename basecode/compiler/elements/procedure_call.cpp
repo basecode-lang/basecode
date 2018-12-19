@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <vm/ffi.h>
 #include <common/defer.h>
 #include <compiler/session.h>
 #include <vm/instruction_block.h>
@@ -70,14 +71,65 @@ namespace basecode::compiler {
             _arguments->emit(session, context, result);
 
         if (procedure_type->is_foreign()) {
-            vm::instruction_operand_t arg_count(
-                static_cast<uint64_t>(_arguments->size()),
-                vm::op_sizes::word);
-            block->push(arg_count);
+            auto& ffi = session.ffi();
+
+            auto func = ffi.find_function(procedure_type->foreign_address());
+            if (func == nullptr) {
+                session.error(
+                    module(),
+                    "X000",
+                    fmt::format(
+                        "unable to find foreign function by address: {}",
+                        procedure_type->foreign_address()),
+                    location());
+                return false;
+            }
+
             block->comment(
                 fmt::format("call: {}", identifier->label_name()),
                 vm::comment_location_t::after_instruction);
-            block->call_foreign(procedure_type->foreign_address());
+
+            vm::instruction_operand_t address_operand(procedure_type->foreign_address());
+
+            if (func->calling_mode == vm::ffi_calling_mode_t::c_ellipsis) {
+                auto signature_id = common::id_pool::instance()->allocate();
+
+                vm::function_value_list_t args {};
+                std::function<bool (const element_list_t&)> recurse_arguments =
+                    [&](const element_list_t& elements) -> bool {
+                        for (auto arg : elements) {
+                            if (arg->element_type() == element_type_t::argument_list) {
+                                auto arg_list = dynamic_cast<compiler::argument_list*>(arg);
+                                auto success = recurse_arguments(arg_list->elements());
+                                if (!success)
+                                    return false;
+                                continue;
+                            }
+
+                            infer_type_result_t type_result {};
+                            if (!arg->infer_type(session, type_result))
+                                return false;
+
+                            vm::function_value_t value {};
+                            value.type = type_result.inferred_type->to_ffi_type();
+                            args.push_back(value);
+                        }
+                        return true;
+                    };
+
+                if (!recurse_arguments(_arguments->elements()))
+                    return false;
+
+                func->call_site_arguments.insert(std::make_pair(signature_id, args));
+
+                block->call_foreign(
+                    address_operand,
+                    vm::instruction_operand_t(
+                        static_cast<uint64_t>(signature_id),
+                        vm::op_sizes::dword));
+            } else {
+                block->call_foreign(address_operand);
+            }
         } else {
             if (return_type != nullptr) {
                 block->comment(

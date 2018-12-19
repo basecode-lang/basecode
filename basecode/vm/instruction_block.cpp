@@ -72,7 +72,7 @@ namespace basecode::vm {
             }
             case instruction_operand_type_t::imm_f32: {
                 op.size = op_sizes::dword;
-                op.value.d = *operand.data<float>();
+                op.value.f = *operand.data<float>();
                 op.type = operand_encoding_t::flags::constant;
                 break;
             }
@@ -867,31 +867,18 @@ namespace basecode::vm {
             | operand_encoding_t::flags::unresolved;
         jsr_op.operands[0].value.u = label_ref->id;
         make_block_entry(jsr_op);
-
-// XXX: this is a PC-relative encoding
-//        instruction_t jsr_op;
-//        jsr_op.op = op_codes::jsr;
-//        jsr_op.size = size;
-//        jsr_op.operands_count = 2;
-//        jsr_op.operands[0].type =
-//            operand_encoding_t::flags::integer
-//            | operand_encoding_t::flags::reg;
-//        jsr_op.operands[0].value.r = i_registers_t::pc;
-//        jsr_op.operands[1].type = offset_type | operand_encoding_t::flags::integer;
-//        jsr_op.operands[1].value.u = offset;
-//        _instructions.push_back(jsr_op);
     }
 
-    void instruction_block::call_foreign(uint64_t proc_address) {
-        instruction_t ffi_op;
-        ffi_op.op = op_codes::ffi;
-        ffi_op.size = op_sizes::qword;
-        ffi_op.operands_count = 1;
-        ffi_op.operands[0].type =
-            operand_encoding_t::flags::integer
-            | operand_encoding_t::flags::constant;
-        ffi_op.operands[0].value.u = proc_address;
-        make_block_entry(ffi_op);
+    void instruction_block::call_foreign(
+            const instruction_operand_t& address,
+            const instruction_operand_t& signature_id) {
+        instruction_t op;
+        op.op = op_codes::ffi;
+        op.size = op_sizes::qword;
+        op.operands_count = static_cast<uint8_t>(signature_id.is_empty() ? 1 : 2);
+        apply_operand(address, op, 0);
+        apply_operand(signature_id, op, 1);
+        make_block_entry(op);
     }
 
     void instruction_block::jump_direct(const label_ref_t* label_ref) {

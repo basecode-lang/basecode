@@ -248,10 +248,12 @@ namespace basecode::vm {
     }
 
     instruction_operand_t::instruction_operand_t(float immediate) : _data(immediate),
+                                                                    _size(op_sizes::dword),
                                                                     _type(instruction_operand_type_t::imm_f32) {
     }
 
     instruction_operand_t::instruction_operand_t(double immediate) : _data(immediate),
+                                                                     _size(op_sizes::qword),
                                                                      _type(instruction_operand_type_t::imm_f64) {
     }
 

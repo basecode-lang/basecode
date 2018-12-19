@@ -393,7 +393,9 @@ namespace basecode::vm {
         // calls & jumps
         void call(const label_ref_t* label_ref);
 
-        void call_foreign(uint64_t proc_address);
+        void call_foreign(
+            const instruction_operand_t& address,
+            const instruction_operand_t& signature_id = {});
 
         void jump_indirect(const register_t& reg);
 

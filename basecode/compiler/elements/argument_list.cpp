@@ -72,6 +72,8 @@ namespace basecode::compiler {
                         return false;
                     break;
                 }
+                case element_type_t::cast:
+                case element_type_t::transmute:
                 case element_type_t::proc_call:
                 case element_type_t::expression:
                 case element_type_t::float_literal:

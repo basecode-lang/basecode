@@ -21,6 +21,7 @@
 #include "assignment.h"
 #include "declaration.h"
 #include "initializer.h"
+#include "numeric_type.h"
 #include "string_literal.h"
 #include "procedure_type.h"
 #include "symbol_element.h"
@@ -361,24 +362,32 @@ namespace basecode::compiler {
 
         auto proc_type = ffi_decl->identifier()->initializer()->procedure_type();
         if (proc_type != nullptr) {
+            auto is_variadic = false;
+
             auto params_list = proc_type->parameters().as_list();
             for (auto param : params_list) {
-                // XXX: need to figure out how to best handle this
-                if (param->identifier()->type_ref()->is_any_type())
-                    continue;
                 vm::function_value_t value;
                 value.name = param->identifier()->symbol()->name();
-                value.type = vm::ffi_types_t::pointer_type;
+
+                auto type = param->identifier()->type_ref()->type();
+                if (type != nullptr) {
+                    value.type = type->to_ffi_type();
+                    if (value.type == vm::ffi_types_t::any_type)
+                        is_variadic = true;
+                }
+
                 signature.arguments.push_back(value);
             }
 
-            if (proc_type->return_type() == nullptr) {
-                signature.return_value.type = vm::ffi_types_t::void_type;
-            }
+            auto return_type_field = proc_type->return_type();
+            signature.return_value.type = return_type_field != nullptr ?
+                return_type_field->identifier()->type_ref()->type()->to_ffi_type() :
+                vm::ffi_types_t::void_type;
 
-            // XXX: this is a hack
             if (proc_type->is_foreign()) {
-                signature.calling_mode = vm::ffi_calling_mode_t::c_ellipsis;
+                signature.calling_mode = is_variadic ?
+                    vm::ffi_calling_mode_t::c_ellipsis :
+                    vm::ffi_calling_mode_t::c_default;
             }
         }
 

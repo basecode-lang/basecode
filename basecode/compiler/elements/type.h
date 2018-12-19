@@ -54,6 +54,8 @@ namespace basecode::compiler {
 
         virtual bool is_proc_type() const;
 
+        vm::ffi_types_t to_ffi_type() const;
+
         virtual bool is_unknown_type() const;
 
         virtual bool is_pointer_type() const;

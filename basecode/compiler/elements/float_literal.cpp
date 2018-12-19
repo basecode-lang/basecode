@@ -29,10 +29,13 @@ namespace basecode::compiler {
             compiler::session& session,
             compiler::emit_context_t& context,
             compiler::emit_result_t& result) {
-        result.operands.emplace_back(vm::instruction_operand_t(
-            numeric_type::narrow_to_value(_value) == "f32" ?
-                static_cast<float>(_value) :
-                _value));
+        auto is_float = numeric_type::narrow_to_value(_value) == "f32";
+        if (is_float) {
+            float temp_value = static_cast<float>(_value);
+            result.operands.emplace_back(vm::instruction_operand_t(temp_value));
+        } else {
+            result.operands.emplace_back(vm::instruction_operand_t(_value));
+        }
         return true;
     }
 

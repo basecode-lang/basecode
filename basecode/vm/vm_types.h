@@ -1797,6 +1797,7 @@ namespace basecode::vm {
         double_type,
         pointer_type,
         struct_type,
+        any_type
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -1850,13 +1851,16 @@ namespace basecode::vm {
         std::vector<function_value_t> fields {};
     };
 
+    using function_value_list_t = std::vector<function_value_t>;
+
     struct function_signature_t {
         std::string symbol {};
         void* func_ptr = nullptr;
         function_value_t return_value {};
         shared_library_t* library = nullptr;
-        std::vector<function_value_t> arguments {};
+        function_value_list_t arguments {};
         ffi_calling_mode_t calling_mode = ffi_calling_mode_t::c_default;
+        std::unordered_map<common::id_t, function_value_list_t> call_site_arguments {};
     };
 
     ///////////////////////////////////////////////////////////////////////////

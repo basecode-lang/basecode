@@ -175,10 +175,11 @@ namespace basecode::vm {
     }
 
     void ffi::push(ffi_types_t type, uint64_t value) {
-        register_value_alias_t alias;
+        register_value_alias_t alias {};
         alias.qw = value;
 
         switch (type) {
+            case ffi_types_t::any_type:
             case ffi_types_t::void_type:
                 break;
             case ffi_types_t::bool_type:

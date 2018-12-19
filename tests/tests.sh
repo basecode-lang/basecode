@@ -32,3 +32,4 @@
 ../bin/bc -v -G with.bc
 ../bin/bc -v -G asserts.bc
 ../bin/bc -v -G enum.bc
+../bin/bc -v -G ffi.bc
