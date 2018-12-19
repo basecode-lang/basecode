@@ -69,6 +69,8 @@ namespace basecode::compiler {
 
         bool on_greater_than_or_equal(const element& other) const override;
 
+        bool on_as_identifier(compiler::identifier*& value) const override;
+
     private:
         qualified_symbol_t _symbol;
         compiler::identifier* _identifier = nullptr;

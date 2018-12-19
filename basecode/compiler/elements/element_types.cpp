@@ -16,6 +16,7 @@
 #include "field.h"
 #include "attribute.h"
 #include "identifier.h"
+#include "pointer_type.h"
 #include "element_types.h"
 #include "symbol_element.h"
 #include "type_reference.h"
@@ -192,6 +193,18 @@ namespace basecode::compiler {
         if (reference != nullptr)
             return reference->symbol().name;
         return inferred_type->symbol()->name();
+    }
+
+    compiler::type* infer_type_result_t::base_type() const {
+        if (inferred_type == nullptr)
+            return nullptr;
+        if (inferred_type->is_pointer_type()) {
+            auto pointer_type = dynamic_cast<compiler::pointer_type*>(inferred_type);
+            return pointer_type->base_type_ref()->type();
+        } else {
+            return inferred_type;
+        }
+
     }
 
     compiler::type_reference* type_find_result_t::make_type_reference(

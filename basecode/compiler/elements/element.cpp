@@ -292,7 +292,15 @@ namespace basecode::compiler {
         _location = location;
     }
 
+    bool element::as_identifier(compiler::identifier*& value) const {
+        return on_as_identifier(value);
+    }
+
     bool element::on_greater_than_or_equal(const element& other) const {
+        return false;
+    }
+
+    bool element::on_as_identifier(compiler::identifier*& value) const {
         return false;
     }
 

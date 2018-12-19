@@ -35,6 +35,8 @@ namespace basecode::compiler {
 
         void on_owned_elements(element_list_t& list) override;
 
+        bool on_as_identifier(compiler::identifier*& value) const override;
+
     private:
         compiler::identifier* _identifier = nullptr;
         compiler::binary_operator* _assignment = nullptr;

@@ -51,6 +51,8 @@ namespace basecode::compiler {
 
         void on_owned_elements(element_list_t& list) override;
 
+        bool on_as_identifier(compiler::identifier*& value) const override;
+
     private:
         uint8_t _padding = 0;
         uint64_t _offset = 0;

@@ -144,6 +144,11 @@ namespace basecode::compiler {
         return _stack_frame_entry;
     }
 
+    bool identifier::on_as_identifier(compiler::identifier*& value) const {
+        value = const_cast<compiler::identifier*>(this);
+        return true;
+    }
+
     void identifier::stack_frame_entry(compiler::stack_frame_entry* value) {
         _stack_frame_entry = value;
         if (_stack_frame_entry != nullptr)

@@ -115,14 +115,7 @@ namespace basecode::compiler {
             variable_handle_t& handle,
             compiler::element* element,
             bool activate) {
-        compiler::type* base_type = nullptr;
-        if (_type.inferred_type->is_pointer_type()) {
-            auto pointer_type = dynamic_cast<compiler::pointer_type*>(_type.inferred_type);
-            base_type = pointer_type->base_type_ref()->type();
-        } else {
-            base_type = _type.inferred_type;
-        }
-
+        compiler::type* base_type = _type.base_type();
         if (!base_type->is_composite_type())
             return false;
 
@@ -131,8 +124,6 @@ namespace basecode::compiler {
         if (field == nullptr)
             return false;
 
-        // XXX: think on this... not super happy with how pointer deref is being handled
-        //      in this scenario.  also, what happens if we have multiple derefs?
         auto result = false;
         if (element != nullptr) {
             if (_session.variable(element, handle, activate)) {
@@ -173,26 +164,10 @@ namespace basecode::compiler {
             compiler::element* element,
             variable_handle_t& handle,
             bool activate) {
-        compiler::identifier_reference* var = nullptr;
-        switch (element->element_type()) {
-            case element_type_t::unary_operator: {
-                auto unary_op = dynamic_cast<compiler::unary_operator*>(element);
-                if (unary_op->operator_type() == operator_type_t::pointer_dereference) {
-                    var = dynamic_cast<compiler::identifier_reference*>(unary_op->rhs());
-                }
-                break;
-            }
-            case element_type_t::identifier_reference: {
-                var = dynamic_cast<compiler::identifier_reference*>(element);
-                break;
-            }
-            default: {
-                break;
-            }
-        }
-        return var == nullptr ?
-            false :
-            field(var->symbol().name, handle, element, activate);
+        compiler::identifier* var = nullptr;
+        if (!element->as_identifier(var))
+            return false;
+        return field(var->symbol()->name(), handle, element, activate);
     }
 
     bool variable::write() {
@@ -240,24 +215,7 @@ namespace basecode::compiler {
             return true;
 
         compiler::identifier* var = nullptr;
-        switch (_element->element_type()) {
-            case element_type_t::identifier: {
-                var = dynamic_cast<compiler::identifier*>(_element);
-                break;
-            }
-            case element_type_t::unary_operator: {
-                auto unary_op = dynamic_cast<compiler::unary_operator*>(_element);
-                if (unary_op->operator_type() == operator_type_t::pointer_dereference) {
-                    auto ref = dynamic_cast<compiler::identifier_reference*>(unary_op->rhs());
-                    if (ref != nullptr)
-                        var = ref->identifier();
-                }
-                break;
-            }
-            default: {
-                break;
-            }
-        }
+        _element->as_identifier(var);
 
         if (walk_to_root_and_calculate_offset()) {
             var = _rot.identifier;
@@ -533,24 +491,6 @@ namespace basecode::compiler {
         }
 
         _rot.root = current;
-        switch (current->_element->element_type()) {
-            case element_type_t::identifier: {
-                _rot.identifier = dynamic_cast<compiler::identifier*>(current->_element);
-                break;
-            }
-            case element_type_t::unary_operator: {
-                auto unary_op = dynamic_cast<compiler::unary_operator*>(current->_element);
-                if (unary_op->operator_type() == operator_type_t::pointer_dereference) {
-                    auto ref = dynamic_cast<compiler::identifier_reference*>(unary_op->rhs());
-                    if (ref != nullptr)
-                        _rot.identifier = ref->identifier();
-                }
-                break;
-            }
-            default: {
-                break;
-            }
-        }
 
         // +-------------+
         // | i           | -$10
@@ -564,19 +504,23 @@ namespace basecode::compiler {
         // | param 1     |
         // | param 2     |
         // +-------------+
-        if (_rot.identifier != nullptr) {
-            names.push(_rot.identifier->symbol()->name());
-            auto frame_entry = _rot.identifier->stack_frame_entry();
+        compiler::identifier* var = nullptr;
+        if (current->_element->as_identifier(var)) {
+            _rot.identifier = var;
+            names.push(var->symbol()->name());
+
+            auto is_ptr_deref = current->_element->is_pointer_dereference();
+            auto frame_entry = var->stack_frame_entry();
             if (frame_entry != nullptr) {
                 const auto& offsets = frame_entry->owning_frame()->offsets();
                 switch (frame_entry->type()) {
                     case stack_frame_entry_type_t::local: {
-                        if (!current->_element->is_pointer_dereference())
+                        if (!is_ptr_deref)
                             _rot.offset = (frame_entry->offset() + -offsets.locals) + _rot.offset;
                         break;
                     }
                     case stack_frame_entry_type_t::parameter: {
-                        if (!current->_element->is_pointer_dereference())
+                        if (!is_ptr_deref)
                             _rot.offset += (frame_entry->offset() + offsets.parameters);
                         break;
                     }

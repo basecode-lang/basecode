@@ -586,6 +586,8 @@ namespace basecode::compiler {
     struct infer_type_result_t {
         std::string type_name() const;
 
+        compiler::type* base_type() const;
+
         compiler::type* inferred_type = nullptr;
         compiler::type_reference* reference = nullptr;
     };

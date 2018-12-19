@@ -1196,6 +1196,7 @@ namespace basecode::compiler {
             //
             if (infer_type_result.inferred_type->is_composite_type()) {
                 compiler::composite_type* composite_type = nullptr;
+                // XXX: clean up using infer_type_result_t::base_type()
                 if (infer_type_result.inferred_type->is_pointer_type()) {
                     auto pointer_type = dynamic_cast<compiler::pointer_type*>(infer_type_result.inferred_type);
                     composite_type = dynamic_cast<compiler::composite_type*>(pointer_type->base_type_ref()->type());
@@ -1235,6 +1236,7 @@ namespace basecode::compiler {
                     return false;
                 }
 
+                // XXX: clean up using infer_type_result_t::base_type()
                 if (rhs_type_result.inferred_type->is_pointer_type()) {
                     auto pointer_type = dynamic_cast<compiler::pointer_type*>(rhs_type_result.inferred_type);
                     if (pointer_type->base_type_ref()->is_composite_type()) {

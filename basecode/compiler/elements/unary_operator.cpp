@@ -209,4 +209,13 @@ namespace basecode::compiler {
         }
     }
 
+    bool unary_operator::on_as_identifier(compiler::identifier*& value) const {
+        value = nullptr;
+
+        if (_rhs == nullptr)
+            return false;
+
+        return _rhs->as_identifier(value);
+    }
+
 };

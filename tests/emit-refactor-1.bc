@@ -32,7 +32,7 @@ temp :: proc() {
 
 {
     value: u32 := ?;
-    value := 33;
+    print("unassigned value := %d\n", value);
 
     temp();
     print("\n");

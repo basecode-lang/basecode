@@ -198,4 +198,9 @@ namespace basecode::compiler {
         return on_greater_than(other) || on_equals(other);
     }
 
+    bool identifier_reference::on_as_identifier(compiler::identifier*& value) const {
+        value = _identifier;
+        return true;
+    }
+
 };

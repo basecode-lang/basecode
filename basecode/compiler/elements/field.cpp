@@ -80,4 +80,13 @@ namespace basecode::compiler {
             list.emplace_back(_declaration);
     }
 
+    bool field::on_as_identifier(compiler::identifier*& value) const {
+        value = nullptr;
+
+        if (_declaration == nullptr)
+            return false;
+
+        return _declaration->as_identifier(value);
+    }
+
 };

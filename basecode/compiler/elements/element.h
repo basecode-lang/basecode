@@ -137,6 +137,8 @@ namespace basecode::compiler {
 
         void location(const common::source_location& location);
 
+        bool as_identifier(compiler::identifier*& value) const;
+
     protected:
         virtual bool on_fold(
             compiler::session& session,
@@ -186,6 +188,8 @@ namespace basecode::compiler {
         virtual bool on_less_than_or_equal(const element& other) const;
 
         virtual bool on_greater_than_or_equal(const element& other) const;
+
+        virtual bool on_as_identifier(compiler::identifier*& value) const;
 
     private:
         common::id_t _id;

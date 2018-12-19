@@ -81,6 +81,8 @@ namespace basecode::compiler {
 
         bool on_as_rune(common::rune_t& value) const override;
 
+        bool on_as_identifier(compiler::identifier*& value) const override;
+
     private:
         bool _inferred_type = false;
         compiler::field* _field = nullptr;

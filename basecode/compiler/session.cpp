@@ -106,6 +106,8 @@ namespace basecode::compiler {
                 return true;
             }
             case element_type_t::identifier_reference: {
+                // N.B. need to leave this case alone because we need the id from
+                //      the reference; not the identifier itself
                 auto ref = dynamic_cast<compiler::identifier_reference*>(element);
                 target_element = ref->identifier();
                 id = ref->id();

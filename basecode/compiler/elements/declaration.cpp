@@ -49,4 +49,9 @@ namespace basecode::compiler {
             list.emplace_back(_assignment);
     }
 
+    bool declaration::on_as_identifier(compiler::identifier*& value) const {
+        value = _identifier;
+        return true;
+    }
+
 };
