@@ -50,10 +50,7 @@ namespace basecode::vm {
                 switch (entry.type()) {
                     case block_entry_type_t::instruction: {
                         auto inst = entry.data<instruction_t>();
-                        auto inst_size = inst->encode(
-                            r,
-                            _terp->heap(),
-                            entry.address());
+                        auto inst_size = inst->encode(r, entry.address());
                         if (inst_size == 0)
                             return false;
                         break;

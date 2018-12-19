@@ -26,12 +26,12 @@ namespace basecode::vm {
         for (const auto& kvp : _source_files) {
             fmt::print(file, "FILE: {:<64} Basecode Alpha Compiler\n", kvp.first);
             fmt::print(file, "      {:>91}\n\n", "Assembly Listing (byte code)");
-            fmt::print(file, "LINE    ADDRESS     SOURCE\n");
+            fmt::print(file, "LINE    ADDRESS            SOURCE\n");
             size_t line_number = 1;
             for (const auto& line : kvp.second.lines)
                 fmt::print(
                     file,
-                    "{:06d}: ${:08x}   {}\n",
+                    "{:06d}: ${:016X}  {}\n",
                     line_number++,
                     line.address,
                     line.source);

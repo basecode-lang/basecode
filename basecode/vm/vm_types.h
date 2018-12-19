@@ -585,12 +585,10 @@ namespace basecode::vm {
 
         size_t decode(
             common::result& r,
-            uint8_t* heap,
             uint64_t address);
 
         size_t encode(
             common::result& r,
-            uint8_t* heap,
             uint64_t address);
 
         size_t encoding_size() const;

@@ -39,13 +39,22 @@ namespace basecode::vm {
 
         uint64_t call(function_signature_t* func);
 
-        void push(ffi_types_t type, uint64_t value);
+        void push(
+            const function_value_t& param,
+            uint64_t value);
 
         void calling_convention(ffi_calling_mode_t mode);
 
         function_signature_t* find_function(uint64_t address);
 
         shared_library_t* shared_library(const boost::filesystem::path& path);
+
+    private:
+        void add_struct_fields(
+            DCstruct* s,
+            const std::vector<function_value_t>& fields);
+
+        DCstruct* make_struct(const function_value_t& value);
 
     private:
         size_t _heap_size;

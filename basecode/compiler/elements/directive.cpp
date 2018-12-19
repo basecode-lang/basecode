@@ -26,6 +26,7 @@
 #include "procedure_type.h"
 #include "symbol_element.h"
 #include "type_reference.h"
+#include "composite_type.h"
 
 namespace basecode::compiler {
 
@@ -372,8 +373,19 @@ namespace basecode::compiler {
                 auto type = param->identifier()->type_ref()->type();
                 if (type != nullptr) {
                     value.type = type->to_ffi_type();
-                    if (value.type == vm::ffi_types_t::any_type)
+                    if (value.type == vm::ffi_types_t::any_type) {
                         is_variadic = true;
+                    } else if (value.type == vm::ffi_types_t::struct_type) {
+                        auto composite_type = dynamic_cast<compiler::composite_type*>(type);
+                        if (composite_type == nullptr)
+                            return false;
+                        for (auto fld : composite_type->fields().as_list()) {
+                            vm::function_value_t fld_value;
+                            fld_value.name = fld->identifier()->symbol()->name();
+                            fld_value.type = fld->identifier()->type_ref()->type()->to_ffi_type();
+                            value.fields.push_back(fld_value);
+                        }
+                    }
                 }
 
                 signature.arguments.push_back(value);

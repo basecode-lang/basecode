@@ -12,3 +12,14 @@
 core :: module("../modules/core");
 
 print("%s: %d, %f\n", "integer and float", 22, cast<f64>(3.5));
+
+@library "basecode";
+#foreign str_test_ptr :: proc(str: ^string);
+
+@library "basecode";
+#foreign str_test_cpy :: proc(str: string);
+
+temp: string := "hello world!";
+str_test_ptr(address_of(temp));
+
+str_test_cpy(temp);

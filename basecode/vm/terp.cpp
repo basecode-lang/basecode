@@ -65,7 +65,7 @@ namespace basecode::vm {
         return offset ? value + (size - offset) : value;
     }
 
-    size_t instruction_t::decode(common::result& r, uint8_t* heap, uint64_t address) {
+    size_t instruction_t::decode(common::result& r, uint64_t address) {
         if (address % alignment != 0) {
             r.add_message(
                 "B003",
@@ -77,7 +77,7 @@ namespace basecode::vm {
             return 0;
         }
 
-        uint8_t* encoding_ptr = heap + address;
+        uint8_t* encoding_ptr = reinterpret_cast<uint8_t*>(address);
         uint8_t encoding_size = *encoding_ptr;
         op = static_cast<op_codes>(*(encoding_ptr + 1));
         auto op_size_and_operands_count = static_cast<uint8_t>(*(encoding_ptr + 2));
@@ -155,7 +155,7 @@ namespace basecode::vm {
         return encoding_size;
     }
 
-    size_t instruction_t::encode(common::result& r, uint8_t* heap, uint64_t address) {
+    size_t instruction_t::encode(common::result& r, uint64_t address) {
         if (address % alignment != 0) {
             r.add_message(
                 "B003",
@@ -170,7 +170,7 @@ namespace basecode::vm {
         uint8_t encoding_size = base_size;
         size_t offset = base_size;
 
-        auto encoding_ptr = heap + address;
+        auto encoding_ptr = reinterpret_cast<uint8_t*>(address);
         *(encoding_ptr + 1) = static_cast<uint8_t>(op);
 
         uint8_t size_type_and_operand_count = 0;
@@ -413,7 +413,7 @@ namespace basecode::vm {
             instruction_t& inst) {
         auto it = _cache.find(address);
         if (it == _cache.end()) {
-            auto size = inst.decode(r, _terp->heap(), address);
+            auto size = inst.decode(r, address);
             if (size == 0)
                 return 0;
             _cache.insert(std::make_pair(
@@ -658,8 +658,8 @@ namespace basecode::vm {
                     return false;
 
                 memcpy(
-                    _heap + target_address.alias.u,
-                    _heap + source_address.alias.u,
+                    reinterpret_cast<void*>(target_address.alias.u),
+                    reinterpret_cast<void*>(source_address.alias.u),
                     length.alias.u * op_size_in_bytes(inst.size));
 
                 _registers.flags(register_file_t::flags_t::zero, false);
@@ -768,19 +768,19 @@ namespace basecode::vm {
                 switch (inst.size) {
                     case op_sizes::byte:
                         memset(
-                            _heap + address.alias.u,
+                            reinterpret_cast<void*>(address.alias.u),
                             static_cast<uint8_t>(value.alias.u),
                             length.alias.u);
                         break;
                     case op_sizes::word:
                         memset(
-                            _heap + address.alias.u,
+                            reinterpret_cast<void*>(address.alias.u),
                             static_cast<uint16_t>(value.alias.u),
                             length.alias.u);
                         break;
                     case op_sizes::dword:
                         memset(
-                            _heap + address.alias.u,
+                            reinterpret_cast<void*>(address.alias.u),
                             static_cast<uint32_t>(value.alias.u),
                             length.alias.u);
                         break;
@@ -2249,7 +2249,8 @@ namespace basecode::vm {
 
                 vm::function_value_list_t* arguments = nullptr;
                 if (func->calling_mode == vm::ffi_calling_mode_t::c_ellipsis) {
-                    auto it = func->call_site_arguments.find(signature_id.alias.u);
+                    auto it = func->call_site_arguments.find(
+                        static_cast<common::id_t>(signature_id.alias.u));
                     if (it == func->call_site_arguments.end()) {
                         execute_trap(trap_invalid_ffi_call);
                         return false;
@@ -2259,11 +2260,9 @@ namespace basecode::vm {
                     arguments = &func->arguments;
                 }
 
-                for (auto arg : *arguments) {
+                for (const auto& arg : *arguments) {
                     auto value = pop();
-                    if (arg.type == ffi_types_t::pointer_type)
-                        value += reinterpret_cast<uint64_t>(_heap);
-                    _ffi->push(arg.type, value);
+                    _ffi->push(arg, value);
                 }
 
                 auto result_value = _ffi->call(func);
@@ -2311,10 +2310,17 @@ namespace basecode::vm {
             return true;
 
         _heap = new uint8_t[_heap_size];
+        _heap_address = reinterpret_cast<uint64_t>(_heap);
 
-        heap_vector(heap_vectors_t::top_of_stack, _heap_size);
-        heap_vector(heap_vectors_t::bottom_of_stack, _heap_size - _stack_size);
-        heap_vector(heap_vectors_t::program_start, program_start);
+        heap_vector(
+            heap_vectors_t::top_of_stack,
+            _heap_address + _heap_size);
+        heap_vector(
+            heap_vectors_t::bottom_of_stack,
+            _heap_address + (_heap_size - _stack_size));
+        heap_vector(
+            heap_vectors_t::program_start,
+            _heap_address + program_start);
 
         reset();
 
@@ -2386,7 +2392,7 @@ namespace basecode::vm {
 
     // XXX: need to add support for both big and little endian
     uint64_t terp::read(op_sizes size, uint64_t address) const {
-        uint8_t* relative_heap_ptr = _heap + address;
+        uint8_t* heap_ptr = reinterpret_cast<uint8_t*>(address);
         uint64_t result = 0;
         auto result_ptr = reinterpret_cast<uint8_t*>(&result);
         switch (size) {
@@ -2394,30 +2400,30 @@ namespace basecode::vm {
                 break;
             }
             case op_sizes::byte: {
-                *(result_ptr + 0) = *relative_heap_ptr;
+                *(result_ptr + 0) = *heap_ptr;
                 break;
             }
             case op_sizes::word: {
-                *(result_ptr + 0) = relative_heap_ptr[0];
-                *(result_ptr + 1) = relative_heap_ptr[1];
+                *(result_ptr + 0) = heap_ptr[0];
+                *(result_ptr + 1) = heap_ptr[1];
                 break;
             }
             case op_sizes::dword: {
-                *(result_ptr + 0) = relative_heap_ptr[0];
-                *(result_ptr + 1) = relative_heap_ptr[1];
-                *(result_ptr + 2) = relative_heap_ptr[2];
-                *(result_ptr + 3) = relative_heap_ptr[3];
+                *(result_ptr + 0) = heap_ptr[0];
+                *(result_ptr + 1) = heap_ptr[1];
+                *(result_ptr + 2) = heap_ptr[2];
+                *(result_ptr + 3) = heap_ptr[3];
                 break;
             }
             case op_sizes::qword: {
-                *(result_ptr + 0) = relative_heap_ptr[0];
-                *(result_ptr + 1) = relative_heap_ptr[1];
-                *(result_ptr + 2) = relative_heap_ptr[2];
-                *(result_ptr + 3) = relative_heap_ptr[3];
-                *(result_ptr + 4) = relative_heap_ptr[4];
-                *(result_ptr + 5) = relative_heap_ptr[5];
-                *(result_ptr + 6) = relative_heap_ptr[6];
-                *(result_ptr + 7) = relative_heap_ptr[7];
+                *(result_ptr + 0) = heap_ptr[0];
+                *(result_ptr + 1) = heap_ptr[1];
+                *(result_ptr + 2) = heap_ptr[2];
+                *(result_ptr + 3) = heap_ptr[3];
+                *(result_ptr + 4) = heap_ptr[4];
+                *(result_ptr + 5) = heap_ptr[5];
+                *(result_ptr + 6) = heap_ptr[6];
+                *(result_ptr + 7) = heap_ptr[7];
                 break;
             }
         }
@@ -2425,8 +2431,10 @@ namespace basecode::vm {
     }
 
     uint64_t terp::heap_vector(heap_vectors_t vector) const {
-        uint64_t heap_vector_address = heap_vector_table_start
-            + (sizeof(uint64_t) * static_cast<uint8_t>(vector));
+        uint64_t heap_vector_address =
+            _heap_address +
+            heap_vector_table_start +
+            (sizeof(uint64_t) * static_cast<uint8_t>(vector));
         return read(op_sizes::qword, heap_vector_address);
     }
 
@@ -2435,8 +2443,10 @@ namespace basecode::vm {
     }
 
     void terp::heap_vector(heap_vectors_t vector, uint64_t address) {
-        size_t heap_vector_address = heap_vector_table_start
-            + (sizeof(uint64_t) * static_cast<uint8_t>(vector));
+        size_t heap_vector_address =
+            _heap_address +
+            heap_vector_table_start +
+            (sizeof(uint64_t) * static_cast<uint8_t>(vector));
         write(op_sizes::qword, heap_vector_address, address);
     }
 
@@ -2636,37 +2646,37 @@ namespace basecode::vm {
 
     // XXX: need to add support for both big and little endian
     void terp::write(op_sizes size, uint64_t address, uint64_t value) {
-        uint8_t* relative_heap_ptr = _heap + address;
+        uint8_t* heap_ptr = reinterpret_cast<uint8_t*>(address);
         auto value_ptr = reinterpret_cast<uint8_t*>(&value);
         switch (size) {
             case op_sizes::none: {
                 break;
             }
             case op_sizes::byte: {
-                *relative_heap_ptr = static_cast<uint8_t>(value);
+                *heap_ptr = static_cast<uint8_t>(value);
                 break;
             }
             case op_sizes::word: {
-                *(relative_heap_ptr + 0) = value_ptr[0];
-                *(relative_heap_ptr + 1) = value_ptr[1];
+                *(heap_ptr + 0) = value_ptr[0];
+                *(heap_ptr + 1) = value_ptr[1];
                 break;
             }
             case op_sizes::dword: {
-                *(relative_heap_ptr + 0) = value_ptr[0];
-                *(relative_heap_ptr + 1) = value_ptr[1];
-                *(relative_heap_ptr + 2) = value_ptr[2];
-                *(relative_heap_ptr + 3) = value_ptr[3];
+                *(heap_ptr + 0) = value_ptr[0];
+                *(heap_ptr + 1) = value_ptr[1];
+                *(heap_ptr + 2) = value_ptr[2];
+                *(heap_ptr + 3) = value_ptr[3];
                 break;
             }
             case op_sizes::qword: {
-                *(relative_heap_ptr + 0) = value_ptr[0];
-                *(relative_heap_ptr + 1) = value_ptr[1];
-                *(relative_heap_ptr + 2) = value_ptr[2];
-                *(relative_heap_ptr + 3) = value_ptr[3];
-                *(relative_heap_ptr + 4) = value_ptr[4];
-                *(relative_heap_ptr + 5) = value_ptr[5];
-                *(relative_heap_ptr + 6) = value_ptr[6];
-                *(relative_heap_ptr + 7) = value_ptr[7];
+                *(heap_ptr + 0) = value_ptr[0];
+                *(heap_ptr + 1) = value_ptr[1];
+                *(heap_ptr + 2) = value_ptr[2];
+                *(heap_ptr + 3) = value_ptr[3];
+                *(heap_ptr + 4) = value_ptr[4];
+                *(heap_ptr + 5) = value_ptr[5];
+                *(heap_ptr + 6) = value_ptr[6];
+                *(heap_ptr + 7) = value_ptr[7];
                 break;
             }
         }

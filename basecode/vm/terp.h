@@ -195,6 +195,7 @@ namespace basecode::vm {
         size_t _stack_size = 0;
         uint8_t* _heap = nullptr;
         instruction_cache _icache;
+        uint64_t _heap_address = 0;
         register_file_t _registers {};
         allocator* _allocator = nullptr;
         meta_information_t _meta_information {};

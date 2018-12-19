@@ -22,6 +22,7 @@
 #include "procedure_type.h"
 #include "procedure_call.h"
 #include "type_reference.h"
+#include "composite_type.h"
 #include "identifier_reference.h"
 
 namespace basecode::compiler {
@@ -112,6 +113,22 @@ namespace basecode::compiler {
 
                             vm::function_value_t value {};
                             value.type = type_result.inferred_type->to_ffi_type();
+                            if (value.type == vm::ffi_types_t::struct_type) {
+                                // XXX: temporary hack to keep string literals working
+                                if (type_result.inferred_type->element_type() == element_type_t::string_type) {
+                                    value.type = vm::ffi_types_t::pointer_type;
+                                } else {
+                                    auto composite_type = dynamic_cast<compiler::composite_type*>(type_result.inferred_type);
+                                    if (composite_type == nullptr)
+                                        return false;
+                                    for (auto fld : composite_type->fields().as_list()) {
+                                        vm::function_value_t fld_value;
+                                        fld_value.name = fld->identifier()->symbol()->name();
+                                        fld_value.type = fld->identifier()->type_ref()->type()->to_ffi_type();
+                                        value.fields.push_back(fld_value);
+                                    }
+                                }
+                            }
                             args.push_back(value);
                         }
                         return true;

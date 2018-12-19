@@ -14,6 +14,7 @@
 #include <vm/instruction_block.h>
 #include "assembly_label.h"
 #include "identifier.h"
+#include "pointer_type.h"
 #include "symbol_element.h"
 #include "identifier_reference.h"
 
@@ -52,9 +53,21 @@ namespace basecode::compiler {
     bool assembly_label::on_infer_type(
             compiler::session& session,
             infer_type_result_t& result) {
-        result.inferred_type = session
-            .scope_manager()
-            .find_type(qualified_symbol_t("u64"));
+        auto& builder = session.builder();
+        auto& scope_manager = session.scope_manager();
+
+        // XXX: this isn't correct!  need to fix
+        auto string_type = scope_manager.find_type(qualified_symbol_t("string"));
+
+        auto type = scope_manager.find_pointer_type(string_type);
+        if (type == nullptr) {
+            type = builder.make_pointer_type(
+                parent_scope(),
+                qualified_symbol_t(),
+                string_type);
+        }
+
+        result.inferred_type = type;
         return true;
     }
 

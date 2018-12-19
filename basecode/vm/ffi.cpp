@@ -26,6 +26,58 @@ namespace basecode::vm {
         _vm = nullptr;
     }
 
+    void ffi::push(
+            const function_value_t& param,
+            uint64_t value) {
+        register_value_alias_t alias {};
+        alias.qw = value;
+
+        switch (param.type) {
+            case ffi_types_t::any_type:
+            case ffi_types_t::void_type:
+                break;
+            case ffi_types_t::bool_type:
+                dcArgBool(_vm, static_cast<DCbool>(value));
+                break;
+            case ffi_types_t::char_type:
+                dcArgChar(_vm, static_cast<DCchar>(value));
+                break;
+            case ffi_types_t::short_type:
+                dcArgShort(_vm, static_cast<DCshort>(value));
+                break;
+            case ffi_types_t::long_type:
+                dcArgLong(_vm, static_cast<DClong>(value));
+                break;
+            case ffi_types_t::long_long_type:
+                dcArgLongLong(_vm, static_cast<DClonglong>(value));
+                break;
+            case ffi_types_t::float_type:
+                dcArgFloat(_vm, alias.dwf);
+                break;
+            case ffi_types_t::double_type:
+                dcArgDouble(_vm, alias.qwf);
+                break;
+            case ffi_types_t::pointer_type:
+                dcArgPointer(
+                    _vm,
+                    reinterpret_cast<DCpointer>(value));
+                break;
+            case ffi_types_t::struct_type: {
+                auto meta_struct = make_struct(param);
+                dcArgStruct(
+                    _vm,
+                    meta_struct,
+                    reinterpret_cast<DCpointer>(value));
+                break;
+            }
+            default:
+            case ffi_types_t::int_type: {
+                dcArgInt(_vm, static_cast<DCint>(value));
+                break;
+            }
+        }
+    }
+
     void ffi::clear() {
         _foreign_functions.clear();
         _shared_libraries.clear();
@@ -54,6 +106,52 @@ namespace basecode::vm {
         _foreign_functions.insert(std::make_pair(func_ptr, signature));
 
         return true;
+    }
+
+    void ffi::add_struct_fields(
+            DCstruct* s,
+            const std::vector<function_value_t>& fields) {
+        for (auto& value : fields) {
+            switch (value.type) {
+                case ffi_types_t::any_type:
+                case ffi_types_t::void_type:
+                    break;
+                case ffi_types_t::bool_type:
+                    dcStructField(s, DC_SIGCHAR_BOOL, DEFAULT_ALIGNMENT, 1);
+                    break;
+                case ffi_types_t::char_type:
+                    dcStructField(s, DC_SIGCHAR_CHAR, DEFAULT_ALIGNMENT, 1);
+                    break;
+                case ffi_types_t::short_type:
+                    dcStructField(s, DC_SIGCHAR_SHORT, DEFAULT_ALIGNMENT, 1);
+                    break;
+                case ffi_types_t::int_type:
+                    dcStructField(s, DC_SIGCHAR_INT, DEFAULT_ALIGNMENT, 1);
+                    break;
+                case ffi_types_t::long_type:
+                    dcStructField(s, DC_SIGCHAR_LONG, DEFAULT_ALIGNMENT, 1);
+                    break;
+                case ffi_types_t::long_long_type:
+                    dcStructField(s, DC_SIGCHAR_LONGLONG, DEFAULT_ALIGNMENT, 1);
+                    break;
+                case ffi_types_t::float_type:
+                    dcStructField(s, DC_SIGCHAR_FLOAT, DEFAULT_ALIGNMENT, 1);
+                    break;
+                case ffi_types_t::double_type:
+                    dcStructField(s, DC_SIGCHAR_DOUBLE, DEFAULT_ALIGNMENT, 1);
+                    break;
+                case ffi_types_t::pointer_type:
+                    dcStructField(s, DC_SIGCHAR_POINTER, DEFAULT_ALIGNMENT, 1);
+                    break;
+                case ffi_types_t::struct_type: {
+                    dcStructField(s, DC_SIGCHAR_STRUCT, DEFAULT_ALIGNMENT, 1);
+                    dcSubStruct(s, value.fields.size(), DEFAULT_ALIGNMENT, 1);
+                    add_struct_fields(s, value.fields);
+                    dcCloseStruct(s);
+                    break;
+                }
+            }
+        }
     }
 
     void ffi::dump_shared_libraries() {
@@ -159,65 +257,17 @@ namespace basecode::vm {
             }
             default:
                 return 0;
-//            case ffi_types_t::struct_type: {
-//                auto dc_struct = func->return_value.struct_meta_info();
-//
-//                DCpointer output_value;
-//                dcCallStruct(
-//                    _vm,
-//                    func->func_ptr,
-//                    dc_struct,
-//                    &output_value);
-//
-//                return reinterpret_cast<uint64_t>(output_value);
-//            }
-        }
-    }
+            case ffi_types_t::struct_type: {
+                auto dc_struct = make_struct(func->return_value);
 
-    void ffi::push(ffi_types_t type, uint64_t value) {
-        register_value_alias_t alias {};
-        alias.qw = value;
+                DCpointer output_value;
+                dcCallStruct(
+                    _vm,
+                    func->func_ptr,
+                    dc_struct,
+                    &output_value);
 
-        switch (type) {
-            case ffi_types_t::any_type:
-            case ffi_types_t::void_type:
-                break;
-            case ffi_types_t::bool_type:
-                dcArgBool(_vm, static_cast<DCbool>(value));
-                break;
-            case ffi_types_t::char_type:
-                dcArgChar(_vm, static_cast<DCchar>(value));
-                break;
-            case ffi_types_t::short_type:
-                dcArgShort(_vm, static_cast<DCshort>(value));
-                break;
-            case ffi_types_t::long_type:
-                dcArgLong(_vm, static_cast<DClong>(value));
-                break;
-            case ffi_types_t::long_long_type:
-                dcArgLongLong(_vm, static_cast<DClonglong>(value));
-                break;
-            case ffi_types_t::float_type:
-                dcArgFloat(_vm, alias.dwf);
-                break;
-            case ffi_types_t::double_type:
-                dcArgDouble(_vm, alias.qwf);
-                break;
-            case ffi_types_t::pointer_type:
-                dcArgPointer(_vm, reinterpret_cast<DCpointer>(value));
-                break;
-//            case ffi_types_t::struct_type: {
-//                auto dc_struct = struct_meta_info();
-//                dcArgStruct(
-//                    vm,
-//                    dc_struct,
-//                    reinterpret_cast<DCpointer>(value));
-//                break;
-//            }
-            default:
-            case ffi_types_t::int_type: {
-                dcArgInt(_vm, static_cast<DCint>(value));
-                break;
+                return reinterpret_cast<uint64_t>(output_value);
             }
         }
     }
@@ -236,6 +286,14 @@ namespace basecode::vm {
         }
     }
 
+    DCstruct* ffi::make_struct(const function_value_t& value) {
+        auto dc_struct = dcNewStruct(value.fields.size(), DEFAULT_ALIGNMENT);
+        add_struct_fields(dc_struct, value.fields);
+        dcCloseStruct(dc_struct);
+
+        return dc_struct;
+    }
+
     function_signature_t* ffi::find_function(uint64_t address) {
         auto it = _foreign_functions.find(reinterpret_cast<void*>(address));
         if (it == _foreign_functions.end())
@@ -249,61 +307,5 @@ namespace basecode::vm {
             return nullptr;
         return &it->second;
     }
-
-//    DCstruct* function_value_t::struct_meta_info() {
-//        if (_struct_meta_data != nullptr)
-//            return _struct_meta_data;
-//
-//        _struct_meta_data = dcNewStruct(
-//            fields.size(),
-//            DEFAULT_ALIGNMENT);
-//        add_struct_fields(_struct_meta_data);
-//        dcCloseStruct(_struct_meta_data);
-//
-//        return _struct_meta_data;
-//    }
-//
-//    void function_value_t::add_struct_fields(DCstruct* s) {
-//        for (auto& value : fields) {
-//            switch (value.type) {
-//                case ffi_types_t::void_type:
-//                    break;
-//                case ffi_types_t::bool_type:
-//                    dcStructField(s, DC_SIGCHAR_BOOL, DEFAULT_ALIGNMENT, 1);
-//                    break;
-//                case ffi_types_t::char_type:
-//                    dcStructField(s, DC_SIGCHAR_CHAR, DEFAULT_ALIGNMENT, 1);
-//                    break;
-//                case ffi_types_t::short_type:
-//                    dcStructField(s, DC_SIGCHAR_SHORT, DEFAULT_ALIGNMENT, 1);
-//                    break;
-//                case ffi_types_t::int_type:
-//                    dcStructField(s, DC_SIGCHAR_INT, DEFAULT_ALIGNMENT, 1);
-//                    break;
-//                case ffi_types_t::long_type:
-//                    dcStructField(s, DC_SIGCHAR_LONG, DEFAULT_ALIGNMENT, 1);
-//                    break;
-//                case ffi_types_t::long_long_type:
-//                    dcStructField(s, DC_SIGCHAR_LONGLONG, DEFAULT_ALIGNMENT, 1);
-//                    break;
-//                case ffi_types_t::float_type:
-//                    dcStructField(s, DC_SIGCHAR_FLOAT, DEFAULT_ALIGNMENT, 1);
-//                    break;
-//                case ffi_types_t::double_type:
-//                    dcStructField(s, DC_SIGCHAR_DOUBLE, DEFAULT_ALIGNMENT, 1);
-//                    break;
-//                case ffi_types_t::pointer_type:
-//                    dcStructField(s, DC_SIGCHAR_POINTER, DEFAULT_ALIGNMENT, 1);
-//                    break;
-//                case ffi_types_t::struct_type: {
-//                    dcStructField(s, DC_SIGCHAR_STRUCT, DEFAULT_ALIGNMENT, 1);
-//                    dcSubStruct(s, value.fields.size(), DEFAULT_ALIGNMENT, 1);
-//                    value.add_struct_fields(s);
-//                    dcCloseStruct(s);
-//                    break;
-//                }
-//            }
-//        }
-//    }
 
 };
