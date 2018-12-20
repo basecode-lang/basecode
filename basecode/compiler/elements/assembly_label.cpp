@@ -16,6 +16,7 @@
 #include "identifier.h"
 #include "pointer_type.h"
 #include "symbol_element.h"
+#include "type_reference.h"
 #include "identifier_reference.h"
 
 namespace basecode::compiler {
@@ -56,15 +57,16 @@ namespace basecode::compiler {
         auto& builder = session.builder();
         auto& scope_manager = session.scope_manager();
 
-        // XXX: this isn't correct!  need to fix
-        auto string_type = scope_manager.find_type(qualified_symbol_t("string"));
+        auto base_type = _ref != nullptr ?
+            _ref->identifier()->type_ref()->type() :
+            scope_manager.find_type(qualified_symbol_t("u0"));
 
-        auto type = scope_manager.find_pointer_type(string_type);
+        auto type = scope_manager.find_pointer_type(base_type);
         if (type == nullptr) {
             type = builder.make_pointer_type(
                 parent_scope(),
                 qualified_symbol_t(),
-                string_type);
+                base_type);
         }
 
         result.inferred_type = type;

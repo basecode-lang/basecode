@@ -53,11 +53,11 @@ namespace basecode::compiler {
     }
 
     std::string numeric_type::narrow_to_value(uint64_t value) {
-        size_t start_index = 0;
-        size_t end_index = 4;
+        size_t start_index = 1;
+        size_t end_index = 5;
         if (common::is_sign_bit_set(value)) {
-            end_index = 8;
-            start_index = 4;
+            end_index = 9;
+            start_index = 5;
         }
         int64_t signed_value = static_cast<int64_t>(value);
         for (size_t i = start_index; i < end_index; i++) {

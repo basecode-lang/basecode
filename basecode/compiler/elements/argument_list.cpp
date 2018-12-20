@@ -117,7 +117,6 @@ namespace basecode::compiler {
                                 vm::instruction_operand_t::sp(),
                                 vm::instruction_operand_t(arg_var->address_reg()),
                                 vm::instruction_operand_t(size, vm::op_sizes::word));
-//                            block->push(vm::instruction_operand_t(arg_var->address_reg()));
                             break;
                         }
                         default: {

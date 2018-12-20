@@ -66,10 +66,10 @@ namespace basecode::compiler {
             }
             case element_type_t::pointer_type: {
                 auto other_pointer_type = dynamic_cast<compiler::pointer_type*>(other);
-                return _base_type_ref->type()->type_check(other_pointer_type->base_type_ref()->type());
+                return _base_type_ref->type()->type_check(other_pointer_type->_base_type_ref->type());
             }
             default: {
-                return _base_type_ref->type()->type_check(other);
+                return false;
             }
         }
     }
