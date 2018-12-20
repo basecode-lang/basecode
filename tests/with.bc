@@ -1,46 +1,48 @@
 core :: module("../modules/core");
 
-msg: string :: "hello world";
+#run {
+    msg: string :: "hello world";
 
-temp: string;
-temp := msg;
+    temp: string;
+    temp := msg;
 
-with temp {
-    print("temp.length   := %d\n", .length);
-    print("temp.capacity := %d\n", .capacity);
-};
+    with temp {
+        print("temp.length   := %d\n", .length);
+        print("temp.capacity := %d\n", .capacity);
+    };
 
-// XXX: this is a problem....
-//
-// it shouldn't matter what order these types are defined.  the compiler
-// should resolve them at the end.  however, the way the member access binary operator
-// works at the moment, it errors on an unknown_type because it can't resolve the field
-// for the rhs.  somehow, this needs to be added to the deferred type resolution process.
-//
-// for now, ordering them so they're pre-defined solves the issue.  i don't want to
-// leave it like this though.
-three :: struct {
-    c: string;
-};
+    // XXX: this is a problem....
+    //
+    // it shouldn't matter what order these types are defined.  the compiler
+    // should resolve them at the end.  however, the way the member access binary operator
+    // works at the moment, it errors on an unknown_type because it can't resolve the field
+    // for the rhs.  somehow, this needs to be added to the deferred type resolution process.
+    //
+    // for now, ordering them so they're pre-defined solves the issue.  i don't want to
+    // leave it like this though.
+    three :: struct {
+        c: string;
+    };
 
-two :: struct {
-    b: three;
-};
+    two :: struct {
+        b: three;
+    };
 
-one :: struct {
-    a: two;
-};
+    one :: struct {
+        a: two;
+    };
 
-x: one;
+    x: one;
 
-with x {
-    with .a {
-        with .b {
-            .c := msg;
-            with .c {
-                print(".length   := %d\n", .length);
-                print(".capacity := %d\n", .capacity);
-                print(".data     := '%s'\n", .data);
+    with x {
+        with .a {
+            with .b {
+                .c := msg;
+                with .c {
+                    print(".length   := %d\n", .length);
+                    print(".capacity := %d\n", .capacity);
+                    print(".data     := '%s'\n", .data);
+                };
             };
         };
     };

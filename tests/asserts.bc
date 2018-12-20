@@ -32,10 +32,12 @@ fib :: proc(n: u64 := 10): u64 {
     };
 };
 
-result := fib(20);
-print("fib       := %d\n", result);
-assert(result == 1, s2);
+#run {
+    result := fib(20);
+    print("fib       := %d\n", result);
+    assert(result == 1, s2);
 
-result := factorial();
-print("factorial := %d\n", result);
-assert(result == 479001600, s2);
+    result := factorial();
+    print("factorial := %d\n", result);
+    assert(result == 479001600, s2);
+};

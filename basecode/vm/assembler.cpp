@@ -883,6 +883,11 @@ namespace basecode::vm {
             std::stringstream line {};
 
             switch (entry.type()) {
+                case block_entry_type_t::meta: {
+                    auto meta = entry.data<meta_t>();
+                    line << fmt::format(".meta '{}'", meta->label);
+                    break;
+                }
                 case block_entry_type_t::label: {
                     auto label = entry.data<label_t>();
                     line << fmt::format("{}:", label->instance->name());

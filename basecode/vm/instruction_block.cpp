@@ -46,6 +46,14 @@ namespace basecode::vm {
         make_block_entry(exit_op);
     }
 
+    void instruction_block::meta_end() {
+        make_block_entry(meta_t {"end"});
+    }
+
+    void instruction_block::meta_begin() {
+        make_block_entry(meta_t {"begin"});
+    }
+
     bool instruction_block::apply_operand(
             const instruction_operand_t& operand,
             instruction_t& encoding,
@@ -1028,6 +1036,10 @@ namespace basecode::vm {
 
     std::vector<block_entry_t>& instruction_block::entries() {
         return _entries;
+    }
+
+    void instruction_block::make_block_entry(const meta_t& meta) {
+        _entries.push_back(block_entry_t(meta));
     }
 
     void instruction_block::add_entry(const block_entry_t& entry) {

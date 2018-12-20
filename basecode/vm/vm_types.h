@@ -712,8 +712,13 @@ namespace basecode::vm {
         vm::label* instance = nullptr;
     };
 
+    struct meta_t {
+        std::string label {};
+    };
+
     enum class block_entry_type_t : uint8_t {
         section = 1,
+        meta,
         comment,
         label,
         blank_line,
@@ -728,6 +733,8 @@ namespace basecode::vm {
         block_entry_t();
 
         block_entry_t(const block_entry_t& other);
+
+        explicit block_entry_t(const meta_t& meta);
 
         explicit block_entry_t(const label_t& label);
 

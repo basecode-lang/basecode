@@ -12,14 +12,8 @@
 intrinsics_module :: module("intrinsics.bc");
 import public from intrinsics_module;
 
-print("intrinsics\n");
-
 compiler_module :: module("compiler.bc");
 import public from compiler_module;
 
-print("compiler\n");
-
 assert_module :: module("assert.bc");
 import public from assert_module;
-
-print("assert\n");

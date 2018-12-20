@@ -3,23 +3,25 @@ core :: module("../modules/core");
 id_t :: #type u32;
 PI   :: cast<f64>(3.1415926535);
 
-bar := 8;
-
-foo: u8;
-foo := 8;
-
 vector3 :: struct {
     x: f32;
     y: f32;
     z: f32;
 };
 
-'foo:
-    a, b, c: u16 := 1, 1, 2;
+#run {
+    bar := 8;
 
-'bar:
-    a, b := 1, 2;
-    b, a := a, b;
+    foo: u8;
+    foo := 8;
 
-'bing:
-    d := cast<u16>(a);
+    'foo:
+        a, b, c: u16 := 1, 1, 2;
+
+    'bar:
+        a, b := 1, 2;
+        b, a := a, b;
+
+    'bing:
+        d := cast<u16>(a);
+};

@@ -64,21 +64,34 @@ namespace basecode::compiler {
         failed
     };
 
+    enum class session_module_type_t : uint8_t {
+        program,
+        module
+    };
+
     using session_compile_callback = std::function<void (
         session_compile_phase_t,
+        session_module_type_t,
         const boost::filesystem::path&)>;
+
+    using session_meta_options_t = std::vector<std::string>;
+    using session_module_paths_t = std::vector<boost::filesystem::path>;
+    using session_definition_map_t = std::unordered_map<std::string, std::string>;
 
     struct session_options_t {
         bool verbose = false;
         size_t heap_size = 0;
+        bool debugger = false;
         size_t stack_size = 0;
         size_t ffi_heap_size = 4096;
         bool output_ast_graphs = false;
         vm::allocator* allocator = nullptr;
-        boost::filesystem::path dom_graph_file;
         boost::filesystem::path compiler_path;
+        session_meta_options_t meta_options {};
+        session_module_paths_t module_paths {};
+        boost::filesystem::path dom_graph_file;
+        session_definition_map_t definitions {};
         session_compile_callback compile_callback;
-        std::unordered_map<std::string, std::string> definitions {};
     };
 
     ///////////////////////////////////////////////////////////////////////////

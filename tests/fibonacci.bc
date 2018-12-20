@@ -11,8 +11,10 @@
 
 core :: module("../modules/core");
 
-print("at the very top!\n");
-alpha::compiler::examples::fib_main();
+#run {
+    print("at the very top!\n");
+    alpha::compiler::examples::fib_main();
+};
 
 alpha::compiler::config :: ns {
     fibonacci :: ns {

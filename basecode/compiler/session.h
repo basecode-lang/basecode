@@ -66,6 +66,8 @@ namespace basecode::compiler {
 
         bool initialize();
 
+        void enable_run();
+
         bool allocate_reg(
             vm::register_t& reg,
             compiler::element* element);
@@ -135,9 +137,12 @@ namespace basecode::compiler {
     private:
         void raise_phase(
             session_compile_phase_t phase,
+            session_module_type_t module_type,
             const boost::filesystem::path& source_file);
 
         bool type_check();
+
+        bool execute_directives();
 
         bool resolve_unknown_types();
 
@@ -160,6 +165,7 @@ namespace basecode::compiler {
     private:
         vm::ffi _ffi;
         vm::terp _terp;
+        bool _run = false;
         common::result _result;
         element_builder _builder;
         vm::assembler _assembler;

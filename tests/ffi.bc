@@ -32,21 +32,23 @@ tuple_by_value :: proc(flags: flags_t) {
     print("flags.bong := %hhu\n", flags.bong);
 };
 
-print("%s: %d, %f\n", "integer and float", 22, 3.5);
+#run {
+    print("%s: %d, %f\n", "integer and float", 22, 3.5);
 
-temp: string := "hello world!";
+    temp: string := "hello world!";
 
-// ffi
-str_test_ptr(address_of(temp));
-str_test_cpy(temp);
+    // ffi
+    str_test_ptr(address_of(temp));
+    str_test_cpy(temp);
 
-// native
-pass_by_value(temp);
+    // native
+    pass_by_value(temp);
 
-my_flags: flags_t;
-my_flags.foo := true;
-my_flags.bing := false;
-tuple_by_value(my_flags);
+    my_flags: flags_t;
+    my_flags.foo := true;
+    my_flags.bing := false;
+    tuple_by_value(my_flags);
+};
 
 min :: proc(a: u32, b: u32): u32 {
     if a < b {
@@ -104,21 +106,23 @@ entity :: struct {
     data: ^player;
 };
 
-print("next_power_of_two          := %d\n", next_power_of_two(33));
-print("max(32, next_power_of_two) := %d\n", max(32, next_power_of_two(33)));
+#run {
+    print("next_power_of_two          := %d\n", next_power_of_two(33));
+    print("max(32, next_power_of_two) := %d\n", max(32, next_power_of_two(33)));
 
-jeff: player;
-with jeff {
-    assign_string(address_of(.name), "jeff", 4);
+    jeff: player;
+    with jeff {
+        assign_string(address_of(.name), "jeff", 4);
 
-    print(".name.length   := %d\n", .name.length);
-    print(".name.capacity := %d\n", .name.capacity);
-    print(".name.data     := %s\n", .name.data);
+        print(".name.length   := %d\n", .name.length);
+        print(".name.capacity := %d\n", .name.capacity);
+        print(".name.data     := %s\n", .name.data);
+    };
+
+    //jeff_entity: entity;
+    //assign_string(address_of(jeff_entity.name), "entity: jeff", 12);
+    //jeff_entity.pos.x := 1.0;
+    //jeff_entity.pos.y := 1.0;
+    //jeff_entity.pos.z := 1.0;
+    //jeff_entity.data := address_of(jeff);
 };
-
-//jeff_entity: entity;
-//assign_string(address_of(jeff_entity.name), "entity: jeff", 12);
-//jeff_entity.pos.x := 1.0;
-//jeff_entity.pos.y := 1.0;
-//jeff_entity.pos.z := 1.0;
-//jeff_entity.data := address_of(jeff);

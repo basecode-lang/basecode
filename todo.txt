@@ -25,9 +25,6 @@ TASKS
 
 - NEW: for_element stack frame support
 
-- NEW: implement the #run directive
-       remove the automatic execution of code during compilation and replace with #run
-
 - NEW: implement procedure instance baking
 - NEW: struct/union instance baking
 
@@ -36,10 +33,6 @@ TASKS
 - NEW: UFCS
 
 - NEW: DFA graph coloring
-
-- BUG: reintroduce dcArgStruct in ffi
-- BUG: passing a string by-value on stack isn't working
-        need to clean up large stack allocations after JSR
 
 - BUG: rework ast_evaluator::proc_call to clean up the various types of "procedure"
 
@@ -171,3 +164,8 @@ DONE
 - BUG: the unary_operator constant evaluator should take
        the size of the integer value into account and narrow to that size (constant-folding.bc)
 - BUG: composite_type offsets incorrect within stack frame.
+- NEW: implement the #run directive
+       remove the automatic execution of code during compilation and replace with #run
+- BUG: reintroduce dcArgStruct in ffi
+- BUG: passing a string by-value on stack isn't working
+        need to clean up large stack allocations after JSR

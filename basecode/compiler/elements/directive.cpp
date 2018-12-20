@@ -69,16 +69,32 @@ namespace basecode::compiler {
             compiler::session& session,
             compiler::emit_context_t& context,
             compiler::emit_result_t& result) {
-        if (_instruction_block != nullptr) {
-            auto current_block = session.assembler().current_block();
-            current_block->comment("inline begin", vm::comment_location_t::after_instruction);
-            for (const auto& entry : _instruction_block->entries())
-                current_block->add_entry(entry);
-            current_block->comment("inline end", vm::comment_location_t::after_instruction);
-        }
+        auto& assembler = session.assembler();
+        auto block = assembler.current_block();
 
-        if (_true_body != nullptr) {
-            _true_body->emit(session, context, result);
+        if (_name == "run") {
+            block->comment(
+                "directive: run",
+                vm::comment_location_t::after_instruction);
+            block->meta_begin();
+            auto success = _lhs->emit(session, context, result);
+            block->meta_end();
+            return success;
+        } else if (_name == "assembly") {
+            if (_instruction_block != nullptr) {
+                for (const auto& entry : _instruction_block->entries()) {
+                    block->comment(
+                        "directive: assembly",
+                        vm::comment_location_t::after_instruction);
+                    block->add_entry(entry);
+                }
+            }
+        } else if (_name == "if") {
+            block->comment(
+                "directive: if/elif/else",
+                vm::comment_location_t::after_instruction);
+            if (_true_body != nullptr)
+                return _true_body->emit(session, context, result);
         }
 
         return true;
@@ -215,6 +231,21 @@ namespace basecode::compiler {
     // assembly directive
 
     bool directive::on_execute_assembly(compiler::session& session) {
+        return true;
+    }
+
+    bool directive::on_evaluate_assembly(compiler::session& session) {
+        auto is_valid = _lhs != nullptr
+            && _lhs->element_type() == element_type_t::raw_block;
+        if (!is_valid) {
+            session.error(
+                module(),
+                "P004",
+                "#assembly expects a valid raw block expression.",
+                location());
+            return false;
+        }
+
         auto raw_block = dynamic_cast<compiler::raw_block*>(_lhs);
         if (raw_block == nullptr) {
             return false;
@@ -234,19 +265,6 @@ namespace basecode::compiler {
             _instruction_block->should_emit(false);
         }
         return success;
-    }
-
-    bool directive::on_evaluate_assembly(compiler::session& session) {
-        auto is_valid = _lhs != nullptr
-            && _lhs->element_type() == element_type_t::raw_block;
-        if (!is_valid) {
-            session.error(
-                module(),
-                "P004",
-                "#assembly expects a valid raw block expression.",
-                location());
-        }
-        return is_valid;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -284,6 +302,7 @@ namespace basecode::compiler {
     // run directive
 
     bool directive::on_execute_run(compiler::session& session) {
+        session.enable_run();
         return true;
     }
 
@@ -296,7 +315,27 @@ namespace basecode::compiler {
     // foreign directive
 
     bool directive::on_execute_foreign(compiler::session& session) {
+        return true;
+    }
+
+    bool directive::on_evaluate_foreign(compiler::session& session) {
         auto& ffi = session.ffi();
+
+        auto assignment = dynamic_cast<compiler::assignment*>(_lhs);
+        auto proc_decl = dynamic_cast<compiler::declaration*>(assignment->expressions()[0]);
+        if (proc_decl == nullptr)
+            return false;
+
+        auto proc_type = proc_decl->identifier()->initializer()->procedure_type();
+        if (proc_type == nullptr)
+            return false;
+
+        auto attrs = proc_type->attributes().as_list();
+        for (auto attr : attrs) {
+            attributes().add(attr);
+            proc_type->attributes().remove(attr->name());
+        }
+        proc_type->is_foreign(true);
 
         std::string library_name;
         auto library_attribute = find_attribute("library");
@@ -341,7 +380,6 @@ namespace basecode::compiler {
         }
         library->self_loaded(library_name == COMPILER_LIBRARY_NAME);
 
-        auto assignment = dynamic_cast<compiler::assignment*>(_lhs);
         auto ffi_decl = dynamic_cast<compiler::declaration*>(assignment->expressions()[0]);
         std::string symbol_name = ffi_decl->identifier()->symbol()->name();
         auto alias_attribute = attributes().find("alias");
@@ -361,47 +399,41 @@ namespace basecode::compiler {
             .library = library,
         };
 
-        auto proc_type = ffi_decl->identifier()->initializer()->procedure_type();
-        if (proc_type != nullptr) {
-            auto is_variadic = false;
+        auto is_variadic = false;
 
-            auto params_list = proc_type->parameters().as_list();
-            for (auto param : params_list) {
-                vm::function_value_t value;
-                value.name = param->identifier()->symbol()->name();
+        auto params_list = proc_type->parameters().as_list();
+        for (auto param : params_list) {
+            vm::function_value_t value;
+            value.name = param->identifier()->symbol()->name();
 
-                auto type = param->identifier()->type_ref()->type();
-                if (type != nullptr) {
-                    value.type = type->to_ffi_type();
-                    if (value.type == vm::ffi_types_t::any_type) {
-                        is_variadic = true;
-                    } else if (value.type == vm::ffi_types_t::struct_type) {
-                        auto composite_type = dynamic_cast<compiler::composite_type*>(type);
-                        if (composite_type == nullptr)
-                            return false;
-                        for (auto fld : composite_type->fields().as_list()) {
-                            vm::function_value_t fld_value;
-                            fld_value.name = fld->identifier()->symbol()->name();
-                            fld_value.type = fld->identifier()->type_ref()->type()->to_ffi_type();
-                            value.fields.push_back(fld_value);
-                        }
+            auto type = param->identifier()->type_ref()->type();
+            if (type != nullptr) {
+                value.type = type->to_ffi_type();
+                if (value.type == vm::ffi_types_t::any_type) {
+                    is_variadic = true;
+                } else if (value.type == vm::ffi_types_t::struct_type) {
+                    auto composite_type = dynamic_cast<compiler::composite_type*>(type);
+                    if (composite_type == nullptr)
+                        return false;
+                    for (auto fld : composite_type->fields().as_list()) {
+                        vm::function_value_t fld_value;
+                        fld_value.name = fld->identifier()->symbol()->name();
+                        fld_value.type = fld->identifier()->type_ref()->type()->to_ffi_type();
+                        value.fields.push_back(fld_value);
                     }
                 }
-
-                signature.arguments.push_back(value);
             }
 
-            auto return_type_field = proc_type->return_type();
-            signature.return_value.type = return_type_field != nullptr ?
-                return_type_field->identifier()->type_ref()->type()->to_ffi_type() :
-                vm::ffi_types_t::void_type;
-
-            if (proc_type->is_foreign()) {
-                signature.calling_mode = is_variadic ?
-                    vm::ffi_calling_mode_t::c_ellipsis_varargs :
-                    vm::ffi_calling_mode_t::c_default;
-            }
+            signature.arguments.push_back(value);
         }
+
+        auto return_type_field = proc_type->return_type();
+        signature.return_value.type = return_type_field != nullptr ?
+                                      return_type_field->identifier()->type_ref()->type()->to_ffi_type() :
+                                      vm::ffi_types_t::void_type;
+        signature.calling_mode = is_variadic ?
+                                 vm::ffi_calling_mode_t::c_ellipsis_varargs :
+                                 vm::ffi_calling_mode_t::c_default;
 
         auto result = ffi.register_function(session.result(), signature);
         if (!result) {
@@ -412,30 +444,10 @@ namespace basecode::compiler {
                 location());
             return false;
         } else {
-            if (proc_type != nullptr)
-                proc_type->foreign_address(reinterpret_cast<uint64_t>(signature.func_ptr));
+            proc_type->foreign_address(reinterpret_cast<uint64_t>(signature.func_ptr));
         }
 
         return !session.result().is_failed();
-    }
-
-    bool directive::on_evaluate_foreign(compiler::session& session) {
-        auto assignment = dynamic_cast<compiler::assignment*>(_lhs);
-        auto proc_decl = dynamic_cast<compiler::declaration*>(assignment->expressions()[0]);
-        if (proc_decl == nullptr)
-            return false;
-
-        auto proc_type = proc_decl->identifier()->initializer()->procedure_type();
-        if (proc_type != nullptr) {
-            auto attrs = proc_type->attributes().as_list();
-            for (auto attr : attrs) {
-                attributes().add(attr);
-                proc_type->attributes().remove(attr->name());
-            }
-            proc_type->is_foreign(true);
-            return true;
-        }
-        return false;
     }
 
     ///////////////////////////////////////////////////////////////////////////

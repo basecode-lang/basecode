@@ -143,13 +143,20 @@ namespace basecode::compiler {
         auto& top_level_stack = _scope_manager.top_level_stack();
 
         auto& listing = _assembler.listing();
-        listing.add_source_file("top_level.basm");
-        listing.select_source_file("top_level.basm");
+
+        const auto& first = (*_source_files.begin()).second;
+        auto listing_name = first
+            .path()
+            .filename()
+            .replace_extension(".basm");
+        listing.add_source_file(listing_name);
+        listing.select_source_file(listing_name);
 
         _program.block(_scope_manager.push_new_block());
         _program.block()->parent_element(&_program);
 
         top_level_stack.push(_program.block());
+        defer(top_level_stack.pop());
 
         initialize_core_types();
         initialize_built_in_procedures();
@@ -158,22 +165,6 @@ namespace basecode::compiler {
             auto module = compile_module(source_file);
             if (module == nullptr)
                 return false;
-        }
-
-        auto directives = _elements.find_by_type(element_type_t::directive);
-        for (auto directive : directives) {
-            auto directive_element = dynamic_cast<compiler::directive*>(directive);
-            if (directive_element->is_parent_element(element_type_t::directive))
-                continue;
-
-            if (!directive_element->execute(*this)) {
-                error(
-                    directive_element->module(),
-                    "P044",
-                    fmt::format("directive failed to execute: {}", directive_element->name()),
-                    directive->location());
-                return false;
-            }
         }
 
         if (!resolve_unknown_identifiers())
@@ -205,11 +196,13 @@ namespace basecode::compiler {
                 fmt::print("\n");
             }
 
-            if (success)
-                run();
+            if (success) {
+                if (execute_directives()) {
+                    if (_run)
+                        run();
+                }
+            }
         }
-
-        top_level_stack.pop();
 
         return !_result.is_failed();
     }
@@ -220,10 +213,11 @@ namespace basecode::compiler {
 
     void session::raise_phase(
             session_compile_phase_t phase,
+            session_module_type_t module_type,
             const boost::filesystem::path& source_file) {
         if (_options.compile_callback == nullptr)
             return;
-        _options.compile_callback(phase, source_file);
+        _options.compile_callback(phase, module_type, source_file);
     }
 
     void session::finalize() {
@@ -396,12 +390,35 @@ namespace basecode::compiler {
         return !_result.is_failed();
     }
 
+    void session::enable_run() {
+        _run = true;
+    }
+
     element_map& session::elements() {
         return _elements;
     }
 
     common::result& session::result() {
         return _result;
+    }
+
+    bool session::execute_directives() {
+        auto directives = _elements.find_by_type(element_type_t::directive);
+        for (auto directive : directives) {
+            auto directive_element = dynamic_cast<compiler::directive*>(directive);
+            if (directive_element->is_parent_element(element_type_t::directive))
+                continue;
+
+            if (!directive_element->execute(*this)) {
+                error(
+                    directive_element->module(),
+                    "P044",
+                    fmt::format("directive failed to execute: {}", directive_element->name()),
+                    directive->location());
+                return false;
+            }
+        }
+        return true;
     }
 
     vm::assembler& session::assembler() {
@@ -776,9 +793,25 @@ namespace basecode::compiler {
 
     compiler::module* session::compile_module(common::source_file* source_file) {
         auto is_root = current_source_file() == nullptr;
+        auto module_type = is_root ?
+            session_module_type_t::program :
+            session_module_type_t::module;
 
         push_source_file(source_file);
-        defer(pop_source_file());
+        raise_phase(
+            session_compile_phase_t::start,
+            module_type,
+            source_file->path());
+
+        defer({
+            pop_source_file();
+            raise_phase(
+                _result.is_failed() ?
+                    session_compile_phase_t::failed :
+                    session_compile_phase_t::success,
+                module_type,
+                source_file->path());
+        });
 
         compiler::module* module = nullptr;
         auto module_node = parse(source_file);
@@ -810,15 +843,6 @@ namespace basecode::compiler {
     }
 
     syntax::ast_node_shared_ptr session::parse(common::source_file* source_file) {
-        raise_phase(session_compile_phase_t::start, source_file->path());
-        defer({
-            if (_result.is_failed()) {
-                raise_phase(session_compile_phase_t::failed, source_file->path());
-            } else {
-                raise_phase(session_compile_phase_t::success, source_file->path());
-            }
-        });
-
         if (source_file->empty()) {
             if (!source_file->load(_result))
                 return nullptr;

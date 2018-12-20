@@ -44,6 +44,11 @@ namespace basecode::vm {
                                      _type(block_entry_type_t::blank_line) {
     }
 
+    block_entry_t::block_entry_t(const meta_t& meta) : _data(boost::any(meta)),
+                                                       _type(block_entry_type_t::meta) {
+
+    }
+
     block_entry_t::block_entry_t(const block_entry_t& other) : _data(other._data),
                                                                _address(other._address),
                                                                _type(other._type) {

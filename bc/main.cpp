@@ -45,23 +45,37 @@ static void print_results(const basecode::common::result& r) {
 }
 
 static void usage() {
-    fmt::print("usage: bc "
-               "[-?|--help] "
-               "[-v|--verbose] "
-               "[--no-color]"
-               "[-G] "
-               "[-H{{filename}}|--code_dom={{filename}}] "
-               "file\n");
+    fmt::print(
+        "usage: bc "
+        "[-?|--help] "
+        "[-v|--verbose] "
+        "[--debugger] "
+        "[--no-color] "
+        "[-G] "
+        "[-M{path} ...] "
+        "[-H{{filename}}|--code_dom={{filename}}] "
+        "file [-- option ...]\n");
 }
 
 int main(int argc, char** argv) {
     using namespace std::chrono;
 
+    namespace compiler = basecode::compiler;
+    namespace common = basecode::common;
+    namespace vm = basecode::vm;
+    namespace fs = boost::filesystem;
+
+    auto is_redirected = !isatty(fileno(stdout));
+
+    common::g_color_enabled = !is_redirected;
+
     int opt = -1;
+    bool debugger = false;
     bool help_flag = false;
     bool verbose_flag = false;
     bool output_ast_graphs = false;
-    boost::filesystem::path code_dom_graph_file_name;
+    fs::path code_dom_graph_file_name;
+    std::vector<fs::path> module_paths {};
     std::unordered_map<std::string, std::string> definitions {};
 
     static struct option long_options[] = {
@@ -70,6 +84,7 @@ int main(int argc, char** argv) {
         {"ast",     ya_no_argument,       0,       'G'},
         {"code_dom",ya_required_argument, 0,       'H'},
         {"no-color",ya_no_argument,       0,       0  },
+        {"debugger",ya_no_argument,       0,       0  },
         {0,         0,                    0,       0  },
     };
 
@@ -78,7 +93,7 @@ int main(int argc, char** argv) {
         opt = ya_getopt_long(
             argc,
             argv,
-            "?vGH:D:",
+            "?vGM:H:D:",
             long_options,
             &option_index);
         if (opt == -1) {
@@ -101,7 +116,10 @@ int main(int argc, char** argv) {
                         code_dom_graph_file_name = ya_optarg;
                         break;
                     case 4:
-                        basecode::common::g_color_enabled = false;
+                        common::g_color_enabled = false;
+                        break;
+                    case 5:
+                        debugger = true;
                         break;
                     default:
                         abort();
@@ -117,15 +135,18 @@ int main(int argc, char** argv) {
             case 'G':
                 output_ast_graphs = true;
                 break;
+            case 'M':
+                module_paths.emplace_back(ya_optarg);
+                break;
             case 'H':
                 code_dom_graph_file_name = ya_optarg;
                 break;
             case 'D': {
-                auto parts = basecode::common::string_to_list(ya_optarg, '=');
+                auto parts = common::string_to_list(ya_optarg, '=');
                 std::string value;
                 if (parts.size() == 2)
                     value = parts[1];
-                basecode::common::trim(parts[0]);
+                common::trim(parts[0]);
                 definitions.insert(std::make_pair(parts[0], value));
                 break;
             }
@@ -142,19 +163,30 @@ int main(int argc, char** argv) {
     high_resolution_clock::time_point start = high_resolution_clock::now();
     defer({
         high_resolution_clock::time_point end = high_resolution_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+        auto duration = duration_cast<microseconds>(end - start).count();
         fmt::print(
             "\n{} {}\n",
-            basecode::common::colorizer::colorize(
+            common::colorizer::colorize(
                 "compilation time (in μs):",
-                basecode::common::term_colors_t::cyan),
+                common::term_colors_t::cyan),
             duration);
     });
 
-    std::vector<boost::filesystem::path> source_files {};
+    auto separator_found = false;
+    std::vector<std::string> meta_options {};
+    std::vector<fs::path> source_files {};
     while (ya_optind < argc) {
-        boost::filesystem::path source_file_path(argv[ya_optind++]);
-        source_files.push_back(source_file_path);
+        std::string arg(argv[ya_optind++]);
+        if (source_files.empty()) {
+            source_files.emplace_back(arg);
+        } else {
+            if (separator_found) {
+                meta_options.emplace_back(arg);
+            } else {
+                if (arg == "--")
+                    separator_found = true;
+            }
+        }
     }
 
     if (source_files.empty()) {
@@ -162,36 +194,54 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    basecode::vm::default_allocator allocator {};
-    basecode::compiler::session_options_t session_options {
+    vm::default_allocator allocator {};
+    compiler::session_options_t session_options {
         .verbose = verbose_flag,
         .heap_size = heap_size,
+        .debugger = debugger,
         .stack_size = stack_size,
         .output_ast_graphs = output_ast_graphs,
-        .dom_graph_file = code_dom_graph_file_name,
         .allocator = &allocator,
-        .compiler_path = boost::filesystem::system_complete(argv[0]).remove_filename(),
+        .compiler_path = fs::system_complete(argv[0]).remove_filename(),
+        .meta_options = meta_options,
+        .module_paths = module_paths,
+        .dom_graph_file = code_dom_graph_file_name,
+        .definitions = definitions,
         .compile_callback = [](
-                basecode::compiler::session_compile_phase_t phase,
-                const boost::filesystem::path& source_file) {
+                compiler::session_compile_phase_t phase,
+                compiler::session_module_type_t module_type,
+                const fs::path& source_file) {
             switch (phase) {
-                case basecode::compiler::session_compile_phase_t::start:
+                case compiler::session_compile_phase_t::start: {
+                    auto file_name = source_file.filename().string();
+                    std::string module_path {};
+                    auto label = "program:";
+                    if (module_type == compiler::session_module_type_t::module) {
+                        label = " module:";
+                        module_path = source_file.parent_path().filename().string();
+                        if (file_name == "module.bc")
+                            file_name.clear();
+                        else
+                            file_name = "/" + file_name;
+                    }
                     fmt::print(
-                        "{} {}\n",
-                        basecode::common::colorizer::colorize(
-                            "module:",
-                            basecode::common::term_colors_t::cyan),
-                        source_file.filename().string());
+                        "{} {}{}\n",
+                        common::colorizer::colorize(
+                            label,
+                            common::term_colors_t::cyan),
+                        module_path,
+                        file_name);
                     break;
-                case basecode::compiler::session_compile_phase_t::success:
-                case basecode::compiler::session_compile_phase_t::failed:
+                }
+                case compiler::session_compile_phase_t::success:
+                case compiler::session_compile_phase_t::failed: {
                     break;
+                }
             }
         },
-        .definitions = definitions
     };
 
-    basecode::compiler::session compilation_session(
+    compiler::session compilation_session(
         session_options,
         source_files);
 

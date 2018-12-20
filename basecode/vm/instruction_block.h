@@ -55,9 +55,11 @@ namespace basecode::vm {
 
         instruction_block_type_t type() const;
 
-        bool is_current_instruction(op_codes code);
+        void make_block_entry(const meta_t& meta);
 
         void add_entry(const block_entry_t& entry);
+
+        bool is_current_instruction(op_codes code);
 
         void make_block_entry(const label_t& label);
 
@@ -72,6 +74,12 @@ namespace basecode::vm {
         void make_block_entry(const instruction_t& inst);
 
         void make_block_entry(const data_definition_t& data);
+
+    // meta directives
+    public:
+        void meta_end();
+
+        void meta_begin();
 
     // data definitions
     public:
