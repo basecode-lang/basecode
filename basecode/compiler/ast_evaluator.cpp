@@ -175,7 +175,6 @@ namespace basecode::compiler {
     }
 
     compiler::element* ast_evaluator::evaluate_in_scope(
-            const evaluator_context_t& context,
             const syntax::ast_node_t* node,
             compiler::block* scope) {
         auto& scope_manager = _session.scope_manager();
@@ -214,7 +213,6 @@ namespace basecode::compiler {
             switch (child_node->type) {
                 case syntax::ast_node_types_t::basic_block: {
                     auto basic_block = dynamic_cast<compiler::block*>(evaluate_in_scope(
-                        context,
                         child_node.get(),
                         proc_type->scope()));
                     if (basic_block == nullptr) {
@@ -316,7 +314,7 @@ namespace basecode::compiler {
                 flag_as_unresolved);
         } else {
             if (scope != nullptr)
-                element = evaluate_in_scope(context, node, scope);
+                element = evaluate_in_scope(node, scope);
             else
                 element = evaluate(node);
         }
@@ -593,7 +591,7 @@ namespace basecode::compiler {
         auto init_expr = (compiler::element*) nullptr;
         auto init = (compiler::initializer*) nullptr;
         if (node != nullptr) {
-            init_expr = evaluate_in_scope(context, source_node.get(), scope);
+            init_expr = evaluate_in_scope(source_node.get(), scope);
             if (init_expr != nullptr) {
                 if (init_expr->element_type() == element_type_t::symbol) {
                     auto init_symbol = dynamic_cast<compiler::symbol_element*>(init_expr);
@@ -2016,7 +2014,6 @@ namespace basecode::compiler {
 //        induction_decl->identifier()->stack_frame_entry(entry);
 
         auto block = evaluate_in_scope(
-            context,
             context.node->children.front().get(),
             for_scope);
         auto body = dynamic_cast<compiler::block*>(block);
@@ -2128,7 +2125,6 @@ namespace basecode::compiler {
                 _session.elements().remove(target_element->id());
 
                 auto lhs = evaluate_in_scope(
-                    context,
                     target_symbol.get(),
                     scope);
 
@@ -2136,7 +2132,6 @@ namespace basecode::compiler {
                 symbol->constant(is_constant_assignment);
 
                 auto type_ref = dynamic_cast<compiler::type_reference*>(evaluate_in_scope(
-                    context,
                     target_symbol->rhs.get(),
                     scope));
                 auto decl = add_identifier_to_scope(
@@ -2267,7 +2262,6 @@ namespace basecode::compiler {
         return_identifier->usage(identifier_usage_t::stack);
 
         auto type_ref = dynamic_cast<compiler::type_reference*>(evaluate_in_scope(
-            context,
             return_type_node,
             block_scope));
         if (type_ref->is_unknown_type()) {
@@ -2290,12 +2284,10 @@ namespace basecode::compiler {
             const syntax::ast_node_t* node,
             compiler::block* scope) {
         auto identifier = dynamic_cast<compiler::symbol_element*>(evaluate_in_scope(
-            context,
             node,
             scope));
 
         auto declared_type_ref = dynamic_cast<compiler::type_reference*>(evaluate_in_scope(
-            context,
             node->rhs.get(),
             scope));
         auto type_ref = declared_type_ref != nullptr ?

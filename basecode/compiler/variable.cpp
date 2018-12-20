@@ -96,7 +96,9 @@ namespace basecode::compiler {
                 break;
             }
             default: {
-                _element->emit(_session, _context, _result);
+                if (!_element->emit(_session, _context, _result))
+                    return false;
+
                 if (_element->is_pointer_dereference()
                 && !_result.operands.empty()) {
                     _temp_address = *(_result.operands.back().data<vm::register_t>());
@@ -419,6 +421,8 @@ namespace basecode::compiler {
         value->read();
 
         auto var = dynamic_cast<compiler::identifier*>(_element);
+        if (var == nullptr)
+            var = _rot.identifier;
         auto on_stack = var->usage() == identifier_usage_t::stack;
 
         auto fmt = "{}";

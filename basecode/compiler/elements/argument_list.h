@@ -67,6 +67,7 @@ namespace basecode::compiler {
         void on_owned_elements(element_list_t& list) override;
 
     private:
+        bool _is_foreign_call = false;
         compiler::element_list_t _elements {};
         std::map<std::string, size_t> _param_index {};
     };

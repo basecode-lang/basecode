@@ -88,21 +88,10 @@ namespace basecode::compiler {
             return type_params;
 
         for (const auto& type_node : node->lhs->children) {
-            qualified_symbol_t type_name {};
-            make_qualified_symbol(type_name, type_node.get());
-
-            auto type = scope_manager.find_type(
-                type_name,
-                active_scope);
-            if (type == nullptr) {
-                type = make_unknown_type(
-                    active_scope,
-                    make_symbol_from_node(type_node.get(), active_scope));
-            }
-            type_params.push_back(make_type_reference(
-                active_scope,
-                type_name,
-                type));
+            auto type_ref = dynamic_cast<compiler::type_reference*>(_session
+                .evaluator()
+                .evaluate_in_scope(type_node.get(), active_scope));
+            type_params.emplace_back(type_ref);
         }
 
         return type_params;

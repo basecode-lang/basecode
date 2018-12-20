@@ -21,6 +21,7 @@
 #include "pointer_type.h"
 #include "symbol_element.h"
 #include "string_literal.h"
+#include "type_reference.h"
 
 namespace basecode::compiler {
 
@@ -125,6 +126,23 @@ namespace basecode::compiler {
         }
 
         return true;
+    }
+
+    bool string_type::on_type_check(compiler::type* other) {
+        if (other == nullptr)
+            return false;
+
+        if (other->element_type() == element_type_t::string_type)
+            return true;
+
+        if (other->is_pointer_type()) {
+            auto pointer = dynamic_cast<compiler::pointer_type*>(other);
+            auto base_type = pointer->base_type_ref()->type();
+            return base_type->size_in_bytes() == 1
+                && base_type->number_class() == type_number_class_t::integer;
+        }
+
+        return false;
     }
 
     bool string_type::on_initialize(compiler::session& session) {

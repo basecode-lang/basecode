@@ -13,6 +13,7 @@
 #include <vm/instruction_block.h>
 #include <common/string_support.h>
 #include "program.h"
+#include "pointer_type.h"
 #include "string_literal.h"
 
 namespace basecode::compiler {
@@ -37,10 +38,24 @@ namespace basecode::compiler {
     bool string_literal::on_infer_type(
             compiler::session& session,
             infer_type_result_t& result) {
-        result.inferred_type = session
-            .scope_manager()
-            .find_type(qualified_symbol_t("string"));
+        auto& builder = session.builder();
+        auto& scope_manager = session.scope_manager();
+
+        auto base_type = scope_manager.find_type(qualified_symbol_t("u8"));
+        auto type = scope_manager.find_pointer_type(base_type);
+        if (type == nullptr) {
+            type = builder.make_pointer_type(
+                parent_scope(),
+                qualified_symbol_t(),
+                base_type);
+        }
+        result.inferred_type = type;
+
         return true;
+    }
+
+    std::string string_literal::value() const {
+        return _value;
     }
 
     bool string_literal::on_is_constant() const {

@@ -10,6 +10,7 @@
 // ----------------------------------------------------------------------------
 
 #include <compiler/session.h>
+#include <vm/instruction_block.h>
 #include <compiler/scope_manager.h>
 #include "type.h"
 #include "identifier.h"
@@ -32,6 +33,23 @@ namespace basecode::compiler {
                                                                             args,
                                                                             proc_type,
                                                                             type_params) {
+    }
+
+    bool address_of_intrinsic::on_emit(
+            compiler::session& session,
+            compiler::emit_context_t& context,
+            compiler::emit_result_t& result) {
+        auto args = arguments()->elements();
+
+        variable_handle_t temp_var {};
+        if (!session.variable(args[0], temp_var))
+            return false;
+
+        if (!temp_var->address_of())
+            return false;
+
+        result.operands.emplace_back(temp_var->emit_result().operands.front());
+        return true;
     }
 
     bool address_of_intrinsic::on_fold(
@@ -81,11 +99,21 @@ namespace basecode::compiler {
     }
 
     bool address_of_intrinsic::can_fold() const {
-        return true;
+        return is_constant_parameter();
     }
 
     std::string address_of_intrinsic::name() const {
         return "address_of";
+    }
+
+    bool address_of_intrinsic::is_constant_parameter() const {
+        auto args = arguments()->elements();
+        if (args.empty() || args.size() > 1)
+            return false;
+
+        auto arg = args[0];
+        return arg != nullptr
+            && arg->element_type() == element_type_t::identifier_reference;
     }
 
 };

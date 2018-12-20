@@ -39,7 +39,7 @@ namespace basecode::compiler {
 
         virtual std::string name() const;
 
-        compiler::argument_list* arguments();
+        compiler::argument_list* arguments() const;
 
         compiler::procedure_type* procedure_type();
 

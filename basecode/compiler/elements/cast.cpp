@@ -163,7 +163,7 @@ namespace basecode::compiler {
         block->comment(
             fmt::format(
                 "cast<{}> from type {}",
-                _type_ref->symbol().name,
+                _type_ref->name(),
                 infer_type_result.type_name()),
             vm::comment_location_t::after_instruction);
 
@@ -188,22 +188,19 @@ namespace basecode::compiler {
             case cast_mode_t::integer_truncate: {
                 block->move(
                     target_operand,
-                    temp_var->emit_result().operands.back(),
-                    vm::instruction_operand_t::empty());
+                    temp_var->emit_result().operands.back());
                 break;
             }
             case cast_mode_t::integer_sign_extend: {
                 block->moves(
                     target_operand,
-                    temp_var->emit_result().operands.back(),
-                    vm::instruction_operand_t::empty());
+                    temp_var->emit_result().operands.back());
                 break;
             }
             case cast_mode_t::integer_zero_extend: {
                 block->movez(
                     target_operand,
-                    temp_var->emit_result().operands.back(),
-                    vm::instruction_operand_t::empty());
+                    temp_var->emit_result().operands.back());
                 break;
             }
             case cast_mode_t::float_extend:

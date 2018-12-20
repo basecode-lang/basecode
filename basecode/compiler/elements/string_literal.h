@@ -22,11 +22,9 @@ namespace basecode::compiler {
             block* parent_scope,
             const std::string& value);
 
-        std::string escaped_value() const;
+        std::string value() const;
 
-        inline std::string value() const {
-            return _value;
-        }
+        std::string escaped_value() const;
 
     protected:
         bool on_emit(

@@ -1101,9 +1101,34 @@ namespace basecode::vm {
                         subtraction_result.alias.d = lhs_value.alias.d - rhs_value.alias.d;
                     subtraction_result.type = register_type_t::floating_point;
                 } else {
-                    subtraction_result.alias.u = lhs_value.alias.u - rhs_value.alias.u;
                     subtraction_result.type = register_type_t::integer;
-                    carry_flag = lhs_value.alias.u < rhs_value.alias.u;
+
+                    register_value_alias_t lhs {};
+                    lhs.qw = lhs_value.alias.u;
+
+                    register_value_alias_t rhs {};
+                    rhs.qw = rhs_value.alias.u;
+
+                    switch (inst.size) {
+                        case op_sizes::byte:
+                            carry_flag = lhs.b < rhs.b;
+                            subtraction_result.alias.u = lhs.b - rhs.b;
+                            break;
+                        case op_sizes::word:
+                            carry_flag = lhs.w < rhs.w;
+                            subtraction_result.alias.u = lhs.w - rhs.w;
+                            break;
+                        case op_sizes::dword:
+                            carry_flag = lhs.dw < rhs.dw;
+                            subtraction_result.alias.u = lhs.dw - rhs.dw;
+                            break;
+                        case op_sizes::qword:
+                            carry_flag = lhs.qw < rhs.qw;
+                            subtraction_result.alias.u = lhs.qw - rhs.qw;
+                            break;
+                        default:
+                            return false;
+                    }
                 }
 
                 if (!set_target_operand_value(r, inst.operands[0], inst.size, subtraction_result))
@@ -1628,6 +1653,8 @@ namespace basecode::vm {
             }
             case op_codes::cmp: {
                 operand_value_t lhs_value, rhs_value;
+                lhs_value.alias.u = 0;
+                rhs_value.alias.u = 0;
 
                 if (!get_operand_value(r, inst, 0, lhs_value))
                     return false;
@@ -1635,10 +1662,37 @@ namespace basecode::vm {
                 if (!get_operand_value(r, inst, 1, rhs_value))
                     return false;
 
+                register_value_alias_t lhs {};
+                lhs.qw = lhs_value.alias.u;
+
+                register_value_alias_t rhs {};
+                rhs.qw = rhs_value.alias.u;
+
                 operand_value_t result;
-                result.alias.u = lhs_value.alias.u - rhs_value.alias.u;
+                auto carry_flag = false;
+
+                switch (inst.size) {
+                    case op_sizes::byte:
+                        carry_flag = lhs.b < rhs.b;
+                        result.alias.u = lhs.b - rhs.b;
+                        break;
+                    case op_sizes::word:
+                        carry_flag = lhs.w < rhs.w;
+                        result.alias.u = lhs.w - rhs.w;
+                        break;
+                    case op_sizes::dword:
+                        carry_flag = lhs.dw < rhs.dw;
+                        result.alias.u = lhs.dw - rhs.dw;
+                        break;
+                    case op_sizes::qword:
+                        carry_flag = lhs.qw < rhs.qw;
+                        result.alias.u = lhs.qw - rhs.qw;
+                        break;
+                    default:
+                        return false;
+                }
+
                 auto zero_flag = is_zero(inst.size, result);
-                auto carry_flag = lhs_value.alias.u < rhs_value.alias.u;
                 auto overflow_flag = has_overflow(
                     lhs_value.as_register_alias(),
                     rhs_value.as_register_alias(),
@@ -2011,8 +2065,9 @@ namespace basecode::vm {
             case op_codes::setnbe: {
                 // CF = 0 and ZF = 0
                 operand_value_t result;
-                result.alias.u = !_registers.flags(register_file_t::flags_t::zero)
-                    && !_registers.flags(register_file_t::flags_t::carry) ? 1 : 0;
+                auto zero_flag = _registers.flags(register_file_t::flags_t::zero);
+                auto carry_flag = _registers.flags(register_file_t::flags_t::carry);
+                result.alias.u = !zero_flag && !carry_flag ? 1 : 0;
                 if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
                     return false;
                 break;

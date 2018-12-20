@@ -89,9 +89,9 @@ namespace basecode::syntax {
         {'&', std::bind(&lexer::ampersand_literal, std::placeholders::_1, std::placeholders::_2)},
 
         // lambda literal, |:=, logical or, bitwise or, pipe
-        {'|', std::bind(&lexer::lambda_literal, std::placeholders::_1, std::placeholders::_2)},
         {'|', std::bind(&lexer::binary_or_equal_operator, std::placeholders::_1, std::placeholders::_2)},
         {'|', std::bind(&lexer::logical_or_operator, std::placeholders::_1, std::placeholders::_2)},
+        {'|', std::bind(&lexer::lambda_literal, std::placeholders::_1, std::placeholders::_2)},
         {'|', std::bind(&lexer::pipe_literal, std::placeholders::_1, std::placeholders::_2)},
 
         // raw block/braces
@@ -1400,6 +1400,11 @@ namespace basecode::syntax {
 
             token_t temp;
             while (true) {
+                ch = read();
+                // XXX: refactor this state machine so it handles
+                //      classification better
+                if (ch != '^')
+                    rewind_one_char();
                 if (!identifier(temp))
                     break;
                 ch = read();

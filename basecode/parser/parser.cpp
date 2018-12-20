@@ -891,19 +891,11 @@ namespace basecode::syntax {
         symbol_node->lhs->location.start(less_than.location.start());
 
         while (true) {
-            if (!parser->peek(token_types_t::identifier)
-            &&  !parser->peek(token_types_t::type_tagged_identifier)) {
-                parser->error(
-                    r,
-                    "P019",
-                    "identifier expected",
-                    token.location);
-                return nullptr;
-            }
-
-            auto type_node = parser->parse_expression(
+            auto type_node = create_type_declaration_node(
                 r,
-                precedence_t::variable);
+                parser,
+                nullptr,
+                token);
             symbol_node->lhs->children.push_back(type_node);
 
             if (parser->peek(token_types_t::comma)) {

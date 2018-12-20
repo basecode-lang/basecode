@@ -204,7 +204,7 @@ namespace basecode::compiler {
         return "intrinsic";
     }
 
-    compiler::argument_list* intrinsic::arguments() {
+    compiler::argument_list* intrinsic::arguments() const {
         return _arguments;
     }
 

@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <common/bytes.h>
 #include <compiler/session.h>
 #include <vm/instruction_block.h>
 #include "type.h"
@@ -75,6 +76,7 @@ namespace basecode::compiler {
                 case element_type_t::cast:
                 case element_type_t::transmute:
                 case element_type_t::proc_call:
+                case element_type_t::intrinsic:
                 case element_type_t::expression:
                 case element_type_t::float_literal:
                 case element_type_t::string_literal:
@@ -98,25 +100,33 @@ namespace basecode::compiler {
 
                     auto type = arg_var->type_result().inferred_type;
                     switch (type->element_type()) {
+                        case element_type_t::any_type:
+                        case element_type_t::array_type:
+                        case element_type_t::tuple_type:
                         case element_type_t::string_type:
                         case element_type_t::composite_type: {
                             arg_var->address();
+                            if (!_is_foreign_call) {
+                                vm::register_t temp{};
+                                temp.type = vm::register_type_t::integer;
+                                session.assembler().allocate_reg(temp);
+                                defer(session.assembler().free_reg(temp));
 
-                            vm::register_t temp {};
-                            temp.type = vm::register_type_t::integer;
-                            session.assembler().allocate_reg(temp);
-                            defer(session.assembler().free_reg(temp));
-
-                            auto size = static_cast<uint64_t>(type->size_in_bytes());
-                            block->sub(
-                                vm::instruction_operand_t::sp(),
-                                vm::instruction_operand_t::sp(),
-                                vm::instruction_operand_t(size, vm::op_sizes::word));
-                            block->copy(
-                                vm::op_sizes::byte,
-                                vm::instruction_operand_t::sp(),
-                                vm::instruction_operand_t(arg_var->address_reg()),
-                                vm::instruction_operand_t(size, vm::op_sizes::word));
+                                auto size = static_cast<uint64_t>(common::align(
+                                    type->size_in_bytes(),
+                                    8));
+                                block->sub(
+                                    vm::instruction_operand_t::sp(),
+                                    vm::instruction_operand_t::sp(),
+                                    vm::instruction_operand_t(size, vm::op_sizes::word));
+                                block->copy(
+                                    vm::op_sizes::byte,
+                                    vm::instruction_operand_t::sp(),
+                                    vm::instruction_operand_t(arg_var->address_reg()),
+                                    vm::instruction_operand_t(size, vm::op_sizes::word));
+                            } else {
+                                block->push(vm::instruction_operand_t(arg_var->address_reg()));
+                            }
                             break;
                         }
                         default: {
@@ -168,6 +178,7 @@ namespace basecode::compiler {
             compiler::session& session,
             compiler::procedure_type* proc_type) {
         _param_index.clear();
+        _is_foreign_call = proc_type->is_foreign();
 
         auto& param_map = proc_type->parameters();
         auto field_list = param_map.as_list();

@@ -119,6 +119,10 @@ namespace basecode::compiler {
 
         bool copy(variable* value, uint64_t size_in_bytes);
 
+        bool has_temp_register() const {
+            return _temp_address.type != vm::register_type_t::none;
+        }
+
     private:
         bool flag(variable::flags_t f) const;
 

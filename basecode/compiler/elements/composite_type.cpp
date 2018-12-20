@@ -48,6 +48,7 @@ namespace basecode::compiler {
             compiler::variable* var) {
         auto field_list = _fields.as_list();
         for (auto fld: field_list) {
+            // XXX: this isn't handling pointer types properly
             variable_handle_t field_var {};
             if (!var->field(fld->identifier()->symbol()->name(), field_var)) {
                 // XXX: error

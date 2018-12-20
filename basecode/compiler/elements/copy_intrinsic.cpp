@@ -50,17 +50,20 @@ namespace basecode::compiler {
         variable_handle_t dest_var;
         if (!session.variable(args[0], dest_var))
             return false;
-        dest_var->read();
+        if (!dest_var->read())
+            return false;
 
         variable_handle_t src_var;
         if (!session.variable(args[1], src_var))
             return false;
-        src_var->read();
+        if (!src_var->read())
+            return false;
 
         variable_handle_t size_var;
         if (!session.variable(args[2], size_var))
             return false;
-        size_var->read();
+        if (!size_var->read())
+            return false;
 
         block->copy(
             vm::op_sizes::byte,

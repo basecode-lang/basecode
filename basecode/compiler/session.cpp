@@ -80,8 +80,13 @@ namespace basecode::compiler {
                 auto lhs_read = should_read_variable(bin_op->lhs());
                 vars.push_back({});
                 if (variable(bin_op->lhs(), vars.back(), lhs_read)) {
-                    if (lhs_read)
-                        vars.back()->read();
+                    if (lhs_read) {
+                        auto& var = vars.back();
+                        var->read();
+                        // XXX: this sucks, fix me
+                        if (var->has_temp_register())
+                            var.skip_deactivate();
+                    }
                 }
 
                 while (!member_accesses.empty()) {

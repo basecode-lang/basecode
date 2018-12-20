@@ -312,7 +312,7 @@ namespace basecode::vm {
             const instruction_operand_t& src,
             const instruction_operand_t& offset) {
         instruction_t op;
-        op.size = src.size();
+        op.size = dest.size();
         op.op = op_codes::moves;
         op.operands_count = static_cast<uint8_t>(offset.is_empty() ? 2 : 3);
         apply_operand(dest, op, 0);
@@ -326,7 +326,7 @@ namespace basecode::vm {
             const instruction_operand_t& src,
             const instruction_operand_t& offset) {
         instruction_t op;
-        op.size = src.size();
+        op.size = dest.size();
         op.op = op_codes::movez;
         op.operands_count = static_cast<uint8_t>(offset.is_empty() ? 2 : 3);
         apply_operand(dest, op, 0);
