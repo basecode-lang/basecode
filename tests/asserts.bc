@@ -1,4 +1,4 @@
-support :: module("support");
+core :: module("../modules/core");
 
 MODE :: 2;
 
@@ -7,11 +7,11 @@ MODE :: 2;
 //#assert 2 == 1;
 
 #if MODE == 1 {
-    support::print("mode 1\n");
+    print("mode 1\n");
 } #elif MODE == 2 {
-    support::print("mode 2\n");
+    print("mode 2\n");
 } #else {
-    support::print("unknown mode\n");
+    print("unknown mode\n");
 };
 
 s2 := "oh, noes!  what did you DO!?";
@@ -33,9 +33,9 @@ fib :: proc(n: u64 := 10): u64 {
 };
 
 result := fib(20);
-support::print("fib       := %d\n", result);
-support::assert(result == 1,  address_of(s2));
+print("fib       := %d\n", result);
+assert(result == 1, s2);
 
 result := factorial();
-support::print("factorial := %d\n", result);
-support::assert(result == 479001600,  address_of(s2));
+print("factorial := %d\n", result);
+assert(result == 479001600, s2);

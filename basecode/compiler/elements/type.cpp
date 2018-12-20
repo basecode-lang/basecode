@@ -133,6 +133,9 @@ namespace basecode::compiler {
             case element_type_t::any_type: {
                 return vm::ffi_types_t::any_type;
             }
+            case element_type_t::rune_type: {
+                return vm::ffi_types_t::char_type;
+            }
             case element_type_t::numeric_type: {
                 auto numeric_type = dynamic_cast<const compiler::numeric_type*>(this);
                 if (numeric_type != nullptr) {

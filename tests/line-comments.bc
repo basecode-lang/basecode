@@ -3,7 +3,7 @@
 //
 //
 
-support :: module("support");
+core :: module("../modules/core");
 
 /* just before a */ a: /* just before type*/ u32 /* just after type */; // bar
 
@@ -27,9 +27,9 @@ d := /* before integer */ 100 /* after integer */;
 // with
 
 /* before if */ if /* after if */ a == 2 /* after condition */ {
-    support::print("one\n");
+    print("one\n");
 } /* before else if */ else if /* after else if */ a == 4 /* after else if condition */ {
-    support::print("two\n");
+    print("two\n");
 } /* before else */ else /* after else */ {
-    support::print("three\n");
+    print("three\n");
 } /* after ladder */;

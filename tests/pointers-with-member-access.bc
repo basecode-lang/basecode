@@ -1,25 +1,25 @@
-support :: module("support");
+core :: module("../modules/core");
 
 text := "hello world";
 
-support::print("text.length       := %d\n",     text.length);
-support::print("text.capacity     := %d\n",     text.capacity);
-support::print("text.data         := $%08x\n",  text.data);
-support::print("text.data^        := %c\n",     text.data^);
+print("text.length       := %d\n",     text.length);
+print("text.capacity     := %d\n",     text.capacity);
+print("text.data         := $%08x\n",  text.data);
+print("text.data^        := %c\n",     text.data^);
 
 char: u8 := 65;
 
 char_ptr: ^u8;
 char_ptr := address_of(char);
 
-support::print("%c", char_ptr^);
+print("%c", char_ptr^);
 
-support::print("\n");
+print("\n");
 
 text_ptr: ^string;
 text_ptr := address_of(text);
 
-support::print("text_ptr.length   := %d\n",     text_ptr.length);
-support::print("text_ptr.capacity := %d\n",     text_ptr.capacity);
-support::print("text_ptr.data     := $%08x\n",  text_ptr.data);
-support::print("text_ptr.data^    := %c\n",     text_ptr.data^);
+print("text_ptr.length   := %d\n",     text_ptr.length);
+print("text_ptr.capacity := %d\n",     text_ptr.capacity);
+print("text_ptr.data     := $%08x\n",  text_ptr.data);
+print("text_ptr.data^    := %c\n",     text_ptr.data^);

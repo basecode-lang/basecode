@@ -93,17 +93,16 @@ static void dc_callvm_argFloat_x64(DCCallVM* in_self, DCfloat x)
 {
   DCCallVM_x64* self = (DCCallVM_x64*)in_self;
 
-  /* Although not promoted to doubles, floats are stored with 64bits in this API.*/
   union {
     DCdouble d;
     DCfloat  f;
   } f;
-  f.f = x;
+  f.d = x;
 
   if(self->mRegCount.f < numFloatRegs)
-    *(DCfloat*)&self->mRegData.f[self->mRegCount.f++] = x;
+    *&self->mRegData.f[self->mRegCount.f++] = (DCdouble)x;
   else
-    dcVecAppend(&self->mVecHead, &f.f, sizeof(DCdouble));
+    dcVecAppend(&self->mVecHead, &f.d, sizeof(DCdouble));
 }
 
 

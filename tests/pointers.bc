@@ -1,4 +1,4 @@
-support :: module("support");
+core :: module("../modules/core");
 
 ARRAY_WIDTH  :: 4;
 ARRAY_HEIGHT :: 4;
@@ -25,5 +25,5 @@ foo := items^;
 'allocate_memory:
 addr: ^u8;
 addr := alloc(size_of(u16) * 4096);
-support::print("addr := $%08x\n", addr);
+print("addr := $%08x\n", addr);
 free(addr);

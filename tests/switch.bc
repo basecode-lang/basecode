@@ -1,22 +1,22 @@
-support :: module("support");
+core :: module("../modules/core");
 
 x := 1;
 
 switch x {
     case 0 => {
-        support::print("0\n");
+        print("0\n");
     };
 
     case 1 => {
-        support::print("1\n");
+        print("1\n");
     };
 
     case 2 => {
-        support::print("2\n");
+        print("2\n");
         fallthrough;
     };
 
     case => {
-        support::print("default\n");
+        print("default\n");
     };
 };

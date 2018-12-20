@@ -1,5 +1,5 @@
 // module scope
-support :: module("support");
+core :: module("../modules/core");
 
 a: bool := true;
 

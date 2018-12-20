@@ -179,12 +179,13 @@ DCsize dcStructAlignment(DCstruct* s)
 
 void dcArgStructUnroll(DCCallVM* vm, DCstruct* s, DCpointer  value)
 {
-	DCsize i;
+	DCsize i, offset = 0;
 	/*printf("UNROLLING STRUCT !\n");@@@*/
 	assert(s && value);
 	for (i = 0; i < s->fieldCount; i++) {
 		DCfield *f = s->pFields + i;
-		DCpointer p = (char*)value + f->offset;
+		DCpointer p = (char*)value + offset;
+		offset += f->size;
 		switch(f->type) {
 		  case DC_SIGCHAR_STRUCT:
 		  	dcArgStruct(vm, f->pSubStruct, p);

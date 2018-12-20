@@ -2248,7 +2248,7 @@ namespace basecode::vm {
                 _ffi->calling_convention(func->calling_mode);
 
                 vm::function_value_list_t* arguments = nullptr;
-                if (func->calling_mode == vm::ffi_calling_mode_t::c_ellipsis) {
+                if (func->is_variadic()) {
                     auto it = func->call_site_arguments.find(
                         static_cast<common::id_t>(signature_id.alias.u));
                     if (it == func->call_site_arguments.end()) {

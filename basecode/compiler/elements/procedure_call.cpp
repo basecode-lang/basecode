@@ -92,7 +92,7 @@ namespace basecode::compiler {
 
             vm::instruction_operand_t address_operand(procedure_type->foreign_address());
 
-            if (func->calling_mode == vm::ffi_calling_mode_t::c_ellipsis) {
+            if (func->is_variadic()) {
                 auto signature_id = common::id_pool::instance()->allocate();
 
                 vm::function_value_list_t args {};

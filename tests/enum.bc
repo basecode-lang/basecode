@@ -1,4 +1,4 @@
-support :: module("support");
+core :: module("../modules/core");
 
 entity_types :: enum {
     none;
@@ -9,9 +9,9 @@ entity_types :: enum {
     bullet;
 };
 
-support::print("none    := %d\n", entity_types.none);
-support::print("player  := %d\n", entity_types.player);
-support::print("ghost   := %d\n", entity_types.ghost);
-support::print("gorilla := %d\n", entity_types.gorilla);
-support::print("tank    := %d\n", entity_types.tank);
-support::print("bullet  := %d\n", entity_types.bullet);
+print("none    := %d\n", entity_types.none);
+print("player  := %d\n", entity_types.player);
+print("ghost   := %d\n", entity_types.ghost);
+print("gorilla := %d\n", entity_types.gorilla);
+print("tank    := %d\n", entity_types.tank);
+print("bullet  := %d\n", entity_types.bullet);

@@ -140,7 +140,7 @@ namespace basecode::compiler {
     };
 
     struct stack_frame_base_offsets_t {
-        int32_t locals = 0;
+        int32_t locals = 8;
         int32_t parameters = 0;
         int32_t return_slot = 0;
     };

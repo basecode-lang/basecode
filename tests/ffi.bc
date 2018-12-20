@@ -11,7 +11,7 @@
 
 core :: module("../modules/core");
 
-print("%s: %d, %f\n", "integer and float", 22, cast<f64>(3.5));
+print("%s: %d, %f\n", "integer and float", 22, 3.5);
 
 @library "basecode";
 #foreign str_test_ptr :: proc(str: ^string);
@@ -22,4 +22,12 @@ print("%s: %d, %f\n", "integer and float", 22, cast<f64>(3.5));
 temp: string := "hello world!";
 str_test_ptr(address_of(temp));
 
-str_test_cpy(temp);
+//str_test_cpy(temp);
+
+pass_by_value :: proc(msg: string) {
+    print("msg.length := %d\n", msg.length);
+    print("msg.capacity := %d\n", msg.capacity);
+    print("msg.data := %s\n", msg.data);
+};
+
+pass_by_value(temp);

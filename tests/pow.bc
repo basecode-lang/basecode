@@ -1,15 +1,15 @@
-support :: module("support");
+core :: module("../modules/core");
 
 x: u32 := 2 ** 4;
 
-support::print("x := %d\n", x);
+print("x := %d\n", x);
 
 y: u32;
 
 @no_fold;
 y := 2 ** 4;
 
-support::print("y := %d\n", y);
+print("y := %d\n", y);
 
 w: f32 := 2.0 ** 4.0;
 

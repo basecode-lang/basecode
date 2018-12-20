@@ -9,9 +9,10 @@
 //
 // ----------------------------------------------------------------------------
 
-support :: module("support");
+core :: module("../modules/core");
 
-support::print("at the very top!\n");
+print("at the very top!\n");
+alpha::compiler::examples::fib_main();
 
 alpha::compiler::config :: ns {
     fibonacci :: ns {
@@ -32,7 +33,7 @@ alpha::compiler::examples :: ns {
     bar_rhs_is_constant: s16 := length_of_sequence * 4;
 
     count := 1;
-    support::print("what the hell am i doing here?");
+    core::compiler_module::public::print("what the hell am i doing here?\n");
 
     is_this_true := count == (max == 256) && count == (max / 2);
 
@@ -50,12 +51,11 @@ alpha::compiler::examples :: ns {
     };
 
     fib :: proc(n: u64 := 10): u64 {
+        core::compiler_module::public::print("n := %d\n", n);
         if n == 0 || n == 1 {
             return n;
         } else {
-            value := fib((n - 1) + fib(n - 2));
-            support::print("value := %d\n", value);
-            return value;
+            return fib((n - 1) + fib(n - 2));
         };
     };
 
@@ -65,7 +65,5 @@ alpha::compiler::examples :: ns {
     'the_end:
         return final_fib_value;
     };
-
-    fib_main();
 
 };

@@ -1852,6 +1852,11 @@ namespace basecode::vm {
     using function_value_list_t = std::vector<function_value_t>;
 
     struct function_signature_t {
+        bool is_variadic() const {
+            return calling_mode == ffi_calling_mode_t::c_ellipsis_varargs
+                || calling_mode == ffi_calling_mode_t::c_ellipsis;
+        }
+
         std::string symbol {};
         void* func_ptr = nullptr;
         function_value_t return_value {};

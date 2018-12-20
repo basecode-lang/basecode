@@ -1,4 +1,4 @@
-support :: module("support");
+core :: module("../modules/core");
 
 foo := 128;
 foo := foo * 2;
@@ -28,27 +28,27 @@ temp := size_of(bar);
 temp_type_info: ^type := type_of(temp);
 huh := temp_type_info^;
 
-support::print("address_of(temp) := $%08x\n\n", address_of(temp));
+print("address_of(temp) := $%08x\n\n", address_of(temp));
 
-support::print("foo := %hhu\n\n", foo);
+print("foo := %hhu\n\n", foo);
 
-support::print("size_of(foo)     := %d\n",   size_of(foo));
-support::print("align_of(foo)    := %d\n\n", align_of(foo));
+print("size_of(foo)     := %d\n",   size_of(foo));
+print("align_of(foo)    := %d\n\n", align_of(foo));
 
-support::print("size_of(u16)     := %d\n",   size_of(u16));
-support::print("align_of(u16)    := %d\n\n", align_of(u16));
+print("size_of(u16)     := %d\n",   size_of(u16));
+print("align_of(u16)    := %d\n\n", align_of(u16));
 
-support::print("size_of(u32)     := %d\n",   size_of(u32));
-support::print("align_of(u32)    := %d\n\n", align_of(u32));
+print("size_of(u32)     := %d\n",   size_of(u32));
+print("align_of(u32)    := %d\n\n", align_of(u32));
 
-support::print("size_of(bar)     := %d\n",   size_of(bar));
-support::print("align_of(bar)    := %d\n\n", align_of(bar));
+print("size_of(bar)     := %d\n",   size_of(bar));
+print("align_of(bar)    := %d\n\n", align_of(bar));
 
-support::print("size_of(string)  := %d\n",   size_of(string));
-support::print("align_of(string) := %d\n\n", align_of(string));
+print("size_of(string)  := %d\n",   size_of(string));
+print("align_of(string) := %d\n\n", align_of(string));
 
 // alloc & free block of memory
 'allocate_memory:
 addr: ^u8 := alloc(size_of(u16) * 4096);
-support::print("addr := $%08x\n", addr);
+print("addr := $%08x\n", addr);
 free(addr);

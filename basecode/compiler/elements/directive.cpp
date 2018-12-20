@@ -398,7 +398,7 @@ namespace basecode::compiler {
 
             if (proc_type->is_foreign()) {
                 signature.calling_mode = is_variadic ?
-                    vm::ffi_calling_mode_t::c_ellipsis :
+                    vm::ffi_calling_mode_t::c_ellipsis_varargs :
                     vm::ffi_calling_mode_t::c_default;
             }
         }

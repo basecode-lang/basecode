@@ -1,33 +1,33 @@
-support :: module("support");
+core :: module("../modules/core");
 
 is_true1: bool;
 is_true1 := true && true || false && true;
 
 if is_true1 {
-    support::print("is_true1 := true\n");
+    print("is_true1 := true\n");
 } else {
-    support::print("is_true1 := false\n");
+    print("is_true1 := false\n");
 };
 
 is_true2: bool;
 is_true2 := (true || false) && (false || false);
 
 if is_true2 {
-    support::print("is_true2 := true\n");
+    print("is_true2 := true\n");
 } else {
-    support::print("is_true2 := false\n");
+    print("is_true2 := false\n");
 };
 
 is_high1: u8;
 is_high1 := %0000_0000 & %0000_1000 | %0000_1000 & %0000_1000;
 if is_high1 == %0000_1000 {
-    support::print("masks match\n");
+    print("masks match\n");
 } else {
-    support::print("masks do not match\n");
+    print("masks do not match\n");
 };
 
 if 1 > 2 == true || 3 - 3 > 1 == true {
-    support::print("true\n");
+    print("true\n");
 } else {
-    support::print("false\n");
+    print("false\n");
 };

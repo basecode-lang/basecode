@@ -80,7 +80,7 @@ namespace basecode::compiler {
         block->label(assembler.make_label(procedure_label));
 
         auto& stack_offsets = _scope->stack_frame().offsets();
-        stack_offsets.locals = 0;
+        stack_offsets.locals = 8;
         if (_return_type != nullptr) {
             auto entry = _scope->stack_frame().add(
                 stack_frame_entry_type_t::return_slot,
@@ -89,9 +89,9 @@ namespace basecode::compiler {
             _return_type->identifier()->stack_frame_entry(entry);
 
             stack_offsets.return_slot = 16;
-            stack_offsets.parameters = 16;
+            stack_offsets.parameters = 24;
         } else {
-            stack_offsets.parameters = 8;
+            stack_offsets.parameters = 16;
         }
 
         auto fields = parameters().as_list();

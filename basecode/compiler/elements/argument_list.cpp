@@ -102,22 +102,22 @@ namespace basecode::compiler {
                         case element_type_t::composite_type: {
                             arg_var->address();
 
-//                            vm::register_t temp {};
-//                            temp.type = vm::register_type_t::integer;
-//                            session.assembler().allocate_reg(temp);
-//                            defer(session.assembler().free_reg(temp));
+                            vm::register_t temp {};
+                            temp.type = vm::register_type_t::integer;
+                            session.assembler().allocate_reg(temp);
+                            defer(session.assembler().free_reg(temp));
 
-//                            auto size = static_cast<uint64_t>(type->size_in_bytes());
-//                            block->sub(
-//                                vm::instruction_operand_t::sp(),
-//                                vm::instruction_operand_t::sp(),
-//                                vm::instruction_operand_t(size, vm::op_sizes::word));
-//                            block->copy(
-//                                vm::op_sizes::byte,
-//                                vm::instruction_operand_t::sp(),
-//                                vm::instruction_operand_t(arg_var->address_reg()),
-//                                vm::instruction_operand_t(size, vm::op_sizes::word));
-                            block->push(vm::instruction_operand_t(arg_var->address_reg()));
+                            auto size = static_cast<uint64_t>(type->size_in_bytes());
+                            block->sub(
+                                vm::instruction_operand_t::sp(),
+                                vm::instruction_operand_t::sp(),
+                                vm::instruction_operand_t(size, vm::op_sizes::word));
+                            block->copy(
+                                vm::op_sizes::byte,
+                                vm::instruction_operand_t::sp(),
+                                vm::instruction_operand_t(arg_var->address_reg()),
+                                vm::instruction_operand_t(size, vm::op_sizes::word));
+//                            block->push(vm::instruction_operand_t(arg_var->address_reg()));
                             break;
                         }
                         default: {

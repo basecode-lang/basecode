@@ -1,21 +1,29 @@
-support :: module("support");
+core :: module("../modules/core");
 
 text := "hello world!";
-support::print("text.length   := %d\n", text.length);
-support::print("text.capacity := %d\n", text.capacity);
-support::print("text.data     := $%08x\n", text.data);
+print("text.length   := %d\n", text.length);
+print("text.capacity := %d\n", text.capacity);
+print("text.data     := $%08x\n", text.data);
 
 content := text.data;
-support::print("content       := $%08x\n", content);
+print("content       := $%08x\n", content);
 
 i: u32 := 0;
 while i < text.length {
-    support::print("%c", content^);
+    print("%c", content^);
     content +:= 1;
     i +:= 1;
 };
 
-support::print("\n");
+{
+    content := text.data;
+    for i in range<u32>(0, text.length, kind := ranges::kinds::EXCLUSIVE) {
+        print("%c", content^);
+        content +:= 1;
+    };
+};
+
+print("\n");
 
 vector3 :: struct {
     x: s32;
@@ -38,27 +46,27 @@ player.pos.x := 10;
 player.pos.y := 5;
 player.pos.z := -6;
 
-support::print("player.pos.x := %d\n", player.pos.x);
-support::print("player.pos.y := %d\n", player.pos.y);
-support::print("player.pos.z := %hhd\n", player.pos.z);
+print("player.pos.x := %d\n", player.pos.x);
+print("player.pos.y := %d\n", player.pos.y);
+print("player.pos.z := %hhd\n", player.pos.z);
 
-support::print("player.dir.x := %d\n", player.dir.x);
-support::print("player.dir.y := %d\n", player.dir.y);
-support::print("player.dir.z := %d\n", player.dir.z);
+print("player.dir.x := %d\n", player.dir.x);
+print("player.dir.y := %d\n", player.dir.y);
+print("player.dir.z := %d\n", player.dir.z);
 
-support::print("player.cls.name.length   := %d\n", player.cls.name.length);
-support::print("player.cls.name.capacity := %d\n", player.cls.name.capacity);
+print("player.cls.name.length   := %d\n", player.cls.name.length);
+print("player.cls.name.capacity := %d\n", player.cls.name.capacity);
 
 player_ptr: ^entity := address_of(player);
 
-support::print("before: player_ptr.pos.x := %d\n", player_ptr.pos.x);
-support::print("before: player_ptr.pos.y := %d\n", player_ptr.pos.y);
-support::print("before: player_ptr.pos.z := %hhd\n", player_ptr.pos.z);
+print("before: player_ptr.pos.x := %d\n", player_ptr.pos.x);
+print("before: player_ptr.pos.y := %d\n", player_ptr.pos.y);
+print("before: player_ptr.pos.z := %hhd\n", player_ptr.pos.z);
 
 player_ptr.pos.x := 100;
 player_ptr.pos.y := 55;
 player_ptr.pos.z := -106;
 
-support::print("after: player_ptr.pos.x := %d\n", player_ptr.pos.x);
-support::print("after: player_ptr.pos.y := %d\n", player_ptr.pos.y);
-support::print("after: player_ptr.pos.z := %hhd\n", player_ptr.pos.z);
+print("after: player_ptr.pos.x := %d\n", player_ptr.pos.x);
+print("after: player_ptr.pos.y := %d\n", player_ptr.pos.y);
+print("after: player_ptr.pos.z := %hhd\n", player_ptr.pos.z);

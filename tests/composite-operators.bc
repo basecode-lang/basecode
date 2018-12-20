@@ -1,4 +1,4 @@
-support :: module("support");
+core :: module("../modules/core");
 
 utf16_string :: struct {
     length: u32;

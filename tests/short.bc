@@ -1,4 +1,4 @@
-support :: module("support");
+core :: module("../modules/core");
 
 a: string := "hello world\n";
 //print("%s\n", a);

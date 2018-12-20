@@ -1,4 +1,4 @@
-support :: module("support");
+core :: module("../modules/core");
 
 FOURS :: 4;
 
@@ -14,7 +14,7 @@ flag6 := 1 == 0 || 2 == 2;
 negativity_sucks: s32 := -65536;
 
 inverted: u8 := ~%1111_0000;
-support::print("inverted := %d\n", inverted);
+print("inverted := %d\n", inverted);
 
 // the code dom will retain the full expression
 // for this variable declaration's initializer

@@ -23,14 +23,13 @@ namespace basecode::compiler {
             stack_frame_entry_type_t type,
             const std::string& name,
             size_t size_in_bytes) {
-        size_t offset = 0;
+        int32_t offset = 0;
         auto size_it = _type_sizes.find(type);
         if (size_it == _type_sizes.end()) {
-            offset = size_in_bytes;
             _type_sizes.insert(std::make_pair(type, size_in_bytes));
         } else {
-            _type_sizes[type] = size_it->second + size_in_bytes;
             offset = size_it->second;
+            _type_sizes[type] = size_it->second + size_in_bytes;
         }
         auto it = _entries.insert(std::make_pair(
             name,

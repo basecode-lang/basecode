@@ -1,10 +1,10 @@
-support :: module("support");
+core :: module("../modules/core");
 
 temp := "hello world";
 
 with temp {
-    support::print("temp.length   := %d\n", .length);
-    support::print("temp.capacity := %d\n", .capacity);
+    print("temp.length   := %d\n", .length);
+    print("temp.capacity := %d\n", .capacity);
 };
 
 // XXX: this is a problem....
@@ -30,12 +30,16 @@ one :: struct {
 
 x: one;
 
+msg :: "hello world";
+
 with x {
     with .a {
         with .b {
+            .c := msg;
             with .c {
-                support::print(".length   := %d\n", .length);
-                support::print(".capacity := %d\n", .capacity);
+                print(".length   := %d\n", .length);
+                print(".capacity := %d\n", .capacity);
+                print(".data     := '%s'\n", .data);
             };
         };
     };

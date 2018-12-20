@@ -1,4 +1,4 @@
-support :: module("support");
+core :: module("../modules/core");
 
 a: []string;
 b: [8]u16;
@@ -8,8 +8,8 @@ ARRAY_SIZE :: 200;
 d: [ARRAY_SIZE]bool;
 
 // XXX: assignment here is doing the wrong thing
-e := b[0];
-f := c[2][2];
+//e := b[0];
+//f := c[2][2];
 
 g := array<any>(
     1,

@@ -1317,10 +1317,11 @@ namespace basecode::compiler {
             qualified_symbol,
             scope_manager.find_identifier(qualified_symbol));
         if (from_ref != nullptr) {
-            mod_ref = dynamic_cast<compiler::module_reference*>(from_ref
-                ->identifier()
-                ->initializer()
-                ->expression());
+            // XXX: handle case where module reference not found
+            auto var = from_ref->identifier();
+            if (var != nullptr) {
+                mod_ref = dynamic_cast<compiler::module_reference*>(var->initializer()->expression());
+            }
         }
 
         auto import = builder.make_import(
