@@ -79,13 +79,10 @@ next_power_of_two :: proc(n: u32): u32 {
 //      on the stack, there typically noise in the upper 32-bits which
 //      causes issues for smaller sizes
 assign_string :: proc(str: ^string, lit: ^u8, len: u32) {
-    // XXX: calling other procedures is stomping on registers
-    //      need to push registers to stack and restore
-    new_capacity := next_power_of_two(len + 1);
     str.length := len;
-    str.capacity := new_capacity;
-    str.data := alloc(cast<u64>(new_capacity));
-    fill(str.data, 0, cast<u64>(new_capacity));
+    str.capacity := next_power_of_two(len + 1);
+    str.data := alloc(cast<u64>(str.capacity));
+    fill(str.data, 0, cast<u64>(str.capacity));
     copy(str.data, lit, cast<u64>(len));
 };
 

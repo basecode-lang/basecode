@@ -1,6 +1,9 @@
 core :: module("../modules/core");
 
-temp := "hello world";
+msg: string :: "hello world";
+
+temp: string;
+temp := msg;
 
 with temp {
     print("temp.length   := %d\n", .length);
@@ -29,8 +32,6 @@ one :: struct {
 };
 
 x: one;
-
-msg :: "hello world";
 
 with x {
     with .a {

@@ -180,7 +180,9 @@ namespace basecode::compiler {
 
         auto block = _session.assembler().current_block();
 
-        auto var = dynamic_cast<compiler::identifier*>(_element);
+        auto var = _rot.identifier;
+        if (var == nullptr)
+            return false;
         auto on_stack = var->usage() == identifier_usage_t::stack;
 
         auto fmt = "{}";
@@ -417,12 +419,13 @@ namespace basecode::compiler {
         auto& assembler = _session.assembler();
         auto block = assembler.current_block();
 
-        address();
         value->read();
 
-        auto var = dynamic_cast<compiler::identifier*>(_element);
+        address();
+
+        auto var = _rot.identifier;
         if (var == nullptr)
-            var = _rot.identifier;
+            return false;
         auto on_stack = var->usage() == identifier_usage_t::stack;
 
         auto fmt = "{}";

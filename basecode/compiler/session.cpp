@@ -83,9 +83,6 @@ namespace basecode::compiler {
                     if (lhs_read) {
                         auto& var = vars.back();
                         var->read();
-                        // XXX: this sucks, fix me
-                        if (var->has_temp_register())
-                            var.skip_deactivate();
                     }
                 }
 

@@ -1,6 +1,6 @@
 core :: module("../modules/core");
 
-text := "hello world!";
+text: string := "hello world!";
 print("text.length   := %d\n", text.length);
 print("text.capacity := %d\n", text.capacity);
 print("text.data     := $%08x\n", text.data);

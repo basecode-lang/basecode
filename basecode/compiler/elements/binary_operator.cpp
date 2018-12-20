@@ -147,12 +147,13 @@ namespace basecode::compiler {
                     copy_required = lhs_is_composite && rhs_is_composite;
                 }
 
-                variable_handle_t lhs_var;
-                if (!session.variable(_lhs, lhs_var))
-                    return false;
-
                 variable_handle_t rhs_var;
                 if (!session.variable(_rhs, rhs_var))
+                    return false;
+                rhs_var->read();
+
+                variable_handle_t lhs_var;
+                if (!session.variable(_lhs, lhs_var))
                     return false;
 
                 if (copy_required) {

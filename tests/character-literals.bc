@@ -14,5 +14,5 @@ b_type := type_of(b);
 print("a_type.name := %s\n", a_type.name.data);
 print("b_type.name := %s\n", b_type.name.data);
 
-temp := "hello world!";
+temp: string := "hello world!";
 print("%s\n", temp.data);

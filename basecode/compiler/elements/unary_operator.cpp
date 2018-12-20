@@ -81,15 +81,13 @@ namespace basecode::compiler {
                 break;
             }
             case operator_type_t::pointer_dereference: {
-                block->comment("unary_op: deref", vm::comment_location_t::after_instruction);
                 if (!rhs_var->type_result().inferred_type->is_composite_type()) {
+                    block->comment("unary_op: deref", vm::comment_location_t::after_instruction);
                     block->load(
                         result_operand,
                         rhs_var->emit_result().operands.back());
                 } else {
-                    block->move(
-                        result_operand,
-                        rhs_var->emit_result().operands.back());
+                    result.operands.push_back(rhs_var->emit_result().operands.back());
                 }
                 break;
             }

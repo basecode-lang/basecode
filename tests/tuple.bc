@@ -1,7 +1,7 @@
 core :: module("../modules/core");
 
 anonymous_tuple :: tuple(1, 2, 3);
-named_tuple     :: tuple(first := 1, second := 2, third := "foobar");
+named_tuple     :: tuple(first := 1, second := 2, third: string := "foobar");
 
 print("anonymous_tuple._0 := %d\n", anonymous_tuple._0);
 print("anonymous_tuple._1 := %d\n", anonymous_tuple._1);
