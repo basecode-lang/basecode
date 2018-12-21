@@ -879,13 +879,24 @@ namespace basecode::vm {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    enum class listing_source_line_type_t : uint8_t {
+        blank,
+        label,
+        comment,
+        directive,
+        instruction,
+        data_definition
+    };
+
     struct listing_source_line_t {
         uint64_t address = 0;
         std::string source {};
+        listing_source_line_type_t type;
     };
 
     struct listing_source_file_t {
         void add_source_line(
+            listing_source_line_type_t type,
             uint64_t address,
             const std::string& source);
 

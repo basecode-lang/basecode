@@ -881,14 +881,17 @@ namespace basecode::vm {
 
         for (auto& entry : block->entries()) {
             std::stringstream line {};
+            listing_source_line_type_t type;
 
             switch (entry.type()) {
                 case block_entry_type_t::meta: {
+                    type = listing_source_line_type_t::directive;
                     auto meta = entry.data<meta_t>();
                     line << fmt::format(".meta '{}'", meta->label);
                     break;
                 }
                 case block_entry_type_t::label: {
+                    type = listing_source_line_type_t::label;
                     auto label = entry.data<label_t>();
                     line << fmt::format("{}:", label->instance->name());
                     break;
@@ -898,6 +901,7 @@ namespace basecode::vm {
                     continue;
                 }
                 case block_entry_type_t::comment: {
+                    type = listing_source_line_type_t::comment;
                     auto comment = entry.data<comment_t>();
                     if (comment->location == comment_location_t::after_instruction) {
                         post_inst_comments.push(*comment);
@@ -911,16 +915,19 @@ namespace basecode::vm {
                     break;
                 }
                 case block_entry_type_t::align: {
+                    type = listing_source_line_type_t::directive;
                     auto align = entry.data<align_t>();
                     line << fmt::format(".align {}", align->size);
                     break;
                 }
                 case block_entry_type_t::section: {
+                    type = listing_source_line_type_t::directive;
                     auto section = entry.data<section_t>();
                     line << fmt::format(".section '{}'", section_name(*section));
                     break;
                 }
                 case block_entry_type_t::instruction: {
+                    type = listing_source_line_type_t::instruction;
                     auto inst = entry.data<instruction_t>();
                     auto stream = inst->disassemble([&](uint64_t id) -> std::string {
                         auto label_ref = find_label_ref(static_cast<common::id_t>(id));
@@ -940,6 +947,7 @@ namespace basecode::vm {
                     break;
                 }
                 case block_entry_type_t::data_definition: {
+                    type = listing_source_line_type_t::data_definition;
                     auto definition = entry.data<data_definition_t>();
                     std::stringstream directive;
                     std::string format_spec;
@@ -1007,6 +1015,7 @@ namespace basecode::vm {
                             items += boost::get<label_ref_t*>(v)->name;
                         if ((item_index % 8) == 0) {
                             source_file->add_source_line(
+                                listing_source_line_type_t::data_definition,
                                 entry.address(),
                                 fmt::format("{}{:<10}{}", indent_four_spaces, directive.str(), items));
                             items.clear();
@@ -1038,7 +1047,10 @@ namespace basecode::vm {
                 post_inst_comments.pop();
             }
 
-            source_file->add_source_line(entry.address(), line.str());
+            source_file->add_source_line(
+                type,
+                entry.address(),
+                line.str());
 
             while (!post_inst_comments.empty()) {
                 std::stringstream temp {};
@@ -1046,7 +1058,10 @@ namespace basecode::vm {
                 std::string indent(last_indent, ' ');
                 temp << fmt::format("{}; {}", indent, top.value);
                 post_inst_comments.pop();
-                source_file->add_source_line(entry.address(), temp.str());
+                source_file->add_source_line(
+                    listing_source_line_type_t::comment,
+                    entry.address(),
+                    temp.str());
             }
         }
     }

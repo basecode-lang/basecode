@@ -31,4 +31,17 @@
 
 namespace basecode::debugger {
 
+    enum class breakpoint_type_t : uint8_t {
+        simple,
+        flag_set,
+        flag_clear,
+        register_equals
+    };
+
+    struct breakpoint_t {
+        bool enabled = false;
+        uint64_t address = 0;
+        breakpoint_type_t type = breakpoint_type_t::simple;
+    };
+
 };

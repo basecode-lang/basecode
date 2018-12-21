@@ -96,13 +96,14 @@ namespace basecode::debugger {
         window_t _footer_window {};
         uint32_t _current_line = 1;
         window_t _output_window {};
+        uint32_t _output_offset = 0;
         window_t _command_window {};
         uint64_t _memory_offset = 0;
         compiler::session& _session;
         uint32_t _column_offset = 0;
         window_t _assembly_window {};
         window_t _registers_window {};
-        std::stringstream _stdout_stream {};
+        std::vector<std::string> _stdout_lines {};
         vm::listing_source_file_t* _source_file = nullptr;
         debugger_state_t _state = debugger_state_t::stopped;
         registers_display_mode_t _registers_display_mode {};

@@ -170,7 +170,7 @@ namespace basecode::debugger {
             if (source_line_index < _source_file->lines.size()) {
                 const auto& line = _source_file->lines[source_line_index];
                 auto value = fmt::format(
-                    "{:06d}: ${:016X}  {}\n",
+                    "{:06d}: ${:016X}  {}",
                     line_number++,
                     line.address,
                     line.source);
@@ -204,9 +204,23 @@ namespace basecode::debugger {
     }
 
     void environment::draw_output(window_t& win) {
-        wprintw(win.ptr, _stdout_stream.str().c_str());
-        _stdout_stream.str("");
-
+        auto page_width = win.max_width - 2;
+        auto page_height = win.max_height - 2;
+        for (size_t line_index = 0;
+                line_index < page_height;
+                line_index ++) {
+            mvwhline(win.ptr, static_cast<int>(line_index + 1), 1, ' ', page_width);
+            auto output_line_index = _output_offset + line_index;
+            if (output_line_index < _stdout_lines.size()) {
+                const auto& line = _stdout_lines[output_line_index];
+                mvwprintw(
+                    win.ptr,
+                    static_cast<int>(line_index + 1),
+                    1,
+                    "%s",
+                    line.c_str());
+            }
+        }
         wrefresh(win.ptr);
     }
 
@@ -411,7 +425,20 @@ namespace basecode::debugger {
                     continue;
                 }
 
-                _stdout_stream << buffer;
+                std::string line;
+                for (size_t i = 0; i < 4096; i++) {
+                    auto val = buffer[i];
+                    if (val == 0)
+                        break;
+                    if (val == '\n') {
+                        _stdout_lines.emplace_back(line);
+                        line.clear();
+                        if (_stdout_lines.size() > _output_window.max_height - 2)
+                            _output_offset++;
+                        continue;
+                    }
+                    line += val;
+                }
                 memset(buffer, 0, 4096);
                 std::fseek(fp, 0, SEEK_SET);
 
@@ -481,7 +508,7 @@ namespace basecode::debugger {
         _registers_window.height = _main_window.max_height - 15;
         make_window(_registers_window);
 
-        auto left_section = _main_window.max_width - 42;
+        auto left_section = _main_window.max_width - 38;
         _memory_window.x = 0;
         _memory_window.width = left_section / 2;
         _memory_window.height = 12;
@@ -497,7 +524,7 @@ namespace basecode::debugger {
         _output_window.y = _main_window.max_height - 14;
         make_window(_output_window);
 
-        _stack_window.width = 42;
+        _stack_window.width = 38;
         _stack_window.height = 12;
         _stack_window.title = "Stack";
         _stack_window.y = _main_window.max_height - 14;
@@ -561,8 +588,10 @@ namespace basecode::debugger {
 
         size_t index = 0;
         for (const auto& line : _source_file->lines) {
-            if (line.address == pc)
+            if (line.address == pc
+            &&  line.type == vm::listing_source_line_type_t::instruction) {
                 return index;
+            }
             ++index;
         }
 

@@ -22,20 +22,27 @@ namespace basecode::vm {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    void listing_source_file_t::add_blank_lines(uint64_t address, uint16_t count) {
+    void listing_source_file_t::add_source_line(
+            listing_source_line_type_t type,
+            uint64_t address,
+            const std::string& source) {
+        lines.push_back(listing_source_line_t {
+            .address = address,
+            .source = source,
+            .type = type
+        });
+    }
+
+    void listing_source_file_t::add_blank_lines(
+            uint64_t address,
+            uint16_t count) {
         for (uint16_t i = 0; i < count; i++) {
             lines.push_back(listing_source_line_t {
                 .address = address,
-                .source = ""
+                .source = "",
+                .type = listing_source_line_type_t::blank
             });
         }
-    }
-
-    void listing_source_file_t::add_source_line(uint64_t address, const std::string& source) {
-        lines.push_back(listing_source_line_t {
-            .address = address,
-            .source = source
-        });
     }
 
     ///////////////////////////////////////////////////////////////////////////
