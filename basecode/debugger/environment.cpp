@@ -62,12 +62,19 @@ namespace basecode::debugger {
 
         for (int row = 1; row < 11; row++) {
             auto start_address = address;
-            std::stringstream stream;
+            std::stringstream bytes_stream;
+            std::stringstream chars_stream;
             for (size_t x = 0; x < 8; x++) {
-                stream << fmt::format("{:02X} ", terp.read(vm::op_sizes::byte, address));
+                auto value = terp.read(vm::op_sizes::byte, address);
+                bytes_stream << fmt::format("{:02X} ", value);
+                chars_stream << (char)(isprint(static_cast<int>(value)) ? value : '.');
                 address++;
             }
-            auto value = fmt::format("${:016X}: {}", start_address, stream.str());
+            auto value = fmt::format(
+                "${:016X}: {}{}",
+                start_address,
+                bytes_stream.str(),
+                chars_stream.str());
             mvwprintw(win.ptr, row, 1, "%s", value.c_str());
         }
 
@@ -75,7 +82,7 @@ namespace basecode::debugger {
     }
 
     void environment::draw_footer(window_t& win) {
-        auto footer = fmt::format(" F3=Exit | F8=Step | F9=Run {} ", "");
+        auto footer = fmt::format(" F1=Command | F2=Reset | F3=Exit | F8=Step | F9=Run {} ", "");
 
         size_t pad_length = 0;
         if (footer.length() < _main_window.max_width)
@@ -221,11 +228,13 @@ namespace basecode::debugger {
                     line.c_str());
             }
         }
+        if (_stdout_lines.empty())
+            print_centered_window(win, "Output is empty.");
         wrefresh(win.ptr);
     }
 
     void environment::draw_command(window_t& win) {
-        mvwprintw(win.ptr, 0, 0, "%s", "> ");
+        mvwprintw(win.ptr, 0, 0, "%s", "(command) > ");
         wrefresh(win.ptr);
     }
 
@@ -301,6 +310,15 @@ namespace basecode::debugger {
 
             auto ch = getch();
             switch (ch) {
+                case KEY_F(2): {
+                    terp.reset();
+                    _state = debugger_state_t::stopped;
+                    _stdout_lines.clear();
+                    _current_line = 1;
+                    _line_offset = static_cast<uint32_t>(source_line_for_pc());
+                    draw_all();
+                    break;
+                }
                 case KEY_F(3): {
                     goto _exit;
                 }
