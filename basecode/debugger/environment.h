@@ -11,10 +11,35 @@
 
 #pragma once
 
+#include <iostream>
 #include <ncurses.h>
 #include "debugger_types.h"
 
 namespace basecode::debugger {
+
+    enum class debugger_state_t : uint8_t {
+        stopped,
+        running,
+        single_step,
+    };
+
+    enum class registers_display_mode_t : uint8_t {
+        integers,
+        floats
+    };
+
+    struct window_t {
+        int x = 0;
+        int y = 0;
+        int width = 0;
+        int height = 0;
+        int max_width = 0;
+        int max_height = 0;
+        short color_pair = 1;
+        std::string title {};
+        WINDOW* ptr = nullptr;
+        bool scrollable = false;
+    };
 
     class environment {
     public:
@@ -27,46 +52,60 @@ namespace basecode::debugger {
         bool initialize(common::result& r);
 
     private:
-        void update();
+        void draw_all();
 
-        void update_stack();
+        void draw_output(window_t& win);
 
-        void update_header();
+        void draw_stack(window_t& win);
 
-        void update_footer();
+        void draw_header(window_t& win);
 
-        void update_source();
+        void draw_footer(window_t& win);
 
-        void update_memory();
+        void draw_assembly(window_t& win);
 
-        void update_command();
+        void draw_memory(window_t& win);
 
-        void update_registers();
+        void draw_command(window_t& win);
 
-        void title(WINDOW* win, const std::string& value, int width);
+        void draw_registers(window_t& win);
 
-        WINDOW* make_window(int height, int width, int y, int x);
+        void print_centered_row(
+            const window_t& win,
+            int row,
+            const std::string& value);
 
-        void print_centered_window(WINDOW* win, const std::string& value);
+        void print_centered_window(
+            const window_t& win,
+            const std::string& value);
 
-        void print_centered_row(WINDOW* win, int row, const std::string& value);
+        size_t source_line_for_pc();
+
+        void make_window(window_t& win);
+
+        void title(const window_t& win);
 
     private:
         static inline char s_flags[] = {'Z', 'C', 'V', 'N', 'E', 'S'};
 
-        int _rows = 0;
-        int _columns = 0;
+        window_t _main_window {};
+        window_t _stack_window {};
+        uint32_t _line_offset = 0;
+        window_t _memory_window {};
+        window_t _header_window {};
+        window_t _footer_window {};
+        uint32_t _current_line = 1;
+        window_t _output_window {};
+        window_t _command_window {};
         uint64_t _memory_offset = 0;
         compiler::session& _session;
-        WINDOW* _stack_window = nullptr;
-        WINDOW* _memory_window = nullptr;
-        WINDOW* _source_window = nullptr;
-        WINDOW* _flags_window  = nullptr;
-        WINDOW* _header_window = nullptr;
-        WINDOW* _footer_window = nullptr;
-        WINDOW* _command_window = nullptr;
-        WINDOW* _registers_window = nullptr;
+        uint32_t _column_offset = 0;
+        window_t _assembly_window {};
+        window_t _registers_window {};
+        std::stringstream _stdout_stream {};
+        vm::listing_source_file_t* _source_file = nullptr;
+        debugger_state_t _state = debugger_state_t::stopped;
+        registers_display_mode_t _registers_display_mode {};
     };
 
 };
-

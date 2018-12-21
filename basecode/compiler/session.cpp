@@ -150,8 +150,8 @@ namespace basecode::compiler {
             .path()
             .filename()
             .replace_extension(".basm");
-        listing.add_source_file(listing_name);
-        listing.select_source_file(listing_name);
+        listing.add_source_file(listing_name.string());
+        listing.select_source_file(listing_name.string());
 
         _program.block(_scope_manager.push_new_block());
         _program.block()->parent_element(&_program);
@@ -201,6 +201,7 @@ namespace basecode::compiler {
                 if (execute_directives()) {
                     if (_options.debugger) {
 #if DEBUGGER_ENABLED
+                        disassemble(nullptr);
                         debugger::environment env(*this);
                         if (!env.initialize(_result))
                             return false;

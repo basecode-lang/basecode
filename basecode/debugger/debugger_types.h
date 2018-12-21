@@ -27,7 +27,8 @@
 #include <boost/filesystem.hpp>
 #include <compiler/compiler_types.h>
 
-namespace basecode::debugger {
+#define CTRL(c) ((c) & 0x1f)
 
+namespace basecode::debugger {
 
 };

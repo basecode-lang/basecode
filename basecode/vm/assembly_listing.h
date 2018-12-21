@@ -23,11 +23,15 @@ namespace basecode::vm {
 
         void write(FILE* file);
 
+        std::vector<std::string> file_names() const;
+
         listing_source_file_t* current_source_file();
 
-        void add_source_file(const boost::filesystem::path& path);
+        void add_source_file(const std::string& path);
 
-        void select_source_file(const boost::filesystem::path& path);
+        void select_source_file(const std::string& path);
+
+        listing_source_file_t* source_file(const std::string& path);
 
     private:
         listing_source_file_t* _current_source_file = nullptr;

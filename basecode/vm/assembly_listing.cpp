@@ -41,23 +41,37 @@ namespace basecode::vm {
         }
     }
 
+    std::vector<std::string> assembly_listing::file_names() const {
+        std::vector<std::string> names {};
+        for (const auto& kvp : _source_files)
+            names.emplace_back(kvp.first);
+        return names;
+    }
+
     listing_source_file_t* assembly_listing::current_source_file() {
         return _current_source_file;
     }
 
-    void assembly_listing::add_source_file(const boost::filesystem::path& path) {
+    void assembly_listing::add_source_file(const std::string& path) {
         _source_files.insert(std::make_pair(
-            path.string(),
+            path,
             listing_source_file_t {.path = path}));
     }
 
-    void assembly_listing::select_source_file(const boost::filesystem::path& path) {
-        auto it = _source_files.find(path.string());
+    void assembly_listing::select_source_file(const std::string& path) {
+        auto it = _source_files.find(path);
         if (it == _source_files.end()) {
             _current_source_file = nullptr;
             return;
         }
         _current_source_file = &it->second;
+    }
+
+    listing_source_file_t* assembly_listing::source_file(const std::string& path) {
+        auto it = _source_files.find(path);
+        if (it == _source_files.end())
+            return nullptr;
+        return &it->second;
     }
 
 };
