@@ -47,16 +47,26 @@ endif()
 
 set (VER_MAJOR 0)
 set (VER_MINOR 1)
+set (DEBUGGER_ENABLED 0)
 set (COMPILER_LIBRARY_NAME ${PROJECT_NAME})
-
-configure_file (
-    "${PROJECT_SOURCE_DIR}/configure.in.h"
-    "${PROJECT_BINARY_DIR}/configure.h"
-)
 
 include_directories(
     ${PROJECT_SOURCE_DIR}
     ${PROJECT_BINARY_DIR}
+)
+
+if (CURSES_FOUND)
+    set (
+        DEBUGGER_SOURCES
+        debugger/debugger_types.h
+        debugger/environment.cpp debugger/environment.h)
+    set (DEBUGGER_ENABLED 1)
+    message (STATUS "DEBUGGER_ENABLED = ${DEBUGGER_ENABLED}")
+endif()
+
+configure_file (
+    "${PROJECT_SOURCE_DIR}/configure.in.h"
+    "${PROJECT_BINARY_DIR}/configure.h"
 )
 
 add_library(
@@ -97,6 +107,8 @@ add_library(
     vm/default_allocator.cpp vm/default_allocator.h
     vm/instruction_block.cpp vm/instruction_block.h
     vm/register_allocator.cpp vm/register_allocator.h
+
+    ${DEBUGGER_SOURCES}
 
     compiler/elements.h
     compiler/session.cpp compiler/session.h
@@ -199,4 +211,5 @@ target_link_libraries(
     boost-system
     boost-filesystem
     utf8proc
-    ${DL_LIBRARY})
+    ${DL_LIBRARY}
+    ${CURSES_LIBRARIES})

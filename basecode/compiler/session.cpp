@@ -10,6 +10,7 @@
 // ----------------------------------------------------------------------------
 
 #include <fstream>
+#include <debugger/environment.h>
 #include "session.h"
 #include "elements.h"
 #include "code_dom_formatter.h"
@@ -198,8 +199,21 @@ namespace basecode::compiler {
 
             if (success) {
                 if (execute_directives()) {
-                    if (_run)
-                        run();
+                    if (_options.debugger) {
+#if DEBUGGER_ENABLED
+                        debugger::environment env(*this);
+                        if (!env.initialize(_result))
+                            return false;
+                        env.run(_result);
+                        env.shutdown(_result);
+#else
+                        fmt::print("\nNOTE: Debugger not enabled.\n");
+                        fmt::print("      Ensure you have ncurses installed and rebuild the compiler.\n");
+#endif
+                    } else {
+                        if (_run)
+                            run();
+                    }
                 }
             }
         }

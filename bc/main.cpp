@@ -52,7 +52,7 @@ static void usage() {
         "[--debugger] "
         "[--no-color] "
         "[-G] "
-        "[-M{path} ...] "
+        "[-M{{path}} ...] "
         "[-H{{filename}}|--code_dom={{filename}}] "
         "file [-- option ...]\n");
 }
@@ -150,8 +150,9 @@ int main(int argc, char** argv) {
                 definitions.insert(std::make_pair(parts[0], value));
                 break;
             }
-            default:
+            default: {
                 break;
+            }
         }
     }
 
@@ -173,8 +174,9 @@ int main(int argc, char** argv) {
     });
 
     auto separator_found = false;
-    std::vector<std::string> meta_options {};
     std::vector<fs::path> source_files {};
+    std::vector<std::string> meta_options {};
+
     while (ya_optind < argc) {
         std::string arg(argv[ya_optind++]);
         if (source_files.empty()) {

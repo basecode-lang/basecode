@@ -61,6 +61,13 @@ include_directories(ext/utf8proc-2.2.0)
 # ya_getopt
 include_directories(ext/ya_getopt-1.0.0)
 
+# ncurses
+set(CURSES_NEED_NCURSES true)
+find_package(Curses)
+if (CURSES_FOUND)
+    include_directories(${CURSES_INCLUDE_DIRS})
+endif()
+
 # projects
 add_subdirectory(basecode)
 add_subdirectory(bc)
