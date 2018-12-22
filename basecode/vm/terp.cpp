@@ -460,7 +460,6 @@ namespace basecode::vm {
         }
 
         _icache.reset();
-        _ffi->clear();
         _allocator->reset();
 
         _exited = false;
@@ -2377,6 +2376,7 @@ namespace basecode::vm {
             heap_vectors_t::program_start,
             _heap_address + program_start);
 
+        _ffi->clear();
         reset();
 
         return !r.is_failed();
