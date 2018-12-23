@@ -52,8 +52,14 @@ namespace basecode::debugger {
 
         while (true) {
             auto pc = terp.register_file().r[vm::register_pc].qw;
-            auto user_step = false;
+            auto bp = breakpoint(pc);
+            if (bp != nullptr && bp->enabled) {
+                _state = debugger_state_t::break_s;
+                _header_window->mark_dirty();
+                _assembly_window->mark_dirty();
+            }
 
+            auto user_step = false;
             _ch = getch();
             switch (_ch) {
                 case KEY_F(2): {
@@ -74,11 +80,14 @@ namespace basecode::debugger {
                     goto _exit;
                 }
                 case KEY_F(8): {
-                    if (_state != debugger_state_t::single_step) {
-                        // XXX: error!
-                        break;
+                    if (_state == debugger_state_t::break_s)
+                        _state = debugger_state_t::single_step;
+
+                    if (_state == debugger_state_t::single_step) {
+                        user_step = true;
+                    } else {
+                        // XXX: state error
                     }
-                    user_step = true;
                     break;
                 }
                 case KEY_F(9): {
@@ -91,6 +100,7 @@ namespace basecode::debugger {
                             _assembly_window->move_to_address(pc);
                             break;
                         }
+                        case debugger_state_t::break_s:
                         case debugger_state_t::single_step: {
                             _state = debugger_state_t::running;
                             break;
@@ -162,6 +172,18 @@ namespace basecode::debugger {
         return true;
     }
 
+    breakpoint_t* environment::add_breakpoint(
+            uint64_t address,
+            breakpoint_type_t type) {
+        auto bp = breakpoint(address);
+        if (bp != nullptr)
+            return bp;
+        auto it = _breakpoints.insert(std::make_pair(
+            address,
+            breakpoint_t{true, address, type}));
+        return &it.first->second;
+    }
+
     compiler::session& environment::session() {
         return _session;
     }
@@ -185,6 +207,7 @@ namespace basecode::debugger {
 
         init_pair(1, COLOR_BLUE, COLOR_WHITE);
         init_pair(2, COLOR_BLUE, COLOR_YELLOW);
+        init_pair(3, COLOR_RED, COLOR_WHITE);
 
         _main_window = new window(nullptr, stdscr);
         _header_window = new header_window(
@@ -249,6 +272,17 @@ namespace basecode::debugger {
         draw_all();
 
         return true;
+    }
+
+    void environment::remove_breakpoint(uint64_t address) {
+        _breakpoints.erase(address);
+    }
+
+    breakpoint_t* environment::breakpoint(uint64_t address) {
+        auto it = _breakpoints.find(address);
+        if (it == _breakpoints.end())
+            return nullptr;
+        return &it->second;
     }
 
 };

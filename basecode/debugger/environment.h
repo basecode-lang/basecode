@@ -37,11 +37,19 @@ namespace basecode::debugger {
 
         compiler::session& session();
 
+        breakpoint_t* add_breakpoint(
+            uint64_t address,
+            breakpoint_type_t type);
+
         debugger_state_t state() const;
 
         bool shutdown(common::result& r);
 
         bool initialize(common::result& r);
+
+        void remove_breakpoint(uint64_t address);
+
+        breakpoint_t* breakpoint(uint64_t address);
 
     private:
         void draw_all();
@@ -50,6 +58,7 @@ namespace basecode::debugger {
         int _ch;
         compiler::session& _session;
         window* _main_window = nullptr;
+        breakpoint_map_t _breakpoints {};
         stack_window* _stack_window = nullptr;
         output_window* _output_window = nullptr;
         header_window* _header_window = nullptr;

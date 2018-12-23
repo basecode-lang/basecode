@@ -50,6 +50,10 @@ namespace basecode::debugger {
                 mode = "stopped";
                 break;
             }
+            case debugger_state_t::break_s: {
+                mode = "break";
+                break;
+            }
             case debugger_state_t::single_step: {
                 mode = "step";
                 break;

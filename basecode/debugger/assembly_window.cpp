@@ -109,6 +109,9 @@ namespace basecode::debugger {
             auto source_line_index = row() + line_index;
             if (source_line_index < _source_file->lines.size()) {
                 const auto& line = _source_file->lines[source_line_index];
+
+                auto bp = env.breakpoint(line.address);
+
                 auto value = fmt::format(
                     "{:06d}: ${:016X}  {}",
                     line_number++,
@@ -127,12 +130,28 @@ namespace basecode::debugger {
 
                 value = value.substr(column_offset, clip_length);
 
+                auto display_index = static_cast<int>(line_index + 1);
                 mvwprintw(
                     ptr(),
-                    static_cast<int>(line_index + 1),
+                    display_index,
                     2,
                     "%s",
                     value.c_str());
+
+                if (bp != nullptr
+                &&  line.type == vm::listing_source_line_type_t::instruction) {
+                    mvwprintw(ptr(), display_index, 1, "%s", "B");
+                    mvwchgat(
+                        ptr(),
+                        display_index,
+                        1,
+                        page_width() + 1,
+                        A_REVERSE,
+                        3,
+                        0);
+                } else {
+                    mvwprintw(ptr(), display_index, 1, "%s", " ");
+                }
             }
         }
 
@@ -167,6 +186,22 @@ namespace basecode::debugger {
                 move_down();
                 mark_dirty();
                 return true;
+            }
+            case CTRL('b'): {
+                if (_source_file == nullptr)
+                    break;
+                auto line_index = row() + (_current_line - 1);
+                const auto& line = _source_file->lines[line_index];
+                auto bp = env.breakpoint(line.address);
+                if (bp != nullptr) {
+                    env.remove_breakpoint(line.address);
+                } else {
+                    env.add_breakpoint(
+                        line.address,
+                        breakpoint_type_t::simple);
+                }
+                mark_dirty();
+                break;
             }
             default:
                 break;

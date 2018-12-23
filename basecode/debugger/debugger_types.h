@@ -33,6 +33,8 @@ namespace basecode::debugger {
 
     class environment;
 
+    ///////////////////////////////////////////////////////////////////////////
+
     enum class breakpoint_type_t : uint8_t {
         simple,
         flag_set,
@@ -46,10 +48,15 @@ namespace basecode::debugger {
         breakpoint_type_t type = breakpoint_type_t::simple;
     };
 
+    using breakpoint_map_t = std::unordered_map<uint64_t, breakpoint_t>;
+
+    ///////////////////////////////////////////////////////////////////////////
+
     enum class debugger_state_t : uint8_t {
         stopped,
         running,
         single_step,
+        break_s
     };
 
     enum class registers_display_mode_t : uint8_t {
