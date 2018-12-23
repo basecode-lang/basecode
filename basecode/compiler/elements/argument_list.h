@@ -25,6 +25,8 @@ namespace basecode::compiler {
 
         size_t size() const;
 
+        uint64_t allocated_size() const;
+
         compiler::element* replace(
             size_t index,
             compiler::element* item);
@@ -67,6 +69,7 @@ namespace basecode::compiler {
         void on_owned_elements(element_list_t& list) override;
 
     private:
+        uint64_t _allocated_size = 0;
         bool _is_foreign_call = false;
         compiler::element_list_t _elements {};
         std::map<std::string, size_t> _param_index {};

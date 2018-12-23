@@ -2570,6 +2570,9 @@ namespace basecode::vm {
             const instruction_t& inst,
             uint8_t operand_index,
             operand_value_t& value) const {
+        register_value_alias_t alias {};
+        auto size = op_sizes::qword;
+
         auto& operand = inst.operands[operand_index];
         value.type = operand.is_integer() ?
             register_type_t::integer :
@@ -2578,9 +2581,31 @@ namespace basecode::vm {
             auto reg_index = register_index(
                 static_cast<registers_t>(operand.value.r),
                 value.type);
-            value.alias.u = _registers.r[reg_index].qw;
+            alias = _registers.r[reg_index];
         } else {
-            value.alias.u = operand.value.u;
+            alias.qw = operand.value.u;
+            size = operand.size;
+        }
+
+        switch (size) {
+            case op_sizes::byte: {
+                value.alias.u = alias.b;
+                break;
+            }
+            case op_sizes::word: {
+                value.alias.u = alias.w;
+                break;
+            }
+            case op_sizes::dword: {
+                value.alias.u = alias.dw;
+                break;
+            }
+            case op_sizes::qword: {
+                value.alias.u = alias.qw;
+                break;
+            }
+            default:
+                return false;
         }
 
         return true;

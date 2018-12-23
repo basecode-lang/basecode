@@ -34,6 +34,21 @@ namespace basecode::debugger {
         bool on_update(environment& env) override;
 
     private:
+        void move_up();
+
+        void page_up();
+
+        void move_top();
+
+        void move_down();
+
+        void page_down();
+
+        int page_width() const;
+
+        int page_height() const;
+
+    private:
         int _current_line = 1;
         vm::listing_source_file_t* _source_file = nullptr;
     };

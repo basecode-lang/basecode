@@ -62,6 +62,8 @@ namespace basecode::compiler {
             vm::instruction_block* block,
             const compiler::element_list_t& elements) {
         for (auto it = elements.rbegin(); it != elements.rend(); ++it) {
+            compiler::type* type = nullptr;
+
             element* arg = *it;
             switch (arg->element_type()) {
                 case element_type_t::argument_list: {
@@ -91,6 +93,9 @@ namespace basecode::compiler {
                         return false;
                     arg_var->read();
                     block->push(arg_var->emit_result().operands.back());
+
+                    if (!_is_foreign_call)
+                        type = arg_var->type_result().inferred_type;
                     break;
                 }
                 case element_type_t::identifier_reference: {
@@ -98,7 +103,8 @@ namespace basecode::compiler {
                     if (!session.variable(arg, arg_var))
                         return false;
 
-                    auto type = arg_var->type_result().inferred_type;
+                    type = arg_var->type_result().inferred_type;
+
                     switch (type->element_type()) {
                         case element_type_t::any_type:
                         case element_type_t::array_type:
@@ -135,10 +141,20 @@ namespace basecode::compiler {
                             break;
                         }
                     }
+
+                    if (_is_foreign_call)
+                        type = nullptr;
                     break;
                 }
                 default:
                     break;
+            }
+
+            if (type != nullptr) {
+                auto size = static_cast<uint64_t>(common::align(
+                    type->size_in_bytes(),
+                    8));
+                _allocated_size += size;
             }
         }
 
@@ -343,6 +359,10 @@ namespace basecode::compiler {
         }
 
         return true;
+    }
+
+    uint64_t argument_list::allocated_size() const {
+        return _allocated_size;
     }
 
     void argument_list::add(compiler::element* item) {

@@ -176,6 +176,16 @@ namespace basecode::compiler {
             block->pop(result_operand);
         }
 
+        if (_arguments->allocated_size() > 0) {
+            block->comment(
+                "free stack space",
+                vm::comment_location_t::after_instruction);
+            block->add(
+                vm::instruction_operand_t::sp(),
+                vm::instruction_operand_t::sp(),
+                vm::instruction_operand_t(_arguments->allocated_size(), vm::op_sizes::word));
+        }
+
         return true;
     }
 

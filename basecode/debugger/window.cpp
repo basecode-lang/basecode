@@ -66,6 +66,8 @@ namespace basecode::debugger {
     }
 
     void window::draw_title() {
+        if (_title.empty())
+            return;
         mvwhline(_ptr, 0, 1, ' ', _max_width - 2);
         mvwprintw(_ptr, 0, 2, "%s", _title.c_str());
         mvwchgat(_ptr, 0, 1, _max_width - 2, A_REVERSE, _color_pair, 0);
@@ -136,6 +138,7 @@ namespace basecode::debugger {
         if (!_dirty)
             return;
         on_draw(env);
+        draw_title();
         wrefresh(_ptr);
         _dirty = false;
     }

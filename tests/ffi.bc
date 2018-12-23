@@ -113,16 +113,21 @@ entity :: struct {
     jeff: player;
     with jeff {
         assign_string(address_of(.name), "jeff", 4);
-
         print(".name.length   := %d\n", .name.length);
         print(".name.capacity := %d\n", .name.capacity);
         print(".name.data     := %s\n", .name.data);
     };
 
-    //jeff_entity: entity;
-    //assign_string(address_of(jeff_entity.name), "entity: jeff", 12);
-    //jeff_entity.pos.x := 1.0;
-    //jeff_entity.pos.y := 1.0;
-    //jeff_entity.pos.z := 1.0;
-    //jeff_entity.data := address_of(jeff);
+    jeff_entity: entity;
+    with jeff_entity {
+        assign_string(address_of(.name), "entity: jeff", 12);
+        print(".name.length   := %d\n", .name.length);
+        print(".name.capacity := %d\n", .name.capacity);
+        print(".name.data     := %s\n", .name.data);
+
+        .pos.x := 1.0;
+        .pos.y := 1.0;
+        .pos.z := 1.0;
+        .data := address_of(jeff);
+    };
 };

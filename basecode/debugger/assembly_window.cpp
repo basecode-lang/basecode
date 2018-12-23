@@ -29,6 +29,64 @@ namespace basecode::debugger {
                                  "Assembly") {
     }
 
+    void assembly_window::page_up() {
+        for (auto i = 0; i < page_height(); i++)
+            move_up();
+    }
+
+    void assembly_window::move_up() {
+        if (_source_file == nullptr)
+            return;
+
+        if (_current_line > 1)
+            _current_line--;
+        else {
+            auto current_row = row();
+            if (current_row > page_height()) {
+                _current_line = page_height();
+                row(current_row - page_height());
+            } else {
+                row(0);
+            }
+        }
+    }
+
+    void assembly_window::move_top() {
+        row(0);
+        _current_line = 1;
+    }
+
+    void assembly_window::page_down() {
+        for (auto i = 0; i < page_height(); i++)
+            move_down();
+    }
+
+    void assembly_window::move_down() {
+        if (_source_file == nullptr)
+            return;
+
+        auto max_lines = _source_file->lines.size();
+        if (_current_line < page_height()) {
+            if (_current_line + row() == max_lines)
+                return;
+            _current_line++;
+        } else {
+            auto current_row = row();
+            if (current_row + page_height() < (max_lines - 1)) {
+                row(current_row + page_height());
+                _current_line = 1;
+            }
+        }
+    }
+
+    int assembly_window::page_width() const {
+        return max_width() - 3;
+    }
+
+    int assembly_window::page_height() const {
+        return max_height() - 2;
+    }
+
     void assembly_window::on_draw(environment& env) {
         std::string file_name("(none)");
         auto total_lines = 0;
@@ -43,14 +101,11 @@ namespace basecode::debugger {
             row() + _current_line,
             total_lines));
 
-        auto page_size = max_height() - 2;
-        auto page_width = max_width() - 3;
-
         auto line_number = row() + 1;
         for (size_t line_index = 0;
-             line_index < page_size;
+             line_index < page_height();
              line_index++) {
-            mvwhline(ptr(), static_cast<int>(line_index + 1), 1, ' ', page_width + 1);
+            mvwhline(ptr(), static_cast<int>(line_index + 1), 1, ' ', page_width() + 1);
             auto source_line_index = row() + line_index;
             if (source_line_index < _source_file->lines.size()) {
                 const auto& line = _source_file->lines[source_line_index];
@@ -61,8 +116,8 @@ namespace basecode::debugger {
                     line.source);
 
                 size_t clip_length = value.length();
-                if (clip_length > page_width)
-                    clip_length = static_cast<size_t>(page_width);
+                if (clip_length > page_width())
+                    clip_length = static_cast<size_t>(page_width());
 
                 auto column_offset = static_cast<size_t>(column());
                 if (column_offset > 0
@@ -85,7 +140,7 @@ namespace basecode::debugger {
             ptr(),
             _current_line,
             1,
-            page_width + 1,
+            page_width() + 1,
             A_REVERSE,
             2,
             0);
@@ -94,56 +149,22 @@ namespace basecode::debugger {
     bool assembly_window::on_update(environment& env) {
         switch (env.ch()) {
             case KEY_PPAGE: {
-                if (_source_file == nullptr)
-                    break;
-
-                auto page_size = max_height() - 2;
-                if (row() > page_size)
-                    row(row() - page_size);
-                else
-                    row(0);
-
+                page_up();
                 mark_dirty();
                 return true;
             }
             case KEY_NPAGE: {
-                if (_source_file == nullptr)
-                    break;
-
-                auto page_size = max_height() - 2;
-                row(row() + page_size);
-                if (row() > _source_file->lines.size() - 1)
-                    row(static_cast<uint32_t>(_source_file->lines.size() - 1 - page_size));
-
+                page_down();
                 mark_dirty();
                 return true;
             }
             case KEY_UP: {
-                if (_source_file == nullptr)
-                    break;
-
-                if (_current_line > 1)
-                    --_current_line;
-                else {
-                    if (row() > 0)
-                        row(row() - 1);
-                }
-
+                move_up();
                 mark_dirty();
                 return true;
             }
             case KEY_DOWN: {
-                if (_source_file == nullptr)
-                    break;
-
-                if (_current_line < max_height() - 2)
-                    ++_current_line;
-                else {
-                    auto last_page_top = (_source_file->lines.size() - 1) - (max_height() - 2);
-                    if (row() < last_page_top)
-                        row(row() + 1);
-                }
-
+                move_down();
                 mark_dirty();
                 return true;
             }
@@ -158,14 +179,16 @@ namespace basecode::debugger {
         if (_source_file == nullptr)
             return 0;
 
+        move_top();
+
         size_t index = 0;
         for (const auto& line : _source_file->lines) {
             if (line.address == address
             &&  line.type == vm::listing_source_line_type_t::instruction) {
-                row(static_cast<int>(index));
-                _current_line = 1;
+                mark_dirty();
                 return index;
             }
+            move_down();
             ++index;
         }
         return 0;
