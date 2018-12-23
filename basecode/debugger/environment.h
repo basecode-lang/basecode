@@ -13,39 +13,31 @@
 
 #include <iostream>
 #include <ncurses.h>
+#include "stack_window.h"
+#include "header_window.h"
+#include "footer_window.h"
+#include "output_window.h"
+#include "memory_window.h"
+#include "command_window.h"
 #include "debugger_types.h"
+#include "assembly_window.h"
+#include "registers_window.h"
 
 namespace basecode::debugger {
-
-    enum class debugger_state_t : uint8_t {
-        stopped,
-        running,
-        single_step,
-    };
-
-    enum class registers_display_mode_t : uint8_t {
-        integers,
-        floats
-    };
-
-    struct window_t {
-        int x = 0;
-        int y = 0;
-        int width = 0;
-        int height = 0;
-        int max_width = 0;
-        int max_height = 0;
-        short color_pair = 1;
-        std::string title {};
-        WINDOW* ptr = nullptr;
-        bool scrollable = false;
-    };
 
     class environment {
     public:
         explicit environment(compiler::session& session);
 
+        ~environment();
+
+        int ch() const;
+
         bool run(common::result& r);
+
+        compiler::session& session();
+
+        debugger_state_t state() const;
 
         bool shutdown(common::result& r);
 
@@ -54,59 +46,19 @@ namespace basecode::debugger {
     private:
         void draw_all();
 
-        void draw_output(window_t& win);
-
-        void draw_stack(window_t& win);
-
-        void draw_header(window_t& win);
-
-        void draw_footer(window_t& win);
-
-        void draw_assembly(window_t& win);
-
-        void draw_memory(window_t& win);
-
-        void draw_command(window_t& win);
-
-        void draw_registers(window_t& win);
-
-        void print_centered_row(
-            const window_t& win,
-            int row,
-            const std::string& value);
-
-        void print_centered_window(
-            const window_t& win,
-            const std::string& value);
-
-        size_t source_line_for_pc();
-
-        void make_window(window_t& win);
-
-        void title(const window_t& win);
-
     private:
-        static inline char s_flags[] = {'Z', 'C', 'V', 'N', 'E', 'S'};
-
-        window_t _main_window {};
-        window_t _stack_window {};
-        uint32_t _line_offset = 0;
-        window_t _memory_window {};
-        window_t _header_window {};
-        window_t _footer_window {};
-        uint32_t _current_line = 1;
-        window_t _output_window {};
-        uint32_t _output_offset = 0;
-        window_t _command_window {};
-        uint64_t _memory_offset = 0;
+        int _ch;
         compiler::session& _session;
-        uint32_t _column_offset = 0;
-        window_t _assembly_window {};
-        window_t _registers_window {};
-        std::vector<std::string> _stdout_lines {};
-        vm::listing_source_file_t* _source_file = nullptr;
+        window* _main_window = nullptr;
+        stack_window* _stack_window = nullptr;
+        output_window* _output_window = nullptr;
+        header_window* _header_window = nullptr;
+        footer_window* _footer_window = nullptr;
+        memory_window* _memory_window = nullptr;
+        command_window* _command_window = nullptr;
+        assembly_window* _assembly_window = nullptr;
+        registers_window* _registers_window = nullptr;
         debugger_state_t _state = debugger_state_t::stopped;
-        registers_display_mode_t _registers_display_mode {};
     };
 
 };
