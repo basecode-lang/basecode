@@ -28,6 +28,7 @@ namespace basecode::debugger {
     }
 
     void output_window::clear() {
+        _stdout_line.clear();
         _stdout_lines.clear();
         _stderr_lines.clear();
         row(0);
@@ -47,19 +48,15 @@ namespace basecode::debugger {
     }
 
     void output_window::process_buffers() {
-        std::string line;
         for (char val : _stdout_buffer) {
             if (val == 0)
                 break;
             if (val == '\n') {
-                mark_dirty();
-                _stdout_lines.emplace_back(line);
-                line.clear();
-                if (_stdout_lines.size() > max_height() - 2)
-                    row(row() + 1);
+                add_stdout_line(_stdout_line);
+                _stdout_line.clear();
                 continue;
             }
-            line += val;
+            _stdout_line += val;
         }
         memset(_stdout_buffer, 0, 4096);
         std::fseek(_stdout_fp, 0, SEEK_SET);
@@ -99,6 +96,13 @@ namespace basecode::debugger {
 
         if (_stdout_lines.empty())
             print_centered_window("Output is empty.");
+    }
+
+    void output_window::add_stdout_line(const std::string& line) {
+        mark_dirty();
+        _stdout_lines.emplace_back(line);
+        if (_stdout_lines.size() > max_height() - 2)
+            row(row() + 1);
     }
 
 };

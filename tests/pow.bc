@@ -1,19 +1,21 @@
 core :: module("../modules/core");
 
-x: u32 := 2 ** 4;
+#run {
+    x: u32 := 2 ** 4;
 
-print("x := %d\n", x);
+    print("x := %d\n", x);
 
-y: u32;
+    y: u32;
 
-@no_fold;
-y := 2 ** 4;
+    @no_fold;
+    y := 2 ** 4;
 
-print("y := %d\n", y);
+    print("y := %d\n", y);
 
-w: f32 := 2.0 ** 4.0;
+    w: f32 := 2.0 ** 4.0;
 
-z: f32;
+    z: f32;
 
-@no_fold;
-z := 2.0 ** 4.0;
+    @no_fold;
+    z := 2.0 ** 4.0;
+};

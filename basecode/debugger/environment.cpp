@@ -92,6 +92,7 @@ namespace basecode::debugger {
                 }
                 case KEY_F(9): {
                     switch (_state) {
+                        case debugger_state_t::errored:
                         case debugger_state_t::running: {
                             break;
                         }
@@ -141,21 +142,20 @@ namespace basecode::debugger {
             };
 
             if (execute_next_step) {
-                auto success = terp.step(_session.result());
+                common::result step_result {};
+                auto success = terp.step(step_result);
                 if (!success) {
-                    // XXX:
-                    continue;
-                }
-
-                pc = terp.register_file().r[vm::register_pc].qw;
-                _output_window->process_buffers();
-
-                if (terp.has_exited()) {
-                    _state = debugger_state_t::stopped;
+                    _state = debugger_state_t::errored;
                 } else {
-                    _assembly_window->move_to_address(pc);
-                }
+                    pc = terp.register_file().r[vm::register_pc].qw;
+                    _output_window->process_buffers();
 
+                    if (terp.has_exited()) {
+                        _state = debugger_state_t::stopped;
+                    } else {
+                        _assembly_window->move_to_address(pc);
+                    }
+                }
                 _stack_window->mark_dirty();
                 _header_window->mark_dirty();
                 _memory_window->mark_dirty();

@@ -1,57 +1,59 @@
 core :: module("../modules/core");
 
-ptr: ^u8 := nil;
-is_true := false;
+#run {
+    ptr: ^u8 := nil;
+    is_true := false;
 
-bong: u8 := 0;
-if !is_true {
-    print("toggle the bong!\n");
-    bong := 1;
-};
+    bong: u8 := 0;
+    if !is_true {
+        print("toggle the bong!\n");
+        bong := 1;
+    };
 
-if cast<bool>(bong) {
-    print("musk got in trouble for hitting the weed\n");
-};
+    if cast<bool>(bong) {
+        print("musk got in trouble for hitting the weed\n");
+    };
 
-if is_true {
-    print("true!\n");
-} else {
-    print("oh, noes...it's faalllse!\n");
-};
+    if is_true {
+        print("true!\n");
+    } else {
+        print("oh, noes...it's faalllse!\n");
+    };
 
-if is_true != true {
-    print("not equals true\n");
-};
+    if is_true != true {
+        print("not equals true\n");
+    };
 
-if !is_true {
-    print("does this work?\n");
-};
+    if !is_true {
+        print("does this work?\n");
+    };
 
-a := 6;
-is_a_less_than_five := a < 5 && is_true;
+    a := 6;
+    is_a_less_than_five := a < 5 && is_true;
 
-if is_a_less_than_five {
-    print("a is < 5 and/or is_true := true\n");
-} else {
-    print("a is > 5 and/or is_true := false\n");
-};
+    if is_a_less_than_five {
+        print("a is < 5 and/or is_true := true\n");
+    } else {
+        print("a is > 5 and/or is_true := false\n");
+    };
 
-if is_a_less_than_five {
-    print("yes, a is less than 5.\n");
-} else {
-    print("no, it's not!\n");
-};
+    if is_a_less_than_five {
+        print("yes, a is less than 5.\n");
+    } else {
+        print("no, it's not!\n");
+    };
 
-if a == 5 {
-    print("a is 5\n");
-} else if a < 5 {
-    print("a is less than 5\n");
-} else if a > 5 {
-    print("a is greater than 5\n");
-};
+    if a == 5 {
+        print("a is 5\n");
+    } else if a < 5 {
+        print("a is less than 5\n");
+    } else if a > 5 {
+        print("a is greater than 5\n");
+    };
 
-if a <= 5 {
-    print("a is less than or equal to 5\n");
-} else if a >= 5 {
-    print("a is greater than or equal to 5\n");
+    if a <= 5 {
+        print("a is less than or equal to 5\n");
+    } else if a >= 5 {
+        print("a is greater than or equal to 5\n");
+    };
 };

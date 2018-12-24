@@ -1,54 +1,56 @@
 core :: module("../modules/core");
 
-foo := 128;
-foo := foo * 2;
+#run {
+    foo := 128;
+    foo := foo * 2;
 
-#assembly {{
-    move.qw i0, foo
-    load.b  i1, i0
-    move.b  i2, #$0a
-    sub.b   i3, i1, i2
-    store.b i0, i3
-}};
+    #assembly {{
+        move.qw i0, foo
+        load.b  i1, i0
+        move.b  i2, #$0a
+        sub.b   i3, i1, i2
+        store.b i0, i3
+    }};
 
-foo := (foo - 16) shr 2;
+    foo := (foo - 16) shr 2;
 
-j, k := cast<u16>(4), 8;
-j, k := k, cast<u8>(j);
+    j, k := cast<u16>(4), 8;
+    j, k := k, cast<u8>(j);
 
-bar: u64;
-bar := 512;
+    bar: u64;
+    bar := 512;
 
-constant_fold_at_assignment := size_of(bar);
+    constant_fold_at_assignment := size_of(bar);
 
-temp: u32;
-temp := size_of(bar);
+    temp: u32;
+    temp := size_of(bar);
 
-'get_a_type:
-temp_type_info: ^type := type_of(temp);
-huh := temp_type_info^;
+    'get_a_type:
+    temp_type_info: ^type := type_of(temp);
+    huh := temp_type_info^;
 
-print("address_of(temp) := $%08x\n\n", address_of(temp));
+    print("address_of(temp) := $%08x\n\n", address_of(temp));
 
-print("foo := %hhu\n\n", foo);
+    print("foo := %hhu\n\n", foo);
 
-print("size_of(foo)     := %d\n",   size_of(foo));
-print("align_of(foo)    := %d\n\n", align_of(foo));
+    print("size_of(foo)     := %d\n",   size_of(foo));
+    print("align_of(foo)    := %d\n\n", align_of(foo));
 
-print("size_of(u16)     := %d\n",   size_of(u16));
-print("align_of(u16)    := %d\n\n", align_of(u16));
+    print("size_of(u16)     := %d\n",   size_of(u16));
+    print("align_of(u16)    := %d\n\n", align_of(u16));
 
-print("size_of(u32)     := %d\n",   size_of(u32));
-print("align_of(u32)    := %d\n\n", align_of(u32));
+    print("size_of(u32)     := %d\n",   size_of(u32));
+    print("align_of(u32)    := %d\n\n", align_of(u32));
 
-print("size_of(bar)     := %d\n",   size_of(bar));
-print("align_of(bar)    := %d\n\n", align_of(bar));
+    print("size_of(bar)     := %d\n",   size_of(bar));
+    print("align_of(bar)    := %d\n\n", align_of(bar));
 
-print("size_of(string)  := %d\n",   size_of(string));
-print("align_of(string) := %d\n\n", align_of(string));
+    print("size_of(string)  := %d\n",   size_of(string));
+    print("align_of(string) := %d\n\n", align_of(string));
 
-// alloc & free block of memory
-'allocate_memory:
-addr: ^u8 := alloc(size_of(u16) * 4096);
-print("addr := $%08x\n", addr);
-free(addr);
+    // alloc & free block of memory
+    'allocate_memory:
+    addr: ^u8 := alloc(size_of(u16) * 4096);
+    print("addr := $%08x\n", addr);
+    free(addr);
+};

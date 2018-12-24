@@ -25,4 +25,4 @@ test :: proc() {
     };
 };
 
-test();
+#run test();

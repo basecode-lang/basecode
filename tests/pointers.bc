@@ -21,9 +21,11 @@ item_ptr_ptr_t :: #type ^^item;
 items: ^item_ptr_t;
 foo := items^;
 
-// alloc & free block of memory
-'allocate_memory:
-addr: ^u8;
-addr := alloc(size_of(u16) * 4096);
-print("addr := $%08x\n", addr);
-free(addr);
+#run {
+    // alloc & free block of memory
+    'allocate_memory:
+    addr: ^u8;
+    addr := alloc(size_of(u16) * 4096);
+    print("addr := $%08x\n", addr);
+    free(addr);
+};

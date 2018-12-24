@@ -73,6 +73,7 @@ namespace basecode::vm {
 
         static constexpr uint8_t trap_out_of_memory = 0xff;
         static constexpr uint8_t trap_invalid_ffi_call = 0xfe;
+        static constexpr uint8_t trap_invalid_address = 0xfd;
 
         terp(
             vm::ffi* ffi,
@@ -185,6 +186,8 @@ namespace basecode::vm {
             uint8_t operand_index,
             uint64_t inst_size,
             operand_value_t& address);
+
+        bool bounds_check_address(const operand_value_t& address);
 
         bool is_negative(const operand_value_t& value, op_sizes size);
 

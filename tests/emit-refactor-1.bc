@@ -30,26 +30,29 @@ temp :: proc() {
     pos.z := 11.65;
 };
 
-{
-    value: u32 := ?;
-    print("unassigned value := %d\n", value);
+#run {
+    // N.B. anonymous scope to test stack
+    {
+        value: u32 := ?;
+        print("unassigned value := %d\n", value);
 
-    temp();
-    print("\n");
+        temp();
+        print("\n");
 
-    a: bool;
+        a: bool;
 
-    @no_fold;
-    a := 2 > 1;
+        @no_fold;
+        a := 2 > 1;
 
-    @no_fold;
-    b := !a;
+        @no_fold;
+        b := !a;
 
-    z: u32;
+        z: u32;
 
-    @no_fold;
-    z := (cast<u32>(16) * (2 shl 4)) * (6 + 4);
+        @no_fold;
+        z := (cast<u32>(16) * (2 shl 4)) * (6 + 4);
 
-    error_message := "expected z == 5120";
-    assert(z == 5120, address_of(error_message));
+        error_message := "expected z == 5120";
+        assert(z == 5120, address_of(error_message));
+    };
 };

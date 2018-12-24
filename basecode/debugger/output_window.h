@@ -36,6 +36,10 @@ namespace basecode::debugger {
         void on_draw(environment& env) override;
 
     private:
+        void add_stdout_line(const std::string& line);
+
+    private:
+        std::string _stdout_line;
         char _stdout_buffer[4096];
         char _stderr_buffer[4096];
         FILE* _stdout_fp = nullptr;

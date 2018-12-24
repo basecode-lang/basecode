@@ -22,4 +22,4 @@ test :: proc() {
 };
 
 // XXX: implement support for this
-//test();
+//#run test();

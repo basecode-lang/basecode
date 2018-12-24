@@ -1,22 +1,24 @@
 core :: module("../modules/core");
 
-x := 1;
+#run {
+    x := 1;
 
-switch x {
-    case 0 => {
-        print("0\n");
-    };
+    switch x {
+        case 0 => {
+            print("0\n");
+        };
 
-    case 1 => {
-        print("1\n");
-    };
+        case 1 => {
+            print("1\n");
+        };
 
-    case 2 => {
-        print("2\n");
-        fallthrough;
-    };
+        case 2 => {
+            print("2\n");
+            fallthrough;
+        };
 
-    case => {
-        print("default\n");
+        case => {
+            print("default\n");
+        };
     };
 };

@@ -58,6 +58,10 @@ namespace basecode::debugger {
                 mode = "step";
                 break;
             }
+            case debugger_state_t::errored: {
+                mode = "error";
+                break;
+            }
         }
 
         auto header = fmt::format(

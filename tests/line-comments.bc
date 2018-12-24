@@ -26,10 +26,12 @@ d := /* before integer */ 100 /* after integer */;
 // for
 // with
 
-/* before if */ if /* after if */ a == 2 /* after condition */ {
-    print("one\n");
-} /* before else if */ else if /* after else if */ a == 4 /* after else if condition */ {
-    print("two\n");
-} /* before else */ else /* after else */ {
-    print("three\n");
-} /* after ladder */;
+#run {
+    /* before if */ if /* after if */ a == 2 /* after condition */ {
+        print("one\n");
+    } /* before else if */ else if /* after else if */ a == 4 /* after else if condition */ {
+        print("two\n");
+    } /* before else */ else /* after else */ {
+        print("three\n");
+    } /* after ladder */;
+};

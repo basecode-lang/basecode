@@ -3,16 +3,19 @@ core :: module("../modules/core");
 a := 'A';
 b := 'b';
 
-print("a := %c\n", a);
-print("b := %c\n", b);
-print("%c\n", 'Z');
-
 a_type: ^type;
 a_type := type_of(a);
 b_type := type_of(b);
 
-print("a_type.name := %s\n", a_type.name.data);
-print("b_type.name := %s\n", b_type.name.data);
-
 temp: string := "hello world!";
-print("%s\n", temp.data);
+
+#run {
+    print("a := %c\n", a);
+    print("b := %c\n", b);
+    print("%c\n", 'Z');
+
+    print("a_type.name := %s\n", a_type.name.data);
+    print("b_type.name := %s\n", b_type.name.data);
+
+    print("%s\n", temp.data);
+};

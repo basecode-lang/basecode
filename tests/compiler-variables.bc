@@ -1,30 +1,6 @@
 core :: module("../modules/core");
 
 text: string := "hello world!";
-print("text.length   := %d\n", text.length);
-print("text.capacity := %d\n", text.capacity);
-print("text.data     := $%08x\n", text.data);
-
-content := text.data;
-print("content       := $%08x\n", content);
-
-i: u32 := 0;
-while i < text.length {
-    print("%c", content^);
-    content +:= 1;
-    i +:= 1;
-};
-
-{
-    content := text.data;
-    for i in range<u32>(0, text.length, kind := ranges::kinds::EXCLUSIVE) {
-        print("%c", content^);
-        content +:= 1;
-    };
-};
-
-print("\n");
-
 vector3 :: struct {
     x: s32;
     y: s32;
@@ -41,32 +17,76 @@ entity :: struct {
     cls: class;
 };
 
-player: entity;
-player.pos.x := 10;
-player.pos.y := 5;
-player.pos.z := -6;
+barzar :: struct {
+    e: ^entity;
+    c: ^class;
+};
 
-print("player.pos.x := %d\n", player.pos.x);
-print("player.pos.y := %d\n", player.pos.y);
-print("player.pos.z := %hhd\n", player.pos.z);
+#run {
+    print("text.length   := %d\n", text.length);
+    print("text.capacity := %d\n", text.capacity);
+    print("text.data     := $%08x\n", text.data);
 
-print("player.dir.x := %d\n", player.dir.x);
-print("player.dir.y := %d\n", player.dir.y);
-print("player.dir.z := %d\n", player.dir.z);
+    content := text.data;
+    print("content       := $%08x\n", content);
 
-print("player.cls.name.length   := %d\n", player.cls.name.length);
-print("player.cls.name.capacity := %d\n", player.cls.name.capacity);
+    i: u32 := 0;
+    while i < text.length {
+        print("%c", content^);
+        content +:= 1;
+        i +:= 1;
+    };
 
-player_ptr: ^entity := address_of(player);
+    {
+        content := text.data;
+        for i in range<u32>(0, text.length, kind := ranges::kinds::EXCLUSIVE) {
+            print("%c", content^);
+            content +:= 1;
+        };
+    };
 
-print("before: player_ptr.pos.x := %d\n", player_ptr.pos.x);
-print("before: player_ptr.pos.y := %d\n", player_ptr.pos.y);
-print("before: player_ptr.pos.z := %hhd\n", player_ptr.pos.z);
+    print("\n");
 
-player_ptr.pos.x := 100;
-player_ptr.pos.y := 55;
-player_ptr.pos.z := -106;
+    player: entity;
+    player.pos.x := 10;
+    player.pos.y := 5;
+    player.pos.z := -6;
 
-print("after: player_ptr.pos.x := %d\n", player_ptr.pos.x);
-print("after: player_ptr.pos.y := %d\n", player_ptr.pos.y);
-print("after: player_ptr.pos.z := %hhd\n", player_ptr.pos.z);
+    print("player.pos.x := %d\n", player.pos.x);
+    print("player.pos.y := %d\n", player.pos.y);
+    print("player.pos.z := %hhd\n", player.pos.z);
+
+    print("player.dir.x := %d\n", player.dir.x);
+    print("player.dir.y := %d\n", player.dir.y);
+    print("player.dir.z := %d\n", player.dir.z);
+
+    print("player.cls.name.length   := %d\n", player.cls.name.length);
+    print("player.cls.name.capacity := %d\n", player.cls.name.capacity);
+
+    player_ptr: ^entity := address_of(player);
+
+    print("before: player_ptr.pos.x := %d\n", player_ptr.pos.x);
+    print("before: player_ptr.pos.y := %d\n", player_ptr.pos.y);
+    print("before: player_ptr.pos.z := %hhd\n", player_ptr.pos.z);
+
+    player_ptr.pos.x := 100;
+    player_ptr.pos.y := 55;
+    player_ptr.pos.z := -106;
+
+    print("after: player_ptr.pos.x := %d\n", player_ptr.pos.x);
+    print("after: player_ptr.pos.y := %d\n", player_ptr.pos.y);
+    print("after: player_ptr.pos.z := %hhd\n", player_ptr.pos.z);
+
+    b: ^barzar := alloc(size_of(barzar));
+    b.e := alloc(size_of(entity));
+    b.e.pos.x := 0;
+    b.e.pos.y := 0;
+    b.e.pos.z := 0;
+
+    b.c := alloc(size_of(class));
+    b.c.name.length := 4;
+    b.c.name.capacity := 32;
+    b.c.name.data := alloc(32);
+    fill(b.c.name.data, 0, 32);
+    copy(b.c.name.data, "four", 4);
+};

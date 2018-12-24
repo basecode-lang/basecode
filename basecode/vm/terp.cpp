@@ -607,6 +607,9 @@ namespace basecode::vm {
                 if (!get_address_with_offset(r, inst, 1, 2, address))
                     return false;
 
+                if (!bounds_check_address(address))
+                    return false;
+
                 operand_value_t loaded_data;
                 loaded_data.alias.u = read(inst.size, address.alias.u);
                 auto zero_flag = is_zero(inst.size, loaded_data);
@@ -625,6 +628,9 @@ namespace basecode::vm {
             case op_codes::store: {
                 operand_value_t address;
                 if (!get_address_with_offset(r, inst, 0, 2, address))
+                    return false;
+
+                if (!bounds_check_address(address))
                     return false;
 
                 operand_value_t data;
@@ -649,7 +655,13 @@ namespace basecode::vm {
                 if (!get_operand_value(r, inst, 0, target_address))
                     return false;
 
+                if (!bounds_check_address(target_address))
+                    return false;
+
                 if (!get_operand_value(r, inst, 1, source_address))
+                    return false;
+
+                if (!bounds_check_address(source_address))
                     return false;
 
                 operand_value_t length;
@@ -753,6 +765,9 @@ namespace basecode::vm {
             case op_codes::fill: {
                 operand_value_t address;
                 if (!get_operand_value(r, inst, 0, address))
+                    return false;
+
+                if (!bounds_check_address(address))
                     return false;
 
                 operand_value_t value;
@@ -970,9 +985,31 @@ namespace basecode::vm {
                     new_value.type = register_type_t::floating_point;
                 }
                 else {
-                    new_value.alias.u = reg_value.alias.u + 1;
+                    register_value_alias_t alias {};
+                    alias.qw = reg_value.alias.u;
+
                     new_value.type = register_type_t::integer;
+                    switch (inst.size) {
+                        case op_sizes::byte: {
+                            new_value.alias.u = alias.b + one.b;
+                            break;
+                        }
+                        case op_sizes::word: {
+                            new_value.alias.u = alias.w + one.w;
+                            break;
+                        }
+                        case op_sizes::dword: {
+                            new_value.alias.u = alias.dw + one.dw;
+                            break;
+                        }
+                        default:
+                        case op_sizes::qword: {
+                            new_value.alias.u = alias.qw + one.qw;
+                            break;
+                        }
+                    }
                 }
+
                 if (set_target_operand_value(r, inst.operands[0], inst.size, reg_value))
                     return false;
 
@@ -1010,9 +1047,32 @@ namespace basecode::vm {
                         new_value.alias.d = reg_value.alias.d - 1.0;
                     new_value.type = register_type_t::floating_point;
                 } else {
-                    new_value.alias.u = reg_value.alias.u - one.qw;
+                    register_value_alias_t alias {};
+                    alias.qw = reg_value.alias.u;
+
                     new_value.type = register_type_t::integer;
+
+                    switch (inst.size) {
+                        case op_sizes::byte: {
+                            new_value.alias.u = alias.b - one.b;
+                            break;
+                        }
+                        case op_sizes::word: {
+                            new_value.alias.u = alias.w - one.w;
+                            break;
+                        }
+                        case op_sizes::dword: {
+                            new_value.alias.u = alias.dw - one.dw;
+                            break;
+                        }
+                        default:
+                        case op_sizes::qword: {
+                            new_value.alias.u = alias.qw - one.qw;
+                            break;
+                        }
+                    }
                 }
+
                 if (set_target_operand_value(r, inst.operands[0], inst.size, reg_value))
                     return false;
 
@@ -1051,8 +1111,32 @@ namespace basecode::vm {
                     else
                         sum_result.alias.d = lhs_value.alias.d + rhs_value.alias.d;
                 } else {
-                    sum_result.alias.u = lhs_value.alias.u + rhs_value.alias.u;
+                    register_value_alias_t lhs_alias {};
+                    lhs_alias.qw = lhs_value.alias.u;
+
+                    register_value_alias_t rhs_alias {};
+                    rhs_alias.qw = rhs_value.alias.u;
+
                     sum_result.type = register_type_t::integer;
+                    switch (inst.size) {
+                        case op_sizes::byte: {
+                            sum_result.alias.u = lhs_alias.b + rhs_alias.b;
+                            break;
+                        }
+                        case op_sizes::word: {
+                            sum_result.alias.u = lhs_alias.w + rhs_alias.w;
+                            break;
+                        }
+                        case op_sizes::dword: {
+                            sum_result.alias.u = lhs_alias.dw + rhs_alias.dw;
+                            break;
+                        }
+                        default:
+                        case op_sizes::qword: {
+                            sum_result.alias.u = lhs_alias.qw + rhs_alias.qw;
+                            break;
+                        }
+                    }
                 }
 
                 if (!set_target_operand_value(r, inst.operands[0], inst.size, sum_result))
@@ -1170,8 +1254,32 @@ namespace basecode::vm {
                         product_result.alias.d = lhs_value.alias.d * rhs_value.alias.d;
                 }
                 else {
+                    register_value_alias_t lhs_alias {};
+                    lhs_alias.qw = lhs_value.alias.u;
+
+                    register_value_alias_t rhs_alias {};
+                    rhs_alias.qw = rhs_value.alias.u;
+
                     product_result.type = register_type_t::integer;
-                    product_result.alias.u = lhs_value.alias.u * rhs_value.alias.u;
+                    switch (inst.size) {
+                        case op_sizes::byte: {
+                            product_result.alias.u = lhs_alias.b * rhs_alias.b;
+                            break;
+                        }
+                        case op_sizes::word: {
+                            product_result.alias.u = lhs_alias.w * rhs_alias.w;
+                            break;
+                        }
+                        case op_sizes::dword: {
+                            product_result.alias.u = lhs_alias.dw * rhs_alias.dw;
+                            break;
+                        }
+                        default:
+                        case op_sizes::qword: {
+                            product_result.alias.u = lhs_alias.qw * rhs_alias.qw;
+                            break;
+                        }
+                    }
                 }
 
                 if (!set_target_operand_value(r, inst.operands[0], inst.size, product_result))
@@ -1208,10 +1316,11 @@ namespace basecode::vm {
                     return false;
 
                 operand_value_t result;
-                result.type = register_type_t::integer;
+                result.alias.u = 0;
 
                 if (lhs_value.type == register_type_t::floating_point
                 &&  rhs_value.type == register_type_t::floating_point) {
+                    result.type = register_type_t::floating_point;
                     if (inst.size == op_sizes::dword) {
                         if (rhs_value.alias.f != 0) {
                             result.alias.f = lhs_value.alias.f / rhs_value.alias.f;
@@ -1222,8 +1331,35 @@ namespace basecode::vm {
                         }
                     }
                 } else {
-                    if (rhs_value.alias.u != 0) {
-                        result.alias.u = lhs_value.alias.u / rhs_value.alias.u;
+                    result.type = register_type_t::integer;
+                    register_value_alias_t lhs_alias{};
+                    lhs_alias.qw = lhs_value.alias.u;
+
+                    register_value_alias_t rhs_alias{};
+                    rhs_alias.qw = rhs_value.alias.u;
+
+                    switch (inst.size) {
+                        case op_sizes::byte: {
+                            if (rhs_alias.b != 0)
+                                result.alias.u = lhs_alias.b / rhs_alias.b;
+                            break;
+                        }
+                        case op_sizes::word: {
+                            if (rhs_alias.w != 0)
+                            result.alias.u = lhs_alias.w / rhs_alias.w;
+                            break;
+                        }
+                        case op_sizes::dword: {
+                            if (rhs_alias.dw != 0)
+                                result.alias.u = lhs_alias.dw / rhs_alias.dw;
+                            break;
+                        }
+                        default:
+                        case op_sizes::qword: {
+                            if (rhs_alias.qw != 0)
+                                result.alias.u = lhs_alias.qw / rhs_alias.qw;
+                            break;
+                        }
                     }
                 }
 
@@ -1265,8 +1401,35 @@ namespace basecode::vm {
                 operand_value_t result;
                 result.alias.u = 0;
 
-                if (lhs_value.alias.u != 0 && rhs_value.alias.u != 0)
-                    result.alias.u = lhs_value.alias.u % rhs_value.alias.u;
+                register_value_alias_t lhs_alias {};
+                lhs_alias.qw = lhs_value.alias.u;
+
+                register_value_alias_t rhs_alias {};
+                rhs_alias.qw = rhs_value.alias.u;
+
+                switch (inst.size) {
+                    case op_sizes::byte: {
+                        if (lhs_alias.b != 0 && rhs_alias.b != 0)
+                            result.alias.u = lhs_alias.b % rhs_alias.b;
+                        break;
+                    }
+                    case op_sizes::word: {
+                        if (lhs_alias.w != 0 && rhs_alias.w != 0)
+                            result.alias.u = lhs_alias.w % rhs_alias.w;
+                        break;
+                    }
+                    case op_sizes::dword: {
+                        if (lhs_alias.dw != 0 && rhs_alias.dw != 0)
+                            result.alias.u = lhs_alias.dw % rhs_alias.dw;
+                        break;
+                    }
+                    default:
+                    case op_sizes::qword: {
+                        if (lhs_alias.qw != 0 && rhs_alias.qw != 0)
+                            result.alias.u = lhs_alias.qw % rhs_alias.qw;
+                        break;
+                    }
+                }
 
                 auto zero_flag = is_zero(inst.size, result);
                 if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
@@ -1303,9 +1466,34 @@ namespace basecode::vm {
                         result.alias.d = value.alias.d * -1.0;
                     result.type = register_type_t::floating_point;
                 } else {
-                    int64_t negated_result = -static_cast<int64_t>(value.alias.u);
-                    result.alias.u = static_cast<uint64_t>(negated_result);
                     result.type = register_type_t::integer;
+
+                    register_value_alias_t alias {};
+                    alias.qw = value.alias.u;
+
+                    switch (inst.size) {
+                        case op_sizes::byte: {
+                            int8_t negated_result = -static_cast<int8_t>(alias.b);
+                            result.alias.u = static_cast<uint64_t>(negated_result);
+                            break;
+                        }
+                        case op_sizes::word: {
+                            int16_t negated_result = -static_cast<int16_t>(alias.w);
+                            result.alias.u = static_cast<uint64_t>(negated_result);
+                            break;
+                        }
+                        case op_sizes::dword: {
+                            int32_t negated_result = -static_cast<int32_t>(alias.dw);
+                            result.alias.u = static_cast<uint64_t>(negated_result);
+                            break;
+                        }
+                        default:
+                        case op_sizes::qword: {
+                            int64_t negated_result = -static_cast<int64_t>(alias.qw);
+                            result.alias.u = static_cast<uint64_t>(negated_result);
+                            break;
+                        }
+                    }
                 }
 
                 auto zero_flag = is_zero(inst.size, result);
@@ -1332,7 +1520,32 @@ namespace basecode::vm {
                     return false;
 
                 operand_value_t result;
-                result.alias.u = lhs_value.alias.u >> rhs_value.alias.u;
+                register_value_alias_t lhs_alias {};
+                lhs_alias.qw = lhs_value.alias.u;
+
+                register_value_alias_t rhs_alias {};
+                rhs_alias.qw = rhs_value.alias.u;
+
+                switch (inst.size) {
+                    case op_sizes::byte: {
+                        result.alias.u = lhs_alias.b >> rhs_alias.b;
+                        break;
+                    }
+                    case op_sizes::word: {
+                        result.alias.u = lhs_alias.w >> rhs_alias.w;
+                        break;
+                    }
+                    case op_sizes::dword: {
+                        result.alias.u = lhs_alias.dw >> rhs_alias.dw;
+                        break;
+                    }
+                    default:
+                    case op_sizes::qword: {
+                        result.alias.u = lhs_alias.qw >> rhs_alias.qw;
+                        break;
+                    }
+                }
+
                 if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
                     return false;
 
@@ -1357,7 +1570,32 @@ namespace basecode::vm {
                     return false;
 
                 operand_value_t result;
-                result.alias.u = lhs_value.alias.u << rhs_value.alias.u;
+                register_value_alias_t lhs_alias {};
+                lhs_alias.qw = lhs_value.alias.u;
+
+                register_value_alias_t rhs_alias {};
+                rhs_alias.qw = rhs_value.alias.u;
+
+                switch (inst.size) {
+                    case op_sizes::byte: {
+                        result.alias.u = lhs_alias.b << rhs_alias.b;
+                        break;
+                    }
+                    case op_sizes::word: {
+                        result.alias.u = lhs_alias.w << rhs_alias.w;
+                        break;
+                    }
+                    case op_sizes::dword: {
+                        result.alias.u = lhs_alias.dw << rhs_alias.dw;
+                        break;
+                    }
+                    default:
+                    case op_sizes::qword: {
+                        result.alias.u = lhs_alias.qw << rhs_alias.qw;
+                        break;
+                    }
+                }
+
                 if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
                     return false;
 
@@ -1439,8 +1677,11 @@ namespace basecode::vm {
                     return false;
 
                 operand_value_t power_value;
+                power_value.alias.u = 0;
+
                 if (lhs_value.type == register_type_t::floating_point
                 &&  rhs_value.type == register_type_t::floating_point) {
+                    power_value.type = register_type_t::floating_point;
                     if (inst.size == op_sizes::dword) {
                         power_value.alias.f = std::pow(
                             lhs_value.alias.f,
@@ -1451,9 +1692,41 @@ namespace basecode::vm {
                             rhs_value.alias.d);
                     }
                 } else {
-                    power_value.alias.u = common::power(
-                        lhs_value.alias.u,
-                        rhs_value.alias.u);
+                    power_value.type = register_type_t::integer;
+
+                    register_value_alias_t lhs_alias {};
+                    lhs_alias.qw = lhs_value.alias.u;
+
+                    register_value_alias_t rhs_alias {};
+                    rhs_alias.qw = rhs_value.alias.u;
+
+                    switch (inst.size) {
+                        case op_sizes::byte: {
+                            power_value.alias.u = common::power(
+                                lhs_alias.b,
+                                rhs_alias.b);
+                            break;
+                        }
+                        case op_sizes::word: {
+                            power_value.alias.u = common::power(
+                                lhs_alias.w,
+                                rhs_alias.w);
+                            break;
+                        }
+                        case op_sizes::dword: {
+                            power_value.alias.u = common::power(
+                                lhs_alias.dw,
+                                rhs_alias.dw);
+                            break;
+                        }
+                        default:
+                        case op_sizes::qword: {
+                            power_value.alias.u = common::power(
+                                lhs_alias.qw,
+                                rhs_alias.qw);
+                            break;
+                        }
+                    }
                 }
 
                 if (!set_target_operand_value(r, inst.operands[0], inst.size, power_value))
@@ -1481,7 +1754,34 @@ namespace basecode::vm {
                     return false;
 
                 operand_value_t result;
-                result.alias.u = lhs_value.alias.u & rhs_value.alias.u;
+                result.type = register_type_t::integer;
+
+                register_value_alias_t lhs_alias {};
+                lhs_alias.qw = lhs_value.alias.u;
+
+                register_value_alias_t rhs_alias {};
+                rhs_alias.qw = rhs_value.alias.u;
+
+                switch (inst.size) {
+                    case op_sizes::byte: {
+                        result.alias.u = lhs_alias.b & rhs_alias.b;
+                        break;
+                    }
+                    case op_sizes::word: {
+                        result.alias.u = lhs_alias.w & rhs_alias.w;
+                        break;
+                    }
+                    case op_sizes::dword: {
+                        result.alias.u = lhs_alias.dw & rhs_alias.dw;
+                        break;
+                    }
+                    default:
+                    case op_sizes::qword: {
+                        result.alias.u = lhs_alias.qw & rhs_alias.qw;
+                        break;
+                    }
+                }
+
                 if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
                     return false;
 
@@ -1507,7 +1807,34 @@ namespace basecode::vm {
                     return false;
 
                 operand_value_t result;
-                result.alias.u = lhs_value.alias.u | rhs_value.alias.u;
+                result.type = register_type_t::integer;
+
+                register_value_alias_t lhs_alias {};
+                lhs_alias.qw = lhs_value.alias.u;
+
+                register_value_alias_t rhs_alias {};
+                rhs_alias.qw = rhs_value.alias.u;
+
+                switch (inst.size) {
+                    case op_sizes::byte: {
+                        result.alias.u = lhs_alias.b | rhs_alias.b;
+                        break;
+                    }
+                    case op_sizes::word: {
+                        result.alias.u = lhs_alias.w | rhs_alias.w;
+                        break;
+                    }
+                    case op_sizes::dword: {
+                        result.alias.u = lhs_alias.dw | rhs_alias.dw;
+                        break;
+                    }
+                    default:
+                    case op_sizes::qword: {
+                        result.alias.u = lhs_alias.qw | rhs_alias.qw;
+                        break;
+                    }
+                }
+
                 if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
                     return false;
 
@@ -1533,7 +1860,34 @@ namespace basecode::vm {
                     return false;
 
                 operand_value_t result;
-                result.alias.u = lhs_value.alias.u ^ rhs_value.alias.u;
+                result.type = register_type_t::integer;
+
+                register_value_alias_t lhs_alias {};
+                lhs_alias.qw = lhs_value.alias.u;
+
+                register_value_alias_t rhs_alias {};
+                rhs_alias.qw = rhs_value.alias.u;
+
+                switch (inst.size) {
+                    case op_sizes::byte: {
+                        result.alias.u = lhs_alias.b ^ rhs_alias.b;
+                        break;
+                    }
+                    case op_sizes::word: {
+                        result.alias.u = lhs_alias.w ^ rhs_alias.w;
+                        break;
+                    }
+                    case op_sizes::dword: {
+                        result.alias.u = lhs_alias.dw ^ rhs_alias.dw;
+                        break;
+                    }
+                    default:
+                    case op_sizes::qword: {
+                        result.alias.u = lhs_alias.qw ^ rhs_alias.qw;
+                        break;
+                    }
+                }
+
                 if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
                     return false;
 
@@ -1555,12 +1909,36 @@ namespace basecode::vm {
                 if (!get_operand_value(r, inst, 1, value))
                     return false;
 
-                operand_value_t not_result;
-                not_result.alias.u = ~value.alias.u;
-                if (!set_target_operand_value(r, inst.operands[0], inst.size, not_result))
+                operand_value_t result;
+                result.type = register_type_t::integer;
+
+                register_value_alias_t alias {};
+                alias.qw = value.alias.u;
+
+                switch (inst.size) {
+                    case op_sizes::byte: {
+                        result.alias.u = ~alias.b;
+                        break;
+                    }
+                    case op_sizes::word: {
+                        result.alias.u = ~alias.w;
+                        break;
+                    }
+                    case op_sizes::dword: {
+                        result.alias.u = ~alias.dw;
+                        break;
+                    }
+                    default:
+                    case op_sizes::qword: {
+                        result.alias.u = ~alias.qw;
+                        break;
+                    }
+                }
+
+                if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
                     return false;
 
-                auto zero_flag = is_zero(inst.size, not_result);
+                auto zero_flag = is_zero(inst.size, result);
 
                 _registers.flags(register_file_t::flags_t::carry, false);
                 _registers.flags(register_file_t::flags_t::subtract, false);
@@ -1568,7 +1946,7 @@ namespace basecode::vm {
                 _registers.flags(register_file_t::flags_t::zero, zero_flag);
                 _registers.flags(
                     register_file_t::flags_t::negative,
-                    is_negative(not_result, inst.size));
+                    is_negative(result, inst.size));
 
                 break;
             }
@@ -1581,9 +1959,39 @@ namespace basecode::vm {
                 if (!get_operand_value(r, inst, 2, bit_number))
                     return false;
 
-                auto masked_value = static_cast<uint64_t>(1) << bit_number.alias.u;
                 operand_value_t result;
-                result.alias.u = value.alias.u | masked_value;
+                result.type = register_type_t::integer;
+
+                register_value_alias_t value_alias {};
+                value_alias.qw = value.alias.u;
+
+                register_value_alias_t bit_alias {};
+                bit_alias.qw = bit_number.alias.u;
+
+                switch (inst.size) {
+                    case op_sizes::byte: {
+                        auto masked_value = static_cast<uint8_t>(1) << bit_alias.b;
+                        result.alias.u = value_alias.b | masked_value;
+                        break;
+                    }
+                    case op_sizes::word: {
+                        auto masked_value = static_cast<uint16_t>(1) << bit_alias.w;
+                        result.alias.u = value_alias.w | masked_value;
+                        break;
+                    }
+                    case op_sizes::dword: {
+                        auto masked_value = static_cast<uint32_t>(1) << bit_alias.dw;
+                        result.alias.u = value_alias.dw | masked_value;
+                        break;
+                    }
+                    default:
+                    case op_sizes::qword: {
+                        auto masked_value = static_cast<uint64_t>(1) << bit_alias.qw;
+                        result.alias.u = value_alias.qw | masked_value;
+                        break;
+                    }
+                }
+
                 if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
                     return false;
 
@@ -1608,13 +2016,42 @@ namespace basecode::vm {
                 if (!get_operand_value(r, inst, 2, bit_number))
                     return false;
 
-                auto masked_value = ~(static_cast<uint64_t>(1) << bit_number.alias.u);
                 operand_value_t result;
+                result.type = register_type_t::integer;
+
+                register_value_alias_t value_alias {};
+                value_alias.qw = value.alias.u;
+
+                register_value_alias_t bit_alias {};
+                bit_alias.qw = bit_number.alias.u;
+
+                switch (inst.size) {
+                    case op_sizes::byte: {
+                        auto masked_value = ~(static_cast<uint8_t>(1) << bit_alias.b);
+                        result.alias.u = value_alias.b & masked_value;
+                        break;
+                    }
+                    case op_sizes::word: {
+                        auto masked_value = ~(static_cast<uint16_t>(1) << bit_alias.w);
+                        result.alias.u = value_alias.w & masked_value;
+                        break;
+                    }
+                    case op_sizes::dword: {
+                        auto masked_value = ~(static_cast<uint32_t>(1) << bit_alias.dw);
+                        result.alias.u = value_alias.dw & masked_value;
+                        break;
+                    }
+                    default:
+                    case op_sizes::qword: {
+                        auto masked_value = ~(static_cast<uint64_t>(1) << bit_alias.qw);
+                        result.alias.u = value_alias.qw & masked_value;
+                        break;
+                    }
+                }
+
                 auto zero_flag = is_zero(inst.size, result);
                 if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
                     return false;
-
-                result.alias.u = value.alias.u & masked_value;
 
                 _registers.flags(register_file_t::flags_t::zero, zero_flag);
                 _registers.flags(register_file_t::flags_t::carry, false);
@@ -1636,7 +2073,32 @@ namespace basecode::vm {
                     return false;
 
                 operand_value_t result;
-                result.alias.u = value.alias.u & mask.alias.u;
+
+                register_value_alias_t value_alias {};
+                value_alias.qw = value.alias.u;
+
+                register_value_alias_t mask_alias {};
+                mask_alias.qw = mask.alias.u;
+
+                switch (inst.size) {
+                    case op_sizes::byte: {
+                        result.alias.u = value_alias.b & mask_alias.b;
+                        break;
+                    }
+                    case op_sizes::word: {
+                        result.alias.u = value_alias.w & mask_alias.w;
+                        break;
+                    }
+                    case op_sizes::dword: {
+                        result.alias.u = value_alias.w & mask_alias.w;
+                        break;
+                    }
+                    default:
+                    case op_sizes::qword: {
+                        result.alias.u = value_alias.w & mask_alias.w;
+                        break;
+                    }
+                }
 
                 auto zero_flag = is_zero(inst.size, result);
 
@@ -1668,7 +2130,7 @@ namespace basecode::vm {
                 rhs.qw = rhs_value.alias.u;
 
                 operand_value_t result;
-                auto carry_flag = false;
+                bool carry_flag;
 
                 switch (inst.size) {
                     case op_sizes::byte:
@@ -1769,7 +2231,34 @@ namespace basecode::vm {
                     return false;
 
                 operand_value_t result;
-                result.alias.u = value.alias.u & mask.alias.u;
+                result.type = register_type_t::integer;
+
+                register_value_alias_t value_alias {};
+                value_alias.qw = value.alias.u;
+
+                register_value_alias_t mask_alias {};
+                mask_alias.qw = mask.alias.u;
+
+                switch (inst.size) {
+                    case op_sizes::byte: {
+                        result.alias.u = value_alias.b & mask_alias.b;
+                        break;
+                    }
+                    case op_sizes::word: {
+                        result.alias.u = value_alias.w & mask_alias.w;
+                        break;
+                    }
+                    case op_sizes::dword: {
+                        result.alias.u = value_alias.w & mask_alias.w;
+                        break;
+                    }
+                    default:
+                    case op_sizes::qword: {
+                        result.alias.u = value_alias.w & mask_alias.w;
+                        break;
+                    }
+                }
+
                 auto zero_flag = is_zero(inst.size, result);
                 if (zero_flag)
                     _registers.r[register_pc].qw = address.alias.u;
@@ -1795,7 +2284,34 @@ namespace basecode::vm {
                     return false;
 
                 operand_value_t result;
-                result.alias.u = value.alias.u & mask.alias.u;
+                result.type = register_type_t::integer;
+
+                register_value_alias_t value_alias {};
+                value_alias.qw = value.alias.u;
+
+                register_value_alias_t mask_alias {};
+                mask_alias.qw = mask.alias.u;
+
+                switch (inst.size) {
+                    case op_sizes::byte: {
+                        result.alias.u = value_alias.b & mask_alias.b;
+                        break;
+                    }
+                    case op_sizes::word: {
+                        result.alias.u = value_alias.w & mask_alias.w;
+                        break;
+                    }
+                    case op_sizes::dword: {
+                        result.alias.u = value_alias.w & mask_alias.w;
+                        break;
+                    }
+                    default:
+                    case op_sizes::qword: {
+                        result.alias.u = value_alias.w & mask_alias.w;
+                        break;
+                    }
+                }
+
                 auto zero_flag = is_zero(inst.size, result);
                 if (!zero_flag)
                     _registers.r[register_pc].qw = address.alias.u;
@@ -2176,7 +2692,6 @@ namespace basecode::vm {
             }
             case op_codes::jsr: {
                 auto pc = _registers.r[register_pc].qw;
-//                fmt::print("jsr: return pc = ${:08X}\n", pc);
                 push(pc);
 
                 operand_value_t address;
@@ -2194,7 +2709,6 @@ namespace basecode::vm {
             }
             case op_codes::rts: {
                 auto address = pop();
-//                fmt::print("rts: return pc = ${:08X}\n", address);
                 _registers.r[register_pc].qw = address;
                 break;
             }
@@ -2705,6 +3219,15 @@ namespace basecode::vm {
             default:
                 return lhs == UINT64_MAX && rhs > 0;
         }
+    }
+
+    bool terp::bounds_check_address(const operand_value_t& address) {
+        if (address.alias.u < _heap_address
+        ||  address.alias.u > _heap_address + _heap_size) {
+            execute_trap(trap_invalid_address);
+            return false;
+        }
+        return true;
     }
 
     bool terp::is_negative(const operand_value_t& value, op_sizes size) {

@@ -1185,6 +1185,29 @@ namespace basecode::compiler {
                 return false;
             }
 
+// XXX: if the lhs is a member access binary_operator AND the rhs of that
+//      is a pointer to a composite type, we need to wrap that field in a dereference.
+//            if (is_member_access) {
+//                infer_type_result_t rhs_type_result {};
+//                if (!rhs->infer_type(_session, rhs_type_result)) {
+//                    _session.error(
+//                        _session.scope_manager().current_module(),
+//                        "P052",
+//                        "unable to infer type.",
+//                        rhs->location());
+//                    return false;
+//                }
+//                if (rhs_type_result.inferred_type->is_pointer_type()) {
+//                    auto pointer_type = dynamic_cast<compiler::pointer_type*>(rhs_type_result.inferred_type);
+//                    if (pointer_type->is_composite_type()) {
+//                        rhs = builder.make_unary_operator(
+//                            scope,
+//                            operator_type_t::pointer_dereference,
+//                            rhs);
+//                    }
+//                }
+//            }
+
             // XXX: there's a bug here and it goes like this...
             //
             // member access is expecting a resolved type here; however, it may be an unknown_type and
@@ -1223,28 +1246,6 @@ namespace basecode::compiler {
                 context,
                 context.node->rhs.get(),
                 type_scope);
-            if (is_member_access) {
-                infer_type_result_t rhs_type_result {};
-                if (!rhs->infer_type(_session, rhs_type_result)) {
-                    _session.error(
-                        _session.scope_manager().current_module(),
-                        "P052",
-                        "unable to infer type.",
-                        rhs->location());
-                    return false;
-                }
-
-                // XXX: clean up using infer_type_result_t::base_type()
-                if (rhs_type_result.inferred_type->is_pointer_type()) {
-                    auto pointer_type = dynamic_cast<compiler::pointer_type*>(rhs_type_result.inferred_type);
-                    if (pointer_type->base_type_ref()->is_composite_type()) {
-                        rhs = builder.make_unary_operator(
-                            scope,
-                            operator_type_t::pointer_dereference,
-                            rhs);
-                    }
-                }
-            }
         }
 
         result.element = builder.make_binary_operator(

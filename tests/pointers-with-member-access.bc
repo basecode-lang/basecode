@@ -1,25 +1,27 @@
 core :: module("../modules/core");
 
-text: string := "hello world";
+#run {
+    text: string := "hello world";
 
-print("text.length       := %d\n",     text.length);
-print("text.capacity     := %d\n",     text.capacity);
-print("text.data         := $%08x\n",  text.data);
-print("text.data^        := %c\n",     text.data^);
+    print("text.length       := %d\n",     text.length);
+    print("text.capacity     := %d\n",     text.capacity);
+    print("text.data         := $%08x\n",  text.data);
+    print("text.data^        := %c\n",     text.data^);
 
-char: u8 := 65;
+    char: u8 := 65;
 
-char_ptr: ^u8;
-char_ptr := address_of(char);
+    char_ptr: ^u8;
+    char_ptr := address_of(char);
 
-print("%c", char_ptr^);
+    print("%c", char_ptr^);
 
-print("\n");
+    print("\n");
 
-text_ptr: ^string;
-text_ptr := address_of(text);
+    text_ptr: ^string;
+    text_ptr := address_of(text);
 
-print("text_ptr.length   := %d\n",     text_ptr.length);
-print("text_ptr.capacity := %d\n",     text_ptr.capacity);
-print("text_ptr.data     := $%08x\n",  text_ptr.data);
-print("text_ptr.data^    := %c\n",     text_ptr.data^);
+    print("text_ptr.length   := %d\n",     text_ptr.length);
+    print("text_ptr.capacity := %d\n",     text_ptr.capacity);
+    print("text_ptr.data     := $%08x\n",  text_ptr.data);
+    print("text_ptr.data^    := %c\n",     text_ptr.data^);
+};

@@ -56,7 +56,8 @@ namespace basecode::debugger {
         stopped,
         running,
         single_step,
-        break_s
+        break_s,
+        errored
     };
 
     enum class registers_display_mode_t : uint8_t {
