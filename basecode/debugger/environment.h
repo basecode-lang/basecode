@@ -51,6 +51,8 @@ namespace basecode::debugger {
 
         breakpoint_t* breakpoint(uint64_t address);
 
+        bool execute_command(const command_t& command);
+
     private:
         void draw_all();
 
@@ -68,6 +70,7 @@ namespace basecode::debugger {
         assembly_window* _assembly_window = nullptr;
         registers_window* _registers_window = nullptr;
         debugger_state_t _state = debugger_state_t::stopped;
+        debugger_state_t _previous_state = debugger_state_t::stopped;
     };
 
 };

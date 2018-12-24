@@ -68,6 +68,8 @@ namespace basecode::vm {
         void free_heap_block_list();
 
     private:
+        uint64_t _size = 0;
+        uint64_t _address = 0;
         heap_block_t* _head_heap_block = nullptr;
         std::unordered_map<uint64_t, heap_block_t*> _address_blocks {};
     };

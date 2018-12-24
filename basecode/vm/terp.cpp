@@ -475,6 +475,12 @@ namespace basecode::vm {
         return read(op_sizes::qword, _registers.r[register_sp].qw);
     }
 
+    void terp::initialize_allocator() {
+        auto address = heap_vector(heap_vectors_t::free_space_start);
+        auto size = heap_vector(heap_vectors_t::bottom_of_stack) - address;
+        _allocator->initialize(address, size);
+    }
+
     void terp::dump_state(uint8_t count) {
         fmt::print("\n-------------------------------------------------------------\n");
         fmt::print(
@@ -607,7 +613,7 @@ namespace basecode::vm {
                 if (!get_address_with_offset(r, inst, 1, 2, address))
                     return false;
 
-                if (!bounds_check_address(address))
+                if (!bounds_check_address(r, address))
                     return false;
 
                 operand_value_t loaded_data;
@@ -630,7 +636,7 @@ namespace basecode::vm {
                 if (!get_address_with_offset(r, inst, 0, 2, address))
                     return false;
 
-                if (!bounds_check_address(address))
+                if (!bounds_check_address(r, address))
                     return false;
 
                 operand_value_t data;
@@ -655,13 +661,13 @@ namespace basecode::vm {
                 if (!get_operand_value(r, inst, 0, target_address))
                     return false;
 
-                if (!bounds_check_address(target_address))
+                if (!bounds_check_address(r, target_address))
                     return false;
 
                 if (!get_operand_value(r, inst, 1, source_address))
                     return false;
 
-                if (!bounds_check_address(source_address))
+                if (!bounds_check_address(r, source_address))
                     return false;
 
                 operand_value_t length;
@@ -767,7 +773,7 @@ namespace basecode::vm {
                 if (!get_operand_value(r, inst, 0, address))
                     return false;
 
-                if (!bounds_check_address(address))
+                if (!bounds_check_address(r, address))
                     return false;
 
                 operand_value_t value;
@@ -2873,6 +2879,24 @@ namespace basecode::vm {
         write(op_sizes::qword, _registers.r[register_sp].qw, value);
     }
 
+    bool terp::bounds_check_address(
+            common::result& r,
+            const operand_value_t& address) {
+        if (address.alias.u < _heap_address
+        ||  address.alias.u > _heap_address + _heap_size) {
+            execute_trap(trap_invalid_address);
+            // XXX: include heap range in message
+            r.add_message(
+                "B004",
+                fmt::format(
+                    "invalid address: address = ${:016X}",
+                    address.alias.u),
+                true);
+            return false;
+        }
+        return true;
+    }
+
     bool terp::initialize(common::result& r) {
         if (_heap != nullptr)
             return true;
@@ -2955,8 +2979,7 @@ namespace basecode::vm {
 
     void terp::heap_free_space_begin(uint64_t address) {
         heap_vector(heap_vectors_t::free_space_start, address);
-        auto size = heap_vector(heap_vectors_t::bottom_of_stack) - address;
-        _allocator->initialize(address, size);
+        initialize_allocator();
     }
 
     // XXX: need to add support for both big and little endian
@@ -3219,15 +3242,6 @@ namespace basecode::vm {
             default:
                 return lhs == UINT64_MAX && rhs > 0;
         }
-    }
-
-    bool terp::bounds_check_address(const operand_value_t& address) {
-        if (address.alias.u < _heap_address
-        ||  address.alias.u > _heap_address + _heap_size) {
-            execute_trap(trap_invalid_address);
-            return false;
-        }
-        return true;
     }
 
     bool terp::is_negative(const operand_value_t& value, op_sizes size) {

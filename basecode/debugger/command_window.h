@@ -24,10 +24,24 @@ namespace basecode::debugger {
             int width,
             int height);
 
+        void reset();
+
     protected:
         void on_draw(environment& env) override;
 
+        bool on_update(environment& env) override;
+
     private:
+        void cursor_left();
+
+        void cursor_right();
+
+    private:
+        size_t _cursor_x = 0;
+        std::string _input {};
+        command_t _command {};
+        size_t _history_index = 0;
+        std::vector<std::string> _history {};
     };
 
 };

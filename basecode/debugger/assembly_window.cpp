@@ -210,6 +210,21 @@ namespace basecode::debugger {
         return false;
     }
 
+    void assembly_window::move_to_line(uint64_t line_number) {
+        if (_source_file == nullptr)
+            return;
+
+        move_top();
+
+        for (size_t index = 1; index <= _source_file->lines.size(); index++) {
+            if (index == line_number) {
+                mark_dirty();
+                return;
+            }
+            move_down();
+        }
+    }
+
     size_t assembly_window::move_to_address(uint64_t address) {
         if (_source_file == nullptr)
             return 0;

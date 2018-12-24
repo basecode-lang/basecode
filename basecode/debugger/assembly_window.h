@@ -24,6 +24,8 @@ namespace basecode::debugger {
             int width,
             int height);
 
+        void move_to_line(uint64_t line_number);
+
         size_t move_to_address(uint64_t address);
 
         void source_file(vm::listing_source_file_t* value);

@@ -29,24 +29,41 @@ namespace basecode::debugger {
                                  "Memory") {
     }
 
+    uint64_t memory_window::address() const {
+        return _address;
+    }
+
+    void memory_window::address(uint64_t value) {
+        if (_address != value) {
+            row(0);
+            column(0);
+            _address = value;
+            mark_dirty();
+        }
+    }
+
     void memory_window::on_draw(environment& env) {
         auto& terp = env.session().terp();
-        auto address = reinterpret_cast<uint64_t>(terp.heap() + row());
+        auto end_of_heap = terp.heap_vector(vm::heap_vectors_t::top_of_stack);
+        auto address = reinterpret_cast<uint64_t>(_address + row());
 
         auto page_height = max_height() - 1;
         auto page_width = max_width() - 2;
 
         for (int row = 1; row < page_height; row++) {
-                auto start_address = address;
-                std::stringstream bytes_stream;
-                std::stringstream chars_stream;
+            auto start_address = address;
+            std::stringstream bytes_stream;
+            std::stringstream chars_stream;
+
             mvwhline(ptr(), row, 1, ' ', page_width);
 
             for (size_t x = 0; x < 8; x++) {
-                auto value = terp.read(vm::op_sizes::byte, address);
-                bytes_stream << fmt::format("{:02X} ", value);
-                chars_stream << (char)(isprint(static_cast<int>(value)) ? value : '.');
-                address++;
+                if (address < end_of_heap) {
+                    auto value = terp.read(vm::op_sizes::byte, address);
+                    bytes_stream << fmt::format("{:02X} ", value);
+                    chars_stream << (char) (isprint(static_cast<int>(value)) ? value : '.');
+                    address++;
+                }
             }
 
             auto value = fmt::format(

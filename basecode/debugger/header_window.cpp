@@ -40,6 +40,7 @@ namespace basecode::debugger {
             flag <<= 1;
         }
 
+        auto color_pair = 0;
         std::string mode;
         switch (env.state()) {
             case debugger_state_t::running: {
@@ -59,7 +60,17 @@ namespace basecode::debugger {
                 break;
             }
             case debugger_state_t::errored: {
+                color_pair = 3;
                 mode = "error";
+                break;
+            }
+            case debugger_state_t::command_entry: {
+                color_pair = 4;
+                mode = "command";
+                break;
+            }
+            case debugger_state_t::command_execute: {
+                mode = "execute";
                 break;
             }
         }
@@ -81,9 +92,15 @@ namespace basecode::debugger {
             std::string(pad_length, ' '));
 
         leaveok(ptr(), true);
-        wattron(ptr(), A_BOLD | A_REVERSE);
         mvwprintw(ptr(), 0, 0, "%s", header.c_str());
-        wattroff(ptr(), A_BOLD | A_REVERSE);
+        mvwchgat(
+            ptr(),
+            0,
+            0,
+            max_width(),
+            A_BOLD | A_REVERSE,
+            color_pair,
+            0);
     }
 
 };

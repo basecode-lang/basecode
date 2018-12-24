@@ -24,10 +24,15 @@ namespace basecode::debugger {
             int width,
             int height);
 
+        uint64_t address() const;
+
+        void address(uint64_t value);
+
     protected:
         void on_draw(environment& env) override;
 
     private:
+        uint64_t _address;
     };
 
 };

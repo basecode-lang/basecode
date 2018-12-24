@@ -15,7 +15,7 @@ core :: module("../modules/core");
 #foreign str_test_ptr :: proc(str: ^string);
 
 @library "basecode";
-#foreign str_test_cpy :: proc(str: string);
+#foreign complex_test_ptr :: proc(e: ^entity);
 
 pass_by_value :: proc(msg: string) {
     print("msg.length := %d\n", msg.length);
@@ -39,15 +39,13 @@ tuple_by_value :: proc(flags: flags_t) {
 
     // ffi
     str_test_ptr(address_of(temp));
-    str_test_cpy(temp);
 
     // native
-    pass_by_value(temp);
-
     my_flags: flags_t;
     my_flags.foo := true;
     my_flags.bing := false;
     tuple_by_value(my_flags);
+    pass_by_value(temp);
 };
 
 min :: proc(a: u32, b: u32): u32 {
@@ -77,9 +75,6 @@ next_power_of_two :: proc(n: u32): u32 {
     return n;
 };
 
-// XXX: the interpreter isn't handling zoned values very well
-//      on the stack, there typically noise in the upper 32-bits which
-//      causes issues for smaller sizes
 assign_string :: proc(str: ^string, lit: ^u8, len: u32) {
     str.length := len;
     str.capacity := next_power_of_two(len + 1);
@@ -130,4 +125,6 @@ entity :: struct {
         .pos.z := 1.0;
         .data := address_of(jeff);
     };
+
+    complex_test_ptr(address_of(jeff_entity));
 };

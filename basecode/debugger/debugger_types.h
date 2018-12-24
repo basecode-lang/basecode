@@ -57,12 +57,21 @@ namespace basecode::debugger {
         running,
         single_step,
         break_s,
-        errored
+        errored,
+        command_entry,
+        command_execute
     };
 
     enum class registers_display_mode_t : uint8_t {
         integers,
         floats
+    };
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    struct command_t {
+        std::string name {};
+        std::vector<std::string> params {};
     };
 
 };

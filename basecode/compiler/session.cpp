@@ -212,8 +212,11 @@ namespace basecode::compiler {
                         fmt::print("      Ensure you have ncurses installed and rebuild the compiler.\n");
 #endif
                     } else {
-                        if (_run)
-                            run();
+                        if (_run) {
+                            success = run();
+                            if (!success)
+                                return false;
+                        }
                     }
                 }
             }

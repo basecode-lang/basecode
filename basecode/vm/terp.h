@@ -165,6 +165,12 @@ namespace basecode::vm {
             uint8_t operand_index,
             operand_value_t& value) const;
 
+        bool bounds_check_address(
+            common::result& r,
+            const operand_value_t& address);
+
+        void initialize_allocator();
+
         bool set_target_operand_value(
             common::result& r,
             const operand_encoding_t& operand,
@@ -186,8 +192,6 @@ namespace basecode::vm {
             uint8_t operand_index,
             uint64_t inst_size,
             operand_value_t& address);
-
-        bool bounds_check_address(const operand_value_t& address);
 
         bool is_negative(const operand_value_t& value, op_sizes size);
 

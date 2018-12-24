@@ -19,19 +19,21 @@ namespace basecode::vm {
 
     void default_allocator::reset() {
         free_heap_block_list();
+
+        _head_heap_block = new heap_block_t;
+        _head_heap_block->size = _size;
+        _head_heap_block->address = _address;
+        _address_blocks.insert(std::make_pair(
+            _head_heap_block->address,
+            _head_heap_block));
     }
 
     void default_allocator::initialize(
             uint64_t address,
             uint64_t size) {
-        free_heap_block_list();
-
-        _head_heap_block = new heap_block_t;
-        _head_heap_block->size = size;
-        _head_heap_block->address = address;
-        _address_blocks.insert(std::make_pair(
-            _head_heap_block->address,
-            _head_heap_block));
+        _size = size;
+        _address = address;
+        reset();
     }
 
     void default_allocator::free_heap_block_list() {

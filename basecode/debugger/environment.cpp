@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <parser/token.h>
 #include <compiler/session.h>
 #include <common/string_support.h>
 #include "environment.h"
@@ -53,7 +54,9 @@ namespace basecode::debugger {
         while (true) {
             auto pc = terp.register_file().r[vm::register_pc].qw;
             auto bp = breakpoint(pc);
-            if (bp != nullptr && bp->enabled) {
+            if (bp != nullptr
+            &&  bp->enabled
+            &&  _state != debugger_state_t::break_s) {
                 _state = debugger_state_t::break_s;
                 _header_window->mark_dirty();
                 _assembly_window->mark_dirty();
@@ -62,6 +65,13 @@ namespace basecode::debugger {
             auto user_step = false;
             _ch = getch();
             switch (_ch) {
+                case KEY_F(1): {
+                    _previous_state = _state;
+                    _state = debugger_state_t::command_entry;
+                    _header_window->mark_dirty();
+                    _command_window->reset();
+                    break;
+                }
                 case KEY_F(2): {
                     terp.reset();
                     pc = terp.register_file().r[vm::register_pc].qw;
@@ -93,7 +103,9 @@ namespace basecode::debugger {
                 case KEY_F(9): {
                     switch (_state) {
                         case debugger_state_t::errored:
-                        case debugger_state_t::running: {
+                        case debugger_state_t::running:
+                        case debugger_state_t::command_entry:
+                        case debugger_state_t::command_execute: {
                             break;
                         }
                         case debugger_state_t::stopped: {
@@ -129,7 +141,16 @@ namespace basecode::debugger {
                     break;
                 }
                 default: {
-                    _assembly_window->update(*this);
+                    switch (_state) {
+                        case debugger_state_t::command_entry:
+                            _command_window->update(*this);
+                            _command_window->mark_dirty();
+                            _header_window->mark_dirty();
+                            break;
+                        default:
+                            _assembly_window->update(*this);
+                            break;
+                    }
                     break;
                 }
             }
@@ -208,6 +229,7 @@ namespace basecode::debugger {
         init_pair(1, COLOR_BLUE, COLOR_WHITE);
         init_pair(2, COLOR_BLUE, COLOR_YELLOW);
         init_pair(3, COLOR_RED, COLOR_WHITE);
+        init_pair(4, COLOR_CYAN, COLOR_WHITE);
 
         _main_window = new window(nullptr, stdscr);
         _header_window = new header_window(
@@ -254,6 +276,8 @@ namespace basecode::debugger {
             _main_window->max_height() - 14,
             left_section / 2,
             12);
+        _memory_window->address(reinterpret_cast<uint64_t>(_session.terp().heap()));
+
         _output_window = new output_window(
             _main_window,
             _memory_window->x() + _memory_window->width(),
@@ -283,6 +307,60 @@ namespace basecode::debugger {
         if (it == _breakpoints.end())
             return nullptr;
         return &it->second;
+    }
+
+    bool environment::execute_command(const command_t& command) {
+        _state = debugger_state_t::command_execute;
+        _header_window->mark_dirty();
+        _command_window->mark_dirty();
+        draw_all();
+
+        if (command.name == "line") {
+            if (command.params.empty()) {
+                // XXX: error
+                return false;
+            }
+
+            syntax::token_t param;
+            param.radix = 10;
+            param.value = command.params[0];
+            param.number_type = syntax::number_types_t::integer;
+
+            uint64_t line_number = 0;
+            if (param.parse(line_number) != syntax::conversion_result_t::success) {
+                // XXX: error
+                return false;
+            }
+
+            _assembly_window->move_to_line(line_number);
+            _state = _previous_state;
+        } else if (command.name == "m") {
+            if (command.params.empty()) {
+                // XXX: error
+                return false;
+            }
+
+            syntax::token_t param;
+            param.radix = 16;
+            param.value = command.params[0];
+            param.number_type = syntax::number_types_t::integer;
+
+            uint64_t address = 0;
+            if (param.parse(address) != syntax::conversion_result_t::success) {
+                // XXX: error
+                return false;
+            }
+
+            _memory_window->address(address);
+            _state = _previous_state;
+        } else {
+            // XXX: unknown command
+            _state = debugger_state_t::errored;
+        }
+
+        _command_window->reset();
+        draw_all();
+        return true;
     }
 
 };

@@ -269,19 +269,19 @@ namespace basecode::compiler {
 
         std::unordered_map<common::id_t, compiler::type*> used_types {};
 
-        auto declarations = session.elements().find_by_type(element_type_t::declaration);
-        for (auto d : declarations) {
-            auto decl = dynamic_cast<compiler::declaration*>(d);
-            auto decl_type = decl->identifier()->type_ref()->type();
-            if (decl_type == nullptr) {
+        auto refs = session.elements().find_by_type(element_type_t::identifier_reference);
+        for (auto r : refs) {
+            auto var = dynamic_cast<compiler::identifier_reference*>(r);
+            auto var_type = var->identifier()->type_ref()->type();
+            if (var_type == nullptr) {
                 // XXX: this is an error!
                 return false;
             }
-            if (decl_type->element_type() == element_type_t::generic_type)
+            if (var_type->element_type() == element_type_t::generic_type)
                 continue;
-            if (used_types.count(decl_type->id()) > 0)
+            if (used_types.count(var_type->id()) > 0)
                 continue;
-            used_types.insert(std::make_pair(decl_type->id(), decl_type));
+            used_types.insert(std::make_pair(var_type->id(), var_type));
         }
 
         for (const auto& kvp : used_types) {
