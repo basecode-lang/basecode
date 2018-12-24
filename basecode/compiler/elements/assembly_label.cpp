@@ -25,8 +25,10 @@ namespace basecode::compiler {
             compiler::module* module,
             compiler::block* parent_scope,
             compiler::identifier_reference* ref,
+            compiler::type* type,
             const std::string& name) : element(module, parent_scope, element_type_t::assembly_label),
                                        _name(name),
+                                       _type(type),
                                        _ref(ref) {
     }
 
@@ -57,16 +59,21 @@ namespace basecode::compiler {
         auto& builder = session.builder();
         auto& scope_manager = session.scope_manager();
 
-        auto base_type = _ref != nullptr ?
-            _ref->identifier()->type_ref()->type() :
-            scope_manager.find_type(qualified_symbol_t("u0"));
+        compiler::type* type = nullptr;
+        if (_type == nullptr) {
+            auto base_type = _ref != nullptr ?
+                             _ref->identifier()->type_ref()->type() :
+                             scope_manager.find_type(qualified_symbol_t("u0"));
 
-        auto type = scope_manager.find_pointer_type(base_type);
-        if (type == nullptr) {
-            type = builder.make_pointer_type(
-                parent_scope(),
-                qualified_symbol_t(),
-                base_type);
+            type = scope_manager.find_pointer_type(base_type);
+            if (type == nullptr) {
+                type = builder.make_pointer_type(
+                    parent_scope(),
+                    qualified_symbol_t(),
+                    base_type);
+            }
+        } else {
+            type = _type;
         }
 
         result.inferred_type = type;
@@ -79,6 +86,11 @@ namespace basecode::compiler {
 
     bool assembly_label::on_is_constant() const {
         return true;
+    }
+
+    // XXX: this sucks, fix me
+    compiler::type* assembly_label::type() const {
+        return _type;
     }
 
     compiler::identifier_reference* assembly_label::reference() {

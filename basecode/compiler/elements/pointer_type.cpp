@@ -10,7 +10,10 @@
 // ----------------------------------------------------------------------------
 
 #include <compiler/session.h>
+#include <vm/instruction_block.h>
 #include "program.h"
+#include "identifier.h"
+#include "initializer.h"
 #include "numeric_type.h"
 #include "pointer_type.h"
 #include "symbol_element.h"
@@ -38,9 +41,22 @@ namespace basecode::compiler {
     bool pointer_type::on_emit_initializer(
             compiler::session& session,
             compiler::variable* var) {
-        if (_base_type_ref == nullptr)
-            return true;
-        return _base_type_ref->type()->emit_initializer(session, var);
+        auto& assembler = session.assembler();
+        auto block = assembler.current_block();
+
+        auto var_ident = dynamic_cast<compiler::identifier*>(var->element());
+        auto init = var_ident->initializer();
+
+        block->comment("initializer", vm::comment_location_t::after_instruction);
+        if (init != nullptr) {
+            variable_handle_t init_var{};
+            if (!session.variable(init, init_var))
+                return false;
+            var->write(init_var.get());
+        } else {
+            var->write(var->value_reg().size, 0);
+        }
+        return true;
     }
 
     bool pointer_type::is_pointer_type() const {

@@ -21,9 +21,13 @@ namespace basecode::compiler {
             compiler::module* module,
             compiler::block* parent_scope,
             compiler::identifier_reference* ref,
+            compiler::type* type,
             const std::string& name);
 
         std::string name() const;
+
+        // XXX: this sucks, fix me
+        compiler::type* type() const;
 
         compiler::identifier_reference* reference();
 
@@ -41,6 +45,7 @@ namespace basecode::compiler {
 
     private:
         std::string _name;
+        compiler::type* _type = nullptr;
         compiler::identifier_reference* _ref = nullptr;
     };
 

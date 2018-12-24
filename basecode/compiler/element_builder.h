@@ -316,6 +316,7 @@ namespace basecode::compiler {
         assembly_label* make_assembly_label(
             compiler::block* parent_scope,
             compiler::identifier_reference* ref,
+            compiler::type* type,
             const std::string& name,
             compiler::module* module = nullptr);
 

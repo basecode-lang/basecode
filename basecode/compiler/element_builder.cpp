@@ -699,12 +699,14 @@ namespace basecode::compiler {
     assembly_label* element_builder::make_assembly_label(
             compiler::block* parent_scope,
             compiler::identifier_reference* ref,
+            compiler::type* type,
             const std::string& name,
             compiler::module* module) {
         auto label = new compiler::assembly_label(
             module != nullptr ? module : _session.scope_manager().current_module(),
             parent_scope,
             ref,
+            type,
             name);
         if (ref != nullptr)
             ref->parent_element(label);

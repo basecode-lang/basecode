@@ -284,6 +284,19 @@ namespace basecode::compiler {
             used_types.insert(std::make_pair(var_type->id(), var_type));
         }
 
+        auto assembly_labels = session.elements().find_by_type(element_type_t::assembly_label);
+        for (auto l : assembly_labels) {
+            auto label = dynamic_cast<compiler::assembly_label*>(l);
+            auto label_type = label->type();
+            if (label_type == nullptr)
+                continue;
+            if (label_type->element_type() == element_type_t::generic_type)
+                continue;
+            if (used_types.count(label_type->id()) > 0)
+                continue;
+            used_types.insert(std::make_pair(label_type->id(), label_type));
+        }
+
         for (const auto& kvp : used_types) {
             type_info_block->blank_line();
             type_info_block->align(4);

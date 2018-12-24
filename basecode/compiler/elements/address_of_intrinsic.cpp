@@ -80,7 +80,8 @@ namespace basecode::compiler {
         result.element = session.builder().make_assembly_label(
             parent_scope(),
             ref,
-            "",
+            nullptr,
+            {},
             module());
         result.element->location(location());
 

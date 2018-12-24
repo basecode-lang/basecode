@@ -62,6 +62,7 @@ namespace basecode::compiler {
         result.element = session.builder().make_assembly_label(
             parent_scope(),
             nullptr,
+            infer_type_result.inferred_type,
             label_name,
             module());
         result.element->location(location());
