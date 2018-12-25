@@ -31,6 +31,8 @@ namespace basecode::compiler {
 
         import_list_t& imports();
 
+        void activate_stack_frame();
+
         bool has_stack_frame() const;
 
         defer_stack_t& defer_stack();
@@ -39,7 +41,9 @@ namespace basecode::compiler {
 
         identifier_map_t& identifiers();
 
-        compiler::stack_frame& stack_frame();
+        compiler::stack_frame* stack_frame();
+
+        compiler::stack_frame* find_active_stack_frame();
 
     protected:
         bool on_emit(

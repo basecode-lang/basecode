@@ -131,8 +131,10 @@ namespace basecode::compiler {
             parent_scope,
             block_scope,
             make_symbol(parent_scope, type_name));
-        if (block_scope != nullptr)
+        if (block_scope != nullptr) {
             block_scope->parent_element(type);
+            block_scope->activate_stack_frame();
+        }
         _session.elements().add(type);
         return type;
     }
@@ -491,8 +493,10 @@ namespace basecode::compiler {
             parent_scope,
             procedure_type,
             scope);
-        if (scope != nullptr)
+        if (scope != nullptr) {
             scope->parent_element(instance);
+            scope->activate_stack_frame();
+        }
         _session.elements().add(instance);
         return instance;
     }

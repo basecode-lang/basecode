@@ -35,6 +35,10 @@ namespace basecode::compiler {
             const std::string& name,
             size_t size_in_bytes);
 
+        bool active() const;
+
+        void active(bool value);
+
         stack_frame* parent_frame();
 
         stack_frame_base_offsets_t& offsets();
@@ -44,6 +48,7 @@ namespace basecode::compiler {
         size_t type_size_in_bytes(stack_frame_entry_type_t type) const;
 
     private:
+        bool _active = false;
         stack_frame* _parent_frame = nullptr;
         stack_frame_base_offsets_t _offsets {};
         std::unordered_map<std::string, stack_frame_entry> _entries {};

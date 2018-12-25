@@ -1535,22 +1535,34 @@ namespace basecode::compiler {
             if (expr == nullptr)
                 return false;
 
-            if (expr->element_type() == element_type_t::symbol) {
-                auto type_ref = dynamic_cast<compiler::type_reference*>(evaluate(context.node->rhs->rhs.get()));
-                if (type_ref == nullptr) {
-                    _session.error(
-                        _session.scope_manager().current_module(),
-                        "X000",
-                        "invalid type expression.",
-                        context.node->rhs->rhs->location);
-                    return false;
+            switch (expr->element_type()) {
+                case element_type_t::block: {
+                    auto block = dynamic_cast<compiler::block*>(expr);
+                    block->activate_stack_frame();
+                    break;
                 }
-                expr = add_identifier_to_scope(
-                    context,
-                    dynamic_cast<compiler::symbol_element*>(expr),
-                    type_ref,
-                    nullptr,
-                    0);
+                case element_type_t::symbol: {
+                    auto e = evaluate(context.node->rhs->rhs.get());
+                    auto type_ref = dynamic_cast<compiler::type_reference*>(e);
+                    if (type_ref == nullptr) {
+                        _session.error(
+                            _session.scope_manager().current_module(),
+                            "X000",
+                            "invalid type expression.",
+                            context.node->rhs->rhs->location);
+                        return false;
+                    }
+                    expr = add_identifier_to_scope(
+                        context,
+                        dynamic_cast<compiler::symbol_element*>(expr),
+                        type_ref,
+                        nullptr,
+                        0);
+                    break;
+                }
+                default: {
+                    break;
+                }
             }
         }
 

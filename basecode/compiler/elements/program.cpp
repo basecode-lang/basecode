@@ -463,6 +463,8 @@ namespace basecode::compiler {
             assembler.push_block(implicit_block);
             emit_context_t context {};
             emit_result_t result(assembler);
+            // XXX: do we want these to be stack frames?
+            //block->activate_stack_frame();
             block->emit(session, context, result);
             assembler.pop_block();
         }

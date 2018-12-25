@@ -79,10 +79,12 @@ namespace basecode::compiler {
         block->align(vm::instruction_t::alignment);
         block->label(assembler.make_label(procedure_label));
 
-        auto& stack_offsets = _scope->stack_frame().offsets();
+        auto frame = _scope->stack_frame();
+
+        auto& stack_offsets = frame->offsets();
         stack_offsets.locals = 8;
         if (_return_type != nullptr) {
-            auto entry = _scope->stack_frame().add(
+            auto entry = frame->add(
                 stack_frame_entry_type_t::return_slot,
                 _return_type->identifier()->symbol()->name(),
                 8);
@@ -105,7 +107,7 @@ namespace basecode::compiler {
             //      we can use truer sizes within
             //      the 8-byte aligned stack block.
             //
-            auto entry = _scope->stack_frame().add(
+            auto entry = frame->add(
                 stack_frame_entry_type_t::parameter,
                 var->symbol()->name(),
                 common::align(type->size_in_bytes(), 8));

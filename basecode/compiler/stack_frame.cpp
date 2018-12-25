@@ -19,6 +19,10 @@ namespace basecode::compiler {
             stack_frame* parent_frame) : _parent_frame(parent_frame) {
     }
 
+    bool stack_frame::active() const {
+        return _active;
+    }
+
     stack_frame_entry* stack_frame::add(
             stack_frame_entry_type_t type,
             const std::string& name,
@@ -35,6 +39,10 @@ namespace basecode::compiler {
             name,
             stack_frame_entry(this, name, offset, type)));
         return &it.first->second;
+    }
+
+    void stack_frame::active(bool value) {
+        _active = value;
     }
 
     stack_frame* stack_frame::parent_frame() {

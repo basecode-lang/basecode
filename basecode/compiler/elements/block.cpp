@@ -33,7 +33,7 @@ namespace basecode::compiler {
             compiler::module* module,
             block* parent_scope,
             element_type_t type) : element(module, parent_scope, type),
-                                   _stack_frame(parent_scope != nullptr ? &parent_scope->stack_frame() : nullptr) {
+                                   _stack_frame(parent_scope != nullptr ? &parent_scope->_stack_frame : nullptr) {
     }
 
     bool block::on_emit(
@@ -98,10 +98,12 @@ namespace basecode::compiler {
         return _imports;
     }
 
+    void block::activate_stack_frame() {
+        _stack_frame.active(true);
+    }
+
     bool block::has_stack_frame() const {
-        return is_parent_element(element_type_t::proc_type)
-               || is_parent_element(element_type_t::proc_instance)
-               || is_parent_element(element_type_t::block);
+        return _stack_frame.active();
     }
 
     defer_stack_t& block::defer_stack() {
@@ -116,8 +118,8 @@ namespace basecode::compiler {
         return _identifiers;
     }
 
-    compiler::stack_frame& block::stack_frame() {
-        return _stack_frame;
+    compiler::stack_frame* block::stack_frame() {
+        return _stack_frame.active() ? &_stack_frame : nullptr;
     }
 
     void block::on_owned_elements(element_list_t& list) {
@@ -155,12 +157,24 @@ namespace basecode::compiler {
                 return false;
         }
 
-        block->move(
-            vm::instruction_operand_t::sp(),
-            vm::instruction_operand_t::fp());
-        block->pop(vm::instruction_operand_t::fp());
+        if (!block->is_current_instruction(vm::op_codes::rts)) {
+            block->move(
+                vm::instruction_operand_t::sp(),
+                vm::instruction_operand_t::fp());
+            block->pop(vm::instruction_operand_t::fp());
+        }
 
         return true;
+    }
+
+    compiler::stack_frame* block::find_active_stack_frame() {
+        auto current = this;
+        while (current != nullptr) {
+            if (current->_stack_frame.active())
+                return &current->_stack_frame;
+            current = current->parent_scope();
+        }
+        return nullptr;
     }
 
     bool block::begin_stack_frame(compiler::session& session) {
@@ -188,13 +202,15 @@ namespace basecode::compiler {
                     if (type->is_proc_type())
                         continue;
 
-                    auto entry = _stack_frame.add(
-                        stack_frame_entry_type_t::local,
-                        var->symbol()->name(),
-                        type->size_in_bytes());
+                    auto entry = _stack_frame.find(var->symbol()->name());
+                    if (entry == nullptr) {
+                        entry = _stack_frame.add(
+                            stack_frame_entry_type_t::local,
+                            var->symbol()->name(),
+                            type->size_in_bytes());
+                        _locals.emplace_back(var);
+                    }
                     var->stack_frame_entry(entry);
-
-                    _locals.emplace_back(var);
                 }
 
                 return true;

@@ -25,4 +25,11 @@ test :: proc() {
     };
 };
 
-#run test();
+#run {
+    test();
+
+//    print("\n5\n");
+//    for x in range<s32>(0, 30, 5) {
+//        print("x := %d\n", x);
+//    };
+};
