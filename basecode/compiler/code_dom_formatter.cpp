@@ -323,13 +323,10 @@ namespace basecode::compiler {
             case element_type_t::directive: {
                 auto directive_element = dynamic_cast<directive*>(node);
                 auto style = ", fillcolor=darkolivegreen1, style=\"filled\"";
-                add_primary_edge(directive_element, directive_element->lhs());
-                auto rhs = directive_element->rhs();
-                if (rhs != nullptr)
-                    add_primary_edge(directive_element, directive_element->rhs());
-                auto body = directive_element->body();
-                if (body != nullptr)
-                    add_primary_edge(directive_element, directive_element->body());
+                element_list_t owned_elements {};
+                directive_element->owned_elements(owned_elements);
+                for (auto e : owned_elements)
+                    add_primary_edge(directive_element, e);
                 return fmt::format(
                     "{}[shape=record,label=\"directive|{}\"{}];",
                     node_vertex_name,

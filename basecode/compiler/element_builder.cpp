@@ -908,23 +908,14 @@ namespace basecode::compiler {
     compiler::directive* element_builder::make_directive(
             compiler::block* parent_scope,
             const std::string& name,
-            compiler::element* lhs,
-            compiler::element* rhs,
-            compiler::element* body) {
-        auto directive = new compiler::directive(
+            const element_list_t& params) {
+        auto directive = compiler::directive::directive_for_name(
             _session.scope_manager().current_module(),
             parent_scope,
             name,
-            lhs,
-            rhs,
-            body);
-        if (lhs != nullptr)
-            lhs->parent_element(directive);
-        if (rhs != nullptr)
-            rhs->parent_element(directive);
-        if (body != nullptr)
-            body->parent_element(directive);
-        _session.elements().add(directive);
+            params);
+        if (directive != nullptr)
+            _session.elements().add(directive);
         return directive;
     }
 

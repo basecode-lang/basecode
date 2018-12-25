@@ -810,31 +810,44 @@ namespace basecode::compiler {
         compiler::element* rhs = nullptr;
         compiler::element* body = nullptr;
 
+        element_list_t params {};
         if (context.node->lhs != nullptr) {
             lhs = evaluate(context.node->lhs.get());
-            if (lhs != nullptr)
+            if (lhs != nullptr) {
                 lhs->location(context.node->lhs->location);
+                params.emplace_back(lhs);
+            }
         }
 
         if (context.node->rhs != nullptr) {
             rhs = evaluate(context.node->rhs.get());
-            if (rhs != nullptr)
+            if (rhs != nullptr) {
                 rhs->location(context.node->rhs->location);
+                params.emplace_back(rhs);
+            }
         }
 
         if (!context.node->children.empty()) {
             const auto& body_node = context.node->children.front();
             body = evaluate(body_node.get());
-            if (body != nullptr)
+            if (body != nullptr) {
                 body->location(body_node->location);
+                params.emplace_back(body);
+            }
         }
 
         auto directive_element = builder.make_directive(
             scope_manager.current_scope(),
             context.node->token.value,
-            lhs,
-            rhs,
-            body);
+            params);
+        if (directive_element == nullptr) {
+            _session.error(
+                _session.scope_manager().current_module(),
+                "X000",
+                fmt::format("invalid compiler directive: {}", context.node->token.value),
+                context.node->location);
+            return false;
+        }
         directive_element->location(context.node->location);
 
         result.element = directive_element;

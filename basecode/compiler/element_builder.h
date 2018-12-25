@@ -248,9 +248,7 @@ namespace basecode::compiler {
         compiler::directive* make_directive(
             compiler::block* parent_scope,
             const std::string& name,
-            compiler::element* lhs,
-            compiler::element* rhs,
-            compiler::element* body);
+            const element_list_t& params);
 
         intrinsic* make_copy_intrinsic(
             compiler::block* parent_scope,

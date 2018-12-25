@@ -9,496 +9,101 @@
 //
 // ----------------------------------------------------------------------------
 
-#include <vm/ffi.h>
-#include <configure.h>
-#include <compiler/session.h>
-#include <boost/filesystem.hpp>
-#include "type.h"
-#include "intrinsic.h"
-#include "attribute.h"
 #include "directive.h"
-#include "raw_block.h"
-#include "assignment.h"
-#include "declaration.h"
-#include "initializer.h"
-#include "numeric_type.h"
-#include "string_literal.h"
-#include "procedure_type.h"
-#include "symbol_element.h"
-#include "type_reference.h"
-#include "composite_type.h"
+#include "if_directive.h"
+#include "run_directive.h"
+#include "type_directive.h"
+#include "assert_directive.h"
+#include "foreign_directive.h"
+#include "assembly_directive.h"
+#include "intrinsic_directive.h"
 
 namespace basecode::compiler {
 
-    std::unordered_map<std::string, directive::directive_callable> directive::s_execute_handlers = {
-        {"if",          std::bind(&directive::on_execute_if,     std::placeholders::_1, std::placeholders::_2)},
-        {"run",         std::bind(&directive::on_execute_run,     std::placeholders::_1, std::placeholders::_2)},
-        {"type",        std::bind(&directive::on_execute_type,    std::placeholders::_1, std::placeholders::_2)},
-        {"assert",      std::bind(&directive::on_execute_assert, std::placeholders::_1, std::placeholders::_2)},
-        {"foreign",     std::bind(&directive::on_execute_foreign, std::placeholders::_1, std::placeholders::_2)},
-        {"assembly",    std::bind(&directive::on_execute_assembly, std::placeholders::_1, std::placeholders::_2)},
-        {"intrinsic",   std::bind(&directive::on_execute_intrinsic, std::placeholders::_1, std::placeholders::_2)},
-    };
-
-    std::unordered_map<std::string, directive::directive_callable> directive::s_evaluate_handlers = {
-        {"if",          std::bind(&directive::on_evaluate_if,     std::placeholders::_1, std::placeholders::_2)},
-        {"run",         std::bind(&directive::on_evaluate_run,     std::placeholders::_1, std::placeholders::_2)},
-        {"type",        std::bind(&directive::on_evaluate_type,    std::placeholders::_1, std::placeholders::_2)},
-        {"assert",      std::bind(&directive::on_evaluate_assert, std::placeholders::_1, std::placeholders::_2)},
-        {"foreign",     std::bind(&directive::on_evaluate_foreign, std::placeholders::_1, std::placeholders::_2)},
-        {"assembly",    std::bind(&directive::on_evaluate_assembly, std::placeholders::_1, std::placeholders::_2)},
-        {"intrinsic",   std::bind(&directive::on_evaluate_intrinsic, std::placeholders::_1, std::placeholders::_2)},
-    };
+    directive* directive::directive_for_name(
+            compiler::module* module,
+            compiler::block* parent_scope,
+            const std::string& name,
+            const element_list_t& params) {
+        if (name == "if"
+        ||  name == "elif"
+        ||  name == "else") {
+            compiler::element* lhs = nullptr;
+            if (!params.empty())
+                lhs = params[0];
+            compiler::element* rhs = nullptr;
+            if (params.size() > 1)
+                rhs = params[1];
+            compiler::element* body = nullptr;
+            if (params.size() > 2)
+                body = params[2];
+            auto instance = new if_directive(
+                module,
+                parent_scope,
+                lhs,
+                rhs,
+                body);
+            if (lhs != nullptr)
+                lhs->parent_element(instance);
+            if (rhs != nullptr)
+                rhs->parent_element(instance);
+            if (body != nullptr)
+                body->parent_element(instance);
+            return instance;
+        } else if (name == "run") {
+            auto instance = new run_directive(module, parent_scope, params[0]);
+            params[0]->parent_element(instance);
+            return instance;
+        } else if (name == "type") {
+            auto instance = new type_directive(module, parent_scope, params[0]);
+            params[0]->parent_element(instance);
+            return instance;
+        } else if (name == "assert") {
+            auto instance = new assert_directive(module, parent_scope, params[0]);
+            params[0]->parent_element(instance);
+            return instance;
+        } else if (name == "assembly") {
+            auto instance = new assembly_directive(module, parent_scope, params[0]);
+            params[0]->parent_element(instance);
+            return instance;
+        } else if (name == "foreign") {
+            auto instance = new foreign_directive(module, parent_scope, params[0]);
+            params[0]->parent_element(instance);
+            return instance;
+        } else if (name == "intrinsic") {
+            auto instance = new intrinsic_directive(module, parent_scope, params[0]);
+            params[0]->parent_element(instance);
+            return instance;
+        }
+        return nullptr;
+    }
 
     ///////////////////////////////////////////////////////////////////////////
 
     directive::directive(
             compiler::module* module,
             compiler::block* parent_scope,
-            const std::string& name,
-            compiler::element* lhs,
-            compiler::element* rhs,
-            compiler::element* body) : element(module, parent_scope, element_type_t::directive),
-                                       _name(name),
-                                       _lhs(lhs),
-                                       _rhs(rhs),
-                                       _body(body) {
-    }
-
-    bool directive::on_emit(
-            compiler::session& session,
-            compiler::emit_context_t& context,
-            compiler::emit_result_t& result) {
-        auto& assembler = session.assembler();
-        auto block = assembler.current_block();
-
-        if (_name == "run") {
-            block->comment(
-                "directive: run",
-                vm::comment_location_t::after_instruction);
-            block->meta_begin();
-            auto success = _lhs->emit(session, context, result);
-            block->meta_end();
-            return success;
-        } else if (_name == "assembly") {
-            if (_instruction_block != nullptr) {
-                for (const auto& entry : _instruction_block->entries()) {
-                    block->comment(
-                        "directive: assembly",
-                        vm::comment_location_t::after_instruction);
-                    block->add_entry(entry);
-                }
-            }
-        } else if (_name == "if") {
-            block->comment(
-                "directive: if/elif/else",
-                vm::comment_location_t::after_instruction);
-            if (_true_body != nullptr)
-                return _true_body->emit(session, context, result);
-        }
-
-        return true;
-    }
-
-    bool directive::on_infer_type(
-            compiler::session& session,
-            infer_type_result_t& result) {
-        if (_lhs != nullptr) {
-            auto type_ref = dynamic_cast<compiler::type_reference*>(_lhs);
-            result.inferred_type = type_ref->type();
-            result.reference = type_ref;
-            return true;
-        }
-        return false;
+            const std::string& name) : element(module, parent_scope, element_type_t::directive),
+                                       _name(name) {
     }
 
     std::string directive::name() const {
         return _name;
     }
 
-    bool directive::on_is_constant() const {
-        return _lhs != nullptr
-            && _lhs->element_type() == element_type_t::type_reference;
-    }
-
-    compiler::element* directive::lhs() {
-        return _lhs;
-    }
-
-    compiler::element* directive::rhs() {
-        return _rhs;
-    }
-
-    compiler::element* directive::body() {
-        return _body;
-    }
-
-    bool directive::on_apply_fold_result(
-            compiler::element* e,
-            const fold_result_t& fold_result) {
-        if (_name == "if"
-        ||  _name == "elif"
-        ||  _name == "assert") {
-            _lhs = fold_result.element;
-        }
-        return true;
-    }
-
     bool directive::execute(compiler::session& session) {
-        auto it = s_execute_handlers.find(_name);
-        if (it == s_execute_handlers.end()) {
-            session.error(
-                module(),
-                "P044",
-                fmt::format("unknown directive: {}", _name),
-                location());
-            return false;
-        }
-        return it->second(this, session);
+        return on_execute(session);
     }
 
     bool directive::evaluate(compiler::session& session) {
-        auto it = s_evaluate_handlers.find(_name);
-        if (it == s_evaluate_handlers.end()) {
-            session.error(
-                module(),
-                "P044",
-                fmt::format("unknown directive: {}", _name),
-                location());
-            return false;
-        }
-        return it->second(this, session);
+        return on_evaluate(session);
     }
 
-    void directive::on_owned_elements(element_list_t& list) {
-        if (_lhs != nullptr)
-            list.emplace_back(_lhs);
-
-        if (_rhs != nullptr)
-            list.emplace_back(_rhs);
-
-        if (_body != nullptr)
-            list.emplace_back(_body);
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    //
-    // if/elif/if directive
-
-    bool directive::on_execute_if(compiler::session& session) {
+    bool directive::on_execute(compiler::session& session) {
         return true;
     }
 
-    bool directive::on_evaluate_if(compiler::session& session) {
-        auto value = false;
-        auto next_branch = this;
-        while (!value && next_branch != nullptr) {
-            if (next_branch->_lhs == nullptr) {
-                _true_body = next_branch->_body;
-                break;
-            }
-            if (!next_branch->_lhs->as_bool(value)) {
-                session.error(
-                    module(),
-                    "X000",
-                    "#if/#elif requires constant boolean expression.",
-                    location());
-                return false;
-            }
-            if (value) {
-                _true_body = next_branch->_body;
-                break;
-            }
-            next_branch = dynamic_cast<compiler::directive*>(next_branch->_rhs);
-        }
-        return true;
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    //
-    // type directive
-
-    bool directive::on_execute_type(compiler::session& session) {
-        return true;
-    }
-
-    bool directive::on_evaluate_type(compiler::session& session) {
-        return true;
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    //
-    // assembly directive
-
-    bool directive::on_execute_assembly(compiler::session& session) {
-        return true;
-    }
-
-    bool directive::on_evaluate_assembly(compiler::session& session) {
-        auto is_valid = _lhs != nullptr
-            && _lhs->element_type() == element_type_t::raw_block;
-        if (!is_valid) {
-            session.error(
-                module(),
-                "P004",
-                "#assembly expects a valid raw block expression.",
-                location());
-            return false;
-        }
-
-        auto raw_block = dynamic_cast<compiler::raw_block*>(_lhs);
-        if (raw_block == nullptr) {
-            return false;
-        }
-
-        common::source_file source_file;
-        if (!source_file.load(session.result(), raw_block->value() + "\n"))
-            return false;
-
-        auto& assembler = session.assembler();
-        auto success = assembler.assemble_from_source(
-            session.result(),
-            source_file);
-        if (success) {
-            // XXX:  this is so evil
-            _instruction_block = assembler.blocks().back();
-            _instruction_block->should_emit(false);
-        }
-        return success;
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    //
-    // assert directive
-
-    bool directive::on_execute_assert(compiler::session& session) {
-        return true;
-    }
-
-    bool directive::on_evaluate_assert(compiler::session& session) {
-        bool value;
-        if (_lhs == nullptr
-        || !_lhs->as_bool(value)) {
-            session.error(
-                module(),
-                "X000",
-                "compile time assert requires constant boolean expression.",
-                location());
-            return false;
-        }
-        if (!value) {
-            session.error(
-                module(),
-                "X000",
-                "compile time assertion failed.",
-                _lhs->location());
-            return false;
-        }
-        return true;
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    //
-    // run directive
-
-    bool directive::on_execute_run(compiler::session& session) {
-        session.enable_run();
-        return true;
-    }
-
-    bool directive::on_evaluate_run(compiler::session& session) {
-        return true;
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    //
-    // foreign directive
-
-    bool directive::on_execute_foreign(compiler::session& session) {
-        return true;
-    }
-
-    bool directive::on_evaluate_foreign(compiler::session& session) {
-        auto& ffi = session.ffi();
-
-        auto assignment = dynamic_cast<compiler::assignment*>(_lhs);
-        auto proc_decl = dynamic_cast<compiler::declaration*>(assignment->expressions()[0]);
-        if (proc_decl == nullptr)
-            return false;
-
-        auto proc_type = proc_decl->identifier()->initializer()->procedure_type();
-        if (proc_type == nullptr)
-            return false;
-
-        auto attrs = proc_type->attributes().as_list();
-        for (auto attr : attrs) {
-            attributes().add(attr);
-            proc_type->attributes().remove(attr->name());
-        }
-        proc_type->is_foreign(true);
-
-        std::string library_name;
-        auto library_attribute = find_attribute("library");
-        if (library_attribute != nullptr) {
-            if (!library_attribute->as_string(library_name)) {
-                session.error(
-                    module(),
-                    "P004",
-                    "unable to convert library name.",
-                    location());
-                return false;
-            }
-        }
-
-        if (library_name.empty()) {
-            session.error(
-                module(),
-                "P005",
-                "library attribute required for foreign directive.",
-                location());
-            return false;
-        }
-
-        std::stringstream platform_name;
-        platform_name
-            << SHARED_LIBRARY_PREFIX
-            << library_name
-            << SHARED_LIBRARY_SUFFIX;
-        boost::filesystem::path library_path(platform_name.str());
-        auto library = ffi.load_shared_library(session.result(), library_path);
-        if (library == nullptr) {
-            auto msg = session.result().find_code("B062");
-            if (msg != nullptr) {
-                session.error(
-                    module(),
-                    "P006",
-                    msg->message(),
-                    location());
-                session.result().remove_code("B062");
-            }
-            return false;
-        }
-        library->self_loaded(library_name == COMPILER_LIBRARY_NAME);
-
-        auto ffi_decl = dynamic_cast<compiler::declaration*>(assignment->expressions()[0]);
-        std::string symbol_name = ffi_decl->identifier()->symbol()->name();
-        auto alias_attribute = attributes().find("alias");
-        if (alias_attribute != nullptr) {
-            if (!alias_attribute->as_string(symbol_name)) {
-                session.error(
-                    module(),
-                    "P004",
-                    "unable to convert alias attribute's name.",
-                    location());
-                return false;
-            }
-        }
-
-        vm::function_signature_t signature {
-            .symbol = symbol_name,
-            .library = library,
-        };
-
-        auto is_variadic = false;
-
-        auto params_list = proc_type->parameters().as_list();
-        for (auto param : params_list) {
-            vm::function_value_t value;
-            value.name = param->identifier()->symbol()->name();
-
-            auto type = param->identifier()->type_ref()->type();
-            if (type != nullptr) {
-                value.type = type->to_ffi_type();
-                if (value.type == vm::ffi_types_t::any_type) {
-                    is_variadic = true;
-                } else if (value.type == vm::ffi_types_t::struct_type) {
-                    auto composite_type = dynamic_cast<compiler::composite_type*>(type);
-                    if (composite_type == nullptr)
-                        return false;
-                    for (auto fld : composite_type->fields().as_list()) {
-                        vm::function_value_t fld_value;
-                        fld_value.name = fld->identifier()->symbol()->name();
-                        fld_value.type = fld->identifier()->type_ref()->type()->to_ffi_type();
-                        value.fields.push_back(fld_value);
-                    }
-                }
-            }
-
-            signature.arguments.push_back(value);
-        }
-
-        auto return_type_field = proc_type->return_type();
-        signature.return_value.type = return_type_field != nullptr ?
-                                      return_type_field->identifier()->type_ref()->type()->to_ffi_type() :
-                                      vm::ffi_types_t::void_type;
-        signature.calling_mode = is_variadic ?
-                                 vm::ffi_calling_mode_t::c_ellipsis_varargs :
-                                 vm::ffi_calling_mode_t::c_default;
-
-        auto result = ffi.register_function(session.result(), signature);
-        if (!result) {
-            session.error(
-                module(),
-                "P004",
-                fmt::format("unable to find foreign function symbol: {}", symbol_name),
-                location());
-            return false;
-        } else {
-            proc_type->foreign_address(reinterpret_cast<uint64_t>(signature.func_ptr));
-        }
-
-        return !session.result().is_failed();
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    //
-    // intrinsic directive
-
-    bool directive::on_execute_intrinsic(compiler::session& session) {
-        return true;
-    }
-
-    bool directive::on_evaluate_intrinsic(compiler::session& session) {
-        auto assignment = dynamic_cast<compiler::assignment*>(_lhs);
-        auto proc_decl = dynamic_cast<compiler::declaration*>(assignment->expressions()[0]);
-        if (proc_decl == nullptr)
-            return false;
-
-        auto proc_type = proc_decl->identifier()->initializer()->procedure_type();
-
-        std::string intrinsic_name;
-        auto attr = find_attribute("intrinsic_name");
-        if (attr != nullptr) {
-            if (!attr->as_string(intrinsic_name)) {
-                session.error(
-                    module(),
-                    "P004",
-                    "unable to convert intrinsic name.",
-                    location());
-                return false;
-            }
-        }
-
-        if (intrinsic_name.empty()) {
-            session.error(
-                module(),
-                "P005",
-                "intrinsic_name attribute required for intrinsic directive.",
-                location());
-            return false;
-        }
-
-        if (!compiler::intrinsic::register_intrinsic_procedure_type(
-                intrinsic_name,
-                proc_type)) {
-            session.error(
-                module(),
-                "X000",
-                "unable to register intrinsic procedure type.",
-                location());
-            return false;
-        }
-
+    bool directive::on_evaluate(compiler::session& session) {
         return true;
     }
 

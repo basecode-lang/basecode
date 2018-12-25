@@ -172,6 +172,7 @@ add_library(
     compiler/elements/unknown_type.cpp compiler/elements/unknown_type.h
     compiler/elements/pointer_type.cpp compiler/elements/pointer_type.h
     compiler/elements/case_element.cpp compiler/elements/case_element.h
+    compiler/elements/if_directive.cpp compiler/elements/if_directive.h
     compiler/elements/operator_base.cpp compiler/elements/operator_base.h
     compiler/elements/float_literal.cpp compiler/elements/float_literal.h
     compiler/elements/element_types.cpp compiler/elements/element_types.h
@@ -180,6 +181,8 @@ add_library(
     compiler/elements/break_element.cpp compiler/elements/break_element.h
     compiler/elements/defer_element.cpp compiler/elements/defer_element.h
     compiler/elements/argument_pair.cpp compiler/elements/argument_pair.h
+    compiler/elements/run_directive.cpp compiler/elements/run_directive.h
+    compiler/elements/type_directive.cpp compiler/elements/type_directive.h
     compiler/elements/switch_element.cpp compiler/elements/switch_element.h
     compiler/elements/copy_intrinsic.cpp compiler/elements/copy_intrinsic.h
     compiler/elements/fill_intrinsic.cpp compiler/elements/fill_intrinsic.h
@@ -201,14 +204,18 @@ add_library(
     compiler/elements/binary_operator.cpp compiler/elements/binary_operator.h
     compiler/elements/boolean_literal.cpp compiler/elements/boolean_literal.h
     compiler/elements/range_intrinsic.cpp compiler/elements/range_intrinsic.h
+    compiler/elements/assert_directive.cpp compiler/elements/assert_directive.h
     compiler/elements/continue_element.cpp compiler/elements/continue_element.h
     compiler/elements/module_reference.cpp compiler/elements/module_reference.h
     compiler/elements/character_literal.cpp compiler/elements/character_literal.h
     compiler/elements/type_of_intrinsic.cpp compiler/elements/type_of_intrinsic.h
     compiler/elements/namespace_element.cpp compiler/elements/namespace_element.h
     compiler/elements/size_of_intrinsic.cpp compiler/elements/size_of_intrinsic.h
+    compiler/elements/foreign_directive.cpp compiler/elements/foreign_directive.h
+    compiler/elements/assembly_directive.cpp compiler/elements/assembly_directive.h
     compiler/elements/align_of_intrinsic.cpp compiler/elements/align_of_intrinsic.h
     compiler/elements/procedure_instance.cpp compiler/elements/procedure_instance.h
+    compiler/elements/intrinsic_directive.cpp compiler/elements/intrinsic_directive.h
     compiler/elements/address_of_intrinsic.cpp compiler/elements/address_of_intrinsic.h
     compiler/elements/identifier_reference.cpp compiler/elements/identifier_reference.h
     compiler/elements/uninitialized_literal.cpp compiler/elements/uninitialized_literal.h)
