@@ -357,7 +357,7 @@ namespace basecode::compiler {
                     break;
                 }
                 case element_type_t::unary_operator: {
-                    auto lhs_unary_op = dynamic_cast<compiler::binary_operator*>(binary_op->lhs());
+                    auto lhs_unary_op = dynamic_cast<compiler::unary_operator*>(binary_op->lhs());
                     if (lhs_unary_op->operator_type() != operator_type_t::pointer_dereference)
                         break;
 

@@ -14,54 +14,60 @@ utf32_string :: struct {
 
 make_string :: proc(): string {
     s: string;
-    s.length   := 8;
-    s.capacity := 8;
-    s.data     := alloc(8);
+    s.length   := 0;
+    s.capacity := next_power_of_two(32);
+    s.data     := alloc(s.capacity);
     return s;
 };
 
 resize_string :: proc(s: ^string, target_length: u32) {
+    if s.capacity >= target_length {
+        return;
+    };
 
+    s.capacity := next_power_of_two(target_length);
+
+    buffer: ^u8 := alloc(s.capacity);
+    fill(buffer, 0, s.capacity);
+    copy(buffer, s.data, s.length);
+
+    free(s.data);
+    s.data := buffer;
 };
 
-make_shitty_cstring :: proc(s: ^string): ^u8 {
-    resize_string(s, s.length + 1);
-    s.data[length] := 0;
-    return s.data;
+make_cstring :: proc(s: ^string): ^u8 {
+    buffer: ^u8 := alloc(s.length + 1);
+    copy(buffer, s.data, s.length);
+    (buffer + s.length)^ := 0;
+    return buffer;
 };
 
 @binary_operator "+";
-string_append :: proc(lhs: ^string, rhs: string) {
+string_append :: proc(lhs: ^string, rhs: ^string) {
     resize_string(lhs, lhs.length + rhs.length);
-    copy(lhs.data + lhs.length, address_of(rhs), rhs.length);
+    copy(lhs.data + lhs.length, rhs.data, rhs.length);
 };
 
 @binary_operator ":="
 string_assignment_1 :: proc(lhs: ^utf16_string, rhs: string) {
+    with lhs {
+        .length := rhs.length;
+        .capacity := next_power_of_two(size_of(u16) * rhs.length);
+        .data := alloc(.capacity);
+        fill(.data, 0, .capacity);
+    };
 };
 
 @binary_operator ":="
 string_assignment_2 :: proc(lhs: ^utf32_string, rhs: string) {
+    with lhs {
+        .length := rhs.length;
+        .capacity := next_power_of_two(size_of(u32) * rhs.length);
+        .data := alloc(.capacity);
+        fill(.data, 0, .capacity);
+    };
 };
 
 @binary_operator ":="
 string_assignment_3 :: proc(lhs: ^string, rhs: utf32_string) {
 };
-
-////////////////////
-
-//foo: string := "foo";
-//baz: utf16_string := "baz baz baz";
-
-///////////////////
-
-//bar := foo + " bar"; /// -> bar := string_append(foo, "bar");
-//support::print("shitty c shit: %s\n", foo.data);
-//vector3 :: struct {
-//};
-//a: vector3;
-//b: vector3;
-//c := a + b;
-
-///////////////////
-

@@ -88,6 +88,11 @@ namespace basecode::compiler {
         return _subscripts;
     }
 
+    bool array_type::on_type_check(compiler::type* other) {
+        // XXX: temporary!
+        return true;
+    }
+
     compiler::type_reference* array_type::entry_type_ref() {
         return _entry_type_ref;
     }

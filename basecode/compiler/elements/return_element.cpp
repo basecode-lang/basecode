@@ -27,6 +27,7 @@ namespace basecode::compiler {
             compiler::emit_result_t& result) {
         auto& assembler = session.assembler();
         auto block = assembler.current_block();
+
         if (!_expressions.empty()) {
             variable_handle_t expr_var {};
             if (!session.variable(_expressions.front(), expr_var))
@@ -42,12 +43,14 @@ namespace basecode::compiler {
                 vm::instruction_operand_t(
                     static_cast<uint64_t>(16 /*frame.offsets().return_slot*/),
                     vm::op_sizes::byte));
-            block->move(
-                vm::instruction_operand_t::sp(),
-                vm::instruction_operand_t::fp());
-            block->pop(vm::instruction_operand_t::fp());
-            block->rts();
         }
+
+        block->move(
+            vm::instruction_operand_t::sp(),
+            vm::instruction_operand_t::fp());
+        block->pop(vm::instruction_operand_t::fp());
+        block->rts();
+
         return true;
     }
 

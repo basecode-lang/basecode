@@ -184,7 +184,8 @@ namespace basecode::compiler {
         if (other == nullptr)
             return false;
 
-        return symbol()->name() == other->symbol()->name();
+        // XXX: very temporary hack...
+        return other->element_type() == element_type_t::proc_type;
     }
 
     type_access_model_t procedure_type::on_access_model() const {
