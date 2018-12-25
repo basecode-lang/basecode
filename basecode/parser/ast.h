@@ -173,6 +173,8 @@ namespace basecode::syntax {
     }
 
     struct ast_node_t {
+        ast_node_shared_ptr clone();
+
         bool is_label() const {
             return type == ast_node_types_t::label;
         }
@@ -385,7 +387,6 @@ namespace basecode::syntax {
             ast_node_types_t type);
 
     private:
-        uint32_t _id = 0;
         std::stack<ast_node_shared_ptr> _case_stack {};
         std::stack<ast_node_shared_ptr> _with_stack {};
         std::stack<ast_node_shared_ptr> _scope_stack {};

@@ -11,12 +11,35 @@
 
 #include <set>
 #include <fmt/format.h>
+#include <common/id_pool.h>
 #include "ast.h"
 
 namespace basecode::syntax {
 
+    ast_node_shared_ptr ast_node_t::clone() {
+        auto node = std::make_shared<ast_node_t>();
+        node->id = common::id_pool::instance()->allocate();;
+        node->type = type;
+        node->token = token;
+        node->location = location;
+        if (lhs != nullptr)
+            node->lhs = lhs->clone();
+        if (rhs != nullptr)
+            node->rhs = rhs->clone();
+        for (const auto& child : children)
+            node->children.push_back(child->clone());
+        for (const auto& label : labels)
+            node->labels.push_back(label->clone());
+        for (const auto& comment : comments)
+            node->comments.push_back(comment->clone());
+        for (const auto& attr : attributes)
+            node->attributes.push_back(attr->clone());
+        return node;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
     void ast_builder::reset() {
-        _id = 0;
         while (!_with_stack.empty())
             _with_stack.pop();
         while (!_case_stack.empty())
@@ -89,7 +112,7 @@ namespace basecode::syntax {
             const ast_node_shared_ptr& node,
             const token_t& token,
             ast_node_types_t type) {
-        node->id = ++_id;
+        node->id = common::id_pool::instance()->allocate();
         node->type = type;
         node->token = token;
         node->location = token.location;
@@ -97,7 +120,7 @@ namespace basecode::syntax {
 
     ast_node_shared_ptr ast_builder::pair_node() {
         auto node = std::make_shared<ast_node_t>();
-        node->id = ++_id;
+        node->id = common::id_pool::instance()->allocate();
         node->type = ast_node_types_t::pair;
         return node;
     }
@@ -122,7 +145,7 @@ namespace basecode::syntax {
 
     ast_node_shared_ptr ast_builder::symbol_node() {
         auto node = std::make_shared<ast_node_t>();
-        node->id = ++_id;
+        node->id = common::id_pool::instance()->allocate();
         node->type = ast_node_types_t::symbol;
         node->lhs = type_list_node();
         return node;
@@ -130,7 +153,7 @@ namespace basecode::syntax {
 
     ast_node_shared_ptr ast_builder::module_node() {
         auto node = std::make_shared<ast_node_t>();
-        node->id = ++_id;
+        node->id = common::id_pool::instance()->allocate();
         node->type = ast_node_types_t::module;
         push_scope(node);
         return node;
@@ -146,14 +169,14 @@ namespace basecode::syntax {
 
     ast_node_shared_ptr ast_builder::type_list_node() {
         auto node = std::make_shared<ast_node_t>();
-        node->id = ++_id;
+        node->id = common::id_pool::instance()->allocate();
         node->type = ast_node_types_t::type_list;
         return node;
     }
 
     ast_node_shared_ptr ast_builder::proc_call_node() {
         auto node = std::make_shared<ast_node_t>();
-        node->id = ++_id;
+        node->id = common::id_pool::instance()->allocate();
         node->type = ast_node_types_t::proc_call;
         node->lhs = proc_call_binding_node();
         node->rhs = argument_list_node();
@@ -162,21 +185,21 @@ namespace basecode::syntax {
 
     ast_node_shared_ptr ast_builder::statement_node() {
         auto node = std::make_shared<ast_node_t>();
-        node->id = ++_id;
+        node->id = common::id_pool::instance()->allocate();
         node->type = ast_node_types_t::statement;
         return node;
     }
 
     ast_node_shared_ptr ast_builder::expression_node() {
         auto node = std::make_shared<ast_node_t>();
-        node->id = ++_id;
+        node->id = common::id_pool::instance()->allocate();
         node->type = ast_node_types_t::expression;
         return node;
     }
 
     ast_node_shared_ptr ast_builder::proc_types_node() {
         auto node = std::make_shared<ast_node_t>();
-        node->id = ++_id;
+        node->id = common::id_pool::instance()->allocate();
         node->type = ast_node_types_t::proc_types;
         node->lhs = type_parameter_list_node();
         return node;
@@ -184,7 +207,7 @@ namespace basecode::syntax {
 
     ast_node_shared_ptr ast_builder::assignment_node() {
         auto node = std::make_shared<ast_node_t>();
-        node->id = ++_id;
+        node->id = common::id_pool::instance()->allocate();
         node->type = ast_node_types_t::assignment;
         node->lhs = assignment_target_list_node();
         node->rhs = assignment_source_list_node();
@@ -193,7 +216,7 @@ namespace basecode::syntax {
 
     ast_node_shared_ptr ast_builder::basic_block_node() {
         auto node = std::make_shared<ast_node_t>();
-        node->id = ++_id;
+        node->id = common::id_pool::instance()->allocate();
         node->type = ast_node_types_t::basic_block;
         push_scope(node);
         return node;
@@ -214,42 +237,42 @@ namespace basecode::syntax {
 
     ast_node_shared_ptr ast_builder::argument_list_node() {
         auto node = std::make_shared<ast_node_t>();
-        node->id = ++_id;
+        node->id = common::id_pool::instance()->allocate();
         node->type = ast_node_types_t::argument_list;
         return node;
     }
 
     ast_node_shared_ptr ast_builder::statement_body_node() {
         auto node = std::make_shared<ast_node_t>();
-        node->id = ++_id;
+        node->id = common::id_pool::instance()->allocate();
         node->type = ast_node_types_t::statement_body;
         return node;
     }
 
     ast_node_shared_ptr ast_builder::parameter_list_node() {
         auto node = std::make_shared<ast_node_t>();
-        node->id = ++_id;
+        node->id = common::id_pool::instance()->allocate();
         node->type = ast_node_types_t::parameter_list;
         return node;
     }
 
     ast_node_shared_ptr ast_builder::type_parameter_node() {
         auto node = std::make_shared<ast_node_t>();
-        node->id = ++_id;
+        node->id = common::id_pool::instance()->allocate();
         node->type = ast_node_types_t::type_parameter;
         return node;
     }
 
     ast_node_shared_ptr ast_builder::type_declaration_node() {
         auto node = std::make_shared<ast_node_t>();
-        node->id = ++_id;
+        node->id = common::id_pool::instance()->allocate();
         node->type = ast_node_types_t::type_declaration;
         return node;
     }
 
     ast_node_shared_ptr ast_builder::proc_call_binding_node() {
         auto node = std::make_shared<ast_node_t>();
-        node->id = ++_id;
+        node->id = common::id_pool::instance()->allocate();
         node->type = ast_node_types_t::proc_call_binding;
         node->lhs = type_list_node();
         return node;
@@ -257,21 +280,21 @@ namespace basecode::syntax {
 
     ast_node_shared_ptr ast_builder::with_member_access_node() {
         auto node = std::make_shared<ast_node_t>();
-        node->id = ++_id;
+        node->id = common::id_pool::instance()->allocate();
         node->type = ast_node_types_t::with_member_access;
         return node;
     }
 
     ast_node_shared_ptr ast_builder::subscript_operator_node() {
         auto node = std::make_shared<ast_node_t>();
-        node->id = ++_id;
+        node->id = common::id_pool::instance()->allocate();
         node->type = ast_node_types_t::subscript_operator;
         return node;
     }
 
     ast_node_shared_ptr ast_builder::type_tagged_symbol_node() {
         auto node = std::make_shared<ast_node_t>();
-        node->id = ++_id;
+        node->id = common::id_pool::instance()->allocate();
         node->type = ast_node_types_t::type_tagged_symbol;
         node->lhs = type_list_node();
         return node;
@@ -279,14 +302,14 @@ namespace basecode::syntax {
 
     ast_node_shared_ptr ast_builder::pointer_declaration_node() {
         auto node = std::make_shared<ast_node_t>();
-        node->id = ++_id;
+        node->id = common::id_pool::instance()->allocate();
         node->type = ast_node_types_t::pointer_declaration;
         return node;
     }
 
     ast_node_shared_ptr ast_builder::constant_assignment_node() {
         auto node = std::make_shared<ast_node_t>();
-        node->id = ++_id;
+        node->id = common::id_pool::instance()->allocate();
         node->type = ast_node_types_t::constant_assignment;
         node->lhs = assignment_target_list_node();
         node->rhs = assignment_source_list_node();
@@ -295,28 +318,28 @@ namespace basecode::syntax {
 
     ast_node_shared_ptr ast_builder::type_parameter_list_node() {
         auto node = std::make_shared<ast_node_t>();
-        node->id = ++_id;
+        node->id = common::id_pool::instance()->allocate();
         node->type = ast_node_types_t::type_parameter_list;
         return node;
     }
 
     ast_node_shared_ptr ast_builder::array_subscript_list_node() {
         auto node = std::make_shared<ast_node_t>();
-        node->id = ++_id;
+        node->id = common::id_pool::instance()->allocate();
         node->type = ast_node_types_t::array_subscript_list;
         return node;
     }
 
     ast_node_shared_ptr ast_builder::return_argument_list_node() {
         auto node = std::make_shared<ast_node_t>();
-        node->id = ++_id;
+        node->id = common::id_pool::instance()->allocate();
         node->type = ast_node_types_t::return_argument_list;
         return node;
     }
 
     ast_node_shared_ptr ast_builder::subscript_declaration_node() {
         auto node = std::make_shared<ast_node_t>();
-        node->id = ++_id;
+        node->id = common::id_pool::instance()->allocate();
         node->type = ast_node_types_t::subscript_declaration;
         return node;
     }
@@ -327,14 +350,14 @@ namespace basecode::syntax {
 
     ast_node_shared_ptr ast_builder::assignment_source_list_node() {
         auto node = std::make_shared<ast_node_t>();
-        node->id = ++_id;
+        node->id = common::id_pool::instance()->allocate();
         node->type = ast_node_types_t::assignment_source_list;
         return node;
     }
 
     ast_node_shared_ptr ast_builder::assignment_target_list_node() {
         auto node = std::make_shared<ast_node_t>();
-        node->id = ++_id;
+        node->id = common::id_pool::instance()->allocate();
         node->type = ast_node_types_t::assignment_target_list;
         return node;
     }
@@ -347,7 +370,7 @@ namespace basecode::syntax {
 
     ast_node_shared_ptr ast_builder::case_node(const token_t& token) {
         auto node = std::make_shared<ast_node_t>();
-        node->id = ++_id;
+        node->id = common::id_pool::instance()->allocate();
         node->type = ast_node_types_t::case_expression;
         return node;
     }
@@ -416,7 +439,7 @@ namespace basecode::syntax {
 
     ast_node_shared_ptr ast_builder::return_node(const token_t& token) {
         auto node = std::make_shared<ast_node_t>();
-        node->id = ++_id;
+        node->id = common::id_pool::instance()->allocate();
         node->type = ast_node_types_t::return_statement;
         node->rhs = return_argument_list_node();
         node->location = token.location;
@@ -445,7 +468,7 @@ namespace basecode::syntax {
 
     ast_node_shared_ptr ast_builder::else_if_node(const token_t& token) {
         auto node = std::make_shared<ast_node_t>();
-        node->id = ++_id;
+        node->id = common::id_pool::instance()->allocate();
         node->type = ast_node_types_t::elseif_expression;
         node->location = token.location;
         return node;
@@ -531,7 +554,7 @@ namespace basecode::syntax {
 
     ast_node_shared_ptr ast_builder::proc_expression_node(const token_t& token) {
         auto node = std::make_shared<ast_node_t>();
-        node->id = ++_id;
+        node->id = common::id_pool::instance()->allocate();
         node->type = ast_node_types_t::proc_expression;
         node->lhs = proc_types_node();
         node->rhs = parameter_list_node();
@@ -565,7 +588,7 @@ namespace basecode::syntax {
 
     ast_node_shared_ptr ast_builder::lambda_expression_node(const token_t& token) {
         auto node = std::make_shared<ast_node_t>();
-        node->id = ++_id;
+        node->id = common::id_pool::instance()->allocate();
         node->type = ast_node_types_t::lambda_expression;
         node->lhs = proc_types_node();
         node->rhs = parameter_list_node();

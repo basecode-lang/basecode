@@ -336,7 +336,7 @@ namespace basecode::syntax {
         if (!parser->expect(r, symbol_token))
             return nullptr;
 
-        node->lhs = parser->ast_builder()->current_with()->lhs;
+        node->lhs = parser->ast_builder()->current_with()->lhs->clone();
         node->rhs = create_symbol_node(r, parser, nullptr, symbol_token);
         node->location.end(node->lhs->location.end());
 
@@ -406,7 +406,7 @@ namespace basecode::syntax {
         if (lhs->type == ast_node_types_t::with_member_access
         &&  current_with != nullptr) {
             with_node->lhs = ast_builder->binary_operator_node(
-                current_with->lhs,
+                current_with->lhs->clone(),
                 s_period_literal,
                 lhs->rhs);
         } else {
