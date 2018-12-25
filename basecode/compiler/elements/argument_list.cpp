@@ -91,7 +91,10 @@ namespace basecode::compiler {
                     variable_handle_t arg_var;
                     if (!session.variable(arg, arg_var))
                         return false;
-                    arg_var->read();
+
+                    if (!arg_var->read())
+                        return false;
+
                     block->push(arg_var->emit_result().operands.back());
 
                     if (!_is_foreign_call)
@@ -136,7 +139,9 @@ namespace basecode::compiler {
                             break;
                         }
                         default: {
-                            arg_var->read();
+                            if (!arg_var->read())
+                                return false;
+
                             block->push(arg_var->emit_result().operands.back());
                             break;
                         }

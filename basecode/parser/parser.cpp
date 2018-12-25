@@ -261,10 +261,10 @@ namespace basecode::syntax {
         }
         pairs_to_list(assignment_node->rhs, rhs);
 
-        assignment_node->location.start(lhs->location.start());
-        assignment_node->location.end(assignment_node->rhs->location.end());
-
         collect_comments(r, parser, assignment_node->comments);
+
+        assignment_node->location.start(lhs->location.start());
+        assignment_node->location.end(rhs->location.end());
 
         return assignment_node;
     }
@@ -1082,6 +1082,9 @@ namespace basecode::syntax {
         auto bin_op_node = parser
             ->ast_builder()
             ->binary_operator_node(lhs, extract_non_assign_operator(token), rhs);
+        bin_op_node->location.start(lhs->location.start());
+        bin_op_node->location.end(rhs->location.end());
+
         if (!_with_assignment)
             return bin_op_node;
 

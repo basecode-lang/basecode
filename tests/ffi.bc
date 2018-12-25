@@ -48,41 +48,6 @@ tuple_by_value :: proc(flags: flags_t) {
     pass_by_value(temp);
 };
 
-min :: proc(a: u32, b: u32): u32 {
-    if a < b {
-        return a;
-    } else {
-        return b;
-    };
-};
-
-max :: proc(a: u32, b: u32): u32 {
-    if a > b {
-        return a;
-    } else {
-        return b;
-    };
-};
-
-next_power_of_two :: proc(n: u32): u32 {
-    n -:= 1;
-    n |:= n shr 1;
-    n |:= n shr 2;
-    n |:= n shr 4;
-    n |:= n shr 8;
-    n |:= n shr 16;
-    n +:= 1;
-    return n;
-};
-
-assign_string :: proc(str: ^string, lit: ^u8, len: u32) {
-    str.length := len;
-    str.capacity := next_power_of_two(len + 1);
-    str.data := alloc(cast<u64>(str.capacity));
-    fill(str.data, 0, cast<u64>(str.capacity));
-    copy(str.data, lit, cast<u64>(len));
-};
-
 vector3 :: struct {
     x: f32;
     y: f32;

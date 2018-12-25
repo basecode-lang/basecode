@@ -30,6 +30,12 @@ namespace basecode::compiler {
                                       _rhs(rhs) {
     }
 
+    bool unary_operator::on_fold(
+            compiler::session& session,
+            fold_result_t& result) {
+        return constant_fold_strategy(session, result);
+    }
+
     bool unary_operator::on_emit(
             compiler::session& session,
             compiler::emit_context_t& context,
@@ -46,11 +52,19 @@ namespace basecode::compiler {
             return false;
         rhs_var->read();
 
+        auto is_composite_type = rhs_var->type_result().inferred_type->is_composite_type();
+        auto size = vm::op_size_for_byte_size(type_result.inferred_type->size_in_bytes());
+        if (operator_type() == operator_type_t::pointer_dereference
+        &&  !is_composite_type) {
+            auto pointer_type = dynamic_cast<compiler::pointer_type*>(type_result.inferred_type);
+            size = vm::op_size_for_byte_size(pointer_type->base_type_ref()->type()->size_in_bytes());
+        }
+
         vm::instruction_operand_t result_operand;
         if (!vm::instruction_operand_t::allocate(
                 assembler,
                 result_operand,
-                vm::op_size_for_byte_size(type_result.inferred_type->size_in_bytes()),
+                size,
                 rhs_var->value_reg().type)) {
             return false;
         }
@@ -81,7 +95,7 @@ namespace basecode::compiler {
                 break;
             }
             case operator_type_t::pointer_dereference: {
-                if (!rhs_var->type_result().inferred_type->is_composite_type()) {
+                if (!is_composite_type) {
                     block->comment("unary_op: deref", vm::comment_location_t::after_instruction);
                     block->load(
                         result_operand,
@@ -98,10 +112,28 @@ namespace basecode::compiler {
         return true;
     }
 
-    bool unary_operator::on_fold(
+    bool unary_operator::on_infer_type(
             compiler::session& session,
-            fold_result_t& result) {
-        return constant_fold_strategy(session, result);
+            infer_type_result_t& result) {
+        auto& scope_manager = session.scope_manager();
+        switch (operator_type()) {
+            case operator_type_t::negate:
+            case operator_type_t::binary_not: {
+                return _rhs->infer_type(session, result);
+            }
+            case operator_type_t::logical_not: {
+                result.inferred_type = scope_manager.find_type(qualified_symbol_t("bool"));
+                return true;
+            }
+            case operator_type_t::pointer_dereference: {
+                if (!_rhs->infer_type(session, result))
+                    return false;
+                return result.inferred_type->is_pointer_type();
+            }
+            default: {
+                return false;
+            }
+        }
     }
 
     compiler::element* unary_operator::rhs() {
@@ -234,30 +266,6 @@ namespace basecode::compiler {
     void unary_operator::on_owned_elements(element_list_t& list) {
         if (_rhs != nullptr)
             list.emplace_back(_rhs);
-    }
-
-    bool unary_operator::on_infer_type(
-            compiler::session& session,
-            infer_type_result_t& result) {
-        auto& scope_manager = session.scope_manager();
-        switch (operator_type()) {
-            case operator_type_t::negate:
-            case operator_type_t::binary_not: {
-                return _rhs->infer_type(session, result);
-            }
-            case operator_type_t::logical_not: {
-                result.inferred_type = scope_manager.find_type(qualified_symbol_t("bool"));
-                return true;
-            }
-            case operator_type_t::pointer_dereference: {
-                if (!_rhs->infer_type(session, result))
-                    return false;
-                return result.inferred_type->is_pointer_type();
-            }
-            default: {
-                return false;
-            }
-        }
     }
 
     bool unary_operator::on_as_identifier(compiler::identifier*& value) const {

@@ -25,6 +25,9 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             const std::string& name,
             const element_list_t& params) {
+        if (params.empty())
+            return nullptr;
+
         if (name == "if"
         ||  name == "elif"
         ||  name == "else") {

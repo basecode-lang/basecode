@@ -1,6 +1,7 @@
 core :: module("../modules/core");
 
 text: string := "hello world!";
+
 vector3 :: struct {
     x: s32;
     y: s32;
@@ -15,11 +16,6 @@ entity :: struct {
     pos: vector3;
     dir: vector3;
     cls: class;
-};
-
-barzar :: struct {
-    e: ^entity;
-    c: ^class;
 };
 
 #run {
@@ -76,18 +72,4 @@ barzar :: struct {
     print("after: player_ptr.pos.x := %d\n", player_ptr.pos.x);
     print("after: player_ptr.pos.y := %d\n", player_ptr.pos.y);
     print("after: player_ptr.pos.z := %hhd\n", player_ptr.pos.z);
-
-    // XXX: this is broken, fix me
-    b: ^barzar := alloc(size_of(barzar));
-    b.e := alloc(size_of(entity));
-    b.e.pos.x := 0;
-    b.e.pos.y := 0;
-    b.e.pos.z := 0;
-
-    b.c := alloc(size_of(class));
-    b.c.name.length := 4;
-    b.c.name.capacity := 32;
-    b.c.name.data := alloc(32);
-    fill(b.c.name.data, 0, 32);
-    copy(b.c.name.data, "four", 4);
 };

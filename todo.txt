@@ -34,6 +34,8 @@ TASKS
 
 - NEW: DFA graph coloring
 
+- BUG: redefining an identifier with another type doesn't give nice errors.
+
 - BUG: structures aren't being padded to match what C/C++ are expecting.
         __attribute__((packed)) does allow C/C++ to align with our structures.
 

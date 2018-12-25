@@ -14,6 +14,7 @@
 #include <compiler/scope_manager.h>
 #include "type.h"
 #include "identifier.h"
+#include "pointer_type.h"
 #include "argument_list.h"
 #include "assembly_label.h"
 #include "symbol_element.h"
@@ -93,9 +94,26 @@ namespace basecode::compiler {
     bool address_of_intrinsic::on_infer_type(
             compiler::session& session,
             infer_type_result_t& result) {
-        result.inferred_type = session
-            .scope_manager()
-            .find_type(qualified_symbol_t("u64"));
+        auto args = arguments()->elements();
+        if (args.empty() || args.size() > 1)
+            return false;
+
+        infer_type_result_t base_result {};
+        if (!args[0]->infer_type(session, base_result))
+            return false;
+
+        auto& builder = session.builder();
+        auto& scope_manager = session.scope_manager();
+
+        auto type = scope_manager.find_pointer_type(base_result.inferred_type);
+        if (type == nullptr) {
+            type = builder.make_pointer_type(
+                parent_scope(),
+                qualified_symbol_t(),
+                base_result.inferred_type);
+        }
+
+        result.inferred_type = type;
         return true;
     }
 

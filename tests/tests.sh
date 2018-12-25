@@ -33,3 +33,4 @@
 ../bin/bc -v -G asserts.bc
 ../bin/bc -v -G enum.bc
 ../bin/bc -v -G ffi.bc
+../bin/bc -v -G automatic-pointer-deref.bc

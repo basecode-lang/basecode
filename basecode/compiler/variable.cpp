@@ -62,7 +62,7 @@ namespace basecode::compiler {
 
     bool variable::read() {
         if (flag(flags_t::f_read))
-            return false;
+            return true;
 
         auto& assembler = _session.assembler();
         auto block = assembler.current_block();
@@ -174,7 +174,7 @@ namespace basecode::compiler {
 
     bool variable::write() {
         if (flag(flags_t::f_written))
-            return false;
+            return true;
 
         address();
 
@@ -326,6 +326,12 @@ namespace basecode::compiler {
                 _result.operands.emplace_back(vm::instruction_operand_t(label_ref));
             }
             return true;
+        } else {
+            auto temp_address_reg = find_temp_address_reg();
+            if (temp_address_reg != nullptr) {
+                _result.operands.emplace_back(vm::instruction_operand_t(*temp_address_reg));
+                return true;
+            }
         }
 
         return false;
@@ -372,7 +378,7 @@ namespace basecode::compiler {
             vm::op_sizes size,
             uint64_t value) {
         if (flag(flags_t::f_written))
-            return false;
+            return true;
 
         address();
 
@@ -423,9 +429,17 @@ namespace basecode::compiler {
 
         address();
 
-        auto var = _rot.identifier;
+        compiler::identifier* var = nullptr;
+        _element->as_identifier(var);
+
         if (var == nullptr)
+            var = _rot.identifier;
+
+        if (var == nullptr) {
+            // XXX: error
             return false;
+        }
+
         auto on_stack = var->usage() == identifier_usage_t::stack;
 
         auto fmt = "{}";
