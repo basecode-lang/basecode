@@ -56,14 +56,16 @@ namespace basecode::debugger {
             switch (_mode) {
                 case registers_display_mode_t::floats: {
                     value = fmt::format(
-                        "F{:02}=${:016X}",
+                        "{}F{}=${:016X}",
+                        i < 10 ? " " : "",
                         i,
                         register_file.r[vm::register_float_start + i].qw);
                     break;
                 }
                 case registers_display_mode_t::integers: {
                     value = fmt::format(
-                        "I{:02}=${:016X}",
+                        "{}I{}=${:016X}",
+                        i < 10 ? " " : "",
                         i,
                         register_file.r[i].qw);
                     break;

@@ -30,6 +30,7 @@ namespace basecode::debugger {
         bool on_update(environment& env) override;
 
     private:
+        int _current_line = 1;
     };
 
 };

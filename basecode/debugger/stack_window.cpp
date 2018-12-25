@@ -41,15 +41,27 @@ namespace basecode::debugger {
             print_centered_window("Stack is empty.");
         } else {
             int row = 1;
+
             while (sp.qw < top_of_stack && row < max_height() - 2) {
-                auto value = fmt::format(
-                    "${:016X}: ${:016X}",
-                    sp.qw,
-                    terp.read(vm::op_sizes::qword, sp.qw));
+                auto value = fmt::format("${:016X}: ", sp.qw);
+                for (auto x = 0; x < 8; x++) {
+                    value += fmt::format("{:02X}", terp.read(vm::op_sizes::byte, sp.qw + x));
+                    if (x < 7)
+                        value += " ";
+                }
                 mvwprintw(ptr(), row, 1, "%s", value.c_str());
                 sp.qw += 8;
                 ++row;
             }
+
+            mvwchgat(
+                ptr(),
+                _current_line,
+                1,
+                max_width() - 2,
+                A_REVERSE,
+                1,
+                0);
         }
     }
 

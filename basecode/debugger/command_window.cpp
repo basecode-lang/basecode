@@ -62,6 +62,11 @@ namespace basecode::debugger {
 
     bool command_window::on_update(environment& env) {
         switch (env.ch()) {
+            case 27: {
+                reset();
+                env.cancel_command();
+                return true;
+            }
             case 10:
             case KEY_ENTER: {
                 _history.push_back(_input);

@@ -33,6 +33,8 @@ namespace basecode::debugger {
 
         int ch() const;
 
+        void cancel_command();
+
         bool run(common::result& r);
 
         compiler::session& session();

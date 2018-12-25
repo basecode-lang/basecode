@@ -46,6 +46,13 @@ namespace basecode::debugger {
         refresh();
     }
 
+    void environment::cancel_command() {
+        _state = _previous_state;
+        _header_window->mark_dirty();
+        _command_window->mark_dirty();
+        draw_all();
+    }
+
     bool environment::run(common::result& r) {
         auto& terp = _session.terp();
 
@@ -264,12 +271,12 @@ namespace basecode::debugger {
             _main_window->max_height() - 15);
         _stack_window = new stack_window(
             _main_window,
-            _main_window->max_width() - 38,
+            _main_window->max_width() - 44,
             _main_window->max_height() - 14,
-            38,
+            44,
             12);
 
-        auto left_section = _main_window->max_width() - 38;
+        auto left_section = _main_window->max_width() - _stack_window->width();
         _memory_window = new memory_window(
             _main_window,
             0,
