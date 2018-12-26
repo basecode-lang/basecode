@@ -1059,7 +1059,7 @@ namespace basecode::compiler {
             _buffer.push_back(c);
 
         auto ch = _buffer[0];
-        rune_t rune = ch;
+        common::rune_t rune = ch;
         if (ch >= 0x80) {
             auto cp = common::utf8_decode(
                 (char*)(_buffer.data()),
