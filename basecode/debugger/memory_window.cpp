@@ -47,10 +47,10 @@ namespace basecode::debugger {
         auto end_of_heap = terp.heap_vector(vm::heap_vectors_t::top_of_stack);
         auto address = reinterpret_cast<uint64_t>(_address + row());
 
-        auto page_height = max_height() - 1;
-        auto page_width = max_width() - 2;
+        auto page_height = static_cast<size_t>(max_height() - 1);
+        auto page_width = static_cast<size_t>(max_width() - 2);
 
-        for (int row = 1; row < page_height; row++) {
+        for (size_t row = 1; row < page_height; row++) {
             auto start_address = address;
             std::stringstream bytes_stream;
             std::stringstream chars_stream;
@@ -75,7 +75,7 @@ namespace basecode::debugger {
             if (clip_length > page_width)
                 clip_length = static_cast<size_t>(page_width);
 
-            auto column_offset = column();
+            auto column_offset = static_cast<size_t>(column());
             if (column_offset > 0
             &&  clip_length > column_offset) {
                 clip_length -= column_offset;

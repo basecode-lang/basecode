@@ -46,12 +46,12 @@ namespace basecode::debugger {
 
         void page_down();
 
-        int page_width() const;
+        size_t page_width() const;
 
-        int page_height() const;
+        size_t page_height() const;
 
     private:
-        int _current_line = 1;
+        size_t _current_line = 1;
         vm::listing_source_file_t* _source_file = nullptr;
     };
 

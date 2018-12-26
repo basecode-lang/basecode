@@ -87,7 +87,8 @@ namespace basecode::debugger {
             flag_stream.str());
 
         size_t pad_length = 0;
-        if (header.length() < max_width())
+        size_t page_width = static_cast<size_t>(max_width());
+        if (header.length() < page_width)
             pad_length = max_width() - header.length();
 
         header = fmt::format(

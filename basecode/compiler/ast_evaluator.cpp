@@ -2174,7 +2174,7 @@ namespace basecode::compiler {
         compiler::field* param_field = nullptr;
         auto& parameter_map = proc_type->parameters();
 
-        auto index = 0;
+        size_t index = 0;
         for (const auto& param_node : parameters_node->children) {
             switch (param_node->type) {
                 case syntax::ast_node_types_t::symbol: {

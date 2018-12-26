@@ -63,8 +63,8 @@ namespace basecode::debugger {
     }
 
     void output_window::on_draw(environment& env) {
-        auto page_width = max_width() - 2;
-        auto page_height = max_height() - 2;
+        size_t page_width = static_cast<size_t>(max_width() - 2);
+        size_t page_height = static_cast<size_t>(max_height() - 2);
         for (size_t line_index = 0;
                 line_index < page_height;
                 line_index ++) {
@@ -77,7 +77,7 @@ namespace basecode::debugger {
                 if (clip_length > page_width)
                     clip_length = static_cast<size_t>(page_width);
 
-                auto column_offset = column();
+                size_t column_offset = static_cast<size_t>(column());
                 if (column_offset > 0
                 &&  clip_length > column_offset) {
                     clip_length -= column_offset;
@@ -101,7 +101,7 @@ namespace basecode::debugger {
     void output_window::add_stdout_line(const std::string& line) {
         mark_dirty();
         _stdout_lines.emplace_back(line);
-        if (_stdout_lines.size() > max_height() - 2)
+        if (_stdout_lines.size() > static_cast<size_t>(max_height() - 2))
             row(row() + 1);
     }
 

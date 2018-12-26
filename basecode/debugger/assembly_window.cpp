@@ -30,7 +30,7 @@ namespace basecode::debugger {
     }
 
     void assembly_window::page_up() {
-        for (auto i = 0; i < page_height(); i++)
+        for (size_t i = 0; i < page_height(); i++)
             move_up();
     }
 
@@ -41,7 +41,7 @@ namespace basecode::debugger {
         if (_current_line > 1)
             _current_line--;
         else {
-            auto current_row = row();
+            size_t current_row = row();
             if (current_row > page_height()) {
                 _current_line = page_height();
                 row(current_row - page_height());
@@ -57,7 +57,7 @@ namespace basecode::debugger {
     }
 
     void assembly_window::page_down() {
-        for (auto i = 0; i < page_height(); i++)
+        for (size_t i = 0; i < page_height(); i++)
             move_down();
     }
 
@@ -71,7 +71,7 @@ namespace basecode::debugger {
                 return;
             _current_line++;
         } else {
-            auto current_row = row();
+            auto current_row = static_cast<size_t>(row());
             if (current_row + page_height() < (max_lines - 1)) {
                 row(current_row + page_height());
                 _current_line = 1;
@@ -79,12 +79,12 @@ namespace basecode::debugger {
         }
     }
 
-    int assembly_window::page_width() const {
-        return max_width() - 3;
+    size_t assembly_window::page_width() const {
+        return static_cast<size_t>(max_width() - 3);
     }
 
-    int assembly_window::page_height() const {
-        return max_height() - 2;
+    size_t assembly_window::page_height() const {
+        return static_cast<size_t>(max_height() - 2);
     }
 
     void assembly_window::on_draw(environment& env) {

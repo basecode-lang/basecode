@@ -31,7 +31,8 @@ namespace basecode::debugger {
         auto footer = fmt::format(" F1=Command | F2=Reset | F3=Exit | F8=Step | F9=Run {} ", "");
 
         size_t pad_length = 0;
-        if (footer.length() < max_width())
+        size_t page_width = static_cast<size_t>(max_width());
+        if (footer.length() < page_width)
             pad_length = max_width() - footer.length();
 
         footer = fmt::format(

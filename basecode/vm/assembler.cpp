@@ -374,7 +374,7 @@ namespace basecode::vm {
                 }
                 case assembly_parser_state_t::operand_list: {
                     auto required_operand_count = wip.instance.m->required_operand_count();
-                    auto commas_found = 0;
+                    size_t commas_found = 0;
                     source_file.push_mark();
                     auto test_rune = rune;
                     while (test_rune != '\n' && test_rune != ';') {
@@ -592,7 +592,7 @@ namespace basecode::vm {
                             wip.params.push_back(value);
                         }
                     } else {
-                        auto param_index = 0;
+                        size_t param_index = 0;
                         for (const auto& param_def : wip.instance.d->params) {
                             if (param_index >= params.size())
                                 break;
@@ -604,7 +604,7 @@ namespace basecode::vm {
                                 wip.params.push_back(value);
                             } else if (param_def.is_string()) {
                                 if (param[0] == '\'') {
-                                    auto param_char_idx = 1;
+                                    size_t param_char_idx = 1;
                                     std::stringstream stream;
                                     while (true) {
                                         if (param_char_idx >= param.length()) {
