@@ -9,6 +9,8 @@
 //
 // ----------------------------------------------------------------------------
 
+#define YA_GETOPT_NO_COMPAT_MACRO
+
 #include <chrono>
 #include <sstream>
 #include <cstdlib>
