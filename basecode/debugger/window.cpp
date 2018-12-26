@@ -13,8 +13,8 @@
 
 namespace basecode::debugger {
 
-    window::window(window* parent, WINDOW* ptr) : _ptr(ptr), _parent(parent) {
-        make_win();
+    window::window(window* parent, WINDOW* ptr) : _ptr(ptr),
+                                                  _parent(parent) {
     }
 
     window::window(
@@ -29,7 +29,6 @@ namespace basecode::debugger {
                                         _height(height),
                                         _title(title),
                                         _parent(parent) {
-        make_win();
     }
 
     int window::x() const {
@@ -45,24 +44,30 @@ namespace basecode::debugger {
     }
 
     void window::make_win() {
-        if (_ptr == nullptr)
+        if (_ptr == nullptr) {
             _ptr = newwin(_height, _width, _y, _x);
 
-        if (_height > 1)
-            box(_ptr, 0, 0);
+            if (_height > 1)
+                box(_ptr, 0, 0);
 
-        scrollok(_ptr, _scrollable);
+            scrollok(_ptr, _scrollable);
+        }
 
         getmaxyx(_ptr, _max_height, _max_width);
 
         if (!_title.empty())
             draw_title();
 
-        wrefresh(_ptr);
+        if (_visible)
+            wrefresh(_ptr);
     }
 
     void window::mark_dirty() {
         _dirty = true;
+    }
+
+    void window::initialize() {
+        make_win();
     }
 
     void window::draw_title() {
@@ -94,6 +99,10 @@ namespace basecode::debugger {
 
     WINDOW* window::ptr() const {
         return _ptr;
+    }
+
+    bool window::visible() const {
+        return _visible;
     }
 
     int window::max_width() const {
@@ -130,12 +139,16 @@ namespace basecode::debugger {
         return _scrollable;
     }
 
+    void window::visible(bool value) {
+        _visible = value;
+    }
+
     std::string window::title() const {
         return _title;
     }
 
     void window::draw(environment& env) {
-        if (!_dirty)
+        if (!_dirty || !_visible)
             return;
         on_draw(env);
         draw_title();

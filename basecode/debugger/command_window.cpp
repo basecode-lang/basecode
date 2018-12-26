@@ -10,7 +10,6 @@
 // ----------------------------------------------------------------------------
 
 #include <fmt/format.h>
-#include <common/string_support.h>
 #include "environment.h"
 #include "command_window.h"
 
@@ -71,15 +70,7 @@ namespace basecode::debugger {
             case KEY_ENTER: {
                 _history.push_back(_input);
                 _history_index = _history.size() - 1;
-                auto parts = common::string_to_list(_input, ' ');
-                if (parts.empty()) {
-                    // XXX: error!
-                    return false;
-                }
-                _command.name = parts[0];
-                parts.erase(parts.begin());
-                _command.params = parts;
-                auto success = env.execute_command(_command);
+                auto success = env.execute_command(_input);
                 if (!success) {
                     // XXX: ?
                 }

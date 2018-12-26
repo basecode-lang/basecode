@@ -58,7 +58,6 @@ include_directories(
 if (CURSES_FOUND)
     set (
         DEBUGGER_SOURCES
-        debugger/debugger_types.h
         debugger/window.cpp debugger/window.h
         debugger/environment.cpp debugger/environment.h
         debugger/stack_window.cpp debugger/stack_window.h
@@ -66,6 +65,8 @@ if (CURSES_FOUND)
         debugger/footer_window.cpp debugger/footer_window.h
         debugger/output_window.cpp debugger/output_window.h
         debugger/memory_window.cpp debugger/memory_window.h
+        debugger/errors_window.cpp debugger/errors_window.h
+        debugger/debugger_types.cpp debugger/debugger_types.h
         debugger/command_window.cpp debugger/command_window.h
         debugger/assembly_window.cpp debugger/assembly_window.h
         debugger/registers_window.cpp debugger/registers_window.h)

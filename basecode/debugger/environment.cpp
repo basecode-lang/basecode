@@ -13,6 +13,15 @@
 #include <compiler/session.h>
 #include <common/string_support.h>
 #include "environment.h"
+#include "stack_window.h"
+#include "header_window.h"
+#include "footer_window.h"
+#include "output_window.h"
+#include "memory_window.h"
+#include "errors_window.h"
+#include "command_window.h"
+#include "assembly_window.h"
+#include "registers_window.h"
 
 namespace basecode::debugger {
 
@@ -43,11 +52,21 @@ namespace basecode::debugger {
         _output_window->draw(*this);
         _stack_window->draw(*this);
         _command_window->draw(*this);
+        _errors_window->draw(*this);
         refresh();
     }
 
+    void environment::pop_state() {
+        if (_state_stack.empty())
+            return;
+        _state_stack.pop();
+    }
+
     void environment::cancel_command() {
-        _state = _previous_state;
+        if (current_state() != debugger_state_t::command_entry)
+            return;
+
+        pop_state();
         _header_window->mark_dirty();
         _command_window->mark_dirty();
         draw_all();
@@ -59,12 +78,13 @@ namespace basecode::debugger {
         _output_window->start_redirect();
 
         while (true) {
+            auto state = current_state();
             auto pc = terp.register_file().r[vm::register_pc].qw;
             auto bp = breakpoint(pc);
             if (bp != nullptr
             &&  bp->enabled
-            &&  _state != debugger_state_t::break_s) {
-                _state = debugger_state_t::break_s;
+            &&  state != debugger_state_t::break_s) {
+                push_state(debugger_state_t::break_s);
                 _header_window->mark_dirty();
                 _assembly_window->mark_dirty();
             }
@@ -73,8 +93,7 @@ namespace basecode::debugger {
             _ch = getch();
             switch (_ch) {
                 case KEY_F(1): {
-                    _previous_state = _state;
-                    _state = debugger_state_t::command_entry;
+                    push_state(debugger_state_t::command_entry);
                     _header_window->mark_dirty();
                     _command_window->reset();
                     break;
@@ -83,7 +102,7 @@ namespace basecode::debugger {
                     terp.reset();
                     pc = terp.register_file().r[vm::register_pc].qw;
 
-                    _state = debugger_state_t::stopped;
+                    pop_state();
 
                     _output_window->clear();
                     _stack_window->mark_dirty();
@@ -97,10 +116,10 @@ namespace basecode::debugger {
                     goto _exit;
                 }
                 case KEY_F(8): {
-                    if (_state == debugger_state_t::break_s)
-                        _state = debugger_state_t::single_step;
+                    if (state == debugger_state_t::break_s)
+                        pop_state();
 
-                    if (_state == debugger_state_t::single_step) {
+                    if (state == debugger_state_t::single_step) {
                         user_step = true;
                     } else {
                         // XXX: state error
@@ -108,7 +127,8 @@ namespace basecode::debugger {
                     break;
                 }
                 case KEY_F(9): {
-                    switch (_state) {
+                    switch (state) {
+                        case debugger_state_t::ended:
                         case debugger_state_t::errored:
                         case debugger_state_t::running:
                         case debugger_state_t::command_entry:
@@ -116,13 +136,14 @@ namespace basecode::debugger {
                             break;
                         }
                         case debugger_state_t::stopped: {
-                            _state = debugger_state_t::single_step;
+                            push_state(debugger_state_t::single_step);
                             _assembly_window->move_to_address(pc);
                             break;
                         }
                         case debugger_state_t::break_s:
                         case debugger_state_t::single_step: {
-                            _state = debugger_state_t::running;
+                            pop_state();
+                            push_state(debugger_state_t::running);
                             break;
                         }
                     }
@@ -130,8 +151,8 @@ namespace basecode::debugger {
                     break;
                 }
                 case CTRL('c'): {
-                    if (_state == debugger_state_t::running)
-                        _state = debugger_state_t::stopped;
+                    if (state == debugger_state_t::running)
+                        pop_state();
                     _stack_window->mark_dirty();
                     _header_window->mark_dirty();
                     _output_window->mark_dirty();
@@ -148,7 +169,12 @@ namespace basecode::debugger {
                     break;
                 }
                 default: {
-                    switch (_state) {
+                    switch (state) {
+                        case debugger_state_t::errored: {
+                            _errors_window->update(*this);
+                            _errors_window->mark_dirty();
+                            break;
+                        }
                         case debugger_state_t::command_entry:
                             _command_window->update(*this);
                             _command_window->mark_dirty();
@@ -164,22 +190,25 @@ namespace basecode::debugger {
 
             bool execute_next_step;
             if (user_step) {
-                execute_next_step = _state == debugger_state_t::single_step;
+                execute_next_step = state == debugger_state_t::single_step;
             } else {
-                execute_next_step = _state == debugger_state_t::running;
+                execute_next_step = state == debugger_state_t::running;
             };
 
             if (execute_next_step) {
                 common::result step_result {};
                 auto success = terp.step(step_result);
                 if (!success) {
-                    _state = debugger_state_t::errored;
+                    pop_state();
+                    push_state(debugger_state_t::errored);
+                    _errors_window->visible(true);
                 } else {
                     pc = terp.register_file().r[vm::register_pc].qw;
                     _output_window->process_buffers();
 
                     if (terp.has_exited()) {
-                        _state = debugger_state_t::stopped;
+                        pop_state();
+                        push_state(debugger_state_t::ended);
                     } else {
                         _assembly_window->move_to_address(pc);
                     }
@@ -216,10 +245,6 @@ namespace basecode::debugger {
         return _session;
     }
 
-    debugger_state_t environment::state() const {
-        return _state;
-    }
-
     bool environment::shutdown(common::result& r) {
         endwin();
         return true;
@@ -239,42 +264,55 @@ namespace basecode::debugger {
         init_pair(4, COLOR_CYAN, COLOR_WHITE);
 
         _main_window = new window(nullptr, stdscr);
+        _main_window->initialize();
+
         _header_window = new header_window(
             _main_window,
             0,
             0,
             _main_window->max_width(),
             1);
+        _header_window->initialize();
+
         _footer_window = new footer_window(
             _main_window,
             0,
             _main_window->max_height() - 1,
             _main_window->max_width(),
             1);
+        _footer_window->initialize();
+
         _command_window = new command_window(
             _main_window,
             0,
             _main_window->max_height() - 2,
             _main_window->max_width(),
             1);
+        _command_window->initialize();
+
         _assembly_window = new assembly_window(
             _main_window,
             0,
             1,
             _main_window->max_width() - 23,
             _main_window->max_height() - 15);
+        _assembly_window->initialize();
+
         _registers_window = new registers_window(
             _main_window,
             _main_window->max_width() - 23,
             1,
             23,
             _main_window->max_height() - 15);
+        _registers_window->initialize();
+
         _stack_window = new stack_window(
             _main_window,
             _main_window->max_width() - 44,
             _main_window->max_height() - 14,
             44,
             12);
+        _stack_window->initialize();
 
         auto left_section = _main_window->max_width() - _stack_window->width();
         _memory_window = new memory_window(
@@ -284,6 +322,7 @@ namespace basecode::debugger {
             left_section / 2,
             12);
         _memory_window->address(reinterpret_cast<uint64_t>(_session.terp().heap()));
+        _memory_window->initialize();
 
         _output_window = new output_window(
             _main_window,
@@ -291,6 +330,16 @@ namespace basecode::debugger {
             _memory_window->y(),
             _memory_window->width(),
             _memory_window->height());
+        _output_window->initialize();
+
+        _errors_window = new errors_window(
+            _main_window,
+            2,
+            2,
+            _main_window->max_width() - 2,
+            _main_window->max_height() - 2);
+        _errors_window->visible(false);
+        _errors_window->initialize();
 
         // XXX: since we only have the one listing source file for now
         //      automatically select it.
@@ -305,6 +354,16 @@ namespace basecode::debugger {
         return true;
     }
 
+    debugger_state_t environment::current_state() const {
+        if (_state_stack.empty())
+            return debugger_state_t::stopped;
+        return _state_stack.top();
+    }
+
+    void environment::push_state(debugger_state_t state) {
+        _state_stack.push(state);
+    }
+
     void environment::remove_breakpoint(uint64_t address) {
         _breakpoints.erase(address);
     }
@@ -316,57 +375,24 @@ namespace basecode::debugger {
         return &it->second;
     }
 
-    bool environment::execute_command(const command_t& command) {
-        _state = debugger_state_t::command_execute;
+    bool environment::execute_command(const std::string& input) {
+        if (input.empty()) {
+            cancel_command();
+            return true;
+        }
+
+        push_state(debugger_state_t::command_execute);
+
         _header_window->mark_dirty();
         _command_window->mark_dirty();
         draw_all();
 
-        if (command.name == "line") {
-            if (command.params.empty()) {
-                // XXX: error
-                return false;
-            }
-
-            syntax::token_t param;
-            param.radix = 10;
-            param.value = command.params[0];
-            param.number_type = syntax::number_types_t::integer;
-
-            uint64_t line_number = 0;
-            if (param.parse(line_number) != syntax::conversion_result_t::success) {
-                // XXX: error
-                return false;
-            }
-
-            _assembly_window->move_to_line(line_number);
-            _state = _previous_state;
-        } else if (command.name == "m") {
-            if (command.params.empty()) {
-                // XXX: error
-                return false;
-            }
-
-            syntax::token_t param;
-            param.radix = 16;
-            param.value = command.params[0];
-            param.number_type = syntax::number_types_t::integer;
-
-            uint64_t address = 0;
-            if (param.parse(address) != syntax::conversion_result_t::success) {
-                // XXX: error
-                return false;
-            }
-
-            _memory_window->address(address);
-            _state = _previous_state;
-        } else {
-            // XXX: unknown command
-            _state = debugger_state_t::errored;
-        }
-
+        pop_state();
         _command_window->reset();
+        _header_window->mark_dirty();
+        _command_window->mark_dirty();
         draw_all();
+
         return true;
     }
 

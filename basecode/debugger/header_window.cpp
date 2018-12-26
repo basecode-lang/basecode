@@ -42,7 +42,7 @@ namespace basecode::debugger {
 
         auto color_pair = 0;
         std::string mode;
-        switch (env.state()) {
+        switch (env.current_state()) {
             case debugger_state_t::running: {
                 mode = "running";
                 break;
@@ -62,6 +62,10 @@ namespace basecode::debugger {
             case debugger_state_t::errored: {
                 color_pair = 3;
                 mode = "error";
+                break;
+            }
+            case debugger_state_t::ended: {
+                mode = "ended";
                 break;
             }
             case debugger_state_t::command_entry: {

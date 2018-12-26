@@ -15,16 +15,18 @@
 
 namespace basecode::debugger {
 
-    class command_window : public window {
+    class errors_window : public window {
     public:
-        command_window(
+        errors_window(
             window* parent,
             int x,
             int y,
             int width,
             int height);
 
-        void reset();
+        common::result* result() const;
+
+        void result(common::result* value);
 
     protected:
         void on_draw(environment& env) override;
@@ -32,15 +34,20 @@ namespace basecode::debugger {
         bool on_update(environment& env) override;
 
     private:
-        void cursor_left();
+        void move_up();
 
-        void cursor_right();
+        void page_up();
+
+        void page_down();
+
+        void move_down();
+
+        void move_left();
+
+        void move_right();
 
     private:
-        size_t _cursor_x = 0;
-        std::string _input {};
-        size_t _history_index = 0;
-        std::vector<std::string> _history {};
+        common::result* _result = nullptr;
     };
 
 };

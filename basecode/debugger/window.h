@@ -36,11 +36,15 @@ namespace basecode::debugger {
 
         int width() const;
 
-        int height() const;
-
         void mark_dirty();
 
+        void initialize();
+
+        int height() const;
+
         WINDOW* ptr() const;
+
+        bool visible() const;
 
         int max_width() const;
 
@@ -49,6 +53,8 @@ namespace basecode::debugger {
         window* parent() const;
 
         bool scrollable() const;
+
+        void visible(bool value);
 
         std::string title() const;
 
@@ -96,6 +102,7 @@ namespace basecode::debugger {
         int _max_width = 0;
         bool _dirty = true;
         int _max_height = 0;
+        bool _visible = true;
         std::string _title {};
         short _color_pair = 1;
         WINDOW* _ptr = nullptr;
