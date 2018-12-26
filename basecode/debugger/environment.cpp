@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <vm/label.h>
 #include <common/defer.h>
 #include <parser/token.h>
 #include <compiler/session.h>
@@ -90,12 +91,11 @@ namespace basecode::debugger {
         _output_window->start_redirect();
 
         while (true) {
-            auto state = current_state();
             auto pc = terp.register_file().r[vm::register_pc].qw;
             auto bp = breakpoint(pc);
             if (bp != nullptr
             &&  bp->enabled
-            &&  state != debugger_state_t::break_s) {
+            &&  current_state() != debugger_state_t::break_s) {
                 push_state(debugger_state_t::break_s);
                 _header_window->mark_dirty();
                 _assembly_window->mark_dirty();
@@ -114,7 +114,7 @@ namespace basecode::debugger {
                     terp.reset();
                     pc = terp.register_file().r[vm::register_pc].qw;
 
-                    pop_state();
+                    unwind_state_stack();
 
                     _output_window->clear();
                     _stack_window->mark_dirty();
@@ -128,10 +128,15 @@ namespace basecode::debugger {
                     goto _exit;
                 }
                 case KEY_F(8): {
-                    if (state == debugger_state_t::break_s)
+                    if (current_state() == debugger_state_t::break_s) {
                         pop_state();
+                        if (current_state() == debugger_state_t::running) {
+                            pop_state();
+                            push_state(debugger_state_t::single_step);
+                        }
+                    }
 
-                    if (state == debugger_state_t::single_step) {
+                    if (current_state() == debugger_state_t::single_step) {
                         user_step = true;
                     } else {
                         // XXX: state error
@@ -139,7 +144,7 @@ namespace basecode::debugger {
                     break;
                 }
                 case KEY_F(9): {
-                    switch (state) {
+                    switch (current_state()) {
                         case debugger_state_t::ended:
                         case debugger_state_t::errored:
                         case debugger_state_t::running:
@@ -152,7 +157,14 @@ namespace basecode::debugger {
                             _assembly_window->move_to_address(pc);
                             break;
                         }
-                        case debugger_state_t::break_s:
+                        case debugger_state_t::break_s: {
+                            pop_state();
+                            if (current_state() == debugger_state_t::single_step) {
+                                pop_state();
+                                push_state(debugger_state_t::running);
+                            }
+                            break;
+                        }
                         case debugger_state_t::single_step: {
                             pop_state();
                             push_state(debugger_state_t::running);
@@ -163,7 +175,7 @@ namespace basecode::debugger {
                     break;
                 }
                 case CTRL('c'): {
-                    if (state == debugger_state_t::running)
+                    if (current_state() == debugger_state_t::running)
                         pop_state();
                     _stack_window->mark_dirty();
                     _header_window->mark_dirty();
@@ -181,7 +193,7 @@ namespace basecode::debugger {
                     break;
                 }
                 default: {
-                    switch (state) {
+                    switch (current_state()) {
                         case debugger_state_t::errored: {
                             _errors_window->update(*this);
                             _errors_window->mark_dirty();
@@ -202,9 +214,9 @@ namespace basecode::debugger {
 
             bool execute_next_step;
             if (user_step) {
-                execute_next_step = state == debugger_state_t::single_step;
+                execute_next_step = current_state() == debugger_state_t::single_step;
             } else {
-                execute_next_step = state == debugger_state_t::running;
+                execute_next_step = current_state() == debugger_state_t::running;
             };
 
             if (execute_next_step) {
@@ -216,8 +228,6 @@ namespace basecode::debugger {
                     _errors_window->visible(true);
                 } else {
                     pc = terp.register_file().r[vm::register_pc].qw;
-                    _output_window->process_buffers();
-
                     if (terp.has_exited()) {
                         pop_state();
                         push_state(debugger_state_t::ended);
@@ -231,6 +241,8 @@ namespace basecode::debugger {
                 _registers_window->mark_dirty();
             }
 
+            _output_window->process_buffers();
+
             draw_all();
             refresh();
         }
@@ -239,6 +251,11 @@ namespace basecode::debugger {
         _output_window->stop_redirect();
 
         return true;
+    }
+
+    void environment::unwind_state_stack() {
+        while (!_state_stack.empty())
+            _state_stack.pop();
     }
 
     breakpoint_t* environment::add_breakpoint(
@@ -393,6 +410,8 @@ namespace basecode::debugger {
             return true;
         }
 
+        common::result result {};
+
         push_state(debugger_state_t::command_execute);
         _header_window->mark_dirty();
         _command_window->mark_dirty();
@@ -405,8 +424,6 @@ namespace basecode::debugger {
             _command_window->mark_dirty();
             draw_all();
         });
-
-        common::result result {};
 
         std::string part {};
         std::vector<std::string> parts {};
@@ -430,14 +447,18 @@ namespace basecode::debugger {
                    ||  c == ';'
                    ||  c == '/'
                    ||  c == '%'
+                   ||  c == '-'
+                   ||  c == ','
                    ||  c == '@') {
                 part += c;
             } else if (c == '\"' || c == '\'') {
                 if (in_quotes) {
+                    part += '\'';
                     parts.emplace_back(part);
                     part.clear();
                     in_quotes = false;
                 } else {
+                    part += '\'';
                     in_quotes = true;
                 }
             }
@@ -457,7 +478,69 @@ namespace basecode::debugger {
         index = 1;
         for (const auto& kvp : cmd.command.prototype.params) {
             if (kvp.second.required && index < parts.size()) {
+                auto param = parts[index];
+                auto first_char = param[0];
+                auto upper_first_char = std::toupper(param[0]);
+                if (first_char == '@') {
+                    number_data_t data {};
+                    data.radix = 8;
+                    data.input = param;
+                    if (data.parse(data.value) != syntax::conversion_result_t::success)
+                        break;
+                    cmd.arguments.insert(std::make_pair(kvp.first, data));
+                } else if (first_char == '%') {
+                    number_data_t data {};
+                    data.radix = 2;
+                    data.input = param;
+                    if (data.parse(data.value) != syntax::conversion_result_t::success)
+                        return false;
+                    cmd.arguments.insert(std::make_pair(kvp.first, data));
+                } else if (first_char == '$') {
+                    number_data_t data {};
+                    data.radix = 16;
+                    data.input = param;
+                    if (data.parse(data.value) != syntax::conversion_result_t::success)
+                        return false;
+                    cmd.arguments.insert(std::make_pair(kvp.first, data));
+                } else if (isdigit(first_char)) {
+                    number_data_t data {};
+                    data.radix = 10;
+                    data.input = param;
+                    if (data.parse(data.value) != syntax::conversion_result_t::success)
+                        return false;
+                    cmd.arguments.insert(std::make_pair(kvp.first, data));
+                } else if (first_char == '\'') {
+                    string_data_t data {};
+                    data.input = param.substr(1, param.length() - 1);
+                    cmd.arguments.insert(std::make_pair(kvp.first, data));
+                } else if (first_char == '_') {
+                    symbol_data_t data {};
+                    data.input = param;
+                } else if (upper_first_char == 'I'
+                       || upper_first_char == 'F'
+                       || upper_first_char == 'S'
+                       || upper_first_char == 'P') {
+                    register_data_t data {};
+                    data.input = param;
 
+                    common::result r;
+                    if (!data.parse(r)) {
+                        symbol_data_t symbol_data {};
+                        symbol_data.input = param;
+                        cmd.arguments.insert(std::make_pair(kvp.first, symbol_data));
+                    } else {
+                        cmd.arguments.insert(std::make_pair(kvp.first, data));
+                    }
+                } else {
+                    result.add_message(
+                        "X000",
+                        fmt::format(
+                            "unrecognized parameter '{}' value: {}",
+                            kvp.second.name,
+                            param),
+                            true);
+                    break;
+                }
             } else {
                 result.add_message(
                     "X000",
@@ -465,37 +548,143 @@ namespace basecode::debugger {
                     true);
                 break;
             }
+            ++index;
         }
 
         if (result.is_failed()) {
             return false;
         }
 
-        return true;
+        auto handler_it = s_command_handlers.find(cmd.command.prototype.type);
+        if (handler_it == s_command_handlers.end()) {
+            result.add_message(
+                "X000",
+                fmt::format("no command handler: {}", cmd.command.name),
+                true);
+            return false;
+        }
+
+        return handler_it->second(this, result, cmd);
+    }
+
+    uint64_t environment::get_address(const command_argument_t* arg) const {
+        uint64_t address = 0;
+
+        switch (arg->type()) {
+            case command_parameter_type_t::symbol: {
+                auto sym = arg->data<symbol_data_t>();
+                if (sym != nullptr) {
+                    auto& assembler = _session.assembler();
+                    auto label = assembler.find_label(sym->input);
+                    if (label != nullptr)
+                        address = label->address();
+                }
+                break;
+            }
+            case command_parameter_type_t::number: {
+                auto number = arg->data<number_data_t>();
+                if (number != nullptr)
+                    address = number->value;
+                break;
+            }
+            case command_parameter_type_t::register_t: {
+                auto reg = arg->data<register_data_t>();
+                if (reg != nullptr)
+                    address = register_value(*reg);
+                break;
+            }
+            default: {
+                break;
+            }
+        }
+
+        return address;
+    }
+
+    uint64_t environment::register_value(const register_data_t& reg) const {
+        auto& terp = _session.terp();
+        auto register_file = terp.register_file();
+
+        uint64_t value = 0;
+        switch (reg.value) {
+            case vm::registers_t::pc: {
+                value = register_file.r[vm::register_pc].qw + reg.offset;
+                break;
+            }
+            case vm::registers_t::sp: {
+                value = register_file.r[vm::register_sp].qw + reg.offset;
+                break;
+            }
+            case vm::registers_t::fp: {
+                value = register_file.r[vm::register_fp].qw + reg.offset;
+                break;
+            }
+            case vm::registers_t::sr: {
+                value = register_file.r[vm::register_sr].qw + reg.offset;
+                break;
+            }
+            default: {
+                if (reg.type == vm::register_type_t::integer) {
+                    value = register_file.r[vm::register_integer_start + reg.value].qw + reg.offset;
+                } else {
+                    value = register_file.r[vm::register_float_start + reg.value].qw + reg.offset;
+                }
+                break;
+            }
+        }
+        return value;
     }
 
     bool environment::on_help(common::result& r, const command_t& command) {
-        return false;
+        return true;
     }
 
     bool environment::on_find(common::result& r, const command_t& command) {
-        return false;
+        return true;
     }
 
     bool environment::on_goto_line(common::result& r, const command_t& command) {
-        return false;
+        auto line_number_arg = command.arg("line_number");
+        if (line_number_arg != nullptr) {
+            auto line_number = line_number_arg->data<number_data_t>();
+            _assembly_window->move_to_line(line_number->value);
+        }
+        return true;
     }
 
     bool environment::on_show_memory(common::result& r, const command_t& command) {
-        return false;
+        auto address_arg = command.arg("address");
+        if (address_arg != nullptr) {
+            auto address = get_address(address_arg);
+            if (address != 0) {
+                _memory_window->address(address);
+            }
+        }
+        return true;
     }
 
     bool environment::on_read_memory(common::result& r, const command_t& command) {
-        return false;
+        auto address_arg = command.arg("address");
+        if (address_arg != nullptr) {
+            auto& terp = _session.terp();
+
+            auto address = get_address(address_arg);
+            if (address != 0) {
+                auto value = terp.read(command.command.size, address);
+
+                fmt::print("\n*read memory\n*-----------\n");
+                fmt::print("*${:016X}: ", address);
+                auto value_ptr = reinterpret_cast<uint8_t*>(&value);
+                for (size_t i = 0; i < vm::op_size_in_bytes(command.command.size); i++)
+                    fmt::print("{:02X} ", *value_ptr++);
+                fmt::print("\n");
+            }
+        }
+        return true;
     }
 
     bool environment::on_write_memory(common::result& r, const command_t& command) {
-        return false;
+        return true;
     }
 
 };

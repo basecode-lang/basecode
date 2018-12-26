@@ -56,11 +56,24 @@ namespace basecode::debugger {
 
         prototype = it->second;
 
-        if (prototype.sizes != command_prototype_t::size_flags_t::none
-        &&  parts.size() == 2) {
+        if (prototype.sizes != command_prototype_t::size_flags_t::none) {
+            if (parts.size() < 2) {
+                r.add_message(
+                    "X000",
+                    "command requires a size suffix",
+                    true);
+                return false;
+            }
             auto size_flag = prototype.suffix_to_size(parts[1]);
             if ((prototype.sizes & size_flag) != 0) {
                 switch (size_flag) {
+                    case command_prototype_t::size_flags_t::none: {
+                        r.add_message(
+                            "X000",
+                            "invalid size suffix for command",
+                            true);
+                        return false;
+                    }
                     case command_prototype_t::size_flags_t::byte: {
                         size = vm::op_sizes::byte;
                         break;
@@ -86,11 +99,13 @@ namespace basecode::debugger {
                 return false;
             }
         } else {
-            r.add_message(
-                "X000",
-                "command does not support size suffix",
-                true);
-            return false;
+            if (parts.size() == 2) {
+                r.add_message(
+                    "X000",
+                    "command does not support size suffix",
+                    true);
+                return false;
+            }
         }
 
         return true;
@@ -99,7 +114,86 @@ namespace basecode::debugger {
     ///////////////////////////////////////////////////////////////////////////
 
     bool register_data_t::parse(common::result& r) {
-        return false;
+        auto parts = common::string_to_list(input, ',');
+        if (parts.empty()) {
+            r.add_message(
+                "X000",
+                "invalid register",
+                true);
+            return false;
+        }
+
+        auto reg_name = parts[0];
+        if (reg_name.length() < 2) {
+            r.add_message(
+                "X000",
+                fmt::format("invalid register: {}", reg_name),
+                true);
+            return false;
+        }
+
+        std::string reg_offset;
+        if (parts.size() == 2) {
+            offset = std::atoi(parts[1].c_str());
+        }
+
+        auto reg_name_parts = common::string_to_list(reg_name, '.');
+        reg_name = reg_name_parts[0];
+        if (reg_name_parts.size() == 2) {
+            auto suffix = reg_name_parts[1];
+            if (suffix == "b")
+                size = vm::op_sizes::byte;
+            else if (suffix == "w")
+                size = vm::op_sizes::word;
+            else if (suffix == "dw")
+                size = vm::op_sizes::dword;
+            else if (suffix == "qw")
+                size = vm::op_sizes::qword;
+            else
+                size = vm::op_sizes::none;
+        }
+
+        auto first_char = std::toupper(reg_name[0]);
+        auto second_char = std::toupper(reg_name[1]);
+        if (first_char == 'I') {
+            auto number = std::atoi(reg_name.substr(1).c_str());
+            value = static_cast<vm::registers_t>(number);
+            type = vm::register_type_t::integer;
+        } else if (first_char == 'F') {
+            if (second_char == 'P') {
+                value = vm::registers_t::fp;
+                type = vm::register_type_t::integer;
+            } else if (isdigit(second_char)) {
+                auto number = std::atoi(reg_name.substr(1).c_str());
+                value = static_cast<vm::registers_t>(number);
+                type = vm::register_type_t::floating_point;
+            } else {
+                r.add_message(
+                    "X000",
+                    fmt::format("invalid register: {}", reg_name),
+                    true);
+                return false;
+            }
+        } else if (first_char == 'S') {
+            if (second_char == 'P') {
+                value = vm::registers_t::sp;
+                type = vm::register_type_t::integer;
+            } else if (second_char == 'R') {
+                value = vm::registers_t::sr;
+                type = vm::register_type_t::integer;
+            } else {
+                r.add_message(
+                    "X000",
+                    fmt::format("invalid register: {}", reg_name),
+                    true);
+                return false;
+            }
+        } else if (first_char == 'P' && second_char == 'C') {
+            value = vm::registers_t::pc;
+            type = vm::register_type_t::integer;
+        }
+
+        return true;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -118,27 +212,33 @@ namespace basecode::debugger {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    command_parameter_t::command_parameter_t() : _type(command_parameter_type_t::none) {
+    command_argument_t::command_argument_t() : _type(command_parameter_type_t::none) {
     }
 
-    command_parameter_t::command_parameter_t(const symbol_data_t& value) : _data(value),
-                                                                           _type(command_parameter_type_t::symbol) {
+    command_argument_t::command_argument_t(const symbol_data_t& value) : _data(value),
+                                                                         _type(command_parameter_type_t::symbol) {
     }
 
-    command_parameter_t::command_parameter_t(const string_data_t& value) : _data(value),
-                                                                           _type(command_parameter_type_t::string_t) {
+    command_argument_t::command_argument_t(const string_data_t& value) : _data(value),
+                                                                         _type(command_parameter_type_t::string_t) {
     }
 
-    command_parameter_t::command_parameter_t(const number_data_t& value) : _data(value),
-                                                                           _type(command_parameter_type_t::number) {
+    command_argument_t::command_argument_t(const number_data_t& value) : _data(value),
+                                                                         _type(command_parameter_type_t::number) {
     }
 
-    command_parameter_t::command_parameter_t(const register_data_t& value)  : _data(value),
-                                                                              _type(command_parameter_type_t::register_t) {
+    command_argument_t::command_argument_t(const register_data_t& value)  : _data(value),
+                                                                            _type(command_parameter_type_t::register_t) {
     }
 
-    command_parameter_type_t command_parameter_t::type() const {
+    command_parameter_type_t command_argument_t::type() const {
         return _type;
     }
 
+    const command_argument_t* command_t::arg(const std::string& name) const {
+        auto it = arguments.find(name);
+        if (it == arguments.end())
+            return nullptr;
+        return &it->second;
+    }
 };

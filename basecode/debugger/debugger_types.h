@@ -133,6 +133,7 @@ namespace basecode::debugger {
         syntax::conversion_result_t parse(uint64_t& value) const;
 
         uint8_t radix;
+        uint64_t value;
         std::string input;
         bool is_float = false;
     };
@@ -155,17 +156,17 @@ namespace basecode::debugger {
         vm::register_type_t type;
     };
 
-    struct command_parameter_t {
+    struct command_argument_t {
     public:
-        command_parameter_t();
+        command_argument_t();
 
-        explicit command_parameter_t(const symbol_data_t& value);
+        explicit command_argument_t(const symbol_data_t& value);
 
-        explicit command_parameter_t(const string_data_t& value);
+        explicit command_argument_t(const string_data_t& value);
 
-        explicit command_parameter_t(const number_data_t& value);
+        explicit command_argument_t(const number_data_t& value);
 
-        explicit command_parameter_t(const register_data_t& value);
+        explicit command_argument_t(const register_data_t& value);
 
         template <typename T>
         T* data() {
@@ -196,11 +197,13 @@ namespace basecode::debugger {
         command_parameter_type_t _type = command_parameter_type_t::none;
     };
 
-    using command_parameter_map_t = std::map<std::string, command_parameter_t>;
+    using command_argument_map_t = std::map<std::string, command_argument_t>;
 
     struct command_t {
+        const command_argument_t* arg(const std::string& name) const;
+
         command_data_t command {};
-        command_parameter_map_t params {};
+        command_argument_map_t arguments {};
     };
 
     using command_handler_function_t = std::function<bool (environment*, common::result&, const command_t&)>;
@@ -274,6 +277,28 @@ namespace basecode::debugger {
                                 command_parameter_type_t::symbol
                         }
                     }
+                }
+            }
+        },
+        {
+            "r",
+            {
+                command_type_t::read_memory,
+                command_prototype_t::size_flags_t::byte |
+                    command_prototype_t::size_flags_t::word |
+                    command_prototype_t::size_flags_t::dword |
+                    command_prototype_t::size_flags_t::qword,
+                {
+                    {
+                        "address",
+                        {
+                            true,
+                            "address",
+                            command_parameter_type_t::number |
+                            command_parameter_type_t::register_t |
+                            command_parameter_type_t::symbol
+                        }
+                    },
                 }
             }
         },

@@ -52,7 +52,13 @@ namespace basecode::debugger {
 
         void pop_state();
 
+        void unwind_state_stack();
+
         void push_state(debugger_state_t state);
+
+        uint64_t get_address(const command_argument_t* arg) const;
+
+        uint64_t register_value(const register_data_t& reg) const;
 
     private:
         static std::unordered_map<command_type_t, command_handler_function_t> s_command_handlers;
