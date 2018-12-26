@@ -118,15 +118,15 @@ namespace basecode::compiler {
 
         const address_register_map_t& address_registers() const;
 
+        syntax::ast_node_t* parse(common::source_file* source_file);
+
         common::id_t intern_string(compiler::string_literal* literal);
+
+        syntax::ast_node_t* parse(const boost::filesystem::path& path);
 
         void type_info_label(compiler::type* type, vm::label_ref_t* label);
 
         compiler::module* compile_module(common::source_file* source_file);
-
-        syntax::ast_node_shared_ptr parse(common::source_file* source_file);
-
-        syntax::ast_node_shared_ptr parse(const boost::filesystem::path& path);
 
         std::string intern_data_label(compiler::string_literal* literal) const;
 

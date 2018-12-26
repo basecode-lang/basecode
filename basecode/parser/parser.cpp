@@ -25,7 +25,7 @@ namespace basecode::syntax {
     static bool create_type_parameter_nodes(
             common::result& r,
             parser* parser,
-            const ast_node_shared_ptr& type_parameter_list) {
+            ast_node_t* type_parameter_list) {
         if (!parser->peek(token_types_t::less_than))
             return true;
 
@@ -75,7 +75,7 @@ namespace basecode::syntax {
             if (!parser->consume(token))
                 return count;
 
-            ast_node_shared_ptr comment_node;
+            ast_node_t* comment_node = nullptr;
             switch (token.type) {
                 case token_types_t::line_comment:
                     comment_node = parser->ast_builder()->line_comment_node(token);
@@ -87,7 +87,9 @@ namespace basecode::syntax {
                     break;
             }
 
-            target.push_back(comment_node);
+            if (comment_node != nullptr)
+                target.push_back(comment_node);
+
             ++count;
         }
 
@@ -96,10 +98,10 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    static ast_node_shared_ptr create_type_declaration_node(
+    static ast_node_t* create_type_declaration_node(
             common::result& r,
             parser* parser,
-            const ast_node_shared_ptr& lhs,
+            ast_node_t* lhs,
             token_t& token) {
         auto node = parser->ast_builder()->type_declaration_node();
         node->location.start(token.location.start());
@@ -122,8 +124,8 @@ namespace basecode::syntax {
     ///////////////////////////////////////////////////////////////////////////
 
     static void pairs_to_list(
-            const ast_node_shared_ptr& target,
-            const ast_node_shared_ptr& root) {
+            ast_node_t* target,
+            ast_node_t* root) {
         if (root == nullptr)
             return;
 
@@ -152,10 +154,10 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    static ast_node_shared_ptr create_module_expression_node(
+    static ast_node_t* create_module_expression_node(
             common::result& r,
             parser* parser,
-            const ast_node_shared_ptr& lhs,
+            ast_node_t* lhs,
             token_t& token) {
         auto module_expression_node = parser
             ->ast_builder()
@@ -178,12 +180,12 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    static ast_node_shared_ptr create_symbol_node(
+    static ast_node_t* create_symbol_node(
             common::result& r,
             parser* parser,
-            const ast_node_shared_ptr& lhs,
+            ast_node_t* lhs,
             token_t& token) {
-        ast_node_shared_ptr symbol_node;
+        ast_node_t* symbol_node;
         if (token.type == token_types_t::type_tagged_identifier)
             symbol_node = parser->ast_builder()->type_tagged_symbol_node();
         else
@@ -214,10 +216,10 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    static ast_node_shared_ptr create_expression_node(
+    static ast_node_t* create_expression_node(
             common::result& r,
             parser* parser,
-            const ast_node_shared_ptr& lhs,
+            ast_node_t* lhs,
             token_t& token) {
         auto node = parser->ast_builder()->expression_node();
         node->lhs = parser->parse_expression(r);
@@ -232,17 +234,21 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    static ast_node_shared_ptr create_assignment_node(
+    static ast_node_t* create_assignment_node(
             common::result& r,
             ast_node_types_t type,
             parser* parser,
-            const ast_node_shared_ptr& lhs,
+            ast_node_t* lhs,
             token_t& token) {
-        ast_node_shared_ptr assignment_node;
+        ast_node_t* assignment_node = nullptr;
         if (type == ast_node_types_t::assignment)
             assignment_node = parser->ast_builder()->assignment_node();
         else if (type == ast_node_types_t::constant_assignment)
             assignment_node = parser->ast_builder()->constant_assignment_node();
+        else {
+            // XXX: error case
+            return nullptr;
+        }
 
         pairs_to_list(assignment_node->lhs, lhs);
 
@@ -271,7 +277,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    ast_node_shared_ptr subscript_declaration_prefix_parser::parse(
+    ast_node_t* subscript_declaration_prefix_parser::parse(
             common::result& r,
             parser* parser,
             token_t& token) {
@@ -300,7 +306,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    ast_node_shared_ptr pointer_declaration_prefix_parser::parse(
+    ast_node_t* pointer_declaration_prefix_parser::parse(
             common::result& r,
             parser* parser,
             token_t& token) {
@@ -311,7 +317,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    ast_node_shared_ptr from_prefix_parser::parse(
+    ast_node_t* from_prefix_parser::parse(
             common::result& r,
             parser* parser,
             token_t& token) {
@@ -324,11 +330,13 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    ast_node_shared_ptr with_member_access_prefix_parser::parse(
+    ast_node_t* with_member_access_prefix_parser::parse(
             common::result& r,
             parser* parser,
             token_t& token) {
-        auto node = parser->ast_builder()->with_member_access_node();
+        auto ast_builder = parser->ast_builder();
+
+        auto node = ast_builder->with_member_access_node();
         node->location.start(token.location.start());
 
         token_t symbol_token;
@@ -336,7 +344,7 @@ namespace basecode::syntax {
         if (!parser->expect(r, symbol_token))
             return nullptr;
 
-        node->lhs = parser->ast_builder()->current_with()->lhs->clone();
+        node->lhs = ast_builder->clone(ast_builder->current_with()->lhs);
         node->rhs = create_symbol_node(r, parser, nullptr, symbol_token);
         node->location.end(node->lhs->location.end());
 
@@ -345,7 +353,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    ast_node_shared_ptr module_prefix_parser::parse(
+    ast_node_t* module_prefix_parser::parse(
             common::result& r,
             parser* parser,
             token_t& token) {
@@ -354,7 +362,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    ast_node_shared_ptr spread_prefix_parser::parse(
+    ast_node_t* spread_prefix_parser::parse(
             common::result& r,
             parser* parser,
             token_t& token) {
@@ -365,7 +373,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    ast_node_shared_ptr label_prefix_parser::parse(
+    ast_node_t* label_prefix_parser::parse(
             common::result& r,
             parser* parser,
             token_t& token) {
@@ -374,7 +382,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    ast_node_shared_ptr while_prefix_parser::parse(
+    ast_node_t* while_prefix_parser::parse(
             common::result& r,
             parser* parser,
             token_t& token) {
@@ -391,7 +399,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    ast_node_shared_ptr with_prefix_parser::parse(
+    ast_node_t* with_prefix_parser::parse(
             common::result& r,
             parser* parser,
             token_t& token) {
@@ -406,7 +414,7 @@ namespace basecode::syntax {
         if (lhs->type == ast_node_types_t::with_member_access
         &&  current_with != nullptr) {
             with_node->lhs = ast_builder->binary_operator_node(
-                current_with->lhs->clone(),
+                ast_builder->clone(current_with->lhs),
                 s_period_literal,
                 lhs->rhs);
         } else {
@@ -425,7 +433,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    ast_node_shared_ptr defer_prefix_parser::parse(
+    ast_node_t* defer_prefix_parser::parse(
             common::result& r,
             parser* parser,
             token_t& token) {
@@ -437,7 +445,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    ast_node_shared_ptr union_prefix_parser::parse(
+    ast_node_t* union_prefix_parser::parse(
             common::result& r,
             parser* parser,
             token_t& token) {
@@ -451,7 +459,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    ast_node_shared_ptr namespace_prefix_parser::parse(
+    ast_node_t* namespace_prefix_parser::parse(
             common::result& r,
             parser* parser,
             token_t& token) {
@@ -462,7 +470,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    ast_node_shared_ptr struct_prefix_parser::parse(
+    ast_node_t* struct_prefix_parser::parse(
             common::result& r,
             parser* parser,
             token_t& token) {
@@ -476,7 +484,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    ast_node_shared_ptr enum_prefix_parser::parse(
+    ast_node_t* enum_prefix_parser::parse(
             common::result& r,
             parser* parser,
             token_t& token) {
@@ -490,7 +498,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    ast_node_shared_ptr for_in_prefix_parser::parse(
+    ast_node_t* for_in_prefix_parser::parse(
             common::result& r,
             parser* parser,
             token_t& token) {
@@ -518,7 +526,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    ast_node_shared_ptr return_prefix_parser::parse(
+    ast_node_t* return_prefix_parser::parse(
             common::result& r,
             parser* parser,
             token_t& token) {
@@ -531,7 +539,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    ast_node_shared_ptr if_prefix_parser::parse(
+    ast_node_t* if_prefix_parser::parse(
             common::result& r,
             parser* parser,
             token_t& token) {
@@ -588,7 +596,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    ast_node_shared_ptr basic_block_prefix_parser::parse(
+    ast_node_t* basic_block_prefix_parser::parse(
             common::result& r,
             parser* parser,
             token_t& token) {
@@ -597,7 +605,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    ast_node_shared_ptr proc_expression_prefix_parser::parse(
+    ast_node_t* proc_expression_prefix_parser::parse(
             common::result& r,
             parser* parser,
             token_t& token) {
@@ -644,7 +652,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    ast_node_shared_ptr lambda_expression_prefix_parser::parse(
+    ast_node_t* lambda_expression_prefix_parser::parse(
             common::result& r,
             parser* parser,
             token_t& token) {
@@ -687,7 +695,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    ast_node_shared_ptr group_prefix_parser::parse(
+    ast_node_t* group_prefix_parser::parse(
             common::result& r,
             parser* parser,
             token_t& token) {
@@ -700,7 +708,7 @@ namespace basecode::syntax {
             precedence_t precedence) noexcept : _precedence(precedence) {
     }
 
-    ast_node_shared_ptr unary_operator_prefix_parser::parse(
+    ast_node_t* unary_operator_prefix_parser::parse(
             common::result& r,
             parser* parser,
             token_t& token) {
@@ -724,7 +732,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    ast_node_shared_ptr keyword_literal_prefix_parser::parse(
+    ast_node_t* keyword_literal_prefix_parser::parse(
             common::result& r,
             parser* parser,
             token_t& token) {
@@ -835,7 +843,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    ast_node_shared_ptr number_literal_prefix_parser::parse(
+    ast_node_t* number_literal_prefix_parser::parse(
             common::result& r,
             parser* parser,
             token_t& token) {
@@ -844,7 +852,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    ast_node_shared_ptr string_literal_prefix_parser::parse(
+    ast_node_t* string_literal_prefix_parser::parse(
             common::result& r,
             parser* parser,
             token_t& token) {
@@ -853,7 +861,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    ast_node_shared_ptr char_literal_prefix_parser::parse(
+    ast_node_t* char_literal_prefix_parser::parse(
             common::result& r,
             parser* parser,
             token_t& token) {
@@ -862,7 +870,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    ast_node_shared_ptr line_comment_prefix_parser::parse(
+    ast_node_t* line_comment_prefix_parser::parse(
             common::result& r,
             parser* parser,
             token_t& token) {
@@ -871,7 +879,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    ast_node_shared_ptr block_comment_prefix_parser::parse(
+    ast_node_t* block_comment_prefix_parser::parse(
             common::result& r,
             parser* parser,
             token_t& token) {
@@ -880,7 +888,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    ast_node_shared_ptr type_tagged_symbol_prefix_parser::parse(
+    ast_node_t* type_tagged_symbol_prefix_parser::parse(
             common::result& r,
             parser* parser,
             token_t& token) {
@@ -915,7 +923,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    ast_node_shared_ptr symbol_prefix_parser::parse(
+    ast_node_t* symbol_prefix_parser::parse(
             common::result& r,
             parser* parser,
             token_t& token) {
@@ -924,10 +932,10 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    ast_node_shared_ptr pointer_dereference_infix_parser::parse(
+    ast_node_t* pointer_dereference_infix_parser::parse(
             common::result& r,
             parser* parser,
-            const ast_node_shared_ptr& lhs,
+            ast_node_t* lhs,
             token_t& token) {
         auto node = parser->ast_builder()->unary_operator_node(token);
         node->rhs = lhs;
@@ -940,10 +948,10 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    ast_node_shared_ptr key_value_infix_parser::parse(
+    ast_node_t* key_value_infix_parser::parse(
             common::result& r,
             parser* parser,
-            const ast_node_shared_ptr& lhs,
+            ast_node_t* lhs,
             token_t& token) {
         auto assignment_node = parser->ast_builder()->assignment_node();
 
@@ -978,10 +986,10 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    ast_node_shared_ptr comma_infix_parser::parse(
+    ast_node_t* comma_infix_parser::parse(
             common::result& r,
             parser* parser,
-            const ast_node_shared_ptr& lhs,
+            ast_node_t* lhs,
             token_t& token) {
         auto pair_node = parser->ast_builder()->pair_node();
         ast_node_list comments {};
@@ -1008,10 +1016,10 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    ast_node_shared_ptr proc_call_infix_parser::parse(
+    ast_node_t* proc_call_infix_parser::parse(
             common::result& r,
             parser* parser,
-            const ast_node_shared_ptr& lhs,
+            ast_node_t* lhs,
             token_t& token) {
         auto node = parser->ast_builder()->proc_call_node();
         node->location.start(lhs->location.start());
@@ -1040,10 +1048,10 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    ast_node_shared_ptr type_declaration_infix_parser::parse(
+    ast_node_t* type_declaration_infix_parser::parse(
             common::result& r,
             parser* parser,
-            const ast_node_shared_ptr& lhs,
+            ast_node_t* lhs,
             token_t& token) {
         return create_type_declaration_node(r, parser, lhs, token);
     }
@@ -1062,10 +1070,10 @@ namespace basecode::syntax {
                                     _is_right_associative(is_right_associative) {
     }
 
-    ast_node_shared_ptr binary_operator_infix_parser::parse(
+    ast_node_t* binary_operator_infix_parser::parse(
             common::result& r,
             parser* parser,
-            const ast_node_shared_ptr& lhs,
+            ast_node_t* lhs,
             token_t& token) {
         auto associative_precedence = static_cast<precedence_t>(
             static_cast<uint8_t>(_precedence) - (_is_right_associative ? 1 : 0));
@@ -1103,10 +1111,10 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    ast_node_shared_ptr constant_assignment_infix_parser::parse(
+    ast_node_t* constant_assignment_infix_parser::parse(
             common::result& r,
             parser* parser,
-            const ast_node_shared_ptr& lhs,
+            ast_node_t* lhs,
             token_t& token) {
         return create_assignment_node(
             r,
@@ -1122,10 +1130,10 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    ast_node_shared_ptr assignment_infix_parser::parse(
+    ast_node_t* assignment_infix_parser::parse(
             common::result& r,
             parser* parser,
-            const ast_node_shared_ptr& lhs,
+            ast_node_t* lhs,
             token_t& token) {
         return create_assignment_node(
             r,
@@ -1141,7 +1149,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    ast_node_shared_ptr raw_block_prefix_parser::parse(
+    ast_node_t* raw_block_prefix_parser::parse(
             common::result& r,
             parser* parser,
             token_t& token) {
@@ -1150,7 +1158,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    ast_node_shared_ptr directive_prefix_parser::parse(
+    ast_node_t* directive_prefix_parser::parse(
             common::result& r,
             parser* parser,
             token_t& token) {
@@ -1203,7 +1211,7 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    ast_node_shared_ptr attribute_prefix_parser::parse(
+    ast_node_t* attribute_prefix_parser::parse(
             common::result& r,
             parser* parser,
             token_t& token) {
@@ -1218,12 +1226,12 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    ast_node_shared_ptr array_subscript_infix_parser::parse(
+    ast_node_t* array_subscript_infix_parser::parse(
             common::result& r,
             parser* parser,
-            const ast_node_shared_ptr& lhs,
+            ast_node_t* lhs,
             token_t& token) {
-        ast_node_shared_ptr subscript_node = parser->ast_builder()->subscript_operator_node();
+        ast_node_t* subscript_node = parser->ast_builder()->subscript_operator_node();
         if (parser->peek(token_types_t::right_square_bracket)) {
             parser->error(
                 r,
@@ -1272,7 +1280,7 @@ namespace basecode::syntax {
 
     void parser::write_ast_graph(
             const boost::filesystem::path& path,
-            const ast_node_shared_ptr& program_node) {
+            ast_node_t* program_node) {
         auto close_required = false;
         FILE* ast_output_file = stdout;
         if (!path.empty()) {
@@ -1342,7 +1350,7 @@ namespace basecode::syntax {
         return &_ast_builder;
     }
 
-    ast_node_shared_ptr parser::parse_expression(
+    ast_node_t* parser::parse_expression(
             common::result& r,
             precedence_t precedence) {
         token_t token;
@@ -1395,7 +1403,7 @@ namespace basecode::syntax {
         return lhs;
     }
 
-    ast_node_shared_ptr parser::expect_expression(
+    ast_node_t* parser::expect_expression(
             common::result& r,
             ast_node_types_t expected_type,
             precedence_t precedence) {
@@ -1418,7 +1426,7 @@ namespace basecode::syntax {
         return node;
     }
 
-    ast_node_shared_ptr parser::parse(common::result& r) {
+    ast_node_t* parser::parse(common::result& r) {
         token_t empty_token {};
         return parse_scope(r, empty_token);
     }
@@ -1447,7 +1455,7 @@ namespace basecode::syntax {
         return true;
     }
 
-    ast_node_shared_ptr parser::parse_scope(
+    ast_node_t* parser::parse_scope(
             common::result& r,
             token_t& token) {
         auto scope = _ast_builder.begin_scope();
@@ -1487,7 +1495,7 @@ namespace basecode::syntax {
         return _ast_builder.end_scope();
     }
 
-    ast_node_shared_ptr parser::parse_statement(common::result& r) {
+    ast_node_t* parser::parse_statement(common::result& r) {
         auto statement_node = _ast_builder.statement_node();
 
         while (true) {

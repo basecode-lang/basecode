@@ -12,7 +12,7 @@
 #pragma once
 
 #include <string>
-#include <stdio.h>
+#include <cstdio>
 #include "ast.h"
 
 namespace basecode::syntax {
@@ -20,19 +20,19 @@ namespace basecode::syntax {
     class ast_formatter {
     public:
         ast_formatter(
-            const ast_node_shared_ptr& root,
+            ast_node_t* root,
             FILE* file);
 
         void format(const std::string& title);
 
     private:
-        void format_node(const ast_node_shared_ptr& node);
+        void format_node(const ast_node_t* node);
 
-        std::string get_vertex_name(const ast_node_shared_ptr& node) const;
+        std::string get_vertex_name(const ast_node_t* node) const;
 
     private:
         FILE* _file = nullptr;
-        ast_node_shared_ptr _root;
+        ast_node_t* _root = nullptr;
     };
 
 }

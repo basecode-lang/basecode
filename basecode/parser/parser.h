@@ -59,10 +59,10 @@ namespace basecode::syntax {
     public:
         virtual ~infix_parser() = default;
 
-        virtual ast_node_shared_ptr parse(
+        virtual ast_node_t* parse(
             common::result& r,
             parser* parser,
-            const ast_node_shared_ptr& lhs,
+            ast_node_t* lhs,
             token_t& token) = 0;
 
         virtual precedence_t precedence() const = 0;
@@ -74,10 +74,10 @@ namespace basecode::syntax {
     public:
         key_value_infix_parser() = default;
 
-        ast_node_shared_ptr parse(
+        ast_node_t* parse(
             common::result& r,
             parser* parser,
-            const ast_node_shared_ptr& lhs,
+            ast_node_t* lhs,
             token_t& token) override;
 
         precedence_t precedence() const override;
@@ -89,10 +89,10 @@ namespace basecode::syntax {
     public:
         comma_infix_parser() = default;
 
-        ast_node_shared_ptr parse(
+        ast_node_t* parse(
             common::result& r,
             parser* parser,
-            const ast_node_shared_ptr& lhs,
+            ast_node_t* lhs,
             token_t& token) override;
 
         precedence_t precedence() const override;
@@ -104,10 +104,10 @@ namespace basecode::syntax {
     public:
         type_declaration_infix_parser() = default;
 
-        ast_node_shared_ptr parse(
+        ast_node_t* parse(
             common::result& r,
             parser* parser,
-            const ast_node_shared_ptr& lhs,
+            ast_node_t* lhs,
             token_t& token) override;
 
         precedence_t precedence() const override;
@@ -119,10 +119,10 @@ namespace basecode::syntax {
     public:
         pointer_dereference_infix_parser() = default;
 
-        ast_node_shared_ptr parse(
+        ast_node_t* parse(
             common::result& r,
             parser* parser,
-            const ast_node_shared_ptr& lhs,
+            ast_node_t* lhs,
             token_t& token) override;
 
         precedence_t precedence() const override;
@@ -134,10 +134,10 @@ namespace basecode::syntax {
     public:
         proc_call_infix_parser() = default;
 
-        ast_node_shared_ptr parse(
+        ast_node_t* parse(
             common::result& r,
             parser* parser,
-            const ast_node_shared_ptr& lhs,
+            ast_node_t* lhs,
             token_t& token) override;
 
         precedence_t precedence() const override;
@@ -149,10 +149,10 @@ namespace basecode::syntax {
     public:
         array_subscript_infix_parser() = default;
 
-        ast_node_shared_ptr parse(
+        ast_node_t* parse(
             common::result& r,
             parser* parser,
-            const ast_node_shared_ptr& lhs,
+            ast_node_t* lhs,
             token_t& token) override;
 
         precedence_t precedence() const override;
@@ -167,10 +167,10 @@ namespace basecode::syntax {
             bool is_right_associative,
             bool with_assignment = false) noexcept;
 
-        ast_node_shared_ptr parse(
+        ast_node_t* parse(
             common::result& r,
             parser* parser,
-            const ast_node_shared_ptr& lhs,
+            ast_node_t* lhs,
             token_t& token) override;
 
         precedence_t precedence() const override;
@@ -187,10 +187,10 @@ namespace basecode::syntax {
     public:
         constant_assignment_infix_parser() = default;
 
-        ast_node_shared_ptr parse(
+        ast_node_t* parse(
             common::result& r,
             parser* parser,
-            const ast_node_shared_ptr& lhs,
+            ast_node_t* lhs,
             token_t& token) override;
 
         void precedence(precedence_t value) {
@@ -209,10 +209,10 @@ namespace basecode::syntax {
     public:
         assignment_infix_parser() = default;
 
-        ast_node_shared_ptr parse(
+        ast_node_t* parse(
             common::result& r,
             parser* parser,
-            const ast_node_shared_ptr& lhs,
+            ast_node_t* lhs,
             token_t& token) override;
 
         precedence_t precedence() const override;
@@ -224,7 +224,7 @@ namespace basecode::syntax {
     public:
         virtual ~prefix_parser() = default;
 
-        virtual ast_node_shared_ptr parse(
+        virtual ast_node_t* parse(
             common::result& r,
             parser* parser,
             token_t& token) = 0;
@@ -236,7 +236,7 @@ namespace basecode::syntax {
     public:
         subscript_declaration_prefix_parser() = default;
 
-        ast_node_shared_ptr parse(
+        ast_node_t* parse(
             common::result& r,
             parser* parser,
             token_t& token) override;
@@ -248,7 +248,7 @@ namespace basecode::syntax {
     public:
         pointer_declaration_prefix_parser() = default;
 
-        ast_node_shared_ptr parse(
+        ast_node_t* parse(
             common::result& r,
             parser* parser,
             token_t& token) override;
@@ -260,7 +260,7 @@ namespace basecode::syntax {
     public:
         with_member_access_prefix_parser() = default;
 
-        ast_node_shared_ptr parse(
+        ast_node_t* parse(
             common::result& r,
             parser* parser,
             token_t& token) override;
@@ -272,7 +272,7 @@ namespace basecode::syntax {
     public:
         spread_prefix_parser() = default;
 
-        ast_node_shared_ptr parse(
+        ast_node_t* parse(
             common::result& r,
             parser* parser,
             token_t& token) override;
@@ -284,7 +284,7 @@ namespace basecode::syntax {
     public:
         label_prefix_parser() = default;
 
-        ast_node_shared_ptr parse(
+        ast_node_t* parse(
             common::result& r,
             parser* parser,
             token_t& token) override;
@@ -296,7 +296,7 @@ namespace basecode::syntax {
     public:
         with_prefix_parser() = default;
 
-        ast_node_shared_ptr parse(
+        ast_node_t* parse(
             common::result& r,
             parser* parser,
             token_t& token) override;
@@ -308,7 +308,7 @@ namespace basecode::syntax {
     public:
         while_prefix_parser() = default;
 
-        ast_node_shared_ptr parse(
+        ast_node_t* parse(
             common::result& r,
             parser* parser,
             token_t& token) override;
@@ -320,7 +320,7 @@ namespace basecode::syntax {
     public:
         defer_prefix_parser() = default;
 
-        ast_node_shared_ptr parse(
+        ast_node_t* parse(
             common::result& r,
             parser* parser,
             token_t& token) override;
@@ -332,7 +332,7 @@ namespace basecode::syntax {
     public:
         union_prefix_parser() = default;
 
-        ast_node_shared_ptr parse(
+        ast_node_t* parse(
             common::result& r,
             parser* parser,
             token_t& token) override;
@@ -344,7 +344,7 @@ namespace basecode::syntax {
     public:
         namespace_prefix_parser() = default;
 
-        ast_node_shared_ptr parse(
+        ast_node_t* parse(
             common::result& r,
             parser* parser,
             token_t& token) override;
@@ -356,7 +356,7 @@ namespace basecode::syntax {
     public:
         struct_prefix_parser() = default;
 
-        ast_node_shared_ptr parse(
+        ast_node_t* parse(
             common::result& r,
             parser* parser,
             token_t& token) override;
@@ -368,7 +368,7 @@ namespace basecode::syntax {
     public:
         enum_prefix_parser() = default;
 
-        ast_node_shared_ptr parse(
+        ast_node_t* parse(
             common::result& r,
             parser* parser,
             token_t& token) override;
@@ -380,7 +380,7 @@ namespace basecode::syntax {
     public:
         for_in_prefix_parser() = default;
 
-        ast_node_shared_ptr parse(
+        ast_node_t* parse(
             common::result& r,
             parser* parser,
             token_t& token) override;
@@ -392,7 +392,7 @@ namespace basecode::syntax {
     public:
         return_prefix_parser() = default;
 
-        ast_node_shared_ptr parse(
+        ast_node_t* parse(
             common::result& r,
             parser* parser,
             token_t& token) override;
@@ -404,7 +404,7 @@ namespace basecode::syntax {
     public:
         if_prefix_parser() = default;
 
-        ast_node_shared_ptr parse(
+        ast_node_t* parse(
             common::result& r,
             parser* parser,
             token_t& token) override;
@@ -416,7 +416,7 @@ namespace basecode::syntax {
     public:
         basic_block_prefix_parser() = default;
 
-        ast_node_shared_ptr parse(
+        ast_node_t* parse(
             common::result& r,
             parser* parser,
             token_t& token) override;
@@ -428,7 +428,7 @@ namespace basecode::syntax {
     public:
         group_prefix_parser() = default;
 
-        ast_node_shared_ptr parse(
+        ast_node_t* parse(
             common::result& r,
             parser* parser,
             token_t& token) override;
@@ -440,7 +440,7 @@ namespace basecode::syntax {
     public:
         proc_expression_prefix_parser() = default;
 
-        ast_node_shared_ptr parse(
+        ast_node_t* parse(
             common::result& r,
             parser* parser,
             token_t& token) override;
@@ -452,7 +452,7 @@ namespace basecode::syntax {
     public:
         lambda_expression_prefix_parser() = default;
 
-        ast_node_shared_ptr parse(
+        ast_node_t* parse(
             common::result& r,
             parser* parser,
             token_t& token) override;
@@ -464,7 +464,7 @@ namespace basecode::syntax {
     public:
         explicit unary_operator_prefix_parser(precedence_t precedence) noexcept;
 
-        ast_node_shared_ptr parse(
+        ast_node_t* parse(
             common::result& r,
             parser* parser,
             token_t& token) override;
@@ -479,7 +479,7 @@ namespace basecode::syntax {
     public:
         keyword_literal_prefix_parser() = default;
 
-        ast_node_shared_ptr parse(
+        ast_node_t* parse(
             common::result& r,
             parser* parser,
             token_t& token) override;
@@ -491,7 +491,7 @@ namespace basecode::syntax {
     public:
         number_literal_prefix_parser() = default;
 
-        ast_node_shared_ptr parse(
+        ast_node_t* parse(
             common::result& r,
             parser* parser,
             token_t& token) override;
@@ -503,7 +503,7 @@ namespace basecode::syntax {
     public:
         string_literal_prefix_parser() = default;
 
-        ast_node_shared_ptr parse(
+        ast_node_t* parse(
             common::result& r,
             parser* parser,
             token_t& token) override;
@@ -515,7 +515,7 @@ namespace basecode::syntax {
     public:
         char_literal_prefix_parser() = default;
 
-        ast_node_shared_ptr parse(
+        ast_node_t* parse(
             common::result& r,
             parser* parser,
             token_t& token) override;
@@ -527,7 +527,7 @@ namespace basecode::syntax {
     public:
         line_comment_prefix_parser() = default;
 
-        ast_node_shared_ptr parse(
+        ast_node_t* parse(
             common::result& r,
             parser* parser,
             token_t& token) override;
@@ -539,7 +539,7 @@ namespace basecode::syntax {
     public:
         block_comment_prefix_parser() = default;
 
-        ast_node_shared_ptr parse(
+        ast_node_t* parse(
             common::result& r,
             parser* parser,
             token_t& token) override;
@@ -551,7 +551,7 @@ namespace basecode::syntax {
     public:
         type_tagged_symbol_prefix_parser() = default;
 
-        ast_node_shared_ptr parse(
+        ast_node_t* parse(
             common::result& r,
             parser* parser,
             token_t& token) override;
@@ -563,7 +563,7 @@ namespace basecode::syntax {
     public:
         symbol_prefix_parser() = default;
 
-        ast_node_shared_ptr parse(
+        ast_node_t* parse(
             common::result& r,
             parser* parser,
             token_t& token) override;
@@ -575,7 +575,7 @@ namespace basecode::syntax {
     public:
         from_prefix_parser() = default;
 
-        ast_node_shared_ptr parse(
+        ast_node_t* parse(
             common::result& r,
             parser* parser,
             token_t& token) override;
@@ -587,7 +587,7 @@ namespace basecode::syntax {
     public:
         module_prefix_parser() = default;
 
-        ast_node_shared_ptr parse(
+        ast_node_t* parse(
             common::result& r,
             parser* parser,
             token_t& token) override;
@@ -599,7 +599,7 @@ namespace basecode::syntax {
     public:
         raw_block_prefix_parser() = default;
 
-        ast_node_shared_ptr parse(
+        ast_node_t* parse(
             common::result& r,
             parser* parser,
             token_t& token) override;
@@ -611,7 +611,7 @@ namespace basecode::syntax {
     public:
         directive_prefix_parser() = default;
 
-        ast_node_shared_ptr parse(
+        ast_node_t* parse(
             common::result& r,
             parser* parser,
             token_t& token) override;
@@ -623,7 +623,7 @@ namespace basecode::syntax {
     public:
         attribute_prefix_parser() = default;
 
-        ast_node_shared_ptr parse(
+        ast_node_t* parse(
             common::result& r,
             parser* parser,
             token_t& token) override;
@@ -647,7 +647,7 @@ namespace basecode::syntax {
 
         void write_ast_graph(
             const boost::filesystem::path& path,
-            const ast_node_shared_ptr& program_node);
+            ast_node_t* program_node);
 
         bool consume(token_t& token);
 
@@ -657,27 +657,27 @@ namespace basecode::syntax {
 
         bool look_ahead(size_t count);
 
-        ast_node_shared_ptr parse_scope(
+        ast_node_t* parse_scope(
             common::result& r,
             token_t& token);
 
         syntax::ast_builder* ast_builder();
 
-        ast_node_shared_ptr parse_expression(
+        ast_node_t* parse_expression(
             common::result& r,
             precedence_t precedence = precedence_t::lowest);
 
-        ast_node_shared_ptr expect_expression(
+        ast_node_t* expect_expression(
             common::result& r,
             ast_node_types_t expected_type,
             precedence_t precedence = precedence_t::lowest);
 
-        ast_node_shared_ptr parse(common::result& r);
+        ast_node_t* parse(common::result& r);
 
         bool expect(common::result& r, token_t& token);
 
     protected:
-        ast_node_shared_ptr parse_statement(common::result& r);
+        ast_node_t* parse_statement(common::result& r);
 
     private:
         precedence_t current_infix_precedence();

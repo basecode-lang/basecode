@@ -834,8 +834,7 @@ namespace basecode::compiler {
         compiler::module* module = nullptr;
         auto module_node = parse(source_file);
         if (module_node != nullptr) {
-            auto node = module_node.get();
-            module = dynamic_cast<compiler::module*>(_ast_evaluator.evaluate(node));
+            module = dynamic_cast<compiler::module*>(_ast_evaluator.evaluate(module_node));
             if (module != nullptr) {
                 module->source_file(source_file);
                 auto current_module = _scope_manager.current_module();
@@ -846,7 +845,7 @@ namespace basecode::compiler {
                 module->is_root(is_root);
                 if (is_root)
                     _program.module(module);
-                if (!_ast_evaluator.compile_module(node,module))
+                if (!_ast_evaluator.compile_module(module_node, module))
                     return nullptr;
             }
         }
@@ -860,7 +859,7 @@ namespace basecode::compiler {
         _type_info_labels.insert(std::make_pair(type->id(), label));
     }
 
-    syntax::ast_node_shared_ptr session::parse(common::source_file* source_file) {
+    syntax::ast_node_t* session::parse(common::source_file* source_file) {
         if (source_file->empty()) {
             if (!source_file->load(_result))
                 return nullptr;
@@ -889,7 +888,7 @@ namespace basecode::compiler {
         return module_node;
     }
 
-    syntax::ast_node_shared_ptr session::parse(const boost::filesystem::path& path) {
+    syntax::ast_node_t* session::parse(const boost::filesystem::path& path) {
         auto source_file = find_source_file(path);
         if (source_file == nullptr) {
             source_file = add_source_file(path);

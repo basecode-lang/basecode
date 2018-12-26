@@ -90,7 +90,7 @@ namespace basecode::compiler {
         for (const auto& type_node : node->lhs->children) {
             auto type_ref = dynamic_cast<compiler::type_reference*>(_session
                 .evaluator()
-                .evaluate_in_scope(type_node.get(), active_scope));
+                .evaluate_in_scope(type_node, active_scope));
             type_params.emplace_back(type_ref);
         }
 

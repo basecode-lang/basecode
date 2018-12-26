@@ -17,7 +17,7 @@
 namespace basecode::syntax {
 
     ast_formatter::ast_formatter(
-            const ast_node_shared_ptr& root,
+            ast_node_t* root,
             FILE* file) : _file(file),
                           _root(root) {
     }
@@ -31,7 +31,7 @@ namespace basecode::syntax {
         fmt::print(_file, "}}\n");
     }
 
-    void ast_formatter::format_node(const ast_node_shared_ptr& node) {
+    void ast_formatter::format_node(const ast_node_t* node) {
         if (node == nullptr)
             return;
 
@@ -156,7 +156,7 @@ namespace basecode::syntax {
         }
     }
 
-    std::string ast_formatter::get_vertex_name(const ast_node_shared_ptr& node) const {
+    std::string ast_formatter::get_vertex_name(const ast_node_t* node) const {
         return fmt::format("{}{}", node->name(), node->id);
     }
 
