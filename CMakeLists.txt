@@ -61,6 +61,9 @@ include_directories(ext/utf8proc-2.2.0)
 # ya_getopt
 include_directories(ext/ya_getopt-1.0.0)
 
+# short_alloc
+include_directories(ext/short_alloc)
+
 # ncurses
 set(CURSES_NEED_NCURSES true)
 find_package(Curses)
