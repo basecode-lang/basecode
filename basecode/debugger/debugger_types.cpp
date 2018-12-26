@@ -9,6 +9,8 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <fmt/format.h>
+#include <common/string_support.h>
 #include "debugger_types.h"
 
 namespace basecode::debugger {
@@ -32,7 +34,66 @@ namespace basecode::debugger {
     ///////////////////////////////////////////////////////////////////////////
 
     bool command_data_t::parse(common::result& r) {
-        return false;
+        auto parts = common::string_to_list(name, '.');
+        if (parts.empty()) {
+            r.add_message(
+                "X000",
+                "invalid command",
+                true);
+            return false;
+        }
+
+        name = parts[0];
+
+        auto it = s_commands.find(name);
+        if (it == s_commands.end()) {
+            r.add_message(
+                "X000",
+                fmt::format("unknown command: {}", name),
+                true);
+            return false;
+        }
+
+        prototype = it->second;
+
+        if (prototype.sizes != command_prototype_t::size_flags_t::none
+        &&  parts.size() == 2) {
+            auto size_flag = prototype.suffix_to_size(parts[1]);
+            if ((prototype.sizes & size_flag) != 0) {
+                switch (size_flag) {
+                    case command_prototype_t::size_flags_t::byte: {
+                        size = vm::op_sizes::byte;
+                        break;
+                    }
+                    case command_prototype_t::size_flags_t::word: {
+                        size = vm::op_sizes::word;
+                        break;
+                    }
+                    case command_prototype_t::size_flags_t::dword: {
+                        size = vm::op_sizes::dword;
+                        break;
+                    }
+                    case command_prototype_t::size_flags_t::qword: {
+                        size = vm::op_sizes::qword;
+                        break;
+                    }
+                }
+            } else {
+                r.add_message(
+                    "X000",
+                    "invalid size suffix for command",
+                    true);
+                return false;
+            }
+        } else {
+            r.add_message(
+                "X000",
+                "command does not support size suffix",
+                true);
+            return false;
+        }
+
+        return true;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -44,13 +105,13 @@ namespace basecode::debugger {
     ///////////////////////////////////////////////////////////////////////////
 
     command_prototype_t::size_flags_t command_prototype_t::suffix_to_size(const std::string& suffix) {
-        if (suffix == ".b")
+        if (suffix == "b")
             return size_flags_t::byte;
-        else if (suffix == ".w")
+        else if (suffix == "w")
             return size_flags_t::word;
-        else if (suffix == ".dw")
+        else if (suffix == "dw")
             return size_flags_t::dword;
-        else if (suffix == ".qw")
+        else if (suffix == "qw")
             return size_flags_t::qword;
         return size_flags_t::none;
     }

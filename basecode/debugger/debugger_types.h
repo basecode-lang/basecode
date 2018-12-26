@@ -123,8 +123,8 @@ namespace basecode::debugger {
         bool parse(common::result& r);
 
         std::string name;
+        command_prototype_t prototype {};
         vm::op_sizes size = vm::op_sizes::none;
-        command_type_t type = command_type_t::unknown;
     };
 
     struct number_data_t {
@@ -202,6 +202,8 @@ namespace basecode::debugger {
         command_data_t command {};
         command_parameter_map_t params {};
     };
+
+    using command_handler_function_t = std::function<bool (environment*, common::result&, const command_t&)>;
 
     inline static std::unordered_map<std::string, command_prototype_t> s_commands = {
         {

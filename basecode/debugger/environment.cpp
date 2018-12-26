@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <common/defer.h>
 #include <parser/token.h>
 #include <compiler/session.h>
 #include <common/string_support.h>
@@ -24,6 +25,17 @@
 #include "registers_window.h"
 
 namespace basecode::debugger {
+
+    std::unordered_map<command_type_t, command_handler_function_t> environment::s_command_handlers = {
+        {command_type_t::help,          std::bind(&environment::on_help, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {command_type_t::find,          std::bind(&environment::on_find, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {command_type_t::goto_line,     std::bind(&environment::on_goto_line, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {command_type_t::show_memory,   std::bind(&environment::on_show_memory, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {command_type_t::read_memory,   std::bind(&environment::on_read_memory, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {command_type_t::write_memory,  std::bind(&environment::on_write_memory, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+    };
+
+    ///////////////////////////////////////////////////////////////////////////
 
     environment::environment(compiler::session& session) :_session(session) {
     }
@@ -382,18 +394,108 @@ namespace basecode::debugger {
         }
 
         push_state(debugger_state_t::command_execute);
-
         _header_window->mark_dirty();
         _command_window->mark_dirty();
         draw_all();
 
-        pop_state();
-        _command_window->reset();
-        _header_window->mark_dirty();
-        _command_window->mark_dirty();
-        draw_all();
+        defer({
+            pop_state();
+            _command_window->reset();
+            _header_window->mark_dirty();
+            _command_window->mark_dirty();
+            draw_all();
+        });
+
+        common::result result {};
+
+        std::string part {};
+        std::vector<std::string> parts {};
+
+        size_t index = 0;
+        auto in_quotes = false;
+        while (index < input.size()) {
+            auto c = input[index];
+            if (isspace(c)) {
+                if (!in_quotes) {
+                    parts.emplace_back(part);
+                    part.clear();
+                } else {
+                    part += " ";
+                }
+            } else if (isalnum(c)
+                   ||  c == '_'
+                   ||  c == '$'
+                   ||  c == '.'
+                   ||  c == ':'
+                   ||  c == ';'
+                   ||  c == '/'
+                   ||  c == '%'
+                   ||  c == '@') {
+                part += c;
+            } else if (c == '\"' || c == '\'') {
+                if (in_quotes) {
+                    parts.emplace_back(part);
+                    part.clear();
+                    in_quotes = false;
+                } else {
+                    in_quotes = true;
+                }
+            }
+            ++index;
+        }
+        if (!part.empty())
+            parts.emplace_back(part);
+
+        command_data_t cmd_data {};
+        cmd_data.name = parts[0];
+        if (!cmd_data.parse(result))
+            return false;
+
+        command_t cmd {};
+        cmd.command = cmd_data;
+
+        index = 1;
+        for (const auto& kvp : cmd.command.prototype.params) {
+            if (kvp.second.required && index < parts.size()) {
+
+            } else {
+                result.add_message(
+                    "X000",
+                    fmt::format("missing required parameter: {}", kvp.second.name),
+                    true);
+                break;
+            }
+        }
+
+        if (result.is_failed()) {
+            return false;
+        }
 
         return true;
+    }
+
+    bool environment::on_help(common::result& r, const command_t& command) {
+        return false;
+    }
+
+    bool environment::on_find(common::result& r, const command_t& command) {
+        return false;
+    }
+
+    bool environment::on_goto_line(common::result& r, const command_t& command) {
+        return false;
+    }
+
+    bool environment::on_show_memory(common::result& r, const command_t& command) {
+        return false;
+    }
+
+    bool environment::on_read_memory(common::result& r, const command_t& command) {
+        return false;
+    }
+
+    bool environment::on_write_memory(common::result& r, const command_t& command) {
+        return false;
     }
 
 };

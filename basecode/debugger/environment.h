@@ -55,6 +55,21 @@ namespace basecode::debugger {
         void push_state(debugger_state_t state);
 
     private:
+        static std::unordered_map<command_type_t, command_handler_function_t> s_command_handlers;
+
+        bool on_help(common::result& r, const command_t& command);
+
+        bool on_find(common::result& r, const command_t& command);
+
+        bool on_goto_line(common::result& r, const command_t& command);
+
+        bool on_show_memory(common::result& r, const command_t& command);
+
+        bool on_read_memory(common::result& r, const command_t& command);
+
+        bool on_write_memory(common::result& r, const command_t& command);
+
+    private:
         int _ch;
         compiler::session& _session;
         window* _main_window = nullptr;
