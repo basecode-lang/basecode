@@ -12,6 +12,7 @@ TASKS
             return x + y;
         };
 
+- NEW: consolidate all errors into one class along with constants for quick lookup.
 - NEW: finish terp::jump_to_subroutine
 - NEW: add terp trap for putc/getc for any file handle
 - NEW: implement mechanism to identify the type of symbol for inline assembly, e.g.
@@ -34,6 +35,8 @@ TASKS
 
 - NEW: DFA graph coloring
 
+- BUG: multiple assignment code generation doesn't allow for value swaps.
+- BUG: placeholder identifier "_" isn't working properly
 - BUG: redefining an identifier with another type doesn't give nice errors.
 
 - BUG: structures aren't being padded to match what C/C++ are expecting.
@@ -46,13 +49,14 @@ TASKS
 - BUG: ordering issues between types; requires deferred type checking
         (see ast_evaluator::binary_operator)
 - BUG: add missing errors
-- BUG: fix location for elements
 - BUG: tuple.bc -- the type_reference's symbol isn't being updated to match
         the constant identifier's symbol.
 - BUG: proc_expression needs to support overloaded procedures
 - BUG: lambda procedure type checking
 - BUG: type parameter propagation
+- BUG: fix location for elements
 
+- REFACTOR: assembly_label needs to be broken into at least three subclasses
 - REFACTOR: session/variable combination, again
             merge concept of register_allocator + variable
             DFA graph coloring
@@ -66,7 +70,7 @@ DONE
 - implement enumerations in lexer/parser
 - implement object/pointer dereference with . operator
 - fix precedence of @attribute in parser
-- implement defer in parser (executed in reverse order)
+- implement defer in parser (executed in reverse order)``
 - implement with in parser
 - ast to internal model
 - what is the type of a function?
