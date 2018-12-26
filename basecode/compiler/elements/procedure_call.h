@@ -24,7 +24,11 @@ namespace basecode::compiler {
             compiler::argument_list* args,
             const compiler::type_reference_list_t& type_params);
 
+        bool is_foreign() const;
+
         compiler::argument_list* arguments();
+
+        compiler::procedure_type* procedure_type();
 
         compiler::identifier_reference* reference();
 

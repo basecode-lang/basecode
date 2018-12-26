@@ -479,16 +479,14 @@ namespace basecode::compiler {
         auto proc_calls = session.elements().find_by_type(element_type_t::proc_call);
         for (auto call : proc_calls) {
             auto proc_call = dynamic_cast<compiler::procedure_call*>(call);
-            auto type = proc_call->reference()->identifier()->type_ref()->type();
-
-            auto procedure_type = dynamic_cast<compiler::procedure_type*>(type);
-            if (procedure_type == nullptr)
-                return false;
-
-            if (procedure_type->is_foreign())
+            if (proc_call->is_foreign())
                 continue;
 
-            auto instance = procedure_type->instance_for(session, proc_call);
+            auto proc_type = proc_call->procedure_type();
+            if (proc_type == nullptr)
+                return false;
+
+            auto instance = proc_type->instance_for(session, proc_call);
             if (instance != nullptr)
                 proc_instance_set.insert(instance);
         }

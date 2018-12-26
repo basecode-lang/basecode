@@ -194,7 +194,7 @@ namespace basecode::compiler {
             infer_type_result_t& result) {
         auto identifier = _reference->identifier();
         if (identifier != nullptr) {
-            auto proc_type = dynamic_cast<procedure_type*>(identifier->type_ref()->type());
+            auto proc_type = dynamic_cast<compiler::procedure_type*>(identifier->type_ref()->type());
             if (proc_type != nullptr) {
                 if (proc_type->return_type() == nullptr)
                     return false;
@@ -207,12 +207,23 @@ namespace basecode::compiler {
         return false;
     }
 
+    bool procedure_call::is_foreign() const {
+        if (_arguments == nullptr)
+            return false;
+        return _arguments->is_foreign_call();
+    }
+
     compiler::argument_list* procedure_call::arguments() {
         return _arguments;
     }
 
     compiler::identifier_reference* procedure_call::reference(){
         return _reference;
+    }
+
+    compiler::procedure_type* procedure_call::procedure_type() {
+        auto type = _reference->identifier()->type_ref()->type();
+        return dynamic_cast<compiler::procedure_type*>(type);
     }
 
     void procedure_call::on_owned_elements(element_list_t& list) {

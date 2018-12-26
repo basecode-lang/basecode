@@ -366,6 +366,10 @@ namespace basecode::compiler {
         return true;
     }
 
+    bool argument_list::is_foreign_call() const {
+        return _is_foreign_call;
+    }
+
     uint64_t argument_list::allocated_size() const {
         return _allocated_size;
     }

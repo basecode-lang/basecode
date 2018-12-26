@@ -25,17 +25,19 @@ namespace basecode::compiler {
 
         size_t size() const;
 
-        uint64_t allocated_size() const;
-
         compiler::element* replace(
             size_t index,
             compiler::element* item);
+
+        bool is_foreign_call() const;
 
         void remove(common::id_t id);
 
         bool index_to_procedure_type(
             compiler::session& session,
             compiler::procedure_type* proc_type);
+
+        uint64_t allocated_size() const;
 
         void add(compiler::element* item);
 
