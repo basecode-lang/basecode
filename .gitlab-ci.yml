@@ -1,7 +1,7 @@
 build_test:
   stage: build
   before_script:
-    - apt-get update -qq && apt-get install -y -qq cmake ncurses
+    - apt-get update -qq && apt-get install -y -qq cmake libncurses-dev
   script:
     - if [ -d build ]; then rm -rf build ; fi
     - mkdir build
