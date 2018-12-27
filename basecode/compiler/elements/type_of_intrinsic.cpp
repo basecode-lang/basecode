@@ -16,9 +16,9 @@
 #include "argument_list.h"
 #include "symbol_element.h"
 #include "type_reference.h"
-#include "assembly_label.h"
 #include "integer_literal.h"
 #include "type_of_intrinsic.h"
+#include "assembly_literal_label.h"
 
 namespace basecode::compiler {
 
@@ -59,9 +59,8 @@ namespace basecode::compiler {
         }
 
         auto label_name = compiler::type::make_info_label_name(infer_type_result.inferred_type);
-        result.element = session.builder().make_assembly_label(
+        result.element = session.builder().make_assembly_literal_label(
             parent_scope(),
-            nullptr,
             infer_type_result.inferred_type,
             label_name,
             module());

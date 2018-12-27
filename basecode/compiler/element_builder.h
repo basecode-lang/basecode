@@ -311,11 +311,15 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             compiler::block* block_scope);
 
+        assembly_literal_label* make_assembly_literal_label(
+            compiler::block* parent_scope,
+            compiler::type* type,
+            const std::string& name,
+            compiler::module* module = nullptr);
+
         assembly_label* make_assembly_label(
             compiler::block* parent_scope,
             compiler::identifier_reference* ref,
-            compiler::type* type,
-            const std::string& name,
             compiler::module* module = nullptr);
 
         argument_pair* make_argument_pair(

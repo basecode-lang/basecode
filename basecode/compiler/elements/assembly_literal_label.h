@@ -15,14 +15,17 @@
 
 namespace basecode::compiler {
 
-    class assembly_label : public element {
+    class assembly_literal_label  : public element {
     public:
-        assembly_label(
+        assembly_literal_label(
             compiler::module* module,
             compiler::block* parent_scope,
-            compiler::identifier_reference* ref);
+            compiler::type* type,
+            const std::string& name);
 
-        compiler::identifier_reference* reference();
+        std::string name() const;
+
+        compiler::type* type() const;
 
     protected:
         bool on_emit(
@@ -37,7 +40,8 @@ namespace basecode::compiler {
         bool on_is_constant() const override;
 
     private:
-        compiler::identifier_reference* _ref = nullptr;
+        std::string _name;
+        compiler::type* _type = nullptr;
     };
 
 };

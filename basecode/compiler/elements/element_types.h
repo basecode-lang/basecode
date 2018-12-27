@@ -64,6 +64,8 @@ namespace basecode::compiler {
     class type_literal;
     class generic_type;
     class case_element;
+    class if_directive;
+    class run_directive;
     class defer_element;
     class break_element;
     class float_literal;
@@ -71,6 +73,7 @@ namespace basecode::compiler {
     class argument_list;
     class while_element;
     class argument_pair;
+    class type_directive;
     class switch_element;
     class type_reference;
     class assembly_label;
@@ -96,11 +99,15 @@ namespace basecode::compiler {
     class namespace_element;
     class type_of_intrinsic;
     class character_literal;
+    class foreign_directive;
     class align_of_intrinsic;
     class procedure_instance;
+    class assembly_directive;
+    class intrinsic_directive;
     class address_of_intrinsic;
     class identifier_reference;
     class uninitialized_literal;
+    class assembly_literal_label;
 
     using type_list_t = std::vector<type*>;
     using import_set_t = std::set<import*>;
@@ -218,6 +225,7 @@ namespace basecode::compiler {
         unknown_identifier,
         identifier_reference,
         uninitialized_literal,
+        assembly_literal_label
     };
 
     static inline std::unordered_map<element_type_t, std::string> s_element_type_names = {
@@ -291,6 +299,7 @@ namespace basecode::compiler {
         {element_type_t::unknown_identifier, "unknown_identifier"},
         {element_type_t::identifier_reference, "identifier_reference"},
         {element_type_t::uninitialized_literal, "uninitialized_literal"},
+        {element_type_t::assembly_literal_label, "assembly_literal_label"},
     };
 
     static inline std::string element_type_name(element_type_t type) {

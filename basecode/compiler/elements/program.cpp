@@ -284,8 +284,9 @@ namespace basecode::compiler {
             used_types.insert(std::make_pair(var_type->id(), var_type));
         }
 
-        auto assembly_labels = elements.find_by_type<compiler::assembly_label>(element_type_t::assembly_label);
-        for (auto label : assembly_labels) {
+        auto assembly_literal_labels = elements
+            .find_by_type<compiler::assembly_literal_label>(element_type_t::assembly_literal_label);
+        for (auto label : assembly_literal_labels) {
             auto label_type = label->type();
             if (label_type == nullptr)
                 continue;

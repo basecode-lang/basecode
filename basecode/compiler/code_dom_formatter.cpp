@@ -783,8 +783,18 @@ namespace basecode::compiler {
             case element_type_t::assembly_label: {
                 auto element = dynamic_cast<assembly_label*>(node);
                 auto style = ", fillcolor=pink, style=\"filled\"";
+                add_primary_edge(element, element->reference());
                 return fmt::format(
-                    "{}[shape=record,label=\"assembly_label|{}\"{}];",
+                    "{}[shape=record,label=\"assembly_label\"{}];",
+                    node_vertex_name,
+                    style);
+            }
+            case element_type_t::assembly_literal_label: {
+                auto element = dynamic_cast<assembly_literal_label*>(node);
+                auto style = ", fillcolor=pink, style=\"filled\"";
+                add_primary_edge(element, element->type());
+                return fmt::format(
+                    "{}[shape=record,label=\"assembly_literal_label|{}\"{}];",
                     node_vertex_name,
                     element->name(),
                     style);
