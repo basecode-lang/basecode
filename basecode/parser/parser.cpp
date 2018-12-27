@@ -41,7 +41,7 @@ namespace basecode::syntax {
                 parser->consume();
                 type_parameter_node->lhs = parser->expect_expression(
                     r,
-                    ast_node_types_t::proc_call,
+                    ast_node_type_t::proc_call,
                     precedence_t::variable);
                 if (r.is_failed())
                     return false;
@@ -129,7 +129,7 @@ namespace basecode::syntax {
         if (root == nullptr)
             return;
 
-        if (root->type != ast_node_types_t::pair) {
+        if (root->type != ast_node_type_t::pair) {
             target->location = root->location;
             target->children.push_back(root);
             return;
@@ -138,7 +138,7 @@ namespace basecode::syntax {
         auto current_pair = root;
         target->location.start(current_pair->location.start());
         while (true) {
-            if (current_pair->lhs->type != ast_node_types_t::pair) {
+            if (current_pair->lhs->type != ast_node_type_t::pair) {
                 if (current_pair->rhs != nullptr)
                     target->children.push_back(current_pair->rhs);
                 target->children.push_back(current_pair->lhs);
@@ -236,14 +236,14 @@ namespace basecode::syntax {
 
     static ast_node_t* create_assignment_node(
             common::result& r,
-            ast_node_types_t type,
+            ast_node_type_t type,
             parser* parser,
             ast_node_t* lhs,
             token_t& token) {
         ast_node_t* assignment_node = nullptr;
-        if (type == ast_node_types_t::assignment)
+        if (type == ast_node_type_t::assignment)
             assignment_node = parser->ast_builder()->assignment_node();
-        else if (type == ast_node_types_t::constant_assignment)
+        else if (type == ast_node_type_t::constant_assignment)
             assignment_node = parser->ast_builder()->constant_assignment_node();
         else {
             // XXX: error case
@@ -296,7 +296,7 @@ namespace basecode::syntax {
                 break;
             auto node = parser->parse_expression(r, precedence_t::type);
             current_decl_node->rhs = node;
-            if (node->type != ast_node_types_t::subscript_declaration)
+            if (node->type != ast_node_type_t::subscript_declaration)
                 break;
             current_decl_node = node;
         }
@@ -411,7 +411,7 @@ namespace basecode::syntax {
         collect_comments(r, parser, with_node->comments);
 
         auto lhs = parser->parse_expression(r);
-        if (lhs->type == ast_node_types_t::with_member_access
+        if (lhs->type == ast_node_type_t::with_member_access
         &&  current_with != nullptr) {
             with_node->lhs = ast_builder->binary_operator_node(
                 ast_builder->clone(current_with->lhs),
@@ -1000,7 +1000,7 @@ namespace basecode::syntax {
             r,
             precedence_t::comma);
 
-        if (lhs->type != ast_node_types_t::pair) {
+        if (lhs->type != ast_node_type_t::pair) {
             lhs->comments = comments;
         } else {
             if (pair_node->rhs != nullptr)
@@ -1118,7 +1118,7 @@ namespace basecode::syntax {
             token_t& token) {
         return create_assignment_node(
             r,
-            ast_node_types_t::constant_assignment,
+            ast_node_type_t::constant_assignment,
             parser,
             lhs,
             token);
@@ -1137,7 +1137,7 @@ namespace basecode::syntax {
             token_t& token) {
         return create_assignment_node(
             r,
-            ast_node_types_t::assignment,
+            ast_node_type_t::assignment,
             parser,
             lhs,
             token);
@@ -1405,7 +1405,7 @@ namespace basecode::syntax {
 
     ast_node_t* parser::expect_expression(
             common::result& r,
-            ast_node_types_t expected_type,
+            ast_node_type_t expected_type,
             precedence_t precedence) {
         auto node = parse_expression(r, precedence);
         if (node == nullptr)

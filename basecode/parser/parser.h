@@ -669,7 +669,7 @@ namespace basecode::syntax {
 
         ast_node_t* expect_expression(
             common::result& r,
-            ast_node_types_t expected_type,
+            ast_node_type_t expected_type,
             precedence_t precedence = precedence_t::lowest);
 
         ast_node_t* parse(common::result& r);

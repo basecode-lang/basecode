@@ -40,46 +40,46 @@ namespace basecode::syntax {
         std::string shape = "record", style, details;
 
         switch (node->type) {
-            case basecode::syntax::ast_node_types_t::line_comment:
-            case basecode::syntax::ast_node_types_t::block_comment:
+            case ast_node_type_t::line_comment:
+            case ast_node_type_t::block_comment:
                 style = ", fillcolor=green, style=\"filled\"";
                 details = fmt::format(
                     "|{{ token: '{}' }}",
                     common::graphviz_formatter::escape_chars(node->token.value));
                 break;
-            case basecode::syntax::ast_node_types_t::module:
+            case ast_node_type_t::module:
                 style = ", fillcolor=cadetblue, style=\"filled\"";
                 break;
-            case basecode::syntax::ast_node_types_t::binary_operator:
+            case ast_node_type_t::binary_operator:
                 style = ", fillcolor=goldenrod1, style=\"filled\"";
                 break;
-            case basecode::syntax::ast_node_types_t::symbol_reference:
+            case ast_node_type_t::symbol_reference:
                 style = ", fillcolor=aquamarine3, style=\"filled\"";
                 break;
-            case basecode::syntax::ast_node_types_t::type_declaration:
+            case ast_node_type_t::type_declaration:
                 style = ", fillcolor=gainsboro, style=\"filled\"";
                 break;
-            case basecode::syntax::ast_node_types_t::attribute:
+            case ast_node_type_t::attribute:
                 style = ", fillcolor=darkseagreen, style=\"filled\"";
                 break;
-            case basecode::syntax::ast_node_types_t::statement:
+            case ast_node_type_t::statement:
                 style = ", fillcolor=cornflowerblue, style=\"filled\"";
                 break;
-            case basecode::syntax::ast_node_types_t::proc_expression:
+            case ast_node_type_t::proc_expression:
                 style = ", fillcolor=cyan, style=\"filled\"";
                 break;
-            case basecode::syntax::ast_node_types_t::proc_call:
+            case ast_node_type_t::proc_call:
                 style = ", fillcolor=darkorchid1, style=\"filled\"";
                 break;
-            case basecode::syntax::ast_node_types_t::basic_block:
+            case ast_node_type_t::basic_block:
                 style = ", fillcolor=lightblue, style=\"filled\"";
                 break;
-            case basecode::syntax::ast_node_types_t::assignment:
+            case ast_node_type_t::assignment:
                 style = ", fillcolor=pink, style=\"filled\"";
                 break;
-            case basecode::syntax::ast_node_types_t::if_expression:
-            case basecode::syntax::ast_node_types_t::else_expression:
-            case basecode::syntax::ast_node_types_t::elseif_expression:
+            case ast_node_type_t::if_expression:
+            case ast_node_type_t::else_expression:
+            case ast_node_type_t::elseif_expression:
                 shape = "Mrecord";
                 style = ", fillcolor=yellow, style=\"filled\"";
                 break;

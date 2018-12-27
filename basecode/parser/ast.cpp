@@ -111,7 +111,7 @@ namespace basecode::syntax {
 
     //
     ast_node_t* ast_builder::pair_node() {
-        return make_node(ast_node_types_t::pair);
+        return make_node(ast_node_type_t::pair);
     }
 
     ast_node_t* ast_builder::pop_scope() {
@@ -133,13 +133,13 @@ namespace basecode::syntax {
     }
 
     ast_node_t* ast_builder::symbol_node() {
-        auto node = make_node(ast_node_types_t::symbol);
+        auto node = make_node(ast_node_type_t::symbol);
         node->lhs = type_list_node();
         return node;
     }
 
     ast_node_t* ast_builder::module_node() {
-        auto node = make_node(ast_node_types_t::module);
+        auto node = make_node(ast_node_type_t::module);
         push_scope(node);
         return node;
     }
@@ -153,39 +153,39 @@ namespace basecode::syntax {
     }
 
     ast_node_t* ast_builder::type_list_node() {
-        return make_node(ast_node_types_t::type_list);
+        return make_node(ast_node_type_t::type_list);
     }
 
     ast_node_t* ast_builder::proc_call_node() {
-        auto node = make_node(ast_node_types_t::proc_call);
+        auto node = make_node(ast_node_type_t::proc_call);
         node->lhs = proc_call_binding_node();
         node->rhs = argument_list_node();
         return node;
     }
 
     ast_node_t* ast_builder::statement_node() {
-        return make_node(ast_node_types_t::statement);
+        return make_node(ast_node_type_t::statement);
     }
 
     ast_node_t* ast_builder::expression_node() {
-        return make_node(ast_node_types_t::expression);
+        return make_node(ast_node_type_t::expression);
     }
 
     ast_node_t* ast_builder::proc_types_node() {
-        auto node = make_node(ast_node_types_t::proc_types);
+        auto node = make_node(ast_node_type_t::proc_types);
         node->lhs = type_parameter_list_node();
         return node;
     }
 
     ast_node_t* ast_builder::assignment_node() {
-        auto node = make_node(ast_node_types_t::assignment);
+        auto node = make_node(ast_node_type_t::assignment);
         node->lhs = assignment_target_list_node();
         node->rhs = assignment_source_list_node();
         return node;
     }
 
     ast_node_t* ast_builder::basic_block_node() {
-        auto node = make_node(ast_node_types_t::basic_block);
+        auto node = make_node(ast_node_type_t::basic_block);
         push_scope(node);
         return node;
     }
@@ -194,7 +194,7 @@ namespace basecode::syntax {
             ast_node_t* lhs,
             const token_t& token,
             ast_node_t* rhs) {
-        auto node = make_node(ast_node_types_t::binary_operator, &token);
+        auto node = make_node(ast_node_type_t::binary_operator, &token);
         node->lhs = lhs;
         node->rhs = rhs;
         node->location.end(rhs->location.end());
@@ -203,70 +203,70 @@ namespace basecode::syntax {
     }
 
     ast_node_t* ast_builder::argument_list_node() {
-        return make_node(ast_node_types_t::argument_list);
+        return make_node(ast_node_type_t::argument_list);
     }
 
     ast_node_t* ast_builder::statement_body_node() {
-        return make_node(ast_node_types_t::statement_body);
+        return make_node(ast_node_type_t::statement_body);
     }
 
     ast_node_t* ast_builder::parameter_list_node() {
-        return make_node(ast_node_types_t::parameter_list);
+        return make_node(ast_node_type_t::parameter_list);
     }
 
     ast_node_t* ast_builder::type_parameter_node() {
-        return make_node(ast_node_types_t::type_parameter);
+        return make_node(ast_node_type_t::type_parameter);
     }
 
     ast_node_t* ast_builder::type_declaration_node() {
-        return make_node(ast_node_types_t::type_declaration);
+        return make_node(ast_node_type_t::type_declaration);
     }
 
     ast_node_t* ast_builder::proc_call_binding_node() {
-        auto node = make_node(ast_node_types_t::proc_call_binding);
+        auto node = make_node(ast_node_type_t::proc_call_binding);
         node->lhs = type_list_node();
         return node;
     }
 
     ast_node_t* ast_builder::with_member_access_node() {
-        return make_node(ast_node_types_t::with_member_access);
+        return make_node(ast_node_type_t::with_member_access);
     }
 
     ast_node_t* ast_builder::subscript_operator_node() {
-        return make_node(ast_node_types_t::subscript_operator);
+        return make_node(ast_node_type_t::subscript_operator);
     }
 
     ast_node_t* ast_builder::type_tagged_symbol_node() {
-        auto node = make_node(ast_node_types_t::type_tagged_symbol);
+        auto node = make_node(ast_node_type_t::type_tagged_symbol);
         node->lhs = type_list_node();
         return node;
     }
 
     ast_node_t* ast_builder::pointer_declaration_node() {
-        return make_node(ast_node_types_t::pointer_declaration);
+        return make_node(ast_node_type_t::pointer_declaration);
     }
 
     ast_node_t* ast_builder::constant_assignment_node() {
-        auto node = make_node(ast_node_types_t::constant_assignment);
+        auto node = make_node(ast_node_type_t::constant_assignment);
         node->lhs = assignment_target_list_node();
         node->rhs = assignment_source_list_node();
         return node;
     }
 
     ast_node_t* ast_builder::type_parameter_list_node() {
-        return make_node(ast_node_types_t::type_parameter_list);
+        return make_node(ast_node_type_t::type_parameter_list);
     }
 
     ast_node_t* ast_builder::array_subscript_list_node() {
-        return make_node(ast_node_types_t::array_subscript_list);
+        return make_node(ast_node_type_t::array_subscript_list);
     }
 
     ast_node_t* ast_builder::return_argument_list_node() {
-        return make_node(ast_node_types_t::return_argument_list);
+        return make_node(ast_node_type_t::return_argument_list);
     }
 
     ast_node_t* ast_builder::subscript_declaration_node() {
-        return make_node(ast_node_types_t::subscript_declaration);
+        return make_node(ast_node_type_t::subscript_declaration);
     }
 
     void ast_builder::push_scope(ast_node_t* node) {
@@ -274,176 +274,176 @@ namespace basecode::syntax {
     }
 
     ast_node_t* ast_builder::assignment_source_list_node() {
-        return make_node(ast_node_types_t::assignment_source_list);
+        return make_node(ast_node_type_t::assignment_source_list);
     }
 
     ast_node_t* ast_builder::assignment_target_list_node() {
-        return make_node(ast_node_types_t::assignment_target_list);
+        return make_node(ast_node_type_t::assignment_target_list);
     }
 
     ast_node_t* ast_builder::if_node(const token_t& token) {
-        return make_node(ast_node_types_t::if_expression, &token);
+        return make_node(ast_node_type_t::if_expression, &token);
     }
 
     ast_node_t* ast_builder::case_node(const token_t& token) {
-        return make_node(ast_node_types_t::case_expression, &token);
+        return make_node(ast_node_type_t::case_expression, &token);
     }
 
     ast_node_t* ast_builder::with_node(const token_t& token) {
-        return make_node(ast_node_types_t::with_expression, &token);
+        return make_node(ast_node_type_t::with_expression, &token);
     }
 
     ast_node_t* ast_builder::else_node(const token_t& token) {
-        return make_node(ast_node_types_t::else_expression, &token);
+        return make_node(ast_node_type_t::else_expression, &token);
     }
 
     ast_node_t* ast_builder::from_node(const token_t& token) {
-        return make_node(ast_node_types_t::from_expression, &token);
+        return make_node(ast_node_type_t::from_expression, &token);
     }
 
     ast_node_t* ast_builder::enum_node(const token_t& token) {
-        auto node = make_node(ast_node_types_t::enum_expression, &token);
+        auto node = make_node(ast_node_type_t::enum_expression, &token);
         node->lhs = type_parameter_list_node();
         return node;
     }
 
     ast_node_t* ast_builder::while_node(const token_t& token) {
-        return make_node(ast_node_types_t::while_statement, &token);
+        return make_node(ast_node_type_t::while_statement, &token);
     }
 
     ast_node_t* ast_builder::union_node(const token_t& token) {
-        auto node = make_node(ast_node_types_t::union_expression, &token);
+        auto node = make_node(ast_node_type_t::union_expression, &token);
         node->lhs = type_parameter_list_node();
         return node;
     }
 
     ast_node_t* ast_builder::defer_node(const token_t& token) {
-        return make_node(ast_node_types_t::defer_expression, &token);
+        return make_node(ast_node_type_t::defer_expression, &token);
     }
 
     ast_node_t* ast_builder::break_node(const token_t& token) {
-        return make_node(ast_node_types_t::break_statement, &token);
+        return make_node(ast_node_type_t::break_statement, &token);
     }
 
     ast_node_t* ast_builder::label_node(const token_t& token) {
-        return make_node(ast_node_types_t::label, &token);
+        return make_node(ast_node_type_t::label, &token);
     }
 
     ast_node_t* ast_builder::import_node(const token_t& token) {
-        return make_node(ast_node_types_t::import_expression, &token);
+        return make_node(ast_node_type_t::import_expression, &token);
     }
 
     ast_node_t* ast_builder::return_node(const token_t& token) {
-        auto node = make_node(ast_node_types_t::return_statement, &token);
+        auto node = make_node(ast_node_type_t::return_statement, &token);
         node->rhs = return_argument_list_node();
         return node;
     }
 
     ast_node_t* ast_builder::for_in_node(const token_t& token) {
-        return make_node(ast_node_types_t::for_in_statement, &token);
+        return make_node(ast_node_type_t::for_in_statement, &token);
     }
 
     ast_node_t* ast_builder::struct_node(const token_t& token) {
-        auto node = make_node(ast_node_types_t::struct_expression, &token);
+        auto node = make_node(ast_node_type_t::struct_expression, &token);
         node->lhs = type_parameter_list_node();
         return node;
     }
 
     ast_node_t* ast_builder::switch_node(const token_t& token) {
-        return make_node(ast_node_types_t::switch_expression, &token);
+        return make_node(ast_node_type_t::switch_expression, &token);
     }
 
     ast_node_t* ast_builder::else_if_node(const token_t& token) {
-        return make_node(ast_node_types_t::elseif_expression, &token);
+        return make_node(ast_node_type_t::elseif_expression, &token);
     }
 
     ast_node_t* ast_builder::continue_node(const token_t& token) {
-        return make_node(ast_node_types_t::continue_statement, &token);
+        return make_node(ast_node_type_t::continue_statement, &token);
     }
 
     ast_node_t* ast_builder::raw_block_node(const token_t& token) {
-        return make_node(ast_node_types_t::raw_block, &token);
+        return make_node(ast_node_type_t::raw_block, &token);
     }
 
     ast_node_t* ast_builder::namespace_node(const token_t& token) {
-        return make_node(ast_node_types_t::namespace_expression, &token);
+        return make_node(ast_node_type_t::namespace_expression, &token);
     }
 
     ast_node_t* ast_builder::directive_node(const token_t& token) {
-        return make_node(ast_node_types_t::directive, &token);
+        return make_node(ast_node_type_t::directive, &token);
     }
 
     ast_node_t* ast_builder::attribute_node(const token_t& token) {
-        return make_node(ast_node_types_t::attribute, &token);
+        return make_node(ast_node_type_t::attribute, &token);
     }
 
     ast_node_t* ast_builder::fallthrough_node(const token_t& token) {
-        return make_node(ast_node_types_t::fallthrough_statement, &token);
+        return make_node(ast_node_type_t::fallthrough_statement, &token);
     }
 
     ast_node_t* ast_builder::symbol_part_node(const token_t& token) {
-        return make_node(ast_node_types_t::symbol_part, &token);
+        return make_node(ast_node_type_t::symbol_part, &token);
     }
 
     ast_node_t* ast_builder::nil_literal_node(const token_t& token) {
-        return make_node(ast_node_types_t::nil_literal, &token);
+        return make_node(ast_node_type_t::nil_literal, &token);
     }
 
     ast_node_t* ast_builder::line_comment_node(const token_t& token) {
-        return make_node(ast_node_types_t::line_comment, &token);
+        return make_node(ast_node_type_t::line_comment, &token);
     }
 
     ast_node_t* ast_builder::block_comment_node(const token_t& token) {
-        return make_node(ast_node_types_t::block_comment, &token);
+        return make_node(ast_node_type_t::block_comment, &token);
     }
 
     ast_node_t* ast_builder::unary_operator_node(const token_t& token) {
-        return make_node(ast_node_types_t::unary_operator, &token);
+        return make_node(ast_node_type_t::unary_operator, &token);
     }
 
     ast_node_t* ast_builder::string_literal_node(const token_t& token) {
-        return make_node(ast_node_types_t::string_literal, &token);
+        return make_node(ast_node_type_t::string_literal, &token);
     }
 
     ast_node_t* ast_builder::number_literal_node(const token_t& token) {
-        return make_node(ast_node_types_t::number_literal, &token);
+        return make_node(ast_node_type_t::number_literal, &token);
     }
 
     ast_node_t* ast_builder::proc_expression_node(const token_t& token) {
-        auto node = make_node(ast_node_types_t::proc_expression, &token);
+        auto node = make_node(ast_node_type_t::proc_expression, &token);
         node->lhs = proc_types_node();
         node->rhs = parameter_list_node();
         return node;
     }
 
     ast_node_t* ast_builder::spread_operator_node(const token_t& token) {
-        return make_node(ast_node_types_t::spread_operator, &token);
+        return make_node(ast_node_type_t::spread_operator, &token);
     }
 
     ast_node_t* ast_builder::boolean_literal_node(const token_t& token) {
-        return make_node(ast_node_types_t::boolean_literal, &token);
+        return make_node(ast_node_type_t::boolean_literal, &token);
     }
 
     ast_node_t* ast_builder::module_expression_node(const token_t& token) {
-        return make_node(ast_node_types_t::module_expression, &token);
+        return make_node(ast_node_type_t::module_expression, &token);
     }
 
     ast_node_t* ast_builder::character_literal_node(const token_t& token) {
-        return make_node(ast_node_types_t::character_literal, &token);
+        return make_node(ast_node_type_t::character_literal, &token);
     }
 
     ast_node_t* ast_builder::lambda_expression_node(const token_t& token) {
-        auto node = make_node(ast_node_types_t::lambda_expression, &token);
+        auto node = make_node(ast_node_type_t::lambda_expression, &token);
         node->lhs = proc_types_node();
         node->rhs = parameter_list_node();
         return node;
     }
 
     ast_node_t* ast_builder::uninitialized_literal_node(const token_t& token) {
-        return make_node(ast_node_types_t::uninitialized_literal, &token);
+        return make_node(ast_node_type_t::uninitialized_literal, &token);
     }
 
-    ast_node_t* ast_builder::make_node(ast_node_types_t type, const token_t* token) {
+    ast_node_t* ast_builder::make_node(ast_node_type_t type, const token_t* token) {
         auto node = new ast_node_t;
         node->id = common::id_pool::instance()->allocate();
         node->type = type;

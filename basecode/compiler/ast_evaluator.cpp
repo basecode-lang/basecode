@@ -16,67 +16,67 @@
 
 namespace basecode::compiler {
 
-    std::unordered_map<syntax::ast_node_types_t, node_evaluator_callable> ast_evaluator::s_node_evaluators = {
-        {syntax::ast_node_types_t::pair,                    std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::label,                   std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::module,                  std::bind(&ast_evaluator::module, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::symbol,                  std::bind(&ast_evaluator::symbol, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::type_list,               std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::proc_call,               std::bind(&ast_evaluator::proc_call, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::statement,               std::bind(&ast_evaluator::statement, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::attribute,               std::bind(&ast_evaluator::attribute, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::directive,               std::bind(&ast_evaluator::directive, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::raw_block,               std::bind(&ast_evaluator::raw_block, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::assignment,              std::bind(&ast_evaluator::assignment, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::expression,              std::bind(&ast_evaluator::expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::nil_literal,             std::bind(&ast_evaluator::nil, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::basic_block,             std::bind(&ast_evaluator::basic_block, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::symbol_part,             std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::line_comment,            std::bind(&ast_evaluator::line_comment, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::block_comment,           std::bind(&ast_evaluator::block_comment, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::argument_list,           std::bind(&ast_evaluator::argument_list, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::if_expression,           std::bind(&ast_evaluator::if_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::parameter_list,          std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::number_literal,          std::bind(&ast_evaluator::number_literal, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::string_literal,          std::bind(&ast_evaluator::string_literal, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::unary_operator,          std::bind(&ast_evaluator::unary_operator, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::case_expression,         std::bind(&ast_evaluator::case_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::spread_operator,         std::bind(&ast_evaluator::spread_operator, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::from_expression,         std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::proc_expression,         std::bind(&ast_evaluator::proc_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::enum_expression,         std::bind(&ast_evaluator::enum_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::binary_operator,         std::bind(&ast_evaluator::binary_operator, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::boolean_literal,         std::bind(&ast_evaluator::boolean_literal, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::else_expression,         std::bind(&ast_evaluator::else_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::break_statement,         std::bind(&ast_evaluator::break_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::with_expression,         std::bind(&ast_evaluator::with_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::while_statement,         std::bind(&ast_evaluator::while_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::type_declaration,        std::bind(&ast_evaluator::type_declaration, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::defer_expression,        std::bind(&ast_evaluator::defer_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::union_expression,        std::bind(&ast_evaluator::union_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::return_statement,        std::bind(&ast_evaluator::return_statement, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::symbol_reference,        std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::for_in_statement,        std::bind(&ast_evaluator::for_in_statement, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::switch_expression,       std::bind(&ast_evaluator::switch_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::lambda_expression,       std::bind(&ast_evaluator::lambda_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::switch_expression,       std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::import_expression,       std::bind(&ast_evaluator::import_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::struct_expression,       std::bind(&ast_evaluator::struct_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::character_literal,       std::bind(&ast_evaluator::character_literal, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::module_expression,       std::bind(&ast_evaluator::module_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::elseif_expression,       std::bind(&ast_evaluator::if_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::subscript_operator,      std::bind(&ast_evaluator::subscript_operator, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::with_member_access,      std::bind(&ast_evaluator::with_member_access, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::continue_statement,      std::bind(&ast_evaluator::continue_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::type_tagged_symbol,      std::bind(&ast_evaluator::symbol, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::constant_assignment,     std::bind(&ast_evaluator::assignment, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::namespace_expression,    std::bind(&ast_evaluator::namespace_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::return_argument_list,    std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::array_subscript_list,    std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::uninitialized_literal,   std::bind(&ast_evaluator::uninitialized_literal, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::fallthrough_statement,   std::bind(&ast_evaluator::fallthrough_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::assignment_source_list,  std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
-        {syntax::ast_node_types_t::assignment_target_list,  std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+    std::unordered_map<syntax::ast_node_type_t, node_evaluator_callable> ast_evaluator::s_node_evaluators = {
+        {syntax::ast_node_type_t::pair,                    std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::label,                   std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::module,                  std::bind(&ast_evaluator::module, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::symbol,                  std::bind(&ast_evaluator::symbol, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::type_list,               std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::proc_call,               std::bind(&ast_evaluator::proc_call, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::statement,               std::bind(&ast_evaluator::statement, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::attribute,               std::bind(&ast_evaluator::attribute, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::directive,               std::bind(&ast_evaluator::directive, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::raw_block,               std::bind(&ast_evaluator::raw_block, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::assignment,              std::bind(&ast_evaluator::assignment, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::expression,              std::bind(&ast_evaluator::expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::nil_literal,             std::bind(&ast_evaluator::nil, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::basic_block,             std::bind(&ast_evaluator::basic_block, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::symbol_part,             std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::line_comment,            std::bind(&ast_evaluator::line_comment, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::block_comment,           std::bind(&ast_evaluator::block_comment, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::argument_list,           std::bind(&ast_evaluator::argument_list, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::if_expression,           std::bind(&ast_evaluator::if_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::parameter_list,          std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::number_literal,          std::bind(&ast_evaluator::number_literal, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::string_literal,          std::bind(&ast_evaluator::string_literal, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::unary_operator,          std::bind(&ast_evaluator::unary_operator, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::case_expression,         std::bind(&ast_evaluator::case_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::spread_operator,         std::bind(&ast_evaluator::spread_operator, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::from_expression,         std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::proc_expression,         std::bind(&ast_evaluator::proc_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::enum_expression,         std::bind(&ast_evaluator::enum_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::binary_operator,         std::bind(&ast_evaluator::binary_operator, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::boolean_literal,         std::bind(&ast_evaluator::boolean_literal, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::else_expression,         std::bind(&ast_evaluator::else_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::break_statement,         std::bind(&ast_evaluator::break_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::with_expression,         std::bind(&ast_evaluator::with_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::while_statement,         std::bind(&ast_evaluator::while_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::type_declaration,        std::bind(&ast_evaluator::type_declaration, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::defer_expression,        std::bind(&ast_evaluator::defer_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::union_expression,        std::bind(&ast_evaluator::union_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::return_statement,        std::bind(&ast_evaluator::return_statement, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::symbol_reference,        std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::for_in_statement,        std::bind(&ast_evaluator::for_in_statement, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::switch_expression,       std::bind(&ast_evaluator::switch_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::lambda_expression,       std::bind(&ast_evaluator::lambda_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::switch_expression,       std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::import_expression,       std::bind(&ast_evaluator::import_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::struct_expression,       std::bind(&ast_evaluator::struct_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::character_literal,       std::bind(&ast_evaluator::character_literal, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::module_expression,       std::bind(&ast_evaluator::module_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::elseif_expression,       std::bind(&ast_evaluator::if_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::subscript_operator,      std::bind(&ast_evaluator::subscript_operator, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::with_member_access,      std::bind(&ast_evaluator::with_member_access, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::continue_statement,      std::bind(&ast_evaluator::continue_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::type_tagged_symbol,      std::bind(&ast_evaluator::symbol, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::constant_assignment,     std::bind(&ast_evaluator::assignment, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::namespace_expression,    std::bind(&ast_evaluator::namespace_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::return_argument_list,    std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::array_subscript_list,    std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::uninitialized_literal,   std::bind(&ast_evaluator::uninitialized_literal, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::fallthrough_statement,   std::bind(&ast_evaluator::fallthrough_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::assignment_source_list,  std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::assignment_target_list,  std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -120,14 +120,14 @@ namespace basecode::compiler {
 
         for (const auto& comment : node->comments) {
             switch (comment->type) {
-                case syntax::ast_node_types_t::line_comment: {
+                case syntax::ast_node_type_t::line_comment: {
                     context.comments.emplace_back(builder.make_comment(
                         scope_manager.current_scope(),
                         comment_type_t::line,
                         comment->token.value));
                     break;
                 }
-                case syntax::ast_node_types_t::block_comment: {
+                case syntax::ast_node_type_t::block_comment: {
                     context.comments.emplace_back(builder.make_comment(
                         scope_manager.current_scope(),
                         comment_type_t::block,
@@ -211,7 +211,7 @@ namespace basecode::compiler {
 
         for (const auto& child_node : node->children) {
             switch (child_node->type) {
-                case syntax::ast_node_types_t::basic_block: {
+                case syntax::ast_node_type_t::basic_block: {
                     auto basic_block = dynamic_cast<compiler::block*>(evaluate_in_scope(
                         child_node,
                         proc_type->scope()));
@@ -304,7 +304,7 @@ namespace basecode::compiler {
 
         compiler::element* element = nullptr;
         if (node != nullptr
-        &&  node->type == syntax::ast_node_types_t::symbol) {
+        &&  node->type == syntax::ast_node_type_t::symbol) {
             qualified_symbol_t qualified_symbol {};
             builder.make_qualified_symbol(qualified_symbol, node);
             element = builder.make_identifier_reference(
@@ -476,7 +476,7 @@ namespace basecode::compiler {
         }
 
         for (const auto& child : block->children) {
-            if (child->type != syntax::ast_node_types_t::statement) {
+            if (child->type != syntax::ast_node_type_t::statement) {
                 break;
             }
 
@@ -492,8 +492,8 @@ namespace basecode::compiler {
             }
 
             switch (expr_node->type) {
-                case syntax::ast_node_types_t::assignment:
-                case syntax::ast_node_types_t::constant_assignment: {
+                case syntax::ast_node_type_t::assignment:
+                case syntax::ast_node_type_t::constant_assignment: {
                     element_list_t list {};
                     auto success = add_assignments_to_scope(
                         context,
@@ -536,7 +536,7 @@ namespace basecode::compiler {
                     }
                     break;
                 }
-                case syntax::ast_node_types_t::symbol: {
+                case syntax::ast_node_type_t::symbol: {
                     auto field_decl = declare_identifier(
                         context,
                         expr_node,
@@ -1104,7 +1104,7 @@ namespace basecode::compiler {
             compiler::element* arg = nullptr;
 
             switch (arg_node->type) {
-                case syntax::ast_node_types_t::assignment: {
+                case syntax::ast_node_type_t::assignment: {
                     auto lhs = evaluate(arg_node->lhs->children.front());
                     auto rhs = resolve_symbol_or_evaluate(
                         context,
@@ -1758,7 +1758,7 @@ namespace basecode::compiler {
             predicate,
             true_branch,
             false_branch,
-            context.node->type == syntax::ast_node_types_t::elseif_expression);
+            context.node->type == syntax::ast_node_type_t::elseif_expression);
         return true;
     }
 
@@ -1882,7 +1882,7 @@ namespace basecode::compiler {
             type_nodes.pop();
 
             switch (current->type) {
-                case syntax::ast_node_types_t::symbol: {
+                case syntax::ast_node_type_t::symbol: {
                     qualified_symbol_t type_name{};
                     builder.make_qualified_symbol(
                         type_name,
@@ -1898,7 +1898,7 @@ namespace basecode::compiler {
                         type);
                     break;
                 }
-                case syntax::ast_node_types_t::pointer_declaration: {
+                case syntax::ast_node_type_t::pointer_declaration: {
                     auto type = scope_manager.find_pointer_type(
                         type_decl_ref->type(),
                         scope);
@@ -1914,7 +1914,7 @@ namespace basecode::compiler {
                         type);
                     break;
                 }
-                case syntax::ast_node_types_t::subscript_declaration: {
+                case syntax::ast_node_type_t::subscript_declaration: {
                     auto is_dynamic = current->lhs == nullptr;
                     if (!is_dynamic) {
                         subscripts.push_back(resolve_symbol_or_evaluate(
@@ -1924,7 +1924,7 @@ namespace basecode::compiler {
 
                     while (!type_nodes.empty()) {
                         auto subscript_node = type_nodes.top();
-                        if (subscript_node->type != syntax::ast_node_types_t::subscript_declaration)
+                        if (subscript_node->type != syntax::ast_node_type_t::subscript_declaration)
                             break;
 
                         if (is_dynamic) {
@@ -2074,7 +2074,7 @@ namespace basecode::compiler {
         const auto& target_list = node->lhs;
         const auto& source_list = node->rhs;
 
-        const bool is_constant_assignment = node->type == syntax::ast_node_types_t::constant_assignment;
+        const bool is_constant_assignment = node->type == syntax::ast_node_type_t::constant_assignment;
 
         if (target_list->children.size() != source_list->children.size()) {
             _session.error(
@@ -2177,7 +2177,7 @@ namespace basecode::compiler {
         size_t index = 0;
         for (const auto& param_node : parameters_node->children) {
             switch (param_node->type) {
-                case syntax::ast_node_types_t::symbol: {
+                case syntax::ast_node_type_t::symbol: {
                     auto param_decl = declare_identifier(
                         context,
                         param_node,
@@ -2196,7 +2196,7 @@ namespace basecode::compiler {
                     }
                     break;
                 }
-                case syntax::ast_node_types_t::assignment: {
+                case syntax::ast_node_type_t::assignment: {
                     element_list_t list {};
                     auto success = add_assignments_to_scope(
                         context,
@@ -2218,7 +2218,7 @@ namespace basecode::compiler {
                     }
                     break;
                 }
-                case syntax::ast_node_types_t::spread_operator: {
+                case syntax::ast_node_type_t::spread_operator: {
                     auto param_decl = declare_identifier(
                         context,
                         param_node->rhs,
@@ -2376,7 +2376,7 @@ namespace basecode::compiler {
         for (const auto& arg : context.node->rhs->children) {
             syntax::ast_node_t* assignment_node = nullptr;
 
-            if (arg->type != syntax::ast_node_types_t::assignment) {
+            if (arg->type != syntax::ast_node_type_t::assignment) {
                 syntax::token_t field_name;
                 field_name.type = syntax::token_types_t::identifier;
                 field_name.value = fmt::format("_{}", index);

@@ -313,7 +313,7 @@ namespace basecode::compiler {
             evaluator_result_t& result);
 
     private:
-        static std::unordered_map<syntax::ast_node_types_t, node_evaluator_callable> s_node_evaluators;
+        static std::unordered_map<syntax::ast_node_type_t, node_evaluator_callable> s_node_evaluators;
 
         compiler::session& _session;
     };
