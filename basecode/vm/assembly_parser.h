@@ -65,9 +65,9 @@ namespace basecode::vm {
             common::source_file& source_file,
             const assembly_symbol_resolver_t& resolver);
 
-        bool parse(
-            common::result& r,
-            vm::assemble_from_source_result_t& result);
+        ~assembly_parser();
+
+        bool parse(common::result& r);
 
     private:
         bool parse_immediate_number(
@@ -97,6 +97,7 @@ namespace basecode::vm {
         common::source_file& _source_file;
         vm::assembler* _assembler = nullptr;
         assembly_symbol_resolver_t _resolver = nullptr;
+        std::unordered_map<std::string, vm::register_t> _locals {};
     };
 
 };

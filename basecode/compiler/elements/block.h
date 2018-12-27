@@ -43,7 +43,7 @@ namespace basecode::compiler {
 
         compiler::stack_frame* stack_frame();
 
-        compiler::stack_frame* find_active_stack_frame();
+        compiler::stack_frame* find_active_frame();
 
         compiler::stack_frame_entry* find_active_frame_entry(const std::string& symbol);
 

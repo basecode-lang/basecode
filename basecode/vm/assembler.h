@@ -34,8 +34,7 @@ namespace basecode::vm {
         bool assemble_from_source(
             common::result& r,
             common::source_file& source_file,
-            const assembly_symbol_resolver_t& resolver,
-            vm::assemble_from_source_result_t& result);
+            const assembly_symbol_resolver_t& resolver);
 
         instruction_block* pop_block();
 

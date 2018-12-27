@@ -5,11 +5,13 @@ core :: module("../modules/core");
     foo := foo * 2;
 
     #assembly {{
-        move.qw i20, module(foo)
-        load.w  i21, i20
-        move.w  i22, #$0a
-        sub.w   i23, i21, i22
-        store.w i20, i23
+        .ilocal foo_addr
+        .ilocal temp
+
+        move.qw foo_addr, module(foo)
+        load.w  temp, foo_addr
+        sub.w   temp, temp, #$0a
+        store.w foo_addr, temp
     }};
 
     foo := (foo - 16) shr 2;

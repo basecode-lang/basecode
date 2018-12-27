@@ -30,7 +30,6 @@ namespace basecode::compiler {
             compiler::emit_context_t& context,
             compiler::emit_result_t& result) {
         auto& assembler = session.assembler();
-        auto block = assembler.current_block();
 
         auto raw_block = dynamic_cast<compiler::raw_block*>(_expression);
 
@@ -38,8 +37,7 @@ namespace basecode::compiler {
         if (!source_file.load(session.result(), raw_block->value() + "\n"))
             return false;
 
-        vm::assemble_from_source_result_t assemble_result {};
-        auto success = assembler.assemble_from_source(
+        return assembler.assemble_from_source(
             session.result(),
             source_file,
             [&](vm::assembly_symbol_type_t type,
@@ -91,8 +89,11 @@ namespace basecode::compiler {
                             qualified_symbol_t(symbol),
                             _expression->parent_scope());
                         if (var != nullptr) {
-                            vm::compiler_label_data_t data {};
+                            vm::compiler_module_data_t data {};
                             data.label = var->label_name();
+                            auto address_reg = session.get_address_register(var->id());
+                            if (address_reg != nullptr)
+                                data.reg = *address_reg;
                             result.data(data);
                             return true;
                         }
@@ -103,18 +104,7 @@ namespace basecode::compiler {
                     }
                 }
                 return false;
-            },
-            assemble_result);
-        if (success) {
-            for (const auto& entry : assemble_result.block->entries()) {
-                block->comment(
-                    "directive: assembly",
-                    vm::comment_location_t::after_instruction);
-                block->add_entry(entry);
-            }
-        }
-
-        return true;
+            });
     }
 
     void assembly_directive::on_owned_elements(element_list_t& list) {

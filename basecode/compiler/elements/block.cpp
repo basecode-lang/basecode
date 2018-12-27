@@ -167,7 +167,7 @@ namespace basecode::compiler {
         return true;
     }
 
-    compiler::stack_frame* block::find_active_stack_frame() {
+    compiler::stack_frame* block::find_active_frame() {
         auto current = this;
         while (current != nullptr) {
             if (current->_stack_frame.active())

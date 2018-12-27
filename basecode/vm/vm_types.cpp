@@ -289,4 +289,8 @@ namespace basecode::vm {
     void assembly_symbol_result_t::data(const compiler_local_data_t& value) {
         _data = value;
     }
+
+    void assembly_symbol_result_t::data(const compiler_module_data_t& value) {
+        _data = value;
+    }
 };

@@ -26,12 +26,14 @@ namespace basecode::vm {
                                                           _resolver(resolver) {
     }
 
-    bool assembly_parser::parse(
-            common::result& r,
-            vm::assemble_from_source_result_t& result) {
-        auto block = _assembler->make_basic_block();
-        block->should_emit(false);
-        result.block = block;
+    assembly_parser::~assembly_parser() {
+        for (const auto& kvp : _locals) {
+            _assembler->free_reg(kvp.second);
+        }
+    }
+
+    bool assembly_parser::parse(common::result& r) {
+        auto block = _assembler->current_block();
 
         _state = assembly_parser_state_t::start;
         _start_pos = 0;
@@ -41,7 +43,8 @@ namespace basecode::vm {
             if (rune == common::rune_eof)
                 break;
 
-            retry:
+
+        retry:
             switch (_state) {
                 case assembly_parser_state_t::start: {
                     _state = assembly_parser_state_t::whitespace;
@@ -242,8 +245,7 @@ namespace basecode::vm {
                             std::string symbol;
                             auto type = symbol_type(operand, symbol);
                             switch (type) {
-                                case vm::assembly_symbol_type_t::label:
-                                case vm::assembly_symbol_type_t::module: {
+                                case vm::assembly_symbol_type_t::label: {
                                     vm::assembly_symbol_result_t resolver_result {};
                                     if (_resolver(type, symbol, resolver_result)) {
                                         auto label_data = resolver_result.data<compiler_label_data_t>();
@@ -253,6 +255,28 @@ namespace basecode::vm {
                                                             | operand_encoding_t::flags::unresolved;
                                             auto label_ref = _assembler->make_label_ref(label_data->label);
                                             encoding.value.u = label_ref->id;
+                                        }
+                                    }
+                                    break;
+                                }
+                                case vm::assembly_symbol_type_t::module: {
+                                    vm::assembly_symbol_result_t resolver_result {};
+                                    if (_resolver(type, symbol, resolver_result)) {
+                                        auto module_data = resolver_result.data<compiler_module_data_t>();
+                                        if (module_data != nullptr) {
+                                            if (module_data->reg.type != vm::register_type_t::none) {
+                                                encoding.size = module_data->reg.size;
+                                                encoding.type = operand_encoding_t::flags::reg;
+                                                if (module_data->reg.type == vm::register_type_t::integer)
+                                                    encoding.type |= operand_encoding_t::flags::integer;
+                                                encoding.value.r = static_cast<uint8_t>(module_data->reg.number);
+                                            } else {
+                                                encoding.type = operand_encoding_t::flags::integer
+                                                                | operand_encoding_t::flags::constant
+                                                                | operand_encoding_t::flags::unresolved;
+                                                auto label_ref = _assembler->make_label_ref(module_data->label);
+                                                encoding.value.u = label_ref->id;
+                                            }
                                         }
                                     }
                                     break;
@@ -273,12 +297,21 @@ namespace basecode::vm {
                                     break;
                                 }
                                 case vm::assembly_symbol_type_t::assembler: {
-                                    encoding.type = operand_encoding_t::flags::integer
-                                                    | operand_encoding_t::flags::constant
-                                                    | operand_encoding_t::flags::unresolved;
-                                    auto label_ref = _assembler->make_label_ref(operand);
-                                    encoding.value.u = label_ref->id;
-                                    break;
+                                    auto it = _locals.find(operand);
+                                    if (it != _locals.end()) {
+                                        encoding.size = it->second.size;
+                                        encoding.type = operand_encoding_t::flags::reg;
+                                        if (it->second.type == vm::register_type_t::integer)
+                                            encoding.type |= operand_encoding_t::flags::integer;
+                                        encoding.value.r = static_cast<uint8_t>(it->second.number);
+                                    } else {
+                                        encoding.type = operand_encoding_t::flags::integer
+                                                        | operand_encoding_t::flags::constant
+                                                        | operand_encoding_t::flags::unresolved;
+                                        auto label_ref = _assembler->make_label_ref(operand);
+                                        encoding.value.u = label_ref->id;
+                                        break;
+                                    }
                                 }
                             }
                         }
@@ -327,6 +360,36 @@ namespace basecode::vm {
                     data_definition_t data_def {};
 
                     switch (_wip.instance.d->type) {
+                        case directive_type_t::meta: {
+                            block->make_block_entry(meta_t{boost::get<std::string>(_wip.params.front())});
+                            break;
+                        }
+                        case directive_type_t::ilocal: {
+                            auto symbol = boost::get<std::string>(_wip.params.front());
+                            auto it = _locals.find(symbol);
+                            if (it == _locals.end()) {
+                                vm::register_t local;
+                                local.size = vm::op_sizes::qword;
+                                local.type = vm::register_type_t::integer;
+                                if (_assembler->allocate_reg(local)) {
+                                    _locals.insert(std::make_pair(symbol, local));
+                                }
+                            }
+                            break;
+                        }
+                        case directive_type_t::flocal: {
+                            auto symbol = boost::get<std::string>(_wip.params.front());
+                            auto it = _locals.find(symbol);
+                            if (it == _locals.end()) {
+                                vm::register_t local;
+                                local.size = vm::op_sizes::qword;
+                                local.type = vm::register_type_t::floating_point;
+                                if (_assembler->allocate_reg(local)) {
+                                    _locals.insert(std::make_pair(symbol, local));
+                                }
+                            }
+                            break;
+                        }
                         case directive_type_t::section: {
                             block->make_block_entry(section_type(boost::get<std::string>(_wip.params.front())));
                             break;
@@ -472,6 +535,8 @@ namespace basecode::vm {
                                         make_location(_source_file.pos()));
                                     return false;
                                 }
+                            } else if (param_def.is_symbol()) {
+                                _wip.params.push_back(param);
                             } else {
                                 _source_file.error(
                                     r,

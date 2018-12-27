@@ -1632,6 +1632,9 @@ namespace basecode::vm {
     enum class directive_type_t : uint8_t {
         section,
         align,
+        meta,
+        ilocal,
+        flocal,
         db,
         dw,
         dd,
@@ -1649,6 +1652,7 @@ namespace basecode::vm {
             none        = 0b00000000,
             string      = 0b00000001,
             number      = 0b00000010,
+            symbol      = 0b00000100,
             repeating   = 0b10000000,
         };
 
@@ -1658,6 +1662,10 @@ namespace basecode::vm {
 
         bool is_string() const {
             return (type & flags::string) != 0;
+        }
+
+        bool is_symbol() const {
+            return (type & flags::symbol) != 0;
         }
 
         bool is_repeating() const {
@@ -1699,6 +1707,36 @@ namespace basecode::vm {
                 directive_type_t::align,
                 {
                     {directive_param_t::flags::number, true},
+                }
+            }
+        },
+        {
+            "META",
+            directive_t{
+                op_sizes::none,
+                directive_type_t::meta,
+                {
+                    {directive_param_t::flags::string, true},
+                }
+            }
+        },
+        {
+            "ILOCAL",
+            directive_t{
+                op_sizes::none,
+                directive_type_t::ilocal,
+                {
+                    {directive_param_t::flags::symbol, true},
+                }
+            }
+        },
+        {
+            "FLOCAL",
+            directive_t{
+                op_sizes::none,
+                directive_type_t::flocal,
+                {
+                    {directive_param_t::flags::symbol, true},
                 }
             }
         },
@@ -1923,6 +1961,11 @@ namespace basecode::vm {
         std::string label;
     };
 
+    struct compiler_module_data_t {
+        std::string label;
+        vm::register_t reg {};
+    };
+
     struct compiler_local_data_t {
         int64_t offset = 0;
         vm::registers_t reg {};
@@ -1933,6 +1976,8 @@ namespace basecode::vm {
         void data(const compiler_label_data_t& value);
 
         void data(const compiler_local_data_t& value);
+
+        void data(const compiler_module_data_t& value);
 
         template <typename T>
         T* data() {
@@ -1965,7 +2010,4 @@ namespace basecode::vm {
         const std::string&,
         vm::assembly_symbol_result_t&)>;
 
-    struct assemble_from_source_result_t {
-        instruction_block* block = nullptr;
-    };
 };
