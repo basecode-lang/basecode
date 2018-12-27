@@ -22,6 +22,9 @@ vector3 :: struct {
         a, b := 1, 2;
         b, a := a, b;
 
+        _, j := 102, 405;
+        j, _ := _, j;
+
     'bing:
         d := cast<u16>(a);
 };

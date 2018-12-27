@@ -111,14 +111,14 @@ namespace basecode::compiler {
         context.node = node;
         context.scope = scope_manager.current_scope();
 
-        for (const auto& attribute : node->attributes) {
+        for (auto attribute : node->attributes) {
             context.attributes.add(builder.make_attribute(
                 scope_manager.current_scope(),
                 attribute->token.value,
                 evaluate(attribute->lhs)));
         }
 
-        for (const auto& comment : node->comments) {
+        for (auto comment : node->comments) {
             switch (comment->type) {
                 case syntax::ast_node_type_t::line_comment: {
                     context.comments.emplace_back(builder.make_comment(
@@ -209,7 +209,7 @@ namespace basecode::compiler {
             proc_type->attributes().add(attribute);
         }
 
-        for (const auto& child_node : node->children) {
+        for (auto child_node : node->children) {
             switch (child_node->type) {
                 case syntax::ast_node_type_t::basic_block: {
                     auto basic_block = dynamic_cast<compiler::block*>(evaluate_in_scope(
@@ -389,7 +389,7 @@ namespace basecode::compiler {
         auto& scope_manager = _session.scope_manager();
         auto open_generic_type = scope_manager.find_generic_type({});
 
-        for (const auto& type_parameter_node : type_parameters_node->children) {
+        for (auto type_parameter_node : type_parameters_node->children) {
             compiler::type* generic_type = open_generic_type;
             auto param_symbol = builder.make_symbol_from_node(
                 type_parameter_node->rhs,
@@ -399,7 +399,7 @@ namespace basecode::compiler {
             if (known_type == nullptr
             &&  type_parameter_node->lhs != nullptr) {
                 compiler::type_reference_list_t constraints {};
-                for (const auto& symbol : type_parameter_node->lhs->rhs->children) {
+                for (auto symbol : type_parameter_node->lhs->rhs->children) {
                     qualified_symbol_t qualified_symbol {};
                     builder.make_qualified_symbol(qualified_symbol, symbol);
 
@@ -475,7 +475,7 @@ namespace basecode::compiler {
                 value_type);
         }
 
-        for (const auto& child : block->children) {
+        for (auto child : block->children) {
             if (child->type != syntax::ast_node_type_t::statement) {
                 break;
             }
@@ -829,7 +829,7 @@ namespace basecode::compiler {
         }
 
         if (!context.node->children.empty()) {
-            const auto& body_node = context.node->children.front();
+            auto body_node = context.node->children.front();
             body = evaluate(body_node);
             if (body != nullptr) {
                 body->location(body_node->location);
@@ -1100,7 +1100,7 @@ namespace basecode::compiler {
         auto& scope_manager = _session.scope_manager();
 
         auto args = builder.make_argument_list(scope_manager.current_scope());
-        for (const auto& arg_node : context.node->children) {
+        for (auto arg_node : context.node->children) {
             compiler::element* arg = nullptr;
 
             switch (arg_node->type) {
@@ -1283,7 +1283,7 @@ namespace basecode::compiler {
             evaluator_result_t& result) {
         auto return_element = _session.builder().make_return(_session.scope_manager().current_scope());
         auto& expressions = return_element->expressions();
-        for (const auto& arg_node : context.node->rhs->children) {
+        for (auto arg_node : context.node->rhs->children) {
             auto arg = resolve_symbol_or_evaluate(context, arg_node);
             expressions.push_back(arg);
             arg->parent_element(return_element);
@@ -1352,10 +1352,7 @@ namespace basecode::compiler {
         auto& scope_manager = _session.scope_manager();
         auto active_scope = scope_manager.push_new_block();
 
-        for (auto it = context.node->children.begin();
-                 it != context.node->children.end();
-                 ++it) {
-            auto current_node = *it;
+        for (auto current_node : context.node->children) {
             auto expr = evaluate(current_node);
             if (expr == nullptr) {
                 _session.error(
@@ -1523,7 +1520,7 @@ namespace basecode::compiler {
 
         label_list_t labels {};
 
-        for (const auto& label : context.node->labels) {
+        for (auto label : context.node->labels) {
             labels.push_back(builder.make_label(
                 scope_manager.current_scope(),
                 label->token.value));
@@ -2071,8 +2068,8 @@ namespace basecode::compiler {
         auto& builder = _session.builder();
         auto& scope_manager = _session.scope_manager();
 
-        const auto& target_list = node->lhs;
-        const auto& source_list = node->rhs;
+        auto target_list = node->lhs;
+        auto source_list = node->rhs;
 
         const bool is_constant_assignment = node->type == syntax::ast_node_type_t::constant_assignment;
 
@@ -2087,7 +2084,7 @@ namespace basecode::compiler {
         }
 
         for (size_t i = 0; i < target_list->children.size(); i++) {
-            const auto& target_symbol = target_list->children[i];
+            auto target_symbol = target_list->children[i];
 
             auto is_binary_op = true;
             auto target_element = resolve_symbol_or_evaluate(
@@ -2175,7 +2172,7 @@ namespace basecode::compiler {
         auto& parameter_map = proc_type->parameters();
 
         size_t index = 0;
-        for (const auto& param_node : parameters_node->children) {
+        for (auto param_node : parameters_node->children) {
             switch (param_node->type) {
                 case syntax::ast_node_type_t::symbol: {
                     auto param_decl = declare_identifier(
@@ -2373,7 +2370,7 @@ namespace basecode::compiler {
 
         size_t index = 0;
         compiler::field* previous_field = nullptr;
-        for (const auto& arg : context.node->rhs->children) {
+        for (auto arg : context.node->rhs->children) {
             syntax::ast_node_t* assignment_node = nullptr;
 
             if (arg->type != syntax::ast_node_type_t::assignment) {
@@ -2432,10 +2429,8 @@ namespace basecode::compiler {
         scope_manager.top_level_stack().push(module->scope());
         scope_manager.module_stack().push(module);
 
-        for (auto it = node->children.begin();
-             it != node->children.end();
-             ++it) {
-            auto expr = evaluate((*it));
+        for (auto child : node->children) {
+            auto expr = evaluate(child);
             if (expr == nullptr)
                 return false;
             add_expression_to_scope(
