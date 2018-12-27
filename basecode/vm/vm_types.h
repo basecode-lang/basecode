@@ -35,7 +35,7 @@ namespace basecode::vm {
     class symbol;
     class segment;
     class assembler;
-    class stack_frame;
+    class assembly_parser;
     class assembly_listing;
     class instruction_block;
     class register_allocator;
@@ -1910,4 +1910,9 @@ namespace basecode::vm {
         virtual uint64_t free(uint64_t address) = 0;
     };
 
+    ///////////////////////////////////////////////////////////////////////////
+
+    struct assemble_from_source_result_t {
+        instruction_block* block = nullptr;
+    };
 };

@@ -68,13 +68,13 @@ namespace basecode::compiler {
             return false;
 
         auto& assembler = session.assembler();
+        vm::assemble_from_source_result_t assemble_result {};
         auto success = assembler.assemble_from_source(
             session.result(),
-            source_file);
-        if (success) {
-            _block = assembler.blocks().back();
-            _block->should_emit(false);
-        }
+            source_file,
+            assemble_result);
+        if (success)
+            assemble_result.block->should_emit(false);
 
         return success;
     }

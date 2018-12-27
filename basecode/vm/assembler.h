@@ -33,7 +33,8 @@ namespace basecode::vm {
 
         bool assemble_from_source(
             common::result& r,
-            common::source_file& source_file);
+            common::source_file& source_file,
+            vm::assemble_from_source_result_t& result);
 
         instruction_block* pop_block();
 
@@ -91,10 +92,6 @@ namespace basecode::vm {
         std::vector<label_ref_t*> label_references();
 
         void add_new_block(instruction_block* block);
-
-        bool is_float_register(const std::string& value) const;
-
-        bool is_integer_register(const std::string& value) const;
 
     private:
         vm::terp* _terp = nullptr;

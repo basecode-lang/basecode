@@ -1,6 +1,17 @@
 NOTES
 ------------------------
 
+WORKING
+-------
+- NEW: implement mechanism to identify the type of symbol for inline assembly, e.g.
+        local(foo)  (local variable on the stack frame, would return offset)
+        module(foo) (module variable in the image/on the heap, would return address)
+        label(foo)  (a basecode label reference, would return address)
+        foo         (an assembler identifier only, would return address)
+
+        .local i {alias}  ; allocates an integer register
+        .local f {alias}  ; allocates a float register
+
 TASKS
 -----
 - NEW: family expressions
@@ -15,14 +26,6 @@ TASKS
 - NEW: consolidate all errors into one class along with constants for quick lookup.
 - NEW: finish terp::jump_to_subroutine
 - NEW: add terp trap for putc/getc for any file handle
-- NEW: implement mechanism to identify the type of symbol for inline assembly, e.g.
-        local(foo)  (local variable on the stack frame, would return offset)
-        module(foo) (module variable in the image/on the heap, would return address)
-        label(foo)  (a basecode label reference, would return address)
-        foo         (an assembler identifier only, would return address)
-
-        .local i {alias}  ; allocates an integer register
-        .local f {alias}  ; allocates a float register
 
 - NEW: for_element stack frame support
 
@@ -56,12 +59,9 @@ TASKS
 - BUG: type parameter propagation
 - BUG: fix location for elements
 
-- REFACTOR: assembly_label needs to be broken into at least three subclasses
 - REFACTOR: session/variable combination, again
             merge concept of register_allocator + variable
             DFA graph coloring
-- REFACTOR: assembler::assemble_from_source should take a result-like object
-            which has a pointer to the new instruction_block it creates.
 - REFACTOR: ast_evaluator::add_identifier_to_scope
 
 DONE
@@ -178,3 +178,6 @@ DONE
 - BUG: reintroduce dcArgStruct in ffi
 - BUG: passing a string by-value on stack isn't working
         need to clean up large stack allocations after JSR
+- REFACTOR: assembly_label needs to be broken into at least three subclasses
+- REFACTOR: assembler::assemble_from_source should take a result-like object
+            which has a pointer to the new instruction_block it creates.
