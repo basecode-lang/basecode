@@ -280,4 +280,13 @@ namespace basecode::vm {
         assembler.free_reg(*data<register_t>());
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+
+    void assembly_symbol_result_t::data(const compiler_label_data_t& value) {
+        _data = value;
+    }
+
+    void assembly_symbol_result_t::data(const compiler_local_data_t& value) {
+        _data = value;
+    }
 };

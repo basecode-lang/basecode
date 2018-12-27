@@ -1,18 +1,21 @@
 core :: module("../modules/core");
 
 #run {
-    foo := 128;
+    foo: u16 := 128;
     foo := foo * 2;
 
     #assembly {{
-        move.qw i0, foo
-        load.b  i1, i0
-        move.b  i2, #$0a
-        sub.b   i3, i1, i2
-        store.b i0, i3
+        move.qw i20, module(foo)
+        load.w  i21, i20
+        move.w  i22, #$0a
+        sub.w   i23, i21, i22
+        store.w i20, i23
     }};
 
     foo := (foo - 16) shr 2;
+
+    msg: string := "foo: expected 57";
+    assert(foo == 57, msg);
 
     j, k := cast<u16>(4), 8;
     j, k := k, cast<u8>(j);

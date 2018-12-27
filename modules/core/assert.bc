@@ -11,8 +11,9 @@
 
 public :: ns {
     exit   :: proc(level: s32) {
-        print("exit level := %d\n", level);
         #assembly {{
+            load.dw i63, fp, local(level)
+            push.dw i63
             jmp.qw  _finalizer
         }};
     };

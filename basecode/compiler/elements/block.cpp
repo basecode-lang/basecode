@@ -245,4 +245,17 @@ namespace basecode::compiler {
         return true;
     }
 
+    compiler::stack_frame_entry* block::find_active_frame_entry(const std::string& symbol) {
+        auto current = this;
+        while (current != nullptr) {
+            if (current->_stack_frame.active()) {
+                auto entry = current->_stack_frame.find(symbol);
+                if (entry != nullptr)
+                    return entry;
+            }
+            current = current->parent_scope();
+        }
+        return nullptr;
+    }
+
 };

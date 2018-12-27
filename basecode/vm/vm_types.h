@@ -1912,6 +1912,59 @@ namespace basecode::vm {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    enum class assembly_symbol_type_t {
+        assembler = 1,
+        local,
+        module,
+        label,
+    };
+
+    struct compiler_label_data_t {
+        std::string label;
+    };
+
+    struct compiler_local_data_t {
+        int64_t offset = 0;
+        vm::registers_t reg {};
+    };
+
+    struct assembly_symbol_result_t {
+    public:
+        void data(const compiler_label_data_t& value);
+
+        void data(const compiler_local_data_t& value);
+
+        template <typename T>
+        T* data() {
+            if (_data.empty())
+                return nullptr;
+            try {
+                return boost::any_cast<T>(&_data);
+            } catch (const boost::bad_any_cast& e) {
+                return nullptr;
+            }
+        }
+
+        template <typename T>
+        const T* data() const {
+            if (_data.empty())
+                return nullptr;
+            try {
+                return boost::any_cast<T>(&_data);
+            } catch (const boost::bad_any_cast& e) {
+                return nullptr;
+            }
+        }
+
+    private:
+        boost::any _data;
+    };
+
+    using assembly_symbol_resolver_t = std::function<bool (
+        assembly_symbol_type_t,
+        const std::string&,
+        vm::assembly_symbol_result_t&)>;
+
     struct assemble_from_source_result_t {
         instruction_block* block = nullptr;
     };

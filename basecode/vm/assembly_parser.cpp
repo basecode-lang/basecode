@@ -10,6 +10,7 @@
 // ----------------------------------------------------------------------------
 
 #include <parser/token.h>
+#include <common/defer.h>
 #include <common/string_support.h>
 #include "assembler.h"
 #include "assembly_parser.h"
@@ -19,14 +20,17 @@ namespace basecode::vm {
 
     assembly_parser::assembly_parser(
             vm::assembler* assembler,
-            common::source_file& source_file) : _source_file(source_file),
-                                                _assembler(assembler) {
+            common::source_file& source_file,
+            const assembly_symbol_resolver_t& resolver) : _source_file(source_file),
+                                                          _assembler(assembler),
+                                                          _resolver(resolver) {
     }
 
     bool assembly_parser::parse(
             common::result& r,
             vm::assemble_from_source_result_t& result) {
         auto block = _assembler->make_basic_block();
+        block->should_emit(false);
         result.block = block;
 
         _state = assembly_parser_state_t::start;
@@ -213,34 +217,76 @@ namespace basecode::vm {
                                             | operand_encoding_t::flags::reg;
                             encoding.value.r = static_cast<uint8_t>(number);
                         } else if (is_float_register(operand)) {
-                            if (operand[1] == 'P' || operand[1] == 'p') {
-                                encoding.type = operand_encoding_t::flags::reg;
-                                encoding.value.r = static_cast<uint8_t>(registers_t::fp);
-                            } else {
-                                auto number = std::atoi(operand.substr(1).c_str());
-                                encoding.type = operand_encoding_t::flags::reg;
-                                encoding.value.r = static_cast<uint8_t>(number);
-                            }
+                            auto number = std::atoi(operand.substr(1).c_str());
+                            encoding.type = operand_encoding_t::flags::reg;
+                            encoding.value.r = static_cast<uint8_t>(number);
+                        } else if ((operand[0] == 'F' || operand[0] == 'f')
+                                && (operand[1] == 'P' || operand[1] == 'p')) {
+                            encoding.size = op_sizes::qword;
+                            encoding.type = operand_encoding_t::flags::reg
+                                | operand_encoding_t::flags::integer;
+                            encoding.value.r = static_cast<uint8_t>(registers_t::fp);
                         } else if ((operand[0] == 'S' || operand[0] == 's')
                                    && (operand[1] == 'P' || operand[1] == 'p')) {
-                            encoding.type = operand_encoding_t::flags::reg;
+                            encoding.size = op_sizes::qword;
+                            encoding.type = operand_encoding_t::flags::reg
+                                | operand_encoding_t::flags::integer;
                             encoding.value.r = static_cast<uint8_t>(registers_t::sp);
                         } else if ((operand[0] == 'P' || operand[0] == 'p')
                                    && (operand[1] == 'C' || operand[1] == 'c')) {
-                            encoding.type = operand_encoding_t::flags::reg;
+                            encoding.size = op_sizes::qword;
+                            encoding.type = operand_encoding_t::flags::reg
+                                | operand_encoding_t::flags::integer;
                             encoding.value.r = static_cast<uint8_t>(registers_t::pc);
                         } else {
-                            encoding.type = operand_encoding_t::flags::integer
-                                            | operand_encoding_t::flags::constant
-                                            | operand_encoding_t::flags::unresolved;
-                            auto label_ref = _assembler->make_label_ref(operand);
-                            encoding.value.u = label_ref->id;
+                            std::string symbol;
+                            auto type = symbol_type(operand, symbol);
+                            switch (type) {
+                                case vm::assembly_symbol_type_t::label:
+                                case vm::assembly_symbol_type_t::module: {
+                                    vm::assembly_symbol_result_t resolver_result {};
+                                    if (_resolver(type, symbol, resolver_result)) {
+                                        auto label_data = resolver_result.data<compiler_label_data_t>();
+                                        if (label_data != nullptr) {
+                                            encoding.type = operand_encoding_t::flags::integer
+                                                            | operand_encoding_t::flags::constant
+                                                            | operand_encoding_t::flags::unresolved;
+                                            auto label_ref = _assembler->make_label_ref(label_data->label);
+                                            encoding.value.u = label_ref->id;
+                                        }
+                                    }
+                                    break;
+                                }
+                                case vm::assembly_symbol_type_t::local: {
+                                    vm::assembly_symbol_result_t resolver_result {};
+                                    if (_resolver(type, symbol, resolver_result)) {
+                                        auto local_data = resolver_result.data<compiler_local_data_t>();
+                                        if (local_data != nullptr) {
+                                            encoding.size = op_sizes::word;
+                                            encoding.type = operand_encoding_t::flags::integer
+                                                            | operand_encoding_t::flags::constant;
+                                            if (local_data->offset < 0)
+                                                encoding.type |= operand_encoding_t::flags::negative;
+                                            encoding.value.u = static_cast<uint64_t>(local_data->offset);
+                                        }
+                                    }
+                                    break;
+                                }
+                                case vm::assembly_symbol_type_t::assembler: {
+                                    encoding.type = operand_encoding_t::flags::integer
+                                                    | operand_encoding_t::flags::constant
+                                                    | operand_encoding_t::flags::unresolved;
+                                    auto label_ref = _assembler->make_label_ref(operand);
+                                    encoding.value.u = label_ref->id;
+                                    break;
+                                }
+                            }
                         }
 
                         _wip.operands.push_back(encoding);
                     }
 
-                    _wip.is_valid = _wip.operands.size() == required_operand_count;
+                    _wip.is_valid = _wip.operands.size() >= required_operand_count;
                     goto retry;
                 }
                 case assembly_parser_state_t::encode_instruction: {
@@ -519,6 +565,34 @@ namespace basecode::vm {
             }
             rune = _source_file.next(r);
         }
+    }
+
+    vm::assembly_symbol_type_t assembly_parser::symbol_type(
+            const std::string& operand,
+            std::string& symbol) {
+        auto type = vm::assembly_symbol_type_t::assembler;
+
+        auto pos = operand.find("local(");
+        if (pos != std::string::npos) {
+            type = vm::assembly_symbol_type_t::local;
+            symbol = operand.substr(6, operand.size() - 7);
+        } else {
+            pos = operand.find("module(");
+            if (pos != std::string::npos) {
+                type = vm::assembly_symbol_type_t::module;
+                symbol = operand.substr(7, operand.size() - 8);
+            } else {
+                pos = operand.find("label(");
+                if (pos != std::string::npos) {
+                    type = vm::assembly_symbol_type_t::label;
+                    symbol = operand.substr(6, operand.size() - 7);
+                } else {
+                    symbol = operand;
+                }
+            }
+        }
+
+        return type;
     }
 
     common::source_location assembly_parser::make_location(size_t end_pos) {

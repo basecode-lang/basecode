@@ -62,7 +62,8 @@ namespace basecode::vm {
     public:
         assembly_parser(
             vm::assembler* assembler,
-            common::source_file& source_file);
+            common::source_file& source_file,
+            const assembly_symbol_resolver_t& resolver);
 
         bool parse(
             common::result& r,
@@ -79,6 +80,10 @@ namespace basecode::vm {
             common::rune_t& rune,
             std::vector<std::string>& operand_strings);
 
+        vm::assembly_symbol_type_t symbol_type(
+            const std::string& operand,
+            std::string& symbol);
+
         common::source_location make_location(size_t end_pos);
 
         bool is_float_register(const std::string& value) const;
@@ -91,6 +96,7 @@ namespace basecode::vm {
         assembly_parser_state_t _state;
         common::source_file& _source_file;
         vm::assembler* _assembler = nullptr;
+        assembly_symbol_resolver_t _resolver = nullptr;
     };
 
 };

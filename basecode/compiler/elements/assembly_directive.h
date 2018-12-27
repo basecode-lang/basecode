@@ -33,7 +33,6 @@ namespace basecode::compiler {
         bool on_evaluate(compiler::session& session) override;
 
     private:
-        vm::instruction_block* _block = nullptr;
         compiler::element* _expression = nullptr;
     };
 

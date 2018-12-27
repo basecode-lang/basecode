@@ -104,8 +104,9 @@ namespace basecode::vm {
     bool assembler::assemble_from_source(
             common::result& r,
             common::source_file& source_file,
+            const assembly_symbol_resolver_t& resolver,
             vm::assemble_from_source_result_t& result) {
-        vm::assembly_parser parser(this, source_file);
+        vm::assembly_parser parser(this, source_file, resolver);
         return parser.parse(r, result);
     }
 
