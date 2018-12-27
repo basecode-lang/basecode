@@ -9,7 +9,8 @@
 //
 // ----------------------------------------------------------------------------
 
-#include "compiler/elements/element.h"
+#include <compiler/elements/element.h>
+#include <compiler/elements/attribute.h>
 #include "element_map.h"
 
 namespace basecode::compiler {
@@ -72,6 +73,10 @@ namespace basecode::compiler {
         return _elements_by_id.end();
     }
 
+    element_by_id_map_t::const_iterator element_map::cend() const {
+        return _elements_by_id.cend();
+    }
+
     element_by_id_map_t::const_iterator element_map::begin() const {
         return _elements_by_id.begin();
     }
@@ -86,21 +91,6 @@ namespace basecode::compiler {
             element_list_t& list = it->second;
             list.emplace_back(element);
         }
-    }
-
-    element_by_id_map_t::const_iterator element_map::cend() const {
-        return _elements_by_id.cend();
-    }
-
-    element_list_t element_map::find_by_type(element_type_t type) {
-        element_list_t list {};
-        auto it = _elements_by_type.find(type);
-        if (it != _elements_by_type.end()) {
-            element_list_t& index_list = it->second;
-            for (auto e : index_list)
-                list.emplace_back(e);
-        }
-        return list;
     }
 
     element_by_id_map_t::const_iterator element_map::cbegin() const {
@@ -119,6 +109,15 @@ namespace basecode::compiler {
         if (element_it == list.end())
             return;
         list.erase(element_it);
+    }
+
+    const_attribute_list_t element_map::attribute_by_name(const std::string& name) const {
+        const_attribute_list_t list {};
+        auto attributes = find_by_type<compiler::attribute>(element_type_t::attribute);
+        for (auto attribute : attributes)
+            if (attribute->name() == name)
+                list.emplace_back(attribute);
+        return list;
     }
 
 };

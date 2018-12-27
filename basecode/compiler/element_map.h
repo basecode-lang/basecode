@@ -41,13 +41,37 @@ namespace basecode::compiler {
 
         element_by_id_map_t::const_iterator end() const;
 
-        element_by_id_map_t::const_iterator begin() const;
-
-        element_list_t find_by_type(element_type_t type);
-
         element_by_id_map_t::const_iterator cend() const;
 
+        element_by_id_map_t::const_iterator begin() const;
+
+        template <typename T>
+        std::vector<T*> find_by_type(element_type_t type) {
+            std::vector<T*> list {};
+            auto it = _elements_by_type.find(type);
+            if (it != _elements_by_type.end()) {
+                const auto& index_list = it->second;
+                for (auto e : index_list)
+                    list.emplace_back(dynamic_cast<T*>(e));
+            }
+            return list;
+        };
+
+        template <typename T>
+        std::vector<const T*> find_by_type(element_type_t type) const {
+            std::vector<const T*> list {};
+            auto it = _elements_by_type.find(type);
+            if (it != _elements_by_type.end()) {
+                const element_list_t& index_list = it->second;
+                for (auto e : index_list)
+                    list.emplace_back(dynamic_cast<const T*>(e));
+            }
+            return list;
+        };
+
         element_by_id_map_t::const_iterator cbegin() const;
+
+        const_attribute_list_t attribute_by_name(const std::string& name) const;
 
     private:
         void add_index_by_type(compiler::element* element);

@@ -265,9 +265,8 @@ namespace basecode::compiler {
     }
 
     bool session::type_check() {
-        auto intrinsics = _elements.find_by_type(element_type_t::intrinsic);
-        for (auto i : intrinsics) {
-            auto intrinsic = dynamic_cast<compiler::intrinsic*>(i);
+        auto intrinsics = _elements.find_by_type<compiler::intrinsic>(element_type_t::intrinsic);
+        for (auto intrinsic : intrinsics) {
             if (!intrinsic->arguments()->index_to_procedure_type(
                     *this,
                     intrinsic->procedure_type())) {
@@ -275,9 +274,8 @@ namespace basecode::compiler {
             }
         }
 
-        auto proc_calls = _elements.find_by_type(element_type_t::proc_call);
-        for (auto p : proc_calls) {
-            auto proc_call = dynamic_cast<compiler::procedure_call*>(p);
+        auto proc_calls = _elements.find_by_type<compiler::procedure_call>(element_type_t::proc_call);
+        for (auto proc_call : proc_calls) {
             auto proc_type = dynamic_cast<compiler::procedure_type*>(proc_call
                 ->reference()
                 ->identifier()
@@ -291,12 +289,8 @@ namespace basecode::compiler {
             }
         }
 
-        auto identifiers = _elements.find_by_type(element_type_t::identifier);
-        for (auto identifier : identifiers) {
-            auto var = dynamic_cast<compiler::identifier*>(identifier);
-            if (var == nullptr)
-                continue;
-
+        auto identifiers = _elements.find_by_type<compiler::identifier>(element_type_t::identifier);
+        for (auto var : identifiers) {
             auto init = var->initializer();
             if (init == nullptr)
                 continue;
@@ -325,9 +319,8 @@ namespace basecode::compiler {
             }
         }
 
-        auto binary_ops = _elements.find_by_type(element_type_t::binary_operator);
-        for (auto op : binary_ops) {
-            auto binary_op = dynamic_cast<compiler::binary_operator*>(op);
+        auto binary_ops = _elements.find_by_type<compiler::binary_operator>(element_type_t::binary_operator);
+        for (auto binary_op : binary_ops) {
             if (binary_op->operator_type() != operator_type_t::assignment)
                 continue;
 
@@ -421,9 +414,8 @@ namespace basecode::compiler {
     }
 
     bool session::execute_directives() {
-        auto directives = _elements.find_by_type(element_type_t::directive);
-        for (auto directive : directives) {
-            auto directive_element = dynamic_cast<compiler::directive*>(directive);
+        auto directives = _elements.find_by_type<compiler::directive>(element_type_t::directive);
+        for (auto directive_element : directives) {
             if (directive_element->is_parent_element(element_type_t::directive))
                 continue;
 
@@ -432,7 +424,7 @@ namespace basecode::compiler {
                     directive_element->module(),
                     "P044",
                     fmt::format("directive failed to execute: {}", directive_element->name()),
-                    directive->location());
+                    directive_element->location());
                 return false;
             }
         }
@@ -653,7 +645,7 @@ namespace basecode::compiler {
     bool session::fold_elements_of_type(element_type_t type) {
         std::vector<common::id_t> to_remove {};
 
-        auto elements = _elements.find_by_type(type);
+        auto elements = _elements.find_by_type<compiler::element>(type);
         for (auto e : elements) {
             if (e->element_type() == element_type_t::intrinsic) {
                 auto intrinsic = dynamic_cast<compiler::intrinsic*>(e);

@@ -26,10 +26,9 @@ namespace basecode::compiler {
     bool label_reference::on_fold(
             compiler::session& session,
             fold_result_t& result) {
-        auto labels = session.elements().find_by_type(element_type_t::label);
+        auto labels = session.elements().find_by_type<compiler::label>(element_type_t::label);
         for (auto label : labels) {
-            auto label_element = dynamic_cast<compiler::label*>(label);
-            if (label_element->name() == _label) {
+            if (label->name() == _label) {
                 result.element = label;
                 return true;
             }

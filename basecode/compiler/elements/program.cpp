@@ -258,6 +258,7 @@ namespace basecode::compiler {
     }
 
     bool program::emit_type_info(compiler::session& session) {
+        auto& elements = session.elements();
         auto& assembler = session.assembler();
 
         auto type_info_block = assembler.make_basic_block();
@@ -269,9 +270,8 @@ namespace basecode::compiler {
 
         std::unordered_map<common::id_t, compiler::type*> used_types {};
 
-        auto refs = session.elements().find_by_type(element_type_t::identifier_reference);
-        for (auto r : refs) {
-            auto var = dynamic_cast<compiler::identifier_reference*>(r);
+        auto refs = elements.find_by_type<compiler::identifier_reference>(element_type_t::identifier_reference);
+        for (auto var : refs) {
             auto var_type = var->identifier()->type_ref()->type();
             if (var_type == nullptr) {
                 // XXX: this is an error!
@@ -284,9 +284,8 @@ namespace basecode::compiler {
             used_types.insert(std::make_pair(var_type->id(), var_type));
         }
 
-        auto assembly_labels = session.elements().find_by_type(element_type_t::assembly_label);
-        for (auto l : assembly_labels) {
-            auto label = dynamic_cast<compiler::assembly_label*>(l);
+        auto assembly_labels = elements.find_by_type<compiler::assembly_label>(element_type_t::assembly_label);
+        for (auto label : assembly_labels) {
             auto label_type = label->type();
             if (label_type == nullptr)
                 continue;
@@ -424,9 +423,8 @@ namespace basecode::compiler {
         auto& assembler = session.assembler();
 
         block_list_t implicit_blocks {};
-        auto module_refs = session.elements().find_by_type(element_type_t::module_reference);
-        for (auto ref : module_refs) {
-            auto mod_ref = dynamic_cast<compiler::module_reference*>(ref);
+        auto module_refs = session.elements().find_by_type<compiler::module_reference>(element_type_t::module_reference);
+        for (auto mod_ref : module_refs) {
             auto block = mod_ref->reference()->scope();
             // XXX: how can we check a block to determine if it will emit byte code?
             //      if it won't, then don't add it here
@@ -476,9 +474,8 @@ namespace basecode::compiler {
         auto& assembler = session.assembler();
         procedure_instance_set_t proc_instance_set {};
 
-        auto proc_calls = session.elements().find_by_type(element_type_t::proc_call);
-        for (auto call : proc_calls) {
-            auto proc_call = dynamic_cast<compiler::procedure_call*>(call);
+        auto proc_calls = session.elements().find_by_type<compiler::procedure_call>(element_type_t::proc_call);
+        for (auto proc_call : proc_calls) {
             if (proc_call->is_foreign())
                 continue;
 
@@ -517,9 +514,9 @@ namespace basecode::compiler {
     }
 
     void program::intern_string_literals(compiler::session& session) {
-        auto literals = session.elements().find_by_type(element_type_t::string_literal);
+        auto literals = session.elements().find_by_type<compiler::string_literal>(element_type_t::string_literal);
         for (auto literal : literals)
-            session.intern_string(dynamic_cast<compiler::string_literal*>(literal));
+            session.intern_string(literal);
     }
 
     bool program::group_identifiers_by_section(compiler::session& session) {
@@ -530,9 +527,8 @@ namespace basecode::compiler {
 
         std::set<common::id_t> processed_identifiers {};
 
-        auto identifier_refs = session.elements().find_by_type(element_type_t::identifier_reference);
-        for (auto r : identifier_refs) {
-            auto ref = dynamic_cast<compiler::identifier_reference*>(r);
+        auto identifier_refs = session.elements().find_by_type<compiler::identifier_reference>(element_type_t::identifier_reference);
+        for (auto ref : identifier_refs) {
             auto var = ref->identifier();
             if (processed_identifiers.count(var->id()) > 0)
                 continue;
