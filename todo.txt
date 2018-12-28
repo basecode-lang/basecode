@@ -3,17 +3,6 @@ NOTES
 
 WORKING
 -------
-- NEW: implement mechanism to identify the type of symbol for inline assembly, e.g.
-        local(foo)  (local variable on the stack frame, would return offset)
-        module(foo) (module variable in the image/on the heap, would return address)
-        label(foo)  (a basecode label reference, would return address)
-        foo         (an assembler identifier only, would return address)
-
-        .local i {alias}  ; allocates an integer register
-        .local f {alias}  ; allocates a float register
-
-TASKS
------
 - NEW: family expressions
         integers :: family(signed_integers, unsigned_integers);
         signed_integers :: family(s8, s16, s32, s64);
@@ -22,7 +11,13 @@ TASKS
         only_signed_adder :: proc<T:signed_integers>(x: T, y: T): T {
             return x + y;
         };
+- NEW: convert multiple/named parameters in procedure return into a tuple
+- BUG: proc_expression needs to support overloaded procedures
+- BUG: tuple.bc -- the type_reference's symbol isn't being updated to match
+        the constant identifier's symbol.
 
+TASKS
+-----
 - NEW: consolidate all errors into one class along with constants for quick lookup.
 - NEW: finish terp::jump_to_subroutine
 - NEW: add terp trap for putc/getc for any file handle
@@ -32,7 +27,6 @@ TASKS
 - NEW: implement procedure instance baking
 - NEW: struct/union instance baking
 
-- NEW: convert multiple/named parameters in procedure return into a tuple
 - NEW: finish array subscript operator
 - NEW: UFCS
 
@@ -52,9 +46,6 @@ TASKS
 - BUG: ordering issues between types; requires deferred type checking
         (see ast_evaluator::binary_operator)
 - BUG: add missing errors
-- BUG: tuple.bc -- the type_reference's symbol isn't being updated to match
-        the constant identifier's symbol.
-- BUG: proc_expression needs to support overloaded procedures
 - BUG: lambda procedure type checking
 - BUG: type parameter propagation
 - BUG: fix location for elements
@@ -181,3 +172,11 @@ DONE
 - REFACTOR: assembly_label needs to be broken into at least three subclasses
 - REFACTOR: assembler::assemble_from_source should take a result-like object
             which has a pointer to the new instruction_block it creates.
+- NEW: implement mechanism to identify the type of symbol for inline assembly, e.g.
+        local(foo)  (local variable on the stack frame, would return offset)
+        module(foo) (module variable in the image/on the heap, would return address)
+        label(foo)  (a basecode label reference, would return address)
+        foo         (an assembler identifier only, would return address)
+
+        .ilocal {alias}  ; allocates an integer register
+        .flocal {alias}  ; allocates a float register
