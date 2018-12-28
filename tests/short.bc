@@ -1,7 +1,8 @@
 core :: module("../modules/core");
 
-a: string := "hello world\n";
-//print("%s\n", a);
+a: string;
+assign_string(address_of(a), "hello world\n", 12);
+print("%s\n", a.data);
 
 PI :: cast<f64>(3.1415926535);
 E  :: cast<f64>(2.7182818284);

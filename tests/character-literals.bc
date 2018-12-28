@@ -7,7 +7,8 @@ a_type: ^type;
 a_type := type_of(a);
 b_type := type_of(b);
 
-temp: string := "hello world!";
+temp: string;
+assign_string(address_of(temp), "hello world!", 12);
 
 #run {
     print("a := %c\n", a);

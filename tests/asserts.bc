@@ -14,8 +14,6 @@ MODE :: 2;
     print("unknown mode\n");
 };
 
-s2 := "oh, noes!  what did you DO!?";
-
 factorial :: proc(n: u64 := 12): u64 {
     r: u64 := 1;
     for i in range<u64>(1, n) {
@@ -34,10 +32,10 @@ fib :: proc(n: u64 := 10): u64 {
 
 #run {
     result := fib(20);
-    print("fib       := %d\n", result);
-    assert(result == 1, s2);
+    print("fib       := %llu\n", result);
+    assert(result == 1, "fib expected 1");
 
     result := factorial();
-    print("factorial := %d\n", result);
-    assert(result == 479001600, s2);
+    print("factorial := %llu\n", result);
+    assert(result == 479001600, "factorial expected 479001600");
 };

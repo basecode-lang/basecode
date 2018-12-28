@@ -1,13 +1,12 @@
 core :: module("../modules/core");
 
 anonymous_tuple :: tuple(1, 2, 3);
-named_tuple     :: tuple(first := 1, second := 2, third: string := "foobar");
+named_tuple     :: tuple(first := 1, second := 2, third := "foobar");
 
 #run {
     print("anonymous_tuple._0 := %d\n", anonymous_tuple._0);
     print("anonymous_tuple._1 := %d\n", anonymous_tuple._1);
     print("anonymous_tuple._2 := %d\n", anonymous_tuple._2);
 
-    print("named_tuple.third        := %s\n", named_tuple.third.data);
-    print("named_tuple.third.length := %d\n", named_tuple.third.length);
+    print("named_tuple.third  := %s\n", named_tuple.third);
 };

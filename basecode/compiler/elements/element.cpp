@@ -19,6 +19,7 @@
 #include "float_literal.h"
 #include "unary_operator.h"
 #include "string_literal.h"
+#include "type_reference.h"
 #include "integer_literal.h"
 #include "boolean_literal.h"
 
@@ -70,7 +71,12 @@ namespace basecode::compiler {
             compiler::session& session,
             infer_type_result_t& result) {
         if (is_type()) {
-            result.inferred_type = dynamic_cast<compiler::type*>(this);
+            if (_element_type == element_type_t::type_reference) {
+                result.reference = dynamic_cast<compiler::type_reference*>(this);
+                result.inferred_type = result.reference->type();
+            } else {
+                result.inferred_type = dynamic_cast<compiler::type*>(this);
+            }
             return true;
         }
         return on_infer_type(session, result);
@@ -99,6 +105,7 @@ namespace basecode::compiler {
             case element_type_t::pointer_type:
             case element_type_t::composite_type:
             case element_type_t::namespace_type:
+            case element_type_t::type_reference:
                 return true;
             default:
                 return false;

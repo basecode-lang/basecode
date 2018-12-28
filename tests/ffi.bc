@@ -35,7 +35,8 @@ tuple_by_value :: proc(flags: flags_t) {
 #run {
     print("%s: %d, %f\n", "integer and float", 22, 3.5);
 
-    temp: string := "hello world!";
+    temp: string;
+    assign_string(address_of(temp), "hello world!", 12);
 
     // ffi
     str_test_ptr(address_of(temp));

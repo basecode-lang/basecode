@@ -134,17 +134,7 @@ namespace basecode::compiler {
         if (other == nullptr)
             return false;
 
-        if (other->element_type() == element_type_t::string_type)
-            return true;
-
-        if (other->is_pointer_type()) {
-            auto pointer = dynamic_cast<compiler::pointer_type*>(other);
-            auto base_type = pointer->base_type_ref()->type();
-            return base_type->size_in_bytes() == 1
-                && base_type->number_class() == type_number_class_t::integer;
-        }
-
-        return false;
+        return other->element_type() == element_type_t::string_type;
     }
 
     bool string_type::on_initialize(compiler::session& session) {

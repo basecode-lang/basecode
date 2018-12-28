@@ -16,8 +16,7 @@ core :: module("../modules/core");
 
     foo := (foo - 16) shr 2;
 
-    msg: string := "foo: expected 57";
-    assert(foo == 57, msg);
+    assert(foo == 57, "foo expected 57");
 
     j, k := cast<u16>(4), 8;
     j, k := k, cast<u8>(j);

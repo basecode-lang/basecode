@@ -14,10 +14,12 @@
 #include <compiler/scope_manager.h>
 #include "type.h"
 #include "identifier.h"
+#include "initializer.h"
 #include "pointer_type.h"
 #include "argument_list.h"
 #include "assembly_label.h"
 #include "symbol_element.h"
+#include "type_reference.h"
 #include "integer_literal.h"
 #include "identifier_reference.h"
 #include "address_of_intrinsic.h"
@@ -78,6 +80,19 @@ namespace basecode::compiler {
         }
 
         auto ref = dynamic_cast<compiler::identifier_reference*>(arg);
+        auto init = ref->identifier()->initializer();
+        if (init != nullptr) {
+            auto init_expr = init->expression();
+            if (init_expr != nullptr && init_expr->is_type()) {
+                session.error(
+                    module(),
+                    "X000",
+                    "address_of does not support type identifiers; use type_of instead.",
+                    location());
+                return false;
+            }
+        }
+
         result.element = session.builder().make_assembly_label(
             parent_scope(),
             ref,

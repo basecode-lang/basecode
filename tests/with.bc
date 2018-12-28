@@ -1,7 +1,8 @@
 core :: module("../modules/core");
 
 #run {
-    msg: string :: "hello world";
+    msg: string;
+    assign_string(address_of(msg), "hello world", 11);
 
     temp: string;
     temp := msg;

@@ -27,7 +27,11 @@ alpha::compiler::examples :: ns {
 
     count:  u32;
     max:    u16 := 32767;
-    name:   string := "fibonacci test program";
+    name:   string;
+    core::compiler_module::public::assign_string(
+        address_of(name),
+        "fibonacci test program",
+        22);
 
     foo: u32 := max * 4;
     boom := length_of_sequence;

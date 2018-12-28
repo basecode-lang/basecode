@@ -1,6 +1,7 @@
 core :: module("../modules/core");
 
-text: string := "hello world!";
+text: string;
+assign_string(address_of(text), "hello world!", 12);
 
 vector3 :: struct {
     x: s32;

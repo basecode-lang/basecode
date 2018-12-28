@@ -20,10 +20,11 @@ public :: ns {
         }};
     };
 
-    assert :: proc(predicate: bool, message: string) {
-        if !predicate {
-            print("%s\n", message.data);
-            exit(1);
+    assert :: proc(predicate: bool, message: ^u8) {
+        if predicate {
+            return;
         };
+        print("assertion failure: %s\n", message);
+        exit(1);
     };
 };
