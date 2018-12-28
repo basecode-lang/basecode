@@ -17,6 +17,7 @@
 #include "program.h"
 #include "identifier.h"
 #include "initializer.h"
+#include "unknown_type.h"
 #include "argument_list.h"
 #include "symbol_element.h"
 #include "procedure_type.h"
@@ -198,8 +199,11 @@ namespace basecode::compiler {
             }
         } else {
             result.inferred_type = session
-                .scope_manager()
-                .find_type(qualified_symbol_t("unknown"));
+                .builder()
+                .make_unknown_type(
+                    parent_scope(),
+                    session.builder().make_symbol(parent_scope(), "---"),
+                    this);
             return true;
         }
 
@@ -246,8 +250,9 @@ namespace basecode::compiler {
             return false;
         }
 
-        _active_procedure_type = type;
         _active_identifier = _references.front();
+        auto proc_type = _active_identifier->identifier()->type_ref()->type();
+        _active_procedure_type = dynamic_cast<compiler::procedure_type*>(proc_type);
 
         return true;
     }

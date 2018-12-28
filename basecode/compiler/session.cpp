@@ -171,7 +171,7 @@ namespace basecode::compiler {
         if (!resolve_unknown_identifiers())
             return false;
 
-        if (!resolve_unknown_types())
+        if (!resolve_unknown_types(false))
             return false;
 
         if (!fold_constant_intrinsics())
@@ -279,6 +279,9 @@ namespace basecode::compiler {
             if (!proc_call->resolve_overloads(*this))
                 return false;
         }
+
+        if (!resolve_unknown_types(true))
+            return false;
 
         auto identifiers = _elements.find_by_type<compiler::identifier>(element_type_t::identifier);
         for (auto var : identifiers) {
@@ -488,8 +491,10 @@ namespace basecode::compiler {
             {}));
     }
 
-    bool session::resolve_unknown_types() {
+    bool session::resolve_unknown_types(bool final) {
         auto& identifiers = _scope_manager.identifiers_with_unknown_types();
+        auto remaining = identifiers.size();
+
         std::set<common::id_t> to_remove {};
 
         auto it = identifiers.begin();
@@ -499,10 +504,21 @@ namespace basecode::compiler {
             if (var->type_ref() != nullptr
             && !var->type_ref()->is_unknown_type()) {
                 it = identifiers.erase(it);
+                remaining--;
                 continue;
             }
 
+            compiler::pointer_type* pointer = nullptr;
+            compiler::unknown_type* unknown_type = nullptr;
             auto is_pointer = var->type_ref()->is_pointer_type();
+
+            if (is_pointer) {
+                pointer = dynamic_cast<compiler::pointer_type*>(var->type_ref()->type());
+                unknown_type = dynamic_cast<compiler::unknown_type*>(pointer->base_type_ref()->type());
+            } else {
+                unknown_type = dynamic_cast<compiler::unknown_type*>(var->type_ref()->type());
+            }
+
             infer_type_result_t infer_type_result {};
 
             if (var->is_parent_element(element_type_t::binary_operator)) {
@@ -513,18 +529,14 @@ namespace basecode::compiler {
                     var->type_ref(infer_type_result.reference);
                 }
             } else {
+                compiler::element* expr = nullptr;
                 auto init = var->initializer();
-                compiler::pointer_type* pointer = nullptr;
-                compiler::unknown_type* unknown_type = nullptr;
+                if (init != nullptr)
+                    expr = init->expression();
+                else
+                    expr = unknown_type->expression();
 
-                if (is_pointer) {
-                    pointer = dynamic_cast<compiler::pointer_type*>(var->type_ref()->type());
-                    unknown_type = dynamic_cast<compiler::unknown_type*>(pointer->base_type_ref()->type());
-                } else {
-                    unknown_type = dynamic_cast<compiler::unknown_type*>(var->type_ref()->type());
-                }
-
-                if (init == nullptr || is_pointer) {
+                if (expr == nullptr || is_pointer) {
                     auto type = _scope_manager.find_type(
                         unknown_type->symbol()->qualified_symbol(),
                         var->parent_scope());
@@ -541,9 +553,14 @@ namespace basecode::compiler {
                         to_remove.insert(unknown_type->id());
                     }
                 } else {
-                    if (!init->expression()->infer_type(*this, infer_type_result))
+                    if (!expr->infer_type(*this, infer_type_result))
                         return false;
-                    var->type_ref(infer_type_result.reference);
+                    if (infer_type_result.reference != nullptr)
+                        var->type_ref(infer_type_result.reference);
+                    else {
+                        if (!final)
+                            remaining--;
+                    }
                 }
             }
 
@@ -551,22 +568,25 @@ namespace basecode::compiler {
             if (type_ref != nullptr && !type_ref->is_unknown_type()) {
                 var->inferred_type(true);
                 it = identifiers.erase(it);
+                remaining--;
             } else {
                 ++it;
-                error(
-                    var->module(),
-                    "P004",
-                    fmt::format(
-                        "unable to resolve type for identifier: {}",
-                        var->symbol()->name()),
-                    var->symbol()->location());
+                if (final || unknown_type->expression() == nullptr) {
+                    error(
+                        var->module(),
+                        "P004",
+                        fmt::format(
+                            "unable to resolve type for identifier: {}",
+                            var->symbol()->name()),
+                        var->symbol()->location());
+                }
             }
         }
 
         for (auto id : to_remove)
             _elements.remove(id);
 
-        return identifiers.empty();
+        return remaining == 0;
     }
 
     ast_evaluator& session::evaluator() {

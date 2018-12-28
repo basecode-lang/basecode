@@ -110,14 +110,17 @@ namespace basecode::compiler {
 
     unknown_type* element_builder::make_unknown_type(
             compiler::block* parent_scope,
-            compiler::symbol_element* symbol) {
+            compiler::symbol_element* symbol,
+            compiler::element* expression) {
         auto type = new compiler::unknown_type(
             _session.scope_manager().current_module(),
             parent_scope,
-            symbol);
+            symbol,
+            expression);
         if (!type->initialize(_session))
             return nullptr;
-        symbol->parent_element(type);
+        if (symbol != nullptr)
+            symbol->parent_element(type);
         _session.elements().add(type);
         return type;
     }

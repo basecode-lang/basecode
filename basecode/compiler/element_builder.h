@@ -219,7 +219,8 @@ namespace basecode::compiler {
 
         unknown_type* make_unknown_type(
             compiler::block* parent_scope,
-            compiler::symbol_element* symbol);
+            compiler::symbol_element* symbol,
+            compiler::element* expression = nullptr);
 
         composite_type* make_union_type(
             compiler::block* parent_scope,

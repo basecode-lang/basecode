@@ -148,8 +148,6 @@ namespace basecode::compiler {
 
         bool execute_directives();
 
-        bool resolve_unknown_types();
-
         void initialize_core_types();
 
         bool fold_constant_intrinsics();
@@ -159,6 +157,8 @@ namespace basecode::compiler {
         bool resolve_unknown_identifiers();
 
         void initialize_built_in_procedures();
+
+        bool resolve_unknown_types(bool final);
 
         bool fold_elements_of_type(element_type_t type);
 
