@@ -11,6 +11,7 @@
 
 #include <sstream>
 #include <fmt/format.h>
+#include <common/string_support.h>
 #include <compiler/element_builder.h>
 #include "type.h"
 #include "field.h"
@@ -205,6 +206,30 @@ namespace basecode::compiler {
             return inferred_type;
         }
 
+    }
+
+    qualified_symbol_t make_qualified_symbol(const std::string& symbol) {
+        qualified_symbol_t qs {};
+
+        size_t index = 0;
+        std::stringstream stream;
+        while (index < symbol.length()) {
+            const auto& c = symbol[index];
+            if (c == ':') {
+                ++index;
+                if (c == ':') {
+                    qs.namespaces.emplace_back(stream.str());
+                    stream.str("");
+                }
+            } else {
+                stream << c;
+            }
+            ++index;
+        }
+        qs.name = stream.str();
+        qs.fully_qualified_name = symbol;
+
+        return qs;
     }
 
     compiler::type_reference* type_find_result_t::make_type_reference(

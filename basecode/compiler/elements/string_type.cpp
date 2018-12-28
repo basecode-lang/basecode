@@ -43,7 +43,9 @@ namespace basecode::compiler {
         auto& assembler = session.assembler();
         auto block = assembler.current_block();
 
-        block->comment("finalizer", vm::comment_location_t::after_instruction);
+        block->comment(
+            "finalizer: string",
+            vm::comment_location_t::after_instruction);
 
         variable_handle_t data_field;
         if (!var->field("data", data_field))
@@ -70,7 +72,7 @@ namespace basecode::compiler {
         auto block = assembler.current_block();
 
         block->comment(
-            "initializer",
+            "initializer: string",
             vm::comment_location_t::after_instruction);
 
         auto length = static_cast<uint64_t>(literal != nullptr ? literal->value().length() : 0);

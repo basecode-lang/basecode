@@ -11,9 +11,11 @@
 
 #include <compiler/session.h>
 #include <vm/instruction_block.h>
+#include "type.h"
 #include "block.h"
 #include "label.h"
 #include "raw_block.h"
+#include "type_reference.h"
 #include "assembly_directive.h"
 
 namespace basecode::compiler {
@@ -86,15 +88,52 @@ namespace basecode::compiler {
                     }
                     case vm::assembly_symbol_type_t::module: {
                         auto var = session.scope_manager().find_identifier(
-                            qualified_symbol_t(symbol),
+                            make_qualified_symbol(symbol),
                             _expression->parent_scope());
                         if (var != nullptr) {
-                            vm::compiler_module_data_t data {};
-                            data.label = var->label_name();
-                            auto address_reg = session.get_address_register(var->id());
-                            if (address_reg != nullptr)
-                                data.reg = *address_reg;
-                            result.data(data);
+                            if (var->is_constant()) {
+                                switch (var->type_ref()->type()->element_type()) {
+                                    case element_type_t::bool_type: {
+                                        bool value;
+                                        if (var->as_bool(value)) {
+                                            result.data(vm::compiler_module_data_t(
+                                                static_cast<uint64_t>(value ? 1 : 0)));
+                                        }
+                                        break;
+                                    }
+                                    case element_type_t::numeric_type: {
+                                        auto size = var->type_ref()->type()->size_in_bytes();
+                                        auto number_class = var->type_ref()->type()->number_class();
+
+                                        if (number_class == type_number_class_t::integer) {
+                                            uint64_t value;
+                                            if (var->as_integer(value)) {
+                                                result.data(vm::compiler_module_data_t(value));
+                                            }
+                                        } else {
+                                            double value;
+                                            if (var->as_float(value)) {
+                                                if (size == 4)
+                                                    result.data(vm::compiler_module_data_t((float)value));
+                                                else
+                                                    result.data(vm::compiler_module_data_t(value));
+                                            }
+                                        }
+                                        break;
+                                    }
+                                    default:
+                                        break;
+                                }
+                            }
+
+                            if (!result.is_set()) {
+                                auto address_reg = session.get_address_register(var->id());
+                                if (address_reg != nullptr)
+                                    result.data(vm::compiler_module_data_t(*address_reg));
+                                else
+                                    result.data(vm::compiler_module_data_t(var->label_name()));
+                            }
+
                             return true;
                         }
                         break;

@@ -567,6 +567,8 @@ namespace basecode::compiler {
         common::source_location location {};
     };
 
+    qualified_symbol_t make_qualified_symbol(const std::string& symbol);
+
     std::string make_fully_qualified_name(const symbol_element* symbol);
 
     std::string make_fully_qualified_name(const qualified_symbol_t& symbol);

@@ -398,6 +398,24 @@ namespace basecode::compiler {
         _terp.initialize(_result);
         _assembler.initialize(_result);
 
+        _terp.register_trap(trap_putc, [](vm::terp* terp) {
+            vm::register_value_alias_t fp_alias {};
+            fp_alias.qw = terp->pop();
+
+            vm::register_value_alias_t ch_alias {};
+            ch_alias.qw = terp->pop();
+
+            fputc(ch_alias.dw, stdout);
+        });
+
+        _terp.register_trap(trap_getc, [](vm::terp* terp) {
+            vm::register_value_alias_t fp_alias {};
+            fp_alias.qw = terp->pop();
+
+            auto ch = fgetc(stdin);
+            terp->push(ch);
+        });
+
         return !_result.is_failed();
     }
 

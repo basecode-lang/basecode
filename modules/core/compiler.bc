@@ -48,18 +48,35 @@ public :: ns {
         copy(str.data, lit, cast<u64>(len));
     };
 
-//    traps :: enum<u8> {
-//        putc := 1;
-//        getc;
-//    };
-//
-//    putc :: proc(char: u8) {
-//        #assembly {{
-//            .ireg char_addr
-//
-//            load.b  char_addr, fp, local(char)
-//            push.b  char_addr
-//            trap.b  module(traps::putc)
-//        }};
-//    };
+    traps :: ns {
+        putc :: $01;
+        getc :: $02;
+    };
+
+    putc :: proc(char: rune, f: u32 := 1) {
+        #assembly {{
+            .ilocal f
+            .ilocal char
+
+            load.dw     f, fp, local(f)
+            load.dw     char, fp, local(char)
+            push.dw     char
+            push.dw     f
+            trap.b      module(traps::putc)
+        }};
+    };
+
+    getc :: proc(f: u32 := 1): rune {
+        result: rune;
+        #assembly {{
+            .ilocal f
+
+            load.dw     f, fp, local(f)
+            push.dw     f
+            trap.b      module(traps::getc)
+            pop.dw      f
+            store.dw    fp, f, local(result)
+        }};
+        return result;
+    };
 };

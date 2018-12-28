@@ -58,4 +58,10 @@ core :: module("../modules/core");
     addr: ^u8 := alloc(size_of(u16) * 4096);
     print("addr := $%08x\n", addr);
     free(addr);
+
+    putc('H');
+
+    // N.B. be careful, this call blocks
+    //r := getc();
+    //putc(r);
 };

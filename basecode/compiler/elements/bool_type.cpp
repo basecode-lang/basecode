@@ -38,7 +38,9 @@ namespace basecode::compiler {
         auto var_ident = dynamic_cast<compiler::identifier*>(var->element());
         auto init = var_ident->initializer();
 
-        block->comment("initializer", vm::comment_location_t::after_instruction);
+        block->comment(
+            "initializer: bool",
+            vm::comment_location_t::after_instruction);
         if (init != nullptr) {
             variable_handle_t init_var{};
             if (!session.variable(init, init_var))

@@ -37,6 +37,10 @@ namespace basecode::compiler {
 
     class session {
     public:
+        static constexpr uint8_t trap_putc = 0x01;
+        static constexpr uint8_t trap_getc = 0x02;
+
+    public:
         session(
             const session_options_t& options,
             const path_list_t& source_files);

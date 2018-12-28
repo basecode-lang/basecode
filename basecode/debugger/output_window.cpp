@@ -58,13 +58,14 @@ namespace basecode::debugger {
             }
             _stdout_line += val;
         }
+
         memset(_stdout_buffer, 0, 4096);
         std::fseek(_stdout_fp, 0, SEEK_SET);
     }
 
     void output_window::on_draw(environment& env) {
-        size_t page_width = static_cast<size_t>(max_width() - 2);
-        size_t page_height = static_cast<size_t>(max_height() - 2);
+        auto page_width = static_cast<size_t>(max_width() - 2);
+        auto page_height = static_cast<size_t>(max_height() - 2);
         for (size_t line_index = 0;
                 line_index < page_height;
                 line_index ++) {
@@ -77,7 +78,7 @@ namespace basecode::debugger {
                 if (clip_length > page_width)
                     clip_length = static_cast<size_t>(page_width);
 
-                size_t column_offset = static_cast<size_t>(column());
+                auto column_offset = static_cast<size_t>(column());
                 if (column_offset > 0
                 &&  clip_length > column_offset) {
                     clip_length -= column_offset;

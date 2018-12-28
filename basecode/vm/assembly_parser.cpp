@@ -65,7 +65,12 @@ namespace basecode::vm {
                             while (true) {
                                 auto next_rune = _source_file.next(r);
                                 if (next_rune == ':') {
-                                    _state = assembly_parser_state_t::label;
+                                    auto pos = _source_file.pos();
+                                    next_rune = _source_file.next(r);
+                                    if (next_rune != ':') {
+                                        _source_file.seek(pos);
+                                        _state = assembly_parser_state_t::label;
+                                    }
                                     break;
                                 } else if (next_rune == '\n') {
                                     break;
@@ -264,18 +269,44 @@ namespace basecode::vm {
                                     if (_resolver(type, symbol, resolver_result)) {
                                         auto module_data = resolver_result.data<compiler_module_data_t>();
                                         if (module_data != nullptr) {
-                                            if (module_data->reg.type != vm::register_type_t::none) {
-                                                encoding.size = module_data->reg.size;
-                                                encoding.type = operand_encoding_t::flags::reg;
-                                                if (module_data->reg.type == vm::register_type_t::integer)
-                                                    encoding.type |= operand_encoding_t::flags::integer;
-                                                encoding.value.r = static_cast<uint8_t>(module_data->reg.number);
-                                            } else {
-                                                encoding.type = operand_encoding_t::flags::integer
-                                                                | operand_encoding_t::flags::constant
-                                                                | operand_encoding_t::flags::unresolved;
-                                                auto label_ref = _assembler->make_label_ref(module_data->label);
-                                                encoding.value.u = label_ref->id;
+                                            switch (module_data->type()) {
+                                                case vm::compiler_module_data_type_t::reg: {
+                                                    auto reg_data = module_data->data<vm::register_t>();
+                                                    encoding.size = reg_data->size;
+                                                    encoding.type = operand_encoding_t::flags::reg;
+                                                    if (reg_data->type == vm::register_type_t::integer)
+                                                        encoding.type |= operand_encoding_t::flags::integer;
+                                                    encoding.value.r = static_cast<uint8_t>(reg_data->number);
+                                                    break;
+                                                }
+                                                case vm::compiler_module_data_type_t::label: {
+                                                    auto label = module_data->data<std::string>();
+                                                    encoding.type = operand_encoding_t::flags::integer
+                                                                    | operand_encoding_t::flags::constant
+                                                                    | operand_encoding_t::flags::unresolved;
+                                                    auto label_ref = _assembler->make_label_ref(*label);
+                                                    encoding.value.u = label_ref->id;
+                                                    break;
+                                                }
+                                                case vm::compiler_module_data_type_t::imm_f32: {
+                                                    auto value = module_data->data<float>();
+                                                    encoding.type = operand_encoding_t::flags::constant;
+                                                    encoding.value.f = *value;
+                                                    break;
+                                                }
+                                                case vm::compiler_module_data_type_t::imm_f64: {
+                                                    auto value = module_data->data<double>();
+                                                    encoding.type = operand_encoding_t::flags::constant;
+                                                    encoding.value.d = *value;
+                                                    break;
+                                                }
+                                                case vm::compiler_module_data_type_t::imm_integer: {
+                                                    auto value = module_data->data<uint64_t>();
+                                                    encoding.type = operand_encoding_t::flags::integer
+                                                                    | operand_encoding_t::flags::constant;
+                                                    encoding.value.u = *value;
+                                                    break;
+                                                }
                                             }
                                         }
                                     }
@@ -286,12 +317,15 @@ namespace basecode::vm {
                                     if (_resolver(type, symbol, resolver_result)) {
                                         auto local_data = resolver_result.data<compiler_local_data_t>();
                                         if (local_data != nullptr) {
+                                            auto offset = local_data->offset;
                                             encoding.size = op_sizes::word;
                                             encoding.type = operand_encoding_t::flags::integer
                                                             | operand_encoding_t::flags::constant;
-                                            if (local_data->offset < 0)
+                                            if (local_data->offset < 0) {
                                                 encoding.type |= operand_encoding_t::flags::negative;
-                                            encoding.value.u = static_cast<uint64_t>(local_data->offset);
+                                                offset = -offset;
+                                            }
+                                            encoding.value.u = static_cast<uint64_t>(offset);
                                         }
                                     }
                                     break;
@@ -391,7 +425,8 @@ namespace basecode::vm {
                             break;
                         }
                         case directive_type_t::section: {
-                            block->make_block_entry(section_type(boost::get<std::string>(_wip.params.front())));
+                            block->make_block_entry(section_type(boost::get<std::string>(
+                                _wip.params.front())));
                             break;
                         }
                         case directive_type_t::align: {
@@ -444,7 +479,7 @@ namespace basecode::vm {
 
                     if (data_def.type != data_definition_type_t::none) {
                         for (const auto& data : _wip.params)
-                            data_def.values.push_back(boost::get<uint64_t>(data));
+                            data_def.values.emplace_back(boost::get<uint64_t>(data));
                         block->make_block_entry(data_def);
                     }
 

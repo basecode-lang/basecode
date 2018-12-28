@@ -1961,9 +1961,65 @@ namespace basecode::vm {
         std::string label;
     };
 
+    enum class compiler_module_data_type_t {
+        reg,
+        label,
+        imm_f32,
+        imm_f64,
+        imm_integer,
+    };
+
     struct compiler_module_data_t {
-        std::string label;
-        vm::register_t reg {};
+    public:
+        explicit compiler_module_data_t(float value) : _data(value),
+                                                       _type(compiler_module_data_type_t::imm_f32) {
+        }
+
+        explicit compiler_module_data_t(double value) : _data(value),
+                                                       _type(compiler_module_data_type_t::imm_f64) {
+        }
+
+        explicit compiler_module_data_t(uint64_t value) : _data(value),
+                                                          _type(compiler_module_data_type_t::imm_integer) {
+        }
+
+        explicit compiler_module_data_t(const std::string& value) : _data(value),
+                                                                    _type(compiler_module_data_type_t::label) {
+        }
+
+        explicit compiler_module_data_t(const vm::register_t& value) : _data(value),
+                                                                       _type(compiler_module_data_type_t::reg) {
+        }
+
+        template <typename T>
+        T* data() {
+            if (_data.empty())
+                return nullptr;
+            try {
+                return boost::any_cast<T>(&_data);
+            } catch (const boost::bad_any_cast& e) {
+                return nullptr;
+            }
+        }
+
+        template <typename T>
+        const T* data() const {
+            if (_data.empty())
+                return nullptr;
+            try {
+                return boost::any_cast<T>(&_data);
+            } catch (const boost::bad_any_cast& e) {
+                return nullptr;
+            }
+        }
+
+        compiler_module_data_type_t type() const {
+            return _type;
+        }
+
+    private:
+        boost::any _data;
+        compiler_module_data_type_t _type;
     };
 
     struct compiler_local_data_t {
@@ -1973,6 +2029,10 @@ namespace basecode::vm {
 
     struct assembly_symbol_result_t {
     public:
+        bool is_set() const {
+            return _is_set;
+        }
+
         void data(const compiler_label_data_t& value);
 
         void data(const compiler_local_data_t& value);
@@ -2003,6 +2063,7 @@ namespace basecode::vm {
 
     private:
         boost::any _data;
+        bool _is_set = false;
     };
 
     using assembly_symbol_resolver_t = std::function<bool (
