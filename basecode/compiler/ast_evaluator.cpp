@@ -603,6 +603,11 @@ namespace basecode::compiler {
                 }
                 if (init_expr->is_constant()) {
                     init = builder.make_initializer(scope, init_expr);
+
+                    // XXX: after a type_literal is created, we could update
+                    //      the type_reference's symbol (the first type_params entry).
+                    //
+                    //      do we want to do this?
                 }
             } else {
                 if (_session.result().is_failed())
@@ -613,7 +618,7 @@ namespace basecode::compiler {
         // XXX: clean up
         if (!symbol->is_constant()) {
             auto is_module = init_expr != nullptr
-                             && init_expr->element_type() == element_type_t::module_reference;
+                && init_expr->element_type() == element_type_t::module_reference;
             if (is_module) {
                 _session.error(
                     _session.scope_manager().current_module(),
@@ -624,7 +629,7 @@ namespace basecode::compiler {
             }
 
             auto is_ns = init_expr != nullptr
-                         && init_expr->element_type() == element_type_t::namespace_e;
+                && init_expr->element_type() == element_type_t::namespace_e;
             if (is_ns) {
                 _session.error(
                     _session.scope_manager().current_module(),
@@ -635,9 +640,7 @@ namespace basecode::compiler {
             }
 
             auto is_type = init_expr != nullptr && init_expr->is_type();
-            auto is_type_directive = init_expr != nullptr
-                                     && init_expr->element_type() == element_type_t::directive
-                                     && dynamic_cast<compiler::directive*>(init_expr)->name() == "type";
+            auto is_type_directive = init_expr != nullptr && init_expr->is_directive_named("type");
             if (is_type || is_type_directive) {
                 _session.error(
                     _session.scope_manager().current_module(),
@@ -650,6 +653,7 @@ namespace basecode::compiler {
 
         auto new_identifier = builder.make_identifier(scope, symbol, init);
         if (init_expr != nullptr) {
+            // XXX: why?
             if (init == nullptr)
                 init_expr->parent_element(new_identifier);
         }
@@ -2103,8 +2107,9 @@ namespace basecode::compiler {
 
             if (target_element->element_type() == element_type_t::identifier_reference) {
                 auto identifier_ref = dynamic_cast<compiler::identifier_reference*>(target_element);
-                if (identifier_ref->resolved()) {
-                    if (identifier_ref->identifier()->symbol()->is_constant()) {
+                if (identifier_ref->resolved()
+                &&  !identifier_ref->identifier()->type_ref()->is_proc_type()) {
+                    if (identifier_ref->is_constant()) {
                         _session.error(
                             _session.scope_manager().current_module(),
                             "P028",

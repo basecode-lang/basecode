@@ -1,6 +1,15 @@
 NOTES
 ------------------------
 
+QUESTIONS
+---------
+- Do we want to make type_reference's aliases match the bound identifier's
+  symbol?
+
+  See ~line 607 in ast_evaluator for note:
+    - BUG: tuple.bc -- the type_reference's symbol isn't being updated to match
+            the constant identifier's symbol.
+
 WORKING
 -------
 - NEW: family expressions
@@ -13,8 +22,6 @@ WORKING
         };
 - NEW: convert multiple/named parameters in procedure return into a tuple
 - BUG: proc_expression needs to support overloaded procedures
-- BUG: tuple.bc -- the type_reference's symbol isn't being updated to match
-        the constant identifier's symbol.
 
 TASKS
 -----

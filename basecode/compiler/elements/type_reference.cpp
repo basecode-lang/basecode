@@ -82,4 +82,8 @@ namespace basecode::compiler {
         return _symbol;
     }
 
+    void type_reference::symbol(const qualified_symbol_t& value) {
+        _symbol = value;
+    }
+
 };

@@ -16,6 +16,7 @@
 #include "element.h"
 #include "program.h"
 #include "attribute.h"
+#include "directive.h"
 #include "float_literal.h"
 #include "unary_operator.h"
 #include "string_literal.h"
@@ -301,6 +302,11 @@ namespace basecode::compiler {
 
     bool element::as_identifier(compiler::identifier*& value) const {
         return on_as_identifier(value);
+    }
+
+    bool element::is_directive_named(const std::string& name) const {
+        return _element_type == element_type_t::directive
+               && dynamic_cast<const compiler::directive*>(this)->name() == name;
     }
 
     bool element::on_greater_than_or_equal(const element& other) const {

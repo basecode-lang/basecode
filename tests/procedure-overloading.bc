@@ -1,0 +1,18 @@
+core :: module("../modules/core");
+
+foo :: proc(a: ^u8) {
+    b: u32 := a * 10;
+    print("b := %d\n", b);
+};
+
+foo :: proc(a: ^u16) {
+    b: u32 := a * 10;
+    print("b := %d\n", b);
+};
+
+foo :: proc(a: ^u32) {
+    b: u64 := a * 10;
+    print("b := %llu\n", b);
+};
+
+foo(16);

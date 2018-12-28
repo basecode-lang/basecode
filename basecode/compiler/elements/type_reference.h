@@ -45,6 +45,8 @@ namespace basecode::compiler {
 
         const qualified_symbol_t& symbol() const;
 
+        void symbol(const qualified_symbol_t& value);
+
     protected:
         bool on_infer_type(
             compiler::session& session,
