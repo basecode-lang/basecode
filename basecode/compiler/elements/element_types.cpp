@@ -110,11 +110,12 @@ namespace basecode::compiler {
         return _identifiers.erase(name) > 0;
     }
 
-    identifier* identifier_map_t::find(const std::string& name) {
-        auto it = _identifiers.find(name);
-        if (it != _identifiers.end())
-            return it->second;
-        return nullptr;
+    identifier_list_t identifier_map_t::find(const std::string& name) {
+        identifier_list_t list {};
+        auto range = _identifiers.equal_range(name);
+        for (auto it = range.first; it != range.second; ++it)
+            list.emplace_back(it->second);
+        return list;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -205,7 +206,6 @@ namespace basecode::compiler {
         } else {
             return inferred_type;
         }
-
     }
 
     qualified_symbol_t make_qualified_symbol(const std::string& symbol) {

@@ -32,7 +32,8 @@ namespace basecode::compiler {
     bool symbol_element::on_infer_type(
             compiler::session& session,
             infer_type_result_t& result) {
-        auto identifier = session.scope_manager().find_identifier(qualified_symbol());
+        auto vars = session.scope_manager().find_identifier(qualified_symbol());
+        compiler::identifier* identifier = vars.empty() ? nullptr : vars.front();
         if (identifier != nullptr) {
             result.inferred_type = identifier->type_ref()->type();
             result.reference = identifier->type_ref();

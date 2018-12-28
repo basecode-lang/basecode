@@ -141,6 +141,7 @@ namespace basecode::compiler {
         void clear();
 
         vm::assembler& assembler;
+        vm::instruction_block* block = nullptr;
         std::vector<vm::instruction_operand_t> operands {};
     };
 

@@ -27,7 +27,6 @@ TASKS
 -----
 - NEW: consolidate all errors into one class along with constants for quick lookup.
 - NEW: finish terp::jump_to_subroutine
-- NEW: add terp trap for putc/getc for any file handle
 
 - NEW: for_element stack frame support
 
@@ -48,14 +47,15 @@ TASKS
 
 - BUG: rework ast_evaluator::proc_call to clean up the various types of "procedure"
 
-- BUG: unary_operator case not implemented in session::type_check
 - BUG: fix utf8 streaming issues in lexer/source_file
 - BUG: ordering issues between types; requires deferred type checking
         (see ast_evaluator::binary_operator)
 - BUG: add missing errors
+- BUG: fix location for elements
+
+- BUG: unary_operator case not implemented in session::type_check
 - BUG: lambda procedure type checking
 - BUG: type parameter propagation
-- BUG: fix location for elements
 
 - REFACTOR: session/variable combination, again
             merge concept of register_allocator + variable
@@ -187,3 +187,4 @@ DONE
 
         .ilocal {alias}  ; allocates an integer register
         .flocal {alias}  ; allocates a float register
+- NEW: add terp trap for putc/getc for any file handle

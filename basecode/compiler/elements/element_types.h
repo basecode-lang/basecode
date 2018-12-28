@@ -123,6 +123,8 @@ namespace basecode::compiler {
     using statement_list_t = std::vector<statement*>;
     using attribute_list_t = std::vector<attribute*>;
     using identifier_list_t = std::vector<identifier*>;
+    using block_stack_t = std::stack<compiler::block*>;
+    using module_stack_t = std::stack<compiler::module*>;
     using directive_map_t = std::map<std::string, directive*>;
     using type_reference_list_t = std::vector<type_reference*>;
     using procedure_type_list_t = std::vector<procedure_type*>;
@@ -130,6 +132,77 @@ namespace basecode::compiler {
     using procedure_instance_set_t = std::set<procedure_instance*>;
     using procedure_instance_list_t = std::vector<procedure_instance*>;
     using identifier_reference_list_t = std::vector<identifier_reference*>;
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    enum class visitor_data_type_t {
+        none,
+        type,
+        module,
+        identifier,
+        identifier_list
+    };
+
+    struct visitor_result_t {
+    public:
+        visitor_result_t() : _type(visitor_data_type_t::none) {
+        }
+
+        explicit visitor_result_t(compiler::type* type) : _data(type),
+                                                          _type(visitor_data_type_t::type) {
+        }
+
+        explicit visitor_result_t(compiler::module* value) : _data(value),
+                                                             _type(visitor_data_type_t::module) {
+        }
+
+        explicit visitor_result_t(compiler::identifier* var) : _data(var),
+                                                               _type(visitor_data_type_t::identifier) {
+        }
+
+        explicit visitor_result_t(const compiler::identifier_list_t& list) : _data(list),
+                                                                             _type(visitor_data_type_t::identifier_list) {
+        }
+
+        template <typename T>
+        T* data() {
+            if (_data.empty())
+                return nullptr;
+            try {
+                return boost::any_cast<T>(&_data);
+            } catch (const boost::bad_any_cast& e) {
+                return nullptr;
+            }
+        }
+
+        template <typename T>
+        const T* data() const {
+            if (_data.empty())
+                return nullptr;
+            try {
+                return boost::any_cast<T>(&_data);
+            } catch (const boost::bad_any_cast& e) {
+                return nullptr;
+            }
+        }
+
+        bool empty() const {
+            return _type == visitor_data_type_t::none;
+        }
+
+        visitor_data_type_t type() const {
+            return _type;
+        }
+
+    private:
+        boost::any _data;
+        visitor_data_type_t _type;
+    };
+
+    using block_visitor_callable = std::function<bool (compiler::block*)>;
+    using scope_visitor_callable = std::function<visitor_result_t (compiler::block*)>;
+    using element_visitor_callable = std::function<visitor_result_t (compiler::element*)>;
+    using namespace_visitor_callable = std::function<visitor_result_t (compiler::block*)>;
 
     ///////////////////////////////////////////////////////////////////////////
 
@@ -519,7 +592,7 @@ namespace basecode::compiler {
 
         bool remove(const std::string& name);
 
-        identifier* find(const std::string& name);
+        identifier_list_t find(const std::string& name);
 
     private:
         std::unordered_multimap<std::string, identifier*> _identifiers {};

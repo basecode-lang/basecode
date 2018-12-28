@@ -307,10 +307,14 @@ namespace basecode::compiler {
         &&  node->type == syntax::ast_node_type_t::symbol) {
             qualified_symbol_t qualified_symbol {};
             builder.make_qualified_symbol(qualified_symbol, node);
+
+            auto vars = scope_manager.find_identifier(qualified_symbol, scope);
+            compiler::identifier* identifier = vars.empty() ? nullptr : vars.front();
+
             element = builder.make_identifier_reference(
                 scope_manager.current_scope(),
                 qualified_symbol,
-                scope_manager.find_identifier(qualified_symbol, scope),
+                identifier,
                 flag_as_unresolved);
             element->location(node->location);
         } else {
@@ -345,8 +349,8 @@ namespace basecode::compiler {
             if (!namespace_name.empty())
                 temp_list.push_back(namespace_name);
             namespace_name = namespaces[i];
-            auto var = scope->identifiers().find(namespace_name);
-            if (var == nullptr) {
+            auto vars = scope->identifiers().find(namespace_name);
+            if (vars.empty()) {
                 auto new_scope = builder.make_block(scope);
                 auto ns = builder.make_namespace(scope, new_scope);
                 auto ns_identifier = builder.make_identifier(
@@ -360,7 +364,7 @@ namespace basecode::compiler {
                 scope->identifiers().add(ns_identifier);
                 scope = new_scope;
             } else {
-                auto expr = var->initializer()->expression();
+                auto expr = vars.front()->initializer()->expression();
                 if (expr->element_type() == element_type_t::namespace_e) {
                     auto ns = dynamic_cast<namespace_element*>(expr);
                     scope = dynamic_cast<compiler::block*>(ns->expression());
@@ -596,10 +600,14 @@ namespace basecode::compiler {
             if (init_expr != nullptr) {
                 if (init_expr->element_type() == element_type_t::symbol) {
                     auto init_symbol = dynamic_cast<compiler::symbol_element*>(init_expr);
+                    auto vars = scope_manager.find_identifier(
+                        init_symbol->qualified_symbol(),
+                        scope);
+                    compiler::identifier* identifier = vars.empty() ? nullptr : vars.front();
                     init_expr = builder.make_identifier_reference(
                         scope,
                         init_symbol->qualified_symbol(),
-                        scope_manager.find_identifier(init_symbol->qualified_symbol(), scope));
+                        identifier);
                 }
                 if (init_expr->is_constant()) {
                     init = builder.make_initializer(scope, init_expr);
@@ -1314,11 +1322,14 @@ namespace basecode::compiler {
                 from_ref->symbol().name);
         }
 
+        auto vars = scope_manager.find_identifier(qualified_symbol);
+        compiler::identifier* identifier = vars.empty() ? nullptr : vars.front();
+
         compiler::module_reference* mod_ref = nullptr;
         auto symbol_ref = builder.make_identifier_reference(
             scope_manager.current_scope(),
             qualified_symbol,
-            scope_manager.find_identifier(qualified_symbol));
+            identifier);
         if (from_ref != nullptr) {
             // XXX: handle case where module reference not found
             auto var = from_ref->identifier();
@@ -1501,7 +1512,8 @@ namespace basecode::compiler {
                 return true;
             }
 
-            auto proc_identifier = scope_manager.find_identifier(proc_name);
+            auto vars = scope_manager.find_identifier(proc_name);
+            compiler::identifier* proc_identifier = vars.empty() ? nullptr : vars.front();
             result.element = builder.make_procedure_call(
                 scope_manager.current_scope(),
                 builder.make_identifier_reference(

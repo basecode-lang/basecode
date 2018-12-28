@@ -69,29 +69,29 @@ namespace basecode::compiler {
         return recursive_execute(root_block != nullptr ? root_block : _top_level_stack.top());
     }
 
-    element* scope_manager::walk_parent_scopes(
+    visitor_result_t scope_manager::walk_parent_scopes(
             compiler::block* scope,
             const scope_visitor_callable& callable) const {
         while (scope != nullptr) {
-            auto* result = callable(scope);
-            if (result != nullptr)
+            auto result = callable(scope);
+            if (!result.empty())
                 return result;
             scope = scope->parent_scope();
         }
-        return nullptr;
+        return {};
     }
 
-    element* scope_manager::walk_parent_elements(
+    visitor_result_t scope_manager::walk_parent_elements(
             compiler::element* element,
             const element_visitor_callable& callable) const {
         auto current = element;
         while (current != nullptr) {
-            auto* result = callable(current);
-            if (result != nullptr)
+            auto result = callable(current);
+            if (!result.empty())
                 return result;
             current = current->parent_element();
         }
-        return nullptr;
+        return {};
     }
 
     void scope_manager::push_scope(compiler::block* block) {
@@ -101,34 +101,38 @@ namespace basecode::compiler {
     compiler::type* scope_manager::find_type(
             const qualified_symbol_t& symbol,
             compiler::block* scope) const {
+        visitor_result_t result;
         if (symbol.is_qualified()) {
-            return dynamic_cast<compiler::type*>(walk_qualified_symbol(
+            result = walk_qualified_symbol(
                 symbol,
                 const_cast<compiler::scope_manager*>(this)->current_top_level(),
-                [&](compiler::block* scope) -> compiler::element* {
+                [&](compiler::block* scope) -> visitor_result_t {
                     auto matching_type = scope->types().find(symbol.name);
                     if (matching_type != nullptr)
-                        return matching_type;
+                        return visitor_result_t(matching_type);
 
-                    auto type_identifier = find_identifier(symbol, scope);
-                    if (type_identifier != nullptr && type_identifier->is_constant())
-                        return type_identifier->type_ref()->type();
+                    auto vars = find_identifier(symbol, scope);
+                    if (!vars.empty() && vars.front()->is_constant())
+                        return visitor_result_t(vars.front()->type_ref()->type());
 
-                    return nullptr;
-                }));
+                    return {};
+                });
         } else {
-            return dynamic_cast<compiler::type*>(walk_parent_scopes(
+            result = walk_parent_scopes(
                 scope != nullptr ? scope : current_scope(),
-                [&](compiler::block* scope) -> compiler::element* {
+                [&](compiler::block* scope) -> visitor_result_t {
                     auto type = scope->types().find(symbol.name);
                     if (type != nullptr)
-                        return type;
-                    auto type_identifier = find_identifier(symbol, scope);
-                    if (type_identifier != nullptr && type_identifier->is_constant())
-                        return type_identifier->type_ref()->type();
-                    return nullptr;
-                }));
+                        return visitor_result_t(type);
+                    auto vars = find_identifier(symbol, scope);
+                    if (!vars.empty() && vars.front()->is_constant())
+                        return visitor_result_t(vars.front()->type_ref()->type());
+                    return {};
+                });
         }
+        return result.type() == visitor_data_type_t::type ?
+            *result.data<compiler::type*>() :
+            nullptr;
     }
 
     void scope_manager::add_type_to_scope(compiler::type* type) {
@@ -163,13 +167,16 @@ namespace basecode::compiler {
     }
 
     compiler::module* scope_manager::find_module(compiler::element* element) const {
-        return dynamic_cast<compiler::module*>(walk_parent_elements(
+        auto result = walk_parent_elements(
             element,
-            [](compiler::element* each) -> compiler::element* {
+            [](compiler::element* each) -> visitor_result_t {
                 if (each->element_type() == element_type_t::module)
-                    return each;
-                return nullptr;
-            }));
+                    return visitor_result_t(dynamic_cast<compiler::module*>(each));
+                return {};
+            });
+        return result.type() == visitor_data_type_t::module ?
+            *result.data<compiler::module*>() :
+            nullptr;
     }
 
     bool scope_manager::within_local_scope(compiler::block* parent_scope) const {
@@ -182,7 +189,7 @@ namespace basecode::compiler {
         return false;
     }
 
-    compiler::identifier* scope_manager::find_identifier(
+    identifier_list_t scope_manager::find_identifier(
             const qualified_symbol_t& symbol,
             compiler::block* scope) const {
         std::stack<std::string> parts {};
@@ -194,31 +201,30 @@ namespace basecode::compiler {
         }
 
         auto block_scope = scope != nullptr ? scope : current_scope();
-        compiler::identifier* result = nullptr;
+        visitor_result_t result;
         while (!parts.empty()) {
             auto& part = parts.top();
 
             import_set_t imports {};
-            result = dynamic_cast<compiler::identifier*>(walk_parent_scopes(
+            result = walk_parent_scopes(
                 block_scope,
-                [&](compiler::block* scope) -> compiler::element* {
-                    auto var = scope->identifiers().find(part);
-                    if (var != nullptr)
-                        return var;
+                [&](compiler::block* scope) -> visitor_result_t {
+                    auto vars = scope->identifiers().find(part);
+                    if (!vars.empty()) {
+                        return visitor_result_t(vars);
+                    }
                     for (auto import : scope->imports())
                         imports.insert(import);
-                    return nullptr;
-                }));
+                    return {};
+                });
 
-            if (result == nullptr) {
+            if (result.empty()) {
                 for (auto import : imports) {
                     auto ref = dynamic_cast<compiler::identifier_reference*>(import->expression());
 
                     qualified_symbol_t import_symbol{};
                     import_symbol.name = part;
 
-                    // XXX: i thought this could be simplified to one case
-                    //      but now i'm not sure.  review.
                     auto& namespaces = ref->symbol().namespaces;
                     if (import->imported_module() != nullptr) {
                         for (size_t i = 1; i < namespaces.size(); i++)
@@ -234,21 +240,24 @@ namespace basecode::compiler {
                     } else {
                         import_scope = import->module()->scope();
                     }
-                    result = dynamic_cast<compiler::identifier*>(walk_qualified_symbol(
+                    result = walk_qualified_symbol(
                         import_symbol,
                         import_scope,
-                        [&part](compiler::block* scope) {
-                            return scope->identifiers().find(part);
-                        }));
-                    if (result != nullptr)
+                        [&part](compiler::block* scope) -> visitor_result_t {
+                            auto vars = scope->identifiers().find(part);
+                            return vars.empty() ? visitor_result_t{} : visitor_result_t(vars);
+                        });
+                    if (!result.empty())
                         break;
                 }
 
-                if(result == nullptr)
+                if(result.empty())
                     break;
             }
 
-            auto init = result->initializer();
+            auto vars = *result.data<identifier_list_t>();
+            compiler::identifier* identifier = vars.empty() ? nullptr : vars.front();
+            auto init = identifier == nullptr ? nullptr : identifier->initializer();
             if (init == nullptr)
                 break;
 
@@ -265,27 +274,38 @@ namespace basecode::compiler {
                     break;
                 }
                 default: {
-                    return result;
+                    goto done;
                 }
             }
 
             parts.pop();
         }
 
-        return result;
+    done:
+        switch (result.type()) {
+            default: {
+                return {};
+            }
+            case visitor_data_type_t::identifier: {
+                return {*result.data<compiler::identifier*>()};
+            }
+            case visitor_data_type_t::identifier_list: {
+                return {*result.data<compiler::identifier_list_t>()};
+            }
+        }
     }
 
-    element* scope_manager::walk_qualified_symbol(
+    visitor_result_t scope_manager::walk_qualified_symbol(
             const qualified_symbol_t& symbol,
             compiler::block* scope,
             const namespace_visitor_callable& callable) const {
         auto non_const_this = const_cast<compiler::scope_manager*>(this);
         auto block_scope = scope != nullptr ? scope : non_const_this->current_top_level();
         for (const auto& namespace_name : symbol.namespaces) {
-            auto var = block_scope->identifiers().find(namespace_name);
-            if (var == nullptr || var->initializer() == nullptr)
-                return nullptr;
-            auto expr = var->initializer()->expression();
+            auto vars = block_scope->identifiers().find(namespace_name);
+            if (vars.empty() || vars.front()->initializer() == nullptr)
+                return {};
+            auto expr = vars.front()->initializer()->expression();
             if (expr->element_type() == element_type_t::namespace_e) {
                 auto ns = dynamic_cast<namespace_element*>(expr);
                 block_scope = dynamic_cast<compiler::block*>(ns->expression());
@@ -293,7 +313,7 @@ namespace basecode::compiler {
                 auto mod_ref = dynamic_cast<compiler::module_reference*>(expr);
                 block_scope = mod_ref->reference()->scope();
             } else {
-                return nullptr;
+                return {};
             }
         }
         return callable(block_scope);

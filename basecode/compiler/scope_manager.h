@@ -18,14 +18,6 @@
 
 namespace basecode::compiler {
 
-    using block_stack_t = std::stack<compiler::block*>;
-    using module_stack_t = std::stack<compiler::module*>;
-
-    using block_visitor_callable = std::function<bool (compiler::block*)>;
-    using scope_visitor_callable = std::function<compiler::element* (compiler::block*)>;
-    using element_visitor_callable = std::function<compiler::element* (compiler::element*)>;
-    using namespace_visitor_callable = std::function<compiler::element* (compiler::block*)>;
-
     class scope_manager {
     public:
         explicit scope_manager(compiler::session& session);
@@ -41,46 +33,46 @@ namespace basecode::compiler {
 
         compiler::block* pop_scope();
 
-        element* walk_parent_scopes(
-            compiler::block* scope,
-            const scope_visitor_callable& callable) const;
-
         module_stack_t& module_stack();
-
-        element* walk_parent_elements(
-            compiler::element* element,
-            const element_visitor_callable& callable) const;
-
-        element* walk_qualified_symbol(
-            const qualified_symbol_t& symbol,
-            compiler::block* scope,
-            const namespace_visitor_callable& callable) const;
 
         block_stack_t& top_level_stack();
 
         compiler::block* push_new_block();
+
+        compiler::module* current_module();
 
         compiler::map_type* find_map_type(
             compiler::type_reference* key_type,
             compiler::type_reference* value_type,
             compiler::block* scope = nullptr) const;
 
-        compiler::module* current_module();
+        visitor_result_t walk_parent_scopes(
+            compiler::block* scope,
+            const scope_visitor_callable& callable) const;
 
         compiler::block* current_top_level();
+
+        identifier_list_t find_identifier(
+            const qualified_symbol_t& symbol,
+            compiler::block* scope = nullptr) const;
 
         compiler::array_type* find_array_type(
             compiler::type* entry_type,
             const element_list_t& subscripts,
             compiler::block* scope = nullptr) const;
 
+        visitor_result_t walk_parent_elements(
+            compiler::element* element,
+            const element_visitor_callable& callable) const;
+
         compiler::block* current_scope() const;
 
-        void push_scope(compiler::block* block);
-
-        compiler::identifier* find_identifier(
+        visitor_result_t walk_qualified_symbol(
             const qualified_symbol_t& symbol,
-            compiler::block* scope = nullptr) const;
+            compiler::block* scope,
+            const namespace_visitor_callable& callable) const;
+
+        void push_scope(compiler::block* block);
 
         compiler::pointer_type* find_pointer_type(
             compiler::type* base_type,

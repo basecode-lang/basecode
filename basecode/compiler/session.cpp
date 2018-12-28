@@ -611,14 +611,16 @@ namespace basecode::compiler {
                 continue;
             }
 
-            auto identifier = _scope_manager.find_identifier(
+            auto vars = _scope_manager.find_identifier(
                 unresolved_reference->symbol(),
                 unresolved_reference->parent_scope());
+            compiler::identifier* identifier = vars.empty() ? nullptr : vars.front();
             if (identifier == nullptr
             &&  unresolved_reference->symbol().is_qualified()) {
-                identifier = _scope_manager.find_identifier(
+                vars = _scope_manager.find_identifier(
                     unresolved_reference->symbol(),
                     unresolved_reference->module()->scope());
+                identifier = vars.empty() ? nullptr : vars.front();
             }
 
             if (identifier == nullptr) {

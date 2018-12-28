@@ -87,9 +87,10 @@ namespace basecode::compiler {
                         break;
                     }
                     case vm::assembly_symbol_type_t::module: {
-                        auto var = session.scope_manager().find_identifier(
+                        auto vars = session.scope_manager().find_identifier(
                             make_qualified_symbol(symbol),
                             _expression->parent_scope());
+                        compiler::identifier* var = vars.empty() ? nullptr : vars.front();
                         if (var != nullptr) {
                             if (var->is_constant()) {
                                 switch (var->type_ref()->type()->element_type()) {
