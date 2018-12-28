@@ -27,6 +27,8 @@ namespace basecode::compiler {
 
         compiler::identifier* identifier();
 
+        std::string label_name() const override;
+
         const qualified_symbol_t& symbol() const;
 
         void identifier(compiler::identifier* value);

@@ -618,20 +618,18 @@ namespace basecode::compiler {
 
     procedure_call* element_builder::make_procedure_call(
             compiler::block* parent_scope,
-            compiler::identifier_reference* reference,
             compiler::argument_list* args,
-            const compiler::type_reference_list_t& type_params) {
+            const compiler::type_reference_list_t& type_params,
+            const compiler::identifier_reference_list_t& references) {
         auto proc_call = new compiler::procedure_call(
             _session.scope_manager().current_module(),
             parent_scope,
-            reference,
             args,
-            type_params);
+            type_params,
+            references);
         _session.elements().add(proc_call);
         if (args != nullptr)
             args->parent_element(proc_call);
-        if (reference != nullptr)
-            reference->parent_element(proc_call);
         return proc_call;
     }
 

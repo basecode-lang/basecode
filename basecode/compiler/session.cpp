@@ -276,17 +276,8 @@ namespace basecode::compiler {
 
         auto proc_calls = _elements.find_by_type<compiler::procedure_call>(element_type_t::proc_call);
         for (auto proc_call : proc_calls) {
-            auto proc_type = dynamic_cast<compiler::procedure_type*>(proc_call
-                ->reference()
-                ->identifier()
-                ->type_ref()
-                ->type());
-            if (proc_type != nullptr
-            && !proc_call->arguments()->index_to_procedure_type(
-                    *this,
-                    proc_type)) {
+            if (!proc_call->resolve_overloads(*this))
                 return false;
-            }
         }
 
         auto identifiers = _elements.find_by_type<compiler::identifier>(element_type_t::identifier);

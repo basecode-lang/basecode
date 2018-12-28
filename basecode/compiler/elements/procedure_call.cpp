@@ -30,12 +30,12 @@ namespace basecode::compiler {
     procedure_call::procedure_call(
             compiler::module* module,
             compiler::block* parent_scope,
-            compiler::identifier_reference* reference,
             compiler::argument_list* args,
-            const compiler::type_reference_list_t& type_params) : element(module, parent_scope, element_type_t::proc_call),
-                                                                  _arguments(args),
-                                                                  _type_parameters(type_params),
-                                                                  _reference(reference) {
+            const compiler::type_reference_list_t& type_params,
+            const compiler::identifier_reference_list_t& references) : element(module, parent_scope, element_type_t::proc_call),
+                                                                       _arguments(args),
+                                                                       _type_parameters(type_params),
+                                                                       _references(references) {
     }
 
     bool procedure_call::on_emit(
@@ -43,17 +43,12 @@ namespace basecode::compiler {
             compiler::emit_context_t& context,
             compiler::emit_result_t& result) {
         auto& assembler = session.assembler();
-
         auto block = assembler.current_block();
-        auto identifier = _reference->identifier();
-        auto init = identifier->initializer();
-        if (init == nullptr)
-            return false;
 
-        auto procedure_type = init->procedure_type();
+        auto label = _active_identifier->label_name();
 
         compiler::type* return_type = nullptr;
-        auto return_type_field = procedure_type->return_type();
+        auto return_type_field = _active_procedure_type->return_type();
         if (return_type_field != nullptr)
             return_type = return_type_field->identifier()->type_ref()->type();
 
@@ -71,26 +66,26 @@ namespace basecode::compiler {
         if (_arguments != nullptr)
             _arguments->emit(session, context, result);
 
-        if (procedure_type->is_foreign()) {
+        if (_active_procedure_type->is_foreign()) {
             auto& ffi = session.ffi();
 
-            auto func = ffi.find_function(procedure_type->foreign_address());
+            auto func = ffi.find_function(_active_procedure_type->foreign_address());
             if (func == nullptr) {
                 session.error(
                     module(),
                     "X000",
                     fmt::format(
                         "unable to find foreign function by address: {}",
-                        procedure_type->foreign_address()),
+                        _active_procedure_type->foreign_address()),
                     location());
                 return false;
             }
 
             block->comment(
-                fmt::format("call: {}", identifier->label_name()),
+                fmt::format("call: {}", label),
                 vm::comment_location_t::after_instruction);
 
-            vm::instruction_operand_t address_operand(procedure_type->foreign_address());
+            vm::instruction_operand_t address_operand(_active_procedure_type->foreign_address());
 
             if (func->is_variadic()) {
                 auto signature_id = common::id_pool::instance()->allocate();
@@ -157,10 +152,11 @@ namespace basecode::compiler {
                     vm::instruction_operand_t::sp(),
                     vm::instruction_operand_t(static_cast<uint64_t>(8), vm::op_sizes::byte));
             }
+
             block->comment(
-                fmt::format("call: {}", identifier->label_name()),
+                fmt::format("call: {}", label),
                 vm::comment_location_t::after_instruction);
-            block->call(assembler.make_label_ref(identifier->label_name()));
+            block->call(assembler.make_label_ref(label));
         }
 
         if (return_type_field != nullptr) {
@@ -192,18 +188,21 @@ namespace basecode::compiler {
     bool procedure_call::on_infer_type(
             compiler::session& session,
             infer_type_result_t& result) {
-        auto identifier = _reference->identifier();
-        if (identifier != nullptr) {
-            auto proc_type = dynamic_cast<compiler::procedure_type*>(identifier->type_ref()->type());
-            if (proc_type != nullptr) {
-                if (proc_type->return_type() == nullptr)
-                    return false;
-                auto return_identifier = proc_type->return_type()->identifier();
+        auto type = procedure_type();
+        if (type != nullptr) {
+            if (type->return_type() != nullptr) {
+                auto return_identifier = type->return_type()->identifier();
                 result.inferred_type = return_identifier->type_ref()->type();
                 result.reference = return_identifier->type_ref();
                 return true;
             }
+        } else {
+            result.inferred_type = session
+                .scope_manager()
+                .find_type(qualified_symbol_t("unknown"));
+            return true;
         }
+
         return false;
     }
 
@@ -217,30 +216,48 @@ namespace basecode::compiler {
         return _arguments;
     }
 
-    compiler::identifier_reference* procedure_call::reference(){
-        return _reference;
-    }
-
     compiler::procedure_type* procedure_call::procedure_type() {
-        auto type = _reference->identifier()->type_ref()->type();
-        return dynamic_cast<compiler::procedure_type*>(type);
+        // XXX: temporary work around
+        if (_references.size() == 1) {
+            _active_identifier = _references.front();
+
+            auto type = _active_identifier->identifier()->type_ref()->type();
+            _active_procedure_type = dynamic_cast<compiler::procedure_type*>(type);
+        }
+        return _active_procedure_type;
     }
 
     void procedure_call::on_owned_elements(element_list_t& list) {
         if (_arguments != nullptr)
             list.emplace_back(_arguments);
 
-        for (auto type_param : _type_parameters) {
+        for (auto ref : _references)
+            list.emplace_back(ref);
+
+        for (auto type_param : _type_parameters)
             list.emplace_back(type_param);
-        }
     }
 
-    void procedure_call::reference(compiler::identifier_reference* value) {
-        _reference = value;
+    bool procedure_call::resolve_overloads(compiler::session& session) {
+        auto type = procedure_type();
+
+        if (type != nullptr
+        && !_arguments->index_to_procedure_type(session, type)) {
+            return false;
+        }
+
+        _active_procedure_type = type;
+        _active_identifier = _references.front();
+
+        return true;
     }
 
     const compiler::type_reference_list_t& procedure_call::type_parameters() const {
         return _type_parameters;
+    }
+
+    const compiler::identifier_reference_list_t& procedure_call::references() const {
+        return _references;
     }
 
 };

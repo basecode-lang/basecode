@@ -1512,16 +1512,27 @@ namespace basecode::compiler {
                 return true;
             }
 
+            compiler::identifier_reference_list_t references {};
             auto vars = scope_manager.find_identifier(proc_name);
-            compiler::identifier* proc_identifier = vars.empty() ? nullptr : vars.front();
-            result.element = builder.make_procedure_call(
-                scope_manager.current_scope(),
-                builder.make_identifier_reference(
+            if (vars.empty()) {
+                references.emplace_back(builder.make_identifier_reference(
                     scope_manager.current_scope(),
                     proc_name,
-                    proc_identifier),
+                    nullptr));
+            } else {
+                for (auto proc_identifier : vars) {
+                    references.emplace_back(builder.make_identifier_reference(
+                        scope_manager.current_scope(),
+                        proc_name,
+                        proc_identifier));
+                }
+            }
+
+            result.element = builder.make_procedure_call(
+                scope_manager.current_scope(),
                 args,
-                type_params);
+                type_params,
+                references);
             result.element->location(symbol_node->location);
         }
 

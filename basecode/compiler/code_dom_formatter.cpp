@@ -421,7 +421,8 @@ namespace basecode::compiler {
                 auto element = dynamic_cast<procedure_call*>(node);
                 auto style = ", fillcolor=darkorchid1, style=\"filled\"";
                 add_primary_edge(element, element->arguments());
-                add_primary_edge(element, element->reference());
+                for (auto ref : element->references())
+                    add_primary_edge(element, ref);
                 return fmt::format(
                     "{}[shape=record,label=\"proc_call\"{}];",
                     node_vertex_name,

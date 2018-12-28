@@ -63,6 +63,12 @@ namespace basecode::compiler {
         return _identifier->is_constant();
     }
 
+    std::string identifier_reference::label_name() const {
+        if (_identifier != nullptr)
+            return _identifier->label_name();
+        return element::label_name();
+    }
+
     bool identifier_reference::on_as_bool(bool& value) const {
         if (_identifier == nullptr)
             return false;

@@ -298,9 +298,9 @@ namespace basecode::compiler {
 
         procedure_call* make_procedure_call(
             compiler::block* parent_scope,
-            compiler::identifier_reference* reference,
             compiler::argument_list* args,
-            const compiler::type_reference_list_t& type_params = {});
+            const compiler::type_reference_list_t& type_params,
+            const compiler::identifier_reference_list_t& references);
 
         unary_operator* make_unary_operator(
             compiler::block* parent_scope,

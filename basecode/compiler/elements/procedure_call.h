@@ -20,9 +20,9 @@ namespace basecode::compiler {
         procedure_call(
             compiler::module* module,
             compiler::block* parent_scope,
-            compiler::identifier_reference* reference,
             compiler::argument_list* args,
-            const compiler::type_reference_list_t& type_params);
+            const compiler::type_reference_list_t& type_params,
+            const compiler::identifier_reference_list_t& identifier_references);
 
         bool is_foreign() const;
 
@@ -30,11 +30,11 @@ namespace basecode::compiler {
 
         compiler::procedure_type* procedure_type();
 
-        compiler::identifier_reference* reference();
-
-        void reference(compiler::identifier_reference* value);
+        bool resolve_overloads(compiler::session& session);
 
         const compiler::type_reference_list_t& type_parameters() const;
+
+        const compiler::identifier_reference_list_t& references() const;
 
     protected:
         bool on_emit(
@@ -51,7 +51,9 @@ namespace basecode::compiler {
     private:
         compiler::argument_list* _arguments = nullptr;
         compiler::type_reference_list_t _type_parameters {};
-        compiler::identifier_reference* _reference = nullptr;
+        compiler::identifier_reference_list_t _references {};
+        compiler::procedure_type* _active_procedure_type = nullptr;
+        compiler::identifier_reference* _active_identifier = nullptr;
     };
 
 };
