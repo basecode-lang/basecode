@@ -1,5 +1,17 @@
-image: ubuntu:latest
-build_test:
+FreeBSD:
+  tags:
+    - FreeBSD
+  stage: build
+  script:
+    - if [ -d build ]; then rm -rf build ; fi
+    - mkdir build
+    - cd build ; cmake generate -G Ninja .. ; ninja all basecode-configured
+    - cd tests ; ./tests.sh
+
+Ubuntu:
+  tags:
+    - docker
+  image: ubuntu:latest
   stage: build
   before_script:
     - apt-get update -qq && apt-get install -y -qq build-essential gcc-8 g++-8 cmake ninja-build libncurses-dev
