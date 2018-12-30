@@ -1,6 +1,13 @@
 NOTES
 ------------------------
 
+IDEAS
+---------
+- What would native co-routines look like?
+    yield {expression};
+    mark proc as co
+    stack frame management
+
 QUESTIONS
 ---------
 - Do we want to make type_reference's aliases match the bound identifier's

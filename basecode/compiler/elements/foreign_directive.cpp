@@ -12,7 +12,9 @@
 #include <vm/ffi.h>
 #include <configure.h>
 #include <compiler/session.h>
+#include "block.h"
 #include "attribute.h"
+#include "statement.h"
 #include "assignment.h"
 #include "identifier.h"
 #include "declaration.h"
@@ -32,54 +34,27 @@ namespace basecode::compiler {
                                              _expression(expression) {
     }
 
-    bool foreign_directive::on_evaluate(compiler::session& session) {
+    bool foreign_directive::apply_directive(
+            compiler::session& session,
+            const std::string& library_name,
+            compiler::identifier* identifier,
+            compiler::procedure_type* proc_type) {
         auto& ffi = session.ffi();
 
-        auto assignment = dynamic_cast<compiler::assignment*>(_expression);
-        auto proc_decl = dynamic_cast<compiler::declaration*>(assignment->expressions()[0]);
-        if (proc_decl == nullptr)
-            return false;
-
-        auto proc_type = proc_decl->identifier()->initializer()->procedure_type();
-        if (proc_type == nullptr)
-            return false;
-
-        auto attrs = proc_type->attributes().as_list();
-        for (auto attr : attrs) {
-            attributes().add(attr);
-            proc_type->attributes().remove(attr->name());
-        }
         proc_type->is_foreign(true);
 
-        std::string library_name;
-        auto library_attribute = find_attribute("library");
-        if (library_attribute != nullptr) {
-            if (!library_attribute->as_string(library_name)) {
-                session.error(
-                    module(),
-                    "P004",
-                    "unable to convert library name.",
-                    location());
-                return false;
-            }
+        boost::filesystem::path library_path(library_name);
+        if (!library_path.is_absolute()) {
+            std::stringstream platform_name;
+            platform_name
+                << SHARED_LIBRARY_PREFIX
+                << library_name
+                << SHARED_LIBRARY_SUFFIX;
+            library_path = platform_name.str();
         }
-
-        if (library_name.empty()) {
-            session.error(
-                module(),
-                "P005",
-                "library attribute required for foreign directive.",
-                location());
-            return false;
-        }
-
-        std::stringstream platform_name;
-        platform_name
-            << SHARED_LIBRARY_PREFIX
-            << library_name
-            << SHARED_LIBRARY_SUFFIX;
-        boost::filesystem::path library_path(platform_name.str());
-        auto library = ffi.load_shared_library(session.result(), library_path);
+        auto library = ffi.load_shared_library(
+            session.result(),
+            library_path);
         if (library == nullptr) {
             auto msg = session.result().find_code("B062");
             if (msg != nullptr) {
@@ -94,9 +69,8 @@ namespace basecode::compiler {
         }
         library->self_loaded(library_name == COMPILER_LIBRARY_NAME);
 
-        auto ffi_decl = dynamic_cast<compiler::declaration*>(assignment->expressions()[0]);
-        std::string symbol_name = ffi_decl->identifier()->symbol()->name();
-        auto alias_attribute = attributes().find("alias");
+        std::string symbol_name = identifier->symbol()->name();
+        auto alias_attribute = proc_type->find_attribute("alias");
         if (alias_attribute != nullptr) {
             if (!alias_attribute->as_string(symbol_name)) {
                 session.error(
@@ -161,11 +135,85 @@ namespace basecode::compiler {
             proc_type->foreign_address(reinterpret_cast<uint64_t>(signature.func_ptr));
         }
 
-        return !session.result().is_failed();
+        return true;
+    }
+
+    bool foreign_directive::apply_assignment(
+            compiler::session& session,
+            const std::string& library_name,
+            compiler::assignment* assignment) {
+        auto first_expr = assignment->expressions().front();
+        auto proc_decl = dynamic_cast<compiler::declaration*>(first_expr);
+        if (proc_decl == nullptr)
+            return false;
+
+        auto proc_type = proc_decl->identifier()->initializer()->procedure_type();
+        if (proc_type == nullptr)
+            return false;
+
+        return apply_directive(
+            session,
+            library_name,
+            proc_decl->identifier(),
+            proc_type);
     }
 
     void foreign_directive::on_owned_elements(element_list_t& list) {
         list.emplace_back(_expression);
+    }
+
+    bool foreign_directive::on_evaluate(compiler::session& session) {
+        std::string library_name = COMPILER_LIBRARY_NAME;
+        auto library_attribute = find_attribute("library");
+        if (library_attribute != nullptr) {
+            if (!library_attribute->as_string(library_name)) {
+                session.error(
+                    module(),
+                    "P004",
+                    "unable to convert library name.",
+                    location());
+                return false;
+            }
+        }
+
+        if (library_name.empty()) {
+            session.error(
+                module(),
+                "P005",
+                "library attribute required for foreign directive.",
+                location());
+            return false;
+        }
+
+        switch (_expression->element_type()) {
+            case element_type_t::block: {
+                auto block = dynamic_cast<compiler::block*>(_expression);
+                for (compiler::statement* stmt : block->statements()) {
+                    auto expr = stmt->expression();
+                    if (expr != nullptr
+                    &&  expr->element_type() == element_type_t::assignment) {
+                        auto success = apply_assignment(
+                            session,
+                            library_name,
+                            dynamic_cast<compiler::assignment*>(expr));
+                        if (!success)
+                            return false;
+                    }
+                }
+                break;
+            }
+            case element_type_t::assignment: {
+                return apply_assignment(
+                    session,
+                    library_name,
+                    dynamic_cast<compiler::assignment*>(_expression));
+            }
+            default: {
+                break;
+            }
+        }
+
+        return !session.result().is_failed();
     }
 
 };

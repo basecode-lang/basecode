@@ -28,6 +28,18 @@ namespace basecode::compiler {
         bool on_evaluate(compiler::session& session) override;
 
     private:
+        bool apply_assignment(
+            compiler::session& session,
+            const std::string& library_name,
+            compiler::assignment* assignment);
+
+        bool apply_directive(
+            compiler::session& session,
+            const std::string& library_name,
+            compiler::identifier* identifier,
+            compiler::procedure_type* proc_type);
+
+    private:
         compiler::element* _expression = nullptr;
     };
 

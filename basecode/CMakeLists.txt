@@ -50,11 +50,6 @@ set (VER_MINOR 1)
 set (DEBUGGER_ENABLED 0)
 set (COMPILER_LIBRARY_NAME ${PROJECT_NAME})
 
-include_directories(
-    ${PROJECT_SOURCE_DIR}
-    ${PROJECT_BINARY_DIR}
-)
-
 if (CURSES_FOUND)
     set (
         DEBUGGER_SOURCES
@@ -77,6 +72,11 @@ endif()
 configure_file (
     "${PROJECT_SOURCE_DIR}/configure.in.h"
     "${PROJECT_BINARY_DIR}/configure.h"
+)
+
+include_directories(
+    ${PROJECT_SOURCE_DIR}
+    ${PROJECT_BINARY_DIR}
 )
 
 add_library(

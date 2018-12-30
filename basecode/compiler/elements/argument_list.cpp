@@ -80,6 +80,7 @@ namespace basecode::compiler {
                 case element_type_t::proc_call:
                 case element_type_t::intrinsic:
                 case element_type_t::expression:
+                case element_type_t::nil_literal:
                 case element_type_t::float_literal:
                 case element_type_t::string_literal:
                 case element_type_t::unary_operator:
