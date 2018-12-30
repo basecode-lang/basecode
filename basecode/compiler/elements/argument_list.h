@@ -25,6 +25,10 @@ namespace basecode::compiler {
 
         size_t size() const;
 
+        bool as_ffi_arguments(
+            compiler::session& session,
+            vm::function_value_list_t& args) const;
+
         compiler::element* replace(
             size_t index,
             compiler::element* item);
@@ -69,6 +73,12 @@ namespace basecode::compiler {
             const fold_result_t& fold_result) override;
 
         void on_owned_elements(element_list_t& list) override;
+
+    private:
+        bool recurse_ffi_arguments(
+            compiler::session& session,
+            const element_list_t& elements,
+            vm::function_value_list_t& args) const;
 
     private:
         uint64_t _allocated_size = 0;

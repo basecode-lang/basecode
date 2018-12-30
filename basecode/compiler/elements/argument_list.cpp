@@ -49,14 +49,6 @@ namespace basecode::compiler {
         _param_index.clear();
     }
 
-    size_t argument_list::size() const {
-        auto size = _elements.size();
-        auto variadic_args = variadic_arguments();
-        if (variadic_args != nullptr)
-            size += (variadic_args->size() - 1);
-        return size;
-    }
-
     bool argument_list::emit_elements(
             compiler::session& session,
             vm::instruction_block* block,
@@ -167,6 +159,20 @@ namespace basecode::compiler {
         return true;
     }
 
+    size_t argument_list::size() const {
+        auto size = _elements.size();
+        auto variadic_args = variadic_arguments();
+        if (variadic_args != nullptr)
+            size += (variadic_args->size() - 1);
+        return size;
+    }
+
+    bool argument_list::as_ffi_arguments(
+            compiler::session& session,
+            vm::function_value_list_t& args) const {
+        return recurse_ffi_arguments(session, _elements, args);
+    }
+
     bool argument_list::on_apply_fold_result(
             compiler::element* e,
             const fold_result_t& fold_result) {
@@ -184,6 +190,46 @@ namespace basecode::compiler {
         auto old = _elements[index];
         _elements[index] = item;
         return old;
+    }
+
+    bool argument_list::recurse_ffi_arguments(
+            compiler::session& session,
+            const element_list_t& elements,
+            vm::function_value_list_t& args) const {
+        for (compiler::element* arg : elements) {
+            if (arg->element_type() == element_type_t::argument_list) {
+                auto arg_list = dynamic_cast<compiler::argument_list*>(arg);
+                auto success = recurse_ffi_arguments(session, arg_list->elements(), args);
+                if (!success)
+                    return false;
+                continue;
+            }
+
+            infer_type_result_t type_result {};
+            if (!arg->infer_type(session, type_result))
+                return false;
+
+            vm::function_value_t value {};
+            value.type = type_result.inferred_type->to_ffi_type();
+            if (value.type == vm::ffi_types_t::struct_type) {
+                // XXX: temporary hack to keep string literals working
+                if (type_result.inferred_type->element_type() == element_type_t::string_type) {
+                    value.type = vm::ffi_types_t::pointer_type;
+                } else {
+                    auto composite_type = dynamic_cast<compiler::composite_type*>(type_result.inferred_type);
+                    if (composite_type == nullptr)
+                        return false;
+                    for (auto fld : composite_type->fields().as_list()) {
+                        vm::function_value_t fld_value;
+                        fld_value.name = fld->identifier()->symbol()->name();
+                        fld_value.type = fld->identifier()->type_ref()->type()->to_ffi_type();
+                        value.fields.push_back(fld_value);
+                    }
+                }
+            }
+            args.push_back(value);
+        }
+        return true;
     }
 
     void argument_list::remove(common::id_t id) {

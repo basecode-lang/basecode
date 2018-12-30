@@ -89,50 +89,11 @@ namespace basecode::compiler {
             vm::instruction_operand_t address_operand(_active_procedure_type->foreign_address());
 
             if (func->is_variadic()) {
-                auto signature_id = common::id_pool::instance()->allocate();
-
                 vm::function_value_list_t args {};
-                std::function<bool (const element_list_t&)> recurse_arguments =
-                    [&](const element_list_t& elements) -> bool {
-                        for (auto arg : elements) {
-                            if (arg->element_type() == element_type_t::argument_list) {
-                                auto arg_list = dynamic_cast<compiler::argument_list*>(arg);
-                                auto success = recurse_arguments(arg_list->elements());
-                                if (!success)
-                                    return false;
-                                continue;
-                            }
-
-                            infer_type_result_t type_result {};
-                            if (!arg->infer_type(session, type_result))
-                                return false;
-
-                            vm::function_value_t value {};
-                            value.type = type_result.inferred_type->to_ffi_type();
-                            if (value.type == vm::ffi_types_t::struct_type) {
-                                // XXX: temporary hack to keep string literals working
-                                if (type_result.inferred_type->element_type() == element_type_t::string_type) {
-                                    value.type = vm::ffi_types_t::pointer_type;
-                                } else {
-                                    auto composite_type = dynamic_cast<compiler::composite_type*>(type_result.inferred_type);
-                                    if (composite_type == nullptr)
-                                        return false;
-                                    for (auto fld : composite_type->fields().as_list()) {
-                                        vm::function_value_t fld_value;
-                                        fld_value.name = fld->identifier()->symbol()->name();
-                                        fld_value.type = fld->identifier()->type_ref()->type()->to_ffi_type();
-                                        value.fields.push_back(fld_value);
-                                    }
-                                }
-                            }
-                            args.push_back(value);
-                        }
-                        return true;
-                    };
-
-                if (!recurse_arguments(_arguments->elements()))
+                if (!_arguments->as_ffi_arguments(session, args))
                     return false;
 
+                auto signature_id = common::id_pool::instance()->allocate();
                 func->call_site_arguments.insert(std::make_pair(signature_id, args));
 
                 block->call_foreign(
