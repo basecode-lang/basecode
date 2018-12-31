@@ -30,37 +30,44 @@ namespace basecode::common {
             _success = true;
         }
 
-        inline void add_message(
-                const std::string& code,
-                const std::string& message) {
-            _messages.emplace_back(code, message, std::string(), result_message::types::info);
-        }
-
-        inline void add_message(
+        inline void info(
                 const std::string& code,
                 const std::string& message,
-                bool error) {
+                const source_location& loc = {},
+                const std::string& details = {}) {
+            _messages.emplace_back(
+                code,
+                message,
+                loc,
+                details,
+                result_message::types::info);
+        }
+
+        inline void error(
+                const std::string& code,
+                const std::string& message,
+                const source_location& loc = {},
+                const std::string& details = {}) {
             _messages.emplace_back(
                     code,
                     message,
-                    std::string(),
-                    error ? result_message::types::error : result_message::types::info);
-            if (error)
-                fail();
-        }
-
-        inline void add_message(
-                const std::string& code,
-                const std::string& message,
-                const std::string& details,
-                bool error) {
-            _messages.emplace_back(
-                    code,
-                    message,
+                    loc,
                     details,
-                    error ? result_message::types::error : result_message::types::info);
-            if (error)
-                fail();
+                    result_message::types::error);
+            fail();
+        }
+
+        inline void warning(
+                const std::string& code,
+                const std::string& message,
+                const source_location& loc = {},
+                const std::string& details = {}) {
+            _messages.emplace_back(
+                code,
+                message,
+                loc,
+                details,
+                result_message::types::warning);
         }
 
         inline bool is_failed() const {

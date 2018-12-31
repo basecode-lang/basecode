@@ -40,8 +40,6 @@ namespace basecode::compiler {
 
         bool is_type() const;
 
-        block* parent_scope();
-
         void make_non_owning();
 
         bool apply_fold_result(
@@ -66,6 +64,8 @@ namespace basecode::compiler {
         compiler::module* module();
 
         comment_list_t& comments();
+
+        block* parent_scope() const;
 
         attribute_map_t& attributes();
 

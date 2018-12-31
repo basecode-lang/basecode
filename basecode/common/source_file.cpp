@@ -72,7 +72,7 @@ namespace basecode::common {
                 stream << "\n";
         }
 
-        r.add_message(
+        r.error(
             code,
             fmt::format(
                 "({}@{}:{}) {}",
@@ -80,8 +80,8 @@ namespace basecode::common {
                 location.start().line + 1,
                 location.start().column + 1,
                 message),
-            stream.str(),
-            true);
+            location,
+            stream.str());
     }
 
     void source_file::push_mark() {
@@ -218,10 +218,9 @@ namespace basecode::common {
                            std::istream_iterator<uint8_t>());
             build_lines(r);
         } else {
-            r.add_message(
+            r.error(
                 "S001",
-                fmt::format("unable to open source file: {}", _path.string()),
-                true );
+                fmt::format("unable to open source file: {}", _path.string()));
         }
         return !r.is_failed();
     }
@@ -237,10 +236,7 @@ namespace basecode::common {
         auto ch = _buffer[_index];
         rune_t rune = ch;
         if (ch == 0) {
-            r.add_message(
-                "S003",
-                "illegal character NUL",
-                true);
+            r.error("S003", "illegal character NUL");
             return rune_invalid;
         } else if (ch >= 0x80) {
             auto cp = utf8_decode(
@@ -249,16 +245,10 @@ namespace basecode::common {
             width = cp.width;
             rune = cp.value;
             if (rune == rune_invalid && width == 1) {
-                r.add_message(
-                    "S001",
-                    "illegal utf-8 encoding",
-                    true);
+                r.error("S001", "illegal utf-8 encoding");
                 return rune_invalid;
             } else if (rune == rune_bom && _index > 0) {
-                r.add_message(
-                    "S002",
-                    "illegal byte order mark",
-                    true);
+                r.error("S002", "illegal byte order mark");
                 return rune_invalid;
             }
         }

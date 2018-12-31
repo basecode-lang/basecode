@@ -113,10 +113,6 @@ namespace basecode::compiler {
         }
     }
 
-    block* element::parent_scope() {
-        return _parent_scope;
-    }
-
     bool element::apply_fold_result(
             compiler::element* e,
             const fold_result_t& fold_result) {
@@ -159,6 +155,10 @@ namespace basecode::compiler {
 
     comment_list_t& element::comments() {
         return _comments;
+    }
+
+    block* element::parent_scope() const {
+        return _parent_scope;
     }
 
     bool element::on_is_constant() const {

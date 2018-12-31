@@ -34,6 +34,11 @@ namespace basecode::compiler {
             compiler::emit_context_t& context,
             compiler::emit_result_t& result);
 
+        bool prepare_call_site(
+            compiler::session& session,
+            compiler::argument_list* args,
+            compiler::prepare_call_site_result_t& result) const;
+
         bool has_return() const;
 
         bool is_foreign() const;

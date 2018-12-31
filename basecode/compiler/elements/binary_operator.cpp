@@ -209,6 +209,9 @@ namespace basecode::compiler {
 
                 return true;
             }
+            case operator_type_t::assignment: {
+                return _lhs->infer_type(session, result);
+            }
             case operator_type_t::member_access: {
                 return _rhs->infer_type(session, result);
             }

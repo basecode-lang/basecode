@@ -58,7 +58,7 @@ namespace basecode::compiler {
         _fields.insert(std::make_pair(value->id(), value));
     }
 
-    field_list_t field_map_t::as_list() {
+    field_list_t field_map_t::as_list() const {
         field_list_t list {};
         for (const auto& it : _fields) {
             list.push_back(it.second);

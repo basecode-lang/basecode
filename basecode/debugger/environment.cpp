@@ -532,20 +532,18 @@ namespace basecode::debugger {
                         cmd.arguments.insert(std::make_pair(kvp.first, data));
                     }
                 } else {
-                    result.add_message(
+                    result.error(
                         "X000",
                         fmt::format(
                             "unrecognized parameter '{}' value: {}",
                             kvp.second.name,
-                            param),
-                            true);
+                            param));
                     break;
                 }
             } else {
-                result.add_message(
+                result.error(
                     "X000",
-                    fmt::format("missing required parameter: {}", kvp.second.name),
-                    true);
+                    fmt::format("missing required parameter: {}", kvp.second.name));
                 break;
             }
             ++index;
@@ -557,10 +555,9 @@ namespace basecode::debugger {
 
         auto handler_it = s_command_handlers.find(cmd.command.prototype.type);
         if (handler_it == s_command_handlers.end()) {
-            result.add_message(
+            result.error(
                 "X000",
-                fmt::format("no command handler: {}", cmd.command.name),
-                true);
+                fmt::format("no command handler: {}", cmd.command.name));
             return false;
         }
 

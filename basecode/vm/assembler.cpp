@@ -64,10 +64,9 @@ namespace basecode::vm {
                             for (auto v : data_def->values) {
                                 if (v.which() != 0) {
                                     auto label_ref = boost::get<label_ref_t*>(v);
-                                    r.add_message(
+                                    r.error(
                                         "A031",
-                                        fmt::format("unexpected label_ref_t*: {}", label_ref->name),
-                                        true);
+                                        fmt::format("unexpected label_ref_t*: {}", label_ref->name));
                                     continue;
                                 }
                                 _terp->write(
@@ -159,12 +158,11 @@ namespace basecode::vm {
         for (auto label_ref : label_refs) {
             label_ref->resolved = find_label(label_ref->name);
             if (label_ref->resolved == nullptr) {
-                r.add_message(
+                r.error(
                     "A001",
                     fmt::format(
                         "unable to resolve label: {}",
-                        label_ref->name),
-                    true);
+                        label_ref->name));
             }
         }
 

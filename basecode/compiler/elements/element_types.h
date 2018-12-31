@@ -557,11 +557,11 @@ namespace basecode::compiler {
     struct field_map_t {
         void add(field* value);
 
-        field_list_t as_list();
-
         inline size_t size() const {
             return _fields.size();
         }
+
+        field_list_t as_list() const;
 
         bool remove(common::id_t id);
 
@@ -697,4 +697,17 @@ namespace basecode::compiler {
     static const constexpr uint16_t switch_expression = 1;
     static const constexpr uint16_t previous_element = 2;
     static const constexpr uint16_t next_element = 3;
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    using argument_index_map_t = std::map<std::string, size_t>;
+
+    struct prepare_call_site_result_t {
+        common::result messages {};
+        element_list_t arguments {};
+        argument_index_map_t index {};
+        compiler::procedure_type* proc_type = nullptr;
+        compiler::identifier_reference* ref = nullptr;
+    };
+
 };

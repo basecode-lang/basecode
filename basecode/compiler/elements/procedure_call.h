@@ -52,8 +52,8 @@ namespace basecode::compiler {
         compiler::argument_list* _arguments = nullptr;
         compiler::type_reference_list_t _type_parameters {};
         compiler::identifier_reference_list_t _references {};
-        compiler::procedure_type* _active_procedure_type = nullptr;
-        compiler::identifier_reference* _active_identifier = nullptr;
+        compiler::procedure_type* _resolved_proc_type = nullptr;
+        compiler::identifier_reference* _resolved_identifier_ref = nullptr;
     };
 
 };

@@ -67,13 +67,12 @@ namespace basecode::vm {
 
     size_t instruction_t::decode(common::result& r, uint64_t address) {
         if (address % alignment != 0) {
-            r.add_message(
+            r.error(
                 "B003",
                 fmt::format(
                     "instruction alignment violation: alignment = {} bytes, address = ${:016X}",
                     alignment,
-                    address),
-                true);
+                    address));
             return 0;
         }
 
@@ -136,15 +135,13 @@ namespace basecode::vm {
                     }
                     case op_sizes::none: {
                         if (operand.is_integer()) {
-                            r.add_message(
+                            r.error(
                                 "B010",
-                                "constant integers cannot have a size of 'none'.",
-                                true);
+                                "constant integers cannot have a size of 'none'.");
                         } else {
-                            r.add_message(
+                            r.error(
                                 "B010",
-                                "constant floats cannot have a size of 'none', 'byte', or 'word'.",
-                                true);
+                                "constant floats cannot have a size of 'none', 'byte', or 'word'.");
                         }
                         break;
                     }
@@ -157,13 +154,12 @@ namespace basecode::vm {
 
     size_t instruction_t::encode(common::result& r, uint64_t address) {
         if (address % alignment != 0) {
-            r.add_message(
+            r.error(
                 "B003",
                 fmt::format(
                     "instruction alignment violation: alignment = {} bytes, address = ${:016X}",
                     alignment,
-                    address),
-                true);
+                    address));
             return 0;
         }
 
@@ -241,15 +237,13 @@ namespace basecode::vm {
                     }
                     case op_sizes::none:
                         if (operand.is_integer()) {
-                            r.add_message(
+                            r.error(
                                 "B009",
-                                "constant integers cannot have a size of 'none'.",
-                                true);
+                                "constant integers cannot have a size of 'none'.");
                         } else {
-                            r.add_message(
+                            r.error(
                                 "B009",
-                                "constant floats cannot have a size of 'none', 'byte', or 'word'.",
-                                true);
+                                "constant floats cannot have a size of 'none', 'byte', or 'word'.");
                         }
                         break;
                 }
@@ -2886,12 +2880,11 @@ namespace basecode::vm {
         ||  address.alias.u > _heap_address + _heap_size) {
             execute_trap(trap_invalid_address);
             // XXX: include heap range in message
-            r.add_message(
+            r.error(
                 "B004",
                 fmt::format(
                     "invalid address: address = ${:016X}",
-                    address.alias.u),
-                true);
+                    address.alias.u));
             return false;
         }
         return true;
@@ -3166,10 +3159,9 @@ namespace basecode::vm {
                 value.alias.u,
                 size);
         } else {
-            r.add_message(
+            r.error(
                 "B006",
-                "constant cannot be a target operand type.",
-                true);
+                "constant cannot be a target operand type.");
             return false;
         }
 

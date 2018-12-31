@@ -50,6 +50,8 @@ namespace basecode::compiler {
         auto file = module->source_file();
         if (file != nullptr)
             file->error(_result, code, message, location);
+        else
+            _result.error(code, message, location);
     }
 
     bool session::variable(
@@ -267,11 +269,18 @@ namespace basecode::compiler {
     bool session::type_check() {
         auto intrinsics = _elements.find_by_type<compiler::intrinsic>(element_type_t::intrinsic);
         for (auto intrinsic : intrinsics) {
-            if (!intrinsic->arguments()->index_to_procedure_type(
+            auto args = intrinsic->arguments();
+            prepare_call_site_result_t result {};
+            if (!intrinsic->procedure_type()->prepare_call_site(
                     *this,
-                    intrinsic->procedure_type())) {
+                    args,
+                    result)) {
+                for (const auto& msg : result.messages.messages())
+                    error(intrinsic->module(), msg.code(), msg.message(), msg.location());
                 return false;
             }
+            args->elements(result.arguments);
+            args->argument_index(result.index);
         }
 
         auto proc_calls = _elements.find_by_type<compiler::procedure_call>(element_type_t::proc_call);

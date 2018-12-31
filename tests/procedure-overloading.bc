@@ -1,31 +1,36 @@
 core :: module("../modules/core");
 
-TEST_TYPE :: 1;
+TEST_TYPE :: 3;
 
 foo :: proc(a: u8): u8 {
     b: u8 := a * 10;
+    print("#1\n");
     return b;
 };
 
 foo :: proc(a: u16): u16 {
     b: u16 := a * 10;
+    print("#2\n");
     return b;
 };
 
 foo :: proc(a: u32): u64 {
     b: u64 := a * 10;
+    print("#3\n");
     return b;
 };
 
 #run {
     #if TEST_TYPE == 1 {
-        result := foo(16);
+        result: u8 := foo(16);
         print("result := %hhu\n", result);
     } #elif TEST_TYPE == 2 {
-        result := foo(cast<u16>(16));
+        result: u16 := foo(16);
         print("result := %hu\n", result);
-    } #else {
-        result := foo(cast<u32>(16));
+    } #elif TEST_TYPE == 3 {
+        result: u64 := foo(16);
         print("result := %llu\n", result);
+    } #else {
+        print("unknown TEST_TYPE\n");
     };
 };

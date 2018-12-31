@@ -13,6 +13,7 @@
 
 #include <vector>
 #include <string>
+#include "source_location.h"
 
 namespace basecode::common {
 
@@ -21,17 +22,20 @@ namespace basecode::common {
         enum types {
             info,
             error,
+            warning,
             data
         };
 
         result_message(
                 const std::string& code,
                 const std::string& message,
+                const source_location& loc = {},
                 const std::string& details = "",
                 types type = types::info) : _type(type),
                                             _code(code),
                                             _message(message),
-                                            _details(details) {
+                                            _details(details),
+                                            _location(loc) {
         }
 
         inline types type() const {
@@ -54,11 +58,16 @@ namespace basecode::common {
             return _message;
         }
 
+        inline const source_location& location() const {
+            return _location;
+        }
+
     private:
         types _type;
         std::string _code;
         std::string _message {};
         std::string _details {};
+        source_location _location {};
     };
 
     using result_message_list = std::vector <result_message>;

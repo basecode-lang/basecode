@@ -36,10 +36,7 @@ namespace basecode::debugger {
     bool command_data_t::parse(common::result& r) {
         auto parts = common::string_to_list(name, '.');
         if (parts.empty()) {
-            r.add_message(
-                "X000",
-                "invalid command",
-                true);
+            r.error("X000", "invalid command");
             return false;
         }
 
@@ -47,10 +44,9 @@ namespace basecode::debugger {
 
         auto it = s_commands.find(name);
         if (it == s_commands.end()) {
-            r.add_message(
+            r.error(
                 "X000",
-                fmt::format("unknown command: {}", name),
-                true);
+                fmt::format("unknown command: {}", name));
             return false;
         }
 
@@ -58,20 +54,18 @@ namespace basecode::debugger {
 
         if (prototype.sizes != command_prototype_t::size_flags_t::none) {
             if (parts.size() < 2) {
-                r.add_message(
+                r.error(
                     "X000",
-                    "command requires a size suffix",
-                    true);
+                    "command requires a size suffix");
                 return false;
             }
             auto size_flag = prototype.suffix_to_size(parts[1]);
             if ((prototype.sizes & size_flag) != 0) {
                 switch (size_flag) {
                     case command_prototype_t::size_flags_t::none: {
-                        r.add_message(
+                        r.error(
                             "X000",
-                            "invalid size suffix for command",
-                            true);
+                            "invalid size suffix for command");
                         return false;
                     }
                     case command_prototype_t::size_flags_t::byte: {
@@ -92,18 +86,16 @@ namespace basecode::debugger {
                     }
                 }
             } else {
-                r.add_message(
+                r.error(
                     "X000",
-                    "invalid size suffix for command",
-                    true);
+                    "invalid size suffix for command");
                 return false;
             }
         } else {
             if (parts.size() == 2) {
-                r.add_message(
+                r.error(
                     "X000",
-                    "command does not support size suffix",
-                    true);
+                    "command does not support size suffix");
                 return false;
             }
         }
@@ -116,19 +108,17 @@ namespace basecode::debugger {
     bool register_data_t::parse(common::result& r) {
         auto parts = common::string_to_list(input, ',');
         if (parts.empty()) {
-            r.add_message(
+            r.error(
                 "X000",
-                "invalid register",
-                true);
+                "invalid register");
             return false;
         }
 
         auto reg_name = parts[0];
         if (reg_name.length() < 2) {
-            r.add_message(
+            r.error(
                 "X000",
-                fmt::format("invalid register: {}", reg_name),
-                true);
+                fmt::format("invalid register: {}", reg_name));
             return false;
         }
 
@@ -168,10 +158,9 @@ namespace basecode::debugger {
                 value = static_cast<vm::registers_t>(number);
                 type = vm::register_type_t::floating_point;
             } else {
-                r.add_message(
+                r.error(
                     "X000",
-                    fmt::format("invalid register: {}", reg_name),
-                    true);
+                    fmt::format("invalid register: {}", reg_name));
                 return false;
             }
         } else if (first_char == 'S') {
@@ -182,10 +171,9 @@ namespace basecode::debugger {
                 value = vm::registers_t::sr;
                 type = vm::register_type_t::integer;
             } else {
-                r.add_message(
+                r.error(
                     "X000",
-                    fmt::format("invalid register: {}", reg_name),
-                    true);
+                    fmt::format("invalid register: {}", reg_name));
                 return false;
             }
         } else if (first_char == 'P' && second_char == 'C') {

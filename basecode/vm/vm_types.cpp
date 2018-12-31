@@ -117,10 +117,9 @@ namespace basecode::vm {
             const boost::filesystem::path& path) {
         _library = dlLoadLibrary(path.string().c_str());
         if (_library == nullptr) {
-            r.add_message(
+            r.error(
                 "B062",
-                fmt::format("unable to load library image file: {}.", path.string()),
-                true);
+                fmt::format("unable to load library image file: {}.", path.string()));
             return false;
         }
         get_library_path();
@@ -130,10 +129,9 @@ namespace basecode::vm {
     bool shared_library_t::initialize(common::result& r) {
         _library = dlLoadLibrary(nullptr);
         if (_library == nullptr) {
-            r.add_message(
+            r.error(
                 "B062",
-                fmt::format("unable to load library image for self."),
-                true);
+                fmt::format("unable to load library image for self."));
             return false;
         }
         get_library_path();

@@ -19,6 +19,9 @@
 #include "identifier.h"
 #include "declaration.h"
 #include "initializer.h"
+#include "argument_pair.h"
+#include "argument_list.h"
+#include "procedure_call.h"
 #include "procedure_type.h"
 #include "symbol_element.h"
 #include "type_reference.h"
@@ -112,6 +115,168 @@ namespace basecode::compiler {
                 var->symbol()->name(),
                 common::align(type->size_in_bytes(), 8));
             var->stack_frame_entry(entry);
+        }
+
+        return true;
+    }
+
+    bool procedure_type::prepare_call_site(
+            compiler::session& session,
+            compiler::argument_list* args,
+            compiler::prepare_call_site_result_t& result) const {
+        result.arguments = args->elements();
+
+        auto field_list = _parameters.as_list();
+        if (field_list.empty()) {
+            if (!result.arguments.empty()) {
+                result.messages.error(
+                    "X000",
+                    "procedure declares no parameters.",
+                    args->parent_element()->location());
+                return false;
+            }
+            return true;
+        }
+
+        auto& builder = session.builder();
+
+        result.arguments.resize(field_list.size());
+
+        element_list_t temp {};
+        temp.resize(field_list.size());
+        compiler::argument_list* variadic_args = nullptr;
+
+        size_t index = 0;
+        for (index = 0; index < field_list.size(); index++) {
+            auto fld = field_list[index];
+            auto fld_name = fld->identifier()->symbol()->name();
+            if (fld->is_variadic()) {
+                if (index < field_list.size() - 1) {
+                    result.messages.error(
+                        "X000",
+                        fmt::format(
+                            "variadic parameter only valid in final position: {}",
+                            fld_name),
+                            args->parent_element()->location());
+                    return false;
+                } else {
+                    variadic_args = builder.make_argument_list(args->parent_scope());
+                    temp[index] = variadic_args;
+                }
+            }
+            result.index.insert(std::make_pair(fld_name, index));
+        }
+
+        auto last_field = field_list.back();
+        for (index = 0; index < result.arguments.size(); index++) {
+        _retry:
+            auto arg = result.arguments[index];
+            if (arg == nullptr)
+                continue;
+
+            if (last_field->is_variadic()
+            &&  index >= field_list.size() - 1) {
+                if (variadic_args == nullptr) {
+                    result.messages.error(
+                        "X000",
+                        "no variadic parameter defined.",
+                        args->parent_element()->location());
+                    return false;
+                }
+
+                variadic_args->add(arg);
+                if (result.arguments.size() == field_list.size()) {
+                    result.arguments[index] = nullptr;
+                } else {
+                    if (index < result.arguments.size()) {
+                        result.arguments.erase(result.arguments.begin() + index);
+                    } else {
+                        continue;
+                    }
+                }
+                goto _retry;
+            } else {
+                if (arg->element_type() != element_type_t::argument_pair)
+                    continue;
+
+                auto arg_pair = dynamic_cast<compiler::argument_pair*>(arg);
+                std::string key;
+                if (arg_pair->lhs()->as_string(key)) {
+                    auto it = result.index.find(key);
+                    if (it != result.index.end()) {
+                        temp[it->second] = arg_pair->rhs();
+                        result.arguments.erase(result.arguments.begin() + index);
+                        result.arguments.emplace_back(nullptr);
+                        goto _retry;
+                    } else {
+                        result.messages.error(
+                            "X000",
+                            fmt::format("invalid procedure parameter: {}", key),
+                            arg->location());
+                        return false;
+                    }
+                }
+            }
+        }
+
+        index = 0;
+        for (auto fld : field_list) {
+            auto param = result.arguments[index];
+            if (param != nullptr) {
+                infer_type_result_t type_result{};
+                if (!param->infer_type(session, type_result)) {
+                    result.messages.error(
+                        "X000",
+                        fmt::format(
+                            "unable to infer type for parameter: {}",
+                            fld->identifier()->symbol()->name()),
+                        param->location());
+                    return false;
+                }
+
+                auto type_ref = fld->identifier()->type_ref();
+                if (!type_ref->type()->type_check(type_result.inferred_type)) {
+                    result.messages.error(
+                        "X000",
+                        fmt::format(
+                            "type mismatch: cannot assign {} to parameter {}.",
+                            type_result.type_name(),
+                            fld->identifier()->symbol()->name()),
+                        param->location());
+                    return false;
+                }
+            } else {
+                if (temp[index] != nullptr) {
+                    result.arguments[index] = temp[index];
+                    goto _next;
+                }
+
+                auto init = fld->identifier()->initializer();
+                if (init == nullptr) {
+                    auto decl = fld->declaration();
+                    if (decl != nullptr) {
+                        auto assignment = decl->assignment();
+                        if (assignment != nullptr) {
+                            result.arguments[index] = assignment->rhs();
+                            goto _next;
+                        }
+                    }
+
+                    result.messages.error(
+                        "X000",
+                        fmt::format(
+                            "missing required parameter: {}",
+                            fld->identifier()->symbol()->name()),
+                        args->parent_element()->location());
+
+                    return false;
+                }
+
+                result.arguments[index] = init->expression();
+            }
+
+        _next:
+            index++;
         }
 
         return true;

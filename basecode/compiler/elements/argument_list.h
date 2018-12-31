@@ -37,11 +37,9 @@ namespace basecode::compiler {
 
         void remove(common::id_t id);
 
-        bool index_to_procedure_type(
-            compiler::session& session,
-            compiler::procedure_type* proc_type);
-
         uint64_t allocated_size() const;
+
+        void is_foreign_call(bool value);
 
         void add(compiler::element* item);
 
@@ -51,9 +49,13 @@ namespace basecode::compiler {
 
         compiler::element* find(common::id_t id);
 
+        void elements(const element_list_t& value);
+
         compiler::element* param_at_index(size_t index);
 
         compiler::argument_list* variadic_arguments() const;
+
+        void argument_index(const argument_index_map_t& value);
 
         compiler::element* param_by_name(const std::string& name);
 
@@ -84,7 +86,7 @@ namespace basecode::compiler {
         uint64_t _allocated_size = 0;
         bool _is_foreign_call = false;
         compiler::element_list_t _elements {};
-        std::map<std::string, size_t> _param_index {};
+        argument_index_map_t _argument_index {};
     };
 
 };

@@ -46,7 +46,7 @@ namespace basecode::compiler {
 
     void argument_list::clear() {
         _elements.clear();
-        _param_index.clear();
+        _argument_index.clear();
     }
 
     bool argument_list::emit_elements(
@@ -242,183 +242,16 @@ namespace basecode::compiler {
             item);
     }
 
-    bool argument_list::index_to_procedure_type(
-            compiler::session& session,
-            compiler::procedure_type* proc_type) {
-        _param_index.clear();
-        _is_foreign_call = proc_type->is_foreign();
-
-        auto& param_map = proc_type->parameters();
-        auto field_list = param_map.as_list();
-        if (field_list.empty()) {
-            if (!_elements.empty()) {
-                session.error(
-                    module(),
-                    "P019",
-                    "procedure declares no parameters.",
-                    parent_element()->location());
-                return false;
-            }
-            return true;
-        }
-
-        auto& builder = session.builder();
-
-        if (_elements.size() < field_list.size()) {
-            _elements.resize(field_list.size());
-        }
-
-        element_list_t temp {};
-        temp.resize(field_list.size());
-        compiler::argument_list* variadic_args = nullptr;
-
-        size_t index = 0;
-        for (index = 0; index < field_list.size(); index++) {
-            auto fld = field_list[index];
-            auto fld_name = fld->identifier()->symbol()->name();
-            if (fld->is_variadic()) {
-                if (index < field_list.size() - 1) {
-                    session.error(
-                        module(),
-                        "P019",
-                        fmt::format(
-                            "variadic parameter only valid in final position: {}",
-                            fld_name),
-                        parent_element()->location());
-                    return false;
-                } else {
-                    variadic_args = builder.make_argument_list(parent_scope());
-                    temp[index] = variadic_args;
-                }
-            }
-            _param_index.insert(std::make_pair(fld_name, index));
-        }
-
-        auto last_field = field_list.back();
-        for (index = 0; index < _elements.size(); index++) {
-        _retry:
-            auto arg = _elements[index];
-            if (arg == nullptr)
-                continue;
-
-            if (last_field->is_variadic()
-            &&  index >= field_list.size() - 1) {
-                if (variadic_args == nullptr) {
-                    session.error(
-                        module(),
-                        "P019",
-                        "no variadic parameter defined.",
-                        parent_element()->location());
-                    return false;
-                }
-
-                variadic_args->add(arg);
-                if (_elements.size() == field_list.size()) {
-                    _elements[index] = nullptr;
-                } else {
-                    if (index < _elements.size()) {
-                        _elements.erase(_elements.begin() + index);
-                    } else {
-                        continue;
-                    }
-                }
-                goto _retry;
-            } else {
-                if (arg->element_type() != element_type_t::argument_pair)
-                    continue;
-
-                auto arg_pair = dynamic_cast<compiler::argument_pair*>(arg);
-                std::string key;
-                if (arg_pair->lhs()->as_string(key)) {
-                    auto it = _param_index.find(key);
-                    if (it != _param_index.end()) {
-                        temp[it->second] = arg_pair->rhs();
-                        _elements.erase(_elements.begin() + index);
-                        _elements.emplace_back(nullptr);
-                        goto _retry;
-                    } else {
-                        session.error(
-                            module(),
-                            "P019",
-                            fmt::format("invalid procedure parameter: {}", key),
-                            arg->location());
-                        return false;
-                    }
-                }
-            }
-        }
-
-        index = 0;
-        for (auto fld : field_list) {
-            auto param = _elements[index];
-            if (param != nullptr) {
-                infer_type_result_t type_result{};
-                if (!param->infer_type(session, type_result)) {
-                    session.error(
-                        module(),
-                        "P019",
-                        fmt::format(
-                            "unable to infer type for parameter: {}",
-                            fld->identifier()->symbol()->name()),
-                        param->location());
-                    return false;
-                }
-
-                auto type_ref = fld->identifier()->type_ref();
-                if (!type_ref->type()->type_check(type_result.inferred_type)) {
-                    session.error(
-                        module(),
-                        "C051",
-                        fmt::format(
-                            "type mismatch: cannot assign {} to parameter {}.",
-                            type_result.type_name(),
-                            fld->identifier()->symbol()->name()),
-                        param->location());
-                    return false;
-                }
-            } else {
-                if (temp[index] != nullptr) {
-                    _elements[index] = temp[index];
-                    goto _next;
-                }
-
-                auto init = fld->identifier()->initializer();
-                if (init == nullptr) {
-                    auto decl = fld->declaration();
-                    if (decl != nullptr) {
-                        auto assignment = decl->assignment();
-                        if (assignment != nullptr) {
-                            _elements[index] = assignment->rhs();
-                            goto _next;
-                        }
-                    }
-
-                    session.error(
-                        module(),
-                        "P019",
-                        fmt::format(
-                            "missing required parameter: {}",
-                            fld->identifier()->symbol()->name()),
-                        parent_element()->location());
-                    return false;
-                }
-
-                _elements[index] = init->expression();
-            }
-
-        _next:
-            index++;
-        }
-
-        return true;
-    }
-
     bool argument_list::is_foreign_call() const {
         return _is_foreign_call;
     }
 
     uint64_t argument_list::allocated_size() const {
         return _allocated_size;
+    }
+
+    void argument_list::is_foreign_call(bool value) {
+        _is_foreign_call = value;
     }
 
     void argument_list::add(compiler::element* item) {
@@ -447,6 +280,10 @@ namespace basecode::compiler {
         return *it;
     }
 
+    void argument_list::elements(const element_list_t& value) {
+        _elements = value;
+    }
+
     void argument_list::on_owned_elements(element_list_t& list) {
         for (auto element : _elements)
             list.emplace_back(element);
@@ -469,9 +306,13 @@ namespace basecode::compiler {
         return nullptr;
     }
 
+    void argument_list::argument_index(const argument_index_map_t& value) {
+        _argument_index = value;
+    }
+
     compiler::element* argument_list::param_by_name(const std::string& name) {
-        auto it = _param_index.find(name);
-        if (it == _param_index.end())
+        auto it = _argument_index.find(name);
+        if (it == _argument_index.end())
             return nullptr;
         return _elements[it->second];
     }

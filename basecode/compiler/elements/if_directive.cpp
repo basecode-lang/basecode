@@ -54,8 +54,8 @@ namespace basecode::compiler {
         auto value = false;
         auto next_branch = this;
         while (!value && next_branch != nullptr) {
-            if (next_branch->_lhs == nullptr) {
-                _true_body = next_branch->_body;
+            if (next_branch->_rhs == nullptr) {
+                _true_body = next_branch->_lhs;
                 break;
             }
             if (!next_branch->_lhs->as_bool(value)) {

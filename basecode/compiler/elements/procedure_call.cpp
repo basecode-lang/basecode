@@ -46,10 +46,10 @@ namespace basecode::compiler {
         auto& assembler = session.assembler();
         auto block = assembler.current_block();
 
-        auto label = _active_identifier->label_name();
+        auto label = _resolved_identifier_ref->label_name();
 
         compiler::type* return_type = nullptr;
-        auto return_type_field = _active_procedure_type->return_type();
+        auto return_type_field = _resolved_proc_type->return_type();
         if (return_type_field != nullptr)
             return_type = return_type_field->identifier()->type_ref()->type();
 
@@ -67,17 +67,17 @@ namespace basecode::compiler {
         if (_arguments != nullptr)
             _arguments->emit(session, context, result);
 
-        if (_active_procedure_type->is_foreign()) {
+        if (_resolved_proc_type->is_foreign()) {
             auto& ffi = session.ffi();
 
-            auto func = ffi.find_function(_active_procedure_type->foreign_address());
+            auto func = ffi.find_function(_resolved_proc_type->foreign_address());
             if (func == nullptr) {
                 session.error(
                     module(),
                     "X000",
                     fmt::format(
                         "unable to find foreign function by address: {}",
-                        _active_procedure_type->foreign_address()),
+                        _resolved_proc_type->foreign_address()),
                     location());
                 return false;
             }
@@ -86,7 +86,7 @@ namespace basecode::compiler {
                 fmt::format("call: {}", label),
                 vm::comment_location_t::after_instruction);
 
-            vm::instruction_operand_t address_operand(_active_procedure_type->foreign_address());
+            vm::instruction_operand_t address_operand(_resolved_proc_type->foreign_address());
 
             if (func->is_variadic()) {
                 vm::function_value_list_t args {};
@@ -182,14 +182,7 @@ namespace basecode::compiler {
     }
 
     compiler::procedure_type* procedure_call::procedure_type() {
-        // XXX: temporary work around
-        if (_references.size() == 1) {
-            _active_identifier = _references.front();
-
-            auto type = _active_identifier->identifier()->type_ref()->type();
-            _active_procedure_type = dynamic_cast<compiler::procedure_type*>(type);
-        }
-        return _active_procedure_type;
+        return _resolved_proc_type;
     }
 
     void procedure_call::on_owned_elements(element_list_t& list) {
@@ -204,16 +197,70 @@ namespace basecode::compiler {
     }
 
     bool procedure_call::resolve_overloads(compiler::session& session) {
-        auto type = procedure_type();
+        compiler::type* return_type = nullptr;
 
-        if (type != nullptr
-        && !_arguments->index_to_procedure_type(session, type)) {
+        if (is_parent_element(element_type_t::binary_operator)) {
+            infer_type_result_t type_result {};
+            if (parent_element()->infer_type(session, type_result)) {
+                if (!type_result.inferred_type->is_unknown_type())
+                    return_type = type_result.inferred_type;
+            }
+        }
+
+        size_t success_count = 0;
+        size_t success_index = 0;
+        std::vector<prepare_call_site_result_t> results {};
+        for (auto ref : _references) {
+            prepare_call_site_result_t result {};
+            result.ref = ref;
+
+            auto type = result.ref->identifier()->type_ref()->type();
+            result.proc_type = dynamic_cast<compiler::procedure_type*>(type);
+
+            if (result.proc_type->prepare_call_site(session, _arguments, result)) {
+                if (return_type != nullptr) {
+                    auto return_fld = result.proc_type->return_type();
+                    if (return_fld != nullptr) {
+                        auto proc_return_type = return_fld->identifier()->type_ref()->type();
+                        if (proc_return_type->id() == return_type->id()) {
+                            ++success_count;
+                            success_index = results.size();
+                        }
+                    }
+                } else {
+                    ++success_count;
+                    success_index = results.size();
+                }
+            }
+
+            results.emplace_back(result);
+        }
+
+        if (success_count == 0) {
+            for (const auto& prepare_result : results) {
+                for (const auto& msg : prepare_result.messages.messages())
+                    session.error(module(), msg.code(), msg.message(), msg.location());
+            }
             return false;
         }
 
-        _active_identifier = _references.front();
-        auto proc_type = _active_identifier->identifier()->type_ref()->type();
-        _active_procedure_type = dynamic_cast<compiler::procedure_type*>(proc_type);
+        if (success_count > 1) {
+            session.error(
+                module(),
+                "X000",
+                "ambiguous call site.",
+                location());
+            return false;
+        }
+
+        auto& matched_result = results[success_index];
+
+        _arguments->elements(matched_result.arguments);
+        _arguments->argument_index(matched_result.index);
+        _arguments->is_foreign_call(matched_result.proc_type->is_foreign());
+
+        _resolved_identifier_ref = matched_result.ref;
+        _resolved_proc_type = matched_result.proc_type;
 
         return true;
     }
