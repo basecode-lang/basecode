@@ -24,6 +24,7 @@
 #include "procedure_call.h"
 #include "type_reference.h"
 #include "composite_type.h"
+#include "binary_operator.h"
 #include "identifier_reference.h"
 
 namespace basecode::compiler {
@@ -182,7 +183,16 @@ namespace basecode::compiler {
     }
 
     compiler::procedure_type* procedure_call::procedure_type() {
-        return _resolved_proc_type;
+        if (_resolved_proc_type != nullptr)
+            return _resolved_proc_type;
+        if (_references.size() == 1) {
+            auto identifier = _references.front()->identifier();
+            if (identifier != nullptr) {
+                auto type = identifier->type_ref()->type();
+                return dynamic_cast<compiler::procedure_type*>(type);
+            }
+        }
+        return nullptr;
     }
 
     void procedure_call::on_owned_elements(element_list_t& list) {
@@ -200,10 +210,13 @@ namespace basecode::compiler {
         compiler::type* return_type = nullptr;
 
         if (is_parent_element(element_type_t::binary_operator)) {
-            infer_type_result_t type_result {};
-            if (parent_element()->infer_type(session, type_result)) {
-                if (!type_result.inferred_type->is_unknown_type())
-                    return_type = type_result.inferred_type;
+            auto bin_op = dynamic_cast<compiler::binary_operator*>(parent_element());
+            if (bin_op->operator_type() == operator_type_t::assignment) {
+                infer_type_result_t type_result{};
+                if (parent_element()->infer_type(session, type_result)) {
+                    if (!type_result.inferred_type->is_unknown_type())
+                        return_type = type_result.inferred_type;
+                }
             }
         }
 

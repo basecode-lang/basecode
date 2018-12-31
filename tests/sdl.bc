@@ -1,140 +1,142 @@
 core :: module("../modules/core");
 
-SDL_Color :: struct {
-    r: u8;
-    g: u8;
-    b: u8;
-    a: u8;
-};
+SDL :: ns {
+    Color :: struct {
+        r: u8;
+        g: u8;
+        b: u8;
+        a: u8;
+    };
 
-SDL_Palette :: struct {
-    ncolors: s32;
-    colors: ^SDL_Color;
-    version: u32;
-    refcount: s32;
-};
+    Palette :: struct {
+        ncolors: s32;
+        colors: ^Color;
+        version: u32;
+        refcount: s32;
+    };
 
-SDL_PixelFormat :: struct {
-    format: u32;
-    palette: ^SDL_Palette;
-    bits_per_pixel: u8;
-    bytes_per_pixel: u8;
-    padding: u16;
-    rmask: u32;
-    gmask: u32;
-    bmask: u32;
-    amask: u32;
-    rloss: u8;
-    gloss: u8;
-    bloss: u8;
-    aloss: u8;
-    rshift: u8;
-    gshift: u8;
-    bshift: u8;
-    ashift: u8;
-    refcount : s32;
-    next: ^SDL_PixelFormat;
-};
+    PixelFormat :: struct {
+        format: u32;
+        palette: ^Palette;
+        bits_per_pixel: u8;
+        bytes_per_pixel: u8;
+        padding: u16;
+        rmask: u32;
+        gmask: u32;
+        bmask: u32;
+        amask: u32;
+        rloss: u8;
+        gloss: u8;
+        bloss: u8;
+        aloss: u8;
+        rshift: u8;
+        gshift: u8;
+        bshift: u8;
+        ashift: u8;
+        refcount : s32;
+        next: ^PixelFormat;
+    };
 
-SDL_BlitMap :: struct {};
+    BlitMap :: struct {};
 
-SDL_Point   :: struct {
-    x: s32;
-    y: s32;
-};
+    Point   :: struct {
+        x: s32;
+        y: s32;
+    };
 
-SDL_Rect    :: struct {
-    x: s32;
-    y: s32;
-    w: s32;
-    h: s32;
-};
+    Rect    :: struct {
+        x: s32;
+        y: s32;
+        w: s32;
+        h: s32;
+    };
 
-SDL_Window  :: struct {};
+    Window  :: struct {};
 
-SDL_Surface :: struct {
-    flags: u32;
-    format: ^SDL_PixelFormat;
-    w: s32;
-    h: s32;
-    pitch: s32;
-    pixels: ^u8;
-    userdata: ^u8;
-    locked: s32;
-    lock_data: ^u8;
-    clip_rect: SDL_Rect;
-    map: ^SDL_BlitMap;
-    refcount: s32;
-};
+    Surface :: struct {
+        flags: u32;
+        format: ^PixelFormat;
+        w: s32;
+        h: s32;
+        pitch: s32;
+        pixels: ^u8;
+        userdata: ^u8;
+        locked: s32;
+        lock_data: ^u8;
+        clip_rect: Rect;
+        map: ^BlitMap;
+        refcount: s32;
+    };
 
-SDL_INIT_TIMER          :: $00000001;
-SDL_INIT_AUDIO          :: $00000010;
-SDL_INIT_VIDEO          :: $00000020;
-SDL_INIT_JOYSTICK       :: $00000200;
-SDL_INIT_HAPTIC         :: $00001000;
-SDL_INIT_GAMECONTROLLER :: $00002000;
-SDL_INIT_EVENTS         :: $00004000;
-SDL_INIT_NOPARACHUTE    :: $00100000;
-SDL_INIT_EVERYTHING     :: SDL_INIT_TIMER 
-                            | SDL_INIT_AUDIO 
-                            | SDL_INIT_VIDEO 
-                            | SDL_INIT_EVENTS 
-                            | SDL_INIT_JOYSTICK 
-                            | SDL_INIT_HAPTIC 
-                            | SDL_INIT_GAMECONTROLLER;
+    INIT_TIMER          :: $00000001;
+    INIT_AUDIO          :: $00000010;
+    INIT_VIDEO          :: $00000020;
+    INIT_JOYSTICK       :: $00000200;
+    INIT_HAPTIC         :: $00001000;
+    INIT_GAMECONTROLLER :: $00002000;
+    INIT_EVENTS         :: $00004000;
+    INIT_NOPARACHUTE    :: $00100000;
+    INIT_EVERYTHING     :: INIT_TIMER
+                           | INIT_AUDIO
+                           | INIT_VIDEO
+                           | INIT_EVENTS
+                           | INIT_JOYSTICK
+                           | INIT_HAPTIC
+                           | INIT_GAMECONTROLLER;
 
-FULLSCREEN         :: $00000001;
-OPENGL             :: $00000002;
-SHOWN              :: $00000004;
-HIDDEN             :: $00000008;
-BORDERLESS         :: $00000010;
-RESIZABLE          :: $00000020;
-MINIMIZED          :: $00000040;
-MAXIMIZED          :: $00000080;
-INPUT_GRABBED      :: $00000100;
-INPUT_FOCUS        :: $00000200;
-MOUSE_FOCUS        :: $00000400;
-FULLSCREEN_DESKTOP :: $00000001 | $00001000;
-FOREIGN            :: $00000800;
-ALLOW_HIGHDPI      :: $00002000;      
-MOUSE_CAPTURE      :: $00004000;      
-ALWAYS_ON_TOP      :: $00008000;      
-SKIP_TASKBAR       :: $00010000;      
-UTILITY            :: $00020000;      
-TOOLTIP            :: $00040000;      
-POPUP_MENU         :: $00080000;      
-VULKAN             :: $10000000;      
+    WINDOWPOS_UNDEFINED_MASK :: $1FFF0000;
+    WINDOWPOS_UNDEFINED      :: WINDOWPOS_UNDEFINED_MASK;
 
-SDL_WINDOWPOS_UNDEFINED_MASK :: $1FFF0000;
-SDL_WINDOWPOS_UNDEFINED      :: SDL_WINDOWPOS_UNDEFINED_MASK;   
+    WINDOWPOS_CENTERED_MASK  :: $2FFF0000;
+    WINDOWPOS_CENTERED       :: WINDOWPOS_CENTERED_MASK;
 
-SDL_WINDOWPOS_CENTERED_MASK  :: $2FFF0000;
-SDL_WINDOWPOS_CENTERED       :: SDL_WINDOWPOS_CENTERED_MASK;
+    FULLSCREEN         :: $00000001;
+    OPENGL             :: $00000002;
+    SHOWN              :: $00000004;
+    HIDDEN             :: $00000008;
+    BORDERLESS         :: $00000010;
+    RESIZABLE          :: $00000020;
+    MINIMIZED          :: $00000040;
+    MAXIMIZED          :: $00000080;
+    INPUT_GRABBED      :: $00000100;
+    INPUT_FOCUS        :: $00000200;
+    MOUSE_FOCUS        :: $00000400;
+    FULLSCREEN_DESKTOP :: FULLSCREEN | $00001000;
+    FOREIGN            :: $00000800;
+    ALLOW_HIGHDPI      :: $00002000;
+    MOUSE_CAPTURE      :: $00004000;
+    ALWAYS_ON_TOP      :: $00008000;
+    SKIP_TASKBAR       :: $00010000;
+    UTILITY            :: $00020000;
+    TOOLTIP            :: $00040000;
+    POPUP_MENU         :: $00080000;
+    VULKAN             :: $10000000;
 
-@library "SDL2";
-#foreign {
-    SDL_Init                :: proc(flags: u32): s32;
-    SDL_Quit                :: proc();
-    SDL_Delay               :: proc(ms: u32);
-    SDL_CreateWindow        :: proc(title: ^u8, x: s32, y: s32, w: s32, h: s32, flags: u32): ^SDL_Window;
-    SDL_DestroyWindow       :: proc(window: ^SDL_Window);
-    SDL_GetWindowSurface    :: proc(window: ^SDL_Window): ^SDL_Surface;
-    SDL_UpdateWindowSurface :: proc(window: ^SDL_Window): s32;
-    SDL_FillRect            :: proc(surface: ^SDL_Surface, rect: ^SDL_Rect, color: u32): s32;
+    @library "SDL2";
+    #foreign {
+        Quit                :: proc() @alias "SDL_Quit";
+        Delay               :: proc(ms: u32) @alias "SDL_Delay";
+        Init                :: proc(flags: u32): s32 @alias "SDL_Init";
+        DestroyWindow       :: proc(window: ^Window) @alias "SDL_DestroyWindow";
+        UpdateWindowSurface :: proc(window: ^Window): s32 @alias "SDL_UpdateWindowSurface";
+        GetWindowSurface    :: proc(window: ^Window): ^Surface @alias "SDL_GetWindowSurface";
+        FillRect            :: proc(surface: ^Surface, rect: ^Rect, color: u32): s32 @alias "SDL_FillRect";
+        CreateWindow        :: proc(title: ^u8, x: s32, y: s32, w: s32, h: s32, flags: u32): ^Window @alias "SDL_CreateWindow";
+    } @parent_scope;
 };
 
 #run {
-    assert(SDL_Init(SDL_INIT_VIDEO) >= 0, "SDL could not be initialized!");
+    assert(SDL::Init(SDL::INIT_VIDEO) >= 0, "SDL could not be initialized!");
     
-    window := SDL_CreateWindow(
+    window := SDL::CreateWindow(
         "Test Window", 
-        SDL_WINDOWPOS_CENTERED, 
-        SDL_WINDOWPOS_CENTERED, 
+        SDL::WINDOWPOS_CENTERED,
+        SDL::WINDOWPOS_CENTERED,
         1280, 
         1024, 
-        OPENGL | SHOWN);
+        SDL::OPENGL | SDL::SHOWN);
     assert(window != nil, "window not initialized!");
-    rect: SDL_Rect;
+    rect: SDL::Rect;
     with rect {
         .x := 0;
         .y := 0;
@@ -142,14 +144,14 @@ SDL_WINDOWPOS_CENTERED       :: SDL_WINDOWPOS_CENTERED_MASK;
         .h := 1024;
     };
 
-    surface := SDL_GetWindowSurface(window);
+    surface := SDL::GetWindowSurface(window);
 
-    SDL_FillRect(surface, nil, $FFFFFFFF);
-    SDL_UpdateWindowSurface(window);
+    SDL::FillRect(surface, nil, $FFFFFFFF);
+    SDL::UpdateWindowSurface(window);
 
-    SDL_Delay(10000);
+    SDL::Delay(10000);
 
-    SDL_DestroyWindow(window);
+    SDL::DestroyWindow(window);
 
-    SDL_Quit();
+    SDL::Quit();
 };

@@ -18,40 +18,6 @@ namespace basecode::compiler {
     scope_manager::scope_manager(compiler::session& session) : _session(session) {
     }
 
-    compiler::block* scope_manager::pop_scope() {
-        if (_scope_stack.empty())
-            return nullptr;
-        auto top = _scope_stack.top();
-        _scope_stack.pop();
-        return top;
-    }
-
-    module_stack_t& scope_manager::module_stack() {
-        return _module_stack;
-    }
-
-    block_stack_t& scope_manager::top_level_stack() {
-        return _top_level_stack;
-    }
-
-    compiler::module* scope_manager::current_module() {
-        if (_module_stack.empty())
-            return nullptr;
-        return _module_stack.top();
-    }
-
-    compiler::block* scope_manager::current_top_level() {
-        if (_top_level_stack.empty())
-            return nullptr;
-        return _top_level_stack.top();
-    }
-
-    compiler::block* scope_manager::current_scope() const {
-        if (_scope_stack.empty())
-            return nullptr;
-        return _scope_stack.top();
-    }
-
     bool scope_manager::visit_blocks(
             common::result& r,
             const block_visitor_callable& callable,
@@ -69,88 +35,31 @@ namespace basecode::compiler {
         return recursive_execute(root_block != nullptr ? root_block : _top_level_stack.top());
     }
 
-    visitor_result_t scope_manager::walk_parent_scopes(
-            compiler::block* scope,
-            const scope_visitor_callable& callable) const {
-        while (scope != nullptr) {
-            auto result = callable(scope);
-            if (!result.empty())
-                return result;
-            scope = scope->parent_scope();
-        }
-        return {};
-    }
-
-    visitor_result_t scope_manager::walk_parent_elements(
-            compiler::element* element,
-            const element_visitor_callable& callable) const {
-        auto current = element;
-        while (current != nullptr) {
-            auto result = callable(current);
-            if (!result.empty())
-                return result;
-            current = current->parent_element();
-        }
-        return {};
-    }
-
-    void scope_manager::push_scope(compiler::block* block) {
-        _scope_stack.push(block);
-    }
-
     compiler::type* scope_manager::find_type(
             const qualified_symbol_t& symbol,
             compiler::block* scope) const {
-        visitor_result_t result;
-        if (symbol.is_qualified()) {
-            result = walk_qualified_symbol(
-                symbol,
-                const_cast<compiler::scope_manager*>(this)->current_top_level(),
-                [&](compiler::block* scope) -> visitor_result_t {
-                    auto matching_type = scope->types().find(symbol.name);
-                    if (matching_type != nullptr)
-                        return visitor_result_t(matching_type);
-
-                    auto vars = find_identifier(symbol, scope);
-                    if (!vars.empty() && vars.front()->is_constant())
-                        return visitor_result_t(vars.front()->type_ref()->type());
-
-                    return {};
-                });
-        } else {
-            result = walk_parent_scopes(
-                scope != nullptr ? scope : current_scope(),
-                [&](compiler::block* scope) -> visitor_result_t {
-                    auto type = scope->types().find(symbol.name);
-                    if (type != nullptr)
-                        return visitor_result_t(type);
-                    auto vars = find_identifier(symbol, scope);
-                    if (!vars.empty() && vars.front()->is_constant())
-                        return visitor_result_t(vars.front()->type_ref()->type());
-                    return {};
-                });
+        auto vars = find_identifier(symbol, scope);
+        if (!vars.empty()) {
+            auto identifier = vars.front();
+            return identifier->type_ref()->type();
         }
-        return result.type() == visitor_data_type_t::type ?
-            *result.data<compiler::type*>() :
-            nullptr;
+        return nullptr;
     }
 
-    void scope_manager::add_type_to_scope(compiler::type* type) {
-        auto& builder = _session.builder();
+    compiler::block* scope_manager::pop_scope() {
+        if (_scope_stack.empty())
+            return nullptr;
+        auto top = _scope_stack.top();
+        _scope_stack.pop();
+        return top;
+    }
 
-        auto scope = current_scope();
-        scope->types().add(type);
+    module_stack_t& scope_manager::module_stack() {
+        return _module_stack;
+    }
 
-        auto type_ref = builder.make_type_reference(
-            scope,
-            type->symbol()->qualified_symbol(),
-            type);
-        auto identifier = builder.make_identifier(
-            scope,
-            type->symbol(),
-            builder.make_initializer(scope, type_ref));
-        identifier->type_ref(type_ref);
-        scope->identifiers().add(identifier);
+    block_stack_t& scope_manager::top_level_stack() {
+        return _top_level_stack;
     }
 
     compiler::block* scope_manager::push_new_block() {
@@ -166,27 +75,13 @@ namespace basecode::compiler {
         return scope_block;
     }
 
-    compiler::module* scope_manager::find_module(compiler::element* element) const {
-        auto result = walk_parent_elements(
-            element,
-            [](compiler::element* each) -> visitor_result_t {
-                if (each->element_type() == element_type_t::module)
-                    return visitor_result_t(dynamic_cast<compiler::module*>(each));
-                return {};
-            });
-        return result.type() == visitor_data_type_t::module ?
-            *result.data<compiler::module*>() :
-            nullptr;
-    }
-
-    bool scope_manager::within_local_scope(compiler::block* parent_scope) const {
-        auto block_scope = parent_scope == nullptr ? current_scope() : parent_scope;
-        while (block_scope != nullptr) {
-            if (block_scope->has_stack_frame())
-                return true;
-            block_scope = block_scope->parent_scope();
-        }
-        return false;
+    compiler::map_type* scope_manager::find_map_type(
+            compiler::type_reference* key_type,
+            compiler::type_reference* value_type,
+            compiler::block* scope) const {
+        return dynamic_cast<compiler::map_type*>(find_type(
+            qualified_symbol_t(compiler::map_type::name_for_map(key_type, value_type)),
+            scope));
     }
 
     identifier_list_t scope_manager::find_identifier(
@@ -195,8 +90,8 @@ namespace basecode::compiler {
         std::stack<std::string> parts {};
         parts.push(symbol.name);
         for (auto it = symbol.namespaces.rbegin();
-                it != symbol.namespaces.rend();
-                ++it) {
+                 it != symbol.namespaces.rend();
+                 ++it) {
             parts.push(*it);
         }
 
@@ -295,6 +190,46 @@ namespace basecode::compiler {
         }
     }
 
+    visitor_result_t scope_manager::walk_parent_scopes(
+            compiler::block* scope,
+            const scope_visitor_callable& callable) const {
+        while (scope != nullptr) {
+            auto result = callable(scope);
+            if (!result.empty())
+                return result;
+            scope = scope->parent_scope();
+        }
+        return {};
+    }
+
+    compiler::module* scope_manager::current_module() {
+        if (_module_stack.empty())
+            return nullptr;
+        return _module_stack.top();
+    }
+
+    compiler::array_type* scope_manager::find_array_type(
+            compiler::type* entry_type,
+            const element_list_t& subscripts,
+            compiler::block* scope) const {
+        return dynamic_cast<compiler::array_type*>(find_type(
+            qualified_symbol_t(compiler::array_type::name_for_array(entry_type, subscripts)),
+            scope));
+    }
+
+    visitor_result_t scope_manager::walk_parent_elements(
+            compiler::element* element,
+            const element_visitor_callable& callable) const {
+        auto current = element;
+        while (current != nullptr) {
+            auto result = callable(current);
+            if (!result.empty())
+                return result;
+            current = current->parent_element();
+        }
+        return {};
+    }
+
     visitor_result_t scope_manager::walk_qualified_symbol(
             const qualified_symbol_t& symbol,
             compiler::block* scope,
@@ -319,6 +254,22 @@ namespace basecode::compiler {
         return callable(block_scope);
     }
 
+    compiler::block* scope_manager::current_top_level() {
+        if (_top_level_stack.empty())
+            return nullptr;
+        return _top_level_stack.top();
+    }
+
+    compiler::block* scope_manager::current_scope() const {
+        if (_scope_stack.empty())
+            return nullptr;
+        return _scope_stack.top();
+    }
+
+    void scope_manager::push_scope(compiler::block* block) {
+        _scope_stack.push(block);
+    }
+
     compiler::pointer_type* scope_manager::find_pointer_type(
             compiler::type* base_type,
             compiler::block* scope) const {
@@ -335,22 +286,22 @@ namespace basecode::compiler {
             scope));
     }
 
-    compiler::map_type* scope_manager::find_map_type(
-            compiler::type_reference* key_type,
-            compiler::type_reference* value_type,
-            compiler::block* scope) const {
-        return dynamic_cast<compiler::map_type*>(find_type(
-            qualified_symbol_t(compiler::map_type::name_for_map(key_type, value_type)),
-            scope));
-    }
+    void scope_manager::add_type_to_scope(compiler::type* type) {
+        auto& builder = _session.builder();
 
-    compiler::array_type* scope_manager::find_array_type(
-            compiler::type* entry_type,
-            const element_list_t& subscripts,
-            compiler::block* scope) const {
-        return dynamic_cast<compiler::array_type*>(find_type(
-            qualified_symbol_t(compiler::array_type::name_for_array(entry_type, subscripts)),
-            scope));
+        auto scope = current_scope();
+        scope->types().add(type);
+
+        auto type_ref = builder.make_type_reference(
+            scope,
+            type->symbol()->qualified_symbol(),
+            type);
+        auto identifier = builder.make_identifier(
+            scope,
+            type->symbol(),
+            builder.make_initializer(scope, type_ref));
+        identifier->type_ref(type_ref);
+        scope->identifiers().add(identifier);
     }
 
     identifier_list_t& scope_manager::identifiers_with_unknown_types() {
@@ -362,8 +313,31 @@ namespace basecode::compiler {
             qualified_symbol_t("namespace")));
     }
 
+    bool scope_manager::within_local_scope(compiler::block* parent_scope) const {
+        auto block_scope = parent_scope == nullptr ? current_scope() : parent_scope;
+        while (block_scope != nullptr) {
+            if (block_scope->has_stack_frame())
+                return true;
+            block_scope = block_scope->parent_scope();
+        }
+        return false;
+    }
+
     identifier_reference_list_t& scope_manager::unresolved_identifier_references() {
         return _unresolved_identifier_references;
+    }
+
+    compiler::module* scope_manager::find_module(compiler::element* element) const {
+        auto result = walk_parent_elements(
+            element,
+            [](compiler::element* each) -> visitor_result_t {
+                if (each->element_type() == element_type_t::module)
+                    return visitor_result_t(dynamic_cast<compiler::module*>(each));
+                return {};
+            });
+        return result.type() == visitor_data_type_t::module ?
+               *result.data<compiler::module*>() :
+               nullptr;
     }
 
 };

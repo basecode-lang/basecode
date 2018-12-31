@@ -193,6 +193,15 @@ namespace basecode::syntax {
             return token.value == other.token.value;
         }
 
+        bool has_attribute(const std::string& name) const {
+            if (attributes.empty())
+                return false;
+            for (auto attr : attributes)
+                if (attr->token.value == name)
+                    return true;
+            return false;
+        }
+
         token_t token;
         common::id_t id;
         ast_node_type_t type;

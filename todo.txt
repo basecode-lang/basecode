@@ -19,6 +19,7 @@ QUESTIONS
 
 WORKING
 -------
+- BUG: finish union
 - NEW: family expressions
         integers :: family(signed_integers, unsigned_integers);
         signed_integers :: family(s8, s16, s32, s64);
@@ -28,7 +29,6 @@ WORKING
             return x + y;
         };
 - NEW: convert multiple/named parameters in procedure return into a tuple
-- BUG: proc_expression needs to support overloaded procedures
 
 TASKS
 -----
@@ -195,3 +195,4 @@ DONE
         .ilocal {alias}  ; allocates an integer register
         .flocal {alias}  ; allocates a float register
 - NEW: add terp trap for putc/getc for any file handle
+- BUG: proc_expression needs to support overloaded procedures

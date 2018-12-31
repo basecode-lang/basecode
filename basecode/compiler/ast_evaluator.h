@@ -114,7 +114,6 @@ namespace basecode::compiler {
             compiler::block* scope);
 
         compiler::element* resolve_symbol_or_evaluate(
-            const evaluator_context_t& context,
             const syntax::ast_node_t* node,
             compiler::block* scope = nullptr,
             bool flag_as_unresolved = true);

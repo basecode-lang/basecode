@@ -295,7 +295,6 @@ namespace basecode::compiler {
     }
 
     compiler::element* ast_evaluator::resolve_symbol_or_evaluate(
-            const evaluator_context_t& context,
             const syntax::ast_node_t* node,
             compiler::block* scope,
             bool flag_as_unresolved) {
@@ -925,7 +924,7 @@ namespace basecode::compiler {
     bool ast_evaluator::module_expression(
             evaluator_context_t& context,
             evaluator_result_t& result) {
-        auto expr = resolve_symbol_or_evaluate(context, context.node->rhs);
+        auto expr = resolve_symbol_or_evaluate(context.node->rhs);
         auto mod_ref = _session.builder().make_module_reference(
             _session.scope_manager().current_scope(),
             expr);
@@ -1118,9 +1117,7 @@ namespace basecode::compiler {
             switch (arg_node->type) {
                 case syntax::ast_node_type_t::assignment: {
                     auto lhs = evaluate(arg_node->lhs->children.front());
-                    auto rhs = resolve_symbol_or_evaluate(
-                        context,
-                        arg_node->rhs->children.front());
+                    auto rhs = resolve_symbol_or_evaluate(arg_node->rhs->children.front());
                     if (lhs != nullptr && rhs != nullptr)
                         arg = builder.make_argument_pair(
                             scope_manager.current_scope(),
@@ -1129,7 +1126,7 @@ namespace basecode::compiler {
                     break;
                 }
                 default: {
-                    arg = resolve_symbol_or_evaluate(context, arg_node);
+                    arg = resolve_symbol_or_evaluate(arg_node);
                     break;
                 }
             }
@@ -1160,7 +1157,7 @@ namespace basecode::compiler {
         result.element = _session.builder().make_unary_operator(
             _session.scope_manager().current_scope(),
             it->second,
-            resolve_symbol_or_evaluate(context, context.node->rhs));
+            resolve_symbol_or_evaluate(context.node->rhs));
         return true;
     }
 
@@ -1169,7 +1166,7 @@ namespace basecode::compiler {
             evaluator_result_t& result) {
         compiler::element* expr = nullptr;
         if (context.node->lhs != nullptr) {
-            expr = resolve_symbol_or_evaluate(context, context.node->lhs);
+            expr = resolve_symbol_or_evaluate(context.node->lhs);
         }
         result.element = _session.builder().make_spread_operator(
             _session.scope_manager().current_scope(),
@@ -1197,9 +1194,7 @@ namespace basecode::compiler {
         } else {
             compiler::block* type_scope = nullptr;
 
-            lhs = resolve_symbol_or_evaluate(
-                context,
-                context.node->lhs);
+            lhs = resolve_symbol_or_evaluate(context.node->lhs);
             infer_type_result_t infer_type_result {};
             if (lhs == nullptr
             || !lhs->infer_type(_session, infer_type_result)) {
@@ -1248,7 +1243,6 @@ namespace basecode::compiler {
             }
 
             rhs = resolve_symbol_or_evaluate(
-                context,
                 context.node->rhs,
                 type_scope);
         }
@@ -1296,7 +1290,7 @@ namespace basecode::compiler {
         auto return_element = _session.builder().make_return(_session.scope_manager().current_scope());
         auto& expressions = return_element->expressions();
         for (auto arg_node : context.node->rhs->children) {
-            auto arg = resolve_symbol_or_evaluate(context, arg_node);
+            auto arg = resolve_symbol_or_evaluate(arg_node);
             expressions.push_back(arg);
             arg->parent_element(return_element);
         }
@@ -1316,7 +1310,7 @@ namespace basecode::compiler {
         compiler::identifier_reference* from_ref = nullptr;
         if (context.node->rhs != nullptr) {
             from_ref = dynamic_cast<compiler::identifier_reference*>(
-                resolve_symbol_or_evaluate(context, context.node->rhs));
+                resolve_symbol_or_evaluate(context.node->rhs));
             qualified_symbol.namespaces.insert(
                 qualified_symbol.namespaces.begin(),
                 from_ref->symbol().name);
@@ -1356,7 +1350,7 @@ namespace basecode::compiler {
         result.element = _session.builder().make_binary_operator(
             _session.scope_manager().current_scope(),
             operator_type_t::subscript,
-            resolve_symbol_or_evaluate(context, context.node->lhs),
+            resolve_symbol_or_evaluate(context.node->lhs),
             evaluate(context.node->rhs));
         return true;
     }
@@ -1382,6 +1376,13 @@ namespace basecode::compiler {
         }
 
         result.element = scope_manager.pop_scope();
+
+        if (context.node->has_attribute("parent_scope")) {
+            auto current_scope = scope_manager.current_scope();
+            for (auto identifier : active_scope->identifiers().as_list())
+                current_scope->identifiers().add(identifier);
+        }
+
         return true;
     }
 
@@ -1657,9 +1658,7 @@ namespace basecode::compiler {
 
         result.element = builder.make_with(
             scope_manager.current_scope(),
-            resolve_symbol_or_evaluate(
-                context,
-                context.node->lhs),
+            resolve_symbol_or_evaluate(context.node->lhs),
             dynamic_cast<compiler::block*>(evaluate(context.node->rhs)));
         return true;
     }
@@ -1670,7 +1669,7 @@ namespace basecode::compiler {
         auto& builder = _session.builder();
         auto& scope_manager = _session.scope_manager();
 
-        auto expr = resolve_symbol_or_evaluate(context, context.node->lhs);
+        auto expr = resolve_symbol_or_evaluate(context.node->lhs);
         auto scope = dynamic_cast<compiler::block*>(evaluate(context.node->rhs));
 
         result.element = builder.make_switch(
@@ -1941,9 +1940,7 @@ namespace basecode::compiler {
                 case syntax::ast_node_type_t::subscript_declaration: {
                     auto is_dynamic = current->lhs == nullptr;
                     if (!is_dynamic) {
-                        subscripts.push_back(resolve_symbol_or_evaluate(
-                            context,
-                            current->lhs));
+                        subscripts.push_back(resolve_symbol_or_evaluate(current->lhs));
                     }
 
                     while (!type_nodes.empty()) {
@@ -1956,9 +1953,7 @@ namespace basecode::compiler {
                             return false;
                         }
 
-                        subscripts.push_back(resolve_symbol_or_evaluate(
-                            context,
-                            subscript_node->lhs));
+                        subscripts.push_back(resolve_symbol_or_evaluate(subscript_node->lhs));
 
                         type_nodes.pop();
                     }
@@ -1998,9 +1993,7 @@ namespace basecode::compiler {
         auto& builder = _session.builder();
         auto& scope_manager = _session.scope_manager();
 
-        auto rhs = resolve_symbol_or_evaluate(
-            context,
-            context.node->rhs);
+        auto rhs = resolve_symbol_or_evaluate(context.node->rhs);
         if (rhs == nullptr) {
             // XXX: error
             return false;
@@ -2115,7 +2108,6 @@ namespace basecode::compiler {
 
             auto is_binary_op = true;
             auto target_element = resolve_symbol_or_evaluate(
-                context,
                 target_symbol,
                 scope,
                 false);
@@ -2147,7 +2139,6 @@ namespace basecode::compiler {
 
             if (is_binary_op) {
                 auto rhs = resolve_symbol_or_evaluate(
-                    context,
                     source_list->children[i],
                     scope);
                 if (rhs == nullptr)
@@ -2347,7 +2338,7 @@ namespace basecode::compiler {
             compiler::block* scope) {
         auto& builder = _session.builder();
 
-        auto predicate = resolve_symbol_or_evaluate(context, node, scope);
+        auto predicate = resolve_symbol_or_evaluate(node, scope);
         if (predicate->element_type() != element_type_t::binary_operator) {
             infer_type_result_t infer_type_result {};
             if (!predicate->infer_type(_session, infer_type_result))
