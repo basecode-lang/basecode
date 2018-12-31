@@ -206,6 +206,7 @@ namespace basecode::vm {
         register_file_t _registers {};
         allocator* _allocator = nullptr;
         meta_information_t _meta_information {};
+        std::set<uint64_t> _white_listed_addresses {};
         std::unordered_map<uint8_t, trap_callable> _traps {};
     };
 

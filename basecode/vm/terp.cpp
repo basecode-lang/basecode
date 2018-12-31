@@ -607,9 +607,6 @@ namespace basecode::vm {
                 if (!get_address_with_offset(r, inst, 1, 2, address))
                     return false;
 
-                if (!bounds_check_address(r, address))
-                    return false;
-
                 operand_value_t loaded_data;
                 loaded_data.alias.u = read(inst.size, address.alias.u);
                 auto zero_flag = is_zero(inst.size, loaded_data);
@@ -628,9 +625,6 @@ namespace basecode::vm {
             case op_codes::store: {
                 operand_value_t address;
                 if (!get_address_with_offset(r, inst, 0, 2, address))
-                    return false;
-
-                if (!bounds_check_address(r, address))
                     return false;
 
                 operand_value_t data;
@@ -2834,8 +2828,11 @@ namespace basecode::vm {
                 }
 
                 auto result_value = _ffi->call(func);
-                if (func->return_value.type != ffi_types_t::void_type)
+                if (func->return_value.type != ffi_types_t::void_type) {
                     push(result_value);
+                    if (func->return_value.type == ffi_types_t::pointer_type)
+                        _white_listed_addresses.insert(result_value);
+                }
 
                 break;
             }
@@ -2876,6 +2873,9 @@ namespace basecode::vm {
     bool terp::bounds_check_address(
             common::result& r,
             const operand_value_t& address) {
+        if (_white_listed_addresses.count(address.alias.u))
+            return true;
+
         if (address.alias.u < _heap_address
         ||  address.alias.u > _heap_address + _heap_size) {
             execute_trap(trap_invalid_address);
@@ -2887,6 +2887,7 @@ namespace basecode::vm {
                     address.alias.u));
             return false;
         }
+
         return true;
     }
 
@@ -3176,6 +3177,13 @@ namespace basecode::vm {
             operand_value_t& address) {
         if (!get_operand_value(r, inst, address_index, address))
             return false;
+
+        // XXX: need a better way to do this
+        if (inst.op == op_codes::load
+        ||  inst.op == op_codes::store) {
+            if (!bounds_check_address(r, address))
+                return false;
+        }
 
         if (inst.operands_count > 2) {
             operand_value_t offset;

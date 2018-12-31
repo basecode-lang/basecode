@@ -484,6 +484,8 @@ namespace basecode::compiler {
             }
 
             auto expr_node = child->rhs;
+            if (expr_node == nullptr)
+                continue;
 
             if (is_enum && value > value_type->max()) {
                 _session.error(

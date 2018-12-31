@@ -100,6 +100,13 @@ namespace basecode::compiler {
         return _scope;
     }
 
+    bool case_element::on_apply_fold_result(
+            compiler::element* e,
+            const fold_result_t& fold_result) {
+        _expr = fold_result.element;
+        return true;
+    }
+
     compiler::element* case_element::expression() {
         return _expr;
     }
