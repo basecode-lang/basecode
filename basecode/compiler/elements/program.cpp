@@ -390,6 +390,9 @@ namespace basecode::compiler {
             for (auto e : section.second) {
                 if (e->element_type() == element_type_t::identifier) {
                     auto var = dynamic_cast<compiler::identifier*>(e);
+                    if (var->is_constant())
+                        continue;
+
                     auto var_type = var->type_ref()->type();
 
                     auto init = var->initializer();
@@ -424,7 +427,9 @@ namespace basecode::compiler {
         auto& assembler = session.assembler();
 
         block_list_t implicit_blocks {};
-        auto module_refs = session.elements().find_by_type<compiler::module_reference>(element_type_t::module_reference);
+        auto module_refs = session
+            .elements()
+            .find_by_type<compiler::module_reference>(element_type_t::module_reference);
         for (auto mod_ref : module_refs) {
             auto block = mod_ref->reference()->scope();
             // XXX: how can we check a block to determine if it will emit byte code?
@@ -475,7 +480,9 @@ namespace basecode::compiler {
         auto& assembler = session.assembler();
         procedure_instance_set_t proc_instance_set {};
 
-        auto proc_calls = session.elements().find_by_type<compiler::procedure_call>(element_type_t::proc_call);
+        auto proc_calls = session
+            .elements()
+            .find_by_type<compiler::procedure_call>(element_type_t::proc_call);
         for (auto proc_call : proc_calls) {
             if (proc_call->is_foreign())
                 continue;
@@ -515,7 +522,9 @@ namespace basecode::compiler {
     }
 
     void program::intern_string_literals(compiler::session& session) {
-        auto literals = session.elements().find_by_type<compiler::string_literal>(element_type_t::string_literal);
+        auto literals = session
+            .elements()
+            .find_by_type<compiler::string_literal>(element_type_t::string_literal);
         for (auto literal : literals)
             session.intern_string(literal);
     }
@@ -528,7 +537,9 @@ namespace basecode::compiler {
 
         std::set<common::id_t> processed_identifiers {};
 
-        auto identifier_refs = session.elements().find_by_type<compiler::identifier_reference>(element_type_t::identifier_reference);
+        auto identifier_refs = session
+            .elements()
+            .find_by_type<compiler::identifier_reference>(element_type_t::identifier_reference);
         for (auto ref : identifier_refs) {
             auto var = ref->identifier();
             if (processed_identifiers.count(var->id()) > 0)

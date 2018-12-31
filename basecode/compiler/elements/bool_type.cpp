@@ -68,6 +68,7 @@ namespace basecode::compiler {
 
     bool bool_type::on_initialize(compiler::session& session) {
         symbol(session.builder().make_symbol(parent_scope(), "bool"));
+        alignment(1);
         size_in_bytes(1);
         return true;
     }

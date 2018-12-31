@@ -106,6 +106,7 @@ namespace basecode::compiler {
             name_for_pointer(_base_type_ref->type()));
         symbol(type_symbol);
         type_symbol->parent_element(this);
+        alignment(sizeof(uint64_t));
         size_in_bytes(sizeof(uint64_t));
         return true;
     }

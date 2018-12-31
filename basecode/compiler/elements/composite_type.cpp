@@ -9,11 +9,13 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <common/bytes.h>
 #include <compiler/session.h>
 #include <vm/instruction_block.h>
 #include "field.h"
 #include "block.h"
 #include "identifier.h"
+#include "initializer.h"
 #include "symbol_element.h"
 #include "composite_type.h"
 #include "type_reference.h"
@@ -46,20 +48,46 @@ namespace basecode::compiler {
     bool composite_type::on_emit_initializer(
             compiler::session& session,
             compiler::variable* var) {
-        auto field_list = _fields.as_list();
-        for (auto fld: field_list) {
-            // XXX: this isn't handling pointer types properly
-            variable_handle_t field_var {};
-            if (!var->field(fld->identifier()->symbol()->name(), field_var)) {
-                // XXX: error
-                return false;
+        switch (_type) {
+            case composite_types_t::enum_type: {
+                auto& assembler = session.assembler();
+                auto block = assembler.current_block();
+
+                auto var_ident = dynamic_cast<compiler::identifier*>(var->element());
+                auto init = var_ident->initializer();
+
+                block->comment(
+                    fmt::format("enum initializer: {}", name()),
+                    vm::comment_location_t::after_instruction);
+                if (init != nullptr) {
+                    variable_handle_t init_var{};
+                    if (!session.variable(init, init_var))
+                        return false;
+                    var->write(init_var.get());
+                } else {
+                    var->write(var->value_reg().size, 0);
+                }
+                break;
             }
-            if (!field_var->initializer()) {
-                // XXX: error
-                return false;
+            case composite_types_t::union_type: {
+                break;
+            }
+            case composite_types_t::struct_type: {
+                auto field_list = _fields.as_list();
+                for (auto fld: field_list) {
+                    variable_handle_t field_var {};
+                    if (!var->field(fld->identifier()->symbol()->name(), field_var)) {
+                        // XXX: error
+                        return false;
+                    }
+                    if (!field_var->initializer()) {
+                        // XXX: error
+                        return false;
+                    }
+                }
+                break;
             }
         }
-
         return true;
     }
 
@@ -102,10 +130,35 @@ namespace basecode::compiler {
 
     bool composite_type::on_initialize(compiler::session& session) {
         size_t size = 0;
-        for (auto fld : _fields.as_list())
-            size += fld->size_in_bytes();
+        size_t align = 0;
+        switch (_type) {
+            case composite_types_t::enum_type: {
+                auto type_params = _type_parameters.as_list();
+                if (type_params.empty()) {
+                    size = 4;
+                } else {
+                    size = type_params.front()->size_in_bytes();
+                }
+                align = size;
+                break;
+            }
+            case composite_types_t::union_type: {
+                for (auto fld : _fields.as_list()) {
+                    if (fld->size_in_bytes() > size)
+                        size = fld->size_in_bytes();
+                }
+                align = sizeof(uint64_t);
+                break;
+            }
+            case composite_types_t::struct_type: {
+                for (auto fld : _fields.as_list())
+                    size += common::align(fld->size_in_bytes(), fld->alignment());
+                align = sizeof(uint64_t);
+                break;
+            }
+        }
         size_in_bytes(size);
-        alignment(sizeof(uint64_t));
+        alignment(align);
         return true;
     }
 

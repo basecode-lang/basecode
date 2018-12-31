@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <common/bytes.h>
 #include "type.h"
 #include "field.h"
 #include "identifier.h"
@@ -48,8 +49,17 @@ namespace basecode::compiler {
         return _is_variadic;
     }
 
+    uint64_t field::alignment() const {
+        if (_declaration != nullptr)  {
+            auto type_ref = _declaration->identifier()->type_ref();
+            if (type_ref != nullptr)
+                return type_ref->type()->alignment();
+        }
+        return 0;
+    }
+
     uint64_t field::end_offset() const {
-        return _offset + size_in_bytes();
+        return common::align(_offset + size_in_bytes(), alignment());
     }
 
     size_t field::size_in_bytes() const {
@@ -64,7 +74,7 @@ namespace basecode::compiler {
     }
 
     uint64_t field::start_offset() const {
-        return _offset;
+        return common::align(_offset, alignment());
     }
 
     compiler::identifier* field::identifier() {

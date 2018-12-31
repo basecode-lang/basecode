@@ -33,6 +33,8 @@ namespace basecode::compiler {
 
         bool is_variadic() const;
 
+        uint64_t alignment() const;
+
         uint64_t end_offset() const;
 
         size_t size_in_bytes() const;

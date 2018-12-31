@@ -65,6 +65,7 @@ namespace basecode::compiler {
 
     bool rune_type::on_initialize(compiler::session& session) {
         symbol(session.builder().make_symbol(parent_scope(), "rune"));
+        alignment(4);
         size_in_bytes(4);
         return true;
     }

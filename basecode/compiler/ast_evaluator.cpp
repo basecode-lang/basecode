@@ -2123,16 +2123,23 @@ namespace basecode::compiler {
             }
 
             if (target_element->element_type() == element_type_t::identifier_reference) {
+                // XXX: clean this up
+                //
                 auto identifier_ref = dynamic_cast<compiler::identifier_reference*>(target_element);
                 if (identifier_ref->resolved()
                 &&  !identifier_ref->identifier()->type_ref()->is_proc_type()) {
-                    if (identifier_ref->is_constant()) {
+                    // XXX: it makes sense that we only want to check for reassignment here
+                    //      if it's constant AND we're adding something to the same scope
+                    if (identifier_ref->is_constant()
+                    &&  (scope == nullptr ||scope->id() == identifier_ref->parent_scope()->id())) {
                         _session.error(
                             _session.scope_manager().current_module(),
                             "P028",
                             "constant variables cannot be modified.",
                             target_symbol->location);
                         return false;
+                    } else {
+                        is_binary_op = false;
                     }
                 } else {
                     is_binary_op = false;
@@ -2158,6 +2165,8 @@ namespace basecode::compiler {
                 auto lhs = evaluate_in_scope(
                     target_symbol,
                     scope);
+                if (lhs == nullptr)
+                    return false;
 
                 auto symbol = dynamic_cast<compiler::symbol_element*>(lhs);
                 symbol->constant(is_constant_assignment);
