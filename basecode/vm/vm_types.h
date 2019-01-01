@@ -649,7 +649,6 @@ namespace basecode::vm {
 
     enum class instruction_block_type_t {
         basic,
-        procedure
     };
 
     enum class section_t : uint8_t {

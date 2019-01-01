@@ -26,11 +26,9 @@ namespace basecode::vm {
     assembler::~assembler() {
         for (const auto& it : _labels)
             delete it.second;
-        _labels.clear();
 
-        for (auto block : _blocks)
-            delete block;
-        _blocks.clear();
+        for (const auto& kvp : _block_registry)
+            delete kvp.second;
     }
 
     void assembler::disassemble() {
@@ -112,18 +110,12 @@ namespace basecode::vm {
         if (_block_stack.empty())
             return nullptr;
         auto top = _block_stack.top();
-        if (top->type() == instruction_block_type_t::procedure && _procedure_block_count > 0)
-            _procedure_block_count--;
         _block_stack.pop();
         return top;
     }
 
     vm::assembly_listing& assembler::listing() {
         return _listing;
-    }
-
-    bool assembler::in_procedure_scope() const {
-        return _procedure_block_count > 0;
     }
 
     segment_list_t assembler::segments() const {
@@ -211,7 +203,7 @@ namespace basecode::vm {
 
     instruction_block* assembler::make_basic_block() {
         auto block = new instruction_block(instruction_block_type_t::basic);
-        add_new_block(block);
+        register_block(block);
         return block;
     }
 
@@ -279,20 +271,8 @@ namespace basecode::vm {
         return !r.is_failed();
     }
 
-    std::vector<instruction_block*>& assembler::blocks() {
-        return _blocks;
-    }
-
     void assembler::push_block(instruction_block* block) {
         _block_stack.push(block);
-        if (block->type() == instruction_block_type_t::procedure)
-            _procedure_block_count++;
-    }
-
-    instruction_block* assembler::make_procedure_block() {
-        auto block = new instruction_block(instruction_block_type_t::procedure);
-        add_new_block(block);
-        return block;
     }
 
     label* assembler::find_label(const std::string& name) {
@@ -302,18 +282,12 @@ namespace basecode::vm {
         return it->second;
     }
 
-    void assembler::add_new_block(instruction_block* block) {
+    void assembler::register_block(instruction_block* block) {
         auto source_file = _listing.current_source_file();
         if (source_file != nullptr)
             block->source_file(source_file);
         _blocks.push_back(block);
-    }
-
-    vm::segment* assembler::segment(const std::string& name) {
-        auto it = _segments.find(name);
-        if (it == _segments.end())
-            return nullptr;
-        return &it->second;
+        _block_registry.insert(std::make_pair(block->id(), block));
     }
 
     label_ref_t* assembler::find_label_ref(common::id_t id) {
@@ -322,6 +296,13 @@ namespace basecode::vm {
             return &it->second;
         }
         return nullptr;
+    }
+
+    vm::segment* assembler::segment(const std::string& name) {
+        auto it = _segments.find(name);
+        if (it == _segments.end())
+            return nullptr;
+        return &it->second;
     }
 
     void assembler::disassemble(instruction_block* block) {
@@ -535,6 +516,13 @@ namespace basecode::vm {
     vm::label* assembler::make_label(const std::string& name) {
         auto it = _labels.insert(std::make_pair(name, new vm::label(name)));
         return it.first->second;
+    }
+
+    instruction_block* assembler::block(common::id_t id) const {
+        auto it = _block_registry.find(id);
+        if (it == _block_registry.end())
+            return nullptr;
+        return it->second;
     }
 
     label_ref_t* assembler::make_label_ref(const std::string& label_name) {

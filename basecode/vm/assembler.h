@@ -40,8 +40,6 @@ namespace basecode::vm {
 
         vm::assembly_listing& listing();
 
-        bool in_procedure_scope() const;
-
         segment_list_t segments() const;
 
         bool assemble(common::result& r);
@@ -60,10 +58,6 @@ namespace basecode::vm {
 
         bool apply_addresses(common::result& r);
 
-        instruction_block* make_procedure_block();
-
-        std::vector<instruction_block*>& blocks();
-
         void push_block(instruction_block* block);
 
         label* find_label(const std::string& name);
@@ -75,6 +69,8 @@ namespace basecode::vm {
         vm::segment* segment(const std::string& name);
 
         vm::label* make_label(const std::string& name);
+
+        instruction_block* block(common::id_t id) const;
 
         label_ref_t* make_label_ref(const std::string& label_name);
 
@@ -91,13 +87,12 @@ namespace basecode::vm {
     private:
         std::vector<label_ref_t*> label_references();
 
-        void add_new_block(instruction_block* block);
+        void register_block(instruction_block* block);
 
     private:
         vm::terp* _terp = nullptr;
         uint64_t _location_counter = 0;
         vm::assembly_listing _listing {};
-        uint32_t _procedure_block_count = 0;
         std::vector<instruction_block*> _blocks {};
         register_allocator_t _register_allocator {};
         std::stack<instruction_block*> _block_stack {};
@@ -105,6 +100,7 @@ namespace basecode::vm {
         std::unordered_map<std::string, vm::segment> _segments {};
         std::unordered_map<common::id_t, label_ref_t> _unresolved_labels {};
         std::unordered_map<std::string, common::id_t> _label_to_unresolved_ids {};
+        std::unordered_map<common::id_t, vm::instruction_block*> _block_registry {};
     };
 
 };

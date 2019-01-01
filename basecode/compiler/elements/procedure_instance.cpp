@@ -34,7 +34,7 @@ namespace basecode::compiler {
             return true;
 
         auto& assembler = session.assembler();
-        auto block = assembler.make_procedure_block();
+        auto block = assembler.make_basic_block();
 
         assembler.push_block(block);
 
