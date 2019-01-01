@@ -19,9 +19,6 @@ QUESTIONS
 
 WORKING
 -------
-- BUG: I added a partial whitelisting approach to the terp for foreign addresses.
-       For completeness, the terp needs to whitelist and moves, adds, subtracts to
-       source values that are in the whitelist.
 - NEW: family expressions
         integers :: family(signed_integers, unsigned_integers);
         signed_integers :: family(s8, s16, s32, s64);
@@ -200,3 +197,6 @@ DONE
 - BUG: proc_expression needs to support overloaded procedures
 - BUG: struct should conform to C ABI for padding/alignment
 - BUG: finish union (ensure proper padding/alignment)
+- BUG: I added a partial whitelisting approach to the terp for foreign addresses.
+       For completeness, the terp needs to whitelist and moves, adds, subtracts to
+       source values that are in the whitelist.

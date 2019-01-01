@@ -1004,7 +1004,11 @@ namespace basecode::vm {
                     }
                 }
 
-                if (set_target_operand_value(r, inst.operands[0], inst.size, reg_value))
+                if (_white_listed_addresses.count(reg_value.alias.u) > 0) {
+                    _white_listed_addresses.insert(new_value.alias.u);
+                }
+
+                if (set_target_operand_value(r, inst.operands[0], inst.size, new_value))
                     return false;
 
                 _registers.flags(
@@ -1067,7 +1071,11 @@ namespace basecode::vm {
                     }
                 }
 
-                if (set_target_operand_value(r, inst.operands[0], inst.size, reg_value))
+                if (_white_listed_addresses.count(reg_value.alias.u) > 0) {
+                    _white_listed_addresses.insert(new_value.alias.u);
+                }
+
+                if (set_target_operand_value(r, inst.operands[0], inst.size, new_value))
                     return false;
 
                 _registers.flags(
@@ -1131,6 +1139,11 @@ namespace basecode::vm {
                             break;
                         }
                     }
+                }
+
+                if (_white_listed_addresses.count(lhs_value.alias.u) > 0
+                ||  _white_listed_addresses.count(rhs_value.alias.u) > 0) {
+                    _white_listed_addresses.insert(sum_result.alias.u);
                 }
 
                 if (!set_target_operand_value(r, inst.operands[0], inst.size, sum_result))
@@ -1206,6 +1219,11 @@ namespace basecode::vm {
                         default:
                             return false;
                     }
+                }
+
+                if (_white_listed_addresses.count(lhs_value.alias.u) > 0
+                ||  _white_listed_addresses.count(rhs_value.alias.u) > 0) {
+                    _white_listed_addresses.insert(subtraction_result.alias.u);
                 }
 
                 if (!set_target_operand_value(r, inst.operands[0], inst.size, subtraction_result))
@@ -2876,15 +2894,19 @@ namespace basecode::vm {
         if (_white_listed_addresses.count(address.alias.u))
             return true;
 
-        if (address.alias.u < _heap_address
-        ||  address.alias.u > _heap_address + _heap_size) {
+        auto heap_bottom = _heap_address;
+        auto heap_top = _heap_address + _heap_size;
+
+        if (address.alias.u < heap_bottom
+        ||  address.alias.u > heap_top) {
             execute_trap(trap_invalid_address);
-            // XXX: include heap range in message
             r.error(
                 "B004",
                 fmt::format(
-                    "invalid address: address = ${:016X}",
-                    address.alias.u));
+                    "invalid address: ${:016X}; bottom: ${:016X}; top: ${:016X}",
+                    address.alias.u,
+                    heap_bottom,
+                    heap_top));
             return false;
         }
 
@@ -3178,12 +3200,7 @@ namespace basecode::vm {
         if (!get_operand_value(r, inst, address_index, address))
             return false;
 
-        // XXX: need a better way to do this
-        if (inst.op == op_codes::load
-        ||  inst.op == op_codes::store) {
-            if (!bounds_check_address(r, address))
-                return false;
-        }
+        auto is_white_listed = _white_listed_addresses.count(address.alias.u) > 0;
 
         if (inst.operands_count > 2) {
             operand_value_t offset;
@@ -3196,6 +3213,19 @@ namespace basecode::vm {
             } else {
                 address.alias.u += offset.alias.u;
             }
+
+            if(inst.op == op_codes::move
+            || inst.op == op_codes::moves
+            || inst.op == op_codes::movez) {
+                if (is_white_listed)
+                    _white_listed_addresses.insert(address.alias.u);
+            }
+        }
+
+        if (!is_white_listed
+        && (inst.op == op_codes::load || inst.op == op_codes::store)) {
+            if (!bounds_check_address(r, address))
+                return false;
         }
 
         return true;
