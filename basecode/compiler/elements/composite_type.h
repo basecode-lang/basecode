@@ -28,6 +28,8 @@ namespace basecode::compiler {
 
         bool is_enum() const;
 
+        bool is_union() const;
+
         field_map_t& fields();
 
         compiler::block* scope();

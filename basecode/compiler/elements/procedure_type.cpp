@@ -140,7 +140,8 @@ namespace basecode::compiler {
 
         auto& builder = session.builder();
 
-        result.arguments.resize(field_list.size());
+        if (result.arguments.size() < field_list.size())
+            result.arguments.resize(field_list.size());
 
         element_list_t temp {};
         temp.resize(field_list.size());
@@ -161,6 +162,7 @@ namespace basecode::compiler {
                     return false;
                 } else {
                     variadic_args = builder.make_argument_list(args->parent_scope());
+                    variadic_args->parent_element(args);
                     temp[index] = variadic_args;
                 }
             }

@@ -700,7 +700,7 @@ namespace basecode::syntax {
     bool lexer::in_literal(token_t& token) {
         if (match_literal("in")) {
             auto ch = read(false);
-            if (!isalnum(ch)) {
+            if (!isalnum(ch) && ch != '_') {
                 rewind_one_char();
                 token = s_in_literal;
                 return true;

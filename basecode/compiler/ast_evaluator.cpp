@@ -451,6 +451,7 @@ namespace basecode::compiler {
 
         uint64_t value = 0;
         auto is_enum = type->is_enum();
+        auto is_union = type->is_union();
         std::string value_type_name = "u32";
         compiler::numeric_type* value_type = nullptr;
         if (is_enum) {
@@ -496,6 +497,10 @@ namespace basecode::compiler {
                 return false;
             }
 
+            uint64_t offset = 0;
+            if (!is_union && previous_field != nullptr)
+                offset = previous_field->end_offset();
+
             switch (expr_node->type) {
                 case syntax::ast_node_type_t::assignment:
                 case syntax::ast_node_type_t::constant_assignment: {
@@ -511,7 +516,7 @@ namespace basecode::compiler {
                             type,
                             type->scope(),
                             decl,
-                            previous_field != nullptr ? previous_field->end_offset() : 0);
+                            offset);
                         type->fields().add(new_field);
                         decl->identifier()->field(new_field);
                         if (is_enum) {
@@ -558,7 +563,7 @@ namespace basecode::compiler {
                             type,
                             type->scope(),
                             field_decl,
-                            previous_field != nullptr ? previous_field->end_offset() : 0);
+                            offset);
                         type->fields().add(new_field);
                         field_decl->identifier()->field(new_field);
                         previous_field = new_field;
@@ -2130,16 +2135,18 @@ namespace basecode::compiler {
                 &&  !identifier_ref->identifier()->type_ref()->is_proc_type()) {
                     // XXX: it makes sense that we only want to check for reassignment here
                     //      if it's constant AND we're adding something to the same scope
-                    if (identifier_ref->is_constant()
-                    &&  (scope == nullptr ||scope->id() == identifier_ref->parent_scope()->id())) {
-                        _session.error(
-                            _session.scope_manager().current_module(),
-                            "P028",
-                            "constant variables cannot be modified.",
-                            target_symbol->location);
-                        return false;
-                    } else {
-                        is_binary_op = false;
+                    if (identifier_ref->is_constant()) {
+                        auto current_scope = scope != nullptr ? scope : scope_manager.current_scope();
+                        if (current_scope->id() == identifier_ref->parent_scope()->id()) {
+                            _session.error(
+                                _session.scope_manager().current_module(),
+                                "P028",
+                                "constant variables cannot be modified.",
+                                target_symbol->location);
+                            return false;
+                        } else {
+                            is_binary_op = false;
+                        }
                     }
                 } else {
                     is_binary_op = false;

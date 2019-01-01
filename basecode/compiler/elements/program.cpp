@@ -390,8 +390,10 @@ namespace basecode::compiler {
             for (auto e : section.second) {
                 if (e->element_type() == element_type_t::identifier) {
                     auto var = dynamic_cast<compiler::identifier*>(e);
-                    if (var->is_constant())
+                    if (var->is_constant()
+                    && !var->type_ref()->is_composite_type()) {
                         continue;
+                    }
 
                     auto var_type = var->type_ref()->type();
 

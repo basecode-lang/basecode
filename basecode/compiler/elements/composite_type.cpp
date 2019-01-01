@@ -41,6 +41,10 @@ namespace basecode::compiler {
         return _type == composite_types_t::enum_type;
     }
 
+    bool composite_type::is_union() const {
+        return _type == composite_types_t::union_type;
+    }
+
     field_map_t& composite_type::fields() {
         return _fields;
     }

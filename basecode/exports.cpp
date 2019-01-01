@@ -26,23 +26,23 @@ extern "C" {
         uint32_t length;
         uint32_t capacity;
         uint8_t* data;
-    } __attribute__((packed));
+    };
 
     struct bc_vector3 {
         float x, y, z;
-    } __attribute__((packed));
+    };
 
     struct bc_player {
         bc_string name;
         uint8_t lives;
         uint16_t hp;
-    } __attribute__((packed));
+    };
 
     struct bc_entity {
         bc_string name;
         bc_vector3 pos;
         bc_player* data;
-    } __attribute__((packed));
+    };
 
     void str_test_ptr(struct bc_string* str) {
         fmt::print("str.length = {}\n", str->length);
