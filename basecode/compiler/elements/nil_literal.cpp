@@ -12,6 +12,7 @@
 #include <compiler/session.h>
 #include <vm/instruction_block.h>
 #include "nil_literal.h"
+#include "pointer_type.h"
 
 namespace basecode::compiler {
 
@@ -31,9 +32,19 @@ namespace basecode::compiler {
     bool nil_literal::on_infer_type(
             compiler::session& session,
             infer_type_result_t& result) {
-        result.inferred_type = session
-            .scope_manager()
-            .find_type(qualified_symbol_t("u64"));
+        auto& builder = session.builder();
+        auto& scope_manager = session.scope_manager();
+
+        auto base_type = scope_manager.find_type(qualified_symbol_t("u0"));
+        auto type = scope_manager.find_pointer_type(base_type);
+        if (type == nullptr) {
+            type = builder.make_pointer_type(
+                parent_scope(),
+                qualified_symbol_t(),
+                base_type);
+        }
+        result.inferred_type = type;
+
         return true;
     }
 

@@ -48,8 +48,19 @@ namespace basecode::compiler {
         }
 
         auto arg = args[0];
-        infer_type_result_t infer_type_result {};
-        if (!arg->infer_type(session, infer_type_result)) {
+        infer_type_result_t arg_type_result {};
+        if (!arg->infer_type(session, arg_type_result)) {
+            session.error(
+                module(),
+                "P091",
+                "type_of unable to infer type.",
+                location());
+            return false;
+        }
+        auto label_name = compiler::type::make_info_label_name(arg_type_result.inferred_type);
+
+        infer_type_result_t type_result {};
+        if (!infer_type(session, type_result)) {
             session.error(
                 module(),
                 "P091",
@@ -58,10 +69,9 @@ namespace basecode::compiler {
             return false;
         }
 
-        auto label_name = compiler::type::make_info_label_name(infer_type_result.inferred_type);
         result.element = session.builder().make_assembly_literal_label(
             parent_scope(),
-            infer_type_result.inferred_type,
+            type_result.inferred_type,
             label_name,
             module());
         result.element->location(location());
@@ -75,23 +85,15 @@ namespace basecode::compiler {
         auto& builder = session.builder();
         auto& scope_manager = session.scope_manager();
 
-        qualified_symbol_t type_name("type");
-        auto type_info_type = scope_manager.find_type(type_name);
-        auto ptr_type = scope_manager.find_pointer_type(
-            type_info_type,
-            parent_scope());
-        if (ptr_type == nullptr) {
-            ptr_type = builder.make_pointer_type(
+        auto base_type = scope_manager.find_type(qualified_symbol_t("type"));
+        auto type = scope_manager.find_pointer_type(base_type);
+        if (type == nullptr) {
+            type = builder.make_pointer_type(
                 parent_scope(),
-                type_name,
-                type_info_type);
+                qualified_symbol_t(),
+                base_type);
         }
-
-        result.inferred_type = ptr_type;
-        result.reference = builder.make_type_reference(
-            parent_scope(),
-            type_name,
-            ptr_type);
+        result.inferred_type = type;
 
         return true;
     }

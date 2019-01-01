@@ -64,6 +64,10 @@ namespace basecode::compiler {
         return true;
     }
 
+    bool type_info::on_type_check(compiler::type* other) {
+        return other != nullptr && id() == other->id();
+    }
+
     type_access_model_t type_info::on_access_model() const {
         return type_access_model_t::pointer;
     }

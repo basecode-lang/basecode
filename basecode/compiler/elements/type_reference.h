@@ -23,6 +23,8 @@ namespace basecode::compiler {
             const qualified_symbol_t& symbol,
             compiler::type* type);
 
+        bool is_void() const;
+
         bool resolved() const;
 
         compiler::type* type();

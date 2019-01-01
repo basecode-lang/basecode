@@ -78,16 +78,16 @@ namespace basecode::compiler {
             return false;
 
         switch (other->element_type()) {
-            case element_type_t::numeric_type: {
-                auto numeric_type = dynamic_cast<compiler::numeric_type*>(other);
-                return numeric_type->size_in_bytes() == 8;
-            }
             case element_type_t::pointer_type: {
                 auto other_pointer_type = dynamic_cast<compiler::pointer_type*>(other);
-                return _base_type_ref->type()->type_check(other_pointer_type->_base_type_ref->type());
+                if (other_pointer_type->_base_type_ref->is_void())
+                    return true;
+                return _base_type_ref
+                    ->type()
+                    ->type_check(other_pointer_type->_base_type_ref->type());
             }
             default: {
-                return false;
+                return _base_type_ref->type()->type_check(other);
             }
         }
     }

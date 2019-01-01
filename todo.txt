@@ -48,9 +48,6 @@ TASKS
 - BUG: placeholder identifier "_" isn't working properly
 - BUG: redefining an identifier with another type doesn't give nice errors.
 
-- BUG: structures aren't being padded to match what C/C++ are expecting.
-        __attribute__((packed)) does allow C/C++ to align with our structures.
-
 - BUG: rework ast_evaluator::proc_call to clean up the various types of "procedure"
 
 - BUG: fix utf8 streaming issues in lexer/source_file
@@ -59,7 +56,6 @@ TASKS
 - BUG: add missing errors
 - BUG: fix location for elements
 
-- BUG: unary_operator case not implemented in session::type_check
 - BUG: lambda procedure type checking
 - BUG: type parameter propagation
 
@@ -200,3 +196,6 @@ DONE
 - BUG: I added a partial whitelisting approach to the terp for foreign addresses.
        For completeness, the terp needs to whitelist and moves, adds, subtracts to
        source values that are in the whitelist.
+- BUG: structures aren't being padded to match what C/C++ are expecting.
+        __attribute__((packed)) does allow C/C++ to align with our structures.
+- BUG: unary_operator case not implemented in session::type_check

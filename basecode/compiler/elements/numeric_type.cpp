@@ -148,13 +148,12 @@ namespace basecode::compiler {
         if (other_numeric_type == nullptr)
             return false;
 
-        if (symbol()->name() == other_numeric_type->symbol()->name())
+        if (id() == other_numeric_type->id())
             return true;
 
-        if (other_numeric_type->number_class() == type_number_class_t::floating_point) {
-            if (_number_class == type_number_class_t::floating_point) {
-                return false;
-            }
+        if (other_numeric_type->number_class() == type_number_class_t::floating_point
+        &&  _number_class == type_number_class_t::floating_point) {
+            return true;
         }
 
         if (is_signed() && other_numeric_type->is_signed()) {

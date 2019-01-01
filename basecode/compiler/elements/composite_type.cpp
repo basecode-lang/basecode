@@ -116,8 +116,7 @@ namespace basecode::compiler {
     }
 
     bool composite_type::on_type_check(compiler::type* other) {
-        return other != nullptr
-               && other->symbol()->name() == symbol()->name();
+        return other != nullptr && other->id() == id();
     }
 
     type_access_model_t composite_type::on_access_model() const {

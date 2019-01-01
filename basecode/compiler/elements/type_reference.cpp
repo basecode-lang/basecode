@@ -10,6 +10,7 @@
 // ----------------------------------------------------------------------------
 
 #include "type.h"
+#include "numeric_type.h"
 #include "type_reference.h"
 
 namespace basecode::compiler {
@@ -29,6 +30,15 @@ namespace basecode::compiler {
         result.inferred_type = _type;
         result.reference = this;
         return true;
+    }
+
+    bool type_reference::is_void() const {
+        if (_type == nullptr
+        ||  _type->element_type() != element_type_t::numeric_type)
+            return false;
+
+        auto numeric_type = dynamic_cast<compiler::numeric_type*>(_type);
+        return numeric_type != nullptr && numeric_type->size_in_bytes() == 0;
     }
 
     bool type_reference::resolved() const {
