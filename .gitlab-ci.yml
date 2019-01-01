@@ -5,8 +5,8 @@ FreeBSD:
   script:
     - if [ -d build ]; then rm -rf build ; fi
     - mkdir build
-    - cd build ; cmake generate -G Ninja .. ; ninja all basecode-configured
-    - cd tests ; ./tests.sh
+    - cd build ; timeout 5m cmake generate -G Ninja .. ; timeout 5m ninja all basecode-configured
+    - cd tests ; timeout 5m ./tests.sh
 
 Ubuntu:
   tags:
@@ -20,5 +20,5 @@ Ubuntu:
     - export CXX=g++-8
     - if [ -d build ]; then rm -rf build ; fi
     - mkdir build
-    - cd build ; cmake generate -G Ninja .. ; ninja all basecode-configured
-    - cd tests ; ./tests.sh
+    - cd build ; timeout 5m cmake generate -G Ninja .. ; timeout 20m ninja all basecode-configured
+    - cd tests ; timeout 5m ./tests.sh
