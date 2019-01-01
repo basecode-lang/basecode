@@ -17,10 +17,10 @@
 namespace basecode::compiler {
     
     character_literal::character_literal(
-        compiler::module* module,
-        block* parent_scope,
-        common::rune_t rune) : element(module, parent_scope, element_type_t::character_literal),
-                               _rune(rune) {
+            compiler::module* module,
+            block* parent_scope,
+            common::rune_t rune) : element(module, parent_scope, element_type_t::character_literal),
+                                   _rune(rune) {
     }
 
     bool character_literal::on_emit(
@@ -48,6 +48,11 @@ namespace basecode::compiler {
 
     common::rune_t character_literal::rune() const {
         return _rune;
+    }
+
+    bool character_literal::on_as_integer(uint64_t& value) const {
+        value = static_cast<uint64_t>(_rune);
+        return true;
     }
 
     bool character_literal::on_as_rune(common::rune_t& value) const {

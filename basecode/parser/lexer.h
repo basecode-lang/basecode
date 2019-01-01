@@ -222,6 +222,10 @@ namespace basecode::syntax {
 
         common::rune_t read(bool skip_whitespace = true);
 
+        bool read_dec_digits(size_t length, std::string& value);
+
+        bool read_hex_digits(size_t length, std::string& value);
+
     private:
         static std::multimap<common::rune_t, lexer_case_callable> s_cases;
 

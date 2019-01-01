@@ -1153,13 +1153,93 @@ namespace basecode::syntax {
     }
 
     bool lexer::character_literal(token_t& token) {
+        uint8_t radix = 10;
+        auto number_type = number_types_t::none;
+
         auto ch = read();
         if (ch == '\'') {
-            auto value = read();
+            std::string value {};
+            ch = read(false);
+            if (ch == '\\') {
+                ch = read(false);
+                switch (ch) {
+                    case 'a': {
+                        value = (char)0x07;
+                        break;
+                    }
+                    case 'b': {
+                        value = (char)0x08;
+                        break;
+                    }
+                    case 'e': {
+                        value = (char)0x1b;
+                        break;
+                    }
+                    case 'n': {
+                        value = (char)0x0a;
+                        break;
+                    }
+                    case 'r': {
+                        value = (char)0x0d;
+                        break;
+                    }
+                    case 't': {
+                        value = (char)0x09;
+                        break;
+                    }
+                    case 'v': {
+                        value = (char)0x0b;
+                        break;
+                    }
+                    case '\\': {
+                        value = "\\";
+                        break;
+                    }
+                    case '\'': {
+                        value = "'";
+                        break;
+                    }
+                    case 'x': {
+                        rewind_one_char();
+                        if (!read_hex_digits(2, value))
+                            return false;
+                        radix = 16;
+                        number_type = number_types_t::integer;
+                        break;
+                    }
+                    case 'u': {
+                        rewind_one_char();
+                        if (!read_hex_digits(4, value))
+                            return false;
+                        radix = 16;
+                        number_type = number_types_t::integer;
+                        break;
+                    }
+                    case 'U': {
+                        rewind_one_char();
+                        if (!read_hex_digits(8, value))
+                            return false;
+                        radix = 16;
+                        number_type = number_types_t::integer;
+                        break;
+                    }
+                    default: {
+                        rewind_one_char();
+                        if (!read_dec_digits(3, value))
+                            return false;
+                        radix = 8;
+                        number_type = number_types_t::integer;
+                    }
+                }
+            } else {
+                value = ch;
+            }
             ch = read();
             if (ch == '\'') {
-                token.type = token_types_t::character_literal;
                 token.value = value;
+                token.radix = radix;
+                token.number_type = number_type;
+                token.type = token_types_t::character_literal;
                 return true;
             }
         }
@@ -1490,6 +1570,36 @@ namespace basecode::syntax {
             }
         }
         return false;
+    }
+
+    bool lexer::read_hex_digits(size_t length, std::string& value) {
+        while (length > 0) {
+            auto ch = read(false);
+            if (ch == '_')
+                continue;
+            if (isxdigit(ch)) {
+                value += ch;
+                --length;
+            } else {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    bool lexer::read_dec_digits(size_t length, std::string& value) {
+        while (length > 0) {
+            auto ch = read(false);
+            if (ch == '_')
+                continue;
+            if (isdigit(ch)) {
+                value += ch;
+                --length;
+            } else {
+                return false;
+            }
+        }
+        return true;
     }
 
 };

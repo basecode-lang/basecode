@@ -36,6 +36,8 @@ namespace basecode::compiler {
 
         bool on_is_constant() const override;
 
+        bool on_as_integer(uint64_t& value) const override;
+
         bool on_as_rune(common::rune_t& value) const override;
 
     private:

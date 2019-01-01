@@ -40,76 +40,77 @@ SDL :: ns {
     K :: enum {
         UNKNOWN             :: 0;
 
-//        RETURN              :: '\r';
-//        ESCAPE              :: '\033';
-//        BACKSPACE           :: '\b';
-//        TAB                 :: '\t';
-//        SPACE               :: ' ';
-//        EXCLAIM             :: '!';
-//        QUOTEDBL            :: '"';
-//        HASH                :: '#';
-//        PERCENT             :: '%';
-//        DOLLAR              :: '$';
-//        AMPERSAND           :: '&';
-//        QUOTE               :: '\'';
-//        LEFTPAREN           :: '(';
-//        RIGHTPAREN          :: ')';
-//        ASTERISK            :: '*';
-//        PLUS                :: '+';
-//        COMMA               :: ';';
-//        MINUS               :: '-';
-//        PERIOD              :: '.';
-//        SLASH               :: '/';
-//        _0                  :: '0';
-//        _1                  :: '1';
-//        _2                  :: '2';
-//        _3                  :: '3';
-//        _4                  :: '4';
-//        _5                  :: '5';
-//        _6                  :: '6';
-//        _7                  :: '7';
-//        _8                  :: '8';
-//        _9                  :: '9';
-//        COLON               :: ':';
-//        SEMICOLON           :: ';';
-//        LESS                :: '<';
-//        EQUALS              :: '::';
-//        GREATER             :: '>';
-//        QUESTION            :: '?';
-//        AT                  :: '@';
+        BACKSPACE           :: '\b';
+        TAB                 :: '\t';
+        RETURN              :: '\r';
+        ESCAPE              :: '\033';
+        SPACE               :: ' ';
+        EXCLAIM             :: '!';
+        QUOTEDBL            :: '"';
+        HASH                :: '#';
+        DOLLAR              :: '$';
+        PERCENT             :: '%';
+        AMPERSAND           :: '&';
+        QUOTE               :: '\'';
+        LEFTPAREN           :: '(';
+        RIGHTPAREN          :: ')';
+        ASTERISK            :: '*';
+        PLUS                :: '+';
+        COMMA               :: ',';
+        MINUS               :: '-';
+        PERIOD              :: '.';
+        SLASH               :: '/';
+        _0                  :: '0';
+        _1                  :: '1';
+        _2                  :: '2';
+        _3                  :: '3';
+        _4                  :: '4';
+        _5                  :: '5';
+        _6                  :: '6';
+        _7                  :: '7';
+        _8                  :: '8';
+        _9                  :: '9';
+        COLON               :: ':';
+        SEMICOLON           :: ';';
+        LESS                :: '<';
+        EQUALS              :: '=';
+        GREATER             :: '>';
+        QUESTION            :: '?';
+        AT                  :: '@';
 
-//        LEFTBRACKET         :: '[';
-//        BACKSLASH           :: '\\';
-//        RIGHTBRACKET        :: ']';
-//        CARET               :: '^';
-//        UNDERSCORE          :: '_';
-//        BACKQUOTE           :: '`';
-//        a                   :: 'a';
-//        b                   :: 'b';
-//        c                   :: 'c';
-//        d                   :: 'd';
-//        e                   :: 'e';
-//        f                   :: 'f';
-//        g                   :: 'g';
-//        h                   :: 'h';
-//        i                   :: 'i';
-//        j                   :: 'j';
-//        k                   :: 'k';
-//        l                   :: 'l';
-//        m                   :: 'm';
-//        n                   :: 'n';
-//        o                   :: 'o';
-//        p                   :: 'p';
-//        q                   :: 'q';
-//        r                   :: 'r';
-//        s                   :: 's';
-//        t                   :: 't';
-//        u                   :: 'u';
-//        v                   :: 'v';
-//        w                   :: 'w';
-//        x                   :: 'x';
-//        y                   :: 'y';
-//        z                   :: 'z';
+        LEFTBRACKET         :: '[';
+        BACKSLASH           :: '\\';
+        RIGHTBRACKET        :: ']';
+        CARET               :: '^';
+        UNDERSCORE          :: '_';
+        BACKQUOTE           :: '`';
+        a                   :: 'a';
+        b                   :: 'b';
+        c                   :: 'c';
+        d                   :: 'd';
+        e                   :: 'e';
+        f                   :: 'f';
+        g                   :: 'g';
+        h                   :: 'h';
+        i                   :: 'i';
+        j                   :: 'j';
+        k                   :: 'k';
+        l                   :: 'l';
+        m                   :: 'm';
+        n                   :: 'n';
+        o                   :: 'o';
+        p                   :: 'p';
+        q                   :: 'q';
+        r                   :: 'r';
+        s                   :: 's';
+        t                   :: 't';
+        u                   :: 'u';
+        v                   :: 'v';
+        w                   :: 'w';
+        x                   :: 'x';
+        y                   :: 'y';
+        z                   :: 'z';
+        DELETE              :: '\177';
 
     //    CAPSLOCK            :: SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_CAPSLOCK);
     //
@@ -132,7 +133,6 @@ SDL :: ns {
     //    INSERT              :: SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_INSERT);
     //    HOME                :: SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_HOME);
     //    PAGEUP              :: SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_PAGEUP);
-    //    DELETE              :: '\177';
     //    END                 :: SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_END);
     //    PAGEDOWN            :: SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_PAGEDOWN);
     //    RIGHT               :: SDL_SCANCODE_TO_KEYCODE(SDL_SCANCODE_RIGHT);
@@ -639,21 +639,15 @@ SDL :: ns {
         HIT_TEST;
     };
 
-//#define SDL_TEXTEDITINGEVENT_TEXT_SIZE (32)
-///**
-// *  \brief Keyboard text editing event structure (event.edit.*)
-// */
-//typedef struct SDL_TextEditingEvent
-//{
-//    Uint32 type;                                /**< ::SDL_TEXTEDITING */
-//    Uint32 timestamp;                           /**< In milliseconds, populated using SDL_GetTicks() */
-//    Uint32 windowID;                            /**< The window with keyboard focus, if any */
-//    char text[SDL_TEXTEDITINGEVENT_TEXT_SIZE];  /**< The editing text */
-//    Sint32 start;                               /**< The start cursor of selected editing text */
-//    Sint32 length;                              /**< The length of selected editing text */
-//} SDL_TextEditingEvent;
-//
-//
+    Text_Editing_Event :: struct {
+        type:           u32;
+        timestamp:      u32;
+        window_id:      u32;
+        text:           [32]u8;
+        start:          s32;
+        length:         s32;
+    };
+
 //#define SDL_TEXTINPUTEVENT_TEXT_SIZE (32)
 ///**
 // *  \brief Keyboard text input event structure (event.text.*)
@@ -1302,7 +1296,7 @@ SDL :: ns {
             };
             case SDL::Event_Type.KEYDOWN => {
                 switch e.key.keysym.sym {
-                    case 27 => {
+                    case SDL::K.ESCAPE => {
                         running := false;
                     };
                 };
@@ -1330,6 +1324,7 @@ SDL :: ns {
 
         // frame rate cap
         if frame_duration < TARGET_FPS_MS {
+            // XXX: constant assignment here is a bug
             delay :: TARGET_FPS_MS - frame_duration;
             SDL::Delay(delay);
         };

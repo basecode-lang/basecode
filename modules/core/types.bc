@@ -1,0 +1,34 @@
+// ----------------------------------------------------------------------------
+//
+// Basecode Compiler
+// Copyright (C) 2018 Jeff Panici
+// All rights reserved.
+//
+// This software source file is licensed under the terms of MIT license.
+// For details, please read the LICENSE file.
+//
+// ----------------------------------------------------------------------------
+
+public :: ns {
+
+    any :: struct {
+    };
+
+    string :: struct {
+    };
+
+    // XXX: how to associate syntax with this?
+//    dynamic_array :: struct<T> {
+//        element_type:   ^type :: type_of(T);
+//
+//        length:         u32;
+//        capacity:       u32;
+//        data:           ^T;
+//    };
+//
+//
+//    bar :: struct {};
+//    foo :: struct {
+//        bars:   dynamic_array;
+//    };
+};

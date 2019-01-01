@@ -1072,17 +1072,35 @@ namespace basecode::compiler {
             evaluator_result_t& result) {
         auto& builder = _session.builder();
 
-        std::vector<uint8_t> _buffer;
-        for (auto c : context.node->token.value)
-            _buffer.push_back(c);
+        common::rune_t rune = common::rune_invalid;
 
-        auto ch = _buffer[0];
-        common::rune_t rune = ch;
-        if (ch >= 0x80) {
-            auto cp = common::utf8_decode(
-                (char*)(_buffer.data()),
-                _buffer.size());
-            rune = cp.value;
+        if (context.node->token.number_type == syntax::number_types_t::integer) {
+            int64_t value;
+            if (context.node->token.parse(value) == syntax::conversion_result_t::success) {
+                rune = static_cast<common::rune_t>(value);
+            } else {
+                _session.error(
+                    _session.scope_manager().current_module(),
+                    "X000",
+                    fmt::format("invalid unicode codepoint: {}", context.node->token.value),
+                    context.node->location);
+                return false;
+            }
+        } else {
+            std::vector<uint8_t> _buffer;
+            for (auto c : context.node->token.value)
+                _buffer.push_back(c);
+
+            if (!_buffer.empty()) {
+                auto ch = _buffer[0];
+                rune = ch;
+                if (ch >= 0x80) {
+                    auto cp = common::utf8_decode(
+                        (char*) (_buffer.data()),
+                        _buffer.size());
+                    rune = cp.value;
+                }
+            }
         }
 
         result.element = builder.make_character(
@@ -1894,6 +1912,9 @@ namespace basecode::compiler {
         auto& builder = _session.builder();
         auto& scope_manager = _session.scope_manager();
         auto scope = scope_manager.current_scope();
+
+        // XXX: inline type declarations, e.g. union, struct, enum
+        //      aren't being handled here!
 
         compiler::type_reference* type_decl_ref = nullptr;
 
