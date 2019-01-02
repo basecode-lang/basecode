@@ -1232,7 +1232,7 @@ namespace basecode::syntax {
                     }
                 }
             } else {
-                value = ch;
+                value = static_cast<char>(ch);
             }
             ch = read();
             if (ch == '\'') {
@@ -1550,8 +1550,7 @@ namespace basecode::syntax {
 
     bool lexer::match_literal(const std::string& literal) {
         auto ch = read();
-        for (size_t i = 0; i < literal.length(); ++i) {
-            const auto& target_ch = literal[i];
+        for (const auto& target_ch : literal) {
             if (target_ch != ch)
                 return false;
             ch = read(false);
@@ -1578,7 +1577,7 @@ namespace basecode::syntax {
             if (ch == '_')
                 continue;
             if (isxdigit(ch)) {
-                value += ch;
+                value += static_cast<char>(ch);
                 --length;
             } else {
                 return false;
@@ -1593,7 +1592,7 @@ namespace basecode::syntax {
             if (ch == '_')
                 continue;
             if (isdigit(ch)) {
-                value += ch;
+                value += static_cast<char>(ch);
                 --length;
             } else {
                 return false;

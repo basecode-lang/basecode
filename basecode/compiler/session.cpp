@@ -144,63 +144,117 @@ namespace basecode::compiler {
 
     bool session::compile() {
         auto& top_level_stack = _scope_manager.top_level_stack();
-
         auto& listing = _assembler.listing();
-
         const auto& first = (*_source_files.begin()).second;
-        auto listing_name = first
-            .path()
-            .filename()
-            .replace_extension(".basm");
-        listing.add_source_file(listing_name.string());
-        listing.select_source_file(listing_name.string());
 
-        _program.block(_scope_manager.push_new_block());
-        _program.block()->parent_element(&_program);
+        time_task(
+            "assembler: preparation",
+            [&]() {
+                auto listing_name = first
+                    .path()
+                    .filename()
+                    .replace_extension(".basm");
+                listing.add_source_file(listing_name.string());
+                listing.select_source_file(listing_name.string());
+                return true;
+            });
 
-        top_level_stack.push(_program.block());
+        time_task(
+            "compiler: preparation",
+            [&]() {
+                _program.block(_scope_manager.push_new_block());
+                _program.block()->parent_element(&_program);
+                top_level_stack.push(_program.block());
+                return true;
+            });
         defer(top_level_stack.pop());
 
-        initialize_core_types();
-        initialize_built_in_procedures();
+        time_task(
+            "compiler: core types",
+            [&]() {
+                initialize_core_types();
+                return true;
+            });
 
-        for (auto source_file : source_files()) {
-            auto module = compile_module(source_file);
-            if (module == nullptr)
-                return false;
-        }
+        time_task(
+            "compiler: built-in procedures",
+            [&]() {
+                initialize_built_in_procedures();
+                return true;
+            });
 
-        if (!resolve_unknown_identifiers())
+        auto success = time_task(
+            "compiler: generate model",
+            [&]() {
+                for (auto source_file : source_files()) {
+                    auto module = compile_module(source_file);
+                    if (module == nullptr)
+                        return false;
+                }
+                return true;
+            });
+        if (!success)
             return false;
 
-        if (!resolve_unknown_types(false))
+        success = time_task(
+            "compiler: resolve unknown identifiers",
+            [&]() {
+                return resolve_unknown_identifiers();
+            });
+        if (!success)
             return false;
 
-        if (!fold_constant_intrinsics())
+        success = time_task(
+            "compiler: resolve unknown types (phase 1)",
+            [&]() { return resolve_unknown_types(false); });
+        if (!success)
             return false;
 
-        if (!fold_constant_expressions())
+        success = time_task(
+            "compiler: constant expression folding",
+            [&]() { return fold_constant_expressions(); });
+        if (!success)
             return false;
 
-        if (!type_check())
+        success = time_task(
+            "compiler: type check",
+            [&]() { return type_check(); });
+        if (!success)
             return false;
 
         if (!_result.is_failed()) {
-            emit_context_t context {};
-            emit_result_t result(_assembler);
-            _program.emit(*this, context, result);
+            time_task(
+                "compiler: generate byte-code",
+                [&]() {
+                    emit_context_t context {};
+                    emit_result_t result(_assembler);
+                    _program.emit(*this, context, result);
+                   return true;
+                });
 
-            _assembler.apply_addresses(_result);
-            _assembler.resolve_labels(_result);
+            success = time_task(
+                "assembler: encode byte-code",
+                [&]() {
+                    _assembler.apply_addresses(_result);
+                    _assembler.resolve_labels(_result);
+                    return _assembler.assemble(_result);
+                });
 
-            auto success =_assembler.assemble(_result);
             if (_options.verbose) {
-                disassemble(stdout);
-                fmt::print("\n");
+                time_task(
+                    "assembler: listing file",
+                    [&]() {
+                        disassemble(stdout);
+                        fmt::print("\n");
+                        return true;
+                    });
             }
 
             if (success) {
-                if (execute_directives()) {
+                success = time_task(
+                    "compiler: execute directives",
+                    [&]() { return execute_directives(); });
+                if (success) {
                     if (_options.debugger) {
 #if DEBUGGER_ENABLED
                         disassemble(nullptr);
@@ -215,7 +269,9 @@ namespace basecode::compiler {
 #endif
                     } else {
                         if (_run) {
-                            success = run();
+                            success = time_task(
+                                "compiler: execute byte-code",
+                                [&]() { return run(); });
                             if (!success)
                                 return false;
                         }
@@ -225,6 +281,26 @@ namespace basecode::compiler {
         }
 
         return !_result.is_failed();
+    }
+
+    bool session::time_task(
+            const std::string& name,
+            const session_task_callable_t& callable,
+            bool include_in_total) {
+        auto insert_at = _tasks.size();
+
+        session_task_t task;
+        task.name = name;
+        task.include_in_total = include_in_total;
+
+        auto start = std::chrono::high_resolution_clock::now();
+        auto success = callable();
+        auto end = std::chrono::high_resolution_clock::now();
+
+        task.elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+        _tasks.insert(_tasks.begin() + insert_at, task);
+
+        return success;
     }
 
     vm::terp& session::terp() {
@@ -241,16 +317,19 @@ namespace basecode::compiler {
     }
 
     void session::finalize() {
-        if (_options.verbose) {
-            try {
-                if (!_options.dom_graph_file.empty())
-                    write_code_dom_graph(_options.dom_graph_file);
-            } catch (const fmt::format_error& e) {
-                fmt::print("fmt::format_error caught: {}\n", e.what());
+        try {
+            if (!_options.dom_graph_file.empty()) {
+                time_task(
+                    "compiler: write code DOM",
+                    [&]() {
+                        write_code_dom_graph(_options.dom_graph_file);
+                        return true;
+                    });
             }
+        } catch (const fmt::format_error& e) {
+            fmt::print("fmt::format_error caught: {}\n", e.what());
         }
     }
-
 
     bool session::allocate_reg(
             vm::register_t& reg,
@@ -267,29 +346,50 @@ namespace basecode::compiler {
     }
 
     bool session::type_check() {
-        auto intrinsics = _elements.find_by_type<compiler::intrinsic>(element_type_t::intrinsic);
-        for (auto intrinsic : intrinsics) {
-            auto args = intrinsic->arguments();
-            prepare_call_site_result_t result {};
-            if (!intrinsic->procedure_type()->prepare_call_site(
-                    *this,
-                    args,
-                    result)) {
-                for (const auto& msg : result.messages.messages())
-                    error(intrinsic->module(), msg.code(), msg.message(), msg.location());
-                return false;
-            }
-            args->elements(result.arguments);
-            args->argument_index(result.index);
-        }
+        bool success;
 
-        auto proc_calls = _elements.find_by_type<compiler::procedure_call>(element_type_t::proc_call);
-        for (auto proc_call : proc_calls) {
-            if (!proc_call->resolve_overloads(*this))
-                return false;
-        }
+        success = time_task(
+            " - instrinsic callsites",
+            [&]() {
+                auto intrinsics = _elements.find_by_type<compiler::intrinsic>(element_type_t::intrinsic);
+                for (auto intrinsic : intrinsics) {
+                    auto args = intrinsic->arguments();
+                    prepare_call_site_result_t result {};
+                    if (!intrinsic->procedure_type()->prepare_call_site(
+                        *this,
+                        args,
+                        result)) {
+                        for (const auto& msg : result.messages.messages())
+                            error(intrinsic->module(), msg.code(), msg.message(), msg.location());
+                        return false;
+                    }
+                    args->elements(result.arguments);
+                    args->argument_index(result.index);
+                }
+                return true;
+            },
+            false);
+        if (!success)
+            return false;
 
-        if (!resolve_unknown_types(true))
+        success = time_task(
+            " - procedure callsites",
+            [&]() {
+                auto proc_calls = _elements.find_by_type<compiler::procedure_call>(element_type_t::proc_call);
+                for (auto proc_call : proc_calls) {
+                    if (!proc_call->resolve_overloads(*this))
+                        return false;
+                }
+                return true;
+            },
+            false);
+        if (!success)
+            return false;
+
+        success = time_task(
+            "compiler: resolve unknown types (phase 2)",
+            [&]() { return resolve_unknown_types(true); });
+        if (!success)
             return false;
 
         auto identifiers = _elements.find_by_type<compiler::identifier>(element_type_t::identifier);
@@ -576,12 +676,9 @@ namespace basecode::compiler {
         }
     }
 
-    bool session::fold_constant_intrinsics() {
-        return fold_elements_of_type(element_type_t::intrinsic);
-    }
-
     bool session::fold_constant_expressions() {
-        return fold_elements_of_type(element_type_t::identifier_reference)
+        return fold_elements_of_type(element_type_t::intrinsic)
+            && fold_elements_of_type(element_type_t::identifier_reference)
             && fold_elements_of_type(element_type_t::unary_operator)
             && fold_elements_of_type(element_type_t::binary_operator)
             && fold_elements_of_type(element_type_t::label_reference);
@@ -717,6 +814,10 @@ namespace basecode::compiler {
         return _program;
     }
 
+    const session_task_list_t& session::tasks() const {
+        return _tasks;
+    }
+
     common::source_file* session::current_source_file() {
         if (_source_file_stack.empty())
             return nullptr;
@@ -830,23 +931,37 @@ namespace basecode::compiler {
         });
 
         compiler::module* module = nullptr;
-        auto module_node = parse(source_file);
-        if (module_node != nullptr) {
-            module = dynamic_cast<compiler::module*>(_ast_evaluator.evaluate(module_node));
-            if (module != nullptr) {
-                module->source_file(source_file);
-                auto current_module = _scope_manager.current_module();
-                if (current_module == nullptr)
-                    module->parent_element(&_program);
-                else
-                    module->parent_element(current_module);
-                module->is_root(is_root);
-                if (is_root)
-                    _program.module(module);
-                if (!_ast_evaluator.compile_module(module_node, module))
-                    return nullptr;
-            }
-        }
+        auto success = time_task(
+            fmt::format(" - parse: {}", source_file->path().filename().string()),
+            [&]() {
+                auto module_node = parse(source_file);
+                if (module_node != nullptr) {
+                    return time_task(
+                        " - compile",
+                        [&]() {
+                            module = dynamic_cast<compiler::module*>(_ast_evaluator.evaluate(module_node));
+                            if (module != nullptr) {
+                                module->source_file(source_file);
+                                auto current_module = _scope_manager.current_module();
+                                if (current_module == nullptr)
+                                    module->parent_element(&_program);
+                                else
+                                    module->parent_element(current_module);
+                                module->is_root(is_root);
+                                if (is_root)
+                                    _program.module(module);
+                                if (!_ast_evaluator.compile_module(module_node, module))
+                                    return false;
+                            }
+                            return true;
+                        },
+                        false);
+                }
+                return false;
+            },
+            false);
+        if (!success)
+            return nullptr;
 
         return module;
     }

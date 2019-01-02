@@ -11,6 +11,7 @@
 
 #pragma once
 
+#include <chrono>
 #include <cstdint>
 #include <functional>
 #include <vm/vm_types.h>
@@ -93,6 +94,16 @@ namespace basecode::compiler {
         session_definition_map_t definitions {};
         session_compile_callback compile_callback;
     };
+
+    using session_task_callable_t = std::function<bool ()>;
+
+    struct session_task_t {
+        std::string name;
+        bool include_in_total;
+        std::chrono::microseconds elapsed;
+    };
+
+    using session_task_list_t = std::vector<session_task_t>;
 
     ///////////////////////////////////////////////////////////////////////////
 

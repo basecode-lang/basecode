@@ -66,6 +66,11 @@ namespace basecode::compiler {
 
         void finalize();
 
+        bool time_task(
+            const std::string& name,
+            const session_task_callable_t& callable,
+            bool include_in_total = true);
+
         vm::terp& terp();
 
         bool initialize();
@@ -105,6 +110,8 @@ namespace basecode::compiler {
         const session_options_t& options() const;
 
         const compiler::program& program() const;
+
+        const session_task_list_t& tasks() const;
 
         common::source_file* current_source_file();
 
@@ -150,8 +157,6 @@ namespace basecode::compiler {
 
         void initialize_core_types();
 
-        bool fold_constant_intrinsics();
-
         bool fold_constant_expressions();
 
         bool resolve_unknown_identifiers();
@@ -177,6 +182,7 @@ namespace basecode::compiler {
         compiler::program _program;
         ast_evaluator _ast_evaluator;
         session_options_t _options {};
+        session_task_list_t _tasks {};
         syntax::ast_builder _ast_builder;
         string_intern_map _interned_strings {};
         compiler::scope_manager _scope_manager;

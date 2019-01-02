@@ -24,6 +24,14 @@
 static constexpr size_t heap_size = (1024 * 1024) * 32;
 static constexpr size_t stack_size = (1024 * 1024) * 8;
 
+static void pad_to(
+        std::string& str,
+        const size_t num,
+        const char padding = ' ') {
+    if (num > str.size())
+        str.insert(str.begin(), num - str.size(), padding);
+}
+
 static void print_results(const basecode::common::result& r) {
     auto has_messages = !r.messages().empty();
 
@@ -163,18 +171,6 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    high_resolution_clock::time_point start = high_resolution_clock::now();
-    defer({
-        high_resolution_clock::time_point end = high_resolution_clock::now();
-        auto duration = duration_cast<microseconds>(end - start).count();
-        fmt::print(
-            "\n{} {}\n",
-            common::colorizer::colorize(
-                "compilation time (in μs):",
-                common::term_colors_t::cyan),
-            duration);
-    });
-
     auto separator_found = false;
     std::vector<fs::path> source_files {};
     std::vector<std::string> meta_options {};
@@ -254,6 +250,46 @@ int main(int argc, char** argv) {
         if (r.is_failed())
             print_results(r);
         compilation_session.finalize();
+
+        size_t total_time = 0;
+        const auto time_pad_width = common::g_color_enabled ? 24 : 12;
+
+        std::stringstream stream;
+        stream << common::colorizer::colorize(
+            "\ncompiler task time breakdown (in μs):\n",
+            common::term_colors_t::cyan);
+        for (const compiler::session_task_t& task : compilation_session.tasks()) {
+            auto elapsed = task.elapsed.count();
+            auto time_color = common::term_colors_t::blue;
+            if (task.include_in_total) {
+                total_time += elapsed;
+                time_color = common::term_colors_t::light_gray;
+            }
+            stream << std::left
+                << std::setw(60)
+                << common::colorizer::colorize(
+                        task.name,
+                        common::term_colors_t::green);
+            auto elapsed_str = common::colorizer::colorize(
+                std::to_string(elapsed),
+                time_color);
+            pad_to(elapsed_str, time_pad_width);
+            stream << elapsed_str << "\n";
+        }
+
+        stream << std::left
+             << std::setw(60)
+             << common::colorizer::colorize(
+                     "total execution time",
+                     common::term_colors_t::yellow);
+
+        auto total = common::colorizer::colorize(
+            std::to_string(total_time),
+            common::term_colors_t::yellow);
+        pad_to(total, time_pad_width);
+        stream << total << "\n\n";
+
+        fmt::print(stream.str());
     });
 
     if (!compilation_session.initialize())
