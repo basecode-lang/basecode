@@ -12,25 +12,16 @@ core :: module("../modules/core");
         print("temp.capacity := %d\n", .capacity);
     };
 
-    // XXX: this is a problem....
-    //
-    // it shouldn't matter what order these types are defined.  the compiler
-    // should resolve them at the end.  however, the way the member access binary operator
-    // works at the moment, it errors on an unknown_type because it can't resolve the field
-    // for the rhs.  somehow, this needs to be added to the deferred type resolution process.
-    //
-    // for now, ordering them so they're pre-defined solves the issue.  i don't want to
-    // leave it like this though.
-    three :: struct {
-        c: string;
+    one :: struct {
+        a: two;
     };
 
     two :: struct {
         b: three;
     };
 
-    one :: struct {
-        a: two;
+    three :: struct {
+        c: string;
     };
 
     x: one;

@@ -1207,53 +1207,37 @@ namespace basecode::compiler {
             lhs = convert_predicate(context, context.node->lhs, scope);
             rhs = convert_predicate(context, context.node->rhs, scope);
         } else {
-            compiler::block* type_scope = nullptr;
-
             lhs = resolve_symbol_or_evaluate(context.node->lhs);
-            infer_type_result_t infer_type_result {};
-            if (lhs == nullptr
-            || !lhs->infer_type(_session, infer_type_result)) {
+            if (lhs == nullptr) {
                 _session.error(
                     _session.scope_manager().current_module(),
                     "P052",
-                    "unable to infer type.",
+                    "unknown identifier.",
                     context.node->lhs->location);
                 return false;
             }
 
-            // XXX: there's a bug here and it goes like this...
-            //
-            // member access is expecting a resolved type here; however, it may be an unknown_type and
-            // that is ok.  however, that means the field resolution process here is going to fail
-            // because the lhs type is unknown at this point.  this code needs to be reworked so
-            // we can defer this processing until after all unknown_type instances have been resolved.
-            //
-            if (infer_type_result.inferred_type->is_composite_type()) {
-                compiler::composite_type* composite_type = nullptr;
-                if (infer_type_result.inferred_type->is_pointer_type()) {
-                    auto pointer_type = dynamic_cast<compiler::pointer_type*>(infer_type_result.inferred_type);
-                    composite_type = dynamic_cast<compiler::composite_type*>(pointer_type->base_type_ref()->type());
-                    if (is_member_access) {
-                        auto location = lhs->location();
-                        lhs = builder.make_unary_operator(
-                            scope,
-                            operator_type_t::pointer_dereference,
-                            lhs);
-                        lhs->location(location);
+            compiler::block* type_scope = nullptr;
+            infer_type_result_t infer_type_result {};
+            if (lhs->infer_type(_session, infer_type_result)) {
+                if (infer_type_result.inferred_type->is_composite_type()) {
+                    compiler::composite_type* composite_type = nullptr;
+                    if (infer_type_result.inferred_type->is_pointer_type()) {
+                        auto pointer_type = dynamic_cast<compiler::pointer_type*>(infer_type_result.inferred_type);
+                        composite_type = dynamic_cast<compiler::composite_type*>(pointer_type->base_type_ref()->type());
+                        if (is_member_access) {
+                            auto location = lhs->location();
+                            lhs = builder.make_unary_operator(
+                                scope,
+                                operator_type_t::pointer_dereference,
+                                lhs);
+                            lhs->location(location);
+                        }
+                    } else {
+                        composite_type = dynamic_cast<compiler::composite_type*>(infer_type_result.inferred_type);
                     }
-                } else {
-                    composite_type = dynamic_cast<compiler::composite_type*>(infer_type_result.inferred_type);
-                }
 
-                type_scope = composite_type->scope();
-            } else {
-                if (is_member_access) {
-                    _session.error(
-                        _session.scope_manager().current_module(),
-                        "P053",
-                        "member access requires lhs composite type.",
-                        lhs->location());
-                    return false;
+                    type_scope = composite_type->scope();
                 }
             }
 

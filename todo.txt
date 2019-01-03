@@ -19,6 +19,8 @@ QUESTIONS
 
 WORKING
 -------
+- NEW: finish array subscript operator
+
 - NEW: family expressions
         integers :: family(signed_integers, unsigned_integers);
         signed_integers :: family(s8, s16, s32, s64);
@@ -39,7 +41,6 @@ TASKS
 - NEW: implement procedure instance baking
 - NEW: struct/union instance baking
 
-- NEW: finish array subscript operator
 - NEW: UFCS
 
 - NEW: DFA graph coloring
@@ -51,8 +52,6 @@ TASKS
 - BUG: rework ast_evaluator::proc_call to clean up the various types of "procedure"
 
 - BUG: fix utf8 streaming issues in lexer/source_file
-- BUG: ordering issues between types; requires deferred type checking
-        (see ast_evaluator::binary_operator)
 - BUG: add missing errors
 - BUG: fix location for elements
 
@@ -199,3 +198,5 @@ DONE
 - BUG: structures aren't being padded to match what C/C++ are expecting.
         __attribute__((packed)) does allow C/C++ to align with our structures.
 - BUG: unary_operator case not implemented in session::type_check
+- BUG: ordering issues between types; requires deferred type checking
+        (see ast_evaluator::binary_operator)

@@ -197,6 +197,12 @@ namespace basecode::compiler {
             return false;
 
         success = time_task(
+            "compiler: resolve unknown types (phase 1)",
+            [&]() { return resolve_unknown_types(false); });
+        if (!success)
+            return false;
+
+        success = time_task(
             "compiler: resolve unknown identifiers",
             [&]() {
                 return resolve_unknown_identifiers();
@@ -205,7 +211,7 @@ namespace basecode::compiler {
             return false;
 
         success = time_task(
-            "compiler: resolve unknown types (phase 1)",
+            "compiler: resolve unknown types (phase 2)",
             [&]() { return resolve_unknown_types(false); });
         if (!success)
             return false;
@@ -387,7 +393,7 @@ namespace basecode::compiler {
             return false;
 
         success = time_task(
-            "compiler: resolve unknown types (phase 2)",
+            "compiler: resolve unknown types (phase 3)",
             [&]() { return resolve_unknown_types(true); });
         if (!success)
             return false;
@@ -588,10 +594,16 @@ namespace basecode::compiler {
 
             if (var->is_parent_element(element_type_t::binary_operator)) {
                 auto binary_operator = dynamic_cast<compiler::binary_operator*>(var->parent_element());
-                if (binary_operator->operator_type() == operator_type_t::assignment) {
-                    if (!binary_operator->rhs()->infer_type(*this, infer_type_result))
-                        return false;
-                    var->type_ref(infer_type_result.reference);
+                switch (binary_operator->operator_type()) {
+                    case operator_type_t::assignment: {
+                        if (!binary_operator->rhs()->infer_type(*this, infer_type_result))
+                            return false;
+                        var->type_ref(infer_type_result.reference);
+                        break;
+                    }
+                    default: {
+                        break;
+                    }
                 }
             } else {
                 compiler::element* expr = nullptr;
@@ -684,15 +696,41 @@ namespace basecode::compiler {
                 continue;
             }
 
+            compiler::block* type_scope = unresolved_reference->parent_scope();
+            if (unresolved_reference->is_parent_element(element_type_t::binary_operator)) {
+                auto bin_op = dynamic_cast<compiler::binary_operator*>(unresolved_reference->parent_element());
+                if (bin_op->operator_type() == operator_type_t::member_access) {
+                    infer_type_result_t type_result;
+                    if (!bin_op->lhs()->infer_type(*this, type_result)) {
+                        error(
+                            unresolved_reference->module(),
+                            "X000",
+                            "unable to infer lhs of member access operator.",
+                            unresolved_reference->symbol().location);
+                        return false;
+                    }
+                    if (!type_result.inferred_type->is_composite_type()) {
+                        error(
+                            unresolved_reference->module(),
+                            "X000",
+                            "member access requires lhs composite type.",
+                            unresolved_reference->symbol().location);
+                        return false;
+                    }
+                    auto composite_type = dynamic_cast<compiler::composite_type*>(type_result.inferred_type);
+                    type_scope = composite_type->scope();
+                }
+            }
+
             auto vars = _scope_manager.find_identifier(
                 unresolved_reference->symbol(),
-                unresolved_reference->parent_scope());
+                type_scope);
             compiler::identifier* identifier = vars.empty() ? nullptr : vars.front();
             if (identifier == nullptr
             &&  unresolved_reference->symbol().is_qualified()) {
                 vars = _scope_manager.find_identifier(
                     unresolved_reference->symbol(),
-                    unresolved_reference->module()->scope());
+                    type_scope);
                 identifier = vars.empty() ? nullptr : vars.front();
             }
 

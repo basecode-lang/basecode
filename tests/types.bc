@@ -1,28 +1,30 @@
 core :: module("../modules/core");
 
-type_of_string := type_of(#type string);
+#run {
+    type_of_string := type_of(#type string);
 
-i: u32;
-type_of_i: ^type := nil;
-type_of_i := type_of(i);
+    i: u32;
+    type_of_i: ^type := nil;
+    type_of_i := type_of(i);
 
-//a := "something";
-//a := 1;
-//
-//b := 2;
-//b := "no way";
+    //a := "something";
+    //a := 1;
+    //
+    //b := 2;
+    //b := "no way";
 
-foobar :: struct {
-    f1: u16;
-    f2: u16;
-    f3: string;
+    foobar :: struct {
+        f1: u16;
+        f2: u16;
+        f3: string;
+    };
+
+    a := "hello world!";
+    b := a;
+
+    c: foobar;
+    d: foobar;
+    c.f1 := d.f1;
+    c.f2 := d.f2;
+    c.f3 := d.f3;
 };
-
-a := "hello world!";
-b := a;
-
-c: foobar;
-d: foobar;
-c.f1 := d.f1;
-c.f2 := d.f2;
-c.f3 := d.f3;

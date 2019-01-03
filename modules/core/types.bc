@@ -11,12 +11,6 @@
 
 public :: ns {
 
-    #core_type string :: struct {
-        length:     u32;
-        capacity:   u32;
-        data:       ^u8;
-    };
-
     #core_type type :: struct {
         name: string;
     };
@@ -24,6 +18,12 @@ public :: ns {
     #core_type any :: struct {
         type: ^type;
         data: ^u0;
+    };
+
+    #core_type string :: struct {
+        length:     u32;
+        capacity:   u32;
+        data:       ^u8;
     };
 
     #core_type map :: struct<K, V> {
