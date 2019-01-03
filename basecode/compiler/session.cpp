@@ -47,11 +47,14 @@ namespace basecode::compiler {
             const std::string& code,
             const std::string& message,
             const common::source_location& location) {
-        auto file = module->source_file();
-        if (file != nullptr)
-            file->error(_result, code, message, location);
-        else
-            _result.error(code, message, location);
+        if (module != nullptr) {
+            auto file = module->source_file();
+            if (file != nullptr) {
+                file->error(_result, code, message, location);
+                return;
+            }
+        }
+        _result.error(code, message, location);
     }
 
     bool session::variable(
@@ -355,7 +358,7 @@ namespace basecode::compiler {
         bool success;
 
         success = time_task(
-            " - instrinsic callsites",
+            " - instrinsic call sites",
             [&]() {
                 auto intrinsics = _elements.find_by_type<compiler::intrinsic>(element_type_t::intrinsic);
                 for (auto intrinsic : intrinsics) {
@@ -379,7 +382,7 @@ namespace basecode::compiler {
             return false;
 
         success = time_task(
-            " - procedure callsites",
+            " - procedure call sites",
             [&]() {
                 auto proc_calls = _elements.find_by_type<compiler::procedure_call>(element_type_t::proc_call);
                 for (auto proc_call : proc_calls) {
@@ -389,14 +392,26 @@ namespace basecode::compiler {
                 return true;
             },
             false);
-        if (!success)
+        if (!success) {
+            error(
+                nullptr,
+                "X000",
+                "unable to prepare procedure call sites.",
+                _program.location());
             return false;
+        }
 
         success = time_task(
             "compiler: resolve unknown types (phase 3)",
             [&]() { return resolve_unknown_types(true); });
-        if (!success)
+        if (!success) {
+            error(
+                nullptr,
+                "X000",
+                "unable to resolve unknown types (phase 3).",
+                _program.location());
             return false;
+        }
 
         auto identifiers = _elements.find_by_type<compiler::identifier>(element_type_t::identifier);
         for (auto var : identifiers) {
