@@ -11,23 +11,24 @@
 
 #pragma once
 
-#include "composite_type.h"
+#include "directive.h"
 
 namespace basecode::compiler {
 
-    class any_type : public compiler::composite_type {
+    class core_type_directive  : public directive {
     public:
-        any_type(
+        core_type_directive(
             compiler::module* module,
             compiler::block* parent_scope,
-            compiler::block* scope);
+            compiler::element* expression);
 
     protected:
-        type_access_model_t on_access_model() const override;
+        void on_owned_elements(element_list_t& list) override;
 
-        bool on_initialize(compiler::session& session) override;
+        bool on_evaluate(compiler::session& session) override;
 
     private:
+        compiler::element* _expression = nullptr;
     };
 
 };

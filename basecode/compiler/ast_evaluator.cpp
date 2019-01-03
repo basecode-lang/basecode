@@ -160,17 +160,6 @@ namespace basecode::compiler {
             }
         }
 
-//        if (!_session.result().has_code("P071")) {
-//            _session.error(
-//                scope_manager.current_module(),
-//                "P071",
-//                fmt::format(
-//                    "ast node evaluation failed: id = {}, type = {}",
-//                    node->id,
-//                    syntax::ast_node_type_name(node->type)),
-//                node->location);
-//        }
-
         return nullptr;
     }
 
@@ -935,6 +924,7 @@ namespace basecode::compiler {
         auto mod_ref = _session.builder().make_module_reference(
             _session.scope_manager().current_scope(),
             expr);
+        mod_ref->location(context.node->location);
 
         std::string path;
         if (expr->is_constant() && expr->as_string(path)) {
@@ -953,17 +943,17 @@ namespace basecode::compiler {
             auto module = _session.compile_module(source_file);
             if (module == nullptr) {
                 _session.error(
-                    _session.scope_manager().current_module(),
+                    mod_ref->module(),
                     "C021",
                     "unable to load module.",
-                    context.node->rhs->location);
+                    context.node->location);
                 return false;
             }
             mod_ref->reference(module);
             result.element = mod_ref;
         } else {
             _session.error(
-                _session.scope_manager().current_module(),
+                mod_ref->module(),
                 "C021",
                 "expected string literal or constant string variable.",
                 context.node->rhs->location);
@@ -1452,24 +1442,6 @@ namespace basecode::compiler {
                 }
             },
             {
-                "map",
-                [](compiler::element_builder& builder,
-                       compiler::scope_manager& scope_manager,
-                       evaluator_result_t& result,
-                       const type_reference_list_t& type_params,
-                       compiler::argument_list* args) {
-                    auto map_type = builder.make_map_type(
-                        scope_manager.current_scope(),
-                        type_params[0],
-                        type_params[1]);
-                    result.element = builder.make_map_literal(
-                        scope_manager.current_scope(),
-                        map_type,
-                        args);
-                    return true;
-                }
-            },
-            {
                 "cast",
                 [](compiler::element_builder& builder,
                        compiler::scope_manager& scope_manager,
@@ -1933,7 +1905,8 @@ namespace basecode::compiler {
             type_nodes.pop();
 
             switch (current->type) {
-                case syntax::ast_node_type_t::symbol: {
+                case syntax::ast_node_type_t::symbol:
+                case syntax::ast_node_type_t::type_tagged_symbol: {
                     qualified_symbol_t type_name{};
                     builder.make_qualified_symbol(
                         type_name,

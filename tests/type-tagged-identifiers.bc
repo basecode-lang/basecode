@@ -11,7 +11,7 @@ u :: new<the_foo_t>(x := 1.0, y := 1.0, z := 1.0, w := 1.0);
 v :: tuple(name := "jeff", status := "old");
 //x :: range<s32>(0, 10);
 y :: array<s8>(-1, -2, -3, -4);
-z :: map<string, u16>("test" := 2, "foo" := 3, "bar" := 1);
+z :: new<map<string, u16>>("test" := 2, "foo" := 3, "bar" := 1);
 
 a: u8 :: 1;
 b :: cast<s8>(a);

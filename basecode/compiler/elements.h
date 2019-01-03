@@ -21,15 +21,12 @@
 #include <compiler/elements/module.h>
 #include <compiler/elements/comment.h>
 #include <compiler/elements/program.h>
-#include <compiler/elements/any_type.h>
-#include <compiler/elements/map_type.h>
 #include <compiler/elements/intrinsic.h>
 #include <compiler/elements/raw_block.h>
 #include <compiler/elements/bool_type.h>
 #include <compiler/elements/attribute.h>
 #include <compiler/elements/directive.h>
 #include <compiler/elements/statement.h>
-#include <compiler/elements/type_info.h>
 #include <compiler/elements/transmute.h>
 #include <compiler/elements/rune_type.h>
 #include <compiler/elements/assignment.h>
@@ -43,7 +40,6 @@
 #include <compiler/elements/declaration.h>
 #include <compiler/elements/initializer.h>
 #include <compiler/elements/module_type.h>
-#include <compiler/elements/string_type.h>
 #include <compiler/elements/nil_literal.h>
 #include <compiler/elements/if_directive.h>
 #include <compiler/elements/case_element.h>
@@ -93,6 +89,7 @@
 #include <compiler/elements/align_of_intrinsic.h>
 #include <compiler/elements/procedure_instance.h>
 #include <compiler/elements/assembly_directive.h>
+#include <compiler/elements/core_type_directive.h>
 #include <compiler/elements/intrinsic_directive.h>
 #include <compiler/elements/identifier_reference.h>
 #include <compiler/elements/address_of_intrinsic.h>

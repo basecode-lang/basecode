@@ -119,10 +119,6 @@ namespace basecode::compiler {
             comment_type_t type,
             const std::string& value);
 
-        any_type* make_any_type(
-            compiler::block* parent_scope,
-            compiler::block* scope);
-
         statement* make_statement(
             compiler::block* parent_scope,
             label_list_t labels,
@@ -149,11 +145,6 @@ namespace basecode::compiler {
         character_literal* make_character(
             compiler::block* parent_scope,
             common::rune_t rune);
-
-        map_type* make_map_type(
-            compiler::block* parent_scope,
-            compiler::type_reference* key_type,
-            compiler::type_reference* value_type);
 
         type_literal* make_user_literal(
             compiler::block* parent_scope,
@@ -200,20 +191,12 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             uint64_t value);
 
-        string_type* make_string_type(
-            compiler::block* parent_scope,
-            compiler::block* scope);
-
         pointer_type* make_pointer_type(
             compiler::block* parent_scope,
             const qualified_symbol_t& type_name,
             compiler::type* base_type);
 
         composite_type* make_enum_type(
-            compiler::block* parent_scope,
-            compiler::block* scope);
-
-        type_info* make_type_info_type(
             compiler::block* parent_scope,
             compiler::block* scope);
 

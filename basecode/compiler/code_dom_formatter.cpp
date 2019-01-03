@@ -272,32 +272,6 @@ namespace basecode::compiler {
                     element->symbol()->name(),
                     style);
             }
-            case element_type_t::any_type: {
-                auto element = dynamic_cast<any_type*>(node);
-                auto style = ", fillcolor=gainsboro, style=\"filled\"";
-                for (auto fld : element->fields().as_list())
-                    add_primary_edge(element, fld);
-                add_primary_edge(element, element->scope());
-                add_primary_edge(element, element->symbol());
-                return fmt::format(
-                    "{}[shape=record,label=\"any_type|{}\"{}];",
-                    node_vertex_name,
-                    element->symbol()->name(),
-                    style);
-            }
-            case element_type_t::type_info: {
-                auto element = dynamic_cast<type_info*>(node);
-                auto style = ", fillcolor=gainsboro, style=\"filled\"";
-                for (auto fld : element->fields().as_list())
-                    add_primary_edge(element, fld);
-                add_primary_edge(element, element->scope());
-                add_primary_edge(element, element->symbol());
-                return fmt::format(
-                    "{}[shape=record,label=\"type_info|{}\"{}];",
-                    node_vertex_name,
-                    element->symbol()->name(),
-                    style);
-            }
             case element_type_t::return_e: {
                 auto element = dynamic_cast<return_element*>(node);
                 auto style = ", fillcolor=brown1, style=\"filled\"";
@@ -490,19 +464,6 @@ namespace basecode::compiler {
                 return fmt::format(
                     "{}[shape=record,label=\"expression_group\"{}];",
                     node_vertex_name,
-                    style);
-            }
-            case element_type_t::string_type: {
-                auto element = dynamic_cast<string_type*>(node);
-                auto style = ", fillcolor=gainsboro, style=\"filled\"";
-                for (auto fld : element->fields().as_list())
-                    add_primary_edge(element, fld);
-                add_primary_edge(element, element->scope());
-                add_primary_edge(element, element->symbol());
-                return fmt::format(
-                    "{}[shape=record,label=\"string_type|{}\"{}];",
-                    node_vertex_name,
-                    element->symbol()->name(),
                     style);
             }
             case element_type_t::namespace_e: {
@@ -728,19 +689,6 @@ namespace basecode::compiler {
                 return fmt::format(
                     "{}[shape=record,label=\"defer\"{}];",
                     node_vertex_name,
-                    style);
-            }
-            case element_type_t::map_type: {
-                auto element = dynamic_cast<map_type*>(node);
-                auto style = ", fillcolor=gainsboro, style=\"filled\"";
-                for (auto fld : element->fields().as_list())
-                    add_primary_edge(element, fld);
-                add_primary_edge(element, element->scope());
-                add_primary_edge(element, element->symbol());
-                return fmt::format(
-                    "{}[shape=record,label=\"map_type|{}\"{}];",
-                    node_vertex_name,
-                    element->symbol()->name(),
                     style);
             }
             case element_type_t::intrinsic: {

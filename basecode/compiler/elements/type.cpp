@@ -130,9 +130,6 @@ namespace basecode::compiler {
 
     vm::ffi_types_t type::to_ffi_type() const {
         switch (element_type()) {
-            case element_type_t::any_type: {
-                return vm::ffi_types_t::any_type;
-            }
             case element_type_t::rune_type: {
                 return vm::ffi_types_t::char_type;
             }
@@ -169,9 +166,6 @@ namespace basecode::compiler {
             }
             case element_type_t::bool_type: {
                 return vm::ffi_types_t::bool_type;
-            }
-            case element_type_t::string_type: {
-                return vm::ffi_types_t::struct_type;
             }
             case element_type_t::pointer_type: {
                 return vm::ffi_types_t::pointer_type;

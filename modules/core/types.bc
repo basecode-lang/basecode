@@ -11,24 +11,37 @@
 
 public :: ns {
 
-    any :: struct {
+    #core_type string :: struct {
+        length:     u32;
+        capacity:   u32;
+        data:       ^u8;
     };
 
-    string :: struct {
+    #core_type type :: struct {
+        name: string;
     };
 
-    // XXX: how to associate syntax with this?
-//    dynamic_array :: struct<T> {
-//        element_type:   ^type :: type_of(T);
-//
-//        length:         u32;
-//        capacity:       u32;
-//        data:           ^T;
-//    };
-//
-//
-//    bar :: struct {};
-//    foo :: struct {
-//        bars:   dynamic_array;
-//    };
+    #core_type any :: struct {
+        type: ^type;
+        data: ^u0;
+    };
+
+    #core_type map :: struct<K, V> {
+    };
+
+    #core_type map_iterator :: struct<K, V> {
+        key:    K;
+        value:  V;
+    };
+
+    assign_string :: proc(str: ^string, lit: ^u8, len: u32) {
+        str.length := len;
+        str.capacity := next_power_of_two(len + 1);
+        // XXX: the compiler should issue an error about type promotion
+        //      if not exact match
+        str.data := alloc(cast<u64>(str.capacity));
+        fill(str.data, 0, cast<u64>(str.capacity));
+        copy(str.data, lit, cast<u64>(len));
+    };
+
 };

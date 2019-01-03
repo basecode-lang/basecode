@@ -94,12 +94,13 @@ namespace basecode::compiler {
             vm::function_value_t value;
             value.name = param->identifier()->symbol()->name();
 
+            if (param->is_variadic())
+                is_variadic = true;
+
             auto type = param->identifier()->type_ref()->type();
             if (type != nullptr) {
                 value.type = type->to_ffi_type();
-                if (value.type == vm::ffi_types_t::any_type) {
-                    is_variadic = true;
-                } else if (value.type == vm::ffi_types_t::struct_type) {
+                if (value.type == vm::ffi_types_t::struct_type) {
                     auto composite_type = dynamic_cast<compiler::composite_type*>(type);
                     if (composite_type == nullptr)
                         return false;

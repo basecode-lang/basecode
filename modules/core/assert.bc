@@ -10,6 +10,7 @@
 // ----------------------------------------------------------------------------
 
 public :: ns {
+
     exit   :: proc(level: s32) {
         #assembly {{
             .ilocal level
@@ -27,4 +28,5 @@ public :: ns {
         print("assertion failure: %s\n", message);
         exit(1);
     };
+
 };

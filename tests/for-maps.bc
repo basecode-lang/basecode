@@ -1,16 +1,10 @@
 core :: module("../modules/core");
 
-map_iterator :: struct {
-    key: string;
-    value: string;
-};
-
 ////////////////////////////////////////////////////////
 // 3. iterating over maps
 
 test :: proc() {
-    // XXX: type declaration should be supported but isn't
-    for it: map_iterator in map<string, string>("foo" := "bar", "bing" := "baz") {
+    for it: map_iterator in new<map<string, string>>("foo" := "bar", "bing" := "baz") {
         print("k := %s\n", it.key);
         print("v := %d\n", it.value);
     };

@@ -1488,7 +1488,7 @@ namespace basecode::syntax {
                 if (!identifier(temp))
                     break;
                 ch = read();
-                if (ch == '>') {
+                if (ch == '<' || ch == '>') {
                     is_tagged = true;
                     break;
                 } else if (ch != ',') {

@@ -36,30 +36,30 @@ namespace basecode::compiler {
 
         auto proc_type = proc_decl->identifier()->initializer()->procedure_type();
 
-        std::string intrinsic_name;
-        auto attr = find_attribute("intrinsic_name");
+        std::string name;
+        auto attr = find_attribute("name");
         if (attr != nullptr) {
-            if (!attr->as_string(intrinsic_name)) {
+            if (!attr->as_string(name)) {
                 session.error(
                     module(),
                     "P004",
-                    "unable to convert intrinsic name.",
+                    "unable to convert name.",
                     location());
                 return false;
             }
         }
 
-        if (intrinsic_name.empty()) {
+        if (name.empty()) {
             session.error(
                 module(),
                 "P005",
-                "intrinsic_name attribute required for intrinsic directive.",
+                "name attribute required for intrinsic directive.",
                 location());
             return false;
         }
 
         if (!compiler::intrinsic::register_intrinsic_procedure_type(
-                intrinsic_name,
+                name,
                 proc_type)) {
             session.error(
                 module(),

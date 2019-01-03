@@ -41,11 +41,6 @@ namespace basecode::compiler {
 
         compiler::module* current_module();
 
-        compiler::map_type* find_map_type(
-            compiler::type_reference* key_type,
-            compiler::type_reference* value_type,
-            compiler::block* scope = nullptr) const;
-
         visitor_result_t walk_parent_scopes(
             compiler::block* scope,
             const scope_visitor_callable& callable) const;

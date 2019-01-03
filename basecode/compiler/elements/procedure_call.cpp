@@ -229,6 +229,14 @@ namespace basecode::compiler {
 
             auto type = result.ref->identifier()->type_ref()->type();
             result.proc_type = dynamic_cast<compiler::procedure_type*>(type);
+            if (result.proc_type == nullptr) {
+                session.error(
+                    module(),
+                    "X000",
+                    "unknown procedure type.",
+                    location());
+                return false;
+            }
 
             if (result.proc_type->prepare_call_site(session, _arguments, result)) {
                 if (return_type != nullptr) {

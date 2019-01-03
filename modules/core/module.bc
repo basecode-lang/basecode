@@ -12,6 +12,12 @@
 intrinsics_module :: module("intrinsics.bc");
 import public from intrinsics_module;
 
+types_module :: module("types.bc");
+import public from types_module;
+
+math_module :: module("math.bc");
+import public from math_module;
+
 compiler_module :: module("compiler.bc");
 import public from compiler_module;
 

@@ -91,15 +91,11 @@ namespace basecode::compiler {
 
     bool element::is_type() const {
         switch (_element_type) {
-            case element_type_t::any_type:
-            case element_type_t::map_type:
             case element_type_t::proc_type:
             case element_type_t::bool_type:
-            case element_type_t::type_info:
             case element_type_t::rune_type:
             case element_type_t::array_type:
             case element_type_t::tuple_type:
-            case element_type_t::string_type:
             case element_type_t::module_type:
             case element_type_t::generic_type:
             case element_type_t::numeric_type:

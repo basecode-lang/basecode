@@ -75,15 +75,6 @@ namespace basecode::compiler {
         return scope_block;
     }
 
-    compiler::map_type* scope_manager::find_map_type(
-            compiler::type_reference* key_type,
-            compiler::type_reference* value_type,
-            compiler::block* scope) const {
-        return dynamic_cast<compiler::map_type*>(find_type(
-            qualified_symbol_t(compiler::map_type::name_for_map(key_type, value_type)),
-            scope));
-    }
-
     identifier_list_t scope_manager::find_identifier(
             const qualified_symbol_t& symbol,
             compiler::block* scope) const {

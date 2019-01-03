@@ -53,11 +53,6 @@ namespace basecode::compiler {
         return _type->name(_symbol.name);
     }
 
-    bool type_reference::is_any_type() const {
-        return _type != nullptr
-               && _type->element_type() == element_type_t::any_type;
-    }
-
     bool type_reference::is_proc_type() const {
         return _type != nullptr && _type->is_proc_type();
     }

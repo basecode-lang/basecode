@@ -175,6 +175,8 @@ namespace basecode::syntax {
         if (!parser->expect(r, right_paren))
             return nullptr;
 
+        module_expression_node->location.end(right_paren.location.end());
+
         return module_expression_node;
     }
 

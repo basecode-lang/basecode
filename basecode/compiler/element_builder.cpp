@@ -243,30 +243,6 @@ namespace basecode::compiler {
         return type_literal;
     }
 
-    map_type* element_builder::make_map_type(
-            compiler::block* parent_scope,
-            compiler::type_reference* key_type,
-            compiler::type_reference* value_type) {
-        auto& scope_manager = _session.scope_manager();
-
-        auto type = scope_manager.find_map_type(key_type, value_type);
-        if (type == nullptr) {
-            auto scope = make_block(parent_scope);
-            type = new compiler::map_type(
-                scope_manager.current_module(),
-                parent_scope,
-                scope,
-                key_type,
-                value_type);
-            if (!type->initialize(_session))
-                return nullptr;
-            scope->parent_element(type);
-            _session.elements().add(type);
-        }
-
-        return type;
-    }
-
     array_type* element_builder::make_array_type(
             compiler::block* parent_scope,
             compiler::block* scope,
@@ -548,20 +524,6 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             compiler::block* scope) {
         auto type = new compiler::module_type(
-            _session.scope_manager().current_module(),
-            parent_scope,
-            scope);
-        if (!type->initialize(_session))
-            return nullptr;
-        scope->parent_element(type);
-        _session.elements().add(type);
-        return type;
-    }
-
-    string_type* element_builder::make_string_type(
-            compiler::block* parent_scope,
-            compiler::block* scope) {
-        auto type = new compiler::string_type(
             _session.scope_manager().current_module(),
             parent_scope,
             scope);
@@ -1030,34 +992,6 @@ namespace basecode::compiler {
         _session.elements().add(identifier);
 
         return identifier;
-    }
-
-    type_info* element_builder::make_type_info_type(
-            compiler::block* parent_scope,
-            compiler::block* scope) {
-        auto type = new compiler::type_info(
-            _session.scope_manager().current_module(),
-            parent_scope,
-            scope);
-        if (!type->initialize(_session))
-            return nullptr;
-        scope->parent_element(type);
-        _session.elements().add(type);
-        return type;
-    }
-
-    any_type* element_builder::make_any_type(
-            compiler::block* parent_scope,
-            compiler::block* scope) {
-        auto type = new compiler::any_type(
-            _session.scope_manager().current_module(),
-            parent_scope,
-            scope);
-        if (!type->initialize(_session))
-            return nullptr;
-        scope->parent_element(type);
-        _session.elements().add(type);
-        return type;
     }
 
     intrinsic* element_builder::make_copy_intrinsic(

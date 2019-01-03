@@ -1,0 +1,41 @@
+// ----------------------------------------------------------------------------
+//
+// Basecode Compiler
+// Copyright (C) 2018 Jeff Panici
+// All rights reserved.
+//
+// This software source file is licensed under the terms of MIT license.
+// For details, please read the LICENSE file.
+//
+// ----------------------------------------------------------------------------
+
+public :: ns {
+
+    min :: proc(a: u32, b: u32): u32 {
+        if a < b {
+            return a;
+        } else {
+            return b;
+        };
+    };
+
+    max :: proc(a: u32, b: u32): u32 {
+        if a > b {
+            return a;
+        } else {
+            return b;
+        };
+    };
+
+    next_power_of_two :: proc(n: u32): u32 {
+        n -:= 1;
+        n |:= n shr 1;
+        n |:= n shr 2;
+        n |:= n shr 4;
+        n |:= n shr 8;
+        n |:= n shr 16;
+        n +:= 1;
+        return n;
+    };
+
+};

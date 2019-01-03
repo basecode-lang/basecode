@@ -10,6 +10,7 @@
 // ----------------------------------------------------------------------------
 
 public :: ns {
+
     ranges :: ns {
         kinds  :: ns {
             INCLUSIVE :: 0;
@@ -21,16 +22,18 @@ public :: ns {
             REVERSE   :: 1;
         };
     };
+
 };
 
 internal :: ns {
-    @intrinsic_name "copy";
+
+    @name "copy";
     #intrinsic copy_proc :: proc<T>(
         dest: ^T,
         src:  ^T,
         size: u64);
 
-    @intrinsic_name "fill";
+    @name "fill";
     #intrinsic fill_proc :: proc<T>(
         dest:   ^T,
         value:  u8,
@@ -39,7 +42,7 @@ internal :: ns {
     import public::ranges::kinds;
     import public::ranges::orders;
 
-    @intrinsic_name "range";
+    @name "range";
     #intrinsic range_proc :: proc<T>(
         start: T,
         stop:  T,
@@ -47,21 +50,22 @@ internal :: ns {
         kind:  u8  := INCLUSIVE,
         dir:   u8  := NORMAL):T;
 
-    @intrinsic_name "free";
+    @name "free";
     #intrinsic free_proc :: proc<T>(expr: T);
 
-    @intrinsic_name "alloc";
+    @name "alloc";
     #intrinsic alloc_proc :: proc<T>(size: u64):^T;
 
-    @intrinsic_name "size_of";
+    @name "size_of";
     #intrinsic size_of_proc :: proc<T>(expr: T):u32;
 
-    @intrinsic_name "align_of";
+    @name "align_of";
     #intrinsic align_of_proc :: proc<T>(expr: T):u32;
 
-    @intrinsic_name "type_of";
+    @name "type_of";
     #intrinsic type_of_proc :: proc<T>(expr: T):^type;
 
-    @intrinsic_name "address_of";
+    @name "address_of";
     #intrinsic address_of_proc :: proc<T>(expr: T):u64;
+    
 };

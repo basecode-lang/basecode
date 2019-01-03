@@ -31,10 +31,6 @@ namespace basecode::compiler {
             compiler::session& session,
             compiler::emit_context_t& context,
             compiler::emit_result_t& result) {
-        _string_type = session
-            .scope_manager()
-            .find_type(qualified_symbol_t("string"));
-
         intern_string_literals(session);
         initialize_variable_sections();
 
@@ -185,12 +181,8 @@ namespace basecode::compiler {
                         }
                         break;
                     }
-                    case element_type_t::any_type:
-                    case element_type_t::map_type:
-                    case element_type_t::type_info:
                     case element_type_t::array_type:
                     case element_type_t::tuple_type:
-                    case element_type_t::string_type:
                     case element_type_t::composite_type: {
                         instruction_block->reserve_byte(var_type->size_in_bytes());
                         break;

@@ -34,15 +34,12 @@ namespace basecode::compiler {
     class element;
     class program;
     class comment;
-    class any_type;
-    class map_type;
     class raw_block;
     class intrinsic;
     class bool_type;
     class directive;
     class attribute;
     class statement;
-    class type_info;
     class transmute;
     class rune_type;
     class assignment;
@@ -55,7 +52,6 @@ namespace basecode::compiler {
     class declaration;
     class module_type;
     class initializer;
-    class string_type;
     class nil_literal;
     class for_element;
     class numeric_type;
@@ -104,6 +100,7 @@ namespace basecode::compiler {
     class procedure_instance;
     class assembly_directive;
     class intrinsic_directive;
+    class core_type_directive;
     class address_of_intrinsic;
     class identifier_reference;
     class uninitialized_literal;
@@ -244,10 +241,8 @@ namespace basecode::compiler {
         comment,
         program,
         while_e,
-        any_type,
         return_e,
         import_e,
-        map_type,
         switch_e,
         rune_type,
         raw_block,
@@ -258,7 +253,6 @@ namespace basecode::compiler {
         bool_type,
         statement,
         proc_call,
-        type_info,
         transmute,
         continue_e,
         array_type,
@@ -267,7 +261,6 @@ namespace basecode::compiler {
         tuple_type,
         assignment,
         declaration,
-        string_type,
         namespace_e,
         initializer,
         module_type,
@@ -318,8 +311,6 @@ namespace basecode::compiler {
         {element_type_t::comment, "comment"},
         {element_type_t::element, "element"},
         {element_type_t::program, "program"},
-        {element_type_t::map_type, "map_type"},
-        {element_type_t::any_type, "any_type"},
         {element_type_t::return_e, "return"},
         {element_type_t::import_e, "import"},
         {element_type_t::switch_e, "switch"},
@@ -333,19 +324,17 @@ namespace basecode::compiler {
         {element_type_t::bool_type, "bool_type"},
         {element_type_t::statement, "statement"},
         {element_type_t::proc_call, "proc_call"},
-        {element_type_t::type_info, "type_info"},
         {element_type_t::continue_e, "continue"},
         {element_type_t::assignment, "assignment"},
         {element_type_t::tuple_type, "tuple_type"},
         {element_type_t::array_type, "array_type"},
         {element_type_t::identifier, "identifier"},
         {element_type_t::expression, "expression"},
+        {element_type_t::namespace_e, "namespace"},
         {element_type_t::fallthrough, "fallthrough"},
         {element_type_t::nil_literal, "nil_literal"},
         {element_type_t::declaration, "declaration"},
         {element_type_t::module_type, "module_type"},
-        {element_type_t::string_type, "string_type"},
-        {element_type_t::namespace_e, "namespace"},
         {element_type_t::initializer, "initializer"},
         {element_type_t::generic_type, "generic_type"},
         {element_type_t::type_literal, "type_literal"},
@@ -546,7 +535,7 @@ namespace basecode::compiler {
 
         bool remove(const std::string& name);
 
-        compiler::attribute* find(const std::string& name);
+        compiler::attribute* find(const std::string& name) const;
 
     private:
         std::unordered_map<std::string, attribute*> _attrs {};

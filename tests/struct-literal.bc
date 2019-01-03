@@ -10,6 +10,6 @@ player :: struct {
 
 threes  := array<u8>(1, 2, 3);
 triplet := tuple(1, 2, 3);
-letters := map<string, u8>("a" := 1, "b" := 2, "c" := 3);
+letters := new<map<string, u8>>("a" := 1, "b" := 2, "c" := 3);
 p1      := new<player>(id := cast<u32>(2), name := "foobar");
 

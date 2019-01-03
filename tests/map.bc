@@ -1,15 +1,6 @@
 core :: module("../modules/core");
 
-//some_func ::= proc(p: ^person):u64 {
-//    return 0;
-//};
-//
-//@hash_algorithm(some_func)
-//person ::= struct {
-//    name: string;
-//};
-
-people :: map<u8, string>(
+people :: new<map<u8, string>>(
       1 := "Jeff",
       2 := "Bob",
       3 := "Mr. Foobar"

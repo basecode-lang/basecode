@@ -110,7 +110,6 @@ namespace basecode::compiler {
     }
 
     bool array_type::on_initialize(compiler::session& session) {
-        auto& scope_manager = session.scope_manager();
         auto& builder = session.builder();
 
         auto type_symbol = builder.make_symbol(
@@ -118,100 +117,6 @@ namespace basecode::compiler {
             name_for_array(_entry_type_ref->type(), _subscripts));
         symbol(type_symbol);
         type_symbol->parent_element(this);
-
-        auto block_scope = scope();
-
-        auto u8_type = scope_manager.find_type(qualified_symbol_t("u8"));
-        auto u32_type = scope_manager.find_type(qualified_symbol_t("u32"));
-        auto ptr_type = builder.make_pointer_type(
-            block_scope,
-            qualified_symbol_t("u8"),
-            u8_type);
-        auto type_info_type = scope_manager.find_type(qualified_symbol_t("type"));
-
-        auto u8_type_ref = builder.make_type_reference(
-            block_scope,
-            u8_type->symbol()->qualified_symbol(),
-            u8_type);
-        auto u32_type_ref = builder.make_type_reference(
-            block_scope,
-            u32_type->symbol()->qualified_symbol(),
-            u32_type);
-        auto ptr_type_ref = builder.make_type_reference(
-            block_scope,
-            qualified_symbol_t("^u8"),
-            ptr_type);
-        auto type_info_ref = builder.make_type_reference(
-            block_scope,
-            type_info_type->symbol()->qualified_symbol(),
-            type_info_type);
-
-        auto flags_identifier = builder.make_identifier(
-            block_scope,
-            builder.make_symbol(block_scope, "flags"),
-            nullptr);
-        flags_identifier->type_ref(u8_type_ref);
-        block_scope->identifiers().add(flags_identifier);
-        auto flags_field = builder.make_field(
-            this,
-            block_scope,
-            builder.make_declaration(block_scope, flags_identifier, nullptr),
-            0);
-
-        auto length_identifier = builder.make_identifier(
-            block_scope,
-            builder.make_symbol(block_scope, "length"),
-            nullptr);
-        length_identifier->type_ref(u32_type_ref);
-        block_scope->identifiers().add(length_identifier);
-        auto length_field = builder.make_field(
-            this,
-            block_scope,
-            builder.make_declaration(block_scope, length_identifier, nullptr),
-            flags_field->end_offset());
-
-        auto capacity_identifier = builder.make_identifier(
-            block_scope,
-            builder.make_symbol(block_scope, "capacity"),
-            nullptr);
-        capacity_identifier->type_ref(u32_type_ref);
-        block_scope->identifiers().add(capacity_identifier);
-        auto capacity_field = builder.make_field(
-            this,
-            block_scope,
-            builder.make_declaration(block_scope, capacity_identifier, nullptr),
-            length_field->end_offset());
-
-        auto element_type_identifier = builder.make_identifier(
-            block_scope,
-            builder.make_symbol(block_scope, "element_type"),
-            nullptr);
-        element_type_identifier->type_ref(type_info_ref);
-        block_scope->identifiers().add(element_type_identifier);
-        auto element_type_field = builder.make_field(
-            this,
-            block_scope,
-            builder.make_declaration(block_scope, element_type_identifier, nullptr),
-            capacity_field->end_offset());
-
-        auto data_identifier = builder.make_identifier(
-            block_scope,
-            builder.make_symbol(block_scope, "data"),
-            nullptr);
-        data_identifier->type_ref(ptr_type_ref);
-        block_scope->identifiers().add(data_identifier);
-        auto data_field = builder.make_field(
-            this,
-            block_scope,
-            builder.make_declaration(block_scope, data_identifier, nullptr),
-            element_type_field->end_offset());
-
-        auto& field_map = fields();
-        field_map.add(flags_field);
-        field_map.add(length_field);
-        field_map.add(capacity_field);
-        field_map.add(element_type_field);
-        field_map.add(data_field);
 
         return composite_type::on_initialize(session);
     }

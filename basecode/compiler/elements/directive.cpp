@@ -16,6 +16,7 @@
 #include "assert_directive.h"
 #include "foreign_directive.h"
 #include "assembly_directive.h"
+#include "core_type_directive.h"
 #include "intrinsic_directive.h"
 
 namespace basecode::compiler {
@@ -59,6 +60,10 @@ namespace basecode::compiler {
             return instance;
         } else if (name == "type") {
             auto instance = new type_directive(module, parent_scope, params[0]);
+            params[0]->parent_element(instance);
+            return instance;
+        } else if (name == "core_type") {
+            auto instance = new core_type_directive(module, parent_scope, params[0]);
             params[0]->parent_element(instance);
             return instance;
         } else if (name == "assert") {

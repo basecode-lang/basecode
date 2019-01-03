@@ -143,8 +143,6 @@ add_library(
     compiler/elements/program.cpp compiler/elements/program.h
     compiler/stack_frame_entry.cpp compiler/stack_frame_entry.h
     compiler/string_intern_map.cpp compiler/string_intern_map.h
-    compiler/elements/any_type.cpp compiler/elements/any_type.h
-    compiler/elements/map_type.cpp compiler/elements/map_type.h
     compiler/elements/rune_type.cpp compiler/elements/rune_type.h
     compiler/elements/intrinsic.cpp compiler/elements/intrinsic.h
     compiler/elements/transmute.cpp compiler/elements/transmute.h
@@ -153,7 +151,6 @@ add_library(
     compiler/elements/directive.cpp compiler/elements/directive.h
     compiler/elements/statement.cpp compiler/elements/statement.h
     compiler/code_dom_formatter.cpp compiler/code_dom_formatter.h
-    compiler/elements/type_info.cpp compiler/elements/type_info.h
     compiler/elements/raw_block.cpp compiler/elements/raw_block.h
     compiler/elements/assignment.cpp compiler/elements/assignment.h
     compiler/elements/if_element.cpp compiler/elements/if_element.h
@@ -164,7 +161,6 @@ add_library(
     compiler/elements/for_element.cpp compiler/elements/for_element.h
     compiler/elements/nil_literal.cpp compiler/elements/nil_literal.h
     compiler/elements/initializer.cpp compiler/elements/initializer.h
-    compiler/elements/string_type.cpp compiler/elements/string_type.h
     compiler/elements/module_type.cpp compiler/elements/module_type.h
     compiler/elements/declaration.cpp compiler/elements/declaration.h
     compiler/elements/fallthrough.cpp compiler/elements/fallthrough.h
@@ -218,6 +214,7 @@ add_library(
     compiler/elements/align_of_intrinsic.cpp compiler/elements/align_of_intrinsic.h
     compiler/elements/procedure_instance.cpp compiler/elements/procedure_instance.h
     compiler/elements/intrinsic_directive.cpp compiler/elements/intrinsic_directive.h
+    compiler/elements/core_type_directive.cpp compiler/elements/core_type_directive.h
     compiler/elements/address_of_intrinsic.cpp compiler/elements/address_of_intrinsic.h
     compiler/elements/identifier_reference.cpp compiler/elements/identifier_reference.h
     compiler/elements/uninitialized_literal.cpp compiler/elements/uninitialized_literal.h

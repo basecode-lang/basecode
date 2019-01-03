@@ -31,8 +31,6 @@ namespace basecode::compiler {
 
         std::string name() const;
 
-        bool is_any_type() const;
-
         bool is_proc_type() const;
 
         bool is_array_type() const;

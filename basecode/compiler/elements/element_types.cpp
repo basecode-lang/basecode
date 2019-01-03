@@ -45,7 +45,7 @@ namespace basecode::compiler {
         return _attrs.erase(name) > 0;
     }
 
-    compiler::attribute* attribute_map_t::find(const std::string& name) {
+    compiler::attribute* attribute_map_t::find(const std::string& name) const {
         auto it = _attrs.find(name);
         if (it != _attrs.end())
             return it->second;
