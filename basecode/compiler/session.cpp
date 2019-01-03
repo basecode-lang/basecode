@@ -737,31 +737,50 @@ namespace basecode::compiler {
                 }
             }
 
+            compiler::identifier* identifier = nullptr;
+
             auto vars = _scope_manager.find_identifier(
                 unresolved_reference->symbol(),
                 type_scope);
-            compiler::identifier* identifier = vars.empty() ? nullptr : vars.front();
-            if (identifier == nullptr
-            &&  unresolved_reference->symbol().is_qualified()) {
-                vars = _scope_manager.find_identifier(
-                    unresolved_reference->symbol(),
-                    type_scope);
+            if (vars.size() > 1) {
+                if (unresolved_reference->is_parent_element(element_type_t::proc_call)) {
+                    auto proc_call = dynamic_cast<compiler::procedure_call*>(unresolved_reference->parent_element());
+                    unresolved_reference->identifier(vars[0]);
+
+                    auto new_refs = proc_call->references();
+                    for (size_t i = 1; i < vars.size(); i++) {
+                        new_refs.emplace_back(_builder.make_identifier_reference(
+                            unresolved_reference->parent_scope(),
+                            vars[i]->symbol()->qualified_symbol(),
+                            vars[i]));
+                    }
+                    proc_call->references(new_refs);
+                }
+            } else {
                 identifier = vars.empty() ? nullptr : vars.front();
-            }
+                if (identifier == nullptr) {
+                    if (unresolved_reference->symbol().is_qualified()) {
+                        vars = _scope_manager.find_identifier(
+                            unresolved_reference->symbol(),
+                            type_scope);
+                        identifier = vars.empty() ? nullptr : vars.front();
+                    }
+                }
 
-            if (identifier == nullptr) {
-                ++it;
-                error(
-                    unresolved_reference->module(),
-                    "P004",
-                    fmt::format(
-                        "unable to resolve identifier: {}",
-                        unresolved_reference->symbol().name),
-                    unresolved_reference->symbol().location);
-                continue;
+                if (identifier != nullptr) {
+                    unresolved_reference->identifier(identifier);
+                } else {
+                    ++it;
+                    error(
+                        unresolved_reference->module(),
+                        "P004",
+                        fmt::format(
+                            "unable to resolve identifier: {}",
+                            unresolved_reference->symbol().name),
+                        unresolved_reference->symbol().location);
+                    continue;
+                }
             }
-
-            unresolved_reference->identifier(identifier);
 
             it = unresolved.erase(it);
         }

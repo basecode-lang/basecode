@@ -264,6 +264,9 @@ namespace basecode::compiler {
 
         auto refs = elements.find_by_type<compiler::identifier_reference>(element_type_t::identifier_reference);
         for (auto var : refs) {
+            if (var->identifier() == nullptr) {
+                return false;
+            }
             auto var_type = var->identifier()->type_ref()->type();
             if (var_type == nullptr) {
                 // XXX: this is an error!

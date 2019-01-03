@@ -36,6 +36,8 @@ namespace basecode::compiler {
 
         const compiler::identifier_reference_list_t& references() const;
 
+        void references(const compiler::identifier_reference_list_t& refs);
+
     protected:
         bool on_emit(
             compiler::session& session,

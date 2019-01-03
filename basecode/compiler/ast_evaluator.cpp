@@ -1497,10 +1497,11 @@ namespace basecode::compiler {
             compiler::identifier_reference_list_t references {};
             auto vars = scope_manager.find_identifier(proc_name);
             if (vars.empty()) {
-                references.emplace_back(builder.make_identifier_reference(
+                auto unresolved = builder.make_identifier_reference(
                     scope_manager.current_scope(),
                     proc_name,
-                    nullptr));
+                    nullptr);
+                references.emplace_back(unresolved);
             } else {
                 for (auto proc_identifier : vars) {
                     references.emplace_back(builder.make_identifier_reference(
@@ -1510,12 +1511,16 @@ namespace basecode::compiler {
                 }
             }
 
-            result.element = builder.make_procedure_call(
+            auto proc_call = builder.make_procedure_call(
                 scope_manager.current_scope(),
                 args,
                 type_params,
                 references);
-            result.element->location(symbol_node->location);
+            proc_call->location(symbol_node->location);
+            for (auto ref : proc_call->references())
+                ref->parent_element(proc_call);
+            result.element = proc_call;
+
         }
 
         return true;

@@ -258,10 +258,22 @@ namespace basecode::compiler {
         }
 
         if (success_count == 0) {
+            auto had_prepare_messages = false;
             for (const auto& prepare_result : results) {
-                for (const auto& msg : prepare_result.messages.messages())
+                for (const auto& msg : prepare_result.messages.messages()) {
+                    had_prepare_messages = true;
                     session.error(module(), msg.code(), msg.message(), msg.location());
+                }
             }
+
+            if (!had_prepare_messages) {
+                session.error(
+                    module(),
+                    "X000",
+                    "ambiguous call site.",
+                    location());
+            }
+
             return false;
         }
 
@@ -292,6 +304,10 @@ namespace basecode::compiler {
 
     const compiler::identifier_reference_list_t& procedure_call::references() const {
         return _references;
+    }
+
+    void procedure_call::references(const compiler::identifier_reference_list_t& refs) {
+        _references = refs;
     }
 
 };
