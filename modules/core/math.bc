@@ -11,6 +11,70 @@
 
 public :: ns {
 
+    is_power_of_two :: proc(x: u64): bool {
+        if x <= 0 {
+            return false;
+        };
+        return !(x & (x - 1));
+    };
+
+    is_platform_little_endian :: proc(): bool {
+        n: u32 := 1;
+        return (address_of(n))^ == 1;
+    };
+
+    upper_nybble :: proc(n: u8): u8 {
+        return (n & $f0) shr 4;
+    };
+
+    lower_nybble :: proc(n: u8): u8 {
+        return n & $f0;
+    };
+
+    endian_swap :: proc(n: u16): u16 {
+        return (n shr 8) | (n shl 8);
+    };
+
+    endian_swap :: proc(n: u32): u32 {
+        return ((n shr 24) & $ff)
+                | ((n shl 8) & $ff0000)
+                | ((n shr 8) & $ff00)
+                | ((n shl 24) & $ff000000);
+    };
+
+    endian_swap :: proc(n: u64): u64 {
+        return ((n & $00000000000000ff) shl 56) |
+               ((n & $000000000000ff00) shl 40) |
+               ((n & $0000000000ff0000) shl 24) |
+               ((n & $00000000ff000000) shl 8)  |
+               ((n & $000000ff00000000) shr 8)  |
+               ((n & $0000ff0000000000) shr 24) |
+               ((n & $00ff000000000000) shr 40) |
+               ((n & $ff00000000000000) shr 56);
+    };
+
+    align :: proc(n: u64, align: u64): u64 {
+        if align == 0 {
+            return n;
+        };
+        result := n + align - 1;
+        return result - result % align;
+    };
+
+    set_lower_nybble :: proc(original: u8, value: u8): u8 {
+        res := original;
+        res &:= $f0;
+        res |:= value & $0f;
+        return res;
+    };
+
+    set_upper_nybble :: proc(original: u8, value: u8): u8 {
+        res := original;
+        res &:= $0f;
+        res |:= ((value shl 4) & $f0);
+        return res;
+    };
+
     min :: proc(a: u32, b: u32): u32 {
         if a < b {
             return a;
@@ -34,6 +98,18 @@ public :: ns {
         n |:= n shr 4;
         n |:= n shr 8;
         n |:= n shr 16;
+        n +:= 1;
+        return n;
+    };
+
+    next_power_of_two :: proc(n: u64): u64 {
+        n -:= 1;
+        n |:= n shr 1;
+        n |:= n shr 2;
+        n |:= n shr 4;
+        n |:= n shr 8;
+        n |:= n shr 16;
+        n |:= n shr 32;
         n +:= 1;
         return n;
     };

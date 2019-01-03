@@ -54,6 +54,16 @@ namespace basecode::compiler {
         return true;
     }
 
+    bool return_element::on_apply_fold_result(
+            compiler::element* e,
+            const fold_result_t& fold_result) {
+        for (size_t i = 0; i < _expressions.size(); i++) {
+            if (_expressions[i] == e)
+                _expressions[i] = fold_result.element;
+        }
+        return true;
+    }
+
     element_list_t& return_element::expressions() {
         return _expressions;
     }

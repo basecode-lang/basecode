@@ -84,7 +84,7 @@ namespace basecode::syntax {
         {'>', std::bind(&lexer::greater_than_operator, std::placeholders::_1, std::placeholders::_2)},
 
         // &:=, logical and, bitwise and, ampersand
-        {'&', std::bind(&lexer::binary_not_equal_operator, std::placeholders::_1, std::placeholders::_2)},
+        {'&', std::bind(&lexer::binary_and_equal_operator, std::placeholders::_1, std::placeholders::_2)},
         {'&', std::bind(&lexer::logical_and_operator, std::placeholders::_1, std::placeholders::_2)},
         {'&', std::bind(&lexer::ampersand_literal, std::placeholders::_1, std::placeholders::_2)},
 
