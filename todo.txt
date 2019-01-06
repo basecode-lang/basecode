@@ -1,5 +1,48 @@
 NOTES
 ------------------------
+Steps to reach feature complete for the bootstrap compiler:
+
+- length_of intrinsic
+- clean up ast_evaluator::proc_call
+- fixed array type and subscript operator
+- family expressions
+- type-baking for generics
+- type-promotion errors for procedure_call
+- multiple/named return parameters
+- UFCS
+- consolidate errors/return errors from all appropriate locations
+
+After these tasks are complete (most are covered below) then the assembler should be enhanced to
+support variable directives and label operators.
+
+Code generation rewrite to move away from emit/on_emit and do everything in a byte_code_emitter for
+better state management and locality.  We need some new structures here:
+    - element needs to be somehow linked to a "unit" or "section" in the assembler and this construct
+      contains the related instruction_block instances;
+    - this should allow for easy regeneration of a particular element and its children because we
+      know what that is on the assembler side of things;
+
+Refactor session:
+    - need to introduce a general job system (not necessarily multi-threaded)
+    - the work that session does should be broken into jobs
+    - jobs can depend on other jobs
+    - session should track "versions" of the code DOM:
+        - associated assembler constructs ("units"/"sections" and their instruction_blocks)
+        - source representation
+        - changes to debugger to support "compile type" debugging so we can see the
+            different versions as the meta-program makes changes and "runtime" where
+            things are now fixed and we're doing classical debugging.
+
+Compiler:
+    - Expose structures and API for meta-programming
+    - Add an event callback system where the Basecode meta-program can pass a pointer to a procedure
+      and receive callbacks when the compiler does something, e.g. parse a statement, translate a statement
+      to the compiler DOM, etc.
+    - Need to track changes to the DOM (set of pointers to element) and when a meta-program phase finishes
+      the compiler needs to version the DOM by regenerating new code.  This cycle repeats until
+      no more meta-programs need to run.
+
+Enhance the built-in debugger to support source-level debugging in addition to byte-code.
 
 IDEAS
 ---------
@@ -19,7 +62,14 @@ QUESTIONS
 
 WORKING
 -------
-- NEW: finish array subscript operator
+- BUG: don't recreate modules, just point references at them.  probably need to
+        base this on the file name/path of the module.
+
+- NEW: length_of intrinsic for literal strings and fixed arrays
+
+- NEW: string literal parsing and escapes
+
+- NEW: fixed length arrays; subscript operator
 
 - NEW: family expressions
         integers :: family(signed_integers, unsigned_integers);
@@ -29,6 +79,7 @@ WORKING
         only_signed_adder :: proc<T:signed_integers>(x: T, y: T): T {
             return x + y;
         };
+
 - NEW: convert multiple/named parameters in procedure return into a tuple
 
 TASKS
