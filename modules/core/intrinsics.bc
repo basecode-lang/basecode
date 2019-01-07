@@ -65,6 +65,9 @@ internal :: ns {
     @name "type_of";
     #intrinsic type_of_proc :: proc<T>(expr: T):^type;
 
+    @name "length_of";
+    #intrinsic length_of_proc :: proc<T>(expr: T):u32;
+
     @name "address_of";
     #intrinsic address_of_proc :: proc<T>(expr: T):u64;
     

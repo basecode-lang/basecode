@@ -215,6 +215,7 @@ add_library(
     compiler/elements/procedure_instance.cpp compiler/elements/procedure_instance.h
     compiler/elements/intrinsic_directive.cpp compiler/elements/intrinsic_directive.h
     compiler/elements/core_type_directive.cpp compiler/elements/core_type_directive.h
+    compiler/elements/length_of_intrinsic.cpp compiler/elements/length_of_intrinsic.h
     compiler/elements/address_of_intrinsic.cpp compiler/elements/address_of_intrinsic.h
     compiler/elements/identifier_reference.cpp compiler/elements/identifier_reference.h
     compiler/elements/uninitialized_literal.cpp compiler/elements/uninitialized_literal.h

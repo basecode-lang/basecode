@@ -150,6 +150,19 @@ namespace basecode::compiler {
                     type_params);
             }
         },
+        {
+            "length_of",
+            [](compiler::element_builder& builder,
+                   auto parent_scope,
+                   auto args,
+                   auto proc_type,
+                   auto type_params) -> compiler::intrinsic* {
+                return builder.make_length_of_intrinsic(
+                    parent_scope,
+                    args,
+                    proc_type);
+            }
+        },
     };
 
     bool intrinsic::register_intrinsic_procedure_type(

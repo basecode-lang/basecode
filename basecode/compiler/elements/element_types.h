@@ -99,6 +99,7 @@ namespace basecode::compiler {
     class align_of_intrinsic;
     class procedure_instance;
     class assembly_directive;
+    class length_of_intrinsic;
     class intrinsic_directive;
     class core_type_directive;
     class address_of_intrinsic;

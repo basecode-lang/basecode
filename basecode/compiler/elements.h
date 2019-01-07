@@ -89,6 +89,7 @@
 #include <compiler/elements/align_of_intrinsic.h>
 #include <compiler/elements/procedure_instance.h>
 #include <compiler/elements/assembly_directive.h>
+#include <compiler/elements/length_of_intrinsic.h>
 #include <compiler/elements/core_type_directive.h>
 #include <compiler/elements/intrinsic_directive.h>
 #include <compiler/elements/identifier_reference.h>

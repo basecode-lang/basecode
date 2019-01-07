@@ -275,6 +275,11 @@ namespace basecode::compiler {
             compiler::argument_list* args,
             compiler::procedure_type* proc_type);
 
+        intrinsic* make_length_of_intrinsic(
+            compiler::block* parent_scope,
+            compiler::argument_list* args,
+            compiler::procedure_type* proc_type);
+
         intrinsic* make_address_of_intrinsic(
             compiler::block* parent_scope,
             compiler::argument_list* args,

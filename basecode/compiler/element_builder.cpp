@@ -1115,6 +1115,21 @@ namespace basecode::compiler {
         return intrinsic;
     }
 
+    intrinsic* element_builder::make_length_of_intrinsic(
+            compiler::block* parent_scope,
+            compiler::argument_list* args,
+            compiler::procedure_type* proc_type) {
+        auto intrinsic = new compiler::length_of_intrinsic(
+            _session.scope_manager().current_module(),
+            parent_scope,
+            args,
+            proc_type,
+            {});
+        _session.elements().add(intrinsic);
+        args->parent_element(intrinsic);
+        return intrinsic;
+    }
+
     intrinsic* element_builder::make_type_of_intrinsic(
             compiler::block* parent_scope,
             compiler::argument_list* args,
