@@ -42,7 +42,9 @@ namespace basecode::common {
     public:
         source_file() = default;
 
-        explicit source_file(const boost::filesystem::path& path);
+        source_file(
+            id_t id,
+            const boost::filesystem::path& path);
 
         ~source_file();
 
@@ -55,6 +57,8 @@ namespace basecode::common {
             const std::string& code,
             const std::string& message,
             const common::source_location& location);
+
+        id_t id() const;
 
         bool eof() const;
 
@@ -98,6 +102,7 @@ namespace basecode::common {
         void build_lines(common::result& r);
 
     private:
+        id_t _id = 0;
         size_t _index = 0;
         boost::filesystem::path _path;
         std::vector<uint8_t> _buffer;

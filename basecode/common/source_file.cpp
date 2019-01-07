@@ -13,12 +13,16 @@
 #include <sstream>
 #include <iterator>
 #include <fmt/format.h>
+#include "id_pool.h"
 #include "colorizer.h"
 #include "source_file.h"
 
 namespace basecode::common {
 
-    source_file::source_file(const boost::filesystem::path& path) : _path(path) {
+    source_file::source_file(
+            common::id_t id,
+            const boost::filesystem::path& path) : _id(id),
+                                                   _path(path) {
     }
 
     source_file::~source_file() {
@@ -82,6 +86,10 @@ namespace basecode::common {
                 message),
             location,
             stream.str());
+    }
+
+    id_t source_file::id() const {
+        return _id;
     }
 
     void source_file::push_mark() {

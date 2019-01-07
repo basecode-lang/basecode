@@ -16,9 +16,6 @@ public :: ns {
         getc :: $02;
     };
 
-    @library "basecode";
-    #foreign print :: proc(format: ^u8, ...values: any) @alias "fmt_print";
-
     putc :: proc(char: rune, f: u32 := 1) {
         #assembly {{
             .ilocal f
@@ -45,5 +42,10 @@ public :: ns {
         }};
         return result;
     };
+
+    @library "basecode";
+    #foreign {
+        print :: proc(format: ^u8, ...values: any) @alias "fmt_print";
+    } @parent_scope;
 
 };

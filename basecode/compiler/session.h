@@ -22,7 +22,6 @@
 #include <common/defer.h>
 #include <parser/parser.h>
 #include <boost/filesystem.hpp>
-#include <common/source_file.h>
 #include <vm/default_allocator.h>
 #include "variable.h"
 #include "element_map.h"
@@ -45,7 +44,7 @@ namespace basecode::compiler {
             const session_options_t& options,
             const path_list_t& source_files);
 
-        virtual ~session();
+        virtual ~session() = default;
 
         bool run();
 
@@ -105,6 +104,8 @@ namespace basecode::compiler {
 
         common::source_file* pop_source_file();
 
+        const path_list_t& source_files() const;
+
         compiler::scope_manager& scope_manager();
 
         const session_options_t& options() const;
@@ -117,7 +118,7 @@ namespace basecode::compiler {
 
         bool allocate_address_register(common::id_t id);
 
-        std::vector<common::source_file*> source_files();
+        common::source_file* source_file(common::id_t id);
 
         const compiler::scope_manager& scope_manager() const;
 
@@ -139,11 +140,11 @@ namespace basecode::compiler {
 
         compiler::module* compile_module(common::source_file* source_file);
 
+        common::source_file* source_file(const boost::filesystem::path& path);
+
         std::string intern_data_label(compiler::string_literal* literal) const;
 
         common::source_file* add_source_file(const boost::filesystem::path& path);
-
-        common::source_file* find_source_file(const boost::filesystem::path& path);
 
     private:
         void raise_phase(
@@ -175,20 +176,24 @@ namespace basecode::compiler {
         vm::ffi _ffi;
         vm::terp _terp;
         bool _run = false;
+        ast_map_t _asts {};
         common::result _result;
         element_builder _builder;
         vm::assembler _assembler;
         element_map _elements {};
+        module_map_t _modules {};
         compiler::program _program;
         ast_evaluator _ast_evaluator;
+        path_list_t _source_files {};
         session_options_t _options {};
         session_task_list_t _tasks {};
         syntax::ast_builder _ast_builder;
         string_intern_map _interned_strings {};
         compiler::scope_manager _scope_manager;
+        source_file_stack_t _source_file_stack {};
+        source_file_map_t _source_file_registry {};
         address_register_map_t _address_registers {};
-        std::stack<common::source_file*> _source_file_stack {};
-        std::map<std::string, common::source_file> _source_files {};
+        source_file_path_map_t _source_file_paths {};
         std::unordered_map<common::id_t, compiler::variable> _variables {};
         std::unordered_map<common::id_t, vm::label_ref_t*> _type_info_labels {};
     };

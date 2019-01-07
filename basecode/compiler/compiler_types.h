@@ -14,11 +14,13 @@
 #include <chrono>
 #include <cstdint>
 #include <functional>
+#include <parser/ast.h>
 #include <vm/vm_types.h>
 #include <unordered_map>
 #include <common/rune.h>
 #include <common/result.h>
 #include <common/id_pool.h>
+#include <common/source_file.h>
 #include <boost/filesystem.hpp>
 #include "elements/element_types.h"
 
@@ -34,7 +36,13 @@ namespace basecode::compiler {
     class code_dom_formatter;
 
     using path_list_t = std::vector<boost::filesystem::path>;
+    using source_file_stack_t = std::stack<common::source_file*>;
+    using source_file_list_t = std::vector<common::source_file*>;
+    using module_map_t = std::unordered_map<std::string, module*>;
+    using ast_map_t = std::unordered_map<std::string, syntax::ast_node_t*>;
+    using source_file_map_t = std::unordered_map<common::id_t, common::source_file>;
     using address_register_map_t = std::unordered_map<common::id_t, vm::register_t>;
+    using source_file_path_map_t = std::unordered_map<std::string, common::source_file*>;
 
     ///////////////////////////////////////////////////////////////////////////
 

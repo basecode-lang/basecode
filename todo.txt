@@ -62,9 +62,6 @@ QUESTIONS
 
 WORKING
 -------
-- BUG: don't recreate modules, just point references at them.  probably need to
-        base this on the file name/path of the module.
-
 - NEW: length_of intrinsic for literal strings and fixed arrays
 
 - NEW: string literal parsing and escapes
@@ -251,3 +248,5 @@ DONE
 - BUG: unary_operator case not implemented in session::type_check
 - BUG: ordering issues between types; requires deferred type checking
         (see ast_evaluator::binary_operator)
+- BUG: don't recreate modules, just point references at them.  probably need to
+        base this on the file name/path of the module.

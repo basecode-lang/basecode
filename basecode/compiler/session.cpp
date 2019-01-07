@@ -24,18 +24,9 @@ namespace basecode::compiler {
                                                _builder(*this),
                                                _assembler(&_terp),
                                                _ast_evaluator(*this),
+                                               _source_files(source_files),
                                                _options(options),
                                                _scope_manager(*this) {
-        for (const auto& path : source_files) {
-            if (path.is_relative()) {
-                add_source_file(boost::filesystem::absolute(path));
-            } else {
-                add_source_file(path);
-            }
-        }
-    }
-
-    session::~session() {
     }
 
     bool session::run() {
@@ -148,13 +139,12 @@ namespace basecode::compiler {
     bool session::compile() {
         auto& top_level_stack = _scope_manager.top_level_stack();
         auto& listing = _assembler.listing();
-        const auto& first = (*_source_files.begin()).second;
 
         time_task(
             "assembler: preparation",
             [&]() {
-                auto listing_name = first
-                    .path()
+                auto listing_name = _source_files
+                    .front()
                     .filename()
                     .replace_extension(".basm");
                 listing.add_source_file(listing_name.string());
@@ -189,8 +179,8 @@ namespace basecode::compiler {
         auto success = time_task(
             "compiler: generate model",
             [&]() {
-                for (auto source_file : source_files()) {
-                    auto module = compile_module(source_file);
+                for (const auto& file : source_files()) {
+                    auto module = compile_module(add_source_file(file));
                     if (module == nullptr)
                         return false;
                 }
@@ -807,6 +797,10 @@ namespace basecode::compiler {
         return source_file;
     }
 
+    const path_list_t& session::source_files() const {
+        return _source_files;
+    }
+
     bool session::fold_elements_of_type(element_type_t type) {
         std::vector<common::id_t> to_remove {};
 
@@ -905,12 +899,11 @@ namespace basecode::compiler {
         return true;
     }
 
-    std::vector<common::source_file*> session::source_files() {
-        std::vector<common::source_file*> list {};
-        for (auto& it : _source_files) {
-            list.push_back(&it.second);
-        }
-        return list;
+    common::source_file* session::source_file(common::id_t id) {
+        auto it = _source_file_registry.find(id);
+        if (it == _source_file_registry.end())
+            return nullptr;
+        return &it->second;
     }
 
     const compiler::scope_manager& session::scope_manager() const {
@@ -971,6 +964,11 @@ namespace basecode::compiler {
     }
 
     compiler::module* session::compile_module(common::source_file* source_file) {
+        auto path_string = source_file->path().string();
+        auto it = _modules.find(path_string);
+        if (it != _modules.end())
+            return it->second;
+
         auto is_root = current_source_file() == nullptr;
         auto module_type = is_root ?
             session_module_type_t::program :
@@ -1022,16 +1020,13 @@ namespace basecode::compiler {
                 return false;
             },
             false);
+
         if (!success)
             return nullptr;
 
-        return module;
-    }
+        _modules.insert(std::make_pair(path_string, module));
 
-    void session::type_info_label(compiler::type* type, vm::label_ref_t* label) {
-        if (_type_info_labels.count(type->id()) > 0)
-            return;
-        _type_info_labels.insert(std::make_pair(type->id(), label));
+        return module;
     }
 
     syntax::ast_node_t* session::parse(common::source_file* source_file) {
@@ -1064,11 +1059,29 @@ namespace basecode::compiler {
     }
 
     syntax::ast_node_t* session::parse(const boost::filesystem::path& path) {
-        auto source_file = find_source_file(path);
-        if (source_file == nullptr) {
-            source_file = add_source_file(path);
+        auto path_string = path.string();
+        auto it = _asts.find(path_string);
+        if (it != _asts.end())
+            return it->second;
+        auto root = parse(add_source_file(path));
+        if (root != nullptr) {
+            _asts.insert(std::make_pair(path_string, root));
+            return root;
         }
-        return parse(source_file);
+        return nullptr;
+    }
+
+    void session::type_info_label(compiler::type* type, vm::label_ref_t* label) {
+        if (_type_info_labels.count(type->id()) > 0)
+            return;
+        _type_info_labels.insert(std::make_pair(type->id(), label));
+    }
+
+    common::source_file* session::source_file(const boost::filesystem::path& path) {
+        auto it = _source_file_paths.find(path.string());
+        if (it == _source_file_paths.end())
+            return nullptr;
+        return it->second;
     }
 
     std::string session::intern_data_label(compiler::string_literal* literal) const {
@@ -1076,19 +1089,28 @@ namespace basecode::compiler {
     }
 
     common::source_file* session::add_source_file(const boost::filesystem::path& path) {
-        auto it = _source_files.insert(std::make_pair(
-            path.string(),
-            common::source_file(path)));
+        auto adjusted_path = path;
+        if (adjusted_path.is_relative()) {
+            adjusted_path = boost::filesystem::absolute(path);
+        }
+
+        auto file = source_file(path);
+        if (file != nullptr)
+            return file;
+
+        auto id = common::id_pool::instance()->allocate();
+        auto it = _source_file_registry.insert(std::make_pair(
+            id,
+            common::source_file(id, adjusted_path)));
+
         if (!it.second)
             return nullptr;
-        return &it.first->second;
-    }
 
-    common::source_file* session::find_source_file(const boost::filesystem::path& path) {
-        auto it = _source_files.find(path.string());
-        if (it == _source_files.end())
-            return nullptr;
-        return &it->second;
+        _source_file_paths.insert(std::make_pair(
+            adjusted_path.string(),
+            &it.first->second));
+
+        return &it.first->second;
     }
 
 };
