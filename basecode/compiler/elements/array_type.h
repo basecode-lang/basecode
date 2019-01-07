@@ -35,6 +35,8 @@ namespace basecode::compiler {
 
         int32_t find_index(common::id_t id);
 
+        bool is_array_type() const override;
+
         const element_list_t& subscripts() const;
 
         compiler::type_reference* entry_type_ref();

@@ -26,13 +26,9 @@ namespace basecode::compiler {
         std::stringstream stream;
         stream << fmt::format("__array_{}", entry_type->symbol()->name());
         for (auto s : subscripts) {
-            if (s->element_type() == element_type_t::spread_operator) {
-                stream << "_SD";
-            } else {
-                uint64_t size = 0;
-                if (s->as_integer(size)) {
-                    stream << fmt::format("_S{}", size);
-                }
+            uint64_t size = 0;
+            if (s->as_integer(size)) {
+                stream << fmt::format("_S{}", size);
             }
         }
         stream << "__";
@@ -76,6 +72,10 @@ namespace basecode::compiler {
         return old;
     }
 
+    bool array_type::is_array_type() const {
+        return true;
+    }
+
     int32_t array_type::find_index(common::id_t id) {
         for (size_t i = 0; i < _subscripts.size(); i++) {
             if (_subscripts[i]->id() == id)
@@ -89,8 +89,11 @@ namespace basecode::compiler {
     }
 
     bool array_type::on_type_check(compiler::type* other) {
-        // XXX: temporary!
-        return true;
+        if (other == nullptr || !other->is_array_type())
+            return false;
+
+        auto other_array = dynamic_cast<compiler::array_type*>(other);
+        return _entry_type_ref->type()->type_check(other_array->entry_type_ref()->type());
     }
 
     compiler::type_reference* array_type::entry_type_ref() {
@@ -126,14 +129,9 @@ namespace basecode::compiler {
         std::stringstream stream;
 
         for (auto s : _subscripts) {
-            if (s->element_type() == element_type_t::spread_operator) {
-                stream << "[...]";
-                break;
-            } else {
-                uint64_t size = 0;
-                if (s->as_integer(size)) {
-                    stream << fmt::format("[{}]", size);
-                }
+            uint64_t size = 0;
+            if (s->as_integer(size)) {
+                stream << fmt::format("[{}]", size);
             }
         }
 

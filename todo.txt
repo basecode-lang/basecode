@@ -250,3 +250,4 @@ DONE
         (see ast_evaluator::binary_operator)
 - BUG: don't recreate modules, just point references at them.  probably need to
         base this on the file name/path of the module.
+- BUG: inline type declarations aren't working in ast_evaluator::type_declaration

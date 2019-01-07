@@ -559,8 +559,9 @@ namespace basecode::compiler {
                     }
                     break;
                 }
-                default:
-                    break;
+                default: {
+                    return false;
+                }
             }
         }
 
@@ -1874,15 +1875,17 @@ namespace basecode::compiler {
         auto& scope_manager = _session.scope_manager();
         auto scope = scope_manager.current_scope();
 
-        // XXX: inline type declarations, e.g. union, struct, enum
-        //      aren't being handled here!
-
         compiler::type_reference* type_decl_ref = nullptr;
 
         std::stack<syntax::ast_node_t*> type_nodes {};
         auto current = context.node->lhs;
         while (true) {
             type_nodes.push(current);
+            if (current->type == syntax::ast_node_type_t::struct_expression
+            ||  current->type == syntax::ast_node_type_t::union_expression
+            ||  current->type == syntax::ast_node_type_t::enum_expression) {
+                break;
+            }
             if (current->rhs == nullptr)
                 break;
             current = current->rhs;
@@ -1904,6 +1907,19 @@ namespace basecode::compiler {
                     auto type = scope_manager.find_type(type_name, scope);
                     if (type == nullptr) {
                         type = builder.make_unknown_type(scope, symbol);
+                    }
+                    type_decl_ref = builder.make_type_reference(
+                        scope,
+                        type->symbol()->qualified_symbol(),
+                        type);
+                    break;
+                }
+                case syntax::ast_node_type_t::enum_expression:
+                case syntax::ast_node_type_t::union_expression:
+                case syntax::ast_node_type_t::struct_expression: {
+                    auto type = dynamic_cast<compiler::type*>(evaluate(current));
+                    if (type == nullptr) {
+                        return false;
                     }
                     type_decl_ref = builder.make_type_reference(
                         scope,
@@ -2323,6 +2339,8 @@ namespace basecode::compiler {
         auto type_ref = declared_type_ref != nullptr ?
             declared_type_ref :
             context.decl_type_ref;
+        if (type_ref == nullptr)
+            return nullptr;
 
         return add_identifier_to_scope(
             context,

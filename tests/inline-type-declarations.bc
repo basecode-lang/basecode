@@ -1,0 +1,23 @@
+core :: module("../modules/core");
+
+entity :: struct {
+    pos: struct {
+        x: s32;
+        y: s32;
+        z: s32;
+    };
+    cls: struct {
+        name: string;
+    };
+};
+
+#run {
+    t: entity;
+    t.pos.x := 3;
+    t.pos.y := 4;
+    t.pos.z := -15;
+
+    print("t.pos.x := %d\n", t.pos.x);
+    print("t.pos.y := %d\n", t.pos.y);
+    print("t.pos.z := %d\n", t.pos.z);
+};

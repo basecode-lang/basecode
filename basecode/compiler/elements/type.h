@@ -45,7 +45,7 @@ namespace basecode::compiler {
         void packed(bool value);
 
         size_t alignment() const;
-        
+
         size_t size_in_bytes() const;
 
         void alignment(size_t value);
@@ -53,6 +53,8 @@ namespace basecode::compiler {
         virtual bool is_signed() const;
 
         virtual bool is_proc_type() const;
+
+        virtual bool is_array_type() const;
 
         vm::ffi_types_t to_ffi_type() const;
 

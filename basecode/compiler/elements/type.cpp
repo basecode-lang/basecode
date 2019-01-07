@@ -53,11 +53,11 @@ namespace basecode::compiler {
     }
 
     type::type(
-        compiler::module* module,
-        block* parent_scope,
-        element_type_t type,
-        compiler::symbol_element* symbol) : element(module, parent_scope, type),
-                                            _symbol(symbol) {
+            compiler::module* module,
+            block* parent_scope,
+            element_type_t type,
+            compiler::symbol_element* symbol) : element(module, parent_scope, type),
+                                                _symbol(symbol) {
     }
 
     bool type::emit_finalizer(
@@ -101,6 +101,10 @@ namespace basecode::compiler {
     }
 
     bool type::is_proc_type() const {
+        return false;
+    }
+
+    bool type::is_array_type() const {
         return false;
     }
 
