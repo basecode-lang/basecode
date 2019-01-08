@@ -2,13 +2,15 @@ core :: module("../modules/core");
 
 entity :: struct {
     pos: struct {
-        x: s32;
-        y: s32;
-        z: s32;
+        x, y, z: s32;
     };
     cls: struct {
         name: string;
     };
+};
+
+adder :: proc(a, b: s32): s32 {
+    return a + b;
 };
 
 #run {

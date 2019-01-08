@@ -436,6 +436,8 @@ namespace basecode::compiler {
             compiler::composite_type* type,
             const syntax::ast_node_t* block) {
         auto& builder = _session.builder();
+        auto& scope_manager = _session.scope_manager();
+
         compiler::field* previous_field = nullptr;
 
         uint64_t value = 0;
@@ -449,8 +451,7 @@ namespace basecode::compiler {
                 value_type_name = names[0];
                 value_type = dynamic_cast<compiler::numeric_type*>(type->type_parameters().find(value_type_name));
             } else {
-                value_type = dynamic_cast<compiler::numeric_type*>(_session
-                    .scope_manager()
+                value_type = dynamic_cast<compiler::numeric_type*>(scope_manager
                     .find_type(qualified_symbol_t(value_type_name)));
             }
             if (value_type == nullptr) {
@@ -479,7 +480,7 @@ namespace basecode::compiler {
 
             if (is_enum && value > value_type->max()) {
                 _session.error(
-                    _session.scope_manager().current_module(),
+                    scope_manager.current_module(),
                     "X000",
                     fmt::format("enum field value exceeds range, type: {}.", value_type_name),
                     expr_node->location);
@@ -491,6 +492,56 @@ namespace basecode::compiler {
                 offset = previous_field->end_offset();
 
             switch (expr_node->type) {
+                case syntax::ast_node_type_t::pair: {
+                    if (is_enum || is_union) {
+                        _session.error(
+                            scope_manager.current_module(),
+                            "X000",
+                            "consolidated field declarations are not supported for enum or union.",
+                            expr_node->location);
+                        return false;
+                    }
+                    symbol_list_and_type_t result {};
+                    pairs_to_symbols_and_type(expr_node, result);
+
+                    if (result.type_ref == nullptr) {
+                        _session.error(
+                            scope_manager.current_module(),
+                            "X000",
+                            "consolidated field declarations require a valid type declaration.",
+                            expr_node->location);
+                        return false;
+                    }
+
+                    for (auto symbol : result.symbols) {
+                        auto field_decl = add_identifier_to_scope(
+                            context,
+                            dynamic_cast<compiler::symbol_element*>(symbol),
+                            result.type_ref,
+                            nullptr,
+                            0,
+                            type->scope());
+                        if (field_decl != nullptr) {
+                            if (is_enum) {
+                                auto value_expr = builder.make_integer(type->scope(), value++);
+                                field_decl->identifier()->initializer(builder.make_initializer(
+                                    type->scope(),
+                                    value_expr));
+                                field_decl->identifier()->symbol()->constant(true);
+                            }
+                            auto new_field = builder.make_field(
+                                type,
+                                type->scope(),
+                                field_decl,
+                                offset);
+                            type->fields().add(new_field);
+                            field_decl->identifier()->field(new_field);
+                            previous_field = new_field;
+                            offset = previous_field->end_offset();
+                        }
+                    }
+                    break;
+                }
                 case syntax::ast_node_type_t::assignment:
                 case syntax::ast_node_type_t::constant_assignment: {
                     element_list_t list {};
@@ -512,7 +563,7 @@ namespace basecode::compiler {
                             uint64_t init_value;
                             if (!decl->identifier()->as_integer(init_value)) {
                                 _session.error(
-                                    _session.scope_manager().current_module(),
+                                    scope_manager.current_module(),
                                     "X000",
                                     "enum field initializers must be constant integer expressions.",
                                     expr_node->location);
@@ -521,7 +572,7 @@ namespace basecode::compiler {
 
                             if (init_value < value) {
                                 _session.error(
-                                    _session.scope_manager().current_module(),
+                                    scope_manager.current_module(),
                                     "X000",
                                     "enum field initializers must be equal to or greater than implicit values.",
                                     expr_node->location);
@@ -578,9 +629,9 @@ namespace basecode::compiler {
         auto& builder = _session.builder();
         auto& scope_manager = _session.scope_manager();
 
-        auto scope = symbol->is_qualified()
-                     ? scope_manager.current_top_level()
-                     : parent_scope != nullptr ? parent_scope : scope_manager.current_scope();
+        auto scope = symbol->is_qualified() ?
+            scope_manager.current_top_level() :
+            parent_scope != nullptr ? parent_scope : scope_manager.current_scope();
 
         scope = add_namespaces_to_scope(context, node, symbol, scope);
 
@@ -2198,35 +2249,68 @@ namespace basecode::compiler {
     }
 
     bool ast_evaluator::add_procedure_type_parameter_fields(
-            const evaluator_context_t& context,
+            evaluator_context_t& context,
             compiler::procedure_type* proc_type,
             compiler::block* block_scope,
             const syntax::ast_node_t* parameters_node) {
         auto& builder = _session.builder();
+        auto& scope_manager = _session.scope_manager();
 
         compiler::field* param_field = nullptr;
         auto& parameter_map = proc_type->parameters();
 
-        size_t index = 0;
+        auto add_param_decl = [&](compiler::declaration* param_decl, bool is_variadic) {
+            param_decl->identifier()->usage(identifier_usage_t::stack);
+            param_field = builder.make_field(
+                proc_type,
+                block_scope,
+                param_decl,
+                param_field != nullptr ? param_field->end_offset() : 0,
+                0,
+                is_variadic);
+            parameter_map.add(param_field);
+            param_decl->identifier()->field(param_field);
+        };
+
+        syntax::ast_node_t* current_type = nullptr;
+        syntax::ast_node_list type_nodes {};
+        type_nodes.resize(parameters_node->children.size());
+
+        size_t index = parameters_node->children.empty() ? 0 : parameters_node->children.size() - 1;
+        for (auto it = parameters_node->children.rbegin();
+                it != parameters_node->children.rend();
+                ++it) {
+            auto param_node = *it;
+            if (param_node->rhs != nullptr
+            &&  param_node->rhs->type == syntax::ast_node_type_t::type_declaration)
+                current_type = param_node->rhs;
+            type_nodes[index--] = current_type;
+        }
+
+        index = 0;
         for (auto param_node : parameters_node->children) {
             switch (param_node->type) {
                 case syntax::ast_node_type_t::symbol: {
+                    if (param_node->rhs == nullptr) {
+                        context.decl_type_ref = dynamic_cast<compiler::type_reference*>(evaluate(type_nodes[index]));
+                    }
+
                     auto param_decl = declare_identifier(
                         context,
                         param_node,
                         block_scope);
-                    if (param_decl != nullptr) {
-                        param_decl->identifier()->usage(identifier_usage_t::stack);
-                        param_field = builder.make_field(
-                            proc_type,
-                            block_scope,
-                            param_decl,
-                            param_field != nullptr ? param_field->end_offset() : 0);
-                        parameter_map.add(param_field);
-                        param_decl->identifier()->field(param_field);
-                    } else {
+                    if (param_decl == nullptr) {
+                        _session.error(
+                            scope_manager.current_module(),
+                            "X000",
+                            "invalid procedure parameter declaration.",
+                            param_node->location);
                         return false;
                     }
+
+                    add_param_decl(param_decl, false);
+                    context.decl_type_ref = nullptr;
+
                     break;
                 }
                 case syntax::ast_node_type_t::assignment: {
@@ -2236,19 +2320,18 @@ namespace basecode::compiler {
                         param_node,
                         list,
                         block_scope);
-                    if (success) {
-                        auto param_decl = dynamic_cast<compiler::declaration*>(list.front());
-                        param_decl->identifier()->usage(identifier_usage_t::stack);
-                        param_field = builder.make_field(
-                            proc_type,
-                            block_scope,
-                            param_decl,
-                            param_field != nullptr ? param_field->end_offset() : 0);
-                        parameter_map.add(param_field);
-                        param_decl->identifier()->field(param_field);
-                    } else {
+                    if (!success) {
+                        _session.error(
+                            scope_manager.current_module(),
+                            "X000",
+                            "invalid procedure parameter declaration via assignment.",
+                            param_node->location);
                         return false;
                     }
+
+                    auto param_decl = dynamic_cast<compiler::declaration*>(list.front());
+                    add_param_decl(param_decl, false);
+
                     break;
                 }
                 case syntax::ast_node_type_t::spread_operator: {
@@ -2256,35 +2339,32 @@ namespace basecode::compiler {
                         context,
                         param_node->rhs,
                         block_scope);
-                    if (param_decl != nullptr) {
-                        if (index != parameters_node->children.size() - 1) {
-                            _session.error(
-                                _session.scope_manager().current_module(),
-                                "P019",
-                                fmt::format(
-                                    "variadic parameter only valid in final position: {}",
-                                    param_decl->identifier()->symbol()->name()),
-                                proc_type->location());
-                            return false;
-                        }
-
-                        param_decl->identifier()->usage(identifier_usage_t::stack);
-                        param_field = builder.make_field(
-                            proc_type,
-                            block_scope,
-                            param_decl,
-                            param_field != nullptr ? param_field->end_offset() : 0,
-                            0,
-                            true);
-                        parameter_map.add(param_field);
-                        param_decl->identifier()->field(param_field);
-                    } else {
+                    if (param_decl == nullptr) {
+                        _session.error(
+                            scope_manager.current_module(),
+                            "X000",
+                            "invalid procedure variadic parameter declaration.",
+                            param_node->location);
                         return false;
                     }
+
+                    if (index != parameters_node->children.size() - 1) {
+                        _session.error(
+                            _session.scope_manager().current_module(),
+                            "P019",
+                            fmt::format(
+                                "variadic parameter only valid in final position: {}",
+                                param_decl->identifier()->symbol()->name()),
+                            proc_type->location());
+                        return false;
+                    }
+
+                    add_param_decl(param_decl, true);
+
                     break;
                 }
                 default: {
-                    break;
+                    return false;
                 }
             }
             ++index;
@@ -2481,6 +2561,40 @@ namespace basecode::compiler {
         scope_manager.module_stack().pop();
 
         return true;
+    }
+
+    void ast_evaluator::pairs_to_symbols_and_type(
+            const syntax::ast_node_t* root,
+            symbol_list_and_type_t& result) {
+        if (root == nullptr
+        ||  root->type != syntax::ast_node_type_t::pair) {
+            return;
+        }
+
+        auto get_type_ref = [&](const syntax::ast_node_t* node) {
+            if (node == nullptr
+            ||  node->type != syntax::ast_node_type_t::type_declaration)
+                return;
+            result.type_ref = dynamic_cast<compiler::type_reference*>(evaluate(node));
+        };
+
+        auto current_pair = root;
+        while (true) {
+            if (current_pair->lhs->type != syntax::ast_node_type_t::pair) {
+                if (current_pair->rhs != nullptr) {
+                    result.symbols.push_back(evaluate(current_pair->rhs));
+                    get_type_ref(current_pair->rhs->rhs);
+                }
+                result.symbols.push_back(evaluate(current_pair->lhs));
+                get_type_ref(current_pair->lhs->rhs);
+                break;
+            }
+            result.symbols.push_back(evaluate(current_pair->rhs));
+            get_type_ref(current_pair->rhs->rhs);
+            current_pair = current_pair->lhs;
+        }
+
+        std::reverse(std::begin(result.symbols), std::end(result.symbols));
     }
 
 };

@@ -994,6 +994,8 @@ namespace basecode::syntax {
             ast_node_t* lhs,
             token_t& token) {
         auto pair_node = parser->ast_builder()->pair_node();
+        pair_node->location.start(lhs->location.start());
+
         ast_node_list comments {};
         collect_comments(r, parser, comments);
 
@@ -1001,6 +1003,10 @@ namespace basecode::syntax {
         pair_node->rhs = parser->parse_expression(
             r,
             precedence_t::comma);
+        if (pair_node->rhs != nullptr)
+            pair_node->location.end(pair_node->rhs->location.end());
+        else
+            pair_node->location.end(lhs->location.end());
 
         if (lhs->type != ast_node_type_t::pair) {
             lhs->comments = comments;

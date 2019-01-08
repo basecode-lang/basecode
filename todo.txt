@@ -9,6 +9,7 @@ Steps to reach feature complete for the bootstrap compiler:
 - type-baking for generics
 - type-promotion errors for procedure_call
 - multiple/named return parameters
+- lambdas
 - UFCS
 - consolidate errors/return errors from all appropriate locations
 
@@ -251,3 +252,14 @@ DONE
 - BUG: don't recreate modules, just point references at them.  probably need to
         base this on the file name/path of the module.
 - BUG: inline type declarations aren't working in ast_evaluator::type_declaration
+- NEW: add support for consolidated field/parameter declarations, e.g.
+
+    vector3 :: struct {
+        x, y, z: f32;
+    };
+
+    or
+
+    adder :: proc(a, b: s32): s32 {
+        return a + b;
+    };

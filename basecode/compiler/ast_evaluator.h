@@ -33,6 +33,11 @@ namespace basecode::compiler {
         compiler::element* element = nullptr;
     };
 
+    struct symbol_list_and_type_t {
+        compiler::element_list_t symbols {};
+        compiler::type_reference* type_ref = nullptr;
+    };
+
     class ast_evaluator;
 
     using node_evaluator_callable = std::function<bool (
@@ -55,6 +60,10 @@ namespace basecode::compiler {
         compiler::element* evaluate(const syntax::ast_node_t* node);
 
     private:
+        void pairs_to_symbols_and_type(
+            const syntax::ast_node_t* root,
+            symbol_list_and_type_t& result);
+
         void add_type_parameters(
             const evaluator_context_t& context,
             compiler::block* scope,
@@ -68,7 +77,7 @@ namespace basecode::compiler {
             const syntax::ast_node_t* return_type_node);
 
         bool add_procedure_type_parameter_fields(
-            const evaluator_context_t& context,
+            evaluator_context_t& context,
             compiler::procedure_type* proc_type,
             compiler::block* block_scope,
             const syntax::ast_node_t* parameters_node);
