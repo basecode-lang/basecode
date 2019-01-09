@@ -124,7 +124,7 @@ namespace basecode::compiler {
                         int64_t cp;
                         if (token.parse(cp) != syntax::conversion_result_t::success)
                             return false;
-                        auto encode_result = common::utf8_encode(static_cast<rune_t>(cp));
+                        auto encode_result = common::utf8_encode(static_cast<common::rune_t>(cp));
                         for (size_t j = 0; j < encode_result.width; j++)
                             stream << static_cast<char>(encode_result.data[j]);
                         i += 4;
@@ -140,7 +140,7 @@ namespace basecode::compiler {
                         int64_t cp;
                         if (token.parse(cp) != syntax::conversion_result_t::success)
                             return false;
-                        auto encode_result = common::utf8_encode(static_cast<rune_t>(cp));
+                        auto encode_result = common::utf8_encode(static_cast<common::rune_t>(cp));
                         for (size_t j = 0; j < encode_result.width; j++)
                             stream << static_cast<char>(encode_result.data[j]);
                         i += 8;
