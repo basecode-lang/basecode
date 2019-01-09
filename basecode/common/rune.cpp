@@ -53,7 +53,7 @@ namespace basecode::common {
     encoded_rune_t utf8_encode(rune_t r) {
         encoded_rune_t e {};
 
-        uint32_t i = static_cast<uint32_t>(r);
+        auto i = static_cast<uint32_t>(r);
         uint8_t mask = 0x3f;
         if (i <= (1<<7)-1) {
             e.data[0] = static_cast<uint8_t>(r);
@@ -122,10 +122,10 @@ namespace basecode::common {
         if (length == 0)
             return cp;
 
-        uint8_t s0 = (uint8_t) str[0];
+        auto s0 = (uint8_t) str[0];
         uint8_t x = s_utf8_first[s0], sz;
         uint8_t b1, b2, b3;
-        utf8_accept_range_t accept;
+        utf8_accept_range_t accept {};
 
         if (x >= 0xf0) {
             rune_t mask = (static_cast<rune_t>(x) << 31) >> 31;

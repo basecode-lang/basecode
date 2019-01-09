@@ -1200,7 +1200,6 @@ namespace basecode::syntax {
                         break;
                     }
                     case 'x': {
-                        rewind_one_char();
                         if (!read_hex_digits(2, value))
                             return false;
                         radix = 16;
@@ -1208,7 +1207,6 @@ namespace basecode::syntax {
                         break;
                     }
                     case 'u': {
-                        rewind_one_char();
                         if (!read_hex_digits(4, value))
                             return false;
                         radix = 16;
@@ -1216,7 +1214,6 @@ namespace basecode::syntax {
                         break;
                     }
                     case 'U': {
-                        rewind_one_char();
                         if (!read_hex_digits(8, value))
                             return false;
                         radix = 16;
@@ -1224,7 +1221,6 @@ namespace basecode::syntax {
                         break;
                     }
                     default: {
-                        rewind_one_char();
                         if (!read_dec_digits(3, value))
                             return false;
                         radix = 8;

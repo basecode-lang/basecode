@@ -17,14 +17,16 @@ namespace basecode::compiler {
 
     class string_literal : public element {
     public:
+        static bool escape(
+            const std::string& value,
+            std::string& result);
+
         string_literal(
             compiler::module* module,
             block* parent_scope,
             const std::string& value);
 
         std::string value() const;
-
-        std::string escaped_value() const;
 
     protected:
         bool on_emit(

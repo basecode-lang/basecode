@@ -60,27 +60,78 @@ namespace basecode::common {
 
     std::string escaped_string(const std::string& value) {
         std::stringstream stream;
-        bool escaped = false;
-        for (auto& ch : value) {
+        for (size_t i = 0; i < value.size(); i++) {
+            auto ch = value[i];
             if (ch == '\\') {
-                escaped = true;
-            } else {
-                if (escaped) {
-                    if (ch == 'n')
-                        stream << "\n";
-                    else if (ch == 'r')
-                        stream << "\r";
-                    else if (ch == 't')
-                        stream << "\t";
-                    else if (ch == '\\')
+                ch = value[++i];
+                switch (ch) {
+                    case 'a': {
+                        stream << (char)0x07;
+                        break;
+                    }
+                    case 'b': {
+                        stream << (char)0x08;
+                        break;
+                    }
+                    case 'e': {
+                        stream << (char)0x1b;
+                        break;
+                    }
+                    case 'n': {
+                        stream << (char)0x0a;
+                        break;
+                    }
+                    case 'r': {
+                        stream << (char)0x0d;
+                        break;
+                    }
+                    case 't': {
+                        stream << (char)0x09;
+                        break;
+                    }
+                    case 'v': {
+                        stream << (char)0x0b;
+                        break;
+                    }
+                    case '\\': {
                         stream << "\\";
-                    else if (ch == '0')
-                        stream << '\0';
-
-                    escaped = false;
-                } else {
-                    stream << ch;
+                        break;
+                    }
+                    case '\'': {
+                        stream << "'";
+                        break;
+                    }
+                    case 'x': {
+//                        if (!read_hex_digits(2, value))
+//                            return false;
+//                        radix = 16;
+//                        number_type = number_types_t::integer;
+                        break;
+                    }
+                    case 'u': {
+//                        if (!read_hex_digits(4, value))
+//                            return false;
+//                        radix = 16;
+//                        number_type = number_types_t::integer;
+                        break;
+                    }
+                    case 'U': {
+//                        if (!read_hex_digits(8, value))
+//                            return false;
+//                        radix = 16;
+//                        number_type = number_types_t::integer;
+                        break;
+                    }
+                    default: {
+//                        if (!read_dec_digits(3, value))
+//                            return false;
+//                        radix = 8;
+//                        number_type = number_types_t::integer;
+                        break;
+                    }
                 }
+            } else {
+                stream << ch;
             }
         }
         return stream.str();

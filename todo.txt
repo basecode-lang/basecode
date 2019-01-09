@@ -65,8 +65,6 @@ WORKING
 -------
 - NEW: length_of intrinsic for literal strings and fixed arrays
 
-- NEW: string literal parsing and escapes
-
 - NEW: fixed length arrays; subscript operator
 
 - NEW: family expressions
@@ -263,3 +261,4 @@ DONE
     adder :: proc(a, b: s32): s32 {
         return a + b;
     };
+- NEW: string literal parsing and escapes

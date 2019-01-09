@@ -35,3 +35,4 @@
 ../bin/bc -v -G ffi.bc
 ../bin/bc -v -G automatic-pointer-deref.bc
 ../bin/bc -v -G inline-type-declarations.bc
+../bin/bc -v -G string-literal.bc

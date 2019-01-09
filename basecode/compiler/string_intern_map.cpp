@@ -46,10 +46,21 @@ namespace basecode::compiler {
             block->comment(
                 fmt::format("\"{}\"", kvp.first),
                 0);
+
+            std::string escaped {};
+            if (!compiler::string_literal::escape(kvp.first, escaped)) {
+                session.error(
+                    nullptr,
+                    "X000",
+                    fmt::format("invalid escape sequence: {}", kvp.first),
+                    {});
+                return false;
+            }
+
             block->string(
                 assembler.make_label(base_label_for_id(kvp.second)),
                 assembler.make_label(data_label_for_id(kvp.second)),
-                common::escaped_string(kvp.first));
+                escaped);
         }
 
         return true;
