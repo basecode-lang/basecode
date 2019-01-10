@@ -671,6 +671,17 @@ namespace basecode::syntax {
                 precedence_t::variable);
             lambda_node->rhs->children.push_back(symbol_node);
 
+            if (parser->peek(token_types_t::colon)) {
+                token_t colon_token;
+                parser->consume(colon_token);
+
+                symbol_node->rhs = create_type_declaration_node(
+                    r,
+                    parser,
+                    nullptr,
+                    colon_token);
+            }
+
             if (parser->peek(token_types_t::comma))
                 parser->consume();
         }

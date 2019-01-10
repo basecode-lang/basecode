@@ -307,7 +307,7 @@ SDL :: ns {
 
     Keycode             :: #type s32;
     SCANCODE_MASK: u32  :: 1 shl 30;
-    scancode_to_keycode :: |k|:u32 k | SCANCODE_MASK;
+    scancode_to_keycode :: |k: Scancode|:u32 k | SCANCODE_MASK;
 
     K :: enum {
         UNKNOWN             :: 0;
@@ -1090,7 +1090,7 @@ SDL :: ns {
     } @parent_scope;
 };
 
-#run {
+main :: proc() {
     assert(SDL::Init(SDL::INIT_VIDEO) >= 0, "SDL could not be initialized!");
     
     window := SDL::CreateWindow(
@@ -1212,3 +1212,5 @@ SDL :: ns {
 
     SDL::Quit();
 };
+
+#run main();

@@ -148,7 +148,7 @@ namespace basecode::compiler {
                     }
                     default: {
                         std::string octal_value;
-                        if (!read_dec_digits(i + 1, 3, octal_value))
+                        if (!read_dec_digits(i, 3, octal_value))
                             return false;
                         token.radix = 8;
                         token.value = octal_value;
@@ -157,7 +157,7 @@ namespace basecode::compiler {
                         if (token.parse(cp) != syntax::conversion_result_t::success)
                             return false;
                         stream << static_cast<char>(cp);
-                        i += 3;
+                        i += octal_value.size();
                     }
                 }
             } else {

@@ -11,4 +11,4 @@ qsort :: proc<T>(
 
 values := array<u32>(16, 3, 5, 110, 4, 3, 9, 19, 21);
 
-#run qsort(address_of(values), |lhs, rhs| lhs < rhs);
+#run qsort(address_of(values), |lhs: ^u32, rhs: ^u32| lhs^ < rhs^);

@@ -1053,16 +1053,31 @@ namespace basecode::syntax {
 
         token_t temp;
         while (true) {
-            auto has_identifier = identifier(temp);
             ch = read();
             if (ch == '|') {
                 token.type = token_types_t::lambda_literal;
                 return true;
-            } else if (ch != ',' && !has_identifier) {
-                break;
             }
-            read();
+
+            if (ch == ',')
+                continue;
+
             rewind_one_char();
+            if (!identifier(temp))
+                break;
+
+            ch = read();
+            if (ch == ':') {
+                while (true) {
+                    ch = read();
+                    if (ch == '^' || ch == '[' || ch == ']')
+                        continue;
+                    break;
+                }
+                rewind_one_char();
+                if (!identifier(temp))
+                    return false;
+            }
         }
 
         return false;
@@ -1221,6 +1236,7 @@ namespace basecode::syntax {
                         break;
                     }
                     default: {
+                        rewind_one_char();
                         if (!read_dec_digits(3, value))
                             return false;
                         radix = 8;
