@@ -21,8 +21,8 @@ public :: ns {
             .ilocal f
             .ilocal char
 
-            load.dw     f, fp, local(f)
-            load.dw     char, fp, local(char)
+            load.dw     f, fp, offset(f)
+            load.dw     char, fp, offset(char)
             push.dw     char
             push.dw     f
             trap.b      module(traps::putc)
@@ -34,11 +34,11 @@ public :: ns {
         #assembly {{
             .ilocal f
 
-            load.dw     f, fp, local(f)
+            load.dw     f, fp, offset(f)
             push.dw     f
             trap.b      module(traps::getc)
             pop.dw      f
-            store.dw    fp, f, local(result)
+            store.dw    fp, f, offset(result)
         }};
         return result;
     };

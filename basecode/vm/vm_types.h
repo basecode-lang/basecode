@@ -711,6 +711,17 @@ namespace basecode::vm {
         vm::label* instance = nullptr;
     };
 
+    enum class local_type_t {
+        integer,
+        floating_point
+    };
+
+    struct local_t {
+        int64_t offset;
+        local_type_t type;
+        std::string name {};
+    };
+
     struct meta_t {
         std::string label {};
     };
@@ -718,10 +729,11 @@ namespace basecode::vm {
     enum class block_entry_type_t : uint8_t {
         section = 1,
         meta,
-        comment,
         label,
-        blank_line,
+        local,
         align,
+        comment,
+        blank_line,
         instruction,
         data_definition,
     };
@@ -736,6 +748,8 @@ namespace basecode::vm {
         explicit block_entry_t(const meta_t& meta);
 
         explicit block_entry_t(const label_t& label);
+
+        explicit block_entry_t(const local_t& local);
 
         explicit block_entry_t(const align_t& align);
 
@@ -1951,7 +1965,7 @@ namespace basecode::vm {
 
     enum class assembly_symbol_type_t {
         assembler = 1,
-        local,
+        offset,
         module,
         label,
     };
@@ -2066,7 +2080,8 @@ namespace basecode::vm {
     };
 
     using assembly_symbol_resolver_t = std::function<bool (
-        assembly_symbol_type_t,
+        vm::assembly_symbol_type_t,
+        void* data,
         const std::string&,
         vm::assembly_symbol_result_t&)>;
 

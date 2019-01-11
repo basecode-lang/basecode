@@ -21,9 +21,9 @@ namespace basecode::vm {
     assembly_parser::assembly_parser(
             vm::assembler* assembler,
             common::source_file& source_file,
-            const assembly_symbol_resolver_t& resolver) : _source_file(source_file),
-                                                          _assembler(assembler),
-                                                          _resolver(resolver) {
+            void* data) : _data(data),
+                          _source_file(source_file),
+                          _assembler(assembler) {
     }
 
     assembly_parser::~assembly_parser() {
@@ -34,6 +34,7 @@ namespace basecode::vm {
 
     bool assembly_parser::parse(common::result& r) {
         auto block = _assembler->current_block();
+        auto resolver = _assembler->resolver();
 
         _state = assembly_parser_state_t::start;
         _start_pos = 0;
@@ -252,7 +253,7 @@ namespace basecode::vm {
                             switch (type) {
                                 case vm::assembly_symbol_type_t::label: {
                                     vm::assembly_symbol_result_t resolver_result {};
-                                    if (_resolver(type, symbol, resolver_result)) {
+                                    if (resolver(type, _data, symbol, resolver_result)) {
                                         auto label_data = resolver_result.data<compiler_label_data_t>();
                                         if (label_data != nullptr) {
                                             encoding.type = operand_encoding_t::flags::integer
@@ -266,7 +267,7 @@ namespace basecode::vm {
                                 }
                                 case vm::assembly_symbol_type_t::module: {
                                     vm::assembly_symbol_result_t resolver_result {};
-                                    if (_resolver(type, symbol, resolver_result)) {
+                                    if (resolver(type, _data, symbol, resolver_result)) {
                                         auto module_data = resolver_result.data<compiler_module_data_t>();
                                         if (module_data != nullptr) {
                                             switch (module_data->type()) {
@@ -312,9 +313,9 @@ namespace basecode::vm {
                                     }
                                     break;
                                 }
-                                case vm::assembly_symbol_type_t::local: {
+                                case vm::assembly_symbol_type_t::offset: {
                                     vm::assembly_symbol_result_t resolver_result {};
-                                    if (_resolver(type, symbol, resolver_result)) {
+                                    if (resolver(type, _data, symbol, resolver_result)) {
                                         auto local_data = resolver_result.data<compiler_local_data_t>();
                                         if (local_data != nullptr) {
                                             auto offset = local_data->offset;
@@ -409,6 +410,8 @@ namespace basecode::vm {
                                     _locals.insert(std::make_pair(symbol, local));
                                 }
                             }
+
+                            block->local(local_type_t::integer, symbol, 0);
                             break;
                         }
                         case directive_type_t::flocal: {
@@ -422,6 +425,8 @@ namespace basecode::vm {
                                     _locals.insert(std::make_pair(symbol, local));
                                 }
                             }
+
+                            block->local(local_type_t::floating_point, symbol, 0);
                             break;
                         }
                         case directive_type_t::section: {
@@ -672,10 +677,10 @@ namespace basecode::vm {
             std::string& symbol) {
         auto type = vm::assembly_symbol_type_t::assembler;
 
-        auto pos = operand.find("local(");
+        auto pos = operand.find("offset(");
         if (pos != std::string::npos) {
-            type = vm::assembly_symbol_type_t::local;
-            symbol = operand.substr(6, operand.size() - 7);
+            type = vm::assembly_symbol_type_t::offset;
+            symbol = operand.substr(7, operand.size() - 8);
         } else {
             pos = operand.find("module(");
             if (pos != std::string::npos) {

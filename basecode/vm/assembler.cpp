@@ -101,8 +101,8 @@ namespace basecode::vm {
     bool assembler::assemble_from_source(
             common::result& r,
             common::source_file& source_file,
-            const assembly_symbol_resolver_t& resolver) {
-        vm::assembly_parser parser(this, source_file, resolver);
+            void* data) {
+        vm::assembly_parser parser(this, source_file, data);
         return parser.parse(r);
     }
 
@@ -329,15 +329,34 @@ namespace basecode::vm {
                     line << fmt::format(".meta '{}'", meta->label);
                     break;
                 }
+                case block_entry_type_t::local: {
+                    type = listing_source_line_type_t::directive;
+                    auto local = entry.data<local_t>();
+                    switch (local->type) {
+                        case local_type_t::integer: {
+                            line << fmt::format(".ilocal {}", local->name);
+                            break;
+                        }
+                        case local_type_t::floating_point: {
+                            line << fmt::format(".flocal {}", local->name);
+                            break;
+                        }
+                    }
+                    if (local->offset != 0)
+                        line << fmt::format(", {}", local->offset);
+                    break;
+                }
                 case block_entry_type_t::label: {
                     type = listing_source_line_type_t::label;
                     auto label = entry.data<label_t>();
                     line << fmt::format("{}:", label->instance->name());
                     break;
                 }
-                case block_entry_type_t::blank_line: {
-                    source_file->add_blank_lines(entry.address(), 1);
-                    continue;
+                case block_entry_type_t::align: {
+                    type = listing_source_line_type_t::directive;
+                    auto align = entry.data<align_t>();
+                    line << fmt::format(".align {}", align->size);
+                    break;
                 }
                 case block_entry_type_t::comment: {
                     type = listing_source_line_type_t::comment;
@@ -353,17 +372,15 @@ namespace basecode::vm {
                     }
                     break;
                 }
-                case block_entry_type_t::align: {
-                    type = listing_source_line_type_t::directive;
-                    auto align = entry.data<align_t>();
-                    line << fmt::format(".align {}", align->size);
-                    break;
-                }
                 case block_entry_type_t::section: {
                     type = listing_source_line_type_t::directive;
                     auto section = entry.data<section_t>();
                     line << fmt::format(".section '{}'", section_name(*section));
                     break;
+                }
+                case block_entry_type_t::blank_line: {
+                    source_file->add_blank_lines(entry.address(), 1);
+                    continue;
                 }
                 case block_entry_type_t::instruction: {
                     type = listing_source_line_type_t::instruction;
@@ -523,6 +540,14 @@ namespace basecode::vm {
         if (it == _block_registry.end())
             return nullptr;
         return it->second;
+    }
+
+    const assembly_symbol_resolver_t& assembler::resolver() const {
+        return _resolver;
+    }
+
+    void assembler::resolver(const assembly_symbol_resolver_t& resolver) {
+        _resolver = resolver;
     }
 
     label_ref_t* assembler::make_label_ref(const std::string& label_name) {

@@ -28,6 +28,11 @@ namespace basecode::vm {
 
     // block support
     public:
+        void local(
+            local_type_t type,
+            const std::string& name,
+            int64_t offset = 0);
+
         void comment(
             const std::string& value,
             uint8_t indent,
@@ -62,6 +67,8 @@ namespace basecode::vm {
         bool is_current_instruction(op_codes code);
 
         void make_block_entry(const label_t& label);
+
+        void make_block_entry(const local_t& local);
 
         void make_block_entry(const align_t& section);
 

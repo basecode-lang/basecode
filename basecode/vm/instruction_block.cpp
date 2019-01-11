@@ -1004,6 +1004,17 @@ namespace basecode::vm {
         make_block_entry(op);
     }
 
+    void instruction_block::local(
+            local_type_t type,
+            const std::string& name,
+            int64_t offset) {
+        make_block_entry(local_t{
+            .offset = offset,
+            .type = type,
+            .name = name,
+        });
+    }
+
     void instruction_block::comment(
             const std::string& value,
             uint8_t indent,
@@ -1057,6 +1068,10 @@ namespace basecode::vm {
         }
 
         return false;
+    }
+
+    void instruction_block::make_block_entry(const local_t& local) {
+        _entries.push_back(block_entry_t(local));
     }
 
     void instruction_block::make_block_entry(const label_t& label) {

@@ -162,6 +162,12 @@ namespace basecode::compiler {
 
         void initialize_core_types();
 
+        bool resolve_assembly_symbol(
+            vm::assembly_symbol_type_t type,
+            void* data,
+            const std::string& symbol,
+            vm::assembly_symbol_result_t& result);
+
         bool fold_constant_expressions();
 
         bool resolve_unknown_identifiers();

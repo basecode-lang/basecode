@@ -63,7 +63,7 @@ namespace basecode::vm {
         assembly_parser(
             vm::assembler* assembler,
             common::source_file& source_file,
-            const assembly_symbol_resolver_t& resolver);
+            void* data);
 
         ~assembly_parser();
 
@@ -92,11 +92,11 @@ namespace basecode::vm {
 
     private:
         wip_t _wip {};
+        void* _data = nullptr;
         size_t _start_pos = 0;
         assembly_parser_state_t _state;
         common::source_file& _source_file;
         vm::assembler* _assembler = nullptr;
-        assembly_symbol_resolver_t _resolver = nullptr;
         std::unordered_map<std::string, vm::register_t> _locals {};
     };
 

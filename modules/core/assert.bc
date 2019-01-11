@@ -15,7 +15,7 @@ public :: ns {
         #assembly {{
             .ilocal level
 
-            load.dw level, fp, local(level)
+            load.dw level, fp, offset(level)
             push.dw level
             jmp.qw  _finalizer
         }};

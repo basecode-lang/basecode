@@ -476,6 +476,13 @@ namespace basecode::compiler {
     bool session::initialize() {
         _ffi.initialize(_result);
         _terp.initialize(_result);
+
+        _assembler.resolver(std::bind(&session::resolve_assembly_symbol,
+            this,
+            std::placeholders::_1,
+            std::placeholders::_2,
+            std::placeholders::_3,
+            std::placeholders::_4));
         _assembler.initialize(_result);
 
         _terp.register_trap(trap_putc, [](vm::terp* terp) {
@@ -546,6 +553,111 @@ namespace basecode::compiler {
 
     vm::allocator* session::allocator() {
         return _options.allocator;
+    }
+
+    bool session::resolve_assembly_symbol(
+            vm::assembly_symbol_type_t type,
+            void* data,
+            const std::string& symbol,
+            vm::assembly_symbol_result_t& result) {
+        auto scope = reinterpret_cast<compiler::block*>(data);
+        switch (type) {
+            case vm::assembly_symbol_type_t::offset: {
+                auto entry = scope->find_active_frame_entry(symbol);
+                if (entry != nullptr) {
+                    vm::compiler_local_data_t data {};
+                    const auto& offsets = entry->owning_frame()->offsets();
+                    switch (entry->type()) {
+                        case stack_frame_entry_type_t::local: {
+                            data.offset = -offsets.locals + entry->offset();
+                            break;
+                        }
+                        case stack_frame_entry_type_t::parameter: {
+                            data.offset = offsets.parameters + entry->offset();
+                            break;
+                        }
+                        case stack_frame_entry_type_t::return_slot: {
+                            data.offset = offsets.return_slot + entry->offset();
+                            break;
+                        }
+                    }
+                    data.reg = vm::registers_t::fp;
+                    result.data(data);
+                    return true;
+                }
+                break;
+            }
+            case vm::assembly_symbol_type_t::label: {
+                auto labels = elements().find_by_type<compiler::label>(element_type_t::label);
+                for (auto label : labels) {
+                    if (label->name() == symbol) {
+                        vm::compiler_label_data_t data {};
+                        data.label = label->label_name();
+                        result.data(data);
+                        return true;
+                    }
+                }
+
+                break;
+            }
+            case vm::assembly_symbol_type_t::module: {
+                auto vars = _scope_manager.find_identifier(
+                    make_qualified_symbol(symbol),
+                    scope);
+                compiler::identifier* var = vars.empty() ? nullptr : vars.front();
+                if (var != nullptr) {
+                    if (var->is_constant()) {
+                        switch (var->type_ref()->type()->element_type()) {
+                            case element_type_t::bool_type: {
+                                bool value;
+                                if (var->as_bool(value)) {
+                                    result.data(vm::compiler_module_data_t(
+                                        static_cast<uint64_t>(value ? 1 : 0)));
+                                }
+                                break;
+                            }
+                            case element_type_t::numeric_type: {
+                                auto size = var->type_ref()->type()->size_in_bytes();
+                                auto number_class = var->type_ref()->type()->number_class();
+
+                                if (number_class == type_number_class_t::integer) {
+                                    uint64_t value;
+                                    if (var->as_integer(value)) {
+                                        result.data(vm::compiler_module_data_t(value));
+                                    }
+                                } else {
+                                    double value;
+                                    if (var->as_float(value)) {
+                                        if (size == 4)
+                                            result.data(vm::compiler_module_data_t((float)value));
+                                        else
+                                            result.data(vm::compiler_module_data_t(value));
+                                    }
+                                }
+                                break;
+                            }
+                            default:
+                                break;
+                        }
+                    }
+
+                    if (!result.is_set()) {
+                        auto address_reg = get_address_register(var->id());
+                        if (address_reg != nullptr)
+                            result.data(vm::compiler_module_data_t(*address_reg));
+                        else
+                            result.data(vm::compiler_module_data_t(var->label_name()));
+                    }
+
+                    return true;
+                }
+                break;
+            }
+            case vm::assembly_symbol_type_t::assembler: {
+                break;
+            }
+        }
+        return false;
     }
 
     compiler::program& session::program() {

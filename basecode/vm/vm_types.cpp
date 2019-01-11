@@ -51,9 +51,13 @@ namespace basecode::vm {
                                      _type(block_entry_type_t::blank_line) {
     }
 
-    block_entry_t::block_entry_t(const meta_t& meta) : _data(boost::any(meta)),
+    block_entry_t::block_entry_t(const meta_t& meta) : _data(meta),
                                                        _type(block_entry_type_t::meta) {
 
+    }
+
+    block_entry_t::block_entry_t(const local_t& local) : _data(local),
+                                                         _type(block_entry_type_t::local) {
     }
 
     block_entry_t::block_entry_t(const block_entry_t& other) : _data(other._data),
@@ -61,27 +65,27 @@ namespace basecode::vm {
                                                                _type(other._type) {
     }
 
-    block_entry_t::block_entry_t(const align_t& align) : _data(boost::any(align)),
+    block_entry_t::block_entry_t(const align_t& align) : _data(align),
                                                          _type(block_entry_type_t::align) {
     }
 
-    block_entry_t::block_entry_t(const label_t& label) : _data(boost::any(label)),
+    block_entry_t::block_entry_t(const label_t& label) : _data(label),
                                                          _type(block_entry_type_t::label) {
     }
 
-    block_entry_t::block_entry_t(const section_t& section) : _data(boost::any(section)),
+    block_entry_t::block_entry_t(const section_t& section) : _data(section),
                                                              _type(block_entry_type_t::section) {
     }
 
-    block_entry_t::block_entry_t(const comment_t& comment) : _data(boost::any(comment)),
+    block_entry_t::block_entry_t(const comment_t& comment) : _data(comment),
                                                              _type(block_entry_type_t::comment) {
     }
 
-    block_entry_t::block_entry_t(const data_definition_t& data) : _data(boost::any(data)),
+    block_entry_t::block_entry_t(const data_definition_t& data) : _data(data),
                                                                   _type(block_entry_type_t::data_definition) {
     }
 
-    block_entry_t::block_entry_t(const instruction_t& instruction) : _data(boost::any(instruction)),
+    block_entry_t::block_entry_t(const instruction_t& instruction) : _data(instruction),
                                                                      _type(block_entry_type_t::instruction) {
     }
 
