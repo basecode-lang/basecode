@@ -419,10 +419,10 @@ namespace basecode::compiler {
             case element_type_t::array_type: {
                 auto element = dynamic_cast<array_type*>(node);
                 auto style = ", fillcolor=gainsboro, style=\"filled\"";
-                std::string entry_type_name = "unknown";
-                if (element->entry_type_ref() != nullptr)
-                    entry_type_name = element->entry_type_ref()->name();
-                add_primary_edge(element, element->entry_type_ref());
+                std::string base_type_name = "unknown";
+                if (element->base_type_ref() != nullptr)
+                    base_type_name = element->base_type_ref()->name();
+                add_primary_edge(element, element->base_type_ref());
                 for (auto fld : element->fields().as_list())
                     add_primary_edge(element, fld);
                 add_primary_edge(element, element->scope());
@@ -433,7 +433,7 @@ namespace basecode::compiler {
                     "{}[shape=record,label=\"array_type|{}|type: {}\"{}];",
                     node_vertex_name,
                     element->name(),
-                    entry_type_name,
+                    base_type_name,
                     style);
             }
             case element_type_t::identifier: {

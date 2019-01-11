@@ -107,6 +107,7 @@ namespace basecode::compiler {
     class uninitialized_literal;
     class assembly_literal_label;
 
+    using type_set_t = std::set<type*>;
     using type_list_t = std::vector<type*>;
     using import_set_t = std::set<import*>;
     using label_list_t = std::vector<label*>;
@@ -372,6 +373,8 @@ namespace basecode::compiler {
         }
         return it->second;
     }
+
+    using element_type_set_t = std::set<element_type_t>;
 
     ///////////////////////////////////////////////////////////////////////////
 

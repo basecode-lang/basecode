@@ -236,6 +236,11 @@ namespace basecode::compiler {
     }
 
     bool type::emit_type_info(compiler::session& session) {
+        if (element_type() == element_type_t::generic_type
+        ||  element_type() == element_type_t::unknown_type) {
+            return true;
+        }
+
         auto& assembler = session.assembler();
         auto block = assembler.current_block();
 

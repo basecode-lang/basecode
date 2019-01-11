@@ -209,7 +209,7 @@ namespace basecode::compiler {
     bool procedure_call::resolve_overloads(compiler::session& session) {
         compiler::type* return_type = nullptr;
 
-        if (is_parent_element(element_type_t::binary_operator)) {
+        if (is_parent_type_one_of({element_type_t::binary_operator})) {
             auto bin_op = dynamic_cast<compiler::binary_operator*>(parent_element());
             if (bin_op->operator_type() == operator_type_t::assignment) {
                 infer_type_result_t type_result{};

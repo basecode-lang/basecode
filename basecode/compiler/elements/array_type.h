@@ -26,7 +26,7 @@ namespace basecode::compiler {
             compiler::module* module,
             block* parent_scope,
             compiler::block* scope,
-            compiler::type_reference* entry_type,
+            compiler::type_reference* base_type_ref,
             const element_list_t& subscripts);
 
         compiler::element* replace(
@@ -39,7 +39,7 @@ namespace basecode::compiler {
 
         const element_list_t& subscripts() const;
 
-        compiler::type_reference* entry_type_ref();
+        compiler::type_reference* base_type_ref();
 
         compiler::element* find_subscript(common::id_t id);
 
@@ -60,7 +60,7 @@ namespace basecode::compiler {
 
     private:
         element_list_t _subscripts {};
-        compiler::type_reference* _entry_type_ref = nullptr;
+        compiler::type_reference* _base_type_ref = nullptr;
     };
 
 };

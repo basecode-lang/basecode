@@ -24,8 +24,6 @@ namespace basecode::compiler {
     public:
         program();
 
-        ~program() override;
-
         compiler::block* block();
 
         void block(compiler::block* value);

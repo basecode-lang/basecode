@@ -194,7 +194,7 @@ namespace basecode::compiler {
         scope_manager.visit_blocks(
             session.result(),
             [&](compiler::block* scope) {
-                if (scope->is_parent_element(element_type_t::proc_type))
+                if (scope->is_parent_type_one_of({element_type_t::proc_type}))
                     return true;
 
                 for (auto var : scope->identifiers().as_list()) {

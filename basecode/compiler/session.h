@@ -84,6 +84,8 @@ namespace basecode::compiler {
 
         common::result& result();
 
+        type_list_t used_types();
+
         element_builder& builder();
 
         vm::assembler& assembler();
@@ -115,6 +117,8 @@ namespace basecode::compiler {
         const session_task_list_t& tasks() const;
 
         common::source_file* current_source_file();
+
+        void track_used_type(compiler::type* type);
 
         bool allocate_address_register(common::id_t id);
 
@@ -182,6 +186,7 @@ namespace basecode::compiler {
         vm::assembler _assembler;
         element_map _elements {};
         module_map_t _modules {};
+        type_set_t _used_types {};
         compiler::program _program;
         ast_evaluator _ast_evaluator;
         path_list_t _source_files {};

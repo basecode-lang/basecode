@@ -511,10 +511,17 @@ namespace basecode::compiler {
         return _result;
     }
 
+    type_list_t session::used_types() {
+        type_list_t list {};
+        for (auto type : _used_types)
+            list.emplace_back(type);
+        return list;
+    }
+
     bool session::execute_directives() {
         auto directives = _elements.find_by_type<compiler::directive>(element_type_t::directive);
         for (auto directive_element : directives) {
-            if (directive_element->is_parent_element(element_type_t::directive))
+            if (directive_element->is_parent_type_one_of({element_type_t::directive}))
                 continue;
 
             if (!directive_element->execute(*this)) {
@@ -597,7 +604,7 @@ namespace basecode::compiler {
 
             infer_type_result_t infer_type_result {};
 
-            if (var->is_parent_element(element_type_t::binary_operator)) {
+            if (var->is_parent_type_one_of({element_type_t::binary_operator})) {
                 auto binary_operator = dynamic_cast<compiler::binary_operator*>(var->parent_element());
                 switch (binary_operator->operator_type()) {
                     case operator_type_t::assignment: {
@@ -702,7 +709,7 @@ namespace basecode::compiler {
             }
 
             compiler::block* type_scope = unresolved_reference->parent_scope();
-            if (unresolved_reference->is_parent_element(element_type_t::binary_operator)) {
+            if (unresolved_reference->is_parent_type_one_of({element_type_t::binary_operator})) {
                 auto bin_op = dynamic_cast<compiler::binary_operator*>(unresolved_reference->parent_element());
                 if (bin_op->operator_type() == operator_type_t::member_access) {
                     infer_type_result_t type_result;
@@ -733,7 +740,7 @@ namespace basecode::compiler {
                 unresolved_reference->symbol(),
                 type_scope);
             if (vars.size() > 1) {
-                if (unresolved_reference->is_parent_element(element_type_t::proc_call)) {
+                if (unresolved_reference->is_parent_type_one_of({element_type_t::proc_call})) {
                     auto proc_call = dynamic_cast<compiler::procedure_call*>(unresolved_reference->parent_element());
                     unresolved_reference->identifier(vars[0]);
 
@@ -799,6 +806,42 @@ namespace basecode::compiler {
 
     const path_list_t& session::source_files() const {
         return _source_files;
+    }
+
+    void session::track_used_type(compiler::type* type) {
+        const element_type_set_t invalid_types = {
+            element_type_t::unknown_type,
+            element_type_t::generic_type
+        };
+
+        if (type == nullptr
+        ||  type->is_type_one_of(invalid_types)) {
+            return;
+        }
+
+        compiler::type* base_type = nullptr;
+        switch (type->element_type()) {
+            case element_type_t::pointer_type: {
+                auto pointer_type = dynamic_cast<compiler::pointer_type*>(type);
+                base_type = pointer_type->base_type_ref()->type();
+                break;
+            }
+            case element_type_t::array_type: {
+                auto array_type = dynamic_cast<compiler::array_type*>(type);
+                base_type = array_type->base_type_ref()->type();
+                break;
+            }
+            default: {
+                break;
+            }
+        }
+
+        if (base_type != nullptr) {
+            if (base_type->is_type_one_of(invalid_types))
+                return;
+        }
+
+        _used_types.insert(type);
     }
 
     bool session::fold_elements_of_type(element_type_t type) {

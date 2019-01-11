@@ -41,7 +41,7 @@ namespace basecode::compiler {
             compiler::module* module,
             block* parent_scope,
             compiler::block* scope,
-            compiler::type_reference* entry_type,
+            compiler::type_reference* base_type_ref,
             const element_list_t& subscripts) : compiler::composite_type(
                                                     module,
                                                     parent_scope,
@@ -50,7 +50,7 @@ namespace basecode::compiler {
                                                     nullptr,
                                                     element_type_t::array_type),
                                                 _subscripts(subscripts),
-                                                _entry_type_ref(entry_type) {
+                                                _base_type_ref(base_type_ref) {
     }
 
     bool array_type::on_apply_fold_result(
@@ -93,11 +93,11 @@ namespace basecode::compiler {
             return false;
 
         auto other_array = dynamic_cast<compiler::array_type*>(other);
-        return _entry_type_ref->type()->type_check(other_array->entry_type_ref()->type());
+        return _base_type_ref->type()->type_check(other_array->base_type_ref()->type());
     }
 
-    compiler::type_reference* array_type::entry_type_ref() {
-        return _entry_type_ref;
+    compiler::type_reference* array_type::base_type_ref() {
+        return _base_type_ref;
     }
 
     type_access_model_t array_type::on_access_model() const {
@@ -105,8 +105,8 @@ namespace basecode::compiler {
     }
 
     void array_type::on_owned_elements(element_list_t& list) {
-        if (_entry_type_ref != nullptr)
-            list.emplace_back(_entry_type_ref);
+        if (_base_type_ref != nullptr)
+            list.emplace_back(_base_type_ref);
 
         for (auto e : _subscripts)
             list.emplace_back(e);
@@ -117,7 +117,7 @@ namespace basecode::compiler {
 
         auto type_symbol = builder.make_symbol(
             parent_scope(),
-            name_for_array(_entry_type_ref->type(), _subscripts));
+            name_for_array(_base_type_ref->type(), _subscripts));
         symbol(type_symbol);
         type_symbol->parent_element(this);
 
@@ -125,7 +125,7 @@ namespace basecode::compiler {
     }
 
     std::string array_type::name(const std::string& alias) const {
-        auto entry_type_name = !alias.empty() ? alias : _entry_type_ref->name();
+        auto entry_type_name = !alias.empty() ? alias : _base_type_ref->name();
         std::stringstream stream;
 
         for (auto s : _subscripts) {

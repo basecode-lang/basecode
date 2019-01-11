@@ -688,6 +688,7 @@ namespace basecode::compiler {
             type,
             name);
         _session.elements().add(label);
+        _session.track_used_type(type);
         return label;
     }
 
@@ -948,6 +949,7 @@ namespace basecode::compiler {
             symbol,
             type);
         _session.elements().add(reference);
+        _session.track_used_type(type);
         reference->location(symbol.location);
         return reference;
     }

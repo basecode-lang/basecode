@@ -1090,7 +1090,7 @@ SDL :: ns {
     } @parent_scope;
 };
 
-main :: proc() {
+#run {
     assert(SDL::Init(SDL::INIT_VIDEO) >= 0, "SDL could not be initialized!");
     
     window := SDL::CreateWindow(
@@ -1212,5 +1212,3 @@ main :: proc() {
 
     SDL::Quit();
 };
-
-#run main();

@@ -24,9 +24,6 @@ namespace basecode::compiler {
     program::program() : element(nullptr, nullptr, element_type_t::program) {
     }
 
-    program::~program() {
-    }
-
     bool program::on_emit(
             compiler::session& session,
             compiler::emit_context_t& context,
@@ -250,7 +247,6 @@ namespace basecode::compiler {
     }
 
     bool program::emit_type_info(compiler::session& session) {
-        auto& elements = session.elements();
         auto& assembler = session.assembler();
 
         auto type_info_block = assembler.make_basic_block();
@@ -260,53 +256,22 @@ namespace basecode::compiler {
         assembler.push_block(type_info_block);
         defer(assembler.pop_block());
 
-        std::unordered_map<common::id_t, compiler::type*> used_types {};
-
-        auto refs = elements.find_by_type<compiler::identifier_reference>(element_type_t::identifier_reference);
-        for (auto var : refs) {
-            if (var->identifier() == nullptr) {
-                return false;
-            }
-            auto var_type = var->identifier()->type_ref()->type();
-            if (var_type == nullptr) {
-                // XXX: this is an error!
-                return false;
-            }
-            if (var_type->element_type() == element_type_t::generic_type)
-                continue;
-            if (used_types.count(var_type->id()) > 0)
-                continue;
-            used_types.insert(std::make_pair(var_type->id(), var_type));
-        }
-
-        auto assembly_literal_labels = elements
-            .find_by_type<compiler::assembly_literal_label>(element_type_t::assembly_literal_label);
-        for (auto label : assembly_literal_labels) {
-            auto label_type = label->type();
-            if (label_type == nullptr)
-                continue;
-            if (label_type->element_type() == element_type_t::generic_type)
-                continue;
-            if (used_types.count(label_type->id()) > 0)
-                continue;
-            used_types.insert(std::make_pair(label_type->id(), label_type));
-        }
-
-        for (const auto& kvp : used_types) {
+        auto used_types = session.used_types();
+        for (auto type : used_types) {
             type_info_block->blank_line();
             type_info_block->align(4);
             type_info_block->string(
-                assembler.make_label(compiler::type::make_literal_label_name(kvp.second)),
-                assembler.make_label(compiler::type::make_literal_data_label_name(kvp.second)),
-                kvp.second->name());
+                assembler.make_label(compiler::type::make_literal_label_name(type)),
+                assembler.make_label(compiler::type::make_literal_data_label_name(type)),
+                type->name());
         }
 
         type_info_block->blank_line();
         type_info_block->align(8);
         type_info_block->label(assembler.make_label("_ti_array"));
         type_info_block->qwords({used_types.size()});
-        for (const auto& kvp : used_types) {
-            kvp.second->emit_type_info(session);
+        for (auto type : used_types) {
+            type->emit_type_info(session);
         }
 
         return true;
@@ -522,8 +487,16 @@ namespace basecode::compiler {
         auto literals = session
             .elements()
             .find_by_type<compiler::string_literal>(element_type_t::string_literal);
-        for (auto literal : literals)
+        for (auto literal : literals) {
+            if (literal->is_parent_type_one_of({
+                    element_type_t::attribute,
+                    element_type_t::directive,
+                    element_type_t::module_reference})) {
+                continue;
+            }
+
             session.intern_string(literal);
+        }
     }
 
     bool program::group_identifiers_by_section(compiler::session& session) {
@@ -548,8 +521,10 @@ namespace basecode::compiler {
                 continue;
 
             auto var_parent = var->parent_element();
-            if (var_parent != nullptr && var_parent->is_parent_element(element_type_t::field))
+            if (var_parent != nullptr
+            &&  var_parent->is_parent_type_one_of({element_type_t::field})) {
                 continue;
+            }
 
             auto var_type = var->type_ref()->type();
             if (var_type == nullptr) {

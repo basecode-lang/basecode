@@ -131,8 +131,6 @@ namespace basecode::compiler {
             return on_multiply(other);
         }
 
-        bool is_parent_element(element_type_t type) const;
-
         attribute* find_attribute(const std::string& name);
 
         bool is_directive_named(const std::string& name) const;
@@ -140,6 +138,10 @@ namespace basecode::compiler {
         void location(const common::source_location& location);
 
         bool as_identifier(compiler::identifier*& value) const;
+
+        bool is_type_one_of(const element_type_set_t& types) const;
+
+        bool is_parent_type_one_of(const element_type_set_t& types) const;
 
     protected:
         virtual bool on_fold(

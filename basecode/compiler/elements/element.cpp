@@ -271,12 +271,6 @@ namespace basecode::compiler {
         return false;
     }
 
-    bool element::is_parent_element(element_type_t type) const {
-        if (_parent_element == nullptr)
-            return false;
-        return _parent_element->element_type() == type;
-    }
-
     attribute* element::find_attribute(const std::string& name) {
         auto current_element = this;
         while (current_element != nullptr) {
@@ -311,6 +305,16 @@ namespace basecode::compiler {
 
     bool element::on_as_identifier(compiler::identifier*& value) const {
         return false;
+    }
+
+    bool element::is_type_one_of(const element_type_set_t& types) const {
+        return types.count(_element_type) > 0;
+    }
+
+    bool element::is_parent_type_one_of(const element_type_set_t& types) const {
+        if (_parent_element == nullptr)
+            return false;
+        return _parent_element->is_type_one_of(types);
     }
 
 };
