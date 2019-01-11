@@ -22,10 +22,6 @@ namespace basecode::compiler {
             compiler::block* parent_scope);
 
     protected:
-        bool on_emit_initializer(
-            compiler::session&,
-            compiler::variable* var) override;
-
         bool on_type_check(compiler::type* other) override;
 
         type_number_class_t on_number_class() const override;

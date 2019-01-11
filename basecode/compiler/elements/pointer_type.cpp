@@ -38,29 +38,6 @@ namespace basecode::compiler {
                                                    _base_type_ref(base_type) {
     }
 
-    bool pointer_type::on_emit_initializer(
-            compiler::session& session,
-            compiler::variable* var) {
-        auto& assembler = session.assembler();
-        auto block = assembler.current_block();
-
-        auto var_ident = dynamic_cast<compiler::identifier*>(var->element());
-        auto init = var_ident->initializer();
-
-        block->comment(
-            fmt::format("initializer: {}", name()),
-            vm::comment_location_t::after_instruction);
-        if (init != nullptr) {
-            variable_handle_t init_var{};
-            if (!session.variable(init, init_var))
-                return false;
-            var->write(init_var.get());
-        } else {
-            var->write(var->value_reg().size, 0);
-        }
-        return true;
-    }
-
     bool pointer_type::is_pointer_type() const {
         return true;
     }

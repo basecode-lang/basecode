@@ -147,14 +147,14 @@ namespace basecode::compiler {
         auto block = assembler.current_block();
 
         for (auto var : _locals) {
-            auto var_type = var->type_ref()->type();
+//            auto var_type = var->type_ref()->type();
 
             variable_handle_t temp_var {};
             if (!session.variable(var, temp_var))
                 return false;
 
-            if (!var_type->emit_finalizer(session, temp_var.get()))
-                return false;
+//            if (!var_type->emit_finalizer(session, temp_var.get()))
+//                return false;
         }
 
         if (!block->is_current_instruction(vm::op_codes::rts)) {
@@ -226,7 +226,7 @@ namespace basecode::compiler {
         }
 
         for (auto var : _locals) {
-            auto var_type = var->type_ref()->type();
+//            auto var_type = var->type_ref()->type();
 
             auto init = var->initializer();
             if (init != nullptr) {
@@ -238,8 +238,8 @@ namespace basecode::compiler {
             if (!session.variable(var, temp_var))
                 return false;
 
-            if (!var_type->emit_initializer(session, temp_var.get()))
-                return false;
+//            if (!var_type->emit_initializer(session, temp_var.get()))
+//                return false;
         }
 
         return true;

@@ -34,14 +34,6 @@ namespace basecode::compiler {
 
         bool packed() const;
 
-        bool emit_finalizer(
-            compiler::session& session,
-            compiler::variable* var);
-
-        bool emit_initializer(
-            compiler::session& session,
-            compiler::variable* var);
-
         void packed(bool value);
 
         size_t alignment() const;
@@ -76,19 +68,9 @@ namespace basecode::compiler {
 
         void symbol(compiler::symbol_element* value);
 
-        bool emit_type_info(compiler::session& session);
-
         virtual std::string name(const std::string& alias = "") const;
 
     protected:
-        virtual bool on_emit_finalizer(
-            compiler::session& session,
-            compiler::variable* var);
-
-        virtual bool on_emit_initializer(
-            compiler::session& session,
-            compiler::variable* var);
-
         void size_in_bytes(size_t value);
 
         virtual bool on_type_check(compiler::type* other);
@@ -100,8 +82,6 @@ namespace basecode::compiler {
         void on_owned_elements(element_list_t& list) override;
 
         virtual bool on_initialize(compiler::session& session);
-
-        virtual bool on_emit_type_info(compiler::session& session);
 
     private:
         bool _packed = false;

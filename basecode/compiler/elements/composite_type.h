@@ -41,10 +41,6 @@ namespace basecode::compiler {
         bool is_composite_type() const override;
 
     protected:
-        bool on_emit_initializer(
-            compiler::session& session,
-            compiler::variable* var) override;
-
         bool on_is_constant() const override;
 
         bool on_type_check(compiler::type* other) override;

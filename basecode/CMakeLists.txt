@@ -141,6 +141,7 @@ add_library(
     compiler/elements/comment.cpp compiler/elements/comment.h
     compiler/elements/element.cpp compiler/elements/element.h
     compiler/elements/program.cpp compiler/elements/program.h
+    compiler/byte_code_emitter.cpp compiler/byte_code_emitter.h
     compiler/stack_frame_entry.cpp compiler/stack_frame_entry.h
     compiler/string_intern_map.cpp compiler/string_intern_map.h
     compiler/elements/rune_type.cpp compiler/elements/rune_type.h

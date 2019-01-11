@@ -84,8 +84,6 @@ namespace basecode::compiler {
 
         bool activate();
 
-        bool finalizer();
-
         bool address_of();
 
         bool deactivate();
@@ -93,8 +91,6 @@ namespace basecode::compiler {
         bool initialize();
 
         variable* parent();
-
-        bool initializer();
 
         compiler::field* field();
 

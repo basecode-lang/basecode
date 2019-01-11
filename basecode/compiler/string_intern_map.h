@@ -15,6 +15,8 @@
 
 namespace basecode::compiler {
 
+    using intern_string_map_t = std::unordered_map<std::string, common::id_t>;
+
     class string_intern_map {
     public:
         string_intern_map() = default;
@@ -25,7 +27,13 @@ namespace basecode::compiler {
             compiler::string_literal* literal,
             common::id_t& intern_id);
 
-        bool emit(compiler::session& session);
+        intern_string_map_t::const_iterator end() const;
+
+        intern_string_map_t::const_iterator begin() const;
+
+        std::string base_label_for_id(common::id_t id) const;
+
+        std::string data_label_for_id(common::id_t id) const;
 
         common::id_t intern(compiler::string_literal* literal);
 
@@ -34,12 +42,7 @@ namespace basecode::compiler {
         std::string data_label(compiler::string_literal* literal) const;
 
     private:
-        std::string base_label_for_id(common::id_t id) const;
-
-        std::string data_label_for_id(common::id_t id) const;
-
-    private:
-        std::unordered_map<std::string, common::id_t> _interned_strings {};
+        intern_string_map_t _interned_strings {};
         std::unordered_map<common::id_t, common::id_t> _element_to_intern_ids {};
     };
 

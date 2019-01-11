@@ -60,26 +60,8 @@ namespace basecode::compiler {
                                                 _symbol(symbol) {
     }
 
-    bool type::emit_finalizer(
-            compiler::session& session,
-            compiler::variable* var) {
-        return on_emit_finalizer(session, var);
-    }
-
     bool type::packed() const {
         return _packed;
-    }
-
-    bool type::emit_initializer(
-            compiler::session& session,
-            compiler::variable* var) {
-        return on_emit_initializer(session, var);
-    }
-
-    bool type::on_emit_finalizer(
-            compiler::session& session,
-            compiler::variable* var) {
-        return true;
     }
 
     bool type::is_signed() const {
@@ -88,12 +70,6 @@ namespace basecode::compiler {
 
     void type::packed(bool value) {
         _packed = value;
-    }
-
-    bool type::on_emit_initializer(
-            compiler::session& session,
-            compiler::variable* var) {
-        return true;
     }
 
     size_t type::alignment() const {
@@ -235,45 +211,10 @@ namespace basecode::compiler {
         return true;
     }
 
-    bool type::emit_type_info(compiler::session& session) {
-        if (element_type() == element_type_t::generic_type
-        ||  element_type() == element_type_t::unknown_type) {
-            return true;
-        }
-
-        auto& assembler = session.assembler();
-        auto block = assembler.current_block();
-
-        auto type_name = name();
-        auto type_name_len = static_cast<uint32_t>(type_name.length());
-        auto label_name = make_info_label_name(this);
-
-        block->blank_line();
-        block->comment(fmt::format("type: {}", type_name), 0);
-        block->label(assembler.make_label(label_name));
-
-        block->dwords({type_name_len});
-        block->dwords({type_name_len});
-        block->qwords({assembler.make_label_ref(make_literal_data_label_name(this))});
-
-        if (!on_emit_type_info(session))
-            return false;
-
-        session.type_info_label(
-            this,
-            assembler.make_label_ref(label_name));
-
-        return true;
-    }
-
     std::string type::name(const std::string& alias) const {
         if (!alias.empty())
             return alias;
         return _symbol != nullptr ? _symbol->name() : "unknown";
-    }
-
-    bool type::on_emit_type_info(compiler::session& session) {
-        return true;
     }
 
 };

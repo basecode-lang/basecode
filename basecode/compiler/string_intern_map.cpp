@@ -32,38 +32,12 @@ namespace basecode::compiler {
         return true;
     }
 
-    bool string_intern_map::emit(compiler::session& session) {
-        auto& assembler = session.assembler();
+    intern_string_map_t::const_iterator string_intern_map::end() const {
+        return _interned_strings.end();
+    }
 
-        auto block = assembler.make_basic_block();
-        block->blank_line();
-        block->comment("interned string literals", 0);
-        block->section(vm::section_t::ro_data);
-
-        for (const auto& kvp : _interned_strings) {
-            block->blank_line();
-            block->align(4);
-            block->comment(
-                fmt::format("\"{}\"", kvp.first),
-                0);
-
-            std::string escaped {};
-            if (!compiler::string_literal::escape(kvp.first, escaped)) {
-                session.error(
-                    nullptr,
-                    "X000",
-                    fmt::format("invalid escape sequence: {}", kvp.first),
-                    {});
-                return false;
-            }
-
-            block->string(
-                assembler.make_label(base_label_for_id(kvp.second)),
-                assembler.make_label(data_label_for_id(kvp.second)),
-                escaped);
-        }
-
-        return true;
+    intern_string_map_t::const_iterator string_intern_map::begin() const {
+        return _interned_strings.begin();
     }
 
     std::string string_intern_map::base_label_for_id(common::id_t id) const {

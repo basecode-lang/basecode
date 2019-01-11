@@ -84,10 +84,6 @@ namespace basecode::compiler {
             {"f64",  {&s_type_properties[10]}},
         };
 
-        bool on_emit_initializer(
-            compiler::session& session,
-            compiler::variable* var) override;
-
         bool on_type_check(compiler::type* other) override;
 
         type_number_class_t on_number_class() const override;

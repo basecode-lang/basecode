@@ -31,6 +31,7 @@
 #include "element_builder.h"
 #include "elements/program.h"
 #include "string_intern_map.h"
+#include "byte_code_emitter.h"
 
 namespace basecode::compiler {
 
@@ -98,8 +99,6 @@ namespace basecode::compiler {
 
         void disassemble(FILE* file);
 
-        bool emit_interned_strings();
-
         syntax::ast_builder& ast_builder();
 
         const element_map& elements() const;
@@ -121,6 +120,10 @@ namespace basecode::compiler {
         void track_used_type(compiler::type* type);
 
         bool allocate_address_register(common::id_t id);
+
+        compiler::byte_code_emitter& byte_code_emitter();
+
+        const string_intern_map& interned_strings() const;
 
         common::source_file* source_file(common::id_t id);
 
@@ -199,6 +202,7 @@ namespace basecode::compiler {
         session_options_t _options {};
         session_task_list_t _tasks {};
         syntax::ast_builder _ast_builder;
+        compiler::byte_code_emitter _emitter;
         string_intern_map _interned_strings {};
         compiler::scope_manager _scope_manager;
         source_file_stack_t _source_file_stack {};

@@ -26,6 +26,7 @@ namespace basecode::compiler {
                                                _ast_evaluator(*this),
                                                _source_files(source_files),
                                                _options(options),
+                                               _emitter(*this),
                                                _scope_manager(*this) {
     }
 
@@ -225,10 +226,8 @@ namespace basecode::compiler {
             time_task(
                 "compiler: generate byte-code",
                 [&]() {
-                    emit_context_t context {};
-                    emit_result_t result(_assembler);
-                    _program.emit(*this, context, result);
-                   return true;
+                    _emitter.emit();
+                    return true;
                 });
 
             success = time_task(
@@ -664,10 +663,6 @@ namespace basecode::compiler {
         return _program;
     }
 
-    bool session::emit_interned_strings() {
-        return _interned_strings.emit(*this);
-    }
-
     void session::initialize_core_types() {
         auto parent_scope = _scope_manager.current_scope();
 
@@ -1052,6 +1047,14 @@ namespace basecode::compiler {
         _address_registers.insert(std::make_pair(id, reg));
 
         return true;
+    }
+
+    compiler::byte_code_emitter& session::byte_code_emitter() {
+        return _emitter;
+    }
+
+    const string_intern_map& session::interned_strings() const {
+        return _interned_strings;
     }
 
     common::source_file* session::source_file(common::id_t id) {

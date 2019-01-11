@@ -49,52 +49,6 @@ namespace basecode::compiler {
         return _fields;
     }
 
-    bool composite_type::on_emit_initializer(
-            compiler::session& session,
-            compiler::variable* var) {
-        switch (_type) {
-            case composite_types_t::enum_type: {
-                auto& assembler = session.assembler();
-                auto block = assembler.current_block();
-
-                auto var_ident = dynamic_cast<compiler::identifier*>(var->element());
-                auto init = var_ident->initializer();
-
-                block->comment(
-                    fmt::format("enum initializer: {}", name()),
-                    vm::comment_location_t::after_instruction);
-                if (init != nullptr) {
-                    variable_handle_t init_var{};
-                    if (!session.variable(init, init_var))
-                        return false;
-                    var->write(init_var.get());
-                } else {
-                    var->write(var->value_reg().size, 0);
-                }
-                break;
-            }
-            case composite_types_t::union_type: {
-                break;
-            }
-            case composite_types_t::struct_type: {
-                auto field_list = _fields.as_list();
-                for (auto fld: field_list) {
-                    variable_handle_t field_var {};
-                    if (!var->field(fld->identifier()->symbol()->name(), field_var)) {
-                        // XXX: error
-                        return false;
-                    }
-                    if (!field_var->initializer()) {
-                        // XXX: error
-                        return false;
-                    }
-                }
-                break;
-            }
-        }
-        return true;
-    }
-
     compiler::block* composite_type::scope() {
         return _scope;
     }
