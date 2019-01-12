@@ -38,22 +38,22 @@ namespace basecode::compiler {
                                                                             type_params) {
     }
 
-    bool address_of_intrinsic::on_emit(
-            compiler::session& session,
-            compiler::emit_context_t& context,
-            compiler::emit_result_t& result) {
-        auto args = arguments()->elements();
-
-        variable_handle_t temp_var {};
-        if (!session.variable(args[0], temp_var))
-            return false;
-
-        if (!temp_var->address_of())
-            return false;
-
-        result.operands.emplace_back(temp_var->emit_result().operands.front());
-        return true;
-    }
+//    bool address_of_intrinsic::on_emit(
+//            compiler::session& session,
+//            compiler::emit_context_t& context,
+//            compiler::emit_result_t& result) {
+//        auto args = arguments()->elements();
+//
+//        variable_handle_t temp_var {};
+//        if (!session.variable(args[0], temp_var))
+//            return false;
+//
+//        if (!temp_var->address_of())
+//            return false;
+//
+//        result.operands.emplace_back(temp_var->emit_result().operands.front());
+//        return true;
+//    }
 
     bool address_of_intrinsic::on_fold(
             compiler::session& session,

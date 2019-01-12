@@ -28,14 +28,14 @@ namespace basecode::compiler {
                                                 _identifier(identifier) {
     }
 
-    bool identifier_reference::on_emit(
-            compiler::session& session,
-            compiler::emit_context_t& context,
-            compiler::emit_result_t& result) {
-        if (_identifier == nullptr)
-            return false;
-        return _identifier->emit(session, context, result);
-    }
+//    bool identifier_reference::on_emit(
+//            compiler::session& session,
+//            compiler::emit_context_t& context,
+//            compiler::emit_result_t& result) {
+//        if (_identifier == nullptr)
+//            return false;
+//        return _identifier->emit(session, context, result);
+//    }
 
     bool identifier_reference::on_fold(
             compiler::session& session,

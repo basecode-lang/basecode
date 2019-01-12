@@ -26,14 +26,14 @@ namespace basecode::compiler {
                                        _expr(expr) {
     }
 
-    bool initializer::on_emit(
-            compiler::session& session,
-            compiler::emit_context_t& context,
-            compiler::emit_result_t& result) {
-        if (_expr == nullptr)
-            return true;
-        return _expr->emit(session, context, result);
-    }
+//    bool initializer::on_emit(
+//            compiler::session& session,
+//            compiler::emit_context_t& context,
+//            compiler::emit_result_t& result) {
+//        if (_expr == nullptr)
+//            return true;
+//        return _expr->emit(session, context, result);
+//    }
 
     bool initializer::on_fold(
             compiler::session& session,

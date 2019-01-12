@@ -30,19 +30,6 @@ namespace basecode::compiler {
                                                           _type_params(type_params) {
     }
 
-    bool type_literal::on_emit(
-            compiler::session& session,
-            compiler::emit_context_t& context,
-            compiler::emit_result_t& result) {
-        auto& assembler = session.assembler();
-        auto block = assembler.current_block();
-
-        block->comment("XXX: type literal", 4);
-        block->nop();
-
-        return true;
-    }
-
     bool type_literal::on_infer_type(
             compiler::session& session,
             infer_type_result_t& result) {

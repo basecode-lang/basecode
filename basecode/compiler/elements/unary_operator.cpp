@@ -36,81 +36,81 @@ namespace basecode::compiler {
         return constant_fold_strategy(session, result);
     }
 
-    bool unary_operator::on_emit(
-            compiler::session& session,
-            compiler::emit_context_t& context,
-            compiler::emit_result_t& result) {
-        auto& assembler = session.assembler();
-        auto block = assembler.current_block();
-
-        infer_type_result_t type_result {};
-        if (!infer_type(session, type_result))
-            return false;
-
-        variable_handle_t rhs_var;
-        if (!session.variable(_rhs, rhs_var))
-            return false;
-        rhs_var->read();
-
-        auto is_composite_type = rhs_var->type_result().inferred_type->is_composite_type();
-        auto size = vm::op_size_for_byte_size(type_result.inferred_type->size_in_bytes());
-        if (operator_type() == operator_type_t::pointer_dereference
-        &&  !is_composite_type) {
-            auto pointer_type = dynamic_cast<compiler::pointer_type*>(type_result.inferred_type);
-            size = vm::op_size_for_byte_size(pointer_type->base_type_ref()->type()->size_in_bytes());
-        }
-
-        vm::instruction_operand_t result_operand;
-        if (!vm::instruction_operand_t::allocate(
-                assembler,
-                result_operand,
-                size,
-                rhs_var->value_reg().type)) {
-            return false;
-        }
-        result.operands.emplace_back(result_operand);
-
-        switch (operator_type()) {
-            case operator_type_t::negate: {
-                block->comment("unary_op: negate", vm::comment_location_t::after_instruction);
-                block->neg(
-                    result_operand,
-                    rhs_var->emit_result().operands.back());
-                break;
-            }
-            case operator_type_t::binary_not: {
-                block->comment("unary_op: binary not", vm::comment_location_t::after_instruction);
-                block->not_op(
-                    result_operand,
-                    rhs_var->emit_result().operands.back());
-                break;
-            }
-            case operator_type_t::logical_not: {
-                block->comment("unary_op: logical not", vm::comment_location_t::after_instruction);
-                block->cmp(
-                    result_operand.size(),
-                    rhs_var->emit_result().operands.back(),
-                    vm::instruction_operand_t(static_cast<uint64_t>(1), vm::op_sizes::byte));
-                block->setnz(result_operand);
-                break;
-            }
-            case operator_type_t::pointer_dereference: {
-                if (!is_composite_type) {
-                    block->comment("unary_op: deref", vm::comment_location_t::after_instruction);
-                    block->load(
-                        result_operand,
-                        rhs_var->emit_result().operands.back());
-                } else {
-                    result.operands.push_back(rhs_var->emit_result().operands.back());
-                }
-                break;
-            }
-            default:
-                break;
-        }
-
-        return true;
-    }
+//    bool unary_operator::on_emit(
+//            compiler::session& session,
+//            compiler::emit_context_t& context,
+//            compiler::emit_result_t& result) {
+//        auto& assembler = session.assembler();
+//        auto block = assembler.current_block();
+//
+//        infer_type_result_t type_result {};
+//        if (!infer_type(session, type_result))
+//            return false;
+//
+//        variable_handle_t rhs_var;
+//        if (!session.variable(_rhs, rhs_var))
+//            return false;
+//        rhs_var->read();
+//
+//        auto is_composite_type = rhs_var->type_result().inferred_type->is_composite_type();
+//        auto size = vm::op_size_for_byte_size(type_result.inferred_type->size_in_bytes());
+//        if (operator_type() == operator_type_t::pointer_dereference
+//        &&  !is_composite_type) {
+//            auto pointer_type = dynamic_cast<compiler::pointer_type*>(type_result.inferred_type);
+//            size = vm::op_size_for_byte_size(pointer_type->base_type_ref()->type()->size_in_bytes());
+//        }
+//
+//        vm::instruction_operand_t result_operand;
+//        if (!vm::instruction_operand_t::allocate(
+//                assembler,
+//                result_operand,
+//                size,
+//                rhs_var->value_reg().type)) {
+//            return false;
+//        }
+//        result.operands.emplace_back(result_operand);
+//
+//        switch (operator_type()) {
+//            case operator_type_t::negate: {
+//                block->comment("unary_op: negate", vm::comment_location_t::after_instruction);
+//                block->neg(
+//                    result_operand,
+//                    rhs_var->emit_result().operands.back());
+//                break;
+//            }
+//            case operator_type_t::binary_not: {
+//                block->comment("unary_op: binary not", vm::comment_location_t::after_instruction);
+//                block->not_op(
+//                    result_operand,
+//                    rhs_var->emit_result().operands.back());
+//                break;
+//            }
+//            case operator_type_t::logical_not: {
+//                block->comment("unary_op: logical not", vm::comment_location_t::after_instruction);
+//                block->cmp(
+//                    result_operand.size(),
+//                    rhs_var->emit_result().operands.back(),
+//                    vm::instruction_operand_t(static_cast<uint64_t>(1), vm::op_sizes::byte));
+//                block->setnz(result_operand);
+//                break;
+//            }
+//            case operator_type_t::pointer_dereference: {
+//                if (!is_composite_type) {
+//                    block->comment("unary_op: deref", vm::comment_location_t::after_instruction);
+//                    block->load(
+//                        result_operand,
+//                        rhs_var->emit_result().operands.back());
+//                } else {
+//                    result.operands.push_back(rhs_var->emit_result().operands.back());
+//                }
+//                break;
+//            }
+//            default:
+//                break;
+//        }
+//
+//        return true;
+//    }
 
     bool unary_operator::on_infer_type(
             compiler::session& session,

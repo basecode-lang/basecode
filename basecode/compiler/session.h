@@ -23,7 +23,6 @@
 #include <parser/parser.h>
 #include <boost/filesystem.hpp>
 #include <vm/default_allocator.h>
-#include "variable.h"
 #include "element_map.h"
 #include "scope_manager.h"
 #include "ast_evaluator.h"
@@ -54,11 +53,6 @@ namespace basecode::compiler {
             const std::string& code,
             const std::string& message,
             const common::source_location& location);
-
-        bool variable(
-            compiler::element* element,
-            variable_handle_t& handle,
-            bool activate = true);
 
         vm::ffi& ffi();
 
@@ -149,8 +143,6 @@ namespace basecode::compiler {
 
         common::source_file* source_file(const boost::filesystem::path& path);
 
-        std::string intern_data_label(compiler::string_literal* literal) const;
-
         common::source_file* add_source_file(const boost::filesystem::path& path);
 
     private:
@@ -209,7 +201,6 @@ namespace basecode::compiler {
         source_file_map_t _source_file_registry {};
         address_register_map_t _address_registers {};
         source_file_path_map_t _source_file_paths {};
-        std::unordered_map<common::id_t, compiler::variable> _variables {};
         std::unordered_map<common::id_t, vm::label_ref_t*> _type_info_labels {};
     };
 

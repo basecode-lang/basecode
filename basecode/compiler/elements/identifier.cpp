@@ -28,13 +28,6 @@ namespace basecode::compiler {
                                                   _initializer(initializer) {
     }
 
-    bool identifier::on_emit(
-            compiler::session& session,
-            compiler::emit_context_t& context,
-            compiler::emit_result_t& result) {
-        return true;
-    }
-
     bool identifier::on_fold(
             compiler::session& session,
             fold_result_t& result) {

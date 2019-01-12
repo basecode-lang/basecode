@@ -35,127 +35,127 @@ namespace basecode::compiler {
                                                      element_type_t::argument_list) {
     }
 
-    bool argument_list::on_emit(
-            compiler::session& session,
-            compiler::emit_context_t& context,
-            compiler::emit_result_t& result) {
-        auto& assembler = session.assembler();
-        auto block = assembler.current_block();
-        return emit_elements(session, block, _elements);
-    }
+//    bool argument_list::on_emit(
+//            compiler::session& session,
+//            compiler::emit_context_t& context,
+//            compiler::emit_result_t& result) {
+//        auto& assembler = session.assembler();
+//        auto block = assembler.current_block();
+//        return emit_elements(session, block, _elements);
+//    }
 
     void argument_list::clear() {
         _elements.clear();
         _argument_index.clear();
     }
 
-    bool argument_list::emit_elements(
-            compiler::session& session,
-            vm::instruction_block* block,
-            const compiler::element_list_t& elements) {
-        for (auto it = elements.rbegin(); it != elements.rend(); ++it) {
-            compiler::type* type = nullptr;
-
-            element* arg = *it;
-            switch (arg->element_type()) {
-                case element_type_t::argument_list: {
-                    auto result = emit_elements(
-                        session,
-                        block,
-                        dynamic_cast<compiler::argument_list*>(arg)->_elements);
-                    if (!result)
-                        return false;
-                    break;
-                }
-                case element_type_t::cast:
-                case element_type_t::transmute:
-                case element_type_t::proc_call:
-                case element_type_t::intrinsic:
-                case element_type_t::expression:
-                case element_type_t::nil_literal:
-                case element_type_t::float_literal:
-                case element_type_t::string_literal:
-                case element_type_t::unary_operator:
-                case element_type_t::assembly_label:
-                case element_type_t::binary_operator:
-                case element_type_t::boolean_literal:
-                case element_type_t::integer_literal:
-                case element_type_t::character_literal: {
-                    variable_handle_t arg_var;
-                    if (!session.variable(arg, arg_var))
-                        return false;
-
-                    if (!arg_var->read())
-                        return false;
-
-                    block->push(arg_var->emit_result().operands.back());
-
-                    if (!_is_foreign_call)
-                        type = arg_var->type_result().inferred_type;
-                    break;
-                }
-                case element_type_t::identifier_reference: {
-                    variable_handle_t arg_var;
-                    if (!session.variable(arg, arg_var))
-                        return false;
-
-                    type = arg_var->type_result().inferred_type;
-
-                    switch (type->element_type()) {
-                        case element_type_t::array_type:
-                        case element_type_t::tuple_type:
-                        case element_type_t::composite_type: {
-                            arg_var->address();
-                            if (!_is_foreign_call) {
-                                vm::register_t temp{};
-                                temp.type = vm::register_type_t::integer;
-                                session.assembler().allocate_reg(temp);
-                                defer(session.assembler().free_reg(temp));
-
-                                auto size = static_cast<uint64_t>(common::align(
-                                    type->size_in_bytes(),
-                                    8));
-                                block->sub(
-                                    vm::instruction_operand_t::sp(),
-                                    vm::instruction_operand_t::sp(),
-                                    vm::instruction_operand_t(size, vm::op_sizes::word));
-                                block->copy(
-                                    vm::op_sizes::byte,
-                                    vm::instruction_operand_t::sp(),
-                                    vm::instruction_operand_t(arg_var->address_reg()),
-                                    vm::instruction_operand_t(size, vm::op_sizes::word));
-                            } else {
-                                block->push(vm::instruction_operand_t(arg_var->address_reg()));
-                            }
-                            break;
-                        }
-                        default: {
-                            if (!arg_var->read())
-                                return false;
-
-                            block->push(arg_var->emit_result().operands.back());
-                            break;
-                        }
-                    }
-
-                    if (_is_foreign_call)
-                        type = nullptr;
-                    break;
-                }
-                default:
-                    break;
-            }
-
-            if (type != nullptr) {
-                auto size = static_cast<uint64_t>(common::align(
-                    type->size_in_bytes(),
-                    8));
-                _allocated_size += size;
-            }
-        }
-
-        return true;
-    }
+//    bool argument_list::emit_elements(
+//            compiler::session& session,
+//            vm::instruction_block* block,
+//            const compiler::element_list_t& elements) {
+//        for (auto it = elements.rbegin(); it != elements.rend(); ++it) {
+//            compiler::type* type = nullptr;
+//
+//            element* arg = *it;
+//            switch (arg->element_type()) {
+//                case element_type_t::argument_list: {
+//                    auto result = emit_elements(
+//                        session,
+//                        block,
+//                        dynamic_cast<compiler::argument_list*>(arg)->_elements);
+//                    if (!result)
+//                        return false;
+//                    break;
+//                }
+//                case element_type_t::cast:
+//                case element_type_t::transmute:
+//                case element_type_t::proc_call:
+//                case element_type_t::intrinsic:
+//                case element_type_t::expression:
+//                case element_type_t::nil_literal:
+//                case element_type_t::float_literal:
+//                case element_type_t::string_literal:
+//                case element_type_t::unary_operator:
+//                case element_type_t::assembly_label:
+//                case element_type_t::binary_operator:
+//                case element_type_t::boolean_literal:
+//                case element_type_t::integer_literal:
+//                case element_type_t::character_literal: {
+//                    variable_handle_t arg_var;
+//                    if (!session.variable(arg, arg_var))
+//                        return false;
+//
+//                    if (!arg_var->read())
+//                        return false;
+//
+//                    block->push(arg_var->emit_result().operands.back());
+//
+//                    if (!_is_foreign_call)
+//                        type = arg_var->type_result().inferred_type;
+//                    break;
+//                }
+//                case element_type_t::identifier_reference: {
+//                    variable_handle_t arg_var;
+//                    if (!session.variable(arg, arg_var))
+//                        return false;
+//
+//                    type = arg_var->type_result().inferred_type;
+//
+//                    switch (type->element_type()) {
+//                        case element_type_t::array_type:
+//                        case element_type_t::tuple_type:
+//                        case element_type_t::composite_type: {
+//                            arg_var->address();
+//                            if (!_is_foreign_call) {
+//                                vm::register_t temp{};
+//                                temp.type = vm::register_type_t::integer;
+//                                session.assembler().allocate_reg(temp);
+//                                defer(session.assembler().free_reg(temp));
+//
+//                                auto size = static_cast<uint64_t>(common::align(
+//                                    type->size_in_bytes(),
+//                                    8));
+//                                block->sub(
+//                                    vm::instruction_operand_t::sp(),
+//                                    vm::instruction_operand_t::sp(),
+//                                    vm::instruction_operand_t(size, vm::op_sizes::word));
+//                                block->copy(
+//                                    vm::op_sizes::byte,
+//                                    vm::instruction_operand_t::sp(),
+//                                    vm::instruction_operand_t(arg_var->address_reg()),
+//                                    vm::instruction_operand_t(size, vm::op_sizes::word));
+//                            } else {
+//                                block->push(vm::instruction_operand_t(arg_var->address_reg()));
+//                            }
+//                            break;
+//                        }
+//                        default: {
+//                            if (!arg_var->read())
+//                                return false;
+//
+//                            block->push(arg_var->emit_result().operands.back());
+//                            break;
+//                        }
+//                    }
+//
+//                    if (_is_foreign_call)
+//                        type = nullptr;
+//                    break;
+//                }
+//                default:
+//                    break;
+//            }
+//
+//            if (type != nullptr) {
+//                auto size = static_cast<uint64_t>(common::align(
+//                    type->size_in_bytes(),
+//                    8));
+//                _allocated_size += size;
+//            }
+//        }
+//
+//        return true;
+//    }
 
     size_t argument_list::size() const {
         auto size = _elements.size();

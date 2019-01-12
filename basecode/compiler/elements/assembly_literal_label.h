@@ -28,11 +28,6 @@ namespace basecode::compiler {
         compiler::type* type() const;
 
     protected:
-        bool on_emit(
-            compiler::session& session,
-            compiler::emit_context_t& context,
-            compiler::emit_result_t& result) override;
-
         bool on_infer_type(
             compiler::session& session,
             infer_type_result_t& result) override;

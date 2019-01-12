@@ -30,46 +30,46 @@ namespace basecode::compiler {
                                                                             type_params) {
     }
 
-    bool fill_intrinsic::on_emit(
-            compiler::session& session,
-            compiler::emit_context_t& context,
-            compiler::emit_result_t& result) {
-        auto& assembler = session.assembler();
-        auto block = assembler.current_block();
-
-        auto args = arguments()->elements();
-        if (args.empty() || args.size() < 3 || args.size() > 3) {
-            session.error(
-                module(),
-                "P091",
-                "fill expects destination, value, and length arguments.",
-                location());
-            return false;
-        }
-
-        variable_handle_t dest_var;
-        if (!session.variable(args[0], dest_var))
-            return false;
-        dest_var->read();
-
-        variable_handle_t value_var;
-        if (!session.variable(args[1], value_var))
-            return false;
-        value_var->read();
-
-        variable_handle_t length_var;
-        if (!session.variable(args[2], length_var))
-            return false;
-        length_var->read();
-
-        block->fill(
-            vm::op_sizes::byte,
-            dest_var->emit_result().operands.back(),
-            value_var->emit_result().operands.back(),
-            length_var->emit_result().operands.back());
-
-        return true;
-    }
+//    bool fill_intrinsic::on_emit(
+//            compiler::session& session,
+//            compiler::emit_context_t& context,
+//            compiler::emit_result_t& result) {
+//        auto& assembler = session.assembler();
+//        auto block = assembler.current_block();
+//
+//        auto args = arguments()->elements();
+//        if (args.empty() || args.size() < 3 || args.size() > 3) {
+//            session.error(
+//                module(),
+//                "P091",
+//                "fill expects destination, value, and length arguments.",
+//                location());
+//            return false;
+//        }
+//
+//        variable_handle_t dest_var;
+//        if (!session.variable(args[0], dest_var))
+//            return false;
+//        dest_var->read();
+//
+//        variable_handle_t value_var;
+//        if (!session.variable(args[1], value_var))
+//            return false;
+//        value_var->read();
+//
+//        variable_handle_t length_var;
+//        if (!session.variable(args[2], length_var))
+//            return false;
+//        length_var->read();
+//
+//        block->fill(
+//            vm::op_sizes::byte,
+//            dest_var->emit_result().operands.back(),
+//            value_var->emit_result().operands.back(),
+//            length_var->emit_result().operands.back());
+//
+//        return true;
+//    }
 
     std::string fill_intrinsic::name() const {
         return "fill";

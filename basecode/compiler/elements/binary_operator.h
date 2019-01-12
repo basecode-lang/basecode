@@ -34,11 +34,6 @@ namespace basecode::compiler {
         void rhs(compiler::element* element);
 
     protected:
-        bool on_emit(
-            compiler::session& session,
-            compiler::emit_context_t& context,
-            compiler::emit_result_t& result) override;
-
         bool on_fold(
             compiler::session& session,
             fold_result_t& result) override;
@@ -50,16 +45,6 @@ namespace basecode::compiler {
         bool on_apply_fold_result(
             compiler::element* e,
             const fold_result_t& fold_result) override;
-
-        bool emit_arithmetic_operator(
-            compiler::session& session,
-            emit_context_t& context,
-            emit_result_t& result);
-
-        void emit_relational_operator(
-            compiler::session& session,
-            emit_context_t& context,
-            emit_result_t& result);
 
         bool on_is_constant() const override;
 

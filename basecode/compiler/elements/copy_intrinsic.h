@@ -25,12 +25,6 @@ namespace basecode::compiler {
             const compiler::type_reference_list_t& type_params);
 
         std::string name() const override;
-
-    protected:
-        bool on_emit(
-            compiler::session& session,
-            compiler::emit_context_t& context,
-            compiler::emit_result_t& result) override;
     };
 
 };

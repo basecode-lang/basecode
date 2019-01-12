@@ -123,7 +123,6 @@ add_library(
 
     compiler/elements.h
     compiler/session.cpp compiler/session.h
-    compiler/variable.cpp compiler/variable.h
     compiler/element_map.cpp compiler/element_map.h
     compiler/stack_frame.cpp compiler/stack_frame.h
     compiler/elements/type.cpp compiler/elements/type.h

@@ -27,7 +27,6 @@
 namespace basecode::compiler {
 
     class session;
-    class variable;
     class element_map;
     class ast_evaluator;
     class scope_manager;
@@ -115,52 +114,7 @@ namespace basecode::compiler {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    struct variable_handle_t {
-        variable_handle_t() = default;
-
-        virtual ~variable_handle_t();
-
-        void set(
-            variable* instance,
-            bool activate = true);
-
-        void skip_deactivate();
-
-        bool is_valid() const {
-            return _instance != nullptr;
-        }
-
-        variable* get() const {
-            return _instance;
-        }
-
-        variable* operator->() const {
-            return _instance;
-        }
-
-    private:
-        bool _skip_deactivate = false;
-        variable* _instance = nullptr;
-    };
-
-    ///////////////////////////////////////////////////////////////////////////
-
-    struct emit_context_t {
-        vm::control_flow_t* flow_control = nullptr;
-    };
-
     struct emit_result_t {
-        explicit emit_result_t(vm::assembler& assembler) : assembler(assembler) {
-        }
-
-        ~emit_result_t() {
-            clear();
-        }
-
-        void clear();
-
-        vm::assembler& assembler;
-        vm::instruction_block* block = nullptr;
         std::vector<vm::instruction_operand_t> operands {};
     };
 

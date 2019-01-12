@@ -49,90 +49,6 @@ namespace basecode::compiler {
         _result.error(code, message, location);
     }
 
-    bool session::variable(
-            compiler::element* element,
-            variable_handle_t& handle,
-            bool activate) {
-        compiler::element* target_element = element;
-        auto id = target_element->id();
-
-        switch (element->element_type()) {
-            case element_type_t::binary_operator: {
-                auto child_bin_op = dynamic_cast<compiler::binary_operator*>(element);
-                if (child_bin_op->operator_type() != operator_type_t::member_access)
-                    break;
-
-                std::vector<variable_handle_t> vars {};
-                std::stack<binary_operator*> member_accesses {};
-
-                auto current = element;
-                while (current->element_type() == element_type_t::binary_operator) {
-                    auto bin_op = dynamic_cast<compiler::binary_operator*>(current);
-                    if (bin_op->operator_type() == operator_type_t::member_access) {
-                        member_accesses.push(bin_op);
-                    }
-                    current = bin_op->lhs();
-                }
-
-                auto bin_op = member_accesses.top();
-                auto lhs_read = should_read_variable(bin_op->lhs());
-                vars.push_back({});
-                if (variable(bin_op->lhs(), vars.back(), lhs_read)) {
-                    if (lhs_read) {
-                        auto& var = vars.back();
-                        var->read();
-                    }
-                }
-
-                while (!member_accesses.empty()) {
-                    bin_op = member_accesses.top();
-                    member_accesses.pop();
-
-                    auto& previous_var = vars.back();
-                    vars.push_back({});
-
-                    auto rhs_read = should_read_variable(bin_op->rhs());
-                    previous_var->field(bin_op->rhs(), vars.back(), rhs_read);
-                    if (rhs_read) {
-                        auto& var = vars.back();
-                        if (!var.is_valid())
-                            return false;
-                        var->read();
-                    }
-                }
-
-                vars.back().skip_deactivate();
-                handle.set(vars.back().get(), activate);
-                return true;
-            }
-            case element_type_t::identifier_reference: {
-                // N.B. need to leave this case alone because we need the id from
-                //      the reference; not the identifier itself
-                auto ref = dynamic_cast<compiler::identifier_reference*>(element);
-                target_element = ref->identifier();
-                id = ref->id();
-                break;
-            }
-            default: {
-                break;
-            }
-        }
-
-        auto it = _variables.find(id);
-        if (it == _variables.end()) {
-            compiler::variable var(*this, target_element);
-            if (!var.initialize())
-                return false;
-
-            auto new_it = _variables.insert(std::make_pair(id, var));
-            handle.set(&new_it.first->second, activate);
-        } else {
-            handle.set(&it->second, activate);
-        }
-
-        return true;
-    }
-
     vm::ffi& session::ffi() {
         return _ffi;
     }
@@ -1240,10 +1156,6 @@ namespace basecode::compiler {
         if (it == _source_file_paths.end())
             return nullptr;
         return it->second;
-    }
-
-    std::string session::intern_data_label(compiler::string_literal* literal) const {
-        return _interned_strings.data_label(literal);
     }
 
     common::source_file* session::add_source_file(const boost::filesystem::path& path) {

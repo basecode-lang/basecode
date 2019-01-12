@@ -28,12 +28,12 @@ namespace basecode::compiler {
                                      _expr(expr) {
     }
 
-    bool with::on_emit(
-            compiler::session& session,
-            compiler::emit_context_t& context,
-            compiler::emit_result_t& result) {
-        return _body->emit(session, context, result);
-    }
+//    bool with::on_emit(
+//            compiler::session& session,
+//            compiler::emit_context_t& context,
+//            compiler::emit_result_t& result) {
+//        return _body->emit(session, context, result);
+//    }
 
     compiler::block* with::body() {
         return _body;

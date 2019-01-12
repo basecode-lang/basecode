@@ -31,11 +31,6 @@ namespace basecode::compiler {
         compiler::declaration* induction_decl();
 
     protected:
-        bool on_emit(
-            compiler::session& session,
-            compiler::emit_context_t& context,
-            compiler::emit_result_t& result) override;
-
         void on_owned_elements(element_list_t& list) override;
 
     private:

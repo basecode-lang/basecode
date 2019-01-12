@@ -21,14 +21,14 @@ namespace basecode::compiler {
                                       _scope(scope) {
     }
 
-    bool module::on_emit(
-            compiler::session& session,
-            compiler::emit_context_t& context,
-            compiler::emit_result_t& result) {
-        if (_scope == nullptr)
-            return true;
-        return _scope->emit(session, context, result);
-    }
+//    bool module::on_emit(
+//            compiler::session& session,
+//            compiler::emit_context_t& context,
+//            compiler::emit_result_t& result) {
+//        if (_scope == nullptr)
+//            return true;
+//        return _scope->emit(session, context, result);
+//    }
 
     bool module::is_root() const {
         return _is_root;

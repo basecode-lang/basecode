@@ -27,71 +27,71 @@ namespace basecode::compiler {
                                        _type_ref(type) {
     }
 
-    bool transmute::on_emit(
-            compiler::session& session,
-            compiler::emit_context_t& context,
-            compiler::emit_result_t& result) {
-        if (_expression == nullptr)
-            return true;
-
-        infer_type_result_t infer_type_result {};
-        if (!_expression->infer_type(session, infer_type_result)) {
-            // XXX: error
-            return false;
-        }
-
-        if (infer_type_result.inferred_type->number_class() == type_number_class_t::none) {
-            session.error(
-                module(),
-                "C073",
-                fmt::format("cannot transmute from type: {}", infer_type_result.type_name()),
-                _expression->location());
-            return false;
-        } else if (_type_ref->type()->number_class() == type_number_class_t::none) {
-            session.error(
-                module(),
-                "C073",
-                fmt::format("cannot transmute to type: {}", _type_ref->symbol().name),
-                _type_location);
-            return false;
-        }
-
-        auto target_number_class = _type_ref->type()->number_class();
-        auto target_size = _type_ref->type()->size_in_bytes();
-
-        auto& assembler = session.assembler();
-        auto block = assembler.current_block();
-
-        variable_handle_t temp_var;
-        if (!session.variable(_expression, temp_var))
-            return false;
-        temp_var->read();
-
-        block->comment(
-            fmt::format("transmute<{}>", _type_ref->symbol().name),
-            vm::comment_location_t::after_instruction);
-
-        vm::instruction_operand_t target_operand;
-        auto target_type = target_number_class == type_number_class_t::integer ?
-                           vm::register_type_t::integer :
-                           vm::register_type_t::floating_point;
-        if (!vm::instruction_operand_t::allocate(
-                assembler,
-                target_operand,
-                vm::op_size_for_byte_size(target_size),
-                target_type)) {
-            return false;
-        }
-
-        result.operands.emplace_back(target_operand);
-
-        block->move(
-            target_operand,
-            temp_var->emit_result().operands.back(),
-            vm::instruction_operand_t::empty());
-
-        return true;
-    }
+//    bool transmute::on_emit(
+//            compiler::session& session,
+//            compiler::emit_context_t& context,
+//            compiler::emit_result_t& result) {
+//        if (_expression == nullptr)
+//            return true;
+//
+//        infer_type_result_t infer_type_result {};
+//        if (!_expression->infer_type(session, infer_type_result)) {
+//            // XXX: error
+//            return false;
+//        }
+//
+//        if (infer_type_result.inferred_type->number_class() == type_number_class_t::none) {
+//            session.error(
+//                module(),
+//                "C073",
+//                fmt::format("cannot transmute from type: {}", infer_type_result.type_name()),
+//                _expression->location());
+//            return false;
+//        } else if (_type_ref->type()->number_class() == type_number_class_t::none) {
+//            session.error(
+//                module(),
+//                "C073",
+//                fmt::format("cannot transmute to type: {}", _type_ref->symbol().name),
+//                _type_location);
+//            return false;
+//        }
+//
+//        auto target_number_class = _type_ref->type()->number_class();
+//        auto target_size = _type_ref->type()->size_in_bytes();
+//
+//        auto& assembler = session.assembler();
+//        auto block = assembler.current_block();
+//
+//        variable_handle_t temp_var;
+//        if (!session.variable(_expression, temp_var))
+//            return false;
+//        temp_var->read();
+//
+//        block->comment(
+//            fmt::format("transmute<{}>", _type_ref->symbol().name),
+//            vm::comment_location_t::after_instruction);
+//
+//        vm::instruction_operand_t target_operand;
+//        auto target_type = target_number_class == type_number_class_t::integer ?
+//                           vm::register_type_t::integer :
+//                           vm::register_type_t::floating_point;
+//        if (!vm::instruction_operand_t::allocate(
+//                assembler,
+//                target_operand,
+//                vm::op_size_for_byte_size(target_size),
+//                target_type)) {
+//            return false;
+//        }
+//
+//        result.operands.emplace_back(target_operand);
+//
+//        block->move(
+//            target_operand,
+//            temp_var->emit_result().operands.back(),
+//            vm::instruction_operand_t::empty());
+//
+//        return true;
+//    }
 
     bool transmute::on_infer_type(
             compiler::session& session,

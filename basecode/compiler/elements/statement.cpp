@@ -22,15 +22,15 @@ namespace basecode::compiler {
                              _expression(expr) {
     }
 
-    bool statement::on_emit(
-            compiler::session& session,
-            compiler::emit_context_t& context,
-            compiler::emit_result_t& result) {
-        if (_expression == nullptr)
-            return true;
-
-        return _expression->emit(session, context, result);
-    }
+//    bool statement::on_emit(
+//            compiler::session& session,
+//            compiler::emit_context_t& context,
+//            compiler::emit_result_t& result) {
+//        if (_expression == nullptr)
+//            return true;
+//
+//        return _expression->emit(session, context, result);
+//    }
 
     label_list_t& statement::labels() {
         return _labels;
@@ -59,12 +59,12 @@ namespace basecode::compiler {
             list.emplace_back(element);
     }
 
-    bool statement::emit_labels(compiler::session& session) {
-        emit_context_t context {};
-        emit_result_t result(session.assembler());
-        for (auto label : _labels)
-            label->emit(session, context, result);
-        return true;
-    }
+//    bool statement::emit_labels(compiler::session& session) {
+//        emit_context_t context {};
+//        emit_result_t result(session.assembler());
+//        for (auto label : _labels)
+//            label->emit(session, context, result);
+//        return true;
+//    }
 
 };

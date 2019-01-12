@@ -27,23 +27,23 @@ namespace basecode::compiler {
                                              _expression(expression) {
     }
 
-    bool assembly_directive::on_emit(
-            compiler::session& session,
-            compiler::emit_context_t& context,
-            compiler::emit_result_t& result) {
-        auto& assembler = session.assembler();
-
-        auto raw_block = dynamic_cast<compiler::raw_block*>(_expression);
-
-        common::source_file source_file;
-        if (!source_file.load(session.result(), raw_block->value() + "\n"))
-            return false;
-
-        return assembler.assemble_from_source(
-            session.result(),
-            source_file,
-            _expression->parent_scope());
-    }
+//    bool assembly_directive::on_emit(
+//            compiler::session& session,
+//            compiler::emit_context_t& context,
+//            compiler::emit_result_t& result) {
+//        auto& assembler = session.assembler();
+//
+//        auto raw_block = dynamic_cast<compiler::raw_block*>(_expression);
+//
+//        common::source_file source_file;
+//        if (!source_file.load(session.result(), raw_block->value() + "\n"))
+//            return false;
+//
+//        return assembler.assemble_from_source(
+//            session.result(),
+//            source_file,
+//            _expression->parent_scope());
+//    }
 
     void assembly_directive::on_owned_elements(element_list_t& list) {
         list.emplace_back(_expression);

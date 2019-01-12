@@ -29,11 +29,6 @@ namespace basecode::compiler {
             compiler::session& session,
             fold_result_t& result);
 
-        bool emit(
-            compiler::session& session,
-            compiler::emit_context_t& context,
-            compiler::emit_result_t& result);
-
         bool infer_type(
             compiler::session& session,
             infer_type_result_t& result);
@@ -147,11 +142,6 @@ namespace basecode::compiler {
         virtual bool on_fold(
             compiler::session& session,
             fold_result_t& result);
-
-        virtual bool on_emit(
-            compiler::session& session,
-            compiler::emit_context_t& context,
-            compiler::emit_result_t& result);
 
         virtual bool on_infer_type(
             compiler::session& session,

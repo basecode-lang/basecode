@@ -177,15 +177,15 @@ namespace basecode::compiler {
                                         _value(value) {
     }
 
-    bool string_literal::on_emit(
-            compiler::session& session,
-            compiler::emit_context_t& context,
-            compiler::emit_result_t& result) {
-        auto& assembler = session.assembler();
-        result.operands.emplace_back(vm::instruction_operand_t(
-            assembler.make_label_ref(session.intern_data_label(this))));
-        return true;
-    }
+//    bool string_literal::on_emit(
+//            compiler::session& session,
+//            compiler::emit_context_t& context,
+//            compiler::emit_result_t& result) {
+//        auto& assembler = session.assembler();
+//        result.operands.emplace_back(vm::instruction_operand_t(
+//            assembler.make_label_ref(session.byte_code_emitter().interned_string_data_label(id()))));
+//        return true;
+//    }
 
     bool string_literal::on_infer_type(
             compiler::session& session,

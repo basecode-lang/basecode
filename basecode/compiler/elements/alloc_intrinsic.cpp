@@ -31,62 +31,62 @@ namespace basecode::compiler {
                                                                             type_params) {
     }
 
-    bool alloc_intrinsic::on_emit(
-            compiler::session& session,
-            compiler::emit_context_t& context,
-            compiler::emit_result_t& result) {
-        auto& assembler = session.assembler();
-        auto block = assembler.current_block();
-
-        auto args = arguments()->elements();
-        if (args.empty() || args.size() > 1) {
-            session.error(
-                module(),
-                "P091",
-                "alloc expects a single integer argument.",
-                location());
-            return false;
-        }
-
-        auto arg = args[0];
-        infer_type_result_t infer_type_result {};
-        if (!arg->infer_type(session, infer_type_result)) {
-            // XXX: error
-            return false;
-        }
-
-        if (infer_type_result.inferred_type->number_class() != type_number_class_t::integer) {
-            session.error(
-                module(),
-                "P091",
-                "alloc expects a single integer argument.",
-                location());
-            return false;
-        }
-
-        variable_handle_t arg_var;
-        if (!session.variable(arg, arg_var))
-            return false;
-        arg_var->read();
-
-        vm::instruction_operand_t result_operand;
-        if (!vm::instruction_operand_t::allocate(
-                assembler,
-                result_operand,
-                vm::op_sizes::qword,
-                vm::register_type_t::integer)) {
-            return false;
-        }
-
-        result.operands.emplace_back(result_operand);
-
-        block->alloc(
-            vm::op_sizes::byte,
-            result_operand,
-            arg_var->emit_result().operands.back());
-
-        return true;
-    }
+//    bool alloc_intrinsic::on_emit(
+//            compiler::session& session,
+//            compiler::emit_context_t& context,
+//            compiler::emit_result_t& result) {
+//        auto& assembler = session.assembler();
+//        auto block = assembler.current_block();
+//
+//        auto args = arguments()->elements();
+//        if (args.empty() || args.size() > 1) {
+//            session.error(
+//                module(),
+//                "P091",
+//                "alloc expects a single integer argument.",
+//                location());
+//            return false;
+//        }
+//
+//        auto arg = args[0];
+//        infer_type_result_t infer_type_result {};
+//        if (!arg->infer_type(session, infer_type_result)) {
+//            // XXX: error
+//            return false;
+//        }
+//
+//        if (infer_type_result.inferred_type->number_class() != type_number_class_t::integer) {
+//            session.error(
+//                module(),
+//                "P091",
+//                "alloc expects a single integer argument.",
+//                location());
+//            return false;
+//        }
+//
+//        variable_handle_t arg_var;
+//        if (!session.variable(arg, arg_var))
+//            return false;
+//        arg_var->read();
+//
+//        vm::instruction_operand_t result_operand;
+//        if (!vm::instruction_operand_t::allocate(
+//                assembler,
+//                result_operand,
+//                vm::op_sizes::qword,
+//                vm::register_type_t::integer)) {
+//            return false;
+//        }
+//
+//        result.operands.emplace_back(result_operand);
+//
+//        block->alloc(
+//            vm::op_sizes::byte,
+//            result_operand,
+//            arg_var->emit_result().operands.back());
+//
+//        return true;
+//    }
 
     bool alloc_intrinsic::on_infer_type(
             compiler::session& session,

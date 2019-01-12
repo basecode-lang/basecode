@@ -23,7 +23,13 @@ namespace basecode::compiler {
 
         bool emit();
 
+        std::string interned_string_data_label(common::id_t id);
+
     private:
+        bool emit_element(
+            compiler::element* e,
+            emit_result_t& result);
+
         bool emit_type_info(
             vm::instruction_block* block,
             compiler::type* type);

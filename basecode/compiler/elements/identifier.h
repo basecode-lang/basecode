@@ -54,11 +54,6 @@ namespace basecode::compiler {
         void stack_frame_entry(compiler::stack_frame_entry* value);
 
     protected:
-        bool on_emit(
-            compiler::session& session,
-            compiler::emit_context_t& context,
-            compiler::emit_result_t& result) override;
-
         bool on_fold(
             compiler::session& session,
             fold_result_t& result) override;

@@ -30,49 +30,49 @@ namespace basecode::compiler {
                                                                             type_params) {
     }
 
-    bool copy_intrinsic::on_emit(
-            compiler::session& session,
-            compiler::emit_context_t& context,
-            compiler::emit_result_t& result) {
-        auto& assembler = session.assembler();
-        auto block = assembler.current_block();
-
-        auto args = arguments()->elements();
-        if (args.empty() || args.size() < 3 || args.size() > 3) {
-            session.error(
-                module(),
-                "P091",
-                "copy expects destination, source, and size arguments.",
-                location());
-            return false;
-        }
-
-        variable_handle_t dest_var;
-        if (!session.variable(args[0], dest_var))
-            return false;
-        if (!dest_var->read())
-            return false;
-
-        variable_handle_t src_var;
-        if (!session.variable(args[1], src_var))
-            return false;
-        if (!src_var->read())
-            return false;
-
-        variable_handle_t size_var;
-        if (!session.variable(args[2], size_var))
-            return false;
-        if (!size_var->read())
-            return false;
-
-        block->copy(
-            vm::op_sizes::byte,
-            dest_var->emit_result().operands.back(),
-            src_var->emit_result().operands.back(),
-            size_var->emit_result().operands.back());
-
-        return true;
-    }
+//    bool copy_intrinsic::on_emit(
+//            compiler::session& session,
+//            compiler::emit_context_t& context,
+//            compiler::emit_result_t& result) {
+//        auto& assembler = session.assembler();
+//        auto block = assembler.current_block();
+//
+//        auto args = arguments()->elements();
+//        if (args.empty() || args.size() < 3 || args.size() > 3) {
+//            session.error(
+//                module(),
+//                "P091",
+//                "copy expects destination, source, and size arguments.",
+//                location());
+//            return false;
+//        }
+//
+//        variable_handle_t dest_var;
+//        if (!session.variable(args[0], dest_var))
+//            return false;
+//        if (!dest_var->read())
+//            return false;
+//
+//        variable_handle_t src_var;
+//        if (!session.variable(args[1], src_var))
+//            return false;
+//        if (!src_var->read())
+//            return false;
+//
+//        variable_handle_t size_var;
+//        if (!session.variable(args[2], size_var))
+//            return false;
+//        if (!size_var->read())
+//            return false;
+//
+//        block->copy(
+//            vm::op_sizes::byte,
+//            dest_var->emit_result().operands.back(),
+//            src_var->emit_result().operands.back(),
+//            size_var->emit_result().operands.back());
+//
+//        return true;
+//    }
 
     std::string copy_intrinsic::name() const {
         return "copy";

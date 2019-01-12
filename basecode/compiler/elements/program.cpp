@@ -16,8 +16,6 @@
 #include <common/bytes.h>
 #include <compiler/session.h>
 #include <compiler/elements.h>
-#include <compiler/variable.h>
-#include <vm/instruction_block.h>
 
 namespace basecode::compiler {
 

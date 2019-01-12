@@ -48,20 +48,6 @@ namespace basecode::compiler {
         return on_fold(session, result);
     }
 
-    bool element::emit(
-            compiler::session& session,
-            compiler::emit_context_t& context,
-            compiler::emit_result_t& result) {
-        return on_emit(session, context, result);
-    }
-
-    bool element::on_emit(
-            compiler::session& session,
-            compiler::emit_context_t& context,
-            compiler::emit_result_t& result) {
-        return true;
-    }
-
     bool element::on_fold(
             compiler::session& session,
             fold_result_t& result) {

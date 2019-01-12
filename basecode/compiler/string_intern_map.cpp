@@ -17,11 +17,6 @@
 
 namespace basecode::compiler {
 
-    void string_intern_map::reset() {
-        _interned_strings.clear();
-        _element_to_intern_ids.clear();
-    }
-
     bool string_intern_map::id(
             compiler::string_literal* literal,
             common::id_t& intern_id) {
@@ -32,25 +27,43 @@ namespace basecode::compiler {
         return true;
     }
 
+    bool string_intern_map::string(
+            common::id_t id,
+            std::string_view& data) const {
+        auto it = _id_to_view.find(id);
+        if (it == _id_to_view.end())
+            return false;
+        data = it->second;
+        return true;
+    }
+
+    void string_intern_map::reset() {
+        _strings.clear();
+        _id_to_view.clear();
+        _element_to_intern_ids.clear();
+    }
+
+    bool string_intern_map::element_id_to_intern_id(
+            common::id_t element_id,
+            common::id_t& intern_id) const {
+        auto it = _element_to_intern_ids.find(element_id);
+        if (it == _element_to_intern_ids.end())
+            return false;
+        intern_id = it->second;
+        return true;
+    }
+
     intern_string_map_t::const_iterator string_intern_map::end() const {
-        return _interned_strings.end();
+        return _strings.end();
     }
 
     intern_string_map_t::const_iterator string_intern_map::begin() const {
-        return _interned_strings.begin();
-    }
-
-    std::string string_intern_map::base_label_for_id(common::id_t id) const {
-        return fmt::format("_intern_str_lit_{}", id);
-    }
-
-    std::string string_intern_map::data_label_for_id(common::id_t id) const {
-        return fmt::format("_intern_str_lit_{}_data", id);
+        return _strings.begin();
     }
 
     common::id_t string_intern_map::intern(compiler::string_literal* literal) {
-        auto it = _interned_strings.find(literal->value());
-        if (it != _interned_strings.end()) {
+        auto it = _strings.find(literal->value());
+        if (it != _strings.end()) {
             auto eit = _element_to_intern_ids.find(literal->id());
             if (eit == _element_to_intern_ids.end()) {
                 _element_to_intern_ids.insert(std::make_pair(
@@ -61,24 +74,11 @@ namespace basecode::compiler {
         }
 
         auto id = common::id_pool::instance()->allocate();
-        _interned_strings.insert(std::make_pair(literal->value(), id));
+        auto new_entry = _strings.insert(std::make_pair(literal->value(), id));
+        _id_to_view.insert(std::make_pair(id, new_entry.first->first));
         _element_to_intern_ids.insert(std::make_pair(literal->id(), id));
 
         return id;
-    }
-
-    std::string string_intern_map::base_label(compiler::string_literal* literal) const {
-        auto it = _element_to_intern_ids.find(literal->id());
-        if (it == _element_to_intern_ids.end())
-            return "";
-        return base_label_for_id(it->second);
-    }
-
-    std::string string_intern_map::data_label(compiler::string_literal* literal) const {
-        auto it = _element_to_intern_ids.find(literal->id());
-        if (it == _element_to_intern_ids.end())
-            return "";
-        return data_label_for_id(it->second);
     }
 
 };

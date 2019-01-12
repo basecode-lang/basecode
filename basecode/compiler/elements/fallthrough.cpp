@@ -23,17 +23,17 @@ namespace basecode::compiler {
                                       _label(label) {
     }
 
-    bool fallthrough::on_emit(
-            compiler::session& session,
-            compiler::emit_context_t& context,
-            compiler::emit_result_t& result) {
-        if (context.flow_control == nullptr) {
-            // XXX: error
-            return false;
-        }
-        context.flow_control->fallthrough = true;
-        return true;
-    }
+//    bool fallthrough::on_emit(
+//            compiler::session& session,
+//            compiler::emit_context_t& context,
+//            compiler::emit_result_t& result) {
+//        if (context.flow_control == nullptr) {
+//            // XXX: error
+//            return false;
+//        }
+//        context.flow_control->fallthrough = true;
+//        return true;
+//    }
 
     compiler::label* fallthrough::label() {
         return _label;

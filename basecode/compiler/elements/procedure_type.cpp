@@ -42,83 +42,83 @@ namespace basecode::compiler {
                                                 _scope(scope) {
     }
 
-    bool procedure_type::emit_epilogue(
-            session& session,
-            emit_context_t& context,
-            emit_result_t& result) {
-        if (is_foreign())
-            return true;
-
-        auto& assembler = session.assembler();
-        auto block = assembler.current_block();
-
-        if (!_has_return) {
-            block->rts();
-        }
-
-        return true;
-    }
-
-    bool procedure_type::emit_prologue(
-            session& session,
-            emit_context_t& context,
-            emit_result_t& result) {
-        if (is_foreign())
-            return true;
-
-        auto& assembler = session.assembler();
-        auto block = assembler.current_block();
-
-        auto procedure_label = symbol()->name();
-        auto parent_init = parent_element_as<compiler::initializer>();
-        if (parent_init != nullptr) {
-            auto parent_var = parent_init->parent_element_as<compiler::identifier>();
-            if (parent_var != nullptr) {
-                procedure_label = parent_var->label_name();
-            }
-        }
-
-        block->blank_line();
-        block->align(vm::instruction_t::alignment);
-        block->label(assembler.make_label(procedure_label));
-
-        auto frame = _scope->stack_frame();
-
-        auto& stack_offsets = frame->offsets();
-        stack_offsets.locals = 8;
-        if (_return_type != nullptr) {
-            auto entry = frame->add(
-                stack_frame_entry_type_t::return_slot,
-                _return_type->identifier()->symbol()->name(),
-                8);
-            _return_type->identifier()->stack_frame_entry(entry);
-
-            stack_offsets.return_slot = 16;
-            stack_offsets.parameters = 24;
-        } else {
-            stack_offsets.parameters = 16;
-        }
-
-        auto fields = parameters().as_list();
-        for (auto fld : fields) {
-            auto var = fld->identifier();
-            auto type = var->type_ref()->type();
-            // XXX: if we change procedure_call to
-            //      sub.qw sp, sp, {size}
-            //
-            //      and then store.x sp, {value}, offset
-            //      we can use truer sizes within
-            //      the 8-byte aligned stack block.
-            //
-            auto entry = frame->add(
-                stack_frame_entry_type_t::parameter,
-                var->symbol()->name(),
-                common::align(type->size_in_bytes(), 8));
-            var->stack_frame_entry(entry);
-        }
-
-        return true;
-    }
+//    bool procedure_type::emit_epilogue(
+//            session& session,
+//            emit_context_t& context,
+//            emit_result_t& result) {
+//        if (is_foreign())
+//            return true;
+//
+//        auto& assembler = session.assembler();
+//        auto block = assembler.current_block();
+//
+//        if (!_has_return) {
+//            block->rts();
+//        }
+//
+//        return true;
+//    }
+//
+//    bool procedure_type::emit_prologue(
+//            session& session,
+//            emit_context_t& context,
+//            emit_result_t& result) {
+//        if (is_foreign())
+//            return true;
+//
+//        auto& assembler = session.assembler();
+//        auto block = assembler.current_block();
+//
+//        auto procedure_label = symbol()->name();
+//        auto parent_init = parent_element_as<compiler::initializer>();
+//        if (parent_init != nullptr) {
+//            auto parent_var = parent_init->parent_element_as<compiler::identifier>();
+//            if (parent_var != nullptr) {
+//                procedure_label = parent_var->label_name();
+//            }
+//        }
+//
+//        block->blank_line();
+//        block->align(vm::instruction_t::alignment);
+//        block->label(assembler.make_label(procedure_label));
+//
+//        auto frame = _scope->stack_frame();
+//
+//        auto& stack_offsets = frame->offsets();
+//        stack_offsets.locals = 8;
+//        if (_return_type != nullptr) {
+//            auto entry = frame->add(
+//                stack_frame_entry_type_t::return_slot,
+//                _return_type->identifier()->symbol()->name(),
+//                8);
+//            _return_type->identifier()->stack_frame_entry(entry);
+//
+//            stack_offsets.return_slot = 16;
+//            stack_offsets.parameters = 24;
+//        } else {
+//            stack_offsets.parameters = 16;
+//        }
+//
+//        auto fields = parameters().as_list();
+//        for (auto fld : fields) {
+//            auto var = fld->identifier();
+//            auto type = var->type_ref()->type();
+//            // XXX: if we change procedure_call to
+//            //      sub.qw sp, sp, {size}
+//            //
+//            //      and then store.x sp, {value}, offset
+//            //      we can use truer sizes within
+//            //      the 8-byte aligned stack block.
+//            //
+//            auto entry = frame->add(
+//                stack_frame_entry_type_t::parameter,
+//                var->symbol()->name(),
+//                common::align(type->size_in_bytes(), 8));
+//            var->stack_frame_entry(entry);
+//        }
+//
+//        return true;
+//    }
 
     bool procedure_type::prepare_call_site(
             compiler::session& session,

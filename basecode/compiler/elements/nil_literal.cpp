@@ -21,13 +21,13 @@ namespace basecode::compiler {
             block* parent_scope) : element(module, parent_scope, element_type_t::nil_literal) {
     }
 
-    bool nil_literal::on_emit(
-            compiler::session& session,
-            compiler::emit_context_t& context,
-            compiler::emit_result_t& result) {
-        result.operands.emplace_back(vm::instruction_operand_t(static_cast<uint64_t>(0)));
-        return true;
-    }
+//    bool nil_literal::on_emit(
+//            compiler::session& session,
+//            compiler::emit_context_t& context,
+//            compiler::emit_result_t& result) {
+//        result.operands.emplace_back(vm::instruction_operand_t(static_cast<uint64_t>(0)));
+//        return true;
+//    }
 
     bool nil_literal::on_infer_type(
             compiler::session& session,

@@ -37,140 +37,140 @@ namespace basecode::compiler {
                                       _rhs(rhs) {
     }
 
-    bool binary_operator::on_emit(
-            compiler::session& session,
-            compiler::emit_context_t& context,
-            compiler::emit_result_t& result) {
-        auto& assembler = session.assembler();
-
-        auto block = assembler.current_block();
-        block->label(assembler.make_label(fmt::format("{}_begin", label_name())));
-
-        switch (operator_type()) {
-            case operator_type_t::add:
-            case operator_type_t::modulo:
-            case operator_type_t::divide:
-            case operator_type_t::subtract:
-            case operator_type_t::multiply:
-            case operator_type_t::exponent:
-            case operator_type_t::binary_or:
-            case operator_type_t::shift_left:
-            case operator_type_t::binary_and:
-            case operator_type_t::binary_xor:
-            case operator_type_t::shift_right:
-            case operator_type_t::rotate_left:
-            case operator_type_t::rotate_right: {
-                return emit_arithmetic_operator(
-                    session,
-                    context,
-                    result);
-            }
-            case operator_type_t::equals:
-            case operator_type_t::less_than:
-            case operator_type_t::not_equals:
-            case operator_type_t::logical_or:
-            case operator_type_t::logical_and:
-            case operator_type_t::greater_than:
-            case operator_type_t::less_than_or_equal:
-            case operator_type_t::greater_than_or_equal: {
-                emit_relational_operator(
-                    session,
-                    context,
-                    result);
-                break;
-            }
-            case operator_type_t::subscript: {
-                block->comment("XXX: implement subscript operator", 4);
-                block->nop();
-                break;
-            }
-            case operator_type_t::member_access: {
-                variable_handle_t field_var {};
-                if (!session.variable(this, field_var))
-                    return false;
-
-                auto type = field_var->type_result().inferred_type;
-                auto target_number_class = type->number_class();
-                auto target_size = type->size_in_bytes();
-                auto target_type = target_number_class == type_number_class_t::integer ?
-                                   vm::register_type_t::integer :
-                                   vm::register_type_t::floating_point;
-
-                vm::instruction_operand_t result_operand;
-                if (!vm::instruction_operand_t::allocate(
-                        assembler,
-                        result_operand,
-                        vm::op_size_for_byte_size(target_size),
-                        target_type)) {
-                    return false;
-                }
-                result.operands.emplace_back(result_operand);
-
-                block->move(
-                    result_operand,
-                    field_var->emit_result().operands.back(),
-                    vm::instruction_operand_t::empty());
-                break;
-            }
-            case operator_type_t::assignment: {
-                infer_type_result_t lhs_type {};
-                if (!_lhs->infer_type(session, lhs_type))
-                    return false;
-
-                infer_type_result_t rhs_type {};
-                if (!_rhs->infer_type(session, rhs_type))
-                    return false;
-
-                auto copy_required = false;
-                auto lhs_is_composite = lhs_type.inferred_type->is_composite_type();
-                auto rhs_is_composite = rhs_type.inferred_type->is_composite_type();
-
-                if (!lhs_type.inferred_type->is_pointer_type()) {
-                    if (lhs_is_composite && !rhs_is_composite) {
-                        session.error(
-                            module(),
-                            "X000",
-                            "cannot assign scalar to composite type.",
-                            _rhs->location());
-                        return false;
-                    }
-
-                    if (!lhs_is_composite && rhs_is_composite) {
-                        session.error(
-                            module(),
-                            "X000",
-                            "cannot assign composite type to scalar.",
-                            _rhs->location());
-                        return false;
-                    }
-
-                    copy_required = lhs_is_composite && rhs_is_composite;
-                }
-
-                variable_handle_t rhs_var;
-                if (!session.variable(_rhs, rhs_var))
-                    return false;
-                rhs_var->read();
-
-                variable_handle_t lhs_var;
-                if (!session.variable(_lhs, lhs_var))
-                    return false;
-
-                if (copy_required) {
-                    lhs_var->copy(
-                        rhs_var.get(),
-                        rhs_type.inferred_type->size_in_bytes());
-                } else {
-                    lhs_var->write(rhs_var.get());
-                }
-                break;
-            }
-            default:
-                break;
-        }
-
-        return true;
-    }
+//    bool binary_operator::on_emit(
+//            compiler::session& session,
+//            compiler::emit_context_t& context,
+//            compiler::emit_result_t& result) {
+//        auto& assembler = session.assembler();
+//
+//        auto block = assembler.current_block();
+//        block->label(assembler.make_label(fmt::format("{}_begin", label_name())));
+//
+//        switch (operator_type()) {
+//            case operator_type_t::add:
+//            case operator_type_t::modulo:
+//            case operator_type_t::divide:
+//            case operator_type_t::subtract:
+//            case operator_type_t::multiply:
+//            case operator_type_t::exponent:
+//            case operator_type_t::binary_or:
+//            case operator_type_t::shift_left:
+//            case operator_type_t::binary_and:
+//            case operator_type_t::binary_xor:
+//            case operator_type_t::shift_right:
+//            case operator_type_t::rotate_left:
+//            case operator_type_t::rotate_right: {
+//                return emit_arithmetic_operator(
+//                    session,
+//                    context,
+//                    result);
+//            }
+//            case operator_type_t::equals:
+//            case operator_type_t::less_than:
+//            case operator_type_t::not_equals:
+//            case operator_type_t::logical_or:
+//            case operator_type_t::logical_and:
+//            case operator_type_t::greater_than:
+//            case operator_type_t::less_than_or_equal:
+//            case operator_type_t::greater_than_or_equal: {
+//                emit_relational_operator(
+//                    session,
+//                    context,
+//                    result);
+//                break;
+//            }
+//            case operator_type_t::subscript: {
+//                block->comment("XXX: implement subscript operator", 4);
+//                block->nop();
+//                break;
+//            }
+//            case operator_type_t::member_access: {
+//                variable_handle_t field_var {};
+//                if (!session.variable(this, field_var))
+//                    return false;
+//
+//                auto type = field_var->type_result().inferred_type;
+//                auto target_number_class = type->number_class();
+//                auto target_size = type->size_in_bytes();
+//                auto target_type = target_number_class == type_number_class_t::integer ?
+//                                   vm::register_type_t::integer :
+//                                   vm::register_type_t::floating_point;
+//
+//                vm::instruction_operand_t result_operand;
+//                if (!vm::instruction_operand_t::allocate(
+//                        assembler,
+//                        result_operand,
+//                        vm::op_size_for_byte_size(target_size),
+//                        target_type)) {
+//                    return false;
+//                }
+//                result.operands.emplace_back(result_operand);
+//
+//                block->move(
+//                    result_operand,
+//                    field_var->emit_result().operands.back(),
+//                    vm::instruction_operand_t::empty());
+//                break;
+//            }
+//            case operator_type_t::assignment: {
+//                infer_type_result_t lhs_type {};
+//                if (!_lhs->infer_type(session, lhs_type))
+//                    return false;
+//
+//                infer_type_result_t rhs_type {};
+//                if (!_rhs->infer_type(session, rhs_type))
+//                    return false;
+//
+//                auto copy_required = false;
+//                auto lhs_is_composite = lhs_type.inferred_type->is_composite_type();
+//                auto rhs_is_composite = rhs_type.inferred_type->is_composite_type();
+//
+//                if (!lhs_type.inferred_type->is_pointer_type()) {
+//                    if (lhs_is_composite && !rhs_is_composite) {
+//                        session.error(
+//                            module(),
+//                            "X000",
+//                            "cannot assign scalar to composite type.",
+//                            _rhs->location());
+//                        return false;
+//                    }
+//
+//                    if (!lhs_is_composite && rhs_is_composite) {
+//                        session.error(
+//                            module(),
+//                            "X000",
+//                            "cannot assign composite type to scalar.",
+//                            _rhs->location());
+//                        return false;
+//                    }
+//
+//                    copy_required = lhs_is_composite && rhs_is_composite;
+//                }
+//
+//                variable_handle_t rhs_var;
+//                if (!session.variable(_rhs, rhs_var))
+//                    return false;
+//                rhs_var->read();
+//
+//                variable_handle_t lhs_var;
+//                if (!session.variable(_lhs, lhs_var))
+//                    return false;
+//
+//                if (copy_required) {
+//                    lhs_var->copy(
+//                        rhs_var.get(),
+//                        rhs_type.inferred_type->size_in_bytes());
+//                } else {
+//                    lhs_var->write(rhs_var.get());
+//                }
+//                break;
+//            }
+//            default:
+//                break;
+//        }
+//
+//        return true;
+//    }
 
     bool binary_operator::on_infer_type(
             compiler::session& session,
@@ -444,246 +444,246 @@ namespace basecode::compiler {
             list.emplace_back(_rhs);
     }
 
-    void binary_operator::emit_relational_operator(
-            compiler::session& session,
-            emit_context_t& context,
-            emit_result_t& result) {
-        auto& assembler = session.assembler();
-        auto block = assembler.current_block();
-
-        auto end_label_name = fmt::format("{}_end", label_name());
-        auto end_label_ref = assembler.make_label_ref(end_label_name);
-
-        vm::instruction_operand_t result_operand;
-        if (!vm::instruction_operand_t::allocate(
-                assembler,
-                result_operand,
-                vm::op_sizes::byte,
-                vm::register_type_t::integer)) {
-            return;
-        }
-        result.operands.emplace_back(result_operand);
-
-        variable_handle_t lhs_var;
-        if (!session.variable(_lhs, lhs_var))
-            return;
-        lhs_var->read();
-
-        variable_handle_t rhs_var;
-        if (!session.variable(_rhs, rhs_var))
-            return;
-
-        auto is_signed = lhs_var->type_result().inferred_type->is_signed();
-
-        if (is_logical_conjunction_operator(operator_type())) {
-            block->move(
-                result_operand,
-                lhs_var->emit_result().operands.back());
-
-            switch (operator_type()) {
-                case operator_type_t::logical_or: {
-                    block->bnz(
-                        result_operand,
-                        vm::instruction_operand_t(end_label_ref));
-                    break;
-                }
-                case operator_type_t::logical_and: {
-                    block->bz(
-                        result_operand,
-                        vm::instruction_operand_t(end_label_ref));
-                    break;
-                }
-                default: {
-                    break;
-                }
-            }
-
-            rhs_var->read();
-            block->move(
-                result_operand,
-                rhs_var->emit_result().operands.back());
-        } else {
-            rhs_var->read();
-
-            block->cmp(
-                lhs_var->emit_result().operands.back(),
-                rhs_var->emit_result().operands.back());
-
-            switch (operator_type()) {
-                case operator_type_t::equals: {
-                    block->setz(result_operand);
-                    break;
-                }
-                case operator_type_t::less_than: {
-                    if (is_signed)
-                        block->setl(result_operand);
-                    else
-                        block->setb(result_operand);
-                    break;
-                }
-                case operator_type_t::not_equals: {
-                    block->setnz(result_operand);
-                    break;
-                }
-                case operator_type_t::greater_than: {
-                    if (is_signed)
-                        block->setg(result_operand);
-                    else
-                        block->seta(result_operand);
-                    break;
-                }
-                case operator_type_t::less_than_or_equal: {
-                    if (is_signed)
-                        block->setle(result_operand);
-                    else
-                        block->setbe(result_operand);
-                    break;
-                }
-                case operator_type_t::greater_than_or_equal: {
-                    if (is_signed)
-                        block->setge(result_operand);
-                    else
-                        block->setae(result_operand);
-                    break;
-                }
-                default: {
-                    break;
-                }
-            }
-        }
-
-        block->label(assembler.make_label(end_label_name));
-    }
-
-    bool binary_operator::emit_arithmetic_operator(
-            compiler::session& session,
-            emit_context_t& context,
-            emit_result_t& result) {
-        auto& assembler = session.assembler();
-        auto block = assembler.current_block();
-
-        infer_type_result_t type_result {};
-        if (!infer_type(session, type_result))
-            return false;
-
-        variable_handle_t lhs_var;
-        if (!session.variable(_lhs, lhs_var))
-            return false;
-        lhs_var->read();
-
-        variable_handle_t rhs_var;
-        if (!session.variable(_rhs, rhs_var))
-            return false;
-        rhs_var->read();
-
-        vm::instruction_operand_t result_operand;
-        if (!vm::instruction_operand_t::allocate(
-                assembler,
-                result_operand,
-                vm::op_size_for_byte_size(type_result.inferred_type->size_in_bytes()),
-                lhs_var->value_reg().type)) {
-            return false;
-        }
-
-        result.operands.emplace_back(result_operand);
-
-        switch (operator_type()) {
-            case operator_type_t::add: {
-                block->add(
-                    result_operand,
-                    lhs_var->emit_result().operands.back(),
-                    rhs_var->emit_result().operands.back());
-                break;
-            }
-            case operator_type_t::divide: {
-                block->div(
-                    result_operand,
-                    lhs_var->emit_result().operands.back(),
-                    rhs_var->emit_result().operands.back());
-                break;
-            }
-            case operator_type_t::modulo: {
-                block->mod(
-                    result_operand,
-                    lhs_var->emit_result().operands.back(),
-                    rhs_var->emit_result().operands.back());
-                break;
-            }
-            case operator_type_t::multiply: {
-                block->mul(
-                    result_operand,
-                    lhs_var->emit_result().operands.back(),
-                    rhs_var->emit_result().operands.back());
-                break;
-            }
-            case operator_type_t::exponent: {
-                block->pow(
-                    result_operand,
-                    lhs_var->emit_result().operands.back(),
-                    rhs_var->emit_result().operands.back());
-                break;
-            }
-            case operator_type_t::subtract: {
-                block->sub(
-                    result_operand,
-                    lhs_var->emit_result().operands.back(),
-                    rhs_var->emit_result().operands.back());
-                break;
-            }
-            case operator_type_t::binary_or: {
-                block->or_op(
-                    result_operand,
-                    lhs_var->emit_result().operands.back(),
-                    rhs_var->emit_result().operands.back());
-                break;
-            }
-            case operator_type_t::shift_left: {
-                block->shl(
-                    result_operand,
-                    lhs_var->emit_result().operands.back(),
-                    rhs_var->emit_result().operands.back());
-                break;
-            }
-            case operator_type_t::binary_and: {
-                block->and_op(
-                    result_operand,
-                    lhs_var->emit_result().operands.back(),
-                    rhs_var->emit_result().operands.back());
-                break;
-            }
-            case operator_type_t::binary_xor: {
-                block->xor_op(
-                    result_operand,
-                    lhs_var->emit_result().operands.back(),
-                    rhs_var->emit_result().operands.back());
-                break;
-            }
-            case operator_type_t::rotate_left: {
-                block->rol(
-                    result_operand,
-                    lhs_var->emit_result().operands.back(),
-                    rhs_var->emit_result().operands.back());
-                break;
-            }
-            case operator_type_t::shift_right: {
-                block->shr(
-                    result_operand,
-                    lhs_var->emit_result().operands.back(),
-                    rhs_var->emit_result().operands.back());
-                break;
-            }
-            case operator_type_t::rotate_right: {
-                block->ror(
-                    result_operand,
-                    lhs_var->emit_result().operands.back(),
-                    rhs_var->emit_result().operands.back());
-                break;
-            }
-            default:
-                break;
-        }
-
-        return true;
-    }
+//    void binary_operator::emit_relational_operator(
+//            compiler::session& session,
+//            emit_context_t& context,
+//            emit_result_t& result) {
+//        auto& assembler = session.assembler();
+//        auto block = assembler.current_block();
+//
+//        auto end_label_name = fmt::format("{}_end", label_name());
+//        auto end_label_ref = assembler.make_label_ref(end_label_name);
+//
+//        vm::instruction_operand_t result_operand;
+//        if (!vm::instruction_operand_t::allocate(
+//                assembler,
+//                result_operand,
+//                vm::op_sizes::byte,
+//                vm::register_type_t::integer)) {
+//            return;
+//        }
+//        result.operands.emplace_back(result_operand);
+//
+//        variable_handle_t lhs_var;
+//        if (!session.variable(_lhs, lhs_var))
+//            return;
+//        lhs_var->read();
+//
+//        variable_handle_t rhs_var;
+//        if (!session.variable(_rhs, rhs_var))
+//            return;
+//
+//        auto is_signed = lhs_var->type_result().inferred_type->is_signed();
+//
+//        if (is_logical_conjunction_operator(operator_type())) {
+//            block->move(
+//                result_operand,
+//                lhs_var->emit_result().operands.back());
+//
+//            switch (operator_type()) {
+//                case operator_type_t::logical_or: {
+//                    block->bnz(
+//                        result_operand,
+//                        vm::instruction_operand_t(end_label_ref));
+//                    break;
+//                }
+//                case operator_type_t::logical_and: {
+//                    block->bz(
+//                        result_operand,
+//                        vm::instruction_operand_t(end_label_ref));
+//                    break;
+//                }
+//                default: {
+//                    break;
+//                }
+//            }
+//
+//            rhs_var->read();
+//            block->move(
+//                result_operand,
+//                rhs_var->emit_result().operands.back());
+//        } else {
+//            rhs_var->read();
+//
+//            block->cmp(
+//                lhs_var->emit_result().operands.back(),
+//                rhs_var->emit_result().operands.back());
+//
+//            switch (operator_type()) {
+//                case operator_type_t::equals: {
+//                    block->setz(result_operand);
+//                    break;
+//                }
+//                case operator_type_t::less_than: {
+//                    if (is_signed)
+//                        block->setl(result_operand);
+//                    else
+//                        block->setb(result_operand);
+//                    break;
+//                }
+//                case operator_type_t::not_equals: {
+//                    block->setnz(result_operand);
+//                    break;
+//                }
+//                case operator_type_t::greater_than: {
+//                    if (is_signed)
+//                        block->setg(result_operand);
+//                    else
+//                        block->seta(result_operand);
+//                    break;
+//                }
+//                case operator_type_t::less_than_or_equal: {
+//                    if (is_signed)
+//                        block->setle(result_operand);
+//                    else
+//                        block->setbe(result_operand);
+//                    break;
+//                }
+//                case operator_type_t::greater_than_or_equal: {
+//                    if (is_signed)
+//                        block->setge(result_operand);
+//                    else
+//                        block->setae(result_operand);
+//                    break;
+//                }
+//                default: {
+//                    break;
+//                }
+//            }
+//        }
+//
+//        block->label(assembler.make_label(end_label_name));
+//    }
+//
+//    bool binary_operator::emit_arithmetic_operator(
+//            compiler::session& session,
+//            emit_context_t& context,
+//            emit_result_t& result) {
+//        auto& assembler = session.assembler();
+//        auto block = assembler.current_block();
+//
+//        infer_type_result_t type_result {};
+//        if (!infer_type(session, type_result))
+//            return false;
+//
+//        variable_handle_t lhs_var;
+//        if (!session.variable(_lhs, lhs_var))
+//            return false;
+//        lhs_var->read();
+//
+//        variable_handle_t rhs_var;
+//        if (!session.variable(_rhs, rhs_var))
+//            return false;
+//        rhs_var->read();
+//
+//        vm::instruction_operand_t result_operand;
+//        if (!vm::instruction_operand_t::allocate(
+//                assembler,
+//                result_operand,
+//                vm::op_size_for_byte_size(type_result.inferred_type->size_in_bytes()),
+//                lhs_var->value_reg().type)) {
+//            return false;
+//        }
+//
+//        result.operands.emplace_back(result_operand);
+//
+//        switch (operator_type()) {
+//            case operator_type_t::add: {
+//                block->add(
+//                    result_operand,
+//                    lhs_var->emit_result().operands.back(),
+//                    rhs_var->emit_result().operands.back());
+//                break;
+//            }
+//            case operator_type_t::divide: {
+//                block->div(
+//                    result_operand,
+//                    lhs_var->emit_result().operands.back(),
+//                    rhs_var->emit_result().operands.back());
+//                break;
+//            }
+//            case operator_type_t::modulo: {
+//                block->mod(
+//                    result_operand,
+//                    lhs_var->emit_result().operands.back(),
+//                    rhs_var->emit_result().operands.back());
+//                break;
+//            }
+//            case operator_type_t::multiply: {
+//                block->mul(
+//                    result_operand,
+//                    lhs_var->emit_result().operands.back(),
+//                    rhs_var->emit_result().operands.back());
+//                break;
+//            }
+//            case operator_type_t::exponent: {
+//                block->pow(
+//                    result_operand,
+//                    lhs_var->emit_result().operands.back(),
+//                    rhs_var->emit_result().operands.back());
+//                break;
+//            }
+//            case operator_type_t::subtract: {
+//                block->sub(
+//                    result_operand,
+//                    lhs_var->emit_result().operands.back(),
+//                    rhs_var->emit_result().operands.back());
+//                break;
+//            }
+//            case operator_type_t::binary_or: {
+//                block->or_op(
+//                    result_operand,
+//                    lhs_var->emit_result().operands.back(),
+//                    rhs_var->emit_result().operands.back());
+//                break;
+//            }
+//            case operator_type_t::shift_left: {
+//                block->shl(
+//                    result_operand,
+//                    lhs_var->emit_result().operands.back(),
+//                    rhs_var->emit_result().operands.back());
+//                break;
+//            }
+//            case operator_type_t::binary_and: {
+//                block->and_op(
+//                    result_operand,
+//                    lhs_var->emit_result().operands.back(),
+//                    rhs_var->emit_result().operands.back());
+//                break;
+//            }
+//            case operator_type_t::binary_xor: {
+//                block->xor_op(
+//                    result_operand,
+//                    lhs_var->emit_result().operands.back(),
+//                    rhs_var->emit_result().operands.back());
+//                break;
+//            }
+//            case operator_type_t::rotate_left: {
+//                block->rol(
+//                    result_operand,
+//                    lhs_var->emit_result().operands.back(),
+//                    rhs_var->emit_result().operands.back());
+//                break;
+//            }
+//            case operator_type_t::shift_right: {
+//                block->shr(
+//                    result_operand,
+//                    lhs_var->emit_result().operands.back(),
+//                    rhs_var->emit_result().operands.back());
+//                break;
+//            }
+//            case operator_type_t::rotate_right: {
+//                block->ror(
+//                    result_operand,
+//                    lhs_var->emit_result().operands.back(),
+//                    rhs_var->emit_result().operands.back());
+//                break;
+//            }
+//            default:
+//                break;
+//        }
+//
+//        return true;
+//    }
 
 };

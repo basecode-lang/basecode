@@ -22,22 +22,22 @@ namespace basecode::compiler {
                                              _expression(expression) {
     }
 
-    bool run_directive::on_emit(
-            compiler::session& session,
-            compiler::emit_context_t& context,
-            compiler::emit_result_t& result) {
-        auto& assembler = session.assembler();
-        auto block = assembler.current_block();
-
-        block->comment(
-            "directive: run",
-            vm::comment_location_t::after_instruction);
-        block->meta_begin();
-        auto success = _expression->emit(session, context, result);
-        block->meta_end();
-
-        return success;
-    }
+//    bool run_directive::on_emit(
+//            compiler::session& session,
+//            compiler::emit_context_t& context,
+//            compiler::emit_result_t& result) {
+//        auto& assembler = session.assembler();
+//        auto block = assembler.current_block();
+//
+//        block->comment(
+//            "directive: run",
+//            vm::comment_location_t::after_instruction);
+//        block->meta_begin();
+//        auto success = _expression->emit(session, context, result);
+//        block->meta_end();
+//
+//        return success;
+//    }
 
     bool run_directive::on_execute(compiler::session& session) {
         session.enable_run();

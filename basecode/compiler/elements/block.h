@@ -48,17 +48,7 @@ namespace basecode::compiler {
         compiler::stack_frame_entry* find_active_frame_entry(const std::string& symbol);
 
     protected:
-        bool on_emit(
-            compiler::session& session,
-            compiler::emit_context_t& context,
-            compiler::emit_result_t& result) override;
-
         void on_owned_elements(element_list_t& list) override;
-
-    private:
-        bool end_stack_frame(compiler::session& session);
-
-        bool begin_stack_frame(compiler::session& session);
 
     private:
         type_map_t _types {};

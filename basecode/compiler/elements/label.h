@@ -27,11 +27,6 @@ namespace basecode::compiler {
         std::string label_name() const override;
 
     protected:
-        bool on_emit(
-            compiler::session& session,
-            compiler::emit_context_t& context,
-            compiler::emit_result_t& result) override;
-
         bool on_is_constant() const override;
 
     private:
