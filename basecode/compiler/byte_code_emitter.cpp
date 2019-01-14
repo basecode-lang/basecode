@@ -714,6 +714,8 @@ namespace basecode::compiler {
             }
         }
 
+        block->blank_line();
+
         for (auto var : to_init) {
             block->move(
                 vm::instruction_operand_t(assembler.make_named_ref(
@@ -863,97 +865,101 @@ namespace basecode::compiler {
         return true;
     }
 
+    bool byte_code_emitter::emit_primitive_initializer(
+            vm::instruction_block* block,
+            const vm::instruction_operand_t& base_local,
+            compiler::identifier* var,
+            int64_t offset) {
+        auto var_type = var->type_ref()->type();
+        auto init = var->initializer();
+
+        uint64_t default_value = var_type->element_type() == element_type_t::rune_type ?
+                                 common::rune_invalid :
+                                 0;
+        vm::instruction_operand_t value(
+            default_value,
+            vm::op_size_for_byte_size(var_type->size_in_bytes()));
+        vm::instruction_operand_t* value_ptr = &value;
+
+        emit_result_t result {};
+        if (init != nullptr) {
+            if (!emit_element(block, init, result))
+                return false;
+            value_ptr = &result.operands.back();
+        }
+
+        block->comment(
+            fmt::format("initializer: {}", var_type->name()),
+            vm::comment_location_t::after_instruction);
+        block->store(
+            base_local,
+            *value_ptr,
+            vm::instruction_operand_t::offset(offset));
+        return true;
+    }
+
     bool byte_code_emitter::emit_identifier_initializer(
             vm::instruction_block* block,
-            compiler::identifier* var,
-            compiler::field* field,
-            int64_t parent_offset) {
-        auto& assembler = _session.assembler();
-        auto working_var = field != nullptr ? field->identifier() : var;
-        auto var_type = working_var->type_ref()->type();
-        auto init = working_var->initializer();
-        auto offset = field != nullptr ? parent_offset + field->start_offset() : 0;
+            compiler::identifier* var) {
+        vm::instruction_operand_t base_local(_session.assembler().make_named_ref(
+            vm::assembler_named_ref_type_t::local,
+            var->symbol()->name()));
 
-        auto emit_primitive_init = [&]() {
-            emit_result_t result {};
-
-            uint64_t default_value = var_type->element_type() == element_type_t::rune_type ?
-                common::rune_invalid :
-                0;
-            vm::instruction_operand_t value(
-                default_value,
-                vm::op_size_for_byte_size(var_type->size_in_bytes()));
-            vm::instruction_operand_t* value_ptr = &value;
-
-            if (init != nullptr) {
-                if (!emit_element(block, init, result))
-                    return false;
-                value_ptr = &result.operands.back();
-            }
-
-            block->comment(
-                fmt::format("initializer: {}", var_type->name()),
-                vm::comment_location_t::after_instruction);
-            block->store(
-                vm::instruction_operand_t(assembler.make_named_ref(
-                    vm::assembler_named_ref_type_t::local,
-                    var->symbol()->name())),
-                *value_ptr,
-                vm::instruction_operand_t::offset(offset));
-            return true;
+        struct identifier_todo_t {
+            compiler::identifier* var = nullptr;
+            uint64_t offset = 0;
         };
 
-        switch (var_type->element_type()) {
-            case element_type_t::rune_type:
-            case element_type_t::bool_type:
-            case element_type_t::numeric_type:
-            case element_type_t::pointer_type: {
-                if (!emit_primitive_init())
-                    return false;
-                break;
-            }
-            case element_type_t::tuple_type:
-            case element_type_t::composite_type: {
-                auto composite_type = dynamic_cast<compiler::composite_type*>(var_type);
-                switch (composite_type->type()) {
-                    case composite_types_t::enum_type: {
-                        if (!emit_primitive_init())
-                            return false;
-                        break;
-                    }
-                    case composite_types_t::union_type: {
-                        // XXX: intentional no-op
-                        break;
-                    }
-                    case composite_types_t::struct_type: {
-                        auto field_list = composite_type->fields().as_list();
-                        for (auto fld: field_list) {
-                            auto success = emit_identifier_initializer(
-                                block,
-                                var,
-                                fld,
-                                field != nullptr ? field->start_offset() : 0);
-                            if (!success)
-                                return false;
-                        }
-                        break;
-                    }
+        std::vector<identifier_todo_t> list {};
+        list.emplace_back(identifier_todo_t{var});
+
+        while (!list.empty()) {
+            auto todo = list.front();
+            list.erase(std::begin(list));
+
+            auto var_type = todo.var->type_ref()->type();
+
+            switch (var_type->element_type()) {
+                case element_type_t::rune_type:
+                case element_type_t::bool_type:
+                case element_type_t::numeric_type:
+                case element_type_t::pointer_type: {
+                    if (!emit_primitive_initializer(block, base_local, todo.var, todo.offset))
+                        return false;
+                    break;
                 }
-                break;
-            }
-            default: {
-                break;
+                case element_type_t::tuple_type:
+                case element_type_t::composite_type: {
+                    auto composite_type = dynamic_cast<compiler::composite_type*>(var_type);
+                    switch (composite_type->type()) {
+                        case composite_types_t::enum_type: {
+                            if (!emit_primitive_initializer(block, base_local, todo.var, todo.offset))
+                                return false;
+                            break;
+                        }
+                        case composite_types_t::union_type: {
+                            // XXX: intentional no-op
+                            break;
+                        }
+                        case composite_types_t::struct_type: {
+                            auto field_list = composite_type->fields().as_list();
+                            for (auto fld: field_list) {
+                                list.push_back(identifier_todo_t{
+                                    fld->identifier(),
+                                    fld->start_offset()});
+                            }
+                            break;
+                        }
+                    }
+                    break;
+                }
+                default: {
+                    break;
+                }
             }
         }
 
         return true;
-    }
-
-    int64_t byte_code_emitter::field_offset(compiler::field* field) const {
-        if (field == nullptr)
-            return 0;
-
-        return 0;
     }
 
     std::string byte_code_emitter::interned_string_data_label(common::id_t id) {
@@ -961,6 +967,5 @@ namespace basecode::compiler {
         _session.interned_strings().element_id_to_intern_id(id, intern_id);
         return fmt::format("_intern_str_lit_{}_data", intern_id);
     }
-
 
 };

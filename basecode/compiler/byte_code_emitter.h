@@ -29,10 +29,6 @@ namespace basecode::compiler {
 
         void push_block(vm::instruction_block* block);
 
-    // fields, offsets
-    private:
-        int64_t field_offset(compiler::field* field) const;
-
     private:
         bool emit_element(
             vm::instruction_block* block,
@@ -63,15 +59,19 @@ namespace basecode::compiler {
 
         bool emit_identifier_initializer(
             vm::instruction_block* block,
-            compiler::identifier* var,
-            compiler::field* field = nullptr,
-            int64_t parent_offset = 0);
+            compiler::identifier* var);
 
         element_list_t* variable_section(
             identifier_by_section_t& groups,
             vm::section_t section);
 
         bool emit_interned_string_table();
+
+        bool emit_primitive_initializer(
+            vm::instruction_block* block,
+            const vm::instruction_operand_t& base_local,
+            compiler::identifier* var,
+            int64_t offset);
 
         bool emit_finalizers(identifier_by_section_t& vars);
 
