@@ -48,10 +48,6 @@ namespace basecode::vm {
 
         common::id_t id() const;
 
-        bool should_emit() const;
-
-        void should_emit(bool value);
-
         void label(vm::label* value);
 
         block_entry_list_t& entries();
@@ -406,7 +402,7 @@ namespace basecode::vm {
         void pop(const instruction_operand_t& dest);
 
         // calls & jumps
-        void call(const label_ref_t* label_ref);
+        void call(const instruction_operand_t& target);
 
         void call_foreign(
             const instruction_operand_t& address,
@@ -414,7 +410,7 @@ namespace basecode::vm {
 
         void jump_indirect(const register_t& reg);
 
-        void jump_direct(const label_ref_t* label_ref);
+        void jump_direct(const instruction_operand_t& target);
 
     private:
         void make_set(
@@ -439,7 +435,6 @@ namespace basecode::vm {
 
     private:
         common::id_t _id;
-        bool _should_emit = true;
         instruction_block_type_t _type;
         block_entry_list_t _entries {};
         int64_t _recent_inst_index = -1;

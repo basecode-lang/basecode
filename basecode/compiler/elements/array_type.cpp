@@ -100,10 +100,6 @@ namespace basecode::compiler {
         return _base_type_ref;
     }
 
-    type_access_model_t array_type::on_access_model() const {
-        return type_access_model_t::pointer;
-    }
-
     void array_type::on_owned_elements(element_list_t& list) {
         if (_base_type_ref != nullptr)
             list.emplace_back(_base_type_ref);

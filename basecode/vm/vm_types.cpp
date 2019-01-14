@@ -197,24 +197,6 @@ namespace basecode::vm {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    bool instruction_operand_t::allocate(
-            vm::assembler& assembler,
-            instruction_operand_t& operand,
-            op_sizes size,
-            register_type_t type) {
-        register_t reg {
-            .size = size,
-            .type = type
-        };
-        auto success = assembler.allocate_reg(reg);
-        if (success) {
-            operand._data = reg;
-            operand._size = size;
-            operand._type = instruction_operand_type_t::reg;
-        }
-        return success;
-    }
-
     instruction_operand_t instruction_operand_t::offset(
             int64_t value,
             op_sizes size) {
@@ -271,15 +253,8 @@ namespace basecode::vm {
                                                                      _type(instruction_operand_type_t::imm_f64) {
     }
 
-    instruction_operand_t::instruction_operand_t(label_ref_t* label_ref): _data(label_ref),
-                                                                          _type(instruction_operand_type_t::label_ref) {
-    }
-
-    void instruction_operand_t::free(vm::assembler& assembler) {
-        if (_type != instruction_operand_type_t::reg)
-            return;
-
-        assembler.free_reg(*data<register_t>());
+    instruction_operand_t::instruction_operand_t(assembler_named_ref_t* ref): _data(ref),
+                                                                              _type(instruction_operand_type_t::named_ref) {
     }
 
     ///////////////////////////////////////////////////////////////////////////

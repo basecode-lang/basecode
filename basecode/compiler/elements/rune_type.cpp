@@ -31,10 +31,6 @@ namespace basecode::compiler {
                && other->element_type() == element_type_t::rune_type;
     }
 
-    type_access_model_t rune_type::on_access_model() const {
-        return type_access_model_t::value;
-    }
-
     type_number_class_t rune_type::on_number_class() const {
         return type_number_class_t::integer;
     }

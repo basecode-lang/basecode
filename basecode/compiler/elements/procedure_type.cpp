@@ -357,10 +357,6 @@ namespace basecode::compiler {
         return other->element_type() == element_type_t::proc_type;
     }
 
-    type_access_model_t procedure_type::on_access_model() const {
-        return type_access_model_t::pointer;
-    }
-
     void procedure_type::on_owned_elements(element_list_t& list) {
         if (_scope != nullptr)
             list.emplace_back(_scope);

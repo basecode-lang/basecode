@@ -28,10 +28,6 @@ namespace basecode::compiler {
                                                     element_type_t::tuple_type) {
     }
 
-    type_access_model_t tuple_type::on_access_model() const {
-        return type_access_model_t::pointer;
-    }
-
     bool tuple_type::on_initialize(compiler::session& session) {
         return composite_type::on_initialize(session);
     }

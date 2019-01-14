@@ -143,10 +143,6 @@ namespace basecode::compiler {
         return _number_class;
     }
 
-    type_access_model_t numeric_type::on_access_model() const {
-        return type_access_model_t::value;
-    }
-
     bool numeric_type::on_initialize(compiler::session& session) {
         auto it = s_types_map.find(symbol()->name());
         if (it == s_types_map.end())

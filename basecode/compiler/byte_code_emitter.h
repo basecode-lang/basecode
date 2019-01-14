@@ -15,18 +15,27 @@
 
 namespace basecode::compiler {
 
-    using identifier_by_section_t = std::map<vm::section_t, element_list_t>;
-
     class byte_code_emitter {
     public:
         explicit byte_code_emitter(compiler::session& session);
 
         bool emit();
 
-        std::string interned_string_data_label(common::id_t id);
+    // instruction block stack
+    private:
+        vm::instruction_block* pop_block();
+
+        vm::instruction_block* current_block();
+
+        void push_block(vm::instruction_block* block);
+
+    // fields, offsets
+    private:
+        int64_t field_offset(compiler::field* field) const;
 
     private:
         bool emit_element(
+            vm::instruction_block* block,
             compiler::element* e,
             emit_result_t& result);
 
@@ -54,7 +63,9 @@ namespace basecode::compiler {
 
         bool emit_identifier_initializer(
             vm::instruction_block* block,
-            compiler::identifier* var);
+            compiler::identifier* var,
+            compiler::field* field = nullptr,
+            int64_t parent_offset = 0);
 
         element_list_t* variable_section(
             identifier_by_section_t& groups,
@@ -70,7 +81,10 @@ namespace basecode::compiler {
 
         bool emit_section_tables(identifier_by_section_t& vars);
 
+        std::string interned_string_data_label(common::id_t id);
+
     private:
         compiler::session& _session;
+        basic_block_stack_t _block_stack {};
     };
 };

@@ -73,10 +73,6 @@ namespace basecode::compiler {
         return other != nullptr && other->id() == id();
     }
 
-    type_access_model_t composite_type::on_access_model() const {
-        return type_access_model_t::pointer;
-    }
-
     void composite_type::on_owned_elements(element_list_t& list) {
         for (auto element : _fields.as_list())
             list.emplace_back(element);
@@ -108,8 +104,10 @@ namespace basecode::compiler {
                 break;
             }
             case composite_types_t::struct_type: {
-                for (auto fld : _fields.as_list())
-                    size += common::align(fld->size_in_bytes(), fld->alignment());
+                for (auto fld : _fields.as_list()) {
+                    size += fld->size_in_bytes();
+                    size = common::align(size, fld->alignment());
+                }
                 align = sizeof(uint64_t);
                 break;
             }

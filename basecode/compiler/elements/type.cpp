@@ -170,10 +170,6 @@ namespace basecode::compiler {
         return on_type_check(other);
     }
 
-    type_access_model_t type::access_model() const {
-        return on_access_model();
-    }
-
     type_number_class_t type::number_class() const {
         return on_number_class();
     }
@@ -188,10 +184,6 @@ namespace basecode::compiler {
 
     bool type::initialize(compiler::session& session) {
         return on_initialize(session);
-    }
-
-    type_access_model_t type::on_access_model() const {
-        return type_access_model_t::none;
     }
 
     type_number_class_t type::on_number_class() const {

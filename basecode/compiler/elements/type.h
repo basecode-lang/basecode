@@ -58,8 +58,6 @@ namespace basecode::compiler {
 
         virtual bool is_composite_type() const;
 
-        type_access_model_t access_model() const;
-
         type_number_class_t number_class() const;
 
         compiler::symbol_element* symbol() const;
@@ -75,8 +73,6 @@ namespace basecode::compiler {
 
         virtual bool on_type_check(compiler::type* other);
 
-        virtual type_access_model_t on_access_model() const;
-
         virtual type_number_class_t on_number_class() const;
 
         void on_owned_elements(element_list_t& list) override;
@@ -87,7 +83,7 @@ namespace basecode::compiler {
         bool _packed = false;
         size_t _alignment = 0;
         size_t _size_in_bytes {};
-        compiler::symbol_element* _symbol;
+        compiler::symbol_element* _symbol = nullptr;
     };
 
 };

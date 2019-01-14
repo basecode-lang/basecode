@@ -45,24 +45,23 @@ namespace basecode::compiler {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    enum class type_access_model_t {
-        none,
-        value,
-        pointer
-    };
-
     enum class type_number_class_t {
         none,
         integer,
         floating_point,
     };
 
-    ///////////////////////////////////////////////////////////////////////////
-
-    enum class identifier_usage_t : uint8_t {
-        heap = 1,
-        stack
-    };
+    static inline vm::local_type_t number_class_to_local_type(type_number_class_t type) {
+        switch (type) {
+            case type_number_class_t::none:
+            case type_number_class_t::integer: {
+                return vm::local_type_t::integer;
+            }
+            case type_number_class_t::floating_point: {
+                return vm::local_type_t::floating_point;
+            }
+        }
+    }
 
     ///////////////////////////////////////////////////////////////////////////
 
@@ -114,12 +113,6 @@ namespace basecode::compiler {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    struct emit_result_t {
-        std::vector<vm::instruction_operand_t> operands {};
-    };
-
-    ///////////////////////////////////////////////////////////////////////////
-
     enum class stack_frame_entry_type_t : uint8_t {
         local = 1,
         parameter,
@@ -144,5 +137,19 @@ namespace basecode::compiler {
                 return "unknown";
         }
     }
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    using basic_block_stack_t = std::stack<vm::instruction_block*>;
+    using identifier_by_section_t = std::map<vm::section_t, element_list_t>;
+
+    enum class identifier_usage_t : uint8_t {
+        heap = 1,
+        stack
+    };
+
+    struct emit_result_t {
+        std::vector<vm::instruction_operand_t> operands {};
+    };
 
 }

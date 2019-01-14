@@ -479,6 +479,26 @@ namespace basecode::vm {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    struct assembler_local_t {
+        register_t reg;
+        std::string name;
+        int64_t offset = 0;
+    };
+
+    enum class assembler_named_ref_type_t : uint8_t {
+        none,
+        label,
+        local,
+        offset,
+    };
+
+    struct assembler_named_ref_t {
+        std::string name;
+        assembler_named_ref_type_t type = assembler_named_ref_type_t::none;
+    };
+
+    ///////////////////////////////////////////////////////////////////////////
+
     union operand_value_alias_t {
         uint8_t  r;
         uint64_t u;
@@ -494,7 +514,7 @@ namespace basecode::vm {
             return reg;
         }
 
-        register_type_t type;
+        register_type_t type = register_type_t::none;
         operand_value_alias_t alias {
             .u = 0
         };
@@ -511,15 +531,10 @@ namespace basecode::vm {
             negative    = 0b00000100,
             prefix      = 0b00001000,
             postfix     = 0b00010000,
-            unresolved  = 0b00100000,
-            dword       = 0b01000000,
-            word        = 0b10000000,
-            byte        = 0b11000000,
+            dword       = 0b00100000,
+            word        = 0b01000000,
+            byte        = 0b10000000,
         };
-
-        void clear_unresolved() {
-            type &= ~flags::unresolved;
-        }
 
         void size_to_flags() {
             switch (size) {
@@ -540,41 +555,39 @@ namespace basecode::vm {
         void size_from_flags() {
             if ((type & flags::byte) == flags::byte)
                 size = op_sizes::byte;
-            else if ((type & flags::word) != 0)
+            else if ((type & flags::word) == flags::word)
                 size = op_sizes::word;
-            else if ((type & flags::dword) != 0)
+            else if ((type & flags::dword) == flags::dword)
                 size = op_sizes::dword;
             else
                 size = op_sizes::qword;
         }
 
         inline bool is_reg() const {
-            return (type & flags::reg) != 0;
+            return (type & flags::reg) == flags::reg;
         }
 
         inline bool is_prefix() const {
-            return (type & flags::prefix) != 0;
+            return (type & flags::prefix) == flags::prefix;
         }
 
         inline bool is_postfix() const {
-            return (type & flags::postfix) != 0;
+            return (type & flags::postfix) == flags::postfix;
         }
 
         inline bool is_integer() const {
-            return (type & flags::integer) != 0;
+            return (type & flags::integer) == flags::integer;
         }
 
         inline bool is_negative() const {
-            return (type & flags::negative) != 0;
-        }
-
-        inline bool is_unresolved() const {
-            return (type & flags::unresolved) != 0;
+            return (type & flags::negative) == flags::negative;
         }
 
         op_sizes size = op_sizes::qword;
         flags_t type = flags::reg | flags::integer;
         operand_value_alias_t value {};
+
+        assembler_named_ref_t* fixup_ref = nullptr;
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -639,14 +652,6 @@ namespace basecode::vm {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    struct label_ref_t {
-        common::id_t id;
-        std::string name;
-        label* resolved = nullptr;
-    };
-
-    ///////////////////////////////////////////////////////////////////////////
-
     enum class instruction_block_type_t {
         basic,
     };
@@ -689,7 +694,7 @@ namespace basecode::vm {
         uint8_t size = 0;
     };
 
-    using data_value_variant_t = boost::variant<uint64_t, label_ref_t*>;
+    using data_value_variant_t = boost::variant<uint64_t, assembler_named_ref_t*>;
     struct data_definition_t {
         op_sizes size;
         data_definition_type_t type = data_definition_type_t::none;
@@ -797,23 +802,27 @@ namespace basecode::vm {
 
     using block_entry_list_t = std::vector<block_entry_t>;
 
+    ///////////////////////////////////////////////////////////////////////////
+
     enum class instruction_operand_type_t : uint8_t {
         empty,
         reg,
-        label_ref,
+        named_ref,
         imm_f32,
         imm_f64,
         imm_uint,
         imm_sint,
     };
 
-    struct instruction_operand_t {
-        static bool allocate(
-            vm::assembler& assembler,
-            instruction_operand_t& operand,
-            op_sizes size,
-            register_type_t type = register_type_t::integer);
+    struct offset_ref_t {
+        std::string name;
+    };
 
+    struct local_ref_t {
+        std::string name;
+    };
+
+    struct instruction_operand_t {
         static instruction_operand_t fp();
 
         static instruction_operand_t sp();
@@ -842,7 +851,7 @@ namespace basecode::vm {
 
         explicit instruction_operand_t(double immediate);
 
-        explicit instruction_operand_t(label_ref_t* label_ref);
+        explicit instruction_operand_t(assembler_named_ref_t* ref);
 
         bool is_empty() const {
             return _type == instruction_operand_type_t::empty;
@@ -855,8 +864,6 @@ namespace basecode::vm {
         void size(op_sizes size) {
             _size = size;
         }
-
-        void free(vm::assembler& assembler);
 
         instruction_operand_type_t type() const {
             return _type;
@@ -993,14 +1000,14 @@ namespace basecode::vm {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    using control_flow_value_map_t = std::unordered_map<uint16_t, boost::any>;
-
-    struct control_flow_t {
-        bool fallthrough = false;
-        label_ref_t* exit_label = nullptr;
-        label_ref_t* continue_label = nullptr;
-        control_flow_value_map_t values {};
-    };
+//    using control_flow_value_map_t = std::unordered_map<uint16_t, boost::any>;
+//
+//    struct control_flow_t {
+//        bool fallthrough = false;
+//        assembler_label_ref_t* exit_label = nullptr;
+//        assembler_label_ref_t* continue_label = nullptr;
+//        control_flow_value_map_t values {};
+//    };
 
     ///////////////////////////////////////////////////////////////////////////
 

@@ -67,7 +67,9 @@ namespace basecode::vm {
 
         ~assembly_parser();
 
-        bool parse(common::result& r);
+        bool parse(
+            common::result& r,
+            vm::instruction_block* block);
 
     private:
         bool parse_immediate_number(

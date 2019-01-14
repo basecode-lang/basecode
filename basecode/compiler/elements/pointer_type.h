@@ -41,8 +41,6 @@ namespace basecode::compiler {
 
         type_number_class_t on_number_class() const override;
 
-        type_access_model_t on_access_model() const override;
-
         bool on_initialize(compiler::session& session) override;
 
     private:

@@ -73,10 +73,6 @@ namespace basecode::compiler {
         return type_number_class_t::integer;
     }
 
-    type_access_model_t pointer_type::on_access_model() const {
-        return type_access_model_t::pointer;
-    }
-
     bool pointer_type::on_initialize(compiler::session& session) {
         auto type_symbol = session.builder().make_symbol(
             parent_scope(),

@@ -40,15 +40,77 @@ namespace basecode::vm {
         uint64_t highest_address = 0;
 
         for (auto block : _blocks) {
-            if (!block->should_emit())
-                continue;
+            free_locals();
 
             for (auto& entry : block->entries()) {
                 highest_address = entry.address();
 
                 switch (entry.type()) {
+                    case block_entry_type_t::local: {
+                        auto data = entry.data<local_t>();
+                        assembler_local_t local {};
+                        local.name = data->name;
+                        local.offset = data->offset;
+                        switch (data->type) {
+                            case local_type_t::integer: {
+                                local.reg.type = register_type_t::integer;
+                                break;
+                            }
+                            case local_type_t::floating_point: {
+                                local.reg.type = register_type_t::floating_point;
+                                break;
+                            }
+                        }
+                        if (!allocate_reg(local.reg))
+                            return false;
+                        _locals.insert(std::make_pair(data->name, local));
+                        break;
+                    }
                     case block_entry_type_t::instruction: {
                         auto inst = entry.data<instruction_t>();
+
+                        for (size_t i = 0; i < inst->operands_count; i++) {
+                            auto& operand = inst->operands[i];
+                            if (operand.fixup_ref == nullptr)
+                                continue;
+
+                            switch (operand.fixup_ref->type) {
+                                case assembler_named_ref_type_t::local: {
+                                    auto it = _locals.find(operand.fixup_ref->name);
+                                    if (it != _locals.end()) {
+                                        const auto& local = it->second;
+                                        operand.value.r = local.reg.number;
+                                        switch (local.reg.type) {
+                                            case register_type_t::integer: {
+                                                operand.type |= operand_encoding_t::flags::integer;
+                                                break;
+                                            }
+                                            default: {
+                                                break;
+                                            }
+                                        }
+                                    }
+                                    break;
+                                }
+                                case assembler_named_ref_type_t::offset: {
+                                    auto it = _locals.find(operand.fixup_ref->name);
+                                    if (it != _locals.end()) {
+                                        const auto& local = it->second;
+                                        auto imm_value = local.offset;
+                                        if (imm_value < 0) {
+                                            operand.type |= operand_encoding_t::flags::negative;
+                                            imm_value = -imm_value;
+                                        }
+                                        operand.value.u = static_cast<uint64_t>(imm_value);
+                                    }
+                                    break;
+                                }
+                                default: {
+                                    break;
+                                }
+                            }
+                        }
+
                         auto inst_size = inst->encode(r, entry.address());
                         if (inst_size == 0)
                             return false;
@@ -61,10 +123,10 @@ namespace basecode::vm {
                             auto offset = 0;
                             for (auto v : data_def->values) {
                                 if (v.which() != 0) {
-                                    auto label_ref = boost::get<label_ref_t*>(v);
+                                    auto label_ref = boost::get<assembler_named_ref_t*>(v);
                                     r.error(
                                         "A031",
-                                        fmt::format("unexpected label_ref_t*: {}", label_ref->name));
+                                        fmt::format("unexpected assembler_named_ref_t*: {}", label_ref->name));
                                     continue;
                                 }
                                 _terp->write(
@@ -83,10 +145,20 @@ namespace basecode::vm {
             }
         }
 
+        free_locals();
+
         highest_address += 8;
         _terp->heap_free_space_begin(common::align(highest_address, 8));
 
         return !r.is_failed();
+    }
+
+    void assembler::free_locals() {
+        if (!_labels.empty())
+            return;
+        for (const auto& kvp : _labels)
+            free(kvp.second);
+        _labels.clear();
     }
 
     vm::segment* assembler::segment(
@@ -101,17 +173,10 @@ namespace basecode::vm {
     bool assembler::assemble_from_source(
             common::result& r,
             common::source_file& source_file,
+            vm::instruction_block* block,
             void* data) {
         vm::assembly_parser parser(this, source_file, data);
-        return parser.parse(r);
-    }
-
-    instruction_block* assembler::pop_block() {
-        if (_block_stack.empty())
-            return nullptr;
-        auto top = _block_stack.top();
-        _block_stack.pop();
-        return top;
+        return parser.parse(r, block);
     }
 
     vm::assembly_listing& assembler::listing() {
@@ -131,12 +196,6 @@ namespace basecode::vm {
         return true;
     }
 
-    instruction_block* assembler::current_block() {
-        if (_block_stack.empty())
-            return nullptr;
-        return _block_stack.top();
-    }
-
     bool assembler::allocate_reg(register_t& reg) {
         return _register_allocator.allocate(reg);
     }
@@ -146,18 +205,6 @@ namespace basecode::vm {
     }
 
     bool assembler::resolve_labels(common::result& r) {
-        auto label_refs = label_references();
-        for (auto label_ref : label_refs) {
-            label_ref->resolved = find_label(label_ref->name);
-            if (label_ref->resolved == nullptr) {
-                r.error(
-                    "A001",
-                    fmt::format(
-                        "unable to resolve label: {}",
-                        label_ref->name));
-            }
-        }
-
         for (auto block : _blocks) {
             for (auto& entry : block->entries()) {
                 switch (entry.type()) {
@@ -165,12 +212,19 @@ namespace basecode::vm {
                         auto inst = entry.data<instruction_t>();
                         for (size_t i = 0; i < inst->operands_count; i++) {
                             auto& operand = inst->operands[i];
-                            if (operand.is_unresolved()) {
-                                auto label_ref = find_label_ref(static_cast<uint32_t>(operand.value.u));
-                                if (label_ref != nullptr
-                                &&  label_ref->resolved != nullptr) {
-                                    operand.value.u = label_ref->resolved->address();
-                                    operand.clear_unresolved();
+                            if (operand.fixup_ref == nullptr)
+                                continue;
+
+                            switch (operand.fixup_ref->type) {
+                                case assembler_named_ref_type_t::label: {
+                                    auto label = find_label(operand.fixup_ref->name);
+                                    if (label != nullptr) {
+                                        operand.value.u = label->address();
+                                    }
+                                    break;
+                                }
+                                default: {
+                                    break;
                                 }
                             }
                         }
@@ -180,12 +234,23 @@ namespace basecode::vm {
                         auto data_def = entry.data<data_definition_t>();
                         if (data_def->type == data_definition_type_t::uninitialized)
                             break;
-                        for (size_t i = 0; i < data_def->values.size(); i++) {
-                            auto variant = data_def->values[i];
+                        for (auto& value : data_def->values) {
+                            auto variant = value;
                             if (variant.which() == 1) {
-                                auto label_ref = boost::get<label_ref_t*>(variant);
-                                if (label_ref != nullptr) {
-                                    data_def->values[i] = label_ref->resolved->address();
+                                auto named_ref = boost::get<assembler_named_ref_t*>(variant);
+                                if (named_ref != nullptr) {
+                                    switch (named_ref->type) {
+                                        case assembler_named_ref_type_t::label: {
+                                            auto label = find_label(named_ref->name);
+                                            if (label != nullptr) {
+                                                value = label->address();
+                                            }
+                                            break;
+                                        }
+                                        default: {
+                                            break;
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -201,6 +266,22 @@ namespace basecode::vm {
         return !r.is_failed();
     }
 
+    assembler_named_ref_t* assembler::make_named_ref(
+            assembler_named_ref_type_t type,
+            const std::string& name) {
+        auto it = _named_refs.find(name);
+        if (it != _named_refs.end())
+            return &it->second;
+
+        auto insert_pair = _named_refs.insert(std::make_pair(
+            name,
+            assembler_named_ref_t {
+                .name = name,
+                .type = type
+            }));
+        return &insert_pair.first->second;
+    }
+
     instruction_block* assembler::make_basic_block() {
         auto block = new instruction_block(instruction_block_type_t::basic);
         register_block(block);
@@ -210,9 +291,6 @@ namespace basecode::vm {
     bool assembler::apply_addresses(common::result& r) {
         size_t offset = 0;
         for (auto block : _blocks) {
-            if (!block->should_emit())
-                continue;
-
             for (auto& entry : block->entries()) {
                 entry.address(_location_counter + offset);
                 switch (entry.type()) {
@@ -271,10 +349,6 @@ namespace basecode::vm {
         return !r.is_failed();
     }
 
-    void assembler::push_block(instruction_block* block) {
-        _block_stack.push(block);
-    }
-
     label* assembler::find_label(const std::string& name) {
         const auto it = _labels.find(name);
         if (it == _labels.end())
@@ -282,33 +356,7 @@ namespace basecode::vm {
         return it->second;
     }
 
-    void assembler::register_block(instruction_block* block) {
-        auto source_file = _listing.current_source_file();
-        if (source_file != nullptr)
-            block->source_file(source_file);
-        _blocks.push_back(block);
-        _block_registry.insert(std::make_pair(block->id(), block));
-    }
-
-    label_ref_t* assembler::find_label_ref(common::id_t id) {
-        auto it = _unresolved_labels.find(id);
-        if (it != _unresolved_labels.end()) {
-            return &it->second;
-        }
-        return nullptr;
-    }
-
-    vm::segment* assembler::segment(const std::string& name) {
-        auto it = _segments.find(name);
-        if (it == _segments.end())
-            return nullptr;
-        return &it->second;
-    }
-
     void assembler::disassemble(instruction_block* block) {
-        if (!block->should_emit())
-            return;
-
         auto source_file = block->source_file();
         if (source_file == nullptr)
             return;
@@ -317,6 +365,13 @@ namespace basecode::vm {
 
         size_t last_indent = 0;
         auto indent_four_spaces = std::string(4, ' ');
+
+        auto start_address = block->entries().front().address();
+        source_file->add_blank_lines(start_address);
+        source_file->add_source_line(
+            listing_source_line_type_t::directive,
+            start_address,
+            fmt::format(".block {}", block->id()));
 
         for (auto& entry : block->entries()) {
             std::stringstream line {};
@@ -334,11 +389,17 @@ namespace basecode::vm {
                     auto local = entry.data<local_t>();
                     switch (local->type) {
                         case local_type_t::integer: {
-                            line << fmt::format(".ilocal {}", local->name);
+                            line << fmt::format(
+                                "{}.ilocal {}",
+                                indent_four_spaces,
+                                local->name);
                             break;
                         }
                         case local_type_t::floating_point: {
-                            line << fmt::format(".flocal {}", local->name);
+                            line << fmt::format(
+                                "{}.flocal {}",
+                                indent_four_spaces,
+                                local->name);
                             break;
                         }
                     }
@@ -386,17 +447,17 @@ namespace basecode::vm {
                     type = listing_source_line_type_t::instruction;
                     auto inst = entry.data<instruction_t>();
                     auto stream = inst->disassemble([&](uint64_t id) -> std::string {
-                        auto label_ref = find_label_ref(static_cast<common::id_t>(id));
-                        if (label_ref != nullptr) {
-                            if (label_ref->resolved != nullptr) {
-                                return fmt::format(
-                                    "{} (${:08x})",
-                                    label_ref->name,
-                                    label_ref->resolved->address());
-                            } else {
-                                return label_ref->name;
-                            }
-                        }
+//                        auto named_ref = find_named_ref(static_cast<common::id_t>(id));
+//                        if (named_ref != nullptr) {
+//                            if (named_ref->resolved != nullptr) {
+//                                return fmt::format(
+//                                    "{} (${:08x})",
+//                                    named_ref->name,
+//                                    named_ref->resolved->address());
+//                            } else {
+//                                return named_ref->name;
+//                            }
+//                        }
                         return fmt::format("unresolved_ref_id({})", id);
                     });
                     line << fmt::format("{}{}", indent_four_spaces, stream);
@@ -468,7 +529,7 @@ namespace basecode::vm {
                         if (v.which() == 0)
                             items += fmt::format(format_spec, boost::get<uint64_t>(v));
                         else
-                            items += boost::get<label_ref_t*>(v)->name;
+                            items += boost::get<assembler_named_ref_t*>(v)->name;
                         if ((item_index % 8) == 0) {
                             source_file->add_source_line(
                                 listing_source_line_type_t::data_definition,
@@ -496,7 +557,7 @@ namespace basecode::vm {
                 if (len == 0)
                     indent_len = last_indent;
                 else
-                    indent_len = std::max<int64_t>(0, 60 - len);
+                    indent_len = (size_t) std::max<int64_t>(0, 60 - len);
                 std::string indent(indent_len, ' ');
                 line << fmt::format("{}; {}", indent, top.value);
                 last_indent = len + indent_len;
@@ -520,14 +581,26 @@ namespace basecode::vm {
                     temp.str());
             }
         }
+
+        source_file->add_source_line(
+            listing_source_line_type_t::directive,
+            block->entries().back().address(),
+            ".end");
     }
 
-    std::vector<label_ref_t*> assembler::label_references() {
-        std::vector<label_ref_t*> refs {};
-        for (auto& kvp : _unresolved_labels) {
-            refs.push_back(&kvp.second);
-        }
-        return refs;
+    vm::segment* assembler::segment(const std::string& name) {
+        auto it = _segments.find(name);
+        if (it == _segments.end())
+            return nullptr;
+        return &it->second;
+    }
+
+    void assembler::register_block(instruction_block* block) {
+        auto source_file = _listing.current_source_file();
+        if (source_file != nullptr)
+            block->source_file(source_file);
+        _blocks.push_back(block);
+        _block_registry.insert(std::make_pair(block->id(), block));
     }
 
     vm::label* assembler::make_label(const std::string& name) {
@@ -550,26 +623,12 @@ namespace basecode::vm {
         _resolver = resolver;
     }
 
-    label_ref_t* assembler::make_label_ref(const std::string& label_name) {
-        auto it = _label_to_unresolved_ids.find(label_name);
-        if (it != _label_to_unresolved_ids.end()) {
-            auto ref_it = _unresolved_labels.find(it->second);
-            if (ref_it != _unresolved_labels.end())
-                return &ref_it->second;
+    assembler_named_ref_t* assembler::find_named_ref(const std::string& name) {
+        auto it = _named_refs.find(name);
+        if (it != _named_refs.end()) {
+            return &it->second;
         }
-
-        auto label = find_label(label_name);
-        auto ref_id = common::id_pool::instance()->allocate();
-        auto insert_pair = _unresolved_labels.insert(std::make_pair(
-            ref_id,
-            label_ref_t {
-                .id = ref_id,
-                .name = label_name,
-                .resolved = label
-            }));
-        _label_to_unresolved_ids.insert(std::make_pair(label_name, ref_id));
-
-        return &insert_pair.first.operator->()->second;
+        return nullptr;
     }
 
 };

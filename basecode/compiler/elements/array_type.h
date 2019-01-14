@@ -52,8 +52,6 @@ namespace basecode::compiler {
             compiler::element* e,
             const fold_result_t& fold_result) override;
 
-        type_access_model_t on_access_model() const override;
-
         void on_owned_elements(element_list_t& list) override;
 
         bool on_initialize(compiler::session& session) override;

@@ -352,12 +352,12 @@ namespace basecode::vm {
                         operands_stream << "F" << std::to_string(operand.value.r);
                     }
                 } else {
-                    if (operand.is_unresolved()) {
-                        if (id_resolver == nullptr)
-                            operands_stream << fmt::format("id({})", operand.value.u);
-                        else
-                            operands_stream << id_resolver(operand.value.u);
-                    } else {
+//                    if (operand.is_unresolved()) {
+//                        if (id_resolver == nullptr)
+//                            operands_stream << fmt::format("id({})", operand.value.u);
+//                        else
+//                            operands_stream << id_resolver(operand.value.u);
+//                    } else {
                         operands_stream << prefix;
 
                         auto operand_format_spec = op_size_format_spec(operand.size);
@@ -380,7 +380,7 @@ namespace basecode::vm {
                         }
 
                         operands_stream << postfix;
-                    }
+//                    }
                 }
             }
 

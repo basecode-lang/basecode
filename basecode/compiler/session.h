@@ -125,8 +125,6 @@ namespace basecode::compiler {
 
         vm::register_t* get_address_register(common::id_t id);
 
-        vm::label_ref_t* type_info_label(compiler::type* type);
-
         void push_source_file(common::source_file* source_file);
 
         const address_register_map_t& address_registers() const;
@@ -136,8 +134,6 @@ namespace basecode::compiler {
         common::id_t intern_string(compiler::string_literal* literal);
 
         syntax::ast_node_t* parse(const boost::filesystem::path& path);
-
-        void type_info_label(compiler::type* type, vm::label_ref_t* label);
 
         compiler::module* compile_module(common::source_file* source_file);
 
@@ -201,7 +197,6 @@ namespace basecode::compiler {
         source_file_map_t _source_file_registry {};
         address_register_map_t _address_registers {};
         source_file_path_map_t _source_file_paths {};
-        std::unordered_map<common::id_t, vm::label_ref_t*> _type_info_labels {};
     };
 
 };

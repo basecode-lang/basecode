@@ -90,12 +90,22 @@ namespace basecode::vm {
                 op.value.d = *operand.data<double>();
                 break;
             }
-            case instruction_operand_type_t::label_ref: {
+            case instruction_operand_type_t::named_ref: {
                 op.size = op_sizes::qword;
-                op.type = operand_encoding_t::flags::integer
-                    | operand_encoding_t::flags::constant
-                    | operand_encoding_t::flags::unresolved;
-                op.value.u = (*operand.data<label_ref_t*>())->id;
+                op.type = operand_encoding_t::flags::none;
+                op.value.u = 0;
+                op.fixup_ref = *operand.data<assembler_named_ref_t*>();
+                switch (op.fixup_ref->type) {
+                    case assembler_named_ref_type_t::local: {
+                        op.type |= operand_encoding_t::flags::reg;
+                        break;
+                    }
+                    case assembler_named_ref_type_t::label:
+                    case assembler_named_ref_type_t::offset: {
+                        op.type |= operand_encoding_t::flags::integer
+                            | operand_encoding_t::flags::constant;
+                    }
+                }
                 break;
             }
             case instruction_operand_type_t::imm_sint: {
@@ -128,14 +138,6 @@ namespace basecode::vm {
 
     common::id_t instruction_block::id() const {
         return _id;
-    }
-
-    bool instruction_block::should_emit() const {
-        return _should_emit;
-    }
-
-    void instruction_block::should_emit(bool value) {
-        _should_emit = value;
     }
 
     // copy & fill
@@ -864,17 +866,13 @@ namespace basecode::vm {
         make_block_entry(op);
     }
 
-    void instruction_block::call(const label_ref_t* label_ref) {
-        instruction_t jsr_op;
-        jsr_op.op = op_codes::jsr;
-        jsr_op.size = op_sizes::qword;
-        jsr_op.operands_count = 1;
-        jsr_op.operands[0].type =
-            operand_encoding_t::flags::integer
-            | operand_encoding_t::flags::constant
-            | operand_encoding_t::flags::unresolved;
-        jsr_op.operands[0].value.u = label_ref->id;
-        make_block_entry(jsr_op);
+    void instruction_block::call(const instruction_operand_t& target) {
+        instruction_t op;
+        op.op = op_codes::jsr;
+        op.size = op_sizes::qword;
+        op.operands_count = 1;
+        apply_operand(target, op, 0);
+        make_block_entry(op);
     }
 
     void instruction_block::call_foreign(
@@ -889,17 +887,13 @@ namespace basecode::vm {
         make_block_entry(op);
     }
 
-    void instruction_block::jump_direct(const label_ref_t* label_ref) {
-        instruction_t jmp_op;
-        jmp_op.op = op_codes::jmp;
-        jmp_op.size = op_sizes::qword;
-        jmp_op.operands_count = 1;
-        jmp_op.operands[0].type =
-            operand_encoding_t::flags::integer
-            | operand_encoding_t::flags::constant
-            | operand_encoding_t::flags::unresolved;
-        jmp_op.operands[0].value.u = label_ref->id;
-        make_block_entry(jmp_op);
+    void instruction_block::jump_direct(const instruction_operand_t& target) {
+        instruction_t op;
+        op.op = op_codes::jmp;
+        op.size = op_sizes::qword;
+        op.operands_count = 1;
+        apply_operand(target, op, 0);
+        make_block_entry(op);
     }
 
     listing_source_file_t* instruction_block::source_file() {

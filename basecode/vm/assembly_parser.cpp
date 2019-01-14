@@ -32,8 +32,9 @@ namespace basecode::vm {
         }
     }
 
-    bool assembly_parser::parse(common::result& r) {
-        auto block = _assembler->current_block();
+    bool assembly_parser::parse(
+            common::result& r,
+            vm::instruction_block* block) {
         auto resolver = _assembler->resolver();
 
         _state = assembly_parser_state_t::start;
@@ -257,10 +258,10 @@ namespace basecode::vm {
                                         auto label_data = resolver_result.data<compiler_label_data_t>();
                                         if (label_data != nullptr) {
                                             encoding.type = operand_encoding_t::flags::integer
-                                                            | operand_encoding_t::flags::constant
-                                                            | operand_encoding_t::flags::unresolved;
-                                            auto label_ref = _assembler->make_label_ref(label_data->label);
-                                            encoding.value.u = label_ref->id;
+                                                            | operand_encoding_t::flags::constant;
+                                            encoding.fixup_ref = _assembler->make_named_ref(
+                                                assembler_named_ref_type_t::label,
+                                                label_data->label);
                                         }
                                     }
                                     break;
@@ -283,10 +284,10 @@ namespace basecode::vm {
                                                 case vm::compiler_module_data_type_t::label: {
                                                     auto label = module_data->data<std::string>();
                                                     encoding.type = operand_encoding_t::flags::integer
-                                                                    | operand_encoding_t::flags::constant
-                                                                    | operand_encoding_t::flags::unresolved;
-                                                    auto label_ref = _assembler->make_label_ref(*label);
-                                                    encoding.value.u = label_ref->id;
+                                                                    | operand_encoding_t::flags::constant;
+                                                    encoding.fixup_ref = _assembler->make_named_ref(
+                                                        assembler_named_ref_type_t::label,
+                                                        *label);
                                                     break;
                                                 }
                                                 case vm::compiler_module_data_type_t::imm_f32: {
@@ -341,10 +342,10 @@ namespace basecode::vm {
                                         encoding.value.r = static_cast<uint8_t>(it->second.number);
                                     } else {
                                         encoding.type = operand_encoding_t::flags::integer
-                                                        | operand_encoding_t::flags::constant
-                                                        | operand_encoding_t::flags::unresolved;
-                                        auto label_ref = _assembler->make_label_ref(operand);
-                                        encoding.value.u = label_ref->id;
+                                                        | operand_encoding_t::flags::constant;
+                                        encoding.fixup_ref = _assembler->make_named_ref(
+                                            assembler_named_ref_type_t::label,
+                                            operand);
                                         break;
                                     }
                                 }

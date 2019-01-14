@@ -60,7 +60,7 @@ namespace basecode::compiler {
                 switch (type_result.inferred_type->element_type()) {
                     case element_type_t::array_type: {
                         // XXX: revisit after fixing array_type
-                        auto array_type = dynamic_cast<compiler::array_type*>(type_result.inferred_type);
+                        //auto array_type = dynamic_cast<compiler::array_type*>(type_result.inferred_type);
                         result.element = session.builder().make_integer(
                             parent_scope(),
                             0);

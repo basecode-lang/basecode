@@ -23,16 +23,6 @@ namespace basecode::compiler {
                                    _rune(rune) {
     }
 
-//    bool character_literal::on_emit(
-//            compiler::session& session,
-//            compiler::emit_context_t& context,
-//            compiler::emit_result_t& result) {
-//        result.operands.emplace_back(vm::instruction_operand_t(
-//            static_cast<int64_t>(_rune),
-//            vm::op_sizes::dword));
-//        return true;
-//    }
-
     bool character_literal::on_infer_type(
             compiler::session& session,
             infer_type_result_t& result) {
