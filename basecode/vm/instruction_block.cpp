@@ -1002,11 +1002,15 @@ namespace basecode::vm {
             local_type_t type,
             const std::string& name,
             int64_t offset) {
+        if (_locals.count(name) > 0)
+            return;
+
         make_block_entry(local_t{
             .offset = offset,
             .type = type,
             .name = name,
         });
+        _locals.insert(name);
     }
 
     void instruction_block::comment(
@@ -1074,6 +1078,10 @@ namespace basecode::vm {
 
     void instruction_block::make_block_entry(const align_t& align) {
         _entries.push_back(block_entry_t(align));
+    }
+
+    bool instruction_block::has_local(const std::string& name) const {
+        return _locals.count(name) > 0;
     }
 
     void instruction_block::source_file(listing_source_file_t* value) {

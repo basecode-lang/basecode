@@ -1055,6 +1055,15 @@ namespace basecode::compiler {
                 break;
             }
             case element_type_t::identifier: {
+                auto var = dynamic_cast<compiler::identifier*>(e);
+
+                auto name = var->symbol()->name();
+                if (!block->has_local(name))
+                    block->local(vm::local_type_t::integer, name, 0);
+
+                result.operands.emplace_back(_session.assembler().make_named_ref(
+                    vm::assembler_named_ref_type_t::local,
+                    name));
                 break;
             }
             case element_type_t::expression: {
@@ -1284,6 +1293,7 @@ namespace basecode::compiler {
                     case operator_type_t::rotate_right: {
                         if (!emit_arithmetic_operator(block, binary_op, result))
                             return false;
+                        break;
                     }
                     case operator_type_t::equals:
                     case operator_type_t::less_than:
@@ -1412,6 +1422,12 @@ namespace basecode::compiler {
                 break;
             }
             case element_type_t::identifier_reference: {
+                auto var_ref = dynamic_cast<compiler::identifier_reference*>(e);
+                auto identifier = var_ref->identifier();
+                if (identifier != nullptr) {
+                    if (!emit_element(block, identifier, result))
+                        return false;
+                }
                 break;
             }
             case element_type_t::assembly_literal_label: {

@@ -77,6 +77,8 @@ namespace basecode::vm {
 
         assembler_named_ref_t* find_named_ref(const std::string& name);
 
+        const vm::assembler_local_t* local(const std::string& name) const;
+
     private:
         void free_locals();
 

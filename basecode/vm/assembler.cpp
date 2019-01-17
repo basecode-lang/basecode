@@ -635,4 +635,11 @@ namespace basecode::vm {
         return nullptr;
     }
 
+    const vm::assembler_local_t* assembler::local(const std::string& name) const {
+        auto it = _locals.find(name);
+        if (it == _locals.end())
+            return nullptr;
+        return &it->second;
+    }
+
 };

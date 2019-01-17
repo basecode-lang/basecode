@@ -1,0 +1,5 @@
+@no_fold;
+a: u32 := 2;
+
+@no_fold;
+b := a * 5;
