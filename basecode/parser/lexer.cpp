@@ -267,6 +267,14 @@ namespace basecode::syntax {
 
     bool lexer::next(token_t& token) {
         auto rune = read();
+        defer({
+            _source_file->pop_mark();
+            _has_next = rune != common::rune_eof
+                && rune != common::rune_invalid
+                && token.type != token_types_t::end_of_file
+                && token.type != token_types_t::invalid;
+        });
+
         if (rune == common::rune_invalid) {
             token = s_invalid;
             set_token_location(token);
@@ -282,11 +290,6 @@ namespace basecode::syntax {
 
         rewind_one_char();
         _source_file->push_mark();
-        defer({
-            _source_file->pop_mark();
-            _has_next = rune != common::rune_eof
-                && rune != common::rune_invalid;
-        });
 
         auto case_range = s_cases.equal_range(rune);
         for (auto it = case_range.first; it != case_range.second; ++it) {

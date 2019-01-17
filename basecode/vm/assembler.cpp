@@ -358,7 +358,7 @@ namespace basecode::vm {
 
     void assembler::disassemble(instruction_block* block) {
         auto source_file = block->source_file();
-        if (source_file == nullptr)
+        if (source_file == nullptr || block->entries().empty())
             return;
 
         std::stack<vm::comment_t> post_inst_comments {};
@@ -586,6 +586,10 @@ namespace basecode::vm {
             listing_source_line_type_t::directive,
             block->entries().back().address(),
             ".end");
+    }
+
+    bool assembler::has_local(const std::string& name) const {
+        return _locals.count(name) > 0;
     }
 
     vm::segment* assembler::segment(const std::string& name) {

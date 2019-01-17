@@ -233,7 +233,6 @@ namespace basecode::syntax {
         uint32_t _paren_depth = 0;
         common::result _result {};
         common::source_file* _source_file = nullptr;
-        std::set<std::istream::pos_type> _line_breaks {};
     };
 
 };

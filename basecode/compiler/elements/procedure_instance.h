@@ -28,6 +28,10 @@ namespace basecode::compiler {
         compiler::procedure_type* procedure_type();
 
     protected:
+        bool on_infer_type(
+            compiler::session& session,
+            infer_type_result_t& result) override;
+
         void on_owned_elements(element_list_t& list) override;
 
     private:

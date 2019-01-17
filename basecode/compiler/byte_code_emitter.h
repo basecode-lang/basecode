@@ -89,6 +89,31 @@ namespace basecode::compiler {
 
         bool emit_initializers(identifier_by_section_t& vars);
 
+    // helper functions
+    private:
+        bool allocate_register(
+            vm::instruction_operand_t& op,
+            vm::op_sizes size,
+            vm::register_type_t type);
+
+        bool end_stack_frame(
+            vm::instruction_block* basic_block,
+            compiler::block* block,
+            const identifier_list_t& locals);
+
+        bool begin_stack_frame(
+            vm::instruction_block* basic_block,
+            compiler::block* block,
+            identifier_list_t& locals);
+
+        bool emit_procedure_epilogue(
+            vm::instruction_block* block,
+            compiler::procedure_type* proc_type);
+
+        bool emit_procedure_prologue(
+            vm::instruction_block* block,
+            compiler::procedure_type* proc_type);
+
     private:
         compiler::session& _session;
         basic_block_stack_t _block_stack {};

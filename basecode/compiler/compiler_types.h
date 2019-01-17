@@ -149,6 +149,7 @@ namespace basecode::compiler {
     };
 
     struct emit_result_t {
+        infer_type_result_t type_result {};
         std::vector<vm::instruction_operand_t> operands {};
     };
 

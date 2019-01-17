@@ -24,18 +24,6 @@ namespace basecode::compiler {
                                    _type(type) {
     }
 
-//    bool assembly_literal_label::on_emit(
-//            compiler::session& session,
-//            compiler::emit_context_t& context,
-//            compiler::emit_result_t& result) {
-//        auto& assembler = session.assembler();
-//
-//        auto label_ref = assembler.make_label_ref(_name);
-//        result.operands.emplace_back(vm::instruction_operand_t(label_ref));
-//
-//        return true;
-//    }
-
     bool assembly_literal_label::on_infer_type(
             compiler::session& session,
             infer_type_result_t& result) {

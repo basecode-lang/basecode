@@ -24,16 +24,6 @@ namespace basecode::compiler {
             compiler::block* scope,
             compiler::symbol_element* symbol);
 
-//        bool emit_prologue(
-//            compiler::session& session,
-//            compiler::emit_context_t& context,
-//            compiler::emit_result_t& result);
-//
-//        bool emit_epilogue(
-//            compiler::session& session,
-//            compiler::emit_context_t& context,
-//            compiler::emit_result_t& result);
-
         bool prepare_call_site(
             compiler::session& session,
             compiler::argument_list* args,

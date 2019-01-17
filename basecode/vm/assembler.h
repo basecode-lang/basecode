@@ -65,6 +65,8 @@ namespace basecode::vm {
 
         vm::segment* segment(const std::string& name);
 
+        bool has_local(const std::string& name) const;
+
         vm::label* make_label(const std::string& name);
 
         instruction_block* block(common::id_t id) const;

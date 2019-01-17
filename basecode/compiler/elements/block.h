@@ -54,7 +54,6 @@ namespace basecode::compiler {
         type_map_t _types {};
         block_list_t _blocks {};
         import_list_t _imports {};
-        identifier_list_t _locals {};
         defer_stack_t _defer_stack {};
         statement_list_t _statements {};
         identifier_map_t _identifiers {};
