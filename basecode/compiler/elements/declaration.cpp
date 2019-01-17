@@ -24,15 +24,6 @@ namespace basecode::compiler {
                                                  _assignment(assignment) {
     }
 
-//    bool declaration::on_emit(
-//            compiler::session& session,
-//            compiler::emit_context_t& context,
-//            compiler::emit_result_t& result) {
-//        if (_assignment != nullptr)
-//            return _assignment->emit(session, context, result);
-//        return true;
-//    }
-
     compiler::identifier* declaration::identifier() {
         return _identifier;
     }

@@ -27,20 +27,6 @@ namespace basecode::compiler {
                                                    _ref(ref) {
     }
 
-//    bool assembly_label::on_emit(
-//            compiler::session& session,
-//            compiler::emit_context_t& context,
-//            compiler::emit_result_t& result) {
-//        variable_handle_t temp_var {};
-//        if (!session.variable(_ref->identifier(), temp_var))
-//            return false;
-//        if (!temp_var->address_of())
-//            return false;
-//        result.operands.emplace_back(temp_var->emit_result().operands.front());
-//
-//        return true;
-//    }
-
     bool assembly_label::on_infer_type(
             compiler::session& session,
             infer_type_result_t& result) {

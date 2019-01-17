@@ -23,41 +23,6 @@ namespace basecode::compiler {
                                         _label(label) {
     }
 
-//    bool continue_element::on_emit(
-//            compiler::session& session,
-//            compiler::emit_context_t& context,
-//            compiler::emit_result_t& result) {
-//        auto& assembler = session.assembler();
-//        auto block = assembler.current_block();
-//
-//        vm::label_ref_t* label_ref = nullptr;
-//
-//        std::string label_name;
-//        if (_label != nullptr) {
-//            label_name = _label->label_name();
-//            label_ref = assembler.make_label_ref(label_name);
-//        } else {
-//            if (context.flow_control == nullptr
-//            ||  context.flow_control->continue_label == nullptr) {
-//                session.error(
-//                    module(),
-//                    "P081",
-//                    "no valid continue label on stack.",
-//                    location());
-//                return false;
-//            }
-//            label_ref = context.flow_control->continue_label;
-//            label_name = label_ref->name;
-//        }
-//
-//        block->comment(
-//            fmt::format("continue: {}", label_name),
-//            vm::comment_location_t::after_instruction);
-//        block->jump_direct(label_ref);
-//
-//        return true;
-//    }
-
     bool continue_element::on_apply_fold_result(
             compiler::element* e,
             const fold_result_t& fold_result) {

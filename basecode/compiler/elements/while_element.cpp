@@ -26,48 +26,6 @@ namespace basecode::compiler {
                                      _predicate(predicate) {
     }
 
-//    bool while_element::on_emit(
-//            compiler::session& session,
-//            compiler::emit_context_t& context,
-//            compiler::emit_result_t& result) {
-//        auto& assembler = session.assembler();
-//        auto block = assembler.current_block();
-//
-//        auto begin_label_name = fmt::format("{}_begin", label_name());
-//        auto body_label_name = fmt::format("{}_body", label_name());
-//        auto exit_label_name = fmt::format("{}_exit", label_name());
-//        auto end_label_name = fmt::format("{}_end", label_name());
-//
-//        auto begin_label_ref = assembler.make_label_ref(begin_label_name);
-//        auto exit_label_ref = assembler.make_label_ref(exit_label_name);
-//
-//        emit_context_t while_context {};
-//        vm::control_flow_t flow_control {
-//            .exit_label = exit_label_ref,
-//            .continue_label = begin_label_ref
-//        };
-//        while_context.flow_control = &flow_control;
-//
-//        block->label(assembler.make_label(begin_label_name));
-//
-//        emit_result_t predicate_result(assembler);
-//        _predicate->emit(session, while_context, predicate_result);
-//
-//        block->bz(
-//            predicate_result.operands.back(),
-//            vm::instruction_operand_t(exit_label_ref));
-//
-//        block->label(assembler.make_label(body_label_name));
-//        _body->emit(session, while_context, result);
-//        block->jump_direct(begin_label_ref);
-//
-//        block->label(assembler.make_label(exit_label_name));
-//        block->nop();
-//        block->label(assembler.make_label(end_label_name));
-//
-//        return true;
-//    }
-
     compiler::block* while_element::body() {
         return _body;
     }

@@ -39,6 +39,8 @@ namespace basecode::compiler {
 
         uint64_t allocated_size() const;
 
+        void allocated_size(size_t size);
+
         void is_foreign_call(bool value);
 
         void add(compiler::element* item);

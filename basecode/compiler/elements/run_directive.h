@@ -22,6 +22,8 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             compiler::element* expression);
 
+        compiler::element* expression() const;
+
     protected:
         bool on_execute(compiler::session& session) override;
 

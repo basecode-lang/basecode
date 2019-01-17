@@ -25,15 +25,6 @@ namespace basecode::compiler {
                                        _expression(expr) {
     }
 
-//    bool namespace_element::on_emit(
-//            compiler::session& session,
-//            compiler::emit_context_t& context,
-//            compiler::emit_result_t& result) {
-//        if (_expression == nullptr)
-//            return true;
-//        return _expression->emit(session, context, result);
-//    }
-
     bool namespace_element::on_infer_type(
             compiler::session& session,
             infer_type_result_t& result) {

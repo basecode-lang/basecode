@@ -30,6 +30,8 @@ namespace basecode::compiler {
 
         compiler::procedure_type* procedure_type();
 
+        compiler::identifier_reference* identifier();
+
         bool resolve_overloads(compiler::session& session);
 
         const compiler::type_reference_list_t& type_parameters() const;

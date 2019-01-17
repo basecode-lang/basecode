@@ -22,16 +22,6 @@ namespace basecode::compiler {
                              _expression(expr) {
     }
 
-//    bool statement::on_emit(
-//            compiler::session& session,
-//            compiler::emit_context_t& context,
-//            compiler::emit_result_t& result) {
-//        if (_expression == nullptr)
-//            return true;
-//
-//        return _expression->emit(session, context, result);
-//    }
-
     label_list_t& statement::labels() {
         return _labels;
     }

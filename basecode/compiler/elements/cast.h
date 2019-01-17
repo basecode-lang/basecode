@@ -29,6 +29,8 @@ namespace basecode::compiler {
 
         void expression(compiler::element* value);
 
+        const common::source_location& type_location() const;
+
         void type_location(const common::source_location& loc);
 
     protected:

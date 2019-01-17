@@ -26,28 +26,15 @@ namespace basecode::compiler {
                                        _body(body) {
     }
 
-//    bool if_directive::on_emit(
-//            compiler::session& session,
-//            compiler::emit_context_t& context,
-//            compiler::emit_result_t& result) {
-//        auto& assembler = session.assembler();
-//        auto block = assembler.current_block();
-//
-//        if (_true_body != nullptr) {
-//            block->comment(
-//                "directive: if/elif/else",
-//                vm::comment_location_t::after_instruction);
-//            return _true_body->emit(session, context, result);
-//        }
-//
-//        return true;
-//    }
-
     bool if_directive::on_apply_fold_result(
             compiler::element* e,
             const fold_result_t& fold_result) {
         _lhs = fold_result.element;
         return true;
+    }
+
+    compiler::element* if_directive::true_body() const {
+        return _true_body;
     }
 
     bool if_directive::on_evaluate(compiler::session& session) {

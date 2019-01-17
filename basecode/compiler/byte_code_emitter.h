@@ -91,6 +91,11 @@ namespace basecode::compiler {
 
     // helper functions
     private:
+        bool emit_arguments(
+            vm::instruction_block* block,
+            compiler::argument_list* arg_list,
+            const compiler::element_list_t& elements);
+
         bool allocate_register(
             vm::instruction_operand_t& op,
             vm::op_sizes size,
@@ -113,6 +118,16 @@ namespace basecode::compiler {
         bool emit_procedure_prologue(
             vm::instruction_block* block,
             compiler::procedure_type* proc_type);
+
+        bool emit_arithmetic_operator(
+            vm::instruction_block* block,
+            compiler::binary_operator* binary_op,
+            emit_result_t& result);
+
+        bool emit_relational_operator(
+            vm::instruction_block* block,
+            compiler::binary_operator* binary_op,
+            emit_result_t& result);
 
     private:
         compiler::session& _session;

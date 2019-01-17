@@ -24,6 +24,8 @@ namespace basecode::compiler {
             compiler::element* rhs,
             compiler::element* body);
 
+        compiler::element* true_body() const;
+
     protected:
         bool on_apply_fold_result(
             compiler::element* e,

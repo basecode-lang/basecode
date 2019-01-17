@@ -18,18 +18,6 @@ namespace basecode::compiler {
             compiler::block* parent_scope) : element(module, parent_scope, element_type_t::assignment) {
     }
 
-//    bool assignment::on_emit(
-//            compiler::session& session,
-//            compiler::emit_context_t& context,
-//            compiler::emit_result_t& result) {
-//        for (auto expr : _expressions) {
-//            auto success = expr->emit(session, context, result);
-//            if (!success)
-//                return false;
-//        }
-//        return true;
-//    }
-
     element_list_t& assignment::expressions() {
         return _expressions;
     }

@@ -40,114 +40,6 @@ namespace basecode::compiler {
                                                                        _references(references) {
     }
 
-//    bool procedure_call::on_emit(
-//            compiler::session& session,
-//            compiler::emit_context_t& context,
-//            compiler::emit_result_t& result) {
-//        auto& assembler = session.assembler();
-//        auto block = assembler.current_block();
-//
-//        auto label = _resolved_identifier_ref->label_name();
-//
-//        compiler::type* return_type = nullptr;
-//        auto return_type_field = _resolved_proc_type->return_type();
-//        if (return_type_field != nullptr)
-//            return_type = return_type_field->identifier()->type_ref()->type();
-//
-//        size_t target_size = 8;
-//        type_number_class_t target_number_class;
-//        auto target_type = vm::register_type_t::integer;
-//        if (return_type != nullptr) {
-//            target_number_class = return_type->number_class();
-//            target_size = return_type->size_in_bytes();
-//            target_type = target_number_class == type_number_class_t::integer ?
-//                          vm::register_type_t::integer :
-//                          vm::register_type_t::floating_point;
-//        }
-//
-//        if (_arguments != nullptr)
-//            _arguments->emit(session, context, result);
-//
-//        if (_resolved_proc_type->is_foreign()) {
-//            auto& ffi = session.ffi();
-//
-//            auto func = ffi.find_function(_resolved_proc_type->foreign_address());
-//            if (func == nullptr) {
-//                session.error(
-//                    module(),
-//                    "X000",
-//                    fmt::format(
-//                        "unable to find foreign function by address: {}",
-//                        _resolved_proc_type->foreign_address()),
-//                    location());
-//                return false;
-//            }
-//
-//            block->comment(
-//                fmt::format("call: {}", label),
-//                vm::comment_location_t::after_instruction);
-//
-//            vm::instruction_operand_t address_operand(_resolved_proc_type->foreign_address());
-//
-//            if (func->is_variadic()) {
-//                vm::function_value_list_t args {};
-//                if (!_arguments->as_ffi_arguments(session, args))
-//                    return false;
-//
-//                auto signature_id = common::id_pool::instance()->allocate();
-//                func->call_site_arguments.insert(std::make_pair(signature_id, args));
-//
-//                block->call_foreign(
-//                    address_operand,
-//                    vm::instruction_operand_t(
-//                        static_cast<uint64_t>(signature_id),
-//                        vm::op_sizes::dword));
-//            } else {
-//                block->call_foreign(address_operand);
-//            }
-//        } else {
-//            if (return_type != nullptr) {
-//                block->comment(
-//                    "return slot",
-//                    vm::comment_location_t::after_instruction);
-//                block->sub(
-//                    vm::instruction_operand_t::sp(),
-//                    vm::instruction_operand_t::sp(),
-//                    vm::instruction_operand_t(static_cast<uint64_t>(8), vm::op_sizes::byte));
-//            }
-//
-//            block->comment(
-//                fmt::format("call: {}", label),
-//                vm::comment_location_t::after_instruction);
-//            block->call(assembler.make_label_ref(label));
-//        }
-//
-//        if (return_type_field != nullptr) {
-//            vm::instruction_operand_t result_operand;
-//            if (!vm::instruction_operand_t::allocate(
-//                    assembler,
-//                    result_operand,
-//                    vm::op_size_for_byte_size(target_size),
-//                    target_type)) {
-//                return false;
-//            }
-//            result.operands.emplace_back(result_operand);
-//            block->pop(result_operand);
-//        }
-//
-//        if (_arguments->allocated_size() > 0) {
-//            block->comment(
-//                "free stack space",
-//                vm::comment_location_t::after_instruction);
-//            block->add(
-//                vm::instruction_operand_t::sp(),
-//                vm::instruction_operand_t::sp(),
-//                vm::instruction_operand_t(_arguments->allocated_size(), vm::op_sizes::word));
-//        }
-//
-//        return true;
-//    }
-
     bool procedure_call::on_infer_type(
             compiler::session& session,
             infer_type_result_t& result) {
@@ -193,6 +85,10 @@ namespace basecode::compiler {
             }
         }
         return nullptr;
+    }
+
+    compiler::identifier_reference* procedure_call::identifier() {
+        return _resolved_identifier_ref;
     }
 
     void procedure_call::on_owned_elements(element_list_t& list) {

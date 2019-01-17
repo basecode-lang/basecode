@@ -29,60 +29,6 @@ namespace basecode::compiler {
                                _false_branch(false_branch) {
     }
 
-//    bool if_element::on_emit(
-//            compiler::session& session,
-//            compiler::emit_context_t& context,
-//            compiler::emit_result_t& result) {
-//        auto& assembler = session.assembler();
-//        auto block = assembler.current_block();
-//
-//        auto begin_label_name = fmt::format("{}_begin", label_name());
-//        auto true_label_name = fmt::format("{}_true", label_name());
-//        auto false_label_name = fmt::format("{}_false", label_name());
-//        auto end_label_name = fmt::format("{}_end", label_name());
-//
-//        vm::instruction_operand_t result_operand;
-//        if (!vm::instruction_operand_t::allocate(
-//                assembler,
-//                result_operand,
-//                vm::op_sizes::byte,
-//                vm::register_type_t::integer)) {
-//            return false;
-//        }
-//        result.operands.emplace_back(result_operand);
-//
-//        block->label(assembler.make_label(begin_label_name));
-//
-//        emit_result_t predicate_result(assembler);
-//        _predicate->emit(session, context, predicate_result);
-//
-//        block->bz(
-//            predicate_result.operands.back(),
-//            vm::instruction_operand_t(assembler.make_label_ref(false_label_name)));
-//
-//        block->label(assembler.make_label(true_label_name));
-//
-//        emit_result_t true_result(assembler);
-//        _true_branch->emit(session, context, true_result);
-//
-//        if (!block->is_current_instruction(vm::op_codes::jmp)
-//        &&  !block->is_current_instruction(vm::op_codes::rts)) {
-//            block->jump_direct(assembler.make_label_ref(end_label_name));
-//        }
-//
-//        block->label(assembler.make_label(false_label_name));
-//        if (_false_branch != nullptr) {
-//            emit_result_t false_result(assembler);
-//            _false_branch->emit(session, context, false_result);
-//        } else {
-//            block->nop();
-//        }
-//
-//        block->label(assembler.make_label(end_label_name));
-//
-//        return true;
-//    }
-
     bool if_element::is_else_if() const {
         return _is_else_if;
     }
