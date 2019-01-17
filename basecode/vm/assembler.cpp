@@ -154,11 +154,11 @@ namespace basecode::vm {
     }
 
     void assembler::free_locals() {
-        if (!_labels.empty())
-            return;
-        for (const auto& kvp : _labels)
-            free(kvp.second);
-        _labels.clear();
+        for (const auto& kvp : _locals) {
+            const assembler_local_t& local = kvp.second;
+            free_reg(local.reg);
+        }
+        _locals.clear();
     }
 
     vm::segment* assembler::segment(

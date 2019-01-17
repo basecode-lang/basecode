@@ -57,15 +57,27 @@ namespace basecode::compiler {
 
         void intern_string_literals();
 
-        bool emit_identifier_initializer(
-            vm::instruction_block* block,
-            compiler::identifier* var);
-
         element_list_t* variable_section(
             identifier_by_section_t& groups,
             vm::section_t section);
 
         bool emit_interned_string_table();
+
+        bool group_identifiers(identifier_by_section_t& vars);
+
+        bool emit_section_tables(identifier_by_section_t& vars);
+
+        std::string interned_string_data_label(common::id_t id);
+
+    // initializers & finalizers
+    private:
+        bool emit_finalizer(
+            vm::instruction_block* block,
+            compiler::identifier* var);
+
+        bool emit_initializer(
+            vm::instruction_block* block,
+            compiler::identifier* var);
 
         bool emit_primitive_initializer(
             vm::instruction_block* block,
@@ -76,12 +88,6 @@ namespace basecode::compiler {
         bool emit_finalizers(identifier_by_section_t& vars);
 
         bool emit_initializers(identifier_by_section_t& vars);
-
-        bool group_identifiers(identifier_by_section_t& vars);
-
-        bool emit_section_tables(identifier_by_section_t& vars);
-
-        std::string interned_string_data_label(common::id_t id);
 
     private:
         compiler::session& _session;

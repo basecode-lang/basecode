@@ -37,15 +37,13 @@ namespace basecode::vm {
 
         bool allocate(register_t& reg) {
             if (reg.type == register_type_t::integer) {
-                move_to_next_available_int();
-                _ints[_available_int].live = true;
-                reg.number = _ints[_available_int].reg;
-                _available_int++;
+                auto index = move_to_next_available_int();
+                _ints[index].live = true;
+                reg.number = _ints[index].reg;
             } else {
-                move_to_next_available_float();
-                _floats[_available_float].live = true;
-                reg.number = _floats[_available_float].reg;
-                _available_float++;
+                auto index = move_to_next_available_float();
+                _floats[index].live = true;
+                reg.number = _floats[index].reg;
             }
             return true;
         }
@@ -53,27 +51,25 @@ namespace basecode::vm {
         void free(const register_t& reg) {
             if (reg.type == register_type_t::integer) {
                 _ints[reg.number].live = false;
-                if (reg.number < _available_int)
-                    _available_int = reg.number;
             } else {
                 _floats[reg.number].live = false;
-                if (reg.number < _available_float)
-                    _available_float = reg.number;
             }
         }
 
-        void move_to_next_available_int() {
-            while (_ints[_available_int].live)
-                _available_int++;
+        size_t move_to_next_available_int() {
+            size_t index = 0;
+            while (_ints[index].live)
+                index++;
+            return index;
         }
 
-        void move_to_next_available_float() {
-            while (_floats[_available_float].live)
-                _available_float++;
+        size_t move_to_next_available_float() {
+            size_t index = 0;
+            while (_floats[index].live)
+                index++;
+            return index;
         }
 
-        size_t _available_int = 0;
-        size_t _available_float = 0;
         allocation_status_t _ints[64];
         allocation_status_t _floats[64];
     };

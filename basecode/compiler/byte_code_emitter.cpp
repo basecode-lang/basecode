@@ -589,23 +589,40 @@ namespace basecode::compiler {
         block->align(vm::instruction_t::alignment);
         block->label(assembler.make_label("_finalizer"));
 
-//        assembler.push_block(block);
-//        defer(assembler.pop_block());
+        push_block(block);
+        defer(pop_block());
 
+        std::vector<compiler::identifier*> to_finalize {};
         for (const auto& section : vars) {
             for (compiler::element* e : section.second) {
-                if (e->element_type() == element_type_t::identifier) {
-//                    auto var = dynamic_cast<compiler::identifier*>(e);
-//                    auto var_type = var->type_ref()->type();
-//
-//                    variable_handle_t temp_var {};
-//                    if (!_session.variable(var, temp_var))
-//                        return false;
-//
-//                    if (!var_type->emit_finalizer(_session, temp_var.get()))
-//                        return false;
+                auto var = dynamic_cast<compiler::identifier*>(e);
+                if (var == nullptr)
+                    continue;
+
+                if (!var->type_ref()->is_composite_type()) {
+                    continue;
                 }
+
+                auto local_type = number_class_to_local_type(var->type_ref()->type()->number_class());
+                block->local(local_type, var->symbol()->name());
+                to_finalize.emplace_back(var);
             }
+        }
+
+        block->blank_line();
+
+        for (auto var : to_finalize) {
+            block->move(
+                vm::instruction_operand_t(assembler.make_named_ref(
+                    vm::assembler_named_ref_type_t::local,
+                    var->symbol()->name())),
+                vm::instruction_operand_t(assembler.make_named_ref(
+                    vm::assembler_named_ref_type_t::label,
+                    var->label_name())));
+        }
+
+        for (auto var : to_finalize) {
+            emit_finalizer(block, var);
         }
 
         return true;
@@ -727,7 +744,7 @@ namespace basecode::compiler {
         }
 
         for (auto var : to_init) {
-            emit_identifier_initializer(block, var);
+            emit_initializer(block, var);
         }
 
         return true;
@@ -889,7 +906,7 @@ namespace basecode::compiler {
         }
 
         block->comment(
-            fmt::format("initializer: {}", var_type->name()),
+            fmt::format("initializer: {}: {}", var->symbol()->name(), var_type->name()),
             vm::comment_location_t::after_instruction);
         block->store(
             base_local,
@@ -898,34 +915,44 @@ namespace basecode::compiler {
         return true;
     }
 
-    bool byte_code_emitter::emit_identifier_initializer(
+    bool byte_code_emitter::emit_finalizer(
+            vm::instruction_block* block,
+            compiler::identifier* var) {
+        auto var_type = var->type_ref()->type();
+
+        block->comment(
+            fmt::format("finalizer: {}: {}", var->symbol()->name(), var_type->name()),
+            4);
+
+        return true;
+    }
+
+    bool byte_code_emitter::emit_initializer(
             vm::instruction_block* block,
             compiler::identifier* var) {
         vm::instruction_operand_t base_local(_session.assembler().make_named_ref(
             vm::assembler_named_ref_type_t::local,
             var->symbol()->name()));
 
-        struct identifier_todo_t {
-            compiler::identifier* var = nullptr;
-            uint64_t offset = 0;
-        };
+        std::vector<compiler::identifier*> list {};
+        list.emplace_back(var);
 
-        std::vector<identifier_todo_t> list {};
-        list.emplace_back(identifier_todo_t{var});
+        uint64_t offset = 0;
 
         while (!list.empty()) {
-            auto todo = list.front();
+            auto next_var = list.front();
             list.erase(std::begin(list));
 
-            auto var_type = todo.var->type_ref()->type();
+            auto var_type = next_var->type_ref()->type();
 
             switch (var_type->element_type()) {
                 case element_type_t::rune_type:
                 case element_type_t::bool_type:
                 case element_type_t::numeric_type:
                 case element_type_t::pointer_type: {
-                    if (!emit_primitive_initializer(block, base_local, todo.var, todo.offset))
+                    if (!emit_primitive_initializer(block, base_local, next_var, offset))
                         return false;
+                    offset += var_type->size_in_bytes();
                     break;
                 }
                 case element_type_t::tuple_type:
@@ -933,8 +960,9 @@ namespace basecode::compiler {
                     auto composite_type = dynamic_cast<compiler::composite_type*>(var_type);
                     switch (composite_type->type()) {
                         case composite_types_t::enum_type: {
-                            if (!emit_primitive_initializer(block, base_local, todo.var, todo.offset))
+                            if (!emit_primitive_initializer(block, base_local, next_var, offset))
                                 return false;
+                            offset += var_type->size_in_bytes();
                             break;
                         }
                         case composite_types_t::union_type: {
@@ -943,11 +971,12 @@ namespace basecode::compiler {
                         }
                         case composite_types_t::struct_type: {
                             auto field_list = composite_type->fields().as_list();
+                            size_t index = 0;
                             for (auto fld: field_list) {
-                                list.push_back(identifier_todo_t{
-                                    fld->identifier(),
-                                    fld->start_offset()});
+                                list.emplace(std::begin(list) + index, fld->identifier());
+                                index++;
                             }
+                            offset = common::align(offset, composite_type->alignment());
                             break;
                         }
                     }
