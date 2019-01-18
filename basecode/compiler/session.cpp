@@ -478,29 +478,30 @@ namespace basecode::compiler {
         auto scope = reinterpret_cast<compiler::block*>(data);
         switch (type) {
             case vm::assembly_symbol_type_t::offset: {
-                auto entry = scope->find_active_frame_entry(symbol);
-                if (entry != nullptr) {
-                    vm::compiler_local_data_t data {};
-                    const auto& offsets = entry->owning_frame()->offsets();
-                    switch (entry->type()) {
-                        case stack_frame_entry_type_t::local: {
-                            data.offset = -offsets.locals + entry->offset();
-                            break;
-                        }
-                        case stack_frame_entry_type_t::parameter: {
-                            data.offset = offsets.parameters + entry->offset();
-                            break;
-                        }
-                        case stack_frame_entry_type_t::return_slot: {
-                            data.offset = offsets.return_slot + entry->offset();
-                            break;
-                        }
-                    }
-                    data.reg = vm::registers_t::fp;
-                    result.data(data);
-                    return true;
-                }
-                break;
+                // XXX: refactor this to use the .offset directive's values
+//                auto entry = scope->find_active_frame_entry(symbol);
+//                if (entry != nullptr) {
+//                    vm::compiler_local_data_t data {};
+//                    const auto& offsets = entry->owning_frame()->offsets();
+//                    switch (entry->type()) {
+//                        case stack_frame_entry_type_t::local: {
+//                            data.offset = -offsets.locals + entry->offset();
+//                            break;
+//                        }
+//                        case stack_frame_entry_type_t::parameter: {
+//                            data.offset = offsets.parameters + entry->offset();
+//                            break;
+//                        }
+//                        case stack_frame_entry_type_t::return_slot: {
+//                            data.offset = offsets.return_slot + entry->offset();
+//                            break;
+//                        }
+//                    }
+//                    data.reg = vm::registers_t::fp;
+//                    result.data(data);
+//                    return true;
+//                }
+                return false;
             }
             case vm::assembly_symbol_type_t::label: {
                 auto labels = elements().find_by_type<compiler::label>(element_type_t::label);
@@ -535,7 +536,7 @@ namespace basecode::compiler {
                                 auto size = var->type_ref()->type()->size_in_bytes();
                                 auto number_class = var->type_ref()->type()->number_class();
 
-                                if (number_class == type_number_class_t::integer) {
+                                if (number_class == number_class_t::integer) {
                                     uint64_t value;
                                     if (var->as_integer(value)) {
                                         result.data(vm::compiler_module_data_t(value));

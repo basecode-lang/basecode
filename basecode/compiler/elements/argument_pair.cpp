@@ -11,7 +11,6 @@
 
 #include <vm/assembler.h>
 #include <compiler/session.h>
-#include <vm/instruction_block.h>
 #include "argument_pair.h"
 
 namespace basecode::compiler {

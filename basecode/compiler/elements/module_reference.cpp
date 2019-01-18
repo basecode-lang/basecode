@@ -10,7 +10,6 @@
 // ----------------------------------------------------------------------------
 
 #include <compiler/session.h>
-#include "program.h"
 #include "module_reference.h"
 
 namespace basecode::compiler {

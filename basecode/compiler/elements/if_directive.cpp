@@ -10,7 +10,6 @@
 // ----------------------------------------------------------------------------
 
 #include <compiler/session.h>
-#include <vm/instruction_block.h>
 #include "if_directive.h"
 
 namespace basecode::compiler {

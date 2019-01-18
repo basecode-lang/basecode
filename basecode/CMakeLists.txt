@@ -124,7 +124,6 @@ add_library(
     compiler/elements.h
     compiler/session.cpp compiler/session.h
     compiler/element_map.cpp compiler/element_map.h
-    compiler/stack_frame.cpp compiler/stack_frame.h
     compiler/elements/type.cpp compiler/elements/type.h
     compiler/elements/cast.cpp compiler/elements/cast.h
     compiler/scope_manager.cpp compiler/scope_manager.h
@@ -141,7 +140,6 @@ add_library(
     compiler/elements/element.cpp compiler/elements/element.h
     compiler/elements/program.cpp compiler/elements/program.h
     compiler/byte_code_emitter.cpp compiler/byte_code_emitter.h
-    compiler/stack_frame_entry.cpp compiler/stack_frame_entry.h
     compiler/string_intern_map.cpp compiler/string_intern_map.h
     compiler/elements/rune_type.cpp compiler/elements/rune_type.h
     compiler/elements/intrinsic.cpp compiler/elements/intrinsic.h

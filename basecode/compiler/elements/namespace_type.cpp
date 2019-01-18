@@ -10,7 +10,6 @@
 // ----------------------------------------------------------------------------
 
 #include <compiler/session.h>
-#include "program.h"
 #include "namespace_type.h"
 #include "symbol_element.h"
 

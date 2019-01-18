@@ -10,7 +10,6 @@
 // ----------------------------------------------------------------------------
 
 #include <compiler/session.h>
-#include <vm/instruction_block.h>
 #include "label.h"
 #include "continue_element.h"
 

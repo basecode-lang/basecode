@@ -13,7 +13,6 @@
 
 #include <common/bytes.h>
 #include "type.h"
-#include "program.h"
 
 namespace basecode::compiler {
 
@@ -23,7 +22,7 @@ namespace basecode::compiler {
         uint64_t max;
         size_t size_in_bytes;
         bool is_signed = false;
-        type_number_class_t number_class;
+        number_class_t number_class;
     };
 
     using numeric_type_map_t = std::unordered_map<std::string, numeric_type_properties_t*>;
@@ -47,7 +46,7 @@ namespace basecode::compiler {
             int64_t min,
             uint64_t max,
             bool is_signed,
-            type_number_class_t number_class);
+            number_class_t number_class);
 
         int64_t min() const;
 
@@ -57,17 +56,17 @@ namespace basecode::compiler {
 
     protected:
         static inline std::vector<numeric_type_properties_t> s_type_properties = {
-            {"u0",   0,         0,           0, false, type_number_class_t::integer},
-            {"u8",   0,         UINT8_MAX,   1, false, type_number_class_t::integer},
-            {"u16",  0,         UINT16_MAX,  2, false, type_number_class_t::integer},
-            {"u32",  0,         UINT32_MAX,  4, false, type_number_class_t::integer},
-            {"u64",  0,         UINT64_MAX,  8, false, type_number_class_t::integer},
-            {"s8",   INT8_MIN,  INT8_MAX,    1, true,  type_number_class_t::integer},
-            {"s16",  INT16_MIN, INT16_MAX,   2, true,  type_number_class_t::integer},
-            {"s32",  INT32_MIN, INT32_MAX,   4, true,  type_number_class_t::integer},
-            {"s64",  INT64_MIN, INT64_MAX,   8, true,  type_number_class_t::integer},
-            {"f32",  0,         UINT32_MAX,  4, true,  type_number_class_t::floating_point},
-            {"f64",  0,         UINT64_MAX,  8, true,  type_number_class_t::floating_point},
+            {"u0",   0,         0,           0, false, number_class_t::integer},
+            {"u8",   0,         UINT8_MAX,   1, false, number_class_t::integer},
+            {"u16",  0,         UINT16_MAX,  2, false, number_class_t::integer},
+            {"u32",  0,         UINT32_MAX,  4, false, number_class_t::integer},
+            {"u64",  0,         UINT64_MAX,  8, false, number_class_t::integer},
+            {"s8",   INT8_MIN,  INT8_MAX,    1, true,  number_class_t::integer},
+            {"s16",  INT16_MIN, INT16_MAX,   2, true,  number_class_t::integer},
+            {"s32",  INT32_MIN, INT32_MAX,   4, true,  number_class_t::integer},
+            {"s64",  INT64_MIN, INT64_MAX,   8, true,  number_class_t::integer},
+            {"f32",  0,         UINT32_MAX,  4, true,  number_class_t::floating_point},
+            {"f64",  0,         UINT64_MAX,  8, true,  number_class_t::floating_point},
         };
 
         static inline numeric_type_map_t s_types_map = {
@@ -86,7 +85,7 @@ namespace basecode::compiler {
 
         bool on_type_check(compiler::type* other) override;
 
-        type_number_class_t on_number_class() const override;
+        number_class_t on_number_class() const override;
 
         bool on_initialize(compiler::session& session) override;
 
@@ -94,7 +93,7 @@ namespace basecode::compiler {
         int64_t _min;
         uint64_t _max;
         bool _is_signed;
-        type_number_class_t _number_class;
+        number_class_t _number_class;
     };
 
 };

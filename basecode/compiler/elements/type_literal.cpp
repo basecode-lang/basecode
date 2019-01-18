@@ -10,7 +10,6 @@
 // ----------------------------------------------------------------------------
 
 #include <compiler/session.h>
-#include <vm/instruction_block.h>
 #include "array_type.h"
 #include "type_literal.h"
 #include "type_reference.h"

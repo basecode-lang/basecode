@@ -14,15 +14,9 @@
 #include <compiler/session.h>
 #include "type.h"
 #include "element.h"
-#include "program.h"
-#include "attribute.h"
 #include "directive.h"
-#include "float_literal.h"
 #include "unary_operator.h"
-#include "string_literal.h"
 #include "type_reference.h"
-#include "integer_literal.h"
-#include "boolean_literal.h"
 
 namespace basecode::compiler {
 

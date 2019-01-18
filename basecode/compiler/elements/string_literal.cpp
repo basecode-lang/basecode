@@ -10,9 +10,7 @@
 // ----------------------------------------------------------------------------
 
 #include <compiler/session.h>
-#include <vm/instruction_block.h>
 #include <common/string_support.h>
-#include "program.h"
 #include "pointer_type.h"
 #include "string_literal.h"
 

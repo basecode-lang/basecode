@@ -10,7 +10,6 @@
 // ----------------------------------------------------------------------------
 
 #include <compiler/session.h>
-#include <vm/instruction_block.h>
 #include "assembly_literal_label.h"
 
 namespace basecode::compiler {

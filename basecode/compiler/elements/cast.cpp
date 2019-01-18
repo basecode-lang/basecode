@@ -10,11 +10,7 @@
 // ----------------------------------------------------------------------------
 
 #include <compiler/session.h>
-#include <vm/instruction_block.h>
-#include "type.h"
 #include "cast.h"
-#include "numeric_type.h"
-#include "symbol_element.h"
 #include "type_reference.h"
 
 namespace basecode::compiler {

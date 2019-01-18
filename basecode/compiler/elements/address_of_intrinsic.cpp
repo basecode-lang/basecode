@@ -10,7 +10,6 @@
 // ----------------------------------------------------------------------------
 
 #include <compiler/session.h>
-#include <vm/instruction_block.h>
 #include <compiler/scope_manager.h>
 #include "type.h"
 #include "identifier.h"

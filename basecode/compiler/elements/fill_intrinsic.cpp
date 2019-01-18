@@ -10,7 +10,6 @@
 // ----------------------------------------------------------------------------
 
 #include <compiler/session.h>
-#include <vm/instruction_block.h>
 #include "type.h"
 #include "argument_list.h"
 #include "type_reference.h"

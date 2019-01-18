@@ -10,7 +10,6 @@
 // ----------------------------------------------------------------------------
 
 #include <compiler/session.h>
-#include "program.h"
 #include "tuple_type.h"
 
 namespace basecode::compiler {

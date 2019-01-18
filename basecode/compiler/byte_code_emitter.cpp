@@ -17,6 +17,17 @@
 
 namespace basecode::compiler {
 
+    // +-------------+
+    // | ...         |
+    // | locals      | -offsets
+    // | fp          | 0
+    // | return addr | +offsets
+    // | return slot |
+    // | param 1     |
+    // | param 2     |
+    // +-------------+
+    //
+
     enum class cast_mode_t : uint8_t {
         noop,
         integer_truncate,
@@ -31,6 +42,23 @@ namespace basecode::compiler {
     ///////////////////////////////////////////////////////////////////////////
 
     byte_code_emitter::byte_code_emitter(compiler::session& session) : _session(session) {
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    void byte_code_emitter::pop_flow_control() {
+        if (_control_flow_stack.empty())
+            return;
+    }
+
+    flow_control_t* byte_code_emitter::current_flow_control() {
+        if (_control_flow_stack.empty())
+            return nullptr;
+        return &_control_flow_stack.top();
+    }
+
+    void byte_code_emitter::push_flow_control(const flow_control_t& control_flow) {
+        _control_flow_stack.push(control_flow);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -118,7 +146,9 @@ namespace basecode::compiler {
             vm::instruction_block* block,
             compiler::element* e,
             emit_result_t& result) {
+        auto& builder = _session.builder();
         auto& assembler = _session.assembler();
+
         e->infer_type(_session, result.type_result);
 
         switch (e->element_type()) {
@@ -159,18 +189,18 @@ namespace basecode::compiler {
                 auto source_size = infer_type_result.inferred_type->size_in_bytes();
                 auto target_number_class = type_ref->type()->number_class();
                 auto target_size = type_ref->type()->size_in_bytes();
-                auto target_type = target_number_class == type_number_class_t::integer ?
+                auto target_type = target_number_class == number_class_t::integer ?
                                    vm::register_type_t::integer :
                                    vm::register_type_t::floating_point;
 
-                if (source_number_class == type_number_class_t::none) {
+                if (source_number_class == number_class_t::none) {
                     _session.error(
                         expr->module(),
                         "C073",
                         fmt::format("cannot cast from type: {}", infer_type_result.type_name()),
                         expr->location());
                     return false;
-                } else if (target_number_class == type_number_class_t::none) {
+                } else if (target_number_class == number_class_t::none) {
                     _session.error(
                         expr->module(),
                         "C073",
@@ -179,8 +209,8 @@ namespace basecode::compiler {
                     return false;
                 }
 
-                if (source_number_class == type_number_class_t::integer
-                &&  target_number_class == type_number_class_t::integer) {
+                if (source_number_class == number_class_t::integer
+                &&  target_number_class == number_class_t::integer) {
                     if (source_size == target_size) {
                         mode = cast_mode_t::integer_truncate;
                     } else if (source_size > target_size) {
@@ -193,8 +223,8 @@ namespace basecode::compiler {
                             mode = cast_mode_t::integer_zero_extend;
                         }
                     }
-                } else if (source_number_class == type_number_class_t::floating_point
-                       &&  target_number_class == type_number_class_t::floating_point) {
+                } else if (source_number_class == number_class_t::floating_point
+                       &&  target_number_class == number_class_t::floating_point) {
                     if (source_size == target_size) {
                         mode = cast_mode_t::float_truncate;
                     } else if (source_size > target_size) {
@@ -203,7 +233,7 @@ namespace basecode::compiler {
                         mode = cast_mode_t::float_extend;
                     }
                 } else {
-                    if (source_number_class == type_number_class_t::integer) {
+                    if (source_number_class == number_class_t::integer) {
                         mode = cast_mode_t::integer_to_float;
                     } else {
                         mode = cast_mode_t::float_to_integer;
@@ -330,127 +360,134 @@ namespace basecode::compiler {
                 break;
             }
             case element_type_t::for_e: {
-//        auto& builder = session.builder();
-//
-//        auto begin_label_name = fmt::format("{}_begin", label_name());
-//        auto body_label_name = fmt::format("{}_body", label_name());
-//        auto exit_label_name = fmt::format("{}_exit", label_name());
-//
-//        switch (_expression->element_type()) {
-//            case element_type_t::intrinsic: {
-//                auto intrinsic = dynamic_cast<compiler::intrinsic*>(_expression);
-//                if (intrinsic->name() == "range") {
-//                    auto begin_label_ref = assembler.make_label_ref(begin_label_name);
-//                    auto exit_label_ref = assembler.make_label_ref(exit_label_name);
-//
-//                    emit_context_t for_context {};
-//
-//                    vm::control_flow_t flow_control {
-//                        .exit_label = exit_label_ref,
-//                        .continue_label = begin_label_ref
-//                    };
-//                    for_context.flow_control = &flow_control;
-//
-//                    auto range = dynamic_cast<compiler::range_intrinsic*>(intrinsic);
-//
-//                    auto start_arg = range->arguments()->param_by_name("start");
-//                    auto induction_init = builder.make_binary_operator(
-//                        parent_scope(),
-//                        operator_type_t::assignment,
-//                        _induction_decl->identifier(),
-//                        start_arg);
-//                    induction_init->make_non_owning();
-//                    defer(session.elements().remove(induction_init->id()));
-//                    induction_init->emit(session, for_context, result);
-//
-//                    auto dir_arg = range->arguments()->param_by_name("dir");
-//                    uint64_t dir_value;
-//                    if (!dir_arg->as_integer(dir_value))
-//                        return false;
-//
-//                    auto kind_arg = range->arguments()->param_by_name("kind");
-//                    uint64_t kind_value;
-//                    if (!kind_arg->as_integer(kind_value))
-//                        return false;
-//
-//                    auto step_op_type = dir_value == 0 ?
-//                                        operator_type_t::add :
-//                                        operator_type_t::subtract;
-//                    auto cmp_op_type = operator_type_t::less_than;
-//                    switch (kind_value) {
-//                        case 0: {
-//                            switch (dir_value) {
-//                                case 0:
-//                                    cmp_op_type = operator_type_t::less_than_or_equal;
-//                                    break;
-//                                case 1:
-//                                    cmp_op_type = operator_type_t::greater_than_or_equal;
-//                                    break;
-//                            }
-//                            break;
-//                        }
-//                        case 1: {
-//                            switch (dir_value) {
-//                                case 0:
-//                                    cmp_op_type = operator_type_t::less_than;
-//                                    break;
-//                                case 1:
-//                                    cmp_op_type = operator_type_t::greater_than;
-//                                    break;
-//                            }
-//                            break;
-//                        }
-//                    }
-//
-//                    auto stop_arg = range->arguments()->param_by_name("stop");
-//                    block->label(assembler.make_label(begin_label_name));
-//                    auto comparison_op = builder.make_binary_operator(
-//                        parent_scope(),
-//                        cmp_op_type,
-//                        _induction_decl->identifier(),
-//                        stop_arg);
-//                    comparison_op->make_non_owning();
-//                    defer(session.elements().remove(comparison_op->id()));
-//
-//                    emit_result_t cmp_result(assembler);
-//                    comparison_op->emit(session, for_context, cmp_result);
-//                    block->bz(
-//                        cmp_result.operands.back(),
-//                        vm::instruction_operand_t(exit_label_ref));
-//
-//                    block->label(assembler.make_label(body_label_name));
-//                    _body->emit(session, for_context, result);
-//
-//                    auto step_param = range->arguments()->param_by_name("step");
-//                    auto induction_step = builder.make_binary_operator(
-//                        parent_scope(),
-//                        step_op_type,
-//                        _induction_decl->identifier(),
-//                        step_param);
-//                    auto induction_assign = builder.make_binary_operator(
-//                        parent_scope(),
-//                        operator_type_t::assignment,
-//                        _induction_decl->identifier(),
-//                        induction_step);
-//                    induction_step->make_non_owning();
-//                    induction_assign->make_non_owning();
-//                    defer({
-//                        session.elements().remove(induction_assign->id());
-//                        session.elements().remove(induction_step->id());
-//                    });
-//                    induction_assign->emit(session, for_context, result);
-//
-//                    block->jump_direct(begin_label_ref);
-//
-//                    block->label(assembler.make_label(exit_label_name));
-//                }
-//                break;
-//            }
-//            default: {
-//                block->comment("XXX: unsupported scenario", 4);
-//                break;
-//            }
-//        }
+                auto for_e = dynamic_cast<compiler::for_element*>(e);
+                auto begin_label_name = fmt::format("{}_begin", for_e->label_name());
+                auto body_label_name = fmt::format("{}_body", for_e->label_name());
+                auto exit_label_name = fmt::format("{}_exit", for_e->label_name());
+
+                auto for_expr = for_e->expression();
+                switch (for_expr->element_type()) {
+                    case element_type_t::intrinsic: {
+                        auto intrinsic = dynamic_cast<compiler::intrinsic*>(for_expr);
+                        if (intrinsic->name() == "range") {
+                            auto begin_label_ref = assembler.make_named_ref(
+                                vm::assembler_named_ref_type_t::label,
+                                begin_label_name);
+                            auto exit_label_ref = assembler.make_named_ref(
+                                vm::assembler_named_ref_type_t::label,
+                                exit_label_name);
+
+                            flow_control_t flow_control {
+                                .exit_label = exit_label_ref,
+                                .continue_label = begin_label_ref
+                            };
+                            push_flow_control(flow_control);
+                            defer(pop_flow_control());
+
+                            auto range = dynamic_cast<compiler::range_intrinsic*>(intrinsic);
+
+                            auto start_arg = range->arguments()->param_by_name("start");
+                            auto induction_init = builder.make_binary_operator(
+                                for_e->parent_scope(),
+                                operator_type_t::assignment,
+                                for_e->induction_decl()->identifier(),
+                                start_arg);
+                            induction_init->make_non_owning();
+                            defer(_session.elements().remove(induction_init->id()));
+                            if (!emit_element(block, induction_init, result))
+                                return false;
+
+                            auto dir_arg = range->arguments()->param_by_name("dir");
+                            uint64_t dir_value;
+                            if (!dir_arg->as_integer(dir_value))
+                                return false;
+
+                            auto kind_arg = range->arguments()->param_by_name("kind");
+                            uint64_t kind_value;
+                            if (!kind_arg->as_integer(kind_value))
+                                return false;
+
+                            auto step_op_type = dir_value == 0 ?
+                                                operator_type_t::add :
+                                                operator_type_t::subtract;
+                            auto cmp_op_type = operator_type_t::less_than;
+                            switch (kind_value) {
+                                case 0: {
+                                    switch (dir_value) {
+                                        case 0:
+                                            cmp_op_type = operator_type_t::less_than_or_equal;
+                                            break;
+                                        case 1:
+                                            cmp_op_type = operator_type_t::greater_than_or_equal;
+                                            break;
+                                    }
+                                    break;
+                                }
+                                case 1: {
+                                    switch (dir_value) {
+                                        case 0:
+                                            cmp_op_type = operator_type_t::less_than;
+                                            break;
+                                        case 1:
+                                            cmp_op_type = operator_type_t::greater_than;
+                                            break;
+                                    }
+                                    break;
+                                }
+                            }
+
+                            auto stop_arg = range->arguments()->param_by_name("stop");
+                            block->label(assembler.make_label(begin_label_name));
+                            auto comparison_op = builder.make_binary_operator(
+                                for_e->parent_scope(),
+                                cmp_op_type,
+                                for_e->induction_decl()->identifier(),
+                                stop_arg);
+                            comparison_op->make_non_owning();
+                            defer(_session.elements().remove(comparison_op->id()));
+
+                            emit_result_t cmp_result;
+                            if (!emit_element(block, comparison_op, cmp_result))
+                                return false;
+                            block->bz(
+                                cmp_result.operands.back(),
+                                vm::instruction_operand_t(exit_label_ref));
+
+                            block->label(assembler.make_label(body_label_name));
+                            if (!emit_element(block, for_e->body(), result))
+                                return false;
+
+                            auto step_param = range->arguments()->param_by_name("step");
+                            auto induction_step = builder.make_binary_operator(
+                                for_e->parent_scope(),
+                                step_op_type,
+                                for_e->induction_decl()->identifier(),
+                                step_param);
+                            auto induction_assign = builder.make_binary_operator(
+                                for_e->parent_scope(),
+                                operator_type_t::assignment,
+                                for_e->induction_decl()->identifier(),
+                                induction_step);
+                            induction_step->make_non_owning();
+                            induction_assign->make_non_owning();
+                            defer({
+                                _session.elements().remove(induction_assign->id());
+                                _session.elements().remove(induction_step->id());
+                            });
+                            if (!emit_element(block, induction_assign, result))
+                                return false;
+
+                            block->jump_direct(vm::instruction_operand_t(begin_label_ref));
+
+                            block->label(assembler.make_label(exit_label_name));
+                        }
+                        break;
+                    }
+                    default: {
+                        block->comment("XXX: unsupported scenario", 4);
+                        break;
+                    }
+                }
                 break;
             }
             case element_type_t::label: {
@@ -480,19 +517,20 @@ namespace basecode::compiler {
                     &&  expr->element_type() == element_type_t::defer)
                         continue;
 
-//                    if (context.flow_control != nullptr) {
-//                        compiler::element* prev = nullptr;
-//                        compiler::element* next = nullptr;
-//
-//                        if (index > 0)
-//                            prev = statements[index - 1];
-//                        if (index < statements.size() - 1)
-//                            next = statements[index + 1];
-//
-//                        auto& values_map = context.flow_control->values;
-//                        values_map[next_element] = next;
-//                        values_map[previous_element] = prev;
-//                    }
+                    auto flow_control = current_flow_control();
+                    if (flow_control != nullptr) {
+                        compiler::element* prev = nullptr;
+                        compiler::element* next = nullptr;
+
+                        if (index > 0)
+                            prev = statements[index - 1];
+                        if (index < statements.size() - 1)
+                            next = statements[index + 1];
+
+                        auto& values_map = flow_control->values;
+                        values_map[next_element] = next;
+                        values_map[previous_element] = prev;
+                    }
 
                     emit_result_t stmt_result;
                     if (!emit_element(block, stmt, stmt_result))
@@ -546,125 +584,142 @@ namespace basecode::compiler {
                 break;
             }
             case element_type_t::case_e: {
-//        auto& builder = session.builder();
-//
-//        auto true_label_name = fmt::format("{}_true", label_name());
-//        auto false_label_name = fmt::format("{}_false", label_name());
-//
-//        if (context.flow_control == nullptr) {
-//            // XXX: error
-//            return false;
-//        }
-//
-//        context.flow_control->fallthrough = false;
-//
-//        auto is_default_case = _expr == nullptr;
-//
-//        vm::label_ref_t* fallthrough_label = nullptr;
-//        if (!is_default_case) {
-//            auto next = boost::any_cast<compiler::element*>(context.flow_control->values[next_element]);
-//            if (next != nullptr
-//            && next->element_type() == element_type_t::statement) {
-//                auto stmt = dynamic_cast<compiler::statement*>(next);
-//                if (stmt != nullptr
-//                && stmt->expression()->element_type() == element_type_t::case_e) {
-//                    auto next_case = dynamic_cast<compiler::case_element*>(stmt->expression());
-//                    auto next_true_label_name = fmt::format("{}_true", next_case->label_name());
-//                    fallthrough_label = assembler.make_label_ref(next_true_label_name);
-//                }
-//            }
-//        }
-//
-//        if (!is_default_case) {
-//            auto switch_expr = boost::any_cast<compiler::element*>(context.flow_control->values[switch_expression]);
-//            auto equals_op = builder.make_binary_operator(
-//                parent_scope(),
-//                operator_type_t::equals,
-//                switch_expr,
-//                _expr);
-//            equals_op->make_non_owning();
-//            defer(session.elements().remove(equals_op->id()));
-//
-//            emit_result_t equals_result(assembler);
-//            equals_op->emit(session, context, equals_result);
-//            block->bz(
-//                equals_result.operands.back(),
-//                vm::instruction_operand_t(assembler.make_label_ref(false_label_name)));
-//        }
-//
-//        block->label(assembler.make_label(true_label_name));
-//        _scope->emit(session, context, result);
-//
-//        if (!is_default_case) {
-//            if (context.flow_control->fallthrough) {
-//                block->jump_direct(fallthrough_label);
-//            } else {
-//                block->jump_direct(context.flow_control->exit_label);
-//            }
-//        }
-//
-//        block->label(assembler.make_label(false_label_name));
+                auto case_e = dynamic_cast<compiler::case_element*>(e);
+                auto true_label_name = fmt::format("{}_true", case_e->label_name());
+                auto false_label_name = fmt::format("{}_false", case_e->label_name());
+
+                auto flow_control = current_flow_control();
+                if (flow_control == nullptr) {
+                    // XXX: error
+                    return false;
+                }
+
+                flow_control->fallthrough = false;
+
+                auto is_default_case = case_e->expression() == nullptr;
+
+                vm::assembler_named_ref_t* fallthrough_label = nullptr;
+                if (!is_default_case) {
+                    auto next = boost::any_cast<compiler::element*>(flow_control->values[next_element]);
+                    if (next != nullptr
+                    && next->element_type() == element_type_t::statement) {
+                        auto stmt = dynamic_cast<compiler::statement*>(next);
+                        if (stmt != nullptr
+                        && stmt->expression()->element_type() == element_type_t::case_e) {
+                            auto next_case = dynamic_cast<compiler::case_element*>(stmt->expression());
+                            auto next_true_label_name = fmt::format("{}_true", next_case->label_name());
+                            fallthrough_label = assembler.make_named_ref(
+                                vm::assembler_named_ref_type_t::label,
+                                next_true_label_name);
+                        }
+                    }
+                }
+
+                if (!is_default_case) {
+                    auto switch_expr = boost::any_cast<compiler::element*>(flow_control->values[switch_expression]);
+                    auto equals_op = builder.make_binary_operator(
+                        case_e->parent_scope(),
+                        operator_type_t::equals,
+                        switch_expr,
+                        case_e->expression());
+                    equals_op->make_non_owning();
+                    defer(_session.elements().remove(equals_op->id()));
+
+                    emit_result_t equals_result {};
+                    if (!emit_element(block, equals_op, equals_result))
+                        return false;
+                    block->bz(
+                        equals_result.operands.back(),
+                        vm::instruction_operand_t(assembler.make_named_ref(
+                            vm::assembler_named_ref_type_t::label,
+                            false_label_name)));
+                }
+
+                block->label(assembler.make_label(true_label_name));
+                if (!emit_element(block, case_e->scope(), result))
+                    return false;
+
+                if (!is_default_case) {
+                    if (flow_control->fallthrough) {
+                        block->jump_direct(vm::instruction_operand_t(fallthrough_label));
+                    } else {
+                        block->jump_direct(vm::instruction_operand_t(flow_control->exit_label));
+                    }
+                }
+
+                block->label(assembler.make_label(false_label_name));
                 break;
             }
             case element_type_t::break_e: {
-//        vm::label_ref_t* label_ref = nullptr;
-//
-//        std::string label_name;
-//        if (_label != nullptr) {
-//            label_name = _label->label_name();
-//            label_ref = assembler.make_label_ref(label_name);
-//        } else {
-//            if (context.flow_control == nullptr
-//            ||  context.flow_control->exit_label == nullptr) {
-//                session.error(
-//                    module(),
-//                    "P081",
-//                    "no valid exit label on stack.",
-//                    location());
-//                return false;
-//            }
-//            label_ref = context.flow_control->exit_label;
-//            label_name = label_ref->name;
-//        }
-//
-//        block->comment(
-//            fmt::format("break: {}", label_name),
-//            vm::comment_location_t::after_instruction);
-//        block->jump_direct(label_ref);
+                auto break_e = dynamic_cast<compiler::break_element*>(e);
+                vm::assembler_named_ref_t* label_ref = nullptr;
+
+                std::string label_name;
+                if (break_e->label() != nullptr) {
+                    label_name = break_e->label()->label_name();
+                    label_ref = assembler.make_named_ref(
+                        vm::assembler_named_ref_type_t::label,
+                        label_name);
+                } else {
+                    auto flow_control = current_flow_control();
+                    if (flow_control == nullptr
+                    ||  flow_control->exit_label == nullptr) {
+                        _session.error(
+                            break_e->module(),
+                            "P081",
+                            "no valid exit label on stack.",
+                            break_e->location());
+                        return false;
+                    }
+                    label_ref = flow_control->exit_label;
+                    label_name = label_ref->name;
+                }
+
+                block->comment(
+                    fmt::format("break: {}", label_name),
+                    vm::comment_location_t::after_instruction);
+                block->jump_direct(vm::instruction_operand_t(label_ref));
                 break;
             }
             case element_type_t::while_e: {
-//        auto begin_label_name = fmt::format("{}_begin", label_name());
-//        auto body_label_name = fmt::format("{}_body", label_name());
-//        auto exit_label_name = fmt::format("{}_exit", label_name());
-//        auto end_label_name = fmt::format("{}_end", label_name());
-//
-//        auto begin_label_ref = assembler.make_label_ref(begin_label_name);
-//        auto exit_label_ref = assembler.make_label_ref(exit_label_name);
-//
-//        emit_context_t while_context {};
-//        vm::control_flow_t flow_control {
-//            .exit_label = exit_label_ref,
-//            .continue_label = begin_label_ref
-//        };
-//        while_context.flow_control = &flow_control;
-//
-//        block->label(assembler.make_label(begin_label_name));
-//
-//        emit_result_t predicate_result(assembler);
-//        _predicate->emit(session, while_context, predicate_result);
-//
-//        block->bz(
-//            predicate_result.operands.back(),
-//            vm::instruction_operand_t(exit_label_ref));
-//
-//        block->label(assembler.make_label(body_label_name));
-//        _body->emit(session, while_context, result);
-//        block->jump_direct(begin_label_ref);
-//
-//        block->label(assembler.make_label(exit_label_name));
-//        block->nop();
-//        block->label(assembler.make_label(end_label_name));
+                auto while_e = dynamic_cast<compiler::while_element*>(e);
+                auto begin_label_name = fmt::format("{}_begin", while_e->label_name());
+                auto body_label_name = fmt::format("{}_body", while_e->label_name());
+                auto exit_label_name = fmt::format("{}_exit", while_e->label_name());
+                auto end_label_name = fmt::format("{}_end", while_e->label_name());
+
+                auto begin_label_ref = assembler.make_named_ref(
+                    vm::assembler_named_ref_type_t::label,
+                    begin_label_name);
+                auto exit_label_ref = assembler.make_named_ref(
+                    vm::assembler_named_ref_type_t::label,
+                    exit_label_name);
+
+                push_flow_control(flow_control_t{
+                    .exit_label = exit_label_ref,
+                    .continue_label = begin_label_ref
+                });
+                defer(pop_flow_control());
+
+                block->label(assembler.make_label(begin_label_name));
+
+                emit_result_t predicate_result {};
+                if (!emit_element(block, while_e->predicate(), predicate_result))
+                    return false;
+
+                block->bz(
+                    predicate_result.operands.back(),
+                    vm::instruction_operand_t(exit_label_ref));
+
+                block->label(assembler.make_label(body_label_name));
+                if (!emit_element(block, while_e->body(), result))
+                    return false;
+
+                block->jump_direct(vm::instruction_operand_t(begin_label_ref));
+
+                block->label(assembler.make_label(exit_label_name));
+                block->nop();
+                block->label(assembler.make_label(end_label_name));
                 break;
             }
             case element_type_t::return_e: {
@@ -693,25 +748,31 @@ namespace basecode::compiler {
                 break;
             }
             case element_type_t::switch_e: {
-//        auto begin_label_name = fmt::format("{}_begin", label_name());
-//        auto exit_label_name = fmt::format("{}_exit", label_name());
-//        auto end_label_name = fmt::format("{}_end", label_name());
-//
-//        auto exit_label_ref = assembler.make_label_ref(exit_label_name);
-//
-//        emit_context_t switch_context {};
-//        vm::control_flow_t flow_control {
-//            .exit_label = exit_label_ref,
-//        };
-//        flow_control.values.insert(std::make_pair(switch_expression, _expr));
-//        switch_context.flow_control = &flow_control;
-//
-//        block->label(assembler.make_label(begin_label_name));
-//        _scope->emit(session, switch_context, result);
-//
-//        block->label(assembler.make_label(exit_label_name));
-//        block->nop();
-//        block->label(assembler.make_label(end_label_name));
+                auto switch_e = dynamic_cast<compiler::switch_element*>(e);
+                auto begin_label_name = fmt::format("{}_begin", switch_e->label_name());
+                auto exit_label_name = fmt::format("{}_exit", switch_e->label_name());
+                auto end_label_name = fmt::format("{}_end", switch_e->label_name());
+
+                auto exit_label_ref = assembler.make_named_ref(
+                    vm::assembler_named_ref_type_t::label,
+                    exit_label_name);
+
+                flow_control_t flow_control {
+                    .exit_label = exit_label_ref,
+                };
+                flow_control.values.insert(std::make_pair(
+                    switch_expression,
+                    switch_e->expression()));
+                push_flow_control(flow_control);
+                defer(pop_flow_control());
+
+                block->label(assembler.make_label(begin_label_name));
+                if (!emit_element(block, switch_e->scope(), result))
+                    return false;
+
+                block->label(assembler.make_label(exit_label_name));
+                block->nop();
+                block->label(assembler.make_label(end_label_name));
                 break;
             }
             case element_type_t::intrinsic: {
@@ -867,12 +928,12 @@ namespace basecode::compiler {
                     return_type = return_type_field->identifier()->type_ref()->type();
 
                 size_t target_size = 8;
-                type_number_class_t target_number_class;
+                number_class_t target_number_class;
                 auto target_type = vm::register_type_t::integer;
                 if (return_type != nullptr) {
                     target_number_class = return_type->number_class();
                     target_size = return_type->size_in_bytes();
-                    target_type = target_number_class == type_number_class_t::integer ?
+                    target_type = target_number_class == number_class_t::integer ?
                                   vm::register_type_t::integer :
                                   vm::register_type_t::floating_point;
                 }
@@ -977,7 +1038,7 @@ namespace basecode::compiler {
                     return false;
                 }
 
-                if (infer_type_result.inferred_type->number_class() == type_number_class_t::none) {
+                if (infer_type_result.inferred_type->number_class() == number_class_t::none) {
                     _session.error(
                         expr->module(),
                         "C073",
@@ -986,7 +1047,7 @@ namespace basecode::compiler {
                             infer_type_result.type_name()),
                         expr->location());
                     return false;
-                } else if (type_ref->type()->number_class() == type_number_class_t::none) {
+                } else if (type_ref->type()->number_class() == number_class_t::none) {
                     _session.error(
                         transmute->module(),
                         "C073",
@@ -999,7 +1060,7 @@ namespace basecode::compiler {
 
                 auto target_number_class = type_ref->type()->number_class();
                 auto target_size = type_ref->type()->size_in_bytes();
-                auto target_type = target_number_class == type_number_class_t::integer ?
+                auto target_type = target_number_class == number_class_t::integer ?
                                    vm::register_type_t::integer :
                                    vm::register_type_t::floating_point;
 
@@ -1028,30 +1089,34 @@ namespace basecode::compiler {
                 break;
             }
             case element_type_t::continue_e: {
-//        vm::label_ref_t* label_ref = nullptr;
-//
-//        std::string label_name;
-//        if (_label != nullptr) {
-//            label_name = _label->label_name();
-//            label_ref = assembler.make_label_ref(label_name);
-//        } else {
-//            if (context.flow_control == nullptr
-//            ||  context.flow_control->continue_label == nullptr) {
-//                session.error(
-//                    module(),
-//                    "P081",
-//                    "no valid continue label on stack.",
-//                    location());
-//                return false;
-//            }
-//            label_ref = context.flow_control->continue_label;
-//            label_name = label_ref->name;
-//        }
-//
-//        block->comment(
-//            fmt::format("continue: {}", label_name),
-//            vm::comment_location_t::after_instruction);
-//        block->jump_direct(label_ref);
+                auto continue_e = dynamic_cast<compiler::continue_element*>(e);
+                vm::assembler_named_ref_t* label_ref = nullptr;
+
+                std::string label_name;
+                if (continue_e->label() != nullptr) {
+                    label_name = continue_e->label()->label_name();
+                    label_ref = assembler.make_named_ref(
+                        vm::assembler_named_ref_type_t::label,
+                        label_name);
+                } else {
+                    auto flow_control = current_flow_control();
+                    if (flow_control == nullptr
+                    ||  flow_control->continue_label == nullptr) {
+                        _session.error(
+                            continue_e->module(),
+                            "P081",
+                            "no valid continue label on stack.",
+                            continue_e->location());
+                        return false;
+                    }
+                    label_ref = flow_control->continue_label;
+                    label_name = label_ref->name;
+                }
+
+                block->comment(
+                    fmt::format("continue: {}", label_name),
+                    vm::comment_location_t::after_instruction);
+                block->jump_direct(vm::instruction_operand_t(label_ref));
                 break;
             }
             case element_type_t::identifier: {
@@ -1110,11 +1175,17 @@ namespace basecode::compiler {
                 break;
             }
             case element_type_t::fallthrough: {
-//        if (context.flow_control == nullptr) {
-//            // XXX: error
-//            return false;
-//        }
-//        context.flow_control->fallthrough = true;
+                auto flow_control = current_flow_control();
+                if (flow_control != nullptr)
+                    flow_control->fallthrough = true;
+                else {
+                    _session.error(
+                        e->module(),
+                        "X000",
+                        "fallthrough is only valid within a case.",
+                        e->location());
+                    return false;
+                }
                 break;
             }
             case element_type_t::nil_literal: {
@@ -1320,7 +1391,7 @@ namespace basecode::compiler {
 //                        auto type = field_var->type_result().inferred_type;
 //                        auto target_number_class = type->number_class();
 //                        auto target_size = type->size_in_bytes();
-//                        auto target_type = target_number_class == type_number_class_t::integer ?
+//                        auto target_type = target_number_class == number_class_t::integer ?
 //                                           vm::register_type_t::integer :
 //                                           vm::register_type_t::floating_point;
 //
@@ -1945,7 +2016,7 @@ namespace basecode::compiler {
                         uint64_t value = 0;
                         auto symbol_type = vm::integer_symbol_type_for_size(var_type->size_in_bytes());
 
-                        if (var_type->number_class() == type_number_class_t::integer) {
+                        if (var_type->number_class() == number_class_t::integer) {
                             var->as_integer(value);
                         } else {
                             double temp = 0;
@@ -2166,14 +2237,11 @@ namespace basecode::compiler {
             vm::instruction_operand_t::fp(),
             vm::instruction_operand_t::sp());
 
+        uint64_t offset = 0;
         scope_manager.visit_blocks(
             _session.result(),
             [&](compiler::block* scope) {
                 if (scope->is_parent_type_one_of({element_type_t::proc_type}))
-                    return true;
-
-                auto stack_frame = block->stack_frame();
-                if (stack_frame == nullptr)
                     return true;
 
                 for (auto var : scope->identifiers().as_list()) {
@@ -2181,23 +2249,18 @@ namespace basecode::compiler {
                     if (type->is_proc_type())
                         continue;
 
-                    auto entry = stack_frame->find(var->symbol()->name());
-                    if (entry == nullptr) {
-                        entry = stack_frame->add(
-                            stack_frame_entry_type_t::local,
-                            var->symbol()->name(),
-                            type->size_in_bytes());
-                        locals.emplace_back(var);
-                    }
-                    var->stack_frame_entry(entry);
-                    basic_block->local(vm::local_type_t::integer, entry->name(), entry->offset());
+                    basic_block->local(
+                        vm::local_type_t::integer,
+                        var->symbol()->name(),
+                        offset);
+                    offset += type->size_in_bytes();
                 }
 
                 return true;
             },
             block);
 
-        auto locals_size = block->stack_frame()->type_size_in_bytes(stack_frame_entry_type_t::local);
+        auto locals_size = common::align(offset, 8);
         if (locals_size > 0) {
             basic_block->sub(
                 vm::instruction_operand_t::sp(),
@@ -2269,41 +2332,25 @@ namespace basecode::compiler {
         block->align(vm::instruction_t::alignment);
         block->label(assembler.make_label(procedure_label));
 
-        auto frame = proc_type->scope()->stack_frame();
-
-        auto& stack_offsets = frame->offsets();
-        stack_offsets.locals = 8;
-
         auto return_type = proc_type->return_type();
         if (return_type != nullptr) {
-            auto entry = frame->add(
-                stack_frame_entry_type_t::return_slot,
-                return_type->identifier()->symbol()->name(),
-                8);
-            return_type->identifier()->stack_frame_entry(entry);
-
-            stack_offsets.return_slot = 16;
-            stack_offsets.parameters = 24;
+            block->local(vm::local_type_t::integer, "return_slot");
+            block->frame_offset("return_slot", 16);
+            block->frame_offset("parameters", 24);
         } else {
-            stack_offsets.parameters = 16;
+            block->frame_offset("parameters", 16);
         }
 
+        int64_t offset = 0;
         auto fields = proc_type->parameters().as_list();
         for (auto fld : fields) {
             auto var = fld->identifier();
             auto type = var->type_ref()->type();
-            // XXX: if we change procedure_call to
-            //      sub.qw sp, sp, {size}
-            //
-            //      and then store.x sp, {value}, offset
-            //      we can use truer sizes within
-            //      the 8-byte aligned stack block.
-            //
-            auto entry = frame->add(
-                stack_frame_entry_type_t::parameter,
+            block->local(
+                number_class_to_local_type(type->number_class()),
                 var->symbol()->name(),
-                common::align(type->size_in_bytes(), 8));
-            var->stack_frame_entry(entry);
+                offset);
+            offset += 8;
         }
 
         return true;

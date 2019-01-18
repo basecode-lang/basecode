@@ -21,6 +21,14 @@ namespace basecode::compiler {
 
         bool emit();
 
+    // control flow stack
+    private:
+        void pop_flow_control();
+
+        flow_control_t* current_flow_control();
+
+        void push_flow_control(const flow_control_t& control_flow);
+
     // instruction block stack
     private:
         vm::instruction_block* pop_block();
@@ -132,5 +140,6 @@ namespace basecode::compiler {
     private:
         compiler::session& _session;
         basic_block_stack_t _block_stack {};
+        flow_control_stack_t _control_flow_stack {};
     };
 };

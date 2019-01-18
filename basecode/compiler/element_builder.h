@@ -219,7 +219,7 @@ namespace basecode::compiler {
             int64_t min,
             uint64_t max,
             bool is_signed,
-            type_number_class_t number_class);
+            number_class_t number_class);
 
         composite_type* make_struct_type(
             compiler::block* parent_scope,

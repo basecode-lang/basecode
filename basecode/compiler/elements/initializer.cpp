@@ -10,7 +10,6 @@
 // ----------------------------------------------------------------------------
 
 #include <compiler/session.h>
-#include <vm/instruction_block.h>
 #include "initializer.h"
 #include "float_literal.h"
 #include "procedure_type.h"

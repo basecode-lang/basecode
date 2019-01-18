@@ -10,7 +10,6 @@
 // ----------------------------------------------------------------------------
 
 #include <compiler/session.h>
-#include <vm/instruction_block.h>
 #include "assembly_label.h"
 #include "identifier.h"
 #include "pointer_type.h"

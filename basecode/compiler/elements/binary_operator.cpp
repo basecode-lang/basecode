@@ -12,10 +12,7 @@
 #include <common/bytes.h>
 #include <common/defer.h>
 #include <compiler/session.h>
-#include <vm/instruction_block.h>
 #include "type.h"
-#include "element.h"
-#include "program.h"
 #include "identifier.h"
 #include "array_type.h"
 #include "pointer_type.h"

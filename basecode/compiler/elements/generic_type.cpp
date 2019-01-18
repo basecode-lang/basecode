@@ -10,7 +10,6 @@
 // ----------------------------------------------------------------------------
 
 #include <compiler/session.h>
-#include "program.h"
 #include "generic_type.h"
 #include "type_reference.h"
 

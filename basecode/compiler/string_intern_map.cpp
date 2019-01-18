@@ -9,7 +9,6 @@
 //
 // ----------------------------------------------------------------------------
 
-#include <vm/instruction_block.h>
 #include <common/string_support.h>
 #include "session.h"
 #include "string_intern_map.h"

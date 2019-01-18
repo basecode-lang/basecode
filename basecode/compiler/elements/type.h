@@ -58,7 +58,7 @@ namespace basecode::compiler {
 
         virtual bool is_composite_type() const;
 
-        type_number_class_t number_class() const;
+        number_class_t number_class() const;
 
         compiler::symbol_element* symbol() const;
 
@@ -73,7 +73,7 @@ namespace basecode::compiler {
 
         virtual bool on_type_check(compiler::type* other);
 
-        virtual type_number_class_t on_number_class() const;
+        virtual number_class_t on_number_class() const;
 
         void on_owned_elements(element_list_t& list) override;
 

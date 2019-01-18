@@ -96,6 +96,9 @@ namespace basecode::vm {
                 op.value.u = 0;
                 op.fixup_ref = *operand.data<assembler_named_ref_t*>();
                 switch (op.fixup_ref->type) {
+                    case assembler_named_ref_type_t::none: {
+                        break;
+                    }
                     case assembler_named_ref_type_t::local: {
                         op.type |= operand_encoding_t::flags::reg;
                         break;
@@ -1010,7 +1013,7 @@ namespace basecode::vm {
             .type = type,
             .name = name,
         });
-        _locals.insert(name);
+        _locals.insert(std::make_pair(name, &_entries.back()));
     }
 
     void instruction_block::comment(
@@ -1103,6 +1106,17 @@ namespace basecode::vm {
 
     void instruction_block::make_block_entry(const data_definition_t& data) {
         _entries.push_back(block_entry_t(data));
+    }
+
+    const vm::local_t* instruction_block::local(const std::string& name) const {
+        auto it = _locals.find(name);
+        if (it == _locals.end())
+            return nullptr;
+        return it->second->data<local_t>();
+    }
+
+    void instruction_block::frame_offset(const std::string& name, int64_t offset) {
+
     }
 
 };

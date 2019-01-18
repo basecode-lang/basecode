@@ -9,7 +9,6 @@
 //
 // ----------------------------------------------------------------------------
 
-#include "program.h"
 #include "expression.h"
 
 namespace basecode::compiler {

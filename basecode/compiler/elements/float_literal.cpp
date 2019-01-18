@@ -10,9 +10,7 @@
 // ----------------------------------------------------------------------------
 
 #include <compiler/session.h>
-#include <vm/instruction_block.h>
 #include "type.h"
-#include "program.h"
 #include "numeric_type.h"
 #include "float_literal.h"
 

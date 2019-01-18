@@ -12,9 +12,7 @@
 #include <vm/ffi.h>
 #include <common/defer.h>
 #include <compiler/session.h>
-#include <vm/instruction_block.h>
 #include "type.h"
-#include "program.h"
 #include "identifier.h"
 #include "initializer.h"
 #include "unknown_type.h"

@@ -13,27 +13,17 @@
 #include <vm/assembler.h>
 #include <common/defer.h>
 #include <compiler/session.h>
-#include <vm/instruction_block.h>
 #include "block.h"
 #include "import.h"
-#include "module.h"
 #include "statement.h"
-#include "initializer.h"
-#include "numeric_type.h"
-#include "defer_element.h"
-#include "symbol_element.h"
-#include "procedure_type.h"
-#include "string_literal.h"
-#include "type_reference.h"
-#include "namespace_element.h"
+#include "identifier.h"
 
 namespace basecode::compiler {
 
     block::block(
             compiler::module* module,
             block* parent_scope,
-            element_type_t type) : element(module, parent_scope, type),
-                                   _stack_frame(parent_scope != nullptr ? &parent_scope->_stack_frame : nullptr) {
+            element_type_t type) : element(module, parent_scope, type) {
     }
 
     type_map_t& block::types() {
@@ -48,16 +38,12 @@ namespace basecode::compiler {
         return _imports;
     }
 
-    void block::activate_stack_frame() {
-        _stack_frame.active(true);
+    defer_stack_t& block::defer_stack() {
+        return _defer_stack;
     }
 
     bool block::has_stack_frame() const {
-        return _stack_frame.active();
-    }
-
-    defer_stack_t& block::defer_stack() {
-        return _defer_stack;
+        return _has_stack_frame;
     }
 
     statement_list_t& block::statements() {
@@ -68,8 +54,8 @@ namespace basecode::compiler {
         return _identifiers;
     }
 
-    compiler::stack_frame* block::stack_frame() {
-        return _stack_frame.active() ? &_stack_frame : nullptr;
+    void block::has_stack_frame(bool value) {
+        _has_stack_frame = value;
     }
 
     void block::on_owned_elements(element_list_t& list) {
@@ -87,29 +73,6 @@ namespace basecode::compiler {
 
         for (auto element : _imports)
             list.emplace_back(element);
-    }
-
-    compiler::stack_frame* block::find_active_frame() {
-        auto current = this;
-        while (current != nullptr) {
-            if (current->_stack_frame.active())
-                return &current->_stack_frame;
-            current = current->parent_scope();
-        }
-        return nullptr;
-    }
-
-    compiler::stack_frame_entry* block::find_active_frame_entry(const std::string& symbol) {
-        auto current = this;
-        while (current != nullptr) {
-            if (current->_stack_frame.active()) {
-                auto entry = current->_stack_frame.find(symbol);
-                if (entry != nullptr)
-                    return entry;
-            }
-            current = current->parent_scope();
-        }
-        return nullptr;
     }
 
 };

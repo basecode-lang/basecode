@@ -10,7 +10,6 @@
 // ----------------------------------------------------------------------------
 
 #include <compiler/session.h>
-#include <vm/instruction_block.h>
 #include "type.h"
 #include "identifier.h"
 #include "initializer.h"
@@ -133,21 +132,9 @@ namespace basecode::compiler {
         _initializer = value;
     }
 
-    compiler::stack_frame_entry* identifier::stack_frame_entry() const {
-        return _stack_frame_entry;
-    }
-
     bool identifier::on_as_identifier(compiler::identifier*& value) const {
         value = const_cast<compiler::identifier*>(this);
         return true;
-    }
-
-    void identifier::stack_frame_entry(compiler::stack_frame_entry* value) {
-        _stack_frame_entry = value;
-        if (_stack_frame_entry != nullptr)
-            _usage = identifier_usage_t::stack;
-        else
-            _usage = identifier_usage_t::heap;
     }
 
 };

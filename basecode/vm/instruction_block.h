@@ -80,7 +80,11 @@ namespace basecode::vm {
 
         void make_block_entry(const data_definition_t& data);
 
-    // meta directives
+        const vm::local_t* local(const std::string& name) const;
+
+        void frame_offset(const std::string& name, int64_t offset);
+
+        // meta directives
     public:
         void meta_end();
 
@@ -440,8 +444,8 @@ namespace basecode::vm {
         instruction_block_type_t _type;
         block_entry_list_t _entries {};
         int64_t _recent_inst_index = -1;
-        std::set<std::string> _locals {};
         vm::listing_source_file_t* _source_file = nullptr;
+        std::unordered_map<std::string, block_entry_t*> _locals {};
     };
 
 };

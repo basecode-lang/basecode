@@ -10,8 +10,6 @@
 // ----------------------------------------------------------------------------
 
 #include <compiler/session.h>
-#include <vm/instruction_block.h>
-#include "program.h"
 #include "identifier.h"
 #include "initializer.h"
 #include "numeric_type.h"
@@ -96,7 +94,7 @@ namespace basecode::compiler {
             int64_t min,
             uint64_t max,
             bool is_signed,
-            type_number_class_t number_class) : compiler::type(
+            number_class_t number_class) : compiler::type(
                                                     module,
                                                     parent_scope,
                                                     element_type_t::numeric_type,
@@ -127,8 +125,8 @@ namespace basecode::compiler {
         if (id() == other_numeric_type->id())
             return true;
 
-        if (other_numeric_type->number_class() == type_number_class_t::floating_point
-        &&  _number_class == type_number_class_t::floating_point) {
+        if (other_numeric_type->number_class() == number_class_t::floating_point
+        &&  _number_class == number_class_t::floating_point) {
             return true;
         }
 
@@ -139,7 +137,7 @@ namespace basecode::compiler {
         return other_numeric_type->size_in_bytes() <= size_in_bytes();
     }
 
-    type_number_class_t numeric_type::on_number_class() const {
+    number_class_t numeric_type::on_number_class() const {
         return _number_class;
     }
 

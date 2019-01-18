@@ -10,8 +10,6 @@
 // ----------------------------------------------------------------------------
 
 #include <compiler/session.h>
-#include <vm/instruction_block.h>
-#include "program.h"
 #include "identifier.h"
 #include "initializer.h"
 #include "numeric_type.h"
@@ -69,8 +67,8 @@ namespace basecode::compiler {
         }
     }
 
-    type_number_class_t pointer_type::on_number_class() const {
-        return type_number_class_t::integer;
+    number_class_t pointer_type::on_number_class() const {
+        return number_class_t::integer;
     }
 
     bool pointer_type::on_initialize(compiler::session& session) {

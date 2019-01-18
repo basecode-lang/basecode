@@ -45,19 +45,19 @@ namespace basecode::compiler {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    enum class type_number_class_t {
+    enum class number_class_t {
         none,
         integer,
         floating_point,
     };
 
-    static inline vm::local_type_t number_class_to_local_type(type_number_class_t type) {
+    static inline vm::local_type_t number_class_to_local_type(number_class_t type) {
         switch (type) {
-            case type_number_class_t::none:
-            case type_number_class_t::integer: {
+            case number_class_t::none:
+            case number_class_t::integer: {
                 return vm::local_type_t::integer;
             }
-            case type_number_class_t::floating_point: {
+            case number_class_t::floating_point: {
                 return vm::local_type_t::floating_point;
             }
         }
@@ -113,33 +113,6 @@ namespace basecode::compiler {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    enum class stack_frame_entry_type_t : uint8_t {
-        local = 1,
-        parameter,
-        return_slot
-    };
-
-    struct stack_frame_base_offsets_t {
-        int32_t locals = 8;
-        int32_t parameters = 0;
-        int32_t return_slot = 0;
-    };
-
-    inline static std::string stack_frame_entry_type_name(stack_frame_entry_type_t type) {
-        switch (type) {
-            case stack_frame_entry_type_t::local:
-                return "local";
-            case stack_frame_entry_type_t::parameter:
-                return "parameter";
-            case stack_frame_entry_type_t::return_slot:
-                return "return_slot";
-            default:
-                return "unknown";
-        }
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-
     using basic_block_stack_t = std::stack<vm::instruction_block*>;
     using identifier_by_section_t = std::map<vm::section_t, element_list_t>;
 
@@ -152,5 +125,16 @@ namespace basecode::compiler {
         infer_type_result_t type_result {};
         std::vector<vm::instruction_operand_t> operands {};
     };
+
+    using flow_control_value_map_t = std::unordered_map<uint16_t, boost::any>;
+
+    struct flow_control_t {
+        bool fallthrough = false;
+        flow_control_value_map_t values {};
+        vm::assembler_named_ref_t* exit_label = nullptr;
+        vm::assembler_named_ref_t* continue_label = nullptr;
+    };
+
+    using flow_control_stack_t = std::stack<flow_control_t>;
 
 }

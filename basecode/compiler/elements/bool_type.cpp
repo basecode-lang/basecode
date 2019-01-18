@@ -10,13 +10,7 @@
 // ----------------------------------------------------------------------------
 
 #include <compiler/session.h>
-#include <vm/instruction_block.h>
-#include "program.h"
 #include "bool_type.h"
-#include "identifier.h"
-#include "initializer.h"
-#include "boolean_literal.h"
-#include "binary_operator.h"
 
 namespace basecode::compiler {
 
@@ -34,8 +28,8 @@ namespace basecode::compiler {
             && other->element_type() == element_type_t::bool_type;
     }
 
-    type_number_class_t bool_type::on_number_class() const {
-        return type_number_class_t::integer;
+    number_class_t bool_type::on_number_class() const {
+        return number_class_t::integer;
     }
 
     bool bool_type::on_initialize(compiler::session& session) {

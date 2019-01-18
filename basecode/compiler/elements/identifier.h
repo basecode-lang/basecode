@@ -12,7 +12,6 @@
 #pragma once
 
 #include <compiler/compiler_types.h>
-#include <compiler/stack_frame_entry.h>
 #include "element.h"
 
 namespace basecode::compiler {
@@ -49,10 +48,6 @@ namespace basecode::compiler {
 
         void initializer(compiler::initializer* value);
 
-        compiler::stack_frame_entry* stack_frame_entry() const;
-
-        void stack_frame_entry(compiler::stack_frame_entry* value);
-
     protected:
         bool on_fold(
             compiler::session& session,
@@ -85,7 +80,6 @@ namespace basecode::compiler {
         compiler::initializer* _initializer;
         compiler::type_reference* _type_ref = nullptr;
         identifier_usage_t _usage = identifier_usage_t::heap;
-        compiler::stack_frame_entry* _stack_frame_entry = nullptr;
     };
 
 };

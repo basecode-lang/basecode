@@ -10,7 +10,6 @@
 // ----------------------------------------------------------------------------
 
 #include <compiler/session.h>
-#include <vm/instruction_block.h>
 #include "block.h"
 #include "procedure_type.h"
 #include "procedure_instance.h"

@@ -10,7 +10,6 @@
 // ----------------------------------------------------------------------------
 
 #include <compiler/session.h>
-#include <vm/instruction_block.h>
 #include "type.h"
 #include "field.h"
 #include "identifier.h"
@@ -116,7 +115,7 @@ namespace basecode::compiler {
             case element_type_t::numeric_type: {
                 auto numeric_type = dynamic_cast<const compiler::numeric_type*>(this);
                 if (numeric_type != nullptr) {
-                    if (numeric_type->number_class() == type_number_class_t::integer) {
+                    if (numeric_type->number_class() == number_class_t::integer) {
                         switch (size_in_bytes()) {
                             case 1:
                                 return vm::ffi_types_t::char_type;
@@ -129,7 +128,7 @@ namespace basecode::compiler {
                             default:
                                 return vm::ffi_types_t::void_type;
                         }
-                    } else if (numeric_type->number_class() == type_number_class_t::floating_point) {
+                    } else if (numeric_type->number_class() == number_class_t::floating_point) {
                         switch (size_in_bytes()) {
                             case 4:
                                 return vm::ffi_types_t::float_type;
@@ -170,7 +169,7 @@ namespace basecode::compiler {
         return on_type_check(other);
     }
 
-    type_number_class_t type::number_class() const {
+    number_class_t type::number_class() const {
         return on_number_class();
     }
 
@@ -186,8 +185,8 @@ namespace basecode::compiler {
         return on_initialize(session);
     }
 
-    type_number_class_t type::on_number_class() const {
-        return type_number_class_t::none;
+    number_class_t type::on_number_class() const {
+        return number_class_t::none;
     }
 
     void type::symbol(compiler::symbol_element* value) {

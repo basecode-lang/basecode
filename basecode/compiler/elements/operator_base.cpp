@@ -41,7 +41,7 @@ namespace basecode::compiler {
         if (!infer_type(session, type_result))
             return false;
 
-        if (type_result.inferred_type->number_class() == type_number_class_t::integer) {
+        if (type_result.inferred_type->number_class() == number_class_t::integer) {
             uint64_t value;
             if (as_integer(value)) {
                 result.element = builder.make_integer(
@@ -49,7 +49,7 @@ namespace basecode::compiler {
                     value);
                 return true;
             }
-        } else if (type_result.inferred_type->number_class() == type_number_class_t::floating_point) {
+        } else if (type_result.inferred_type->number_class() == number_class_t::floating_point) {
             double float_value;
             if (as_float(float_value)) {
                 result.element = builder.make_float(

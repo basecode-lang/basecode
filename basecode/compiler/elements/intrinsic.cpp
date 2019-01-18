@@ -11,8 +11,6 @@
 
 #include <common/defer.h>
 #include <compiler/session.h>
-#include <vm/instruction_block.h>
-#include "program.h"
 #include "intrinsic.h"
 #include "identifier.h"
 #include "argument_list.h"

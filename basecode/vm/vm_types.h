@@ -1000,17 +1000,6 @@ namespace basecode::vm {
 
     ///////////////////////////////////////////////////////////////////////////
 
-//    using control_flow_value_map_t = std::unordered_map<uint16_t, boost::any>;
-//
-//    struct control_flow_t {
-//        bool fallthrough = false;
-//        assembler_label_ref_t* exit_label = nullptr;
-//        assembler_label_ref_t* continue_label = nullptr;
-//        control_flow_value_map_t values {};
-//    };
-
-    ///////////////////////////////////////////////////////////////////////////
-
     struct mnemonic_operand_t {
         enum flags : uint8_t {
             none             = 0b00000000,

@@ -10,7 +10,6 @@
 // ----------------------------------------------------------------------------
 
 #include <compiler/session.h>
-#include <vm/instruction_block.h>
 #include "rune_type.h"
 #include "identifier.h"
 #include "initializer.h"
@@ -31,8 +30,8 @@ namespace basecode::compiler {
                && other->element_type() == element_type_t::rune_type;
     }
 
-    type_number_class_t rune_type::on_number_class() const {
-        return type_number_class_t::integer;
+    number_class_t rune_type::on_number_class() const {
+        return number_class_t::integer;
     }
 
     bool rune_type::on_initialize(compiler::session& session) {

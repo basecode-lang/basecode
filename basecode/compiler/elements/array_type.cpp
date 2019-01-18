@@ -10,7 +10,6 @@
 // ----------------------------------------------------------------------------
 
 #include "block.h"
-#include "program.h"
 #include "array_type.h"
 #include "identifier.h"
 #include "declaration.h"

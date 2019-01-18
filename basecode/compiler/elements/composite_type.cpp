@@ -11,7 +11,6 @@
 
 #include <common/bytes.h>
 #include <compiler/session.h>
-#include <vm/instruction_block.h>
 #include "field.h"
 #include "block.h"
 #include "identifier.h"

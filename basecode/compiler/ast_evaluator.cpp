@@ -213,6 +213,8 @@ namespace basecode::compiler {
                         return false;
                     }
 
+                    basic_block->has_stack_frame(true);
+
                     if (proc_type->return_type() != nullptr) {
                         auto has_return = false;
                         scope_manager.visit_blocks(
@@ -1601,7 +1603,7 @@ namespace basecode::compiler {
             switch (expr->element_type()) {
                 case element_type_t::block: {
                     auto block = dynamic_cast<compiler::block*>(expr);
-                    block->activate_stack_frame();
+                    block->has_stack_frame(true);
                     break;
                 }
                 case element_type_t::symbol: {

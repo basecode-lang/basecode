@@ -11,7 +11,6 @@
 
 #include <compiler/session.h>
 #include <compiler/scope_manager.h>
-#include "program.h"
 #include "identifier.h"
 #include "symbol_element.h"
 #include "type_reference.h"
