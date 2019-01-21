@@ -31,7 +31,8 @@ namespace basecode::vm {
         void local(
             local_type_t type,
             const std::string& name,
-            int64_t offset = 0);
+            int64_t offset = 0,
+            const std::string& frame_offset = {});
 
         void comment(
             const std::string& value,

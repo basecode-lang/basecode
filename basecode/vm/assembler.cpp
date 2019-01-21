@@ -61,9 +61,23 @@ namespace basecode::vm {
                                 break;
                             }
                         }
+
                         if (!allocate_reg(local.reg))
                             return false;
+
+                        if (!data->frame_offset.empty()) {
+                            auto it = _frame_offsets.find(data->frame_offset);
+                            if (it != _frame_offsets.end()) {
+                                local.offset += it->second;
+                            }
+                        }
+
                         _locals.insert(std::make_pair(data->name, local));
+                        break;
+                    }
+                    case block_entry_type_t::frame_offset: {
+                        auto data = entry.data<frame_offset_t>();
+                        _frame_offsets.insert(std::make_pair(data->name, data->offset));
                         break;
                     }
                     case block_entry_type_t::instruction: {
@@ -80,6 +94,7 @@ namespace basecode::vm {
                                     if (it != _locals.end()) {
                                         const auto& local = it->second;
                                         operand.value.r = local.reg.number;
+                                        operand.size = operand.fixup_ref->size;
                                         switch (local.reg.type) {
                                             case register_type_t::integer: {
                                                 operand.type |= operand_encoding_t::flags::integer;
@@ -101,6 +116,7 @@ namespace basecode::vm {
                                             operand.type |= operand_encoding_t::flags::negative;
                                             imm_value = -imm_value;
                                         }
+                                        operand.size = operand.fixup_ref->size;
                                         operand.value.u = static_cast<uint64_t>(imm_value);
                                     }
                                     break;
@@ -146,6 +162,7 @@ namespace basecode::vm {
         }
 
         free_locals();
+        _frame_offsets.clear();
 
         highest_address += 8;
         _terp->heap_free_space_begin(common::align(highest_address, 8));
@@ -266,17 +283,34 @@ namespace basecode::vm {
         return !r.is_failed();
     }
 
+    assembler_named_ref_t* assembler::find_named_ref(
+            const std::string& name,
+            vm::assembler_named_ref_type_t type) {
+        auto key = fmt::format("{}{}", name, static_cast<uint8_t>(type));
+        auto it = _named_refs.find(key);
+        if (it != _named_refs.end()) {
+            return &it->second;
+        }
+        return nullptr;
+    }
+
     assembler_named_ref_t* assembler::make_named_ref(
             assembler_named_ref_type_t type,
-            const std::string& name) {
-        auto it = _named_refs.find(name);
-        if (it != _named_refs.end())
-            return &it->second;
+            const std::string& name,
+            vm::op_sizes size) {
+        auto key = fmt::format("{}{}", name, static_cast<uint8_t>(type));
+        auto it = _named_refs.find(key);
+        if (it != _named_refs.end()) {
+            auto ref = &it->second;
+            ref->size = size;
+            return ref;
+        }
 
         auto insert_pair = _named_refs.insert(std::make_pair(
-            name,
+            key,
             assembler_named_ref_t {
                 .name = name,
+                .size = size,
                 .type = type
             }));
         return &insert_pair.first->second;
@@ -403,8 +437,12 @@ namespace basecode::vm {
                             break;
                         }
                     }
-                    if (local->offset != 0)
-                        line << fmt::format(", {}", local->offset);
+
+                    line << fmt::format(", {}", local->offset);
+
+                    if (!local->frame_offset.empty())
+                        line << fmt::format(", '{}'", local->frame_offset);
+
                     break;
                 }
                 case block_entry_type_t::label: {
@@ -437,6 +475,16 @@ namespace basecode::vm {
                     type = listing_source_line_type_t::directive;
                     auto section = entry.data<section_t>();
                     line << fmt::format(".section '{}'", section_name(*section));
+                    break;
+                }
+                case block_entry_type_t::frame_offset: {
+                    type = listing_source_line_type_t::directive;
+                    auto frame_offset = entry.data<frame_offset_t>();
+                    line << fmt::format(
+                        "{}.frame_offset '{}', {}",
+                        indent_four_spaces,
+                        frame_offset->name,
+                        frame_offset->offset);
                     break;
                 }
                 case block_entry_type_t::blank_line: {
@@ -625,14 +673,6 @@ namespace basecode::vm {
 
     void assembler::resolver(const assembly_symbol_resolver_t& resolver) {
         _resolver = resolver;
-    }
-
-    assembler_named_ref_t* assembler::find_named_ref(const std::string& name) {
-        auto it = _named_refs.find(name);
-        if (it != _named_refs.end()) {
-            return &it->second;
-        }
-        return nullptr;
     }
 
     const vm::assembler_local_t* assembler::local(const std::string& name) const {

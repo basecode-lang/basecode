@@ -1004,7 +1004,8 @@ namespace basecode::vm {
     void instruction_block::local(
             local_type_t type,
             const std::string& name,
-            int64_t offset) {
+            int64_t offset,
+            const std::string& frame_offset) {
         if (_locals.count(name) > 0)
             return;
 
@@ -1012,6 +1013,7 @@ namespace basecode::vm {
             .offset = offset,
             .type = type,
             .name = name,
+            .frame_offset = frame_offset
         });
         _locals.insert(std::make_pair(name, &_entries.back()));
     }
@@ -1116,7 +1118,7 @@ namespace basecode::vm {
     }
 
     void instruction_block::frame_offset(const std::string& name, int64_t offset) {
-
+        _entries.push_back(block_entry_t(frame_offset_t{offset, name}));
     }
 
 };

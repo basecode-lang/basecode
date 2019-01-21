@@ -81,6 +81,10 @@ namespace basecode::vm {
                                                              _type(block_entry_type_t::comment) {
     }
 
+    block_entry_t::block_entry_t(const frame_offset_t& offset) : _data(offset),
+                                                                 _type(block_entry_type_t::frame_offset) {
+    }
+
     block_entry_t::block_entry_t(const data_definition_t& data) : _data(data),
                                                                   _type(block_entry_type_t::data_definition) {
     }
@@ -254,6 +258,7 @@ namespace basecode::vm {
     }
 
     instruction_operand_t::instruction_operand_t(assembler_named_ref_t* ref): _data(ref),
+                                                                              _size(ref->size),
                                                                               _type(instruction_operand_type_t::named_ref) {
     }
 

@@ -55,6 +55,7 @@ namespace basecode::compiler {
 
         bool emit_section_variable(
             vm::instruction_block* block,
+            vm::section_t section,
             compiler::element* e);
 
         bool emit_bootstrap_block();
@@ -99,15 +100,15 @@ namespace basecode::compiler {
 
     // helper functions
     private:
+        bool emit_block(
+            vm::instruction_block* basic_block,
+            compiler::block* block,
+            identifier_list_t& locals);
+
         bool emit_arguments(
             vm::instruction_block* block,
             compiler::argument_list* arg_list,
             const compiler::element_list_t& elements);
-
-        bool allocate_register(
-            vm::instruction_operand_t& op,
-            vm::op_sizes size,
-            vm::register_type_t type);
 
         bool end_stack_frame(
             vm::instruction_block* basic_block,
@@ -119,13 +120,18 @@ namespace basecode::compiler {
             compiler::block* block,
             identifier_list_t& locals);
 
+        std::string temp_local_name(
+            number_class_t type,
+            uint8_t number);
+
         bool emit_procedure_epilogue(
             vm::instruction_block* block,
             compiler::procedure_type* proc_type);
 
         bool emit_procedure_prologue(
             vm::instruction_block* block,
-            compiler::procedure_type* proc_type);
+            compiler::procedure_type* proc_type,
+            identifier_list_t& parameters);
 
         bool emit_arithmetic_operator(
             vm::instruction_block* block,

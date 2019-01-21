@@ -494,6 +494,7 @@ namespace basecode::vm {
 
     struct assembler_named_ref_t {
         std::string name;
+        vm::op_sizes size = vm::op_sizes::qword;
         assembler_named_ref_type_t type = assembler_named_ref_type_t::none;
     };
 
@@ -725,6 +726,12 @@ namespace basecode::vm {
         int64_t offset;
         local_type_t type;
         std::string name {};
+        std::string frame_offset {};
+    };
+
+    struct frame_offset_t {
+        int64_t offset;
+        std::string name {};
     };
 
     struct meta_t {
@@ -740,6 +747,7 @@ namespace basecode::vm {
         comment,
         blank_line,
         instruction,
+        frame_offset,
         data_definition,
     };
 
@@ -761,6 +769,8 @@ namespace basecode::vm {
         explicit block_entry_t(const comment_t& comment);
 
         explicit block_entry_t(const section_t& section);
+
+        explicit block_entry_t(const frame_offset_t& offset);
 
         explicit block_entry_t(const data_definition_t& data);
 
