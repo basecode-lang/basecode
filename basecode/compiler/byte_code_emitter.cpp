@@ -2219,6 +2219,8 @@ namespace basecode::compiler {
         auto& assembler = _session.assembler();
         auto& scope_manager = _session.scope_manager();
 
+        identifier_list_t to_init {};
+
         basic_block->local(
             vm::local_type_t::integer,
             temp_local_name(number_class_t::integer, 1),
@@ -2246,6 +2248,8 @@ namespace basecode::compiler {
                         var->symbol()->name(),
                         offset);
                     offset -= type->size_in_bytes();
+                    to_init.emplace_back(var);
+                    locals.emplace_back(var);
                 }
 
                 return true;
@@ -2265,6 +2269,9 @@ namespace basecode::compiler {
                 vm::instruction_operand_t(static_cast<uint64_t>(locals_size), vm::op_sizes::dword));
         }
 
+        basic_block->comment(
+            fmt::format("address: {}", temp_local_name(number_class_t::integer, 1)),
+            vm::comment_location_t::after_instruction);
         basic_block->move(
             vm::instruction_operand_t(assembler.make_named_ref(
                 vm::assembler_named_ref_type_t::local,
@@ -2275,6 +2282,9 @@ namespace basecode::compiler {
                 temp_local_name(number_class_t::integer, 1),
                 vm::op_sizes::word)));
 
+        basic_block->comment(
+            fmt::format("address: {}", temp_local_name(number_class_t::floating_point, 1)),
+            vm::comment_location_t::after_instruction);
         basic_block->move(
             vm::instruction_operand_t(assembler.make_named_ref(
                 vm::assembler_named_ref_type_t::local,
@@ -2287,6 +2297,9 @@ namespace basecode::compiler {
 
         for (auto var : locals) {
             const auto& name = var->symbol()->name();
+            basic_block->comment(
+                fmt::format("address: {}", name),
+                vm::comment_location_t::after_instruction);
             basic_block->move(
                 vm::instruction_operand_t(assembler.make_named_ref(
                     vm::assembler_named_ref_type_t::local,
@@ -2298,20 +2311,9 @@ namespace basecode::compiler {
                     vm::op_sizes::word)));
         }
 
-        identifier_list_t to_init {};
-        for (auto var : locals) {
-            if (var->is_constant()
-            && !var->type_ref()->is_composite_type()) {
-                continue;
-            }
-
-            auto init = var->initializer();
-            if (init != nullptr) {
-                if (init->expression()->element_type() == element_type_t::uninitialized_literal)
-                    continue;
-            }
-
-            to_init.emplace_back(var);
+        for (auto var : to_init) {
+            if (!emit_initializer(basic_block, var))
+                return false;
         }
 
         return true;
