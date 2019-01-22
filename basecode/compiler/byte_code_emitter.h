@@ -15,6 +15,17 @@
 
 namespace basecode::compiler {
 
+    struct temp_local_t {
+        std::string name;
+        int64_t offset;
+        vm::op_sizes size;
+        vm::local_type_t type;
+    };
+
+    using temp_local_list_t = std::vector<temp_local_t>;
+
+    ///////////////////////////////////////////////////////////////////////////
+
     class byte_code_emitter {
     public:
         explicit byte_code_emitter(compiler::session& session);
@@ -100,10 +111,16 @@ namespace basecode::compiler {
 
     // helper functions
     private:
+        void read(
+            vm::instruction_block* block,
+            emit_result_t& result,
+            uint8_t number);
+
         bool emit_block(
             vm::instruction_block* basic_block,
             compiler::block* block,
-            identifier_list_t& locals);
+            identifier_list_t& locals,
+            temp_local_list_t& temp_locals);
 
         bool emit_arguments(
             vm::instruction_block* block,
@@ -118,7 +135,8 @@ namespace basecode::compiler {
         bool begin_stack_frame(
             vm::instruction_block* basic_block,
             compiler::block* block,
-            identifier_list_t& locals);
+            identifier_list_t& locals,
+            temp_local_list_t& temp_locals);
 
         std::string temp_local_name(
             number_class_t type,

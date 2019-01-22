@@ -25,12 +25,17 @@ namespace basecode::vm {
         size_t encoding_size = base_size;
 
         for (size_t i = 0; i < operands_count; i++) {
+            const auto& operand = operands[i];
             encoding_size += 1;
 
-            if ((operands[i].is_reg())) {
+            if ((operand.is_reg())) {
                 encoding_size += sizeof(uint8_t);
             } else {
-                switch (operands[i].size) {
+                auto working_size = operand.size;
+                if (operand.fixup_ref != nullptr) {
+                    working_size = operand.fixup_ref->size;
+                }
+                switch (working_size) {
                     case op_sizes::none:
                         break;
                     case op_sizes::byte:

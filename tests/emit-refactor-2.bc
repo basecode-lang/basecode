@@ -1,5 +1,6 @@
 simple_const_mul :: proc(a: u32): u32 {
-    b := a * 5;
+    c := 5;
+    b := a * c;
     return b;
 };
 
