@@ -11,6 +11,8 @@
 
 #include <compiler/session.h>
 #include "elements.h"
+#include "element_map.h"
+#include "scope_manager.h"
 #include "ast_evaluator.h"
 #include "element_builder.h"
 

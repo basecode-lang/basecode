@@ -15,26 +15,14 @@
 #include <cstdio>
 #include <string>
 #include <vector>
-#include <vm/ffi.h>
-#include <vm/terp.h>
 #include <fmt/format.h>
-#include <vm/assembler.h>
 #include <common/defer.h>
-#include <parser/parser.h>
 #include <boost/filesystem.hpp>
-#include <vm/default_allocator.h>
-#include "element_map.h"
-#include "scope_manager.h"
-#include "ast_evaluator.h"
 #include "compiler_types.h"
-#include "element_builder.h"
-#include "elements/program.h"
-#include "string_intern_map.h"
-#include "byte_code_emitter.h"
 
 namespace basecode::compiler {
 
-    class session {
+    class session final {
     public:
         static constexpr uint8_t trap_putc = 0x01;
         static constexpr uint8_t trap_getc = 0x02;
@@ -44,7 +32,7 @@ namespace basecode::compiler {
             const session_options_t& options,
             const path_list_t& source_files);
 
-        virtual ~session() = default;
+        ~session();
 
         bool run();
 
@@ -174,29 +162,29 @@ namespace basecode::compiler {
         void write_code_dom_graph(const boost::filesystem::path& path);
 
     private:
-        vm::ffi _ffi;
-        vm::terp _terp;
         bool _run = false;
         ast_map_t _asts {};
         common::result _result;
-        element_builder _builder;
-        vm::assembler _assembler;
-        element_map _elements {};
+        vm::ffi* _ffi = nullptr;
         module_map_t _modules {};
+        vm::terp* _terp = nullptr;
         type_set_t _used_types {};
-        compiler::program _program;
-        ast_evaluator _ast_evaluator;
         path_list_t _source_files {};
         session_options_t _options {};
         session_task_list_t _tasks {};
-        syntax::ast_builder _ast_builder;
-        compiler::byte_code_emitter _emitter;
-        string_intern_map _interned_strings {};
-        compiler::scope_manager _scope_manager;
+        element_map* _elements = nullptr;
+        element_builder* _builder = nullptr;
+        vm::assembler* _assembler = nullptr;
+        compiler::program* _program = nullptr;
+        ast_evaluator* _ast_evaluator = nullptr;
         source_file_stack_t _source_file_stack {};
         source_file_map_t _source_file_registry {};
+        syntax::ast_builder* _ast_builder = nullptr;
         address_register_map_t _address_registers {};
         source_file_path_map_t _source_file_paths {};
+        string_intern_map* _interned_strings = nullptr;
+        compiler::byte_code_emitter* _emitter = nullptr;
+        compiler::scope_manager* _scope_manager = nullptr;
     };
 
 };

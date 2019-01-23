@@ -16,5 +16,6 @@
 #include <common/colorizer.h>
 #include <compiler/session.h>
 #include <common/source_file.h>
+#include <vm/default_allocator.h>
 #include <common/hex_formatter.h>
 #include <common/string_support.h>

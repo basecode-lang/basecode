@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <compiler/element_builder.h>
 #include "block.h"
 #include "array_type.h"
 #include "identifier.h"

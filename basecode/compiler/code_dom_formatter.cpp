@@ -11,6 +11,7 @@
 
 #include <fmt/format.h>
 #include <compiler/elements.h>
+#include <compiler/element_map.h>
 #include <common/graphviz_formatter.h>
 #include "code_dom_formatter.h"
 

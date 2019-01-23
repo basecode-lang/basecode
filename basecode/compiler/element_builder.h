@@ -20,6 +20,8 @@ namespace basecode::compiler {
     public:
         explicit element_builder(compiler::session& session);
 
+        program* make_program();
+
         case_element* make_case(
             compiler::block* parent_scope,
             compiler::block* scope,

@@ -11,6 +11,7 @@
 
 #include <common/bytes.h>
 #include <compiler/session.h>
+#include <compiler/element_builder.h>
 #include "block.h"
 #include "field.h"
 #include "element.h"

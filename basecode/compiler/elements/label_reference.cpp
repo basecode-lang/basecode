@@ -10,6 +10,7 @@
 // ----------------------------------------------------------------------------
 
 #include <compiler/session.h>
+#include <compiler/element_map.h>
 #include "label.h"
 #include "label_reference.h"
 

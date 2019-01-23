@@ -15,6 +15,25 @@
 
 namespace basecode::compiler {
 
+    struct temp_count_result_t {
+        size_t ints = 0;
+        size_t floats = 0;
+
+        void update();
+
+        void count(compiler::type* type);
+
+        temp_count_result_t& operator+ (const temp_count_result_t& rhs) {
+            ints += rhs.ints;
+            floats += rhs.floats;
+            return *this;
+        }
+
+    private:
+        size_t _ints = 0;
+        size_t _floats = 0;
+    };
+
     struct temp_local_t {
         std::string name;
         int64_t offset;
@@ -57,6 +76,14 @@ namespace basecode::compiler {
         bool emit_type_info(
             vm::instruction_block* block,
             compiler::type* type);
+
+        bool count_temps(
+            compiler::element* e,
+            temp_count_result_t& result);
+
+        bool make_temp_locals(
+            compiler::block* block,
+            temp_local_list_t& locals);
 
         bool emit_end_block();
 

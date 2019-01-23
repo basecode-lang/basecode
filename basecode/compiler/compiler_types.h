@@ -27,11 +27,13 @@
 namespace basecode::compiler {
 
     class session;
+    class program;
     class element_map;
     class ast_evaluator;
     class scope_manager;
     class element_builder;
     class string_intern_map;
+    class byte_code_emitter;
     class code_dom_formatter;
 
     using path_list_t = std::vector<boost::filesystem::path>;

@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <vm/terp.h>
 #include <fmt/format.h>
 #include <compiler/session.h>
 #include "environment.h"

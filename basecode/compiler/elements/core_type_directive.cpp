@@ -11,6 +11,7 @@
 
 #include <compiler/session.h>
 #include "block.h"
+#include "program.h"
 #include "attribute.h"
 #include "identifier.h"
 #include "assignment.h"

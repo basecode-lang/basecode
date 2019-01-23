@@ -12,6 +12,7 @@
 #include <vm/ffi.h>
 #include <common/defer.h>
 #include <compiler/session.h>
+#include <compiler/element_builder.h>
 #include "type.h"
 #include "identifier.h"
 #include "initializer.h"

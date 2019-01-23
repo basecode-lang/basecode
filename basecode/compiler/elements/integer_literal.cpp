@@ -11,6 +11,7 @@
 
 #include <common/bytes.h>
 #include <compiler/session.h>
+#include <compiler/scope_manager.h>
 #include "numeric_type.h"
 #include "integer_literal.h"
 

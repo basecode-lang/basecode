@@ -9,10 +9,17 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <vm/ffi.h>
+#include <vm/terp.h>
 #include <fmt/format.h>
+#include <vm/assembler.h>
 #include <compiler/session.h>
 #include <vm/instruction_block.h>
 #include "elements.h"
+#include "element_map.h"
+#include "scope_manager.h"
+#include "element_builder.h"
+#include "string_intern_map.h"
 #include "byte_code_emitter.h"
 
 namespace basecode::compiler {
@@ -27,6 +34,36 @@ namespace basecode::compiler {
     // | param 2     |
     // +-------------+
     //
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    void temp_count_result_t::update() {
+        if (_ints > ints)
+            ints = _ints;
+
+        if (_floats > floats)
+            floats = _floats;
+
+        _ints = _floats = 0;
+    }
+
+    void temp_count_result_t::count(compiler::type* type) {
+        switch (type->number_class()) {
+            case number_class_t::integer: {
+                ++_ints;
+                break;
+            }
+            case number_class_t::floating_point: {
+                ++_floats;
+                break;
+            }
+            default: {
+                break;
+            }
+        }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
 
     enum class cast_mode_t : uint8_t {
         noop,
@@ -613,15 +650,13 @@ namespace basecode::compiler {
             case element_type_t::block: {
                 identifier_list_t locals {};
 
-                temp_local_list_t temp_locals {};
-                temp_locals.push_back(temp_local_t{"itemp1", 0, vm::op_sizes::qword, vm::local_type_t::integer});
-                temp_locals.push_back(temp_local_t{"itemp2", 0, vm::op_sizes::qword, vm::local_type_t::integer});
-                temp_locals.push_back(temp_local_t{"itemp3", 0, vm::op_sizes::qword, vm::local_type_t::integer});
-                temp_locals.push_back(temp_local_t{"ftemp1", 0, vm::op_sizes::qword, vm::local_type_t::floating_point});
-                temp_locals.push_back(temp_local_t{"ftemp2", 0, vm::op_sizes::qword, vm::local_type_t::floating_point});
-                temp_locals.push_back(temp_local_t{"ftemp3", 0, vm::op_sizes::qword, vm::local_type_t::floating_point});
+                auto scope_block = dynamic_cast<compiler::block*>(e);
 
-                if (!emit_block(block, dynamic_cast<compiler::block*>(e), locals, temp_locals))
+                temp_local_list_t temp_locals {};
+                if (!make_temp_locals(scope_block, temp_locals))
+                    return false;
+
+                if (!emit_block(block, scope_block, locals, temp_locals))
                     return false;
                 break;
             }
@@ -1321,12 +1356,8 @@ namespace basecode::compiler {
                     return false;
 
                 temp_local_list_t temp_locals {};
-                temp_locals.push_back(temp_local_t{"itemp1", 0, vm::op_sizes::qword, vm::local_type_t::integer});
-                temp_locals.push_back(temp_local_t{"itemp2", 0, vm::op_sizes::qword, vm::local_type_t::integer});
-                temp_locals.push_back(temp_local_t{"itemp3", 0, vm::op_sizes::qword, vm::local_type_t::integer});
-                temp_locals.push_back(temp_local_t{"ftemp1", 0, vm::op_sizes::qword, vm::local_type_t::floating_point});
-                temp_locals.push_back(temp_local_t{"ftemp2", 0, vm::op_sizes::qword, vm::local_type_t::floating_point});
-                temp_locals.push_back(temp_local_t{"ftemp3", 0, vm::op_sizes::qword, vm::local_type_t::floating_point});
+                if (!make_temp_locals(proc_instance->scope(), temp_locals))
+                    return false;
 
                 block->blank_line();
                 if (!emit_block(block, proc_instance->scope(), parameters, temp_locals))
@@ -1611,6 +1642,161 @@ namespace basecode::compiler {
         block->qwords({assembler.make_named_ref(
             vm::assembler_named_ref_type_t::label,
             type::make_literal_data_label_name(type))});
+
+        return true;
+    }
+
+    bool byte_code_emitter::count_temps(
+            compiler::element* e,
+            temp_count_result_t& result) {
+        switch (e->element_type()) {
+            case element_type_t::cast: {
+                auto cast = dynamic_cast<compiler::cast*>(e);
+                if (!count_temps(cast->expression(), result))
+                    return false;
+                break;
+            }
+            case element_type_t::field: {
+                auto field = dynamic_cast<compiler::field*>(e);
+                if (!count_temps(field->identifier(), result))
+                    return false;
+                break;
+            }
+            case element_type_t::proc_type: {
+                auto proc_type = dynamic_cast<compiler::procedure_type*>(e);
+                auto return_type = proc_type->return_type();
+                if (return_type != nullptr) {
+                    if (!count_temps(return_type, result))
+                        return false;
+                }
+                break;
+            }
+            case element_type_t::intrinsic: {
+                auto intrinsic = dynamic_cast<compiler::intrinsic*>(e);
+                if (!count_temps(intrinsic->arguments(), result))
+                    return false;
+                if (!count_temps(intrinsic->procedure_type(), result))
+                    return false;
+                break;
+            }
+            case element_type_t::transmute: {
+                auto transmute = dynamic_cast<compiler::transmute*>(e);
+                if (!count_temps(transmute->expression(), result))
+                    return false;
+                break;
+            }
+            case element_type_t::proc_call: {
+                auto proc_call = dynamic_cast<compiler::procedure_call*>(e);
+                if (!count_temps(proc_call->arguments(), result))
+                    return false;
+                if (!count_temps(proc_call->procedure_type(), result))
+                    return false;
+                break;
+            }
+            case element_type_t::assignment: {
+                auto assignment = dynamic_cast<compiler::assignment*>(e);
+                for (auto expr : assignment->expressions()) {
+                    if (!count_temps(expr, result))
+                        return false;
+                }
+                break;
+            }
+            case element_type_t::identifier: {
+                infer_type_result_t type_result {};
+                if (!e->infer_type(_session, type_result))
+                    return false;
+                result.count(type_result.inferred_type);
+                break;
+            }
+            case element_type_t::declaration: {
+                auto decl = dynamic_cast<compiler::declaration*>(e);
+                auto assignment = decl->assignment();
+                if (assignment != nullptr) {
+                    if (!count_temps(assignment, result))
+                        return false;
+                }
+                break;
+            }
+            case element_type_t::argument_list: {
+                auto arg_list = dynamic_cast<compiler::argument_list*>(e);
+                for (auto arg : arg_list->elements()) {
+                    if (!count_temps(arg, result))
+                        return false;
+                }
+                break;
+            }
+            case element_type_t::unary_operator: {
+                auto unary_op = dynamic_cast<compiler::unary_operator*>(e);
+                if (!count_temps(unary_op->rhs(), result))
+                    return false;
+                result.update();
+                break;
+            }
+            case element_type_t::binary_operator: {
+                auto bin_op = dynamic_cast<compiler::binary_operator*>(e);
+                if (bin_op->operator_type() != operator_type_t::assignment) {
+                    if (!count_temps(bin_op->lhs(), result))
+                        return false;
+                }
+                if (!count_temps(bin_op->rhs(), result))
+                    return false;
+                result.update();
+                break;
+            }
+            case element_type_t::identifier_reference: {
+                auto ref = dynamic_cast<compiler::identifier_reference*>(e);
+                if (ref->identifier() != nullptr) {
+                    if (!count_temps(ref->identifier(), result))
+                        return false;
+                }
+                break;
+            }
+            default: {
+                break;
+            }
+        }
+
+        return true;
+    }
+
+    bool byte_code_emitter::make_temp_locals(
+            compiler::block* block,
+            temp_local_list_t& locals) {
+        temp_count_result_t result {};
+
+        auto success = _session.scope_manager().visit_blocks(
+            _session.result(),
+            [&](compiler::block* scope) {
+                for (auto stmt : scope->statements()) {
+                    auto expr = stmt->expression();
+                    if (expr == nullptr)
+                        continue;
+                    if (!count_temps(expr, result))
+                        return false;
+                }
+                return true;
+            },
+            block);
+        if (!success)
+            return false;
+
+        result.update();
+
+        for (size_t i = 1; i <= result.ints; i++) {
+            locals.push_back(temp_local_t{
+                fmt::format("itemp{}", i),
+                0,
+                vm::op_sizes::qword,
+                vm::local_type_t::integer});
+        }
+
+        for (size_t i = 1; i <= result.floats; i++) {
+            locals.push_back(temp_local_t{
+                fmt::format("ftemp{}", i),
+                0,
+                vm::op_sizes::qword,
+                vm::local_type_t::floating_point});
+        }
 
         return true;
     }

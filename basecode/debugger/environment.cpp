@@ -9,7 +9,9 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <vm/terp.h>
 #include <vm/label.h>
+#include <vm/assembler.h>
 #include <common/defer.h>
 #include <parser/token.h>
 #include <compiler/session.h>

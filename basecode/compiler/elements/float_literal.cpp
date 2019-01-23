@@ -10,6 +10,7 @@
 // ----------------------------------------------------------------------------
 
 #include <compiler/session.h>
+#include <compiler/scope_manager.h>
 #include "type.h"
 #include "numeric_type.h"
 #include "float_literal.h"

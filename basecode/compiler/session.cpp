@@ -10,28 +10,55 @@
 // ----------------------------------------------------------------------------
 
 #include <fstream>
+#include <vm/ffi.h>
+#include <vm/terp.h>
+#include <vm/assembler.h>
+#include <parser/parser.h>
+#include <vm/default_allocator.h>
 #include <debugger/environment.h>
 #include "session.h"
 #include "elements.h"
+#include "element_map.h"
+#include "ast_evaluator.h"
+#include "scope_manager.h"
+#include "element_builder.h"
+#include "string_intern_map.h"
+#include "byte_code_emitter.h"
 #include "code_dom_formatter.h"
 
 namespace basecode::compiler {
 
     session::session(
             const session_options_t& options,
-            const path_list_t& source_files) : _ffi(options.ffi_heap_size),
-                                               _terp(&_ffi, options.allocator, options.heap_size, options.stack_size),
-                                               _builder(*this),
-                                               _assembler(&_terp),
-                                               _ast_evaluator(*this),
+            const path_list_t& source_files) : _ffi(new vm::ffi(options.ffi_heap_size)),
+                                               _terp(new vm::terp(_ffi, options.allocator, options.heap_size, options.stack_size)),
                                                _source_files(source_files),
                                                _options(options),
-                                               _emitter(*this),
-                                               _scope_manager(*this) {
+                                               _elements(new element_map()),
+                                               _builder(new element_builder(*this)),
+                                               _assembler(new vm::assembler(_terp)),
+                                               _ast_evaluator(new ast_evaluator(*this)),
+                                               _ast_builder(new syntax::ast_builder()),
+                                               _interned_strings(new string_intern_map()),
+                                               _emitter(new compiler::byte_code_emitter(*this)),
+                                               _scope_manager(new compiler::scope_manager(*this)) {
+    }
+
+    session::~session() {
+        delete _scope_manager;
+        delete _emitter;
+        delete _interned_strings;
+        delete _ast_builder;
+        delete _ast_evaluator;
+        delete _assembler;
+        delete _builder;
+        delete _elements;
+        delete _terp;
+        delete _ffi;
     }
 
     bool session::run() {
-        return _terp.run(_result);
+        return _terp->run(_result);
     }
 
     void session::error(
@@ -50,12 +77,12 @@ namespace basecode::compiler {
     }
 
     vm::ffi& session::ffi() {
-        return _ffi;
+        return *_ffi;
     }
 
     bool session::compile() {
-        auto& top_level_stack = _scope_manager.top_level_stack();
-        auto& listing = _assembler.listing();
+        auto& top_level_stack = _scope_manager->top_level_stack();
+        auto& listing = _assembler->listing();
 
         time_task(
             "assembler: preparation",
@@ -72,9 +99,9 @@ namespace basecode::compiler {
         time_task(
             "compiler: preparation",
             [&]() {
-                _program.block(_scope_manager.push_new_block());
-                _program.block()->parent_element(&_program);
-                top_level_stack.push(_program.block());
+                _program->block(_scope_manager->push_new_block());
+                _program->block()->parent_element(_program);
+                top_level_stack.push(_program->block());
                 return true;
             });
         defer(top_level_stack.pop());
@@ -142,16 +169,16 @@ namespace basecode::compiler {
             time_task(
                 "compiler: generate byte-code",
                 [&]() {
-                    _emitter.emit();
+                    _emitter->emit();
                     return true;
                 });
 
             success = time_task(
                 "assembler: encode byte-code",
                 [&]() {
-                    _assembler.apply_addresses(_result);
-                    _assembler.resolve_labels(_result);
-                    return _assembler.assemble(_result);
+                    _assembler->apply_addresses(_result);
+                    _assembler->resolve_labels(_result);
+                    return _assembler->assemble(_result);
                 });
 
             if (_options.verbose) {
@@ -218,7 +245,7 @@ namespace basecode::compiler {
     }
 
     vm::terp& session::terp() {
-        return _terp;
+        return *_terp;
     }
 
     void session::raise_phase(
@@ -248,7 +275,7 @@ namespace basecode::compiler {
     bool session::allocate_reg(
             vm::register_t& reg,
             compiler::element* element) {
-        if (!_assembler.allocate_reg(reg)) {
+        if (!_assembler->allocate_reg(reg)) {
             error(
                 element->module(),
                 "P052",
@@ -265,7 +292,7 @@ namespace basecode::compiler {
         success = time_task(
             " - instrinsic call sites",
             [&]() {
-                auto intrinsics = _elements.find_by_type<compiler::intrinsic>(element_type_t::intrinsic);
+                auto intrinsics = _elements->find_by_type<compiler::intrinsic>(element_type_t::intrinsic);
                 for (auto intrinsic : intrinsics) {
                     auto args = intrinsic->arguments();
                     prepare_call_site_result_t result {};
@@ -289,7 +316,7 @@ namespace basecode::compiler {
         success = time_task(
             " - procedure call sites",
             [&]() {
-                auto proc_calls = _elements.find_by_type<compiler::procedure_call>(element_type_t::proc_call);
+                auto proc_calls = _elements->find_by_type<compiler::procedure_call>(element_type_t::proc_call);
                 for (auto proc_call : proc_calls) {
                     if (!proc_call->resolve_overloads(*this))
                         return false;
@@ -302,7 +329,7 @@ namespace basecode::compiler {
                 nullptr,
                 "X000",
                 "unable to prepare procedure call sites.",
-                _program.location());
+                _program->location());
             return false;
         }
 
@@ -314,11 +341,11 @@ namespace basecode::compiler {
                 nullptr,
                 "X000",
                 "unable to resolve unknown types (phase 3).",
-                _program.location());
+                _program->location());
             return false;
         }
 
-        auto identifiers = _elements.find_by_type<compiler::identifier>(element_type_t::identifier);
+        auto identifiers = _elements->find_by_type<compiler::identifier>(element_type_t::identifier);
         for (auto var : identifiers) {
             auto init = var->initializer();
             if (init == nullptr)
@@ -348,7 +375,7 @@ namespace basecode::compiler {
             }
         }
 
-        auto binary_ops = _elements.find_by_type<compiler::binary_operator>(element_type_t::binary_operator);
+        auto binary_ops = _elements->find_by_type<compiler::binary_operator>(element_type_t::binary_operator);
         for (auto binary_op : binary_ops) {
             if (binary_op->operator_type() != operator_type_t::assignment)
                 continue;
@@ -389,18 +416,20 @@ namespace basecode::compiler {
     }
 
     bool session::initialize() {
-        _ffi.initialize(_result);
-        _terp.initialize(_result);
+        _program = _builder->make_program();
 
-        _assembler.resolver(std::bind(&session::resolve_assembly_symbol,
+        _ffi->initialize(_result);
+        _terp->initialize(_result);
+
+        _assembler->resolver(std::bind(&session::resolve_assembly_symbol,
             this,
             std::placeholders::_1,
             std::placeholders::_2,
             std::placeholders::_3,
             std::placeholders::_4));
-        _assembler.initialize(_result);
+        _assembler->initialize(_result);
 
-        _terp.register_trap(trap_putc, [](vm::terp* terp) {
+        _terp->register_trap(trap_putc, [](vm::terp* terp) {
             vm::register_value_alias_t fp_alias {};
             fp_alias.qw = terp->pop();
 
@@ -410,7 +439,7 @@ namespace basecode::compiler {
             fputc(ch_alias.dw, stdout);
         });
 
-        _terp.register_trap(trap_getc, [](vm::terp* terp) {
+        _terp->register_trap(trap_getc, [](vm::terp* terp) {
             vm::register_value_alias_t fp_alias {};
             fp_alias.qw = terp->pop();
 
@@ -426,7 +455,7 @@ namespace basecode::compiler {
     }
 
     element_map& session::elements() {
-        return _elements;
+        return *_elements;
     }
 
     common::result& session::result() {
@@ -441,7 +470,7 @@ namespace basecode::compiler {
     }
 
     bool session::execute_directives() {
-        auto directives = _elements.find_by_type<compiler::directive>(element_type_t::directive);
+        auto directives = _elements->find_by_type<compiler::directive>(element_type_t::directive);
         for (auto directive_element : directives) {
             if (directive_element->is_parent_type_one_of({element_type_t::directive}))
                 continue;
@@ -459,11 +488,11 @@ namespace basecode::compiler {
     }
 
     vm::assembler& session::assembler() {
-        return _assembler;
+        return *_assembler;
     }
 
     element_builder& session::builder() {
-        return _builder;
+        return *_builder;
     }
 
     vm::allocator* session::allocator() {
@@ -517,7 +546,7 @@ namespace basecode::compiler {
                 break;
             }
             case vm::assembly_symbol_type_t::module: {
-                auto vars = _scope_manager.find_identifier(
+                auto vars = _scope_manager->find_identifier(
                     make_qualified_symbol(symbol),
                     scope);
                 compiler::identifier* var = vars.empty() ? nullptr : vars.front();
@@ -577,29 +606,29 @@ namespace basecode::compiler {
     }
 
     compiler::program& session::program() {
-        return _program;
+        return *_program;
     }
 
     void session::initialize_core_types() {
-        auto parent_scope = _scope_manager.current_scope();
+        auto parent_scope = _scope_manager->current_scope();
 
         compiler::numeric_type::make_types(*this, parent_scope);
-        _scope_manager.add_type_to_scope(_builder.make_module_type(
+        _scope_manager->add_type_to_scope(_builder->make_module_type(
             parent_scope,
-            _builder.make_block(parent_scope)));
-        _scope_manager.add_type_to_scope(_builder.make_namespace_type(parent_scope));
-        _scope_manager.add_type_to_scope(_builder.make_bool_type(parent_scope));
-        _scope_manager.add_type_to_scope(_builder.make_rune_type(parent_scope));
-        _scope_manager.add_type_to_scope(_builder.make_tuple_type(
+            _builder->make_block(parent_scope)));
+        _scope_manager->add_type_to_scope(_builder->make_namespace_type(parent_scope));
+        _scope_manager->add_type_to_scope(_builder->make_bool_type(parent_scope));
+        _scope_manager->add_type_to_scope(_builder->make_rune_type(parent_scope));
+        _scope_manager->add_type_to_scope(_builder->make_tuple_type(
             parent_scope,
-            _builder.make_block(parent_scope)));
-        _scope_manager.add_type_to_scope(_builder.make_generic_type(
+            _builder->make_block(parent_scope)));
+        _scope_manager->add_type_to_scope(_builder->make_generic_type(
             parent_scope,
             {}));
     }
 
     bool session::resolve_unknown_types(bool final) {
-        auto& identifiers = _scope_manager.identifiers_with_unknown_types();
+        auto& identifiers = _scope_manager->identifiers_with_unknown_types();
         auto remaining = identifiers.size();
 
         std::set<common::id_t> to_remove {};
@@ -650,11 +679,11 @@ namespace basecode::compiler {
                     expr = unknown_type->expression();
 
                 if (expr == nullptr || is_pointer) {
-                    auto type = _scope_manager.find_type(
+                    auto type = _scope_manager->find_type(
                         unknown_type->symbol()->qualified_symbol(),
                         var->parent_scope());
                     if (type != nullptr) {
-                        auto type_ref = _builder.make_type_reference(
+                        auto type_ref = _builder->make_type_reference(
                             type->parent_scope(),
                             qualified_symbol_t{},
                             type);
@@ -697,20 +726,20 @@ namespace basecode::compiler {
         }
 
         for (auto id : to_remove)
-            _elements.remove(id);
+            _elements->remove(id);
 
         return remaining == 0;
     }
 
     ast_evaluator& session::evaluator() {
-        return _ast_evaluator;
+        return *_ast_evaluator;
     }
 
     void session::disassemble(FILE* file) {
-        _assembler.disassemble();
+        _assembler->disassemble();
         if (file != nullptr) {
             fmt::print(file, "\n");
-            _assembler.listing().write(file);
+            _assembler->listing().write(file);
         }
     }
 
@@ -723,7 +752,7 @@ namespace basecode::compiler {
     }
 
     bool session::resolve_unknown_identifiers() {
-        auto& unresolved = _scope_manager.unresolved_identifier_references();
+        auto& unresolved = _scope_manager->unresolved_identifier_references();
         auto it = unresolved.begin();
         while (it != unresolved.end()) {
             auto unresolved_reference = *it;
@@ -760,7 +789,7 @@ namespace basecode::compiler {
 
             compiler::identifier* identifier = nullptr;
 
-            auto vars = _scope_manager.find_identifier(
+            auto vars = _scope_manager->find_identifier(
                 unresolved_reference->symbol(),
                 type_scope);
             if (vars.size() > 1) {
@@ -770,7 +799,7 @@ namespace basecode::compiler {
 
                     auto new_refs = proc_call->references();
                     for (size_t i = 1; i < vars.size(); i++) {
-                        new_refs.emplace_back(_builder.make_identifier_reference(
+                        new_refs.emplace_back(_builder->make_identifier_reference(
                             unresolved_reference->parent_scope(),
                             vars[i]->symbol()->qualified_symbol(),
                             vars[i]));
@@ -781,7 +810,7 @@ namespace basecode::compiler {
                 identifier = vars.empty() ? nullptr : vars.front();
                 if (identifier == nullptr) {
                     if (unresolved_reference->symbol().is_qualified()) {
-                        vars = _scope_manager.find_identifier(
+                        vars = _scope_manager->find_identifier(
                             unresolved_reference->symbol(),
                             type_scope);
                         identifier = vars.empty() ? nullptr : vars.front();
@@ -810,11 +839,11 @@ namespace basecode::compiler {
     }
 
     syntax::ast_builder& session::ast_builder() {
-        return _ast_builder;
+        return *_ast_builder;
     }
 
     const element_map& session::elements() const {
-        return _elements;
+        return *_elements;
     }
 
     void session::initialize_built_in_procedures() {
@@ -871,7 +900,7 @@ namespace basecode::compiler {
     bool session::fold_elements_of_type(element_type_t type) {
         std::vector<common::id_t> to_remove {};
 
-        auto elements = _elements.find_by_type<compiler::element>(type);
+        auto elements = _elements->find_by_type<compiler::element>(type);
         for (auto e : elements) {
             if (e->element_type() == element_type_t::intrinsic) {
                 auto intrinsic = dynamic_cast<compiler::intrinsic*>(e);
@@ -891,11 +920,11 @@ namespace basecode::compiler {
                 switch (e->element_type()) {
                     case element_type_t::intrinsic: {
                         auto intrinsic = dynamic_cast<compiler::intrinsic*>(e);
-                        fold_result.element->attributes().add(_builder.make_attribute(
-                            _scope_manager.current_scope(),
+                        fold_result.element->attributes().add(_builder->make_attribute(
+                            _scope_manager->current_scope(),
                             "intrinsic_substitution",
-                            _builder.make_string(
-                                _scope_manager.current_scope(),
+                            _builder->make_string(
+                                _scope_manager->current_scope(),
                                 intrinsic->name())));
                         break;
                     }
@@ -920,13 +949,13 @@ namespace basecode::compiler {
         }
 
         for (auto id : to_remove)
-            _elements.remove(id);
+            _elements->remove(id);
 
         return true;
     }
 
     compiler::scope_manager& session::scope_manager() {
-        return _scope_manager;
+        return *_scope_manager;
     }
 
     const session_options_t& session::options() const {
@@ -934,7 +963,7 @@ namespace basecode::compiler {
     }
 
     const compiler::program& session::program() const {
-        return _program;
+        return *_program;
     }
 
     const session_task_list_t& session::tasks() const {
@@ -956,7 +985,7 @@ namespace basecode::compiler {
         reg.size = vm::op_sizes::qword;
         reg.type = vm::register_type_t::integer;
 
-        if (!_assembler.allocate_reg(reg)) {
+        if (!_assembler->allocate_reg(reg)) {
             // XXX: error
             return false;
         }
@@ -967,11 +996,11 @@ namespace basecode::compiler {
     }
 
     compiler::byte_code_emitter& session::byte_code_emitter() {
-        return _emitter;
+        return *_emitter;
     }
 
     const string_intern_map& session::interned_strings() const {
-        return _interned_strings;
+        return *_interned_strings;
     }
 
     common::source_file* session::source_file(common::id_t id) {
@@ -982,7 +1011,7 @@ namespace basecode::compiler {
     }
 
     const compiler::scope_manager& session::scope_manager() const {
-        return _scope_manager;
+        return *_scope_manager;
     }
 
     bool session::should_read_variable(compiler::element* element) {
@@ -1006,7 +1035,7 @@ namespace basecode::compiler {
     }
 
     common::id_t session::intern_string(compiler::string_literal* literal) {
-        return _interned_strings.intern(literal);
+        return _interned_strings->intern(literal);
     }
 
     void session::write_code_dom_graph(const boost::filesystem::path& path) {
@@ -1067,18 +1096,18 @@ namespace basecode::compiler {
                     return time_task(
                         " - compile",
                         [&]() {
-                            module = dynamic_cast<compiler::module*>(_ast_evaluator.evaluate(module_node));
+                            module = dynamic_cast<compiler::module*>(_ast_evaluator->evaluate(module_node));
                             if (module != nullptr) {
                                 module->source_file(source_file);
-                                auto current_module = _scope_manager.current_module();
+                                auto current_module = _scope_manager->current_module();
                                 if (current_module == nullptr)
-                                    module->parent_element(&_program);
+                                    module->parent_element(_program);
                                 else
                                     module->parent_element(current_module);
                                 module->is_root(is_root);
                                 if (is_root)
-                                    _program.module(module);
-                                if (!_ast_evaluator.compile_module(module_node, module))
+                                    _program->module(module);
+                                if (!_ast_evaluator->compile_module(module_node, module))
                                     return false;
                             }
                             return true;
@@ -1103,8 +1132,8 @@ namespace basecode::compiler {
                 return nullptr;
         }
 
-        _ast_builder.reset();
-        syntax::parser alpha_parser(source_file, _ast_builder);
+        _ast_builder->reset();
+        syntax::parser alpha_parser(source_file, *_ast_builder);
 
         auto module_node = alpha_parser.parse(_result);
         if (module_node != nullptr && !_result.is_failed()) {

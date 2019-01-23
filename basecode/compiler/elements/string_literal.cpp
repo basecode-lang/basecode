@@ -11,6 +11,8 @@
 
 #include <compiler/session.h>
 #include <common/string_support.h>
+#include <compiler/scope_manager.h>
+#include <compiler/element_builder.h>
 #include "pointer_type.h"
 #include "string_literal.h"
 

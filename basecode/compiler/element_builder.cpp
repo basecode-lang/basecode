@@ -11,11 +11,20 @@
 
 #include <compiler/session.h>
 #include "elements.h"
+#include "element_map.h"
+#include "scope_manager.h"
+#include "ast_evaluator.h"
 #include "element_builder.h"
 
 namespace basecode::compiler {
 
     element_builder::element_builder(compiler::session& session): _session(session) {
+    }
+
+    program* element_builder::make_program() {
+        auto pgm = new compiler::program();
+        _session.elements().add(pgm);
+        return pgm;
     }
 
     import* element_builder::make_import(

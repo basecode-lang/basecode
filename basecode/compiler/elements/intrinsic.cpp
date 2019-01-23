@@ -11,6 +11,7 @@
 
 #include <common/defer.h>
 #include <compiler/session.h>
+#include <compiler/element_builder.h>
 #include "intrinsic.h"
 #include "identifier.h"
 #include "argument_list.h"

@@ -10,6 +10,7 @@
 // ----------------------------------------------------------------------------
 
 #include <compiler/session.h>
+#include <compiler/element_builder.h>
 #include "rune_type.h"
 #include "identifier.h"
 #include "initializer.h"

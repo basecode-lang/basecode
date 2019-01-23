@@ -10,6 +10,8 @@
 // ----------------------------------------------------------------------------
 
 #include <compiler/session.h>
+#include <compiler/scope_manager.h>
+#include <compiler/element_builder.h>
 #include "identifier.h"
 #include "initializer.h"
 #include "symbol_element.h"

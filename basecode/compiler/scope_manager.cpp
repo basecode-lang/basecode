@@ -12,6 +12,7 @@
 #include "session.h"
 #include "elements.h"
 #include "scope_manager.h"
+#include "element_builder.h"
 
 namespace basecode::compiler {
 
