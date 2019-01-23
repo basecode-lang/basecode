@@ -85,7 +85,7 @@ namespace basecode::vm {
 
         void frame_offset(const std::string& name, int64_t offset);
 
-        // meta directives
+    // meta directives
     public:
         void meta_end();
 
@@ -403,9 +403,13 @@ namespace basecode::vm {
             const register_t& address_reg);
 
         // push variations
+        void push_locals(vm::assembler& assembler);
+
         void push(const instruction_operand_t& operand);
 
         // pop variations
+        void pop_locals(vm::assembler& assembler);
+
         void pop(const instruction_operand_t& dest);
 
         // calls & jumps
@@ -445,9 +449,8 @@ namespace basecode::vm {
         instruction_block_type_t _type;
         block_entry_list_t _entries {};
         int64_t _recent_inst_index = -1;
+        std::map<std::string, size_t> _locals {};
         vm::listing_source_file_t* _source_file = nullptr;
-        std::unordered_map<std::string, block_entry_t*> _locals {};
     };
 
 };
-

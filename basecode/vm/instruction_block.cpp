@@ -9,8 +9,9 @@
 //
 // ----------------------------------------------------------------------------
 
-#include "instruction_block.h"
 #include "terp.h"
+#include "assembler.h"
+#include "instruction_block.h"
 
 namespace basecode::vm {
 
@@ -530,6 +531,15 @@ namespace basecode::vm {
         make_swap_instruction(dest_reg.size, dest_reg, src_reg);
     }
 
+    void instruction_block::push_locals(vm::assembler& assembler) {
+        for (const auto& kvp : _locals) {
+            auto local = _entries[kvp.second].data<local_t>();
+            push(instruction_operand_t(assembler.make_named_ref(
+                vm::assembler_named_ref_type_t::local,
+                local->name)));
+        }
+    }
+
     void instruction_block::push(const instruction_operand_t& operand) {
         instruction_t op;
         op.size = operand.size();
@@ -629,6 +639,15 @@ namespace basecode::vm {
     }
 
     // pop variations
+    void instruction_block::pop_locals(vm::assembler& assembler) {
+        for (auto it = _locals.rbegin(); it != _locals.rend(); ++it) {
+            auto local = _entries[(*it).second].data<local_t>();
+            pop(instruction_operand_t(assembler.make_named_ref(
+                vm::assembler_named_ref_type_t::local,
+                local->name)));
+        }
+    }
+
     void instruction_block::pop(const instruction_operand_t& dest) {
         instruction_t op;
         op.size = dest.size();
@@ -1015,7 +1034,7 @@ namespace basecode::vm {
             .name = name,
             .frame_offset = frame_offset
         });
-        _locals.insert(std::make_pair(name, &_entries.back()));
+        _locals.insert(std::make_pair(name, _entries.size() - 1));
     }
 
     void instruction_block::comment(
@@ -1114,7 +1133,7 @@ namespace basecode::vm {
         auto it = _locals.find(name);
         if (it == _locals.end())
             return nullptr;
-        return it->second->data<local_t>();
+        return _entries[it->second].data<local_t>();
     }
 
     void instruction_block::frame_offset(const std::string& name, int64_t offset) {

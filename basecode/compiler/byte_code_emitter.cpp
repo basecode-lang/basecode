@@ -93,11 +93,10 @@ namespace basecode::compiler {
             return;
 
         const auto& operand = result.operands.back();
+        if (is_temp_local(operand))
+            return;
+
         if (operand.type() == vm::instruction_operand_type_t::named_ref) {
-            // XXX: revisit this and find a better way
-            auto named_ref = *operand.data<vm::assembler_named_ref_t*>();
-            if (named_ref->name.substr(1, 4) == "temp")
-                return;
             auto size = vm::op_size_for_byte_size(result.type_result.inferred_type->size_in_bytes());
             vm::instruction_operand_t temp(_session.assembler().make_named_ref(
                 vm::assembler_named_ref_type_t::local,
@@ -152,44 +151,54 @@ namespace basecode::compiler {
             compiler::block* block,
             identifier_list_t& locals,
             temp_local_list_t& temp_locals) {
-        if (block->has_stack_frame()) {
-            if (!begin_stack_frame(basic_block, block, locals, temp_locals))
-                return false;
-        } else {
-            _session.scope_manager().visit_blocks(
-                _session.result(),
-                [&](compiler::block* scope) {
-                    for (auto var : scope->identifiers().as_list()) {
-                        if (var->is_constant())
-                            continue;
+        const auto excluded_types = element_type_set_t{
+            element_type_t::namespace_type,
+            element_type_t::module_type
+        };
+        const auto excluded_parent_types = element_type_set_t{
+            element_type_t::directive,
+        };
 
-                        auto var_type = var->type_ref()->type();
-                        if (var_type->is_proc_type()
-                        ||  var_type->is_type_one_of({element_type_t::namespace_type, element_type_t::module_type})) {
-                            continue;
+        if (!block->is_parent_type_one_of(excluded_parent_types)) {
+            if (block->has_stack_frame()) {
+                if (!begin_stack_frame(basic_block, block, locals, temp_locals))
+                    return false;
+            } else {
+                _session.scope_manager().visit_blocks(
+                    _session.result(),
+                    [&](compiler::block* scope) {
+                        for (auto var : scope->identifiers().as_list()) {
+                            if (var->is_constant())
+                                continue;
+
+                            auto var_type = var->type_ref()->type();
+                            if (var_type->is_proc_type()
+                            || var_type->is_type_one_of(excluded_types)) {
+                                continue;
+                            }
+
+                            basic_block->local(
+                                vm::local_type_t::integer,
+                                var->symbol()->name());
+                            locals.emplace_back(var);
                         }
+                        return true;
+                    },
+                    block);
 
-                        basic_block->local(
-                            vm::local_type_t::integer,
-                            var->symbol()->name());
-                        locals.emplace_back(var);
-                    }
-                    return true;
-                },
-                block);
+                for (const auto& temp : temp_locals)
+                    basic_block->local(temp.type, temp.name, temp.offset);
 
-            for (const auto& temp : temp_locals)
-                basic_block->local(temp.type, temp.name, temp.offset);
-
-            for (auto var : locals) {
-                basic_block->move(
-                    vm::instruction_operand_t(_session.assembler().make_named_ref(
-                        vm::assembler_named_ref_type_t::local,
-                        var->symbol()->name(),
-                        vm::op_size_for_byte_size(var->type_ref()->type()->size_in_bytes()))),
-                    vm::instruction_operand_t(_session.assembler().make_named_ref(
-                        vm::assembler_named_ref_type_t::label,
-                        var->label_name())));
+                for (auto var : locals) {
+                    basic_block->move(
+                        vm::instruction_operand_t(_session.assembler().make_named_ref(
+                            vm::assembler_named_ref_type_t::local,
+                            var->symbol()->name(),
+                            vm::op_size_for_byte_size(var->type_ref()->type()->size_in_bytes()))),
+                        vm::instruction_operand_t(_session.assembler().make_named_ref(
+                            vm::assembler_named_ref_type_t::label,
+                            var->label_name())));
+                }
             }
         }
 
@@ -258,17 +267,27 @@ namespace basecode::compiler {
             case element_type_t::cast: {
                 // numeric casts
                 // ------------------------------------------------------------------------
-                // casting between two integers of the same size (s32 -> u32) is a no-op
-                // casting from a larger integer to a smaller integer (u32 -> u8) will truncate via move
+                // casting between two integers of the same size (s32 -> u32)
+                // is a no-op
+                //
+                // casting from a larger integer to a smaller integer
+                // (u32 -> u8) will truncate via move
+                //
                 // casting from smaller integer to larger integer (u8 -> u32) will:
                 //  - zero-extend if the source is unsigned
                 //  - sign-extend if the source is signed
+                //
                 // casting from float to an integer will round the float towards zero
-                // casting from an integer to a float will produce the floating point representation of the
-                //    integer, rounded if necessary
+                //
+                // casting from an integer to a float will produce the
+                // floating point representation of the integer, rounded if necessary
+                //
                 // casting from f32 to f64 is lossless
+                //
                 // casting from f64 to f32 will produce the closest possible value, rounded if necessary
+                //
                 // casting bool to and integer type will yield 1 or 0
+                //
                 // casting any integer type whose LSB is set will yield true; otherwise, false
                 //
                 // pointer casts
@@ -989,11 +1008,7 @@ namespace basecode::compiler {
                     }
                 }
 
-                // XXX: this is temporary!  need to figure out how i'm going to preserve/restore registers
-                //      between subroutine calls now that register usage is much tighter and overlaps.
-                block->push(vm::instruction_operand_t(vm::register_t { .number = vm::registers_t::r0, .type = vm::register_type_t::integer }));
-                block->push(vm::instruction_operand_t(vm::register_t { .number = vm::registers_t::r1, .type = vm::register_type_t::integer }));
-                block->push(vm::instruction_operand_t(vm::register_t { .number = vm::registers_t::r2, .type = vm::register_type_t::integer }));
+                block->push_locals(assembler);
 
                 auto arg_list = proc_call->arguments();
                 if (arg_list != nullptr) {
@@ -1077,11 +1092,7 @@ namespace basecode::compiler {
                         vm::instruction_operand_t(arg_list->allocated_size(), vm::op_sizes::word));
                 }
 
-                // XXX: this is temporary!  need to figure out how i'm going to preserve/restore registers
-                //      between subroutine calls now that register usage is much tighter and overlaps.
-                block->pop(vm::instruction_operand_t(vm::register_t { .number = vm::registers_t::r2, .type = vm::register_type_t::integer }));
-                block->pop(vm::instruction_operand_t(vm::register_t { .number = vm::registers_t::r1, .type = vm::register_type_t::integer }));
-                block->pop(vm::instruction_operand_t(vm::register_t { .number = vm::registers_t::r0, .type = vm::register_type_t::integer }));
+                block->pop_locals(assembler);
 
                 break;
             }
@@ -2782,6 +2793,14 @@ namespace basecode::compiler {
         common::id_t intern_id;
         _session.interned_strings().element_id_to_intern_id(id, intern_id);
         return fmt::format("_intern_str_lit_{}_data", intern_id);
+    }
+
+    bool byte_code_emitter::is_temp_local(const vm::instruction_operand_t& operand) {
+        if (operand.type() == vm::instruction_operand_type_t::named_ref) {
+            auto named_ref = *operand.data<vm::assembler_named_ref_t*>();
+            return named_ref->name.substr(1, 4) == "temp";
+        }
+        return false;
     }
 
 };

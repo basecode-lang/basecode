@@ -161,6 +161,8 @@ namespace basecode::compiler {
             compiler::binary_operator* binary_op,
             emit_result_t& result);
 
+        bool is_temp_local(const vm::instruction_operand_t& operand);
+
     private:
         compiler::session& _session;
         basic_block_stack_t _block_stack {};
