@@ -506,45 +506,6 @@ namespace basecode::compiler {
             vm::assembly_symbol_result_t& result) {
         auto scope = reinterpret_cast<compiler::block*>(data);
         switch (type) {
-            case vm::assembly_symbol_type_t::offset: {
-                // XXX: refactor this to use the .offset directive's values
-//                auto entry = scope->find_active_frame_entry(symbol);
-//                if (entry != nullptr) {
-//                    vm::compiler_local_data_t data {};
-//                    const auto& offsets = entry->owning_frame()->offsets();
-//                    switch (entry->type()) {
-//                        case stack_frame_entry_type_t::local: {
-//                            data.offset = -offsets.locals + entry->offset();
-//                            break;
-//                        }
-//                        case stack_frame_entry_type_t::parameter: {
-//                            data.offset = offsets.parameters + entry->offset();
-//                            break;
-//                        }
-//                        case stack_frame_entry_type_t::return_slot: {
-//                            data.offset = offsets.return_slot + entry->offset();
-//                            break;
-//                        }
-//                    }
-//                    data.reg = vm::registers_t::fp;
-//                    result.data(data);
-//                    return true;
-//                }
-                return false;
-            }
-            case vm::assembly_symbol_type_t::label: {
-                auto labels = elements().find_by_type<compiler::label>(element_type_t::label);
-                for (auto label : labels) {
-                    if (label->name() == symbol) {
-                        vm::compiler_label_data_t data {};
-                        data.label = label->label_name();
-                        result.data(data);
-                        return true;
-                    }
-                }
-
-                break;
-            }
             case vm::assembly_symbol_type_t::module: {
                 auto vars = _scope_manager->find_identifier(
                     make_qualified_symbol(symbol),
@@ -587,18 +548,14 @@ namespace basecode::compiler {
                     }
 
                     if (!result.is_set()) {
-                        auto address_reg = get_address_register(var->id());
-                        if (address_reg != nullptr)
-                            result.data(vm::compiler_module_data_t(*address_reg));
-                        else
-                            result.data(vm::compiler_module_data_t(var->label_name()));
+                        result.data(vm::compiler_module_data_t(var->label_name()));
                     }
 
                     return true;
                 }
                 break;
             }
-            case vm::assembly_symbol_type_t::assembler: {
+            default: {
                 break;
             }
         }
@@ -976,25 +933,6 @@ namespace basecode::compiler {
         return _source_file_stack.top();
     }
 
-    bool session::allocate_address_register(common::id_t id) {
-        auto it = _address_registers.find(id);
-        if (it != _address_registers.end())
-            return true;
-
-        vm::register_t reg {};
-        reg.size = vm::op_sizes::qword;
-        reg.type = vm::register_type_t::integer;
-
-        if (!_assembler->allocate_reg(reg)) {
-            // XXX: error
-            return false;
-        }
-
-        _address_registers.insert(std::make_pair(id, reg));
-
-        return true;
-    }
-
     compiler::byte_code_emitter& session::byte_code_emitter() {
         return *_emitter;
     }
@@ -1030,10 +968,6 @@ namespace basecode::compiler {
         _source_file_stack.push(source_file);
     }
 
-    const address_register_map_t& session::address_registers() const {
-        return _address_registers;
-    }
-
     common::id_t session::intern_string(compiler::string_literal* literal) {
         return _interned_strings->intern(literal);
     }
@@ -1050,14 +984,6 @@ namespace basecode::compiler {
 
         compiler::code_dom_formatter formatter(*this, output_file);
         formatter.format(fmt::format("Code DOM Graph: {}", path.string()));
-    }
-
-    vm::register_t* session::get_address_register(common::id_t id) {
-        auto it = _address_registers.find(id);
-        if (it != _address_registers.end())
-            return &it->second;
-
-        return nullptr;
     }
 
     compiler::module* session::compile_module(common::source_file* source_file) {

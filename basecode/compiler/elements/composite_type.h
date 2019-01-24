@@ -43,6 +43,8 @@ namespace basecode::compiler {
     protected:
         bool on_is_constant() const override;
 
+        number_class_t on_number_class() const override;
+
         bool on_type_check(compiler::type* other) override;
 
         void on_owned_elements(element_list_t& list) override;

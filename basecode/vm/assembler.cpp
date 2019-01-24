@@ -671,6 +671,13 @@ namespace basecode::vm {
         return _resolver;
     }
 
+    const int64_t assembler::frame_offset(const std::string& name) const {
+        auto it = _frame_offsets.find(name);
+        if (it == _frame_offsets.end())
+            return 0;
+        return it->second;
+    }
+
     void assembler::resolver(const assembly_symbol_resolver_t& resolver) {
         _resolver = resolver;
     }

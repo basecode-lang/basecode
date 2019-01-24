@@ -26,12 +26,6 @@ namespace basecode::vm {
                           _assembler(assembler) {
     }
 
-    assembly_parser::~assembly_parser() {
-        for (const auto& kvp : _locals) {
-            _assembler->free_reg(kvp.second);
-        }
-    }
-
     bool assembly_parser::parse(
             common::result& r,
             vm::instruction_block* block) {
@@ -253,17 +247,11 @@ namespace basecode::vm {
                             auto type = symbol_type(operand, symbol);
                             switch (type) {
                                 case vm::assembly_symbol_type_t::label: {
-                                    vm::assembly_symbol_result_t resolver_result {};
-                                    if (resolver(type, _data, symbol, resolver_result)) {
-                                        auto label_data = resolver_result.data<compiler_label_data_t>();
-                                        if (label_data != nullptr) {
-                                            encoding.type = operand_encoding_t::flags::integer
-                                                            | operand_encoding_t::flags::constant;
-                                            encoding.fixup_ref = _assembler->make_named_ref(
-                                                assembler_named_ref_type_t::label,
-                                                label_data->label);
-                                        }
-                                    }
+                                    encoding.type = operand_encoding_t::flags::integer
+                                                    | operand_encoding_t::flags::constant;
+                                    encoding.fixup_ref = _assembler->make_named_ref(
+                                        assembler_named_ref_type_t::label,
+                                        symbol);
                                     break;
                                 }
                                 case vm::assembly_symbol_type_t::module: {
@@ -315,31 +303,34 @@ namespace basecode::vm {
                                     break;
                                 }
                                 case vm::assembly_symbol_type_t::offset: {
-                                    vm::assembly_symbol_result_t resolver_result {};
-                                    if (resolver(type, _data, symbol, resolver_result)) {
-                                        auto local_data = resolver_result.data<compiler_local_data_t>();
-                                        if (local_data != nullptr) {
-                                            auto offset = local_data->offset;
-                                            encoding.size = op_sizes::word;
-                                            encoding.type = operand_encoding_t::flags::integer
-                                                            | operand_encoding_t::flags::constant;
-                                            if (local_data->offset < 0) {
-                                                encoding.type |= operand_encoding_t::flags::negative;
-                                                offset = -offset;
-                                            }
-                                            encoding.value.u = static_cast<uint64_t>(offset);
+                                    int64_t offset = 0;
+                                    auto local = block->local(symbol);
+                                    if (local != nullptr) {
+                                        offset = local->offset;
+                                        if (!local->frame_offset.empty()) {
+                                            auto frame_offset = _assembler->frame_offset(local->frame_offset);
+                                            offset += frame_offset;
                                         }
                                     }
+                                    encoding.size = op_sizes::word;
+                                    encoding.type = operand_encoding_t::flags::integer
+                                                    | operand_encoding_t::flags::constant;
+                                    if (offset < 0) {
+                                        encoding.type |= operand_encoding_t::flags::negative;
+                                        offset = -offset;
+                                    }
+                                    encoding.value.u = static_cast<uint64_t>(offset);
                                     break;
                                 }
                                 case vm::assembly_symbol_type_t::assembler: {
-                                    auto it = _locals.find(operand);
-                                    if (it != _locals.end()) {
-                                        encoding.size = it->second.size;
+                                    auto local = block->local(operand);
+                                    if (local != nullptr) {
                                         encoding.type = operand_encoding_t::flags::reg;
-                                        if (it->second.type == vm::register_type_t::integer)
+                                        if (local->type == vm::local_type_t::integer)
                                             encoding.type |= operand_encoding_t::flags::integer;
-                                        encoding.value.r = static_cast<uint8_t>(it->second.number);
+                                        encoding.fixup_ref = _assembler->make_named_ref(
+                                            assembler_named_ref_type_t::local,
+                                            local->name);
                                     } else {
                                         encoding.type = operand_encoding_t::flags::integer
                                                         | operand_encoding_t::flags::constant;
@@ -402,32 +393,30 @@ namespace basecode::vm {
                         }
                         case directive_type_t::ilocal: {
                             auto symbol = boost::get<std::string>(_wip.params.front());
-                            auto it = _locals.find(symbol);
-                            if (it == _locals.end()) {
-                                vm::register_t local;
-                                local.size = vm::op_sizes::qword;
-                                local.type = vm::register_type_t::integer;
-                                if (_assembler->allocate_reg(local)) {
-                                    _locals.insert(std::make_pair(symbol, local));
-                                }
+                            auto local = block->local(symbol);
+                            if (local != nullptr) {
+                                _source_file.error(
+                                    r,
+                                    "X000",
+                                    fmt::format("ilocal already exists: {}", symbol),
+                                    make_location(_source_file.pos()));
+                                return false;
                             }
-
-                            block->local(local_type_t::integer, symbol, 0);
+                            block->local(local_type_t::integer, symbol);
                             break;
                         }
                         case directive_type_t::flocal: {
                             auto symbol = boost::get<std::string>(_wip.params.front());
-                            auto it = _locals.find(symbol);
-                            if (it == _locals.end()) {
-                                vm::register_t local;
-                                local.size = vm::op_sizes::qword;
-                                local.type = vm::register_type_t::floating_point;
-                                if (_assembler->allocate_reg(local)) {
-                                    _locals.insert(std::make_pair(symbol, local));
-                                }
+                            auto local = block->local(symbol);
+                            if (local != nullptr) {
+                                _source_file.error(
+                                    r,
+                                    "X000",
+                                    fmt::format("flocal already exists: {}", symbol),
+                                    make_location(_source_file.pos()));
+                                return false;
                             }
-
-                            block->local(local_type_t::floating_point, symbol, 0);
+                            block->local(local_type_t::floating_point, symbol);
                             break;
                         }
                         case directive_type_t::section: {

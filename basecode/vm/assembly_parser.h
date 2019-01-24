@@ -65,8 +65,6 @@ namespace basecode::vm {
             common::source_file& source_file,
             void* data);
 
-        ~assembly_parser();
-
         bool parse(
             common::result& r,
             vm::instruction_block* block);
@@ -99,7 +97,6 @@ namespace basecode::vm {
         assembly_parser_state_t _state;
         common::source_file& _source_file;
         vm::assembler* _assembler = nullptr;
-        std::unordered_map<std::string, vm::register_t> _locals {};
     };
 
 };

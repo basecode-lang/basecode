@@ -101,8 +101,6 @@ namespace basecode::compiler {
 
         void track_used_type(compiler::type* type);
 
-        bool allocate_address_register(common::id_t id);
-
         compiler::byte_code_emitter& byte_code_emitter();
 
         const string_intern_map& interned_strings() const;
@@ -111,11 +109,7 @@ namespace basecode::compiler {
 
         const compiler::scope_manager& scope_manager() const;
 
-        vm::register_t* get_address_register(common::id_t id);
-
         void push_source_file(common::source_file* source_file);
-
-        const address_register_map_t& address_registers() const;
 
         syntax::ast_node_t* parse(common::source_file* source_file);
 
@@ -180,7 +174,6 @@ namespace basecode::compiler {
         source_file_stack_t _source_file_stack {};
         source_file_map_t _source_file_registry {};
         syntax::ast_builder* _ast_builder = nullptr;
-        address_register_map_t _address_registers {};
         source_file_path_map_t _source_file_paths {};
         string_intern_map* _interned_strings = nullptr;
         compiler::byte_code_emitter* _emitter = nullptr;

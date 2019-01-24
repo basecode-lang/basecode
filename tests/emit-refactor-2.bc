@@ -12,3 +12,40 @@ b := a * 5;
 
 @no_fold;
 c := simple_const_mul(a);
+
+vector3 :: struct {
+    x: s32;
+    y: s32;
+    z: s32;
+};
+
+class  :: struct {
+    name: ^u8;
+};
+
+entity :: struct {
+    pos: vector3;
+    dir: vector3;
+    cls: class;
+};
+
+normalize :: proc(v: vector3) {
+    nv: vector3;
+    nv.x := v.x * 1;
+    nv.y := v.y * 1;
+    nv.z := v.z * 1;
+};
+
+{
+    p: entity;
+    p.pos.x := -5;
+    p.pos.y := -6;
+    p.pos.z := -122;
+
+    p.dir.x := 0;
+    p.dir.y := 1;
+    p.dir.z := 1;
+
+    j := p.dir.z;
+    normalize(p.dir);
+};

@@ -68,6 +68,10 @@ namespace basecode::compiler {
         return true;
     }
 
+    number_class_t composite_type::on_number_class() const {
+        return number_class_t::integer;
+    }
+
     bool composite_type::on_type_check(compiler::type* other) {
         return other != nullptr && other->id() == id();
     }

@@ -126,22 +126,39 @@ namespace basecode::compiler {
             vm::instruction_block* block,
             emit_result_t& result,
             uint8_t number) {
-        if (result.type_result.inferred_type->is_composite_type())
+        const auto& local_ref = result.operands.front();
+        if (is_temp_local(local_ref)
+        ||  local_ref.type() != vm::instruction_operand_type_t::named_ref) {
             return;
-
-        const auto& operand = result.operands.back();
-        if (is_temp_local(operand))
-            return;
-
-        if (operand.type() == vm::instruction_operand_type_t::named_ref) {
-            auto size = vm::op_size_for_byte_size(result.type_result.inferred_type->size_in_bytes());
-            vm::instruction_operand_t temp(_session.assembler().make_named_ref(
-                vm::assembler_named_ref_type_t::local,
-                temp_local_name(result.type_result.inferred_type->number_class(), number),
-                size));
-            block->load(temp, result.operands.back());
-            result.operands.push_back(temp);
         }
+
+        auto named_ref = *local_ref.data<vm::assembler_named_ref_t*>();
+        if (named_ref->type == vm::assembler_named_ref_type_t::label)
+            return;
+
+        auto is_pointer_type = result.type_result.inferred_type->is_pointer_type();
+        auto is_composite = result.type_result.inferred_type->is_composite_type();
+        auto number_class = result.type_result.inferred_type->number_class();
+        auto size = is_composite ?
+            vm::op_sizes::qword :
+            vm::op_size_for_byte_size(result.type_result.inferred_type->size_in_bytes());
+
+        const auto& offset = result.operands.size() == 2 ?
+                             result.operands[1] :
+                             vm::instruction_operand_t();
+
+        vm::instruction_operand_t temp(_session.assembler().make_named_ref(
+            vm::assembler_named_ref_type_t::local,
+            temp_local_name(number_class, number),
+            size));
+
+        if (is_composite && !is_pointer_type) {
+            block->move(temp, local_ref, offset);
+        } else {
+            block->load(temp, local_ref, offset);
+        }
+
+        result.operands.push_back(temp);
     }
 
     bool byte_code_emitter::emit() {
@@ -204,18 +221,21 @@ namespace basecode::compiler {
                 _session.scope_manager().visit_blocks(
                     _session.result(),
                     [&](compiler::block* scope) {
+                        if (_session.scope_manager().within_local_scope(scope))
+                            return true;
+
                         for (auto var : scope->identifiers().as_list()) {
                             if (var->is_constant())
                                 continue;
 
                             auto var_type = var->type_ref()->type();
                             if (var_type->is_proc_type()
-                            || var_type->is_type_one_of(excluded_types)) {
+                            ||  var_type->is_type_one_of(excluded_types)) {
                                 continue;
                             }
 
                             basic_block->local(
-                                vm::local_type_t::integer,
+                                number_class_to_local_type(var_type->number_class()),
                                 var->symbol()->name());
                             locals.emplace_back(var);
                         }
@@ -333,19 +353,16 @@ namespace basecode::compiler {
                 //
                 auto cast = dynamic_cast<compiler::cast*>(e);
                 auto expr = cast->expression();
-                if (expr == nullptr)
-                    return true;
 
-                infer_type_result_t infer_type_result {};
-                if (!expr->infer_type(_session, infer_type_result)) {
-                    // XXX: error
+                emit_result_t expr_result {};
+                if (!emit_element(block, expr, expr_result))
                     return false;
-                }
+                read(block, expr_result, 1);
 
                 cast_mode_t mode;
                 auto type_ref = cast->type();
-                auto source_number_class = infer_type_result.inferred_type->number_class();
-                auto source_size = infer_type_result.inferred_type->size_in_bytes();
+                auto source_number_class = expr_result.type_result.inferred_type->number_class();
+                auto source_size = expr_result.type_result.inferred_type->size_in_bytes();
                 auto target_number_class = type_ref->type()->number_class();
                 auto target_size = type_ref->type()->size_in_bytes();
 
@@ -353,14 +370,18 @@ namespace basecode::compiler {
                     _session.error(
                         expr->module(),
                         "C073",
-                        fmt::format("cannot cast from type: {}", infer_type_result.type_name()),
+                        fmt::format(
+                            "cannot cast from type: {}",
+                            expr_result.type_result.type_name()),
                         expr->location());
                     return false;
                 } else if (target_number_class == number_class_t::none) {
                     _session.error(
                         expr->module(),
                         "C073",
-                        fmt::format("cannot cast to type: {}", type_ref->symbol().name),
+                        fmt::format(
+                            "cannot cast to type: {}",
+                            type_ref->symbol().name),
                         cast->type_location());
                     return false;
                 }
@@ -372,7 +393,7 @@ namespace basecode::compiler {
                     } else if (source_size > target_size) {
                         mode = cast_mode_t::integer_truncate;
                     } else {
-                        auto source_numeric_type = dynamic_cast<compiler::numeric_type*>(infer_type_result.inferred_type);
+                        auto source_numeric_type = dynamic_cast<compiler::numeric_type*>(expr_result.type_result.inferred_type);
                         if (source_numeric_type->is_signed()) {
                             mode = cast_mode_t::integer_sign_extend;
                         } else {
@@ -396,21 +417,16 @@ namespace basecode::compiler {
                     }
                 }
 
-                emit_result_t expr_result {};
-                if (!emit_element(block, expr, expr_result))
-                    return false;
-                read(block, expr_result, 1);
-
                 block->comment(
                     fmt::format(
                         "cast<{}> from type {}",
                         type_ref->name(),
-                        infer_type_result.type_name()),
+                        expr_result.type_result.type_name()),
                     vm::comment_location_t::after_instruction);
 
                 vm::instruction_operand_t target_operand(assembler.make_named_ref(
                     vm::assembler_named_ref_type_t::local,
-                    temp_local_name(target_number_class, 1),
+                    temp_local_name(target_number_class, 2),
                     vm::op_size_for_byte_size(target_size)));
                 result.operands.emplace_back(target_operand);
 
@@ -889,8 +905,6 @@ namespace basecode::compiler {
                 auto args = intrinsic->arguments()->elements();
                 if (name == "address_of") {
                     auto arg = args[0];
-
-                    emit_result_t arg_result {};
                     if (!emit_element(block, arg, result))
                         return false;
                 } else if (name == "alloc") {
@@ -1134,24 +1148,20 @@ namespace basecode::compiler {
             case element_type_t::transmute: {
                 auto transmute = dynamic_cast<compiler::transmute*>(e);
                 auto expr = transmute->expression();
-                if (expr == nullptr)
-                    return true;
-
                 auto type_ref = transmute->type();
 
-                infer_type_result_t infer_type_result {};
-                if (!expr->infer_type(_session, infer_type_result)) {
-                    // XXX: error
+                emit_result_t expr_result {};
+                if (!emit_element(block, expr, expr_result))
                     return false;
-                }
+                read(block, expr_result, 1);
 
-                if (infer_type_result.inferred_type->number_class() == number_class_t::none) {
+                if (expr_result.type_result.inferred_type->number_class() == number_class_t::none) {
                     _session.error(
                         expr->module(),
                         "C073",
                         fmt::format(
                             "cannot transmute from type: {}",
-                            infer_type_result.type_name()),
+                            expr_result.type_result.type_name()),
                         expr->location());
                     return false;
                 } else if (type_ref->type()->number_class() == number_class_t::none) {
@@ -1168,18 +1178,13 @@ namespace basecode::compiler {
                 auto target_number_class = type_ref->type()->number_class();
                 auto target_size = type_ref->type()->size_in_bytes();
 
-                emit_result_t expr_result {};
-                if (!emit_element(block, expr, expr_result))
-                    return false;
-                read(block, expr_result, 1);
-
                 block->comment(
                     fmt::format("transmute<{}>", type_ref->symbol().name),
                     vm::comment_location_t::after_instruction);
 
                 vm::instruction_operand_t target_operand(assembler.make_named_ref(
                     vm::assembler_named_ref_type_t::local,
-                    temp_local_name(target_number_class, 1),
+                    temp_local_name(target_number_class, 2),
                     vm::op_size_for_byte_size(target_size)));
                 result.operands.emplace_back(target_operand);
 
@@ -1321,12 +1326,10 @@ namespace basecode::compiler {
             }
             case element_type_t::integer_literal: {
                 auto integer_literal = dynamic_cast<compiler::integer_literal*>(e);
-                infer_type_result_t type_result {};
-                if (!e->infer_type(_session, type_result))
-                    return false;
+                auto size = result.type_result.inferred_type->size_in_bytes();
                 result.operands.emplace_back(vm::instruction_operand_t(
                     integer_literal->value(),
-                    vm::op_size_for_byte_size(type_result.inferred_type->size_in_bytes())));
+                    vm::op_size_for_byte_size(size)));
                 break;
             }
             case element_type_t::character_literal: {
@@ -1403,7 +1406,6 @@ namespace basecode::compiler {
                     vm::assembler_named_ref_type_t::local,
                     temp_local_name(result.type_result.inferred_type->number_class(), 1),
                     size));
-                result.operands.emplace_back(result_operand);
 
                 switch (op_type) {
                     case operator_type_t::negate: {
@@ -1411,6 +1413,7 @@ namespace basecode::compiler {
                         block->neg(
                             result_operand,
                             rhs_emit_result.operands.back());
+                        result.operands.emplace_back(result_operand);
                         break;
                     }
                     case operator_type_t::binary_not: {
@@ -1418,6 +1421,7 @@ namespace basecode::compiler {
                         block->not_op(
                             result_operand,
                             rhs_emit_result.operands.back());
+                        result.operands.emplace_back(result_operand);
                         break;
                     }
                     case operator_type_t::logical_not: {
@@ -1427,14 +1431,16 @@ namespace basecode::compiler {
                             rhs_emit_result.operands.back(),
                             vm::instruction_operand_t(static_cast<uint64_t>(1), vm::op_sizes::byte));
                         block->setnz(result_operand);
+                        result.operands.emplace_back(result_operand);
                         break;
                     }
                     case operator_type_t::pointer_dereference: {
+                        block->comment("unary_op: deref", vm::comment_location_t::after_instruction);
                         if (!is_composite_type) {
-                            block->comment("unary_op: deref", vm::comment_location_t::after_instruction);
                             block->load(
                                 result_operand,
                                 rhs_emit_result.operands.back());
+                            result.operands.emplace_back(result_operand);
                         } else {
                             result.operands.push_back(rhs_emit_result.operands.back());
                         }
@@ -1447,10 +1453,6 @@ namespace basecode::compiler {
             }
             case element_type_t::binary_operator: {
                 auto binary_op = dynamic_cast<compiler::binary_operator*>(e);
-
-                block->label(assembler.make_label(fmt::format(
-                    "{}_begin",
-                    binary_op->label_name())));
 
                 switch (binary_op->operator_type()) {
                     case operator_type_t::add:
@@ -1488,36 +1490,46 @@ namespace basecode::compiler {
                         break;
                     }
                     case operator_type_t::member_access: {
-//                        variable_handle_t field_var {};
-//                        if (!session.variable(this, field_var))
-//                            return false;
-//
-//                        auto type = field_var->type_result().inferred_type;
-//                        auto target_number_class = type->number_class();
-//                        auto target_size = type->size_in_bytes();
-//                        auto target_type = target_number_class == number_class_t::integer ?
-//                                           vm::register_type_t::integer :
-//                                           vm::register_type_t::floating_point;
-//
-//                        vm::instruction_operand_t result_operand;
-//                        result.operands.emplace_back(result_operand);
-//                        if (!allocate_register(
-//                                result_operand,
-//                                vm::op_size_for_byte_size(target_size),
-//                                target_type)) {
-//                            return false;
-//                        }
-//
-//                        block->move(
-//                            result_operand,
-//                            field_var->emit_result().operands.back(),
-//                            vm::instruction_operand_t::empty());
+                        if (result.operands.size() < 2) {
+                            result.operands.resize(2);
+                        }
+
+                        emit_result_t lhs_result {};
+                        if (!emit_element(block, binary_op->lhs(), lhs_result))
+                            return false;
+
+                        result.operands[0] = lhs_result.operands.front();
+
+                        int64_t offset = 0;
+                        if (lhs_result.operands.size() == 2) {
+                            auto& offset_operand = lhs_result.operands.back();
+                            if (!offset_operand.is_empty())
+                                offset = *offset_operand.data<int64_t>();
+                        }
+
+                        auto type = lhs_result.type_result.inferred_type;
+                        if (lhs_result.type_result.inferred_type->is_pointer_type()) {
+                            auto pointer_type = dynamic_cast<compiler::pointer_type*>(lhs_result.type_result.inferred_type);
+                            type = pointer_type->base_type_ref()->type();
+                        }
+
+                        auto composite_type = dynamic_cast<compiler::composite_type*>(type);
+                        if (composite_type != nullptr) {
+                            auto rhs_ref = dynamic_cast<compiler::identifier_reference*>(binary_op->rhs());
+                            auto field = composite_type->fields().find_by_name(rhs_ref->symbol().name);
+                            if (field != nullptr) {
+                                offset += field->start_offset();
+                            }
+                        }
+
+                        result.operands[1] = vm::instruction_operand_t::offset(offset, vm::op_sizes::word);
                         break;
                     }
                     case operator_type_t::assignment: {
                         emit_result_t rhs_result {};
                         if (!emit_element(block, binary_op->rhs(), rhs_result))
                             return false;
+                        read(block, rhs_result, 1);
 
                         emit_result_t lhs_result {};
                         if (!emit_element(block, binary_op->lhs(), lhs_result))
@@ -1557,11 +1569,16 @@ namespace basecode::compiler {
                                 rhs_result.operands.back(),
                                 vm::instruction_operand_t(size));
                         } else {
-                            // XXX: need to fix offset
-                            block->store(
-                                lhs_result.operands.back(),
-                                rhs_result.operands.back(),
-                                vm::instruction_operand_t::offset(0));
+                            if (lhs_result.operands.size() == 2) {
+                                block->store(
+                                    lhs_result.operands[0],
+                                    rhs_result.operands.back(),
+                                    lhs_result.operands[1]);
+                            } else {
+                                block->store(
+                                    lhs_result.operands.back(),
+                                    rhs_result.operands.back());
+                            }
                         }
                         break;
                     }
@@ -1939,19 +1956,6 @@ namespace basecode::compiler {
             vm::instruction_operand_t::fp(),
             vm::instruction_operand_t::sp());
 
-        auto address_registers = _session.address_registers();
-        for (auto kvp : address_registers) {
-            auto var = dynamic_cast<compiler::identifier*>(_session.elements().find(kvp.first));
-            start_block->comment(
-                var->label_name(),
-                vm::comment_location_t::after_instruction);
-            start_block->move(
-                vm::instruction_operand_t(kvp.second),
-                vm::instruction_operand_t(assembler.make_named_ref(
-                    vm::assembler_named_ref_type_t::label,
-                    var->label_name())));
-        }
-
         return true;
     }
 
@@ -1994,6 +1998,7 @@ namespace basecode::compiler {
             }
 
             implicit_block->label(assembler.make_label(block->label_name()));
+            implicit_block->frame_offset("locals", -8);
 
             push_block(implicit_block);
             emit_result_t result {};
@@ -2497,8 +2502,6 @@ namespace basecode::compiler {
         auto& assembler = _session.assembler();
         auto& scope_manager = _session.scope_manager();
 
-        basic_block->frame_offset("locals", -8);
-
         identifier_list_t to_init {};
         int64_t offset = 0;
 
@@ -2516,13 +2519,14 @@ namespace basecode::compiler {
                     if (type->is_proc_type())
                         continue;
 
+                    offset += -type->size_in_bytes();
+
                     var->usage(identifier_usage_t::stack);
                     basic_block->local(
-                        vm::local_type_t::integer,
+                        number_class_to_local_type(type->number_class()),
                         var->symbol()->name(),
                         offset,
                         "locals");
-                    offset += -type->size_in_bytes();
                     to_init.emplace_back(var);
                     locals.emplace_back(var);
                 }
@@ -2538,6 +2542,7 @@ namespace basecode::compiler {
 
         auto locals_size = common::align(static_cast<uint64_t>(-offset), 8);
         if (locals_size > 0) {
+            locals_size += 8;
             basic_block->sub(
                 vm::instruction_operand_t::sp(),
                 vm::instruction_operand_t::sp(),
@@ -2617,6 +2622,7 @@ namespace basecode::compiler {
 
         block->align(vm::instruction_t::alignment);
         block->label(assembler.make_label(procedure_label));
+        block->frame_offset("locals", -8);
 
         auto return_type = proc_type->return_type();
         if (return_type != nullptr) {
@@ -2679,55 +2685,45 @@ namespace basecode::compiler {
                 case element_type_t::binary_operator:
                 case element_type_t::boolean_literal:
                 case element_type_t::integer_literal:
-                case element_type_t::character_literal: {
-                    emit_result_t arg_result {};
-                    if (!emit_element(block, arg, arg_result))
-                        return false;
-
-                    block->push(arg_result.operands.back());
-
-                    if (!arg_list->is_foreign_call())
-                        type = arg_result.type_result.inferred_type;
-                    break;
-                }
+                case element_type_t::character_literal:
                 case element_type_t::identifier_reference: {
                     emit_result_t arg_result {};
                     if (!emit_element(block, arg, arg_result))
                         return false;
                     read(block, arg_result, 1);
 
-                    type = arg_result.type_result.inferred_type;
-
-                    switch (type->element_type()) {
-                        case element_type_t::array_type:
-                        case element_type_t::tuple_type:
-                        case element_type_t::composite_type: {
-                            if (!arg_list->is_foreign_call()) {
-                                auto size = static_cast<uint64_t>(common::align(
-                                    type->size_in_bytes(),
-                                    8));
-                                block->sub(
-                                    vm::instruction_operand_t::sp(),
-                                    vm::instruction_operand_t::sp(),
-                                    vm::instruction_operand_t(size, vm::op_sizes::word));
-                                block->copy(
-                                    vm::op_sizes::byte,
-                                    vm::instruction_operand_t::sp(),
-                                    arg_result.operands.back(),
-                                    vm::instruction_operand_t(size, vm::op_sizes::word));
-                            } else {
-                                block->push(arg_result.operands.back());
+                    if (!arg_list->is_foreign_call()) {
+                        type = arg_result.type_result.inferred_type;
+                        switch (type->element_type()) {
+                            case element_type_t::array_type:
+                            case element_type_t::tuple_type:
+                            case element_type_t::composite_type: {
+                                if (!arg_list->is_foreign_call()) {
+                                    auto size = static_cast<uint64_t>(common::align(
+                                        type->size_in_bytes(),
+                                        8));
+                                    block->sub(
+                                        vm::instruction_operand_t::sp(),
+                                        vm::instruction_operand_t::sp(),
+                                        vm::instruction_operand_t(size, vm::op_sizes::word));
+                                    block->copy(
+                                        vm::op_sizes::byte,
+                                        vm::instruction_operand_t::sp(),
+                                        arg_result.operands.back(),
+                                        vm::instruction_operand_t(size, vm::op_sizes::word));
+                                } else {
+                                    block->push(arg_result.operands.back());
+                                }
+                                break;
                             }
-                            break;
+                            default: {
+                                block->push(arg_result.operands.back());
+                                break;
+                            }
                         }
-                        default: {
-                            block->push(arg_result.operands.back());
-                            break;
-                        }
+                    } else {
+                        block->push(arg_result.operands.back());
                     }
-
-                    if (arg_list->is_foreign_call())
-                        type = nullptr;
                     break;
                 }
                 default:

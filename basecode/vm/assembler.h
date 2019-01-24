@@ -80,6 +80,8 @@ namespace basecode::vm {
 
         void resolver(const assembly_symbol_resolver_t& resolver);
 
+        const int64_t frame_offset(const std::string& name) const;
+
         const vm::assembler_local_t* local(const std::string& name) const;
 
     private:
