@@ -237,6 +237,14 @@ namespace basecode::vm {
         bytes(str_bytes);
     }
 
+    ssize_t instruction_block::insertion_point() const {
+        return _insertion_point != -1 ? _insertion_point : _entries.size();
+    }
+
+    void instruction_block::insertion_point(ssize_t value) {
+        _insertion_point = value;
+    }
+
     void instruction_block::bytes(const std::vector<uint8_t>& values) {
         data_definition_t def {
             .size = op_sizes::byte,
@@ -531,6 +539,36 @@ namespace basecode::vm {
         make_swap_instruction(dest_reg.size, dest_reg, src_reg);
     }
 
+    void instruction_block::pushm(
+            const register_range_t& first,
+            const register_range_t& second,
+            const register_range_t& third,
+            const register_range_t& fourth) {
+        instruction_t op;
+        op.operands_count = 1;
+        op.op = op_codes::pushm;
+        op.size = op_sizes::qword;
+
+        op.operands[0].type = operand_encoding_t::flags::reg | operand_encoding_t::flags::negative;
+
+        if (!second.empty()) {
+            op.operands[1].type = operand_encoding_t::flags::reg | operand_encoding_t::flags::negative;
+            op.operands_count++;
+        }
+
+        if (!third.empty()) {
+            op.operands[2].type = operand_encoding_t::flags::reg | operand_encoding_t::flags::negative;
+            op.operands_count++;
+        }
+
+        if (!fourth.empty()) {
+            op.operands[3].type = operand_encoding_t::flags::reg | operand_encoding_t::flags::negative;
+            op.operands_count++;
+        }
+
+        make_block_entry(op);
+    }
+
     void instruction_block::push_locals(vm::assembler& assembler) {
         for (const auto& kvp : _locals) {
             auto local = _entries[kvp.second].data<local_t>();
@@ -639,6 +677,36 @@ namespace basecode::vm {
     }
 
     // pop variations
+    void instruction_block::popm(
+            const register_range_t& first,
+            const register_range_t& second,
+            const register_range_t& third,
+            const register_range_t& fourth) {
+        instruction_t op;
+        op.operands_count = 1;
+        op.op = op_codes::popm;
+        op.size = op_sizes::qword;
+
+        op.operands[0].type = operand_encoding_t::flags::reg | operand_encoding_t::flags::negative;
+
+        if (!second.empty()) {
+            op.operands[1].type = operand_encoding_t::flags::reg | operand_encoding_t::flags::negative;
+            op.operands_count++;
+        }
+
+        if (!third.empty()) {
+            op.operands[2].type = operand_encoding_t::flags::reg | operand_encoding_t::flags::negative;
+            op.operands_count++;
+        }
+
+        if (!fourth.empty()) {
+            op.operands[3].type = operand_encoding_t::flags::reg | operand_encoding_t::flags::negative;
+            op.operands_count++;
+        }
+
+        make_block_entry(op);
+    }
+
     void instruction_block::pop_locals(vm::assembler& assembler) {
         for (auto it = _locals.rbegin(); it != _locals.rend(); ++it) {
             auto local = _entries[(*it).second].data<local_t>();
@@ -1058,7 +1126,12 @@ namespace basecode::vm {
     }
 
     void instruction_block::blank_line() {
-        _entries.push_back(block_entry_t());
+        if (_insertion_point != -1) {
+            _entries.insert(std::begin(_entries) + _insertion_point, block_entry_t());
+            _insertion_point++;
+        } else {
+            _entries.push_back(block_entry_t());
+        }
     }
 
     void instruction_block::label(vm::label* value) {
@@ -1072,11 +1145,12 @@ namespace basecode::vm {
     }
 
     void instruction_block::make_block_entry(const meta_t& meta) {
-        _entries.push_back(block_entry_t(meta));
-    }
-
-    void instruction_block::add_entry(const block_entry_t& entry) {
-        _entries.push_back(entry);
+        if (_insertion_point != -1) {
+            _entries.insert(std::begin(_entries) + _insertion_point, block_entry_t(meta));
+            _insertion_point++;
+        } else {
+            _entries.push_back(block_entry_t(meta));
+        }
     }
 
     bool instruction_block::is_current_instruction(op_codes code) {
@@ -1093,15 +1167,30 @@ namespace basecode::vm {
     }
 
     void instruction_block::make_block_entry(const local_t& local) {
-        _entries.push_back(block_entry_t(local));
+        if (_insertion_point != -1) {
+            _entries.insert(std::begin(_entries) + _insertion_point, block_entry_t(local));
+            _insertion_point++;
+        } else {
+            _entries.push_back(block_entry_t(local));
+        }
     }
 
     void instruction_block::make_block_entry(const label_t& label) {
-        _entries.push_back(block_entry_t(label));
+        if (_insertion_point != -1) {
+            _entries.insert(std::begin(_entries) + _insertion_point, block_entry_t(label));
+            _insertion_point++;
+        } else {
+            _entries.push_back(block_entry_t(label));
+        }
     }
 
     void instruction_block::make_block_entry(const align_t& align) {
-        _entries.push_back(block_entry_t(align));
+        if (_insertion_point != -1) {
+            _entries.insert(std::begin(_entries) + _insertion_point, block_entry_t(align));
+            _insertion_point++;
+        } else {
+            _entries.push_back(block_entry_t(align));
+        }
     }
 
     bool instruction_block::has_local(const std::string& name) const {
@@ -1113,20 +1202,42 @@ namespace basecode::vm {
     }
 
     void instruction_block::make_block_entry(const comment_t& comment) {
-        _entries.push_back(block_entry_t(comment));
+        if (_insertion_point != -1) {
+            _entries.insert(std::begin(_entries) + _insertion_point, block_entry_t(comment));
+            _insertion_point++;
+        } else {
+            _entries.push_back(block_entry_t(comment));
+        }
     }
 
     void instruction_block::make_block_entry(const section_t& section) {
-        _entries.push_back(block_entry_t(section));
+        if (_insertion_point != -1) {
+            _entries.insert(std::begin(_entries) + _insertion_point, block_entry_t(section));
+            _insertion_point++;
+        } else {
+            _entries.push_back(block_entry_t(section));
+        }
     }
 
     void instruction_block::make_block_entry(const instruction_t& inst) {
-        _recent_inst_index = static_cast<int64_t>(_entries.size());
-        _entries.push_back(block_entry_t(inst));
+        if (_insertion_point != -1) {
+            _recent_inst_index = _insertion_point;
+            _entries.insert(std::begin(_entries) + _insertion_point, block_entry_t(inst));
+            _insertion_point++;
+        }
+        else {
+            _recent_inst_index = static_cast<int64_t>(_entries.size());
+            _entries.push_back(block_entry_t(inst));
+        }
     }
 
     void instruction_block::make_block_entry(const data_definition_t& data) {
-        _entries.push_back(block_entry_t(data));
+        if (_insertion_point != -1) {
+            _entries.insert(std::begin(_entries) + _insertion_point, block_entry_t(data));
+            _insertion_point++;
+        } else {
+            _entries.push_back(block_entry_t(data));
+        }
     }
 
     const vm::local_t* instruction_block::local(const std::string& name) const {
@@ -1137,7 +1248,14 @@ namespace basecode::vm {
     }
 
     void instruction_block::frame_offset(const std::string& name, int64_t offset) {
-        _entries.push_back(block_entry_t(frame_offset_t{offset, name}));
+        if (_insertion_point != -1) {
+            _entries.insert(
+                std::begin(_entries) + _insertion_point,
+                block_entry_t(frame_offset_t{offset, name}));
+            _insertion_point++;
+        } else {
+            _entries.push_back(block_entry_t(frame_offset_t{offset, name}));
+        }
     }
 
 };

@@ -29,7 +29,12 @@ namespace basecode::vm {
             encoding_size += 1;
 
             if ((operand.is_reg())) {
-                encoding_size += sizeof(uint8_t);
+                // N.B. the negative flag is used for register ranges
+                if (operand.is_negative()) {
+                    encoding_size += sizeof(uint16_t);
+                } else {
+                    encoding_size += sizeof(uint8_t);
+                }
             } else {
                 auto working_size = operand.size;
                 if (operand.fixup_ref != nullptr) {
@@ -98,8 +103,15 @@ namespace basecode::vm {
             ++offset;
 
             if (operand.is_reg()) {
-                operand.value.r = *(encoding_ptr + offset);
-                ++offset;
+                // N.B. the negative flag is used for register ranges
+                if (operand.is_negative()) {
+                    auto constant_value_ptr = reinterpret_cast<uint16_t*>(encoding_ptr + offset);
+                    operand.value.u = *constant_value_ptr;
+                    offset += sizeof(uint16_t);
+                } else {
+                    operand.value.r = *(encoding_ptr + offset);
+                    ++offset;
+                }
             } else {
                 switch (operand.size) {
                     case op_sizes::byte: {
@@ -193,9 +205,17 @@ namespace basecode::vm {
             ++encoding_size;
 
             if (operand.is_reg()) {
-                *(encoding_ptr + offset) = operand.value.r;
-                ++offset;
-                ++encoding_size;
+                // N.B. the negative flag is used for storing register ranges
+                if (operand.is_negative()) {
+                    auto constant_value_ptr = reinterpret_cast<uint16_t*>(encoding_ptr + offset);
+                    *constant_value_ptr = static_cast<uint16_t>(operand.value.u);
+                    offset += sizeof(uint16_t);
+                    encoding_size += sizeof(uint16_t);
+                } else {
+                    *(encoding_ptr + offset) = operand.value.r;
+                    ++offset;
+                    ++encoding_size;
+                }
             } else {
                 switch (operand.size) {
                     case op_sizes::byte: {
@@ -935,6 +955,32 @@ namespace basecode::vm {
 
                 break;
             }
+            case op_codes::pushm: {
+                for (uint8_t i = 0; i < inst.operands_count; i++) {
+                    const auto& operand = inst.operands[i];
+                    auto type = operand.is_integer() ?
+                                register_type_t::integer :
+                                register_type_t::floating_point;
+
+                    auto range = static_cast<uint16_t>(operand.value.u);
+                    auto start = static_cast<uint8_t>(range & 0xff00);
+                    auto end = static_cast<uint8_t>(range & 0x00ff);
+
+                    for (uint8_t reg = start; reg <= end; reg++) {
+                        auto reg_index = register_index(static_cast<registers_t>(reg), type);
+                        auto alias = _registers.r[reg_index];
+                        push(alias.qw);
+                    }
+                }
+
+                _registers.flags(register_file_t::flags_t::zero, false);
+                _registers.flags(register_file_t::flags_t::carry, false);
+                _registers.flags(register_file_t::flags_t::overflow, false);
+                _registers.flags(register_file_t::flags_t::subtract, false);
+                _registers.flags(register_file_t::flags_t::negative, false);
+
+                break;
+            }
             case op_codes::pop: {
                 operand_value_t top_of_stack;
                 top_of_stack.alias.u = pop();
@@ -949,6 +995,31 @@ namespace basecode::vm {
                 _registers.flags(
                     register_file_t::flags_t::negative,
                     is_negative(top_of_stack, inst.size));
+
+                break;
+            }
+            case op_codes::popm: {
+                for (uint8_t i = 0; i < inst.operands_count; i++) {
+                    const auto& operand = inst.operands[i];
+                    auto type = operand.is_integer() ?
+                                register_type_t::integer :
+                                register_type_t::floating_point;
+
+                    auto range = static_cast<uint16_t>(operand.value.u);
+                    auto start = static_cast<uint8_t>(range & 0xff00);
+                    auto end = static_cast<uint8_t>(range & 0x00ff);
+
+                    for (uint8_t reg = start; reg <= end; reg++) {
+                        auto reg_index = register_index(static_cast<registers_t>(reg), type);
+                        _registers.r[reg_index].qw = pop();
+                    }
+                }
+
+                _registers.flags(register_file_t::flags_t::zero, false);
+                _registers.flags(register_file_t::flags_t::carry, false);
+                _registers.flags(register_file_t::flags_t::overflow, false);
+                _registers.flags(register_file_t::flags_t::subtract, false);
+                _registers.flags(register_file_t::flags_t::negative, false);
 
                 break;
             }

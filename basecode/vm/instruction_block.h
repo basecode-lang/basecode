@@ -53,13 +53,15 @@ namespace basecode::vm {
 
         block_entry_list_t& entries();
 
+        ssize_t insertion_point() const;
+
+        void insertion_point(ssize_t value);
+
         listing_source_file_t* source_file();
 
         instruction_block_type_t type() const;
 
         void make_block_entry(const meta_t& meta);
-
-        void add_entry(const block_entry_t& entry);
 
         bool is_current_instruction(op_codes code);
 
@@ -403,11 +405,23 @@ namespace basecode::vm {
             const register_t& address_reg);
 
         // push variations
+        void pushm(
+            const register_range_t& first,
+            const register_range_t& second = {},
+            const register_range_t& third = {},
+            const register_range_t& fourth = {});
+
         void push_locals(vm::assembler& assembler);
 
         void push(const instruction_operand_t& operand);
 
         // pop variations
+        void popm(
+            const register_range_t& first,
+            const register_range_t& second = {},
+            const register_range_t& third = {},
+            const register_range_t& fourth = {});
+
         void pop_locals(vm::assembler& assembler);
 
         void pop(const instruction_operand_t& dest);
@@ -446,6 +460,7 @@ namespace basecode::vm {
 
     private:
         common::id_t _id;
+        ssize_t _insertion_point = -1;
         instruction_block_type_t _type;
         block_entry_list_t _entries {};
         int64_t _recent_inst_index = -1;

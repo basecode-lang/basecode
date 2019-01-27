@@ -302,7 +302,9 @@ namespace basecode::vm {
         moves,
         movez,
         push,
+        pushm,
         pop,
+        popm,
         dup,
         inc,
         dec,
@@ -393,7 +395,9 @@ namespace basecode::vm {
         {op_codes::moves,  "MOVES"},
         {op_codes::movez,  "MOVEZ"},
         {op_codes::push,   "PUSH"},
+        {op_codes::push,   "PUSHM"},
         {op_codes::pop,    "POP"},
+        {op_codes::pop,    "POPM"},
         {op_codes::dup,    "DUP"},
         {op_codes::inc,    "INC"},
         {op_codes::dec,    "DEC"},
@@ -907,6 +911,18 @@ namespace basecode::vm {
         instruction_operand_type_t _type;
     };
 
+    struct register_range_t {
+        bool empty() const {
+            return !((begin.type() == instruction_operand_type_t::reg
+                    || begin.type() == instruction_operand_type_t::named_ref)
+                && (end.type() == instruction_operand_type_t::reg
+                    || end.type() == instruction_operand_type_t::named_ref));
+        }
+
+        instruction_operand_t begin {};
+        instruction_operand_t end {};
+    };
+
     ///////////////////////////////////////////////////////////////////////////
 
     enum class listing_source_line_type_t : uint8_t {
@@ -1019,6 +1035,7 @@ namespace basecode::vm {
             pc_register      = 0b00001000,
             sp_register      = 0b00010000,
             fp_register      = 0b00100000,
+            range            = 0b01000000,
         };
 
         uint8_t types = flags::none;
@@ -1182,11 +1199,35 @@ namespace basecode::vm {
             }
         },
         {
+            "PUSHM",
+            mnemonic_t{
+                op_codes::pushm,
+                {
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::float_register | mnemonic_operand_t::flags::range, true},
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::float_register | mnemonic_operand_t::flags::range, false},
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::float_register | mnemonic_operand_t::flags::range, false},
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::float_register | mnemonic_operand_t::flags::range, false},
+                }
+            }
+        },
+        {
             "POP",
             mnemonic_t{
                 op_codes::pop,
                 {
-                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::float_register, true}
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::float_register, true},
+                }
+            }
+        },
+        {
+            "POPM",
+            mnemonic_t{
+                op_codes::popm,
+                {
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::float_register | mnemonic_operand_t::flags::range, true},
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::float_register | mnemonic_operand_t::flags::range, false},
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::float_register | mnemonic_operand_t::flags::range, false},
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::float_register | mnemonic_operand_t::flags::range, false},
                 }
             }
         },

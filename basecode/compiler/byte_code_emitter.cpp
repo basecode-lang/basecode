@@ -127,18 +127,21 @@ namespace basecode::compiler {
             emit_result_t& result,
             uint8_t number) {
         const auto& local_ref = result.operands.front();
-        if (is_temp_local(local_ref)
-        ||  local_ref.type() != vm::instruction_operand_type_t::named_ref) {
+        if (local_ref.type() != vm::instruction_operand_type_t::named_ref)
             return;
-        }
+
+        auto number_class = result.type_result.inferred_type->number_class();
+        auto temp_name = temp_local_name(number_class, number);
 
         auto named_ref = *local_ref.data<vm::assembler_named_ref_t*>();
         if (named_ref->type == vm::assembler_named_ref_type_t::label)
             return;
 
+        if (temp_name == named_ref->name)
+            return;
+
         auto is_pointer_type = result.type_result.inferred_type->is_pointer_type();
         auto is_composite = result.type_result.inferred_type->is_composite_type();
-        auto number_class = result.type_result.inferred_type->number_class();
         auto size = is_composite ?
             vm::op_sizes::qword :
             vm::op_size_for_byte_size(result.type_result.inferred_type->size_in_bytes());
@@ -147,18 +150,20 @@ namespace basecode::compiler {
                              result.operands[1] :
                              vm::instruction_operand_t();
 
-        vm::instruction_operand_t temp(_session.assembler().make_named_ref(
-            vm::assembler_named_ref_type_t::local,
-            temp_local_name(number_class, number),
-            size));
+        if (!is_temp_local(local_ref) || !offset.is_empty()) {
+            vm::instruction_operand_t temp(_session.assembler().make_named_ref(
+                vm::assembler_named_ref_type_t::local,
+                temp_name,
+                size));
 
-        if (is_composite && !is_pointer_type) {
-            block->move(temp, local_ref, offset);
-        } else {
-            block->load(temp, local_ref, offset);
+            if (is_composite && !is_pointer_type) {
+                block->move(temp, local_ref, offset);
+            } else {
+                block->load(temp, local_ref, offset);
+            }
+
+            result.operands.push_back(temp);
         }
-
-        result.operands.push_back(temp);
     }
 
     bool byte_code_emitter::emit() {
@@ -1389,10 +1394,19 @@ namespace basecode::compiler {
                 auto unary_op = dynamic_cast<compiler::unary_operator*>(e);
                 auto op_type = unary_op->operator_type();
 
+                switch (op_type) {
+                    case operator_type_t::pointer_dereference: {
+                        block->comment("unary_op: deref", vm::comment_location_t::after_instruction);
+                        break;
+                    }
+                    default:
+                        break;
+                }
+
                 emit_result_t rhs_emit_result {};
                 if (!emit_element(block, unary_op->rhs(), rhs_emit_result))
                     return false;
-                read(block, rhs_emit_result, 1);
+                read(block, rhs_emit_result, 2);
 
                 auto is_composite_type = rhs_emit_result.type_result.inferred_type->is_composite_type();
                 auto size = vm::op_size_for_byte_size(result.type_result.inferred_type->size_in_bytes());
@@ -1404,7 +1418,7 @@ namespace basecode::compiler {
 
                 vm::instruction_operand_t result_operand(assembler.make_named_ref(
                     vm::assembler_named_ref_type_t::local,
-                    temp_local_name(result.type_result.inferred_type->number_class(), 1),
+                    temp_local_name(result.type_result.inferred_type->number_class(), 3),
                     size));
 
                 switch (op_type) {
@@ -1435,7 +1449,6 @@ namespace basecode::compiler {
                         break;
                     }
                     case operator_type_t::pointer_dereference: {
-                        block->comment("unary_op: deref", vm::comment_location_t::after_instruction);
                         if (!is_composite_type) {
                             block->load(
                                 result_operand,
@@ -1746,18 +1759,14 @@ namespace basecode::compiler {
                 auto unary_op = dynamic_cast<compiler::unary_operator*>(e);
                 if (!count_temps(unary_op->rhs(), result))
                     return false;
-                result.update();
                 break;
             }
             case element_type_t::binary_operator: {
                 auto bin_op = dynamic_cast<compiler::binary_operator*>(e);
-                if (bin_op->operator_type() != operator_type_t::assignment) {
-                    if (!count_temps(bin_op->lhs(), result))
-                        return false;
-                }
+                if (!count_temps(bin_op->lhs(), result))
+                    return false;
                 if (!count_temps(bin_op->rhs(), result))
                     return false;
-                result.update();
                 break;
             }
             case element_type_t::identifier_reference: {
@@ -1790,14 +1799,13 @@ namespace basecode::compiler {
                         continue;
                     if (!count_temps(expr, result))
                         return false;
+                    result.update();
                 }
                 return true;
             },
             block);
         if (!success)
             return false;
-
-        result.update();
 
         for (size_t i = 1; i <= result.ints; i++) {
             locals.push_back(temp_local_t{
