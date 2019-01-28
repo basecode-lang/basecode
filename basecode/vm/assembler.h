@@ -59,7 +59,8 @@ namespace basecode::vm {
 
         assembler_named_ref_t* make_named_ref(
             assembler_named_ref_type_t type,
-            const std::string& name,
+            const std::string& name1,
+            const std::string& name2 = {},
             vm::op_sizes size = vm::op_sizes::qword);
 
         bool apply_addresses(common::result& r);

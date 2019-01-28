@@ -493,11 +493,13 @@ namespace basecode::vm {
         none,
         label,
         local,
+        range,
         offset,
     };
 
     struct assembler_named_ref_t {
-        std::string name;
+        std::string name1;
+        std::string name2;
         vm::op_sizes size = vm::op_sizes::qword;
         assembler_named_ref_type_t type = assembler_named_ref_type_t::none;
     };

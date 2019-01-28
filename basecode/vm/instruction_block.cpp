@@ -100,6 +100,11 @@ namespace basecode::vm {
                     case assembler_named_ref_type_t::none: {
                         break;
                     }
+                    case assembler_named_ref_type_t::range: {
+                        op.type |= operand_encoding_t::flags::reg
+                            | operand_encoding_t::flags::range;
+                        break;
+                    }
                     case assembler_named_ref_type_t::local: {
                         op.type |= operand_encoding_t::flags::reg;
                         break;

@@ -137,7 +137,7 @@ namespace basecode::compiler {
         if (named_ref->type == vm::assembler_named_ref_type_t::label)
             return;
 
-        if (temp_name == named_ref->name)
+        if (temp_name == named_ref->name1)
             return;
 
         auto is_pointer_type = result.type_result.inferred_type->is_pointer_type();
@@ -154,6 +154,7 @@ namespace basecode::compiler {
             vm::instruction_operand_t temp(_session.assembler().make_named_ref(
                 vm::assembler_named_ref_type_t::local,
                 temp_name,
+                {},
                 size));
 
             if (is_composite && !is_pointer_type) {
@@ -256,6 +257,7 @@ namespace basecode::compiler {
                         vm::instruction_operand_t(_session.assembler().make_named_ref(
                             vm::assembler_named_ref_type_t::local,
                             var->symbol()->name(),
+                            {},
                             vm::op_size_for_byte_size(var->type_ref()->type()->size_in_bytes()))),
                         vm::instruction_operand_t(_session.assembler().make_named_ref(
                             vm::assembler_named_ref_type_t::label,
@@ -432,6 +434,7 @@ namespace basecode::compiler {
                 vm::instruction_operand_t target_operand(assembler.make_named_ref(
                     vm::assembler_named_ref_type_t::local,
                     temp_local_name(target_number_class, 2),
+                    {},
                     vm::op_size_for_byte_size(target_size)));
                 result.operands.emplace_back(target_operand);
 
@@ -803,7 +806,7 @@ namespace basecode::compiler {
                         return false;
                     }
                     label_ref = flow_control->exit_label;
-                    label_name = label_ref->name;
+                    label_name = label_ref->name1;
                 }
 
                 block->comment(
@@ -1133,6 +1136,7 @@ namespace basecode::compiler {
                     vm::instruction_operand_t result_operand(assembler.make_named_ref(
                         vm::assembler_named_ref_type_t::local,
                         temp_local_name(target_number_class, 1),
+                        {},
                         vm::op_size_for_byte_size(target_size)));
                     result.operands.emplace_back(result_operand);
                     block->pop(result_operand);
@@ -1192,6 +1196,7 @@ namespace basecode::compiler {
                 vm::instruction_operand_t target_operand(assembler.make_named_ref(
                     vm::assembler_named_ref_type_t::local,
                     temp_local_name(target_number_class, 2),
+                    {},
                     vm::op_size_for_byte_size(target_size)));
                 result.operands.emplace_back(target_operand);
 
@@ -1223,7 +1228,7 @@ namespace basecode::compiler {
                         return false;
                     }
                     label_ref = flow_control->continue_label;
-                    label_name = label_ref->name;
+                    label_name = label_ref->name1;
                 }
 
                 block->comment(
@@ -1237,6 +1242,7 @@ namespace basecode::compiler {
                 result.operands.emplace_back(_session.assembler().make_named_ref(
                     vm::assembler_named_ref_type_t::local,
                     var->symbol()->name(),
+                    {},
                     vm::op_size_for_byte_size(result.type_result.inferred_type->size_in_bytes())));
                 break;
             }
@@ -1421,6 +1427,7 @@ namespace basecode::compiler {
                 vm::instruction_operand_t result_operand(assembler.make_named_ref(
                     vm::assembler_named_ref_type_t::local,
                     temp_local_name(result.type_result.inferred_type->number_class(), 3),
+                    {},
                     size));
 
                 switch (op_type) {
@@ -2572,6 +2579,7 @@ namespace basecode::compiler {
                 vm::instruction_operand_t(assembler.make_named_ref(
                     vm::assembler_named_ref_type_t::offset,
                     name,
+                    {},
                     vm::op_sizes::word)));
         }
 
@@ -2765,6 +2773,7 @@ namespace basecode::compiler {
         vm::instruction_operand_t result_operand(assembler.make_named_ref(
             vm::assembler_named_ref_type_t::local,
             temp_local_name(result.type_result.inferred_type->number_class(), 1),
+            {},
             vm::op_sizes::byte));
         result.operands.emplace_back(result_operand);
 
@@ -2879,6 +2888,7 @@ namespace basecode::compiler {
         vm::instruction_operand_t result_operand(assembler.make_named_ref(
             vm::assembler_named_ref_type_t::local,
             temp_local_name(result.type_result.inferred_type->number_class(), 1),
+            {},
             size));
         result.operands.emplace_back(result_operand);
 
@@ -2990,7 +3000,7 @@ namespace basecode::compiler {
     bool byte_code_emitter::is_temp_local(const vm::instruction_operand_t& operand) {
         if (operand.type() == vm::instruction_operand_type_t::named_ref) {
             auto named_ref = *operand.data<vm::assembler_named_ref_t*>();
-            return named_ref->name.substr(1, 4) == "temp";
+            return named_ref->name1.substr(1, 4) == "temp";
         }
         return false;
     }

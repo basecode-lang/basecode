@@ -89,8 +89,11 @@ namespace basecode::vm {
                                 continue;
 
                             switch (operand.fixup_ref->type) {
+                                case assembler_named_ref_type_t::range: {
+                                    break;
+                                }
                                 case assembler_named_ref_type_t::local: {
-                                    auto it = _locals.find(operand.fixup_ref->name);
+                                    auto it = _locals.find(operand.fixup_ref->name1);
                                     if (it != _locals.end()) {
                                         const auto& local = it->second;
                                         operand.value.r = local.reg.number;
@@ -108,7 +111,7 @@ namespace basecode::vm {
                                     break;
                                 }
                                 case assembler_named_ref_type_t::offset: {
-                                    auto it = _locals.find(operand.fixup_ref->name);
+                                    auto it = _locals.find(operand.fixup_ref->name1);
                                     if (it != _locals.end()) {
                                         const auto& local = it->second;
                                         auto imm_value = local.offset;
@@ -142,7 +145,7 @@ namespace basecode::vm {
                                     auto label_ref = boost::get<assembler_named_ref_t*>(v);
                                     r.error(
                                         "A031",
-                                        fmt::format("unexpected assembler_named_ref_t*: {}", label_ref->name));
+                                        fmt::format("unexpected assembler_named_ref_t*: {}", label_ref->name1));
                                     continue;
                                 }
                                 _terp->write(
@@ -234,7 +237,7 @@ namespace basecode::vm {
 
                             switch (operand.fixup_ref->type) {
                                 case assembler_named_ref_type_t::label: {
-                                    auto label = find_label(operand.fixup_ref->name);
+                                    auto label = find_label(operand.fixup_ref->name1);
                                     if (label != nullptr) {
                                         operand.value.u = label->address();
                                     }
@@ -258,7 +261,7 @@ namespace basecode::vm {
                                 if (named_ref != nullptr) {
                                     switch (named_ref->type) {
                                         case assembler_named_ref_type_t::label: {
-                                            auto label = find_label(named_ref->name);
+                                            auto label = find_label(named_ref->name1);
                                             if (label != nullptr) {
                                                 value = label->address();
                                             }
@@ -296,9 +299,10 @@ namespace basecode::vm {
 
     assembler_named_ref_t* assembler::make_named_ref(
             assembler_named_ref_type_t type,
-            const std::string& name,
+            const std::string& name1,
+            const std::string& name2,
             vm::op_sizes size) {
-        auto key = fmt::format("{}{}", name, static_cast<uint8_t>(type));
+        auto key = fmt::format("{}{}{}", name1, name2, static_cast<uint8_t>(type));
         auto it = _named_refs.find(key);
         if (it != _named_refs.end()) {
             auto ref = &it->second;
@@ -309,7 +313,8 @@ namespace basecode::vm {
         auto insert_pair = _named_refs.insert(std::make_pair(
             key,
             assembler_named_ref_t {
-                .name = name,
+                .name1 = name1,
+                .name2 = name2,
                 .size = size,
                 .type = type
             }));
@@ -577,7 +582,7 @@ namespace basecode::vm {
                         if (v.which() == 0)
                             items += fmt::format(format_spec, boost::get<uint64_t>(v));
                         else
-                            items += boost::get<assembler_named_ref_t*>(v)->name;
+                            items += boost::get<assembler_named_ref_t*>(v)->name1;
                         if ((item_index % 8) == 0) {
                             source_file->add_source_line(
                                 listing_source_line_type_t::data_definition,
