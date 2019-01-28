@@ -29,8 +29,7 @@ namespace basecode::vm {
             encoding_size += 1;
 
             if ((operand.is_reg())) {
-                // N.B. the negative flag is used for register ranges
-                if (operand.is_negative()) {
+                if (operand.is_range()) {
                     encoding_size += sizeof(uint16_t);
                 } else {
                     encoding_size += sizeof(uint8_t);
@@ -103,8 +102,7 @@ namespace basecode::vm {
             ++offset;
 
             if (operand.is_reg()) {
-                // N.B. the negative flag is used for register ranges
-                if (operand.is_negative()) {
+                if (operand.is_range()) {
                     auto constant_value_ptr = reinterpret_cast<uint16_t*>(encoding_ptr + offset);
                     operand.value.u = *constant_value_ptr;
                     offset += sizeof(uint16_t);
@@ -205,8 +203,7 @@ namespace basecode::vm {
             ++encoding_size;
 
             if (operand.is_reg()) {
-                // N.B. the negative flag is used for storing register ranges
-                if (operand.is_negative()) {
+                if (operand.is_range()) {
                     auto constant_value_ptr = reinterpret_cast<uint16_t*>(encoding_ptr + offset);
                     *constant_value_ptr = static_cast<uint16_t>(operand.value.u);
                     offset += sizeof(uint16_t);
@@ -324,57 +321,48 @@ namespace basecode::vm {
                 register_value_alias_t alias {};
                 alias.qw = operand.value.u;
 
-                std::string prefix, postfix;
-
-                if (operand.is_negative()) {
-                    if (operand.is_prefix())
-                        prefix = "--";
-                    else
-                        prefix = "-";
-
-                    if (operand.is_postfix())
-                        postfix = "--";
-                } else {
-                    if (operand.is_prefix())
-                        prefix = "++";
-
-                    if (operand.is_postfix())
-                        postfix = "++";
-                }
-
                 if (operand.is_reg()) {
-                    if (operand.is_integer()) {
-                        switch (operand.value.r) {
-                            case registers_t::sp: {
-                                operands_stream << prefix << "SP" << postfix;
-                                break;
-                            }
-                            case registers_t::fp: {
-                                operands_stream << prefix << "FP" << postfix;
-                                break;
-                            }
-                            case registers_t::pc: {
-                                operands_stream << prefix << "PC" << postfix;
-                                break;
-                            }
-                            case registers_t::fr: {
-                                operands_stream << "FR";
-                                break;
-                            }
-                            case registers_t::sr: {
-                                operands_stream << "SR";
-                                break;
-                            }
-                            default: {
-                                operands_stream << prefix
-                                                << "I"
-                                                << std::to_string(operand.value.r)
-                                                << postfix;
-                                break;
-                            }
+                    if (operand.is_range()) {
+                        auto range = static_cast<uint16_t>(operand.value.u);
+                        auto start = (range >> 8) & 0xff;
+                        auto end = range & 0xff;
+                        if (operand.is_integer()) {
+                            operands_stream << fmt::format("I{}-I{}", start, end);
+                        } else {
+                            operands_stream << fmt::format("F{}-F{}", start, end);
                         }
                     } else {
-                        operands_stream << "F" << std::to_string(operand.value.r);
+                        if (operand.is_integer()) {
+                            switch (operand.value.r) {
+                                case registers_t::sp: {
+                                    operands_stream << "SP";
+                                    break;
+                                }
+                                case registers_t::fp: {
+                                    operands_stream << "FP";
+                                    break;
+                                }
+                                case registers_t::pc: {
+                                    operands_stream << "PC";
+                                    break;
+                                }
+                                case registers_t::fr: {
+                                    operands_stream << "FR";
+                                    break;
+                                }
+                                case registers_t::sr: {
+                                    operands_stream << "SR";
+                                    break;
+                                }
+                                default: {
+                                    operands_stream << "I"
+                                                    << std::to_string(operand.value.r);
+                                    break;
+                                }
+                            }
+                        } else {
+                            operands_stream << "F" << std::to_string(operand.value.r);
+                        }
                     }
                 } else {
 //                    if (operand.is_unresolved()) {
@@ -383,8 +371,6 @@ namespace basecode::vm {
 //                        else
 //                            operands_stream << id_resolver(operand.value.u);
 //                    } else {
-                        operands_stream << prefix;
-
                         auto operand_format_spec = op_size_format_spec(operand.size);
                         switch (operand.size) {
                             case op_sizes::byte:
@@ -403,8 +389,6 @@ namespace basecode::vm {
                                 break;
                             }
                         }
-
-                        operands_stream << postfix;
 //                    }
                 }
             }
@@ -963,10 +947,12 @@ namespace basecode::vm {
                                 register_type_t::floating_point;
 
                     auto range = static_cast<uint16_t>(operand.value.u);
-                    auto start = static_cast<uint8_t>(range & 0xff00);
-                    auto end = static_cast<uint8_t>(range & 0x00ff);
+                    auto start = (range >> 8) & 0xff;
+                    auto end = range & 0xff;
+                    auto delta = end < start ? -1 : 1;
+                    auto count = std::abs(end - start);
 
-                    for (uint8_t reg = start; reg <= end; reg++) {
+                    for (uint8_t reg = static_cast<uint8_t>(start); count >= 0; reg += delta, --count) {
                         auto reg_index = register_index(static_cast<registers_t>(reg), type);
                         auto alias = _registers.r[reg_index];
                         push(alias.qw);
@@ -1006,10 +992,12 @@ namespace basecode::vm {
                                 register_type_t::floating_point;
 
                     auto range = static_cast<uint16_t>(operand.value.u);
-                    auto start = static_cast<uint8_t>(range & 0xff00);
-                    auto end = static_cast<uint8_t>(range & 0x00ff);
+                    auto start = (range >> 8) & 0xff;
+                    auto end = range & 0xff;
+                    auto delta = end < start ? -1 : 1;
+                    auto count = std::abs(end - start);
 
-                    for (uint8_t reg = start; reg <= end; reg++) {
+                    for (uint8_t reg = static_cast<uint8_t>(start); count >= 0; reg += delta, --count) {
                         auto reg_index = register_index(static_cast<registers_t>(reg), type);
                         _registers.r[reg_index].qw = pop();
                     }

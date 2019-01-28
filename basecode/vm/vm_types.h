@@ -395,9 +395,9 @@ namespace basecode::vm {
         {op_codes::moves,  "MOVES"},
         {op_codes::movez,  "MOVEZ"},
         {op_codes::push,   "PUSH"},
-        {op_codes::push,   "PUSHM"},
+        {op_codes::pushm,  "PUSHM"},
         {op_codes::pop,    "POP"},
-        {op_codes::pop,    "POPM"},
+        {op_codes::popm,   "POPM"},
         {op_codes::dup,    "DUP"},
         {op_codes::inc,    "INC"},
         {op_codes::dec,    "DEC"},
@@ -534,11 +534,10 @@ namespace basecode::vm {
             reg         = 0b00000001,
             integer     = 0b00000010,
             negative    = 0b00000100,
-            prefix      = 0b00001000,
-            postfix     = 0b00010000,
-            dword       = 0b00100000,
-            word        = 0b01000000,
-            byte        = 0b10000000,
+            range       = 0b00001000,
+            dword       = 0b00010000,
+            word        = 0b00100000,
+            byte        = 0b01000000,
         };
 
         void size_to_flags() {
@@ -572,12 +571,8 @@ namespace basecode::vm {
             return (type & flags::reg) == flags::reg;
         }
 
-        inline bool is_prefix() const {
-            return (type & flags::prefix) == flags::prefix;
-        }
-
-        inline bool is_postfix() const {
-            return (type & flags::postfix) == flags::postfix;
+        inline bool is_range() const {
+            return (type & flags::range) == flags::range;
         }
 
         inline bool is_integer() const {
@@ -913,10 +908,15 @@ namespace basecode::vm {
 
     struct register_range_t {
         bool empty() const {
-            return !((begin.type() == instruction_operand_type_t::reg
-                    || begin.type() == instruction_operand_type_t::named_ref)
-                && (end.type() == instruction_operand_type_t::reg
-                    || end.type() == instruction_operand_type_t::named_ref));
+            if (begin.type() != instruction_operand_type_t::reg
+            ||  end.type() != instruction_operand_type_t::reg) {
+                return true;
+            }
+
+            auto begin_reg = begin.data<register_t>();
+            auto end_reg = end.data<register_t>();
+
+            return std::abs(end_reg->number - begin_reg->number) == 0;
         }
 
         instruction_operand_t begin {};

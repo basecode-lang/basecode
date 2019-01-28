@@ -549,20 +549,44 @@ namespace basecode::vm {
         op.op = op_codes::pushm;
         op.size = op_sizes::qword;
 
-        op.operands[0].type = operand_encoding_t::flags::reg | operand_encoding_t::flags::negative;
+        auto first_end = first.end.data<register_t>();
+        auto first_begin = first.begin.data<register_t>();
+        op.operands[0].type = operand_encoding_t::flags::reg | operand_encoding_t::flags::range;
+        if (first_begin->type == register_type_t::integer)
+            op.operands[0].type |= operand_encoding_t::flags::integer;
+        op.operands[0].value.u = static_cast<uint64_t>((static_cast<uint16_t>(first_begin->number) << 8)
+                                                       | (static_cast<uint16_t>(first_end->number) & 0x00ff));
 
         if (!second.empty()) {
-            op.operands[1].type = operand_encoding_t::flags::reg | operand_encoding_t::flags::negative;
+            auto second_end = second.end.data<register_t>();
+            auto second_begin = second.begin.data<register_t>();
+            op.operands[1].type = operand_encoding_t::flags::reg | operand_encoding_t::flags::range;
+            if (second_begin->type == register_type_t::integer)
+                op.operands[1].type |= operand_encoding_t::flags::integer;
+            op.operands[1].value.u = static_cast<uint64_t>((static_cast<uint16_t>(second_begin->number) << 8)
+                                                           | (static_cast<uint16_t>(second_end->number) & 0x00ff));
             op.operands_count++;
         }
 
         if (!third.empty()) {
-            op.operands[2].type = operand_encoding_t::flags::reg | operand_encoding_t::flags::negative;
+            auto third_end = third.end.data<register_t>();
+            auto third_begin = third.begin.data<register_t>();
+            op.operands[2].type = operand_encoding_t::flags::reg | operand_encoding_t::flags::range;
+            if (third_begin->type == register_type_t::integer)
+                op.operands[2].type |= operand_encoding_t::flags::integer;
+            op.operands[2].value.u = static_cast<uint64_t>((static_cast<uint16_t>(third_begin->number) << 8)
+                                                           | (static_cast<uint16_t>(third_end->number) & 0x00ff));
             op.operands_count++;
         }
 
         if (!fourth.empty()) {
-            op.operands[3].type = operand_encoding_t::flags::reg | operand_encoding_t::flags::negative;
+            auto fourth_end = third.end.data<register_t>();
+            auto fourth_begin = third.begin.data<register_t>();
+            op.operands[3].type = operand_encoding_t::flags::reg | operand_encoding_t::flags::range;
+            if (fourth_begin->type == register_type_t::integer)
+                op.operands[3].type |= operand_encoding_t::flags::integer;
+            op.operands[3].value.u = static_cast<uint64_t>((static_cast<uint16_t>(fourth_begin->number) << 8)
+                                                           | (static_cast<uint16_t>(fourth_end->number) & 0x00ff));
             op.operands_count++;
         }
 
@@ -570,12 +594,43 @@ namespace basecode::vm {
     }
 
     void instruction_block::push_locals(vm::assembler& assembler) {
+        ssize_t ints = 0;
+        ssize_t floats = 0;
         for (const auto& kvp : _locals) {
             auto local = _entries[kvp.second].data<local_t>();
-            push(instruction_operand_t(assembler.make_named_ref(
-                vm::assembler_named_ref_type_t::local,
-                local->name)));
+            if (local->type == vm::local_type_t::integer)
+                ints++;
+            else
+                floats++;
         }
+
+        register_t int_begin {
+            .number = static_cast<registers_t>(0),
+            .type = register_type_t::integer
+        };
+        register_t int_end {
+            .number = static_cast<registers_t>(std::max<ssize_t>(0, ints - 1)),
+            .type = register_type_t::integer
+        };
+
+        register_t float_begin {
+            .number = static_cast<registers_t>(0),
+            .type = register_type_t::floating_point
+        };
+        register_t float_end {
+            .number = static_cast<registers_t>(std::max<ssize_t>(0, floats - 1)),
+            .type = register_type_t::floating_point
+        };
+
+        pushm(
+            register_range_t{
+                .begin = vm::instruction_operand_t(int_begin),
+                .end = vm::instruction_operand_t(int_end)
+            },
+            register_range_t{
+                .begin = vm::instruction_operand_t(float_begin),
+                .end = vm::instruction_operand_t(float_end)
+            });
     }
 
     void instruction_block::push(const instruction_operand_t& operand) {
@@ -687,20 +742,44 @@ namespace basecode::vm {
         op.op = op_codes::popm;
         op.size = op_sizes::qword;
 
-        op.operands[0].type = operand_encoding_t::flags::reg | operand_encoding_t::flags::negative;
+        auto first_end = first.end.data<register_t>();
+        auto first_begin = first.begin.data<register_t>();
+        op.operands[0].type = operand_encoding_t::flags::reg | operand_encoding_t::flags::range;
+        if (first_begin->type == register_type_t::integer)
+            op.operands[0].type |= operand_encoding_t::flags::integer;
+        op.operands[0].value.u = static_cast<uint64_t>((static_cast<uint16_t>(first_begin->number) << 8)
+                                                       | (static_cast<uint16_t>(first_end->number) & 0x00ff));
 
         if (!second.empty()) {
-            op.operands[1].type = operand_encoding_t::flags::reg | operand_encoding_t::flags::negative;
+            auto second_end = second.end.data<register_t>();
+            auto second_begin = second.begin.data<register_t>();
+            op.operands[1].type = operand_encoding_t::flags::reg | operand_encoding_t::flags::range;
+            if (second_begin->type == register_type_t::integer)
+                op.operands[1].type |= operand_encoding_t::flags::integer;
+            op.operands[1].value.u = static_cast<uint64_t>((static_cast<uint16_t>(second_begin->number) << 8)
+                                                           | (static_cast<uint16_t>(second_end->number) & 0x00ff));
             op.operands_count++;
         }
 
         if (!third.empty()) {
-            op.operands[2].type = operand_encoding_t::flags::reg | operand_encoding_t::flags::negative;
+            auto third_end = third.end.data<register_t>();
+            auto third_begin = third.begin.data<register_t>();
+            op.operands[2].type = operand_encoding_t::flags::reg | operand_encoding_t::flags::range;
+            if (third_begin->type == register_type_t::integer)
+                op.operands[2].type |= operand_encoding_t::flags::integer;
+            op.operands[2].value.u = static_cast<uint64_t>((static_cast<uint16_t>(third_begin->number) << 8)
+                                                           | (static_cast<uint16_t>(third_end->number) & 0x00ff));
             op.operands_count++;
         }
 
         if (!fourth.empty()) {
-            op.operands[3].type = operand_encoding_t::flags::reg | operand_encoding_t::flags::negative;
+            auto fourth_end = third.end.data<register_t>();
+            auto fourth_begin = third.begin.data<register_t>();
+            op.operands[3].type = operand_encoding_t::flags::reg | operand_encoding_t::flags::range;
+            if (fourth_begin->type == register_type_t::integer)
+                op.operands[3].type |= operand_encoding_t::flags::integer;
+            op.operands[3].value.u = static_cast<uint64_t>((static_cast<uint16_t>(fourth_begin->number) << 8)
+                                                           | (static_cast<uint16_t>(fourth_end->number) & 0x00ff));
             op.operands_count++;
         }
 
@@ -708,12 +787,43 @@ namespace basecode::vm {
     }
 
     void instruction_block::pop_locals(vm::assembler& assembler) {
-        for (auto it = _locals.rbegin(); it != _locals.rend(); ++it) {
-            auto local = _entries[(*it).second].data<local_t>();
-            pop(instruction_operand_t(assembler.make_named_ref(
-                vm::assembler_named_ref_type_t::local,
-                local->name)));
+        ssize_t ints = 0;
+        ssize_t floats = 0;
+        for (const auto& kvp : _locals) {
+            auto local = _entries[kvp.second].data<local_t>();
+            if (local->type == vm::local_type_t::integer)
+                ints++;
+            else
+                floats++;
         }
+
+        register_t int_begin {
+            .number = static_cast<registers_t>(std::max<ssize_t>(0, ints - 1)),
+            .type = register_type_t::integer
+        };
+        register_t int_end {
+            .number = static_cast<registers_t>(0),
+            .type = register_type_t::integer
+        };
+
+        register_t float_begin {
+            .number = static_cast<registers_t>(std::max<ssize_t>(0, floats - 1)),
+            .type = register_type_t::floating_point
+        };
+        register_t float_end {
+            .number = static_cast<registers_t>(0),
+            .type = register_type_t::floating_point
+        };
+
+        popm(
+            register_range_t{
+                .begin = vm::instruction_operand_t(int_begin),
+                .end = vm::instruction_operand_t(int_end)
+            },
+            register_range_t{
+                .begin = vm::instruction_operand_t(float_begin),
+                .end = vm::instruction_operand_t(float_end)
+            });
     }
 
     void instruction_block::pop(const instruction_operand_t& dest) {

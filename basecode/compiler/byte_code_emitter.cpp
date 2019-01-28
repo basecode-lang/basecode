@@ -1062,6 +1062,8 @@ namespace basecode::compiler {
                     }
                 }
 
+                // XXX: need to carve out a temp local if this procedure_type has
+                //      a return value.
                 block->push_locals(assembler);
 
                 auto arg_list = proc_call->arguments();
