@@ -493,13 +493,11 @@ namespace basecode::vm {
         none,
         label,
         local,
-        range,
         offset,
     };
 
     struct assembler_named_ref_t {
-        std::string name1;
-        std::string name2;
+        std::string name;
         vm::op_sizes size = vm::op_sizes::qword;
         assembler_named_ref_type_t type = assembler_named_ref_type_t::none;
     };
@@ -589,7 +587,8 @@ namespace basecode::vm {
         flags_t type = flags::reg | flags::integer;
         operand_value_alias_t value {};
 
-        assembler_named_ref_t* fixup_ref = nullptr;
+        assembler_named_ref_t* fixup_ref1 = nullptr;
+        assembler_named_ref_t* fixup_ref2 = nullptr;
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -823,6 +822,8 @@ namespace basecode::vm {
         imm_f64,
         imm_uint,
         imm_sint,
+        reg_range,
+        named_ref_range
     };
 
     struct offset_ref_t {
@@ -831,6 +832,16 @@ namespace basecode::vm {
 
     struct local_ref_t {
         std::string name;
+    };
+
+    struct register_range_t {
+        register_t begin {};
+        register_t end {};
+    };
+
+    struct named_ref_range_t {
+        assembler_named_ref_t* begin = nullptr;
+        assembler_named_ref_t* end = nullptr;
     };
 
     struct instruction_operand_t {
@@ -863,6 +874,10 @@ namespace basecode::vm {
         explicit instruction_operand_t(double immediate);
 
         explicit instruction_operand_t(assembler_named_ref_t* ref);
+
+        explicit instruction_operand_t(const register_range_t& range);
+
+        explicit instruction_operand_t(const named_ref_range_t& range);
 
         bool is_empty() const {
             return _type == instruction_operand_type_t::empty;
@@ -906,23 +921,6 @@ namespace basecode::vm {
         boost::any _data;
         op_sizes _size = op_sizes::qword;
         instruction_operand_type_t _type;
-    };
-
-    struct register_range_t {
-        bool empty() const {
-            if (begin.type() != instruction_operand_type_t::reg
-            ||  end.type() != instruction_operand_type_t::reg) {
-                return true;
-            }
-
-            auto begin_reg = begin.data<register_t>();
-            auto end_reg = end.data<register_t>();
-
-            return std::abs(end_reg->number - begin_reg->number) == 0;
-        }
-
-        instruction_operand_t begin {};
-        instruction_operand_t end {};
     };
 
     ///////////////////////////////////////////////////////////////////////////

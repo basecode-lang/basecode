@@ -36,8 +36,8 @@ namespace basecode::vm {
                 }
             } else {
                 auto working_size = operand.size;
-                if (operand.fixup_ref != nullptr) {
-                    working_size = operand.fixup_ref->size;
+                if (operand.fixup_ref1 != nullptr) {
+                    working_size = operand.fixup_ref1->size;
                 }
                 switch (working_size) {
                     case op_sizes::none:

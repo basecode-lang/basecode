@@ -95,14 +95,9 @@ namespace basecode::vm {
                 op.size = op_sizes::qword;
                 op.type = operand_encoding_t::flags::none;
                 op.value.u = 0;
-                op.fixup_ref = *operand.data<assembler_named_ref_t*>();
-                switch (op.fixup_ref->type) {
+                op.fixup_ref1 = *operand.data<assembler_named_ref_t*>();
+                switch (op.fixup_ref1->type) {
                     case assembler_named_ref_type_t::none: {
-                        break;
-                    }
-                    case assembler_named_ref_type_t::range: {
-                        op.type |= operand_encoding_t::flags::reg
-                            | operand_encoding_t::flags::range;
                         break;
                     }
                     case assembler_named_ref_type_t::local: {
@@ -135,6 +130,22 @@ namespace basecode::vm {
                 op.type = operand_encoding_t::flags::integer
                     | operand_encoding_t::flags::constant;
                 op.value.u = imm_value;
+                break;
+            }
+            case instruction_operand_type_t::reg_range: {
+                auto range = *operand.data<register_range_t>();
+                op.type = operand_encoding_t::flags::reg | operand_encoding_t::flags::range;
+                if (range.begin.type == register_type_t::integer)
+                    op.type |= operand_encoding_t::flags::integer;
+                op.value.u = static_cast<uint64_t>(static_cast<uint16_t>(range.begin.number) << 8
+                                                   | (static_cast<uint16_t>(range.end.number) & 0x00ff));
+                break;
+            }
+            case instruction_operand_type_t::named_ref_range: {
+                auto range = *operand.data<named_ref_range_t>();
+                op.type = operand_encoding_t::flags::reg | operand_encoding_t::flags::range;
+                op.fixup_ref1 = range.begin;
+                op.fixup_ref2 = range.end;
                 break;
             }
             default: {
@@ -545,97 +556,39 @@ namespace basecode::vm {
     }
 
     void instruction_block::pushm(
-            const register_range_t& first,
-            const register_range_t& second,
-            const register_range_t& third,
-            const register_range_t& fourth) {
+            const instruction_operand_t& first,
+            const instruction_operand_t& second,
+            const instruction_operand_t& third,
+            const instruction_operand_t& fourth) {
         instruction_t op;
+
         op.operands_count = 1;
+        if (!second.is_empty()) op.operands_count++;
+        if (!third.is_empty())  op.operands_count++;
+        if (!fourth.is_empty()) op.operands_count++;
+
         op.op = op_codes::pushm;
         op.size = op_sizes::qword;
-
-        auto first_end = first.end.data<register_t>();
-        auto first_begin = first.begin.data<register_t>();
-        op.operands[0].type = operand_encoding_t::flags::reg | operand_encoding_t::flags::range;
-        if (first_begin->type == register_type_t::integer)
-            op.operands[0].type |= operand_encoding_t::flags::integer;
-        op.operands[0].value.u = static_cast<uint64_t>((static_cast<uint16_t>(first_begin->number) << 8)
-                                                       | (static_cast<uint16_t>(first_end->number) & 0x00ff));
-
-        if (!second.empty()) {
-            auto second_end = second.end.data<register_t>();
-            auto second_begin = second.begin.data<register_t>();
-            op.operands[1].type = operand_encoding_t::flags::reg | operand_encoding_t::flags::range;
-            if (second_begin->type == register_type_t::integer)
-                op.operands[1].type |= operand_encoding_t::flags::integer;
-            op.operands[1].value.u = static_cast<uint64_t>((static_cast<uint16_t>(second_begin->number) << 8)
-                                                           | (static_cast<uint16_t>(second_end->number) & 0x00ff));
-            op.operands_count++;
-        }
-
-        if (!third.empty()) {
-            auto third_end = third.end.data<register_t>();
-            auto third_begin = third.begin.data<register_t>();
-            op.operands[2].type = operand_encoding_t::flags::reg | operand_encoding_t::flags::range;
-            if (third_begin->type == register_type_t::integer)
-                op.operands[2].type |= operand_encoding_t::flags::integer;
-            op.operands[2].value.u = static_cast<uint64_t>((static_cast<uint16_t>(third_begin->number) << 8)
-                                                           | (static_cast<uint16_t>(third_end->number) & 0x00ff));
-            op.operands_count++;
-        }
-
-        if (!fourth.empty()) {
-            auto fourth_end = third.end.data<register_t>();
-            auto fourth_begin = third.begin.data<register_t>();
-            op.operands[3].type = operand_encoding_t::flags::reg | operand_encoding_t::flags::range;
-            if (fourth_begin->type == register_type_t::integer)
-                op.operands[3].type |= operand_encoding_t::flags::integer;
-            op.operands[3].value.u = static_cast<uint64_t>((static_cast<uint16_t>(fourth_begin->number) << 8)
-                                                           | (static_cast<uint16_t>(fourth_end->number) & 0x00ff));
-            op.operands_count++;
-        }
-
+        apply_operand(first, op, 0);
+        apply_operand(second, op, 1);
+        apply_operand(third, op, 2);
+        apply_operand(fourth, op, 3);
         make_block_entry(op);
     }
 
     void instruction_block::push_locals(vm::assembler& assembler) {
-        ssize_t ints = 0;
-        ssize_t floats = 0;
-        for (const auto& kvp : _locals) {
-            auto local = _entries[kvp.second].data<local_t>();
-            if (local->type == vm::local_type_t::integer)
-                ints++;
-            else
-                floats++;
-        }
-
-        register_t int_begin {
-            .number = static_cast<registers_t>(0),
-            .type = register_type_t::integer
-        };
-        register_t int_end {
-            .number = static_cast<registers_t>(std::max<ssize_t>(0, ints - 1)),
-            .type = register_type_t::integer
-        };
-
-        register_t float_begin {
-            .number = static_cast<registers_t>(0),
-            .type = register_type_t::floating_point
-        };
-        register_t float_end {
-            .number = static_cast<registers_t>(std::max<ssize_t>(0, floats - 1)),
-            .type = register_type_t::floating_point
-        };
-
-        pushm(
-            register_range_t{
-                .begin = vm::instruction_operand_t(int_begin),
-                .end = vm::instruction_operand_t(int_end)
-            },
-            register_range_t{
-                .begin = vm::instruction_operand_t(float_begin),
-                .end = vm::instruction_operand_t(float_end)
-            });
+        // XXX: this works but the order of locals in the map isn't going to work
+        //      for clean ranges.  i think the best option is to put a sort value on
+        //      the local_t that goes into the instruction block entry.  then i can
+        //      pull these out and sort them to get the true first and last named
+        //      locals.
+        auto begin = assembler.make_named_ref(
+            assembler_named_ref_type_t::local,
+            (*_locals.crbegin()).first);
+        auto end = assembler.make_named_ref(
+            assembler_named_ref_type_t::local,
+            (*_locals.cbegin()).first);
+        pushm(instruction_operand_t(named_ref_range_t{begin, end}));
     }
 
     void instruction_block::push(const instruction_operand_t& operand) {
@@ -738,97 +691,40 @@ namespace basecode::vm {
 
     // pop variations
     void instruction_block::popm(
-            const register_range_t& first,
-            const register_range_t& second,
-            const register_range_t& third,
-            const register_range_t& fourth) {
+            const instruction_operand_t& first,
+            const instruction_operand_t& second,
+            const instruction_operand_t& third,
+            const instruction_operand_t& fourth) {
         instruction_t op;
+
         op.operands_count = 1;
+        if (!second.is_empty()) op.operands_count++;
+        if (!third.is_empty())  op.operands_count++;
+        if (!fourth.is_empty()) op.operands_count++;
+
         op.op = op_codes::popm;
         op.size = op_sizes::qword;
-
-        auto first_end = first.end.data<register_t>();
-        auto first_begin = first.begin.data<register_t>();
-        op.operands[0].type = operand_encoding_t::flags::reg | operand_encoding_t::flags::range;
-        if (first_begin->type == register_type_t::integer)
-            op.operands[0].type |= operand_encoding_t::flags::integer;
-        op.operands[0].value.u = static_cast<uint64_t>((static_cast<uint16_t>(first_begin->number) << 8)
-                                                       | (static_cast<uint16_t>(first_end->number) & 0x00ff));
-
-        if (!second.empty()) {
-            auto second_end = second.end.data<register_t>();
-            auto second_begin = second.begin.data<register_t>();
-            op.operands[1].type = operand_encoding_t::flags::reg | operand_encoding_t::flags::range;
-            if (second_begin->type == register_type_t::integer)
-                op.operands[1].type |= operand_encoding_t::flags::integer;
-            op.operands[1].value.u = static_cast<uint64_t>((static_cast<uint16_t>(second_begin->number) << 8)
-                                                           | (static_cast<uint16_t>(second_end->number) & 0x00ff));
-            op.operands_count++;
-        }
-
-        if (!third.empty()) {
-            auto third_end = third.end.data<register_t>();
-            auto third_begin = third.begin.data<register_t>();
-            op.operands[2].type = operand_encoding_t::flags::reg | operand_encoding_t::flags::range;
-            if (third_begin->type == register_type_t::integer)
-                op.operands[2].type |= operand_encoding_t::flags::integer;
-            op.operands[2].value.u = static_cast<uint64_t>((static_cast<uint16_t>(third_begin->number) << 8)
-                                                           | (static_cast<uint16_t>(third_end->number) & 0x00ff));
-            op.operands_count++;
-        }
-
-        if (!fourth.empty()) {
-            auto fourth_end = third.end.data<register_t>();
-            auto fourth_begin = third.begin.data<register_t>();
-            op.operands[3].type = operand_encoding_t::flags::reg | operand_encoding_t::flags::range;
-            if (fourth_begin->type == register_type_t::integer)
-                op.operands[3].type |= operand_encoding_t::flags::integer;
-            op.operands[3].value.u = static_cast<uint64_t>((static_cast<uint16_t>(fourth_begin->number) << 8)
-                                                           | (static_cast<uint16_t>(fourth_end->number) & 0x00ff));
-            op.operands_count++;
-        }
+        apply_operand(first, op, 0);
+        apply_operand(second, op, 1);
+        apply_operand(third, op, 2);
+        apply_operand(fourth, op, 3);
 
         make_block_entry(op);
     }
 
     void instruction_block::pop_locals(vm::assembler& assembler) {
-        ssize_t ints = 0;
-        ssize_t floats = 0;
-        for (const auto& kvp : _locals) {
-            auto local = _entries[kvp.second].data<local_t>();
-            if (local->type == vm::local_type_t::integer)
-                ints++;
-            else
-                floats++;
-        }
-
-        register_t int_begin {
-            .number = static_cast<registers_t>(std::max<ssize_t>(0, ints - 1)),
-            .type = register_type_t::integer
-        };
-        register_t int_end {
-            .number = static_cast<registers_t>(0),
-            .type = register_type_t::integer
-        };
-
-        register_t float_begin {
-            .number = static_cast<registers_t>(std::max<ssize_t>(0, floats - 1)),
-            .type = register_type_t::floating_point
-        };
-        register_t float_end {
-            .number = static_cast<registers_t>(0),
-            .type = register_type_t::floating_point
-        };
-
-        popm(
-            register_range_t{
-                .begin = vm::instruction_operand_t(int_begin),
-                .end = vm::instruction_operand_t(int_end)
-            },
-            register_range_t{
-                .begin = vm::instruction_operand_t(float_begin),
-                .end = vm::instruction_operand_t(float_end)
-            });
+        // XXX: this works but the order of locals in the map isn't going to work
+        //      for clean ranges.  i think the best option is to put a sort value on
+        //      the local_t that goes into the instruction block entry.  then i can
+        //      pull these out and sort them to get the true first and last named
+        //      locals.
+        auto begin = assembler.make_named_ref(
+            assembler_named_ref_type_t::local,
+            (*_locals.cbegin()).first);
+        auto end = assembler.make_named_ref(
+            assembler_named_ref_type_t::local,
+            (*_locals.crbegin()).first);
+        popm(instruction_operand_t(named_ref_range_t{begin, end}));
     }
 
     void instruction_block::pop(const instruction_operand_t& dest) {

@@ -406,10 +406,10 @@ namespace basecode::vm {
 
         // push variations
         void pushm(
-            const register_range_t& first,
-            const register_range_t& second = {},
-            const register_range_t& third = {},
-            const register_range_t& fourth = {});
+            const instruction_operand_t& first,
+            const instruction_operand_t& second = {},
+            const instruction_operand_t& third = {},
+            const instruction_operand_t& fourth = {});
 
         void push_locals(vm::assembler& assembler);
 
@@ -417,10 +417,10 @@ namespace basecode::vm {
 
         // pop variations
         void popm(
-            const register_range_t& first,
-            const register_range_t& second = {},
-            const register_range_t& third = {},
-            const register_range_t& fourth = {});
+            const instruction_operand_t& first,
+            const instruction_operand_t& second = {},
+            const instruction_operand_t& third = {},
+            const instruction_operand_t& fourth = {});
 
         void pop_locals(vm::assembler& assembler);
 

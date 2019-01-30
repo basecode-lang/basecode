@@ -262,6 +262,14 @@ namespace basecode::vm {
                                                                               _type(instruction_operand_type_t::named_ref) {
     }
 
+    instruction_operand_t::instruction_operand_t(const register_range_t& range): _data(range),
+                                                                                 _type(instruction_operand_type_t::reg_range) {
+    }
+
+    instruction_operand_t::instruction_operand_t(const named_ref_range_t& range): _data(range),
+                                                                                  _type(instruction_operand_type_t::named_ref_range) {
+    }
+
     ///////////////////////////////////////////////////////////////////////////
 
     void assembly_symbol_result_t::data(const compiler_label_data_t& value) {
