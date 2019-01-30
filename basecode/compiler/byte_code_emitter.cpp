@@ -946,7 +946,7 @@ namespace basecode::compiler {
                     emit_result_t dest_arg_result {};
                     if (!emit_element(block, dest_arg, dest_arg_result))
                         return false;
-                    read(block, dest_arg_result, 1);
+                    read(block, dest_arg_result, 3);
 
                     emit_result_t value_arg_result {};
                     if (!emit_element(block, value_arg, value_arg_result))
@@ -956,7 +956,7 @@ namespace basecode::compiler {
                     emit_result_t length_arg_result {};
                     if (!emit_element(block, length_arg, length_arg_result))
                         return false;
-                    read(block, length_arg_result, 3);
+                    read(block, length_arg_result, 1);
 
                     block->fill(
                         vm::op_sizes::byte,
@@ -971,7 +971,7 @@ namespace basecode::compiler {
                     emit_result_t dest_arg_result {};
                     if (!emit_element(block, dest_arg, dest_arg_result))
                         return false;
-                    read(block, dest_arg_result, 1);
+                    read(block, dest_arg_result, 3);
 
                     emit_result_t src_arg_result {};
                     if (!emit_element(block, src_arg, src_arg_result))
@@ -981,7 +981,7 @@ namespace basecode::compiler {
                     emit_result_t size_arg_result {};
                     if (!emit_element(block, size_arg, size_arg_result))
                         return false;
-                    read(block, size_arg_result, 3);
+                    read(block, size_arg_result, 1);
 
                     block->copy(
                         vm::op_sizes::byte,
@@ -1048,23 +1048,23 @@ namespace basecode::compiler {
                 auto proc_call = dynamic_cast<compiler::procedure_call*>(e);
                 auto procedure_type = proc_call->procedure_type();
                 auto label = proc_call->identifier()->label_name();
+                auto is_foreign = procedure_type->is_foreign();
 
                 size_t target_size = 8;
-                number_class_t target_number_class {};
-
+                std::string return_temp_name {};
                 compiler::type* return_type = nullptr;
+
                 auto return_type_field = procedure_type->return_type();
                 if (return_type_field != nullptr) {
                     return_type = return_type_field->identifier()->type_ref()->type();
                     if (return_type != nullptr) {
                         target_size = return_type->size_in_bytes();
-                        target_number_class = return_type->number_class();
+                        return_temp_name = temp_local_name(return_type->number_class(), 1);
                     }
                 }
 
-                // XXX: need to carve out a temp local if this procedure_type has
-                //      a return value.
-                block->push_locals(assembler);
+                if (!is_foreign)
+                    block->push_locals(assembler, return_temp_name);
 
                 auto arg_list = proc_call->arguments();
                 if (arg_list != nullptr) {
@@ -1073,7 +1073,7 @@ namespace basecode::compiler {
                         return false;
                 }
 
-                if (proc_call->procedure_type()->is_foreign()) {
+                if (is_foreign) {
                     auto& ffi = _session.ffi();
 
                     auto func = ffi.find_function(procedure_type->foreign_address());
@@ -1129,10 +1129,10 @@ namespace basecode::compiler {
                         label)));
                 }
 
-                if (return_type_field != nullptr) {
+                if (!return_temp_name.empty()) {
                     vm::instruction_operand_t result_operand(assembler.make_named_ref(
                         vm::assembler_named_ref_type_t::local,
-                        temp_local_name(target_number_class, 1),
+                        return_temp_name,
                         vm::op_size_for_byte_size(target_size)));
                     result.operands.emplace_back(result_operand);
                     block->pop(result_operand);
@@ -1148,7 +1148,8 @@ namespace basecode::compiler {
                         vm::instruction_operand_t(arg_list->allocated_size(), vm::op_sizes::word));
                 }
 
-                block->pop_locals(assembler);
+                if (!is_foreign)
+                    block->pop_locals(assembler, return_temp_name);
 
                 break;
             }

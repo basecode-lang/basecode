@@ -125,7 +125,7 @@ namespace basecode::compiler {
 
     struct emit_result_t {
         infer_type_result_t type_result {};
-        std::vector<vm::instruction_operand_t> operands {};
+        vm::instruction_operand_list_t operands {};
     };
 
     using flow_control_value_map_t = std::unordered_map<uint16_t, boost::any>;

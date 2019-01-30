@@ -729,6 +729,8 @@ namespace basecode::vm {
         std::string frame_offset {};
     };
 
+    using local_list_t = std::vector<const local_t*>;
+
     struct frame_offset_t {
         int64_t offset;
         std::string name {};
@@ -922,6 +924,8 @@ namespace basecode::vm {
         op_sizes _size = op_sizes::qword;
         instruction_operand_type_t _type;
     };
+
+    using instruction_operand_list_t = std::vector<instruction_operand_t>;
 
     ///////////////////////////////////////////////////////////////////////////
 

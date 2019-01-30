@@ -529,66 +529,23 @@ namespace basecode::vm {
         _recent_inst_index = -1;
     }
 
-    void instruction_block::make_swap_instruction(
-            op_sizes size,
-            const register_t& dest_reg,
-            const register_t& src_reg) {
-        instruction_t swap_op;
-        swap_op.op = op_codes::swap;
-        swap_op.size = size;
-        swap_op.operands_count = 2;
-        swap_op.operands[0].type =
-            operand_encoding_t::flags::integer
-            | operand_encoding_t::flags::reg;
-        swap_op.operands[0].value.r = dest_reg.number;
-        swap_op.operands[1].type =
-            operand_encoding_t::flags::integer
-            | operand_encoding_t::flags::reg;
-        swap_op.operands[1].value.r = src_reg.number;
-        make_block_entry(swap_op);
-    }
-
-    // swap variations
-    void instruction_block::swap_reg_with_reg(
-            const register_t& dest_reg,
-            const register_t& src_reg) {
-        make_swap_instruction(dest_reg.size, dest_reg, src_reg);
-    }
-
-    void instruction_block::pushm(
-            const instruction_operand_t& first,
-            const instruction_operand_t& second,
-            const instruction_operand_t& third,
-            const instruction_operand_t& fourth) {
-        instruction_t op;
-
-        op.operands_count = 1;
-        if (!second.is_empty()) op.operands_count++;
-        if (!third.is_empty())  op.operands_count++;
-        if (!fourth.is_empty()) op.operands_count++;
-
-        op.op = op_codes::pushm;
-        op.size = op_sizes::qword;
-        apply_operand(first, op, 0);
-        apply_operand(second, op, 1);
-        apply_operand(third, op, 2);
-        apply_operand(fourth, op, 3);
-        make_block_entry(op);
-    }
-
-    void instruction_block::push_locals(vm::assembler& assembler) {
-        // XXX: this works but the order of locals in the map isn't going to work
-        //      for clean ranges.  i think the best option is to put a sort value on
-        //      the local_t that goes into the instruction block entry.  then i can
-        //      pull these out and sort them to get the true first and last named
-        //      locals.
-        auto begin = assembler.make_named_ref(
-            assembler_named_ref_type_t::local,
-            (*_locals.crbegin()).first);
-        auto end = assembler.make_named_ref(
-            assembler_named_ref_type_t::local,
-            (*_locals.cbegin()).first);
-        pushm(instruction_operand_t(named_ref_range_t{begin, end}));
+    // push variations
+    void instruction_block::push_locals(
+            vm::assembler& assembler,
+            const std::string& excluded) {
+        instruction_operand_list_t operands {};
+        grouped_named_ranges(
+            assembler,
+            sorted_locals(),
+            excluded,
+            operands);
+        if (operands.empty())
+            return;
+        if (operands.size() == 1) {
+            push(operands.front());
+        } else {
+            pushm(operands);
+        }
     }
 
     void instruction_block::push(const instruction_operand_t& operand) {
@@ -597,6 +554,27 @@ namespace basecode::vm {
         op.operands_count = 1;
         op.op = op_codes::push;
         apply_operand(operand, op, 0);
+        make_block_entry(op);
+    }
+
+    void instruction_block::pushm(const instruction_operand_list_t& operands) {
+        instruction_t op;
+        op.op = op_codes::pushm;
+        op.size = op_sizes::qword;
+        op.operands_count = operands.size();
+
+        size_t index = 0;
+        for (const auto& operand : operands) {
+            if (operand.is_empty()) {
+                op.operands_count--;
+                continue;
+            }
+            apply_operand(operand, op, index++);
+        }
+
+        if (op.operands_count == 0)
+            return;
+
         make_block_entry(op);
     }
 
@@ -663,68 +641,43 @@ namespace basecode::vm {
     }
 
     // inc variations
-    void instruction_block::inc(const register_t& reg) {
-        instruction_t inc_op;
-        inc_op.op = op_codes::inc;
-        inc_op.size = reg.size;
-        inc_op.operands_count = 1;
-        inc_op.operands[0].type = operand_encoding_t::flags::reg;
-        inc_op.operands[0].value.r = reg.number;
-        if (reg.type == register_type_t::integer)
-            inc_op.operands[0].type |= operand_encoding_t::flags::integer;
-
-        make_block_entry(inc_op);
-    }
-
-    // dec variations
-    void instruction_block::dec(const register_t& reg) {
-        instruction_t dec_op;
-        dec_op.op = op_codes::dec;
-        dec_op.size = reg.size;
-        dec_op.operands_count = 1;
-        dec_op.operands[0].type = operand_encoding_t::flags::reg;
-        dec_op.operands[0].value.r = reg.number;
-        if (reg.type == register_type_t::integer)
-            dec_op.operands[0].type |= operand_encoding_t::flags::integer;
-        make_block_entry(dec_op);
-    }
-
-    // pop variations
-    void instruction_block::popm(
-            const instruction_operand_t& first,
-            const instruction_operand_t& second,
-            const instruction_operand_t& third,
-            const instruction_operand_t& fourth) {
+    void instruction_block::inc(const instruction_operand_t& target) {
         instruction_t op;
-
         op.operands_count = 1;
-        if (!second.is_empty()) op.operands_count++;
-        if (!third.is_empty())  op.operands_count++;
-        if (!fourth.is_empty()) op.operands_count++;
-
-        op.op = op_codes::popm;
-        op.size = op_sizes::qword;
-        apply_operand(first, op, 0);
-        apply_operand(second, op, 1);
-        apply_operand(third, op, 2);
-        apply_operand(fourth, op, 3);
-
+        op.op = op_codes::inc;
+        op.size = target.size();
+        apply_operand(target, op, 0);
         make_block_entry(op);
     }
 
-    void instruction_block::pop_locals(vm::assembler& assembler) {
-        // XXX: this works but the order of locals in the map isn't going to work
-        //      for clean ranges.  i think the best option is to put a sort value on
-        //      the local_t that goes into the instruction block entry.  then i can
-        //      pull these out and sort them to get the true first and last named
-        //      locals.
-        auto begin = assembler.make_named_ref(
-            assembler_named_ref_type_t::local,
-            (*_locals.cbegin()).first);
-        auto end = assembler.make_named_ref(
-            assembler_named_ref_type_t::local,
-            (*_locals.crbegin()).first);
-        popm(instruction_operand_t(named_ref_range_t{begin, end}));
+    // dec variations
+    void instruction_block::dec(const instruction_operand_t& target) {
+        instruction_t op;
+        op.operands_count = 1;
+        op.op = op_codes::dec;
+        op.size = target.size();
+        apply_operand(target, op, 0);
+        make_block_entry(op);
+    }
+
+    // pop variations
+    void instruction_block::pop_locals(
+            vm::assembler& assembler,
+            const std::string& excluded) {
+        instruction_operand_list_t operands {};
+        grouped_named_ranges(
+            assembler,
+            sorted_locals(),
+            excluded,
+            operands,
+            true);
+        if (operands.empty())
+            return;
+        if (operands.size() == 1) {
+            pop(operands.front());
+        } else {
+            popm(operands);
+        }
     }
 
     void instruction_block::pop(const instruction_operand_t& dest) {
@@ -736,11 +689,25 @@ namespace basecode::vm {
         make_block_entry(op);
     }
 
-    // test & branch
-    void instruction_block::test_mask_branch_if_zero(
-            const register_t& value_reg,
-            const register_t& mask_reg,
-            const register_t& address_reg) {
+    void instruction_block::popm(const instruction_operand_list_t& operands) {
+        instruction_t op;
+        op.op = op_codes::popm;
+        op.size = op_sizes::qword;
+        op.operands_count = operands.size();
+
+        size_t index = 0;
+        for (const auto& operand : operands) {
+            if (operand.is_empty()) {
+                op.operands_count--;
+                continue;
+            }
+            apply_operand(operand, op, index++);
+        }
+
+        if (op.operands_count == 0)
+            return;
+
+        make_block_entry(op);
     }
 
     // setxx
@@ -850,24 +817,6 @@ namespace basecode::vm {
         op.operands_count = 1;
         apply_operand(dest, op, 0);
         make_block_entry(op);
-    }
-
-    void instruction_block::test_mask_branch_if_not_zero(
-            const register_t& value_reg,
-            const register_t& mask_reg,
-            const register_t& address_reg) {
-    }
-
-    void instruction_block::jump_indirect(const register_t& reg) {
-        instruction_t jmp_op;
-        jmp_op.op = op_codes::jmp;
-        jmp_op.size = op_sizes::qword;
-        jmp_op.operands_count = 1;
-        jmp_op.operands[0].type =
-            operand_encoding_t::flags::integer
-            | operand_encoding_t::flags::reg;
-        jmp_op.operands[0].value.r = reg.number;
-        make_block_entry(jmp_op);
     }
 
     instruction_block_type_t instruction_block::type() const {
@@ -993,6 +942,15 @@ namespace basecode::vm {
         op.op = op_codes::jmp;
         op.size = op_sizes::qword;
         op.operands_count = 1;
+        apply_operand(target, op, 0);
+        make_block_entry(op);
+    }
+
+    void instruction_block::jump_indirect(const instruction_operand_t& target) {
+        instruction_t op;
+        op.operands_count = 1;
+        op.op = op_codes::jmp;
+        op.size = op_sizes::qword;
         apply_operand(target, op, 0);
         make_block_entry(op);
     }
@@ -1145,10 +1103,115 @@ namespace basecode::vm {
         }
     }
 
+    void instruction_block::apply_local_range(
+            vm::assembler& assembler,
+            const local_list_t& locals,
+            instruction_operand_list_t& operands,
+            bool reverse) {
+        if (locals.empty())
+            return;
+        if (locals.size() == 1) {
+            operands.push_back(instruction_operand_t(assembler.make_named_ref(
+                assembler_named_ref_type_t::local,
+                std::string(locals.front()->name))));
+        } else {
+            const local_t* front = nullptr;
+            const local_t* back = nullptr;
+
+            if (reverse) {
+                front = locals.back();
+                back = locals.front();
+            } else {
+                front = locals.front();
+                back = locals.back();
+            }
+
+            auto begin = assembler.make_named_ref(
+                assembler_named_ref_type_t::local,
+                std::string(front->name));
+            auto end = assembler.make_named_ref(
+                assembler_named_ref_type_t::local,
+                std::string(back->name));
+            operands.push_back(instruction_operand_t(named_ref_range_t{
+                begin,
+                end}));
+        }
+    }
+
+    void instruction_block::grouped_named_ranges(
+            vm::assembler& assembler,
+            const local_list_t& locals,
+            const std::string& excluded,
+            instruction_operand_list_t& operands,
+            bool reverse) {
+        std::vector<local_list_t> ints {};
+        std::vector<local_list_t> floats {};
+
+        ints.emplace_back();
+        floats.emplace_back();
+
+        for (const auto local : locals) {
+            if (local->type == local_type_t::integer) {
+                if (local->name == excluded) {
+                    ints.emplace_back();
+                    continue;
+                }
+                ints.back().emplace_back(local);
+            } else {
+                if (local->name == excluded) {
+                    floats.emplace_back();
+                    continue;
+                }
+                floats.back().emplace_back(local);
+            }
+        }
+
+        if (reverse) {
+            std::reverse(std::begin(ints), std::end(ints));
+            std::reverse(std::begin(floats), std::end(floats));
+        }
+
+        for (const auto& list : ints)
+            apply_local_range(assembler, list, operands, reverse);
+
+        for (const auto& list : floats)
+            apply_local_range(assembler, list, operands, reverse);
+    }
+
     void instruction_block::label(vm::label* value) {
         make_block_entry(label_t {
             .instance = value
         });
+    }
+
+    local_list_t instruction_block::sorted_locals() const {
+        struct local_order_t {
+            local_order_t(
+                size_t index,
+                const std::string& name) : index(index), name(name) {
+            }
+
+            size_t index;
+            std::string_view name;
+        };
+
+        std::vector<local_order_t> list {};
+        for (const auto& kvp : _locals)
+            list.emplace_back(kvp.second, kvp.first);
+
+        std::sort(
+            std::begin(list),
+            std::end(list),
+            [](const auto& lhs, const auto& rhs) {
+                return lhs.index < rhs.index;
+            });
+
+        local_list_t locals {};
+        for (const auto& item : list) {
+            locals.emplace_back(_entries[item.index].data<local_t>());
+        }
+
+        return locals;
     }
 
     std::vector<block_entry_t>& instruction_block::entries() {

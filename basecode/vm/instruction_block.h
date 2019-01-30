@@ -304,10 +304,10 @@ namespace basecode::vm {
         void ble(const instruction_operand_t& dest);
 
         // inc variations
-        void inc(const register_t& reg);
+        void inc(const instruction_operand_t& target);
 
         // dec variations
-        void dec(const register_t& reg);
+        void dec(const instruction_operand_t& target);
 
         // pow variations
         void pow(
@@ -387,44 +387,23 @@ namespace basecode::vm {
             const instruction_operand_t& dividend,
             const instruction_operand_t& divisor);
 
-        // swap variations
-        void swap_reg_with_reg(
-            const register_t& dest_reg,
-            const register_t& src_reg);
-
-        // test mask for zero and branch
-        void test_mask_branch_if_zero(
-            const register_t& value_reg,
-            const register_t& mask_reg,
-            const register_t& address_reg);
-
-        // test mask for non-zero and branch
-        void test_mask_branch_if_not_zero(
-            const register_t& value_reg,
-            const register_t& mask_reg,
-            const register_t& address_reg);
-
         // push variations
-        void pushm(
-            const instruction_operand_t& first,
-            const instruction_operand_t& second = {},
-            const instruction_operand_t& third = {},
-            const instruction_operand_t& fourth = {});
-
-        void push_locals(vm::assembler& assembler);
+        void push_locals(
+            vm::assembler& assembler,
+            const std::string& excluded = {});
 
         void push(const instruction_operand_t& operand);
 
-        // pop variations
-        void popm(
-            const instruction_operand_t& first,
-            const instruction_operand_t& second = {},
-            const instruction_operand_t& third = {},
-            const instruction_operand_t& fourth = {});
+        void pushm(const instruction_operand_list_t& operands);
 
-        void pop_locals(vm::assembler& assembler);
+        // pop variations
+        void pop_locals(
+            vm::assembler& assembler,
+            const std::string& excluded = {});
 
         void pop(const instruction_operand_t& dest);
+
+        void popm(const instruction_operand_list_t& operands);
 
         // calls & jumps
         void call(const instruction_operand_t& target);
@@ -433,9 +412,9 @@ namespace basecode::vm {
             const instruction_operand_t& address,
             const instruction_operand_t& signature_id = {});
 
-        void jump_indirect(const register_t& reg);
-
         void jump_direct(const instruction_operand_t& target);
+
+        void jump_indirect(const instruction_operand_t& target);
 
     private:
         void make_set(
@@ -453,10 +432,20 @@ namespace basecode::vm {
             instruction_t& encoding,
             size_t operand_index);
 
-        void make_swap_instruction(
-            op_sizes size,
-            const register_t& dest_reg,
-            const register_t& src_reg);
+        void apply_local_range(
+            vm::assembler& assembler,
+            const local_list_t& locals,
+            instruction_operand_list_t& operands,
+            bool reverse = false);
+
+        void grouped_named_ranges(
+            vm::assembler& assembler,
+            const local_list_t& locals,
+            const std::string& excluded,
+            instruction_operand_list_t& operands,
+            bool reverse = false);
+
+        local_list_t sorted_locals() const;
 
     private:
         common::id_t _id;
