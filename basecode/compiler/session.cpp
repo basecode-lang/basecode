@@ -81,7 +81,6 @@ namespace basecode::compiler {
     }
 
     bool session::compile() {
-        auto& top_level_stack = _scope_manager->top_level_stack();
         auto& listing = _assembler->listing();
 
         time_task(
@@ -101,10 +100,8 @@ namespace basecode::compiler {
             [&]() {
                 _program->block(_scope_manager->push_new_block());
                 _program->block()->parent_element(_program);
-                top_level_stack.push(_program->block());
                 return true;
             });
-        defer(top_level_stack.pop());
 
         time_task(
             "compiler: core types",
@@ -1026,13 +1023,13 @@ namespace basecode::compiler {
                             if (module != nullptr) {
                                 module->source_file(source_file);
                                 auto current_module = _scope_manager->current_module();
-                                if (current_module == nullptr)
-                                    module->parent_element(_program);
-                                else
-                                    module->parent_element(current_module);
-                                module->is_root(is_root);
-                                if (is_root)
+                                if (current_module == nullptr) {
+                                    module->is_root(true);
                                     _program->module(module);
+                                    module->parent_element(_program);
+                                } else {
+                                    module->parent_element(current_module);
+                                }
                                 if (!_ast_evaluator->compile_module(module_node, module))
                                     return false;
                             }

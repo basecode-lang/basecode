@@ -19,21 +19,30 @@ namespace basecode::compiler {
     scope_manager::scope_manager(compiler::session& session) : _session(session) {
     }
 
-    bool scope_manager::visit_blocks(
+    bool scope_manager::visit_child_blocks(
             common::result& r,
             const block_visitor_callable& callable,
             compiler::block* root_block) {
-        std::function<bool (compiler::block*)> recursive_execute =
-            [&](compiler::block* scope) -> bool {
-                if (!callable(scope))
-                    return false;
-                for (auto block : scope->blocks()) {
-                    if (!recursive_execute(block))
-                        return false;
-                }
-                return true;
-            };
-        return recursive_execute(root_block != nullptr ? root_block : _top_level_stack.top());
+        if (!callable)
+            return false;
+
+        root_block = root_block != nullptr ? root_block : _scope_stack.top();
+
+        std::stack<compiler::block*> blocks {};
+        blocks.push(root_block);
+
+        while (!blocks.empty()) {
+            auto current = blocks.top();
+            blocks.pop();
+
+            if (!callable(current))
+                return false;
+
+            for (auto block : current->blocks())
+                blocks.push(block);
+        }
+
+        return true;
     }
 
     compiler::type* scope_manager::find_type(
@@ -57,10 +66,6 @@ namespace basecode::compiler {
 
     module_stack_t& scope_manager::module_stack() {
         return _module_stack;
-    }
-
-    block_stack_t& scope_manager::top_level_stack() {
-        return _top_level_stack;
     }
 
     compiler::block* scope_manager::push_new_block() {
@@ -227,7 +232,9 @@ namespace basecode::compiler {
             compiler::block* scope,
             const namespace_visitor_callable& callable) const {
         auto non_const_this = const_cast<compiler::scope_manager*>(this);
-        auto block_scope = scope != nullptr ? scope : non_const_this->current_top_level();
+        auto block_scope = scope != nullptr ?
+            scope :
+            non_const_this->current_module()->scope();
         for (const auto& namespace_name : symbol.namespaces) {
             auto vars = block_scope->identifiers().find(namespace_name);
             if (vars.empty() || vars.front()->initializer() == nullptr)
@@ -244,12 +251,6 @@ namespace basecode::compiler {
             }
         }
         return callable(block_scope);
-    }
-
-    compiler::block* scope_manager::current_top_level() {
-        if (_top_level_stack.empty())
-            return nullptr;
-        return _top_level_stack.top();
     }
 
     compiler::block* scope_manager::current_scope() const {

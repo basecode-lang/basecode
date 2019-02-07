@@ -22,7 +22,7 @@ namespace basecode::compiler {
     public:
         explicit scope_manager(compiler::session& session);
 
-        bool visit_blocks(
+        bool visit_child_blocks(
             common::result& r,
             const block_visitor_callable& callable,
             compiler::block* root_block = nullptr);
@@ -35,21 +35,17 @@ namespace basecode::compiler {
 
         module_stack_t& module_stack();
 
-        block_stack_t& top_level_stack();
-
         compiler::block* push_new_block();
 
         compiler::module* current_module();
 
-        visitor_result_t walk_parent_scopes(
-            compiler::block* scope,
-            const scope_visitor_callable& callable) const;
-
-        compiler::block* current_top_level();
-
         identifier_list_t find_identifier(
             const qualified_symbol_t& symbol,
             compiler::block* scope = nullptr) const;
+
+        visitor_result_t walk_parent_scopes(
+            compiler::block* scope,
+            const scope_visitor_callable& callable) const;
 
         compiler::array_type* find_array_type(
             compiler::type* entry_type,
@@ -93,7 +89,6 @@ namespace basecode::compiler {
         compiler::session& _session;
         block_stack_t _scope_stack {};
         module_stack_t _module_stack {};
-        block_stack_t _top_level_stack {};
         identifier_list_t _identifiers_with_unknown_types {};
         identifier_reference_list_t _unresolved_identifier_references {};
     };

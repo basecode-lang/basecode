@@ -1,7 +1,7 @@
 core :: module("../modules/core");
 
 text: string;
-assign_string(address_of(text), "hello world!", 12);
+core::assign_string(address_of(text), "hello world!", 12);
 
 vector3 :: struct {
     x: s32;
@@ -20,57 +20,57 @@ entity :: struct {
 };
 
 #run {
-    print("text.length   := %d\n", text.length);
-    print("text.capacity := %d\n", text.capacity);
-    print("text.data     := $%08x\n", text.data);
+    core::print("text.length   := %d\n", text.length);
+    core::print("text.capacity := %d\n", text.capacity);
+    core::print("text.data     := $%08x\n", text.data);
 
     content := text.data;
-    print("content       := $%08x\n", content);
+    core::print("content       := $%08x\n", content);
 
     i: u32 := 0;
     while i < text.length {
-        print("%c", content^);
+        core::print("%c", content^);
         content +:= 1;
         i +:= 1;
     };
 
     {
         content := text.data;
-        for i in range<u32>(0, text.length, kind := ranges::kinds::EXCLUSIVE) {
-            print("%c", content^);
+        for i in range<u32>(0, text.length, kind := core::ranges::kinds::EXCLUSIVE) {
+            core::print("%c", content^);
             content +:= 1;
         };
     };
 
-    print("\n");
+    core::print("\n");
 
     player: entity;
     player.pos.x := 10;
     player.pos.y := 5;
     player.pos.z := -6;
 
-    print("player.pos.x := %d\n", player.pos.x);
-    print("player.pos.y := %d\n", player.pos.y);
-    print("player.pos.z := %hhd\n", player.pos.z);
+    core::print("player.pos.x := %d\n", player.pos.x);
+    core::print("player.pos.y := %d\n", player.pos.y);
+    core::print("player.pos.z := %hhd\n", player.pos.z);
 
-    print("player.dir.x := %d\n", player.dir.x);
-    print("player.dir.y := %d\n", player.dir.y);
-    print("player.dir.z := %d\n", player.dir.z);
+    core::print("player.dir.x := %d\n", player.dir.x);
+    core::print("player.dir.y := %d\n", player.dir.y);
+    core::print("player.dir.z := %d\n", player.dir.z);
 
-    print("player.cls.name.length   := %d\n", player.cls.name.length);
-    print("player.cls.name.capacity := %d\n", player.cls.name.capacity);
+    core::print("player.cls.name.length   := %d\n", player.cls.name.length);
+    core::print("player.cls.name.capacity := %d\n", player.cls.name.capacity);
 
     player_ptr: ^entity := address_of(player);
 
-    print("before: player_ptr.pos.x := %d\n", player_ptr.pos.x);
-    print("before: player_ptr.pos.y := %d\n", player_ptr.pos.y);
-    print("before: player_ptr.pos.z := %hhd\n", player_ptr.pos.z);
+    core::print("before: player_ptr.pos.x := %d\n", player_ptr.pos.x);
+    core::print("before: player_ptr.pos.y := %d\n", player_ptr.pos.y);
+    core::print("before: player_ptr.pos.z := %hhd\n", player_ptr.pos.z);
 
     player_ptr.pos.x := 100;
     player_ptr.pos.y := 55;
     player_ptr.pos.z := -106;
 
-    print("after: player_ptr.pos.x := %d\n", player_ptr.pos.x);
-    print("after: player_ptr.pos.y := %d\n", player_ptr.pos.y);
-    print("after: player_ptr.pos.z := %hhd\n", player_ptr.pos.z);
+    core::print("after: player_ptr.pos.x := %d\n", player_ptr.pos.x);
+    core::print("after: player_ptr.pos.y := %d\n", player_ptr.pos.y);
+    core::print("after: player_ptr.pos.z := %hhd\n", player_ptr.pos.z);
 };

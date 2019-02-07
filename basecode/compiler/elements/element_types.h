@@ -17,6 +17,7 @@
 #include <vector>
 #include <string>
 #include <memory>
+#include <unordered_set>
 #include <unordered_map>
 #include <parser/token.h>
 #include <common/id_pool.h>
@@ -130,7 +131,9 @@ namespace basecode::compiler {
     using const_attribute_list_t = std::vector<const attribute*>;
     using procedure_instance_set_t = std::set<procedure_instance*>;
     using procedure_instance_list_t = std::vector<procedure_instance*>;
-    using identifier_reference_list_t = std::vector<identifier_reference*>;
+    using identifier_reference_list_t = std::vector<compiler::identifier_reference*>;
+
+    using element_id_set_t = std::unordered_set<common::id_t>;
 
     ///////////////////////////////////////////////////////////////////////////
 

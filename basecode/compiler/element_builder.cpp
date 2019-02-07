@@ -202,7 +202,23 @@ namespace basecode::compiler {
             make_type_reference(parent_scope, type_name, base_type));
         if (!type->initialize(_session))
             return nullptr;
+        parent_scope->types().add(type);
+
+        auto symbol = make_symbol(parent_scope, type->symbol()->name());
+        symbol->constant(true);
+
+        auto identifier = make_identifier(
+            parent_scope,
+            symbol,
+            nullptr);
+        identifier->type_ref(make_type_reference(
+            parent_scope,
+            type_name,
+            type));
+        parent_scope->identifiers().add(identifier);
+
         _session.elements().add(type);
+
         return type;
     }
 
@@ -972,9 +988,15 @@ namespace basecode::compiler {
             parent_scope,
             symbol,
             identifier);
+
         _session.elements().add(reference);
-        if (!reference->resolved() && flag_as_unresolved)
-            unresolveds.emplace_back(reference);
+
+        if (!reference->resolved()) {
+            if (flag_as_unresolved)
+                unresolveds.emplace_back(reference);
+        }
+
+        parent_scope->references().insert(reference->id());
         reference->location(symbol.location);
         return reference;
     }

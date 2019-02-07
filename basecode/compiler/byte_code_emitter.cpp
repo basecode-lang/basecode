@@ -210,10 +210,6 @@ namespace basecode::compiler {
             compiler::block* block,
             identifier_list_t& locals,
             temp_local_list_t& temp_locals) {
-        const auto excluded_types = element_type_set_t{
-            element_type_t::namespace_type,
-            element_type_t::module_type
-        };
         const auto excluded_parent_types = element_type_set_t{
             element_type_t::directive,
         };
@@ -223,31 +219,6 @@ namespace basecode::compiler {
                 if (!begin_stack_frame(basic_block, block, locals, temp_locals))
                     return false;
             } else {
-                _session.scope_manager().visit_blocks(
-                    _session.result(),
-                    [&](compiler::block* scope) {
-                        if (_session.scope_manager().within_local_scope(scope))
-                            return true;
-
-                        for (auto var : scope->identifiers().as_list()) {
-                            if (var->is_constant())
-                                continue;
-
-                            auto var_type = var->type_ref()->type();
-                            if (var_type->is_proc_type()
-                            ||  var_type->is_type_one_of(excluded_types)) {
-                                continue;
-                            }
-
-                            basic_block->local(
-                                number_class_to_local_type(var_type->number_class()),
-                                var->symbol()->name());
-                            locals.emplace_back(var);
-                        }
-                        return true;
-                    },
-                    block);
-
                 for (const auto& temp : temp_locals)
                     basic_block->local(temp.type, temp.name, temp.offset);
 
@@ -1793,7 +1764,7 @@ namespace basecode::compiler {
             temp_local_list_t& locals) {
         temp_count_result_t result {};
 
-        auto success = _session.scope_manager().visit_blocks(
+        auto success = _session.scope_manager().visit_child_blocks(
             _session.result(),
             [&](compiler::block* scope) {
                 for (auto stmt : scope->statements()) {
@@ -1971,6 +1942,11 @@ namespace basecode::compiler {
     }
 
     bool byte_code_emitter::emit_implicit_blocks() {
+        const auto excluded_types = element_type_set_t{
+            element_type_t::namespace_type,
+            element_type_t::module_type
+        };
+
         auto& assembler = _session.assembler();
 
         block_list_t implicit_blocks {};
@@ -1979,14 +1955,15 @@ namespace basecode::compiler {
             .find_by_type<compiler::module_reference>(element_type_t::module_reference);
         for (auto mod_ref : module_refs) {
             auto block = mod_ref->reference()->scope();
-            // XXX: how can we check a block to determine if it will emit byte code?
-            //      if it won't, then don't add it here
+            if (block->statements().empty())
+                continue;
             implicit_blocks.emplace_back(block);
         }
         implicit_blocks.emplace_back(_session.program().module()->scope());
 
         for (auto block : implicit_blocks) {
             auto implicit_block = assembler.make_basic_block();
+            push_block(implicit_block);
 
             auto parent_element = block->parent_element();
             switch (parent_element->element_type()) {
@@ -2010,11 +1987,40 @@ namespace basecode::compiler {
 
             implicit_block->label(assembler.make_label(block->label_name()));
             implicit_block->frame_offset("locals", -8);
+            identifier_list_t locals {};
 
-            push_block(implicit_block);
-            emit_result_t result {};
-            if (!emit_element(implicit_block, block, result))
+            _session.scope_manager().visit_child_blocks(
+                _session.result(),
+                [&](compiler::block* scope) {
+                    if (_session.scope_manager().within_local_scope(scope))
+                        return true;
+
+                    for (auto var : scope->identifiers().as_list()) {
+                        if (var->is_constant())
+                            continue;
+
+                        auto var_type = var->type_ref()->type();
+                        if (var_type->is_proc_type()
+                        || var_type->is_type_one_of(excluded_types)) {
+                            continue;
+                        }
+
+                        implicit_block->local(
+                            number_class_to_local_type(var_type->number_class()),
+                            var->symbol()->name());
+                        locals.emplace_back(var);
+                    }
+                    return true;
+                },
+                block);
+
+            temp_local_list_t temp_locals {};
+            if (!make_temp_locals(block, temp_locals))
                 return false;
+
+            if (!emit_block(implicit_block, block, locals, temp_locals))
+                return false;
+
             pop_block();
         }
 
@@ -2519,13 +2525,16 @@ namespace basecode::compiler {
         for (const auto& temp : temp_locals)
             basic_block->local(temp.type, temp.name);
 
-        scope_manager.visit_blocks(
+        scope_manager.visit_child_blocks(
             _session.result(),
             [&](compiler::block* scope) {
                 if (scope->is_parent_type_one_of({element_type_t::proc_type}))
                     return true;
 
                 for (auto var : scope->identifiers().as_list()) {
+                    if (var->is_constant())
+                        continue;
+
                     auto type = var->type_ref()->type();
                     if (type->is_proc_type())
                         continue;

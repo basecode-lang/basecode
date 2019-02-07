@@ -36,6 +36,8 @@ namespace basecode::compiler {
 
         statement_list_t& statements();
 
+        element_id_set_t& references();
+
         identifier_map_t& identifiers();
 
         void has_stack_frame(bool value);
@@ -50,6 +52,7 @@ namespace basecode::compiler {
         bool _has_stack_frame = false;
         defer_stack_t _defer_stack {};
         statement_list_t _statements {};
+        element_id_set_t _references {};
         identifier_map_t _identifiers {};
     };
 

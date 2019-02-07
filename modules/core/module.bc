@@ -9,17 +9,17 @@
 //
 // ----------------------------------------------------------------------------
 
-intrinsics_module :: module("intrinsics.bc");
-import public from intrinsics_module;
+// N.B. this module must be imported first so the compiler
+//      recognizes intrinsic procedures.
+intrinsics  :: module("intrinsics.bc");
 
-types_module :: module("types.bc");
-import public from types_module;
+types       :: module("types.bc");
+maths       :: module("math.bc");
+assert      :: module("assert.bc");
+compiler    :: module("compiler.bc");
 
-math_module :: module("math.bc");
-import public from math_module;
-
-compiler_module :: module("compiler.bc");
-import public from compiler_module;
-
-assert_module :: module("assert.bc");
-import public from assert_module;
+import public from maths;
+import public from types;
+import public from assert;
+import public from compiler;
+import public from intrinsics;

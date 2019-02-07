@@ -27,6 +27,9 @@ public :: ns {
 
 internal :: ns {
 
+    import public::ranges::kinds;
+    import public::ranges::orders;
+
     @name "copy";
     #intrinsic copy_proc :: proc<T>(
         dest: ^T,
@@ -38,9 +41,6 @@ internal :: ns {
         dest:   ^T,
         value:  u8,
         length: u64);
-
-    import public::ranges::kinds;
-    import public::ranges::orders;
 
     @name "range";
     #intrinsic range_proc :: proc<T>(

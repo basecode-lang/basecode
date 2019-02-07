@@ -219,7 +219,7 @@ namespace basecode::compiler {
 
                     if (proc_type->return_type() != nullptr) {
                         auto has_return = false;
-                        scope_manager.visit_blocks(
+                        scope_manager.visit_child_blocks(
                             _session.result(),
                             [&](compiler::block* scope) {
                                 if (has_return)
@@ -634,7 +634,7 @@ namespace basecode::compiler {
         auto& scope_manager = _session.scope_manager();
 
         auto scope = symbol->is_qualified() ?
-            scope_manager.current_top_level() :
+            scope_manager.current_module()->scope() :
             parent_scope != nullptr ? parent_scope : scope_manager.current_scope();
 
         scope = add_namespaces_to_scope(context, node, symbol, scope);
@@ -814,7 +814,7 @@ namespace basecode::compiler {
                     scope,
                     operator_type_t::assignment,
                     builder.make_identifier_reference(
-                        parent_scope,
+                        scope,
                         new_identifier->symbol()->qualified_symbol(),
                         new_identifier),
                     init_expr);
@@ -928,7 +928,6 @@ namespace basecode::compiler {
         auto module = builder.make_module(
             scope_manager.current_scope(),
             builder.make_block(scope_manager.current_scope()));
-        scope_manager.current_scope()->blocks().push_back(module->scope());
 
         result.element = module;
 
@@ -2546,23 +2545,23 @@ namespace basecode::compiler {
             const syntax::ast_node_t* node,
             compiler::module* module) {
         auto& scope_manager = _session.scope_manager();
+        auto& module_stack = scope_manager.module_stack();
+        module_stack.push(module);
 
-        scope_manager.push_scope(module->scope());
-        scope_manager.top_level_stack().push(module->scope());
-        scope_manager.module_stack().push(module);
+        auto module_scope = module->scope();
+        scope_manager.push_scope(module_scope);
+        defer({
+            scope_manager.pop_scope();
+            module_stack.pop();
+        });
 
         for (auto child : node->children) {
             auto expr = evaluate(child);
             if (expr == nullptr)
                 return false;
-            add_expression_to_scope(
-                module->scope(),
-                expr);
+            add_expression_to_scope(module_scope, expr);
             expr->parent_element(module);
         }
-
-        scope_manager.top_level_stack().pop();
-        scope_manager.module_stack().pop();
 
         return true;
     }

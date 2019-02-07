@@ -50,6 +50,10 @@ namespace basecode::compiler {
         return _statements;
     }
 
+    element_id_set_t& block::references() {
+        return _references;
+    }
+
     identifier_map_t& block::identifiers() {
         return _identifiers;
     }

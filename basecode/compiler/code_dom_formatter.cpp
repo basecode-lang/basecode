@@ -343,8 +343,8 @@ namespace basecode::compiler {
             case element_type_t::argument_list: {
                 auto args = dynamic_cast<argument_list*>(node);
                 auto style = ", fillcolor=azure, style=\"filled\"";
-                for (auto arg_element : args->elements())
-                    add_primary_edge(args, arg_element);
+//                for (auto arg_element : args->elements())
+//                    add_primary_edge(args, arg_element);
                 return fmt::format(
                     "{}[shape=record,label=\"argument_list\"{}];",
                     node_vertex_name,
@@ -640,8 +640,8 @@ namespace basecode::compiler {
             case element_type_t::binary_operator: {
                 auto element = dynamic_cast<binary_operator*>(node);
                 auto style = ", fillcolor=slateblue1, style=\"filled\"";
-                add_primary_edge(element, element->lhs(), "lhs");
-                add_primary_edge(element, element->rhs(), "rhs");
+//                add_primary_edge(element, element->lhs(), "lhs");
+//                add_primary_edge(element, element->rhs(), "rhs");
                 return fmt::format(
                     "{}[shape=record,label=\"binary_operator|{}\"{}];",
                     node_vertex_name,
@@ -739,6 +739,13 @@ namespace basecode::compiler {
                     node_vertex_name,
                     style);
             }
+            case element_type_t::uninitialized_literal: {
+                auto style = ", fillcolor=pink, style=\"filled\"";
+                return fmt::format(
+                    "{}[shape=record,label=\"uninitialized_literal\"{}];",
+                    node_vertex_name,
+                    style);
+            }
             case element_type_t::assembly_literal_label: {
                 auto element = dynamic_cast<assembly_literal_label*>(node);
                 auto style = ", fillcolor=pink, style=\"filled\"";
@@ -747,13 +754,6 @@ namespace basecode::compiler {
                     "{}[shape=record,label=\"assembly_literal_label|{}\"{}];",
                     node_vertex_name,
                     element->name(),
-                    style);
-            }
-            case element_type_t::uninitialized_literal: {
-                auto style = ", fillcolor=pink, style=\"filled\"";
-                return fmt::format(
-                    "{}[shape=record,label=\"uninitialized_literal\"{}];",
-                    node_vertex_name,
                     style);
             }
         }
@@ -772,7 +772,9 @@ namespace basecode::compiler {
         _edges.clear();
 
         auto non_const_program = const_cast<compiler::program*>(&_session.program());
-        _nodes.insert(format_node(non_const_program));
+        auto node_text = format_node(non_const_program);
+        if (!node_text.empty())
+            _nodes.insert(node_text);
 
         for (const auto& pair : _session.elements()) {
             auto node_def = format_node(pair.second);
