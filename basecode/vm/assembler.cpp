@@ -179,7 +179,6 @@ namespace basecode::vm {
         }
 
         free_locals();
-        _frame_offsets.clear();
 
         highest_address += 8;
         _terp->heap_free_space_begin(common::align(highest_address, 8));
@@ -193,6 +192,7 @@ namespace basecode::vm {
             free_reg(local.reg);
         }
         _locals.clear();
+        _frame_offsets.clear();
     }
 
     vm::segment* assembler::segment(

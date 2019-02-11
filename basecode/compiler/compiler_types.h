@@ -116,7 +116,19 @@ namespace basecode::compiler {
     ///////////////////////////////////////////////////////////////////////////
 
     using basic_block_stack_t = std::stack<vm::instruction_block*>;
-    using identifier_by_section_t = std::map<vm::section_t, element_list_t>;
+
+    struct identifier_by_section_t {
+        element_list_t* variable_section(vm::section_t value) {
+            auto it = sections.find(value);
+            if (it == sections.end()) {
+                return nullptr;
+            }
+            return &it->second;
+        }
+
+        std::unordered_set<common::id_t> identifiers {};
+        std::map<vm::section_t, element_list_t> sections {};
+    };
 
     enum class identifier_usage_t : uint8_t {
         heap = 1,

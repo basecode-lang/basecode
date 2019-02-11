@@ -1169,13 +1169,19 @@ namespace basecode::vm {
         if (reverse) {
             std::reverse(std::begin(ints), std::end(ints));
             std::reverse(std::begin(floats), std::end(floats));
+
+            for (const auto& list : floats)
+                apply_local_range(assembler, list, operands, reverse);
+
+            for (const auto& list : ints)
+                apply_local_range(assembler, list, operands, reverse);
+        } else {
+            for (const auto& list : ints)
+                apply_local_range(assembler, list, operands, reverse);
+
+            for (const auto& list : floats)
+                apply_local_range(assembler, list, operands, reverse);
         }
-
-        for (const auto& list : ints)
-            apply_local_range(assembler, list, operands, reverse);
-
-        for (const auto& list : floats)
-            apply_local_range(assembler, list, operands, reverse);
     }
 
     void instruction_block::label(vm::label* value) {

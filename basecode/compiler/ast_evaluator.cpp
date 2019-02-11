@@ -217,18 +217,18 @@ namespace basecode::compiler {
 
                     basic_block->has_stack_frame(true);
 
-                    if (proc_type->return_type() != nullptr) {
+                    auto return_type_field = proc_type->return_type();
+                    if (return_type_field != nullptr) {
                         auto has_return = false;
                         scope_manager.visit_child_blocks(
                             _session.result(),
                             [&](compiler::block* scope) {
-                                if (has_return)
-                                    return true;
                                 for (auto stmt : scope->statements()) {
-                                    auto expression = stmt->expression();
-                                    if (expression != nullptr
-                                    &&  expression->element_type() == element_type_t::return_e
-                                    && !has_return) {
+                                    auto return_e = dynamic_cast<compiler::return_element*>(stmt->expression());
+                                    if (return_e != nullptr) {
+                                        const auto& list = return_e->expressions();
+                                        if (!list.empty())
+                                            return_e->field(return_type_field);
                                         has_return = true;
                                     }
                                 }

@@ -21,7 +21,11 @@ namespace basecode::compiler {
             compiler::module* module,
             block* parent_scope);
 
+        compiler::field* field();
+
         element_list_t& expressions();
+
+        void field(compiler::field* value);
 
     protected:
         bool on_apply_fold_result(
@@ -32,6 +36,7 @@ namespace basecode::compiler {
 
     private:
         element_list_t _expressions {};
+        compiler::field* _field = nullptr;
     };
 
 };

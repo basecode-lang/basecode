@@ -59,14 +59,6 @@ namespace basecode::compiler {
 
         void push_flow_control(const flow_control_t& control_flow);
 
-    // instruction block stack
-    private:
-        vm::instruction_block* pop_block();
-
-        vm::instruction_block* current_block();
-
-        void push_block(vm::instruction_block* block);
-
     private:
         bool emit_element(
             vm::instruction_block* block,
@@ -98,15 +90,7 @@ namespace basecode::compiler {
 
         bool emit_bootstrap_block();
 
-        bool emit_procedure_types();
-
-        bool emit_implicit_blocks();
-
         void intern_string_literals();
-
-        element_list_t* variable_section(
-            identifier_by_section_t& groups,
-            vm::section_t section);
 
         bool emit_interned_string_table();
 
@@ -115,6 +99,10 @@ namespace basecode::compiler {
         bool emit_section_tables(identifier_by_section_t& vars);
 
         std::string interned_string_data_label(common::id_t id);
+
+        bool emit_procedure_types(const identifier_by_section_t& vars);
+
+        bool emit_implicit_blocks(const identifier_by_section_t& vars);
 
     // initializers & finalizers
     private:
@@ -132,9 +120,9 @@ namespace basecode::compiler {
             compiler::identifier* var,
             int64_t offset);
 
-        bool emit_finalizers(identifier_by_section_t& vars);
+        bool emit_finalizers(const identifier_by_section_t& vars);
 
-        bool emit_initializers(identifier_by_section_t& vars);
+        bool emit_initializers(const identifier_by_section_t& vars);
 
     // helper functions
     private:
@@ -173,6 +161,11 @@ namespace basecode::compiler {
             vm::instruction_block* block,
             compiler::procedure_type* proc_type);
 
+        bool emit_procedure_instance(
+            vm::instruction_block* block,
+            compiler::procedure_instance* proc_instance,
+            const identifier_by_section_t& vars);
+
         bool emit_procedure_prologue(
             vm::instruction_block* block,
             compiler::procedure_type* proc_type,
@@ -187,6 +180,12 @@ namespace basecode::compiler {
             vm::instruction_block* block,
             compiler::binary_operator* binary_op,
             emit_result_t& result);
+
+        bool referenced_module_variables(
+            vm::instruction_block* basic_block,
+            compiler::block* block,
+            const identifier_by_section_t& vars,
+            identifier_list_t& locals);
 
         bool is_temp_local(const vm::instruction_operand_t& operand);
 

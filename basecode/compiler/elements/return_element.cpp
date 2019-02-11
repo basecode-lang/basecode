@@ -20,6 +20,10 @@ namespace basecode::compiler {
         block* parent_scope) : element(module, parent_scope, element_type_t::return_e) {
     }
 
+    compiler::field* return_element::field() {
+        return _field;
+    }
+
     bool return_element::on_apply_fold_result(
             compiler::element* e,
             const fold_result_t& fold_result) {
@@ -32,6 +36,10 @@ namespace basecode::compiler {
 
     element_list_t& return_element::expressions() {
         return _expressions;
+    }
+
+    void return_element::field(compiler::field* value) {
+        _field = value;
     }
 
     void return_element::on_owned_elements(element_list_t& list) {
