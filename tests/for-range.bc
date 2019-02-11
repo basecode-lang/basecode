@@ -1,27 +1,24 @@
 core :: module("../modules/core");
 
-import public::ranges::kinds from intrinsics_module;
-import public::ranges::orders from intrinsics_module;
-
 test :: proc() {
-    print("\n1\n");
+    core::print("\n1\n");
     for x in range<s32>(0, 10, 2) {
-        print("x := %d\n", x);
+        core::print("x := %d\n", x);
     };
 
-    print("\n2\n");
-    for x in range<s32>(dir := REVERSE, 10, kind := EXCLUSIVE, 0, 1) {
-        print("x := %d\n", x);
+    core::print("\n2\n");
+    for x in range<s32>(dir := core::ranges::orders::REVERSE, 10, kind := core::ranges::kinds::EXCLUSIVE, 0, 1) {
+        core::print("x := %d\n", x);
     };
 
-    print("\n3\n");
-    for x in range<s32>(20, 0, dir := REVERSE) {
-        print("x := %d\n", x);
+    core::print("\n3\n");
+    for x in range<s32>(20, 0, dir := core::ranges::orders::REVERSE) {
+        core::print("x := %d\n", x);
     };
 
-    print("\n4\n");
-    for x in range<s32>(20, 10, 3, dir := REVERSE) {
-        print("x := %d\n", x);
+    core::print("\n4\n");
+    for x in range<s32>(20, 10, 3, dir := core::ranges::orders::REVERSE) {
+        core::print("x := %d\n", x);
     };
 };
 

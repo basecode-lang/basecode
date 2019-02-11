@@ -15,7 +15,7 @@ utf32_string :: struct {
 make_string :: proc(): string {
     s: string;
     s.length   := 0;
-    s.capacity := next_power_of_two(32);
+    s.capacity := core::next_power_of_two(32);
     s.data     := alloc(s.capacity);
     return s;
 };
@@ -25,7 +25,7 @@ resize_string :: proc(s: ^string, target_length: u32) {
         return;
     };
 
-    s.capacity := next_power_of_two(target_length);
+    s.capacity := core::next_power_of_two(target_length);
 
     buffer: ^u8 := alloc(s.capacity);
     fill(buffer, 0, s.capacity);
@@ -52,7 +52,7 @@ string_append :: proc(lhs: ^string, rhs: ^string) {
 string_assignment_1 :: proc(lhs: ^utf16_string, rhs: string) {
     with lhs {
         .length := rhs.length;
-        .capacity := next_power_of_two(size_of(u16) * rhs.length);
+        .capacity := core::next_power_of_two(size_of(u16) * rhs.length);
         .data := alloc(.capacity);
         fill(.data, 0, .capacity);
     };
@@ -62,7 +62,7 @@ string_assignment_1 :: proc(lhs: ^utf16_string, rhs: string) {
 string_assignment_2 :: proc(lhs: ^utf32_string, rhs: string) {
     with lhs {
         .length := rhs.length;
-        .capacity := next_power_of_two(size_of(u32) * rhs.length);
+        .capacity := core::next_power_of_two(size_of(u32) * rhs.length);
         .data := alloc(.capacity);
         fill(.data, 0, .capacity);
     };

@@ -62,6 +62,7 @@ foo :: proc(a, b, c: f32): f32 {
     core::print("player.dir.y := %d\n", player.dir.y);
     core::print("player.dir.z := %d\n", player.dir.z);
 
+//    player.cls.name := text;
     core::print("player.cls.name.length   := %d\n", player.cls.name.length);
     core::print("player.cls.name.capacity := %d\n", player.cls.name.capacity);
 

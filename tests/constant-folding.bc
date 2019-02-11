@@ -16,7 +16,7 @@ core :: module("../modules/core");
 
     inverted: u8 := ~%1111_0000;
 
-    print("inverted := %d\n", inverted);
+    core::print("inverted := %d\n", inverted);
 
     // the code dom will retain the full expression
     // for this variable declaration's initializer

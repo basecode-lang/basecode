@@ -1091,7 +1091,7 @@ SDL :: ns {
 };
 
 #run {
-    assert(SDL::Init(SDL::INIT_VIDEO) >= 0, "SDL could not be initialized!");
+    core::assert(SDL::Init(SDL::INIT_VIDEO) >= 0, "SDL could not be initialized!");
     
     window := SDL::CreateWindow(
         "Test Window", 
@@ -1100,14 +1100,14 @@ SDL :: ns {
         1280, 
         1024, 
         SDL::OPENGL | SDL::SHOWN);
-    assert(window != nil, "window not initialized!");
+    core::assert(window != nil, "window not initialized!");
 
     surface := SDL::GetWindowSurface(window);
-    print("surface.flags := %d\n", surface.flags);
-    print("surface.format:= $%016X\n", surface.format);
-    print("surface.w     := %d\n", surface.w);
-    print("surface.h     := %d\n", surface.h);
-    print("surface.pitch := %d\n", surface.pitch);
+    core::print("surface.flags := %d\n", surface.flags);
+    core::print("surface.format:= $%016X\n", surface.format);
+    core::print("surface.w     := %d\n", surface.w);
+    core::print("surface.h     := %d\n", surface.h);
+    core::print("surface.pitch := %d\n", surface.pitch);
 
     running := true;
     in_window := false;

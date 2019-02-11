@@ -21,10 +21,10 @@ b: two;
 b.next := address_of(c);
 
 a_ptr := address_of(a);
-assign_string(address_of(a_ptr.next.next.name), "hello world!", 13);
+core::assign_string(address_of(a_ptr.next.next.name), "hello world!", 13);
 
 #run {
-    print("a.next.next.name.data = %s\n", a_ptr.next.next.name.data);
+    core::print("a.next.next.name.data = %s\n", a_ptr.next.next.name.data);
 };
 
 vector3 :: struct {
@@ -63,7 +63,7 @@ barzar :: struct {
         bar.e.pos.y := 4.1;
         bar.e.pos.z := -33.2;
 
-        assign_string(address_of(bar.c.name), "magicks class", 13);
-        print("bar.c.name.data = %s\n", bar.c.name.data);
+        core::assign_string(address_of(bar.c.name), "magicks class", 13);
+        core::print("bar.c.name.data = %s\n", bar.c.name.data);
     };
 };

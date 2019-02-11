@@ -36,9 +36,9 @@ sign_extend_src: s8 := -64;
 sign_extend_dest: s16 := -32767;
 
 #run {
-    print("sign_extend_dest := %hd (before)\n", sign_extend_dest);
+    core::print("sign_extend_dest := %hd (before)\n", sign_extend_dest);
     sign_extend_dest := cast<s16>(sign_extend_src);
-    print("sign_extend_dest := %hd (after)\n\n", sign_extend_dest);
+    core::print("sign_extend_dest := %hd (after)\n\n", sign_extend_dest);
 };
 
 zero_extend_src: u8 := $ff;
@@ -46,9 +46,9 @@ zero_extend_dest: u16;
 zero_extend_dest := 65535;
 
 #run {
-    print("zero_extend_dest := %d (before)\n", zero_extend_dest);
+    core::print("zero_extend_dest := %d (before)\n", zero_extend_dest);
     zero_extend_dest := cast<u16>(zero_extend_src);
-    print("zero_extend_dest := %d (after)\n", zero_extend_dest);
+    core::print("zero_extend_dest := %d (after)\n", zero_extend_dest);
 };
 
 E: f32 := 2.7182818284;
@@ -59,7 +59,7 @@ PI := 3.1415926535;
 int_pi: u32;
 #run {
     int_pi := cast<u32>(PI);
-    print("int_pi := %d\n", int_pi);
+    core::print("int_pi := %d\n", int_pi);
 };
 
 pi_from_casted_int := cast<f32>(int_pi);

@@ -6,7 +6,7 @@ b := "\u32db\u0020\u263a\u0020\u32e1\n";
 j := '\u32db';
 
 #run {
-    print("a := %s", a);
-    print("b := %s", b);
-    print("j := %c", j);
+    core::print("a := %s", a);
+    core::print("b := %s", b);
+    core::print("j := %c", j);
 };

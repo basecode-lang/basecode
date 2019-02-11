@@ -19,7 +19,7 @@ adder :: proc(a, b: s32): s32 {
     t.pos.y := 4;
     t.pos.z := -15;
 
-    print("t.pos.x := %d\n", t.pos.x);
-    print("t.pos.y := %d\n", t.pos.y);
-    print("t.pos.z := %d\n", t.pos.z);
+    core::print("t.pos.x := %d\n", t.pos.x);
+    core::print("t.pos.y := %d\n", t.pos.y);
+    core::print("t.pos.z := %d\n", t.pos.z);
 };

@@ -15,11 +15,11 @@ intrinsics  :: module("intrinsics.bc");
 
 types       :: module("types.bc");
 maths       :: module("math.bc");
-assert      :: module("assert.bc");
+asserts     :: module("assert.bc");
 compiler    :: module("compiler.bc");
 
 import public from maths;
 import public from types;
-import public from assert;
+import public from asserts;
 import public from compiler;
 import public from intrinsics;

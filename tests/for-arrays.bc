@@ -17,7 +17,7 @@ array_iterator :: struct {
 
 test :: proc() {
     for x: array_iterator in array<u8>(1, 2, 3, 4, 5) {
-        print("x := %d\n", x.value);
+        core::print("x := %d\n", x.value);
     };
 };
 

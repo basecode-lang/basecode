@@ -7,11 +7,11 @@ MODE :: 2;
 //#assert 2 == 1;
 
 #if MODE == 1 {
-    print("mode 1\n");
+    core::print("mode 1\n");
 } #elif MODE == 2 {
-    print("mode 2\n");
+    core::print("mode 2\n");
 } #else {
-    print("unknown mode\n");
+    core::print("unknown mode\n");
 };
 
 factorial :: proc(n: u64 := 12): u64 {
@@ -32,10 +32,10 @@ fib :: proc(n: u64 := 10): u64 {
 
 #run {
     result := fib(20);
-    print("fib       := %llu\n", result);
-    assert(result == 1, "fib expected 1");
+    core::print("fib       := %llu\n", result);
+    core::assert(result == 1, "fib expected 1");
 
     result := factorial();
-    print("factorial := %llu\n", result);
-    assert(result == 479001600, "factorial expected 479001600");
+    core::print("factorial := %llu\n", result);
+    core::assert(result == 479001600, "factorial expected 479001600");
 };

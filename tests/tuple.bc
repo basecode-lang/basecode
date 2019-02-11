@@ -4,11 +4,11 @@ anonymous_tuple :: tuple(1, 2, 3);
 named_tuple     :: tuple(first := 1, second := 2, third := "foobar");
 
 #run {
-    print("anonymous_tuple._0 := %d\n", anonymous_tuple._0);
-    print("anonymous_tuple._1 := %d\n", anonymous_tuple._1);
-    print("anonymous_tuple._2 := %d\n", anonymous_tuple._2);
+    core::print("anonymous_tuple._0 := %d\n", anonymous_tuple._0);
+    core::print("anonymous_tuple._1 := %d\n", anonymous_tuple._1);
+    core::print("anonymous_tuple._2 := %d\n", anonymous_tuple._2);
 
-    print("named_tuple.first  := %d\n", named_tuple.first);
-    print("named_tuple.second := %d\n", named_tuple.second);
-    print("named_tuple.third  := %s\n", named_tuple.third);
+    core::print("named_tuple.first  := %d\n", named_tuple.first);
+    core::print("named_tuple.second := %d\n", named_tuple.second);
+    core::print("named_tuple.third  := %s\n", named_tuple.third);
 };

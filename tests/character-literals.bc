@@ -8,15 +8,15 @@ a_type := type_of(a);
 b_type := type_of(b);
 
 temp: string;
-assign_string(address_of(temp), "hello world!", 12);
+core::assign_string(address_of(temp), "hello world!", 12);
 
 #run {
-    print("a := %c\n", a);
-    print("b := %c\n", b);
-    print("%c\n", 'Z');
+    core::print("a := %c\n", a);
+    core::print("b := %c\n", b);
+    core::print("%c\n", 'Z');
 
-    print("a_type.name := %s\n", a_type.name.data);
-    print("b_type.name := %s\n", b_type.name.data);
+    core::print("a_type.name := %s\n", a_type.name.data);
+    core::print("b_type.name := %s\n", b_type.name.data);
 
-    print("%s\n", temp.data);
+    core::print("%s\n", temp.data);
 };

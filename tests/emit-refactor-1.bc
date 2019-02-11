@@ -22,7 +22,7 @@ temp :: proc() {
     for i in range<u32>(0, 10) {
         x := i * 6;
         y := 16 * x;
-        print("x := %d, y:= %d\n", x, y);
+        core::print("x := %d, y:= %d\n", x, y);
     };
 
     pos.x := 2.0;
@@ -34,10 +34,10 @@ temp :: proc() {
     // N.B. anonymous scope to test stack
     {
         value: u32 := ?;
-        print("unassigned value := %d\n", value);
+        core::print("unassigned value := %d\n", value);
 
         temp();
-        print("\n");
+        core::print("\n");
 
         a: bool;
 
@@ -52,7 +52,6 @@ temp :: proc() {
         @no_fold;
         z := (cast<u32>(16) * (2 shl 4)) * (6 + 4);
 
-        error_message := "expected z == 5120";
-        assert(z == 5120, address_of(error_message));
+        core::assert(z == 5120, "expected z == 5120");
     };
 };

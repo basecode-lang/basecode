@@ -18,25 +18,25 @@ core :: module("../modules/core");
 #foreign complex_test_ptr :: proc(e: ^entity);
 
 pass_by_value :: proc(msg: string) {
-    print("msg.length := %d\n", msg.length);
-    print("msg.capacity := %d\n", msg.capacity);
-    print("msg.data := %s\n", msg.data);
+    core::print("msg.length := %d\n", msg.length);
+    core::print("msg.capacity := %d\n", msg.capacity);
+    core::print("msg.data := %s\n", msg.data);
 };
 
 flags_t :: tuple(foo := false, bar := false, bing := true, bong := true);
 
 tuple_by_value :: proc(flags: flags_t) {
-    print("flags.foo  := %hhu\n", flags.foo);
-    print("flags.bar  := %hhu\n", flags.bar);
-    print("flags.bing := %hhu\n", flags.bing);
-    print("flags.bong := %hhu\n", flags.bong);
+    core::print("flags.foo  := %hhu\n", flags.foo);
+    core::print("flags.bar  := %hhu\n", flags.bar);
+    core::print("flags.bing := %hhu\n", flags.bing);
+    core::print("flags.bong := %hhu\n", flags.bong);
 };
 
 #run {
-    print("%s: %d, %f\n", "integer and float", 22, 3.5);
+    core::print("%s: %d, %f\n", "integer and float", 22, 3.5);
 
     temp: string;
-    assign_string(address_of(temp), "hello world!", 12);
+    core::assign_string(address_of(temp), "hello world!", 12);
 
     // ffi
     str_test_ptr(address_of(temp));
@@ -68,26 +68,26 @@ entity :: struct {
 };
 
 #run {
-    power_of_two: u32 := next_power_of_two(33);
-    print("next_power_of_two          := %d\n", power_of_two);
+    power_of_two: u32 := core::next_power_of_two(33);
+    core::print("next_power_of_two          := %d\n", power_of_two);
 
-    power_of_two := next_power_of_two(33);
-    print("max(32, next_power_of_two) := %d\n", max(32, power_of_two));
+    power_of_two := core::next_power_of_two(33);
+    core::print("max(32, next_power_of_two) := %d\n", core::max(32, power_of_two));
 
     jeff: player;
     with jeff {
-        assign_string(address_of(.name), "jeff", 4);
-        print(".name.length   := %d\n", .name.length);
-        print(".name.capacity := %d\n", .name.capacity);
-        print(".name.data     := %s\n", .name.data);
+        core::assign_string(address_of(.name), "jeff", 4);
+        core::print(".name.length   := %d\n", .name.length);
+        core::print(".name.capacity := %d\n", .name.capacity);
+        core::print(".name.data     := %s\n", .name.data);
     };
 
     jeff_entity: entity;
     with jeff_entity {
-        assign_string(address_of(.name), "entity: jeff", 12);
-        print(".name.length   := %d\n", .name.length);
-        print(".name.capacity := %d\n", .name.capacity);
-        print(".name.data     := %s\n", .name.data);
+        core::assign_string(address_of(.name), "entity: jeff", 12);
+        core::print(".name.length   := %d\n", .name.length);
+        core::print(".name.capacity := %d\n", .name.capacity);
+        core::print(".name.data     := %s\n", .name.data);
 
         .pos.x := 1.0;
         .pos.y := 1.0;

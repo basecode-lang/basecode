@@ -5,20 +5,20 @@ core :: module("../modules/core");
 
     switch x {
         case 0 => {
-            print("0\n");
+            core::print("0\n");
         };
 
         case 1 => {
-            print("1\n");
+            core::print("1\n");
         };
 
         case 2 => {
-            print("2\n");
+            core::print("2\n");
             fallthrough;
         };
 
         case => {
-            print("default\n");
+            core::print("default\n");
         };
     };
 };

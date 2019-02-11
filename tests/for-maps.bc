@@ -5,8 +5,8 @@ core :: module("../modules/core");
 
 test :: proc() {
     for it: map_iterator in new<map<string, string>>("foo" := "bar", "bing" := "baz") {
-        print("k := %s\n", it.key);
-        print("v := %d\n", it.value);
+        core::print("k := %s\n", it.key);
+        core::print("v := %d\n", it.value);
     };
 };
 

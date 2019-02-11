@@ -2,27 +2,27 @@ core :: module("../modules/core");
 
 #run {
     text: string;
-    assign_string(address_of(text), "hello world", 11);
+    core::assign_string(address_of(text), "hello world", 11);
 
-    print("text.length       := %d\n",     text.length);
-    print("text.capacity     := %d\n",     text.capacity);
-    print("text.data         := $%08x\n",  text.data);
-    print("text.data^        := %c\n",     text.data^);
+    core::print("text.length       := %d\n",     text.length);
+    core::print("text.capacity     := %d\n",     text.capacity);
+    core::print("text.data         := $%08x\n",  text.data);
+    core::print("text.data^        := %c\n",     text.data^);
 
     char: u8 := 65;
 
     char_ptr: ^u8;
     char_ptr := address_of(char);
 
-    print("%c", char_ptr^);
+    core::print("%c", char_ptr^);
 
-    print("\n");
+    core::print("\n");
 
     text_ptr: ^string;
     text_ptr := address_of(text);
 
-    print("text_ptr.length   := %d\n",     text_ptr.length);
-    print("text_ptr.capacity := %d\n",     text_ptr.capacity);
-    print("text_ptr.data     := $%08x\n",  text_ptr.data);
-    print("text_ptr.data^    := %c\n",     text_ptr.data^);
+    core::print("text_ptr.length   := %d\n",     text_ptr.length);
+    core::print("text_ptr.capacity := %d\n",     text_ptr.capacity);
+    core::print("text_ptr.data     := $%08x\n",  text_ptr.data);
+    core::print("text_ptr.data^    := %c\n",     text_ptr.data^);
 };

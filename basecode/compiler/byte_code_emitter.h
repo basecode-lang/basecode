@@ -187,9 +187,23 @@ namespace basecode::compiler {
             const identifier_by_section_t& vars,
             identifier_list_t& locals);
 
+        uint8_t allocate_temp() {
+            return ++_temp;
+        }
+
+        void free_temp() {
+            if (_temp > 0)
+                --_temp;
+        }
+
+        void reset_temp() {
+            _temp = 0;
+        }
+
         bool is_temp_local(const vm::instruction_operand_t& operand);
 
     private:
+        uint8_t _temp = 0;
         compiler::session& _session;
         basic_block_stack_t _block_stack {};
         flow_control_stack_t _control_flow_stack {};

@@ -12,7 +12,7 @@
 core :: module("../modules/core");
 
 #run {
-    print("at the very top!\n");
+    core::print("at the very top!\n");
     alpha::compiler::examples::test();
 };
 
@@ -23,21 +23,19 @@ alpha::compiler::config :: ns {
 };
 
 alpha::compiler::examples :: ns {
-    import core::types_module::public;
-    import core::compiler_module::public;
     import alpha::compiler::config::fibonacci;
 
     test :: proc() {
         count:  u32;
         max:    u16 := 32767;
         name:   string;
-        assign_string(
+        core::assign_string(
             address_of(name),
             "fibonacci test program",
             22);
-        print("name.length   := %d\n", name.length);
-        print("name.capacity := %d\n", name.capacity);
-        print("name.data     := %s\n", name.data);
+        core::print("name.length   := %d\n", name.length);
+        core::print("name.capacity := %d\n", name.capacity);
+        core::print("name.data     := %s\n", name.data);
 
         foo: u32 := max * 4;
         boom := length_of_sequence;
@@ -47,18 +45,18 @@ alpha::compiler::examples :: ns {
         count := 1;
         is_this_true := count == (max == 256) && count == (max / 2);
 
-        print("what the hell am i doing here?\n");
-        print("foo := %d\n", foo);
-        print("boom := %d\n", boom);
-        print("bar_rhs_is_constant := %d\n", bar_rhs_is_constant);
-        print("is_this_true := %d\n", is_this_true);
+        core::print("what the hell am i doing here?\n");
+        core::print("foo := %d\n", foo);
+        core::print("boom := %d\n", boom);
+        core::print("bar_rhs_is_constant := %d\n", bar_rhs_is_constant);
+        core::print("is_this_true := %d\n", is_this_true);
 
         bar();
         fib_main();
     };
 
     bar :: proc() {
-        print("bing := %d\n", bing(256));
+        core::print("bing := %d\n", bing(256));
 
         bing :: proc(z: u64): u64 {
             if z == 0 {
@@ -71,7 +69,7 @@ alpha::compiler::examples :: ns {
     };
 
     fib :: proc(n: u64 := 10): u64 {
-        print("n := %d\n", n);
+        core::print("n := %d\n", n);
         if n == 0 || n == 1 {
             return n;
         } else {

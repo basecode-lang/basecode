@@ -28,10 +28,10 @@ d := /* before integer */ 100 /* after integer */;
 
 #run {
     /* before if */ if /* after if */ a == 2 /* after condition */ {
-        print("one\n");
+        core::print("one\n");
     } /* before else if */ else if /* after else if */ a == 4 /* after else if condition */ {
-        print("two\n");
+        core::print("two\n");
     } /* before else */ else /* after else */ {
-        print("three\n");
+        core::print("three\n");
     } /* after ladder */;
 };

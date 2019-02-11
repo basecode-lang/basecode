@@ -5,11 +5,11 @@ core :: module("../modules/core");
     'label:
     defer free(addr);
 
-    print("addr := $%08x\n", addr);
+    core::print("addr := $%08x\n", addr);
 
     {
-        defer print("a\n");
-        defer print("b\n");
-        defer print("c\n");
+        defer core::print("a\n");
+        defer core::print("b\n");
+        defer core::print("c\n");
     };
 };

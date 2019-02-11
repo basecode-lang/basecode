@@ -2,14 +2,14 @@ core :: module("../modules/core");
 
 #run {
     msg: string;
-    assign_string(address_of(msg), "hello world", 11);
+    core::assign_string(address_of(msg), "hello world", 11);
 
     temp: string;
     temp := msg;
 
     with temp {
-        print("temp.length   := %d\n", .length);
-        print("temp.capacity := %d\n", .capacity);
+        core::print("temp.length   := %d\n", .length);
+        core::print("temp.capacity := %d\n", .capacity);
     };
 
     one :: struct {
@@ -31,9 +31,9 @@ core :: module("../modules/core");
             with .b {
                 .c := msg;
                 with .c {
-                    print(".length   := %d\n", .length);
-                    print(".capacity := %d\n", .capacity);
-                    print(".data     := '%s'\n", .data);
+                    core::print(".length   := %d\n", .length);
+                    core::print(".capacity := %d\n", .capacity);
+                    core::print(".data     := '%s'\n", .data);
                 };
             };
         };

@@ -3,14 +3,14 @@ core :: module("../modules/core");
 #run {
     x: u32 := 2 ** 4;
 
-    print("x := %d\n", x);
+    core::print("x := %d\n", x);
 
     y: u32;
 
     @no_fold;
     y := 2 ** 4;
 
-    print("y := %d\n", y);
+    core::print("y := %d\n", y);
 
     w: f32 := 2.0 ** 4.0;
 

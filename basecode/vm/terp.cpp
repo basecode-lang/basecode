@@ -946,14 +946,26 @@ namespace basecode::vm {
                                 register_type_t::integer :
                                 register_type_t::floating_point;
 
-                    auto range = static_cast<uint16_t>(operand.value.u);
-                    auto start = (range >> 8) & 0xff;
-                    auto end = range & 0xff;
-                    auto delta = end < start ? -1 : 1;
-                    auto count = std::abs(end - start);
+                    if (operand.is_range()) {
+                        auto range = static_cast<uint16_t>(operand.value.u);
+                        auto start = (range >> 8) & 0xff;
+                        auto end = range & 0xff;
+                        auto delta = end < start ? -1 : 1;
+                        auto count = std::abs(end - start);
 
-                    for (uint8_t reg = static_cast<uint8_t>(start); count >= 0; reg += delta, --count) {
-                        auto reg_index = register_index(static_cast<registers_t>(reg), type);
+                        for (auto reg = static_cast<uint8_t>(start);
+                                count >= 0;
+                                reg += delta, --count) {
+                            auto reg_index = register_index(
+                                static_cast<registers_t>(reg),
+                                type);
+                            auto alias = _registers.r[reg_index];
+                            push(alias.qw);
+                        }
+                    } else if (operand.is_reg()) {
+                        auto reg_index = register_index(
+                            static_cast<registers_t>(operand.value.r),
+                            type);
                         auto alias = _registers.r[reg_index];
                         push(alias.qw);
                     }
@@ -991,14 +1003,25 @@ namespace basecode::vm {
                                 register_type_t::integer :
                                 register_type_t::floating_point;
 
-                    auto range = static_cast<uint16_t>(operand.value.u);
-                    auto start = (range >> 8) & 0xff;
-                    auto end = range & 0xff;
-                    auto delta = end < start ? -1 : 1;
-                    auto count = std::abs(end - start);
+                    if (operand.is_range()) {
+                        auto range = static_cast<uint16_t>(operand.value.u);
+                        auto start = (range >> 8) & 0xff;
+                        auto end = range & 0xff;
+                        auto delta = end < start ? -1 : 1;
+                        auto count = std::abs(end - start);
 
-                    for (uint8_t reg = static_cast<uint8_t>(start); count >= 0; reg += delta, --count) {
-                        auto reg_index = register_index(static_cast<registers_t>(reg), type);
+                        for (auto reg = static_cast<uint8_t>(start);
+                                count >= 0;
+                                reg += delta, --count) {
+                            auto reg_index = register_index(
+                                static_cast<registers_t>(reg),
+                                type);
+                            _registers.r[reg_index].qw = pop();
+                        }
+                    } else if (operand.is_reg()) {
+                        auto reg_index = register_index(
+                            static_cast<registers_t>(operand.value.r),
+                            type);
                         _registers.r[reg_index].qw = pop();
                     }
                 }
