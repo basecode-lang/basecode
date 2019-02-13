@@ -541,11 +541,7 @@ namespace basecode::vm {
             operands);
         if (operands.empty())
             return;
-        if (operands.size() == 1) {
-            push(operands.front());
-        } else {
-            pushm(operands);
-        }
+        pushm(operands);
     }
 
     void instruction_block::push(const instruction_operand_t& operand) {
@@ -673,11 +669,7 @@ namespace basecode::vm {
             true);
         if (operands.empty())
             return;
-        if (operands.size() == 1) {
-            pop(operands.front());
-        } else {
-            popm(operands);
-        }
+        popm(operands);
     }
 
     void instruction_block::pop(const instruction_operand_t& dest) {
