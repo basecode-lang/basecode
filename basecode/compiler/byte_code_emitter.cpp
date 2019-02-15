@@ -1962,7 +1962,7 @@ namespace basecode::compiler {
         return _session.scope_manager().visit_child_blocks(
             _session.result(),
             [&](compiler::block* scope) {
-                for (auto ref_id : scope->references()) {
+                for (auto ref_id : scope->references().as_list()) {
                     auto ref = dynamic_cast<compiler::identifier_reference*>(_session.elements().find(ref_id));
                     if (ref == nullptr)
                         continue;

@@ -21,6 +21,7 @@
 #include "element_types.h"
 #include "symbol_element.h"
 #include "type_reference.h"
+#include "identifier_reference.h"
 
 namespace basecode::compiler {
 
@@ -116,6 +117,47 @@ namespace basecode::compiler {
         for (auto it = range.first; it != range.second; ++it)
             list.emplace_back(it->second);
         return list;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    element_id_set_t reference_map_t::as_list() const {
+        element_id_set_t list {};
+        for (const auto& kvp : _references)
+            list.insert(kvp.first);
+        return list;
+    }
+
+    element_id_set_t reference_map_t::in_list() const {
+        element_id_set_t list {};
+        for (const auto& kvp : _references)
+            if ((kvp.second.flags & reference_flow_t::in) == reference_flow_t::in)
+                list.insert(kvp.first);
+        return list;
+    }
+
+    element_id_set_t reference_map_t::out_list() const {
+        element_id_set_t list {};
+        for (const auto& kvp : _references)
+            if ((kvp.second.flags & reference_flow_t::out) == reference_flow_t::out)
+                list.insert(kvp.first);
+        return list;
+    }
+
+    bool reference_map_t::add(compiler::identifier_reference* value) {
+        if (_references.count(value->id()) > 0)
+            return false;
+        auto result = _references.insert(std::make_pair(
+            value->id(),
+            reference_flow_t {
+                .flags = reference_flow_t::flags_t::none,
+                .id = value->id()
+            }));
+        return result.second;
+    }
+
+    bool reference_map_t::remove(compiler::identifier_reference* value) {
+        return _references.erase(value->id()) > 0;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -237,4 +279,5 @@ namespace basecode::compiler {
             compiler::block* parent_scope) {
         return builder.make_type_reference(parent_scope, type_name, type);
     }
+
 };

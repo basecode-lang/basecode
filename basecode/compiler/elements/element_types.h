@@ -17,6 +17,7 @@
 #include <vector>
 #include <string>
 #include <memory>
+#include <utility>
 #include <unordered_set>
 #include <unordered_map>
 #include <parser/token.h>
@@ -596,6 +597,44 @@ namespace basecode::compiler {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    struct reference_flow_t {
+        enum flags_t : uint8_t {
+            none = 0b00000000,
+            in   = 0b00000001,
+            out  = 0b00000010,
+        };
+
+        using flag_t = uint8_t;
+
+        flag_t flags {};
+        common::id_t id {};
+    };
+
+    struct reference_map_t {
+        bool empty() const {
+            return _references.empty();
+        }
+
+        size_t size() const {
+            return _references.size();
+        }
+
+        element_id_set_t as_list() const;
+
+        element_id_set_t in_list() const;
+
+        element_id_set_t out_list() const;
+
+        bool add(identifier_reference* value);
+
+        bool remove(identifier_reference* value);
+
+    private:
+        std::map<common::id_t, reference_flow_t> _references {};
+    };
+
+    ///////////////////////////////////////////////////////////////////////////
+
     struct type_map_t {
         void add(
             compiler::symbol_element* symbol,
@@ -624,7 +663,7 @@ namespace basecode::compiler {
     struct qualified_symbol_t {
         qualified_symbol_t() = default;
 
-        explicit qualified_symbol_t(const std::string& name) : name(name) {
+        explicit qualified_symbol_t(std::string name) : name(std::move(name)) {
         }
 
         bool is_qualified() const {

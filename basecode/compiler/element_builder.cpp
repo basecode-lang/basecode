@@ -996,7 +996,7 @@ namespace basecode::compiler {
                 unresolveds.emplace_back(reference);
         }
 
-        parent_scope->references().insert(reference->id());
+        parent_scope->references().add(reference);
         reference->location(symbol.location);
         return reference;
     }

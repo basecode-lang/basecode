@@ -46,12 +46,12 @@ namespace basecode::compiler {
         return _has_stack_frame;
     }
 
-    statement_list_t& block::statements() {
-        return _statements;
+    reference_map_t& block::references() {
+        return _references;
     }
 
-    element_id_set_t& block::references() {
-        return _references;
+    statement_list_t& block::statements() {
+        return _statements;
     }
 
     identifier_map_t& block::identifiers() {
