@@ -22,7 +22,7 @@ add_custom_command(OUTPUT custom-output COMMAND ${CMAKE_COMMAND} -E echo DEPENDS
 add_custom_command(OUTPUT always-rebuild COMMAND ${CMAKE_COMMAND} -E echo)
 
 # libfmt
-add_subdirectory(ext/fmt-5.1.0 EXCLUDE_FROM_ALL)
+add_subdirectory(ext/fmt-5.3.0 EXCLUDE_FROM_ALL)
 
 # dyncall
 add_subdirectory(ext/dyncall-1.0 EXCLUDE_FROM_ALL)
