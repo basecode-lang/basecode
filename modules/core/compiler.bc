@@ -19,11 +19,10 @@ public :: ns {
     putc :: proc(char: rune, f: u32 := 1) {
         #assembly {{
             .ilocal     temp1
-            .ilocal     temp2
 
             load.dw     temp1, f
-            load.dw     temp2, char
-            push.dw     temp2
+            push.dw     temp1
+            load.dw     temp1, char
             push.dw     temp1
             trap.b      module(traps::putc)
         }};

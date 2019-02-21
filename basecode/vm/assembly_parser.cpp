@@ -323,7 +323,16 @@ namespace basecode::vm {
                                     break;
                                 }
                                 case vm::assembly_symbol_type_t::assembler: {
-                                    auto local = block->local(operand);
+                                    auto local = block->local(symbol);
+                                    if (local == nullptr) {
+                                        vm::assembly_symbol_result_t resolver_result{};
+                                        if (resolver(type, _data, symbol, resolver_result)) {
+                                            auto module_data = resolver_result.data<compiler_module_data_t>();
+                                            symbol = *module_data->data<std::string>();
+                                            local = block->local(symbol);
+                                        }
+                                    }
+
                                     if (local != nullptr) {
                                         encoding.type = operand_encoding_t::flags::reg;
                                         if (local->type == vm::local_type_t::integer)

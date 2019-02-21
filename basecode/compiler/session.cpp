@@ -552,6 +552,17 @@ namespace basecode::compiler {
                 }
                 break;
             }
+            case vm::assembly_symbol_type_t::assembler: {
+                auto vars = _scope_manager->find_identifier(
+                    make_qualified_symbol(symbol),
+                    scope);
+                compiler::identifier* var = vars.empty() ? nullptr : vars.front();
+                if (var != nullptr) {
+                    result.data(vm::compiler_module_data_t(var->label_name()));
+                    return true;
+                }
+                break;
+            }
             default: {
                 break;
             }

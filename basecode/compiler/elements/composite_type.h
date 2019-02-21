@@ -32,6 +32,8 @@ namespace basecode::compiler {
 
         field_map_t& fields();
 
+        void calculate_size();
+
         compiler::block* scope();
 
         type_map_t& type_parameters();

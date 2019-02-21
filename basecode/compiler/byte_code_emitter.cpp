@@ -1370,7 +1370,7 @@ namespace basecode::compiler {
             case element_type_t::unary_operator: {
                 auto unary_op = dynamic_cast<compiler::unary_operator*>(e);
                 auto op_type = unary_op->operator_type();
-                
+
                 auto rhs_temp = allocate_temp();
                 emit_result_t rhs_emit_result {};
                 if (!emit_element(block, unary_op->rhs(), rhs_emit_result))
@@ -1678,6 +1678,18 @@ namespace basecode::compiler {
             compiler::element* e,
             temp_count_result_t& result) {
         switch (e->element_type()) {
+            case element_type_t::if_e: {
+                auto if_e = dynamic_cast<compiler::if_element*>(e);
+                if (!count_temps(if_e->predicate(), result))
+                    return false;
+                auto false_branch = if_e->false_branch();
+                if (false_branch != nullptr
+                &&  false_branch->element_type() == element_type_t::if_e) {
+                    if (!count_temps(false_branch, result))
+                        return false;
+                }
+                break;
+            }
             case element_type_t::cast: {
                 auto cast = dynamic_cast<compiler::cast*>(e);
                 if (!count_temps(cast->expression(), result))
@@ -1987,7 +1999,6 @@ namespace basecode::compiler {
         auto& scope_manager = _session.scope_manager();
 
         element_id_set_t processed {};
-        int64_t offset = 0;
         return scope_manager.visit_child_blocks(
             _session.result(),
             [&](compiler::block* scope) {
@@ -2019,17 +2030,14 @@ namespace basecode::compiler {
 
                     processed.insert(var->id());
 
-                    auto in_stack_frame = scope_manager.within_local_scope(scope);
-                    if (in_stack_frame) {
-                        offset += -var->type_ref()->type()->size_in_bytes();
+                    if (var->usage() == identifier_usage_t::stack
+                    ||  var->parent_scope()->has_stack_frame()) {
                         continue;
                     }
 
                     basic_block->local(
                         vm::local_type_t::integer,
-                        var->label_name(),
-                        in_stack_frame ? offset : 0,
-                        in_stack_frame ? "locals" : "");
+                        var->label_name());
                     locals.emplace_back(var);
                 }
 
@@ -2318,6 +2326,10 @@ namespace basecode::compiler {
                 auto var = dynamic_cast<compiler::identifier*>(e);
 
                 auto var_type = var->type_ref()->type();
+                auto composite_type = dynamic_cast<compiler::composite_type*>(var_type);
+                if (composite_type != nullptr)
+                    composite_type->calculate_size();
+
                 auto init = var->initializer();
                 auto is_initialized = init != nullptr || section == vm::section_t::bss;
 
@@ -2355,10 +2367,32 @@ namespace basecode::compiler {
                         break;
                     }
                     case element_type_t::pointer_type: {
-                        if (!is_initialized)
+                        if (!is_initialized) {
                             block->reserve_qword(1);
-                        else
-                            block->qwords({0});
+                        } else {
+                            if (init != nullptr && init->is_constant()) {
+                                emit_result_t result {};
+                                if (!emit_element(block, init, result))
+                                    return false;
+                                const auto& operand = result.operands.back();
+                                switch (operand.type()) {
+                                    case vm::instruction_operand_type_t::named_ref: {
+                                        auto named_ref = operand.data<vm::assembler_named_ref_t*>();
+                                        if (named_ref != nullptr)
+                                            block->qwords({*named_ref});
+                                        else
+                                            block->qwords({0});
+                                        break;
+                                    }
+                                    default: {
+                                        block->qwords({0});
+                                        break;
+                                    }
+                                }
+                            } else {
+                                block->qwords({0});
+                            }
+                        }
                         break;
                     }
                     case element_type_t::numeric_type: {

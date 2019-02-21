@@ -48,6 +48,47 @@ namespace basecode::compiler {
         return _fields;
     }
 
+    void composite_type::calculate_size() {
+        size_t size = 0;
+        switch (_type) {
+            case composite_types_t::enum_type: {
+                auto type_params = _type_parameters.as_list();
+                if (type_params.empty()) {
+                    size = 4;
+                } else {
+                    size = type_params.front()->size_in_bytes();
+                }
+                break;
+            }
+            case composite_types_t::union_type: {
+                for (auto fld : _fields.as_list()) {
+                    auto type = fld->identifier()->type_ref()->type();
+                    auto composite_type = dynamic_cast<compiler::composite_type*>(type);
+                    if (composite_type != nullptr)
+                        composite_type->calculate_size();
+
+                    if (fld->size_in_bytes() > size) {
+                        size = fld->size_in_bytes();
+                    }
+                }
+                break;
+            }
+            case composite_types_t::struct_type: {
+                for (auto fld : _fields.as_list()) {
+                    auto type = fld->identifier()->type_ref()->type();
+                    auto composite_type = dynamic_cast<compiler::composite_type*>(type);
+                    if (composite_type != nullptr)
+                        composite_type->calculate_size();
+
+                    size += fld->size_in_bytes();
+                    size = common::align(size, fld->alignment());
+                }
+                break;
+            }
+        }
+        size_in_bytes(size);
+    }
+
     compiler::block* composite_type::scope() {
         return _scope;
     }
