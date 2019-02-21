@@ -2086,6 +2086,8 @@ namespace basecode::compiler {
         }
 
         auto for_scope = builder.make_block(scope_manager.current_scope());
+        for_scope->has_stack_frame(true);
+
         scope_manager.current_scope()->blocks().emplace_back(for_scope);
 
         auto induction_decl = add_identifier_to_scope(
@@ -2096,17 +2098,12 @@ namespace basecode::compiler {
             0,
             for_scope);
         induction_decl->identifier()->usage(identifier_usage_t::stack);
-// XXX: this code is probably ok, but need to adjust block
-//        auto entry = for_scope->stack_frame().add(
-//            stack_frame_entry_type_t::local,
-//            induction_decl->identifier()->symbol()->name(),
-//            type_ref->type()->size_in_bytes());
-//        induction_decl->identifier()->stack_frame_entry(entry);
 
         auto block = evaluate_in_scope(
             context.node->children.front(),
             for_scope);
         auto body = dynamic_cast<compiler::block*>(block);
+        //body->has_stack_frame(true);
 
         result.element = builder.make_for(
             scope_manager.current_scope(),

@@ -1,6 +1,8 @@
 core :: module("../modules/core");
 
 three :: struct {
+    id: s32;
+    hp: s16;
     name: string;
 };
 

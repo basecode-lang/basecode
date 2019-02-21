@@ -437,25 +437,22 @@ namespace basecode::vm {
                 }
                 case block_entry_type_t::local: {
                     type = listing_source_line_type_t::directive;
+
+                    line << indent_four_spaces;
+
                     auto local = entry.data<local_t>();
                     switch (local->type) {
                         case local_type_t::integer: {
-                            line << fmt::format(
-                                "{}.ilocal {}",
-                                indent_four_spaces,
-                                local->name);
+                            line << std::left << std::setw(10) << ".ilocal";
                             break;
                         }
                         case local_type_t::floating_point: {
-                            line << fmt::format(
-                                "{}.flocal {}",
-                                indent_four_spaces,
-                                local->name);
+                            line << std::left << std::setw(10) << ".flocal";
                             break;
                         }
                     }
 
-                    line << fmt::format(", {}", local->offset);
+                    line << fmt::format("'{}', {}", local->name, local->offset);
 
                     if (!local->frame_offset.empty())
                         line << fmt::format(", '{}'", local->frame_offset);
@@ -511,20 +508,7 @@ namespace basecode::vm {
                 case block_entry_type_t::instruction: {
                     type = listing_source_line_type_t::instruction;
                     auto inst = entry.data<instruction_t>();
-                    auto stream = inst->disassemble([&](uint64_t id) -> std::string {
-//                        auto named_ref = find_named_ref(static_cast<common::id_t>(id));
-//                        if (named_ref != nullptr) {
-//                            if (named_ref->resolved != nullptr) {
-//                                return fmt::format(
-//                                    "{} (${:08x})",
-//                                    named_ref->name,
-//                                    named_ref->resolved->address());
-//                            } else {
-//                                return named_ref->name;
-//                            }
-//                        }
-                        return fmt::format("unresolved_ref_id({})", id);
-                    });
+                    auto stream = inst->disassemble();
                     line << fmt::format("{}{}", indent_four_spaces, stream);
                     break;
                 }

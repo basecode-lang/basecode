@@ -21,6 +21,121 @@
 
 namespace basecode::vm {
 
+    std::string instruction_t::disassemble() const {
+        std::stringstream stream;
+
+        auto op_name = op_code_name(op);
+        if (!op_name.empty()) {
+            std::stringstream mnemonic;
+
+            mnemonic << op_name;
+
+            switch (size) {
+                case op_sizes::byte:
+                    mnemonic << ".B";
+                    break;
+                case op_sizes::word:
+                    mnemonic << ".W";
+                    break;
+                case op_sizes::dword:
+                    mnemonic << ".DW";
+                    break;
+                case op_sizes::qword:
+                    mnemonic << ".QW";
+                    break;
+                default: {
+                    break;
+                }
+            }
+
+            stream << std::left << std::setw(10) << mnemonic.str();
+
+            std::stringstream operands_stream;
+            for (size_t i = 0; i < operands_count; i++) {
+                if (i > 0 && i < operands_count) {
+                    operands_stream << ", ";
+                }
+
+                const auto& operand = operands[i];
+                register_value_alias_t alias {};
+                alias.qw = operand.value.u;
+
+                if (operand.is_reg()) {
+                    if (operand.is_range()) {
+                        auto range = static_cast<uint16_t>(operand.value.u);
+                        auto start = (range >> 8) & 0xff;
+                        auto end = range & 0xff;
+                        if (operand.is_integer()) {
+                            operands_stream << fmt::format("I{}-I{}", start, end);
+                        } else {
+                            operands_stream << fmt::format("F{}-F{}", start, end);
+                        }
+                    } else {
+                        if (operand.is_integer()) {
+                            switch (operand.value.r) {
+                                case registers_t::sp: {
+                                    operands_stream << "SP";
+                                    break;
+                                }
+                                case registers_t::fp: {
+                                    operands_stream << "FP";
+                                    break;
+                                }
+                                case registers_t::pc: {
+                                    operands_stream << "PC";
+                                    break;
+                                }
+                                case registers_t::fr: {
+                                    operands_stream << "FR";
+                                    break;
+                                }
+                                case registers_t::sr: {
+                                    operands_stream << "SR";
+                                    break;
+                                }
+                                default: {
+                                    operands_stream << "I"
+                                                    << std::to_string(operand.value.r);
+                                    break;
+                                }
+                            }
+                        } else {
+                            operands_stream << "F" << std::to_string(operand.value.r);
+                        }
+                    }
+                } else {
+                    if (operand.is_negative())
+                        operands_stream << "-";
+
+                    auto operand_format_spec = op_size_format_spec(operand.size);
+                    switch (operand.size) {
+                        case op_sizes::byte:
+                            operands_stream << fmt::format(operand_format_spec, alias.b);
+                            break;
+                        case op_sizes::word:
+                            operands_stream << fmt::format(operand_format_spec, alias.w);
+                            break;
+                        case op_sizes::dword:
+                            operands_stream << fmt::format(operand_format_spec, alias.dw);
+                            break;
+                        case op_sizes::qword:
+                            operands_stream << fmt::format(operand_format_spec, alias.qw);
+                            break;
+                        default: {
+                            break;
+                        }
+                    }
+                }
+            }
+
+            stream << std::left << std::setw(24) << operands_stream.str();
+        } else {
+            stream << "UNKNOWN";
+        }
+
+        return stream.str();
+    }
+
     size_t instruction_t::encoding_size() const {
         size_t encoding_size = base_size;
 
@@ -280,125 +395,6 @@ namespace basecode::vm {
 
     void instruction_t::patch_branch_address(uint64_t address, uint8_t index) {
         operands[index].value.u = align(address, alignment);
-    }
-
-    std::string instruction_t::disassemble(const id_resolve_callable& id_resolver) const {
-        std::stringstream stream;
-
-        auto op_name = op_code_name(op);
-        if (!op_name.empty()) {
-            std::stringstream mnemonic;
-
-            mnemonic << op_name;
-
-            switch (size) {
-                case op_sizes::byte:
-                    mnemonic << ".B";
-                    break;
-                case op_sizes::word:
-                    mnemonic << ".W";
-                    break;
-                case op_sizes::dword:
-                    mnemonic << ".DW";
-                    break;
-                case op_sizes::qword:
-                    mnemonic << ".QW";
-                    break;
-                default: {
-                    break;
-                }
-            }
-
-            stream << std::left << std::setw(10) << mnemonic.str();
-
-            std::stringstream operands_stream;
-            for (size_t i = 0; i < operands_count; i++) {
-                if (i > 0 && i < operands_count) {
-                    operands_stream << ", ";
-                }
-
-                const auto& operand = operands[i];
-                register_value_alias_t alias {};
-                alias.qw = operand.value.u;
-
-                if (operand.is_reg()) {
-                    if (operand.is_range()) {
-                        auto range = static_cast<uint16_t>(operand.value.u);
-                        auto start = (range >> 8) & 0xff;
-                        auto end = range & 0xff;
-                        if (operand.is_integer()) {
-                            operands_stream << fmt::format("I{}-I{}", start, end);
-                        } else {
-                            operands_stream << fmt::format("F{}-F{}", start, end);
-                        }
-                    } else {
-                        if (operand.is_integer()) {
-                            switch (operand.value.r) {
-                                case registers_t::sp: {
-                                    operands_stream << "SP";
-                                    break;
-                                }
-                                case registers_t::fp: {
-                                    operands_stream << "FP";
-                                    break;
-                                }
-                                case registers_t::pc: {
-                                    operands_stream << "PC";
-                                    break;
-                                }
-                                case registers_t::fr: {
-                                    operands_stream << "FR";
-                                    break;
-                                }
-                                case registers_t::sr: {
-                                    operands_stream << "SR";
-                                    break;
-                                }
-                                default: {
-                                    operands_stream << "I"
-                                                    << std::to_string(operand.value.r);
-                                    break;
-                                }
-                            }
-                        } else {
-                            operands_stream << "F" << std::to_string(operand.value.r);
-                        }
-                    }
-                } else {
-//                    if (operand.is_unresolved()) {
-//                        if (id_resolver == nullptr)
-//                            operands_stream << fmt::format("id({})", operand.value.u);
-//                        else
-//                            operands_stream << id_resolver(operand.value.u);
-//                    } else {
-                        auto operand_format_spec = op_size_format_spec(operand.size);
-                        switch (operand.size) {
-                            case op_sizes::byte:
-                                operands_stream << fmt::format(operand_format_spec, alias.b);
-                                break;
-                            case op_sizes::word:
-                                operands_stream << fmt::format(operand_format_spec, alias.w);
-                                break;
-                            case op_sizes::dword:
-                                operands_stream << fmt::format(operand_format_spec, alias.dw);
-                                break;
-                            case op_sizes::qword:
-                                operands_stream << fmt::format(operand_format_spec, alias.qw);
-                                break;
-                            default: {
-                                break;
-                            }
-                        }
-//                    }
-                }
-            }
-
-            stream << std::left << std::setw(24) << operands_stream.str();
-        } else {
-            stream << "UNKNOWN";
-        }
-
-        return stream.str();
     }
 
     ///////////////////////////////////////////////////////////////////////////

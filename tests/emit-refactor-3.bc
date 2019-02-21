@@ -1,10 +1,5 @@
 core :: module("../modules/core");
 
-text: string;
-core::assign_string(address_of(text), "hello world!", 12);
-content := text.data;
-i: u32 := 0;
-
 vector3 :: struct {
     x: s32;
     y: s32;
@@ -12,7 +7,7 @@ vector3 :: struct {
 };
 
 class  :: struct {
-    name: string;
+    name: ^u8;
 };
 
 entity :: struct {
@@ -21,34 +16,7 @@ entity :: struct {
     cls: class;
 };
 
-foo :: proc(a, b, c: f32): f32 {
-    return (a + b + c) * i;  // this references a module level variable
-};
-
 #run {
-    gg := foo(1.2, 2.1, 3.1);
-
-    core::print("text.length   := %d\n",    text.length);
-    core::print("text.capacity := %d\n",    text.capacity);
-    core::print("text.data     := $%08x\n", text.data);
-    core::print("content       := $%08x\n", content);
-
-    while i < text.length {
-        core::print("%c", content^);
-        content +:= 1;
-        i +:= 1;
-    };
-
-    {
-        content := text.data;
-        for i in range<u32>(0, text.length, kind := core::ranges::kinds::EXCLUSIVE) {
-            core::print("%c", content^);
-            content +:= 1;
-        };
-    };
-
-    core::print("\n");
-
     player: entity;
     player.pos.x := 10;
     player.pos.y := 5;
@@ -61,10 +29,6 @@ foo :: proc(a, b, c: f32): f32 {
     core::print("player.dir.x := %d\n", player.dir.x);
     core::print("player.dir.y := %d\n", player.dir.y);
     core::print("player.dir.z := %d\n", player.dir.z);
-
-    player.cls.name := text;
-    core::print("player.cls.name.length   := %d\n", player.cls.name.length);
-    core::print("player.cls.name.capacity := %d\n", player.cls.name.capacity);
 
     player_ptr: ^entity := address_of(player);
 

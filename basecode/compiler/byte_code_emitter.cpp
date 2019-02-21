@@ -124,23 +124,29 @@ namespace basecode::compiler {
             vm::op_sizes::qword :
             vm::op_size_for_byte_size(result.type_result.inferred_type->size_in_bytes());
 
-        const auto& offset = result.operands.size() == 2 ?
+        const auto has_offset = result.operands.size() == 2;
+        const auto& offset = has_offset ?
                              result.operands[1] :
                              vm::instruction_operand_t();
 
-        if (!is_temp_local(local_ref) || !offset.is_empty()) {
+        if (!is_temp_local(local_ref) || has_offset) {
             vm::instruction_operand_t temp(_session.assembler().make_named_ref(
                 vm::assembler_named_ref_type_t::local,
                 temp_name,
                 size));
 
-            if (is_composite && !is_pointer_type) {
-                block->move(temp, local_ref, offset);
+            if (is_pointer_type) {
+                block->load(temp, local_ref, offset);
+                result.operands.push_back(temp);
+            } else if (is_composite) {
+                if (has_offset) {
+                    block->move(temp, local_ref, offset);
+                    result.operands.push_back(temp);
+                }
             } else {
                 block->load(temp, local_ref, offset);
+                result.operands.push_back(temp);
             }
-
-            result.operands.push_back(temp);
         }
     }
 
@@ -866,8 +872,18 @@ namespace basecode::compiler {
                 auto args = intrinsic->arguments()->elements();
                 if (name == "address_of") {
                     auto arg = args[0];
-                    if (!emit_element(block, arg, result))
+
+                    emit_result_t arg_result {};
+                    if (!emit_element(block, arg, arg_result))
                         return false;
+
+                    const auto has_offset = arg_result.operands.size() == 2;
+                    const auto& temp = arg_result.operands.front();
+                    const auto& offset = has_offset ?
+                                         arg_result.operands[1] :
+                                         vm::instruction_operand_t();
+                    block->move(temp, temp, offset);
+                    result.operands = {temp};
                 } else if (name == "alloc") {
                     auto arg = args[0];
 
@@ -1354,16 +1370,7 @@ namespace basecode::compiler {
             case element_type_t::unary_operator: {
                 auto unary_op = dynamic_cast<compiler::unary_operator*>(e);
                 auto op_type = unary_op->operator_type();
-
-                switch (op_type) {
-                    case operator_type_t::pointer_dereference: {
-                        block->comment("unary_op: deref", vm::comment_location_t::after_instruction);
-                        break;
-                    }
-                    default:
-                        break;
-                }
-
+                
                 auto rhs_temp = allocate_temp();
                 emit_result_t rhs_emit_result {};
                 if (!emit_element(block, unary_op->rhs(), rhs_emit_result))
@@ -1541,15 +1548,34 @@ namespace basecode::compiler {
                             copy_required = lhs_is_composite && rhs_is_composite;
                         }
 
+                        const auto has_offset = lhs_result.operands.size() == 2;
                         if (copy_required) {
-                            auto size = static_cast<uint64_t>(rhs_result.type_result.inferred_type->size_in_bytes());
-                            block->copy(
-                                vm::op_sizes::byte,
-                                lhs_result.operands.front(),
-                                rhs_result.operands.back(),
-                                vm::instruction_operand_t(size));
+                            const auto size = static_cast<uint64_t>(rhs_result.type_result.inferred_type->size_in_bytes());
+                            if (has_offset) {
+                                auto copy_temp = allocate_temp();
+                                vm::instruction_operand_t temp_target(assembler.make_named_ref(
+                                    vm::assembler_named_ref_type_t::local,
+                                    temp_local_name(number_class_t::integer, copy_temp),
+                                    vm::op_sizes::qword));
+                                block->move(
+                                    temp_target,
+                                    lhs_result.operands.front(),
+                                    lhs_result.operands.back());
+                                block->copy(
+                                    vm::op_sizes::byte,
+                                    temp_target,
+                                    rhs_result.operands.back(),
+                                    vm::instruction_operand_t(size));
+                                free_temp();
+                            } else {
+                                block->copy(
+                                    vm::op_sizes::byte,
+                                    lhs_result.operands.back(),
+                                    rhs_result.operands.back(),
+                                    vm::instruction_operand_t(size));
+                            }
                         } else {
-                            if (lhs_result.operands.size() == 2) {
+                            if (has_offset) {
                                 block->store(
                                     lhs_result.operands[0],
                                     rhs_result.operands.back(),
@@ -1958,8 +1984,11 @@ namespace basecode::compiler {
             compiler::block* block,
             const identifier_by_section_t& vars,
             identifier_list_t& locals) {
+        auto& scope_manager = _session.scope_manager();
+
         element_id_set_t processed {};
-        return _session.scope_manager().visit_child_blocks(
+        int64_t offset = 0;
+        return scope_manager.visit_child_blocks(
             _session.result(),
             [&](compiler::block* scope) {
                 for (auto ref_id : scope->references().as_list()) {
@@ -1968,15 +1997,39 @@ namespace basecode::compiler {
                         continue;
 
                     auto var = ref->identifier();
-                    if (vars.identifiers.count(var->id()) == 0)
+                    if (var->field() != nullptr)
                         continue;
+
+                    auto type = var->type_ref()->type();
+                    if (type->is_type_one_of({
+                            element_type_t::module_type,
+                            element_type_t::namespace_type,
+                            element_type_t::proc_type})) {
+                        continue;
+                    }
+
+                    //if (vars.identifiers.count(var->id()) == 0) {
+                    //    auto init = var->initializer();
+                    //    if (init != nullptr && init->is_constant())
+                    //        continue;
+                    //}
 
                     if (processed.count(var->id()) > 0)
                         continue;
 
                     processed.insert(var->id());
 
-                    basic_block->local(vm::local_type_t::integer, var->label_name());
+                    auto in_stack_frame = scope_manager.within_local_scope(scope);
+                    if (in_stack_frame) {
+                        offset += -var->type_ref()->type()->size_in_bytes();
+                        continue;
+                    }
+
+                    basic_block->local(
+                        vm::local_type_t::integer,
+                        var->label_name(),
+                        in_stack_frame ? offset : 0,
+                        in_stack_frame ? "locals" : "");
                     locals.emplace_back(var);
                 }
 
@@ -2397,8 +2450,15 @@ namespace basecode::compiler {
 
         emit_result_t result {};
         if (init != nullptr) {
+            auto expr = init->expression();
+            if (expr != nullptr
+            &&  expr->element_type() == element_type_t::uninitialized_literal) {
+                return true;
+            }
+
             if (!emit_element(block, init, result))
                 return false;
+
             value_ptr = &result.operands.back();
         }
 
@@ -2447,6 +2507,7 @@ namespace basecode::compiler {
                 case element_type_t::bool_type:
                 case element_type_t::numeric_type:
                 case element_type_t::pointer_type: {
+                    offset = common::align(offset, var_type->alignment());
                     if (!emit_primitive_initializer(block, base_local, next_var, offset))
                         return false;
                     offset += var_type->size_in_bytes();

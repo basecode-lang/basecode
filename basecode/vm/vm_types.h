@@ -607,11 +607,11 @@ namespace basecode::vm {
 
         size_t encoding_size() const;
 
+        std::string disassemble() const;
+
         size_t align(uint64_t value, size_t size) const;
 
         void patch_branch_address(uint64_t address, uint8_t index = 0);
-
-        std::string disassemble(const id_resolve_callable& id_resolver = nullptr) const;
 
         op_codes op = op_codes::nop;
         op_sizes size = op_sizes::none;

@@ -1339,7 +1339,7 @@ namespace basecode::syntax {
 
     bool parser::peek(token_types_t type) {
         if (!look_ahead(0))
-            return false;
+            return type == token_types_t::end_of_file;
         auto& token = _tokens.front();
         return token.type == type;
     }
