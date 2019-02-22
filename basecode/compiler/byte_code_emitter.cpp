@@ -882,7 +882,9 @@ namespace basecode::compiler {
                     const auto& offset = has_offset ?
                                          arg_result.operands[1] :
                                          vm::instruction_operand_t();
-                    block->move(temp, temp, offset);
+                    if (!offset.is_empty())
+                        block->move(temp, temp, offset);
+                    result.skip_read = true;
                     result.operands = {temp};
                 } else if (name == "alloc") {
                     auto arg = args[0];
@@ -2848,7 +2850,8 @@ namespace basecode::compiler {
                     emit_result_t arg_result {};
                     if (!emit_element(block, arg, arg_result))
                         return false;
-                    read(block, arg_result, temp);
+                    if (!arg_result.skip_read)
+                        read(block, arg_result, temp);
 
                     if (!arg_list->is_foreign_call()) {
                         type = arg_result.type_result.inferred_type;

@@ -136,6 +136,7 @@ namespace basecode::compiler {
     };
 
     struct emit_result_t {
+        bool skip_read = false;
         infer_type_result_t type_result {};
         vm::instruction_operand_list_t operands {};
     };
