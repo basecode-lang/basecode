@@ -1,46 +1,14 @@
 core :: module("../modules/core");
 
-vector3 :: struct {
-    x: s32;
-    y: s32;
-    z: s32;
+fib :: proc(n: u64 := 10): u64 {
+    core::print("n := %d\n", n);
+    if n < 2 {
+        return n;
+    } else {
+        n1 := n - 1;
+        n2 := fib(n - 2);
+        return fib(n1 + n2);
+    };
 };
 
-class  :: struct {
-    name: ^u8;
-};
-
-entity :: struct {
-    pos: vector3;
-    dir: vector3;
-    cls: class;
-};
-
-#run {
-    player: entity;
-    player.pos.x := 10;
-    player.pos.y := 5;
-    player.pos.z := -6;
-
-    core::print("player.pos.x := %d\n", player.pos.x);
-    core::print("player.pos.y := %d\n", player.pos.y);
-    core::print("player.pos.z := %hhd\n", player.pos.z);
-
-    core::print("player.dir.x := %d\n", player.dir.x);
-    core::print("player.dir.y := %d\n", player.dir.y);
-    core::print("player.dir.z := %d\n", player.dir.z);
-
-    player_ptr: ^entity := address_of(player);
-
-    core::print("before: player_ptr.pos.x := %d\n", player_ptr.pos.x);
-    core::print("before: player_ptr.pos.y := %d\n", player_ptr.pos.y);
-    core::print("before: player_ptr.pos.z := %hhd\n", player_ptr.pos.z);
-
-    player_ptr.pos.x := 100;
-    player_ptr.pos.y := 55;
-    player_ptr.pos.z := -106;
-
-    core::print("after: player_ptr.pos.x := %d\n", player_ptr.pos.x);
-    core::print("after: player_ptr.pos.y := %d\n", player_ptr.pos.y);
-    core::print("after: player_ptr.pos.z := %hhd\n", player_ptr.pos.z);
-};
+//#run fib(4);

@@ -11,7 +11,7 @@ d: [ARRAY_SIZE]bool;
 //e := b[0];
 //f := c[2][2];
 
-g := array<any>(
+g := array<u32>(
     1,
     array<u32>(10, 20, 30),
     3,
