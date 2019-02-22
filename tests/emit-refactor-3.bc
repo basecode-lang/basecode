@@ -1,14 +1,25 @@
 core :: module("../modules/core");
 
-fib :: proc(n: u64 := 10): u64 {
-    core::print("n := %d\n", n);
-    if n < 2 {
-        return n;
+test :: proc(n: u64 := 10): u64 {
+    if n == 0 || n == 1 {
+        return 10;
     } else {
-        n1 := n - 1;
-        n2 := fib(n - 2);
-        return fib(n1 + n2);
+        return 20;
     };
 };
 
-//#run fib(4);
+fib :: proc(n: u64 := 10): u64 {
+    core::print("n := %d\n", n);
+    if n == 0 || n == 1 {
+        return n;
+    } else {
+        n := (n - 1) + fib(n - 2);
+        return n;
+    };
+};
+
+#run {
+    core::print("test := %d\n", test(2));
+    core::print("test := %d\n", test(1));
+};
+#run fib();

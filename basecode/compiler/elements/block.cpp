@@ -59,7 +59,13 @@ namespace basecode::compiler {
     }
 
     void block::has_stack_frame(bool value) {
-        _has_stack_frame = value;
+        if (_has_stack_frame != value) {
+            _has_stack_frame = value;
+            for (auto child_block : _blocks) {
+                for (auto var : child_block->identifiers().as_list())
+                    var->usage(identifier_usage_t::stack);
+            }
+        }
     }
 
     void block::on_owned_elements(element_list_t& list) {

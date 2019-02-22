@@ -39,10 +39,10 @@ namespace basecode::compiler {
 
     void temp_count_result_t::update() {
         if (_ints > ints)
-            ints = _ints;
+            ints = _ints + 1;
 
         if (_floats > floats)
-            floats = _floats;
+            floats = _floats + 1;
 
         _ints = _floats = 0;
     }
@@ -1713,6 +1713,15 @@ namespace basecode::compiler {
                 }
                 break;
             }
+            case element_type_t::directive: {
+                auto directive = dynamic_cast<compiler::directive*>(e);
+                if (directive->name() == "run") {
+                    auto run_directive = dynamic_cast<compiler::run_directive*>(directive);
+                    if (!count_temps(run_directive->expression(), result))
+                        return false;
+                }
+                break;
+            }
             case element_type_t::return_e: {
                 auto return_e = dynamic_cast<compiler::return_element*>(e);
                 for (auto expr : return_e->expressions()) {
@@ -3020,12 +3029,13 @@ namespace basecode::compiler {
         auto& assembler = _session.assembler();
 
         auto lhs_temp = allocate_temp();
+        auto rhs_temp = allocate_temp();
+
         emit_result_t lhs_result {};
         if (!emit_element(block, binary_op->lhs(), lhs_result))
             return false;
         read(block, lhs_result, lhs_temp);
 
-        auto rhs_temp = allocate_temp();
         emit_result_t rhs_result {};
         if (!emit_element(block, binary_op->rhs(), rhs_result))
             return false;
