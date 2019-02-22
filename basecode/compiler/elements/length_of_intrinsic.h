@@ -38,6 +38,12 @@ namespace basecode::compiler {
             infer_type_result_t& result) override;
 
         bool on_is_constant() const override;
+
+    private:
+        bool length_of_identifier(
+            compiler::session& session,
+            compiler::identifier* identifier,
+            fold_result_t& result);
     };
 
 };

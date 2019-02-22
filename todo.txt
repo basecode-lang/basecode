@@ -2,7 +2,6 @@ NOTES
 ------------------------
 Steps to reach feature complete for the bootstrap compiler:
 
-- length_of intrinsic
 - clean up ast_evaluator::proc_call
 - fixed array type and subscript operator
 - family expressions
@@ -15,13 +14,6 @@ Steps to reach feature complete for the bootstrap compiler:
 
 After these tasks are complete (most are covered below) then the assembler should be enhanced to
 support variable directives and label operators.
-
-Code generation rewrite to move away from emit/on_emit and do everything in a byte_code_emitter for
-better state management and locality.  We need some new structures here:
-    - element needs to be somehow linked to a "unit" or "section" in the assembler and this construct
-      contains the related instruction_block instances;
-    - this should allow for easy regeneration of a particular element and its children because we
-      know what that is on the assembler side of things;
 
 Refactor session:
     - need to introduce a general job system (not necessarily multi-threaded)
@@ -63,9 +55,14 @@ QUESTIONS
 
 WORKING
 -------
-- NEW: length_of intrinsic for literal strings and fixed arrays
+- REFACTOR: session/variable combination, again
+            merge concept of register_allocator + variable
+            DFA graph coloring
+- NEW: DFA graph coloring
 
 - NEW: fixed length arrays; subscript operator
+
+- NEW: length_of intrinsic for fixed arrays
 
 - NEW: family expressions
         integers :: family(signed_integers, unsigned_integers);
@@ -90,8 +87,6 @@ TASKS
 
 - NEW: UFCS
 
-- NEW: DFA graph coloring
-
 - BUG: multiple assignment code generation doesn't allow for value swaps.
 - BUG: placeholder identifier "_" isn't working properly
 - BUG: redefining an identifier with another type doesn't give nice errors.
@@ -105,9 +100,6 @@ TASKS
 - BUG: lambda procedure type checking
 - BUG: type parameter propagation
 
-- REFACTOR: session/variable combination, again
-            merge concept of register_allocator + variable
-            DFA graph coloring
 - REFACTOR: ast_evaluator::add_identifier_to_scope
 
 DONE
@@ -262,3 +254,11 @@ DONE
         return a + b;
     };
 - NEW: string literal parsing and escapes
+- Code generation rewrite to move away from emit/on_emit and do everything in a byte_code_emitter for
+  better state management and locality.  We need some new structures here:
+    - element needs to be somehow linked to a "unit" or "section" in the assembler and this construct
+      contains the related instruction_block instances;
+    - this should allow for easy regeneration of a particular element and its children because we
+      know what that is on the assembler side of things;
+- length_of intrinsic
+- NEW: length_of intrinsic for literal strings

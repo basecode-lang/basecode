@@ -11,6 +11,8 @@
 
 core :: module("../modules/core");
 
+HELLO_WORLD :: "hello world!";
+
 @library "basecode";
 #foreign str_test_ptr :: proc(str: ^string);
 
@@ -36,7 +38,10 @@ tuple_by_value :: proc(flags: flags_t) {
     core::print("%s: %d, %f\n", "integer and float", 22, 3.5);
 
     temp: string;
-    core::assign_string(address_of(temp), "hello world!", 12);
+    core::assign_string(
+        address_of(temp),
+        HELLO_WORLD,
+        length_of(HELLO_WORLD));
 
     // ffi
     str_test_ptr(address_of(temp));
@@ -76,7 +81,10 @@ entity :: struct {
 
     jeff: player;
     with jeff {
-        core::assign_string(address_of(.name), "jeff", 4);
+        core::assign_string(
+            address_of(.name),
+            "jeff",
+            length_of("jeff"));
         core::print(".name.length   := %d\n", .name.length);
         core::print(".name.capacity := %d\n", .name.capacity);
         core::print(".name.data     := %s\n", .name.data);
@@ -84,7 +92,10 @@ entity :: struct {
 
     jeff_entity: entity;
     with jeff_entity {
-        core::assign_string(address_of(.name), "entity: jeff", 12);
+        core::assign_string(
+            address_of(.name),
+            "entity: jeff",
+            length_of("entity: jeff"));
         core::print(".name.length   := %d\n", .name.length);
         core::print(".name.capacity := %d\n", .name.capacity);
         core::print(".name.data     := %s\n", .name.data);
