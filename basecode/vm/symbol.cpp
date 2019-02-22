@@ -51,12 +51,4 @@ namespace basecode::vm {
         return _type;
     }
 
-    common::id_t symbol::pending_address_from_id() const {
-        return _pending_address_from_id;
-    }
-
-    void symbol::pending_address_from_id(common::id_t value) {
-        _pending_address_from_id = value;
-    }
-
 };

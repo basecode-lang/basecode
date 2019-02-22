@@ -37,17 +37,11 @@ namespace basecode::vm {
 
         symbol_type_t type() const;
 
-        common::id_t pending_address_from_id() const;
-
-        void pending_address_from_id(common::id_t value);
-
     private:
         size_t _size;
         uint64_t _offset;
         std::string _name;
         symbol_type_t _type;
-        common::id_t _pending_address_from_id = 0;
-
         union {
             double float_value;
             uint64_t int_value;

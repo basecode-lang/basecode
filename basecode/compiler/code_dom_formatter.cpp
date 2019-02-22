@@ -343,8 +343,8 @@ namespace basecode::compiler {
             case element_type_t::argument_list: {
                 auto args = dynamic_cast<argument_list*>(node);
                 auto style = ", fillcolor=azure, style=\"filled\"";
-//                for (auto arg_element : args->elements())
-//                    add_primary_edge(args, arg_element);
+                for (auto arg_element : args->elements())
+                    add_primary_edge(args, arg_element);
                 return fmt::format(
                     "{}[shape=record,label=\"argument_list\"{}];",
                     node_vertex_name,
@@ -640,8 +640,8 @@ namespace basecode::compiler {
             case element_type_t::binary_operator: {
                 auto element = dynamic_cast<binary_operator*>(node);
                 auto style = ", fillcolor=slateblue1, style=\"filled\"";
-//                add_primary_edge(element, element->lhs(), "lhs");
-//                add_primary_edge(element, element->rhs(), "rhs");
+                add_primary_edge(element, element->lhs(), "lhs");
+                add_primary_edge(element, element->rhs(), "rhs");
                 return fmt::format(
                     "{}[shape=record,label=\"binary_operator|{}\"{}];",
                     node_vertex_name,
