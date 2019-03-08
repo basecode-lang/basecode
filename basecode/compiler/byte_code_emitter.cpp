@@ -159,7 +159,8 @@ namespace basecode::compiler {
 
         intern_string_literals();
 
-        if (!emit_bootstrap_block())
+        auto bootstrap_block = emit_bootstrap_block();
+        if (bootstrap_block == nullptr)
             return false;
 
         if (!emit_type_table())
@@ -174,19 +175,25 @@ namespace basecode::compiler {
         if (!emit_procedure_types(vars))
             return false;
 
-        if (!emit_start_block())
+        auto start_block = emit_start_block({bootstrap_block});
+        if (start_block == nullptr)
             return false;
 
-        if (!emit_initializers(vars))
+        auto initializer_block = emit_initializers({start_block}, vars);
+        if (initializer_block == nullptr)
             return false;
 
-        if (!emit_implicit_blocks(vars))
+        auto last_implicit_block = emit_implicit_blocks({initializer_block}, vars);
+        if (last_implicit_block == nullptr)
             return false;
 
-        if (!emit_finalizers(vars))
+        auto finalizer_block = emit_finalizers({last_implicit_block}, vars);
+        if (finalizer_block == nullptr)
             return false;
 
-        return emit_end_block();
+        auto result = emit_end_block({finalizer_block});
+
+        return result;
     }
 
     bool byte_code_emitter::emit_block(
@@ -1874,7 +1881,9 @@ namespace basecode::compiler {
     bool byte_code_emitter::emit_type_table() {
         auto& assembler = _session.assembler();
 
-        auto type_info_block = assembler.make_basic_block();
+        auto type_info_block = _blocks.make();
+        assembler.blocks().emplace_back(type_info_block);
+
         type_info_block->section(vm::section_t::ro_data);
 
         auto used_types = _session.used_types();
@@ -1898,15 +1907,17 @@ namespace basecode::compiler {
         return true;
     }
 
-    bool byte_code_emitter::emit_bootstrap_block() {
+    vm::basic_block* byte_code_emitter::emit_bootstrap_block() {
         auto& assembler = _session.assembler();
 
-        auto block = assembler.make_basic_block();
+        auto block = _blocks.make();
         block->jump_direct(vm::instruction_operand_t(assembler.make_named_ref(
             vm::assembler_named_ref_type_t::label,
             "_start")));
 
-        return true;
+        assembler.blocks().emplace_back(block);
+
+        return block;
     }
 
     void byte_code_emitter::intern_string_literals() {
@@ -1928,7 +1939,7 @@ namespace basecode::compiler {
     bool byte_code_emitter::emit_interned_string_table() {
         auto& assembler = _session.assembler();
 
-        auto block = assembler.make_basic_block();
+        auto block = _blocks.make();
         block->comment("interned string literals", 0);
         block->section(vm::section_t::ro_data);
 
@@ -1956,6 +1967,8 @@ namespace basecode::compiler {
                 escaped);
         }
 
+        assembler.blocks().emplace_back(block);
+
         return true;
     }
 
@@ -1964,7 +1977,7 @@ namespace basecode::compiler {
             return false;
 
         auto& assembler = _session.assembler();
-        auto block = assembler.make_basic_block();
+        auto block = _blocks.make();
 
         for (const auto& section : vars.sections) {
             block->blank_line();
@@ -1974,24 +1987,37 @@ namespace basecode::compiler {
                 emit_section_variable(block, section.first, e);
         }
 
+        assembler.blocks().emplace_back(block);
+
         return true;
     }
 
-    bool byte_code_emitter::emit_end_block() {
+    bool byte_code_emitter::emit_end_block(const vm::basic_block_list_t& predecessors) {
         auto& assembler = _session.assembler();
 
-        auto end_block = assembler.make_basic_block();
+        auto end_block = _blocks.make();
+        for (auto p : predecessors)
+            p->add_successors({end_block});
+        end_block->add_predecessors(predecessors);
+
         end_block->align(vm::instruction_t::alignment);
         end_block->label(assembler.make_label("_end"));
         end_block->exit();
 
+        assembler.blocks().emplace_back(end_block);
+
         return true;
     }
 
-    bool byte_code_emitter::emit_start_block() {
+    vm::basic_block* byte_code_emitter::emit_start_block(
+            const vm::basic_block_list_t& predecessors) {
         auto& assembler = _session.assembler();
 
-        auto start_block = assembler.make_basic_block();
+        auto start_block = _blocks.make();
+        start_block->add_predecessors(predecessors);
+        for (auto p : predecessors)
+            p->add_successors({start_block});
+
         start_block->align(vm::instruction_t::alignment);
         start_block->label(assembler.make_label("_start"));
 
@@ -1999,7 +2025,9 @@ namespace basecode::compiler {
             vm::instruction_operand_t::fp(),
             vm::instruction_operand_t::sp());
 
-        return true;
+        assembler.blocks().emplace_back(start_block);
+
+        return start_block;
     }
 
     bool byte_code_emitter::referenced_module_variables(
@@ -2057,7 +2085,9 @@ namespace basecode::compiler {
             block);
     }
 
-    bool byte_code_emitter::emit_implicit_blocks(const identifier_by_section_t& vars) {
+    vm::basic_block* byte_code_emitter::emit_implicit_blocks(
+            const vm::basic_block_list_t& predecessors,
+            const identifier_by_section_t& vars) {
         auto& assembler = _session.assembler();
 
         block_list_t implicit_blocks {};
@@ -2072,8 +2102,12 @@ namespace basecode::compiler {
         }
         implicit_blocks.emplace_back(_session.program().module()->scope());
 
+        vm::basic_block_list_t basic_blocks {};
+
         for (auto block : implicit_blocks) {
-            auto implicit_block = assembler.make_basic_block();
+            auto implicit_block = _blocks.make();
+            basic_blocks.emplace_back(implicit_block);
+            assembler.blocks().emplace_back(implicit_block);
 
             auto parent_element = block->parent_element();
             switch (parent_element->element_type()) {
@@ -2100,17 +2134,28 @@ namespace basecode::compiler {
 
             identifier_list_t locals {};
             if (!referenced_module_variables(implicit_block, block, vars, locals))
-                return false;
+                return nullptr;
 
             temp_local_list_t temp_locals {};
             if (!make_temp_locals(block, temp_locals))
-                return false;
+                return nullptr;
 
             if (!emit_block(implicit_block, block, locals, temp_locals))
-                return false;
+                return nullptr;
         }
 
-        return true;
+        for (size_t i = 0; i < basic_blocks.size(); i++) {
+            if (i == 0) {
+                basic_blocks[0]->add_predecessors(predecessors);
+                for (auto p : predecessors)
+                    p->add_successors({basic_blocks[0]});
+                continue;
+            }
+            basic_blocks[i]->add_predecessors({basic_blocks[i - 1]});
+            basic_blocks[i - 1]->add_successors({basic_blocks[i]});
+        }
+
+        return basic_blocks.empty() ? nullptr : basic_blocks.back();
     }
 
     bool byte_code_emitter::emit_procedure_types(const identifier_by_section_t& vars) {
@@ -2137,7 +2182,8 @@ namespace basecode::compiler {
 
         auto& assembler = _session.assembler();
         for (auto instance : proc_instance_set) {
-            auto basic_block = assembler.make_basic_block();
+            auto basic_block = _blocks.make();
+            assembler.blocks().emplace_back(basic_block);
             if (!emit_procedure_instance(basic_block, instance, vars))
                 return false;
         }
@@ -2145,10 +2191,16 @@ namespace basecode::compiler {
         return true;
     }
 
-    bool byte_code_emitter::emit_finalizers(const identifier_by_section_t& vars) {
+    vm::basic_block* byte_code_emitter::emit_finalizers(
+            const vm::basic_block_list_t& predecessors,
+            const identifier_by_section_t& vars) {
         auto& assembler = _session.assembler();
 
-        auto block = assembler.make_basic_block();
+        auto block = _blocks.make();
+        block->add_predecessors(predecessors);
+        for (auto p : predecessors)
+            p->add_successors({block});
+        assembler.blocks().emplace_back(block);
         block->align(vm::instruction_t::alignment);
         block->label(assembler.make_label("_finalizer"));
 
@@ -2185,7 +2237,7 @@ namespace basecode::compiler {
             emit_finalizer(block, var);
         }
 
-        return true;
+        return block;
     }
 
     bool byte_code_emitter::group_identifiers(identifier_by_section_t& vars) {
@@ -2268,10 +2320,16 @@ namespace basecode::compiler {
         return true;
     }
 
-    bool byte_code_emitter::emit_initializers(const identifier_by_section_t& vars) {
+    vm::basic_block* byte_code_emitter::emit_initializers(
+            const vm::basic_block_list_t& predecessors,
+            const identifier_by_section_t& vars) {
         auto& assembler = _session.assembler();
 
-        auto block = assembler.make_basic_block();
+        auto block = _blocks.make();
+        block->add_predecessors(predecessors);
+        for (auto p : predecessors)
+            p->add_successors({block});
+        assembler.blocks().emplace_back(block);
         block->align(vm::instruction_t::alignment);
         block->label(assembler.make_label("_initializer"));
 
@@ -2314,7 +2372,7 @@ namespace basecode::compiler {
             emit_initializer(block, var);
         }
 
-        return true;
+        return block;
     }
 
     bool byte_code_emitter::emit_section_variable(

@@ -11,6 +11,7 @@
 
 #pragma once
 
+#include <vm/basic_block_map.h>
 #include "compiler_types.h"
 
 namespace basecode::compiler {
@@ -77,22 +78,22 @@ namespace basecode::compiler {
             compiler::block* block,
             temp_local_list_t& locals);
 
-        bool emit_end_block();
-
         bool emit_type_table();
-
-        bool emit_start_block();
 
         bool emit_section_variable(
             vm::basic_block* block,
             vm::section_t section,
             compiler::element* e);
 
-        bool emit_bootstrap_block();
-
         void intern_string_literals();
 
         bool emit_interned_string_table();
+
+        vm::basic_block* emit_implicit_blocks(
+            const vm::basic_block_list_t& predecessors,
+            const identifier_by_section_t& vars);
+
+        vm::basic_block* emit_bootstrap_block();
 
         bool group_identifiers(identifier_by_section_t& vars);
 
@@ -102,7 +103,9 @@ namespace basecode::compiler {
 
         bool emit_procedure_types(const identifier_by_section_t& vars);
 
-        bool emit_implicit_blocks(const identifier_by_section_t& vars);
+        bool emit_end_block(const vm::basic_block_list_t& predecessors);
+
+        vm::basic_block* emit_start_block(const vm::basic_block_list_t& predecessors);
 
     // initializers & finalizers
     private:
@@ -120,9 +123,13 @@ namespace basecode::compiler {
             compiler::identifier* var,
             int64_t offset);
 
-        bool emit_finalizers(const identifier_by_section_t& vars);
+        vm::basic_block* emit_finalizers(
+            const vm::basic_block_list_t& predecessors,
+            const identifier_by_section_t& vars);
 
-        bool emit_initializers(const identifier_by_section_t& vars);
+        vm::basic_block* emit_initializers(
+            const vm::basic_block_list_t& predecessors,
+            const identifier_by_section_t& vars);
 
     // helper functions
     private:
@@ -205,6 +212,7 @@ namespace basecode::compiler {
     private:
         uint8_t _temp = 0;
         compiler::session& _session;
+        vm::basic_block_map _blocks {};
         vm::basic_block_stack_t _block_stack {};
         flow_control_stack_t _control_flow_stack {};
     };

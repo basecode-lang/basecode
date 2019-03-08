@@ -41,7 +41,7 @@ namespace basecode::vm {
 
         segment_list_t segments() const;
 
-        basic_block* make_basic_block();
+        vm::basic_block_list_t& blocks();
 
         bool assemble(common::result& r);
 
@@ -61,8 +61,6 @@ namespace basecode::vm {
         bool resolve_labels(common::result& r);
 
         bool apply_addresses(common::result& r);
-
-        basic_block* block(common::id_t id) const;
 
         label* find_label(const std::string& name);
 
@@ -87,8 +85,6 @@ namespace basecode::vm {
 
         void free_reg(const register_t& reg);
 
-        void register_block(basic_block* block);
-
     private:
         vm::terp* _terp = nullptr;
         basic_block_list_t _blocks {};
@@ -101,7 +97,6 @@ namespace basecode::vm {
         std::unordered_map<std::string, int64_t> _frame_offsets {};
         std::unordered_map<std::string, assembler_local_t> _locals {};
         std::unordered_map<std::string, assembler_named_ref_t> _named_refs {};
-        std::unordered_map<common::id_t, vm::basic_block*> _block_registry {};
     };
 
 };

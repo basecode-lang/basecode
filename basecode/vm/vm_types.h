@@ -36,9 +36,9 @@ namespace basecode::vm {
     class segment;
     class assembler;
     class basic_block;
+    class basic_block_map;
     class assembly_parser;
     class assembly_listing;
-    class register_allocator;
 
     using symbol_list_t = std::vector<symbol*>;
     using basic_block_list_t = std::vector<basic_block*>;

@@ -59,8 +59,6 @@ namespace basecode::vm {
 
         void insertion_point(ssize_t value);
 
-        listing_source_file_t* source_file();
-
         vm::basic_block_list_t& successors();
 
         vm::basic_block_list_t& predecessors();
@@ -77,8 +75,6 @@ namespace basecode::vm {
 
         void make_block_entry(const align_t& section);
 
-        void source_file(listing_source_file_t* value);
-
         void make_block_entry(const comment_t& comment);
 
         void make_block_entry(const section_t& section);
@@ -87,11 +83,15 @@ namespace basecode::vm {
 
         void make_block_entry(const data_definition_t& data);
 
+        void add_successors(const vm::basic_block_list_t& list);
+
         const vm::local_t* local(const std::string& name) const;
+
+        void add_predecessors(const vm::basic_block_list_t& list);
 
         void frame_offset(const std::string& name, int64_t offset);
 
-    // meta directives
+        // meta directives
     public:
         void meta_end();
 
@@ -460,7 +460,6 @@ namespace basecode::vm {
         vm::basic_block_list_t _successors {};
         vm::basic_block_list_t _predecessors {};
         std::map<std::string, size_t> _locals {};
-        vm::listing_source_file_t* _source_file = nullptr;
     };
 
 };

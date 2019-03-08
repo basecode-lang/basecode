@@ -947,10 +947,6 @@ namespace basecode::vm {
         make_block_entry(op);
     }
 
-    listing_source_file_t* basic_block::source_file() {
-        return _source_file;
-    }
-
     void basic_block::or_op(
             const instruction_operand_t& dest,
             const instruction_operand_t& lhs,
@@ -1277,10 +1273,6 @@ namespace basecode::vm {
         return _locals.count(name) > 0;
     }
 
-    void basic_block::source_file(listing_source_file_t* value) {
-        _source_file = value;
-    }
-
     void basic_block::make_block_entry(const comment_t& comment) {
         if (_insertion_point != -1) {
             _entries.insert(std::begin(_entries) + _insertion_point, block_entry_t(comment));
@@ -1325,6 +1317,16 @@ namespace basecode::vm {
         if (it == _locals.end())
             return nullptr;
         return _entries[it->second].data<local_t>();
+    }
+
+    void basic_block::add_successors(const vm::basic_block_list_t& list) {
+        for (auto x : list)
+            _successors.emplace_back(x);
+    }
+
+    void basic_block::add_predecessors(const vm::basic_block_list_t& list) {
+        for (auto x : list)
+            _predecessors.emplace_back(x);
     }
 
     void basic_block::frame_offset(const std::string& name, int64_t offset) {

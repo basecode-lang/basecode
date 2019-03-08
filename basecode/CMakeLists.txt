@@ -114,6 +114,7 @@ add_library(
     vm/vm_types.h vm/vm_types.cpp
     vm/assembler.cpp vm/assembler.h
     vm/basic_block.cpp vm/basic_block.h
+    vm/basic_block_map.cpp vm/basic_block_map.h
     vm/assembly_parser.cpp vm/assembly_parser.h
     vm/assembly_listing.cpp vm/assembly_listing.h
     vm/default_allocator.cpp vm/default_allocator.h

@@ -26,9 +26,6 @@ namespace basecode::vm {
     assembler::~assembler() {
         for (const auto& it : _labels)
             delete it.second;
-
-        for (const auto& kvp : _block_registry)
-            delete kvp.second;
     }
 
     void assembler::disassemble() {
@@ -225,6 +222,10 @@ namespace basecode::vm {
         return list;
     }
 
+    vm::basic_block_list_t& assembler::blocks() {
+        return _blocks;
+    }
+
     bool assembler::initialize(common::result& r) {
         _location_counter = _terp->heap_vector(heap_vectors_t::program_start);
         return true;
@@ -394,14 +395,8 @@ namespace basecode::vm {
         return !r.is_failed();
     }
 
-    basic_block* assembler::make_basic_block() {
-        auto block = new basic_block(basic_block_type_t::none);
-        register_block(block);
-        return block;
-    }
-
     void assembler::disassemble(basic_block* block) {
-        auto source_file = block->source_file();
+        auto source_file = _listing.current_source_file();
         if (source_file == nullptr || block->entries().empty())
             return;
 
@@ -630,14 +625,6 @@ namespace basecode::vm {
             ".end");
     }
 
-    void assembler::register_block(basic_block* block) {
-        auto source_file = _listing.current_source_file();
-        if (source_file != nullptr)
-            block->source_file(source_file);
-        _blocks.push_back(block);
-        _block_registry.insert(std::make_pair(block->id(), block));
-    }
-
     label* assembler::find_label(const std::string& name) {
         const auto it = _labels.find(name);
         if (it == _labels.end())
@@ -659,13 +646,6 @@ namespace basecode::vm {
     vm::label* assembler::make_label(const std::string& name) {
         auto it = _labels.insert(std::make_pair(name, new vm::label(name)));
         return it.first->second;
-    }
-
-    basic_block* assembler::block(common::id_t id) const {
-        auto it = _block_registry.find(id);
-        if (it == _block_registry.end())
-            return nullptr;
-        return it->second;
     }
 
     const assembly_symbol_resolver_t& assembler::resolver() const {
