@@ -41,6 +41,8 @@ namespace basecode::vm {
     class register_allocator;
 
     using symbol_list_t = std::vector<symbol*>;
+    using basic_block_list_t = std::vector<basic_block*>;
+    using basic_block_stack_t = std::stack<basic_block*>;
     using symbol_address_map = std::unordered_map<std::string, void*>;
     using id_resolve_callable = std::function<std::string (uint64_t)>;
 

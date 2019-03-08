@@ -47,13 +47,7 @@ namespace basecode::vm {
 
         bool initialize(common::result& r);
 
-        bool allocate_reg(register_t& reg);
-
-        void free_reg(const register_t& reg);
-
         void disassemble(basic_block* block);
-
-        bool resolve_labels(common::result& r);
 
         assembler_named_ref_t* find_named_ref(
             const std::string& name,
@@ -63,6 +57,8 @@ namespace basecode::vm {
             assembler_named_ref_type_t type,
             const std::string& name,
             vm::op_sizes size = vm::op_sizes::qword);
+
+        bool resolve_labels(common::result& r);
 
         bool apply_addresses(common::result& r);
 
@@ -87,14 +83,18 @@ namespace basecode::vm {
     private:
         void free_locals();
 
+        bool allocate_reg(register_t& reg);
+
+        void free_reg(const register_t& reg);
+
         void register_block(basic_block* block);
 
     private:
         vm::terp* _terp = nullptr;
+        basic_block_list_t _blocks {};
         uint64_t _location_counter = 0;
         vm::assembly_listing _listing {};
         assembly_symbol_resolver_t _resolver;
-        std::vector<basic_block*> _blocks {};
         register_allocator_t _register_allocator {};
         std::unordered_map<std::string, vm::label*> _labels {};
         std::unordered_map<std::string, vm::segment> _segments {};

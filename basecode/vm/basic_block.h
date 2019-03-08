@@ -61,6 +61,10 @@ namespace basecode::vm {
 
         listing_source_file_t* source_file();
 
+        vm::basic_block_list_t& successors();
+
+        vm::basic_block_list_t& predecessors();
+
         void make_block_entry(const meta_t& meta);
 
         bool is_current_instruction(op_codes code);
@@ -452,7 +456,9 @@ namespace basecode::vm {
         basic_block_type_t _type;
         ssize_t _insertion_point = -1;
         block_entry_list_t _entries {};
-        int64_t _recent_inst_index = -1;
+        ssize_t _recent_inst_index = -1;
+        vm::basic_block_list_t _successors {};
+        vm::basic_block_list_t _predecessors {};
         std::map<std::string, size_t> _locals {};
         vm::listing_source_file_t* _source_file = nullptr;
     };

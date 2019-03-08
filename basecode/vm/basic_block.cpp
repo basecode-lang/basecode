@@ -1182,6 +1182,10 @@ namespace basecode::vm {
         });
     }
 
+    block_entry_list_t& basic_block::entries() {
+        return _entries;
+    }
+
     local_list_t basic_block::sorted_locals() const {
         struct local_order_t {
             local_order_t(
@@ -1212,8 +1216,12 @@ namespace basecode::vm {
         return locals;
     }
 
-    std::vector<block_entry_t>& basic_block::entries() {
-        return _entries;
+    vm::basic_block_list_t& basic_block::successors() {
+        return _successors;
+    }
+
+    vm::basic_block_list_t& basic_block::predecessors() {
+        return _predecessors;
     }
 
     void basic_block::make_block_entry(const meta_t& meta) {

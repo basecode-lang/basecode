@@ -205,7 +205,7 @@ namespace basecode::compiler {
     private:
         uint8_t _temp = 0;
         compiler::session& _session;
-        basic_block_stack_t _block_stack {};
+        vm::basic_block_stack_t _block_stack {};
         flow_control_stack_t _control_flow_stack {};
     };
 };

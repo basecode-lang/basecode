@@ -59,10 +59,6 @@ namespace basecode::compiler {
 
         void enable_run();
 
-        bool allocate_reg(
-            vm::register_t& reg,
-            compiler::element* element);
-
         element_map& elements();
 
         common::result& result();

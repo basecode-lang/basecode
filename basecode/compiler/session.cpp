@@ -269,20 +269,6 @@ namespace basecode::compiler {
         }
     }
 
-    bool session::allocate_reg(
-            vm::register_t& reg,
-            compiler::element* element) {
-        if (!_assembler->allocate_reg(reg)) {
-            error(
-                element->module(),
-                "P052",
-                "assembler registers exhausted.",
-                element->location());
-            return false;
-        }
-        return true;
-    }
-
     bool session::type_check() {
         bool success;
 

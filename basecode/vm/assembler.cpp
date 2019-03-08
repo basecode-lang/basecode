@@ -333,12 +333,6 @@ namespace basecode::vm {
         return &insert_pair.first->second;
     }
 
-    basic_block* assembler::make_basic_block() {
-        auto block = new basic_block(basic_block_type_t::none);
-        register_block(block);
-        return block;
-    }
-
     bool assembler::apply_addresses(common::result& r) {
         size_t offset = 0;
         for (auto block : _blocks) {
@@ -400,11 +394,10 @@ namespace basecode::vm {
         return !r.is_failed();
     }
 
-    label* assembler::find_label(const std::string& name) {
-        const auto it = _labels.find(name);
-        if (it == _labels.end())
-            return nullptr;
-        return it->second;
+    basic_block* assembler::make_basic_block() {
+        auto block = new basic_block(basic_block_type_t::none);
+        register_block(block);
+        return block;
     }
 
     void assembler::disassemble(basic_block* block) {
@@ -637,6 +630,21 @@ namespace basecode::vm {
             ".end");
     }
 
+    void assembler::register_block(basic_block* block) {
+        auto source_file = _listing.current_source_file();
+        if (source_file != nullptr)
+            block->source_file(source_file);
+        _blocks.push_back(block);
+        _block_registry.insert(std::make_pair(block->id(), block));
+    }
+
+    label* assembler::find_label(const std::string& name) {
+        const auto it = _labels.find(name);
+        if (it == _labels.end())
+            return nullptr;
+        return it->second;
+    }
+
     bool assembler::has_local(const std::string& name) const {
         return _locals.count(name) > 0;
     }
@@ -646,14 +654,6 @@ namespace basecode::vm {
         if (it == _segments.end())
             return nullptr;
         return &it->second;
-    }
-
-    void assembler::register_block(basic_block* block) {
-        auto source_file = _listing.current_source_file();
-        if (source_file != nullptr)
-            block->source_file(source_file);
-        _blocks.push_back(block);
-        _block_registry.insert(std::make_pair(block->id(), block));
     }
 
     vm::label* assembler::make_label(const std::string& name) {
