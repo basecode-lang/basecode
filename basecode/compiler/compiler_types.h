@@ -115,7 +115,7 @@ namespace basecode::compiler {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    using basic_block_stack_t = std::stack<vm::instruction_block*>;
+    using basic_block_stack_t = std::stack<vm::basic_block*>;
 
     struct identifier_by_section_t {
         element_list_t* variable_section(vm::section_t value) {

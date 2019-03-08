@@ -17,7 +17,7 @@
 #include <common/hex_formatter.h>
 #include "ffi.h"
 #include "terp.h"
-#include "instruction_block.h"
+#include "basic_block.h"
 
 namespace basecode::vm {
 

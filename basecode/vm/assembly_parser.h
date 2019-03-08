@@ -67,7 +67,7 @@ namespace basecode::vm {
 
         bool parse(
             common::result& r,
-            vm::instruction_block* block);
+            vm::basic_block* block);
 
     private:
         bool parse_immediate_number(

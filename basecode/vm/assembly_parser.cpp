@@ -13,8 +13,8 @@
 #include <common/defer.h>
 #include <common/string_support.h>
 #include "assembler.h"
+#include "basic_block.h"
 #include "assembly_parser.h"
-#include "instruction_block.h"
 
 namespace basecode::vm {
 
@@ -28,7 +28,7 @@ namespace basecode::vm {
 
     bool assembly_parser::parse(
             common::result& r,
-            vm::instruction_block* block) {
+            vm::basic_block* block) {
         auto resolver = _assembler->resolver();
 
         _state = assembly_parser_state_t::start;

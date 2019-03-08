@@ -15,8 +15,8 @@
 #include <common/source_location.h>
 #include "label.h"
 #include "assembler.h"
+#include "basic_block.h"
 #include "assembly_parser.h"
-#include "instruction_block.h"
 
 namespace basecode::vm {
 
@@ -207,7 +207,7 @@ namespace basecode::vm {
     bool assembler::assemble_from_source(
             common::result& r,
             common::source_file& source_file,
-            vm::instruction_block* block,
+            vm::basic_block* block,
             void* data) {
         vm::assembly_parser parser(this, source_file, data);
         return parser.parse(r, block);
@@ -333,8 +333,8 @@ namespace basecode::vm {
         return &insert_pair.first->second;
     }
 
-    instruction_block* assembler::make_basic_block() {
-        auto block = new instruction_block(instruction_block_type_t::basic);
+    basic_block* assembler::make_basic_block() {
+        auto block = new basic_block(basic_block_type_t::none);
         register_block(block);
         return block;
     }
@@ -407,7 +407,7 @@ namespace basecode::vm {
         return it->second;
     }
 
-    void assembler::disassemble(instruction_block* block) {
+    void assembler::disassemble(basic_block* block) {
         auto source_file = block->source_file();
         if (source_file == nullptr || block->entries().empty())
             return;
@@ -648,7 +648,7 @@ namespace basecode::vm {
         return &it->second;
     }
 
-    void assembler::register_block(instruction_block* block) {
+    void assembler::register_block(basic_block* block) {
         auto source_file = _listing.current_source_file();
         if (source_file != nullptr)
             block->source_file(source_file);
@@ -661,7 +661,7 @@ namespace basecode::vm {
         return it.first->second;
     }
 
-    instruction_block* assembler::block(common::id_t id) const {
+    basic_block* assembler::block(common::id_t id) const {
         auto it = _block_registry.find(id);
         if (it == _block_registry.end())
             return nullptr;

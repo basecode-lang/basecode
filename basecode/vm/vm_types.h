@@ -35,9 +35,9 @@ namespace basecode::vm {
     class symbol;
     class segment;
     class assembler;
+    class basic_block;
     class assembly_parser;
     class assembly_listing;
-    class instruction_block;
     class register_allocator;
 
     using symbol_list_t = std::vector<symbol*>;
@@ -653,8 +653,8 @@ namespace basecode::vm {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    enum class instruction_block_type_t {
-        basic,
+    enum class basic_block_type_t {
+        none,
     };
 
     enum class section_t : uint8_t {
@@ -671,10 +671,8 @@ namespace basecode::vm {
             case section_t::ro_data:return "ro_data";
             case section_t::data:   return "data";
             case section_t::text:   return "text";
-            default:
-                return "unknown";
+            default:                return "unknown";
         }
-        return "unknown";
     }
 
     inline static section_t section_type(const std::string& name) {

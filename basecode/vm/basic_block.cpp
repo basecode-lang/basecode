@@ -11,51 +11,51 @@
 
 #include "terp.h"
 #include "assembler.h"
-#include "instruction_block.h"
+#include "basic_block.h"
 
 namespace basecode::vm {
 
-    instruction_block::instruction_block(instruction_block_type_t type): _id(common::id_pool::instance()->allocate()),
-                                                                         _type(type) {
+    basic_block::basic_block(basic_block_type_t type): _id(common::id_pool::instance()->allocate()),
+                                                       _type(type) {
     }
 
-    instruction_block::~instruction_block() {
+    basic_block::~basic_block() {
         clear_entries();
     }
 
-    void instruction_block::rts() {
+    void basic_block::rts() {
         instruction_t rts_op;
         rts_op.op = op_codes::rts;
         make_block_entry(rts_op);
     }
 
-    void instruction_block::dup() {
+    void basic_block::dup() {
         instruction_t dup_op;
         dup_op.op = op_codes::dup;
         make_block_entry(dup_op);
     }
 
-    void instruction_block::nop() {
+    void basic_block::nop() {
         instruction_t no_op;
         no_op.op = op_codes::nop;
         make_block_entry(no_op);
     }
 
-    void instruction_block::exit() {
+    void basic_block::exit() {
         instruction_t exit_op;
         exit_op.op = op_codes::exit;
         make_block_entry(exit_op);
     }
 
-    void instruction_block::meta_end() {
+    void basic_block::meta_end() {
         make_block_entry(meta_t {"end"});
     }
 
-    void instruction_block::meta_begin() {
+    void basic_block::meta_begin() {
         make_block_entry(meta_t {"begin"});
     }
 
-    bool instruction_block::apply_operand(
+    bool basic_block::apply_operand(
             const instruction_operand_t& operand,
             instruction_t& encoding,
             size_t operand_index) {
@@ -156,12 +156,12 @@ namespace basecode::vm {
         return true;
     }
 
-    common::id_t instruction_block::id() const {
+    common::id_t basic_block::id() const {
         return _id;
     }
 
     // copy & fill
-    void instruction_block::copy(
+    void basic_block::copy(
             op_sizes inst_size,
             const instruction_operand_t& dest,
             const instruction_operand_t& src,
@@ -176,7 +176,7 @@ namespace basecode::vm {
         make_block_entry(op);
     }
 
-    void instruction_block::fill(
+    void basic_block::fill(
             op_sizes inst_size,
             const instruction_operand_t& dest,
             const instruction_operand_t& src,
@@ -192,18 +192,18 @@ namespace basecode::vm {
     }
 
     // sections
-    void instruction_block::section(section_t type) {
+    void basic_block::section(section_t type) {
         make_block_entry(type);
     }
 
     // data definitions
-    void instruction_block::align(uint8_t size) {
+    void basic_block::align(uint8_t size) {
         make_block_entry(align_t {
             .size = size
         });
     }
 
-    void instruction_block::reserve_byte(size_t count) {
+    void basic_block::reserve_byte(size_t count) {
         make_block_entry(data_definition_t {
             .size = op_sizes::byte,
             .type = data_definition_type_t::uninitialized,
@@ -211,7 +211,7 @@ namespace basecode::vm {
         });
     }
 
-    void instruction_block::reserve_word(size_t count) {
+    void basic_block::reserve_word(size_t count) {
         make_block_entry(data_definition_t {
             .size = op_sizes::word,
             .type = data_definition_type_t::uninitialized,
@@ -219,7 +219,7 @@ namespace basecode::vm {
         });
     }
 
-    void instruction_block::reserve_dword(size_t count) {
+    void basic_block::reserve_dword(size_t count) {
         make_block_entry(data_definition_t {
             .size = op_sizes::dword,
             .type = data_definition_type_t::uninitialized,
@@ -227,7 +227,7 @@ namespace basecode::vm {
         });
     }
 
-    void instruction_block::reserve_qword(size_t count) {
+    void basic_block::reserve_qword(size_t count) {
         make_block_entry(data_definition_t {
             .size = op_sizes::qword,
             .type = data_definition_type_t::uninitialized,
@@ -235,7 +235,7 @@ namespace basecode::vm {
         });
     }
 
-    void instruction_block::string(
+    void basic_block::string(
             vm::label* start_label,
             vm::label* data_label,
             const std::string& value) {
@@ -253,15 +253,15 @@ namespace basecode::vm {
         bytes(str_bytes);
     }
 
-    ssize_t instruction_block::insertion_point() const {
+    ssize_t basic_block::insertion_point() const {
         return _insertion_point != -1 ? _insertion_point : _entries.size();
     }
 
-    void instruction_block::insertion_point(ssize_t value) {
+    void basic_block::insertion_point(ssize_t value) {
         _insertion_point = value;
     }
 
-    void instruction_block::bytes(const std::vector<uint8_t>& values) {
+    void basic_block::bytes(const std::vector<uint8_t>& values) {
         data_definition_t def {
             .size = op_sizes::byte,
             .type = data_definition_type_t::initialized,
@@ -271,7 +271,7 @@ namespace basecode::vm {
         make_block_entry(def);
     }
 
-    void instruction_block::words(const std::vector<uint16_t>& values) {
+    void basic_block::words(const std::vector<uint16_t>& values) {
         data_definition_t def {
             .size = op_sizes::word,
             .type = data_definition_type_t::initialized,
@@ -281,7 +281,7 @@ namespace basecode::vm {
         make_block_entry(def);
     }
 
-    void instruction_block::dwords(const std::vector<uint32_t>& values) {
+    void basic_block::dwords(const std::vector<uint32_t>& values) {
         data_definition_t def {
             .size = op_sizes::dword,
             .type = data_definition_type_t::initialized,
@@ -291,7 +291,7 @@ namespace basecode::vm {
         make_block_entry(def);
     }
 
-    void instruction_block::qwords(const std::vector<data_value_variant_t>& values) {
+    void basic_block::qwords(const std::vector<data_value_variant_t>& values) {
         data_definition_t def {
             .size = op_sizes::qword,
             .type = data_definition_type_t::initialized,
@@ -302,7 +302,7 @@ namespace basecode::vm {
     }
 
     // load variations
-    void instruction_block::load(
+    void basic_block::load(
             const instruction_operand_t& dest,
             const instruction_operand_t& src,
             const instruction_operand_t& offset) {
@@ -317,7 +317,7 @@ namespace basecode::vm {
     }
 
     // store variations
-    void instruction_block::store(
+    void basic_block::store(
             const instruction_operand_t& dest,
             const instruction_operand_t& src,
             const instruction_operand_t& offset) {
@@ -331,7 +331,7 @@ namespace basecode::vm {
         make_block_entry(op);
     }
 
-    void instruction_block::move(
+    void basic_block::move(
             const instruction_operand_t& dest,
             const instruction_operand_t& src,
             const instruction_operand_t& offset) {
@@ -345,7 +345,7 @@ namespace basecode::vm {
         make_block_entry(op);
     }
 
-    void instruction_block::moves(
+    void basic_block::moves(
             const instruction_operand_t& dest,
             const instruction_operand_t& src,
             const instruction_operand_t& offset) {
@@ -359,7 +359,7 @@ namespace basecode::vm {
         make_block_entry(op);
     }
 
-    void instruction_block::movez(
+    void basic_block::movez(
             const instruction_operand_t& dest,
             const instruction_operand_t& src,
             const instruction_operand_t& offset) {
@@ -373,7 +373,7 @@ namespace basecode::vm {
         make_block_entry(op);
     }
 
-    void instruction_block::clr(
+    void basic_block::clr(
             op_sizes size,
             const instruction_operand_t& dest) {
         instruction_t op;
@@ -384,12 +384,12 @@ namespace basecode::vm {
         make_block_entry(op);
     }
 
-    void instruction_block::clr(const instruction_operand_t& dest) {
+    void basic_block::clr(const instruction_operand_t& dest) {
         clr(dest.size(), dest);
     }
 
     // not variations
-    void instruction_block::not_op(
+    void basic_block::not_op(
             const instruction_operand_t& dest,
             const instruction_operand_t& src) {
         instruction_t op;
@@ -402,7 +402,7 @@ namespace basecode::vm {
     }
 
     // neg variations
-    void instruction_block::neg(
+    void basic_block::neg(
             const instruction_operand_t& dest,
             const instruction_operand_t& src) {
         instruction_t op;
@@ -415,7 +415,7 @@ namespace basecode::vm {
     }
 
     // pow variations
-    void instruction_block::pow(
+    void basic_block::pow(
             const instruction_operand_t& dest,
             const instruction_operand_t& base,
             const instruction_operand_t& exponent) {
@@ -430,7 +430,7 @@ namespace basecode::vm {
     }
 
     // mul variations
-    void instruction_block::mul(
+    void basic_block::mul(
             const instruction_operand_t& dest,
             const instruction_operand_t& multiplicand,
             const instruction_operand_t& multiplier) {
@@ -445,7 +445,7 @@ namespace basecode::vm {
     }
 
     // add variations
-    void instruction_block::add(
+    void basic_block::add(
             const instruction_operand_t& dest,
             const instruction_operand_t& augend,
             const instruction_operand_t& addened) {
@@ -460,7 +460,7 @@ namespace basecode::vm {
     }
 
     // sub variations
-    void instruction_block::sub(
+    void basic_block::sub(
             const instruction_operand_t& dest,
             const instruction_operand_t& minuend,
             const instruction_operand_t& subtrahend) {
@@ -475,7 +475,7 @@ namespace basecode::vm {
     }
 
     // div variations
-    void instruction_block::div(
+    void basic_block::div(
             const instruction_operand_t& dest,
             const instruction_operand_t& dividend,
             const instruction_operand_t& divisor) {
@@ -490,7 +490,7 @@ namespace basecode::vm {
     }
 
     // mod variations
-    void instruction_block::mod(
+    void basic_block::mod(
             const instruction_operand_t& dest,
             const instruction_operand_t& dividend,
             const instruction_operand_t& divisor) {
@@ -504,7 +504,7 @@ namespace basecode::vm {
         make_block_entry(op);
     }
 
-    void instruction_block::swi(uint8_t index) {
+    void basic_block::swi(uint8_t index) {
         instruction_t swi_op;
         swi_op.op = op_codes::swi;
         swi_op.size = op_sizes::byte;
@@ -514,7 +514,7 @@ namespace basecode::vm {
         make_block_entry(swi_op);
     }
 
-    void instruction_block::trap(uint8_t index) {
+    void basic_block::trap(uint8_t index) {
         instruction_t trap_op;
         trap_op.op = op_codes::trap;
         trap_op.size = op_sizes::byte;
@@ -524,13 +524,13 @@ namespace basecode::vm {
         make_block_entry(trap_op);
     }
 
-    void instruction_block::clear_entries() {
+    void basic_block::clear_entries() {
         _entries.clear();
         _recent_inst_index = -1;
     }
 
     // push variations
-    void instruction_block::push_locals(
+    void basic_block::push_locals(
             vm::assembler& assembler,
             const std::string& excluded) {
         instruction_operand_list_t operands {};
@@ -544,7 +544,7 @@ namespace basecode::vm {
         pushm(operands);
     }
 
-    void instruction_block::push(const instruction_operand_t& operand) {
+    void basic_block::push(const instruction_operand_t& operand) {
         instruction_t op;
         op.size = operand.size();
         op.operands_count = 1;
@@ -553,7 +553,7 @@ namespace basecode::vm {
         make_block_entry(op);
     }
 
-    void instruction_block::pushm(const instruction_operand_list_t& operands) {
+    void basic_block::pushm(const instruction_operand_list_t& operands) {
         instruction_t op;
         op.op = op_codes::pushm;
         op.size = op_sizes::qword;
@@ -575,7 +575,7 @@ namespace basecode::vm {
     }
 
     // alloc/free
-    void instruction_block::alloc(
+    void basic_block::alloc(
             op_sizes inst_size,
             const instruction_operand_t& dest,
             const instruction_operand_t& size) {
@@ -588,7 +588,7 @@ namespace basecode::vm {
         make_block_entry(op);
     }
 
-    void instruction_block::free(const instruction_operand_t& addr) {
+    void basic_block::free(const instruction_operand_t& addr) {
         instruction_t op;
         op.size = addr.size();
         op.operands_count = 1;
@@ -598,7 +598,7 @@ namespace basecode::vm {
     }
 
     // convert
-    void instruction_block::convert(
+    void basic_block::convert(
             const instruction_operand_t& dest,
             const instruction_operand_t& src) {
         instruction_t op;
@@ -611,7 +611,7 @@ namespace basecode::vm {
     }
 
     // cmp variations
-    void instruction_block::cmp(
+    void basic_block::cmp(
             op_sizes size,
             const instruction_operand_t& lhs,
             const instruction_operand_t& rhs) {
@@ -624,7 +624,7 @@ namespace basecode::vm {
         make_block_entry(op);
     }
 
-    void instruction_block::cmp(
+    void basic_block::cmp(
             const instruction_operand_t& lhs,
             const instruction_operand_t& rhs) {
         instruction_t op;
@@ -637,7 +637,7 @@ namespace basecode::vm {
     }
 
     // inc variations
-    void instruction_block::inc(const instruction_operand_t& target) {
+    void basic_block::inc(const instruction_operand_t& target) {
         instruction_t op;
         op.operands_count = 1;
         op.op = op_codes::inc;
@@ -647,7 +647,7 @@ namespace basecode::vm {
     }
 
     // dec variations
-    void instruction_block::dec(const instruction_operand_t& target) {
+    void basic_block::dec(const instruction_operand_t& target) {
         instruction_t op;
         op.operands_count = 1;
         op.op = op_codes::dec;
@@ -657,7 +657,7 @@ namespace basecode::vm {
     }
 
     // pop variations
-    void instruction_block::pop_locals(
+    void basic_block::pop_locals(
             vm::assembler& assembler,
             const std::string& excluded) {
         instruction_operand_list_t operands {};
@@ -672,7 +672,7 @@ namespace basecode::vm {
         popm(operands);
     }
 
-    void instruction_block::pop(const instruction_operand_t& dest) {
+    void basic_block::pop(const instruction_operand_t& dest) {
         instruction_t op;
         op.size = dest.size();
         op.op = op_codes::pop;
@@ -681,7 +681,7 @@ namespace basecode::vm {
         make_block_entry(op);
     }
 
-    void instruction_block::popm(const instruction_operand_list_t& operands) {
+    void basic_block::popm(const instruction_operand_list_t& operands) {
         instruction_t op;
         op.op = op_codes::popm;
         op.size = op_sizes::qword;
@@ -703,103 +703,103 @@ namespace basecode::vm {
     }
 
     // setxx
-    void instruction_block::sets(const instruction_operand_t& dest) {
+    void basic_block::sets(const instruction_operand_t& dest) {
         make_set(op_codes::sets, dest.size(), dest);
     }
 
-    void instruction_block::setns(const instruction_operand_t& dest) {
+    void basic_block::setns(const instruction_operand_t& dest) {
         make_set(op_codes::setns, dest.size(), dest);
     }
 
-    void instruction_block::seto(const instruction_operand_t& dest) {
+    void basic_block::seto(const instruction_operand_t& dest) {
         make_set(op_codes::seto, dest.size(), dest);
     }
 
-    void instruction_block::setno(const instruction_operand_t& dest) {
+    void basic_block::setno(const instruction_operand_t& dest) {
         make_set(op_codes::setno, dest.size(), dest);
     }
 
-    void instruction_block::seta(const instruction_operand_t& dest) {
+    void basic_block::seta(const instruction_operand_t& dest) {
         make_set(op_codes::seta, dest.size(), dest);
     }
 
-    void instruction_block::setna(const instruction_operand_t& dest) {
+    void basic_block::setna(const instruction_operand_t& dest) {
         make_set(op_codes::setna, dest.size(), dest);
     }
 
-    void instruction_block::setae(const instruction_operand_t& dest) {
+    void basic_block::setae(const instruction_operand_t& dest) {
         make_set(op_codes::setae, dest.size(), dest);
     }
 
-    void instruction_block::setnae(const instruction_operand_t& dest) {
+    void basic_block::setnae(const instruction_operand_t& dest) {
         make_set(op_codes::setnae, dest.size(), dest);
     }
 
-    void instruction_block::setb(const instruction_operand_t& dest) {
+    void basic_block::setb(const instruction_operand_t& dest) {
         make_set(op_codes::setb, dest.size(), dest);
     }
 
-    void instruction_block::setnb(const instruction_operand_t& dest) {
+    void basic_block::setnb(const instruction_operand_t& dest) {
         make_set(op_codes::setnb, dest.size(), dest);
     }
 
-    void instruction_block::setbe(const instruction_operand_t& dest) {
+    void basic_block::setbe(const instruction_operand_t& dest) {
         make_set(op_codes::setbe, dest.size(), dest);
     }
 
-    void instruction_block::setnbe(const instruction_operand_t& dest) {
+    void basic_block::setnbe(const instruction_operand_t& dest) {
         make_set(op_codes::setnbe, dest.size(), dest);
     }
 
-    void instruction_block::setc(const instruction_operand_t& dest) {
+    void basic_block::setc(const instruction_operand_t& dest) {
         make_set(op_codes::setc, dest.size(), dest);
     }
 
-    void instruction_block::setnc(const instruction_operand_t& dest) {
+    void basic_block::setnc(const instruction_operand_t& dest) {
         make_set(op_codes::setnc, dest.size(), dest);
     }
 
-    void instruction_block::setg(const instruction_operand_t& dest) {
+    void basic_block::setg(const instruction_operand_t& dest) {
         make_set(op_codes::setg, dest.size(), dest);
     }
 
-    void instruction_block::setng(const instruction_operand_t& dest) {
+    void basic_block::setng(const instruction_operand_t& dest) {
         make_set(op_codes::setng, dest.size(), dest);
     }
 
-    void instruction_block::setge(const instruction_operand_t& dest) {
+    void basic_block::setge(const instruction_operand_t& dest) {
         make_set(op_codes::setge, dest.size(), dest);
     }
 
-    void instruction_block::setnge(const instruction_operand_t& dest) {
+    void basic_block::setnge(const instruction_operand_t& dest) {
         make_set(op_codes::setnge, dest.size(), dest);
     }
 
-    void instruction_block::setl(const instruction_operand_t& dest) {
+    void basic_block::setl(const instruction_operand_t& dest) {
         make_set(op_codes::setl, dest.size(), dest);
     }
 
-    void instruction_block::setnl(const instruction_operand_t& dest) {
+    void basic_block::setnl(const instruction_operand_t& dest) {
         make_set(op_codes::setnl, dest.size(), dest);
     }
 
-    void instruction_block::setle(const instruction_operand_t& dest) {
+    void basic_block::setle(const instruction_operand_t& dest) {
         make_set(op_codes::setle, dest.size(), dest);
     }
 
-    void instruction_block::setnle(const instruction_operand_t& dest) {
+    void basic_block::setnle(const instruction_operand_t& dest) {
         make_set(op_codes::setnle, dest.size(), dest);
     }
 
-    void instruction_block::setz(const instruction_operand_t& dest) {
+    void basic_block::setz(const instruction_operand_t& dest) {
         make_set(op_codes::setz, dest.size(), dest);
     }
 
-    void instruction_block::setnz(const instruction_operand_t& dest) {
+    void basic_block::setnz(const instruction_operand_t& dest) {
         make_set(op_codes::setnz, dest.size(), dest);
     }
 
-    void instruction_block::make_set(
+    void basic_block::make_set(
             op_codes code,
             op_sizes size,
             const instruction_operand_t& dest) {
@@ -811,67 +811,67 @@ namespace basecode::vm {
         make_block_entry(op);
     }
 
-    instruction_block_type_t instruction_block::type() const {
+    basic_block_type_t basic_block::type() const {
         return _type;
     }
 
-    void instruction_block::bb(const instruction_operand_t& dest) {
+    void basic_block::bb(const instruction_operand_t& dest) {
         make_branch(op_codes::bb, op_sizes::qword, dest);
     }
 
-    void instruction_block::ba(const instruction_operand_t& dest) {
+    void basic_block::ba(const instruction_operand_t& dest) {
         make_branch(op_codes::ba, op_sizes::qword, dest);
     }
 
-    void instruction_block::bs(const instruction_operand_t& dest) {
+    void basic_block::bs(const instruction_operand_t& dest) {
         make_branch(op_codes::bs, op_sizes::qword, dest);
     }
 
-    void instruction_block::bo(const instruction_operand_t& dest) {
+    void basic_block::bo(const instruction_operand_t& dest) {
         make_branch(op_codes::bo, op_sizes::qword, dest);
     }
 
-    void instruction_block::bg(const instruction_operand_t& dest) {
+    void basic_block::bg(const instruction_operand_t& dest) {
         make_branch(op_codes::bg, op_sizes::qword, dest);
     }
 
-    void instruction_block::bl(const instruction_operand_t& dest) {
+    void basic_block::bl(const instruction_operand_t& dest) {
         make_branch(op_codes::bl, op_sizes::qword, dest);
     }
 
-    void instruction_block::bge(const instruction_operand_t& dest) {
+    void basic_block::bge(const instruction_operand_t& dest) {
         make_branch(op_codes::bge, op_sizes::qword, dest);
     }
 
-    void instruction_block::ble(const instruction_operand_t& dest) {
+    void basic_block::ble(const instruction_operand_t& dest) {
         make_branch(op_codes::ble, op_sizes::qword, dest);
     }
 
-    void instruction_block::beq(const instruction_operand_t& dest) {
+    void basic_block::beq(const instruction_operand_t& dest) {
         make_branch(op_codes::beq, op_sizes::qword, dest);
     }
 
-    void instruction_block::bne(const instruction_operand_t& dest) {
+    void basic_block::bne(const instruction_operand_t& dest) {
         make_branch(op_codes::bne, op_sizes::qword, dest);
     }
 
-    void instruction_block::bcc(const instruction_operand_t& dest) {
+    void basic_block::bcc(const instruction_operand_t& dest) {
         make_branch(op_codes::bcc, op_sizes::qword, dest);
     }
 
-    void instruction_block::bcs(const instruction_operand_t& dest) {
+    void basic_block::bcs(const instruction_operand_t& dest) {
         make_branch(op_codes::bcs, op_sizes::qword, dest);
     }
 
-    void instruction_block::bbe(const instruction_operand_t& dest) {
+    void basic_block::bbe(const instruction_operand_t& dest) {
         make_branch(op_codes::bbe, op_sizes::qword, dest);
     }
 
-    void instruction_block::bae(const instruction_operand_t& dest) {
+    void basic_block::bae(const instruction_operand_t& dest) {
         make_branch(op_codes::bae, op_sizes::qword, dest);
     }
 
-    void instruction_block::make_branch(
+    void basic_block::make_branch(
             op_codes code,
             op_sizes size,
             const instruction_operand_t& dest) {
@@ -884,7 +884,7 @@ namespace basecode::vm {
     }
 
     // bz & bnz
-    void instruction_block::bz(
+    void basic_block::bz(
             const instruction_operand_t& src,
             const instruction_operand_t& dest) {
         instruction_t op;
@@ -896,7 +896,7 @@ namespace basecode::vm {
         make_block_entry(op);
     }
 
-    void instruction_block::bnz(
+    void basic_block::bnz(
             const instruction_operand_t& src,
             const instruction_operand_t& dest) {
         instruction_t op;
@@ -908,7 +908,7 @@ namespace basecode::vm {
         make_block_entry(op);
     }
 
-    void instruction_block::call(const instruction_operand_t& target) {
+    void basic_block::call(const instruction_operand_t& target) {
         instruction_t op;
         op.op = op_codes::jsr;
         op.size = op_sizes::qword;
@@ -917,7 +917,7 @@ namespace basecode::vm {
         make_block_entry(op);
     }
 
-    void instruction_block::call_foreign(
+    void basic_block::call_foreign(
             const instruction_operand_t& address,
             const instruction_operand_t& signature_id) {
         instruction_t op;
@@ -929,7 +929,7 @@ namespace basecode::vm {
         make_block_entry(op);
     }
 
-    void instruction_block::jump_direct(const instruction_operand_t& target) {
+    void basic_block::jump_direct(const instruction_operand_t& target) {
         instruction_t op;
         op.op = op_codes::jmp;
         op.size = op_sizes::qword;
@@ -938,7 +938,7 @@ namespace basecode::vm {
         make_block_entry(op);
     }
 
-    void instruction_block::jump_indirect(const instruction_operand_t& target) {
+    void basic_block::jump_indirect(const instruction_operand_t& target) {
         instruction_t op;
         op.operands_count = 1;
         op.op = op_codes::jmp;
@@ -947,11 +947,11 @@ namespace basecode::vm {
         make_block_entry(op);
     }
 
-    listing_source_file_t* instruction_block::source_file() {
+    listing_source_file_t* basic_block::source_file() {
         return _source_file;
     }
 
-    void instruction_block::or_op(
+    void basic_block::or_op(
             const instruction_operand_t& dest,
             const instruction_operand_t& lhs,
             const instruction_operand_t& rhs) {
@@ -965,7 +965,7 @@ namespace basecode::vm {
         make_block_entry(op);
     }
 
-    void instruction_block::xor_op(
+    void basic_block::xor_op(
             const instruction_operand_t& dest,
             const instruction_operand_t& lhs,
             const instruction_operand_t& rhs) {
@@ -979,7 +979,7 @@ namespace basecode::vm {
         make_block_entry(op);
     }
 
-    void instruction_block::and_op(
+    void basic_block::and_op(
             const instruction_operand_t& dest,
             const instruction_operand_t& lhs,
             const instruction_operand_t& rhs) {
@@ -993,7 +993,7 @@ namespace basecode::vm {
         make_block_entry(op);
     }
 
-    void instruction_block::shl(
+    void basic_block::shl(
             const instruction_operand_t& dest,
             const instruction_operand_t& lhs,
             const instruction_operand_t& rhs) {
@@ -1007,7 +1007,7 @@ namespace basecode::vm {
         make_block_entry(op);
     }
 
-    void instruction_block::shr(
+    void basic_block::shr(
             const instruction_operand_t& dest,
             const instruction_operand_t& lhs,
             const instruction_operand_t& rhs) {
@@ -1021,7 +1021,7 @@ namespace basecode::vm {
         make_block_entry(op);
     }
 
-    void instruction_block::rol(
+    void basic_block::rol(
             const instruction_operand_t& dest,
             const instruction_operand_t& lhs,
             const instruction_operand_t& rhs) {
@@ -1035,7 +1035,7 @@ namespace basecode::vm {
         make_block_entry(op);
     }
 
-    void instruction_block::ror(
+    void basic_block::ror(
             const instruction_operand_t& dest,
             const instruction_operand_t& lhs,
             const instruction_operand_t& rhs) {
@@ -1049,7 +1049,7 @@ namespace basecode::vm {
         make_block_entry(op);
     }
 
-    void instruction_block::local(
+    void basic_block::local(
             local_type_t type,
             const std::string& name,
             int64_t offset,
@@ -1066,7 +1066,7 @@ namespace basecode::vm {
         _locals.insert(std::make_pair(name, _entries.size() - 1));
     }
 
-    void instruction_block::comment(
+    void basic_block::comment(
             const std::string& value,
             uint8_t indent,
             comment_location_t location) {
@@ -1077,7 +1077,7 @@ namespace basecode::vm {
         make_block_entry(comment);
     }
 
-    void instruction_block::comment(
+    void basic_block::comment(
             const std::string& value,
             comment_location_t location) {
         comment_t comment {};
@@ -1086,7 +1086,7 @@ namespace basecode::vm {
         make_block_entry(comment);
     }
 
-    void instruction_block::blank_line() {
+    void basic_block::blank_line() {
         if (_insertion_point != -1) {
             _entries.insert(std::begin(_entries) + _insertion_point, block_entry_t());
             _insertion_point++;
@@ -1095,7 +1095,7 @@ namespace basecode::vm {
         }
     }
 
-    void instruction_block::apply_local_range(
+    void basic_block::apply_local_range(
             vm::assembler& assembler,
             const local_list_t& locals,
             instruction_operand_list_t& operands,
@@ -1130,7 +1130,7 @@ namespace basecode::vm {
         }
     }
 
-    void instruction_block::grouped_named_ranges(
+    void basic_block::grouped_named_ranges(
             vm::assembler& assembler,
             const local_list_t& locals,
             const std::string& excluded,
@@ -1176,13 +1176,13 @@ namespace basecode::vm {
         }
     }
 
-    void instruction_block::label(vm::label* value) {
+    void basic_block::label(vm::label* value) {
         make_block_entry(label_t {
             .instance = value
         });
     }
 
-    local_list_t instruction_block::sorted_locals() const {
+    local_list_t basic_block::sorted_locals() const {
         struct local_order_t {
             local_order_t(
                 size_t index,
@@ -1212,11 +1212,11 @@ namespace basecode::vm {
         return locals;
     }
 
-    std::vector<block_entry_t>& instruction_block::entries() {
+    std::vector<block_entry_t>& basic_block::entries() {
         return _entries;
     }
 
-    void instruction_block::make_block_entry(const meta_t& meta) {
+    void basic_block::make_block_entry(const meta_t& meta) {
         if (_insertion_point != -1) {
             _entries.insert(std::begin(_entries) + _insertion_point, block_entry_t(meta));
             _insertion_point++;
@@ -1225,7 +1225,7 @@ namespace basecode::vm {
         }
     }
 
-    bool instruction_block::is_current_instruction(op_codes code) {
+    bool basic_block::is_current_instruction(op_codes code) {
         if (_entries.empty() || _recent_inst_index == -1)
             return false;
 
@@ -1238,7 +1238,7 @@ namespace basecode::vm {
         return false;
     }
 
-    void instruction_block::make_block_entry(const local_t& local) {
+    void basic_block::make_block_entry(const local_t& local) {
         if (_insertion_point != -1) {
             _entries.insert(std::begin(_entries) + _insertion_point, block_entry_t(local));
             _insertion_point++;
@@ -1247,7 +1247,7 @@ namespace basecode::vm {
         }
     }
 
-    void instruction_block::make_block_entry(const label_t& label) {
+    void basic_block::make_block_entry(const label_t& label) {
         if (_insertion_point != -1) {
             _entries.insert(std::begin(_entries) + _insertion_point, block_entry_t(label));
             _insertion_point++;
@@ -1256,7 +1256,7 @@ namespace basecode::vm {
         }
     }
 
-    void instruction_block::make_block_entry(const align_t& align) {
+    void basic_block::make_block_entry(const align_t& align) {
         if (_insertion_point != -1) {
             _entries.insert(std::begin(_entries) + _insertion_point, block_entry_t(align));
             _insertion_point++;
@@ -1265,15 +1265,15 @@ namespace basecode::vm {
         }
     }
 
-    bool instruction_block::has_local(const std::string& name) const {
+    bool basic_block::has_local(const std::string& name) const {
         return _locals.count(name) > 0;
     }
 
-    void instruction_block::source_file(listing_source_file_t* value) {
+    void basic_block::source_file(listing_source_file_t* value) {
         _source_file = value;
     }
 
-    void instruction_block::make_block_entry(const comment_t& comment) {
+    void basic_block::make_block_entry(const comment_t& comment) {
         if (_insertion_point != -1) {
             _entries.insert(std::begin(_entries) + _insertion_point, block_entry_t(comment));
             _insertion_point++;
@@ -1282,7 +1282,7 @@ namespace basecode::vm {
         }
     }
 
-    void instruction_block::make_block_entry(const section_t& section) {
+    void basic_block::make_block_entry(const section_t& section) {
         if (_insertion_point != -1) {
             _entries.insert(std::begin(_entries) + _insertion_point, block_entry_t(section));
             _insertion_point++;
@@ -1291,7 +1291,7 @@ namespace basecode::vm {
         }
     }
 
-    void instruction_block::make_block_entry(const instruction_t& inst) {
+    void basic_block::make_block_entry(const instruction_t& inst) {
         if (_insertion_point != -1) {
             _recent_inst_index = _insertion_point;
             _entries.insert(std::begin(_entries) + _insertion_point, block_entry_t(inst));
@@ -1303,7 +1303,7 @@ namespace basecode::vm {
         }
     }
 
-    void instruction_block::make_block_entry(const data_definition_t& data) {
+    void basic_block::make_block_entry(const data_definition_t& data) {
         if (_insertion_point != -1) {
             _entries.insert(std::begin(_entries) + _insertion_point, block_entry_t(data));
             _insertion_point++;
@@ -1312,14 +1312,14 @@ namespace basecode::vm {
         }
     }
 
-    const vm::local_t* instruction_block::local(const std::string& name) const {
+    const vm::local_t* basic_block::local(const std::string& name) const {
         auto it = _locals.find(name);
         if (it == _locals.end())
             return nullptr;
         return _entries[it->second].data<local_t>();
     }
 
-    void instruction_block::frame_offset(const std::string& name, int64_t offset) {
+    void basic_block::frame_offset(const std::string& name, int64_t offset) {
         if (_insertion_point != -1) {
             _entries.insert(
                 std::begin(_entries) + _insertion_point,

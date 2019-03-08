@@ -34,12 +34,14 @@ namespace basecode::vm {
         bool assemble_from_source(
             common::result& r,
             common::source_file& source_file,
-            vm::instruction_block* block,
+            vm::basic_block* block,
             void* data);
 
         vm::assembly_listing& listing();
 
         segment_list_t segments() const;
+
+        basic_block* make_basic_block();
 
         bool assemble(common::result& r);
 
@@ -49,7 +51,7 @@ namespace basecode::vm {
 
         void free_reg(const register_t& reg);
 
-        instruction_block* make_basic_block();
+        void disassemble(basic_block* block);
 
         bool resolve_labels(common::result& r);
 
@@ -64,17 +66,15 @@ namespace basecode::vm {
 
         bool apply_addresses(common::result& r);
 
-        label* find_label(const std::string& name);
+        basic_block* block(common::id_t id) const;
 
-        void disassemble(instruction_block* block);
+        label* find_label(const std::string& name);
 
         vm::segment* segment(const std::string& name);
 
         bool has_local(const std::string& name) const;
 
         vm::label* make_label(const std::string& name);
-
-        instruction_block* block(common::id_t id) const;
 
         const assembly_symbol_resolver_t& resolver() const;
 
@@ -87,21 +87,21 @@ namespace basecode::vm {
     private:
         void free_locals();
 
-        void register_block(instruction_block* block);
+        void register_block(basic_block* block);
 
     private:
         vm::terp* _terp = nullptr;
         uint64_t _location_counter = 0;
         vm::assembly_listing _listing {};
         assembly_symbol_resolver_t _resolver;
-        std::vector<instruction_block*> _blocks {};
+        std::vector<basic_block*> _blocks {};
         register_allocator_t _register_allocator {};
         std::unordered_map<std::string, vm::label*> _labels {};
         std::unordered_map<std::string, vm::segment> _segments {};
         std::unordered_map<std::string, int64_t> _frame_offsets {};
         std::unordered_map<std::string, assembler_local_t> _locals {};
         std::unordered_map<std::string, assembler_named_ref_t> _named_refs {};
-        std::unordered_map<common::id_t, vm::instruction_block*> _block_registry {};
+        std::unordered_map<common::id_t, vm::basic_block*> _block_registry {};
     };
 
 };

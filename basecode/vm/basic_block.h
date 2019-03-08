@@ -20,11 +20,11 @@
 
 namespace basecode::vm {
 
-    class instruction_block {
+    class basic_block {
     public:
-        explicit instruction_block(instruction_block_type_t type);
+        explicit basic_block(basic_block_type_t type);
 
-        virtual ~instruction_block();
+        virtual ~basic_block();
 
     // block support
     public:
@@ -53,13 +53,13 @@ namespace basecode::vm {
 
         block_entry_list_t& entries();
 
+        basic_block_type_t type() const;
+
         ssize_t insertion_point() const;
 
         void insertion_point(ssize_t value);
 
         listing_source_file_t* source_file();
-
-        instruction_block_type_t type() const;
 
         void make_block_entry(const meta_t& meta);
 
@@ -449,8 +449,8 @@ namespace basecode::vm {
 
     private:
         common::id_t _id;
+        basic_block_type_t _type;
         ssize_t _insertion_point = -1;
-        instruction_block_type_t _type;
         block_entry_list_t _entries {};
         int64_t _recent_inst_index = -1;
         std::map<std::string, size_t> _locals {};
