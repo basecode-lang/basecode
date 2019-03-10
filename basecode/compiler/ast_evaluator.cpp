@@ -983,24 +983,63 @@ namespace basecode::compiler {
 
         std::string path;
         if (expr->is_constant() && expr->as_string(path)) {
-            boost::filesystem::path source_path(path);
-            if (source_path.extension() != ".bc") {
-                source_path.append("module.bc");
+            boost::filesystem::path module_file(path);
+            if (module_file.extension() != ".bc") {
+                module_file.append("module.bc");
             }
+
+            boost::filesystem::path source_path = module_file;
+
             auto current_source_file = _session.current_source_file();
-            if (current_source_file != nullptr
-            &&  source_path.is_relative()) {
-                source_path = boost::filesystem::absolute(
-                    source_path,
-                    current_source_file->path().parent_path());
+            if (current_source_file != nullptr) {
+                if (module_file.is_relative()) {
+                    source_path = boost::filesystem::absolute(
+                        module_file,
+                        current_source_file->path().parent_path());
+                }
             }
+
+            auto file_found = true;
+
+            if (!boost::filesystem::exists(source_path)) {
+                file_found = false;
+
+                for (const auto& module_path : _session.options().module_paths) {
+                    boost::filesystem::path possible_path = module_path;
+                    possible_path.append(module_file.string());
+
+                    if (possible_path.is_absolute()) {
+                        source_path = possible_path;
+                    } else {
+                        if (current_source_file != nullptr) {
+                            source_path = boost::filesystem::absolute(
+                                possible_path,
+                                current_source_file->path().parent_path());
+                        }
+                    }
+                    if (boost::filesystem::exists(source_path)) {
+                        file_found = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!file_found) {
+                _session.error(
+                    mod_ref->module(),
+                    "C021",
+                    fmt::format("module file not found: {}", module_file.string()),
+                    context.node->location);
+                return false;
+            }
+
             auto source_file = _session.add_source_file(source_path);
             auto module = _session.compile_module(source_file);
             if (module == nullptr) {
                 _session.error(
                     mod_ref->module(),
                     "C021",
-                    "unable to load module.",
+                    "unable to compile module.",
                     context.node->location);
                 return false;
             }

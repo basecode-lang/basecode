@@ -85,7 +85,6 @@ add_library(
     include/basecode/compiler.h
 
     configure.in.h
-    exports.cpp
 
     common/defer.h
     common/bytes.h
@@ -123,6 +122,11 @@ add_library(
     ${DEBUGGER_SOURCES}
 
     compiler/elements.h
+
+    compiler/api/dom.cpp
+    compiler/api/wrappers.cpp
+    compiler/api/kernel.cpp compiler/api/kernel.h
+
     compiler/session.cpp compiler/session.h
     compiler/element_map.cpp compiler/element_map.h
     compiler/elements/type.cpp compiler/elements/type.h

@@ -1,3 +1,5 @@
+core :: module("core");
+
 a := 5;
 
 test :: proc() {

@@ -14,6 +14,7 @@
 #include <vm/terp.h>
 #include <vm/assembler.h>
 #include <parser/parser.h>
+#include <compiler/api/kernel.h>
 #include <vm/default_allocator.h>
 #include <debugger/environment.h>
 #include "session.h"
@@ -107,13 +108,6 @@ namespace basecode::compiler {
             "compiler: core types",
             [&]() {
                 initialize_core_types();
-                return true;
-            });
-
-        time_task(
-            "compiler: built-in procedures",
-            [&]() {
-                initialize_built_in_procedures();
                 return true;
             });
 
@@ -264,6 +258,8 @@ namespace basecode::compiler {
                         return true;
                     });
             }
+
+            api::g_session = nullptr;
         } catch (const fmt::format_error& e) {
             fmt::print("fmt::format_error caught: {}\n", e.what());
         }
@@ -399,6 +395,8 @@ namespace basecode::compiler {
     }
 
     bool session::initialize() {
+        api::g_session = this;
+
         _program = _builder->make_program();
 
         _ffi->initialize(_result);
@@ -795,9 +793,6 @@ namespace basecode::compiler {
 
     const element_map& session::elements() const {
         return *_elements;
-    }
-
-    void session::initialize_built_in_procedures() {
     }
 
     common::source_file* session::pop_source_file() {

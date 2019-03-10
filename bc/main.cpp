@@ -87,6 +87,7 @@ int main(int argc, char** argv) {
     bool output_ast_graphs = false;
     fs::path code_dom_graph_file_name;
     std::vector<fs::path> module_paths {};
+    std::vector<fs::path> source_files {};
     std::unordered_map<std::string, std::string> definitions {};
 
     static struct option long_options[] = {
@@ -108,6 +109,13 @@ int main(int argc, char** argv) {
             long_options,
             &option_index);
         if (opt == -1) {
+            if (ya_optind < argc) {
+                if (strncmp(argv[ya_optind - 1], "--", 2) == 0) {
+                    source_files.emplace_back(argv[ya_optind - 2]);
+                } else {
+                    source_files.emplace_back(argv[ya_optind]);
+                }
+            }
             break;
         }
 
@@ -165,34 +173,18 @@ int main(int argc, char** argv) {
                 break;
             }
         }
+
     }
 
-    if (help_flag) {
+    if (help_flag || source_files.empty()) {
         usage();
         return 1;
     }
 
-    auto separator_found = false;
-    std::vector<fs::path> source_files {};
     std::vector<std::string> meta_options {};
 
     while (ya_optind < argc) {
-        std::string arg(argv[ya_optind++]);
-        if (source_files.empty()) {
-            source_files.emplace_back(arg);
-        } else {
-            if (separator_found) {
-                meta_options.emplace_back(arg);
-            } else {
-                if (arg == "--")
-                    separator_found = true;
-            }
-        }
-    }
-
-    if (source_files.empty()) {
-        usage();
-        return 1;
+        meta_options.emplace_back(argv[ya_optind++]);
     }
 
     vm::default_allocator allocator {};

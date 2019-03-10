@@ -141,8 +141,6 @@ namespace basecode::compiler {
 
         bool resolve_unknown_identifiers();
 
-        void initialize_built_in_procedures();
-
         bool resolve_unknown_types(bool final);
 
         bool fold_elements_of_type(element_type_t type);
