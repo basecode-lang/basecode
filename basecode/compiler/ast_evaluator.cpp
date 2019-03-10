@@ -165,22 +165,6 @@ namespace basecode::compiler {
         return nullptr;
     }
 
-    compiler::element* ast_evaluator::evaluate_in_scope(
-            const syntax::ast_node_t* node,
-            compiler::block* scope) {
-        auto& scope_manager = _session.scope_manager();
-
-        if (scope != nullptr)
-            scope_manager.push_scope(scope);
-
-        auto result = evaluate(node);
-
-        if (scope != nullptr)
-            scope_manager.pop_scope();
-
-        return result;
-    }
-
     bool ast_evaluator::add_procedure_instance(
             const evaluator_context_t& context,
             compiler::procedure_type* proc_type,
@@ -287,36 +271,20 @@ namespace basecode::compiler {
         }
     }
 
-    compiler::element* ast_evaluator::resolve_symbol_or_evaluate(
+    compiler::element* ast_evaluator::evaluate_in_scope(
             const syntax::ast_node_t* node,
-            compiler::block* scope,
-            bool flag_as_unresolved) {
-        auto& builder = _session.builder();
+            compiler::block* scope) {
         auto& scope_manager = _session.scope_manager();
 
-        compiler::element* element = nullptr;
-        if (node != nullptr
-        &&  node->type == syntax::ast_node_type_t::symbol) {
-            qualified_symbol_t qualified_symbol {};
-            builder.make_qualified_symbol(qualified_symbol, node);
+        if (scope != nullptr)
+            scope_manager.push_scope(scope);
 
-            auto vars = scope_manager.find_identifier(qualified_symbol, scope);
-            compiler::identifier* identifier = vars.empty() ? nullptr : vars.front();
+        auto result = evaluate(node);
 
-            element = builder.make_identifier_reference(
-                scope_manager.current_scope(),
-                qualified_symbol,
-                identifier,
-                flag_as_unresolved);
-            element->location(node->location);
-        } else {
-            if (scope != nullptr)
-                element = evaluate_in_scope(node, scope);
-            else
-                element = evaluate(node);
-        }
+        if (scope != nullptr)
+            scope_manager.pop_scope();
 
-        return element;
+        return result;
     }
 
     compiler::block* ast_evaluator::add_namespaces_to_scope(
@@ -337,10 +305,10 @@ namespace basecode::compiler {
         auto scope = parent_scope;
         string_list_t temp_list {};
         std::string namespace_name {};
-        for (size_t i = 0; i < namespaces.size(); i++) {
+        for (const auto& name : namespaces) {
             if (!namespace_name.empty())
                 temp_list.push_back(namespace_name);
-            namespace_name = namespaces[i];
+            namespace_name = name;
             auto vars = scope->identifiers().find(namespace_name);
             if (vars.empty()) {
                 auto new_scope = builder.make_block(scope);
@@ -621,6 +589,38 @@ namespace basecode::compiler {
         }
 
         return true;
+    }
+
+    compiler::element* ast_evaluator::resolve_symbol_or_evaluate(
+            const syntax::ast_node_t* node,
+            compiler::block* scope,
+        bool flag_as_unresolved) {
+        auto& builder = _session.builder();
+        auto& scope_manager = _session.scope_manager();
+
+        compiler::element* element = nullptr;
+        if (node != nullptr
+        &&  node->type == syntax::ast_node_type_t::symbol) {
+            qualified_symbol_t qualified_symbol {};
+            builder.make_qualified_symbol(qualified_symbol, node);
+
+            auto vars = scope_manager.find_identifier(qualified_symbol, scope);
+            compiler::identifier* identifier = vars.empty() ? nullptr : vars.front();
+
+            element = builder.make_identifier_reference(
+                scope_manager.current_scope(),
+                qualified_symbol,
+                identifier,
+                flag_as_unresolved);
+            element->location(node->location);
+        } else {
+            if (scope != nullptr)
+                element = evaluate_in_scope(node, scope);
+            else
+                element = evaluate(node);
+        }
+
+        return element;
     }
 
     compiler::declaration* ast_evaluator::add_identifier_to_scope(
@@ -2477,7 +2477,7 @@ namespace basecode::compiler {
         auto& ast_builder = _session.ast_builder();
         auto& scope_manager = _session.scope_manager();
 
-        auto active_scope = scope_manager.current_scope();
+        auto active_scope = scope != nullptr ? scope : scope_manager.current_scope();
 
         auto type_scope = builder.make_block(active_scope);
         auto tuple_type = builder.make_tuple_type(active_scope, type_scope);
