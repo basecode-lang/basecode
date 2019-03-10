@@ -919,17 +919,6 @@ SDL :: ns {
         LASTEVENT                   :: $FFFF;
     };
 
-    // XXX: temporary until fixed-arrays
-    Event_Padding :: struct {
-        padding1: u64;
-        padding2: u64;
-        padding3: u64;
-        padding4: u64;
-        padding5: u64;
-        padding6: u64;
-        padding7: u64;
-    };
-
     Event :: union {
         type:       u32;
         common:     Common_Event;
@@ -956,7 +945,7 @@ SDL :: ns {
         mgesture:   Multi_Gesture_Event;
         dgesture:   Dollar_Gesture_Event;
         drop:       Drop_Event;
-        padding:    Event_Padding;     // this forces a size of 56 bytes
+        padding:    [56]u8;     // this forces a size of 56 bytes
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -1202,7 +1191,6 @@ SDL :: ns {
 
         // frame rate cap
         if frame_duration < TARGET_FPS_MS {
-            // XXX: constant assignment here is a bug
             delay :: TARGET_FPS_MS - frame_duration;
             SDL::Delay(delay);
         };

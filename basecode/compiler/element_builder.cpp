@@ -279,12 +279,13 @@ namespace basecode::compiler {
             scope,
             entry_type,
             subscripts);
-        if (!type->initialize(_session))
-            return nullptr;
 
         scope->parent_element(type);
         for (auto s : subscripts)
             s->parent_element(type);
+
+        if (!type->initialize(_session))
+            return nullptr;
 
         _session.elements().add(type);
 

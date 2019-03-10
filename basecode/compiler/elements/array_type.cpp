@@ -53,6 +53,20 @@ namespace basecode::compiler {
                                                 _base_type_ref(base_type_ref) {
     }
 
+    void array_type::calculate_size() {
+        size_t size = 0;
+        for (auto s : _subscripts) {
+            uint64_t temp = 0;
+            if (s->as_integer(temp)) {
+                if (size == 0)
+                    size = temp;
+                else
+                    size *= temp;
+            }
+        }
+        size_in_bytes(size * _base_type_ref->type()->size_in_bytes());
+    }
+
     bool array_type::on_apply_fold_result(
             compiler::element* e,
             const fold_result_t& fold_result) {
@@ -115,6 +129,8 @@ namespace basecode::compiler {
             parent_scope(),
             name_for_array(_base_type_ref->type(), _subscripts));
         symbol(type_symbol);
+        calculate_size();
+        alignment(_base_type_ref->type()->size_in_bytes());
         type_symbol->parent_element(this);
 
         return composite_type::on_initialize(session);
