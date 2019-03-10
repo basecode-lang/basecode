@@ -44,10 +44,13 @@ namespace basecode::syntax {
         basic_block,
         symbol_part,
         nil_literal,
+        new_literal,
         line_comment,
         block_comment,
         argument_list,
         if_expression,
+        array_literal,
+        tuple_literal,
         parameter_list,
         number_literal,
         string_literal,
@@ -64,6 +67,7 @@ namespace basecode::syntax {
         with_expression,
         enum_expression,
         from_expression,
+        cast_expression,
         case_expression,
         type_declaration,
         symbol_reference,
@@ -86,6 +90,7 @@ namespace basecode::syntax {
         pointer_declaration,
         type_parameter_list,
         constant_assignment,
+        transmute_expression,
         namespace_expression,
         return_argument_list,
         array_subscript_list,
@@ -113,16 +118,20 @@ namespace basecode::syntax {
         {ast_node_type_t::basic_block, "basic_block"},
         {ast_node_type_t::symbol_part, "symbol_part"},
         {ast_node_type_t::nil_literal, "nil_literal"},
+        {ast_node_type_t::new_literal, "new_literal"},
         {ast_node_type_t::line_comment, "line_comment"},
+        {ast_node_type_t::tuple_literal, "tuple_literal"},
         {ast_node_type_t::block_comment, "block_comment"},
         {ast_node_type_t::argument_list, "argument_list"},
         {ast_node_type_t::if_expression, "if_expression"},
+        {ast_node_type_t::array_literal, "array_literal"},
         {ast_node_type_t::type_parameter, "type_parameter"},
         {ast_node_type_t::parameter_list, "parameter_list"},
         {ast_node_type_t::statement_body, "statement_body"},
         {ast_node_type_t::number_literal, "number_literal"},
         {ast_node_type_t::string_literal, "string_literal"},
         {ast_node_type_t::unary_operator, "unary_operator"},
+        {ast_node_type_t::cast_expression, "cast_expression"},
         {ast_node_type_t::spread_operator, "spread_operator"},
         {ast_node_type_t::from_expression, "from_expression"},
         {ast_node_type_t::proc_expression, "proc_expression"},
@@ -155,6 +164,7 @@ namespace basecode::syntax {
         {ast_node_type_t::pointer_declaration, "pointer_declaration"},
         {ast_node_type_t::type_parameter_list, "type_parameter_list"},
         {ast_node_type_t::constant_assignment, "constant_assignment"},
+        {ast_node_type_t::transmute_expression, "transmute_expression"},
         {ast_node_type_t::namespace_expression, "namespace_expression"},
         {ast_node_type_t::return_argument_list, "return_argument_list"},
         {ast_node_type_t::array_subscript_list, "array_subscript_list"},
@@ -329,6 +339,8 @@ namespace basecode::syntax {
 
         ast_node_t* enum_node(const token_t& token);
 
+        ast_node_t* cast_node(const token_t& token);
+
         ast_node_t* while_node(const token_t& token);
 
         ast_node_t* label_node(const token_t& token);
@@ -337,9 +349,9 @@ namespace basecode::syntax {
 
         ast_node_t* union_node(const token_t& token);
 
-        ast_node_t* switch_node(const token_t& token);
-
         ast_node_t* defer_node(const token_t& token);
+
+        ast_node_t* switch_node(const token_t& token);
 
         ast_node_t* struct_node(const token_t& token);
 
@@ -361,15 +373,23 @@ namespace basecode::syntax {
 
         ast_node_t* raw_block_node(const token_t& token);
 
+        ast_node_t* transmute_node(const token_t& token);
+
         ast_node_t* fallthrough_node(const token_t& token);
 
         ast_node_t* symbol_part_node(const token_t& token);
+
+        ast_node_t* new_literal_node(const token_t& token);
 
         ast_node_t* nil_literal_node(const token_t& token);
 
         ast_node_t* line_comment_node(const token_t& token);
 
         ast_node_t* block_comment_node(const token_t& token);
+
+        ast_node_t* array_literal_node(const token_t& token);
+
+        ast_node_t* tuple_literal_node(const token_t& token);
 
         ast_node_t* number_literal_node(const token_t& token);
 

@@ -41,7 +41,7 @@ namespace basecode::syntax {
                 parser->consume();
                 type_parameter_node->lhs = parser->expect_expression(
                     r,
-                    ast_node_type_t::proc_call,
+                    ast_node_type_t::tuple_literal,
                     precedence_t::variable);
                 if (r.is_failed())
                     return false;
@@ -1040,7 +1040,22 @@ namespace basecode::syntax {
             parser* parser,
             ast_node_t* lhs,
             token_t& token) {
-        auto node = parser->ast_builder()->proc_call_node();
+        auto ast_builder = parser->ast_builder();
+        ast_node_t* node = nullptr;
+        auto symbol_part = lhs->children[0];
+        if (symbol_part->token.value == "new") {
+            node = ast_builder->new_literal_node(symbol_part->token);
+        } else if (symbol_part->token.value == "cast") {
+            node = ast_builder->cast_node(symbol_part->token);
+        } else if (symbol_part->token.value == "array") {
+            node = ast_builder->array_literal_node(symbol_part->token);
+        } else if (symbol_part->token.value == "tuple") {
+            node = ast_builder->tuple_literal_node(symbol_part->token);
+        } else if (symbol_part->token.value == "transmute") {
+            node = ast_builder->transmute_node(symbol_part->token);
+        } else {
+            node = ast_builder->proc_call_node();
+        }
         node->location.start(lhs->location.start());
         node->lhs->rhs = lhs;
         node->rhs->location.start(token.location.start());

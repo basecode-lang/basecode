@@ -34,14 +34,18 @@ namespace basecode::compiler {
         {syntax::ast_node_type_t::nil_literal,             std::bind(&ast_evaluator::nil, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_type_t::basic_block,             std::bind(&ast_evaluator::basic_block, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_type_t::symbol_part,             std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::new_literal,             std::bind(&ast_evaluator::new_literal, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_type_t::line_comment,            std::bind(&ast_evaluator::line_comment, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_type_t::block_comment,           std::bind(&ast_evaluator::block_comment, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_type_t::argument_list,           std::bind(&ast_evaluator::argument_list, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_type_t::if_expression,           std::bind(&ast_evaluator::if_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::array_literal,           std::bind(&ast_evaluator::array_literal, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::tuple_literal,           std::bind(&ast_evaluator::tuple_literal, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_type_t::parameter_list,          std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_type_t::number_literal,          std::bind(&ast_evaluator::number_literal, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_type_t::string_literal,          std::bind(&ast_evaluator::string_literal, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_type_t::unary_operator,          std::bind(&ast_evaluator::unary_operator, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::cast_expression,         std::bind(&ast_evaluator::cast_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_type_t::case_expression,         std::bind(&ast_evaluator::case_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_type_t::spread_operator,         std::bind(&ast_evaluator::spread_operator, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_type_t::from_expression,         std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
@@ -72,6 +76,7 @@ namespace basecode::compiler {
         {syntax::ast_node_type_t::continue_statement,      std::bind(&ast_evaluator::continue_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_type_t::type_tagged_symbol,      std::bind(&ast_evaluator::symbol, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_type_t::constant_assignment,     std::bind(&ast_evaluator::assignment, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::transmute_expression,    std::bind(&ast_evaluator::transmute_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_type_t::namespace_expression,    std::bind(&ast_evaluator::namespace_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_type_t::return_argument_list,    std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_type_t::array_subscript_list,    std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
@@ -1498,124 +1503,43 @@ namespace basecode::compiler {
 
         auto type_params = builder.make_tagged_type_list_from_node(symbol_node);
 
-        using element_maker_t = std::function<bool (
-            compiler::element_builder&,
-            compiler::scope_manager&,
-            evaluator_result_t&,
-            const type_reference_list_t&,
-            compiler::argument_list*)>;
-        static std::unordered_map<std::string, element_maker_t> s_makers {
-            {
-                "new",
-                [](compiler::element_builder& builder,
-                        compiler::scope_manager& scope_manager,
-                        evaluator_result_t& result,
-                        const type_reference_list_t& type_params,
-                        compiler::argument_list* args) {
-                    result.element = builder.make_user_literal(
-                        scope_manager.current_scope(),
-                        type_params[0],
-                        args);
-                    return true;
-                }
-            },
-            {
-                "cast",
-                [](compiler::element_builder& builder,
-                       compiler::scope_manager& scope_manager,
-                       evaluator_result_t& result,
-                       const type_reference_list_t& type_params,
-                       compiler::argument_list* args) {
-                    // XXX: should cast accept an argument_list?
-                    auto cast_element = builder.make_cast(
-                        scope_manager.current_scope(),
-                        type_params[0],
-                        args->elements().front());
-//                    cast_element->location(context.node->location);
-//                    cast_element->type_location(context.node->lhs->lhs->location);
-                    result.element = cast_element;
-                    return true;
-                }
-            },
-            {
-                "array",
-                [](compiler::element_builder& builder,
-                       compiler::scope_manager& scope_manager,
-                       evaluator_result_t& result,
-                       const type_reference_list_t& type_params,
-                       compiler::argument_list* args) {
-                    result.element = builder.make_array_literal(
-                        scope_manager.current_scope(),
-                        type_params[0],
-                        args);
-                    return true;
-                }
-            },
-            {
-                "transmute",
-                [](compiler::element_builder& builder,
-                       compiler::scope_manager& scope_manager,
-                       evaluator_result_t& result,
-                       const type_reference_list_t& type_params,
-                       compiler::argument_list* args) {
-                    // XXX: like cast, should transmute support argument_list directly?
-                    auto transmute_element = builder.make_transmute(
-                        scope_manager.current_scope(),
-                        type_params[0],
-                        args->elements().front());
-//                    transmute_element->location(context.node->location);
-//                    transmute_element->type_location(context.node->lhs->lhs->location);
-                    result.element = transmute_element;
-                    return true;
-                }
-            },
-        };
+        auto intrinsic = compiler::intrinsic::intrinsic_for_call(
+            _session,
+            scope_manager.current_scope(),
+            args,
+            proc_name,
+            type_params);
+        if (intrinsic != nullptr) {
+            result.element = intrinsic;
+            return true;
+        }
 
-        auto maker_it = s_makers.find(proc_name.name);
-        if (maker_it != s_makers.end()) {
-            return maker_it->second(builder, scope_manager, result, type_params, args);
-        } else if (proc_name.name == "tuple") {
-            result.element = make_tuple_literal(context, scope_manager.current_scope());
-        } else {
-            auto intrinsic = compiler::intrinsic::intrinsic_for_call(
-                _session,
+        compiler::identifier_reference_list_t references {};
+        auto vars = scope_manager.find_identifier(proc_name);
+        if (vars.empty()) {
+            auto unresolved = builder.make_identifier_reference(
                 scope_manager.current_scope(),
-                args,
                 proc_name,
-                type_params);
-            if (intrinsic != nullptr) {
-                result.element = intrinsic;
-                return true;
-            }
-
-            compiler::identifier_reference_list_t references {};
-            auto vars = scope_manager.find_identifier(proc_name);
-            if (vars.empty()) {
-                auto unresolved = builder.make_identifier_reference(
+                nullptr);
+            references.emplace_back(unresolved);
+        } else {
+            for (auto proc_identifier : vars) {
+                references.emplace_back(builder.make_identifier_reference(
                     scope_manager.current_scope(),
                     proc_name,
-                    nullptr);
-                references.emplace_back(unresolved);
-            } else {
-                for (auto proc_identifier : vars) {
-                    references.emplace_back(builder.make_identifier_reference(
-                        scope_manager.current_scope(),
-                        proc_name,
-                        proc_identifier));
-                }
+                    proc_identifier));
             }
-
-            auto proc_call = builder.make_procedure_call(
-                scope_manager.current_scope(),
-                args,
-                type_params,
-                references);
-            proc_call->location(symbol_node->location);
-            for (auto ref : proc_call->references())
-                ref->parent_element(proc_call);
-            result.element = proc_call;
-
         }
+
+        auto proc_call = builder.make_procedure_call(
+            scope_manager.current_scope(),
+            args,
+            type_params,
+            references);
+        proc_call->location(symbol_node->location);
+        for (auto ref : proc_call->references())
+            ref->parent_element(proc_call);
+        result.element = proc_call;
 
         return true;
     }
@@ -1675,6 +1599,149 @@ namespace basecode::compiler {
             scope_manager.current_scope(),
             labels,
             expr);
+
+        return true;
+    }
+
+    bool ast_evaluator::cast_expression(
+            evaluator_context_t& context,
+            evaluator_result_t& result) {
+        auto& builder = _session.builder();
+        auto& scope_manager = _session.scope_manager();
+
+        compiler::argument_list* args = nullptr;
+        auto argument_list = evaluate(context.node->rhs);
+        if (argument_list == nullptr)
+            return false;
+        args = dynamic_cast<compiler::argument_list*>(argument_list);
+
+        auto symbol_node = context.node->lhs->rhs;
+
+        qualified_symbol_t proc_name {};
+        builder.make_qualified_symbol(proc_name, symbol_node);
+
+        auto type_params = builder.make_tagged_type_list_from_node(symbol_node);
+
+        // XXX: should cast accept an argument_list?
+        auto cast_element = builder.make_cast(
+            scope_manager.current_scope(),
+            type_params[0],
+            args->elements().front());
+        cast_element->location(context.node->location);
+        cast_element->type_location(context.node->lhs->rhs->location);
+        result.element = cast_element;
+
+        return true;
+    }
+
+    bool ast_evaluator::transmute_expression(
+            evaluator_context_t& context,
+            evaluator_result_t& result) {
+        auto& builder = _session.builder();
+        auto& scope_manager = _session.scope_manager();
+
+        compiler::argument_list* args = nullptr;
+        auto argument_list = evaluate(context.node->rhs);
+        if (argument_list == nullptr)
+            return false;
+        args = dynamic_cast<compiler::argument_list*>(argument_list);
+
+        auto symbol_node = context.node->lhs->rhs;
+
+        qualified_symbol_t proc_name {};
+        builder.make_qualified_symbol(proc_name, symbol_node);
+
+        auto type_params = builder.make_tagged_type_list_from_node(symbol_node);
+
+        // XXX: like cast, should transmute support argument_list directly?
+        auto transmute_element = builder.make_transmute(
+            scope_manager.current_scope(),
+            type_params[0],
+            args->elements().front());
+        transmute_element->location(context.node->location);
+        transmute_element->type_location(context.node->lhs->rhs->location);
+        result.element = transmute_element;
+
+        return true;
+    }
+
+    bool ast_evaluator::new_literal(
+            evaluator_context_t& context,
+            evaluator_result_t& result) {
+        auto& builder = _session.builder();
+        auto& scope_manager = _session.scope_manager();
+
+        compiler::argument_list* args = nullptr;
+        auto argument_list = evaluate(context.node->rhs);
+        if (argument_list == nullptr)
+            return false;
+        args = dynamic_cast<compiler::argument_list*>(argument_list);
+
+        auto symbol_node = context.node->lhs->rhs;
+
+        qualified_symbol_t proc_name {};
+        builder.make_qualified_symbol(proc_name, symbol_node);
+
+        auto type_params = builder.make_tagged_type_list_from_node(symbol_node);
+
+        auto literal = builder.make_user_literal(
+            scope_manager.current_scope(),
+            type_params[0],
+            args);
+        literal->location(context.node->location);
+        //literal->type_location(context.node->lhs->rhs->location);
+        result.element = literal;
+
+        return true;
+    }
+
+    bool ast_evaluator::tuple_literal(
+            evaluator_context_t& context,
+            evaluator_result_t& result) {
+        auto& builder = _session.builder();
+        auto& scope_manager = _session.scope_manager();
+
+        auto symbol_node = context.node->lhs->rhs;
+
+        qualified_symbol_t proc_name {};
+        builder.make_qualified_symbol(proc_name, symbol_node);
+
+        auto type_params = builder.make_tagged_type_list_from_node(symbol_node);
+
+        auto literal = make_tuple_literal(context, scope_manager.current_scope());
+        literal->location(context.node->location);
+        //literal->type_location(context.node->lhs->rhs->location);
+        result.element = literal;
+
+        return true;
+    }
+
+    bool ast_evaluator::array_literal(
+            evaluator_context_t& context,
+            evaluator_result_t& result) {
+        auto& builder = _session.builder();
+        auto& scope_manager = _session.scope_manager();
+
+        compiler::argument_list* args = nullptr;
+        auto argument_list = evaluate(context.node->rhs);
+        if (argument_list == nullptr)
+            return false;
+        args = dynamic_cast<compiler::argument_list*>(argument_list);
+
+        auto symbol_node = context.node->lhs->rhs;
+
+        qualified_symbol_t proc_name {};
+        builder.make_qualified_symbol(proc_name, symbol_node);
+
+        auto type_params = builder.make_tagged_type_list_from_node(symbol_node);
+
+        auto literal = builder.make_array_literal(
+            scope_manager.current_scope(),
+            type_params[0],
+            args);
+        literal->location(context.node->location);
+        //literal->type_location(context.node->lhs->rhs->location);
+        result.element = literal;
 
         return true;
     }

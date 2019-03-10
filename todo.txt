@@ -2,7 +2,6 @@ NOTES
 ------------------------
 Steps to reach feature complete for the bootstrap compiler:
 
-- clean up ast_evaluator::proc_call
 - fixed array type and subscript operator
 - family expressions
 - type-baking for generics
@@ -90,8 +89,6 @@ TASKS
 - BUG: multiple assignment code generation doesn't allow for value swaps.
 - BUG: placeholder identifier "_" isn't working properly
 - BUG: redefining an identifier with another type doesn't give nice errors.
-
-- BUG: rework ast_evaluator::proc_call to clean up the various types of "procedure"
 
 - BUG: fix utf8 streaming issues in lexer/source_file
 - BUG: add missing errors
@@ -262,3 +259,5 @@ DONE
       know what that is on the assembler side of things;
 - length_of intrinsic
 - NEW: length_of intrinsic for literal strings
+- BUG: rework ast_evaluator::proc_call to clean up the various types of "procedure"
+        clean up ast_evaluator::proc_call

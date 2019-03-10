@@ -307,6 +307,13 @@ namespace basecode::syntax {
         return node;
     }
 
+    ast_node_t* ast_builder::cast_node(const token_t& token) {
+        auto node = make_node(ast_node_type_t::cast_expression, &token);
+        node->lhs = type_parameter_list_node();
+        node->rhs = argument_list_node();
+        return node;
+    }
+
     ast_node_t* ast_builder::while_node(const token_t& token) {
         return make_node(ast_node_type_t::while_statement, &token);
     }
@@ -365,6 +372,13 @@ namespace basecode::syntax {
         return make_node(ast_node_type_t::raw_block, &token);
     }
 
+    ast_node_t* ast_builder::transmute_node(const token_t& token) {
+        auto node = make_node(ast_node_type_t::transmute_expression, &token);
+        node->lhs = type_parameter_list_node();
+        node->rhs = argument_list_node();
+        return node;
+    }
+
     ast_node_t* ast_builder::namespace_node(const token_t& token) {
         return make_node(ast_node_type_t::namespace_expression, &token);
     }
@@ -375,6 +389,13 @@ namespace basecode::syntax {
 
     ast_node_t* ast_builder::attribute_node(const token_t& token) {
         return make_node(ast_node_type_t::attribute, &token);
+    }
+
+    ast_node_t* ast_builder::new_literal_node(const token_t& token) {
+        auto node = make_node(ast_node_type_t::new_literal, &token);
+        node->lhs = type_parameter_list_node();
+        node->rhs = argument_list_node();
+        return node;
     }
 
     ast_node_t* ast_builder::fallthrough_node(const token_t& token) {
@@ -395,6 +416,20 @@ namespace basecode::syntax {
 
     ast_node_t* ast_builder::block_comment_node(const token_t& token) {
         return make_node(ast_node_type_t::block_comment, &token);
+    }
+
+    ast_node_t* ast_builder::array_literal_node(const token_t& token) {
+        auto node = make_node(ast_node_type_t::array_literal, &token);
+        node->lhs = type_parameter_list_node();
+        node->rhs = argument_list_node();
+        return node;
+    }
+
+    ast_node_t* ast_builder::tuple_literal_node(const token_t& token) {
+        auto node = make_node(ast_node_type_t::tuple_literal, &token);
+        node->lhs = type_parameter_list_node();
+        node->rhs = argument_list_node();
+        return node;
     }
 
     ast_node_t* ast_builder::unary_operator_node(const token_t& token) {
@@ -455,4 +490,4 @@ namespace basecode::syntax {
         return node;
     }
 
-};
+}

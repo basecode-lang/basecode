@@ -1,8 +1,10 @@
-core :: module("../modules/core");
+core :: module("core");
+
+HELLO_WORLD :: "hello world\n";
 
 #run {
     a: string;
-    core::assign_string(address_of(a), "hello world\n", 12);
+    core::assign_string(address_of(a), HELLO_WORLD, length_of(HELLO_WORLD));
     core::print("%s\n", a.data);
 
     PI :: cast<f64>(3.1415926535);
