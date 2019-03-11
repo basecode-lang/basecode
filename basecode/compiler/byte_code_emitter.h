@@ -19,6 +19,8 @@ namespace basecode::compiler {
     struct temp_count_result_t {
         size_t ints = 0;
         size_t floats = 0;
+        bool bin_op_lhs = false;
+        bool bin_op_rhs = false;
 
         void update();
 

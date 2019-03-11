@@ -73,6 +73,8 @@ namespace basecode::vm {
 
         vm::basic_block_list_t& predecessors();
 
+        void copy_locals(vm::basic_block* block);
+
         void make_block_entry(const meta_t& meta);
 
         bool is_current_instruction(op_codes code);

@@ -39,12 +39,15 @@ namespace basecode::compiler {
 
     void temp_count_result_t::update() {
         if (_ints > ints)
-            ints = _ints + 1;
+            ints = _ints;
 
         if (_floats > floats)
-            floats = _floats + 1;
+            floats = _floats;
 
-        _ints = _floats = 0;
+        _ints = 0;
+        _floats = 0;
+        bin_op_lhs = false;
+        bin_op_rhs = false;
     }
 
     void temp_count_result_t::count(compiler::type* type) {
@@ -673,9 +676,9 @@ namespace basecode::compiler {
                                 _session.elements().remove(induction_assign->id());
                                 _session.elements().remove(induction_step->id());
                             });
+
                             if (!emit_element(&step_block, induction_assign, result))
                                 return false;
-
                             step_block->jump_direct(vm::instruction_operand_t(begin_label_ref));
 
                             auto exit_block = _blocks.make();
@@ -1184,6 +1187,7 @@ namespace basecode::compiler {
                         return_temp_name = temp_local_name(
                             return_type->number_class(),
                             allocate_temp());
+                        free_temp();
                     }
                 }
 
@@ -1260,7 +1264,6 @@ namespace basecode::compiler {
                         vm::op_size_for_byte_size(target_size)));
                     result.operands.emplace_back(result_operand);
                     current_block->pop(result_operand);
-//                    free_temp();
                 }
 
                 if (arg_list->allocated_size() > 0) {
@@ -1640,11 +1643,12 @@ namespace basecode::compiler {
                         break;
                     }
                     case operator_type_t::assignment: {
-                        auto rhs_temp = allocate_temp();
                         emit_result_t rhs_result {};
                         if (!emit_element(basic_block, binary_op->rhs(), rhs_result))
                             return false;
+                        auto rhs_temp = allocate_temp();
                         read(current_block, rhs_result, rhs_temp);
+                        free_temp();
 
                         emit_result_t lhs_result {};
                         if (!emit_element(basic_block, binary_op->lhs(), lhs_result))
@@ -1715,7 +1719,6 @@ namespace basecode::compiler {
                             }
                         }
 
-                        free_temp();
                         break;
                     }
                     default:
@@ -1831,6 +1834,14 @@ namespace basecode::compiler {
                     return false;
                 break;
             }
+            case element_type_t::for_e: {
+                auto for_e = dynamic_cast<compiler::for_element*>(e);
+                if (!count_temps(for_e->expression(), result))
+                    return false;
+                if (!count_temps(for_e->induction_decl()->identifier(), result))
+                    return false;
+                break;
+            }
             case element_type_t::switch_e: {
                 auto switch_e = dynamic_cast<compiler::switch_element*>(e);
                 if (!count_temps(switch_e->expression(), result))
@@ -1937,10 +1948,18 @@ namespace basecode::compiler {
             }
             case element_type_t::binary_operator: {
                 auto bin_op = dynamic_cast<compiler::binary_operator*>(e);
-                if (!count_temps(bin_op->lhs(), result))
-                    return false;
-                if (!count_temps(bin_op->rhs(), result))
-                    return false;
+                if (!result.bin_op_lhs) {
+                    if (!count_temps(bin_op->lhs(), result))
+                        return false;
+                    result.bin_op_lhs = true;
+                }
+
+                if (!result.bin_op_rhs) {
+                    if (!count_temps(bin_op->rhs(), result))
+                        return false;
+                    result.bin_op_rhs = true;
+                }
+
                 infer_type_result_t type_result {};
                 if (!e->infer_type(_session, type_result))
                     return false;
@@ -3058,12 +3077,14 @@ namespace basecode::compiler {
                 case element_type_t::integer_literal:
                 case element_type_t::character_literal:
                 case element_type_t::identifier_reference: {
-                    auto temp = allocate_temp();
                     emit_result_t arg_result {};
                     if (!emit_element(&block, arg, arg_result))
                         return false;
-                    if (!arg_result.skip_read)
+                    if (!arg_result.skip_read) {
+                        auto temp = allocate_temp();
                         read(block, arg_result, temp);
+                        free_temp();
+                    }
 
                     if (!arg_list->is_foreign_call()) {
                         type = arg_result.type_result.inferred_type;
@@ -3094,7 +3115,6 @@ namespace basecode::compiler {
                         block->push(arg_result.operands.back());
                     }
 
-                    free_temp();
                     break;
                 }
                 default:

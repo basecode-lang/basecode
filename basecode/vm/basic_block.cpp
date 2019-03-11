@@ -1243,6 +1243,13 @@ namespace basecode::vm {
         return _predecessors;
     }
 
+    void basic_block::copy_locals(vm::basic_block* block) {
+        for (const auto& kvp : block->_locals) {
+            auto l = block->local(kvp.first);
+            local(l->type, l->name, l->offset, l->frame_offset);
+        }
+    }
+
     void basic_block::make_block_entry(const meta_t& meta) {
         if (_insertion_point != -1) {
             _entries.insert(std::begin(_entries) + _insertion_point, block_entry_t(meta));
