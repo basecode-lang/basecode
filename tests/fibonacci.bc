@@ -9,7 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
-core :: module("../modules/core");
+core :: module("core");
 
 #run {
     core::print("at the very top!\n");

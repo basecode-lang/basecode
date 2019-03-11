@@ -53,10 +53,14 @@ QUESTIONS
 
 WORKING
 -------
-- REFACTOR: session/variable combination, again
-            merge concept of register_allocator + variable
-            DFA graph coloring
-- NEW: DFA graph coloring
+- FIX: unneeded temp locals in blocks
+
+- FINISH: CFG for break, continue, and procedure calls
+
+- NEW: use/def in compiler::block for variables
+        should supplant byte_code_emitter::referenced_module_variables
+
+- NEW: k-coloring for register allocation
 
 - NEW: fixed length arrays; subscript operator
 

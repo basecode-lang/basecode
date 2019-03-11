@@ -13,6 +13,7 @@
 #include <compiler/scope_manager.h>
 #include <compiler/element_builder.h>
 #include "type.h"
+#include "block.h"
 #include "identifier.h"
 #include "initializer.h"
 #include "pointer_type.h"
@@ -128,7 +129,8 @@ namespace basecode::compiler {
 
         auto arg = args[0];
         return arg != nullptr
-            && arg->element_type() == element_type_t::identifier_reference;
+            && arg->element_type() == element_type_t::identifier_reference
+            && !arg->parent_scope()->has_stack_frame();
     }
 
 };

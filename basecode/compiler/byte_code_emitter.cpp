@@ -1366,10 +1366,15 @@ namespace basecode::compiler {
             }
             case element_type_t::identifier: {
                 auto var = dynamic_cast<compiler::identifier*>(e);
+                auto op_size = vm::op_sizes::qword;
+                if (result.type_result.inferred_type != nullptr
+                &&  !result.type_result.inferred_type->is_composite_type()) {
+                    op_size = vm::op_size_for_byte_size(result.type_result.inferred_type->size_in_bytes());
+                }
                 result.operands.emplace_back(_session.assembler().make_named_ref(
                     vm::assembler_named_ref_type_t::local,
                     var->label_name(),
-                    vm::op_size_for_byte_size(result.type_result.inferred_type->size_in_bytes())));
+                    op_size));
                 break;
             }
             case element_type_t::expression: {
