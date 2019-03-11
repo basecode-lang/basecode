@@ -9,5 +9,14 @@ test :: proc() {
 };
 
 a *:= 10;
+b := 0;
+
+if a == 5 {
+    b := a;
+} else {
+    b := a * 2;
+};
+
+b := b shl 3;
 
 #run test();

@@ -144,6 +144,7 @@ namespace basecode::compiler {
     struct flow_control_t {
         bool fallthrough = false;
         flow_control_value_map_t values {};
+        vm::basic_block* predecessor = nullptr;
         vm::assembler_named_ref_t* exit_label = nullptr;
         vm::assembler_named_ref_t* continue_label = nullptr;
     };

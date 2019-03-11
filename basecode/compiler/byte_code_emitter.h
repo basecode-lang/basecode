@@ -62,7 +62,7 @@ namespace basecode::compiler {
 
     private:
         bool emit_element(
-            vm::basic_block* block,
+            vm::basic_block** basic_block,
             compiler::element* e,
             emit_result_t& result);
 
