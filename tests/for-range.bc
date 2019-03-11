@@ -1,4 +1,4 @@
-core :: module("../modules/core");
+core :: module("core");
 
 test :: proc() {
     core::print("\n1\n");

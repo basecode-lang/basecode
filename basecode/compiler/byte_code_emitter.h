@@ -61,6 +61,10 @@ namespace basecode::compiler {
         void push_flow_control(const flow_control_t& control_flow);
 
     private:
+        bool count_temps(
+            compiler::element* e,
+            temp_count_result_t& result);
+
         bool emit_element(
             vm::basic_block** basic_block,
             compiler::element* e,
@@ -69,10 +73,6 @@ namespace basecode::compiler {
         bool emit_type_info(
             vm::basic_block* block,
             compiler::type* type);
-
-        bool count_temps(
-            compiler::element* e,
-            temp_count_result_t& result);
 
         bool make_temp_locals(
             compiler::block* block,
@@ -139,7 +139,7 @@ namespace basecode::compiler {
             uint8_t number);
 
         bool emit_block(
-            vm::basic_block* basic_block,
+            vm::basic_block** basic_block,
             compiler::block* block,
             identifier_list_t& locals,
             temp_local_list_t& temp_locals);
@@ -150,12 +150,12 @@ namespace basecode::compiler {
             const compiler::element_list_t& elements);
 
         bool end_stack_frame(
-            vm::basic_block* basic_block,
+            vm::basic_block** basic_block,
             compiler::block* block,
             const identifier_list_t& locals);
 
         bool begin_stack_frame(
-            vm::basic_block* basic_block,
+            vm::basic_block** basic_block,
             compiler::block* block,
             identifier_list_t& locals,
             temp_local_list_t& temp_locals);
