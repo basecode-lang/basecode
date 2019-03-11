@@ -121,8 +121,8 @@ namespace basecode::compiler {
         if (named_ref->type == vm::assembler_named_ref_type_t::label)
             return;
 
-        if (temp_name == named_ref->name)
-            return;
+//        if (temp_name == named_ref->name)
+//            return;
 
         auto is_pointer_type = result.type_result.inferred_type->is_pointer_type();
         auto is_composite = result.type_result.inferred_type->is_composite_type();

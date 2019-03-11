@@ -1,4 +1,4 @@
-core :: module("../modules/core");
+core :: module("core");
 
 SDL :: ns {
 
@@ -1088,7 +1088,7 @@ SDL :: ns {
         SDL::WINDOWPOS_CENTERED,
         1280, 
         1024, 
-        SDL::OPENGL | SDL::SHOWN);
+        SDL::SHOWN);
     core::assert(window != nil, "window not initialized!");
 
     surface := SDL::GetWindowSurface(window);
