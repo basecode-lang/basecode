@@ -396,8 +396,18 @@ namespace basecode::vm {
                     data_definition_t data_def {};
 
                     switch (_wip.instance.d->type) {
+                        case directive_type_t::end: {
+                            break;
+                        }
                         case directive_type_t::meta: {
                             block->make_block_entry(meta_t{boost::get<std::string>(_wip.params.front())});
+                            break;
+                        }
+                        case directive_type_t::block: {
+                            break;
+                        }
+                        case directive_type_t::reset: {
+                            block->reset(boost::get<std::string>(_wip.params.front()));
                             break;
                         }
                         case directive_type_t::ilocal: {
@@ -477,6 +487,12 @@ namespace basecode::vm {
                         case directive_type_t::rq: {
                             data_def.type = data_definition_type_t::uninitialized;
                             data_def.size = op_sizes::qword;
+                            break;
+                        }
+                        case directive_type_t::frame_offset: {
+                            block->frame_offset(
+                                boost::get<std::string>(_wip.params[0]),
+                                boost::get<int64_t>(_wip.params[1]));
                             break;
                         }
                     }

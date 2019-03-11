@@ -740,9 +740,14 @@ namespace basecode::vm {
         std::string label {};
     };
 
+    struct reset_t {
+        std::string type {};
+    };
+
     enum class block_entry_type_t : uint8_t {
         section = 1,
         meta,
+        reset,
         label,
         local,
         align,
@@ -767,6 +772,8 @@ namespace basecode::vm {
         explicit block_entry_t(const local_t& local);
 
         explicit block_entry_t(const align_t& align);
+
+        explicit block_entry_t(const reset_t& reset);
 
         explicit block_entry_t(const comment_t& comment);
 
@@ -826,14 +833,6 @@ namespace basecode::vm {
         imm_sint,
         reg_range,
         named_ref_range
-    };
-
-    struct offset_ref_t {
-        std::string name;
-    };
-
-    struct local_ref_t {
-        std::string name;
     };
 
     struct register_range_t {
@@ -1697,8 +1696,12 @@ namespace basecode::vm {
         section,
         align,
         meta,
+        reset,
         ilocal,
         flocal,
+        block,
+        end,
+        frame_offset,
         db,
         dw,
         dd,
@@ -1709,7 +1712,7 @@ namespace basecode::vm {
         rq
     };
 
-    using directive_param_variant_t = boost::variant<std::string, uint64_t>;
+    using directive_param_variant_t = boost::variant<std::string, uint64_t, int64_t>;
 
     struct directive_param_t {
         enum flags : uint8_t {
@@ -1755,6 +1758,14 @@ namespace basecode::vm {
 
     inline static std::map<std::string, directive_t> s_directives = {
         {
+            "END",
+            directive_t{
+                op_sizes::none,
+                directive_type_t::end,
+                {}
+            }
+        },
+        {
             "SECTION",
             directive_t{
                 op_sizes::none,
@@ -1785,6 +1796,26 @@ namespace basecode::vm {
             }
         },
         {
+            "BLOCK",
+            directive_t{
+                op_sizes::none,
+                directive_type_t::block,
+                {
+                    {directive_param_t::flags::number, true},
+                }
+            }
+        },
+        {
+            "RESET",
+            directive_t{
+                op_sizes::none,
+                directive_type_t::reset,
+                {
+                    {directive_param_t::flags::string, true},
+                }
+            }
+        },
+        {
             "ILOCAL",
             directive_t{
                 op_sizes::none,
@@ -1801,6 +1832,17 @@ namespace basecode::vm {
                 directive_type_t::flocal,
                 {
                     {directive_param_t::flags::symbol, true},
+                }
+            }
+        },
+        {
+            "FRAME",
+            directive_t{
+                op_sizes::none,
+                directive_type_t::frame_offset,
+                {
+                    {directive_param_t::flags::string, true},
+                    {directive_param_t::flags::number, true},
                 }
             }
         },

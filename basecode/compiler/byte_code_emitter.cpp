@@ -2004,6 +2004,7 @@ namespace basecode::compiler {
             p->add_successors({end_block});
         end_block->add_predecessors(predecessors);
 
+        end_block->pre_blank_lines(1);
         end_block->align(vm::instruction_t::alignment);
         end_block->label(assembler.make_label("_end"));
         end_block->exit();
@@ -2022,6 +2023,7 @@ namespace basecode::compiler {
         for (auto p : predecessors)
             p->add_successors({start_block});
 
+        start_block->pre_blank_lines(1);
         start_block->align(vm::instruction_t::alignment);
         start_block->label(assembler.make_label("_start"));
 
@@ -2113,6 +2115,8 @@ namespace basecode::compiler {
             basic_blocks.emplace_back(implicit_block);
             assembler.blocks().emplace_back(implicit_block);
 
+            implicit_block->pre_blank_lines(1);
+
             auto parent_element = block->parent_element();
             switch (parent_element->element_type()) {
                 case element_type_t::namespace_e: {
@@ -2134,6 +2138,8 @@ namespace basecode::compiler {
             }
 
             implicit_block->label(assembler.make_label(block->label_name()));
+            implicit_block->reset("local");
+            implicit_block->reset("frame");
             implicit_block->frame_offset("locals", -8);
 
             identifier_list_t locals {};
@@ -2188,6 +2194,7 @@ namespace basecode::compiler {
         for (auto instance : proc_instance_set) {
             auto basic_block = _blocks.make();
             assembler.blocks().emplace_back(basic_block);
+            basic_block->pre_blank_lines(1);
             if (!emit_procedure_instance(basic_block, instance, vars))
                 return false;
         }
@@ -2205,8 +2212,11 @@ namespace basecode::compiler {
         for (auto p : predecessors)
             p->add_successors({block});
         assembler.blocks().emplace_back(block);
+        block->pre_blank_lines(1);
         block->align(vm::instruction_t::alignment);
         block->label(assembler.make_label("_finalizer"));
+        block->reset("local");
+        block->reset("frame");
 
         std::vector<compiler::identifier*> to_finalize {};
         for (const auto& section : vars.sections) {
@@ -2334,8 +2344,11 @@ namespace basecode::compiler {
         for (auto p : predecessors)
             p->add_successors({block});
         assembler.blocks().emplace_back(block);
+        block->pre_blank_lines(1);
         block->align(vm::instruction_t::alignment);
         block->label(assembler.make_label("_initializer"));
+        block->reset("local");
+        block->reset("frame");
 
         identifier_list_t to_init {};
         for (const auto& section : vars.sections) {
@@ -2853,6 +2866,8 @@ namespace basecode::compiler {
 
         block->align(vm::instruction_t::alignment);
         block->label(assembler.make_label(procedure_label));
+        block->reset("local");
+        block->reset("frame");
         block->frame_offset("locals", -8);
 
         auto return_type = proc_type->return_type();

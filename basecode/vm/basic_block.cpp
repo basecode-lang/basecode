@@ -257,8 +257,31 @@ namespace basecode::vm {
         return _insertion_point != -1 ? _insertion_point : _entries.size();
     }
 
+    uint8_t basic_block::pre_blank_lines() const {
+        return _pre_blank_lines;
+    }
+
+    uint8_t basic_block::post_blank_lines() const {
+        return _post_blank_lines;
+    }
+
     void basic_block::insertion_point(ssize_t value) {
         _insertion_point = value;
+    }
+
+    void basic_block::reset(const std::string& type) {
+        reset_t reset_directive {
+            .type = type
+        };
+        make_block_entry(reset_directive);
+    }
+
+    void basic_block::pre_blank_lines(uint8_t value) {
+        _pre_blank_lines = value;
+    }
+
+    void basic_block::post_blank_lines(uint8_t value) {
+        _post_blank_lines = value;
     }
 
     void basic_block::bytes(const std::vector<uint8_t>& values) {
@@ -1269,6 +1292,15 @@ namespace basecode::vm {
         }
     }
 
+    void basic_block::make_block_entry(const reset_t& reset) {
+        if (_insertion_point != -1) {
+            _entries.insert(std::begin(_entries) + _insertion_point, block_entry_t(reset));
+            _insertion_point++;
+        } else {
+            _entries.push_back(block_entry_t(reset));
+        }
+    }
+
     bool basic_block::has_local(const std::string& name) const {
         return _locals.count(name) > 0;
     }
@@ -1340,4 +1372,4 @@ namespace basecode::vm {
         }
     }
 
-};
+}

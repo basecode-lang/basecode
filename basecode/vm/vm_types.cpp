@@ -73,6 +73,10 @@ namespace basecode::vm {
                                                          _type(block_entry_type_t::label) {
     }
 
+    block_entry_t::block_entry_t(const reset_t& reset) : _data(reset),
+                                                         _type(block_entry_type_t::reset) {
+    }
+
     block_entry_t::block_entry_t(const section_t& section) : _data(section),
                                                              _type(block_entry_type_t::section) {
     }

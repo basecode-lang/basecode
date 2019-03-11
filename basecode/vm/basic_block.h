@@ -57,9 +57,19 @@ namespace basecode::vm {
 
         ssize_t insertion_point() const;
 
+        uint8_t pre_blank_lines() const;
+
+        uint8_t post_blank_lines() const;
+
+        void reset(const std::string& type);
+
         void insertion_point(ssize_t value);
 
+        void pre_blank_lines(uint8_t value);
+
         vm::basic_block_list_t& successors();
+
+        void post_blank_lines(uint8_t value);
 
         vm::basic_block_list_t& predecessors();
 
@@ -70,6 +80,8 @@ namespace basecode::vm {
         void make_block_entry(const label_t& label);
 
         void make_block_entry(const local_t& local);
+
+        void make_block_entry(const reset_t& reset);
 
         bool has_local(const std::string& name) const;
 
@@ -454,7 +466,9 @@ namespace basecode::vm {
     private:
         common::id_t _id;
         basic_block_type_t _type;
+        uint8_t _pre_blank_lines = 0;
         ssize_t _insertion_point = -1;
+        uint8_t _post_blank_lines = 0;
         block_entry_list_t _entries {};
         ssize_t _recent_inst_index = -1;
         vm::basic_block_list_t _successors {};

@@ -79,8 +79,6 @@ namespace basecode::vm {
         const vm::assembler_local_t* local(const std::string& name) const;
 
     private:
-        void free_locals();
-
         bool allocate_reg(register_t& reg);
 
         void free_reg(const register_t& reg);

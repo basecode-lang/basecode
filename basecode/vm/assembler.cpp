@@ -37,12 +37,28 @@ namespace basecode::vm {
         uint64_t highest_address = 0;
 
         for (auto block : _blocks) {
-            free_locals();
-
             for (auto& entry : block->entries()) {
                 highest_address = entry.address();
 
                 switch (entry.type()) {
+                    case block_entry_type_t::reset: {
+                        auto reset = entry.data<reset_t>();
+                        if (reset->type == "local") {
+                            for (const auto& kvp : _locals) {
+                                const assembler_local_t& local = kvp.second;
+                                free_reg(local.reg);
+                            }
+                            _locals.clear();
+                        } else if (reset->type == "frame") {
+                            _frame_offsets.clear();
+                        } else {
+                            r.error(
+                                "A031",
+                                fmt::format("unknown reset operand: {}", reset->type));
+                            return false;
+                        }
+                        break;
+                    }
                     case block_entry_type_t::local: {
                         auto data = entry.data<local_t>();
                         assembler_local_t local {};
@@ -175,21 +191,10 @@ namespace basecode::vm {
             }
         }
 
-        free_locals();
-
         highest_address += 8;
         _terp->heap_free_space_begin(common::align(highest_address, 8));
 
         return !r.is_failed();
-    }
-
-    void assembler::free_locals() {
-        for (const auto& kvp : _locals) {
-            const assembler_local_t& local = kvp.second;
-            free_reg(local.reg);
-        }
-        _locals.clear();
-        _frame_offsets.clear();
     }
 
     vm::segment* assembler::segment(
@@ -406,7 +411,10 @@ namespace basecode::vm {
         auto indent_four_spaces = std::string(4, ' ');
 
         auto start_address = block->entries().front().address();
-        source_file->add_blank_lines(start_address);
+        auto pre_blank_lines = block->pre_blank_lines();
+        if (pre_blank_lines > 0)
+            source_file->add_blank_lines(start_address, pre_blank_lines);
+
         source_file->add_source_line(
             listing_source_line_type_t::directive,
             start_address,
@@ -421,6 +429,14 @@ namespace basecode::vm {
                     type = listing_source_line_type_t::directive;
                     auto meta = entry.data<meta_t>();
                     line << fmt::format(".meta '{}'", meta->label);
+                    break;
+                }
+                case block_entry_type_t::reset: {
+                    type = listing_source_line_type_t::directive;
+                    auto reset = entry.data<reset_t>();
+                    line << indent_four_spaces;
+                    line << std::left << std::setw(10) << ".reset";
+                    line << fmt::format("'{}'", reset->type);
                     break;
                 }
                 case block_entry_type_t::local: {
@@ -482,11 +498,9 @@ namespace basecode::vm {
                 case block_entry_type_t::frame_offset: {
                     type = listing_source_line_type_t::directive;
                     auto frame_offset = entry.data<frame_offset_t>();
-                    line << fmt::format(
-                        "{}.frame_offset '{}', {}",
-                        indent_four_spaces,
-                        frame_offset->name,
-                        frame_offset->offset);
+                    line << indent_four_spaces;
+                    line << std::left << std::setw(10) << ".frame";
+                    line << fmt::format("'{}', {}", frame_offset->name, frame_offset->offset);
                     break;
                 }
                 case block_entry_type_t::blank_line: {
@@ -619,10 +633,15 @@ namespace basecode::vm {
             }
         }
 
+        auto final_address = block->entries().back().address();
         source_file->add_source_line(
             listing_source_line_type_t::directive,
-            block->entries().back().address(),
+            final_address,
             ".end");
+
+        auto post_blank_lines = block->post_blank_lines();
+        if (post_blank_lines > 0)
+            source_file->add_blank_lines(final_address, post_blank_lines);
     }
 
     label* assembler::find_label(const std::string& name) {
