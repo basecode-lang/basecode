@@ -104,6 +104,9 @@ namespace basecode::compiler {
             vm::basic_block* block,
             emit_result_t& result,
             uint8_t number) {
+        if (result.operands.empty())
+            return;
+
         const auto& local_ref = result.operands.front();
         if (local_ref.type() != vm::instruction_operand_type_t::named_ref)
             return;
@@ -1617,6 +1620,7 @@ namespace basecode::compiler {
             case element_type_t::tuple_type:
             case element_type_t::array_type:
             case element_type_t::module_type:
+            case element_type_t::family_type:
             case element_type_t::unknown_type:
             case element_type_t::numeric_type:
             case element_type_t::pointer_type:

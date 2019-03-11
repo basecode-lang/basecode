@@ -3,7 +3,6 @@ NOTES
 Steps to reach feature complete for the bootstrap compiler:
 
 - fixed array type and subscript operator
-- family expressions
 - type-baking for generics
 - type-promotion errors for procedure_call
 - multiple/named return parameters
@@ -62,15 +61,6 @@ WORKING
 - NEW: fixed length arrays; subscript operator
 
 - NEW: length_of intrinsic for fixed arrays
-
-- NEW: family expressions
-        integers :: family(signed_integers, unsigned_integers);
-        signed_integers :: family(s8, s16, s32, s64);
-        unsigned_integers :: family(u8, u16, u32, u64);
-
-        only_signed_adder :: proc<T:signed_integers>(x: T, y: T): T {
-            return x + y;
-        };
 
 - NEW: convert multiple/named parameters in procedure return into a tuple
 
@@ -261,3 +251,11 @@ DONE
 - NEW: length_of intrinsic for literal strings
 - BUG: rework ast_evaluator::proc_call to clean up the various types of "procedure"
         clean up ast_evaluator::proc_call
+- NEW: family expressions
+        integers :: family(signed_integers, unsigned_integers);
+        signed_integers :: family(s8, s16, s32, s64);
+        unsigned_integers :: family(u8, u16, u32, u64);
+
+        only_signed_adder :: proc<T:signed_integers>(x: T, y: T): T {
+            return x + y;
+        };

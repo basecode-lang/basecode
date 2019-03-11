@@ -153,6 +153,19 @@ namespace basecode::compiler {
                     node_vertex_name,
                     style);
             }
+            case element_type_t::family_type: {
+                auto element = dynamic_cast<family_type*>(node);
+                auto style = ", fillcolor=gainsboro, style=\"filled\"";
+                add_primary_edge(element, element->symbol());
+                for (auto ref : element->types())
+                    add_primary_edge(element, ref);
+                return fmt::format(
+                    "{}[shape=record,label=\"family_type|{}\"{}];",
+                    node_vertex_name,
+                    element->symbol()->name(),
+                    style);
+                break;
+            }
             case element_type_t::fallthrough: {
                 auto element = dynamic_cast<fallthrough*>(node);
                 auto style = ", fillcolor=red, style=\"filled\"";

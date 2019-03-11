@@ -188,6 +188,10 @@ namespace basecode::compiler {
             evaluator_context_t& context,
             evaluator_result_t& result);
 
+        bool family_expression(
+            evaluator_context_t& context,
+            evaluator_result_t& result);
+
         bool switch_expression(
             evaluator_context_t& context,
             evaluator_result_t& result);
@@ -346,5 +350,5 @@ namespace basecode::compiler {
         compiler::session& _session;
     };
 
-};
+}
 

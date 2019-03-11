@@ -1,0 +1,5 @@
+core :: module("core");
+
+signed_integers     :: family(s8, s16, s32, s64);
+unsigned_integers   :: family(u8, u16, u32, u64);
+integers            :: family(signed_integers, unsigned_integers);

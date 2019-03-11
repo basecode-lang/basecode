@@ -63,6 +63,7 @@ namespace basecode::compiler {
         {syntax::ast_node_type_t::return_statement,        std::bind(&ast_evaluator::return_statement, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_type_t::symbol_reference,        std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_type_t::for_in_statement,        std::bind(&ast_evaluator::for_in_statement, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::family_expression,       std::bind(&ast_evaluator::family_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_type_t::switch_expression,       std::bind(&ast_evaluator::switch_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_type_t::lambda_expression,       std::bind(&ast_evaluator::lambda_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_type_t::switch_expression,       std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
@@ -1810,6 +1811,31 @@ namespace basecode::compiler {
         return true;
     }
 
+    bool ast_evaluator::family_expression(
+            evaluator_context_t& context,
+            evaluator_result_t& result) {
+        auto& builder = _session.builder();
+        auto& scope_manager = _session.scope_manager();
+
+        type_reference_list_t types {};
+        for (auto type_node : context.node->rhs->children) {
+            auto type_ref = dynamic_cast<compiler::type_reference*>(evaluate_in_scope(
+                type_node,
+                scope_manager.current_scope()));
+            if (type_ref->is_unknown_type()) {
+                // XXX: need to extend session support this
+                //      scenario.
+            }
+            types.emplace_back(type_ref);
+        }
+
+        result.element = builder.make_family_type(
+            scope_manager.current_scope(),
+            types);
+
+        return true;
+    }
+
     bool ast_evaluator::switch_expression(
             evaluator_context_t& context,
             evaluator_result_t& result) {
@@ -2703,4 +2729,4 @@ namespace basecode::compiler {
         std::reverse(std::begin(result.symbols), std::end(result.symbols));
     }
 
-};
+}

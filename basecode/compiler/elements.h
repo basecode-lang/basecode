@@ -41,6 +41,7 @@
 #include <compiler/elements/initializer.h>
 #include <compiler/elements/module_type.h>
 #include <compiler/elements/nil_literal.h>
+#include <compiler/elements/family_type.h>
 #include <compiler/elements/if_directive.h>
 #include <compiler/elements/case_element.h>
 #include <compiler/elements/type_literal.h>

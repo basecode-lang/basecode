@@ -1041,8 +1041,11 @@ namespace basecode::syntax {
             ast_node_t* lhs,
             token_t& token) {
         auto ast_builder = parser->ast_builder();
+
         ast_node_t* node = nullptr;
+        bool is_family_node = false;
         auto symbol_part = lhs->children[0];
+
         if (symbol_part->token.value == "new") {
             node = ast_builder->new_literal_node(symbol_part->token);
         } else if (symbol_part->token.value == "cast") {
@@ -1051,6 +1054,9 @@ namespace basecode::syntax {
             node = ast_builder->array_literal_node(symbol_part->token);
         } else if (symbol_part->token.value == "tuple") {
             node = ast_builder->tuple_literal_node(symbol_part->token);
+        } else if (symbol_part->token.value == "family") {
+            is_family_node = true;
+            node = ast_builder->family_node(symbol_part->token);
         } else if (symbol_part->token.value == "transmute") {
             node = ast_builder->transmute_node(symbol_part->token);
         } else {
@@ -1061,17 +1067,46 @@ namespace basecode::syntax {
         node->rhs->location.start(token.location.start());
 
         if (!parser->peek(token_types_t::right_paren)) {
-            pairs_to_list(
-                node->rhs,
-                parser->parse_expression(r));
+            if (is_family_node) {
+                while (true) {
+                    auto type_node = create_type_declaration_node(
+                        r,
+                        parser,
+                        nullptr,
+                        token);
+                    node->rhs->children.emplace_back(type_node);
+
+                    if (parser->peek(token_types_t::comma)) {
+                        parser->consume();
+                    } else {
+                        token_t right_paren;
+                        right_paren.type = token_types_t::right_paren;
+                        if (!parser->expect(r, right_paren))
+                            return nullptr;
+                        node->lhs->location.end(right_paren.location.end());
+                        break;
+                    }
+                }
+            } else {
+                pairs_to_list(
+                    node->rhs,
+                    parser->parse_expression(r));
+
+                token_t right_paren_token;
+                right_paren_token.type = token_types_t::right_paren;
+                if (!parser->expect(r, right_paren_token))
+                    return nullptr;
+
+                node->location.end(right_paren_token.location.end());
+            }
+        } else {
+            token_t right_paren_token;
+            right_paren_token.type = token_types_t::right_paren;
+            if (!parser->expect(r, right_paren_token))
+                return nullptr;
+
+            node->location.end(right_paren_token.location.end());
         }
-
-        token_t right_paren_token;
-        right_paren_token.type = token_types_t::right_paren;
-        if (!parser->expect(r, right_paren_token))
-            return nullptr;
-
-        node->location.end(right_paren_token.location.end());
 
         return node;
     }

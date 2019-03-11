@@ -314,6 +314,13 @@ namespace basecode::syntax {
         return node;
     }
 
+    ast_node_t* ast_builder::family_node(const token_t& token) {
+        auto node = make_node(ast_node_type_t::family_expression, &token);
+        node->lhs = type_parameter_list_node();
+        node->rhs = argument_list_node();
+        return node;
+    }
+
     ast_node_t* ast_builder::while_node(const token_t& token) {
         return make_node(ast_node_type_t::while_statement, &token);
     }

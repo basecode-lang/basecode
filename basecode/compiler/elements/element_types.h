@@ -56,6 +56,7 @@ namespace basecode::compiler {
     class initializer;
     class nil_literal;
     class for_element;
+    class family_type;
     class numeric_type;
     class unknown_type;
     class pointer_type;
@@ -272,6 +273,7 @@ namespace basecode::compiler {
         module_type,
         fallthrough,
         nil_literal,
+        family_type,
         type_literal,
         unknown_type,
         numeric_type,
@@ -342,6 +344,7 @@ namespace basecode::compiler {
         {element_type_t::declaration, "declaration"},
         {element_type_t::module_type, "module_type"},
         {element_type_t::initializer, "initializer"},
+        {element_type_t::family_type, "family_type"},
         {element_type_t::generic_type, "generic_type"},
         {element_type_t::type_literal, "type_literal"},
         {element_type_t::unknown_type, "unknown_type"},

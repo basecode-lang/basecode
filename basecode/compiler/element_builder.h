@@ -168,6 +168,10 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             element* expr);
 
+        family_type* make_family_type(
+            compiler::block* parent_scope,
+            const compiler::type_reference_list_t& types);
+
         type_literal* make_tuple_literal(
             compiler::block* parent_scope,
             compiler::type* tuple_type,
@@ -411,5 +415,4 @@ namespace basecode::compiler {
         compiler::uninitialized_literal* _uninitialized_literal = nullptr;
     };
 
-};
-
+}

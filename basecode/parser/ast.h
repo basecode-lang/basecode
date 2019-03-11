@@ -83,6 +83,7 @@ namespace basecode::syntax {
         struct_expression,
         import_expression,
         proc_call_binding,
+        family_expression,
         continue_statement,
         subscript_operator,
         with_member_access,
@@ -150,6 +151,7 @@ namespace basecode::syntax {
         {ast_node_type_t::symbol_reference, "symbol_reference"},
         {ast_node_type_t::for_in_statement, "for_in_statement"},
         {ast_node_type_t::switch_expression, "switch_statement"},
+        {ast_node_type_t::family_expression, "family_expression"},
         {ast_node_type_t::lambda_expression, "lambda_expression"},
         {ast_node_type_t::import_expression, "import_expression"},
         {ast_node_type_t::struct_expression, "struct_expression"},
@@ -350,6 +352,8 @@ namespace basecode::syntax {
         ast_node_t* union_node(const token_t& token);
 
         ast_node_t* defer_node(const token_t& token);
+
+        ast_node_t* family_node(const token_t& token);
 
         ast_node_t* switch_node(const token_t& token);
 

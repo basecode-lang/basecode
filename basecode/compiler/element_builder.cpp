@@ -542,6 +542,27 @@ namespace basecode::compiler {
         return type;
     }
 
+    family_type* element_builder::make_family_type(
+            compiler::block* parent_scope,
+            const compiler::type_reference_list_t& types) {
+        auto type_name = fmt::format(
+            "__family_{}__",
+            common::id_pool::instance()->allocate());
+        auto symbol = make_symbol(parent_scope, type_name);
+        auto type = new compiler::family_type(
+            _session.scope_manager().current_module(),
+            parent_scope,
+            symbol,
+            types);
+        symbol->parent_element(type);
+
+        if (!type->initialize(_session))
+            return nullptr;
+
+        _session.elements().add(type);
+        return type;
+    }
+
     module_type* element_builder::make_module_type(
             compiler::block* parent_scope,
             compiler::block* scope) {
@@ -1339,4 +1360,4 @@ namespace basecode::compiler {
         return uninit_literal;
     }
 
-};
+}
