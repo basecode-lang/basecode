@@ -573,8 +573,7 @@ namespace basecode::debugger {
             case command_parameter_type_t::symbol: {
                 auto sym = arg->data<symbol_data_t>();
                 if (sym != nullptr) {
-                    auto& assembler = _session.assembler();
-                    auto label = assembler.find_label(sym->input);
+                    auto label = _session.labels().find(sym->input);
                     if (label != nullptr)
                         address = label->address();
                 }

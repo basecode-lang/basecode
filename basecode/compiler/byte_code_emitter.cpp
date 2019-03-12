@@ -292,6 +292,7 @@ namespace basecode::compiler {
             vm::basic_block** basic_block,
             compiler::element* e,
             emit_result_t& result) {
+        auto& labels = _session.labels();
         auto& builder = _session.builder();
         auto& assembler = _session.assembler();
 
@@ -464,7 +465,7 @@ namespace basecode::compiler {
                 predicate_block->predecessors().emplace_back(current_block);
                 current_block->successors().emplace_back(predicate_block);
 
-                predicate_block->label(assembler.make_label(begin_label_name));
+                predicate_block->label(labels.make(begin_label_name, predicate_block));
 
                 emit_result_t predicate_result {};
                 if (!emit_element(&predicate_block, if_e->predicate(), predicate_result))
@@ -481,7 +482,7 @@ namespace basecode::compiler {
                 assembler.blocks().emplace_back(true_block);
                 true_block->predecessors().emplace_back(predicate_block);
 
-                true_block->label(assembler.make_label(true_label_name));
+                true_block->label(labels.make(true_label_name, true_block));
 
                 emit_result_t true_result {};
                 if (!emit_element(&true_block, if_e->true_branch(), true_result))
@@ -499,7 +500,7 @@ namespace basecode::compiler {
                 assembler.blocks().emplace_back(false_block);
                 false_block->predecessors().emplace_back(predicate_block);
 
-                false_block->label(assembler.make_label(false_label_name));
+                false_block->label(labels.make(false_label_name, false_block));
                 auto false_branch = if_e->false_branch();
                 if (false_branch != nullptr) {
                     emit_result_t false_result {};
@@ -514,7 +515,7 @@ namespace basecode::compiler {
                 auto exit_block = _blocks.make();
                 assembler.blocks().emplace_back(exit_block);
                 exit_block->add_predecessors({true_block, false_block});
-                exit_block->label(assembler.make_label(end_label_name));
+                exit_block->label(labels.make(end_label_name, exit_block));
 
                 *basic_block = exit_block;
 
@@ -630,7 +631,7 @@ namespace basecode::compiler {
                             predicate_block->predecessors().emplace_back(init_block);
                             init_block->successors().emplace_back(predicate_block);
 
-                            predicate_block->label(assembler.make_label(entry_label_name));
+                            predicate_block->label(labels.make(entry_label_name, predicate_block));
                             auto comparison_op = builder.make_binary_operator(
                                 for_e->parent_scope(),
                                 cmp_op_type,
@@ -650,7 +651,7 @@ namespace basecode::compiler {
                             assembler.blocks().emplace_back(body_block);
                             body_block->predecessors().emplace_back(predicate_block);
 
-                            body_block->label(assembler.make_label(body_label_name));
+                            body_block->label(labels.make(body_label_name, body_block));
                             if (!emit_element(&body_block, for_e->body(), result))
                                 return false;
 
@@ -684,7 +685,7 @@ namespace basecode::compiler {
                             auto exit_block = _blocks.make();
                             assembler.blocks().emplace_back(exit_block);
                             exit_block->predecessors().emplace_back(predicate_block);
-                            exit_block->label(assembler.make_label(exit_label_name));
+                            exit_block->label(labels.make(exit_label_name, exit_block));
 
                             predicate_block->add_successors({body_block, exit_block});
 
@@ -701,7 +702,7 @@ namespace basecode::compiler {
             }
             case element_type_t::label: {
                 current_block->blank_line();
-                current_block->label(assembler.make_label(e->label_name()));
+                current_block->label(labels.make(e->label_name(), current_block));
                 break;
             }
             case element_type_t::block: {
@@ -814,7 +815,7 @@ namespace basecode::compiler {
                 auto true_block = _blocks.make();
                 assembler.blocks().emplace_back(true_block);
 
-                true_block->label(assembler.make_label(true_label_name));
+                true_block->label(labels.make(true_label_name, true_block));
                 if (!emit_element(&true_block, case_e->scope(), result))
                     return false;
 
@@ -828,7 +829,7 @@ namespace basecode::compiler {
 
                 auto exit_block = _blocks.make();
                 assembler.blocks().emplace_back(exit_block);
-                exit_block->label(assembler.make_label(false_label_name));
+                exit_block->label(labels.make(false_label_name, exit_block));
 
                 if (predicate_block != nullptr) {
                     true_block->add_predecessors({predicate_block});
@@ -895,7 +896,7 @@ namespace basecode::compiler {
                 auto predicate_block = _blocks.make();
                 assembler.blocks().emplace_back(predicate_block);
 
-                predicate_block->label(assembler.make_label(entry_label_name));
+                predicate_block->label(labels.make(entry_label_name, predicate_block));
 
                 emit_result_t predicate_result {};
                 if (!emit_element(&predicate_block, while_e->predicate(), predicate_result))
@@ -908,7 +909,7 @@ namespace basecode::compiler {
                 auto body_block = _blocks.make();
                 assembler.blocks().emplace_back(body_block);
 
-                body_block->label(assembler.make_label(body_label_name));
+                body_block->label(labels.make(body_label_name, body_block));
                 if (!emit_element(&body_block, while_e->body(), result))
                     return false;
 
@@ -917,7 +918,7 @@ namespace basecode::compiler {
                 auto exit_block = _blocks.make();
                 assembler.blocks().emplace_back(exit_block);
 
-                exit_block->label(assembler.make_label(exit_label_name));
+                exit_block->label(labels.make(exit_label_name, exit_block));
                 exit_block->nop();
 
                 exit_block->predecessors().emplace_back(predicate_block);
@@ -979,7 +980,7 @@ namespace basecode::compiler {
                 current_block->successors().emplace_back(entry_block);
                 entry_block->predecessors().emplace_back(current_block);
 
-                entry_block->label(assembler.make_label(begin_label_name));
+                entry_block->label(labels.make(begin_label_name, entry_block));
                 if (!emit_element(&entry_block, switch_e->scope(), result))
                     return false;
 
@@ -987,7 +988,7 @@ namespace basecode::compiler {
                 assembler.blocks().emplace_back(exit_block);
                 exit_block->predecessors().emplace_back(entry_block);
 
-                exit_block->label(assembler.make_label(exit_label_name));
+                exit_block->label(labels.make(exit_label_name, exit_block));
                 exit_block->nop();
 
                 *basic_block = exit_block;
@@ -1130,6 +1131,7 @@ namespace basecode::compiler {
 
                     auto success = assembler.assemble_from_source(
                         _session.result(),
+                        _session.labels(),
                         source_file,
                         current_block,
                         expr->parent_scope());
@@ -1784,23 +1786,14 @@ namespace basecode::compiler {
     bool byte_code_emitter::emit_type_info(
             vm::basic_block* block,
             compiler::type* type) {
-        if (type == nullptr)
-            return false;
-
-        if (type->element_type() == element_type_t::generic_type
-        ||  type->element_type() == element_type_t::unknown_type) {
-            return true;
-        }
-
         auto& assembler = _session.assembler();
 
         auto type_name = type->name();
         auto type_name_len = static_cast<uint32_t>(type_name.length());
         auto label_name = type::make_info_label_name(type);
 
-        block->blank_line();
         block->comment(fmt::format("type: {}", type_name), 0);
-        block->label(assembler.make_label(label_name));
+        block->label(_session.labels().make(label_name, block));
 
         block->dwords({type_name_len});
         block->dwords({type_name_len});
@@ -2029,11 +2022,13 @@ namespace basecode::compiler {
     }
 
     bool byte_code_emitter::emit_type_table() {
+        auto& labels = _session.labels();
         auto& assembler = _session.assembler();
 
         auto type_info_block = _blocks.make();
         assembler.blocks().emplace_back(type_info_block);
 
+        type_info_block->pre_blank_lines(1);
         type_info_block->section(vm::section_t::ro_data);
 
         auto used_types = _session.used_types();
@@ -2041,16 +2036,24 @@ namespace basecode::compiler {
             type_info_block->blank_line();
             type_info_block->align(4);
             type_info_block->string(
-                assembler.make_label(compiler::type::make_literal_label_name(type)),
-                assembler.make_label(compiler::type::make_literal_data_label_name(type)),
+                labels.make(compiler::type::make_literal_label_name(type), type_info_block),
+                labels.make(compiler::type::make_literal_data_label_name(type), type_info_block),
                 type->name());
         }
 
-        type_info_block->blank_line();
         type_info_block->align(8);
-        type_info_block->label(assembler.make_label("_ti_array"));
+        type_info_block->label(labels.make("_ti_array", type_info_block));
         type_info_block->qwords({used_types.size()});
         for (auto type : used_types) {
+            if (type == nullptr)
+                continue;
+
+            if (type->element_type() == element_type_t::generic_type
+            ||  type->element_type() == element_type_t::unknown_type) {
+                continue;
+            }
+
+            type_info_block->blank_line();
             emit_type_info(type_info_block, type);
         }
 
@@ -2087,9 +2090,11 @@ namespace basecode::compiler {
     }
 
     bool byte_code_emitter::emit_interned_string_table() {
+        auto& labels = _session.labels();
         auto& assembler = _session.assembler();
 
         auto block = _blocks.make();
+        block->pre_blank_lines(1);
         block->comment("interned string literals", 0);
         block->section(vm::section_t::ro_data);
 
@@ -2112,8 +2117,8 @@ namespace basecode::compiler {
             }
 
             block->string(
-                assembler.make_label(fmt::format("_intern_str_lit_{}", kvp.second)),
-                assembler.make_label(fmt::format("_intern_str_lit_{}_data", kvp.second)),
+                labels.make(fmt::format("_intern_str_lit_{}", kvp.second), block),
+                labels.make(fmt::format("_intern_str_lit_{}_data", kvp.second), block),
                 escaped);
         }
 
@@ -2128,6 +2133,7 @@ namespace basecode::compiler {
 
         auto& assembler = _session.assembler();
         auto block = _blocks.make();
+        block->pre_blank_lines(1);
 
         for (const auto& section : vars.sections) {
             block->blank_line();
@@ -2143,6 +2149,7 @@ namespace basecode::compiler {
     }
 
     bool byte_code_emitter::emit_end_block(const vm::basic_block_list_t& predecessors) {
+        auto& labels = _session.labels();
         auto& assembler = _session.assembler();
 
         auto end_block = _blocks.make();
@@ -2152,7 +2159,7 @@ namespace basecode::compiler {
 
         end_block->pre_blank_lines(1);
         end_block->align(vm::instruction_t::alignment);
-        end_block->label(assembler.make_label("_end"));
+        end_block->label(labels.make("_end", end_block));
         end_block->exit();
 
         assembler.blocks().emplace_back(end_block);
@@ -2162,6 +2169,7 @@ namespace basecode::compiler {
 
     vm::basic_block* byte_code_emitter::emit_start_block(
             const vm::basic_block_list_t& predecessors) {
+        auto& labels = _session.labels();
         auto& assembler = _session.assembler();
 
         auto start_block = _blocks.make();
@@ -2171,7 +2179,7 @@ namespace basecode::compiler {
 
         start_block->pre_blank_lines(1);
         start_block->align(vm::instruction_t::alignment);
-        start_block->label(assembler.make_label("_start"));
+        start_block->label(labels.make("_start", start_block));
 
         start_block->move(
             vm::instruction_operand_t::fp(),
@@ -2240,6 +2248,7 @@ namespace basecode::compiler {
     vm::basic_block* byte_code_emitter::emit_implicit_blocks(
             const vm::basic_block_list_t& predecessors,
             const identifier_by_section_t& vars) {
+        auto& labels = _session.labels();
         auto& assembler = _session.assembler();
 
         block_list_t implicit_blocks {};
@@ -2283,7 +2292,7 @@ namespace basecode::compiler {
                     break;
             }
 
-            implicit_block->label(assembler.make_label(block->label_name()));
+            implicit_block->label(labels.make(block->label_name(), implicit_block));
             implicit_block->reset("local");
             implicit_block->reset("frame");
             implicit_block->frame_offset("locals", -8);
@@ -2351,6 +2360,7 @@ namespace basecode::compiler {
     vm::basic_block* byte_code_emitter::emit_finalizers(
             const vm::basic_block_list_t& predecessors,
             const identifier_by_section_t& vars) {
+        auto& labels = _session.labels();
         auto& assembler = _session.assembler();
 
         auto block = _blocks.make();
@@ -2360,7 +2370,7 @@ namespace basecode::compiler {
         assembler.blocks().emplace_back(block);
         block->pre_blank_lines(1);
         block->align(vm::instruction_t::alignment);
-        block->label(assembler.make_label("_finalizer"));
+        block->label(labels.make("_finalizer", block));
         block->reset("local");
         block->reset("frame");
 
@@ -2483,6 +2493,7 @@ namespace basecode::compiler {
     vm::basic_block* byte_code_emitter::emit_initializers(
             const vm::basic_block_list_t& predecessors,
             const identifier_by_section_t& vars) {
+        auto& labels = _session.labels();
         auto& assembler = _session.assembler();
 
         auto block = _blocks.make();
@@ -2492,7 +2503,7 @@ namespace basecode::compiler {
         assembler.blocks().emplace_back(block);
         block->pre_blank_lines(1);
         block->align(vm::instruction_t::alignment);
-        block->label(assembler.make_label("_initializer"));
+        block->label(labels.make("_initializer", block));
         block->reset("local");
         block->reset("frame");
 
@@ -2542,14 +2553,14 @@ namespace basecode::compiler {
             vm::basic_block* block,
             vm::section_t section,
             compiler::element* e) {
-        auto& assembler = _session.assembler();
+        auto& labels = _session.labels();
 
         switch (e->element_type()) {
             case element_type_t::type_literal: {
                 auto type_literal = dynamic_cast<compiler::type_literal*>(e);
                 block->blank_line();
                 block->align(4);
-                auto var_label = assembler.make_label(type_literal->label_name());
+                auto var_label = labels.make(type_literal->label_name(), block);
                 block->label(var_label);
                 // XXX: emit data
                 break;
@@ -2574,7 +2585,7 @@ namespace basecode::compiler {
                 block->comment(fmt::format(
                     "identifier type: {}",
                     var->type_ref()->name()));
-                auto var_label = assembler.make_label(var->label_name());
+                auto var_label = labels.make(var->label_name(), block);
                 block->label(var_label);
 
                 switch (var_type->element_type()) {
@@ -3003,7 +3014,7 @@ namespace basecode::compiler {
         if (proc_type->is_foreign())
             return true;
 
-        auto& assembler = _session.assembler();
+        auto& labels = _session.labels();
 
         auto procedure_label = proc_type->symbol()->name();
         auto parent_init = proc_type->parent_element_as<compiler::initializer>();
@@ -3015,7 +3026,7 @@ namespace basecode::compiler {
         }
 
         block->align(vm::instruction_t::alignment);
-        block->label(assembler.make_label(procedure_label));
+        block->label(labels.make(procedure_label, block));
         block->reset("local");
         block->reset("frame");
         block->frame_offset("locals", -8);
@@ -3141,6 +3152,7 @@ namespace basecode::compiler {
             vm::basic_block* block,
             compiler::binary_operator* binary_op,
             emit_result_t& result) {
+        auto& labels = _session.labels();
         auto& assembler = _session.assembler();
 
         auto end_label_name = fmt::format("{}_end", binary_op->label_name());
@@ -3243,7 +3255,7 @@ namespace basecode::compiler {
             }
         }
 
-        block->label(assembler.make_label(end_label_name));
+        block->label(labels.make(end_label_name, block));
 
         free_temp();
         free_temp();

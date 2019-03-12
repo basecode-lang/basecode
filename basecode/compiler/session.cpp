@@ -36,6 +36,7 @@ namespace basecode::compiler {
                                                _source_files(source_files),
                                                _options(options),
                                                _elements(new element_map()),
+                                               _labels(new vm::label_map()),
                                                _builder(new element_builder(*this)),
                                                _assembler(new vm::assembler(_terp)),
                                                _ast_evaluator(new ast_evaluator(*this)),
@@ -53,6 +54,7 @@ namespace basecode::compiler {
         delete _ast_evaluator;
         delete _assembler;
         delete _builder;
+        delete _labels;
         delete _elements;
         delete _terp;
         delete _ffi;
@@ -167,9 +169,7 @@ namespace basecode::compiler {
             success = time_task(
                 "assembler: encode byte-code",
                 [&]() {
-                    _assembler->apply_addresses(_result);
-                    _assembler->resolve_labels(_result);
-                    return _assembler->assemble(_result);
+                    return _assembler->assemble(_result, *_labels);
                 });
 
             if (_options.verbose) {
@@ -437,6 +437,10 @@ namespace basecode::compiler {
 
     element_map& session::elements() {
         return *_elements;
+    }
+
+    vm::label_map& session::labels() {
+        return *_labels;
     }
 
     common::result& session::result() {
@@ -1115,4 +1119,4 @@ namespace basecode::compiler {
         return &it.first->second;
     }
 
-};
+}

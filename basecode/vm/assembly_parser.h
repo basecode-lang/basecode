@@ -62,6 +62,7 @@ namespace basecode::vm {
     public:
         assembly_parser(
             vm::assembler* assembler,
+            vm::label_map* labels,
             common::source_file& source_file,
             void* data);
 
@@ -94,6 +95,7 @@ namespace basecode::vm {
         wip_t _wip {};
         void* _data = nullptr;
         size_t _start_pos = 0;
+        label_map* _labels = nullptr;
         assembly_parser_state_t _state;
         common::source_file& _source_file;
         vm::assembler* _assembler = nullptr;

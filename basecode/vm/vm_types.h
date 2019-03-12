@@ -34,6 +34,7 @@ namespace basecode::vm {
     class label;
     class symbol;
     class segment;
+    class label_map;
     class assembler;
     class basic_block;
     class basic_block_map;

@@ -10,10 +10,18 @@
 // ----------------------------------------------------------------------------
 
 #include "label.h"
+#include <utility>
 
 namespace basecode::vm {
 
-    label::label(const std::string& name) : _name(name) {
+    label::label(
+            std::string name,
+            basic_block* block) : _name(std::move(name)),
+                                  _block(block) {
+    }
+
+    basic_block* label::block() {
+        return _block;
     }
 
     std::string label::name() const {
@@ -28,4 +36,4 @@ namespace basecode::vm {
         _address = value;
     }
 
-};
+}

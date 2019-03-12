@@ -12,12 +12,15 @@
 #pragma once
 
 #include <string>
+#include "vm_types.h"
 
 namespace basecode::vm {
 
     class label {
     public:
-        explicit label(const std::string& name);
+        label(std::string name, basic_block* block);
+
+        basic_block* block();
 
         uint64_t address() const;
 
@@ -28,7 +31,8 @@ namespace basecode::vm {
     private:
         std::string _name;
         uint64_t _address = 0;
+        basic_block* _block = nullptr;
     };
 
-};
+}
 

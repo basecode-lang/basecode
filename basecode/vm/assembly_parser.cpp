@@ -20,8 +20,10 @@ namespace basecode::vm {
 
     assembly_parser::assembly_parser(
             vm::assembler* assembler,
+            vm::label_map* labels,
             common::source_file& source_file,
             void* data) : _data(data),
+                          _labels(labels),
                           _source_file(source_file),
                           _assembler(assembler) {
     }
@@ -107,7 +109,7 @@ namespace basecode::vm {
                         if (rune == ':')
                             break;
                     }
-                    block->label(_assembler->make_label(stream.str()));
+                    block->label(_labels->make(stream.str(), block));
                     _state = assembly_parser_state_t::whitespace;
                     break;
                 }

@@ -61,6 +61,8 @@ namespace basecode::compiler {
 
         element_map& elements();
 
+        vm::label_map& labels();
+
         common::result& result();
 
         type_list_t used_types();
@@ -161,6 +163,7 @@ namespace basecode::compiler {
         session_options_t _options {};
         session_task_list_t _tasks {};
         element_map* _elements = nullptr;
+        vm::label_map* _labels = nullptr;
         element_builder* _builder = nullptr;
         vm::assembler* _assembler = nullptr;
         compiler::program* _program = nullptr;

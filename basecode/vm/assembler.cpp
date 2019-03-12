@@ -23,17 +23,15 @@ namespace basecode::vm {
     assembler::assembler(vm::terp* terp) : _terp(terp) {
     }
 
-    assembler::~assembler() {
-        for (const auto& it : _labels)
-            delete it.second;
-    }
+    bool assembler::assemble(
+            common::result& r,
+            const label_map& labels) {
+        if (!apply_addresses(r))
+            return false;
 
-    void assembler::disassemble() {
-        for (auto block : _blocks)
-            disassemble(block);
-    }
+        if (!resolve_labels(r, labels))
+            return false;
 
-    bool assembler::assemble(common::result& r) {
         uint64_t highest_address = 0;
 
         for (auto block : _blocks) {
@@ -197,6 +195,75 @@ namespace basecode::vm {
         return !r.is_failed();
     }
 
+    void assembler::disassemble() {
+        for (auto block : _blocks)
+            disassemble(block);
+    }
+
+    bool assembler::resolve_labels(
+            common::result& r,
+            const label_map& labels) {
+        for (auto block : _blocks) {
+            for (auto& entry : block->entries()) {
+                switch (entry.type()) {
+                    case block_entry_type_t::instruction: {
+                        auto inst = entry.data<instruction_t>();
+                        for (size_t i = 0; i < inst->operands_count; i++) {
+                            auto& operand = inst->operands[i];
+                            if (operand.fixup_ref1 == nullptr)
+                                continue;
+
+                            switch (operand.fixup_ref1->type) {
+                                case assembler_named_ref_type_t::label: {
+                                    auto label = labels.find(operand.fixup_ref1->name);
+                                    if (label != nullptr) {
+                                        operand.value.u = label->address();
+                                    }
+                                    break;
+                                }
+                                default: {
+                                    break;
+                                }
+                            }
+                        }
+                        break;
+                    }
+                    case block_entry_type_t::data_definition: {
+                        auto data_def = entry.data<data_definition_t>();
+                        if (data_def->type == data_definition_type_t::uninitialized)
+                            break;
+                        for (auto& value : data_def->values) {
+                            auto variant = value;
+                            if (variant.which() == 1) {
+                                auto named_ref = boost::get<assembler_named_ref_t*>(variant);
+                                if (named_ref != nullptr) {
+                                    switch (named_ref->type) {
+                                        case assembler_named_ref_type_t::label: {
+                                            auto label = labels.find(named_ref->name);
+                                            if (label != nullptr) {
+                                                value = label->address();
+                                            }
+                                            break;
+                                        }
+                                        default: {
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        break;
+                    }
+                    default: {
+                        break;
+                    }
+                }
+            }
+        }
+
+        return !r.is_failed();
+    }
+
     vm::segment* assembler::segment(
             const std::string& name,
             segment_type_t type) {
@@ -208,10 +275,11 @@ namespace basecode::vm {
 
     bool assembler::assemble_from_source(
             common::result& r,
+            label_map& labels,
             common::source_file& source_file,
             vm::basic_block* block,
             void* data) {
-        vm::assembly_parser parser(this, source_file, data);
+        vm::assembly_parser parser(this, &labels, source_file, data);
         return parser.parse(r, block);
     }
 
@@ -242,68 +310,6 @@ namespace basecode::vm {
 
     void assembler::free_reg(const register_t& reg) {
         _register_allocator.free(reg);
-    }
-
-    bool assembler::resolve_labels(common::result& r) {
-        for (auto block : _blocks) {
-            for (auto& entry : block->entries()) {
-                switch (entry.type()) {
-                    case block_entry_type_t::instruction: {
-                        auto inst = entry.data<instruction_t>();
-                        for (size_t i = 0; i < inst->operands_count; i++) {
-                            auto& operand = inst->operands[i];
-                            if (operand.fixup_ref1 == nullptr)
-                                continue;
-
-                            switch (operand.fixup_ref1->type) {
-                                case assembler_named_ref_type_t::label: {
-                                    auto label = find_label(operand.fixup_ref1->name);
-                                    if (label != nullptr) {
-                                        operand.value.u = label->address();
-                                    }
-                                    break;
-                                }
-                                default: {
-                                    break;
-                                }
-                            }
-                        }
-                        break;
-                    }
-                    case block_entry_type_t::data_definition: {
-                        auto data_def = entry.data<data_definition_t>();
-                        if (data_def->type == data_definition_type_t::uninitialized)
-                            break;
-                        for (auto& value : data_def->values) {
-                            auto variant = value;
-                            if (variant.which() == 1) {
-                                auto named_ref = boost::get<assembler_named_ref_t*>(variant);
-                                if (named_ref != nullptr) {
-                                    switch (named_ref->type) {
-                                        case assembler_named_ref_type_t::label: {
-                                            auto label = find_label(named_ref->name);
-                                            if (label != nullptr) {
-                                                value = label->address();
-                                            }
-                                            break;
-                                        }
-                                        default: {
-                                            break;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        break;
-                    }
-                    default: {
-                        break;
-                    }
-                }
-            }
-        }
-
-        return !r.is_failed();
     }
 
     assembler_named_ref_t* assembler::find_named_ref(
@@ -644,13 +650,6 @@ namespace basecode::vm {
             source_file->add_blank_lines(final_address, post_blank_lines);
     }
 
-    label* assembler::find_label(const std::string& name) {
-        const auto it = _labels.find(name);
-        if (it == _labels.end())
-            return nullptr;
-        return it->second;
-    }
-
     bool assembler::has_local(const std::string& name) const {
         return _locals.count(name) > 0;
     }
@@ -660,11 +659,6 @@ namespace basecode::vm {
         if (it == _segments.end())
             return nullptr;
         return &it->second;
-    }
-
-    vm::label* assembler::make_label(const std::string& name) {
-        auto it = _labels.insert(std::make_pair(name, new vm::label(name)));
-        return it.first->second;
     }
 
     const assembly_symbol_resolver_t& assembler::resolver() const {

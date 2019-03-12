@@ -112,6 +112,7 @@ add_library(
     vm/segment.cpp vm/segment.h
     vm/vm_types.h vm/vm_types.cpp
     vm/assembler.cpp vm/assembler.h
+    vm/label_map.cpp vm/label_map.h
     vm/basic_block.cpp vm/basic_block.h
     vm/basic_block_map.cpp vm/basic_block_map.h
     vm/assembly_parser.cpp vm/assembly_parser.h
