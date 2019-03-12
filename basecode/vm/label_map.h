@@ -17,16 +17,6 @@
 
 namespace basecode::vm {
 
-    enum class deferred_edge_type_t {
-        predecessor,
-        successor
-    };
-
-    struct deferred_edge_t {
-        deferred_edge_type_t type {};
-        basic_block* block = nullptr;
-    };
-
     class label_map {
     public:
         label_map() = default;
@@ -37,8 +27,14 @@ namespace basecode::vm {
 
         const vm::label* find(const std::string& name) const;
 
+        void add_cfg_edge(vm::basic_block* from, const std::string& to);
+
+    private:
+        void apply_cfg_edge(vm::basic_block* from, vm::basic_block* to);
+
     private:
         std::unordered_map<std::string, vm::label> _labels {};
+        std::unordered_map<std::string, basic_block_stack_t> _edges {};
     };
 
 }

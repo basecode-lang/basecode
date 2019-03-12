@@ -30,7 +30,7 @@ namespace basecode::compiler {
     public:
         session(
             const session_options_t& options,
-            const path_list_t& source_files);
+            path_list_t source_files);
 
         ~session();
 
@@ -99,6 +99,8 @@ namespace basecode::compiler {
 
         void track_used_type(compiler::type* type);
 
+        vm::register_allocator* register_allocator();
+
         compiler::byte_code_emitter& byte_code_emitter();
 
         const string_intern_map& interned_strings() const;
@@ -122,6 +124,8 @@ namespace basecode::compiler {
         common::source_file* add_source_file(const boost::filesystem::path& path);
 
     private:
+        static bool should_read_variable(compiler::element* element);
+
         void raise_phase(
             session_compile_phase_t phase,
             session_module_type_t module_type,
@@ -146,8 +150,6 @@ namespace basecode::compiler {
         bool resolve_unknown_types(bool final);
 
         bool fold_elements_of_type(element_type_t type);
-
-        bool should_read_variable(compiler::element* element);
 
         void write_code_dom_graph(const boost::filesystem::path& path);
 
@@ -175,7 +177,8 @@ namespace basecode::compiler {
         string_intern_map* _interned_strings = nullptr;
         compiler::byte_code_emitter* _emitter = nullptr;
         compiler::scope_manager* _scope_manager = nullptr;
+        vm::register_allocator* _register_allocator = nullptr;
     };
 
-};
+}
 

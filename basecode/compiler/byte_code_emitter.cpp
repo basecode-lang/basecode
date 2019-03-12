@@ -868,10 +868,17 @@ namespace basecode::compiler {
                     label_name = label_ref->name;
                 }
 
-                current_block->comment(
+                auto exit_block = _blocks.make();
+                assembler.blocks().emplace_back(exit_block);
+                exit_block->predecessors().emplace_back(current_block);
+
+                exit_block->comment(
                     fmt::format("break: {}", label_name),
                     vm::comment_location_t::after_instruction);
-                current_block->jump_direct(vm::instruction_operand_t(label_ref));
+                exit_block->jump_direct(vm::instruction_operand_t(label_ref));
+                labels.add_cfg_edge(exit_block, label_name);
+
+                *basic_block = exit_block;
                 break;
             }
             case element_type_t::while_e: {
@@ -1360,10 +1367,17 @@ namespace basecode::compiler {
                     label_name = label_ref->name;
                 }
 
-                current_block->comment(
+                auto exit_block = _blocks.make();
+                assembler.blocks().emplace_back(exit_block);
+                exit_block->predecessors().emplace_back(current_block);
+
+                exit_block->comment(
                     fmt::format("continue: {}", label_name),
                     vm::comment_location_t::after_instruction);
-                current_block->jump_direct(vm::instruction_operand_t(label_ref));
+                exit_block->jump_direct(vm::instruction_operand_t(label_ref));
+                labels.add_cfg_edge(exit_block, label_name);
+
+                *basic_block = exit_block;
                 break;
             }
             case element_type_t::identifier: {

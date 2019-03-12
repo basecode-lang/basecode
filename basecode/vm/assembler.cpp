@@ -20,7 +20,10 @@
 
 namespace basecode::vm {
 
-    assembler::assembler(vm::terp* terp) : _terp(terp) {
+    assembler::assembler(
+            vm::terp* terp,
+            vm::register_allocator* allocator) : _terp(terp),
+                                                 _register_allocator(allocator) {
     }
 
     bool assembler::assemble(
@@ -44,7 +47,7 @@ namespace basecode::vm {
                         if (reset->type == "local") {
                             for (const auto& kvp : _locals) {
                                 const assembler_local_t& local = kvp.second;
-                                free_reg(local.reg);
+                                _register_allocator->release(local.reg);
                             }
                             _locals.clear();
                         } else if (reset->type == "frame") {
@@ -73,7 +76,7 @@ namespace basecode::vm {
                             }
                         }
 
-                        if (!allocate_reg(local.reg))
+                        if (!_register_allocator->allocate(local.reg))
                             return false;
 
                         if (!data->frame_offset.empty()) {
@@ -302,14 +305,6 @@ namespace basecode::vm {
     bool assembler::initialize(common::result& r) {
         _location_counter = _terp->heap_vector(heap_vectors_t::program_start);
         return true;
-    }
-
-    bool assembler::allocate_reg(register_t& reg) {
-        return _register_allocator.allocate(reg);
-    }
-
-    void assembler::free_reg(const register_t& reg) {
-        _register_allocator.free(reg);
     }
 
     assembler_named_ref_t* assembler::find_named_ref(
@@ -683,4 +678,4 @@ namespace basecode::vm {
         return &it->second;
     }
 
-};
+}

@@ -22,7 +22,9 @@ namespace basecode::vm {
 
     class assembler {
     public:
-        explicit assembler(vm::terp* terp);
+        assembler(
+            vm::terp* terp,
+            vm::register_allocator* allocator);
 
         void disassemble();
 
@@ -77,10 +79,6 @@ namespace basecode::vm {
             common::result& r,
             const label_map& labels);
 
-        bool allocate_reg(register_t& reg);
-
-        void free_reg(const register_t& reg);
-
         bool apply_addresses(common::result& r);
 
     private:
@@ -89,7 +87,7 @@ namespace basecode::vm {
         uint64_t _location_counter = 0;
         vm::assembly_listing _listing {};
         assembly_symbol_resolver_t _resolver;
-        register_allocator_t _register_allocator {};
+        vm::register_allocator* _register_allocator = nullptr;
         std::unordered_map<std::string, vm::segment> _segments {};
         std::unordered_map<std::string, int64_t> _frame_offsets {};
         std::unordered_map<std::string, assembler_local_t> _locals {};

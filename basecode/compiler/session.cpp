@@ -10,6 +10,7 @@
 // ----------------------------------------------------------------------------
 
 #include <fstream>
+#include <utility>
 #include <vm/ffi.h>
 #include <vm/terp.h>
 #include <vm/assembler.h>
@@ -17,6 +18,7 @@
 #include <compiler/api/kernel.h>
 #include <vm/default_allocator.h>
 #include <debugger/environment.h>
+#include <vm/register_allocator.h>
 #include "session.h"
 #include "elements.h"
 #include "element_map.h"
@@ -31,22 +33,28 @@ namespace basecode::compiler {
 
     session::session(
             const session_options_t& options,
-            const path_list_t& source_files) : _ffi(new vm::ffi(options.ffi_heap_size)),
-                                               _terp(new vm::terp(_ffi, options.allocator, options.heap_size, options.stack_size)),
-                                               _source_files(source_files),
-                                               _options(options),
-                                               _elements(new element_map()),
-                                               _labels(new vm::label_map()),
-                                               _builder(new element_builder(*this)),
-                                               _assembler(new vm::assembler(_terp)),
-                                               _ast_evaluator(new ast_evaluator(*this)),
-                                               _ast_builder(new syntax::ast_builder()),
-                                               _interned_strings(new string_intern_map()),
-                                               _emitter(new compiler::byte_code_emitter(*this)),
-                                               _scope_manager(new compiler::scope_manager(*this)) {
+            path_list_t source_files) : _ffi(new vm::ffi(options.ffi_heap_size)),
+                                        _terp(new vm::terp(
+                                            _ffi,
+                                            options.allocator,
+                                            options.heap_size,
+                                            options.stack_size)),
+                                        _source_files(std::move(source_files)),
+                                        _options(options),
+                                        _elements(new element_map()),
+                                        _labels(new vm::label_map()),
+                                        _builder(new element_builder(*this)),
+                                        _ast_evaluator(new ast_evaluator(*this)),
+                                        _ast_builder(new syntax::ast_builder()),
+                                        _interned_strings(new string_intern_map()),
+                                        _emitter(new compiler::byte_code_emitter(*this)),
+                                        _scope_manager(new compiler::scope_manager(*this)),
+                                        _register_allocator(new vm::register_allocator()) {
+        _assembler = new vm::assembler(_terp, _register_allocator);
     }
 
     session::~session() {
+        delete _register_allocator;
         delete _scope_manager;
         delete _emitter;
         delete _interned_strings;
@@ -845,6 +853,10 @@ namespace basecode::compiler {
         }
 
         _used_types.insert(type);
+    }
+
+    vm::register_allocator* session::register_allocator() {
+        return _register_allocator;
     }
 
     bool session::fold_elements_of_type(element_type_t type) {
