@@ -130,6 +130,7 @@ add_library(
 
     compiler/session.cpp compiler/session.h
     compiler/element_map.cpp compiler/element_map.h
+    compiler/variable_map.cpp compiler/variable_map.h
     compiler/elements/type.cpp compiler/elements/type.h
     compiler/elements/cast.cpp compiler/elements/cast.h
     compiler/scope_manager.cpp compiler/scope_manager.h

@@ -12,6 +12,7 @@
 #pragma once
 
 #include <vm/basic_block_map.h>
+#include "variable_map.h"
 #include "compiler_types.h"
 
 namespace basecode::compiler {
@@ -213,6 +214,7 @@ namespace basecode::compiler {
 
     private:
         uint8_t _temp = 0;
+        variable_map _variables;
         compiler::session& _session;
         vm::basic_block_map _blocks {};
         vm::basic_block_stack_t _block_stack {};

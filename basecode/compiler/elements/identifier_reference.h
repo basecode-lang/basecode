@@ -25,6 +25,8 @@ namespace basecode::compiler {
 
         bool resolved() const;
 
+        offset_result_t field_offset();
+
         compiler::identifier* identifier();
 
         std::string label_name() const override;

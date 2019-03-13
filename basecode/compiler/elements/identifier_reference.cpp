@@ -11,10 +11,12 @@
 
 #include <compiler/session.h>
 #include "type.h"
+#include "field.h"
 #include "identifier.h"
 #include "initializer.h"
 #include "symbol_element.h"
 #include "type_reference.h"
+#include "binary_operator.h"
 #include "identifier_reference.h"
 
 namespace basecode::compiler {
@@ -58,6 +60,77 @@ namespace basecode::compiler {
         if (_identifier != nullptr)
             return _identifier->label_name();
         return element::label_name();
+    }
+
+    offset_result_t identifier_reference::field_offset() {
+        offset_result_t result {};
+
+        std::stack<compiler::binary_operator*> bin_ops {};
+        std::stack<compiler::identifier_reference*> ref_stack {};
+
+        auto bin_op = dynamic_cast<compiler::binary_operator*>(parent_element());
+        if (bin_op != nullptr && bin_op->operator_type() == operator_type_t::member_access)
+            bin_ops.push(bin_op);
+
+        while (!bin_ops.empty()) {
+            bin_op = bin_ops.top();
+            bin_ops.pop();
+
+            auto lhs = bin_op->lhs();
+            auto rhs = bin_op->rhs();
+
+            switch (rhs->element_type()) {
+                case element_type_t::binary_operator: {
+                    auto other_bin_op = dynamic_cast<compiler::binary_operator*>(rhs);
+                    if (other_bin_op->operator_type() == operator_type_t::member_access)
+                        bin_ops.push(other_bin_op);
+                    break;
+                }
+                case element_type_t::identifier_reference: {
+                    auto ref = dynamic_cast<compiler::identifier_reference*>(rhs);
+                    ref_stack.push(ref);
+                    break;
+                }
+                default: {
+                    break;
+                }
+            }
+
+            switch (lhs->element_type()) {
+                case element_type_t::binary_operator: {
+                    auto other_bin_op = dynamic_cast<compiler::binary_operator*>(lhs);
+                    if (other_bin_op->operator_type() == operator_type_t::member_access)
+                        bin_ops.push(other_bin_op);
+                    break;
+                }
+                case element_type_t::identifier_reference: {
+                    auto ref = dynamic_cast<compiler::identifier_reference*>(lhs);
+                    ref_stack.push(ref);
+                    break;
+                }
+                default: {
+                    break;
+                }
+            }
+        }
+
+        if (!ref_stack.empty()) {
+            result.base_ref = ref_stack.top();
+            result.base_label = result.base_ref->label_name();
+            result.path += result.base_ref->symbol().name;
+            ref_stack.pop();
+
+            while (!ref_stack.empty()) {
+                auto ref = ref_stack.top();
+                ref_stack.pop();
+                auto field = ref->identifier()->field();
+                if (field != nullptr)
+                    result.value += field->start_offset();
+                result.path += fmt::format(".{}", ref->symbol().name);
+            }
+        }
+
+        return result;
     }
 
     bool identifier_reference::on_as_bool(bool& value) const {
@@ -200,4 +273,4 @@ namespace basecode::compiler {
         return true;
     }
 
-};
+}

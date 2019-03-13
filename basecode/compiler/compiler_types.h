@@ -29,6 +29,7 @@ namespace basecode::compiler {
     class session;
     class program;
     class element_map;
+    class variable_map;
     class ast_evaluator;
     class scope_manager;
     class element_builder;
@@ -151,4 +152,10 @@ namespace basecode::compiler {
 
     using flow_control_stack_t = std::stack<flow_control_t>;
 
+    struct offset_result_t {
+        int64_t value = 0;
+        std::string path {};
+        std::string base_label {};
+        compiler::identifier_reference* base_ref = nullptr;
+    };
 }

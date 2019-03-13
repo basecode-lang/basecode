@@ -1,6 +1,27 @@
 core :: module("core");
 
+player :: struct {
+    pos: vector3;
+    dir: vector3;
+    lives: u8;
+    level: u8;
+};
+
+vector3 :: struct {
+    x, y, z: f32;
+};
+
 a := 5;
+
+j: player;
+j.pos.x := 1.0;
+j.pos.y := 1.0;
+j.pos.z := 1.0;
+j.dir.x := 1.0;
+j.dir.y := 1.0;
+j.dir.z := 1.0;
+j.lives := 3;
+j.level := 1;
 
 test :: proc() {
     b := a;
@@ -18,5 +39,9 @@ if a == 5 {
 };
 
 b := b shl 3;
+
+core::print("j.pos.x := %f\n", j.pos.x);
+core::print("j.pos.y := %f\n", j.pos.y);
+core::print("j.pos.z := %f\n", j.pos.z);
 
 #run test();

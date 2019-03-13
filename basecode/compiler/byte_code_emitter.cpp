@@ -81,7 +81,9 @@ namespace basecode::compiler {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    byte_code_emitter::byte_code_emitter(compiler::session& session) : _session(session) {
+    byte_code_emitter::byte_code_emitter(
+            compiler::session& session) : _variables(session),
+                                          _session(session) {
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -157,7 +159,7 @@ namespace basecode::compiler {
     }
 
     bool byte_code_emitter::emit() {
-        identifier_by_section_t vars {};
+        auto& vars = _variables.module_variables();
         vars.sections.insert(std::make_pair(vm::section_t::bss,     element_list_t()));
         vars.sections.insert(std::make_pair(vm::section_t::ro_data, element_list_t()));
         vars.sections.insert(std::make_pair(vm::section_t::data,    element_list_t()));
@@ -2368,6 +2370,10 @@ namespace basecode::compiler {
                 default:
                     break;
             }
+
+            _variables.reset();
+            if (!_variables.build(block))
+                return nullptr;
 
             implicit_block->label(labels.make(block->label_name(), implicit_block));
             implicit_block->reset("local");
