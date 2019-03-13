@@ -63,7 +63,8 @@ namespace basecode::compiler {
             _has_stack_frame = value;
             for (auto child_block : _blocks) {
                 for (auto var : child_block->identifiers().as_list())
-                    var->usage(identifier_usage_t::stack);
+                    var->usage(value ? identifier_usage_t::stack : identifier_usage_t::heap);
+                child_block->has_stack_frame(_has_stack_frame);
             }
         }
     }

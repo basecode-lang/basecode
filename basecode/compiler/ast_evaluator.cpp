@@ -2218,8 +2218,6 @@ namespace basecode::compiler {
         }
 
         auto for_scope = builder.make_block(scope_manager.current_scope());
-        for_scope->has_stack_frame(true);
-
         scope_manager.current_scope()->blocks().emplace_back(for_scope);
 
         auto induction_decl = add_identifier_to_scope(
@@ -2229,13 +2227,11 @@ namespace basecode::compiler {
             nullptr,
             0,
             for_scope);
-        induction_decl->identifier()->usage(identifier_usage_t::stack);
 
         auto block = evaluate_in_scope(
             context.node->children.front(),
             for_scope);
         auto body = dynamic_cast<compiler::block*>(block);
-        //body->has_stack_frame(true);
 
         result.element = builder.make_for(
             scope_manager.current_scope(),
@@ -2243,6 +2239,7 @@ namespace basecode::compiler {
             rhs,
             body);
         for_scope->parent_element(result.element);
+        for_scope->has_stack_frame(true);
 
         return true;
     }
