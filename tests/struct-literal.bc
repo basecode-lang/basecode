@@ -1,4 +1,4 @@
-core :: module("../modules/core");
+core :: module("core");
 
 player :: struct {
     id: u32;

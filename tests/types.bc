@@ -1,4 +1,4 @@
-core :: module("../modules/core");
+core :: module("core");
 
 #run {
     type_of_string := type_of(#type string);

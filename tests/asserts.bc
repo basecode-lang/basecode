@@ -1,4 +1,4 @@
-core :: module("../modules/core");
+core :: module("core");
 
 MODE :: 2;
 

@@ -1,4 +1,4 @@
-core :: module("../modules/core");
+core :: module("core");
 
 text: string;
 core::assign_string(address_of(text), "hello world!", 12);

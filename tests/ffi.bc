@@ -9,7 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
-core :: module("../modules/core");
+core :: module("core");
 
 HELLO_WORLD :: "hello world!";
 

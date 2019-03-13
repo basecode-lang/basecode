@@ -1,3 +1,3 @@
-core :: module("../modules/core");
+core :: module("core");
 
 support:print("crap!");

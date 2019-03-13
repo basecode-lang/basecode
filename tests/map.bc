@@ -1,4 +1,4 @@
-core :: module("../modules/core");
+core :: module("core");
 
 people :: new<map<u8, string>>(
       1 := "Jeff",

@@ -555,11 +555,12 @@ namespace basecode::vm {
     // push variations
     void basic_block::push_locals(
             vm::assembler& assembler,
+            const local_list_t& locals,
             const std::string& excluded) {
         instruction_operand_list_t operands {};
         grouped_named_ranges(
             assembler,
-            sorted_locals(),
+            locals,
             excluded,
             operands);
         if (operands.empty())
@@ -682,11 +683,12 @@ namespace basecode::vm {
     // pop variations
     void basic_block::pop_locals(
             vm::assembler& assembler,
+            const local_list_t& locals,
             const std::string& excluded) {
         instruction_operand_list_t operands {};
         grouped_named_ranges(
             assembler,
-            sorted_locals(),
+            locals,
             excluded,
             operands,
             true);

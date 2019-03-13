@@ -1,4 +1,4 @@
-core :: module("../modules/core");
+core :: module("core");
 
 array_pos_kind :: enum {
     first:  u8;

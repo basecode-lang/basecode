@@ -1,4 +1,4 @@
-core :: module("../modules/core");
+core :: module("core");
 
 COMPARATOR :: proc<K>(lhs: ^K, rhs: ^K):bool;
 

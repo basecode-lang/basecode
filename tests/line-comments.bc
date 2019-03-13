@@ -3,7 +3,7 @@
 //
 //
 
-core :: module("../modules/core");
+core :: module("core");
 
 /* just before a */ a: /* just before type*/ u32 /* just after type */; // bar
 

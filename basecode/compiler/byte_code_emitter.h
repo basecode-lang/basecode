@@ -147,7 +147,7 @@ namespace basecode::compiler {
             temp_local_list_t& temp_locals);
 
         bool emit_arguments(
-            vm::basic_block* block,
+            vm::basic_block** basic_block,
             compiler::argument_list* arg_list,
             const compiler::element_list_t& elements);
 
@@ -167,26 +167,26 @@ namespace basecode::compiler {
             uint8_t number);
 
         bool emit_procedure_epilogue(
-            vm::basic_block* block,
+            vm::basic_block** basic_block,
             compiler::procedure_type* proc_type);
 
         bool emit_procedure_instance(
-            vm::basic_block* block,
+            vm::basic_block** basic_block,
             compiler::procedure_instance* proc_instance,
             const identifier_by_section_t& vars);
 
         bool emit_procedure_prologue(
-            vm::basic_block* block,
+            vm::basic_block** basic_block,
             compiler::procedure_type* proc_type,
             identifier_list_t& parameters);
 
         bool emit_arithmetic_operator(
-            vm::basic_block* block,
+            vm::basic_block** basic_block,
             compiler::binary_operator* binary_op,
             emit_result_t& result);
 
         bool emit_relational_operator(
-            vm::basic_block* block,
+            vm::basic_block** basic_block,
             compiler::binary_operator* binary_op,
             emit_result_t& result);
 

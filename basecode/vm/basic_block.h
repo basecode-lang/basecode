@@ -61,6 +61,8 @@ namespace basecode::vm {
 
         uint8_t post_blank_lines() const;
 
+        local_list_t sorted_locals() const;
+
         void reset(const std::string& type);
 
         void insertion_point(ssize_t value);
@@ -408,6 +410,7 @@ namespace basecode::vm {
         // push variations
         void push_locals(
             vm::assembler& assembler,
+            const local_list_t& locals,
             const std::string& excluded = {});
 
         void push(const instruction_operand_t& operand);
@@ -417,6 +420,7 @@ namespace basecode::vm {
         // pop variations
         void pop_locals(
             vm::assembler& assembler,
+            const local_list_t& locals,
             const std::string& excluded = {});
 
         void pop(const instruction_operand_t& dest);
@@ -462,8 +466,6 @@ namespace basecode::vm {
             const std::string& excluded,
             instruction_operand_list_t& operands,
             bool reverse = false);
-
-        local_list_t sorted_locals() const;
 
     private:
         common::id_t _id;

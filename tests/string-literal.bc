@@ -1,4 +1,4 @@
-core :: module("../modules/core");
+core :: module("core");
 
 a := "hello world!\n";
 b := "\u32db\u0020\u263a\u0020\u32e1\n";

@@ -1,4 +1,4 @@
-core :: module("../modules/core");
+core :: module("core");
 
 the_foo_t :: struct {
     x: f32;

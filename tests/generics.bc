@@ -1,4 +1,4 @@
-core :: module("../modules/core");
+core :: module("core");
 
 key_value_pair :: struct<K:tuple(string), V> {
     key: K;

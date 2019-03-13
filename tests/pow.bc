@@ -1,4 +1,4 @@
-core :: module("../modules/core");
+core :: module("core");
 
 #run {
     x: u32 := 2 ** 4;

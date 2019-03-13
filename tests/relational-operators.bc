@@ -1,4 +1,4 @@
-core :: module("../modules/core");
+core :: module("core");
 
 #run {
     ptr: ^u8 := nil;

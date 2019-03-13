@@ -1,4 +1,4 @@
-core :: module("../modules/core");
+core :: module("core");
 
 ARRAY_WIDTH  :: 4;
 ARRAY_HEIGHT :: 4;

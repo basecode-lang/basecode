@@ -1,4 +1,4 @@
-core :: module("../modules/core");
+core :: module("core");
 
 #run {
     is_true1: bool;

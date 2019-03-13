@@ -1,4 +1,4 @@
-core :: module("../modules/core");
+core :: module("core");
 
 #run {
     addr: ^u8 := alloc(size_of(u16) * 4096);

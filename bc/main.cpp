@@ -110,7 +110,7 @@ int main(int argc, char** argv) {
             &option_index);
         if (opt == -1) {
             if (ya_optind < argc) {
-                if (strncmp(argv[ya_optind - 1], "--", 2) == 0) {
+                if (strcmp(argv[ya_optind - 1], "--") == 0) {
                     source_files.emplace_back(argv[ya_optind - 2]);
                 } else {
                     source_files.emplace_back(argv[ya_optind]);
