@@ -62,6 +62,8 @@ namespace basecode::compiler {
             }
             case composite_types_t::union_type: {
                 for (auto fld : _fields.as_list()) {
+                    fld->offset(0);
+
                     auto type = fld->identifier()->type_ref()->type();
                     auto composite_type = dynamic_cast<compiler::composite_type*>(type);
                     if (composite_type != nullptr)
@@ -75,6 +77,8 @@ namespace basecode::compiler {
             }
             case composite_types_t::struct_type: {
                 for (auto fld : _fields.as_list()) {
+                    fld->offset(size);
+
                     auto type = fld->identifier()->type_ref()->type();
                     auto composite_type = dynamic_cast<compiler::composite_type*>(type);
                     if (composite_type != nullptr)

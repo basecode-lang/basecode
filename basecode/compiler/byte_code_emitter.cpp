@@ -3086,6 +3086,9 @@ namespace basecode::compiler {
 
         auto scope_block = proc_instance->scope();
 
+        _variables.reset();
+        _variables.build(scope_block);
+
         identifier_list_t locals {};
         if (!emit_procedure_prologue(basic_block, procedure_type, locals))
             return false;

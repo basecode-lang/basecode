@@ -16,10 +16,35 @@
 #include "initializer.h"
 #include "symbol_element.h"
 #include "type_reference.h"
+#include "composite_type.h"
 #include "binary_operator.h"
 #include "identifier_reference.h"
 
 namespace basecode::compiler {
+
+    void identifier_reference::evaluate_member_access_expression(
+            compiler::element* e,
+            binary_operator_stack_t& bin_op_stack,
+            identifier_reference_stack_t& ref_stack) {
+        switch (e->element_type()) {
+            case element_type_t::binary_operator: {
+                auto bin_op = dynamic_cast<compiler::binary_operator*>(e);
+                if (bin_op->operator_type() == operator_type_t::member_access)
+                    bin_op_stack.push(bin_op);
+                break;
+            }
+            case element_type_t::identifier_reference: {
+                auto ref = dynamic_cast<compiler::identifier_reference*>(e);
+                ref_stack.push(ref);
+                break;
+            }
+            default: {
+                break;
+            }
+        }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
 
     identifier_reference::identifier_reference(
             compiler::module* module,
@@ -65,53 +90,19 @@ namespace basecode::compiler {
     offset_result_t identifier_reference::field_offset() {
         offset_result_t result {};
 
-        std::stack<compiler::binary_operator*> bin_ops {};
-        std::stack<compiler::identifier_reference*> ref_stack {};
+        binary_operator_stack_t bin_op_stack {};
+        identifier_reference_stack_t ref_stack {};
 
         auto bin_op = dynamic_cast<compiler::binary_operator*>(parent_element());
         if (bin_op != nullptr && bin_op->operator_type() == operator_type_t::member_access)
-            bin_ops.push(bin_op);
+            bin_op_stack.push(bin_op);
 
-        while (!bin_ops.empty()) {
-            bin_op = bin_ops.top();
-            bin_ops.pop();
+        while (!bin_op_stack.empty()) {
+            bin_op = bin_op_stack.top();
+            bin_op_stack.pop();
 
-            auto lhs = bin_op->lhs();
-            auto rhs = bin_op->rhs();
-
-            switch (rhs->element_type()) {
-                case element_type_t::binary_operator: {
-                    auto other_bin_op = dynamic_cast<compiler::binary_operator*>(rhs);
-                    if (other_bin_op->operator_type() == operator_type_t::member_access)
-                        bin_ops.push(other_bin_op);
-                    break;
-                }
-                case element_type_t::identifier_reference: {
-                    auto ref = dynamic_cast<compiler::identifier_reference*>(rhs);
-                    ref_stack.push(ref);
-                    break;
-                }
-                default: {
-                    break;
-                }
-            }
-
-            switch (lhs->element_type()) {
-                case element_type_t::binary_operator: {
-                    auto other_bin_op = dynamic_cast<compiler::binary_operator*>(lhs);
-                    if (other_bin_op->operator_type() == operator_type_t::member_access)
-                        bin_ops.push(other_bin_op);
-                    break;
-                }
-                case element_type_t::identifier_reference: {
-                    auto ref = dynamic_cast<compiler::identifier_reference*>(lhs);
-                    ref_stack.push(ref);
-                    break;
-                }
-                default: {
-                    break;
-                }
-            }
+            evaluate_member_access_expression(bin_op->rhs(), bin_op_stack, ref_stack);
+            evaluate_member_access_expression(bin_op->lhs(), bin_op_stack, ref_stack);
         }
 
         if (!ref_stack.empty()) {
@@ -119,6 +110,11 @@ namespace basecode::compiler {
             result.base_label = result.base_ref->label_name();
             result.path += result.base_ref->symbol().name;
             ref_stack.pop();
+
+            auto composite_type = dynamic_cast<compiler::composite_type*>(result.base_ref->identifier()->type_ref()->type());
+            if (composite_type != nullptr) {
+                composite_type->calculate_size();
+            }
 
             while (!ref_stack.empty()) {
                 auto ref = ref_stack.top();

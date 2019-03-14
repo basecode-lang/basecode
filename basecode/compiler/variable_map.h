@@ -30,18 +30,25 @@ namespace basecode::compiler {
     };
 
     struct variable_t {
-        ~variable_t();
-
-        int64_t offset = 0;
-        std::string path {};
         std::string label {};
         variable_type_t type {};
-        std::string base_label {};
+        int64_t frame_offset = 0;
         variable_state_t state {};
-        variable_map* map = nullptr;
         number_class_t number_class {};
+        offset_result_t field_offset {};
         compiler::identifier* identifier = nullptr;
     };
+
+    struct temp_pool_entry_t {
+        common::id_t id;
+        bool available = false;
+        variable_t* variable = nullptr;
+    };
+
+    using variable_list_t = std::vector<variable_t*>;
+    using variable_map_t = std::map<std::string, variable_t>;
+    using temp_pool_entry_list_t = std::vector<temp_pool_entry_t*>;
+    using temp_pool_map_t = std::unordered_map<common::id_t, temp_pool_entry_t>;
 
     class variable_map {
     public:
@@ -49,22 +56,30 @@ namespace basecode::compiler {
 
         void reset();
 
+        variable_list_t variables();
+
         bool build(compiler::block* block);
+
+        variable_t* find(const std::string& name);
+
+        void release_temp(temp_pool_entry_t* entry);
 
         identifier_by_section_t& module_variables();
 
-        bool emit_prologue(vm::basic_block** basic_block);
-
-        bool emit_epilogue(vm::basic_block** basic_block);
+        temp_pool_entry_t* retain_temp(number_class_t number_class = number_class_t::integer);
 
     private:
+        bool find_local_variables(compiler::block* block);
+
         bool find_referenced_module_variables(compiler::block* block);
 
+        temp_pool_entry_t* find_available_temp(number_class_t number_class);
+
     private:
+        temp_pool_map_t _temps {};
         compiler::session& _session;
-        std::stack<uint16_t> _temps {};
+        variable_map_t _variables {};
         identifier_by_section_t _module_variables {};
-        std::map<std::string, variable_t> _variables {};
     };
 
 }

@@ -133,6 +133,8 @@ namespace basecode::compiler {
     using const_attribute_list_t = std::vector<const attribute*>;
     using procedure_instance_set_t = std::set<procedure_instance*>;
     using procedure_instance_list_t = std::vector<procedure_instance*>;
+    using binary_operator_stack_t = std::stack<compiler::binary_operator*>;
+    using identifier_reference_stack_t = std::stack<compiler::identifier_reference*>;
     using identifier_reference_list_t = std::vector<compiler::identifier_reference*>;
 
     using element_id_set_t = std::unordered_set<common::id_t>;

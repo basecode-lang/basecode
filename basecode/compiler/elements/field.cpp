@@ -53,6 +53,10 @@ namespace basecode::compiler {
         return common::align(_offset + size_in_bytes(), alignment());
     }
 
+    void field::offset(uint64_t value) {
+        _offset = value;
+    }
+
     size_t field::size_in_bytes() const {
         size_t size = 0;
         if (_declaration != nullptr)  {
@@ -90,4 +94,4 @@ namespace basecode::compiler {
         return _declaration->as_identifier(value);
     }
 
-};
+}

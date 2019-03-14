@@ -35,6 +35,8 @@ namespace basecode::compiler {
 
         uint64_t alignment() const;
 
+        void offset(uint64_t value);
+
         uint64_t end_offset() const;
 
         size_t size_in_bytes() const;

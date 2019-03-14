@@ -24,6 +24,12 @@ j.lives := 3;
 j.level := 1;
 
 test :: proc() {
+    foo: player;
+    foo.pos.x := 1.0;
+    foo.dir.x := 1.0;
+    foo.lives := 3;
+    foo.level := 1;
+
     b := a;
     a: u32;
     a := a + 5;
@@ -44,4 +50,5 @@ core::print("j.pos.x := %f\n", j.pos.x);
 core::print("j.pos.y := %f\n", j.pos.y);
 core::print("j.pos.z := %f\n", j.pos.z);
 
-#run test();
+test();
+//#run test();

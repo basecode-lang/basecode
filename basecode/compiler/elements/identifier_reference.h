@@ -71,9 +71,15 @@ namespace basecode::compiler {
         bool on_as_identifier(compiler::identifier*& value) const override;
 
     private:
+        static void evaluate_member_access_expression(
+            compiler::element* e,
+            binary_operator_stack_t& bin_op_stack,
+            identifier_reference_stack_t& ref_stack);
+
+    private:
         qualified_symbol_t _symbol;
         compiler::identifier* _identifier = nullptr;
     };
 
-};
+}
 
