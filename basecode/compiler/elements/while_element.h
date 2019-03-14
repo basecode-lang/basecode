@@ -41,5 +41,5 @@ namespace basecode::compiler {
         compiler::element* _predicate = nullptr;
     };
 
-};
+}
 

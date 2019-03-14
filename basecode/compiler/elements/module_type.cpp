@@ -38,4 +38,4 @@ namespace basecode::compiler {
             && other->symbol()->name() == symbol()->name();
     }
 
-};
+}

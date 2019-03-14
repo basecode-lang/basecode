@@ -39,5 +39,5 @@ namespace basecode::compiler {
         double _value;
     };
 
-};
+}
 

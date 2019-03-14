@@ -86,4 +86,4 @@ namespace basecode::compiler {
         compiler::symbol_element* _symbol = nullptr;
     };
 
-};
+}

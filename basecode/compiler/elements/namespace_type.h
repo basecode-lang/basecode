@@ -27,5 +27,5 @@ namespace basecode::compiler {
         bool on_initialize(compiler::session& session) override;
     };
 
-};
+}
 

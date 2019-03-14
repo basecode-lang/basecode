@@ -33,5 +33,5 @@ namespace basecode::compiler {
         bool on_is_constant() const override;
     };
 
-};
+}
 

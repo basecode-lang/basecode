@@ -34,4 +34,4 @@ namespace basecode::compiler {
         return fmt::format("{}_{}", _name, id());
     }
 
-};
+}

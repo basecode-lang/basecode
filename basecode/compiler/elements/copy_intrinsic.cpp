@@ -33,4 +33,4 @@ namespace basecode::compiler {
         return "copy";
     }
 
-};
+}

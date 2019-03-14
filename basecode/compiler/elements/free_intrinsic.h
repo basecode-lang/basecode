@@ -27,5 +27,5 @@ namespace basecode::compiler {
         std::string name() const override;
     };
 
-};
+}
 

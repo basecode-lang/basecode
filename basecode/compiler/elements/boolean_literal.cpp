@@ -55,4 +55,4 @@ namespace basecode::compiler {
         return _value != other_bool->_value;
     }
 
-};
+}

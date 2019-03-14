@@ -41,5 +41,5 @@ namespace basecode::compiler {
         bool is_constant_parameter() const;
     };
 
-};
+}
 

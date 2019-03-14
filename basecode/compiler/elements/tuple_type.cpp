@@ -31,4 +31,4 @@ namespace basecode::compiler {
         return composite_type::on_initialize(session);
     }
 
-};
+}

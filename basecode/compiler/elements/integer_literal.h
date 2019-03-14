@@ -57,5 +57,5 @@ namespace basecode::compiler {
         uint64_t _value;
     };
 
-};
+}
 

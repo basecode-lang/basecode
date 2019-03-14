@@ -161,4 +161,4 @@ namespace basecode::compiler {
         return *it;
     }
 
-};
+}

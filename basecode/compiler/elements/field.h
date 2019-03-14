@@ -59,4 +59,4 @@ namespace basecode::compiler {
         compiler::declaration* _declaration;
     };
 
-};
+}

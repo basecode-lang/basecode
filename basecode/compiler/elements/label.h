@@ -33,5 +33,5 @@ namespace basecode::compiler {
         std::string _name;
     };
 
-};
+}
 

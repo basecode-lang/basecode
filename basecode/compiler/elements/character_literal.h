@@ -39,5 +39,5 @@ namespace basecode::compiler {
         common::rune_t _rune;
     };
 
-};
+}
 

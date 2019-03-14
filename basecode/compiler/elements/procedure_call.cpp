@@ -9,11 +9,13 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <utility>
 #include <vm/ffi.h>
 #include <common/defer.h>
 #include <compiler/session.h>
 #include <compiler/element_builder.h>
 #include "type.h"
+#include "block.h"
 #include "identifier.h"
 #include "initializer.h"
 #include "unknown_type.h"
@@ -32,11 +34,11 @@ namespace basecode::compiler {
             compiler::module* module,
             compiler::block* parent_scope,
             compiler::argument_list* args,
-            const compiler::type_reference_list_t& type_params,
-            const compiler::identifier_reference_list_t& references) : element(module, parent_scope, element_type_t::proc_call),
-                                                                       _arguments(args),
-                                                                       _type_parameters(type_params),
-                                                                       _references(references) {
+            compiler::type_reference_list_t type_params,
+            compiler::identifier_reference_list_t references) : element(module, parent_scope, element_type_t::proc_call),
+                                                                _arguments(args),
+                                                                _type_parameters(std::move(type_params)),
+                                                                _references(std::move(references)) {
     }
 
     bool procedure_call::on_infer_type(
@@ -205,4 +207,4 @@ namespace basecode::compiler {
         _references = refs;
     }
 
-};
+}

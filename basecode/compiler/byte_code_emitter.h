@@ -17,38 +17,6 @@
 
 namespace basecode::compiler {
 
-    struct temp_count_result_t {
-        size_t ints = 0;
-        size_t floats = 0;
-        bool bin_op_lhs = false;
-        bool bin_op_rhs = false;
-
-        void update();
-
-        void count(compiler::type* type);
-
-        temp_count_result_t& operator+ (const temp_count_result_t& rhs) {
-            ints += rhs.ints;
-            floats += rhs.floats;
-            return *this;
-        }
-
-    private:
-        size_t _ints = 0;
-        size_t _floats = 0;
-    };
-
-    struct temp_local_t {
-        std::string name;
-        int64_t offset;
-        vm::op_sizes size;
-        vm::local_type_t type;
-    };
-
-    using temp_local_list_t = std::vector<temp_local_t>;
-
-    ///////////////////////////////////////////////////////////////////////////
-
     class byte_code_emitter {
     public:
         explicit byte_code_emitter(compiler::session& session);
@@ -64,10 +32,6 @@ namespace basecode::compiler {
         void push_flow_control(const flow_control_t& control_flow);
 
     private:
-        bool count_temps(
-            compiler::element* e,
-            temp_count_result_t& result);
-
         bool emit_element(
             vm::basic_block** basic_block,
             compiler::element* e,
@@ -77,10 +41,6 @@ namespace basecode::compiler {
             vm::basic_block* block,
             compiler::type* type);
 
-        bool make_temp_locals(
-            compiler::block* block,
-            temp_local_list_t& locals);
-
         bool emit_type_table();
 
         bool emit_section_variable(
@@ -88,29 +48,25 @@ namespace basecode::compiler {
             vm::section_t section,
             compiler::element* e);
 
+        bool emit_section_tables();
+
+        bool emit_procedure_types();
+
         void intern_string_literals();
 
         bool emit_interned_string_table();
 
-        vm::basic_block* emit_implicit_blocks(
-            const vm::basic_block_list_t& predecessors,
-            const identifier_by_section_t& vars);
-
         vm::basic_block* emit_bootstrap_block();
 
-        bool group_identifiers(identifier_by_section_t& vars);
-
-        bool emit_section_tables(identifier_by_section_t& vars);
-
         std::string interned_string_data_label(common::id_t id);
-
-        bool emit_procedure_types(const identifier_by_section_t& vars);
 
         bool emit_end_block(const vm::basic_block_list_t& predecessors);
 
         vm::basic_block* emit_start_block(const vm::basic_block_list_t& predecessors);
 
-    // initializers & finalizers
+        vm::basic_block* emit_implicit_blocks(const vm::basic_block_list_t& predecessors);
+
+        // initializers & finalizers
     private:
         bool emit_finalizer(
             vm::basic_block* block,
@@ -126,26 +82,17 @@ namespace basecode::compiler {
             compiler::identifier* var,
             int64_t offset);
 
-        vm::basic_block* emit_finalizers(
-            const vm::basic_block_list_t& predecessors,
-            const identifier_by_section_t& vars);
+        vm::basic_block* emit_finalizers(const vm::basic_block_list_t& predecessors);
 
-        vm::basic_block* emit_initializers(
-            const vm::basic_block_list_t& predecessors,
-            const identifier_by_section_t& vars);
+        vm::basic_block* emit_initializers(const vm::basic_block_list_t& predecessors);
 
     // helper functions
     private:
-        void read(
-            vm::basic_block* block,
-            emit_result_t& result,
-            uint8_t number);
+        static compiler::element* find_call_site(compiler::procedure_call* proc_call);
 
         bool emit_block(
             vm::basic_block** basic_block,
-            compiler::block* block,
-            identifier_list_t& locals,
-            temp_local_list_t& temp_locals);
+            compiler::block* block);
 
         bool emit_arguments(
             vm::basic_block** basic_block,
@@ -154,18 +101,11 @@ namespace basecode::compiler {
 
         bool end_stack_frame(
             vm::basic_block** basic_block,
-            compiler::block* block,
-            const identifier_list_t& locals);
+            compiler::block* block);
 
         bool begin_stack_frame(
             vm::basic_block** basic_block,
-            compiler::block* block,
-            identifier_list_t& locals,
-            temp_local_list_t& temp_locals);
-
-        std::string temp_local_name(
-            number_class_t type,
-            uint8_t number);
+            compiler::block* block);
 
         bool emit_procedure_epilogue(
             vm::basic_block** basic_block,
@@ -173,13 +113,11 @@ namespace basecode::compiler {
 
         bool emit_procedure_instance(
             vm::basic_block** basic_block,
-            compiler::procedure_instance* proc_instance,
-            const identifier_by_section_t& vars);
+            compiler::procedure_instance* proc_instance);
 
         bool emit_procedure_prologue(
             vm::basic_block** basic_block,
-            compiler::procedure_type* proc_type,
-            identifier_list_t& parameters);
+            compiler::procedure_type* proc_type);
 
         bool emit_arithmetic_operator(
             vm::basic_block** basic_block,
@@ -191,29 +129,7 @@ namespace basecode::compiler {
             compiler::binary_operator* binary_op,
             emit_result_t& result);
 
-        bool referenced_module_variables(
-            vm::basic_block* basic_block,
-            compiler::block* block,
-            const identifier_by_section_t& vars,
-            identifier_list_t& locals);
-
-        uint8_t allocate_temp() {
-            return ++_temp;
-        }
-
-        void free_temp() {
-            if (_temp > 0)
-                --_temp;
-        }
-
-        void reset_temp() {
-            _temp = 0;
-        }
-
-        bool is_temp_local(const vm::instruction_operand_t& operand);
-
     private:
-        uint8_t _temp = 0;
         variable_map _variables;
         compiler::session& _session;
         vm::basic_block_map _blocks {};

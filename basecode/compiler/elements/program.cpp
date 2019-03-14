@@ -30,4 +30,4 @@ namespace basecode::compiler {
         _block = value;
     }
 
-};
+}

@@ -42,5 +42,5 @@ namespace basecode::compiler {
         compiler::element* _true_body = nullptr;
     };
 
-};
+}
 

@@ -27,4 +27,4 @@ namespace basecode::compiler {
             list.emplace_back(x);
     }
 
-};
+}

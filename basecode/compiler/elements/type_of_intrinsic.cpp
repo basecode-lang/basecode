@@ -107,4 +107,4 @@ namespace basecode::compiler {
         return "type_of";
     }
 
-};
+}

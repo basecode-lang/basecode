@@ -49,12 +49,4 @@ namespace basecode::compiler {
             list.emplace_back(element);
     }
 
-//    bool statement::emit_labels(compiler::session& session) {
-//        emit_context_t context {};
-//        emit_result_t result(session.assembler());
-//        for (auto label : _labels)
-//            label->emit(session, context, result);
-//        return true;
-//    }
-
-};
+}

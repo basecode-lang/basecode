@@ -37,5 +37,5 @@ namespace basecode::compiler {
         compiler::binary_operator* _assignment = nullptr;
     };
 
-};
+}
 

@@ -39,5 +39,5 @@ namespace basecode::compiler {
         compiler::declaration* _induction_decl = nullptr;
     };
 
-};
+}
 

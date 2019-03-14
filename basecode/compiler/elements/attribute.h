@@ -45,5 +45,5 @@ namespace basecode::compiler {
         element* _expr = nullptr;
     };
 
-};
+}
 

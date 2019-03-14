@@ -95,4 +95,4 @@ namespace basecode::compiler {
         return _value >= other_int->_value;
     }
 
-};
+}

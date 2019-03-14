@@ -45,5 +45,5 @@ namespace basecode::compiler {
         bool _value = false;
     };
 
-};
+}
 

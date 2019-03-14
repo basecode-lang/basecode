@@ -55,6 +55,8 @@ namespace basecode::compiler {
 
         procedure_instance_list_t& instances();
 
+        std::string label_name() const override;
+
         compiler::procedure_instance* instance_for(
             compiler::session& session,
             compiler::procedure_call* call);

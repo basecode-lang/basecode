@@ -35,5 +35,5 @@ namespace basecode::compiler {
         compiler::identifier_reference* _ref = nullptr;
     };
 
-};
+}
 

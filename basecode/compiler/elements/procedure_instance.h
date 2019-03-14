@@ -39,5 +39,5 @@ namespace basecode::compiler {
         compiler::procedure_type* _procedure_type = nullptr;
     };
 
-};
+}
 

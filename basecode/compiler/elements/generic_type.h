@@ -40,5 +40,5 @@ namespace basecode::compiler {
         compiler::type_reference_list_t _constraints {};
     };
 
-};
+}
 

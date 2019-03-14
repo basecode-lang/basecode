@@ -46,4 +46,4 @@ namespace basecode::compiler {
         _source_file = source_file;
     }
 
-};
+}

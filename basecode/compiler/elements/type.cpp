@@ -208,4 +208,4 @@ namespace basecode::compiler {
         return _symbol != nullptr ? _symbol->name() : "unknown";
     }
 
-};
+}

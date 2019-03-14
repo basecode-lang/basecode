@@ -30,5 +30,5 @@ namespace basecode::compiler {
         element_list_t _expressions {};
     };
 
-};
+}
 

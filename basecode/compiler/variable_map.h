@@ -54,11 +54,15 @@ namespace basecode::compiler {
     public:
         explicit variable_map(compiler::session& session);
 
+        bool build(
+            compiler::block* block,
+            compiler::procedure_type* proc_type = nullptr);
+
         void reset();
 
-        variable_list_t variables();
+        bool initialize();
 
-        bool build(compiler::block* block);
+        variable_list_t variables();
 
         variable_t* find(const std::string& name);
 
@@ -69,9 +73,17 @@ namespace basecode::compiler {
         temp_pool_entry_t* retain_temp(number_class_t number_class = number_class_t::integer);
 
     private:
+        void create_sections();
+
+        bool group_module_variables_into_sections();
+
         bool find_local_variables(compiler::block* block);
 
         bool find_referenced_module_variables(compiler::block* block);
+
+        bool find_return_variables(compiler::procedure_type* proc_type);
+
+        bool find_parameter_variables(compiler::procedure_type* proc_type);
 
         temp_pool_entry_t* find_available_temp(number_class_t number_class);
 

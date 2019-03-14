@@ -46,5 +46,5 @@ namespace basecode::compiler {
             fold_result_t& result);
     };
 
-};
+}
 

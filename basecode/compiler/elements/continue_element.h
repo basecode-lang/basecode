@@ -35,5 +35,5 @@ namespace basecode::compiler {
         compiler::element* _label = nullptr;
     };
 
-};
+}
 

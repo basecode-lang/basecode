@@ -42,4 +42,4 @@ namespace basecode::compiler {
         return _type;
     }
 
-};
+}

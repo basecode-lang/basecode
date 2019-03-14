@@ -59,4 +59,4 @@ namespace basecode::compiler {
         return _ref;
     }
 
-};
+}

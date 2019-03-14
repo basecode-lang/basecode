@@ -102,4 +102,4 @@ namespace basecode::compiler {
         return _fully_qualified_name == other.fully_qualified_name;
     }
 
-};
+}

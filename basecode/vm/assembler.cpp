@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <iomanip>
 #include <parser/token.h>
 #include <common/bytes.h>
 #include <common/string_support.h>

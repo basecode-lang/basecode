@@ -39,5 +39,5 @@ namespace basecode::compiler {
         compiler::module_reference* _imported_module = nullptr;
     };
 
-};
+}
 

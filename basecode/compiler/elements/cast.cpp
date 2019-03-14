@@ -64,4 +64,4 @@ namespace basecode::compiler {
         _type_location = loc;
     }
 
-};
+}

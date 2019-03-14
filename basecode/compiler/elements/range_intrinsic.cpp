@@ -57,4 +57,4 @@ namespace basecode::compiler {
         return "range";
     }
 
-};
+}

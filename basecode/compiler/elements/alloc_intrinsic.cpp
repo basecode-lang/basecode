@@ -54,4 +54,4 @@ namespace basecode::compiler {
         return "alloc";
     }
 
-};
+}

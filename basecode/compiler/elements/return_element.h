@@ -39,5 +39,5 @@ namespace basecode::compiler {
         compiler::field* _field = nullptr;
     };
 
-};
+}
 

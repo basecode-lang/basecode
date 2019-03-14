@@ -21,8 +21,8 @@ namespace basecode::compiler {
             compiler::module* module,
             compiler::block* parent_scope,
             compiler::argument_list* args,
-            const compiler::type_reference_list_t& type_params,
-            const compiler::identifier_reference_list_t& identifier_references);
+            compiler::type_reference_list_t type_params,
+            compiler::identifier_reference_list_t identifier_references);
 
         bool is_foreign() const;
 

@@ -195,4 +195,4 @@ namespace basecode::compiler {
         return _elements[it->second];
     }
 
-};
+}

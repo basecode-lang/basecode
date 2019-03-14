@@ -32,4 +32,4 @@ namespace basecode::compiler {
         compiler::block* _block = nullptr;
     };
 
-};
+}

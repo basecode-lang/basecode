@@ -245,6 +245,16 @@ namespace basecode::compiler {
         return _return_type;
     }
 
+    std::string procedure_type::label_name() const {
+        auto parent_init = const_cast<procedure_type*>(this)->parent_element_as<compiler::initializer>();
+        if (parent_init != nullptr) {
+            auto parent_var = parent_init->parent_element_as<compiler::identifier>();
+            if (parent_var != nullptr)
+                return parent_var->label_name();
+        }
+        return element::label_name();
+    }
+
     uint64_t procedure_type::foreign_address() const {
         return _foreign_address;
     }

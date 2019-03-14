@@ -72,4 +72,4 @@ namespace basecode::compiler {
             list.emplace_back(_root);
     }
 
-};
+}

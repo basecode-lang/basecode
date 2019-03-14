@@ -298,4 +298,4 @@ namespace basecode::compiler {
         return _parent_element->is_type_one_of(types);
     }
 
-};
+}

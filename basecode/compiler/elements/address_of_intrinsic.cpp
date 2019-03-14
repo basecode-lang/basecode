@@ -133,4 +133,4 @@ namespace basecode::compiler {
             && !arg->parent_scope()->has_stack_frame();
     }
 
-};
+}

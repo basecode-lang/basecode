@@ -35,5 +35,5 @@ namespace basecode::compiler {
         std::string _label;
     };
 
-};
+}
 

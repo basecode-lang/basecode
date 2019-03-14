@@ -127,6 +127,7 @@ namespace basecode::compiler {
     using identifier_list_t = std::vector<identifier*>;
     using block_stack_t = std::stack<compiler::block*>;
     using module_stack_t = std::stack<compiler::module*>;
+    using procedure_call_set_t = std::set<procedure_call*>;
     using directive_map_t = std::map<std::string, directive*>;
     using type_reference_list_t = std::vector<type_reference*>;
     using procedure_type_list_t = std::vector<procedure_type*>;
@@ -750,4 +751,4 @@ namespace basecode::compiler {
         compiler::identifier_reference* ref = nullptr;
     };
 
-};
+}

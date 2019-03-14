@@ -24,4 +24,4 @@ namespace basecode::compiler {
         return _value;
     }
 
-};
+}

@@ -217,4 +217,4 @@ namespace basecode::compiler {
         return !session.result().is_failed();
     }
 
-};
+}

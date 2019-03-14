@@ -117,4 +117,4 @@ namespace basecode::compiler {
         current->_base_type_ref->parent_element(this);
     }
 
-};
+}

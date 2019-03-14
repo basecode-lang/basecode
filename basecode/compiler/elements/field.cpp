@@ -41,7 +41,7 @@ namespace basecode::compiler {
     }
 
     uint64_t field::alignment() const {
-        if (_declaration != nullptr)  {
+        if (_declaration != nullptr) {
             auto type_ref = _declaration->identifier()->type_ref();
             if (type_ref != nullptr)
                 return type_ref->type()->alignment();
@@ -59,7 +59,7 @@ namespace basecode::compiler {
 
     size_t field::size_in_bytes() const {
         size_t size = 0;
-        if (_declaration != nullptr)  {
+        if (_declaration != nullptr) {
             auto type_ref = _declaration->identifier()->type_ref();
             if (type_ref != nullptr)
                 size = type_ref->type()->size_in_bytes();

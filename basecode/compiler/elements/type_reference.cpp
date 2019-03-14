@@ -91,4 +91,4 @@ namespace basecode::compiler {
         _symbol = value;
     }
 
-};
+}

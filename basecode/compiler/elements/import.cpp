@@ -43,4 +43,4 @@ namespace basecode::compiler {
         return _imported_module;
     }
 
-};
+}

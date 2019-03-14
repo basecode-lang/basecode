@@ -74,4 +74,4 @@ namespace basecode::compiler {
         return _operator_type;
     }
 
-};
+}

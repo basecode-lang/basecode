@@ -88,10 +88,10 @@ namespace basecode::compiler {
     }
 
     offset_result_t identifier_reference::field_offset() {
-        offset_result_t result {};
+        offset_result_t result{};
 
-        binary_operator_stack_t bin_op_stack {};
-        identifier_reference_stack_t ref_stack {};
+        binary_operator_stack_t bin_op_stack{};
+        identifier_reference_stack_t ref_stack{};
 
         auto bin_op = dynamic_cast<compiler::binary_operator*>(parent_element());
         if (bin_op != nullptr && bin_op->operator_type() == operator_type_t::member_access)

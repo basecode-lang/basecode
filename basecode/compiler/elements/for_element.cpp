@@ -58,4 +58,4 @@ namespace basecode::compiler {
             list.emplace_back(_induction_decl);
     }
 
-};
+}

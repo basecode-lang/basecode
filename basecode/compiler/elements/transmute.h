@@ -50,5 +50,5 @@ namespace basecode::compiler {
         compiler::type_reference* _type_ref = nullptr;
     };
 
-};
+}
 

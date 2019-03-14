@@ -38,5 +38,5 @@ namespace basecode::compiler {
             infer_type_result_t& result) override;
     };
 
-};
+}
 

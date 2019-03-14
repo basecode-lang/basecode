@@ -96,5 +96,5 @@ namespace basecode::compiler {
         number_class_t _number_class;
     };
 
-};
+}
 

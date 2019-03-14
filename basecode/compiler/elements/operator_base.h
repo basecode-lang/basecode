@@ -34,5 +34,5 @@ namespace basecode::compiler {
         operator_type_t _operator_type;
     };
 
-};
+}
 

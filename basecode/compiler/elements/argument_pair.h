@@ -47,5 +47,5 @@ namespace basecode::compiler {
         compiler::element* _rhs = nullptr;
     };
 
-};
+}
 

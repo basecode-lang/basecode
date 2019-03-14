@@ -82,4 +82,4 @@ namespace basecode::compiler {
         identifier_usage_t _usage = identifier_usage_t::heap;
     };
 
-};
+}

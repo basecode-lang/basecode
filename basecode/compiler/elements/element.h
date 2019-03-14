@@ -197,5 +197,5 @@ namespace basecode::compiler {
         element_type_t _element_type = element_type_t::element;
     };
 
-};
+}
 

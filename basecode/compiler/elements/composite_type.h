@@ -60,5 +60,5 @@ namespace basecode::compiler {
         compiler::block* _scope = nullptr;
     };
 
-};
+}
 

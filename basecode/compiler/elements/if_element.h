@@ -49,5 +49,5 @@ namespace basecode::compiler {
         compiler::element* _false_branch = nullptr;
     };
 
-};
+}
 

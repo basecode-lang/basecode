@@ -136,4 +136,4 @@ namespace basecode::compiler {
         return _expr->as_rune(value);
     }
 
-};
+}

@@ -81,5 +81,5 @@ namespace basecode::compiler {
         argument_index_map_t _argument_index {};
     };
 
-};
+}
 

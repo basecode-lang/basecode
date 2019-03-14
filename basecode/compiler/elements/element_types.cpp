@@ -280,4 +280,4 @@ namespace basecode::compiler {
         return builder.make_type_reference(parent_scope, type_name, type);
     }
 
-};
+}

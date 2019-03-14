@@ -201,4 +201,4 @@ namespace basecode::compiler {
         return _rhs->as_identifier(value);
     }
 
-};
+}

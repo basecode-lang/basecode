@@ -56,4 +56,4 @@ namespace basecode::compiler {
         identifier_map_t _identifiers {};
     };
 
-};
+}

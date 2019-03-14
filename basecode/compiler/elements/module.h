@@ -42,5 +42,5 @@ namespace basecode::compiler {
         common::source_file* _source_file = nullptr;
     };
 
-};
+}
 

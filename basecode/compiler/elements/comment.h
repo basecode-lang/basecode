@@ -32,5 +32,5 @@ namespace basecode::compiler {
         comment_type_t _type;
     };
 
-};
+}
 
