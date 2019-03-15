@@ -812,22 +812,22 @@ namespace basecode::syntax {
             precedence_t::member_access,
             false};
         static inline binary_operator_infix_parser s_sum_with_assign_bin_op_parser {
-            precedence_t::sum,
+            precedence_t::logical_or,
             false,
             true};
         static inline binary_operator_infix_parser s_product_with_assign_bin_op_parser {
-            precedence_t::product,
+            precedence_t::logical_or,
             false,
             true};
         static inline binary_operator_infix_parser s_bitwise_shift_or_roll_bin_op_parser {
-            precedence_t::bitwise_shift_or_roll,
+            precedence_t::logical_or,
             false};
         static inline binary_operator_infix_parser s_bitwise_or_with_assign_bin_op_parser {
-            precedence_t::bitwise_or,
+            precedence_t::logical_or,
             false,
             true};
         static inline binary_operator_infix_parser s_bitwise_and_with_assign_bin_op_parser {
-            precedence_t::bitwise_and,
+            precedence_t::logical_or,
             false,
             true};
 

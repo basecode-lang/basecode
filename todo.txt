@@ -53,9 +53,12 @@ QUESTIONS
 
 WORKING
 -------
-- FIX: unneeded temp locals in blocks
+- NEW: encode BSS address and length in terp vector table so it can zero out memory
+- FIX: byte_code_emitter::emit_block & begin_stack_frame refactoring
+- FIX: variable_map::assign should handle copies for composite_type
+- FIX: address_of from variable_map
 
-- FINISH: CFG for break, continue, and procedure calls
+- NEW: UFCS
 
 - NEW: use/def in compiler::block for variables
         should supplant byte_code_emitter::referenced_module_variables
@@ -73,12 +76,8 @@ TASKS
 - NEW: consolidate all errors into one class along with constants for quick lookup.
 - NEW: finish terp::jump_to_subroutine
 
-- NEW: for_element stack frame support
-
 - NEW: implement procedure instance baking
 - NEW: struct/union instance baking
-
-- NEW: UFCS
 
 - BUG: multiple assignment code generation doesn't allow for value swaps.
 - BUG: placeholder identifier "_" isn't working properly
@@ -263,3 +262,7 @@ DONE
         only_signed_adder :: proc<T:signed_integers>(x: T, y: T): T {
             return x + y;
         };
+- FIX: unneeded temp locals in blocks
+- FINISH: CFG for break, continue, and procedure calls
+- NEW: for_element stack frame support
+- FIX: short-hand assign+bin_op parser/ast_evaluator bug

@@ -148,20 +148,34 @@ namespace basecode::compiler {
                         vm::assembler_named_ref_type_t::offset,
                         var->label,
                         vm::op_sizes::word);
-                    basic_block->load(
-                        vm::instruction_operand_t(named_ref),
-                        vm::instruction_operand_t::fp(),
-                        vm::instruction_operand_t(offset_ref));
+                    if (var_type->is_pointer_type()) {
+                        basic_block->move(
+                            vm::instruction_operand_t(named_ref),
+                            vm::instruction_operand_t::fp(),
+                            vm::instruction_operand_t(offset_ref));
+                    } else {
+                        basic_block->load(
+                            vm::instruction_operand_t(named_ref),
+                            vm::instruction_operand_t::fp(),
+                            vm::instruction_operand_t(offset_ref));
+                    }
                     break;
                 }
                 case variable_type_t::module: {
                     auto module_var_ref = assembler.make_named_ref(
                         vm::assembler_named_ref_type_t::label,
                         var->label);
-                    basic_block->load(
-                        vm::instruction_operand_t(named_ref),
-                        vm::instruction_operand_t(module_var_ref),
-                        vm::instruction_operand_t::offset(var->field_offset.value));
+                    if (var_type->is_pointer_type()) {
+                        basic_block->move(
+                            vm::instruction_operand_t(named_ref),
+                            vm::instruction_operand_t(module_var_ref),
+                            vm::instruction_operand_t::offset(var->field_offset.value));
+                    } else {
+                        basic_block->load(
+                            vm::instruction_operand_t(named_ref),
+                            vm::instruction_operand_t(module_var_ref),
+                            vm::instruction_operand_t::offset(var->field_offset.value));
+                    }
                     break;
                 }
                 default: {
@@ -210,63 +224,32 @@ namespace basecode::compiler {
 
         auto& assembler = _session.assembler();
 
-        switch (var->type) {
-            case variable_type_t::local:
-            case variable_type_t::parameter:
-            case variable_type_t::return_value: {
-                auto local_offset_ref = assembler.make_named_ref(
-                    vm::assembler_named_ref_type_t::offset,
-                    var->label,
-                    vm::op_sizes::word);
-                basic_block->store(
-                    vm::instruction_operand_t::fp(),
-                    rhs.operands.back(),
-                    vm::instruction_operand_t(local_offset_ref));
-                break;
-            }
-            case variable_type_t::module: {
-                auto module_var_ref = assembler.make_named_ref(
-                    vm::assembler_named_ref_type_t::label,
-                    var->label);
-                basic_block->store(
-                    vm::instruction_operand_t(module_var_ref),
-                    rhs.operands.back(),
-                    vm::instruction_operand_t::offset(var->field_offset.value));
-                break;
-            }
-            default: {
-                break;
-            }
+        auto copy_required = false;
+        auto lhs_is_composite = lhs.type_result.inferred_type->is_composite_type();
+        auto rhs_is_composite = rhs.type_result.inferred_type->is_composite_type();
+
+        if (!lhs.type_result.inferred_type->is_pointer_type()) {
+//            if (lhs_is_composite && !rhs_is_composite) {
+//                _session.error(
+//                    binary_op->module(),
+//                    "X000",
+//                    "cannot assign scalar to composite type.",
+//                    binary_op->rhs()->location());
+//                return false;
+//            }
+//
+//            if (!lhs_is_composite && rhs_is_composite) {
+//                _session.error(
+//                    binary_op->module(),
+//                    "X000",
+//                    "cannot assign composite type to scalar.",
+//                    binary_op->rhs()->location());
+//                return false;
+//            }
+
+            copy_required = lhs_is_composite && rhs_is_composite;
         }
 
-        basic_block->move(vm::instruction_operand_t(lhs_named_ref), rhs.operands.back());
-
-//                        auto copy_required = false;
-//                        auto lhs_is_composite = lhs_result.type_result.inferred_type->is_composite_type();
-//                        auto rhs_is_composite = rhs_result.type_result.inferred_type->is_composite_type();
-//
-//                        if (!lhs_result.type_result.inferred_type->is_pointer_type()) {
-//                            if (lhs_is_composite && !rhs_is_composite) {
-//                                _session.error(
-//                                    binary_op->module(),
-//                                    "X000",
-//                                    "cannot assign scalar to composite type.",
-//                                    binary_op->rhs()->location());
-//                                return false;
-//                            }
-//
-//                            if (!lhs_is_composite && rhs_is_composite) {
-//                                _session.error(
-//                                    binary_op->module(),
-//                                    "X000",
-//                                    "cannot assign composite type to scalar.",
-//                                    binary_op->rhs()->location());
-//                                return false;
-//                            }
-//
-//                            copy_required = lhs_is_composite && rhs_is_composite;
-//                        }
-//
 //                        const auto has_offset = lhs_result.operands.size() == 2;
 //                        if (copy_required) {
 //                            const auto size = static_cast<uint64_t>(rhs_result.type_result.inferred_type->size_in_bytes());
@@ -305,6 +288,37 @@ namespace basecode::compiler {
 //                                    rhs_result.operands.back());
 //                            }
 //                        }
+
+        switch (var->type) {
+            case variable_type_t::local:
+            case variable_type_t::parameter:
+            case variable_type_t::return_value: {
+                auto local_offset_ref = assembler.make_named_ref(
+                    vm::assembler_named_ref_type_t::offset,
+                    var->label,
+                    vm::op_sizes::word);
+                basic_block->store(
+                    vm::instruction_operand_t::fp(),
+                    rhs.operands.back(),
+                    vm::instruction_operand_t(local_offset_ref));
+                break;
+            }
+            case variable_type_t::module: {
+                auto module_var_ref = assembler.make_named_ref(
+                    vm::assembler_named_ref_type_t::label,
+                    var->label);
+                basic_block->store(
+                    vm::instruction_operand_t(module_var_ref),
+                    rhs.operands.back(),
+                    vm::instruction_operand_t::offset(var->field_offset.value));
+                break;
+            }
+            default: {
+                break;
+            }
+        }
+
+        basic_block->move(vm::instruction_operand_t(lhs_named_ref), rhs.operands.back());
 
         return true;
     }

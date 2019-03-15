@@ -3,11 +3,9 @@ core :: module("core");
 foo: u32;
 bar: u8 := 2;
 
-// XXX: there's a parser/ast_evaluator bug here
-//      the fix here is to wrap the RHS in an expression group
-//foo *:= (cast<u32>(bar) + 4);
+foo *:= cast<u32>(bar) + 4;
 
-// this works fine
-foo := foo * cast<u32>(bar) + 4;
+ptr_to_foo := address_of(foo);
 
 core::print("foo := %d\n", foo);
+core::print("ptr_to_foo := %016X\n", ptr_to_foo);
