@@ -137,17 +137,9 @@ namespace basecode::compiler {
         if (start_block == nullptr)
             return false;
 
-//        auto initializer_block = emit_initializers({start_block});
-//        if (initializer_block == nullptr)
-//            return false;
-
         auto last_implicit_block = emit_implicit_blocks({start_block});
         if (last_implicit_block == nullptr)
             return false;
-
-//        auto finalizer_block = emit_finalizers({last_implicit_block});
-//        if (finalizer_block == nullptr)
-//            return false;
 
         auto result = emit_end_block({last_implicit_block});
 
@@ -157,8 +149,7 @@ namespace basecode::compiler {
     bool byte_code_emitter::emit_block(
             vm::basic_block** basic_block,
             compiler::block* block) {
-        if (!begin_stack_frame(basic_block, block))
-            return false;
+        auto temp_vars_block = begin_stack_frame(basic_block, block);
 
         const auto& statements = block->statements();
         for (size_t index = 0; index < statements.size(); ++index) {
@@ -206,6 +197,15 @@ namespace basecode::compiler {
         }
 
         end_stack_frame(basic_block, block);
+
+        if (temp_vars_block != nullptr) {
+            auto temp_locals = _variables.temps();
+            for (auto temp : temp_locals) {
+                temp_vars_block->local(
+                    number_class_to_local_type(temp->number_class),
+                    temp->label);
+            }
+        }
 
         return true;
     }
@@ -256,11 +256,9 @@ namespace basecode::compiler {
                 auto cast = dynamic_cast<compiler::cast*>(e);
                 auto expr = cast->expression();
 
-//                auto cast_temp = allocate_temp();
                 emit_result_t expr_result {};
                 if (!emit_element(basic_block, expr, expr_result))
                     return false;
-//                read(current_block, expr_result, cast_temp);
 
                 cast_mode_t mode;
                 auto type_ref = cast->type();
@@ -327,10 +325,12 @@ namespace basecode::compiler {
                         expr_result.type_result.type_name()),
                     vm::comment_location_t::after_instruction);
 
+                auto result_temp = _variables.retain_temp(target_number_class);
                 vm::instruction_operand_t target_operand(assembler.make_named_ref(
                     vm::assembler_named_ref_type_t::local,
-                    "", // XXX: fix
+                    result_temp->name(),
                     vm::op_size_for_byte_size(target_size)));
+                result.temps.emplace_back(result_temp);
                 result.operands.emplace_back(target_operand);
 
                 switch (mode) {
@@ -366,6 +366,7 @@ namespace basecode::compiler {
                     }
                 }
 
+                release_temps(expr_result.temps);
                 break;
             }
             case element_type_t::if_e: {
@@ -375,10 +376,11 @@ namespace basecode::compiler {
                 auto false_label_name = fmt::format("{}_false", if_e->label_name());
                 auto end_label_name = fmt::format("{}_exit", if_e->label_name());
 
-//                auto predicate_temp = allocate_temp();
+                auto result_temp = _variables.retain_temp();
                 vm::instruction_operand_t result_operand(assembler.make_named_ref(
                     vm::assembler_named_ref_type_t::local,
-                    "")); // XXX: fix
+                    result_temp->name()));
+                result.temps.emplace_back(result_temp);
                 result.operands.emplace_back(result_operand);
 
                 auto predicate_block = _blocks.make();
@@ -391,13 +393,14 @@ namespace basecode::compiler {
                 emit_result_t predicate_result {};
                 if (!emit_element(&predicate_block, if_e->predicate(), predicate_result))
                     return false;
-                //read(predicate_block, predicate_result, predicate_temp);
 
                 predicate_block->bz(
                     predicate_result.operands.back(),
                     vm::instruction_operand_t(assembler.make_named_ref(
                         vm::assembler_named_ref_type_t::label,
                         false_label_name)));
+
+                release_temps(predicate_result.temps);
 
                 auto true_block = _blocks.make();
                 assembler.blocks().emplace_back(true_block);
@@ -417,6 +420,8 @@ namespace basecode::compiler {
                             end_label_name)));
                 }
 
+                release_temps(true_result.temps);
+
                 auto false_block = _blocks.make();
                 assembler.blocks().emplace_back(false_block);
                 false_block->predecessors().emplace_back(predicate_block);
@@ -427,6 +432,7 @@ namespace basecode::compiler {
                     emit_result_t false_result {};
                     if (!emit_element(&false_block, false_branch, false_result))
                         return false;
+                    release_temps(false_result.temps);
                 } else {
                     false_block->nop();
                 }
@@ -452,6 +458,7 @@ namespace basecode::compiler {
                     emit_result_t body_result {};
                     if (!emit_element(basic_block, body, body_result))
                         return false;
+                    release_temps(body_result.temps);
                 }
                 break;
             }
@@ -573,6 +580,7 @@ namespace basecode::compiler {
                             predicate_block->bz(
                                 cmp_result.operands.back(),
                                 vm::instruction_operand_t(exit_label_ref));
+                            release_temps(cmp_result.temps);
 
                             auto body_block = _blocks.make();
                             assembler.blocks().emplace_back(body_block);
@@ -648,6 +656,7 @@ namespace basecode::compiler {
                     emit_result_t decl_result {};
                     if (!emit_element(basic_block, decl, decl_result))
                         return false;
+                    release_temps(decl_result.temps);
                 }
                 break;
             }
@@ -658,6 +667,7 @@ namespace basecode::compiler {
                     emit_result_t expr_result {};
                     if (!emit_element(basic_block, expr, expr_result))
                         return false;
+                    release_temps(expr_result.temps);
                 }
                 break;
             }
@@ -668,6 +678,7 @@ namespace basecode::compiler {
                     emit_result_t scope_result {};
                     if (!emit_element(basic_block, scope, scope_result))
                         return false;
+                    release_temps(scope_result.temps);
                 }
                 break;
             }
@@ -735,6 +746,8 @@ namespace basecode::compiler {
                         vm::instruction_operand_t(assembler.make_named_ref(
                             vm::assembler_named_ref_type_t::label,
                             false_label_name)));
+
+                    release_temps(equals_result.temps);
                 }
 
                 auto true_block = _blocks.make();
@@ -843,6 +856,8 @@ namespace basecode::compiler {
                     predicate_result.operands.back(),
                     vm::instruction_operand_t(exit_label_ref));
 
+                release_temps(predicate_result.temps);
+
                 auto body_block = _blocks.make();
                 assembler.blocks().emplace_back(body_block);
                 body_block->predecessors().emplace_back(predicate_block);
@@ -879,17 +894,17 @@ namespace basecode::compiler {
 
                 auto return_type_field = return_e->field();
                 if (return_type_field != nullptr) {
-                    //auto temp = allocate_temp();
                     emit_result_t expr_result {};
                     if (!emit_element(basic_block, return_e->expressions().front(), expr_result))
                         return false;
-                    //read(return_block, expr_result, temp);
 
                     return_block->store(
                         vm::instruction_operand_t(assembler.make_named_ref(
                             vm::assembler_named_ref_type_t::local,
                             return_type_field->declaration()->identifier()->label_name())),
                         expr_result.operands.back());
+
+                    release_temps(expr_result.temps);
                 }
 
                 return_block->move(
@@ -957,93 +972,89 @@ namespace basecode::compiler {
                                          vm::instruction_operand_t();
                     if (!offset.is_empty())
                         current_block->move(temp, temp, offset);
-                    result.skip_read = true;
                     result.operands = {temp};
                 } else if (name == "alloc") {
                     auto arg = args[0];
 
-                    //auto arg_temp = allocate_temp();
                     emit_result_t arg_result {};
                     if (!emit_element(basic_block, arg, arg_result))
                         return false;
-                    //read(current_block, arg_result, arg_temp);
 
-                    //auto result_temp = allocate_temp();
+                    auto result_temp = _variables.retain_temp();
                     vm::instruction_operand_t result_operand(assembler.make_named_ref(
                         vm::assembler_named_ref_type_t::local,
-                        "")); // XXX: fix
+                        result_temp->name()));
+                    result.temps.emplace_back(result_temp);
                     result.operands.emplace_back(result_operand);
 
                     current_block->alloc(
                         vm::op_sizes::byte,
                         result_operand,
                         arg_result.operands.back());
+
+                    release_temps(arg_result.temps);
                 } else if (name == "free") {
                     auto arg = args[0];
 
-                    //auto arg_temp = allocate_temp();
                     emit_result_t arg_result {};
                     if (!emit_element(basic_block, arg, arg_result))
                         return false;
-                    //read(current_block, arg_result, arg_temp);
 
                     current_block->free(arg_result.operands.back());
+
+                    release_temps(arg_result.temps);
                 } else if (name == "fill") {
                     auto dest_arg = args[0];
                     auto value_arg = args[1];
                     auto length_arg = args[2];
 
-                    //auto dest_temp = allocate_temp();
                     emit_result_t dest_arg_result {};
                     if (!emit_element(basic_block, dest_arg, dest_arg_result))
                         return false;
-                    //read(current_block, dest_arg_result, dest_temp);
 
-                    //auto value_temp = allocate_temp();
                     emit_result_t value_arg_result {};
                     if (!emit_element(basic_block, value_arg, value_arg_result))
                         return false;
-                    //read(current_block, value_arg_result, value_temp);
 
-                    //auto len_temp = allocate_temp();
                     emit_result_t length_arg_result {};
                     if (!emit_element(basic_block, length_arg, length_arg_result))
                         return false;
-                    //read(current_block, length_arg_result, len_temp);
 
                     current_block->fill(
                         vm::op_sizes::byte,
                         dest_arg_result.operands.back(),
                         value_arg_result.operands.back(),
                         length_arg_result.operands.back());
+
+                    release_temps(dest_arg_result.temps);
+                    release_temps(value_arg_result.temps);
+                    release_temps(length_arg_result.temps);
                 } else if (name == "copy") {
                     auto dest_arg = args[0];
                     auto src_arg = args[1];
                     auto size_arg = args[2];
 
-                    //auto dest_temp = allocate_temp();
                     emit_result_t dest_arg_result {};
                     if (!emit_element(basic_block, dest_arg, dest_arg_result))
                         return false;
-                    //read(current_block, dest_arg_result, dest_temp);
 
-                    //auto src_temp = allocate_temp();
                     emit_result_t src_arg_result {};
                     if (!emit_element(basic_block, src_arg, src_arg_result))
                         return false;
-                    //read(current_block, src_arg_result, src_temp);
 
-                    //auto size_temp = allocate_temp();
                     emit_result_t size_arg_result {};
                     if (!emit_element(basic_block, size_arg, size_arg_result))
                         return false;
-                    //read(current_block, size_arg_result, size_temp);
 
                     current_block->copy(
                         vm::op_sizes::byte,
                         dest_arg_result.operands.back(),
                         src_arg_result.operands.back(),
                         size_arg_result.operands.back());
+
+                    release_temps(dest_arg_result.temps);
+                    release_temps(src_arg_result.temps);
+                    release_temps(size_arg_result.temps);
                 }
                 break;
             }
@@ -1077,6 +1088,7 @@ namespace basecode::compiler {
                         emit_result_t if_result {};
                         if (!emit_element(basic_block, true_expr, if_result))
                             return false;
+                        release_temps(if_result.temps);
                     }
                 } else if (name == "run") {
                     auto run_directive = dynamic_cast<compiler::run_directive*>(directive);
@@ -1087,6 +1099,7 @@ namespace basecode::compiler {
                     emit_result_t run_result {};
                     if (!emit_element(basic_block, run_directive->expression(), run_result))
                         return false;
+                    release_temps(run_result.temps);
                     current_block->meta_end();
                 }
                 break;
@@ -1098,6 +1111,7 @@ namespace basecode::compiler {
                     emit_result_t expr_result {};
                     if (!emit_element(basic_block, expr, expr_result))
                         return false;
+                    release_temps(expr_result.temps);
                 }
                 break;
             }
@@ -1108,7 +1122,6 @@ namespace basecode::compiler {
                 auto is_foreign = procedure_type->is_foreign();
 
                 size_t target_size = 8;
-                std::string return_temp_name {};
                 compiler::type* return_type = nullptr;
 
                 auto return_type_field = procedure_type->return_type();
@@ -1116,9 +1129,6 @@ namespace basecode::compiler {
                     return_type = return_type_field->identifier()->type_ref()->type();
                     if (return_type != nullptr) {
                         target_size = return_type->size_in_bytes();
-//                        return_temp_name = temp_local_name(
-//                            return_type->number_class(),
-//                            allocate_temp()); XXX: fix
                     }
                 }
 
@@ -1134,10 +1144,11 @@ namespace basecode::compiler {
                     labels.make(fmt::format("{}_prologue",proc_call->label_name()),
                     prologue_block));
                 if (!is_foreign) {
-                    prologue_block->push_locals(
-                        assembler,
-                        sorted_locals,
-                        return_temp_name);
+                    // XXX: fix
+//                    prologue_block->push_locals(
+//                        assembler,
+//                        sorted_locals,
+//                        return_temp_name);
                 }
 
                 auto arg_list = proc_call->arguments();
@@ -1145,6 +1156,7 @@ namespace basecode::compiler {
                     emit_result_t arg_list_result {};
                     if (!emit_element(basic_block, arg_list, arg_list_result))
                         return false;
+                    release_temps(arg_list_result.temps);
                 }
 
                 prologue_block = *basic_block;
@@ -1226,11 +1238,13 @@ namespace basecode::compiler {
                     labels.make(fmt::format("{}_epilogue",proc_call->label_name()),
                     epilogue_block));
 
-                if (!return_temp_name.empty()) {
+                if (return_type != nullptr) {
+                    auto result_temp = _variables.retain_temp(return_type->number_class());
                     vm::instruction_operand_t result_operand(assembler.make_named_ref(
                         vm::assembler_named_ref_type_t::local,
-                        return_temp_name,
+                        result_temp->name(),
                         vm::op_size_for_byte_size(target_size)));
+                    result.temps.emplace_back(result_temp);
                     result.operands.emplace_back(result_operand);
                     epilogue_block->pop(result_operand);
                 }
@@ -1246,7 +1260,8 @@ namespace basecode::compiler {
                 }
 
                 if (!is_foreign) {
-                    epilogue_block->pop_locals(assembler, sorted_locals, return_temp_name);
+                    // XXX: fix
+//                    epilogue_block->pop_locals(assembler, sorted_locals, return_temp_name);
                 }
 
                 break;
@@ -1256,11 +1271,9 @@ namespace basecode::compiler {
                 auto expr = transmute->expression();
                 auto type_ref = transmute->type();
 
-                //auto temp = allocate_temp();
                 emit_result_t expr_result {};
                 if (!emit_element(basic_block, expr, expr_result))
                     return false;
-                //read(current_block, expr_result, temp);
 
                 if (expr_result.type_result.inferred_type->number_class() == number_class_t::none) {
                     _session.error(
@@ -1289,16 +1302,20 @@ namespace basecode::compiler {
                     fmt::format("transmute<{}>", type_ref->symbol().name),
                     vm::comment_location_t::after_instruction);
 
+                auto result_temp = _variables.retain_temp(target_number_class);
                 vm::instruction_operand_t target_operand(assembler.make_named_ref(
                     vm::assembler_named_ref_type_t::local,
-                    "", // XXX: fix
+                    result_temp->name(),
                     vm::op_size_for_byte_size(target_size)));
+                result.temps.emplace_back(result_temp);
                 result.operands.emplace_back(target_operand);
 
                 current_block->move(
                     target_operand,
                     expr_result.operands.back(),
                     vm::instruction_operand_t::empty());
+
+                release_temps(expr_result.temps);
                 break;
             }
             case element_type_t::continue_e: {
@@ -1346,10 +1363,13 @@ namespace basecode::compiler {
                 &&  !result.type_result.inferred_type->is_composite_type()) {
                     op_size = vm::op_size_for_byte_size(result.type_result.inferred_type->size_in_bytes());
                 }
-                result.operands.emplace_back(assembler.make_named_ref(
+                auto named_ref = assembler.make_named_ref(
                     vm::assembler_named_ref_type_t::local,
                     var->label_name(),
-                    op_size));
+                    op_size);
+                result.operands.emplace_back(named_ref);
+                if (!_variables.use(current_block, named_ref))
+                    return false;
                 break;
             }
             case element_type_t::expression: {
@@ -1365,6 +1385,7 @@ namespace basecode::compiler {
                     emit_result_t expr_result {};
                     if (!emit_element(basic_block, expr, expr_result))
                         return false;
+                    release_temps(expr_result.temps);
                 }
                 break;
             }
@@ -1375,6 +1396,7 @@ namespace basecode::compiler {
                     emit_result_t assignment_result {};
                     if (!emit_element(basic_block, assignment, assignment_result))
                         return false;
+                    release_temps(assignment_result.temps);
                 }
                 break;
             }
@@ -1385,6 +1407,7 @@ namespace basecode::compiler {
                     emit_result_t expr_result {};
                     if (!emit_element(basic_block, expr, expr_result))
                         return false;
+                    release_temps(expr_result.temps);
                 }
                 break;
             }
@@ -1482,11 +1505,9 @@ namespace basecode::compiler {
                 auto unary_op = dynamic_cast<compiler::unary_operator*>(e);
                 auto op_type = unary_op->operator_type();
 
-                //auto rhs_temp = allocate_temp();
                 emit_result_t rhs_emit_result {};
                 if (!emit_element(basic_block, unary_op->rhs(), rhs_emit_result))
                     return false;
-                //read(current_block, rhs_emit_result, rhs_temp);
 
                 auto is_composite_type = rhs_emit_result.type_result.inferred_type->is_composite_type();
                 auto size = vm::op_size_for_byte_size(result.type_result.inferred_type->size_in_bytes());
@@ -1496,11 +1517,12 @@ namespace basecode::compiler {
                     size = vm::op_size_for_byte_size(pointer_type->base_type_ref()->type()->size_in_bytes());
                 }
 
-                //auto result_temp = allocate_temp();
+                auto result_temp = _variables.retain_temp(result.type_result.inferred_type->number_class());
                 vm::instruction_operand_t result_operand(assembler.make_named_ref(
                     vm::assembler_named_ref_type_t::local,
-                    "", // XXX: fix
+                    result_temp->name(),
                     size));
+                result.temps.emplace_back(result_temp);
 
                 switch (op_type) {
                     case operator_type_t::negate: {
@@ -1544,6 +1566,7 @@ namespace basecode::compiler {
                         break;
                 }
 
+                release_temps(rhs_emit_result.temps);
                 break;
             }
             case element_type_t::binary_operator: {
@@ -1624,77 +1647,16 @@ namespace basecode::compiler {
                         emit_result_t rhs_result {};
                         if (!emit_element(basic_block, binary_op->rhs(), rhs_result))
                             return false;
-                        //auto rhs_temp = allocate_temp();
-                        //read(current_block, rhs_result, rhs_temp);
 
                         emit_result_t lhs_result {};
                         if (!emit_element(basic_block, binary_op->lhs(), lhs_result))
                             return false;
 
-                        auto copy_required = false;
-                        auto lhs_is_composite = lhs_result.type_result.inferred_type->is_composite_type();
-                        auto rhs_is_composite = rhs_result.type_result.inferred_type->is_composite_type();
+                        if (!_variables.assign(current_block, lhs_result, rhs_result))
+                            return false;
 
-                        if (!lhs_result.type_result.inferred_type->is_pointer_type()) {
-                            if (lhs_is_composite && !rhs_is_composite) {
-                                _session.error(
-                                    binary_op->module(),
-                                    "X000",
-                                    "cannot assign scalar to composite type.",
-                                    binary_op->rhs()->location());
-                                return false;
-                            }
-
-                            if (!lhs_is_composite && rhs_is_composite) {
-                                _session.error(
-                                    binary_op->module(),
-                                    "X000",
-                                    "cannot assign composite type to scalar.",
-                                    binary_op->rhs()->location());
-                                return false;
-                            }
-
-                            copy_required = lhs_is_composite && rhs_is_composite;
-                        }
-
-                        const auto has_offset = lhs_result.operands.size() == 2;
-                        if (copy_required) {
-                            const auto size = static_cast<uint64_t>(rhs_result.type_result.inferred_type->size_in_bytes());
-                            if (has_offset) {
-                                //auto copy_temp = allocate_temp();
-                                vm::instruction_operand_t temp_target(assembler.make_named_ref(
-                                    vm::assembler_named_ref_type_t::local,
-                                    "", // XXX: fix
-                                    vm::op_sizes::qword));
-                                current_block->move(
-                                    temp_target,
-                                    lhs_result.operands.front(),
-                                    lhs_result.operands.back());
-                                current_block->copy(
-                                    vm::op_sizes::byte,
-                                    temp_target,
-                                    rhs_result.operands.back(),
-                                    vm::instruction_operand_t(size));
-                            } else {
-                                current_block->copy(
-                                    vm::op_sizes::byte,
-                                    lhs_result.operands.back(),
-                                    rhs_result.operands.back(),
-                                    vm::instruction_operand_t(size));
-                            }
-                        } else {
-                            if (has_offset) {
-                                current_block->store(
-                                    lhs_result.operands[0],
-                                    rhs_result.operands.back(),
-                                    lhs_result.operands[1]);
-                            } else {
-                                current_block->store(
-                                    lhs_result.operands.back(),
-                                    rhs_result.operands.back());
-                            }
-                        }
-
+                        release_temps(lhs_result.temps);
+                        release_temps(rhs_result.temps);
                         break;
                     }
                     default:
@@ -1905,6 +1867,11 @@ namespace basecode::compiler {
         return block;
     }
 
+    void byte_code_emitter::release_temps(std::vector<temp_pool_entry_t*> temps) {
+        for (auto t : temps)
+            _variables.release_temp(t);
+    }
+
     bool byte_code_emitter::emit_end_block(const vm::basic_block_list_t& predecessors) {
         auto& labels = _session.labels();
         auto& assembler = _session.assembler();
@@ -1997,7 +1964,6 @@ namespace basecode::compiler {
             implicit_block->label(labels.make(block->label_name(), implicit_block));
             implicit_block->reset("local");
             implicit_block->reset("frame");
-            implicit_block->frame_offset("locals", -8);
 
             if (!emit_block(&implicit_block, block))
                 return nullptr;
@@ -2062,114 +2028,6 @@ namespace basecode::compiler {
         }
 
         return true;
-    }
-
-    vm::basic_block* byte_code_emitter::emit_finalizers(const vm::basic_block_list_t& predecessors) {
-        auto& labels = _session.labels();
-        auto& assembler = _session.assembler();
-        const auto& vars = _variables.module_variables();
-
-        auto block = _blocks.make();
-        block->add_predecessors(predecessors);
-        for (auto p : predecessors)
-            p->add_successors({block});
-        assembler.blocks().emplace_back(block);
-        block->pre_blank_lines(1);
-        block->align(vm::instruction_t::alignment);
-        block->label(labels.make("_finalizer", block));
-        block->reset("local");
-        block->reset("frame");
-
-        std::vector<compiler::identifier*> to_finalize {};
-        for (const auto& section : vars.sections) {
-            for (compiler::element* e : section.second) {
-                auto var = dynamic_cast<compiler::identifier*>(e);
-                if (var == nullptr)
-                    continue;
-
-                if (!var->type_ref()->is_composite_type())
-                    continue;
-
-                auto local_type = number_class_to_local_type(var->type_ref()->type()->number_class());
-                block->local(local_type, var->label_name());
-                to_finalize.emplace_back(var);
-            }
-        }
-
-        if (!to_finalize.empty())
-            block->blank_line();
-
-        for (auto var : to_finalize) {
-            block->move(
-                vm::instruction_operand_t(assembler.make_named_ref(
-                    vm::assembler_named_ref_type_t::local,
-                    var->label_name())),
-                vm::instruction_operand_t(assembler.make_named_ref(
-                    vm::assembler_named_ref_type_t::label,
-                    var->label_name())));
-        }
-
-        for (auto var : to_finalize)
-            emit_finalizer(block, var);
-
-        return block;
-    }
-
-    vm::basic_block* byte_code_emitter::emit_initializers(const vm::basic_block_list_t& predecessors) {
-        auto& labels = _session.labels();
-        auto& assembler = _session.assembler();
-        const auto& vars = _variables.module_variables();
-
-        auto block = _blocks.make();
-        block->add_predecessors(predecessors);
-        for (auto p : predecessors)
-            p->add_successors({block});
-        assembler.blocks().emplace_back(block);
-        block->pre_blank_lines(1);
-        block->align(vm::instruction_t::alignment);
-        block->label(labels.make("_initializer", block));
-        block->reset("local");
-        block->reset("frame");
-
-        identifier_list_t to_init {};
-        for (const auto& section : vars.sections) {
-            for (compiler::element* e : section.second) {
-                auto var = dynamic_cast<compiler::identifier*>(e);
-                if (var == nullptr)
-                    continue;
-
-                if (!var->type_ref()->is_composite_type())
-                    continue;
-
-                auto init = var->initializer();
-                if (init != nullptr) {
-                    if (init->expression()->element_type() == element_type_t::uninitialized_literal)
-                        continue;
-                }
-
-                auto local_type = number_class_to_local_type(var->type_ref()->type()->number_class());
-                block->local(local_type, var->label_name());
-                to_init.emplace_back(var);
-            }
-        }
-
-        if (!to_init.empty())
-            block->blank_line();
-
-        for (auto var : to_init) {
-            block->move(
-                vm::instruction_operand_t(assembler.make_named_ref(
-                    vm::assembler_named_ref_type_t::local,
-                    var->label_name())),
-                vm::instruction_operand_t(assembler.make_named_ref(
-                    vm::assembler_named_ref_type_t::label,
-                    var->label_name())));
-        }
-
-        for (auto var : to_init)
-            emit_initializer(block, var);
-
-        return block;
     }
 
     bool byte_code_emitter::emit_section_variable_data(
@@ -2390,141 +2248,11 @@ namespace basecode::compiler {
         return true;
     }
 
-    bool byte_code_emitter::emit_primitive_initializer(
-            vm::basic_block* block,
-            const vm::instruction_operand_t& base_local,
-            compiler::identifier* var,
-            int64_t offset) {
-        auto var_type = var->type_ref()->type();
-        auto init = var->initializer();
-
-        uint64_t default_value = var_type->element_type() == element_type_t::rune_type ?
-                                 common::rune_invalid :
-                                 0;
-        vm::instruction_operand_t value(
-            default_value,
-            vm::op_size_for_byte_size(var_type->size_in_bytes()));
-        vm::instruction_operand_t* value_ptr = &value;
-
-        emit_result_t result {};
-        if (init != nullptr) {
-            auto expr = init->expression();
-            if (expr != nullptr
-            &&  expr->element_type() == element_type_t::uninitialized_literal) {
-                return true;
-            }
-
-            if (!emit_element(&block, init, result))
-                return false;
-
-            value_ptr = &result.operands.back();
-        }
-
-        block->comment(
-            fmt::format("initializer: {}: {}", var->label_name(), var_type->name()),
-            vm::comment_location_t::after_instruction);
-        block->store(
-            base_local,
-            *value_ptr,
-            vm::instruction_operand_t::offset(offset));
-        return true;
-    }
-
-    bool byte_code_emitter::emit_finalizer(
-            vm::basic_block* block,
-            compiler::identifier* var) {
-        auto var_type = var->type_ref()->type();
-
-        block->comment(
-            fmt::format("finalizer: {}: {}", var->label_name(), var_type->name()),
-            4);
-
-        return true;
-    }
-
-    bool byte_code_emitter::emit_initializer(
-            vm::basic_block* block,
-            compiler::identifier* var) {
-        vm::instruction_operand_t base_local(_session.assembler().make_named_ref(
-            vm::assembler_named_ref_type_t::local,
-            var->label_name()));
-
-        std::vector<compiler::identifier*> list {};
-        list.emplace_back(var);
-
-        uint64_t offset = 0;
-
-        while (!list.empty()) {
-            auto next_var = list.front();
-            list.erase(std::begin(list));
-
-            auto var_type = next_var->type_ref()->type();
-
-            switch (var_type->element_type()) {
-                case element_type_t::rune_type:
-                case element_type_t::bool_type:
-                case element_type_t::numeric_type:
-                case element_type_t::pointer_type: {
-                    offset = common::align(offset, var_type->alignment());
-                    if (!emit_primitive_initializer(block, base_local, next_var, offset))
-                        return false;
-                    offset += var_type->size_in_bytes();
-                    break;
-                }
-                case element_type_t::tuple_type:
-                case element_type_t::composite_type: {
-                    auto composite_type = dynamic_cast<compiler::composite_type*>(var_type);
-                    switch (composite_type->type()) {
-                        case composite_types_t::enum_type: {
-                            if (!emit_primitive_initializer(block, base_local, next_var, offset))
-                                return false;
-                            offset += var_type->size_in_bytes();
-                            break;
-                        }
-                        case composite_types_t::union_type: {
-                            // XXX: intentional no-op
-                            break;
-                        }
-                        case composite_types_t::struct_type: {
-                            auto field_list = composite_type->fields().as_list();
-                            size_t index = 0;
-                            for (auto fld: field_list) {
-                                list.emplace(std::begin(list) + index, fld->identifier());
-                                index++;
-                            }
-                            offset = common::align(offset, composite_type->alignment());
-                            break;
-                        }
-                    }
-                    break;
-                }
-                default: {
-                    break;
-                }
-            }
-        }
-
-        return true;
-    }
-
     bool byte_code_emitter::end_stack_frame(
             vm::basic_block** basic_block,
             compiler::block* block) {
         if (!block->has_stack_frame())
             return true;
-
-        identifier_list_t to_finalize {};
-//        for (compiler::element* e : locals) {
-//            auto var = dynamic_cast<compiler::identifier*>(e);
-//            if (var == nullptr)
-//                continue;
-//
-//            if (!var->type_ref()->is_composite_type()) {
-//                continue;
-//            }
-//
-//            to_finalize.emplace_back(var);
-//        }
 
         auto& assembler = _session.assembler();
 
@@ -2545,7 +2273,7 @@ namespace basecode::compiler {
         return true;
     }
 
-    bool byte_code_emitter::begin_stack_frame(
+    vm::basic_block* byte_code_emitter::begin_stack_frame(
             vm::basic_block** basic_block,
             compiler::block* block) {
         const auto excluded_parent_types = element_type_set_t{
@@ -2553,63 +2281,61 @@ namespace basecode::compiler {
         };
 
         if (block->is_parent_type_one_of(excluded_parent_types))
-            return true;
+            return nullptr;
 
         auto& assembler = _session.assembler();
-        auto& scope_manager = _session.scope_manager();
+        //auto& scope_manager = _session.scope_manager();
 
-        auto current_block = *basic_block;
-
-        identifier_list_t to_init {};
+        auto frame_block = *basic_block;
 
         if (block->has_stack_frame()) {
-            current_block->push(vm::instruction_operand_t::fp());
-            current_block->move(
-                vm::instruction_operand_t::fp(),
-                vm::instruction_operand_t::sp());
-//        auto locals_size = common::align(static_cast<uint64_t>(-offset), 8);
-//        if (locals_size > 0) {
-//            locals_size += 8;
-//            current_block->sub(
-//                vm::instruction_operand_t::sp(),
-//                vm::instruction_operand_t::sp(),
-//                vm::instruction_operand_t(static_cast<uint64_t>(locals_size), vm::op_sizes::dword));
-//        }
-//
-//        for (auto var : locals) {
-//            const auto& name = var->label_name();
-//            const auto& local = current_block->local(name);
-//            current_block->comment(
-//                fmt::format("address: {}", name),
-//                vm::comment_location_t::after_instruction);
-//            if (!local->frame_offset.empty()) {
-//                current_block->move(
-//                    vm::instruction_operand_t(assembler.make_named_ref(
-//                        vm::assembler_named_ref_type_t::local,
-//                        name)),
-//                    vm::instruction_operand_t::fp(),
-//                    vm::instruction_operand_t(assembler.make_named_ref(
-//                        vm::assembler_named_ref_type_t::offset,
-//                        name,
-//                        vm::op_sizes::word)));
-//            } else {
-//                current_block->move(
-//                    vm::instruction_operand_t(assembler.make_named_ref(
-//                        vm::assembler_named_ref_type_t::local,
-//                        name)),
-//                    vm::instruction_operand_t(assembler.make_named_ref(
-//                        vm::assembler_named_ref_type_t::label,
-//                        name)));
-//            }
-//        }
-//
-//        for (auto var : to_init) {
-//            if (!emit_initializer(current_block, var))
-//                return false;
-//        }
+            frame_block->frame_offset("local", -8);
         }
 
-        return true;
+        auto locals = _variables.variables();
+        uint64_t offset = 0;
+        for (auto local : locals) {
+            if (local->identifier->parent_scope() != block)
+                continue;
+
+            frame_block->local(
+                number_class_to_local_type(local->number_class),
+                local->label,
+                local->frame_offset + local->field_offset.value,
+                variable_type_to_group(local->type));
+            offset += local->identifier->type_ref()->type()->size_in_bytes();
+        }
+
+        if (block->has_stack_frame()) {
+            frame_block->push(vm::instruction_operand_t::fp());
+            frame_block->move(
+                vm::instruction_operand_t::fp(),
+                vm::instruction_operand_t::sp());
+            auto locals_size = common::align(static_cast<uint64_t>(-offset), 8);
+            if (locals_size > 0) {
+                locals_size += 8;
+                frame_block->sub(
+                    vm::instruction_operand_t::sp(),
+                    vm::instruction_operand_t::sp(),
+                    vm::instruction_operand_t(
+                        static_cast<uint64_t>(locals_size),
+                        vm::op_sizes::dword));
+            }
+        }
+
+        auto temp_vars_block = _blocks.make();
+        assembler.blocks().emplace_back(temp_vars_block);
+        frame_block->successors().emplace_back(temp_vars_block);
+        temp_vars_block->predecessors().emplace_back(frame_block);
+
+        auto code_block = _blocks.make();
+        assembler.blocks().emplace_back(code_block);
+        code_block->predecessors().emplace_back(temp_vars_block);
+        temp_vars_block->successors().emplace_back(code_block);
+
+        *basic_block = code_block;
+
+        return temp_vars_block;
     }
 
     bool byte_code_emitter::emit_procedure_epilogue(
@@ -2717,10 +2443,6 @@ namespace basecode::compiler {
                         return false;
 
                     auto current_block = *basic_block;
-                    if (!arg_result.skip_read) {
-                        //auto temp = allocate_temp();
-                        //read(current_block, arg_result, temp);
-                    }
 
                     if (!arg_list->is_foreign_call()) {
                         type = arg_result.type_result.inferred_type;
@@ -2751,6 +2473,7 @@ namespace basecode::compiler {
                         current_block->push(arg_result.operands.back());
                     }
 
+                    release_temps(arg_result.temps);
                     break;
                 }
                 default:
@@ -2780,24 +2503,21 @@ namespace basecode::compiler {
             vm::assembler_named_ref_type_t::label,
             exit_label_name);
 
-        //auto lhs_temp = allocate_temp();
-
+        auto result_temp = _variables.retain_temp();
         vm::instruction_operand_t result_operand(assembler.make_named_ref(
             vm::assembler_named_ref_type_t::local,
-            "", // XXX: fix
+            result_temp->name(),
             vm::op_sizes::byte));
+        result.temps.emplace_back(result_temp);
         result.operands.emplace_back(result_operand);
 
         emit_result_t lhs_result {};
         if (!emit_element(basic_block, binary_op->lhs(), lhs_result))
             return false;
-        //read(*basic_block, lhs_result, lhs_temp);
 
-        //auto rhs_temp = allocate_temp();
         emit_result_t rhs_result {};
         if (!emit_element(basic_block, binary_op->rhs(), rhs_result))
             return false;
-        //read(*basic_block, rhs_result, rhs_temp);
 
         auto current_block = *basic_block;
         auto is_signed = lhs_result.type_result.inferred_type->is_signed();
@@ -2889,6 +2609,9 @@ namespace basecode::compiler {
             }
         }
 
+        release_temps(lhs_result.temps);
+        release_temps(rhs_result.temps);
+
         auto exit_block = _blocks.make();
         assembler.blocks().emplace_back(exit_block);
         exit_block->predecessors().emplace_back(current_block);
@@ -2908,26 +2631,23 @@ namespace basecode::compiler {
             emit_result_t& result) {
         auto& assembler = _session.assembler();
 
-        //auto lhs_temp = allocate_temp();
-        //auto rhs_temp = allocate_temp();
-
         emit_result_t lhs_result {};
         if (!emit_element(basic_block, binary_op->lhs(), lhs_result))
             return false;
-        //read(*basic_block, lhs_result, lhs_temp);
 
         emit_result_t rhs_result {};
         if (!emit_element(basic_block, binary_op->rhs(), rhs_result))
             return false;
-        //read(*basic_block, rhs_result, rhs_temp);
 
         auto current_block = *basic_block;
 
+        auto result_temp = _variables.retain_temp(result.type_result.inferred_type->number_class());
         auto size = vm::op_size_for_byte_size(result.type_result.inferred_type->size_in_bytes());
         vm::instruction_operand_t result_operand(assembler.make_named_ref(
             vm::assembler_named_ref_type_t::local,
-            "", // XXX: fix
+            result_temp->name(),
             size));
+        result.temps.emplace_back(result_temp);
         result.operands.emplace_back(result_operand);
 
         switch (binary_op->operator_type()) {
@@ -3025,6 +2745,9 @@ namespace basecode::compiler {
             default:
                 break;
         }
+
+        release_temps(lhs_result.temps);
+        release_temps(rhs_result.temps);
 
         return true;
     }

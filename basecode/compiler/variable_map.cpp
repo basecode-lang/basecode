@@ -9,6 +9,8 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <vm/assembler.h>
+#include <vm/basic_block.h>
 #include "session.h"
 #include "elements.h"
 #include "element_map.h"
@@ -69,7 +71,107 @@ namespace basecode::compiler {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    bool variable_t::flag(basecode::compiler::variable_t::flags_t f) const {
+        return (state & f) == f;
+    }
+
+    void variable_t::flag(basecode::compiler::variable_t::flags_t f, bool value) {
+        if (value)
+            state |= f;
+        else
+            state &= ~f;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
     variable_map::variable_map(compiler::session& session) : _session(session) {
+    }
+
+    bool variable_map::use(
+            vm::basic_block* basic_block,
+            vm::assembler_named_ref_t* named_ref) {
+        auto var = find(named_ref->name);
+        if (var == nullptr)
+            return false;
+
+        var->flag(variable_t::flags_t::used, true);
+
+        auto& assembler = _session.assembler();
+        auto var_type = var->identifier->type_ref()->type();
+
+        if (var->flag(variable_t::flags_t::must_init)) {
+            uint64_t default_value = var_type->element_type() == element_type_t::rune_type ?
+                                     common::rune_invalid :
+                                     0;
+            switch (var->type) {
+                case variable_type_t::local:
+                case variable_type_t::parameter:
+                case variable_type_t::return_value: {
+                    auto local_offset_ref = assembler.make_named_ref(
+                        vm::assembler_named_ref_type_t::offset,
+                        var->label,
+                        vm::op_sizes::word);
+                    basic_block->store(
+                        vm::instruction_operand_t::fp(),
+                        vm::instruction_operand_t(default_value),
+                        vm::instruction_operand_t(local_offset_ref));
+                    break;
+                }
+                case variable_type_t::module: {
+                    auto module_var_ref = assembler.make_named_ref(
+                        vm::assembler_named_ref_type_t::label,
+                        var->label);
+                    basic_block->store(
+                        vm::instruction_operand_t(module_var_ref),
+                        vm::instruction_operand_t(default_value),
+                        vm::instruction_operand_t::offset(var->field_offset.value));
+                    break;
+                }
+                case variable_type_t::temporary: {
+                    basic_block->move(
+                        vm::instruction_operand_t(named_ref),
+                        vm::instruction_operand_t(default_value));
+                    break;
+                }
+            }
+
+            var->flag(variable_t::flags_t::must_init, false);
+            var->flag(variable_t::flags_t::initialized, true);
+        }
+
+        if (!var->flag(variable_t::flags_t::filled)) {
+            switch (var->type) {
+                case variable_type_t::local:
+                case variable_type_t::parameter:
+                case variable_type_t::return_value: {
+                    auto offset_ref = assembler.make_named_ref(
+                        vm::assembler_named_ref_type_t::offset,
+                        var->label,
+                        vm::op_sizes::word);
+                    basic_block->load(
+                        vm::instruction_operand_t(named_ref),
+                        vm::instruction_operand_t::fp(),
+                        vm::instruction_operand_t(offset_ref));
+                    break;
+                }
+                case variable_type_t::module: {
+                    auto module_var_ref = assembler.make_named_ref(
+                        vm::assembler_named_ref_type_t::label,
+                        var->label);
+                    basic_block->load(
+                        vm::instruction_operand_t(named_ref),
+                        vm::instruction_operand_t(module_var_ref),
+                        vm::instruction_operand_t::offset(var->field_offset.value));
+                    break;
+                }
+                default: {
+                    break;
+                }
+            }
+            var->flag(variable_t::flags_t::filled, true);
+        }
+
+        return true;
     }
 
     bool variable_map::build(
@@ -92,6 +194,121 @@ namespace basecode::compiler {
         return true;
     }
 
+    bool variable_map::assign(
+            vm::basic_block* basic_block,
+            emit_result_t& lhs,
+            emit_result_t& rhs) {
+        auto lhs_named_ref = *(lhs.operands.back().data<vm::assembler_named_ref_t*>());
+        auto var = find(lhs_named_ref->name);
+        if (var == nullptr)
+            return false;
+
+        if (!var->flag(variable_t::flags_t::filled)) {
+            // XXX: should probably include an error message
+            return false;
+        }
+
+        auto& assembler = _session.assembler();
+
+        switch (var->type) {
+            case variable_type_t::local:
+            case variable_type_t::parameter:
+            case variable_type_t::return_value: {
+                auto local_offset_ref = assembler.make_named_ref(
+                    vm::assembler_named_ref_type_t::offset,
+                    var->label,
+                    vm::op_sizes::word);
+                basic_block->store(
+                    vm::instruction_operand_t::fp(),
+                    rhs.operands.back(),
+                    vm::instruction_operand_t(local_offset_ref));
+                break;
+            }
+            case variable_type_t::module: {
+                auto module_var_ref = assembler.make_named_ref(
+                    vm::assembler_named_ref_type_t::label,
+                    var->label);
+                basic_block->store(
+                    vm::instruction_operand_t(module_var_ref),
+                    rhs.operands.back(),
+                    vm::instruction_operand_t::offset(var->field_offset.value));
+                break;
+            }
+            default: {
+                break;
+            }
+        }
+
+        basic_block->move(vm::instruction_operand_t(lhs_named_ref), rhs.operands.back());
+
+//                        auto copy_required = false;
+//                        auto lhs_is_composite = lhs_result.type_result.inferred_type->is_composite_type();
+//                        auto rhs_is_composite = rhs_result.type_result.inferred_type->is_composite_type();
+//
+//                        if (!lhs_result.type_result.inferred_type->is_pointer_type()) {
+//                            if (lhs_is_composite && !rhs_is_composite) {
+//                                _session.error(
+//                                    binary_op->module(),
+//                                    "X000",
+//                                    "cannot assign scalar to composite type.",
+//                                    binary_op->rhs()->location());
+//                                return false;
+//                            }
+//
+//                            if (!lhs_is_composite && rhs_is_composite) {
+//                                _session.error(
+//                                    binary_op->module(),
+//                                    "X000",
+//                                    "cannot assign composite type to scalar.",
+//                                    binary_op->rhs()->location());
+//                                return false;
+//                            }
+//
+//                            copy_required = lhs_is_composite && rhs_is_composite;
+//                        }
+//
+//                        const auto has_offset = lhs_result.operands.size() == 2;
+//                        if (copy_required) {
+//                            const auto size = static_cast<uint64_t>(rhs_result.type_result.inferred_type->size_in_bytes());
+//                            if (has_offset) {
+//                                auto temp = _variables.retain_temp();
+//                                vm::instruction_operand_t temp_target(assembler.make_named_ref(
+//                                    vm::assembler_named_ref_type_t::local,
+//                                    temp->name(),
+//                                    vm::op_sizes::qword));
+//                                current_block->move(
+//                                    temp_target,
+//                                    lhs_result.operands.front(),
+//                                    lhs_result.operands.back());
+//                                current_block->copy(
+//                                    vm::op_sizes::byte,
+//                                    temp_target,
+//                                    rhs_result.operands.back(),
+//                                    vm::instruction_operand_t(size));
+//                                _variables.release_temp(temp);
+//                            } else {
+//                                current_block->copy(
+//                                    vm::op_sizes::byte,
+//                                    lhs_result.operands.back(),
+//                                    rhs_result.operands.back(),
+//                                    vm::instruction_operand_t(size));
+//                            }
+//                        } else {
+//                            if (has_offset) {
+//                                current_block->store(
+//                                    lhs_result.operands[0],
+//                                    rhs_result.operands.back(),
+//                                    lhs_result.operands[1]);
+//                            } else {
+//                                current_block->store(
+//                                    lhs_result.operands.back(),
+//                                    rhs_result.operands.back());
+//                            }
+//                        }
+
+        return true;
+    }
+
     void variable_map::reset() {
         _variables.clear();
     }
@@ -105,6 +322,17 @@ namespace basecode::compiler {
         _module_variables.sections.insert(std::make_pair(vm::section_t::bss,     element_list_t()));
         _module_variables.sections.insert(std::make_pair(vm::section_t::data,    element_list_t()));
         _module_variables.sections.insert(std::make_pair(vm::section_t::ro_data, element_list_t()));
+    }
+
+    variable_list_t variable_map::temps() {
+        variable_list_t list {};
+
+        for (auto& kvp : _variables) {
+            if (kvp.second.type == variable_type_t::temporary)
+                list.emplace_back(&kvp.second);
+        }
+
+        return list;
     }
 
     variable_list_t variable_map::variables() {
@@ -266,7 +494,10 @@ namespace basecode::compiler {
                     var_info.label = var->label_name();
                     var_info.field_offset = offset_result;
                     var_info.type = variable_type_t::local;
-                    var_info.state = variable_state_t::unknown;
+                    if (var->is_initialized())
+                        var_info.state |= variable_t::flags_t::must_init;
+                    else
+                        var_info.state = variable_t::flags_t::none;
                     var_info.number_class = type->number_class();
 
                     _variables.insert(std::make_pair(var->label_name(), var_info));
@@ -338,7 +569,7 @@ namespace basecode::compiler {
                     var_info.identifier = var;
                     var_info.label = var->label_name();
                     var_info.type = variable_type_t::module;
-                    var_info.state = variable_state_t::unknown;
+                    var_info.state = variable_t::flags_t::none;
                     var_info.field_offset = ref->field_offset();
                     var_info.number_class = type->number_class();
 
@@ -364,7 +595,7 @@ namespace basecode::compiler {
         var_info.identifier = var;
         var_info.frame_offset = 0;
         var_info.label = var->label_name();
-        var_info.state = variable_state_t::unknown;
+        var_info.state = variable_t::flags_t::none;
         var_info.type = variable_type_t::return_value;
         var_info.number_class = var->type_ref()->type()->number_class();
 
@@ -387,7 +618,7 @@ namespace basecode::compiler {
             var_info.identifier = var;
             var_info.frame_offset = offset;
             var_info.label = var->label_name();
-            var_info.state = variable_state_t::unknown;
+            var_info.state = variable_t::flags_t::none;
             var_info.type = variable_type_t::return_value;
             var_info.number_class = var->type_ref()->type()->number_class();
 

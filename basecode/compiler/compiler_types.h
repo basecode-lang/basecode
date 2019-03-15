@@ -134,9 +134,11 @@ namespace basecode::compiler {
         stack
     };
 
+    struct temp_pool_entry_t;
+
     struct emit_result_t {
-        bool skip_read = false;
         infer_type_result_t type_result {};
+        std::vector<temp_pool_entry_t*> temps {};
         vm::instruction_operand_list_t operands {};
     };
 

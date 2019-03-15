@@ -65,26 +65,6 @@ namespace basecode::compiler {
 
         vm::basic_block* emit_implicit_blocks(const vm::basic_block_list_t& predecessors);
 
-        // initializers & finalizers
-    private:
-        bool emit_finalizer(
-            vm::basic_block* block,
-            compiler::identifier* var);
-
-        bool emit_initializer(
-            vm::basic_block* block,
-            compiler::identifier* var);
-
-        bool emit_primitive_initializer(
-            vm::basic_block* block,
-            const vm::instruction_operand_t& base_local,
-            compiler::identifier* var,
-            int64_t offset);
-
-        vm::basic_block* emit_finalizers(const vm::basic_block_list_t& predecessors);
-
-        vm::basic_block* emit_initializers(const vm::basic_block_list_t& predecessors);
-
     // helper functions
     private:
         bool emit_block(
@@ -97,10 +77,6 @@ namespace basecode::compiler {
             const compiler::element_list_t& elements);
 
         bool end_stack_frame(
-            vm::basic_block** basic_block,
-            compiler::block* block);
-
-        bool begin_stack_frame(
             vm::basic_block** basic_block,
             compiler::block* block);
 
@@ -129,6 +105,12 @@ namespace basecode::compiler {
         bool emit_section_variable_data(
             vm::basic_block* basic_block,
             compiler::identifier* var);
+
+        vm::basic_block* begin_stack_frame(
+            vm::basic_block** basic_block,
+            compiler::block* block);
+
+        void release_temps(std::vector<temp_pool_entry_t*> temps);
 
     private:
         variable_map _variables;
