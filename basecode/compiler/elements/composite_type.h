@@ -42,6 +42,8 @@ namespace basecode::compiler {
 
         bool is_composite_type() const override;
 
+        bool has_at_least_one_initializer() const;
+
     protected:
         bool on_is_constant() const override;
 

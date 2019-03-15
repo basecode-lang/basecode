@@ -28,6 +28,8 @@ namespace basecode::compiler {
 
         bool inferred_type() const;
 
+        bool is_initialized() const;
+
         void inferred_type(bool value);
 
         identifier_usage_t usage() const;

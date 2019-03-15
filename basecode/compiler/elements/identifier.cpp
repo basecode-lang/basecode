@@ -15,6 +15,7 @@
 #include "initializer.h"
 #include "symbol_element.h"
 #include "type_reference.h"
+#include "composite_type.h"
 
 namespace basecode::compiler {
 
@@ -53,6 +54,17 @@ namespace basecode::compiler {
 
     bool identifier::on_is_constant() const {
         return _symbol->is_constant();
+    }
+
+    bool identifier::is_initialized() const {
+        auto type = _type_ref->type();
+        if (type->is_array_type()) {
+            return _initializer != nullptr;
+        } else if (type->is_composite_type()) {
+            auto composite_type = dynamic_cast<compiler::composite_type*>(type);
+            return composite_type->has_at_least_one_initializer();
+        }
+        return _initializer != nullptr;
     }
 
     std::string identifier::label_name() const {

@@ -44,8 +44,7 @@ namespace basecode::compiler {
         bool emit_type_table();
 
         bool emit_section_variable(
-            vm::basic_block* block,
-            vm::section_t section,
+            vm::basic_block* basic_block,
             compiler::element* e);
 
         bool emit_section_tables();
@@ -88,8 +87,6 @@ namespace basecode::compiler {
 
     // helper functions
     private:
-        static compiler::element* find_call_site(compiler::procedure_call* proc_call);
-
         bool emit_block(
             vm::basic_block** basic_block,
             compiler::block* block);
@@ -128,6 +125,10 @@ namespace basecode::compiler {
             vm::basic_block** basic_block,
             compiler::binary_operator* binary_op,
             emit_result_t& result);
+
+        bool emit_section_variable_data(
+            vm::basic_block* basic_block,
+            compiler::identifier* var);
 
     private:
         variable_map _variables;

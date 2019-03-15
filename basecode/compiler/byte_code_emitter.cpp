@@ -24,6 +24,57 @@
 
 namespace basecode::compiler {
 
+    struct proc_call_edge_t {
+        compiler::element* site = nullptr;
+        compiler::procedure_call* call = nullptr;
+    };
+
+    using proc_call_edge_list_t = std::vector<proc_call_edge_t>;
+
+    static void walk_call_graph_edges(
+            const proc_call_edge_list_t& edges,
+            procedure_call_set_t& proc_call_set,
+            compiler::element* site) {
+        for (const auto& edge : edges) {
+            if (edge.site != site)
+                continue;
+            proc_call_set.insert(edge.call);
+            walk_call_graph_edges(
+                edges,
+                proc_call_set,
+                edge.call->procedure_type());
+        }
+    }
+
+    static compiler::element* find_call_site(compiler::procedure_call* proc_call) {
+        auto current_scope = proc_call->parent_scope();
+        while (current_scope != nullptr) {
+            auto parent_element = current_scope->parent_element();
+            switch (parent_element->element_type()) {
+                case element_type_t::module:
+                case element_type_t::proc_type: {
+                    return parent_element;
+                }
+                default: {
+                    break;
+                }
+            }
+            current_scope = current_scope->parent_scope();
+        }
+        return nullptr;
+    }
+
+    static proc_call_edge_list_t find_root_edges(const proc_call_edge_list_t& edges) {
+        proc_call_edge_list_t root_edges {};
+        for (const auto& edge : edges) {
+            if (edge.site->element_type() == element_type_t::module)
+                root_edges.emplace_back(edge);
+        }
+        return root_edges;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
     enum class cast_mode_t : uint8_t {
         noop,
         integer_truncate,
@@ -1772,9 +1823,15 @@ namespace basecode::compiler {
             block->blank_line();
             block->section(section.first);
 
-            for (auto e : section.second)
-                emit_section_variable(block, section.first, e);
+            for (auto e : section.second) {
+                if (!emit_section_variable(block, e))
+                    return false;
+            }
         }
+
+        block->blank_line();
+        block->section(vm::section_t::text);
+        block->blank_line();
 
         assembler.blocks().emplace_back(block);
 
@@ -1960,37 +2017,6 @@ namespace basecode::compiler {
         return basic_blocks.empty() ? nullptr : basic_blocks.back();
     }
 
-    struct proc_call_edge_t {
-        compiler::element* site = nullptr;
-        compiler::procedure_call* call = nullptr;
-    };
-
-    using proc_call_edge_list_t = std::vector<proc_call_edge_t>;
-
-    static proc_call_edge_list_t find_root_edges(const proc_call_edge_list_t& edges) {
-        proc_call_edge_list_t root_edges {};
-        for (const auto& edge : edges) {
-            if (edge.site->element_type() == element_type_t::module)
-                root_edges.emplace_back(edge);
-        }
-        return root_edges;
-    }
-
-    static void walk_call_graph_edges(
-            const proc_call_edge_list_t& edges,
-            procedure_call_set_t& proc_call_set,
-            compiler::element* site) {
-        for (const auto& edge : edges) {
-            if (edge.site != site)
-                continue;
-            proc_call_set.insert(edge.call);
-            walk_call_graph_edges(
-                edges,
-                proc_call_set,
-                edge.call->procedure_type());
-        }
-    }
-
     bool byte_code_emitter::emit_procedure_types() {
         proc_call_edge_list_t edges {};
 
@@ -2146,161 +2172,219 @@ namespace basecode::compiler {
         return block;
     }
 
-    bool byte_code_emitter::emit_section_variable(
-            vm::basic_block* block,
-            vm::section_t section,
-            compiler::element* e) {
-        auto& labels = _session.labels();
+    bool byte_code_emitter::emit_section_variable_data(
+            vm::basic_block* basic_block,
+            compiler::identifier* var) {
+        auto var_type = var->type_ref()->type();
+        auto is_initialized = var->is_initialized();
+        auto composite_type = dynamic_cast<compiler::composite_type*>(var_type);
+        if (composite_type == nullptr) {
+            basic_block->comment(
+                var->label_name(),
+                vm::comment_location_t::after_instruction);
+        }
 
-        switch (e->element_type()) {
-            case element_type_t::type_literal: {
-                auto type_literal = dynamic_cast<compiler::type_literal*>(e);
-                block->blank_line();
-                block->align(4);
-                auto var_label = labels.make(type_literal->label_name(), block);
-                block->label(var_label);
-                // XXX: emit data
+        switch (var_type->element_type()) {
+            case element_type_t::bool_type: {
+                bool value = false;
+                var->as_bool(value);
+
+                if (!is_initialized)
+                    basic_block->reserve_byte(1);
+                else
+                    basic_block->bytes({static_cast<uint8_t>(value ? 1 : 0)});
                 break;
             }
-            case element_type_t::identifier: {
-                auto var = dynamic_cast<compiler::identifier*>(e);
+            case element_type_t::rune_type: {
+                common::rune_t value = common::rune_invalid;
+                var->as_rune(value);
 
-                auto var_type = var->type_ref()->type();
-                auto composite_type = dynamic_cast<compiler::composite_type*>(var_type);
-                if (composite_type != nullptr)
-                    composite_type->calculate_size();
-
-                auto init = var->initializer();
-                auto is_initialized = init != nullptr || section == vm::section_t::bss;
-
-                block->blank_line();
-
-                auto type_alignment = static_cast<uint8_t>(var_type->alignment());
-                if (type_alignment > 1)
-                    block->align(type_alignment);
-
-                block->comment(fmt::format(
-                    "identifier type: {}",
-                    var->type_ref()->name()));
-                auto var_label = labels.make(var->label_name(), block);
-                block->label(var_label);
-
-                switch (var_type->element_type()) {
-                    case element_type_t::bool_type: {
-                        bool value = false;
-                        var->as_bool(value);
-
-                        if (!is_initialized)
-                            block->reserve_byte(1);
-                        else
-                            block->bytes({static_cast<uint8_t>(value ? 1 : 0)});
-                        break;
-                    }
-                    case element_type_t::rune_type: {
-                        common::rune_t value = common::rune_invalid;
-                        var->as_rune(value);
-
-                        if (!is_initialized)
-                            block->reserve_byte(4);
-                        else
-                            block->dwords({static_cast<uint32_t>(value)});
-                        break;
-                    }
-                    case element_type_t::pointer_type: {
-                        if (!is_initialized) {
-                            block->reserve_qword(1);
-                        } else {
-                            if (init != nullptr && init->is_constant()) {
-                                emit_result_t result {};
-                                if (!emit_element(&block, init, result))
-                                    return false;
-                                const auto& operand = result.operands.back();
-                                switch (operand.type()) {
-                                    case vm::instruction_operand_type_t::named_ref: {
-                                        auto named_ref = operand.data<vm::assembler_named_ref_t*>();
-                                        if (named_ref != nullptr)
-                                            block->qwords({*named_ref});
-                                        else
-                                            block->qwords({0});
-                                        break;
-                                    }
-                                    default: {
-                                        block->qwords({0});
-                                        break;
-                                    }
-                                }
-                            } else {
-                                block->qwords({0});
+                if (!is_initialized)
+                    basic_block->reserve_byte(4);
+                else
+                    basic_block->dwords({static_cast<uint32_t>(value)});
+                break;
+            }
+            case element_type_t::pointer_type: {
+                if (!is_initialized) {
+                    basic_block->reserve_qword(1);
+                } else {
+                    auto init = var->initializer();
+                    if (init != nullptr && init->is_constant()) {
+                        emit_result_t result {};
+                        if (!emit_element(&basic_block, init, result))
+                            return false;
+                        const auto& operand = result.operands.back();
+                        switch (operand.type()) {
+                            case vm::instruction_operand_type_t::named_ref: {
+                                auto named_ref = operand.data<vm::assembler_named_ref_t*>();
+                                if (named_ref != nullptr)
+                                    basic_block->qwords({*named_ref});
+                                else
+                                    basic_block->qwords({0});
+                                break;
+                            }
+                            default: {
+                                basic_block->qwords({0});
+                                break;
                             }
                         }
-                        break;
-                    }
-                    case element_type_t::numeric_type: {
-                        uint64_t value = 0;
-                        auto symbol_type = vm::integer_symbol_type_for_size(var_type->size_in_bytes());
-
-                        if (var_type->number_class() == number_class_t::integer) {
-                            var->as_integer(value);
-                        } else {
-                            double temp = 0;
-                            if (var->as_float(temp)) {
-                                vm::register_value_alias_t alias {};
-                                if (symbol_type == vm::symbol_type_t::u32)
-                                    alias.dwf = static_cast<float>(temp);
-                                else
-                                    alias.qwf = temp;
-                                value = alias.qw;
-                            }
-                        }
-
-                        switch (symbol_type) {
-                            case vm::symbol_type_t::u8:
-                                if (!is_initialized)
-                                    block->reserve_byte(1);
-                                else
-                                    block->bytes({static_cast<uint8_t>(value)});
-                                break;
-                            case vm::symbol_type_t::u16:
-                                if (!is_initialized)
-                                    block->reserve_word(1);
-                                else
-                                    block->words({static_cast<uint16_t>(value)});
-                                break;
-                            case vm::symbol_type_t::f32:
-                            case vm::symbol_type_t::u32:
-                                if (!is_initialized)
-                                    block->reserve_dword(1);
-                                else
-                                    block->dwords({static_cast<uint32_t>(value)});
-                                break;
-                            case vm::symbol_type_t::f64:
-                            case vm::symbol_type_t::u64:
-                                if (!is_initialized)
-                                    block->reserve_qword(1);
-                                else
-                                    block->qwords({value});
-                                break;
-                            case vm::symbol_type_t::bytes:
-                                break;
-                            default:
-                                break;
-                        }
-                        break;
-                    }
-                    case element_type_t::array_type:
-                    case element_type_t::tuple_type:
-                    case element_type_t::composite_type: {
-                        block->reserve_byte(var_type->size_in_bytes());
-                        break;
-                    }
-                    default: {
-                        break;
+                    } else {
+                        basic_block->qwords({0});
                     }
                 }
                 break;
             }
-            default:
+            case element_type_t::numeric_type: {
+                uint64_t value = 0;
+                auto symbol_type = vm::integer_symbol_type_for_size(var_type->size_in_bytes());
+
+                if (var_type->number_class() == number_class_t::integer) {
+                    var->as_integer(value);
+                } else {
+                    double temp = 0;
+                    if (var->as_float(temp)) {
+                        vm::register_value_alias_t alias {};
+                        if (symbol_type == vm::symbol_type_t::u32)
+                            alias.dwf = static_cast<float>(temp);
+                        else
+                            alias.qwf = temp;
+                        value = alias.qw;
+                    }
+                }
+
+                switch (symbol_type) {
+                    case vm::symbol_type_t::u8:
+                        if (!is_initialized)
+                            basic_block->reserve_byte(1);
+                        else
+                            basic_block->bytes({static_cast<uint8_t>(value)});
+                        break;
+                    case vm::symbol_type_t::u16:
+                        if (!is_initialized)
+                            basic_block->reserve_word(1);
+                        else
+                            basic_block->words({static_cast<uint16_t>(value)});
+                        break;
+                    case vm::symbol_type_t::f32:
+                    case vm::symbol_type_t::u32:
+                        if (!is_initialized)
+                            basic_block->reserve_dword(1);
+                        else
+                            basic_block->dwords({static_cast<uint32_t>(value)});
+                        break;
+                    case vm::symbol_type_t::f64:
+                    case vm::symbol_type_t::u64:
+                        if (!is_initialized)
+                            basic_block->reserve_qword(1);
+                        else
+                            basic_block->qwords({value});
+                        break;
+                    case vm::symbol_type_t::bytes:
+                        break;
+                    default:
+                        break;
+                }
                 break;
+            }
+            case element_type_t::array_type: {
+                if (!is_initialized) {
+                    basic_block->reserve_byte(var_type->size_in_bytes());
+                } else {
+                    auto init = var->initializer();
+                    if (init != nullptr) {
+                        auto expr = init->expression();
+                        if (expr != nullptr) {
+                            auto type_literal = dynamic_cast<compiler::type_literal*>(expr);
+                            if (type_literal != nullptr) {
+                                //auto type_param = type_literal->type_params().front()->type();
+                                //auto symbol_type = vm::integer_symbol_type_for_size(type_param->size_in_bytes());
+
+                                // XXX: need to revisit this.  data_value_variant_t needs
+                                //      to support all of the valid sizes to make dynamically
+                                //      building arrays of data like this easier.
+                                std::vector<vm::data_value_variant_t> values {};
+                                for (auto arg : type_literal->args()->elements()) {
+                                    uint64_t value;
+                                    if (arg->as_integer(value)) {
+                                        values.emplace_back(value);
+                                    }
+                                }
+
+                                basic_block->qwords(values);
+                            }
+                        }
+                    }
+                }
+                break;
+            }
+            case element_type_t::tuple_type:
+            case element_type_t::composite_type: {
+                if (!is_initialized) {
+                    basic_block->reserve_byte(var_type->size_in_bytes());
+                } else {
+                    if (composite_type == nullptr)
+                        return false;
+
+                    size_t size = 0;
+                    for (auto fld : composite_type->fields().as_list()) {
+                        auto field_var = fld->identifier();
+                        auto field_var_type = var->type_ref()->type();
+                        auto ctype = dynamic_cast<compiler::composite_type*>(field_var_type);
+                        if (ctype != nullptr)
+                            ctype->calculate_size();
+
+                        if (!emit_section_variable_data(basic_block, field_var))
+                            return false;
+
+                        size += fld->size_in_bytes();
+                    }
+                    auto padding_size = common::align(
+                        var_type->size_in_bytes(),
+                        composite_type->alignment()) - size;
+                    if (padding_size > 0) {
+                        basic_block->comment(
+                            "padding",
+                            vm::comment_location_t::after_instruction);
+                        basic_block->reserve_byte(padding_size);
+                    }
+                }
+                break;
+            }
+            default: {
+                break;
+            }
+        }
+
+        return true;
+    }
+
+    bool byte_code_emitter::emit_section_variable(
+            vm::basic_block* basic_block,
+            compiler::element* e) {
+        auto& labels = _session.labels();
+
+        auto var = dynamic_cast<compiler::identifier*>(e);
+        if (var != nullptr) {
+            auto var_type = var->type_ref()->type();
+            auto composite_type = dynamic_cast<compiler::composite_type*>(var_type);
+            if (composite_type != nullptr)
+                composite_type->calculate_size();
+
+            basic_block->blank_line();
+
+            auto type_alignment = static_cast<uint8_t>(var_type->alignment());
+            if (type_alignment > 1)
+                basic_block->align(type_alignment);
+
+            basic_block->comment(fmt::format(
+                "identifier type: {}",
+                var->type_ref()->name()));
+            auto var_label = labels.make(var->label_name(), basic_block);
+            basic_block->label(var_label);
+
+            if (!emit_section_variable_data(basic_block, var))
+                return false;
         }
 
         return true;
@@ -2949,24 +3033,6 @@ namespace basecode::compiler {
         common::id_t intern_id;
         _session.interned_strings().element_id_to_intern_id(id, intern_id);
         return fmt::format("_intern_str_lit_{}_data", intern_id);
-    }
-
-    compiler::element* byte_code_emitter::find_call_site(compiler::procedure_call* proc_call) {
-        auto current_scope = proc_call->parent_scope();
-        while (current_scope != nullptr) {
-            auto parent_element = current_scope->parent_element();
-            switch (parent_element->element_type()) {
-                case element_type_t::module:
-                case element_type_t::proc_type: {
-                    return parent_element;
-                }
-                default: {
-                    break;
-                }
-            }
-            current_scope = current_scope->parent_scope();
-        }
-        return nullptr;
     }
 
 }

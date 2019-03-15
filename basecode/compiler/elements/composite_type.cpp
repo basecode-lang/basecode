@@ -121,6 +121,28 @@ namespace basecode::compiler {
         return other != nullptr && other->id() == id();
     }
 
+    bool composite_type::has_at_least_one_initializer() const {
+        for (auto fld : _fields.as_list()) {
+            auto init = fld->identifier()->initializer();
+            if (init != nullptr) {
+                auto expr = init->expression();
+                if (expr != nullptr
+                &&  expr->element_type() != element_type_t::uninitialized_literal) {
+                    return true;
+                }
+            }
+
+            auto type = fld->identifier()->type_ref()->type();
+            auto composite_type = dynamic_cast<compiler::composite_type*>(type);
+            if (composite_type != nullptr) {
+                auto result = composite_type->has_at_least_one_initializer();
+                if (result)
+                    return true;
+            }
+        }
+        return false;
+    }
+
     void composite_type::on_owned_elements(element_list_t& list) {
         for (auto element : _fields.as_list())
             list.emplace_back(element);

@@ -103,9 +103,8 @@ namespace basecode::compiler {
 
     void variable_map::create_sections() {
         _module_variables.sections.insert(std::make_pair(vm::section_t::bss,     element_list_t()));
-        _module_variables.sections.insert(std::make_pair(vm::section_t::ro_data, element_list_t()));
         _module_variables.sections.insert(std::make_pair(vm::section_t::data,    element_list_t()));
-        _module_variables.sections.insert(std::make_pair(vm::section_t::text,    element_list_t()));
+        _module_variables.sections.insert(std::make_pair(vm::section_t::ro_data, element_list_t()));
     }
 
     variable_list_t variable_map::variables() {
@@ -188,12 +187,16 @@ namespace basecode::compiler {
                 }
             }
 
-            if (var->is_constant()) {
+            auto has_initializers = var->is_initialized();
+            auto is_constant = var->is_constant()
+                && var_type->element_type() != element_type_t::tuple_type;
+
+            if (is_constant) {
                 ro_list->emplace_back(var);
             } else {
                 _module_variables.identifiers.insert(var->id());
 
-                if (init == nullptr) {
+                if (!has_initializers) {
                     bss_list->emplace_back(var);
                 } else {
                     data_list->emplace_back(var);
