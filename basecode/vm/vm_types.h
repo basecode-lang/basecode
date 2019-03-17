@@ -2016,9 +2016,9 @@ namespace basecode::vm {
         top_of_stack = 0,
         bottom_of_stack,
         program_start,
+        free_space_start,
         bss_start,
         bss_length,
-        free_space_start,
     };
 
     class allocator {

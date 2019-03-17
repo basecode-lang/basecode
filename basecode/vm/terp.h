@@ -67,7 +67,7 @@ namespace basecode::vm {
         static constexpr size_t heap_vector_table_start = interrupt_vector_table_end;
         static constexpr size_t heap_vector_table_size = 16;
         static constexpr size_t heap_vector_table_end = heap_vector_table_start
-            + (sizeof(uint16_t) * heap_vector_table_size);
+            + (sizeof(uint64_t) * heap_vector_table_size);
 
         static constexpr size_t program_start = heap_vector_table_end;
 

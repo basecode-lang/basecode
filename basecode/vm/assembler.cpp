@@ -326,7 +326,9 @@ namespace basecode::vm {
 
     bool assembler::apply_addresses(common::result& r) {
         size_t offset = 0;
-        uint64_t previous_section_address = 0;
+        size_t previous_section_size = 0;
+        uint64_t previous_section_addr = 0;
+        auto previous_section = section_t::unknown;
 
         for (auto block : _blocks) {
             for (auto& entry : block->entries()) {
@@ -340,15 +342,15 @@ namespace basecode::vm {
                     }
                     case block_entry_type_t::section: {
                         auto section_type = *entry.data<section_t>();
-                        if (section_type == section_t::bss) {
-                            _terp->heap_vector(
-                                heap_vectors_t::bss_start,
-                                previous_section_address);
-                            _terp->heap_vector(
-                                heap_vectors_t::bss_length,
-                                entry.address() - previous_section_address);
+                        if (section_type != previous_section) {
+                            if (previous_section == section_t::bss) {
+                                _terp->heap_vector(heap_vectors_t::bss_start, previous_section_addr);
+                                _terp->heap_vector(heap_vectors_t::bss_length, previous_section_size);
+                            }
+                            previous_section = section_type;
+                            previous_section_size = 0;
+                            previous_section_addr = entry.address();
                         }
-                        previous_section_address = entry.address();
                         break;
                     }
                     case block_entry_type_t::instruction: {
@@ -361,12 +363,17 @@ namespace basecode::vm {
                         auto size_in_bytes = op_size_in_bytes(data_def->size);
                         switch (data_def->type) {
                             case data_definition_type_t::initialized: {
-                                offset += size_in_bytes * data_def->values.size();
+                                auto size = size_in_bytes * data_def->values.size();
+                                offset += size;
+                                previous_section_size += size;
                                 break;
                             }
                             case data_definition_type_t::uninitialized: {
-                                for (auto v : data_def->values)
-                                    offset += size_in_bytes * boost::get<uint64_t>(v);
+                                for (auto v : data_def->values) {
+                                    auto size = size_in_bytes * boost::get<uint64_t>(v);
+                                    offset += size;
+                                    previous_section_size += size;
+                                }
                                 break;
                             }
                             default: {
