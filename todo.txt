@@ -53,10 +53,9 @@ QUESTIONS
 
 WORKING
 -------
-- NEW: encode BSS address and length in terp vector table so it can zero out memory
-- FIX: byte_code_emitter::emit_block & begin_stack_frame refactoring
 - FIX: variable_map::assign should handle copies for composite_type
 - FIX: address_of from variable_map
+- FIX: byte_code_emitter::emit_block & begin_stack_frame refactoring
 
 - NEW: UFCS
 
@@ -266,3 +265,4 @@ DONE
 - FINISH: CFG for break, continue, and procedure calls
 - NEW: for_element stack frame support
 - FIX: short-hand assign+bin_op parser/ast_evaluator bug
+- NEW: encode BSS address and length in terp vector table so it can zero out memory

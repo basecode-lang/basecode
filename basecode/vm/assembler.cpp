@@ -268,15 +268,6 @@ namespace basecode::vm {
         return !r.is_failed();
     }
 
-    vm::segment* assembler::segment(
-            const std::string& name,
-            segment_type_t type) {
-        _segments.insert(std::make_pair(
-            name,
-            vm::segment(name, type)));
-        return segment(name);
-    }
-
     bool assembler::assemble_from_source(
             common::result& r,
             label_map& labels,
@@ -289,14 +280,6 @@ namespace basecode::vm {
 
     vm::assembly_listing& assembler::listing() {
         return _listing;
-    }
-
-    segment_list_t assembler::segments() const {
-        segment_list_t list {};
-        for (const auto& it : _segments) {
-            list.push_back(const_cast<vm::segment*>(&it.second));
-        }
-        return list;
     }
 
     vm::basic_block_list_t& assembler::blocks() {
@@ -343,6 +326,8 @@ namespace basecode::vm {
 
     bool assembler::apply_addresses(common::result& r) {
         size_t offset = 0;
+        uint64_t previous_section_address = 0;
+
         for (auto block : _blocks) {
             for (auto& entry : block->entries()) {
                 entry.address(_location_counter + offset);
@@ -354,19 +339,16 @@ namespace basecode::vm {
                         break;
                     }
                     case block_entry_type_t::section: {
-                        auto section = entry.data<section_t>();
-                        switch (*section) {
-                            case section_t::unknown:
-                                break;
-                            case section_t::bss:
-                                break;
-                            case section_t::text:
-                                break;
-                            case section_t::data:
-                                break;
-                            case section_t::ro_data:
-                                break;
+                        auto section_type = *entry.data<section_t>();
+                        if (section_type == section_t::bss) {
+                            _terp->heap_vector(
+                                heap_vectors_t::bss_start,
+                                previous_section_address);
+                            _terp->heap_vector(
+                                heap_vectors_t::bss_length,
+                                entry.address() - previous_section_address);
                         }
+                        previous_section_address = entry.address();
                         break;
                     }
                     case block_entry_type_t::instruction: {
@@ -648,13 +630,6 @@ namespace basecode::vm {
 
     bool assembler::has_local(const std::string& name) const {
         return _locals.count(name) > 0;
-    }
-
-    vm::segment* assembler::segment(const std::string& name) {
-        auto it = _segments.find(name);
-        if (it == _segments.end())
-            return nullptr;
-        return &it->second;
     }
 
     const assembly_symbol_resolver_t& assembler::resolver() const {

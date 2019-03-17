@@ -88,7 +88,8 @@ namespace basecode::compiler {
         bool assign(
             vm::basic_block* basic_block,
             emit_result_t& lhs,
-            emit_result_t& rhs);
+            emit_result_t& rhs,
+            bool requires_copy = false);
 
         void reset();
 

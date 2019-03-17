@@ -13,7 +13,6 @@
 
 #include <common/source_file.h>
 #include "vm_types.h"
-#include "segment.h"
 #include "label_map.h"
 #include "assembly_listing.h"
 #include "register_allocator.h"
@@ -32,10 +31,6 @@ namespace basecode::vm {
             common::result& r,
             const label_map& labels);
 
-        vm::segment* segment(
-            const std::string& name,
-            segment_type_t type);
-
         bool assemble_from_source(
             common::result& r,
             label_map& labels,
@@ -44,8 +39,6 @@ namespace basecode::vm {
             void* data);
 
         vm::assembly_listing& listing();
-
-        segment_list_t segments() const;
 
         vm::basic_block_list_t& blocks();
 
@@ -61,8 +54,6 @@ namespace basecode::vm {
             assembler_named_ref_type_t type,
             const std::string& name,
             vm::op_sizes size = vm::op_sizes::qword);
-
-        vm::segment* segment(const std::string& name);
 
         bool has_local(const std::string& name) const;
 
@@ -88,7 +79,6 @@ namespace basecode::vm {
         vm::assembly_listing _listing {};
         assembly_symbol_resolver_t _resolver;
         vm::register_allocator* _register_allocator = nullptr;
-        std::unordered_map<std::string, vm::segment> _segments {};
         std::unordered_map<std::string, int64_t> _frame_offsets {};
         std::unordered_map<std::string, assembler_local_t> _locals {};
         std::unordered_map<std::string, assembler_named_ref_t> _named_refs {};

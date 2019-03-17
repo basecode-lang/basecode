@@ -33,7 +33,6 @@ namespace basecode::vm {
     class terp;
     class label;
     class symbol;
-    class segment;
     class label_map;
     class assembler;
     class basic_block;
@@ -632,38 +631,15 @@ namespace basecode::vm {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    using segment_list_t = std::vector<segment*>;
-
-    enum class segment_type_t {
-        code,
-        data,
-        stack,
-        constant,
-    };
-
-    static inline std::unordered_map<segment_type_t, std::string> s_segment_type_names = {
-        {segment_type_t::code,     "code"},
-        {segment_type_t::data,     "data"},
-        {segment_type_t::stack,    "stack"},
-        {segment_type_t::constant, "constant"}
-    };
-
-    static inline std::string segment_type_name(segment_type_t type) {
-        auto it = s_segment_type_names.find(type);
-        if (it == s_segment_type_names.end())
-            return "unknown";
-        return it->second;
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-
     enum class basic_block_type_t {
         none,
     };
 
+    ///////////////////////////////////////////////////////////////////////////
+
     enum class section_t : uint8_t {
         unknown,
-        bss = 1,
+        bss,
         ro_data,
         data,
         text
@@ -687,11 +663,15 @@ namespace basecode::vm {
         return section_t::unknown;
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+
     enum data_definition_type_t : uint8_t {
         none,
         initialized,
         uninitialized
     };
+
+    ///////////////////////////////////////////////////////////////////////////
 
     struct align_t {
         uint8_t size = 0;
@@ -2036,6 +2016,8 @@ namespace basecode::vm {
         top_of_stack = 0,
         bottom_of_stack,
         program_start,
+        bss_start,
+        bss_length,
         free_space_start,
     };
 

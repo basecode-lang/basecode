@@ -109,7 +109,6 @@ add_library(
     vm/terp.cpp vm/terp.h
     vm/label.cpp vm/label.h
     vm/symbol.cpp vm/symbol.h
-    vm/segment.cpp vm/segment.h
     vm/vm_types.h vm/vm_types.cpp
     vm/assembler.cpp vm/assembler.h
     vm/label_map.cpp vm/label_map.h

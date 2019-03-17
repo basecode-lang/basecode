@@ -211,7 +211,8 @@ namespace basecode::compiler {
     bool variable_map::assign(
             vm::basic_block* basic_block,
             emit_result_t& lhs,
-            emit_result_t& rhs) {
+            emit_result_t& rhs,
+            bool requires_copy) {
         auto lhs_named_ref = *(lhs.operands.back().data<vm::assembler_named_ref_t*>());
         auto var = find(lhs_named_ref->name);
         if (var == nullptr)
@@ -223,32 +224,6 @@ namespace basecode::compiler {
         }
 
         auto& assembler = _session.assembler();
-
-        auto copy_required = false;
-        auto lhs_is_composite = lhs.type_result.inferred_type->is_composite_type();
-        auto rhs_is_composite = rhs.type_result.inferred_type->is_composite_type();
-
-        if (!lhs.type_result.inferred_type->is_pointer_type()) {
-//            if (lhs_is_composite && !rhs_is_composite) {
-//                _session.error(
-//                    binary_op->module(),
-//                    "X000",
-//                    "cannot assign scalar to composite type.",
-//                    binary_op->rhs()->location());
-//                return false;
-//            }
-//
-//            if (!lhs_is_composite && rhs_is_composite) {
-//                _session.error(
-//                    binary_op->module(),
-//                    "X000",
-//                    "cannot assign composite type to scalar.",
-//                    binary_op->rhs()->location());
-//                return false;
-//            }
-
-            copy_required = lhs_is_composite && rhs_is_composite;
-        }
 
 //                        const auto has_offset = lhs_result.operands.size() == 2;
 //                        if (copy_required) {

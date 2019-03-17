@@ -69,6 +69,14 @@ namespace basecode::compiler {
     }
 
     bool session::run() {
+        auto bss_address = _terp->heap_vector(vm::heap_vectors_t::bss_start);
+        auto bss_length = _terp->heap_vector(vm::heap_vectors_t::bss_length);
+
+        if (bss_address != 0 && bss_length > 0) {
+            for (size_t i = 0; i < bss_length; i++)
+                _terp->write(vm::op_sizes::byte, bss_address + i, 0);
+        }
+
         return _terp->run(_result);
     }
 

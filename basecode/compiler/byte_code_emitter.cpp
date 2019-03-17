@@ -970,8 +970,13 @@ namespace basecode::compiler {
                     const auto& offset = has_offset ?
                                          arg_result.operands[1] :
                                          vm::instruction_operand_t();
-                    if (!offset.is_empty())
+                    if (!offset.is_empty()) {
+                        current_block->comment(
+                            "address_of",
+                            vm::comment_location_t::after_instruction);
                         current_block->move(temp, temp, offset);
+                    }
+
                     result.operands = {temp};
                 } else if (name == "alloc") {
                     auto arg = args[0];
@@ -1652,7 +1657,33 @@ namespace basecode::compiler {
                         if (!emit_element(basic_block, binary_op->lhs(), lhs_result))
                             return false;
 
-                        if (!_variables.assign(current_block, lhs_result, rhs_result))
+                        auto copy_required = false;
+                        auto lhs_is_composite = lhs_result.type_result.inferred_type->is_composite_type();
+                        auto rhs_is_composite = rhs_result.type_result.inferred_type->is_composite_type();
+
+                        if (!lhs_result.type_result.inferred_type->is_pointer_type()) {
+                            if (lhs_is_composite && !rhs_is_composite) {
+                                _session.error(
+                                    binary_op->module(),
+                                    "X000",
+                                    "cannot assign scalar to composite type.",
+                                    binary_op->rhs()->location());
+                                return false;
+                            }
+
+                            if (!lhs_is_composite && rhs_is_composite) {
+                                _session.error(
+                                    binary_op->module(),
+                                    "X000",
+                                    "cannot assign composite type to scalar.",
+                                    binary_op->rhs()->location());
+                                return false;
+                            }
+
+                            copy_required = lhs_is_composite && rhs_is_composite;
+                        }
+
+                        if (!_variables.assign(current_block, lhs_result, rhs_result, copy_required))
                             return false;
 
                         release_temps(lhs_result.temps);
