@@ -50,6 +50,8 @@ namespace basecode::compiler {
 
         vm::ffi_types_t to_ffi_type() const;
 
+        number_class_t number_class() const;
+
         virtual bool is_unknown_type() const;
 
         virtual bool is_pointer_type() const;
@@ -58,9 +60,9 @@ namespace basecode::compiler {
 
         virtual bool is_composite_type() const;
 
-        number_class_t number_class() const;
-
         compiler::symbol_element* symbol() const;
+
+        virtual bool is_open_generic_type() const;
 
         bool initialize(compiler::session& session);
 

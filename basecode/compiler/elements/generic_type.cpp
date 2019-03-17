@@ -38,6 +38,14 @@ namespace basecode::compiler {
                                                                   _constraints(constraints) {
     }
 
+    bool generic_type::is_open() const {
+        return _constraints.empty();
+    }
+
+    bool generic_type::is_open_generic_type() const {
+        return is_open();
+    }
+
     bool generic_type::on_type_check(compiler::type* other) {
         if (other != nullptr
         &&  other->element_type() == element_type_t::generic_type) {

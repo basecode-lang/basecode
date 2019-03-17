@@ -293,6 +293,7 @@ namespace basecode::compiler {
                     prepare_call_site_result_t result {};
                     if (!intrinsic->procedure_type()->prepare_call_site(
                             *this,
+                            intrinsic->uniform_function_call(),
                             args,
                             result)) {
                         for (const auto& msg : result.messages.messages())

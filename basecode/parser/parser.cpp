@@ -1175,6 +1175,8 @@ namespace basecode::syntax {
         // this is a uniform function calling syntax invocation, so
         // return the procedure call ast node instead of a binary operator
         if (rhs->type == ast_node_type_t::proc_call) {
+            rhs->location.start(lhs->location.start());
+            rhs->location.end(rhs->location.end());
             return rhs;
         }
 

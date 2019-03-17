@@ -107,6 +107,10 @@ namespace basecode::compiler {
         _size_in_bytes = value;
     }
 
+    bool type::is_open_generic_type() const {
+        return false;
+    }
+
     vm::ffi_types_t type::to_ffi_type() const {
         switch (element_type()) {
             case element_type_t::rune_type: {

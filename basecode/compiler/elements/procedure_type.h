@@ -26,6 +26,7 @@ namespace basecode::compiler {
 
         bool prepare_call_site(
             compiler::session& session,
+            bool uniform_function_call,
             compiler::argument_list* args,
             compiler::prepare_call_site_result_t& result) const;
 

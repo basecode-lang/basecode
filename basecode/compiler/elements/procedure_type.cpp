@@ -43,6 +43,7 @@ namespace basecode::compiler {
 
     bool procedure_type::prepare_call_site(
             compiler::session& session,
+            bool uniform_function_call,
             compiler::argument_list* args,
             compiler::prepare_call_site_result_t& result) const {
         result.arguments = args->elements();
@@ -57,6 +58,18 @@ namespace basecode::compiler {
                 return false;
             }
             return true;
+        }
+
+        if (uniform_function_call) {
+            auto first_param = field_list.front();
+            auto type = first_param->identifier()->type_ref()->type();
+            if (!type->is_pointer_type() && !type->is_open_generic_type()) {
+                result.messages.error(
+                    "X000",
+                    "procedures used in uniform function calls must declare the first parameter as a pointer.",
+                    args->parent_element()->location());
+                return false;
+            }
         }
 
         auto& builder = session.builder();

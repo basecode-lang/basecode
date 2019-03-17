@@ -25,9 +25,9 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             const compiler::type_reference_list_t& constraints);
 
-        inline bool is_open() const {
-            return _constraints.empty();
-        }
+        bool is_open() const;
+
+        bool is_open_generic_type() const override;
 
         const compiler::type_reference_list_t& constraints() const;
 

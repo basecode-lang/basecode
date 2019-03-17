@@ -44,6 +44,8 @@ namespace basecode::syntax {
         node->ufcs = other->ufcs;
         node->lhs = clone(other->lhs);
         node->rhs = clone(other->rhs);
+        node->parent = other->parent;
+        node->location = other->location;
         for (auto child : other->children)
             node->children.emplace_back(clone(child));
         for (auto label : other->labels)

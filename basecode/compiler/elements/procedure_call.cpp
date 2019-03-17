@@ -143,7 +143,11 @@ namespace basecode::compiler {
                 return false;
             }
 
-            if (result.proc_type->prepare_call_site(session, _arguments, result)) {
+            if (result.proc_type->prepare_call_site(
+                    session,
+                    _uniform_function_call,
+                    _arguments,
+                    result)) {
                 if (return_type != nullptr) {
                     auto return_fld = result.proc_type->return_type();
                     if (return_fld != nullptr) {
