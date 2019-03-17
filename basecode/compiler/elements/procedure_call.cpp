@@ -71,8 +71,16 @@ namespace basecode::compiler {
         return _arguments->is_foreign_call();
     }
 
+    bool procedure_call::uniform_function_call() const {
+        return _uniform_function_call;
+    }
+
     compiler::argument_list* procedure_call::arguments() {
         return _arguments;
+    }
+
+    void procedure_call::uniform_function_call(bool value) {
+        _uniform_function_call = value;
     }
 
     compiler::procedure_type* procedure_call::procedure_type() {

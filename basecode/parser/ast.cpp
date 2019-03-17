@@ -32,6 +32,8 @@ namespace basecode::syntax {
             _switch_stack.pop();
         while (!_scope_stack.empty())
             _scope_stack.pop();
+        while (!_member_access_stack.empty())
+            _member_access_stack.pop();
     }
 
     ast_node_t* ast_builder::clone(const ast_node_t* other) {
@@ -39,6 +41,7 @@ namespace basecode::syntax {
             return nullptr;
 
         auto node = make_node(other->type, &other->token);
+        node->ufcs = other->ufcs;
         node->lhs = clone(other->lhs);
         node->rhs = clone(other->rhs);
         for (auto child : other->children)
@@ -107,6 +110,25 @@ namespace basecode::syntax {
 
     void ast_builder::push_switch(ast_node_t* node) {
         _switch_stack.push(node);
+    }
+
+    // member access stack
+    ast_node_t* ast_builder::pop_member_access() {
+        if (_member_access_stack.empty())
+            return nullptr;
+        auto top = _member_access_stack.top();
+        _member_access_stack.pop();
+        return top;
+    }
+
+    ast_node_t* ast_builder::current_member_access() const {
+        if (_member_access_stack.empty())
+            return nullptr;
+        return _member_access_stack.top();
+    }
+
+    void ast_builder::push_member_access(ast_node_t* node) {
+        _member_access_stack.push(node);
     }
 
     //

@@ -216,6 +216,7 @@ namespace basecode::syntax {
 
         token_t token;
         common::id_t id;
+        bool ufcs = false;
         ast_node_type_t type;
         ast_node_list children;
         ast_node_list labels {};
@@ -257,6 +258,13 @@ namespace basecode::syntax {
         ast_node_t* current_switch() const;
 
         void push_switch(ast_node_t* node);
+
+        // member access stack
+        ast_node_t* pop_member_access();
+
+        ast_node_t* current_member_access() const;
+
+        void push_member_access(ast_node_t* node);
 
         // scope/block stack
         ast_node_t* end_scope();
@@ -423,6 +431,7 @@ namespace basecode::syntax {
         std::stack<ast_node_t*> _with_stack {};
         std::stack<ast_node_t*> _scope_stack {};
         std::stack<ast_node_t*> _switch_stack {};
+        std::stack<ast_node_t*> _member_access_stack {};
         std::unordered_map<common::id_t, ast_node_t*> _nodes {};
     };
 

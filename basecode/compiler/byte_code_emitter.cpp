@@ -138,10 +138,14 @@ namespace basecode::compiler {
             return false;
 
         auto last_implicit_block = emit_implicit_blocks({start_block});
-        if (last_implicit_block == nullptr)
-            return false;
 
-        auto result = emit_end_block({last_implicit_block});
+        vm::basic_block_list_t end_predecessors {};
+        if (last_implicit_block != nullptr)
+            end_predecessors.emplace_back(last_implicit_block);
+        else
+            end_predecessors.emplace_back(start_block);
+
+        auto result = emit_end_block(end_predecessors);
 
         return result;
     }
@@ -1252,6 +1256,8 @@ namespace basecode::compiler {
                     result.temps.emplace_back(result_temp);
                     result.operands.emplace_back(result_operand);
                     epilogue_block->pop(result_operand);
+                } else {
+                    epilogue_block->nop();
                 }
 
                 if (arg_list->allocated_size() > 0) {
@@ -1269,6 +1275,12 @@ namespace basecode::compiler {
 //                    epilogue_block->pop_locals(assembler, sorted_locals, return_temp_name);
                 }
 
+                auto next_block = _blocks.make();
+                assembler.blocks().emplace_back(next_block);
+                next_block->predecessors().emplace_back(epilogue_block);
+                epilogue_block->successors().emplace_back(next_block);
+
+                *basic_block = next_block;
                 break;
             }
             case element_type_t::transmute: {
@@ -1639,9 +1651,11 @@ namespace basecode::compiler {
                         auto composite_type = dynamic_cast<compiler::composite_type*>(type);
                         if (composite_type != nullptr) {
                             auto rhs_ref = dynamic_cast<compiler::identifier_reference*>(binary_op->rhs());
-                            auto field = composite_type->fields().find_by_name(rhs_ref->symbol().name);
-                            if (field != nullptr) {
-                                offset += field->start_offset();
+                            if (rhs_ref != nullptr) {
+                                auto field = composite_type->fields().find_by_name(rhs_ref->symbol().name);
+                                if (field != nullptr) {
+                                    offset += field->start_offset();
+                                }
                             }
                         }
 
@@ -1813,6 +1827,9 @@ namespace basecode::compiler {
         block->pre_blank_lines(1);
 
         for (const auto& section : vars.sections) {
+            if (section.second.empty())
+                continue;
+
             block->blank_line();
             block->section(section.first);
 
@@ -1822,11 +1839,8 @@ namespace basecode::compiler {
             }
         }
 
-        block->blank_line();
-        block->section(vm::section_t::text);
-        block->blank_line();
-
-        assembler.blocks().emplace_back(block);
+        if (!block->entries().empty())
+            assembler.blocks().emplace_back(block);
 
         return true;
     }
@@ -1932,6 +1946,7 @@ namespace basecode::compiler {
             p->add_successors({start_block});
 
         start_block->pre_blank_lines(1);
+        start_block->section(vm::section_t::text);
         start_block->align(vm::instruction_t::alignment);
         start_block->label(labels.make("_start", start_block));
 

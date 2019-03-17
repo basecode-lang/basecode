@@ -13,6 +13,7 @@
 #include "type.h"
 #include "identifier.h"
 #include "initializer.h"
+#include "pointer_type.h"
 #include "symbol_element.h"
 #include "type_reference.h"
 #include "composite_type.h"
@@ -58,11 +59,14 @@ namespace basecode::compiler {
 
     bool identifier::is_initialized() const {
         auto type = _type_ref->type();
-        if (type->is_array_type()) {
+        if (type->is_array_type()
+        ||  type->is_pointer_type()) {
             return _initializer != nullptr;
-        } else if (type->is_composite_type()) {
+        }
+        if (type->is_composite_type()) {
             auto composite_type = dynamic_cast<compiler::composite_type*>(type);
-            return composite_type->has_at_least_one_initializer();
+            if (composite_type != nullptr)
+                return composite_type->has_at_least_one_initializer();
         }
         return _initializer != nullptr;
     }

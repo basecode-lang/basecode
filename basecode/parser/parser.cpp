@@ -1066,6 +1066,12 @@ namespace basecode::syntax {
         node->lhs->rhs = lhs;
         node->rhs->location.start(token.location.start());
 
+        auto receiver_node = parser->ast_builder()->current_member_access();
+        if (receiver_node != nullptr) {
+            node->ufcs = true;
+            node->rhs->children.emplace_back(parser->ast_builder()->clone(receiver_node));
+        }
+
         if (!parser->peek(token_types_t::right_paren)) {
             if (is_family_node) {
                 while (true) {
@@ -1144,6 +1150,16 @@ namespace basecode::syntax {
             parser* parser,
             ast_node_t* lhs,
             token_t& token) {
+        auto is_member_access = token.value == s_period_literal.value;
+
+        if (is_member_access)
+            parser->ast_builder()->push_member_access(lhs);
+
+        defer({
+            if (is_member_access)
+                parser->ast_builder()->pop_member_access();
+        });
+
         auto associative_precedence = static_cast<precedence_t>(
             static_cast<uint8_t>(_precedence) - (_is_right_associative ? 1 : 0));
         auto rhs = parser->parse_expression(r, associative_precedence);
@@ -1154,6 +1170,12 @@ namespace basecode::syntax {
                 "binary operator expects right-hand-side expression",
                 token.location);
             return nullptr;
+        }
+
+        // this is a uniform function calling syntax invocation, so
+        // return the procedure call ast node instead of a binary operator
+        if (rhs->type == ast_node_type_t::proc_call) {
+            return rhs;
         }
 
         auto bin_op_node = parser

@@ -292,9 +292,9 @@ namespace basecode::compiler {
                     auto args = intrinsic->arguments();
                     prepare_call_site_result_t result {};
                     if (!intrinsic->procedure_type()->prepare_call_site(
-                        *this,
-                        args,
-                        result)) {
+                            *this,
+                            args,
+                            result)) {
                         for (const auto& msg : result.messages.messages())
                             error(intrinsic->module(), msg.code(), msg.message(), msg.location());
                         return false;

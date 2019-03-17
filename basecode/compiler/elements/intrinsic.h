@@ -39,6 +39,10 @@ namespace basecode::compiler {
 
         virtual std::string name() const;
 
+        bool uniform_function_call() const;
+
+        void uniform_function_call(bool value);
+
         compiler::argument_list* arguments() const;
 
         compiler::procedure_type* procedure_type();
@@ -49,6 +53,7 @@ namespace basecode::compiler {
         void on_owned_elements(element_list_t& list) override;
 
     private:
+        bool _uniform_function_call = false;
         compiler::argument_list* _arguments = nullptr;
         compiler::procedure_type* _procedure_type = nullptr;
         compiler::type_reference_list_t _type_parameters {};

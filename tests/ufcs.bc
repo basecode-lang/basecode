@@ -1,0 +1,41 @@
+core :: module("core");
+
+vector3 :: struct {
+    x := 1.0;
+    y := 1.0;
+    z := 1.0;
+};
+
+player :: struct {
+    lives: u8 := 3;
+    level: u8 := 1;
+    pos: vector3;
+    dir: vector3;
+};
+
+identity :: proc(v: ^vector3) {
+    with v {
+        .x := 1.0;
+        .y := 1.0;
+        .z := 1.0;
+    };
+};
+
+get_player_pos :: proc(p: ^player): ^vector3 {
+    return address_of(p.pos);
+};
+
+j: player;
+j.get_player_pos().identity(); // becomes: identity(get_player_pos(address_of(j)));
+
+core::print("j.pos.x := %f\n", j.pos.x);
+core::print("j.pos.y := %f\n", j.pos.y);
+core::print("j.pos.z := %f\n", j.pos.z);
+
+// works with FFI
+HELLO_WORLD :: "hello world\n";
+HELLO_WORLD.core::print();
+
+// and intrinsics!
+ptr_j := j.address_of();
+"ptr_j := %016X\n".core::print(ptr_j);

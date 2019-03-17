@@ -201,7 +201,7 @@ namespace basecode::compiler {
             emit_result_t& lhs,
             emit_result_t& rhs,
             bool requires_copy) {
-        auto lhs_named_ref = *(lhs.operands.back().data<vm::assembler_named_ref_t*>());
+        auto lhs_named_ref = *(lhs.operands.front().data<vm::assembler_named_ref_t*>());
         auto var = find(lhs_named_ref->name);
         if (var == nullptr)
             return false;

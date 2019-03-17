@@ -1491,11 +1491,35 @@ namespace basecode::compiler {
         auto& builder = _session.builder();
         auto& scope_manager = _session.scope_manager();
 
+        auto is_ufcs = context.node->ufcs;
+
         compiler::argument_list* args = nullptr;
         auto argument_list = evaluate(context.node->rhs);
         if (argument_list == nullptr)
             return false;
+
         args = dynamic_cast<compiler::argument_list*>(argument_list);
+        if (is_ufcs) {
+            const auto& elements = args->elements();
+            auto self_arg = elements[0];
+            infer_type_result_t type_result {};
+            if (!self_arg->infer_type(_session, type_result))
+                return false;
+            if (!type_result.inferred_type->is_pointer_type()) {
+                auto address_of_args = builder.make_argument_list(args->parent_scope());
+                address_of_args->add(self_arg);
+                self_arg->parent_element(address_of_args);
+
+                auto address_of_call = compiler::intrinsic::intrinsic_for_call(
+                    _session,
+                    args->parent_scope(),
+                    address_of_args,
+                    qualified_symbol_t("address_of"),
+                    {});
+                args->replace(0, address_of_call);
+                address_of_call->parent_element(args);
+            }
+        }
 
         auto symbol_node = context.node->lhs->rhs;
 
@@ -1511,6 +1535,7 @@ namespace basecode::compiler {
             proc_name,
             type_params);
         if (intrinsic != nullptr) {
+            intrinsic->uniform_function_call(is_ufcs);
             result.element = intrinsic;
             return true;
         }
@@ -1537,6 +1562,7 @@ namespace basecode::compiler {
             args,
             type_params,
             references);
+        proc_call->uniform_function_call(is_ufcs);
         proc_call->location(symbol_node->location);
         for (auto ref : proc_call->references())
             ref->parent_element(proc_call);

@@ -7,7 +7,6 @@ Steps to reach feature complete for the bootstrap compiler:
 - type-promotion errors for procedure_call
 - multiple/named return parameters
 - lambdas
-- UFCS
 - consolidate errors/return errors from all appropriate locations
 
 After these tasks are complete (most are covered below) then the assembler should be enhanced to
@@ -56,8 +55,6 @@ WORKING
 - FIX: variable_map::assign should handle copies for composite_type
 - FIX: address_of from variable_map
 - FIX: byte_code_emitter::emit_block & begin_stack_frame refactoring
-
-- NEW: UFCS
 
 - NEW: use/def in compiler::block for variables
         should supplant byte_code_emitter::referenced_module_variables
@@ -266,3 +263,6 @@ DONE
 - NEW: for_element stack frame support
 - FIX: short-hand assign+bin_op parser/ast_evaluator bug
 - NEW: encode BSS address and length in terp vector table so it can zero out memory
+- NEW: UFCS
+- FIX: ast_evaluator::proc_call should wrap the first parameter with an address_of
+        if it's not a pointer for UFCS calls

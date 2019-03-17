@@ -216,6 +216,14 @@ namespace basecode::compiler {
         return "intrinsic";
     }
 
+    bool intrinsic::uniform_function_call() const {
+        return _uniform_function_call;
+    }
+
+    void intrinsic::uniform_function_call(bool value) {
+        _uniform_function_call = value;
+    }
+
     compiler::argument_list* intrinsic::arguments() const {
         return _arguments;
     }
