@@ -1963,6 +1963,9 @@ namespace basecode::compiler {
         vm::basic_block_list_t basic_blocks {};
 
         for (auto block : implicit_blocks) {
+            if (!block->has_statements())
+                continue;
+
             auto implicit_block = _blocks.make();
             basic_blocks.emplace_back(implicit_block);
             assembler.blocks().emplace_back(implicit_block);

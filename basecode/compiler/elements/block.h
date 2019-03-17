@@ -30,6 +30,8 @@ namespace basecode::compiler {
 
         import_list_t& imports();
 
+        bool has_statements() const;
+
         defer_stack_t& defer_stack();
 
         bool has_stack_frame() const;

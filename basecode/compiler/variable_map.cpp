@@ -140,6 +140,8 @@ namespace basecode::compiler {
         }
 
         if (!var->flag(variable_t::flags_t::filled)) {
+            basic_block->comment("filled", vm::comment_location_t::after_instruction);
+
             switch (var->type) {
                 case variable_type_t::local:
                 case variable_type_t::parameter:
@@ -148,34 +150,20 @@ namespace basecode::compiler {
                         vm::assembler_named_ref_type_t::offset,
                         var->label,
                         vm::op_sizes::word);
-                    if (var_type->is_pointer_type()) {
-                        basic_block->move(
-                            vm::instruction_operand_t(named_ref),
-                            vm::instruction_operand_t::fp(),
-                            vm::instruction_operand_t(offset_ref));
-                    } else {
-                        basic_block->load(
-                            vm::instruction_operand_t(named_ref),
-                            vm::instruction_operand_t::fp(),
-                            vm::instruction_operand_t(offset_ref));
-                    }
+                    basic_block->load(
+                        vm::instruction_operand_t(named_ref),
+                        vm::instruction_operand_t::fp(),
+                        vm::instruction_operand_t(offset_ref));
                     break;
                 }
                 case variable_type_t::module: {
-                    auto module_var_ref = assembler.make_named_ref(
+                    auto source_ref = assembler.make_named_ref(
                         vm::assembler_named_ref_type_t::label,
                         var->label);
-                    if (var_type->is_pointer_type()) {
-                        basic_block->move(
-                            vm::instruction_operand_t(named_ref),
-                            vm::instruction_operand_t(module_var_ref),
-                            vm::instruction_operand_t::offset(var->field_offset.value));
-                    } else {
-                        basic_block->load(
-                            vm::instruction_operand_t(named_ref),
-                            vm::instruction_operand_t(module_var_ref),
-                            vm::instruction_operand_t::offset(var->field_offset.value));
-                    }
+                    basic_block->load(
+                        vm::instruction_operand_t(named_ref),
+                        vm::instruction_operand_t(source_ref),
+                        vm::instruction_operand_t::offset(var->field_offset.value));
                     break;
                 }
                 default: {
@@ -224,45 +212,10 @@ namespace basecode::compiler {
         }
 
         auto& assembler = _session.assembler();
+        auto is_lhs_pointer = lhs.type_result.inferred_type->is_pointer_type();
 
-//                        const auto has_offset = lhs_result.operands.size() == 2;
-//                        if (copy_required) {
-//                            const auto size = static_cast<uint64_t>(rhs_result.type_result.inferred_type->size_in_bytes());
-//                            if (has_offset) {
-//                                auto temp = _variables.retain_temp();
-//                                vm::instruction_operand_t temp_target(assembler.make_named_ref(
-//                                    vm::assembler_named_ref_type_t::local,
-//                                    temp->name(),
-//                                    vm::op_sizes::qword));
-//                                current_block->move(
-//                                    temp_target,
-//                                    lhs_result.operands.front(),
-//                                    lhs_result.operands.back());
-//                                current_block->copy(
-//                                    vm::op_sizes::byte,
-//                                    temp_target,
-//                                    rhs_result.operands.back(),
-//                                    vm::instruction_operand_t(size));
-//                                _variables.release_temp(temp);
-//                            } else {
-//                                current_block->copy(
-//                                    vm::op_sizes::byte,
-//                                    lhs_result.operands.back(),
-//                                    rhs_result.operands.back(),
-//                                    vm::instruction_operand_t(size));
-//                            }
-//                        } else {
-//                            if (has_offset) {
-//                                current_block->store(
-//                                    lhs_result.operands[0],
-//                                    rhs_result.operands.back(),
-//                                    lhs_result.operands[1]);
-//                            } else {
-//                                current_block->store(
-//                                    lhs_result.operands.back(),
-//                                    rhs_result.operands.back());
-//                            }
-//                        }
+        basic_block->comment("spilled", vm::comment_location_t::after_instruction);
+        basic_block->move(vm::instruction_operand_t(lhs_named_ref), rhs.operands.back());
 
         switch (var->type) {
             case variable_type_t::local:
@@ -274,7 +227,7 @@ namespace basecode::compiler {
                     vm::op_sizes::word);
                 basic_block->store(
                     vm::instruction_operand_t::fp(),
-                    rhs.operands.back(),
+                    vm::instruction_operand_t(lhs_named_ref),
                     vm::instruction_operand_t(local_offset_ref));
                 break;
             }
@@ -284,7 +237,7 @@ namespace basecode::compiler {
                     var->label);
                 basic_block->store(
                     vm::instruction_operand_t(module_var_ref),
-                    rhs.operands.back(),
+                    vm::instruction_operand_t(lhs_named_ref),
                     vm::instruction_operand_t::offset(var->field_offset.value));
                 break;
             }
@@ -292,8 +245,6 @@ namespace basecode::compiler {
                 break;
             }
         }
-
-        basic_block->move(vm::instruction_operand_t(lhs_named_ref), rhs.operands.back());
 
         return true;
     }
