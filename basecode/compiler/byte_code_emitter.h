@@ -76,10 +76,6 @@ namespace basecode::compiler {
             compiler::argument_list* arg_list,
             const compiler::element_list_t& elements);
 
-        bool end_stack_frame(
-            vm::basic_block** basic_block,
-            compiler::block* block);
-
         bool emit_procedure_epilogue(
             vm::basic_block** basic_block,
             compiler::procedure_type* proc_type);
@@ -106,15 +102,12 @@ namespace basecode::compiler {
             vm::basic_block* basic_block,
             compiler::identifier* var);
 
-        vm::basic_block* begin_stack_frame(
-            vm::basic_block** basic_block,
-            compiler::block* block);
-
         void release_temps(std::vector<temp_pool_entry_t*> temps);
 
     private:
         variable_map _variables;
         compiler::session& _session;
+        bool _in_stack_frame = false;
         vm::basic_block_map _blocks {};
         vm::basic_block_stack_t _block_stack {};
         flow_control_stack_t _control_flow_stack {};

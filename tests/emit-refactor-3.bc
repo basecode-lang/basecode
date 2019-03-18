@@ -1,16 +1,19 @@
 core :: module("core");
 
-foo: u32;
-bar: u8 := 2;
+test :: proc() {
+    foo: u32;
+    bar: u8 := 2;
 
-foo := 3;
-foo *:= cast<u32>(bar) + 4;
+    foo := 3;
+    foo *:= cast<u32>(bar) + 4;
 
-ptr_to_foo := address_of(foo);
+    ptr_to_foo := address_of(foo);
 
-core::print("foo := %d\n", foo);
-core::print("ptr_to_foo := %016X\n", ptr_to_foo);
+    core::print("foo := %d\n", foo);
+    core::print("ptr_to_foo := %016llX\n", ptr_to_foo);
+};
 
 #run {
+    test();
     core::print("\nrun\n");
 };

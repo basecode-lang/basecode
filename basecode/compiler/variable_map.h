@@ -47,6 +47,8 @@ namespace basecode::compiler {
 
         bool flag(flags_t f) const;
 
+        size_t size_in_bytes() const;
+
         void flag(flags_t f, bool value);
 
         std::string label {};
@@ -79,7 +81,8 @@ namespace basecode::compiler {
 
         bool use(
             vm::basic_block* basic_block,
-            vm::assembler_named_ref_t* named_ref);
+            vm::assembler_named_ref_t* named_ref,
+            bool load_on_use = false);
 
         bool build(
             compiler::block* block,
@@ -92,6 +95,11 @@ namespace basecode::compiler {
             bool requires_copy = false);
 
         void reset();
+
+        bool address_of(
+            vm::basic_block* basic_block,
+            emit_result_t& arg_result,
+            vm::instruction_operand_t& temp_operand);
 
         bool initialize();
 

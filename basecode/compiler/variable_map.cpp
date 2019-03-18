@@ -71,6 +71,13 @@ namespace basecode::compiler {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    size_t variable_t::size_in_bytes() const {
+        auto var = identifier;
+        if (var != nullptr)
+            return var->type_ref()->type()->size_in_bytes();
+        return 0;
+    }
+
     bool variable_t::flag(basecode::compiler::variable_t::flags_t f) const {
         return (state & f) == f;
     }
@@ -89,7 +96,8 @@ namespace basecode::compiler {
 
     bool variable_map::use(
             vm::basic_block* basic_block,
-            vm::assembler_named_ref_t* named_ref) {
+            vm::assembler_named_ref_t* named_ref,
+            bool load_on_use) {
         auto var = find(named_ref->name);
         if (var == nullptr)
             return false;
@@ -103,6 +111,9 @@ namespace basecode::compiler {
             uint64_t default_value = var_type->element_type() == element_type_t::rune_type ?
                                      common::rune_invalid :
                                      0;
+            auto op_size = vm::op_size_for_byte_size(var_type->size_in_bytes());
+            basic_block->comment("init", vm::comment_location_t::after_instruction);
+
             switch (var->type) {
                 case variable_type_t::local:
                 case variable_type_t::parameter:
@@ -111,9 +122,22 @@ namespace basecode::compiler {
                         vm::assembler_named_ref_type_t::offset,
                         var->label,
                         vm::op_sizes::word);
+
+                    auto init = var->identifier->initializer();
+                    if (init != nullptr) {
+                        auto expr = init->expression();
+                        if (expr != nullptr) {
+                            if (!expr->as_integer(default_value))
+                                return false;
+                        }
+                    }
+
+                    basic_block->move(
+                        vm::instruction_operand_t(named_ref),
+                        vm::instruction_operand_t(default_value, op_size));
                     basic_block->store(
                         vm::instruction_operand_t::fp(),
-                        vm::instruction_operand_t(default_value),
+                        vm::instruction_operand_t(named_ref),
                         vm::instruction_operand_t(local_offset_ref));
                     break;
                 }
@@ -121,16 +145,19 @@ namespace basecode::compiler {
                     auto module_var_ref = assembler.make_named_ref(
                         vm::assembler_named_ref_type_t::label,
                         var->label);
+                    basic_block->move(
+                        vm::instruction_operand_t(named_ref),
+                        vm::instruction_operand_t(default_value, op_size));
                     basic_block->store(
                         vm::instruction_operand_t(module_var_ref),
-                        vm::instruction_operand_t(default_value),
+                        vm::instruction_operand_t(named_ref),
                         vm::instruction_operand_t::offset(var->field_offset.value));
                     break;
                 }
                 case variable_type_t::temporary: {
                     basic_block->move(
                         vm::instruction_operand_t(named_ref),
-                        vm::instruction_operand_t(default_value));
+                        vm::instruction_operand_t(default_value, op_size));
                     break;
                 }
             }
@@ -140,37 +167,40 @@ namespace basecode::compiler {
         }
 
         if (!var->flag(variable_t::flags_t::filled)) {
-            basic_block->comment("filled", vm::comment_location_t::after_instruction);
+            var->flag(variable_t::flags_t::filled, true);
 
-            switch (var->type) {
-                case variable_type_t::local:
-                case variable_type_t::parameter:
-                case variable_type_t::return_value: {
-                    auto offset_ref = assembler.make_named_ref(
-                        vm::assembler_named_ref_type_t::offset,
-                        var->label,
-                        vm::op_sizes::word);
-                    basic_block->load(
-                        vm::instruction_operand_t(named_ref),
-                        vm::instruction_operand_t::fp(),
-                        vm::instruction_operand_t(offset_ref));
-                    break;
-                }
-                case variable_type_t::module: {
-                    auto source_ref = assembler.make_named_ref(
-                        vm::assembler_named_ref_type_t::label,
-                        var->label);
-                    basic_block->load(
-                        vm::instruction_operand_t(named_ref),
-                        vm::instruction_operand_t(source_ref),
-                        vm::instruction_operand_t::offset(var->field_offset.value));
-                    break;
-                }
-                default: {
-                    break;
+            if (load_on_use) {
+                basic_block->comment("filled", vm::comment_location_t::after_instruction);
+
+                switch (var->type) {
+                    case variable_type_t::local:
+                    case variable_type_t::parameter:
+                    case variable_type_t::return_value: {
+                        auto offset_ref = assembler.make_named_ref(
+                            vm::assembler_named_ref_type_t::offset,
+                            var->label,
+                            vm::op_sizes::word);
+                        basic_block->load(
+                            vm::instruction_operand_t(named_ref),
+                            vm::instruction_operand_t::fp(),
+                            vm::instruction_operand_t(offset_ref));
+                        break;
+                    }
+                    case variable_type_t::module: {
+                        auto source_ref = assembler.make_named_ref(
+                            vm::assembler_named_ref_type_t::label,
+                            var->label);
+                        basic_block->load(
+                            vm::instruction_operand_t(named_ref),
+                            vm::instruction_operand_t(source_ref),
+                            vm::instruction_operand_t::offset(var->field_offset.value));
+                        break;
+                    }
+                    default: {
+                        break;
+                    }
                 }
             }
-            var->flag(variable_t::flags_t::filled, true);
         }
 
         return true;
@@ -212,7 +242,7 @@ namespace basecode::compiler {
         }
 
         auto& assembler = _session.assembler();
-        auto is_lhs_pointer = lhs.type_result.inferred_type->is_pointer_type();
+        //auto is_lhs_pointer = lhs.type_result.inferred_type->is_pointer_type();
 
         basic_block->comment("spilled", vm::comment_location_t::after_instruction);
         basic_block->move(vm::instruction_operand_t(lhs_named_ref), rhs.operands.back());
@@ -251,6 +281,51 @@ namespace basecode::compiler {
 
     void variable_map::reset() {
         _variables.clear();
+    }
+
+    bool variable_map::address_of(
+            vm::basic_block* basic_block,
+            emit_result_t& arg_result,
+            vm::instruction_operand_t& temp_operand) {
+        auto named_ref = *(arg_result.operands.front().data<vm::assembler_named_ref_t*>());
+
+        auto var = find(named_ref->name);
+        if (var == nullptr)
+            return false;
+
+        auto& assembler = _session.assembler();
+        basic_block->comment("address_of", vm::comment_location_t::after_instruction);
+
+        switch (var->type) {
+            case variable_type_t::local:
+            case variable_type_t::parameter:
+            case variable_type_t::return_value: {
+                auto local_offset_ref = assembler.make_named_ref(
+                    vm::assembler_named_ref_type_t::offset,
+                    var->label,
+                    vm::op_sizes::word);
+                basic_block->move(
+                    temp_operand,
+                    vm::instruction_operand_t::fp(),
+                    vm::instruction_operand_t(local_offset_ref));
+                break;
+            }
+            case variable_type_t::module: {
+                auto module_var_ref = assembler.make_named_ref(
+                    vm::assembler_named_ref_type_t::label,
+                    var->label);
+                basic_block->move(
+                    temp_operand,
+                    vm::instruction_operand_t(module_var_ref),
+                    vm::instruction_operand_t::offset(var->field_offset.value));
+                break;
+            }
+            default: {
+                break;
+            }
+        }
+
+        return true;
     }
 
     bool variable_map::initialize() {

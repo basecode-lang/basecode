@@ -66,6 +66,7 @@ namespace basecode::vm {
                         assembler_local_t local {};
                         local.name = data->name;
                         local.offset = data->offset;
+
                         switch (data->type) {
                             case local_type_t::integer: {
                                 local.reg.type = register_type_t::integer;
