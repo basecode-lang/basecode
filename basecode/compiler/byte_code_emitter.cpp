@@ -158,16 +158,58 @@ namespace basecode::compiler {
             element_type_t::directive,
         };
 
+        uint64_t locals_size = 0;
         bool clear_stack_frame = false;
         auto frame_block = *basic_block;
+        vm::basic_block* code_block = nullptr;
         vm::basic_block* temp_vars_block = nullptr;
+
+        if (!block->is_parent_type_one_of(excluded_parent_types)
+        && !_in_stack_frame) {
+            //frame_block->frame_offset("local", -8);
+
+            auto locals = _variables.variables();
+            for (auto local : locals) {
+                frame_block->local(
+                    number_class_to_local_type(local->number_class),
+                    local->label,
+                    local->frame_offset + local->field_offset.value,
+                    variable_type_to_group(local->type));
+                if (local->type == variable_type_t::local)
+                    locals_size += local->size_in_bytes();
+            }
+            locals_size = common::align(locals_size, 8);
+
+            temp_vars_block = _blocks.make();
+            assembler.blocks().emplace_back(temp_vars_block);
+            frame_block->successors().emplace_back(temp_vars_block);
+            temp_vars_block->predecessors().emplace_back(frame_block);
+
+            code_block = _blocks.make();
+            assembler.blocks().emplace_back(code_block);
+            code_block->predecessors().emplace_back(temp_vars_block);
+            temp_vars_block->successors().emplace_back(code_block);
+
+            *basic_block = code_block;
+        }
 
         if (block->has_stack_frame()
         && !_in_stack_frame) {
             _in_stack_frame = true;
             clear_stack_frame = true;
 
-            //frame_block->frame_offset("local", -8);
+            code_block->push(vm::instruction_operand_t::fp());
+            code_block->move(
+                vm::instruction_operand_t::fp(),
+                vm::instruction_operand_t::sp());
+            if (locals_size > 0) {
+                code_block->sub(
+                    vm::instruction_operand_t::sp(),
+                    vm::instruction_operand_t::sp(),
+                    vm::instruction_operand_t(
+                        static_cast<uint64_t>(locals_size),
+                        vm::op_sizes::dword));
+            }
         }
         defer({
             if (clear_stack_frame) {
@@ -187,50 +229,6 @@ namespace basecode::compiler {
                 }
             }
         });
-
-        if (!block->is_parent_type_one_of(excluded_parent_types)) {
-            uint64_t locals_size = 0;
-            auto locals = _variables.variables();
-
-            for (auto local : locals) {
-                frame_block->local(
-                    number_class_to_local_type(local->number_class),
-                    local->label,
-                    local->frame_offset + local->field_offset.value,
-                    variable_type_to_group(local->type));
-                if (local->type == variable_type_t::local)
-                    locals_size += local->size_in_bytes();
-            }
-
-            locals_size = common::align(locals_size, 8);
-
-            temp_vars_block = _blocks.make();
-            assembler.blocks().emplace_back(temp_vars_block);
-            frame_block->successors().emplace_back(temp_vars_block);
-            temp_vars_block->predecessors().emplace_back(frame_block);
-
-            auto code_block = _blocks.make();
-            assembler.blocks().emplace_back(code_block);
-            code_block->predecessors().emplace_back(temp_vars_block);
-            temp_vars_block->successors().emplace_back(code_block);
-
-            *basic_block = code_block;
-
-            if (_in_stack_frame) {
-                code_block->push(vm::instruction_operand_t::fp());
-                code_block->move(
-                    vm::instruction_operand_t::fp(),
-                    vm::instruction_operand_t::sp());
-                if (locals_size > 0) {
-                    code_block->sub(
-                        vm::instruction_operand_t::sp(),
-                        vm::instruction_operand_t::sp(),
-                        vm::instruction_operand_t(
-                            static_cast<uint64_t>(locals_size),
-                            vm::op_sizes::dword));
-                }
-            }
-        }
 
         const auto& statements = block->statements();
         for (size_t index = 0; index < statements.size(); ++index) {
@@ -978,11 +976,17 @@ namespace basecode::compiler {
                     if (!emit_element(basic_block, return_e->expressions().front(), expr_result))
                         return false;
 
-                    return_block->store(
-                        vm::instruction_operand_t(assembler.make_named_ref(
-                            vm::assembler_named_ref_type_t::local,
-                            return_type_field->declaration()->identifier()->label_name())),
-                        expr_result.operands.back());
+                    auto named_ref = assembler.make_named_ref(
+                        vm::assembler_named_ref_type_t::local,
+                        return_type_field->declaration()->identifier()->label_name());
+                    emit_result_t lhs {};
+                    lhs.operands.push_back(vm::instruction_operand_t(named_ref));
+
+                    if (!_variables.use(return_block, named_ref))
+                        return false;
+
+                    if (!_variables.assign(return_block, lhs, expr_result))
+                        return false;
 
                     release_temps(expr_result.temps);
                 }
@@ -1210,12 +1214,14 @@ namespace basecode::compiler {
 
                 size_t target_size = 8;
                 compiler::type* return_type = nullptr;
+                temp_pool_entry_t* result_temp = nullptr;
 
                 auto return_type_field = procedure_type->return_type();
                 if (return_type_field != nullptr) {
                     return_type = return_type_field->identifier()->type_ref()->type();
                     if (return_type != nullptr) {
                         target_size = return_type->size_in_bytes();
+                        result_temp = _variables.retain_temp(return_type->number_class());
                     }
                 }
 
@@ -1231,11 +1237,10 @@ namespace basecode::compiler {
                     labels.make(fmt::format("{}_prologue",proc_call->label_name()),
                     prologue_block));
                 if (!is_foreign) {
-                    // XXX: fix
-//                    prologue_block->push_locals(
-//                        assembler,
-//                        sorted_locals,
-//                        return_temp_name);
+                    prologue_block->push_locals(
+                        assembler,
+                        sorted_locals,
+                        result_temp != nullptr ? result_temp->name() : "");
                 }
 
                 auto arg_list = proc_call->arguments();
@@ -1326,7 +1331,6 @@ namespace basecode::compiler {
                     epilogue_block));
 
                 if (return_type != nullptr) {
-                    auto result_temp = _variables.retain_temp(return_type->number_class());
                     vm::instruction_operand_t result_operand(assembler.make_named_ref(
                         vm::assembler_named_ref_type_t::local,
                         result_temp->name(),
@@ -1349,8 +1353,10 @@ namespace basecode::compiler {
                 }
 
                 if (!is_foreign) {
-                    // XXX: fix
-//                    epilogue_block->pop_locals(assembler, sorted_locals, return_temp_name);
+                    epilogue_block->pop_locals(
+                        assembler,
+                        sorted_locals,
+                        result_temp != nullptr ? result_temp->name() : "");
                 }
 
                 auto next_block = _blocks.make();
@@ -2474,6 +2480,7 @@ namespace basecode::compiler {
                 case element_type_t::character_literal:
                 case element_type_t::identifier_reference: {
                     emit_result_t arg_result {};
+                    arg_result.load_when_used = true;
                     if (!emit_element(basic_block, arg, arg_result))
                         return false;
 
@@ -2547,10 +2554,12 @@ namespace basecode::compiler {
         result.operands.emplace_back(result_operand);
 
         emit_result_t lhs_result {};
+        lhs_result.load_when_used = true;
         if (!emit_element(basic_block, binary_op->lhs(), lhs_result))
             return false;
 
         emit_result_t rhs_result {};
+        rhs_result.load_when_used = true;
         if (!emit_element(basic_block, binary_op->rhs(), rhs_result))
             return false;
 

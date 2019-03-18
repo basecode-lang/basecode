@@ -32,8 +32,6 @@ Compiler:
       the compiler needs to version the DOM by regenerating new code.  This cycle repeats until
       no more meta-programs need to run.
 
-Enhance the built-in debugger to support source-level debugging in addition to byte-code.
-
 IDEAS
 ---------
 - What would native co-routines look like?
@@ -52,9 +50,12 @@ QUESTIONS
 
 WORKING
 -------
+- FIX: assembly_parser can't find locals or frame_offsets because they're now
+        in different blocks.
+- FIX: composite binary op + assign has parser precedence issues. may need to
+        programatically wrap the rhs in an expression_group.
+
 - FIX: variable_map::assign should handle copies for composite_type
-- FIX: address_of from variable_map
-- FIX: byte_code_emitter::emit_block & begin_stack_frame refactoring
 
 - NEW: use/def in compiler::block for variables
         should supplant byte_code_emitter::referenced_module_variables
@@ -69,6 +70,8 @@ WORKING
 
 TASKS
 -----
+- NEW: Enhance the built-in debugger to support source-level debugging in addition to byte-code.
+
 - NEW: consolidate all errors into one class along with constants for quick lookup.
 - NEW: finish terp::jump_to_subroutine
 
@@ -266,3 +269,5 @@ DONE
 - NEW: UFCS
 - FIX: ast_evaluator::proc_call should wrap the first parameter with an address_of
         if it's not a pointer for UFCS calls
+- FIX: address_of from variable_map
+- FIX: byte_code_emitter::emit_block & begin_stack_frame refactoring

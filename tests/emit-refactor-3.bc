@@ -1,6 +1,6 @@
 core :: module("core");
 
-test :: proc() {
+test :: proc(): u32 {
     foo: u32;
     bar: u8 := 2;
 
@@ -11,9 +11,15 @@ test :: proc() {
 
     core::print("foo := %d\n", foo);
     core::print("ptr_to_foo := %016llX\n", ptr_to_foo);
+
+    return foo;
 };
 
 #run {
-    test();
-    core::print("\nrun\n");
+    pow_of_2: u32 := core::next_power_of_two(313);
+    core::print("\npow_of_2 := %d\n", pow_of_2);
+
+    result := test();
+    core::assert(result == 17, "expected result == 18");
+    core::print("\nresult := %d\n", result);
 };

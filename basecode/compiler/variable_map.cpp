@@ -634,7 +634,7 @@ namespace basecode::compiler {
             var_info.frame_offset = offset;
             var_info.label = var->label_name();
             var_info.state = variable_t::flags_t::none;
-            var_info.type = variable_type_t::return_value;
+            var_info.type = variable_type_t::parameter;
             var_info.number_class = var->type_ref()->type()->number_class();
 
             _variables.insert(std::make_pair(var->label_name(), var_info));

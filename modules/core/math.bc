@@ -93,23 +93,23 @@ public :: ns {
 
     next_power_of_two :: proc(n: u32): u32 {
         n -:= 1;
-        n |:= n shr 1;
-        n |:= n shr 2;
-        n |:= n shr 4;
-        n |:= n shr 8;
-        n |:= n shr 16;
+        n |:= (n shr 1);
+        n |:= (n shr 2);
+        n |:= (n shr 4);
+        n |:= (n shr 8);
+        n |:= (n shr 16);
         n +:= 1;
         return n;
     };
 
     next_power_of_two :: proc(n: u64): u64 {
         n -:= 1;
-        n |:= n shr 1;
-        n |:= n shr 2;
-        n |:= n shr 4;
-        n |:= n shr 8;
-        n |:= n shr 16;
-        n |:= n shr 32;
+        n |:= (n shr 1);
+        n |:= (n shr 2);
+        n |:= (n shr 4);
+        n |:= (n shr 8);
+        n |:= (n shr 16);
+        n |:= (n shr 32);
         n +:= 1;
         return n;
     };
