@@ -1,5 +1,14 @@
 core :: module("core");
 
+fib :: proc(n: u32 := 10): u32 {
+    core::print("n := %d\n", n);
+    if n < 2 {
+        return n;
+    } else {
+        return fib((n - 1) + fib(n - 2));
+    };
+};
+
 test :: proc(): u32 {
     foo: u32;
     bar: u8 := 2;
@@ -22,4 +31,8 @@ test :: proc(): u32 {
     result := test();
     core::assert(result == 18, "expected result == 18");
     core::print("\nresult := %d\n", result);
+
+    f := fib();
+    core::assert(f == 0, "expected f == 0");
+    core::print("\nf := %d\n", f);
 };

@@ -260,9 +260,18 @@ namespace basecode::compiler {
         }
 
         auto& assembler = _session.assembler();
-        //auto is_lhs_pointer = lhs.type_result.inferred_type->is_pointer_type();
 
+        // N.B. if the rhs_result has a named_ref operand that
+        //      matches the lhs_result's named_ref operand, then
+        //      we'd emit a MOVE that has the same register for
+        //      both operands, so we can safely skip it.
         auto& rhs_operand = rhs.operands.back();
+        if (rhs_operand.type() == vm::instruction_operand_type_t::named_ref) {
+            auto rhs_named_ref = *(rhs_operand.data<vm::assembler_named_ref_t*>());
+            if (rhs_named_ref->name == lhs_named_ref->name)
+                return true;
+        }
+
         rhs_operand.size(lhs_named_ref->size);
         basic_block->comment(
             fmt::format("assign: {}({})", variable_type_name(var->type), var->label),
@@ -314,6 +323,7 @@ namespace basecode::compiler {
     }
 
     void variable_map::reset() {
+        _temps.clear();
         _variables.clear();
     }
 
@@ -781,6 +791,7 @@ namespace basecode::compiler {
     temp_pool_entry_t* variable_map::find_available_temp(number_class_t number_class) {
         for (const auto& kvp : _temps) {
             if (kvp.second.available
+            &&  kvp.second.variable->type == variable_type_t::temporary
             &&  kvp.second.variable->number_class == number_class) {
                 return const_cast<temp_pool_entry_t*>(&kvp.second);
             }
