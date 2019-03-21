@@ -102,6 +102,11 @@ namespace basecode::compiler {
             vm::basic_block* basic_block,
             compiler::identifier* var);
 
+        vm::instruction_operand_t* target_operand(
+            emit_result_t& result,
+            number_class_t number_class = number_class_t::integer,
+            vm::op_sizes size = vm::op_sizes::qword);
+
         void release_temps(std::vector<temp_pool_entry_t*> temps);
 
     private:

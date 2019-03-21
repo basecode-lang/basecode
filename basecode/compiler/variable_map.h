@@ -123,19 +123,21 @@ namespace basecode::compiler {
 
         void save_locals_to_stack(
             vm::basic_block* basic_block,
-            variable_t* excluded);
+            const group_variable_result_t& groups);
 
         variable_list_t variables();
 
         void restore_locals_from_stack(
             vm::basic_block* basic_block,
-            variable_t* excluded);
+            const group_variable_result_t& groups);
 
         variable_t* find(const std::string& name);
 
         void release_temp(temp_pool_entry_t* entry);
 
         identifier_by_section_t& module_variables();
+
+        group_variable_result_t group_variables(variable_t* excluded);
 
         temp_pool_entry_t* retain_temp(number_class_t number_class = number_class_t::integer);
 
@@ -150,8 +152,6 @@ namespace basecode::compiler {
         bool group_module_variables_into_sections();
 
         bool find_local_variables(compiler::block* block);
-
-        group_variable_result_t group_variables(variable_t* excluded);
 
         bool find_referenced_module_variables(compiler::block* block);
 

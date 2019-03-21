@@ -435,8 +435,7 @@ namespace basecode::compiler {
 
     void variable_map::save_locals_to_stack(
             vm::basic_block* basic_block,
-            variable_t* excluded) {
-        auto groups = group_variables(excluded);
+            const group_variable_result_t& groups) {
         vm::instruction_operand_list_t operands {};
 
         for (const auto& list : groups.ints)
@@ -460,17 +459,17 @@ namespace basecode::compiler {
 
     void variable_map::restore_locals_from_stack(
             vm::basic_block* basic_block,
-            variable_t* excluded) {
-        auto groups = group_variables(excluded);
-        std::reverse(std::begin(groups.ints), std::end(groups.ints));
-        std::reverse(std::begin(groups.floats), std::end(groups.floats));
+            const group_variable_result_t& groups) {
+        auto working_groups = groups;
+        std::reverse(std::begin(working_groups.ints), std::end(working_groups.ints));
+        std::reverse(std::begin(working_groups.floats), std::end(working_groups.floats));
 
         vm::instruction_operand_list_t operands {};
 
-        for (const auto& list : groups.ints)
+        for (const auto& list : working_groups.ints)
             apply_variable_range(list, operands, true);
 
-        for (const auto& list : groups.floats)
+        for (const auto& list : working_groups.floats)
             apply_variable_range(list, operands, true);
 
         if (!operands.empty())
@@ -671,19 +670,14 @@ namespace basecode::compiler {
 
         for (const auto& kvp : _variables) {
             auto var = &kvp.second;
-            if (var->number_class == number_class_t::integer) {
-                if (var == excluded) {
-                    result.ints.emplace_back();
-                    continue;
-                }
-                result.ints.back().emplace_back(var);
-            } else {
-                if (var == excluded) {
-                    result.floats.emplace_back();
-                    continue;
-                }
-                result.floats.back().emplace_back(var);
+            auto list = var->number_class == number_class_t::integer ?
+                &result.ints :
+                &result.floats;
+            if (excluded != nullptr && var == excluded) {
+                list->emplace_back();
+                continue;
             }
+            list->back().emplace_back(var);
         }
 
         return result;
