@@ -92,7 +92,6 @@ namespace basecode::vm {
                 break;
             }
             case instruction_operand_type_t::named_ref: {
-                op.size = op_sizes::qword;
                 op.type = operand_encoding_t::flags::none;
                 op.value.u = 0;
                 op.fixup_ref1 = *operand.data<assembler_named_ref_t*>();
@@ -101,13 +100,21 @@ namespace basecode::vm {
                         break;
                     }
                     case assembler_named_ref_type_t::local: {
+                        op.size = operand.size();
                         op.type |= operand_encoding_t::flags::reg;
                         break;
                     }
-                    case assembler_named_ref_type_t::label:
-                    case assembler_named_ref_type_t::offset: {
+                    case assembler_named_ref_type_t::label: {
+                        op.size = op_sizes::qword;
                         op.type |= operand_encoding_t::flags::integer
                             | operand_encoding_t::flags::constant;
+                        break;
+                    }
+                    case assembler_named_ref_type_t::offset: {
+                        op.size = operand.size();
+                        op.type |= operand_encoding_t::flags::integer
+                            | operand_encoding_t::flags::constant;
+                        break;
                     }
                 }
                 break;
@@ -553,21 +560,6 @@ namespace basecode::vm {
     }
 
     // push variations
-    void basic_block::push_locals(
-            vm::assembler& assembler,
-            const local_list_t& locals,
-            const std::string& excluded) {
-        instruction_operand_list_t operands {};
-        grouped_named_ranges(
-            assembler,
-            locals,
-            excluded,
-            operands);
-        if (operands.empty())
-            return;
-        pushm(operands);
-    }
-
     void basic_block::push(const instruction_operand_t& operand) {
         instruction_t op;
         op.size = operand.size();
@@ -681,22 +673,6 @@ namespace basecode::vm {
     }
 
     // pop variations
-    void basic_block::pop_locals(
-            vm::assembler& assembler,
-            const local_list_t& locals,
-            const std::string& excluded) {
-        instruction_operand_list_t operands {};
-        grouped_named_ranges(
-            assembler,
-            locals,
-            excluded,
-            operands,
-            true);
-        if (operands.empty())
-            return;
-        popm(operands);
-    }
-
     void basic_block::pop(const instruction_operand_t& dest) {
         instruction_t op;
         op.size = dest.size();
@@ -1116,87 +1092,6 @@ namespace basecode::vm {
         }
     }
 
-    void basic_block::apply_local_range(
-            vm::assembler& assembler,
-            const local_list_t& locals,
-            instruction_operand_list_t& operands,
-            bool reverse) {
-        if (locals.empty())
-            return;
-        if (locals.size() == 1) {
-            operands.push_back(instruction_operand_t(assembler.make_named_ref(
-                assembler_named_ref_type_t::local,
-                std::string(locals.front()->name))));
-        } else {
-            const local_t* front = nullptr;
-            const local_t* back = nullptr;
-
-            if (reverse) {
-                front = locals.back();
-                back = locals.front();
-            } else {
-                front = locals.front();
-                back = locals.back();
-            }
-
-            auto begin = assembler.make_named_ref(
-                assembler_named_ref_type_t::local,
-                std::string(front->name));
-            auto end = assembler.make_named_ref(
-                assembler_named_ref_type_t::local,
-                std::string(back->name));
-            operands.push_back(instruction_operand_t(named_ref_range_t{
-                begin,
-                end}));
-        }
-    }
-
-    void basic_block::grouped_named_ranges(
-            vm::assembler& assembler,
-            const local_list_t& locals,
-            const std::string& excluded,
-            instruction_operand_list_t& operands,
-            bool reverse) {
-        std::vector<local_list_t> ints {};
-        std::vector<local_list_t> floats {};
-
-        ints.emplace_back();
-        floats.emplace_back();
-
-        for (const auto local : locals) {
-            if (local->type == local_type_t::integer) {
-                if (local->name == excluded) {
-                    ints.emplace_back();
-                    continue;
-                }
-                ints.back().emplace_back(local);
-            } else {
-                if (local->name == excluded) {
-                    floats.emplace_back();
-                    continue;
-                }
-                floats.back().emplace_back(local);
-            }
-        }
-
-        if (reverse) {
-            std::reverse(std::begin(ints), std::end(ints));
-            std::reverse(std::begin(floats), std::end(floats));
-
-            for (const auto& list : floats)
-                apply_local_range(assembler, list, operands, reverse);
-
-            for (const auto& list : ints)
-                apply_local_range(assembler, list, operands, reverse);
-        } else {
-            for (const auto& list : ints)
-                apply_local_range(assembler, list, operands, reverse);
-
-            for (const auto& list : floats)
-                apply_local_range(assembler, list, operands, reverse);
-        }
-    }
-
     void basic_block::label(vm::label* value) {
         make_block_entry(label_t {
             .instance = value
@@ -1205,36 +1100,6 @@ namespace basecode::vm {
 
     block_entry_list_t& basic_block::entries() {
         return _entries;
-    }
-
-    local_list_t basic_block::sorted_locals() const {
-        struct local_order_t {
-            local_order_t(
-                size_t index,
-                const std::string& name) : index(index), name(name) {
-            }
-
-            size_t index;
-            std::string_view name;
-        };
-
-        std::vector<local_order_t> list {};
-        for (const auto& kvp : _locals)
-            list.emplace_back(kvp.second, kvp.first);
-
-        std::sort(
-            std::begin(list),
-            std::end(list),
-            [](const auto& lhs, const auto& rhs) {
-                return lhs.index < rhs.index;
-            });
-
-        local_list_t locals {};
-        for (const auto& item : list) {
-            locals.emplace_back(_entries[item.index].data<local_t>());
-        }
-
-        return locals;
     }
 
     vm::basic_block_list_t& basic_block::successors() {

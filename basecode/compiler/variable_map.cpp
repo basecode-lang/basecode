@@ -96,33 +96,25 @@ namespace basecode::compiler {
 
     bool variable_map::use(
             vm::basic_block* basic_block,
-            vm::assembler_named_ref_t* named_ref,
-            bool load_on_use) {
+            vm::assembler_named_ref_t* named_ref) {
         auto var = find(named_ref->name);
         if (var == nullptr)
             return false;
 
-        var->flag(variable_t::flags_t::used, true);
-
         auto& assembler = _session.assembler();
         auto var_type = var->identifier->type_ref()->type();
 
-        if (var->flag(variable_t::flags_t::must_init)) {
-            uint64_t default_value = var_type->element_type() == element_type_t::rune_type ?
-                                     common::rune_invalid :
-                                     0;
-            auto op_size = vm::op_size_for_byte_size(var_type->size_in_bytes());
-            basic_block->comment("init", vm::comment_location_t::after_instruction);
+        if (!var->flag(variable_t::flags_t::used)) {
+            var->flag(variable_t::flags_t::used, true);
 
-            switch (var->type) {
-                case variable_type_t::local:
-                case variable_type_t::parameter:
-                case variable_type_t::return_value: {
-                    auto local_offset_ref = assembler.make_named_ref(
-                        vm::assembler_named_ref_type_t::offset,
-                        var->label,
-                        vm::op_sizes::word);
+            if (var->flag(variable_t::flags_t::must_init)) {
+                var->flag(variable_t::flags_t::must_init, false);
+                var->flag(variable_t::flags_t::initialized, true);
 
+                uint64_t default_value = var_type->element_type() == element_type_t::rune_type ?
+                                         common::rune_invalid :
+                                         0;
+                if (var->type == variable_type_t::local) {
                     auto init = var->identifier->initializer();
                     if (init != nullptr) {
                         auto expr = init->expression();
@@ -131,74 +123,100 @@ namespace basecode::compiler {
                                 return false;
                         }
                     }
-
-                    basic_block->move(
-                        vm::instruction_operand_t(named_ref),
-                        vm::instruction_operand_t(default_value, op_size));
-                    basic_block->store(
-                        vm::instruction_operand_t::fp(),
-                        vm::instruction_operand_t(named_ref),
-                        vm::instruction_operand_t(local_offset_ref));
-                    break;
                 }
-                case variable_type_t::module: {
-                    auto module_var_ref = assembler.make_named_ref(
-                        vm::assembler_named_ref_type_t::label,
-                        var->label);
-                    basic_block->move(
-                        vm::instruction_operand_t(named_ref),
-                        vm::instruction_operand_t(default_value, op_size));
-                    basic_block->store(
-                        vm::instruction_operand_t(module_var_ref),
-                        vm::instruction_operand_t(named_ref),
-                        vm::instruction_operand_t::offset(var->field_offset.value));
-                    break;
-                }
-                case variable_type_t::temporary: {
-                    basic_block->move(
-                        vm::instruction_operand_t(named_ref),
-                        vm::instruction_operand_t(default_value, op_size));
-                    break;
-                }
-            }
 
-            var->flag(variable_t::flags_t::must_init, false);
-            var->flag(variable_t::flags_t::initialized, true);
-        }
+                auto op_size = vm::op_size_for_byte_size(var_type->size_in_bytes());
 
-        if (!var->flag(variable_t::flags_t::filled)) {
-            var->flag(variable_t::flags_t::filled, true);
-
-            if (load_on_use) {
-                basic_block->comment("filled", vm::comment_location_t::after_instruction);
+                basic_block->comment(
+                    fmt::format("init: {}({})", variable_type_name(var->type), var->label),
+                    vm::comment_location_t::after_instruction);
+                basic_block->clr(vm::op_sizes::qword, vm::instruction_operand_t(named_ref));
+                basic_block->move(
+                    vm::instruction_operand_t(named_ref),
+                    vm::instruction_operand_t(default_value, op_size));
 
                 switch (var->type) {
-                    case variable_type_t::local:
-                    case variable_type_t::parameter:
+                    case variable_type_t::local: {
+                        break;
+                    }
+                    case variable_type_t::parameter: {
+                        break;
+                    }
                     case variable_type_t::return_value: {
-                        auto offset_ref = assembler.make_named_ref(
+                        auto local_offset_ref = assembler.make_named_ref(
                             vm::assembler_named_ref_type_t::offset,
                             var->label,
                             vm::op_sizes::word);
-                        basic_block->load(
-                            vm::instruction_operand_t(named_ref),
+                        basic_block->comment(
+                            fmt::format("spill: return({})", var->label),
+                            vm::comment_location_t::after_instruction);
+                        basic_block->store(
                             vm::instruction_operand_t::fp(),
-                            vm::instruction_operand_t(offset_ref));
+                            vm::instruction_operand_t(named_ref),
+                            vm::instruction_operand_t(local_offset_ref));
                         break;
                     }
                     case variable_type_t::module: {
-                        auto source_ref = assembler.make_named_ref(
+                        auto module_var_ref = assembler.make_named_ref(
                             vm::assembler_named_ref_type_t::label,
                             var->label);
-                        basic_block->load(
+                        basic_block->comment(
+                            fmt::format("spill: module({})", var->label),
+                            vm::comment_location_t::after_instruction);
+                        basic_block->store(
+                            vm::instruction_operand_t(module_var_ref),
                             vm::instruction_operand_t(named_ref),
-                            vm::instruction_operand_t(source_ref),
                             vm::instruction_operand_t::offset(var->field_offset.value));
                         break;
                     }
                     default: {
                         break;
                     }
+                }
+            }
+        }
+
+        if (!var->flag(variable_t::flags_t::filled)) {
+            var->flag(variable_t::flags_t::filled, true);
+
+            switch (var->type) {
+                case variable_type_t::local: {
+                    // XXX: for locals, we don't default to filling from the stack
+                    break;
+                }
+                case variable_type_t::return_value: {
+                    // XXX: for return values, we don't default to filling from the stack
+                    break;
+                }
+                case variable_type_t::parameter: {
+                    auto offset_ref = assembler.make_named_ref(
+                        vm::assembler_named_ref_type_t::offset,
+                        var->label,
+                        vm::op_sizes::word);
+                    basic_block->comment(
+                        fmt::format("fill: parameter({})", var->label),
+                        vm::comment_location_t::after_instruction);
+                    basic_block->load(
+                        vm::instruction_operand_t(named_ref),
+                        vm::instruction_operand_t::fp(),
+                        vm::instruction_operand_t(offset_ref));
+                    break;
+                }
+                case variable_type_t::module: {
+                    auto source_ref = assembler.make_named_ref(
+                        vm::assembler_named_ref_type_t::label,
+                        var->label);
+                    basic_block->comment(
+                        fmt::format("fill: module({})", var->label),
+                        vm::comment_location_t::after_instruction);
+                    basic_block->load(
+                        vm::instruction_operand_t(named_ref),
+                        vm::instruction_operand_t(source_ref),
+                        vm::instruction_operand_t::offset(var->field_offset.value));
+                    break;
+                }
+                default: {
+                    break;
                 }
             }
         }
@@ -244,17 +262,30 @@ namespace basecode::compiler {
         auto& assembler = _session.assembler();
         //auto is_lhs_pointer = lhs.type_result.inferred_type->is_pointer_type();
 
-        basic_block->comment("spilled", vm::comment_location_t::after_instruction);
-        basic_block->move(vm::instruction_operand_t(lhs_named_ref), rhs.operands.back());
+        auto& rhs_operand = rhs.operands.back();
+        rhs_operand.size(lhs_named_ref->size);
+        basic_block->comment(
+            fmt::format("assign: {}({})", variable_type_name(var->type), var->label),
+            vm::comment_location_t::after_instruction);
+        basic_block->move(vm::instruction_operand_t(lhs_named_ref), rhs_operand);
 
         switch (var->type) {
-            case variable_type_t::local:
-            case variable_type_t::parameter:
+            case variable_type_t::local: {
+                // XXX: for locals, we don't spill them anywhere
+                break;
+            }
+            case variable_type_t::parameter: {
+                // XXX: for parameters, we don't default to spilling to the stack
+                break;
+            }
             case variable_type_t::return_value: {
                 auto local_offset_ref = assembler.make_named_ref(
                     vm::assembler_named_ref_type_t::offset,
                     var->label,
                     vm::op_sizes::word);
+                basic_block->comment(
+                    fmt::format("spill: return({})", var->label),
+                    vm::comment_location_t::after_instruction);
                 basic_block->store(
                     vm::instruction_operand_t::fp(),
                     vm::instruction_operand_t(lhs_named_ref),
@@ -265,6 +296,9 @@ namespace basecode::compiler {
                 auto module_var_ref = assembler.make_named_ref(
                     vm::assembler_named_ref_type_t::label,
                     var->label);
+                basic_block->comment(
+                    fmt::format("spill: module({})", var->label),
+                    vm::comment_location_t::after_instruction);
                 basic_block->store(
                     vm::instruction_operand_t(module_var_ref),
                     vm::instruction_operand_t(lhs_named_ref),
@@ -294,7 +328,9 @@ namespace basecode::compiler {
             return false;
 
         auto& assembler = _session.assembler();
-        basic_block->comment("address_of", vm::comment_location_t::after_instruction);
+        basic_block->comment(
+            fmt::format("address_of: {}({})", variable_type_name(var->type), var->label),
+            vm::comment_location_t::after_instruction);
 
         switch (var->type) {
             case variable_type_t::local:
@@ -350,6 +386,59 @@ namespace basecode::compiler {
         return list;
     }
 
+    void variable_map::apply_variable_range(
+            const const_variable_list_t& list,
+            vm::instruction_operand_list_t& operands,
+            bool reverse) {
+        if (list.empty())
+            return;
+
+        auto& assembler = _session.assembler();
+
+        if (list.size() == 1) {
+            operands.push_back(vm::instruction_operand_t(assembler.make_named_ref(
+                vm::assembler_named_ref_type_t::local,
+                list.front()->label)));
+        } else {
+            const variable_t* front = nullptr;
+            const variable_t* back = nullptr;
+
+            if (reverse) {
+                front = list.back();
+                back = list.front();
+            } else {
+                front = list.front();
+                back = list.back();
+            }
+
+            auto begin = assembler.make_named_ref(
+                vm::assembler_named_ref_type_t::local,
+                front->label);
+            auto end = assembler.make_named_ref(
+                vm::assembler_named_ref_type_t::local,
+                back->label);
+            operands.push_back(vm::instruction_operand_t(vm::named_ref_range_t{
+                begin,
+                end}));
+        }
+    }
+
+    void variable_map::save_locals_to_stack(
+            vm::basic_block* basic_block,
+            variable_t* excluded) {
+        auto groups = group_variables(excluded);
+        vm::instruction_operand_list_t operands {};
+
+        for (const auto& list : groups.ints)
+            apply_variable_range(list, operands, false);
+
+        for (const auto& list : groups.floats)
+            apply_variable_range(list, operands, false);
+
+        if (!operands.empty())
+            basic_block->pushm(operands);
+    }
+
     variable_list_t variable_map::variables() {
         variable_list_t list {};
 
@@ -357,6 +446,25 @@ namespace basecode::compiler {
             list.emplace_back(&kvp.second);
 
         return list;
+    }
+
+    void variable_map::restore_locals_from_stack(
+            vm::basic_block* basic_block,
+            variable_t* excluded) {
+        auto groups = group_variables(excluded);
+        std::reverse(std::begin(groups.ints), std::end(groups.ints));
+        std::reverse(std::begin(groups.floats), std::end(groups.floats));
+
+        vm::instruction_operand_list_t operands {};
+
+        for (const auto& list : groups.ints)
+            apply_variable_range(list, operands, true);
+
+        for (const auto& list : groups.floats)
+            apply_variable_range(list, operands, true);
+
+        if (!operands.empty())
+            basic_block->popm(operands);
     }
 
     variable_t* variable_map::find(const std::string& name) {
@@ -544,6 +652,31 @@ namespace basecode::compiler {
 
         auto it = _temps.insert(std::make_pair(entry.id, entry));
         return &it.first->second;
+    }
+
+    group_variable_result_t variable_map::group_variables(variable_t* excluded) {
+        group_variable_result_t result {};
+        result.ints.emplace_back();
+        result.floats.emplace_back();
+
+        for (const auto& kvp : _variables) {
+            auto var = &kvp.second;
+            if (var->number_class == number_class_t::integer) {
+                if (var == excluded) {
+                    result.ints.emplace_back();
+                    continue;
+                }
+                result.ints.back().emplace_back(var);
+            } else {
+                if (var == excluded) {
+                    result.floats.emplace_back();
+                    continue;
+                }
+                result.floats.back().emplace_back(var);
+            }
+        }
+
+        return result;
     }
 
     bool variable_map::find_referenced_module_variables(compiler::block* block) {

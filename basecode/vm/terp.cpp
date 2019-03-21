@@ -200,7 +200,7 @@ namespace basecode::vm {
             return 0;
         }
 
-        uint8_t* encoding_ptr = reinterpret_cast<uint8_t*>(address);
+        auto encoding_ptr = reinterpret_cast<uint8_t*>(address);
         uint8_t encoding_size = *encoding_ptr;
         op = static_cast<op_codes>(*(encoding_ptr + 1));
         auto op_size_and_operands_count = static_cast<uint8_t>(*(encoding_ptr + 2));

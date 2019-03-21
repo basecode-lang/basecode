@@ -1225,8 +1225,6 @@ namespace basecode::compiler {
                     }
                 }
 
-                auto sorted_locals = current_block->sorted_locals();
-
                 auto prologue_block = _blocks.make();
                 assembler.blocks().emplace_back(prologue_block);
                 prologue_block->predecessors().emplace_back(current_block);
@@ -1237,10 +1235,9 @@ namespace basecode::compiler {
                     labels.make(fmt::format("{}_prologue",proc_call->label_name()),
                     prologue_block));
                 if (!is_foreign) {
-                    prologue_block->push_locals(
-                        assembler,
-                        sorted_locals,
-                        result_temp != nullptr ? result_temp->name() : "");
+                    _variables.save_locals_to_stack(
+                        prologue_block,
+                        result_temp != nullptr ? result_temp->variable : nullptr);
                 }
 
                 auto arg_list = proc_call->arguments();
@@ -1353,10 +1350,9 @@ namespace basecode::compiler {
                 }
 
                 if (!is_foreign) {
-                    epilogue_block->pop_locals(
-                        assembler,
-                        sorted_locals,
-                        result_temp != nullptr ? result_temp->name() : "");
+                    _variables.restore_locals_from_stack(
+                        epilogue_block,
+                        result_temp != nullptr ? result_temp->variable : nullptr);
                 }
 
                 auto next_block = _blocks.make();
@@ -1469,7 +1465,7 @@ namespace basecode::compiler {
                     var->label_name(),
                     op_size);
                 result.operands.emplace_back(named_ref);
-                if (!_variables.use(current_block, named_ref, result.load_when_used))
+                if (!_variables.use(current_block, named_ref))
                     return false;
                 break;
             }
@@ -1750,6 +1746,7 @@ namespace basecode::compiler {
                         emit_result_t rhs_result {};
                         if (!emit_element(basic_block, binary_op->rhs(), rhs_result))
                             return false;
+                        current_block = *basic_block;
 
                         emit_result_t lhs_result {};
                         if (!emit_element(basic_block, binary_op->lhs(), lhs_result))
@@ -2480,7 +2477,6 @@ namespace basecode::compiler {
                 case element_type_t::character_literal:
                 case element_type_t::identifier_reference: {
                     emit_result_t arg_result {};
-                    arg_result.load_when_used = true;
                     if (!emit_element(basic_block, arg, arg_result))
                         return false;
 
@@ -2554,12 +2550,10 @@ namespace basecode::compiler {
         result.operands.emplace_back(result_operand);
 
         emit_result_t lhs_result {};
-        lhs_result.load_when_used = true;
         if (!emit_element(basic_block, binary_op->lhs(), lhs_result))
             return false;
 
         emit_result_t rhs_result {};
-        rhs_result.load_when_used = true;
         if (!emit_element(basic_block, binary_op->rhs(), rhs_result))
             return false;
 
@@ -2676,12 +2670,10 @@ namespace basecode::compiler {
         auto& assembler = _session.assembler();
 
         emit_result_t lhs_result {};
-        lhs_result.load_when_used = true;
         if (!emit_element(basic_block, binary_op->lhs(), lhs_result))
             return false;
 
         emit_result_t rhs_result {};
-        rhs_result.load_when_used = true;
         if (!emit_element(basic_block, binary_op->rhs(), rhs_result))
             return false;
 

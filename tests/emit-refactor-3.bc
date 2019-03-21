@@ -20,6 +20,6 @@ test :: proc(): u32 {
     core::print("\npow_of_2 := %d\n", pow_of_2);
 
     result := test();
-    core::assert(result == 17, "expected result == 18");
+    core::assert(result == 18, "expected result == 18");
     core::print("\nresult := %d\n", result);
 };

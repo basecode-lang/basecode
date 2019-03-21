@@ -23,6 +23,16 @@ namespace basecode::compiler {
         return_value
     };
 
+    static inline std::string variable_type_name(variable_type_t type) {
+        switch (type) {
+            case variable_type_t::local:        return "local";
+            case variable_type_t::module:       return "module";
+            case variable_type_t::return_value: return "return";
+            case variable_type_t::temporary:    return "temporary";
+            case variable_type_t::parameter:    return "parameter";
+        }
+    }
+
     static inline std::string variable_type_to_group(variable_type_t type) {
         switch (type) {
             case variable_type_t::module:
@@ -71,9 +81,16 @@ namespace basecode::compiler {
     };
 
     using variable_list_t = std::vector<variable_t*>;
+    using const_variable_list_t = std::vector<const variable_t*>;
     using variable_map_t = std::map<std::string, variable_t>;
     using temp_pool_entry_list_t = std::vector<temp_pool_entry_t*>;
+    using grouped_variable_list_t = std::vector<const_variable_list_t>;
     using temp_pool_map_t = std::unordered_map<common::id_t, temp_pool_entry_t>;
+
+    struct group_variable_result_t {
+        grouped_variable_list_t ints {};
+        grouped_variable_list_t floats {};
+    };
 
     class variable_map {
     public:
@@ -81,8 +98,7 @@ namespace basecode::compiler {
 
         bool use(
             vm::basic_block* basic_block,
-            vm::assembler_named_ref_t* named_ref,
-            bool load_on_use = false);
+            vm::assembler_named_ref_t* named_ref);
 
         bool build(
             compiler::block* block,
@@ -105,7 +121,15 @@ namespace basecode::compiler {
 
         variable_list_t temps();
 
+        void save_locals_to_stack(
+            vm::basic_block* basic_block,
+            variable_t* excluded);
+
         variable_list_t variables();
+
+        void restore_locals_from_stack(
+            vm::basic_block* basic_block,
+            variable_t* excluded);
 
         variable_t* find(const std::string& name);
 
@@ -118,9 +142,16 @@ namespace basecode::compiler {
     private:
         void create_sections();
 
+        void apply_variable_range(
+            const const_variable_list_t& list,
+            vm::instruction_operand_list_t& operands,
+            bool reverse);
+
         bool group_module_variables_into_sections();
 
         bool find_local_variables(compiler::block* block);
+
+        group_variable_result_t group_variables(variable_t* excluded);
 
         bool find_referenced_module_variables(compiler::block* block);
 
