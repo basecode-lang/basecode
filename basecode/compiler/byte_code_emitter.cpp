@@ -582,6 +582,17 @@ namespace basecode::compiler {
                             if (!emit_element(basic_block, induction_init, result))
                                 return false;
 
+                            for (auto var : _variables.variables()) {
+                                if (var->type == variable_type_t::local
+                                ||  var->type == variable_type_t::parameter) {
+                                    auto named_ref = assembler.make_named_ref(
+                                        vm::assembler_named_ref_type_t::local,
+                                        var->identifier->label_name(),
+                                        vm::op_size_for_byte_size(var->size_in_bytes()));
+                                    _variables.use(*basic_block, named_ref);
+                                }
+                            }
+
                             auto dir_arg = range->arguments()->param_by_name("dir");
                             uint64_t dir_value;
                             if (!dir_arg->as_integer(dir_value))
