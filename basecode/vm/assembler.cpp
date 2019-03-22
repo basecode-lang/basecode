@@ -101,17 +101,17 @@ namespace basecode::vm {
 
                         for (size_t i = 0; i < inst->operands_count; i++) {
                             auto& operand = inst->operands[i];
-                            if (operand.fixup_ref1 == nullptr)
+                            if (operand.fixup[0].named_ref == nullptr)
                                 continue;
 
-                            switch (operand.fixup_ref1->type) {
+                            switch (operand.fixup[0].named_ref->type) {
                                 case assembler_named_ref_type_t::local: {
-                                    auto it = _locals.find(operand.fixup_ref1->name);
+                                    auto it = _locals.find(operand.fixup[0].named_ref->name);
                                     if (it != _locals.end()) {
                                         const auto& local1 = it->second;
 
-                                        if (operand.fixup_ref2 != nullptr) {
-                                            it = _locals.find(operand.fixup_ref2->name);
+                                        if (operand.fixup[1].named_ref != nullptr) {
+                                            it = _locals.find(operand.fixup[1].named_ref->name);
                                             if (it != _locals.end()) {
                                                 const auto& local2 = it->second;
 
@@ -126,7 +126,7 @@ namespace basecode::vm {
                                             }
                                         } else {
                                             operand.value.r = local1.reg.number;
-                                            operand.size = operand.fixup_ref1->size;
+                                            operand.size = operand.fixup[0].named_ref->size;
                                             switch (local1.reg.type) {
                                                 case register_type_t::integer: {
                                                     operand.type |= operand_encoding_t::flags::integer;
@@ -141,15 +141,15 @@ namespace basecode::vm {
                                     break;
                                 }
                                 case assembler_named_ref_type_t::offset: {
-                                    auto it = _locals.find(operand.fixup_ref1->name);
+                                    auto it = _locals.find(operand.fixup[0].named_ref->name);
                                     if (it != _locals.end()) {
                                         const auto& local = it->second;
-                                        auto imm_value = local.offset + operand.fixup_ref1->offset;
+                                        int64_t imm_value = local.offset + operand.fixup[0].offset;
                                         if (imm_value < 0) {
                                             operand.type |= operand_encoding_t::flags::negative;
                                             imm_value = -imm_value;
                                         }
-                                        operand.size = operand.fixup_ref1->size;
+                                        operand.size = operand.fixup[0].named_ref->size;
                                         operand.value.u = static_cast<uint64_t>(imm_value);
                                     }
                                     break;
@@ -215,12 +215,12 @@ namespace basecode::vm {
                         auto inst = entry.data<instruction_t>();
                         for (size_t i = 0; i < inst->operands_count; i++) {
                             auto& operand = inst->operands[i];
-                            if (operand.fixup_ref1 == nullptr)
+                            if (operand.fixup[0].named_ref == nullptr)
                                 continue;
 
-                            switch (operand.fixup_ref1->type) {
+                            switch (operand.fixup[0].named_ref->type) {
                                 case assembler_named_ref_type_t::label: {
-                                    auto label = labels.find(operand.fixup_ref1->name);
+                                    auto label = labels.find(operand.fixup[0].named_ref->name);
                                     if (label != nullptr) {
                                         operand.value.u = label->address();
                                     }
@@ -306,14 +306,12 @@ namespace basecode::vm {
     assembler_named_ref_t* assembler::make_named_ref(
             assembler_named_ref_type_t type,
             const std::string& name,
-            vm::op_sizes size,
-            int64_t offset) {
+            vm::op_sizes size) {
         auto key = fmt::format("{}{}", name, static_cast<uint8_t>(type));
         auto it = _named_refs.find(key);
         if (it != _named_refs.end()) {
             auto ref = &it->second;
             ref->size = size;
-            ref->offset = offset;
             return ref;
         }
 
@@ -321,7 +319,6 @@ namespace basecode::vm {
             key,
             assembler_named_ref_t {
                 .name = name,
-                .offset = offset,
                 .size = size,
                 .type = type
             }));

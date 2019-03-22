@@ -251,7 +251,7 @@ namespace basecode::vm {
                                 case vm::assembly_symbol_type_t::label: {
                                     encoding.type = operand_encoding_t::flags::integer
                                                     | operand_encoding_t::flags::constant;
-                                    encoding.fixup_ref1 = _assembler->make_named_ref(
+                                    encoding.fixup[0].named_ref = _assembler->make_named_ref(
                                         assembler_named_ref_type_t::label,
                                         symbol);
                                     break;
@@ -275,7 +275,7 @@ namespace basecode::vm {
                                                     auto label = module_data->data<std::string>();
                                                     encoding.type = operand_encoding_t::flags::integer
                                                                     | operand_encoding_t::flags::constant;
-                                                    encoding.fixup_ref1 = _assembler->make_named_ref(
+                                                    encoding.fixup[0].named_ref = _assembler->make_named_ref(
                                                         assembler_named_ref_type_t::label,
                                                         *label);
                                                     break;
@@ -339,13 +339,13 @@ namespace basecode::vm {
                                         encoding.type = operand_encoding_t::flags::reg;
                                         if (local->type == vm::local_type_t::integer)
                                             encoding.type |= operand_encoding_t::flags::integer;
-                                        encoding.fixup_ref1 = _assembler->make_named_ref(
+                                        encoding.fixup[0].named_ref = _assembler->make_named_ref(
                                             assembler_named_ref_type_t::local,
                                             local->name);
                                     } else {
                                         encoding.type = operand_encoding_t::flags::integer
                                                         | operand_encoding_t::flags::constant;
-                                        encoding.fixup_ref1 = _assembler->make_named_ref(
+                                        encoding.fixup[0].named_ref = _assembler->make_named_ref(
                                             assembler_named_ref_type_t::label,
                                             operand);
                                         break;

@@ -94,8 +94,11 @@ namespace basecode::vm {
             case instruction_operand_type_t::named_ref: {
                 op.type = operand_encoding_t::flags::none;
                 op.value.u = 0;
-                op.fixup_ref1 = *operand.data<assembler_named_ref_t*>();
-                switch (op.fixup_ref1->type) {
+                auto named_ref = operand.data<named_ref_with_offset_t>();
+                op.fixup[0].named_ref = named_ref->ref;
+                op.fixup[0].offset = named_ref->offset;
+
+                switch (named_ref->ref->type) {
                     case assembler_named_ref_type_t::none: {
                         break;
                     }
@@ -151,8 +154,8 @@ namespace basecode::vm {
             case instruction_operand_type_t::named_ref_range: {
                 auto range = *operand.data<named_ref_range_t>();
                 op.type = operand_encoding_t::flags::reg | operand_encoding_t::flags::range;
-                op.fixup_ref1 = range.begin;
-                op.fixup_ref2 = range.end;
+                op.fixup[0].named_ref = range.begin;
+                op.fixup[1].named_ref = range.end;
                 break;
             }
             default: {

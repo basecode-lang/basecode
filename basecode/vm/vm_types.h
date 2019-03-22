@@ -501,9 +501,13 @@ namespace basecode::vm {
 
     struct assembler_named_ref_t {
         std::string name;
-        int64_t offset = 0;
         vm::op_sizes size = vm::op_sizes::qword;
         assembler_named_ref_type_t type = assembler_named_ref_type_t::none;
+    };
+
+    struct fixup_t {
+        int64_t offset = 0;
+        assembler_named_ref_t* named_ref = nullptr;
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -591,8 +595,7 @@ namespace basecode::vm {
         flags_t type = flags::reg | flags::integer;
         operand_value_alias_t value {};
 
-        assembler_named_ref_t* fixup_ref1 = nullptr;
-        assembler_named_ref_t* fixup_ref2 = nullptr;
+        fixup_t fixup[2];
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -823,6 +826,11 @@ namespace basecode::vm {
         register_t end {};
     };
 
+    struct named_ref_with_offset_t {
+        int64_t offset = 0;
+        assembler_named_ref_t* ref = nullptr;
+    };
+
     struct named_ref_range_t {
         assembler_named_ref_t* begin = nullptr;
         assembler_named_ref_t* end = nullptr;
@@ -851,13 +859,15 @@ namespace basecode::vm {
             uint64_t immediate,
             op_sizes size = op_sizes::qword);
 
+        explicit instruction_operand_t(
+            assembler_named_ref_t* ref,
+            int64_t offset = 0);
+
         explicit instruction_operand_t(register_t reg);
 
         explicit instruction_operand_t(float immediate);
 
         explicit instruction_operand_t(double immediate);
-
-        explicit instruction_operand_t(assembler_named_ref_t* ref);
 
         explicit instruction_operand_t(const register_range_t& range);
 

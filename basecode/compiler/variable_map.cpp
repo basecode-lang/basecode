@@ -181,25 +181,18 @@ namespace basecode::compiler {
 
             switch (var->type) {
                 case variable_type_t::local: {
-                    if (var_type->is_composite_type()) {
-                        std::string label_name {};
-                        if (var->field_offset.base_ref != nullptr) {
-                            label_name = var->field_offset.base_ref->label_name();
-                        } else {
-                            label_name = var->label;
-                        }
+                    if (var->field_offset.base_ref != nullptr) {
                         auto local_offset = assembler.make_named_ref(
                             vm::assembler_named_ref_type_t::offset,
-                            label_name,
-                            vm::op_sizes::word,
-                            var->field_offset.value);
+                            var->field_offset.base_ref->label_name(),
+                            vm::op_sizes::word);
                         basic_block->comment(
                             fmt::format("spill: local({})", var->label),
                             vm::comment_location_t::after_instruction);
                         basic_block->load(
                             vm::instruction_operand_t(named_ref),
                             vm::instruction_operand_t::fp(),
-                            vm::instruction_operand_t(local_offset));
+                            vm::instruction_operand_t(local_offset, var->field_offset.value));
                     }
                     break;
                 }
@@ -284,8 +277,8 @@ namespace basecode::compiler {
         if (lhs.operands.empty())
             return false;
 
-        auto lhs_named_ref = *(lhs.operands.front().data<vm::assembler_named_ref_t*>());
-        auto var = find(lhs_named_ref->name);
+        auto lhs_named_ref = lhs.operands.front().data<vm::named_ref_with_offset_t>();
+        auto var = find(lhs_named_ref->ref->name);
         if (var == nullptr)
             return false;
 
@@ -302,16 +295,16 @@ namespace basecode::compiler {
         //      both operands, so we can safely skip it.
         auto& rhs_operand = rhs.operands.back();
         if (rhs_operand.type() == vm::instruction_operand_type_t::named_ref) {
-            auto rhs_named_ref = *(rhs_operand.data<vm::assembler_named_ref_t*>());
-            if (rhs_named_ref->name == lhs_named_ref->name)
+            auto rhs_named_ref = rhs_operand.data<vm::named_ref_with_offset_t>();
+            if (rhs_named_ref->ref->name == lhs_named_ref->ref->name)
                 return true;
         }
 
-        rhs_operand.size(lhs_named_ref->size);
+        rhs_operand.size(lhs_named_ref->ref->size);
         basic_block->comment(
             fmt::format("assign: {}({})", variable_type_name(var->type), var->label),
             vm::comment_location_t::after_instruction);
-        basic_block->move(vm::instruction_operand_t(lhs_named_ref), rhs_operand);
+        basic_block->move(vm::instruction_operand_t(lhs_named_ref->ref), rhs_operand);
 
         switch (var->type) {
             case variable_type_t::local: {
@@ -319,15 +312,14 @@ namespace basecode::compiler {
                     auto local_offset = assembler.make_named_ref(
                         vm::assembler_named_ref_type_t::offset,
                         var->field_offset.base_ref->label_name(),
-                        vm::op_sizes::word,
-                        var->field_offset.value);
+                        vm::op_sizes::word);
                     basic_block->comment(
                         fmt::format("spill: local({})", var->label),
                         vm::comment_location_t::after_instruction);
                     basic_block->store(
                         vm::instruction_operand_t::fp(),
-                        vm::instruction_operand_t(lhs_named_ref),
-                        vm::instruction_operand_t(local_offset));
+                        vm::instruction_operand_t(lhs_named_ref->ref),
+                        vm::instruction_operand_t(local_offset, var->field_offset.value));
                 }
                 break;
             }
@@ -345,7 +337,7 @@ namespace basecode::compiler {
                     vm::comment_location_t::after_instruction);
                 basic_block->store(
                     vm::instruction_operand_t::fp(),
-                    vm::instruction_operand_t(lhs_named_ref),
+                    vm::instruction_operand_t(lhs_named_ref->ref),
                     vm::instruction_operand_t(local_offset_ref));
                 break;
             }
@@ -364,7 +356,7 @@ namespace basecode::compiler {
                     vm::comment_location_t::after_instruction);
                 basic_block->store(
                     vm::instruction_operand_t(source_ref),
-                    vm::instruction_operand_t(lhs_named_ref),
+                    vm::instruction_operand_t(lhs_named_ref->ref),
                     vm::instruction_operand_t::offset(var->field_offset.value));
                 break;
             }
@@ -385,9 +377,9 @@ namespace basecode::compiler {
             vm::basic_block* basic_block,
             emit_result_t& arg_result,
             vm::instruction_operand_t& temp_operand) {
-        auto named_ref = *(arg_result.operands.front().data<vm::assembler_named_ref_t*>());
+        auto named_ref = arg_result.operands.front().data<vm::named_ref_with_offset_t>();
 
-        auto var = find(named_ref->name);
+        auto var = find(named_ref->ref->name);
         if (var == nullptr)
             return false;
 

@@ -53,8 +53,7 @@ namespace basecode::vm {
         assembler_named_ref_t* make_named_ref(
             assembler_named_ref_type_t type,
             const std::string& name,
-            vm::op_sizes size = vm::op_sizes::qword,
-            int64_t offset = 0);
+            vm::op_sizes size = vm::op_sizes::qword);
 
         bool has_local(const std::string& name) const;
 

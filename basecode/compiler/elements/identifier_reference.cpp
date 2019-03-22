@@ -122,10 +122,16 @@ namespace basecode::compiler {
             while (!ref_stack.empty()) {
                 auto ref = ref_stack.top();
                 ref_stack.pop();
-                auto field = ref->identifier()->field();
-                if (field != nullptr)
-                    result.value += field->start_offset();
-                result.path += fmt::format(".{}", ref->symbol().name);
+
+                result.path += fmt::format(
+                    ".{}",
+                    ref->symbol().name);
+
+                if (ref_stack.empty()) {
+                    auto field = ref->identifier()->field();
+                    if (field != nullptr)
+                        result.value = field->end_offset();
+                }
             }
         }
 

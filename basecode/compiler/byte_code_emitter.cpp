@@ -460,7 +460,8 @@ namespace basecode::compiler {
                 auto false_label_name = fmt::format("{}_false", if_e->label_name());
                 auto end_label_name = fmt::format("{}_exit", if_e->label_name());
 
-                auto result_operand = target_operand(result);
+                // XXX: revisit
+                target_operand(result);
 
                 auto predicate_block = _blocks.make();
                 assembler.blocks().emplace_back(predicate_block);
@@ -1229,9 +1230,9 @@ namespace basecode::compiler {
                             result,
                             return_type->number_class(),
                             vm::op_size_for_byte_size(return_type->size_in_bytes()));
-                        auto named_ref = *(result_operand->data<vm::assembler_named_ref_t*>());
+                        auto named_ref = result_operand->data<vm::named_ref_with_offset_t>();
                         if (named_ref != nullptr)
-                            temp_var = _variables.find(named_ref->name);
+                            temp_var = _variables.find(named_ref->ref->name);
                     }
                 }
 
@@ -2176,9 +2177,9 @@ namespace basecode::compiler {
                         const auto& operand = result.operands.back();
                         switch (operand.type()) {
                             case vm::instruction_operand_type_t::named_ref: {
-                                auto named_ref = operand.data<vm::assembler_named_ref_t*>();
+                                auto named_ref = operand.data<vm::named_ref_with_offset_t>();
                                 if (named_ref != nullptr)
-                                    basic_block->qwords({*named_ref});
+                                    basic_block->qwords({named_ref->ref});
                                 else
                                     basic_block->qwords({0});
                                 break;

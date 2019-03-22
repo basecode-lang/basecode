@@ -246,6 +246,13 @@ namespace basecode::vm {
                              _type(instruction_operand_type_t::imm_uint) {
     }
 
+    instruction_operand_t::instruction_operand_t(
+            assembler_named_ref_t* ref,
+            int64_t offset): _data(named_ref_with_offset_t {offset, ref}),
+                             _size(ref->size),
+                             _type(instruction_operand_type_t::named_ref) {
+    }
+
     instruction_operand_t::instruction_operand_t(register_t reg) : _data(reg),
                                                                    _size(reg.size),
                                                                    _type(instruction_operand_type_t::reg) {
@@ -259,11 +266,6 @@ namespace basecode::vm {
     instruction_operand_t::instruction_operand_t(double immediate) : _data(immediate),
                                                                      _size(op_sizes::qword),
                                                                      _type(instruction_operand_type_t::imm_f64) {
-    }
-
-    instruction_operand_t::instruction_operand_t(assembler_named_ref_t* ref): _data(ref),
-                                                                              _size(ref->size),
-                                                                              _type(instruction_operand_type_t::named_ref) {
     }
 
     instruction_operand_t::instruction_operand_t(const register_range_t& range): _data(range),
