@@ -144,7 +144,7 @@ namespace basecode::vm {
                                     auto it = _locals.find(operand.fixup_ref1->name);
                                     if (it != _locals.end()) {
                                         const auto& local = it->second;
-                                        auto imm_value = local.offset;
+                                        auto imm_value = local.offset + operand.fixup_ref1->offset;
                                         if (imm_value < 0) {
                                             operand.type |= operand_encoding_t::flags::negative;
                                             imm_value = -imm_value;
@@ -306,12 +306,14 @@ namespace basecode::vm {
     assembler_named_ref_t* assembler::make_named_ref(
             assembler_named_ref_type_t type,
             const std::string& name,
-            vm::op_sizes size) {
+            vm::op_sizes size,
+            int64_t offset) {
         auto key = fmt::format("{}{}", name, static_cast<uint8_t>(type));
         auto it = _named_refs.find(key);
         if (it != _named_refs.end()) {
             auto ref = &it->second;
             ref->size = size;
+            ref->offset = offset;
             return ref;
         }
 
@@ -319,6 +321,7 @@ namespace basecode::vm {
             key,
             assembler_named_ref_t {
                 .name = name,
+                .offset = offset,
                 .size = size,
                 .type = type
             }));

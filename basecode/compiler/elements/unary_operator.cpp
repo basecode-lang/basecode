@@ -52,7 +52,13 @@ namespace basecode::compiler {
             case operator_type_t::pointer_dereference: {
                 if (!_rhs->infer_type(session, result))
                     return false;
-                return result.inferred_type->is_pointer_type();
+                if (result.inferred_type->is_pointer_type()) {
+                    auto pointer_type = dynamic_cast<compiler::pointer_type*>(result.inferred_type);
+                    result.reference = pointer_type->base_type_ref();
+                    result.inferred_type = pointer_type->base_type_ref()->type();
+                    return true;
+                }
+                return false;
             }
             default: {
                 return false;

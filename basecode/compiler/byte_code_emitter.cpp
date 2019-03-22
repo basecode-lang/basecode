@@ -170,13 +170,19 @@ namespace basecode::compiler {
 
             auto locals = _variables.variables();
             for (auto local : locals) {
+                int64_t offset = 0;
+                if (local->field_offset.base_ref == nullptr) {
+                    offset = local->frame_offset;
+                    if (local->type == variable_type_t::local)
+                        locals_size += local->size_in_bytes();
+                } else {
+                    offset = local->field_offset.value;
+                }
                 frame_block->local(
                     number_class_to_local_type(local->number_class),
                     local->label,
-                    local->frame_offset + local->field_offset.value,
+                    offset,
                     variable_type_to_group(local->type));
-                if (local->type == variable_type_t::local)
-                    locals_size += local->size_in_bytes();
             }
             locals_size = common::align(locals_size, 8);
 
@@ -1596,13 +1602,7 @@ namespace basecode::compiler {
                 if (!emit_element(basic_block, unary_op->rhs(), rhs_emit_result))
                     return false;
 
-                auto is_composite_type = rhs_emit_result.type_result.inferred_type->is_composite_type();
                 auto size = vm::op_size_for_byte_size(result.type_result.inferred_type->size_in_bytes());
-                if (op_type == operator_type_t::pointer_dereference
-                &&  !is_composite_type) {
-                    auto pointer_type = dynamic_cast<compiler::pointer_type*>(result.type_result.inferred_type);
-                    size = vm::op_size_for_byte_size(pointer_type->base_type_ref()->type()->size_in_bytes());
-                }
 
                 auto result_operand = target_operand(
                     result,
@@ -1615,7 +1615,6 @@ namespace basecode::compiler {
                         current_block->neg(
                             *result_operand,
                             rhs_emit_result.operands.back());
-                        result.operands.emplace_back(*result_operand);
                         break;
                     }
                     case operator_type_t::binary_not: {
@@ -1623,7 +1622,6 @@ namespace basecode::compiler {
                         current_block->not_op(
                             *result_operand,
                             rhs_emit_result.operands.back());
-                        result.operands.emplace_back(*result_operand);
                         break;
                     }
                     case operator_type_t::logical_not: {
@@ -1633,17 +1631,20 @@ namespace basecode::compiler {
                             rhs_emit_result.operands.back(),
                             vm::instruction_operand_t(static_cast<uint64_t>(1), vm::op_sizes::byte));
                         current_block->setnz(*result_operand);
-                        result.operands.emplace_back(*result_operand);
                         break;
                     }
                     case operator_type_t::pointer_dereference: {
-                        if (!is_composite_type) {
+                        current_block->comment("unary_op: pointer deref", vm::comment_location_t::after_instruction);
+                        auto is_composite_type = rhs_emit_result.type_result.inferred_type->is_composite_type();
+                        if (is_composite_type) {
+                            current_block->move(
+                                *result_operand,
+                                rhs_emit_result.operands.front(),
+                                rhs_emit_result.operands.back());
+                        } else {
                             current_block->load(
                                 *result_operand,
                                 rhs_emit_result.operands.back());
-                            result.operands.push_back(*result_operand);
-                        } else {
-                            result.operands.push_back(rhs_emit_result.operands.back());
                         }
                         break;
                     }
@@ -1706,41 +1707,8 @@ namespace basecode::compiler {
                         break;
                     }
                     case operator_type_t::member_access: {
-                        if (result.operands.size() < 2) {
-                            result.operands.resize(2);
-                        }
-
-                        emit_result_t lhs_result {};
-                        if (!emit_element(basic_block, binary_op->lhs(), lhs_result))
+                        if (!emit_element(basic_block, binary_op->rhs(), result))
                             return false;
-
-                        result.operands[0] = lhs_result.operands.front();
-
-                        int64_t offset = 0;
-                        if (lhs_result.operands.size() == 2) {
-                            auto& offset_operand = lhs_result.operands.back();
-                            if (!offset_operand.is_empty())
-                                offset = *offset_operand.data<int64_t>();
-                        }
-
-                        auto type = lhs_result.type_result.inferred_type;
-                        if (lhs_result.type_result.inferred_type->is_pointer_type()) {
-                            auto pointer_type = dynamic_cast<compiler::pointer_type*>(lhs_result.type_result.inferred_type);
-                            type = pointer_type->base_type_ref()->type();
-                        }
-
-                        auto composite_type = dynamic_cast<compiler::composite_type*>(type);
-                        if (composite_type != nullptr) {
-                            auto rhs_ref = dynamic_cast<compiler::identifier_reference*>(binary_op->rhs());
-                            if (rhs_ref != nullptr) {
-                                auto field = composite_type->fields().find_by_name(rhs_ref->symbol().name);
-                                if (field != nullptr) {
-                                    offset += field->start_offset();
-                                }
-                            }
-                        }
-
-                        result.operands[1] = vm::instruction_operand_t::offset(offset, vm::op_sizes::word);
                         break;
                     }
                     case operator_type_t::assignment: {

@@ -181,7 +181,26 @@ namespace basecode::compiler {
 
             switch (var->type) {
                 case variable_type_t::local: {
-                    // XXX: for locals, we don't default to filling from the stack
+                    if (var_type->is_composite_type()) {
+                        std::string label_name {};
+                        if (var->field_offset.base_ref != nullptr) {
+                            label_name = var->field_offset.base_ref->label_name();
+                        } else {
+                            label_name = var->label;
+                        }
+                        auto local_offset = assembler.make_named_ref(
+                            vm::assembler_named_ref_type_t::offset,
+                            label_name,
+                            vm::op_sizes::word,
+                            var->field_offset.value);
+                        basic_block->comment(
+                            fmt::format("spill: local({})", var->label),
+                            vm::comment_location_t::after_instruction);
+                        basic_block->load(
+                            vm::instruction_operand_t(named_ref),
+                            vm::instruction_operand_t::fp(),
+                            vm::instruction_operand_t(local_offset));
+                    }
                     break;
                 }
                 case variable_type_t::return_value: {
@@ -203,16 +222,29 @@ namespace basecode::compiler {
                     break;
                 }
                 case variable_type_t::module: {
+                    std::string label_name {};
+                    if (var->field_offset.base_ref != nullptr) {
+                        label_name = var->field_offset.base_ref->label_name();
+                    } else {
+                        label_name = var->label;
+                    }
                     auto source_ref = assembler.make_named_ref(
                         vm::assembler_named_ref_type_t::label,
-                        var->label);
+                        label_name);
                     basic_block->comment(
                         fmt::format("fill: module({})", var->label),
                         vm::comment_location_t::after_instruction);
-                    basic_block->load(
-                        vm::instruction_operand_t(named_ref),
-                        vm::instruction_operand_t(source_ref),
-                        vm::instruction_operand_t::offset(var->field_offset.value));
+                    if (var_type->is_composite_type()) {
+                        basic_block->move(
+                            vm::instruction_operand_t(named_ref),
+                            vm::instruction_operand_t(source_ref),
+                            vm::instruction_operand_t::offset(var->field_offset.value));
+                    } else {
+                        basic_block->load(
+                            vm::instruction_operand_t(named_ref),
+                            vm::instruction_operand_t(source_ref),
+                            vm::instruction_operand_t::offset(var->field_offset.value));
+                    }
                     break;
                 }
                 default: {
@@ -249,6 +281,9 @@ namespace basecode::compiler {
             emit_result_t& lhs,
             emit_result_t& rhs,
             bool requires_copy) {
+        if (lhs.operands.empty())
+            return false;
+
         auto lhs_named_ref = *(lhs.operands.front().data<vm::assembler_named_ref_t*>());
         auto var = find(lhs_named_ref->name);
         if (var == nullptr)
@@ -280,7 +315,20 @@ namespace basecode::compiler {
 
         switch (var->type) {
             case variable_type_t::local: {
-                // XXX: for locals, we don't spill them anywhere
+                if (var->field_offset.base_ref != nullptr) {
+                    auto local_offset = assembler.make_named_ref(
+                        vm::assembler_named_ref_type_t::offset,
+                        var->field_offset.base_ref->label_name(),
+                        vm::op_sizes::word,
+                        var->field_offset.value);
+                    basic_block->comment(
+                        fmt::format("spill: local({})", var->label),
+                        vm::comment_location_t::after_instruction);
+                    basic_block->store(
+                        vm::instruction_operand_t::fp(),
+                        vm::instruction_operand_t(lhs_named_ref),
+                        vm::instruction_operand_t(local_offset));
+                }
                 break;
             }
             case variable_type_t::parameter: {
@@ -302,14 +350,20 @@ namespace basecode::compiler {
                 break;
             }
             case variable_type_t::module: {
-                auto module_var_ref = assembler.make_named_ref(
+                std::string label_name {};
+                if (var->field_offset.base_ref != nullptr) {
+                    label_name = var->field_offset.base_ref->label_name();
+                } else {
+                    label_name = var->label;
+                }
+                auto source_ref = assembler.make_named_ref(
                     vm::assembler_named_ref_type_t::label,
-                    var->label);
+                    label_name);
                 basic_block->comment(
                     fmt::format("spill: module({})", var->label),
                     vm::comment_location_t::after_instruction);
                 basic_block->store(
-                    vm::instruction_operand_t(module_var_ref),
+                    vm::instruction_operand_t(source_ref),
                     vm::instruction_operand_t(lhs_named_ref),
                     vm::instruction_operand_t::offset(var->field_offset.value));
                 break;
@@ -618,7 +672,8 @@ namespace basecode::compiler {
 
                     processed.insert(var->id());
 
-                    offset += -type->size_in_bytes();
+                    if (var->field() == nullptr)
+                        offset += -type->size_in_bytes();
 
                     variable_t var_info {};
                     var_info.identifier = var;
@@ -712,17 +767,20 @@ namespace basecode::compiler {
 
                     processed.insert(var->id());
 
+                    auto offset_result = ref->field_offset();
                     if (var->usage() == identifier_usage_t::stack
-                    ||  var->parent_scope()->has_stack_frame()) {
+                    ||  var->parent_scope()->has_stack_frame()
+                    ||  (offset_result.base_ref != nullptr
+                        && offset_result.base_ref->identifier()->usage() == identifier_usage_t::stack)) {
                         continue;
                     }
 
                     variable_t var_info {};
                     var_info.identifier = var;
                     var_info.label = var->label_name();
+                    var_info.field_offset = offset_result;
                     var_info.type = variable_type_t::module;
                     var_info.state = variable_t::flags_t::none;
-                    var_info.field_offset = ref->field_offset();
                     var_info.number_class = type->number_class();
 
                     _variables.insert(std::make_pair(var->label_name(), var_info));

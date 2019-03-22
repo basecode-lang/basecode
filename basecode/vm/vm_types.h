@@ -501,6 +501,7 @@ namespace basecode::vm {
 
     struct assembler_named_ref_t {
         std::string name;
+        int64_t offset = 0;
         vm::op_sizes size = vm::op_sizes::qword;
         assembler_named_ref_type_t type = assembler_named_ref_type_t::none;
     };

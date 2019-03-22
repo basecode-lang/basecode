@@ -94,8 +94,11 @@ namespace basecode::compiler {
         identifier_reference_stack_t ref_stack{};
 
         auto bin_op = dynamic_cast<compiler::binary_operator*>(parent_element());
-        if (bin_op != nullptr && bin_op->operator_type() == operator_type_t::member_access)
+        if (bin_op != nullptr && bin_op->operator_type() == operator_type_t::member_access) {
+            if (bin_op->lhs()->id() == id())
+                return result;
             bin_op_stack.push(bin_op);
+        }
 
         while (!bin_op_stack.empty()) {
             bin_op = bin_op_stack.top();
