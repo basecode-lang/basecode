@@ -96,13 +96,21 @@ namespace basecode::compiler {
 
     bool variable_map::use(
             vm::basic_block* basic_block,
-            vm::assembler_named_ref_t* named_ref) {
+            vm::assembler_named_ref_t* named_ref,
+            bool is_assign_target) {
         auto var = find(named_ref->name);
         if (var == nullptr)
             return false;
 
         auto& assembler = _session.assembler();
         auto var_type = var->identifier->type_ref()->type();
+
+        if (is_assign_target) {
+            var->flag(variable_t::flags_t::must_init, false);
+            var->flag(variable_t::flags_t::initialized, true);
+            var->flag(variable_t::flags_t::filled, true);
+            return true;
+        }
 
         if (!var->flag(variable_t::flags_t::used)) {
             var->flag(variable_t::flags_t::used, true);
@@ -215,7 +223,7 @@ namespace basecode::compiler {
                     break;
                 }
                 case variable_type_t::module: {
-                    std::string label_name {};
+                    std::string label_name{};
                     if (var->field_offset.base_ref != nullptr) {
                         label_name = var->field_offset.base_ref->label_name();
                     } else {
@@ -263,10 +271,7 @@ namespace basecode::compiler {
         if (!find_return_variables(proc_type))
             return false;
 
-        if (!find_parameter_variables(proc_type))
-            return false;
-
-        return true;
+        return find_parameter_variables(proc_type);
     }
 
     bool variable_map::assign(
@@ -301,67 +306,73 @@ namespace basecode::compiler {
         }
 
         rhs_operand.size(lhs_named_ref->ref->size);
-        basic_block->comment(
-            fmt::format("assign: {}({})", variable_type_name(var->type), var->label),
-            vm::comment_location_t::after_instruction);
-        basic_block->move(vm::instruction_operand_t(lhs_named_ref->ref), rhs_operand);
+        if (requires_copy) {
+            basic_block->comment(
+                fmt::format("copy: {}({})", variable_type_name(var->type), var->label),
+                vm::comment_location_t::after_instruction);
+        } else {
+            basic_block->comment(
+                fmt::format("assign: {}({})", variable_type_name(var->type), var->label),
+                vm::comment_location_t::after_instruction);
+            basic_block->move(vm::instruction_operand_t(lhs_named_ref->ref), rhs_operand);
 
-        switch (var->type) {
-            case variable_type_t::local: {
-                if (var->field_offset.base_ref != nullptr) {
-                    auto local_offset = assembler.make_named_ref(
+            switch (var->type) {
+                case variable_type_t::local: {
+                    if (var->field_offset.base_ref != nullptr) {
+                        auto local_offset = assembler.make_named_ref(
+                            vm::assembler_named_ref_type_t::offset,
+                            var->field_offset.base_ref->label_name(),
+                            vm::op_sizes::word);
+                        basic_block->comment(
+                            fmt::format("spill: local({})", var->label),
+                            vm::comment_location_t::after_instruction);
+                        basic_block->store(
+                            vm::instruction_operand_t::fp(),
+                            vm::instruction_operand_t(lhs_named_ref->ref),
+                            vm::instruction_operand_t(local_offset, var->field_offset.value));
+                    }
+                    break;
+                }
+                case variable_type_t::parameter: {
+                    // XXX: for parameters, we don't default to spilling to the stack
+                    break;
+                }
+                case variable_type_t::return_value: {
+                    auto local_offset_ref = assembler.make_named_ref(
                         vm::assembler_named_ref_type_t::offset,
-                        var->field_offset.base_ref->label_name(),
+                        var->label,
                         vm::op_sizes::word);
                     basic_block->comment(
-                        fmt::format("spill: local({})", var->label),
+                        fmt::format("spill: return({})", var->label),
                         vm::comment_location_t::after_instruction);
                     basic_block->store(
                         vm::instruction_operand_t::fp(),
                         vm::instruction_operand_t(lhs_named_ref->ref),
-                        vm::instruction_operand_t(local_offset, var->field_offset.value));
+                        vm::instruction_operand_t(local_offset_ref));
+                    break;
                 }
-                break;
-            }
-            case variable_type_t::parameter: {
-                // XXX: for parameters, we don't default to spilling to the stack
-                break;
-            }
-            case variable_type_t::return_value: {
-                auto local_offset_ref = assembler.make_named_ref(
-                    vm::assembler_named_ref_type_t::offset,
-                    var->label,
-                    vm::op_sizes::word);
-                basic_block->comment(
-                    fmt::format("spill: return({})", var->label),
-                    vm::comment_location_t::after_instruction);
-                basic_block->store(
-                    vm::instruction_operand_t::fp(),
-                    vm::instruction_operand_t(lhs_named_ref->ref),
-                    vm::instruction_operand_t(local_offset_ref));
-                break;
-            }
-            case variable_type_t::module: {
-                std::string label_name {};
-                if (var->field_offset.base_ref != nullptr) {
-                    label_name = var->field_offset.base_ref->label_name();
-                } else {
-                    label_name = var->label;
+                case variable_type_t::module: {
+                    std::string label_name{};
+                    if (var->field_offset.base_ref != nullptr) {
+                        label_name = var->field_offset.base_ref->label_name();
+                    } else {
+                        label_name = var->label;
+                    }
+                    auto source_ref = assembler.make_named_ref(
+                        vm::assembler_named_ref_type_t::label,
+                        label_name);
+                    basic_block->comment(
+                        fmt::format("spill: module({})", var->label),
+                        vm::comment_location_t::after_instruction);
+                    basic_block->store(
+                        vm::instruction_operand_t(source_ref),
+                        vm::instruction_operand_t(lhs_named_ref->ref),
+                        vm::instruction_operand_t::offset(var->field_offset.value));
+                    break;
                 }
-                auto source_ref = assembler.make_named_ref(
-                    vm::assembler_named_ref_type_t::label,
-                    label_name);
-                basic_block->comment(
-                    fmt::format("spill: module({})", var->label),
-                    vm::comment_location_t::after_instruction);
-                basic_block->store(
-                    vm::instruction_operand_t(source_ref),
-                    vm::instruction_operand_t(lhs_named_ref->ref),
-                    vm::instruction_operand_t::offset(var->field_offset.value));
-                break;
-            }
-            default: {
-                break;
+                default: {
+                    break;
+                }
             }
         }
 

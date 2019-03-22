@@ -81,6 +81,7 @@ namespace basecode::compiler {
     };
 
     using variable_list_t = std::vector<variable_t*>;
+    using variable_stack_t = std::stack<variable_t*>;
     using const_variable_list_t = std::vector<const variable_t*>;
     using variable_map_t = std::map<std::string, variable_t>;
     using temp_pool_entry_list_t = std::vector<temp_pool_entry_t*>;
@@ -98,7 +99,8 @@ namespace basecode::compiler {
 
         bool use(
             vm::basic_block* basic_block,
-            vm::assembler_named_ref_t* named_ref);
+            vm::assembler_named_ref_t* named_ref,
+            bool is_assign_target = false);
 
         bool build(
             compiler::block* block,
@@ -169,4 +171,3 @@ namespace basecode::compiler {
     };
 
 }
-

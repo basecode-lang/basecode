@@ -4,25 +4,10 @@ vector3 :: struct {
     x, y, z: f32;
 };
 
-player :: struct {
-    lives: u8;
-    level: u8;
-    pos: vector3;
+#run {
+    pos1: vector3;
+    pos1.x := 1.0;
+    pos1.y := 1.0;
+    pos1.z := 1.0;
+    //pos2 := pos1;
 };
-
-test :: proc() {
-    p: player;
-    p.lives := 3;
-    p.level := 1;
-    p.pos.x := 1.0;
-    p.pos.y := 1.0;
-    p.pos.z := 1.0;
-
-    core::print("p.lives := %d\n", p.lives);
-    core::print("p.level := %d\n", p.level);
-    core::print("p.pos.x := %f\n", p.pos.x);
-    core::print("p.pos.y := %f\n", p.pos.y);
-    core::print("p.pos.z := %f\n", p.pos.z);
-};
-
-#run test();

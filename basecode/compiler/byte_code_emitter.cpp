@@ -159,6 +159,7 @@ namespace basecode::compiler {
         };
 
         uint64_t locals_size = 0;
+        variable_list_t to_init {};
         bool clear_stack_frame = false;
         auto frame_block = *basic_block;
         vm::basic_block* code_block = nullptr;
@@ -170,6 +171,11 @@ namespace basecode::compiler {
 
             auto locals = _variables.variables();
             for (auto local : locals) {
+                if (local->type == variable_type_t::local
+                ||  local->type == variable_type_t::parameter) {
+                    to_init.emplace_back(local);
+                }
+
                 int64_t offset = 0;
                 if (local->field_offset.base_ref == nullptr) {
                     offset = local->frame_offset;
@@ -215,6 +221,14 @@ namespace basecode::compiler {
                     vm::instruction_operand_t(
                         static_cast<uint64_t>(locals_size),
                         vm::op_sizes::dword));
+            }
+
+            for (auto local : to_init) {
+                auto named_ref = assembler.make_named_ref(
+                    vm::assembler_named_ref_type_t::local,
+                    local->label,
+                    vm::op_size_for_byte_size(local->size_in_bytes()));
+                _variables.use(code_block, named_ref);
             }
         }
         defer({
@@ -407,9 +421,9 @@ namespace basecode::compiler {
 
                 current_block->comment(
                     fmt::format(
-                        "cast<{}> from type {}",
-                        type_ref->name(),
-                        expr_result.type_result.type_name()),
+                        "cast: {} -> {}",
+                        expr_result.type_result.type_name(),
+                        type_ref->name()),
                     vm::comment_location_t::after_instruction);
 
                 auto result_operand = target_operand(
@@ -478,7 +492,6 @@ namespace basecode::compiler {
                     vm::instruction_operand_t(assembler.make_named_ref(
                         vm::assembler_named_ref_type_t::label,
                         false_label_name)));
-
                 release_temps(predicate_result.temps);
 
                 auto true_block = _blocks.make();
@@ -589,17 +602,6 @@ namespace basecode::compiler {
                             if (!emit_element(basic_block, induction_init, result))
                                 return false;
 
-                            for (auto var : _variables.variables()) {
-                                if (var->type == variable_type_t::local
-                                ||  var->type == variable_type_t::parameter) {
-                                    auto named_ref = assembler.make_named_ref(
-                                        vm::assembler_named_ref_type_t::local,
-                                        var->identifier->label_name(),
-                                        vm::op_size_for_byte_size(var->size_in_bytes()));
-                                    _variables.use(*basic_block, named_ref);
-                                }
-                            }
-
                             auto dir_arg = range->arguments()->param_by_name("dir");
                             uint64_t dir_value;
                             if (!dir_arg->as_integer(dir_value))
@@ -681,8 +683,10 @@ namespace basecode::compiler {
                             *basic_block = body_block;
 
                             body_block->label(labels.make(body_label_name, body_block));
-                            if (!emit_element(basic_block, for_e->body(), result))
+                            emit_result_t body_result;
+                            if (!emit_element(basic_block, for_e->body(), body_result))
                                 return false;
+                            release_temps(body_result.temps);
 
                             auto step_block = _blocks.make();
                             assembler.blocks().emplace_back(step_block);
@@ -709,9 +713,11 @@ namespace basecode::compiler {
                             });
 
                             *basic_block = step_block;
-                            if (!emit_element(basic_block, induction_assign, result))
+                            emit_result_t step_result;
+                            if (!emit_element(basic_block, induction_assign, step_result))
                                 return false;
                             step_block->jump_direct(vm::instruction_operand_t(begin_label_ref));
+                            release_temps(step_result.temps);
 
                             auto exit_block = _blocks.make();
                             assembler.blocks().emplace_back(exit_block);
@@ -1396,7 +1402,7 @@ namespace basecode::compiler {
                 auto target_size = type_ref->type()->size_in_bytes();
 
                 current_block->comment(
-                    fmt::format("transmute<{}>", type_ref->symbol().name),
+                    fmt::format("transmute: ", type_ref->symbol().name),
                     vm::comment_location_t::after_instruction);
 
                 auto result_operand = target_operand(
@@ -1462,7 +1468,7 @@ namespace basecode::compiler {
                     var->label_name(),
                     op_size);
                 result.operands.emplace_back(named_ref);
-                if (!_variables.use(current_block, named_ref))
+                if (!_variables.use(current_block, named_ref, result.is_assign_target))
                     return false;
                 break;
             }
@@ -1714,6 +1720,7 @@ namespace basecode::compiler {
                     }
                     case operator_type_t::assignment: {
                         emit_result_t lhs_result {};
+                        lhs_result.is_assign_target = true;
                         if (!emit_element(basic_block, binary_op->lhs(), lhs_result))
                             return false;
 
