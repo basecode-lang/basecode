@@ -94,16 +94,34 @@ namespace basecode::vm {
                                     break;
                                 }
                                 default: {
-                                    operands_stream << "I"
-                                                    << std::to_string(operand.value.r);
+                                    if (operand.fixup[0].named_ref != nullptr) {
+                                        operands_stream << fmt::format(
+                                            "{}{{I{}}}",
+                                            operand.fixup[0].named_ref->name,
+                                            operand.value.r);
+                                    } else {
+                                        operands_stream << fmt::format("I{}", operand.value.r);
+                                    }
                                     break;
                                 }
                             }
                         } else {
-                            operands_stream << "F" << std::to_string(operand.value.r);
+                            if (operand.fixup[0].named_ref != nullptr) {
+                                operands_stream << fmt::format(
+                                    "{}{{F{}}}",
+                                    operand.fixup[0].named_ref->name,
+                                    operand.value.r);
+                            } else {
+                                operands_stream << fmt::format("F{}", operand.value.r);
+                            }
                         }
                     }
                 } else {
+                    auto has_name = operand.fixup[0].named_ref != nullptr;
+                    if (has_name) {
+                        operands_stream << operand.fixup[0].named_ref->name << "{";
+                    }
+
                     if (operand.is_negative())
                         operands_stream << "-";
 
@@ -124,6 +142,10 @@ namespace basecode::vm {
                         default: {
                             break;
                         }
+                    }
+
+                    if (has_name) {
+                        operands_stream << "}";
                     }
                 }
             }
