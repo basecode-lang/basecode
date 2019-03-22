@@ -93,19 +93,24 @@ namespace basecode::compiler {
             compiler::binary_operator* binary_op,
             emit_result_t& result);
 
-        bool emit_relational_operator(
-            vm::basic_block** basic_block,
-            compiler::binary_operator* binary_op,
-            emit_result_t& result);
-
         bool emit_section_variable_data(
             vm::basic_block* basic_block,
             compiler::identifier* var);
+
+        bool emit_simple_relational_operator(
+            vm::basic_block** basic_block,
+            compiler::binary_operator* binary_op,
+            emit_result_t& result);
 
         vm::instruction_operand_t* target_operand(
             emit_result_t& result,
             number_class_t number_class = number_class_t::integer,
             vm::op_sizes size = vm::op_sizes::qword);
+
+        bool emit_short_circuited_relational_operator(
+            vm::basic_block** basic_block,
+            compiler::binary_operator* binary_op,
+            emit_result_t& result);
 
         void release_temps(std::vector<temp_pool_entry_t*> temps);
 
@@ -118,4 +123,5 @@ namespace basecode::compiler {
         vm::basic_block_stack_t _block_stack {};
         flow_control_stack_t _control_flow_stack {};
     };
-};
+
+}

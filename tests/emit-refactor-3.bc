@@ -25,6 +25,13 @@ test :: proc(): u32 {
 };
 
 #run {
+    flag: bool;
+
+    @no_fold;
+    flag := 3 > 2 || 1 == 1;
+
+    core::print("flag := %d\n", flag);
+
     pow_of_2: u32 := core::next_power_of_two(313);
     core::print("\npow_of_2 := %d\n", pow_of_2);
 

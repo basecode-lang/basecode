@@ -1672,8 +1672,21 @@ namespace basecode::compiler {
                     case operator_type_t::greater_than:
                     case operator_type_t::less_than_or_equal:
                     case operator_type_t::greater_than_or_equal: {
-                        if (!emit_relational_operator(basic_block, binary_op, result))
-                            return false;
+                        if (is_logical_conjunction_operator(binary_op->operator_type())) {
+                            if (!emit_short_circuited_relational_operator(
+                                    basic_block,
+                                    binary_op,
+                                    result)) {
+                                return false;
+                            }
+                        } else {
+                            if (!emit_simple_relational_operator(
+                                    basic_block,
+                                    binary_op,
+                                    result)) {
+                                return false;
+                            }
+                        }
                         break;
                     }
                     case operator_type_t::subscript: {
@@ -2508,138 +2521,6 @@ namespace basecode::compiler {
         return true;
     }
 
-    bool byte_code_emitter::emit_relational_operator(
-            vm::basic_block** basic_block,
-            compiler::binary_operator* binary_op,
-            emit_result_t& result) {
-        auto& labels = _session.labels();
-        auto& assembler = _session.assembler();
-
-        auto exit_label_name = fmt::format("{}_exit", binary_op->label_name());
-        auto exit_label_ref = assembler.make_named_ref(
-            vm::assembler_named_ref_type_t::label,
-            exit_label_name);
-
-        auto result_operand = target_operand(
-            result,
-            number_class_t::integer,
-            vm::op_sizes::byte);
-
-        emit_result_t lhs_result {};
-        if (!emit_element(basic_block, binary_op->lhs(), lhs_result))
-            return false;
-
-        emit_result_t rhs_result {};
-        if (!emit_element(basic_block, binary_op->rhs(), rhs_result))
-            return false;
-
-        auto current_block = *basic_block;
-        auto is_signed = lhs_result.type_result.inferred_type->is_signed();
-
-        if (is_logical_conjunction_operator(binary_op->operator_type())) {
-            auto lhs_eval_label_name = fmt::format("{}_lhs_eval", binary_op->label_name());
-            auto rhs_eval_label_name = fmt::format("{}_rhs_eval", binary_op->label_name());
-
-            current_block->label(labels.make(lhs_eval_label_name, current_block));
-            current_block->move(
-                *result_operand,
-                lhs_result.operands.back());
-
-            switch (binary_op->operator_type()) {
-                case operator_type_t::logical_or: {
-                    current_block->bnz(
-                        *result_operand,
-                        vm::instruction_operand_t(exit_label_ref));
-                    break;
-                }
-                case operator_type_t::logical_and: {
-                    current_block->bz(
-                        *result_operand,
-                        vm::instruction_operand_t(exit_label_ref));
-                    break;
-                }
-                default: {
-                    break;
-                }
-            }
-
-            auto rhs_eval_block = _blocks.make();
-            assembler.blocks().emplace_back(rhs_eval_block);
-            rhs_eval_block->predecessors().emplace_back(current_block);
-            current_block->successors().emplace_back(rhs_eval_block);
-            labels.add_cfg_edge(current_block, exit_label_name);
-
-            rhs_eval_block->label(labels.make(rhs_eval_label_name, rhs_eval_block));
-            rhs_eval_block->move(
-                *result_operand,
-                rhs_result.operands.back());
-
-            *basic_block = rhs_eval_block;
-            current_block = *basic_block;
-        } else {
-            current_block->cmp(
-                lhs_result.operands.back(),
-                rhs_result.operands.back());
-
-            switch (binary_op->operator_type()) {
-                case operator_type_t::equals: {
-                    current_block->setz(*result_operand);
-                    break;
-                }
-                case operator_type_t::less_than: {
-                    if (is_signed)
-                        current_block->setl(*result_operand);
-                    else
-                        current_block->setb(*result_operand);
-                    break;
-                }
-                case operator_type_t::not_equals: {
-                    current_block->setnz(*result_operand);
-                    break;
-                }
-                case operator_type_t::greater_than: {
-                    if (is_signed)
-                        current_block->setg(*result_operand);
-                    else
-                        current_block->seta(*result_operand);
-                    break;
-                }
-                case operator_type_t::less_than_or_equal: {
-                    if (is_signed)
-                        current_block->setle(*result_operand);
-                    else
-                        current_block->setbe(*result_operand);
-                    break;
-                }
-                case operator_type_t::greater_than_or_equal: {
-                    if (is_signed)
-                        current_block->setge(*result_operand);
-                    else
-                        current_block->setae(*result_operand);
-                    break;
-                }
-                default: {
-                    break;
-                }
-            }
-        }
-
-        release_temps(lhs_result.temps);
-        release_temps(rhs_result.temps);
-
-        auto exit_block = _blocks.make();
-        assembler.blocks().emplace_back(exit_block);
-        exit_block->predecessors().emplace_back(current_block);
-        current_block->successors().emplace_back(exit_block);
-
-        exit_block->label(labels.make(exit_label_name, current_block));
-        exit_block->nop();
-
-        *basic_block = exit_block;
-
-        return true;
-    }
-
     bool byte_code_emitter::emit_arithmetic_operator(
             vm::basic_block** basic_block,
             compiler::binary_operator* binary_op,
@@ -2761,6 +2642,91 @@ namespace basecode::compiler {
         return true;
     }
 
+    bool byte_code_emitter::emit_simple_relational_operator(
+            vm::basic_block** basic_block,
+            compiler::binary_operator* binary_op,
+            emit_result_t& result) {
+        auto& labels = _session.labels();
+        auto& assembler = _session.assembler();
+
+        auto result_operand = target_operand(
+            result,
+            number_class_t::integer,
+            vm::op_sizes::byte);
+
+        emit_result_t lhs_result {};
+        if (!emit_element(basic_block, binary_op->lhs(), lhs_result))
+            return false;
+
+        emit_result_t rhs_result {};
+        if (!emit_element(basic_block, binary_op->rhs(), rhs_result))
+            return false;
+
+        auto current_block = *basic_block;
+        auto is_signed = lhs_result.type_result.inferred_type->is_signed();
+
+        current_block->cmp(
+            lhs_result.operands.back(),
+            rhs_result.operands.back());
+
+        switch (binary_op->operator_type()) {
+            case operator_type_t::equals: {
+                current_block->setz(*result_operand);
+                break;
+            }
+            case operator_type_t::less_than: {
+                if (is_signed)
+                    current_block->setl(*result_operand);
+                else
+                    current_block->setb(*result_operand);
+                break;
+            }
+            case operator_type_t::not_equals: {
+                current_block->setnz(*result_operand);
+                break;
+            }
+            case operator_type_t::greater_than: {
+                if (is_signed)
+                    current_block->setg(*result_operand);
+                else
+                    current_block->seta(*result_operand);
+                break;
+            }
+            case operator_type_t::less_than_or_equal: {
+                if (is_signed)
+                    current_block->setle(*result_operand);
+                else
+                    current_block->setbe(*result_operand);
+                break;
+            }
+            case operator_type_t::greater_than_or_equal: {
+                if (is_signed)
+                    current_block->setge(*result_operand);
+                else
+                    current_block->setae(*result_operand);
+                break;
+            }
+            default: {
+                break;
+            }
+        }
+
+        release_temps(lhs_result.temps);
+        release_temps(rhs_result.temps);
+
+        auto exit_block = _blocks.make();
+        assembler.blocks().emplace_back(exit_block);
+        exit_block->predecessors().emplace_back(current_block);
+        current_block->successors().emplace_back(exit_block);
+
+        auto exit_label_name = fmt::format("{}_exit", binary_op->label_name());
+        exit_block->label(labels.make(exit_label_name, current_block));
+
+        *basic_block = exit_block;
+
+        return true;
+    }
+
     vm::instruction_operand_t* byte_code_emitter::target_operand(
             emit_result_t& result,
             number_class_t number_class,
@@ -2776,6 +2742,77 @@ namespace basecode::compiler {
             result.operands.emplace_back(target_operand);
         }
         return &result.operands.front();
+    }
+
+    bool byte_code_emitter::emit_short_circuited_relational_operator(
+            vm::basic_block** basic_block,
+            compiler::binary_operator* binary_op,
+            emit_result_t& result) {
+        auto& labels = _session.labels();
+        auto& assembler = _session.assembler();
+
+        auto result_operand = target_operand(
+            result,
+            number_class_t::integer,
+            vm::op_sizes::byte);
+
+        auto lhs_result = result;
+        if (!emit_element(basic_block, binary_op->lhs(), lhs_result))
+            return false;
+
+        auto current_block = *basic_block;
+        auto exit_label_name = fmt::format("{}_exit", binary_op->label_name());
+        auto exit_label_ref = assembler.make_named_ref(
+            vm::assembler_named_ref_type_t::label,
+            exit_label_name);
+
+        switch (binary_op->operator_type()) {
+            case operator_type_t::logical_or: {
+                current_block->bnz(
+                    *result_operand,
+                    vm::instruction_operand_t(exit_label_ref));
+                break;
+            }
+            case operator_type_t::logical_and: {
+                current_block->bz(
+                    *result_operand,
+                    vm::instruction_operand_t(exit_label_ref));
+                break;
+            }
+            default: {
+                break;
+            }
+        }
+
+        auto rhs_block = _blocks.make();
+        assembler.blocks().emplace_back(rhs_block);
+        rhs_block->predecessors().emplace_back(current_block);
+        current_block->successors().emplace_back(rhs_block);
+
+        auto rhs_label_name = fmt::format("{}_rhs", binary_op->label_name());
+        rhs_block->label(labels.make(rhs_label_name, current_block));
+
+        *basic_block = rhs_block;
+
+        auto rhs_result = result;
+        if (!emit_element(basic_block, binary_op->rhs(), rhs_result))
+            return false;
+
+        current_block = *basic_block;
+
+        release_temps(lhs_result.temps);
+        release_temps(rhs_result.temps);
+
+        auto exit_block = _blocks.make();
+        assembler.blocks().emplace_back(exit_block);
+        exit_block->predecessors().emplace_back(current_block);
+        current_block->successors().emplace_back(exit_block);
+
+        exit_block->label(labels.make(exit_label_name, current_block));
+
+        *basic_block = exit_block;
+
+        return true;
     }
 
     std::string byte_code_emitter::interned_string_data_label(common::id_t id) {
