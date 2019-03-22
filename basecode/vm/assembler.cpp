@@ -600,7 +600,7 @@ namespace basecode::vm {
                 if (len == 0)
                     indent_len = last_indent;
                 else
-                    indent_len = (size_t) std::max<int64_t>(0, 60 - len);
+                    indent_len = (size_t) std::max<int64_t>(0, 80 - len);
                 std::string indent(indent_len, ' ');
                 line << fmt::format("{}; {}", indent, top.value);
                 last_indent = len + indent_len;

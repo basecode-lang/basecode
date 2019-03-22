@@ -33,6 +33,8 @@ namespace basecode::compiler {
 
         void rhs(compiler::element* element);
 
+        std::string label_name() const override;
+
     protected:
         bool on_fold(
             compiler::session& session,

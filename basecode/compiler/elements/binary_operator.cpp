@@ -130,6 +130,10 @@ namespace basecode::compiler {
             && (_rhs != nullptr && _rhs->is_constant());
     }
 
+    std::string binary_operator::label_name() const {
+        return fmt::format("bin_op_{}", id());
+    }
+
     bool binary_operator::on_as_bool(bool& value) const {
         value = false;
 
