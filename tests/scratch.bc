@@ -5,6 +5,11 @@ vector3 :: struct {
 };
 
 #run {
+    a, b := 6, 7;
+    b, a := a, b;
+
+    core::print("a, b := %d, %d\n", a, b);
+
     pos1: vector3;
     pos1.x := 1.0;
     pos1.y := 1.0;

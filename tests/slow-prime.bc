@@ -1,0 +1,32 @@
+core :: module("core");
+
+find_prime_iterative :: proc(initial: u32): u32 {
+	prime: u32 := 1;
+	curr: u32 := 1;
+	prime_count : u32 := 0;
+
+	while prime_count < initial {
+		if (prime_count % 1000) == 0 {
+	    	core::print("prime_count := %d\n", prime_count);
+		};
+	    for denom in range<u32>(
+						2,
+						curr,
+						kind := core::ranges::kinds::EXCLUSIVE) {
+	    	if (curr % denom) == 0 {
+				curr +:= 1;
+				continue;
+			};
+	    };
+	    prime := curr;
+	    curr +:= 1;
+	    prime_count +:= 1;
+	};
+
+	return prime;
+};
+
+#run {
+    result := find_prime_iterative(20000);
+    core::print("result := %d\n", result);
+};

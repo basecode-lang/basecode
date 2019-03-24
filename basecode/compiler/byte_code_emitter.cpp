@@ -561,6 +561,7 @@ namespace basecode::compiler {
                 auto for_e = dynamic_cast<compiler::for_element*>(e);
                 auto entry_label_name = fmt::format("{}_entry", for_e->label_name());
                 auto body_label_name = fmt::format("{}_body", for_e->label_name());
+                auto step_label_name = fmt::format("{}_step", for_e->label_name());
                 auto exit_label_name = fmt::format("{}_exit", for_e->label_name());
 
                 auto for_expr = for_e->expression();
@@ -571,13 +572,16 @@ namespace basecode::compiler {
                             auto begin_label_ref = assembler.make_named_ref(
                                 vm::assembler_named_ref_type_t::label,
                                 entry_label_name);
+                            auto step_label_ref = assembler.make_named_ref(
+                                vm::assembler_named_ref_type_t::label,
+                                step_label_name);
                             auto exit_label_ref = assembler.make_named_ref(
                                 vm::assembler_named_ref_type_t::label,
                                 exit_label_name);
 
                             flow_control_t flow_control {
                                 .exit_label = exit_label_ref,
-                                .continue_label = begin_label_ref
+                                .continue_label = step_label_ref
                             };
                             push_flow_control(flow_control);
                             defer(pop_flow_control());
@@ -676,6 +680,7 @@ namespace basecode::compiler {
                                 cmp_result.operands.back(),
                                 vm::instruction_operand_t(exit_label_ref));
                             release_temps(cmp_result.temps);
+                            predicate_block = *basic_block;
 
                             auto body_block = _blocks.make();
                             assembler.blocks().emplace_back(body_block);
@@ -686,6 +691,7 @@ namespace basecode::compiler {
                             emit_result_t body_result;
                             if (!emit_element(basic_block, for_e->body(), body_result))
                                 return false;
+                            body_block = *basic_block;
                             release_temps(body_result.temps);
 
                             auto step_block = _blocks.make();
@@ -693,6 +699,7 @@ namespace basecode::compiler {
                             step_block->predecessors().emplace_back(body_block);
                             step_block->successors().emplace_back(predicate_block);
                             body_block->successors().emplace_back(step_block);
+                            *basic_block = step_block;
 
                             auto step_param = range->arguments()->param_by_name("step");
                             auto induction_step = builder.make_binary_operator(
@@ -712,7 +719,7 @@ namespace basecode::compiler {
                                 _session.elements().remove(induction_step->id());
                             });
 
-                            *basic_block = step_block;
+                            step_block->label(labels.make(step_label_name, step_block));
                             emit_result_t step_result;
                             if (!emit_element(basic_block, induction_assign, step_result))
                                 return false;
@@ -723,10 +730,9 @@ namespace basecode::compiler {
                             assembler.blocks().emplace_back(exit_block);
                             exit_block->predecessors().emplace_back(predicate_block);
                             exit_block->label(labels.make(exit_label_name, exit_block));
+                            *basic_block = exit_block;
 
                             predicate_block->add_successors({body_block, exit_block});
-
-                            *basic_block = exit_block;
                         }
                         break;
                     }
@@ -950,12 +956,11 @@ namespace basecode::compiler {
                 emit_result_t predicate_result {};
                 if (!emit_element(basic_block, while_e->predicate(), predicate_result))
                     return false;
-
                 predicate_block->bz(
                     predicate_result.operands.back(),
                     vm::instruction_operand_t(exit_label_ref));
-
                 release_temps(predicate_result.temps);
+                predicate_block = *basic_block;
 
                 auto body_block = _blocks.make();
                 assembler.blocks().emplace_back(body_block);
@@ -966,7 +971,7 @@ namespace basecode::compiler {
                 body_block->label(labels.make(body_label_name, body_block));
                 if (!emit_element(basic_block, while_e->body(), result))
                     return false;
-
+                body_block = *basic_block;
                 body_block->jump_direct(vm::instruction_operand_t(entry_label_ref));
 
                 auto exit_block = _blocks.make();
