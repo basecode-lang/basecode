@@ -542,13 +542,15 @@ namespace basecode::vm {
     }
 
     bool terp::run(common::result& r) {
-        while (!has_exited())
-            if (!step(r))
-                return false;
-        return true;
+        return step(r);
+//        while (!has_exited())
+//            if (!step(r))
+//                return false;
+//        return true;
     }
 
     bool terp::step(common::result& r) {
+    _fetch:
         auto cache_entry = _icache.fetch(r);
 
         _registers.r[register_pc].qw += cache_entry->size;
@@ -560,8 +562,7 @@ namespace basecode::vm {
             }
             case op_codes::alloc: {
                 register_value_alias_t size {};
-                if (!get_operand_value(r, inst, 1, size))
-                    return false;
+                get_operand_value(r, inst, 1, size);
 
                 size.qw *= op_size_in_bytes(inst.size);
 
@@ -572,8 +573,7 @@ namespace basecode::vm {
                     return false;
                 }
 
-                if (!set_target_operand_value(r, inst.operands[0], op_sizes::qword, address))
-                    return false;
+                set_target_operand_value(r, inst.operands[0], op_sizes::qword, address);
 
                 _registers.flags(register_file_t::flags_t::carry, false);
                 _registers.flags(register_file_t::flags_t::subtract, false);
@@ -587,8 +587,7 @@ namespace basecode::vm {
             }
             case op_codes::free: {
                 register_value_alias_t address {};
-                if (!get_operand_value(r, inst, 0, address))
-                    return false;
+                get_operand_value(r, inst, 0, address);
 
                 auto freed_size = _allocator->free(address.qw);
 
@@ -602,13 +601,11 @@ namespace basecode::vm {
             }
             case op_codes::size: {
                 register_value_alias_t address {};
-                if (!get_operand_value(r, inst, 1, address))
-                    return false;
+                get_operand_value(r, inst, 1, address);
 
                 register_value_alias_t block_size {};
                 block_size.qw = _allocator->size(address.qw);
-                if (!set_target_operand_value(r, inst.operands[0], inst.size, block_size))
-                    return false;
+                set_target_operand_value(r, inst.operands[0], inst.size, block_size);
 
                 _registers.flags(register_file_t::flags_t::carry, false);
                 _registers.flags(register_file_t::flags_t::subtract, false);
@@ -622,14 +619,12 @@ namespace basecode::vm {
             }
             case op_codes::load: {
                 register_value_alias_t address {};
-                if (!get_address_with_offset(r, inst, 1, 2, address))
-                    return false;
+                get_address_with_offset(r, inst, 1, 2, address);
 
                 register_value_alias_t loaded_data {};
                 loaded_data.qw = read(inst.size, address.qw);
                 auto zero_flag = is_zero(inst.size, loaded_data);
-                if (!set_target_operand_value(r, inst.operands[0], inst.size, loaded_data))
-                    return false;
+                set_target_operand_value(r, inst.operands[0], inst.size, loaded_data);
 
                 _registers.flags(register_file_t::flags_t::carry, false);
                 _registers.flags(register_file_t::flags_t::subtract, false);
@@ -642,12 +637,10 @@ namespace basecode::vm {
             }
             case op_codes::store: {
                 register_value_alias_t address {};
-                if (!get_address_with_offset(r, inst, 0, 2, address))
-                    return false;
+                get_address_with_offset(r, inst, 0, 2, address);
 
                 register_value_alias_t data {};
-                if (!get_operand_value(r, inst, 1, data))
-                    return false;
+                get_operand_value(r, inst, 1, data);
 
                 auto zero_flag = is_zero(inst.size, data);
                 write(inst.size, address.qw, data.qw);
@@ -665,21 +658,16 @@ namespace basecode::vm {
                 register_value_alias_t source_address {};
                 register_value_alias_t target_address {};
 
-                if (!get_operand_value(r, inst, 0, target_address))
-                    return false;
-
+                get_operand_value(r, inst, 0, target_address);
                 if (!bounds_check_address(r, target_address))
                     return false;
 
-                if (!get_operand_value(r, inst, 1, source_address))
-                    return false;
-
+                get_operand_value(r, inst, 1, source_address);
                 if (!bounds_check_address(r, source_address))
                     return false;
 
                 register_value_alias_t length {};
-                if (!get_operand_value(r, inst, 2, length))
-                    return false;
+                get_operand_value(r, inst, 2, length);
 
                 memcpy(
                     reinterpret_cast<void*>(target_address.qw),
@@ -696,12 +684,10 @@ namespace basecode::vm {
             }
             case op_codes::convert: {
                 register_value_alias_t target_value {};
-                if (!get_operand_value(r, inst, 0, target_value))
-                    return false;
+                get_operand_value(r, inst, 0, target_value);
 
                 register_value_alias_t value {};
-                if (!get_operand_value(r, inst, 1, value))
-                    return false;
+                get_operand_value(r, inst, 1, value);
 
                 auto casted_value = value;
 
@@ -749,26 +735,22 @@ namespace basecode::vm {
                     }
                 }
 
-                if (!set_target_operand_value(r, inst.operands[0], inst.size, casted_value))
-                    return false;
+                set_target_operand_value(r, inst.operands[0], inst.size, casted_value);
 
                 break;
             }
             case op_codes::fill: {
                 register_value_alias_t address {};
-                if (!get_operand_value(r, inst, 0, address))
-                    return false;
-
+                get_operand_value(r, inst, 0, address);
                 if (!bounds_check_address(r, address))
                     return false;
 
                 register_value_alias_t value {};
-                if (!get_operand_value(r, inst, 1, value))
-                    return false;
+                get_operand_value(r, inst, 1, value);
 
                 register_value_alias_t length {};
-                if (!get_operand_value(r, inst, 2, length))
-                    return false;
+                get_operand_value(r, inst, 2, length);
+
                 length.qw *= op_size_in_bytes(inst.size);
 
                 switch (inst.size) {
@@ -808,8 +790,7 @@ namespace basecode::vm {
                 register_value_alias_t value {};
                 value.qw = 0;
 
-                if (!set_target_operand_value(r, inst.operands[0], inst.size, value))
-                    return false;
+                set_target_operand_value(r, inst.operands[0], inst.size, value);
 
                 _registers.flags(register_file_t::flags_t::carry, false);
                 _registers.flags(register_file_t::flags_t::overflow, false);
@@ -821,15 +802,12 @@ namespace basecode::vm {
             }
             case op_codes::move: {
                 register_value_alias_t source_value {};
-                if (!get_operand_value(r, inst, 1, source_value))
-                    return false;
+                get_operand_value(r, inst, 1, source_value);
 
                 register_value_alias_t offset_value {};
-                if (!get_address_with_offset(r, inst, 1, 2, offset_value))
-                    return false;
+                get_address_with_offset(r, inst, 1, 2, offset_value);
 
-                if (!set_target_operand_value(r, inst.operands[0], inst.size, offset_value))
-                    return false;
+                set_target_operand_value(r, inst.operands[0], inst.size, offset_value);
 
                 _registers.flags(register_file_t::flags_t::carry, false);
                 _registers.flags(register_file_t::flags_t::overflow, false);
@@ -843,20 +821,17 @@ namespace basecode::vm {
             }
             case op_codes::moves: {
                 register_value_alias_t source_value {};
-                if (!get_operand_value(r, inst, 1, source_value))
-                    return false;
+                get_operand_value(r, inst, 1, source_value);
 
                 register_value_alias_t offset_value {};
-                if (!get_address_with_offset(r, inst, 1, 2, offset_value))
-                    return false;
+                get_address_with_offset(r, inst, 1, 2, offset_value);
 
                 auto previous_size = static_cast<op_sizes>(static_cast<uint8_t>(inst.size) - 1);
                 offset_value.qw = common::sign_extend(
                     offset_value.qw,
                     static_cast<uint32_t>(op_size_in_bytes(previous_size) * 8));
 
-                if (!set_target_operand_value(r, inst.operands[0], inst.size, offset_value))
-                    return false;
+                set_target_operand_value(r, inst.operands[0], inst.size, offset_value);
 
                 _registers.flags(register_file_t::flags_t::carry, false);
                 _registers.flags(register_file_t::flags_t::overflow, false);
@@ -870,12 +845,10 @@ namespace basecode::vm {
             }
             case op_codes::movez: {
                 register_value_alias_t source_value {};
-                if (!get_operand_value(r, inst, 1, source_value))
-                    return false;
+                get_operand_value(r, inst, 1, source_value);
 
                 register_value_alias_t offset_value {};
-                if (!get_address_with_offset(r, inst, 1, 2, offset_value))
-                    return false;
+                get_address_with_offset(r, inst, 1, 2, offset_value);
 
                 switch (inst.size) {
                     case op_sizes::none:
@@ -896,8 +869,7 @@ namespace basecode::vm {
                     }
                 }
 
-                if (!set_target_operand_value(r, inst.operands[0], inst.size, offset_value))
-                    return false;
+                set_target_operand_value(r, inst.operands[0], inst.size, offset_value);
 
                 _registers.flags(register_file_t::flags_t::carry, false);
                 _registers.flags(register_file_t::flags_t::overflow, false);
@@ -912,9 +884,7 @@ namespace basecode::vm {
             case op_codes::push: {
                 register_value_alias_t source_value {};
 
-                if (!get_operand_value(r, inst, 0, source_value))
-                    return false;
-
+                get_operand_value(r, inst, 0, source_value);
                 push(source_value.qw);
 
                 _registers.flags(register_file_t::flags_t::carry, false);
@@ -971,8 +941,7 @@ namespace basecode::vm {
                 register_value_alias_t top_of_stack {};
                 top_of_stack.qw = pop();
 
-                if (!set_target_operand_value(r, inst.operands[0], inst.size, top_of_stack))
-                    return false;
+                set_target_operand_value(r, inst.operands[0], inst.size, top_of_stack);
 
                 _registers.flags(register_file_t::flags_t::zero, top_of_stack.qw == 0);
                 _registers.flags(register_file_t::flags_t::overflow, false);
@@ -1038,8 +1007,7 @@ namespace basecode::vm {
             }
             case op_codes::inc: {
                 register_value_alias_t reg_value {};
-                if (get_operand_value(r, inst, 0, reg_value))
-                    return false;
+                get_operand_value(r, inst, 0, reg_value);
 
                 register_value_alias_t one {};
                 one.qw = 1;
@@ -1072,12 +1040,11 @@ namespace basecode::vm {
                         new_value.qwf = reg_value.qwf + 1.0;
                 }
 
-                if (_white_listed_addresses.count(reg_value.qw) > 0) {
-                    _white_listed_addresses.insert(new_value.qw);
-                }
+//                if (_white_listed_addresses.count(reg_value.qw) > 0) {
+//                    _white_listed_addresses.insert(new_value.qw);
+//                }
 
-                if (set_target_operand_value(r, inst.operands[0], inst.size, new_value))
-                    return false;
+                set_target_operand_value(r, inst.operands[0], inst.size, new_value);
 
                 _registers.flags(
                     register_file_t::flags_t::overflow,
@@ -1095,8 +1062,7 @@ namespace basecode::vm {
             }
             case op_codes::dec: {
                 register_value_alias_t reg_value {};
-                if (get_operand_value(r, inst, 0, reg_value))
-                    return false;
+                get_operand_value(r, inst, 0, reg_value);
 
                 register_value_alias_t one {};
                 one.qw = 1;
@@ -1129,12 +1095,11 @@ namespace basecode::vm {
                         new_value.qwf = reg_value.qwf - 1.0;
                 }
 
-                if (_white_listed_addresses.count(reg_value.qw) > 0) {
-                    _white_listed_addresses.insert(new_value.qw);
-                }
+//                if (_white_listed_addresses.count(reg_value.qw) > 0) {
+//                    _white_listed_addresses.insert(new_value.qw);
+//                }
 
-                if (set_target_operand_value(r, inst.operands[0], inst.size, new_value))
-                    return false;
+                set_target_operand_value(r, inst.operands[0], inst.size, new_value);
 
                 _registers.flags(
                     register_file_t::flags_t::overflow,
@@ -1153,11 +1118,8 @@ namespace basecode::vm {
                 register_value_alias_t lhs_value {};
                 register_value_alias_t rhs_value {};
 
-                if (!get_operand_value(r, inst, 1, lhs_value))
-                    return false;
-
-                if (!get_operand_value(r, inst, 2, rhs_value))
-                    return false;
+                get_operand_value(r, inst, 1, lhs_value);
+                get_operand_value(r, inst, 2, rhs_value);
 
                 register_value_alias_t sum_result {};
 
@@ -1189,13 +1151,12 @@ namespace basecode::vm {
                         sum_result.qwf = lhs_value.qwf + rhs_value.qwf;
                 }
 
-                if (_white_listed_addresses.count(lhs_value.qw) > 0
-                ||  _white_listed_addresses.count(rhs_value.qw) > 0) {
-                    _white_listed_addresses.insert(sum_result.qw);
-                }
+//                if (_white_listed_addresses.count(lhs_value.qw) > 0
+//                ||  _white_listed_addresses.count(rhs_value.qw) > 0) {
+//                    _white_listed_addresses.insert(sum_result.qw);
+//                }
 
-                if (!set_target_operand_value(r, inst.operands[0], inst.size, sum_result))
-                    return false;
+                set_target_operand_value(r, inst.operands[0], inst.size, sum_result);
 
                 auto zero_flag = is_zero(inst.size, sum_result);
                 auto carry_flag = has_carry(lhs_value.qw, rhs_value.qw, inst.size);
@@ -1216,11 +1177,8 @@ namespace basecode::vm {
                 register_value_alias_t lhs {};
                 register_value_alias_t rhs {};
 
-                if (!get_operand_value(r, inst, 1, lhs))
-                    return false;
-
-                if (!get_operand_value(r, inst, 2, rhs))
-                    return false;
+                get_operand_value(r, inst, 1, lhs);
+                get_operand_value(r, inst, 2, rhs);
 
                 auto carry_flag = false;
                 register_value_alias_t subtraction_result {};
@@ -1254,13 +1212,12 @@ namespace basecode::vm {
                         subtraction_result.qwf = lhs.qwf - rhs.qwf;
                 }
 
-                if (_white_listed_addresses.count(lhs.qw) > 0
-                ||  _white_listed_addresses.count(rhs.qw) > 0) {
-                    _white_listed_addresses.insert(subtraction_result.qw);
-                }
+//                if (_white_listed_addresses.count(lhs.qw) > 0
+//                ||  _white_listed_addresses.count(rhs.qw) > 0) {
+//                    _white_listed_addresses.insert(subtraction_result.qw);
+//                }
 
-                if (!set_target_operand_value(r, inst.operands[0], inst.size, subtraction_result))
-                    return false;
+                set_target_operand_value(r, inst.operands[0], inst.size, subtraction_result);
 
                 auto zero_flag = is_zero(inst.size, subtraction_result);
                 auto overflow_flag = has_overflow(lhs, rhs, subtraction_result, inst.size);
@@ -1280,11 +1237,8 @@ namespace basecode::vm {
                 register_value_alias_t lhs_value {};
                 register_value_alias_t rhs_value {};
 
-                if (!get_operand_value(r, inst, 1, lhs_value))
-                    return false;
-
-                if (!get_operand_value(r, inst, 2, rhs_value))
-                    return false;
+                get_operand_value(r, inst, 1, lhs_value);
+                get_operand_value(r, inst, 2, rhs_value);
 
                 register_value_alias_t product_result {};
 
@@ -1316,8 +1270,7 @@ namespace basecode::vm {
                         product_result.qwf = lhs_value.qwf * rhs_value.qwf;
                 }
 
-                if (!set_target_operand_value(r, inst.operands[0], inst.size, product_result))
-                    return false;
+                set_target_operand_value(r, inst.operands[0], inst.size, product_result);
 
                 auto zero_flag = is_zero(inst.size, product_result);
                 auto carry_flag = has_carry(lhs_value.qw, rhs_value.qw, inst.size);
@@ -1337,11 +1290,8 @@ namespace basecode::vm {
                 register_value_alias_t lhs_value {};
                 register_value_alias_t rhs_value {};
 
-                if (!get_operand_value(r, inst, 1, lhs_value))
-                    return false;
-
-                if (!get_operand_value(r, inst, 2, rhs_value))
-                    return false;
+                get_operand_value(r, inst, 1, lhs_value);
+                get_operand_value(r, inst, 2, rhs_value);
 
                 register_value_alias_t result {};
 
@@ -1382,8 +1332,7 @@ namespace basecode::vm {
                     }
                 }
 
-                if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
-                    return false;
+                set_target_operand_value(r, inst.operands[0], inst.size, result);
 
                 auto zero_flag = is_zero(inst.size, result);
                 auto carry_flag = has_carry(lhs_value.qw, rhs_value.qw, inst.size);
@@ -1405,11 +1354,8 @@ namespace basecode::vm {
                 register_value_alias_t lhs_value {};
                 register_value_alias_t rhs_value {};
 
-                if (!get_operand_value(r, inst, 1, lhs_value))
-                    return false;
-
-                if (!get_operand_value(r, inst, 2, rhs_value))
-                    return false;
+                get_operand_value(r, inst, 1, lhs_value);
+                get_operand_value(r, inst, 2, rhs_value);
 
                 register_value_alias_t result {};
 
@@ -1438,8 +1384,7 @@ namespace basecode::vm {
                 }
 
                 auto zero_flag = is_zero(inst.size, result);
-                if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
-                    return false;
+                set_target_operand_value(r, inst.operands[0], inst.size, result);
 
                 _registers.flags(
                     register_file_t::flags_t::overflow,
@@ -1460,8 +1405,7 @@ namespace basecode::vm {
             }
             case op_codes::neg: {
                 register_value_alias_t value {};
-                if (!get_operand_value(r, inst, 1, value))
-                    return false;
+                get_operand_value(r, inst, 1, value);
 
                 register_value_alias_t result {};
 
@@ -1497,8 +1441,7 @@ namespace basecode::vm {
                 }
 
                 auto zero_flag = is_zero(inst.size, result);
-                if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
-                    return false;
+                set_target_operand_value(r, inst.operands[0], inst.size, result);
 
                 _registers.flags(register_file_t::flags_t::carry, false);
                 _registers.flags(register_file_t::flags_t::subtract, false);
@@ -1514,11 +1457,8 @@ namespace basecode::vm {
                 register_value_alias_t lhs_value {};
                 register_value_alias_t rhs_value {};
 
-                if (!get_operand_value(r, inst, 1, lhs_value))
-                    return false;
-
-                if (!get_operand_value(r, inst, 2, rhs_value))
-                    return false;
+                get_operand_value(r, inst, 1, lhs_value);
+                get_operand_value(r, inst, 2, rhs_value);
 
                 register_value_alias_t result {};
 
@@ -1542,8 +1482,7 @@ namespace basecode::vm {
                     }
                 }
 
-                if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
-                    return false;
+                set_target_operand_value(r, inst.operands[0], inst.size, result);
 
                 auto zero_flag = is_zero(inst.size, result);
 
@@ -1560,11 +1499,8 @@ namespace basecode::vm {
                 register_value_alias_t lhs_value {};
                 register_value_alias_t rhs_value {};
 
-                if (!get_operand_value(r, inst, 1, lhs_value))
-                    return false;
-
-                if (!get_operand_value(r, inst, 2, rhs_value))
-                    return false;
+                get_operand_value(r, inst, 1, lhs_value);
+                get_operand_value(r, inst, 2, rhs_value);
 
                 register_value_alias_t result {};
 
@@ -1588,8 +1524,7 @@ namespace basecode::vm {
                     }
                 }
 
-                if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
-                    return false;
+                set_target_operand_value(r, inst.operands[0], inst.size, result);
 
                 auto zero_flag = is_zero(inst.size, result);
 
@@ -1607,16 +1542,12 @@ namespace basecode::vm {
                 register_value_alias_t lhs_value {};
                 register_value_alias_t rhs_value {};
 
-                if (!get_operand_value(r, inst, 1, lhs_value))
-                    return false;
-
-                if (!get_operand_value(r, inst, 2, rhs_value))
-                    return false;
+                get_operand_value(r, inst, 1, lhs_value);
+                get_operand_value(r, inst, 2, rhs_value);
 
                 register_value_alias_t right_rotated_value {};
                 right_rotated_value.qw = common::rotr(lhs_value.qw, rhs_value.b);
-                if (!set_target_operand_value(r, inst.operands[0], inst.size, right_rotated_value))
-                    return false;
+                set_target_operand_value(r, inst.operands[0], inst.size, right_rotated_value);
 
                 auto zero_flag = is_zero(inst.size, right_rotated_value);
 
@@ -1634,16 +1565,12 @@ namespace basecode::vm {
                 register_value_alias_t lhs_value {};
                 register_value_alias_t rhs_value {};
 
-                if (!get_operand_value(r, inst, 1, lhs_value))
-                    return false;
-
-                if (!get_operand_value(r, inst, 2, rhs_value))
-                    return false;
+                get_operand_value(r, inst, 1, lhs_value);
+                get_operand_value(r, inst, 2, rhs_value);
 
                 register_value_alias_t left_rotated_value {};
                 left_rotated_value.qw = common::rotl(lhs_value.qw, rhs_value.b);
-                if (!set_target_operand_value(r, inst.operands[0], inst.size, left_rotated_value))
-                    return false;
+                set_target_operand_value(r, inst.operands[0], inst.size, left_rotated_value);
 
                 auto zero_flag = is_zero(inst.size, left_rotated_value);
 
@@ -1661,11 +1588,8 @@ namespace basecode::vm {
                 register_value_alias_t lhs_value {};
                 register_value_alias_t rhs_value {};
 
-                if (!get_operand_value(r, inst, 1, lhs_value))
-                    return false;
-
-                if (!get_operand_value(r, inst, 2, rhs_value))
-                    return false;
+                get_operand_value(r, inst, 1, lhs_value);
+                get_operand_value(r, inst, 2, rhs_value);
 
                 register_value_alias_t power_value {};
 
@@ -1698,8 +1622,7 @@ namespace basecode::vm {
                     }
                 }
 
-                if (!set_target_operand_value(r, inst.operands[0], inst.size, power_value))
-                    return false;
+                set_target_operand_value(r, inst.operands[0], inst.size, power_value);
 
                 auto zero_flag = is_zero(inst.size, power_value);
 
@@ -1717,11 +1640,8 @@ namespace basecode::vm {
                 register_value_alias_t lhs_value {};
                 register_value_alias_t rhs_value {};
 
-                if (!get_operand_value(r, inst, 1, lhs_value))
-                    return false;
-
-                if (!get_operand_value(r, inst, 2, rhs_value))
-                    return false;
+                get_operand_value(r, inst, 1, lhs_value);
+                get_operand_value(r, inst, 2, rhs_value);
 
                 register_value_alias_t result {};
 
@@ -1745,8 +1665,7 @@ namespace basecode::vm {
                     }
                 }
 
-                if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
-                    return false;
+                set_target_operand_value(r, inst.operands[0], inst.size, result);
 
                 auto zero_flag = is_zero(inst.size, result);
 
@@ -1764,11 +1683,8 @@ namespace basecode::vm {
                 register_value_alias_t lhs_value {};
                 register_value_alias_t rhs_value {};
 
-                if (!get_operand_value(r, inst, 1, lhs_value))
-                    return false;
-
-                if (!get_operand_value(r, inst, 2, rhs_value))
-                    return false;
+                get_operand_value(r, inst, 1, lhs_value);
+                get_operand_value(r, inst, 2, rhs_value);
 
                 register_value_alias_t result {};
 
@@ -1792,8 +1708,7 @@ namespace basecode::vm {
                     }
                 }
 
-                if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
-                    return false;
+                set_target_operand_value(r, inst.operands[0], inst.size, result);
 
                 auto zero_flag = is_zero(inst.size, result);
 
@@ -1811,11 +1726,8 @@ namespace basecode::vm {
                 register_value_alias_t lhs_value {};
                 register_value_alias_t rhs_value {};
 
-                if (!get_operand_value(r, inst, 1, lhs_value))
-                    return false;
-
-                if (!get_operand_value(r, inst, 2, rhs_value))
-                    return false;
+                get_operand_value(r, inst, 1, lhs_value);
+                get_operand_value(r, inst, 2, rhs_value);
 
                 register_value_alias_t result {};
 
@@ -1839,8 +1751,7 @@ namespace basecode::vm {
                     }
                 }
 
-                if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
-                    return false;
+                set_target_operand_value(r, inst.operands[0], inst.size, result);
 
                 auto zero_flag = is_zero(inst.size, result);
 
@@ -1857,8 +1768,7 @@ namespace basecode::vm {
             case op_codes::not_op: {
                 register_value_alias_t value {};
 
-                if (!get_operand_value(r, inst, 1, value))
-                    return false;
+                get_operand_value(r, inst, 1, value);
 
                 switch (inst.size) {
                     case op_sizes::byte: {
@@ -1880,8 +1790,7 @@ namespace basecode::vm {
                     }
                 }
 
-                if (!set_target_operand_value(r, inst.operands[0], inst.size, value))
-                    return false;
+                set_target_operand_value(r, inst.operands[0], inst.size, value);
 
                 auto zero_flag = is_zero(inst.size, value);
 
@@ -1899,11 +1808,8 @@ namespace basecode::vm {
                 register_value_alias_t value {};
                 register_value_alias_t bit_number {};
 
-                if (!get_operand_value(r, inst, 1, value))
-                    return false;
-
-                if (!get_operand_value(r, inst, 2, bit_number))
-                    return false;
+                get_operand_value(r, inst, 1, value);
+                get_operand_value(r, inst, 2, bit_number);
 
                 register_value_alias_t result {};
 
@@ -1931,8 +1837,7 @@ namespace basecode::vm {
                     }
                 }
 
-                if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
-                    return false;
+                set_target_operand_value(r, inst.operands[0], inst.size, result);
 
                 auto zero_flag = is_zero(inst.size, result);
 
@@ -1950,11 +1855,8 @@ namespace basecode::vm {
                 register_value_alias_t value {};
                 register_value_alias_t bit_number {};
 
-                if (!get_operand_value(r, inst, 1, value))
-                    return false;
-
-                if (!get_operand_value(r, inst, 2, bit_number))
-                    return false;
+                get_operand_value(r, inst, 1, value);
+                get_operand_value(r, inst, 2, bit_number);
 
                 register_value_alias_t result {};
 
@@ -1983,8 +1885,7 @@ namespace basecode::vm {
                 }
 
                 auto zero_flag = is_zero(inst.size, result);
-                if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
-                    return false;
+                set_target_operand_value(r, inst.operands[0], inst.size, result);
 
                 _registers.flags(register_file_t::flags_t::zero, zero_flag);
                 _registers.flags(register_file_t::flags_t::carry, false);
@@ -2000,11 +1901,8 @@ namespace basecode::vm {
                 register_value_alias_t value {};
                 register_value_alias_t mask {};
 
-                if (!get_operand_value(r, inst, 0, value))
-                    return false;
-
-                if (!get_operand_value(r, inst, 1, mask))
-                    return false;
+                get_operand_value(r, inst, 0, value);
+                get_operand_value(r, inst, 1, mask);
 
                 register_value_alias_t result {};
 
@@ -2044,11 +1942,8 @@ namespace basecode::vm {
                 register_value_alias_t lhs {};
                 register_value_alias_t rhs {};
 
-                if (!get_operand_value(r, inst, 0, lhs))
-                    return false;
-
-                if (!get_operand_value(r, inst, 1, rhs))
-                    return false;
+                get_operand_value(r, inst, 0, lhs);
+                get_operand_value(r, inst, 1, rhs);
 
                 register_value_alias_t result {};
                 bool carry_flag = false;
@@ -2091,14 +1986,11 @@ namespace basecode::vm {
             }
             case op_codes::bz: {
                 register_value_alias_t value {};
-
-                if (!get_operand_value(r, inst, 0, value))
-                    return false;
+                get_operand_value(r, inst, 0, value);
 
                 auto zero_flag = is_zero(inst.size, value);
                 if (zero_flag) {
-                    if (!get_operand_value(r, inst, 1, _registers.r[register_pc]))
-                        return false;
+                    get_operand_value(r, inst, 1, _registers.r[register_pc]);
                 }
 
                 _registers.flags(register_file_t::flags_t::zero, zero_flag);
@@ -2113,14 +2005,11 @@ namespace basecode::vm {
             }
             case op_codes::bnz: {
                 register_value_alias_t value {};
-
-                if (!get_operand_value(r, inst, 0, value))
-                    return false;
+                get_operand_value(r, inst, 0, value);
 
                 auto zero_flag = is_zero(inst.size, value);
                 if (!zero_flag) {
-                    if (!get_operand_value(r, inst, 1, _registers.r[register_pc]))
-                        return false;
+                    get_operand_value(r, inst, 1, _registers.r[register_pc]);
                 }
 
                 _registers.flags(register_file_t::flags_t::zero, zero_flag);
@@ -2137,11 +2026,8 @@ namespace basecode::vm {
                 register_value_alias_t value {};
                 register_value_alias_t mask {};
 
-                if (!get_operand_value(r, inst, 0, value))
-                    return false;
-
-                if (!get_operand_value(r, inst, 1, mask))
-                    return false;
+                get_operand_value(r, inst, 0, value);
+                get_operand_value(r, inst, 1, mask);
 
                 register_value_alias_t result {};
 
@@ -2167,8 +2053,7 @@ namespace basecode::vm {
 
                 auto zero_flag = is_zero(inst.size, result);
                 if (zero_flag) {
-                    if (!get_operand_value(r, inst, 2, _registers.r[register_pc]))
-                        return false;
+                    get_operand_value(r, inst, 2, _registers.r[register_pc]);
                 }
 
                 _registers.flags(register_file_t::flags_t::carry, false);
@@ -2183,11 +2068,8 @@ namespace basecode::vm {
                 register_value_alias_t value {};
                 register_value_alias_t mask {};
 
-                if (!get_operand_value(r, inst, 0, value))
-                    return false;
-
-                if (!get_operand_value(r, inst, 1, mask))
-                    return false;
+                get_operand_value(r, inst, 0, value);
+                get_operand_value(r, inst, 1, mask);
 
                 register_value_alias_t result {};
 
@@ -2213,8 +2095,7 @@ namespace basecode::vm {
 
                 auto zero_flag = is_zero(inst.size, result);
                 if (!zero_flag) {
-                    if (!get_operand_value(r, inst, 2, _registers.r[register_pc]))
-                        return false;
+                    get_operand_value(r, inst, 2, _registers.r[register_pc]);
                 }
 
                 _registers.flags(register_file_t::flags_t::carry, false);
@@ -2228,60 +2109,48 @@ namespace basecode::vm {
             case op_codes::bne: {
                 // ZF = 0
                 if (!_registers.flags(register_file_t::flags_t::zero)) {
-                    auto result = get_constant_address_or_pc_with_offset(
+                    get_constant_address_or_pc_with_offset(
                         r,
                         inst,
                         0,
                         cache_entry->size,
                         _registers.r[register_pc]);
-                    if (!result)
-                        return false;
                 }
-
                 break;
             }
             case op_codes::beq: {
                 // ZF = 1
                 if (_registers.flags(register_file_t::flags_t::zero)) {
-                    auto result = get_constant_address_or_pc_with_offset(
+                    get_constant_address_or_pc_with_offset(
                         r,
                         inst,
                         0,
                         cache_entry->size,
                         _registers.r[register_pc]);
-                    if (!result)
-                        return false;
                 }
-
                 break;
             }
             case op_codes::bs: {
                 // SF = 1
                 if (_registers.flags(register_file_t::flags_t::negative)) {
-                    auto result = get_constant_address_or_pc_with_offset(
+                    get_constant_address_or_pc_with_offset(
                         r,
                         inst,
                         0,
                         cache_entry->size,
                         _registers.r[register_pc]);
-                    if (!result)
-                        return false;
                 }
-
                 break;
             }
             case op_codes::bo: {
                 // OF = 1
                 if (_registers.flags(register_file_t::flags_t::overflow)) {
-                    auto result = get_constant_address_or_pc_with_offset(
+                    get_constant_address_or_pc_with_offset(
                         r,
                         inst,
                         0,
                         cache_entry->size,
                         _registers.r[register_pc]);
-                    if (!result)
-                        return false;
-
                 }
 
                 break;
@@ -2290,14 +2159,12 @@ namespace basecode::vm {
                 // CF = 0 and ZF = 0
                 if (!_registers.flags(register_file_t::flags_t::zero)
                 &&  !_registers.flags(register_file_t::flags_t::carry)) {
-                    auto result = get_constant_address_or_pc_with_offset(
+                    get_constant_address_or_pc_with_offset(
                         r,
                         inst,
                         0,
                         cache_entry->size,
                         _registers.r[register_pc]);
-                    if (!result)
-                        return false;
                 }
                 break;
             }
@@ -2308,16 +2175,13 @@ namespace basecode::vm {
                 auto zf = _registers.flags(register_file_t::flags_t::zero);
 
                 if (!zf && sf == of) {
-                    auto result = get_constant_address_or_pc_with_offset(
+                    get_constant_address_or_pc_with_offset(
                         r,
                         inst,
                         0,
                         cache_entry->size,
                         _registers.r[register_pc]);
-                    if (!result)
-                        return false;
                 }
-
                 break;
             }
             case op_codes::bge: {
@@ -2326,14 +2190,12 @@ namespace basecode::vm {
                 auto of = _registers.flags(register_file_t::flags_t::overflow);
 
                 if (sf == of) {
-                    auto result = get_constant_address_or_pc_with_offset(
+                    get_constant_address_or_pc_with_offset(
                         r,
                         inst,
                         0,
                         cache_entry->size,
                         _registers.r[register_pc]);
-                    if (!result)
-                        return false;
                 }
 
                 break;
@@ -2341,14 +2203,12 @@ namespace basecode::vm {
             case op_codes::bcc: {
                 // CF = 0
                 if (!_registers.flags(register_file_t::flags_t::carry)) {
-                    auto result = get_constant_address_or_pc_with_offset(
+                    get_constant_address_or_pc_with_offset(
                         r,
                         inst,
                         0,
                         cache_entry->size,
                         _registers.r[register_pc]);
-                    if (!result)
-                        return false;
                 }
                 break;
             }
@@ -2357,30 +2217,25 @@ namespace basecode::vm {
             case op_codes::bb: {
                 // CF = 1
                 if (_registers.flags(register_file_t::flags_t::carry)) {
-                    auto result = get_constant_address_or_pc_with_offset(
+                    get_constant_address_or_pc_with_offset(
                         r,
                         inst,
                         0,
                         cache_entry->size,
                         _registers.r[register_pc]);
-                    if (!result)
-                        return false;
                 }
-
                 break;
             }
             case op_codes::bbe: {
                 // CF = 1 or ZF = 1
                 if (_registers.flags(register_file_t::flags_t::carry)
                 ||  _registers.flags(register_file_t::flags_t::zero)) {
-                    auto result = get_constant_address_or_pc_with_offset(
+                    get_constant_address_or_pc_with_offset(
                         r,
                         inst,
                         0,
                         cache_entry->size,
                         _registers.r[register_pc]);
-                    if (!result)
-                        return false;
                 }
 
                 break;
@@ -2391,14 +2246,12 @@ namespace basecode::vm {
                 auto of = _registers.flags(register_file_t::flags_t::overflow);
 
                 if (sf != of) {
-                    auto result = get_constant_address_or_pc_with_offset(
+                    get_constant_address_or_pc_with_offset(
                         r,
                         inst,
                         0,
                         cache_entry->size,
                         _registers.r[register_pc]);
-                    if (!result)
-                        return false;
                 }
 
                 break;
@@ -2410,14 +2263,12 @@ namespace basecode::vm {
                 auto zf = _registers.flags(register_file_t::flags_t::zero);
 
                 if (zf || sf != of) {
-                    auto result = get_constant_address_or_pc_with_offset(
+                    get_constant_address_or_pc_with_offset(
                         r,
                         inst,
                         0,
                         cache_entry->size,
                         _registers.r[register_pc]);
-                    if (!result)
-                        return false;
                 }
                 break;
             }
@@ -2427,8 +2278,7 @@ namespace basecode::vm {
                 // CF = 1
                 register_value_alias_t result {};
                 result.b = _registers.flags(register_file_t::flags_t::carry) ? 1 : 0;
-                if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
-                    return false;
+                set_target_operand_value(r, inst.operands[0], inst.size, result);
                 break;
             }
             case op_codes::setnb:
@@ -2437,8 +2287,7 @@ namespace basecode::vm {
                 // CF = 0
                 register_value_alias_t result {};
                 result.b = !_registers.flags(register_file_t::flags_t::carry) ? 1 : 0;
-                if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
-                    return false;
+                set_target_operand_value(r, inst.operands[0], inst.size, result);
                 break;
             }
             case op_codes::seta:
@@ -2448,8 +2297,7 @@ namespace basecode::vm {
                 auto zero_flag = _registers.flags(register_file_t::flags_t::zero);
                 auto carry_flag = _registers.flags(register_file_t::flags_t::carry);
                 result.b = !zero_flag && !carry_flag ? 1 : 0;
-                if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
-                    return false;
+                set_target_operand_value(r, inst.operands[0], inst.size, result);
                 break;
             }
             case op_codes::setna:
@@ -2459,8 +2307,7 @@ namespace basecode::vm {
                 auto carry_flag = _registers.flags(register_file_t::flags_t::carry);
                 register_value_alias_t result {};
                 result.b = (zero_flag || carry_flag) ? 1 : 0;
-                if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
-                    return false;
+                set_target_operand_value(r, inst.operands[0], inst.size, result);
                 break;
             }
             case op_codes::setg:
@@ -2471,8 +2318,7 @@ namespace basecode::vm {
                 auto zf = _registers.flags(register_file_t::flags_t::zero);
                 register_value_alias_t result {};
                 result.b = !zf && sf == of ? 1 : 0;
-                if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
-                    return false;
+                set_target_operand_value(r, inst.operands[0], inst.size, result);
                 break;
             }
             case op_codes::setnl:
@@ -2482,8 +2328,7 @@ namespace basecode::vm {
                 auto of = _registers.flags(register_file_t::flags_t::overflow);
                 register_value_alias_t result {};
                 result.b = sf == of ? 1 : 0;
-                if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
-                    return false;
+                set_target_operand_value(r, inst.operands[0], inst.size, result);
                 break;
             }
             case op_codes::setle:
@@ -2494,8 +2339,7 @@ namespace basecode::vm {
                 auto zf = _registers.flags(register_file_t::flags_t::zero);
                 register_value_alias_t result {};
                 result.b = zf || sf != of ? 1 : 0;
-                if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
-                    return false;
+                set_target_operand_value(r, inst.operands[0], inst.size, result);
                 break;
             }
             case op_codes::setl:
@@ -2505,67 +2349,58 @@ namespace basecode::vm {
                 auto of = _registers.flags(register_file_t::flags_t::overflow);
                 register_value_alias_t result {};
                 result.b = sf != of ? 1 : 0;
-                if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
-                    return false;
+                set_target_operand_value(r, inst.operands[0], inst.size, result);
                 break;
             }
             case op_codes::seto: {
                 // OF = 1
                 register_value_alias_t result {};
                 result.b = _registers.flags(register_file_t::flags_t::overflow) ? 1 : 0;
-                if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
-                    return false;
+                set_target_operand_value(r, inst.operands[0], inst.size, result);
                 break;
             }
             case op_codes::setno: {
                 // OF = 0
                 register_value_alias_t result {};
                 result.b = !_registers.flags(register_file_t::flags_t::overflow) ? 1 : 0;
-                if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
-                    return false;
+                set_target_operand_value(r, inst.operands[0], inst.size, result);
                 break;
             }
             case op_codes::sets: {
                 // SF = 1
                 register_value_alias_t result {};
                 result.b = _registers.flags(register_file_t::flags_t::negative) ? 1 : 0;
-                if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
-                    return false;
+                set_target_operand_value(r, inst.operands[0], inst.size, result);
                 break;
             }
             case op_codes::setns: {
                 // SF = 0
                 register_value_alias_t result {};
                 result.b = !_registers.flags(register_file_t::flags_t::negative) ? 1 : 0;
-                if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
-                    return false;
+                set_target_operand_value(r, inst.operands[0], inst.size, result);
                 break;
             }
             case op_codes::setz: {
                 register_value_alias_t result {};
                 result.b = _registers.flags(register_file_t::flags_t::zero) ? 1 : 0;
-                if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
-                    return false;
+                set_target_operand_value(r, inst.operands[0], inst.size, result);
                 break;
             }
             case op_codes::setnz: {
                 register_value_alias_t result {};
                 result.b = !_registers.flags(register_file_t::flags_t::zero) ? 1 : 0;
-                if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
-                    return false;
+                set_target_operand_value(r, inst.operands[0], inst.size, result);
                 break;
             }
             case op_codes::jsr: {
                 push(_registers.r[register_pc].qw);
 
-                auto result = get_constant_address_or_pc_with_offset(
+                get_constant_address_or_pc_with_offset(
                     r,
                     inst,
                     0,
                     cache_entry->size,
                     _registers.r[register_pc]);
-                if (!result)
-                    return false;
 
                 break;
             }
@@ -2574,21 +2409,18 @@ namespace basecode::vm {
                 break;
             }
             case op_codes::jmp: {
-                auto result = get_constant_address_or_pc_with_offset(
+                get_constant_address_or_pc_with_offset(
                     r,
                     inst,
                     0,
                     cache_entry->size,
                     _registers.r[register_pc]);
-                if (!result)
-                    return false;
                 break;
             }
             case op_codes::swi: {
                 register_value_alias_t index {};
 
-                if (!get_operand_value(r, inst, 0, index))
-                    return false;
+                get_operand_value(r, inst, 0, index);
 
                 size_t swi_offset = sizeof(uint64_t) * index.qw;
                 uint64_t swi_address = read(op_sizes::qword, swi_offset);
@@ -2602,9 +2434,7 @@ namespace basecode::vm {
             }
             case op_codes::swap: {
                 register_value_alias_t value {};
-
-                if (!get_operand_value(r, inst, 1, value))
-                    return false;
+                get_operand_value(r, inst, 1, value);
 
                 register_value_alias_t result {};
 
@@ -2629,8 +2459,7 @@ namespace basecode::vm {
                 }
 
                 auto zero_flag = is_zero(inst.size, result);
-                if (!set_target_operand_value(r, inst.operands[0], inst.size, result))
-                    return false;
+                set_target_operand_value(r, inst.operands[0], inst.size, result);
 
                 _registers.flags(register_file_t::flags_t::carry, false);
                 _registers.flags(register_file_t::flags_t::subtract, false);
@@ -2642,23 +2471,17 @@ namespace basecode::vm {
             }
             case op_codes::trap: {
                 register_value_alias_t index {};
-
-                if (!get_operand_value(r, inst, 0, index))
-                    return false;
-
+                get_operand_value(r, inst, 0, index);
                 execute_trap(index.b);
-
                 break;
             }
             case op_codes::ffi: {
                 register_value_alias_t address {};
-                if (!get_operand_value(r, inst, 0, address))
-                    return false;
+                get_operand_value(r, inst, 0, address);
 
                 register_value_alias_t signature_id {};
                 if (inst.operands_count > 1) {
-                    if (!get_operand_value(r, inst, 1, signature_id))
-                        return false;
+                    get_operand_value(r, inst, 1, signature_id);
                 }
 
                 auto func = _ffi->find_function(address.qw);
@@ -2690,26 +2513,24 @@ namespace basecode::vm {
                 auto result_value = _ffi->call(func);
                 if (func->return_value.type != ffi_types_t::void_type) {
                     push(result_value);
-                    if (func->return_value.type == ffi_types_t::pointer_type)
-                        _white_listed_addresses.insert(result_value);
+//                    if (func->return_value.type == ffi_types_t::pointer_type)
+//                        _white_listed_addresses.insert(result_value);
                 }
 
                 break;
             }
             case op_codes::meta: {
                 register_value_alias_t meta_data_size {};
-                if (!get_operand_value(r, inst, 0, meta_data_size))
-                    return false;
-
+                get_operand_value(r, inst, 0, meta_data_size);
                 break;
             }
             case op_codes::exit: {
                 _exited = true;
-                break;
+                return !r.is_failed();
             }
         }
 
-        return !r.is_failed();
+        goto _fetch;
     }
 
     bool terp::has_exited() const {
@@ -2732,8 +2553,8 @@ namespace basecode::vm {
     bool terp::bounds_check_address(
             common::result& r,
             const register_value_alias_t& address) {
-        if (_white_listed_addresses.count(address.qw))
-            return true;
+//        if (_white_listed_addresses.count(address.qw))
+//            return true;
 
         auto heap_bottom = _heap_address;
         auto heap_top = _heap_address + _heap_size;
@@ -2956,7 +2777,7 @@ namespace basecode::vm {
         }
     }
 
-    bool terp::get_operand_value(
+    void terp::get_operand_value(
             common::result& r,
             const instruction_t& inst,
             uint8_t operand_index,
@@ -2986,14 +2807,14 @@ namespace basecode::vm {
                     value.qw = operand.value.u;
                     break;
                 }
-                default:
-                    return false;
+                default: {
+                    break;
+                }
             }
         }
-        return true;
     }
 
-    bool terp::set_target_operand_value(
+    void terp::set_target_operand_value(
             common::result& r,
             const operand_encoding_t& operand,
             op_sizes size,
@@ -3013,28 +2834,23 @@ namespace basecode::vm {
             r.error(
                 "B006",
                 "constant cannot be a target operand type.");
-            return false;
         }
-
-        return true;
     }
 
-    bool terp::get_address_with_offset(
+    void terp::get_address_with_offset(
             common::result& r,
             const instruction_t& inst,
             uint8_t address_index,
             uint8_t offset_index,
             register_value_alias_t& address) {
-        if (!get_operand_value(r, inst, address_index, address))
-            return false;
+        get_operand_value(r, inst, address_index, address);
 
-        auto is_white_listed = _white_listed_addresses.count(address.qw) > 0;
+//        auto is_white_listed = _white_listed_addresses.count(address.qw) > 0;
 
         if (inst.operands_count > 2) {
             register_value_alias_t offset {};
 
-            if (!get_operand_value(r, inst, offset_index, offset))
-                return false;
+            get_operand_value(r, inst, offset_index, offset);
 
             if (inst.operands[offset_index].is_negative()) {
                 address.qw -= offset.qw;
@@ -3042,38 +2858,36 @@ namespace basecode::vm {
                 address.qw += offset.qw;
             }
 
-            if(inst.op == op_codes::move
-            || inst.op == op_codes::moves
-            || inst.op == op_codes::movez) {
-                if (is_white_listed)
-                    _white_listed_addresses.insert(address.qw);
-            }
+//            if(inst.op == op_codes::move
+//            || inst.op == op_codes::moves
+//            || inst.op == op_codes::movez) {
+//                if (is_white_listed)
+//                    _white_listed_addresses.insert(address.qw);
+//            }
         }
 
-        if (!is_white_listed
-        && (inst.op == op_codes::load || inst.op == op_codes::store)) {
-            if (!bounds_check_address(r, address))
-                return false;
-        }
-
-        return true;
+//        if (!is_white_listed
+//        && (inst.op == op_codes::load || inst.op == op_codes::store)) {
+//            if (!bounds_check_address(r, address)) {
+//                // XXX: how to handle?
+//                //return false;
+//            }
+//        }
     }
 
-    bool terp::get_constant_address_or_pc_with_offset(
+    void terp::get_constant_address_or_pc_with_offset(
             common::result& r,
             const instruction_t& inst,
             uint8_t operand_index,
             uint64_t inst_size,
             register_value_alias_t& address) {
-        if (!get_operand_value(r, inst, operand_index, address))
-            return false;
+        get_operand_value(r, inst, operand_index, address);
 
         if (inst.operands_count >= 2) {
             register_value_alias_t offset {};
 
             auto offset_index = static_cast<uint8_t>(operand_index + 1);
-            if (!get_operand_value(r, inst, offset_index, offset))
-                return false;
+            get_operand_value(r, inst, offset_index, offset);
 
             if (inst.operands[offset_index].is_negative()) {
                 address.qw -= offset.qw + inst_size;
@@ -3081,9 +2895,7 @@ namespace basecode::vm {
                 address.qw += offset.qw - inst_size;
             }
         }
-
-        return true;
-    }
+   }
 
     bool terp::has_carry(
             uint64_t lhs,

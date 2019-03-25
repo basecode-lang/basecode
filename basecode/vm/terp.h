@@ -18,6 +18,7 @@
 #include <cstdint>
 #include <functional>
 #include <fmt/format.h>
+#include <unordered_set>
 #include <unordered_map>
 #include <common/result.h>
 #include <boost/filesystem.hpp>
@@ -151,7 +152,7 @@ namespace basecode::vm {
             const register_value_alias_t& result,
             op_sizes size);
 
-        bool get_operand_value(
+        void get_operand_value(
             common::result& r,
             const instruction_t& inst,
             uint8_t operand_index,
@@ -163,7 +164,7 @@ namespace basecode::vm {
 
         void initialize_allocator();
 
-        bool set_target_operand_value(
+        void set_target_operand_value(
             common::result& r,
             const operand_encoding_t& operand,
             op_sizes size,
@@ -171,14 +172,14 @@ namespace basecode::vm {
 
         void execute_trap(uint8_t index);
 
-        bool get_address_with_offset(
+        void get_address_with_offset(
             common::result& r,
             const instruction_t& inst,
             uint8_t address_index,
             uint8_t offset_index,
             register_value_alias_t& address);
 
-        bool get_constant_address_or_pc_with_offset(
+        void get_constant_address_or_pc_with_offset(
             common::result& r,
             const instruction_t& inst,
             uint8_t operand_index,
@@ -198,8 +199,8 @@ namespace basecode::vm {
         register_file_t _registers {};
         allocator* _allocator = nullptr;
         meta_information_t _meta_information {};
-        std::set<uint64_t> _white_listed_addresses {};
         std::unordered_map<uint8_t, trap_callable> _traps {};
+        std::unordered_set<uint64_t> _white_listed_addresses {};
     };
 
 }
