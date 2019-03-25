@@ -102,8 +102,6 @@ namespace basecode::vm {
 
         bool run(common::result& r);
 
-        bool step(common::result& r);
-
         void remove_trap(uint8_t index);
 
         bool initialize(common::result& r);
@@ -154,7 +152,7 @@ namespace basecode::vm {
 
         void get_operand_value(
             common::result& r,
-            const instruction_t& inst,
+            const instruction_t* inst,
             uint8_t operand_index,
             register_value_alias_t& value) const;
 
@@ -170,18 +168,18 @@ namespace basecode::vm {
             op_sizes size,
             const register_value_alias_t& value);
 
-        void execute_trap(uint8_t index);
-
         void get_address_with_offset(
             common::result& r,
-            const instruction_t& inst,
+            const instruction_t* inst,
             uint8_t address_index,
             uint8_t offset_index,
             register_value_alias_t& address);
 
+        void execute_trap(uint8_t index);
+
         void get_constant_address_or_pc_with_offset(
             common::result& r,
-            const instruction_t& inst,
+            const instruction_t* inst,
             uint8_t operand_index,
             uint64_t inst_size,
             register_value_alias_t& address);

@@ -221,27 +221,27 @@ namespace basecode::debugger {
                 execute_next_step = current_state() == debugger_state_t::running;
             };
 
-            if (execute_next_step) {
-                common::result step_result {};
-                auto success = terp.step(step_result);
-                if (!success) {
-                    pop_state();
-                    push_state(debugger_state_t::errored);
-                    _errors_window->visible(true);
-                } else {
-                    pc = terp.register_file().r[vm::register_pc].qw;
-                    if (terp.has_exited()) {
-                        pop_state();
-                        push_state(debugger_state_t::ended);
-                    } else {
-                        _assembly_window->move_to_address(pc);
-                    }
-                }
-                _stack_window->mark_dirty();
-                _header_window->mark_dirty();
-                _memory_window->mark_dirty();
-                _registers_window->mark_dirty();
-            }
+//            if (execute_next_step) {
+//                common::result step_result {};
+//                auto success = terp.step(step_result);
+//                if (!success) {
+//                    pop_state();
+//                    push_state(debugger_state_t::errored);
+//                    _errors_window->visible(true);
+//                } else {
+//                    pc = terp.register_file().r[vm::register_pc].qw;
+//                    if (terp.has_exited()) {
+//                        pop_state();
+//                        push_state(debugger_state_t::ended);
+//                    } else {
+//                        _assembly_window->move_to_address(pc);
+//                    }
+//                }
+//                _stack_window->mark_dirty();
+//                _header_window->mark_dirty();
+//                _memory_window->mark_dirty();
+//                _registers_window->mark_dirty();
+//            }
 
             _output_window->process_buffers();
 
