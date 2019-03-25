@@ -192,6 +192,11 @@ namespace basecode::vm {
         double   qwf;
     };
 
+    void register_set_zoned_value(
+        register_value_alias_t& reg,
+        uint64_t value,
+        op_sizes size);
+
     struct register_t {
         static register_t pc() {
             return register_t {
@@ -518,19 +523,6 @@ namespace basecode::vm {
         int64_t  s;
         float    f;
         double   d;
-    };
-
-    struct operand_value_t {
-        register_value_alias_t as_register_alias() const {
-            register_value_alias_t reg {};
-            reg.qw = alias.u;
-            return reg;
-        }
-
-        register_type_t type = register_type_t::none;
-        operand_value_alias_t alias {
-            .u = 0
-        };
     };
 
     struct operand_encoding_t {
@@ -2173,4 +2165,4 @@ namespace basecode::vm {
         const std::string&,
         vm::assembly_symbol_result_t&)>;
 
-};
+}

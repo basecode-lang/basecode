@@ -27,6 +27,7 @@ find_prime_iterative :: proc(initial: u32): u32 {
 };
 
 #run {
-    result := find_prime_iterative(20000);
+    //result := find_prime_iterative(20000);
+    result := find_prime_iterative(2000);
     core::print("result := %d\n", result);
 };

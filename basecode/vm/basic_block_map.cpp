@@ -43,4 +43,4 @@ namespace basecode::vm {
         return it->second;
     }
 
-};
+}

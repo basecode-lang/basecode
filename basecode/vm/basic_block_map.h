@@ -35,5 +35,5 @@ namespace basecode::vm {
         std::unordered_map<common::id_t, basic_block*> _blocks {};
     };
 
-};
+}
 

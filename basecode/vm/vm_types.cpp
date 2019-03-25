@@ -20,6 +20,31 @@
 
 namespace basecode::vm {
 
+    void register_set_zoned_value(
+            register_value_alias_t& reg,
+            uint64_t value,
+            op_sizes size) {
+        switch (size) {
+            case op_sizes::byte: {
+                reg.b = static_cast<uint8_t>(value);
+                break;
+            }
+            case op_sizes::word: {
+                reg.w = static_cast<uint16_t>(value);
+                break;
+            }
+            case op_sizes::dword: {
+                reg.dw = static_cast<uint32_t>(value);
+                break;
+            }
+            default:
+            case op_sizes::qword: {
+                reg.qw = value;
+                break;
+            }
+        }
+    }
+
     ///////////////////////////////////////////////////////////////////////////
 
     void listing_source_file_t::add_source_line(
@@ -292,4 +317,4 @@ namespace basecode::vm {
         _data = value;
         _is_set = true;
     }
-};
+}

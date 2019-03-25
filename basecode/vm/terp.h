@@ -21,13 +21,14 @@
 #include <unordered_map>
 #include <common/result.h>
 #include <boost/filesystem.hpp>
+#include <boost/unordered_map.hpp>
 #include "vm_types.h"
 
 namespace basecode::vm {
 
     struct icache_entry_t {
-        size_t size;
-        instruction_t inst;
+        size_t size = 0;
+        instruction_t inst {};
     };
 
     class instruction_cache {
@@ -36,16 +37,13 @@ namespace basecode::vm {
 
         void reset();
 
-        size_t fetch_at(
-            common::result& r,
-            uint64_t address,
-            instruction_t& inst);
+        icache_entry_t* fetch(common::result& r);
 
-        size_t fetch(common::result& r, instruction_t& inst);
+        icache_entry_t* fetch_at(common::result& r, uint64_t address);
 
     private:
         terp* _terp = nullptr;
-        std::unordered_map<uint64_t, icache_entry_t> _cache {};
+        boost::unordered_map<uint64_t, icache_entry_t> _cache {};
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -140,7 +138,7 @@ namespace basecode::vm {
     private:
         bool is_zero(
             op_sizes size,
-            const operand_value_t& value);
+            const register_value_alias_t& value);
 
         bool has_carry(
             uint64_t lhs,
@@ -153,21 +151,15 @@ namespace basecode::vm {
             const register_value_alias_t& result,
             op_sizes size);
 
-        void set_zoned_value(
-            register_type_t type,
-            register_value_alias_t& reg,
-            uint64_t value,
-            op_sizes size);
-
         bool get_operand_value(
             common::result& r,
             const instruction_t& inst,
             uint8_t operand_index,
-            operand_value_t& value) const;
+            register_value_alias_t& value) const;
 
         bool bounds_check_address(
             common::result& r,
-            const operand_value_t& address);
+            const register_value_alias_t& address);
 
         void initialize_allocator();
 
@@ -175,7 +167,7 @@ namespace basecode::vm {
             common::result& r,
             const operand_encoding_t& operand,
             op_sizes size,
-            const operand_value_t& value);
+            const register_value_alias_t& value);
 
         void execute_trap(uint8_t index);
 
@@ -184,16 +176,16 @@ namespace basecode::vm {
             const instruction_t& inst,
             uint8_t address_index,
             uint8_t offset_index,
-            operand_value_t& address);
+            register_value_alias_t& address);
 
         bool get_constant_address_or_pc_with_offset(
             common::result& r,
             const instruction_t& inst,
             uint8_t operand_index,
             uint64_t inst_size,
-            operand_value_t& address);
+            register_value_alias_t& address);
 
-        bool is_negative(const operand_value_t& value, op_sizes size);
+        bool is_negative(const register_value_alias_t& value, op_sizes size);
 
     private:
         ffi* _ffi = nullptr;
@@ -210,4 +202,4 @@ namespace basecode::vm {
         std::unordered_map<uint8_t, trap_callable> _traps {};
     };
 
-};
+}
