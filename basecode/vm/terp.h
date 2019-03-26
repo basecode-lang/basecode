@@ -53,9 +53,9 @@ namespace basecode::vm {
     public:
         using trap_callable = std::function<void (terp*)>;
 
-        static constexpr uint64_t mask_byte_negative  = 0b0000000000000000000000000000000000000000000000000000000010000000;
-        static constexpr uint64_t mask_word_negative  = 0b0000000000000000000000000000000000000000000000001000000000000000;
-        static constexpr uint64_t mask_dword_negative = 0b0000000000000000000000000000000010000000000000000000000000000000;
+        static constexpr uint8_t  mask_byte_negative  = 0b10000000;
+        static constexpr uint16_t mask_word_negative  = 0b1000000000000000;
+        static constexpr uint32_t mask_dword_negative = 0b10000000000000000000000000000000;
         static constexpr uint64_t mask_qword_negative = 0b1000000000000000000000000000000000000000000000000000000000000000;
 
         static constexpr size_t interrupt_vector_table_start = 0;
@@ -135,20 +135,85 @@ namespace basecode::vm {
         void register_trap(uint8_t index, const trap_callable& callable);
 
     private:
-        bool is_zero(
+        void set_flags(
             op_sizes size,
-            const register_value_alias_t& value);
+            const register_value_alias_t* result,
+            const register_value_alias_t* lhs,
+            const register_value_alias_t* rhs,
+            bool subtract = false,
+            const bool* carry_flag_override = nullptr);
 
-        bool has_carry(
-            uint64_t lhs,
-            uint64_t rhs,
-            op_sizes size);
+        inline bool is_zero(
+                op_sizes size,
+                const register_value_alias_t& value) {
+            switch (size) {
+                case op_sizes::byte:
+                    return value.b == 0;
+                case op_sizes::word:
+                    return value.w == 0;
+                case op_sizes::dword:
+                    return value.dw == 0;
+                case op_sizes::qword:
+                    return value.qw == 0;
+                default:
+                    return false;
+            }
+        }
 
-        bool has_overflow(
-            const register_value_alias_t& lhs,
-            const register_value_alias_t& rhs,
-            const register_value_alias_t& result,
-            op_sizes size);
+        inline bool has_carry(
+                uint64_t lhs,
+                uint64_t rhs,
+                op_sizes size) {
+            switch (size) {
+                case op_sizes::byte:
+                    return lhs == UINT8_MAX && rhs > 0;
+                case op_sizes::word:
+                    return lhs == UINT16_MAX && rhs > 0;
+                case op_sizes::dword:
+                    return lhs == UINT32_MAX && rhs > 0;
+                case op_sizes::qword:
+                default:
+                    return lhs == UINT64_MAX && rhs > 0;
+            }
+        }
+
+        inline bool is_negative(
+                const register_value_alias_t& value,
+                op_sizes size) {
+            switch (size) {
+                case op_sizes::byte: {
+                    return (value.b & mask_byte_negative) != 0;
+                }
+                case op_sizes::word: {
+                    return (value.w & mask_word_negative) != 0;
+                }
+                case op_sizes::dword: {
+                    return (value.dw & mask_dword_negative) != 0;
+                }
+                case op_sizes::qword:
+                default:
+                    return (value.qw & mask_qword_negative) != 0;
+            }
+        }
+
+        inline bool has_overflow(
+                const register_value_alias_t& lhs,
+                const register_value_alias_t& rhs,
+                const register_value_alias_t& result,
+                op_sizes size) {
+            switch (size) {
+                case op_sizes::byte:
+                    return ((~(lhs.b ^ rhs.b)) & (lhs.b ^ result.b) & mask_byte_negative) != 0;
+                case op_sizes::word:
+                    return ((~(lhs.w ^ rhs.w)) & (lhs.w ^ result.w) & mask_word_negative) != 0;
+                case op_sizes::dword:
+                    return ((~(lhs.dw ^ rhs.dw)) & (lhs.dw ^ result.dw) & mask_dword_negative) != 0;
+                case op_sizes::qword:
+                default: {
+                    return ((~(lhs.qw ^ rhs.qw)) & (lhs.qw ^ result.qw) & mask_qword_negative) != 0;
+                }
+            }
+        }
 
         void get_operand_value(
             common::result& r,
@@ -162,18 +227,18 @@ namespace basecode::vm {
 
         void initialize_allocator();
 
-        void set_target_operand_value(
-            common::result& r,
-            const operand_encoding_t& operand,
-            op_sizes size,
-            const register_value_alias_t& value);
-
         void get_address_with_offset(
             common::result& r,
             const instruction_t* inst,
             uint8_t address_index,
             uint8_t offset_index,
             register_value_alias_t& address);
+
+        void set_target_operand_value(
+            common::result& r,
+            const operand_encoding_t& operand,
+            op_sizes size,
+            const register_value_alias_t& value);
 
         void execute_trap(uint8_t index);
 
@@ -183,8 +248,6 @@ namespace basecode::vm {
             uint8_t operand_index,
             uint64_t inst_size,
             register_value_alias_t& address);
-
-        bool is_negative(const register_value_alias_t& value, op_sizes size);
 
     private:
         ffi* _ffi = nullptr;

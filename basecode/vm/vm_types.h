@@ -268,7 +268,6 @@ namespace basecode::vm {
                 else
                     return static_cast<uint8_t>(r);
         }
-        return 0;
     }
 
     struct register_file_t {
@@ -281,11 +280,44 @@ namespace basecode::vm {
             subtract = 0b0000000000000000000000000000000000000000000000000000000000100000,
         };
 
-        bool flags(flags_t f) const {
+        inline void set_flags(
+                bool zero,
+                bool carry,
+                bool overflow,
+                bool negative,
+                bool subtract = false) {
+            auto& flags = r[register_fr];
+            if (zero)
+                flags.qw |= flags_t::zero;
+            else
+                flags.qw &= ~flags_t::zero;
+
+            if (carry)
+                flags.qw |= flags_t::carry;
+            else
+                flags.qw &= ~flags_t::carry;
+
+            if (overflow)
+                flags.qw |= flags_t::overflow;
+            else
+                flags.qw &= ~flags_t::overflow;
+
+            if (negative)
+                flags.qw |= flags_t::negative;
+            else
+                flags.qw &= ~flags_t::negative;
+
+            if (subtract)
+                flags.qw |= flags_t::subtract;
+            else
+                flags.qw &= ~flags_t::subtract;
+        }
+
+        inline bool flags(flags_t f) const {
             return (r[register_fr].qw & f) != 0;
         }
 
-        void flags(flags_t f, bool value) {
+        inline void flags(flags_t f, bool value) {
             if (value)
                 r[register_fr].qw |= f;
             else

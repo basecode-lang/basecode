@@ -666,20 +666,18 @@ namespace basecode::vm {
             address.qw = _allocator->alloc(size.qw);
             if (address.qw == 0) {
                 execute_trap(trap_out_of_memory);
-                // XXX: how to handle errors
+                return false;
             }
 
             set_target_operand_value(r, inst->operands[0], op_sizes::qword, address);
 
-            _registers.flags(register_file_t::flags_t::carry, false);
-            _registers.flags(register_file_t::flags_t::subtract, false);
-            _registers.flags(register_file_t::flags_t::overflow, false);
-            _registers.flags(register_file_t::flags_t::zero, address.qw == 0);
-            _registers.flags(
-                register_file_t::flags_t::negative,
+            _registers.set_flags(
+                address.qw == 0,
+                false,
+                false,
                 is_negative(address, inst->size));
-            NEXT
 
+            NEXT
         }
 
         _free:
@@ -689,14 +687,13 @@ namespace basecode::vm {
 
             auto freed_size = _allocator->free(address.qw);
 
-            _registers.flags(register_file_t::flags_t::carry, false);
-            _registers.flags(register_file_t::flags_t::subtract, false);
-            _registers.flags(register_file_t::flags_t::overflow, false);
-            _registers.flags(register_file_t::flags_t::negative, false);
-            _registers.flags(register_file_t::flags_t::zero, freed_size != 0);
+            _registers.set_flags(
+                freed_size == 0,
+                false,
+                false,
+                is_negative(address, inst->size));
 
             NEXT
-
         }
 
         _size:
@@ -708,16 +705,13 @@ namespace basecode::vm {
             block_size.qw = _allocator->size(address.qw);
             set_target_operand_value(r, inst->operands[0], inst->size, block_size);
 
-            _registers.flags(register_file_t::flags_t::carry, false);
-            _registers.flags(register_file_t::flags_t::subtract, false);
-            _registers.flags(register_file_t::flags_t::overflow, false);
-            _registers.flags(register_file_t::flags_t::zero, block_size.qw == 0);
-            _registers.flags(
-                register_file_t::flags_t::negative,
+            _registers.set_flags(
+                block_size.qw == 0,
+                false,
+                false,
                 is_negative(block_size, inst->size));
 
             NEXT
-
         }
 
         _load:
@@ -727,19 +721,16 @@ namespace basecode::vm {
 
             register_value_alias_t loaded_data{};
             loaded_data.qw = read(inst->size, address.qw);
-            auto zero_flag = is_zero(inst->size, loaded_data);
             set_target_operand_value(r, inst->operands[0], inst->size, loaded_data);
 
-            _registers.flags(register_file_t::flags_t::carry, false);
-            _registers.flags(register_file_t::flags_t::subtract, false);
-            _registers.flags(register_file_t::flags_t::overflow, false);
-            _registers.flags(register_file_t::flags_t::zero, zero_flag);
-            _registers.flags(
-                register_file_t::flags_t::negative,
+            auto zero_flag = is_zero(inst->size, loaded_data);
+            _registers.set_flags(
+                zero_flag,
+                false,
+                false,
                 is_negative(loaded_data, inst->size));
 
             NEXT
-
         }
 
         _store:
@@ -750,19 +741,15 @@ namespace basecode::vm {
             register_value_alias_t data{};
             get_operand_value(r, inst, 1, data);
 
-            auto zero_flag = is_zero(inst->size, data);
             write(inst->size, address.qw, data.qw);
 
-            _registers.flags(register_file_t::flags_t::carry, false);
-            _registers.flags(register_file_t::flags_t::subtract, false);
-            _registers.flags(register_file_t::flags_t::overflow, false);
-            _registers.flags(register_file_t::flags_t::zero, zero_flag);
-            _registers.flags(
-                register_file_t::flags_t::negative,
+            _registers.set_flags(
+                is_zero(inst->size, data),
+                false,
+                false,
                 is_negative(data, inst->size));
 
             NEXT
-
         }
 
         _copy:
@@ -786,14 +773,9 @@ namespace basecode::vm {
                 reinterpret_cast<void*>(source_address.qw),
                 length.qw * op_size_in_bytes(inst->size));
 
-            _registers.flags(register_file_t::flags_t::zero, false);
-            _registers.flags(register_file_t::flags_t::carry, false);
-            _registers.flags(register_file_t::flags_t::overflow, false);
-            _registers.flags(register_file_t::flags_t::subtract, false);
-            _registers.flags(register_file_t::flags_t::negative, false);
+            _registers.set_flags(false, false, false, false);
 
             NEXT
-
         }
 
         _convert:
@@ -852,8 +834,13 @@ namespace basecode::vm {
 
             set_target_operand_value(r, inst->operands[0], inst->size, casted_value);
 
-            NEXT
+            _registers.set_flags(
+                is_zero(inst->size, casted_value),
+                false,
+                false,
+                is_negative(casted_value, inst->size));
 
+            NEXT
         }
 
         _fill:
@@ -896,14 +883,13 @@ namespace basecode::vm {
                     break;
             }
 
-            _registers.flags(register_file_t::flags_t::zero, false);
-            _registers.flags(register_file_t::flags_t::carry, false);
-            _registers.flags(register_file_t::flags_t::overflow, false);
-            _registers.flags(register_file_t::flags_t::subtract, false);
-            _registers.flags(register_file_t::flags_t::negative, false);
+            _registers.set_flags(
+                is_zero(inst->size, value),
+                false,
+                false,
+                false);
 
             NEXT
-
         }
 
         _clr:
@@ -913,14 +899,9 @@ namespace basecode::vm {
 
             set_target_operand_value(r, inst->operands[0], inst->size, value);
 
-            _registers.flags(register_file_t::flags_t::carry, false);
-            _registers.flags(register_file_t::flags_t::overflow, false);
-            _registers.flags(register_file_t::flags_t::subtract, false);
-            _registers.flags(register_file_t::flags_t::zero, true);
-            _registers.flags(register_file_t::flags_t::negative, false);
+            _registers.set_flags(true, false, false, false);
 
             NEXT
-
         }
 
         _move:
@@ -933,12 +914,10 @@ namespace basecode::vm {
 
             set_target_operand_value(r, inst->operands[0], inst->size, offset_value);
 
-            _registers.flags(register_file_t::flags_t::carry, false);
-            _registers.flags(register_file_t::flags_t::overflow, false);
-            _registers.flags(register_file_t::flags_t::subtract, false);
-            _registers.flags(register_file_t::flags_t::zero, source_value.qw == 0);
-            _registers.flags(
-                register_file_t::flags_t::negative,
+            _registers.set_flags(
+                is_zero(inst->size, source_value),
+                false,
+                false,
                 is_negative(source_value, inst->size));
 
             NEXT
@@ -959,12 +938,10 @@ namespace basecode::vm {
 
             set_target_operand_value(r, inst->operands[0], inst->size, offset_value);
 
-            _registers.flags(register_file_t::flags_t::carry, false);
-            _registers.flags(register_file_t::flags_t::overflow, false);
-            _registers.flags(register_file_t::flags_t::subtract, false);
-            _registers.flags(register_file_t::flags_t::zero, source_value.qw == 0);
-            _registers.flags(
-                register_file_t::flags_t::negative,
+            _registers.set_flags(
+                is_zero(inst->size, source_value),
+                false,
+                false,
                 is_negative(source_value, inst->size));
 
             NEXT
@@ -999,12 +976,10 @@ namespace basecode::vm {
 
             set_target_operand_value(r, inst->operands[0], inst->size, offset_value);
 
-            _registers.flags(register_file_t::flags_t::carry, false);
-            _registers.flags(register_file_t::flags_t::overflow, false);
-            _registers.flags(register_file_t::flags_t::subtract, false);
-            _registers.flags(register_file_t::flags_t::zero, source_value.qw == 0);
-            _registers.flags(
-                register_file_t::flags_t::negative,
+            _registers.set_flags(
+                is_zero(inst->size, source_value),
+                false,
+                false,
                 is_negative(source_value, inst->size));
 
             NEXT
@@ -1013,16 +988,14 @@ namespace basecode::vm {
         _push:
         {
             register_value_alias_t source_value{};
-
             get_operand_value(r, inst, 0, source_value);
+
             push(source_value.qw);
 
-            _registers.flags(register_file_t::flags_t::carry, false);
-            _registers.flags(register_file_t::flags_t::overflow, false);
-            _registers.flags(register_file_t::flags_t::subtract, false);
-            _registers.flags(register_file_t::flags_t::zero, source_value.qw == 0);
-            _registers.flags(
-                register_file_t::flags_t::negative,
+            _registers.set_flags(
+                is_zero(inst->size, source_value),
+                false,
+                false,
                 is_negative(source_value, inst->size));
 
             NEXT
@@ -1030,6 +1003,8 @@ namespace basecode::vm {
 
         _pushm:
         {
+            register_value_alias_t* alias = nullptr;
+
             for (uint8_t i = 0; i < inst->operands_count; i++) {
                 const auto& operand = inst->operands[i];
                 auto type = operand.is_integer() ?
@@ -1049,23 +1024,23 @@ namespace basecode::vm {
                         auto reg_index = register_index(
                             static_cast<registers_t>(reg),
                             type);
-                        auto alias = _registers.r[reg_index];
-                        push(alias.qw);
+                        alias = &_registers.r[reg_index];
+                        push(alias->qw);
                     }
                 } else if (operand.is_reg()) {
                     auto reg_index = register_index(
                         static_cast<registers_t>(operand.value.r),
                         type);
-                    auto alias = _registers.r[reg_index];
-                    push(alias.qw);
+                    alias = &_registers.r[reg_index];
+                    push(alias->qw);
                 }
             }
 
-            _registers.flags(register_file_t::flags_t::zero, false);
-            _registers.flags(register_file_t::flags_t::carry, false);
-            _registers.flags(register_file_t::flags_t::overflow, false);
-            _registers.flags(register_file_t::flags_t::subtract, false);
-            _registers.flags(register_file_t::flags_t::negative, false);
+            _registers.set_flags(
+                alias->qw == 0,
+                false,
+                false,
+                is_negative(*alias, inst->size));
 
             NEXT
         }
@@ -1077,12 +1052,10 @@ namespace basecode::vm {
 
             set_target_operand_value(r, inst->operands[0], inst->size, top_of_stack);
 
-            _registers.flags(register_file_t::flags_t::zero, top_of_stack.qw == 0);
-            _registers.flags(register_file_t::flags_t::overflow, false);
-            _registers.flags(register_file_t::flags_t::carry, false);
-            _registers.flags(register_file_t::flags_t::subtract, false);
-            _registers.flags(
-                register_file_t::flags_t::negative,
+            _registers.set_flags(
+                is_zero(inst->size, top_of_stack),
+                false,
+                false,
                 is_negative(top_of_stack, inst->size));
 
             NEXT
@@ -1090,6 +1063,8 @@ namespace basecode::vm {
 
         _popm:
         {
+            register_value_alias_t* alias = nullptr;
+
             for (uint8_t i = 0; i < inst->operands_count; i++) {
                 const auto& operand = inst->operands[i];
                 auto type = operand.is_integer() ?
@@ -1109,37 +1084,38 @@ namespace basecode::vm {
                         auto reg_index = register_index(
                             static_cast<registers_t>(reg),
                             type);
-                        _registers.r[reg_index].qw = pop();
+                        alias = &_registers.r[reg_index];
+                        alias->qw = pop();
                     }
                 } else if (operand.is_reg()) {
                     auto reg_index = register_index(
                         static_cast<registers_t>(operand.value.r),
                         type);
-                    _registers.r[reg_index].qw = pop();
+                    alias = &_registers.r[reg_index];
+                    alias->qw = pop();
                 }
             }
 
-            _registers.flags(register_file_t::flags_t::zero, false);
-            _registers.flags(register_file_t::flags_t::carry, false);
-            _registers.flags(register_file_t::flags_t::overflow, false);
-            _registers.flags(register_file_t::flags_t::subtract, false);
-            _registers.flags(register_file_t::flags_t::negative, false);
+            _registers.set_flags(
+                alias->qw == 0,
+                false,
+                false,
+                is_negative(*alias, inst->size));
 
             NEXT
         }
 
         _dup:
         {
-            auto top_of_stack = peek();
-            push(top_of_stack);
+            register_value_alias_t tos {};
+            tos.qw = peek();
+            push(tos.qw);
 
-            _registers.flags(register_file_t::flags_t::carry, false);
-            _registers.flags(register_file_t::flags_t::overflow, false);
-            _registers.flags(register_file_t::flags_t::subtract, false);
-            _registers.flags(register_file_t::flags_t::zero, top_of_stack == 0);
-            _registers.flags(
-                register_file_t::flags_t::negative,
-                is_negative(register_value_alias_t{.qw = top_of_stack}, inst->size));
+            _registers.set_flags(
+                is_zero(inst->size, tos),
+                false,
+                false,
+                is_negative(tos, inst->size));
 
             NEXT
         }
@@ -1175,7 +1151,7 @@ namespace basecode::vm {
                 }
             } else {
                 if (inst->size == op_sizes::dword)
-                    new_value.dwf = reg_value.dwf + 1.0f;
+                    new_value.dwf = reg_value.dwf + 1.0F;
                 else
                     new_value.qwf = reg_value.qwf + 1.0;
             }
@@ -1186,16 +1162,10 @@ namespace basecode::vm {
 
             set_target_operand_value(r, inst->operands[0], inst->size, new_value);
 
-            _registers.flags(
-                register_file_t::flags_t::overflow,
-                has_overflow(reg_value, one, new_value, inst->size));
-            _registers.flags(register_file_t::flags_t::zero, new_value.qw == 0);
-            _registers.flags(register_file_t::flags_t::subtract, false);
-            _registers.flags(
-                register_file_t::flags_t::carry,
-                has_carry(reg_value.qw, one.qw, inst->size));
-            _registers.flags(
-                register_file_t::flags_t::negative,
+            _registers.set_flags(
+                is_zero(inst->size, new_value),
+                has_carry(reg_value.qw, one.qw, inst->size),
+                has_overflow(reg_value, one, new_value, inst->size),
                 is_negative(new_value, inst->size));
 
             NEXT
@@ -1232,7 +1202,7 @@ namespace basecode::vm {
                 }
             } else {
                 if (inst->size == op_sizes::dword)
-                    new_value.dwf = reg_value.dwf - 1.0f;
+                    new_value.dwf = reg_value.dwf - 1.0F;
                 else
                     new_value.qwf = reg_value.qwf - 1.0;
             }
@@ -1243,17 +1213,12 @@ namespace basecode::vm {
 
             set_target_operand_value(r, inst->operands[0], inst->size, new_value);
 
-            _registers.flags(
-                register_file_t::flags_t::overflow,
-                has_overflow(reg_value, one, new_value, inst->size));
-            _registers.flags(register_file_t::flags_t::subtract, true);
-            _registers.flags(register_file_t::flags_t::zero, new_value.qw == 0);
-            _registers.flags(
-                register_file_t::flags_t::carry,
-                has_carry(reg_value.qw, one.qw, inst->size));
-            _registers.flags(
-                register_file_t::flags_t::negative,
-                is_negative(new_value, inst->size));
+            _registers.set_flags(
+                is_zero(inst->size, new_value),
+                has_carry(reg_value.qw, one.qw, inst->size),
+                has_overflow(reg_value, one, new_value, inst->size),
+                is_negative(new_value, inst->size),
+                true);
 
             NEXT
         }
@@ -1269,7 +1234,7 @@ namespace basecode::vm {
             register_value_alias_t sum_result{};
 
             if (inst->operands[1].is_integer()
-	    &&  inst->operands[2].is_integer()) {
+	        &&  inst->operands[2].is_integer()) {
                 switch (inst->size) {
                     case op_sizes::byte: {
                         sum_result.b = lhs_value.b + rhs_value.b;
@@ -1306,14 +1271,10 @@ namespace basecode::vm {
             auto zero_flag = is_zero(inst->size, sum_result);
             auto carry_flag = has_carry(lhs_value.qw, rhs_value.qw, inst->size);
 
-            _registers.flags(
-                register_file_t::flags_t::overflow,
-                has_overflow(lhs_value, rhs_value, sum_result, inst->size));
-            _registers.flags(register_file_t::flags_t::subtract, false);
-            _registers.flags(register_file_t::flags_t::zero, zero_flag);
-            _registers.flags(register_file_t::flags_t::carry, carry_flag);
-            _registers.flags(
-                register_file_t::flags_t::negative,
+            _registers.set_flags(
+                zero_flag,
+                carry_flag,
+                has_overflow(lhs_value, rhs_value, sum_result, inst->size),
                 is_negative(sum_result, inst->size));
 
             NEXT
@@ -1369,15 +1330,12 @@ namespace basecode::vm {
             auto zero_flag = is_zero(inst->size, subtraction_result);
             auto overflow_flag = has_overflow(lhs, rhs, subtraction_result, inst->size);
 
-            _registers.flags(register_file_t::flags_t::subtract, true);
-            _registers.flags(register_file_t::flags_t::carry, carry_flag);
-            _registers.flags(register_file_t::flags_t::zero, zero_flag);
-            _registers.flags(
-                register_file_t::flags_t::overflow,
-                !carry_flag && overflow_flag);
-            _registers.flags(
-                register_file_t::flags_t::negative,
-                is_negative(subtraction_result, inst->size));
+            _registers.set_flags(
+                zero_flag,
+                carry_flag,
+                !carry_flag && overflow_flag,
+                is_negative(subtraction_result, inst->size),
+                true);
 
             NEXT
         }
@@ -1425,14 +1383,10 @@ namespace basecode::vm {
             auto zero_flag = is_zero(inst->size, product_result);
             auto carry_flag = has_carry(lhs_value.qw, rhs_value.qw, inst->size);
 
-            _registers.flags(
-                register_file_t::flags_t::overflow,
-                has_overflow(lhs_value, rhs_value, product_result, inst->size));
-            _registers.flags(register_file_t::flags_t::carry, carry_flag);
-            _registers.flags(register_file_t::flags_t::subtract, false);
-            _registers.flags(register_file_t::flags_t::zero, zero_flag);
-            _registers.flags(
-                register_file_t::flags_t::negative,
+            _registers.set_flags(
+                zero_flag,
+                carry_flag,
+                has_overflow(lhs_value, rhs_value, product_result, inst->size),
                 is_negative(product_result, inst->size));
 
             NEXT
@@ -1491,14 +1445,10 @@ namespace basecode::vm {
             auto carry_flag = has_carry(lhs_value.qw, rhs_value.qw, inst->size);
             auto overflow_flag = has_overflow(lhs_value, rhs_value, result, inst->size);
 
-            _registers.flags(
-                register_file_t::flags_t::overflow,
-                overflow_flag);
-            _registers.flags(register_file_t::flags_t::carry, carry_flag);
-            _registers.flags(register_file_t::flags_t::subtract, false);
-            _registers.flags(register_file_t::flags_t::zero, zero_flag);
-            _registers.flags(
-                register_file_t::flags_t::negative,
+            _registers.set_flags(
+                zero_flag,
+                carry_flag,
+                overflow_flag,
                 is_negative(result, inst->size));
 
             NEXT
@@ -1538,18 +1488,12 @@ namespace basecode::vm {
                 }
             }
 
-            auto zero_flag = is_zero(inst->size, result);
             set_target_operand_value(r, inst->operands[0], inst->size, result);
 
-            _registers.flags(
-                register_file_t::flags_t::overflow,
-                has_overflow(lhs_value, rhs_value, result, inst->size));
-            _registers.flags(register_file_t::flags_t::carry, false);
-            _registers.flags(register_file_t::flags_t::subtract, false);
-            _registers.flags(register_file_t::flags_t::overflow, false);
-            _registers.flags(register_file_t::flags_t::zero, zero_flag);
-            _registers.flags(
-                register_file_t::flags_t::negative,
+            _registers.set_flags(
+                is_zero(inst->size, result),
+                false,
+                false,
                 is_negative(result, inst->size));
 
             NEXT
@@ -1588,20 +1532,17 @@ namespace basecode::vm {
                 }
             } else {
                 if (inst->size == op_sizes::dword)
-                    result.dwf = value.dwf * -1.0f;
+                    result.dwf = value.dwf * -1.0F;
                 else
                     result.qwf = value.qwf * -1.0;
             }
 
-            auto zero_flag = is_zero(inst->size, result);
             set_target_operand_value(r, inst->operands[0], inst->size, result);
 
-            _registers.flags(register_file_t::flags_t::carry, false);
-            _registers.flags(register_file_t::flags_t::subtract, false);
-            _registers.flags(register_file_t::flags_t::overflow, false);
-            _registers.flags(register_file_t::flags_t::zero, zero_flag);
-            _registers.flags(
-                register_file_t::flags_t::negative,
+            _registers.set_flags(
+                is_zero(inst->size, result),
+                false,
+                false,
                 is_negative(result, inst->size));
 
             NEXT
@@ -1639,14 +1580,10 @@ namespace basecode::vm {
 
             set_target_operand_value(r, inst->operands[0], inst->size, result);
 
-            auto zero_flag = is_zero(inst->size, result);
-
-            _registers.flags(register_file_t::flags_t::carry, false);
-            _registers.flags(register_file_t::flags_t::subtract, false);
-            _registers.flags(register_file_t::flags_t::overflow, false);
-            _registers.flags(register_file_t::flags_t::zero, zero_flag);
-            _registers.flags(
-                register_file_t::flags_t::negative,
+            _registers.set_flags(
+                is_zero(inst->size, result),
+                false,
+                false,
                 is_negative(result, inst->size));
 
             NEXT
@@ -1684,14 +1621,10 @@ namespace basecode::vm {
 
             set_target_operand_value(r, inst->operands[0], inst->size, result);
 
-            auto zero_flag = is_zero(inst->size, result);
-
-            _registers.flags(register_file_t::flags_t::carry, false);
-            _registers.flags(register_file_t::flags_t::subtract, false);
-            _registers.flags(register_file_t::flags_t::overflow, false);
-            _registers.flags(register_file_t::flags_t::zero, zero_flag);
-            _registers.flags(
-                register_file_t::flags_t::negative,
+            _registers.set_flags(
+                is_zero(inst->size, result),
+                false,
+                false,
                 is_negative(result, inst->size));
 
             NEXT
@@ -1705,19 +1638,15 @@ namespace basecode::vm {
             get_operand_value(r, inst, 1, lhs_value);
             get_operand_value(r, inst, 2, rhs_value);
 
-            register_value_alias_t right_rotated_value {};
-            right_rotated_value.qw = common::rotr(lhs_value.qw, rhs_value.b);
-            set_target_operand_value(r, inst->operands[0], inst->size, right_rotated_value);
+            register_value_alias_t result {};
+            result.qw = common::rotr(lhs_value.qw, rhs_value.b);
+            set_target_operand_value(r, inst->operands[0], inst->size, result);
 
-            auto zero_flag = is_zero(inst->size, right_rotated_value);
-
-            _registers.flags(register_file_t::flags_t::carry, false);
-            _registers.flags(register_file_t::flags_t::subtract, false);
-            _registers.flags(register_file_t::flags_t::overflow, false);
-            _registers.flags(register_file_t::flags_t::zero, zero_flag);
-            _registers.flags(
-                register_file_t::flags_t::negative,
-                is_negative(right_rotated_value, inst->size));
+            _registers.set_flags(
+                is_zero(inst->size, result),
+                false,
+                false,
+                is_negative(result, inst->size));
 
             NEXT
         }
@@ -1730,19 +1659,15 @@ namespace basecode::vm {
             get_operand_value(r, inst, 1, lhs_value);
             get_operand_value(r, inst, 2, rhs_value);
 
-            register_value_alias_t left_rotated_value {};
-            left_rotated_value.qw = common::rotl(lhs_value.qw, rhs_value.b);
-            set_target_operand_value(r, inst->operands[0], inst->size, left_rotated_value);
+            register_value_alias_t result {};
+            result.qw = common::rotl(lhs_value.qw, rhs_value.b);
+            set_target_operand_value(r, inst->operands[0], inst->size, result);
 
-            auto zero_flag = is_zero(inst->size, left_rotated_value);
-
-            _registers.flags(register_file_t::flags_t::carry, false);
-            _registers.flags(register_file_t::flags_t::subtract, false);
-            _registers.flags(register_file_t::flags_t::overflow, false);
-            _registers.flags(register_file_t::flags_t::zero, zero_flag);
-            _registers.flags(
-                register_file_t::flags_t::negative,
-                is_negative(left_rotated_value, inst->size));
+            _registers.set_flags(
+                is_zero(inst->size, result),
+                false,
+                false,
+                is_negative(result, inst->size));
 
             NEXT
         }
@@ -1755,48 +1680,44 @@ namespace basecode::vm {
             get_operand_value(r, inst, 1, lhs_value);
             get_operand_value(r, inst, 2, rhs_value);
 
-            register_value_alias_t power_value {};
+            register_value_alias_t result {};
 
             if (inst->operands[1].is_integer()
             &&  inst->operands[2].is_integer()) {
                 switch (inst->size) {
                     case op_sizes::byte: {
-                        power_value.b = common::power(lhs_value.b, rhs_value.b);
+                        result.b = common::power(lhs_value.b, rhs_value.b);
                         break;
                     }
                     case op_sizes::word: {
-                        power_value.w = common::power(lhs_value.w, rhs_value.w);
+                        result.w = common::power(lhs_value.w, rhs_value.w);
                         break;
                     }
                     case op_sizes::dword: {
-                        power_value.dw = common::power(lhs_value.dw, rhs_value.dw);
+                        result.dw = common::power(lhs_value.dw, rhs_value.dw);
                         break;
                     }
                     default:
                     case op_sizes::qword: {
-                        power_value.qw = common::power(lhs_value.qw, rhs_value.qw);
+                        result.qw = common::power(lhs_value.qw, rhs_value.qw);
                         break;
                     }
                 }
             } else {
                 if (inst->size == op_sizes::dword) {
-                    power_value.dwf = std::pow(lhs_value.dwf, rhs_value.dwf);
+                    result.dwf = std::pow(lhs_value.dwf, rhs_value.dwf);
                 } else {
-                    power_value.qwf = std::pow(lhs_value.qwf, rhs_value.qwf);
+                    result.qwf = std::pow(lhs_value.qwf, rhs_value.qwf);
                 }
             }
 
-            set_target_operand_value(r, inst->operands[0], inst->size, power_value);
+            set_target_operand_value(r, inst->operands[0], inst->size, result);
 
-            auto zero_flag = is_zero(inst->size, power_value);
-
-            _registers.flags(register_file_t::flags_t::carry, false);
-            _registers.flags(register_file_t::flags_t::subtract, false);
-            _registers.flags(register_file_t::flags_t::overflow, false);
-            _registers.flags(register_file_t::flags_t::zero, zero_flag);
-            _registers.flags(
-                register_file_t::flags_t::negative,
-                is_negative(power_value, inst->size));
+            _registers.set_flags(
+                is_zero(inst->size, result),
+                false,
+                false,
+                is_negative(result, inst->size));
 
             NEXT
         }
@@ -1833,14 +1754,10 @@ namespace basecode::vm {
 
             set_target_operand_value(r, inst->operands[0], inst->size, result);
 
-            auto zero_flag = is_zero(inst->size, result);
-
-            _registers.flags(register_file_t::flags_t::carry, false);
-            _registers.flags(register_file_t::flags_t::subtract, false);
-            _registers.flags(register_file_t::flags_t::overflow, false);
-            _registers.flags(register_file_t::flags_t::zero, zero_flag);
-            _registers.flags(
-                register_file_t::flags_t::negative,
+            _registers.set_flags(
+                is_zero(inst->size, result),
+                false,
+                false,
                 is_negative(result, inst->size));
 
             NEXT
@@ -1878,14 +1795,10 @@ namespace basecode::vm {
 
             set_target_operand_value(r, inst->operands[0], inst->size, result);
 
-            auto zero_flag = is_zero(inst->size, result);
-
-            _registers.flags(register_file_t::flags_t::carry, false);
-            _registers.flags(register_file_t::flags_t::subtract, false);
-            _registers.flags(register_file_t::flags_t::overflow, false);
-            _registers.flags(register_file_t::flags_t::zero, zero_flag);
-            _registers.flags(
-                register_file_t::flags_t::negative,
+            _registers.set_flags(
+                is_zero(inst->size, result),
+                false,
+                false,
                 is_negative(result, inst->size));
 
             NEXT
@@ -1923,14 +1836,10 @@ namespace basecode::vm {
 
             set_target_operand_value(r, inst->operands[0], inst->size, result);
 
-            auto zero_flag = is_zero(inst->size, result);
-
-            _registers.flags(register_file_t::flags_t::carry, false);
-            _registers.flags(register_file_t::flags_t::subtract, false);
-            _registers.flags(register_file_t::flags_t::overflow, false);
-            _registers.flags(register_file_t::flags_t::zero, zero_flag);
-            _registers.flags(
-                register_file_t::flags_t::negative,
+            _registers.set_flags(
+                is_zero(inst->size, result),
+                false,
+                false,
                 is_negative(result, inst->size));
 
             NEXT
@@ -1938,41 +1847,37 @@ namespace basecode::vm {
 
         _not:
         {
-            register_value_alias_t value {};
+            register_value_alias_t result {};
 
-            get_operand_value(r, inst, 1, value);
+            get_operand_value(r, inst, 1, result);
 
             switch (inst->size) {
                 case op_sizes::byte: {
-                    value.b = ~value.b;
+                    result.b = ~result.b;
                     break;
                 }
                 case op_sizes::word: {
-                    value.w = ~value.w;
+                    result.w = ~result.w;
                     break;
                 }
                 case op_sizes::dword: {
-                    value.dw = ~value.dw;
+                    result.dw = ~result.dw;
                     break;
                 }
                 default:
                 case op_sizes::qword: {
-                    value.qw = ~value.qw;
+                    result.qw = ~result.qw;
                     break;
                 }
             }
 
-            set_target_operand_value(r, inst->operands[0], inst->size, value);
+            set_target_operand_value(r, inst->operands[0], inst->size, result);
 
-            auto zero_flag = is_zero(inst->size, value);
-
-            _registers.flags(register_file_t::flags_t::carry, false);
-            _registers.flags(register_file_t::flags_t::subtract, false);
-            _registers.flags(register_file_t::flags_t::overflow, false);
-            _registers.flags(register_file_t::flags_t::zero, zero_flag);
-            _registers.flags(
-                register_file_t::flags_t::negative,
-                is_negative(value, inst->size));
+            _registers.set_flags(
+                is_zero(inst->size, result),
+                false,
+                false,
+                is_negative(result, inst->size));
 
             NEXT
         }
@@ -2013,14 +1918,10 @@ namespace basecode::vm {
 
             set_target_operand_value(r, inst->operands[0], inst->size, result);
 
-            auto zero_flag = is_zero(inst->size, result);
-
-            _registers.flags(register_file_t::flags_t::zero, zero_flag);
-            _registers.flags(register_file_t::flags_t::carry, false);
-            _registers.flags(register_file_t::flags_t::subtract, false);
-            _registers.flags(register_file_t::flags_t::overflow, false);
-            _registers.flags(
-                register_file_t::flags_t::negative,
+            _registers.set_flags(
+                is_zero(inst->size, result),
+                false,
+                false,
                 is_negative(result, inst->size));
 
             NEXT
@@ -2060,15 +1961,12 @@ namespace basecode::vm {
                 }
             }
 
-            auto zero_flag = is_zero(inst->size, result);
             set_target_operand_value(r, inst->operands[0], inst->size, result);
 
-            _registers.flags(register_file_t::flags_t::zero, zero_flag);
-            _registers.flags(register_file_t::flags_t::carry, false);
-            _registers.flags(register_file_t::flags_t::subtract, false);
-            _registers.flags(register_file_t::flags_t::overflow, false);
-            _registers.flags(
-                register_file_t::flags_t::negative,
+            _registers.set_flags(
+                is_zero(inst->size, result),
+                false,
+                false,
                 is_negative(result, inst->size));
 
             NEXT
@@ -2104,14 +2002,10 @@ namespace basecode::vm {
                 }
             }
 
-            auto zero_flag = is_zero(inst->size, result);
-
-            _registers.flags(register_file_t::flags_t::carry, false);
-            _registers.flags(register_file_t::flags_t::subtract, false);
-            _registers.flags(register_file_t::flags_t::overflow, false);
-            _registers.flags(register_file_t::flags_t::zero, zero_flag);
-            _registers.flags(
-                register_file_t::flags_t::negative,
+            _registers.set_flags(
+                is_zero(inst->size, result),
+                false,
+                false,
                 is_negative(result, inst->size));
 
             NEXT
@@ -2149,18 +2043,12 @@ namespace basecode::vm {
                     return false;
             }
 
-            auto zero_flag = is_zero(inst->size, result);
-            auto overflow_flag = has_overflow(lhs, rhs, result, inst->size);
-
-            _registers.flags(register_file_t::flags_t::subtract, true);
-            _registers.flags(register_file_t::flags_t::zero, zero_flag);
-            _registers.flags(register_file_t::flags_t::carry, carry_flag);
-            _registers.flags(
-                register_file_t::flags_t::overflow,
-                !carry_flag && overflow_flag);
-            _registers.flags(
-                register_file_t::flags_t::negative,
-                is_negative(result, inst->size));
+            _registers.set_flags(
+                is_zero(inst->size, result),
+                carry_flag,
+                !carry_flag && has_overflow(lhs, rhs, result, inst->size),
+                is_negative(result, inst->size),
+                true);
 
             NEXT
         }
@@ -2175,12 +2063,10 @@ namespace basecode::vm {
                 get_operand_value(r, inst, 1, _registers.r[register_pc]);
             }
 
-            _registers.flags(register_file_t::flags_t::zero, zero_flag);
-            _registers.flags(register_file_t::flags_t::subtract, false);
-            _registers.flags(register_file_t::flags_t::overflow, false);
-            _registers.flags(register_file_t::flags_t::carry, false);
-            _registers.flags(
-                register_file_t::flags_t::negative,
+            _registers.set_flags(
+                zero_flag,
+                false,
+                false,
                 is_negative(value, inst->size));
 
             NEXT
@@ -2196,12 +2082,10 @@ namespace basecode::vm {
                 get_operand_value(r, inst, 1, _registers.r[register_pc]);
             }
 
-            _registers.flags(register_file_t::flags_t::zero, zero_flag);
-            _registers.flags(register_file_t::flags_t::subtract, false);
-            _registers.flags(register_file_t::flags_t::overflow, false);
-            _registers.flags(register_file_t::flags_t::carry, false);
-            _registers.flags(
-                register_file_t::flags_t::negative,
+            _registers.set_flags(
+                zero_flag,
+                false,
+                false,
                 is_negative(value, inst->size));
 
             NEXT
@@ -2242,11 +2126,11 @@ namespace basecode::vm {
                 get_operand_value(r, inst, 2, _registers.r[register_pc]);
             }
 
-            _registers.flags(register_file_t::flags_t::carry, false);
-            _registers.flags(register_file_t::flags_t::subtract, false);
-            _registers.flags(register_file_t::flags_t::overflow, false);
-            _registers.flags(register_file_t::flags_t::zero, zero_flag);
-            _registers.flags(register_file_t::flags_t::negative, is_negative(result, inst->size));
+            _registers.set_flags(
+                zero_flag,
+                false,
+                false,
+                is_negative(result, inst->size));
 
             NEXT
         }
@@ -2286,11 +2170,11 @@ namespace basecode::vm {
                 get_operand_value(r, inst, 2, _registers.r[register_pc]);
             }
 
-            _registers.flags(register_file_t::flags_t::carry, false);
-            _registers.flags(register_file_t::flags_t::subtract, false);
-            _registers.flags(register_file_t::flags_t::overflow, false);
-            _registers.flags(register_file_t::flags_t::zero, zero_flag);
-            _registers.flags(register_file_t::flags_t::negative, is_negative(result, inst->size));
+            _registers.set_flags(
+                zero_flag,
+                false,
+                false,
+                is_negative(result, inst->size));
 
             NEXT
         }
@@ -2732,14 +2616,13 @@ namespace basecode::vm {
                     break;
             }
 
-            auto zero_flag = is_zero(inst->size, result);
             set_target_operand_value(r, inst->operands[0], inst->size, result);
 
-            _registers.flags(register_file_t::flags_t::carry, false);
-            _registers.flags(register_file_t::flags_t::subtract, false);
-            _registers.flags(register_file_t::flags_t::overflow, false);
-            _registers.flags(register_file_t::flags_t::zero, zero_flag);
-            _registers.flags(register_file_t::flags_t::negative, is_negative(result, inst->size));
+            _registers.set_flags(
+                is_zero(inst->size, result),
+                false,
+                false,
+                is_negative(result, inst->size));
 
             NEXT
         }
@@ -2796,6 +2679,12 @@ namespace basecode::vm {
 //                    _white_listed_addresses.insert(result_value);
             }
 
+            _registers.set_flags(
+                result_value == 0,
+                false,
+                false,
+                is_negative(register_value_alias_t{.qw = result_value}, inst->size));
+
             NEXT
         }
 
@@ -2821,15 +2710,6 @@ namespace basecode::vm {
         return _heap_size;
     }
 
-    size_t terp::stack_size() const {
-        return _stack_size;
-    }
-
-    void terp::push(uint64_t value) {
-        _registers.r[register_sp].qw -= sizeof(uint64_t);
-        write(op_sizes::qword, _registers.r[register_sp].qw, value);
-    }
-
     bool terp::bounds_check_address(
             common::result& r,
             const register_value_alias_t& address) {
@@ -2853,6 +2733,15 @@ namespace basecode::vm {
         }
 
         return true;
+    }
+
+    size_t terp::stack_size() const {
+        return _stack_size;
+    }
+
+    void terp::push(uint64_t value) {
+        _registers.r[register_sp].qw -= sizeof(uint64_t);
+        write(op_sizes::qword, _registers.r[register_sp].qw, value);
     }
 
     bool terp::initialize(common::result& r) {
@@ -2888,173 +2777,121 @@ namespace basecode::vm {
         _traps.erase(index);
     }
 
-    void terp::execute_trap(uint8_t index) {
-        auto it = _traps.find(index);
-        if (it == _traps.end())
-            return;
-        it->second(this);
-    }
-
-    std::vector<uint64_t> terp::jump_to_subroutine(
-            common::result& r,
-            uint64_t address) {
-        std::vector<uint64_t> return_values;
-
-        auto return_address = _registers.r[register_pc].qw;
-        push(return_address);
-        _registers.r[register_pc].qw = address;
-
-        while (!has_exited()) {
-            // XXX: need to introduce a terp_step_result_t
-            //auto result = step(r);
-            // XXX: did an RTS just execute?
-            //      does _registers.pc == return_address?  if so, we're done
-            //if (!result) {
-            //    break;
-            //}
-        }
-
-        // XXX: how do we handle multiple return values?
-        // XXX: pull return values from the stack
-        return return_values;
-    }
-
-    void terp::swi(uint8_t index, uint64_t address) {
-        size_t swi_address = interrupt_vector_table_start + (sizeof(uint64_t) * index);
-        write(op_sizes::qword, swi_address, address);
-    }
-
-    const register_file_t& terp::register_file() const {
-        return _registers;
-    }
-
-    void terp::dump_heap(uint64_t offset, size_t size) {
-        auto program_memory = common::hex_formatter::dump_to_string(
-            reinterpret_cast<const void*>(_heap + offset),
-            size);
-        fmt::print("{}\n", program_memory);
-    }
-
-    void terp::heap_free_space_begin(uint64_t address) {
-        heap_vector(heap_vectors_t::free_space_start, address);
-        initialize_allocator();
-    }
-
-    // XXX: need to add support for both big and little endian
-    uint64_t terp::read(op_sizes size, uint64_t address) const {
-        auto heap_ptr = reinterpret_cast<uint8_t*>(address);
-        uint64_t result = 0;
-        auto result_ptr = reinterpret_cast<uint8_t*>(&result);
-        switch (size) {
-            case op_sizes::none: {
-                break;
-            }
-            case op_sizes::byte: {
-                *(result_ptr + 0) = *heap_ptr;
-                break;
-            }
-            case op_sizes::word: {
-                *(result_ptr + 0) = heap_ptr[0];
-                *(result_ptr + 1) = heap_ptr[1];
-                break;
-            }
-            case op_sizes::dword: {
-                *(result_ptr + 0) = heap_ptr[0];
-                *(result_ptr + 1) = heap_ptr[1];
-                *(result_ptr + 2) = heap_ptr[2];
-                *(result_ptr + 3) = heap_ptr[3];
-                break;
-            }
-            case op_sizes::qword: {
-                *(result_ptr + 0) = heap_ptr[0];
-                *(result_ptr + 1) = heap_ptr[1];
-                *(result_ptr + 2) = heap_ptr[2];
-                *(result_ptr + 3) = heap_ptr[3];
-                *(result_ptr + 4) = heap_ptr[4];
-                *(result_ptr + 5) = heap_ptr[5];
-                *(result_ptr + 6) = heap_ptr[6];
-                *(result_ptr + 7) = heap_ptr[7];
-                break;
-            }
-        }
-        return result;
-    }
-
-    uint64_t terp::heap_vector(heap_vectors_t vector) const {
-        uint64_t heap_vector_address =
-            _heap_address +
-            heap_vector_table_start +
-            (sizeof(uint64_t) * static_cast<uint8_t>(vector));
-        return read(op_sizes::qword, heap_vector_address);
-    }
-
-    const meta_information_t& terp::meta_information() const {
-        return _meta_information;
-    }
-
-    void terp::heap_vector(heap_vectors_t vector, uint64_t address) {
-        size_t heap_vector_address =
-            _heap_address +
-            heap_vector_table_start +
-            (sizeof(uint64_t) * static_cast<uint8_t>(vector));
-        write(op_sizes::qword, heap_vector_address, address);
-    }
-
-    std::string terp::disassemble(common::result& r, uint64_t address) {
-        std::stringstream stream;
-        while (true) {
-            auto cache_entry = _icache.fetch_at(r, address);
-            if (cache_entry == nullptr)
-                break;
-
-            stream << fmt::format("${:016X}: ", address)
-                   << cache_entry->inst.disassemble()
-                   << fmt::format(" (${:02X} bytes)\n", cache_entry->size);
-
-            if (cache_entry->inst.op == op_codes::exit)
-                break;
-
-            address += cache_entry->size;
-        }
-        return stream.str();
-    }
-
-    bool terp::is_zero(
+    void terp::set_flags(
             op_sizes size,
-            const register_value_alias_t& value) {
-        switch (size) {
-            case op_sizes::byte:
-                return value.b == 0;
-            case op_sizes::word:
-                return value.w == 0;
-            case op_sizes::dword:
-                return value.dw == 0;
-            case op_sizes::qword:
-                return value.qw == 0;
-            default:
-                return false;
-        }
+            const register_value_alias_t* result,
+            const register_value_alias_t* lhs,
+            const register_value_alias_t* rhs,
+            bool subtract,
+            const bool* carry_flag_override) {
+        auto zero_flag = false;
+        auto carry_flag = false;
+        auto overflow_flag = false;
+        auto negative_flag = false;
 
-        return false;
-    }
+        if (carry_flag_override != nullptr)
+            carry_flag = *carry_flag_override;
 
-    bool terp::has_overflow(
-            const register_value_alias_t& lhs,
-            const register_value_alias_t& rhs,
-            const register_value_alias_t& result,
-            op_sizes size) {
-        switch (size) {
-            case op_sizes::byte:
-                return ((~(lhs.b ^ rhs.b)) & (lhs.b ^ result.b) & mask_byte_negative) != 0;
-            case op_sizes::word:
-                return ((~(lhs.w ^ rhs.w)) & (lhs.w ^ result.w) & mask_word_negative) != 0;
-            case op_sizes::dword:
-                return ((~(lhs.dw ^ rhs.dw)) & (lhs.dw ^ result.dw) & mask_dword_negative) != 0;
-            case op_sizes::qword:
-            default: {
-                return ((~(lhs.qw ^ rhs.qw)) & (lhs.qw ^ result.qw) & mask_qword_negative) != 0;
+        if (carry_flag_override == nullptr
+        &&  lhs != nullptr
+        &&  rhs != nullptr) {
+            switch (size) {
+                case op_sizes::byte: {
+                    carry_flag = lhs->b == UINT8_MAX && rhs->b > 0;
+                    break;
+                }
+                case op_sizes::word: {
+                    carry_flag = lhs->w == UINT16_MAX && rhs->w > 0;
+                    break;
+                }
+                case op_sizes::dword: {
+                    carry_flag = lhs->dw == UINT32_MAX && rhs->dw > 0;
+                    break;
+                }
+                case op_sizes::qword:
+                default: {
+                    carry_flag = lhs->qw == UINT64_MAX && rhs->qw > 0;
+                    break;
+                }
             }
         }
+
+        if (result != nullptr) {
+            switch (size) {
+                case op_sizes::byte: {
+                    zero_flag = result->b == 0;
+                    negative_flag = (result->b & mask_byte_negative) != 0;
+                    break;
+                }
+                case op_sizes::word: {
+                    zero_flag = result->w == 0;
+                    negative_flag = (result->w & mask_word_negative) != 0;
+                    break;
+                }
+                case op_sizes::dword: {
+                    zero_flag = result->dw == 0;
+                    negative_flag = (result->dw & mask_dword_negative) != 0;
+                    break;
+                }
+                case op_sizes::qword: {
+                    zero_flag = result->qw == 0;
+                    negative_flag = (result->qw & mask_qword_negative) != 0;
+                    break;
+                }
+                default: {
+                    zero_flag = false;
+                    break;
+                }
+            }
+
+            if (lhs != nullptr && rhs != nullptr) {
+                switch (size) {
+                    case op_sizes::byte: {
+                        overflow_flag = ((~(lhs->b ^ rhs->b)) & (lhs->b ^ result->b) & mask_byte_negative) != 0;
+                        break;
+                    }
+                    case op_sizes::word: {
+                        overflow_flag = ((~(lhs->w ^ rhs->w)) & (lhs->w ^ result->w) & mask_word_negative) != 0;
+                        break;
+                    }
+                    case op_sizes::dword: {
+                        overflow_flag = ((~(lhs->dw ^ rhs->dw)) & (lhs->dw ^ result->dw) & mask_dword_negative) != 0;
+                        break;
+                    }
+                    case op_sizes::qword:
+                    default: {
+                        overflow_flag = ((~(lhs->qw ^ rhs->qw)) & (lhs->qw ^ result->qw) & mask_qword_negative) != 0;
+                        break;
+                    }
+                }
+            }
+        }
+
+        auto& flags = _registers.r[register_fr];
+        if (zero_flag)
+            flags.qw |= register_file_t::flags_t::zero;
+        else
+            flags.qw &= ~register_file_t::flags_t::zero;
+
+        if (carry_flag)
+            flags.qw |= register_file_t::flags_t::carry;
+        else
+            flags.qw &= ~register_file_t::flags_t::carry;
+
+        if (overflow_flag)
+            flags.qw |= register_file_t::flags_t::overflow;
+        else
+            flags.qw &= ~register_file_t::flags_t::overflow;
+
+        if (negative_flag)
+            flags.qw |= register_file_t::flags_t::negative;
+        else
+            flags.qw &= ~register_file_t::flags_t::negative;
+
+        if (subtract)
+            flags.qw |= register_file_t::flags_t::subtract;
+        else
+            flags.qw &= ~register_file_t::flags_t::subtract;
     }
 
     void terp::get_operand_value(
@@ -3091,29 +2928,6 @@ namespace basecode::vm {
                     break;
                 }
             }
-        }
-    }
-
-    void terp::set_target_operand_value(
-            common::result& r,
-            const operand_encoding_t& operand,
-            op_sizes size,
-            const register_value_alias_t& value) {
-        if (operand.is_reg()) {
-            auto type = operand.is_integer() ?
-                        register_type_t::integer :
-                        register_type_t::floating_point;
-            auto reg_index = register_index(
-                static_cast<registers_t>(operand.value.r),
-                type);
-            register_set_zoned_value(
-                _registers.r[reg_index],
-                value.qw,
-                size);
-        } else {
-            r.error(
-                "B006",
-                "constant cannot be a target operand type.");
         }
     }
 
@@ -3155,6 +2969,65 @@ namespace basecode::vm {
 //        }
     }
 
+    void terp::set_target_operand_value(
+            common::result& r,
+            const operand_encoding_t& operand,
+            op_sizes size,
+            const register_value_alias_t& value) {
+        if (operand.is_reg()) {
+            auto type = operand.is_integer() ?
+                        register_type_t::integer :
+                        register_type_t::floating_point;
+            auto reg_index = register_index(
+                static_cast<registers_t>(operand.value.r),
+                type);
+            register_set_zoned_value(
+                _registers.r[reg_index],
+                value.qw,
+                size);
+        } else {
+            r.error(
+                "B006",
+                "constant cannot be a target operand type.");
+        }
+    }
+
+    void terp::execute_trap(uint8_t index) {
+        auto it = _traps.find(index);
+        if (it == _traps.end())
+            return;
+        it->second(this);
+    }
+
+    std::vector<uint64_t> terp::jump_to_subroutine(
+            common::result& r,
+            uint64_t address) {
+        std::vector<uint64_t> return_values;
+
+        auto return_address = _registers.r[register_pc].qw;
+        push(return_address);
+        _registers.r[register_pc].qw = address;
+
+        while (!has_exited()) {
+            // XXX: need to introduce a terp_step_result_t
+            //auto result = step(r);
+            // XXX: did an RTS just execute?
+            //      does _registers.pc == return_address?  if so, we're done
+            //if (!result) {
+            //    break;
+            //}
+        }
+
+        // XXX: how do we handle multiple return values?
+        // XXX: pull return values from the stack
+        return return_values;
+    }
+
+    void terp::swi(uint8_t index, uint64_t address) {
+        size_t swi_address = interrupt_vector_table_start + (sizeof(uint64_t) * index);
+        write(op_sizes::qword, swi_address, address);
+    }
+
     void terp::get_constant_address_or_pc_with_offset(
             common::result& r,
             const instruction_t* inst,
@@ -3175,40 +3048,82 @@ namespace basecode::vm {
                 address.qw += offset.qw - inst_size;
             }
         }
-   }
-
-    bool terp::has_carry(
-            uint64_t lhs,
-            uint64_t rhs,
-            op_sizes size) {
-        switch (size) {
-            case op_sizes::byte:
-                return lhs == UINT8_MAX && rhs > 0;
-            case op_sizes::word:
-                return lhs == UINT16_MAX && rhs > 0;
-            case op_sizes::dword:
-                return lhs == UINT32_MAX && rhs > 0;
-            case op_sizes::qword:
-            default:
-                return lhs == UINT64_MAX && rhs > 0;
-        }
     }
 
-    bool terp::is_negative(const register_value_alias_t& value, op_sizes size) {
+    const register_file_t& terp::register_file() const {
+        return _registers;
+    }
+
+    void terp::dump_heap(uint64_t offset, size_t size) {
+        auto program_memory = common::hex_formatter::dump_to_string(
+            reinterpret_cast<const void*>(_heap + offset),
+            size);
+        fmt::print("{}\n", program_memory);
+    }
+
+    void terp::heap_free_space_begin(uint64_t address) {
+        heap_vector(heap_vectors_t::free_space_start, address);
+        initialize_allocator();
+    }
+
+    uint64_t terp::heap_vector(heap_vectors_t vector) const {
+        uint64_t heap_vector_address =
+            _heap_address +
+            heap_vector_table_start +
+            (sizeof(uint64_t) * static_cast<uint8_t>(vector));
+        return read(op_sizes::qword, heap_vector_address);
+    }
+
+    const meta_information_t& terp::meta_information() const {
+        return _meta_information;
+    }
+
+    // XXX: need to add support for both big and little endian
+    uint64_t terp::read(op_sizes size, uint64_t address) const {
+        uint64_t result = 0;
+        auto heap_ptr = reinterpret_cast<uint8_t*>(address);
+        auto result_ptr = reinterpret_cast<uint8_t*>(&result);
         switch (size) {
+            case op_sizes::none: {
+                break;
+            }
             case op_sizes::byte: {
-                return (value.b & mask_byte_negative) != 0;
+                *(result_ptr + 0) = *heap_ptr;
+                break;
             }
             case op_sizes::word: {
-                return (value.w & mask_word_negative) != 0;
+                *(result_ptr + 0) = heap_ptr[0];
+                *(result_ptr + 1) = heap_ptr[1];
+                break;
             }
             case op_sizes::dword: {
-                return (value.dw & mask_dword_negative) != 0;
+                *(result_ptr + 0) = heap_ptr[0];
+                *(result_ptr + 1) = heap_ptr[1];
+                *(result_ptr + 2) = heap_ptr[2];
+                *(result_ptr + 3) = heap_ptr[3];
+                break;
             }
-            case op_sizes::qword:
-            default:
-                return (value.qw & mask_qword_negative) != 0;
+            case op_sizes::qword: {
+                *(result_ptr + 0) = heap_ptr[0];
+                *(result_ptr + 1) = heap_ptr[1];
+                *(result_ptr + 2) = heap_ptr[2];
+                *(result_ptr + 3) = heap_ptr[3];
+                *(result_ptr + 4) = heap_ptr[4];
+                *(result_ptr + 5) = heap_ptr[5];
+                *(result_ptr + 6) = heap_ptr[6];
+                *(result_ptr + 7) = heap_ptr[7];
+                break;
+            }
         }
+        return result;
+    }
+
+    void terp::heap_vector(heap_vectors_t vector, uint64_t address) {
+        size_t heap_vector_address =
+            _heap_address +
+            heap_vector_table_start +
+            (sizeof(uint64_t) * static_cast<uint8_t>(vector));
+        write(op_sizes::qword, heap_vector_address, address);
     }
 
     // XXX: need to add support for both big and little endian
@@ -3247,6 +3162,25 @@ namespace basecode::vm {
                 break;
             }
         }
+    }
+
+    std::string terp::disassemble(common::result& r, uint64_t address) {
+        std::stringstream stream;
+        while (true) {
+            auto cache_entry = _icache.fetch_at(r, address);
+            if (cache_entry == nullptr)
+                break;
+
+            stream << fmt::format("${:016X}: ", address)
+                   << cache_entry->inst.disassemble()
+                   << fmt::format(" (${:02X} bytes)\n", cache_entry->size);
+
+            if (cache_entry->inst.op == op_codes::exit)
+                break;
+
+            address += cache_entry->size;
+        }
+        return stream.str();
     }
 
 }
