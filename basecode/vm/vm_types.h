@@ -615,6 +615,7 @@ namespace basecode::vm {
         operand_value_alias_t value {};
 
         fixup_t fixup[2];
+        register_value_alias_t* cached_value = nullptr;
     };
 
     ///////////////////////////////////////////////////////////////////////////

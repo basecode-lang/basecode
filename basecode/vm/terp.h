@@ -163,9 +163,9 @@ namespace basecode::vm {
         }
 
         inline bool has_carry(
+                op_sizes size,
                 uint64_t lhs,
-                uint64_t rhs,
-                op_sizes size) {
+                uint64_t rhs) {
             switch (size) {
                 case op_sizes::byte:
                     return lhs == UINT8_MAX && rhs > 0;
@@ -180,8 +180,8 @@ namespace basecode::vm {
         }
 
         inline bool is_negative(
-                const register_value_alias_t& value,
-                op_sizes size) {
+                op_sizes size,
+                const register_value_alias_t& value) {
             switch (size) {
                 case op_sizes::byte: {
                     return (value.b & mask_byte_negative) != 0;
@@ -199,10 +199,10 @@ namespace basecode::vm {
         }
 
         inline bool has_overflow(
+                op_sizes size,
                 const register_value_alias_t& lhs,
                 const register_value_alias_t& rhs,
-                const register_value_alias_t& result,
-                op_sizes size) {
+                const register_value_alias_t& result) {
             switch (size) {
                 case op_sizes::byte:
                     return ((~(lhs.b ^ rhs.b)) & (lhs.b ^ result.b) & mask_byte_negative) != 0;
@@ -219,7 +219,7 @@ namespace basecode::vm {
 
         void get_operand_value(
             common::result& r,
-            const operand_encoding_t& operand,
+            operand_encoding_t& operand,
             register_value_alias_t& value) const;
 
         bool bounds_check_address(
@@ -230,7 +230,7 @@ namespace basecode::vm {
 
         void get_address_with_offset(
             common::result& r,
-            const instruction_t* inst,
+            instruction_t* inst,
             uint8_t address_index,
             uint8_t offset_index,
             register_value_alias_t& address);
@@ -245,7 +245,7 @@ namespace basecode::vm {
 
         void get_constant_address_or_pc_with_offset(
             common::result& r,
-            const instruction_t* inst,
+            instruction_t* inst,
             uint8_t operand_index,
             uint64_t inst_size,
             register_value_alias_t& address);
