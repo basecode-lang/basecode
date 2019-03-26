@@ -21,9 +21,12 @@
 
 #define NEXT { \
         cache_entry = _icache.fetch(r); \
+        if (cache_entry->handler == nullptr) \
+            cache_entry->handler = op_handlers[static_cast<uint8_t>(cache_entry->inst.op)]; \
         inst = &cache_entry->inst; \
         _registers.r[register_pc].qw += cache_entry->size; \
-        goto *op_handlers[static_cast<uint8_t>(inst->op)]; \
+        lhs.qw = rhs.qw = result.qw = 0; \
+        goto *cache_entry->handler; \
     } \
 
 namespace basecode::vm {
@@ -428,7 +431,8 @@ namespace basecode::vm {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    instruction_cache::instruction_cache(terp* terp) : _terp(terp) {
+    instruction_cache::instruction_cache(terp* terp) : _terp(terp),
+                                                       _pc(_terp->register_file().r[register_pc]) {
     }
 
     void instruction_cache::reset() {
@@ -436,7 +440,7 @@ namespace basecode::vm {
     }
 
     icache_entry_t* instruction_cache::fetch(common::result& r) {
-        return fetch_at(r, _terp->register_file().r[register_pc].qw);
+        return fetch_at(r, _pc.qw);
     }
 
     icache_entry_t* instruction_cache::fetch_at(common::result& r, uint64_t address) {
@@ -643,7 +647,10 @@ namespace basecode::vm {
             &&_exit
         };
 
+        register_value_alias_t lhs {};
+        register_value_alias_t rhs {};
         instruction_t* inst = nullptr;
+        register_value_alias_t result {};
         icache_entry_t* cache_entry = nullptr;
 
         // N.B. this starts execution
@@ -657,121 +664,107 @@ namespace basecode::vm {
 
         _alloc:
         {
-            register_value_alias_t size{};
-            get_operand_value(r, inst, 1, size);
+            get_operand_value(r, inst->operands[1], rhs);
 
-            size.qw *= op_size_in_bytes(inst->size);
+            rhs.qw *= op_size_in_bytes(inst->size);
 
-            register_value_alias_t address{};
-            address.qw = _allocator->alloc(size.qw);
-            if (address.qw == 0) {
+            lhs.qw = _allocator->alloc(rhs.qw);
+            if (lhs.qw == 0) {
                 execute_trap(trap_out_of_memory);
                 return false;
             }
 
-            set_target_operand_value(r, inst->operands[0], op_sizes::qword, address);
+            set_target_operand_value(r, inst->operands[0], op_sizes::qword, lhs);
 
             _registers.set_flags(
-                address.qw == 0,
+                lhs.qw == 0,
                 false,
                 false,
-                is_negative(address, inst->size));
+                is_negative(lhs, inst->size));
 
             NEXT
         }
 
         _free:
         {
-            register_value_alias_t address{};
-            get_operand_value(r, inst, 0, address);
+            get_operand_value(r, inst->operands[0], rhs);
 
-            auto freed_size = _allocator->free(address.qw);
+            auto freed_size = _allocator->free(rhs.qw);
 
             _registers.set_flags(
                 freed_size == 0,
                 false,
                 false,
-                is_negative(address, inst->size));
+                is_negative(rhs, inst->size));
 
             NEXT
         }
 
         _size:
         {
-            register_value_alias_t address{};
-            get_operand_value(r, inst, 1, address);
+            get_operand_value(r, inst->operands[1], rhs);
 
-            register_value_alias_t block_size{};
-            block_size.qw = _allocator->size(address.qw);
-            set_target_operand_value(r, inst->operands[0], inst->size, block_size);
+            lhs.qw = _allocator->size(rhs.qw);
+            set_target_operand_value(r, inst->operands[0], inst->size, lhs);
 
             _registers.set_flags(
-                block_size.qw == 0,
+                lhs.qw == 0,
                 false,
                 false,
-                is_negative(block_size, inst->size));
+                is_negative(lhs, inst->size));
 
             NEXT
         }
 
         _load:
         {
-            register_value_alias_t address{};
-            get_address_with_offset(r, inst, 1, 2, address);
+            get_address_with_offset(r, inst, 1, 2, rhs);
 
-            register_value_alias_t loaded_data{};
-            loaded_data.qw = read(inst->size, address.qw);
-            set_target_operand_value(r, inst->operands[0], inst->size, loaded_data);
+            lhs.qw = read(inst->size, rhs.qw);
+            set_target_operand_value(r, inst->operands[0], inst->size, lhs);
 
-            auto zero_flag = is_zero(inst->size, loaded_data);
+            auto zero_flag = is_zero(inst->size, lhs);
             _registers.set_flags(
                 zero_flag,
                 false,
                 false,
-                is_negative(loaded_data, inst->size));
+                is_negative(lhs, inst->size));
 
             NEXT
         }
 
         _store:
         {
-            register_value_alias_t address{};
-            get_address_with_offset(r, inst, 0, 2, address);
+            get_address_with_offset(r, inst, 0, 2, lhs);
+            get_operand_value(r, inst->operands[1], rhs);
 
-            register_value_alias_t data{};
-            get_operand_value(r, inst, 1, data);
-
-            write(inst->size, address.qw, data.qw);
+            write(inst->size, lhs.qw, rhs.qw);
 
             _registers.set_flags(
-                is_zero(inst->size, data),
+                is_zero(inst->size, rhs),
                 false,
                 false,
-                is_negative(data, inst->size));
+                is_negative(rhs, inst->size));
 
             NEXT
         }
 
         _copy:
         {
-            register_value_alias_t source_address{};
-            register_value_alias_t target_address{};
-
-            get_operand_value(r, inst, 0, target_address);
-            if (!bounds_check_address(r, target_address))
+            get_operand_value(r, inst->operands[0], lhs);
+            if (!bounds_check_address(r, lhs))
                 return false;
 
-            get_operand_value(r, inst, 1, source_address);
-            if (!bounds_check_address(r, source_address))
+            get_operand_value(r, inst->operands[1], rhs);
+            if (!bounds_check_address(r, rhs))
                 return false;
 
-            register_value_alias_t length{};
-            get_operand_value(r, inst, 2, length);
+            get_operand_value(r, inst->operands[2], result);
 
             memcpy(
-                reinterpret_cast<void*>(target_address.qw),
-                reinterpret_cast<void*>(source_address.qw),
-                length.qw * op_size_in_bytes(inst->size));
+                reinterpret_cast<void*>(lhs.qw),
+                reinterpret_cast<void*>(rhs.qw),
+                result.qw * op_size_in_bytes(inst->size));
 
             _registers.set_flags(false, false, false, false);
 
@@ -780,23 +773,19 @@ namespace basecode::vm {
 
         _convert:
         {
-            register_value_alias_t target_value{};
-            get_operand_value(r, inst, 0, target_value);
+            get_operand_value(r, inst->operands[1], rhs);
 
-            register_value_alias_t value{};
-            get_operand_value(r, inst, 1, value);
-
-            auto casted_value = value;
+            auto result = rhs;
 
             // XXX: how to handle NaN & Inf for integers
             if (inst->operands[0].is_integer()) {
                 if (!inst->operands[1].is_integer()) {
                     switch (inst->size) {
                         case op_sizes::dword:
-                            casted_value.dw = static_cast<uint64_t>(value.dwf);
+                            result.dw = static_cast<uint64_t>(rhs.dwf);
                             break;
                         case op_sizes::qword:
-                            casted_value.qw = static_cast<uint64_t>(value.qwf);
+                            result.qw = static_cast<uint64_t>(rhs.qwf);
                             break;
                         default:
                             // XXX: this is an error
@@ -807,10 +796,10 @@ namespace basecode::vm {
                 if (inst->operands[1].is_integer()) {
                     switch (inst->size) {
                         case op_sizes::dword:
-                            casted_value.dwf = static_cast<float>(value.dw);
+                            result.dwf = static_cast<float>(rhs.dw);
                             break;
                         case op_sizes::qword:
-                            casted_value.qwf = static_cast<double>(value.qw);
+                            result.qwf = static_cast<double>(rhs.qw);
                             break;
                         default:
                             // XXX: this is an error
@@ -819,10 +808,10 @@ namespace basecode::vm {
                 } else {
                     switch (inst->size) {
                         case op_sizes::dword:
-                            casted_value.dwf = static_cast<float>(value.qwf);
+                            result.dwf = static_cast<float>(rhs.qwf);
                             break;
                         case op_sizes::qword:
-                            casted_value.qwf = value.dwf;
+                            result.qwf = rhs.dwf;
                             break;
                         default:
                             // XXX: this is an error
@@ -832,50 +821,47 @@ namespace basecode::vm {
                 }
             }
 
-            set_target_operand_value(r, inst->operands[0], inst->size, casted_value);
+            set_target_operand_value(r, inst->operands[0], inst->size, result);
 
             _registers.set_flags(
-                is_zero(inst->size, casted_value),
+                is_zero(inst->size, result),
                 false,
                 false,
-                is_negative(casted_value, inst->size));
+                is_negative(result, inst->size));
 
             NEXT
         }
 
         _fill:
         {
-            register_value_alias_t address{};
-            get_operand_value(r, inst, 0, address);
-            if (!bounds_check_address(r, address))
+            get_operand_value(r, inst->operands[0], lhs);
+            if (!bounds_check_address(r, lhs))
                 return false;
 
-            register_value_alias_t value{};
-            get_operand_value(r, inst, 1, value);
+            get_operand_value(r, inst->operands[1], result);
 
-            register_value_alias_t length{};
-            get_operand_value(r, inst, 2, length);
+            get_operand_value(r, inst->operands[2], rhs);
 
-            length.qw *= op_size_in_bytes(inst->size);
+            rhs.qw *= op_size_in_bytes(inst->size);
 
             switch (inst->size) {
                 case op_sizes::byte:
                     memset(
-                        reinterpret_cast<void*>(address.qw),
-                        value.b,
-                        length.qw);
+                        reinterpret_cast<void*>(lhs.qw),
+                        result.b,
+                        rhs.qw);
                     break;
                 case op_sizes::word:
                     memset(
-                        reinterpret_cast<void*>(address.qw),
-                        value.w,
-                        length.qw);
+                        reinterpret_cast<void*>(lhs.qw),
+                        result.w,
+                        rhs.qw);
                     break;
                 case op_sizes::dword:
                     memset(
-                        reinterpret_cast<void*>(address.qw),
-                        value.dw,
-                        length.qw);
+                        reinterpret_cast<void*>(lhs.qw),
+                        result.dw,
+                        rhs.qw);
                     break;
                 case op_sizes::qword:
                 default:
@@ -884,7 +870,7 @@ namespace basecode::vm {
             }
 
             _registers.set_flags(
-                is_zero(inst->size, value),
+                is_zero(inst->size, result),
                 false,
                 false,
                 false);
@@ -894,10 +880,8 @@ namespace basecode::vm {
 
         _clr:
         {
-            register_value_alias_t value{};
-            value.qw = 0;
-
-            set_target_operand_value(r, inst->operands[0], inst->size, value);
+            result.qw = 0;
+            set_target_operand_value(r, inst->operands[0], inst->size, result);
 
             _registers.set_flags(true, false, false, false);
 
@@ -906,54 +890,48 @@ namespace basecode::vm {
 
         _move:
         {
-            register_value_alias_t source_value{};
-            get_operand_value(r, inst, 1, source_value);
+            get_operand_value(r, inst->operands[1], lhs);
 
-            register_value_alias_t offset_value{};
-            get_address_with_offset(r, inst, 1, 2, offset_value);
+            get_address_with_offset(r, inst, 1, 2, rhs);
 
-            set_target_operand_value(r, inst->operands[0], inst->size, offset_value);
+            set_target_operand_value(r, inst->operands[0], inst->size, rhs);
 
             _registers.set_flags(
-                is_zero(inst->size, source_value),
+                is_zero(inst->size, lhs),
                 false,
                 false,
-                is_negative(source_value, inst->size));
+                is_negative(lhs, inst->size));
 
             NEXT
         }
 
         _moves:
         {
-            register_value_alias_t source_value{};
-            get_operand_value(r, inst, 1, source_value);
+            get_operand_value(r, inst->operands[1], lhs);
 
-            register_value_alias_t offset_value{};
-            get_address_with_offset(r, inst, 1, 2, offset_value);
+            get_address_with_offset(r, inst, 1, 2, rhs);
 
             auto previous_size = static_cast<op_sizes>(static_cast<uint8_t>(inst->size) - 1);
-            offset_value.qw = common::sign_extend(
-                offset_value.qw,
+            rhs.qw = common::sign_extend(
+                rhs.qw,
                 static_cast<uint32_t>(op_size_in_bytes(previous_size) * 8));
 
-            set_target_operand_value(r, inst->operands[0], inst->size, offset_value);
+            set_target_operand_value(r, inst->operands[0], inst->size, rhs);
 
             _registers.set_flags(
-                is_zero(inst->size, source_value),
+                is_zero(inst->size, lhs),
                 false,
                 false,
-                is_negative(source_value, inst->size));
+                is_negative(lhs, inst->size));
 
             NEXT
         }
 
         _movez:
         {
-            register_value_alias_t source_value{};
-            get_operand_value(r, inst, 1, source_value);
+            get_operand_value(r, inst->operands[1], lhs);
 
-            register_value_alias_t offset_value{};
-            get_address_with_offset(r, inst, 1, 2, offset_value);
+            get_address_with_offset(r, inst, 1, 2, rhs);
 
             switch (inst->size) {
                 case op_sizes::none:
@@ -961,42 +939,41 @@ namespace basecode::vm {
                     break;
                 }
                 case op_sizes::word: {
-                    offset_value.w &= 0b0000000011111111;
+                    rhs.w &= 0b0000000011111111;
                     break;
                 }
                 case op_sizes::dword: {
-                    offset_value.dw &= 0b00000000000000001111111111111111;
+                    rhs.dw &= 0b00000000000000001111111111111111;
                     break;
                 }
                 case op_sizes::qword: {
-                    offset_value.qw &= 0b0000000000000000000000000000000011111111111111111111111111111111;
+                    rhs.qw &= 0b0000000000000000000000000000000011111111111111111111111111111111;
                     break;
                 }
             }
 
-            set_target_operand_value(r, inst->operands[0], inst->size, offset_value);
+            set_target_operand_value(r, inst->operands[0], inst->size, rhs);
 
             _registers.set_flags(
-                is_zero(inst->size, source_value),
+                is_zero(inst->size, lhs),
                 false,
                 false,
-                is_negative(source_value, inst->size));
+                is_negative(lhs, inst->size));
 
             NEXT
         }
 
         _push:
         {
-            register_value_alias_t source_value{};
-            get_operand_value(r, inst, 0, source_value);
+            get_operand_value(r, inst->operands[0], rhs);
 
-            push(source_value.qw);
+            push(rhs.qw);
 
             _registers.set_flags(
-                is_zero(inst->size, source_value),
+                is_zero(inst->size, rhs),
                 false,
                 false,
-                is_negative(source_value, inst->size));
+                is_negative(rhs, inst->size));
 
             NEXT
         }
@@ -1047,16 +1024,15 @@ namespace basecode::vm {
 
         _pop:
         {
-            register_value_alias_t top_of_stack{};
-            top_of_stack.qw = pop();
+            result.qw = pop();
 
-            set_target_operand_value(r, inst->operands[0], inst->size, top_of_stack);
+            set_target_operand_value(r, inst->operands[0], inst->size, result);
 
             _registers.set_flags(
-                is_zero(inst->size, top_of_stack),
+                is_zero(inst->size, result),
                 false,
                 false,
-                is_negative(top_of_stack, inst->size));
+                is_negative(result, inst->size));
 
             NEXT
         }
@@ -1107,117 +1083,100 @@ namespace basecode::vm {
 
         _dup:
         {
-            register_value_alias_t tos {};
-            tos.qw = peek();
-            push(tos.qw);
+            result.qw = peek();
+            push(result.qw);
 
             _registers.set_flags(
-                is_zero(inst->size, tos),
+                is_zero(inst->size, result),
                 false,
                 false,
-                is_negative(tos, inst->size));
+                is_negative(result, inst->size));
 
             NEXT
         }
 
         _inc:
         {
-            register_value_alias_t reg_value{};
-            get_operand_value(r, inst, 0, reg_value);
+            get_operand_value(r, inst->operands[0], lhs);
+            rhs.qw = 1;
 
-            register_value_alias_t one{};
-            one.qw = 1;
-
-            register_value_alias_t new_value{};
             if (inst->operands[0].is_integer()) {
                 switch (inst->size) {
                     case op_sizes::byte: {
-                        new_value.b = reg_value.b + one.b;
+                        result.b = lhs.b + rhs.b;
                         break;
                     }
                     case op_sizes::word: {
-                        new_value.w = reg_value.w + one.w;
+                        result.w = lhs.w + rhs.w;
                         break;
                     }
                     case op_sizes::dword: {
-                        new_value.dw = reg_value.dw + one.dw;
+                        result.dw = lhs.dw + rhs.dw;
                         break;
                     }
                     default:
                     case op_sizes::qword: {
-                        new_value.qw = reg_value.qw + one.qw;
+                        result.qw = lhs.qw + rhs.qw;
                         break;
                     }
                 }
             } else {
                 if (inst->size == op_sizes::dword)
-                    new_value.dwf = reg_value.dwf + 1.0F;
+                    result.dwf = lhs.dwf + 1.0F;
                 else
-                    new_value.qwf = reg_value.qwf + 1.0;
+                    result.qwf = lhs.qwf + 1.0;
             }
 
-//                if (_white_listed_addresses.count(reg_value.qw) > 0) {
-//                    _white_listed_addresses.insert(new_value.qw);
-//                }
-
-            set_target_operand_value(r, inst->operands[0], inst->size, new_value);
+            set_target_operand_value(r, inst->operands[0], inst->size, result);
 
             _registers.set_flags(
-                is_zero(inst->size, new_value),
-                has_carry(reg_value.qw, one.qw, inst->size),
-                has_overflow(reg_value, one, new_value, inst->size),
-                is_negative(new_value, inst->size));
+                is_zero(inst->size, result),
+                has_carry(lhs.qw, rhs.qw, inst->size),
+                has_overflow(lhs, rhs, result, inst->size),
+                is_negative(result, inst->size));
 
             NEXT
         }
 
         _dec:
         {
-            register_value_alias_t reg_value{};
-            get_operand_value(r, inst, 0, reg_value);
+            get_operand_value(r, inst->operands[0], lhs);
+            rhs.qw = 1;
 
-            register_value_alias_t one{};
-            one.qw = 1;
-
-            register_value_alias_t new_value{};
             if (inst->operands[0].is_integer()) {
                 switch (inst->size) {
                     case op_sizes::byte: {
-                        new_value.b = reg_value.b - one.b;
+                        result.b = lhs.b - rhs.b;
                         break;
                     }
                     case op_sizes::word: {
-                        new_value.w = reg_value.w - one.w;
+                        result.w = lhs.w - rhs.w;
                         break;
                     }
                     case op_sizes::dword: {
-                        new_value.dw = reg_value.dw - one.dw;
+                        result.dw = lhs.dw - rhs.dw;
                         break;
                     }
                     default:
                     case op_sizes::qword: {
-                        new_value.qw = reg_value.qw - one.qw;
+                        result.qw = lhs.qw - rhs.qw;
                         break;
                     }
                 }
             } else {
                 if (inst->size == op_sizes::dword)
-                    new_value.dwf = reg_value.dwf - 1.0F;
+                    result.dwf = lhs.dwf - 1.0F;
                 else
-                    new_value.qwf = reg_value.qwf - 1.0;
+                    result.qwf = lhs.qwf - 1.0;
             }
 
-//                if (_white_listed_addresses.count(reg_value.qw) > 0) {
-//                    _white_listed_addresses.insert(new_value.qw);
-//                }
-
-            set_target_operand_value(r, inst->operands[0], inst->size, new_value);
+            set_target_operand_value(r, inst->operands[0], inst->size, result);
 
             _registers.set_flags(
-                is_zero(inst->size, new_value),
-                has_carry(reg_value.qw, one.qw, inst->size),
-                has_overflow(reg_value, one, new_value, inst->size),
-                is_negative(new_value, inst->size),
+                is_zero(inst->size, result),
+                has_carry(lhs.qw, rhs.qw, inst->size),
+                has_overflow(lhs, rhs, result, inst->size),
+                is_negative(result, inst->size),
                 true);
 
             NEXT
@@ -1225,116 +1184,97 @@ namespace basecode::vm {
 
         _add:
         {
-            register_value_alias_t lhs_value{};
-            register_value_alias_t rhs_value{};
-
-            get_operand_value(r, inst, 1, lhs_value);
-            get_operand_value(r, inst, 2, rhs_value);
-
-            register_value_alias_t sum_result{};
+            get_operand_value(r, inst->operands[1], lhs);
+            get_operand_value(r, inst->operands[2], rhs);
 
             if (inst->operands[1].is_integer()
 	        &&  inst->operands[2].is_integer()) {
                 switch (inst->size) {
                     case op_sizes::byte: {
-                        sum_result.b = lhs_value.b + rhs_value.b;
+                        result.b = lhs.b + rhs.b;
                         break;
                     }
                     case op_sizes::word: {
-                        sum_result.w = lhs_value.w + rhs_value.w;
+                        result.w = lhs.w + rhs.w;
                         break;
                     }
                     case op_sizes::dword: {
-                        sum_result.dw = lhs_value.dw + rhs_value.dw;
+                        result.dw = lhs.dw + rhs.dw;
                         break;
                     }
                     default:
                     case op_sizes::qword: {
-                        sum_result.qw = lhs_value.qw + rhs_value.qw;
+                        result.qw = lhs.qw + rhs.qw;
                         break;
                     }
                 }
             } else {
                 if (inst->size == op_sizes::dword)
-                    sum_result.dwf = lhs_value.dwf + rhs_value.dwf;
+                    result.dwf = lhs.dwf + rhs.dwf;
                 else
-                    sum_result.qwf = lhs_value.qwf + rhs_value.qwf;
+                    result.qwf = lhs.qwf + rhs.qwf;
             }
 
-//                if (_white_listed_addresses.count(lhs_value.qw) > 0
-//                ||  _white_listed_addresses.count(rhs_value.qw) > 0) {
-//                    _white_listed_addresses.insert(sum_result.qw);
-//                }
+            set_target_operand_value(r, inst->operands[0], inst->size, result);
 
-            set_target_operand_value(r, inst->operands[0], inst->size, sum_result);
-
-            auto zero_flag = is_zero(inst->size, sum_result);
-            auto carry_flag = has_carry(lhs_value.qw, rhs_value.qw, inst->size);
+            auto zero_flag = is_zero(inst->size, result);
+            auto carry_flag = has_carry(lhs.qw, rhs.qw, inst->size);
 
             _registers.set_flags(
                 zero_flag,
                 carry_flag,
-                has_overflow(lhs_value, rhs_value, sum_result, inst->size),
-                is_negative(sum_result, inst->size));
+                has_overflow(lhs, rhs, result, inst->size),
+                is_negative(result, inst->size));
 
             NEXT
         }
 
         _sub:
         {
-            register_value_alias_t lhs {};
-            register_value_alias_t rhs {};
-
-            get_operand_value(r, inst, 1, lhs);
-            get_operand_value(r, inst, 2, rhs);
+            get_operand_value(r, inst->operands[1], lhs);
+            get_operand_value(r, inst->operands[2], rhs);
 
             auto carry_flag = false;
-            register_value_alias_t subtraction_result {};
 
             if (inst->operands[1].is_integer()
             &&  inst->operands[2].is_integer()) {
                 switch (inst->size) {
                     case op_sizes::byte:
                         carry_flag = lhs.b < rhs.b;
-                        subtraction_result.b = lhs.b - rhs.b;
+                        result.b = lhs.b - rhs.b;
                         break;
                     case op_sizes::word:
                         carry_flag = lhs.w < rhs.w;
-                        subtraction_result.w = lhs.w - rhs.w;
+                        result.w = lhs.w - rhs.w;
                         break;
                     case op_sizes::dword:
                         carry_flag = lhs.dw < rhs.dw;
-                        subtraction_result.dw = lhs.dw - rhs.dw;
+                        result.dw = lhs.dw - rhs.dw;
                         break;
                     case op_sizes::qword:
                         carry_flag = lhs.qw < rhs.qw;
-                        subtraction_result.qw = lhs.qw - rhs.qw;
+                        result.qw = lhs.qw - rhs.qw;
                         break;
                     default:
                         return false;
                 }
             } else {
                 if (inst->size == op_sizes::dword)
-                    subtraction_result.dwf = lhs.dwf - rhs.dwf;
+                    result.dwf = lhs.dwf - rhs.dwf;
                 else
-                    subtraction_result.qwf = lhs.qwf - rhs.qwf;
+                    result.qwf = lhs.qwf - rhs.qwf;
             }
 
-//                if (_white_listed_addresses.count(lhs.qw) > 0
-//                ||  _white_listed_addresses.count(rhs.qw) > 0) {
-//                    _white_listed_addresses.insert(subtraction_result.qw);
-//                }
+            set_target_operand_value(r, inst->operands[0], inst->size, result);
 
-            set_target_operand_value(r, inst->operands[0], inst->size, subtraction_result);
-
-            auto zero_flag = is_zero(inst->size, subtraction_result);
-            auto overflow_flag = has_overflow(lhs, rhs, subtraction_result, inst->size);
+            auto zero_flag = is_zero(inst->size, result);
+            auto overflow_flag = has_overflow(lhs, rhs, result, inst->size);
 
             _registers.set_flags(
                 zero_flag,
                 carry_flag,
                 !carry_flag && overflow_flag,
-                is_negative(subtraction_result, inst->size),
+                is_negative(result, inst->size),
                 true);
 
             NEXT
@@ -1342,99 +1282,89 @@ namespace basecode::vm {
 
         _mul:
         {
-            register_value_alias_t lhs_value {};
-            register_value_alias_t rhs_value {};
-
-            get_operand_value(r, inst, 1, lhs_value);
-            get_operand_value(r, inst, 2, rhs_value);
-
-            register_value_alias_t product_result {};
+            get_operand_value(r, inst->operands[1], lhs);
+            get_operand_value(r, inst->operands[2], rhs);
 
             if (inst->operands[1].is_integer()
             &&  inst->operands[2].is_integer()) {
                 switch (inst->size) {
                     case op_sizes::byte: {
-                        product_result.b = lhs_value.b * rhs_value.b;
+                        result.b = lhs.b * rhs.b;
                         break;
                     }
                     case op_sizes::word: {
-                        product_result.w = lhs_value.w * rhs_value.w;
+                        result.w = lhs.w * rhs.w;
                         break;
                     }
                     case op_sizes::dword: {
-                        product_result.dw = lhs_value.dw * rhs_value.dw;
+                        result.dw = lhs.dw * rhs.dw;
                         break;
                     }
                     default:
                     case op_sizes::qword: {
-                        product_result.qw = lhs_value.qw * rhs_value.qw;
+                        result.qw = lhs.qw * rhs.qw;
                         break;
                     }
                 }
             } else {
                 if (inst->size == op_sizes::dword)
-                    product_result.dwf = lhs_value.dwf * rhs_value.dwf;
+                    result.dwf = lhs.dwf * rhs.dwf;
                 else
-                    product_result.qwf = lhs_value.qwf * rhs_value.qwf;
+                    result.qwf = lhs.qwf * rhs.qwf;
             }
 
-            set_target_operand_value(r, inst->operands[0], inst->size, product_result);
+            set_target_operand_value(r, inst->operands[0], inst->size, result);
 
-            auto zero_flag = is_zero(inst->size, product_result);
-            auto carry_flag = has_carry(lhs_value.qw, rhs_value.qw, inst->size);
+            auto zero_flag = is_zero(inst->size, result);
+            auto carry_flag = has_carry(lhs.qw, rhs.qw, inst->size);
 
             _registers.set_flags(
                 zero_flag,
                 carry_flag,
-                has_overflow(lhs_value, rhs_value, product_result, inst->size),
-                is_negative(product_result, inst->size));
+                has_overflow(lhs, rhs, result, inst->size),
+                is_negative(result, inst->size));
 
             NEXT
         }
 
         _div:
         {
-            register_value_alias_t lhs_value {};
-            register_value_alias_t rhs_value {};
-
-            get_operand_value(r, inst, 1, lhs_value);
-            get_operand_value(r, inst, 2, rhs_value);
-
-            register_value_alias_t result {};
+            get_operand_value(r, inst->operands[1], lhs);
+            get_operand_value(r, inst->operands[2], rhs);
 
             if (inst->operands[1].is_integer()
             &&  inst->operands[2].is_integer()) {
                 switch (inst->size) {
                     case op_sizes::byte: {
-                        if (rhs_value.b != 0)
-                            result.b = lhs_value.b / rhs_value.b;
+                        if (rhs.b != 0)
+                            result.b = lhs.b / rhs.b;
                         break;
                     }
                     case op_sizes::word: {
-                        if (rhs_value.w != 0)
-                            result.w = lhs_value.w / rhs_value.w;
+                        if (rhs.w != 0)
+                            result.w = lhs.w / rhs.w;
                         break;
                     }
                     case op_sizes::dword: {
-                        if (rhs_value.dw != 0)
-                            result.dw = lhs_value.dw / rhs_value.dw;
+                        if (rhs.dw != 0)
+                            result.dw = lhs.dw / rhs.dw;
                         break;
                     }
                     default:
                     case op_sizes::qword: {
-                        if (rhs_value.qw != 0)
-                            result.qw = lhs_value.qw / rhs_value.qw;
+                        if (rhs.qw != 0)
+                            result.qw = lhs.qw / rhs.qw;
                         break;
                     }
                 }
             } else {
                 if (inst->size == op_sizes::dword) {
-                    if (rhs_value.dwf != 0) {
-                        result.dwf = lhs_value.dwf / rhs_value.dwf;
+                    if (rhs.dwf != 0) {
+                        result.dwf = lhs.dwf / rhs.dwf;
                     }
                 } else {
-                    if (rhs_value.qwf != 0) {
-                        result.qwf = lhs_value.qwf / rhs_value.qwf;
+                    if (rhs.qwf != 0) {
+                        result.qwf = lhs.qwf / rhs.qwf;
                     }
                 }
             }
@@ -1442,8 +1372,8 @@ namespace basecode::vm {
             set_target_operand_value(r, inst->operands[0], inst->size, result);
 
             auto zero_flag = is_zero(inst->size, result);
-            auto carry_flag = has_carry(lhs_value.qw, rhs_value.qw, inst->size);
-            auto overflow_flag = has_overflow(lhs_value, rhs_value, result, inst->size);
+            auto carry_flag = has_carry(lhs.qw, rhs.qw, inst->size);
+            auto overflow_flag = has_overflow(lhs, rhs, result, inst->size);
 
             _registers.set_flags(
                 zero_flag,
@@ -1456,34 +1386,29 @@ namespace basecode::vm {
 
         _mod:
         {
-            register_value_alias_t lhs_value {};
-            register_value_alias_t rhs_value {};
-
-            get_operand_value(r, inst, 1, lhs_value);
-            get_operand_value(r, inst, 2, rhs_value);
-
-            register_value_alias_t result {};
+            get_operand_value(r, inst->operands[1], lhs);
+            get_operand_value(r, inst->operands[2], rhs);
 
             switch (inst->size) {
                 case op_sizes::byte: {
-                    if (lhs_value.b != 0 && rhs_value.b != 0)
-                        result.b = lhs_value.b % rhs_value.b;
+                    if (lhs.b != 0 && rhs.b != 0)
+                        result.b = lhs.b % rhs.b;
                     break;
                 }
                 case op_sizes::word: {
-                    if (lhs_value.w != 0 && rhs_value.w != 0)
-                        result.w = lhs_value.w % rhs_value.w;
+                    if (lhs.w != 0 && rhs.w != 0)
+                        result.w = lhs.w % rhs.w;
                     break;
                 }
                 case op_sizes::dword: {
-                    if (lhs_value.dw != 0 && rhs_value.dw != 0)
-                        result.dw = lhs_value.dw % rhs_value.dw;
+                    if (lhs.dw != 0 && rhs.dw != 0)
+                        result.dw = lhs.dw % rhs.dw;
                     break;
                 }
                 default:
                 case op_sizes::qword: {
-                    if (lhs_value.qw != 0 && rhs_value.qw != 0)
-                        result.qw = lhs_value.qw % rhs_value.qw;
+                    if (lhs.qw != 0 && rhs.qw != 0)
+                        result.qw = lhs.qw % rhs.qw;
                     break;
                 }
             }
@@ -1501,40 +1426,37 @@ namespace basecode::vm {
 
         _neg:
         {
-            register_value_alias_t value {};
-            get_operand_value(r, inst, 1, value);
-
-            register_value_alias_t result {};
+            get_operand_value(r, inst->operands[1], rhs);
 
             if (inst->operands[1].is_integer()) {
                 switch (inst->size) {
                     case op_sizes::byte: {
-                        int8_t negated_result = -value.b;
+                        int8_t negated_result = -rhs.b;
                         result.b = static_cast<uint64_t>(negated_result);
                         break;
                     }
                     case op_sizes::word: {
-                        int16_t negated_result = -value.w;
+                        int16_t negated_result = -rhs.w;
                         result.w = static_cast<uint64_t>(negated_result);
                         break;
                     }
                     case op_sizes::dword: {
-                        int32_t negated_result = -value.dw;
+                        int32_t negated_result = -rhs.dw;
                         result.dw = static_cast<uint64_t>(negated_result);
                         break;
                     }
                     default:
                     case op_sizes::qword: {
-                        int64_t negated_result = -value.qw;
+                        int64_t negated_result = -rhs.qw;
                         result.qw = static_cast<uint64_t>(negated_result);
                         break;
                     }
                 }
             } else {
                 if (inst->size == op_sizes::dword)
-                    result.dwf = value.dwf * -1.0F;
+                    result.dwf = rhs.dwf * -1.0F;
                 else
-                    result.qwf = value.qwf * -1.0;
+                    result.qwf = rhs.qwf * -1.0;
             }
 
             set_target_operand_value(r, inst->operands[0], inst->size, result);
@@ -1553,10 +1475,8 @@ namespace basecode::vm {
             register_value_alias_t lhs_value {};
             register_value_alias_t rhs_value {};
 
-            get_operand_value(r, inst, 1, lhs_value);
-            get_operand_value(r, inst, 2, rhs_value);
-
-            register_value_alias_t result {};
+            get_operand_value(r, inst->operands[1], lhs_value);
+            get_operand_value(r, inst->operands[2], rhs_value);
 
             switch (inst->size) {
                 case op_sizes::byte: {
@@ -1594,10 +1514,8 @@ namespace basecode::vm {
             register_value_alias_t lhs_value {};
             register_value_alias_t rhs_value {};
 
-            get_operand_value(r, inst, 1, lhs_value);
-            get_operand_value(r, inst, 2, rhs_value);
-
-            register_value_alias_t result {};
+            get_operand_value(r, inst->operands[1], lhs_value);
+            get_operand_value(r, inst->operands[2], rhs_value);
 
             switch (inst->size) {
                 case op_sizes::byte: {
@@ -1635,10 +1553,9 @@ namespace basecode::vm {
             register_value_alias_t lhs_value {};
             register_value_alias_t rhs_value {};
 
-            get_operand_value(r, inst, 1, lhs_value);
-            get_operand_value(r, inst, 2, rhs_value);
+            get_operand_value(r, inst->operands[1], lhs_value);
+            get_operand_value(r, inst->operands[2], rhs_value);
 
-            register_value_alias_t result {};
             result.qw = common::rotr(lhs_value.qw, rhs_value.b);
             set_target_operand_value(r, inst->operands[0], inst->size, result);
 
@@ -1656,10 +1573,9 @@ namespace basecode::vm {
             register_value_alias_t lhs_value {};
             register_value_alias_t rhs_value {};
 
-            get_operand_value(r, inst, 1, lhs_value);
-            get_operand_value(r, inst, 2, rhs_value);
+            get_operand_value(r, inst->operands[1], lhs_value);
+            get_operand_value(r, inst->operands[2], rhs_value);
 
-            register_value_alias_t result {};
             result.qw = common::rotl(lhs_value.qw, rhs_value.b);
             set_target_operand_value(r, inst->operands[0], inst->size, result);
 
@@ -1677,10 +1593,8 @@ namespace basecode::vm {
             register_value_alias_t lhs_value {};
             register_value_alias_t rhs_value {};
 
-            get_operand_value(r, inst, 1, lhs_value);
-            get_operand_value(r, inst, 2, rhs_value);
-
-            register_value_alias_t result {};
+            get_operand_value(r, inst->operands[1], lhs_value);
+            get_operand_value(r, inst->operands[2], rhs_value);
 
             if (inst->operands[1].is_integer()
             &&  inst->operands[2].is_integer()) {
@@ -1727,10 +1641,8 @@ namespace basecode::vm {
             register_value_alias_t lhs_value {};
             register_value_alias_t rhs_value {};
 
-            get_operand_value(r, inst, 1, lhs_value);
-            get_operand_value(r, inst, 2, rhs_value);
-
-            register_value_alias_t result {};
+            get_operand_value(r, inst->operands[1], lhs_value);
+            get_operand_value(r, inst->operands[2], rhs_value);
 
             switch (inst->size) {
                 case op_sizes::byte: {
@@ -1768,10 +1680,8 @@ namespace basecode::vm {
             register_value_alias_t lhs_value {};
             register_value_alias_t rhs_value {};
 
-            get_operand_value(r, inst, 1, lhs_value);
-            get_operand_value(r, inst, 2, rhs_value);
-
-            register_value_alias_t result {};
+            get_operand_value(r, inst->operands[1], lhs_value);
+            get_operand_value(r, inst->operands[2], rhs_value);
 
             switch (inst->size) {
                 case op_sizes::byte: {
@@ -1809,10 +1719,8 @@ namespace basecode::vm {
             register_value_alias_t lhs_value {};
             register_value_alias_t rhs_value {};
 
-            get_operand_value(r, inst, 1, lhs_value);
-            get_operand_value(r, inst, 2, rhs_value);
-
-            register_value_alias_t result {};
+            get_operand_value(r, inst->operands[1], lhs_value);
+            get_operand_value(r, inst->operands[2], rhs_value);
 
             switch (inst->size) {
                 case op_sizes::byte: {
@@ -1847,9 +1755,7 @@ namespace basecode::vm {
 
         _not:
         {
-            register_value_alias_t result {};
-
-            get_operand_value(r, inst, 1, result);
+            get_operand_value(r, inst->operands[1], result);
 
             switch (inst->size) {
                 case op_sizes::byte: {
@@ -1887,10 +1793,8 @@ namespace basecode::vm {
             register_value_alias_t value {};
             register_value_alias_t bit_number {};
 
-            get_operand_value(r, inst, 1, value);
-            get_operand_value(r, inst, 2, bit_number);
-
-            register_value_alias_t result {};
+            get_operand_value(r, inst->operands[1], value);
+            get_operand_value(r, inst->operands[2], bit_number);
 
             switch (inst->size) {
                 case op_sizes::byte: {
@@ -1932,10 +1836,8 @@ namespace basecode::vm {
             register_value_alias_t value {};
             register_value_alias_t bit_number {};
 
-            get_operand_value(r, inst, 1, value);
-            get_operand_value(r, inst, 2, bit_number);
-
-            register_value_alias_t result {};
+            get_operand_value(r, inst->operands[1], value);
+            get_operand_value(r, inst->operands[2], bit_number);
 
             switch (inst->size) {
                 case op_sizes::byte: {
@@ -1977,10 +1879,8 @@ namespace basecode::vm {
             register_value_alias_t value {};
             register_value_alias_t mask {};
 
-            get_operand_value(r, inst, 0, value);
-            get_operand_value(r, inst, 1, mask);
-
-            register_value_alias_t result {};
+            get_operand_value(r, inst->operands[1], value);
+            get_operand_value(r, inst->operands[2], mask);
 
             switch (inst->size) {
                 case op_sizes::byte: {
@@ -2013,13 +1913,9 @@ namespace basecode::vm {
 
         _cmp:
         {
-            register_value_alias_t lhs {};
-            register_value_alias_t rhs {};
+            get_operand_value(r, inst->operands[0], lhs);
+            get_operand_value(r, inst->operands[1], rhs);
 
-            get_operand_value(r, inst, 0, lhs);
-            get_operand_value(r, inst, 1, rhs);
-
-            register_value_alias_t result {};
             bool carry_flag = false;
 
             switch (inst->size) {
@@ -2055,38 +1951,36 @@ namespace basecode::vm {
 
         _bz:
         {
-            register_value_alias_t value {};
-            get_operand_value(r, inst, 0, value);
+            get_operand_value(r, inst->operands[0], lhs);
 
-            auto zero_flag = is_zero(inst->size, value);
+            auto zero_flag = is_zero(inst->size, lhs);
             if (zero_flag) {
-                get_operand_value(r, inst, 1, _registers.r[register_pc]);
+                get_operand_value(r, inst->operands[1], _registers.r[register_pc]);
             }
 
             _registers.set_flags(
                 zero_flag,
                 false,
                 false,
-                is_negative(value, inst->size));
+                is_negative(lhs, inst->size));
 
             NEXT
         }
 
         _bnz:
         {
-            register_value_alias_t value {};
-            get_operand_value(r, inst, 0, value);
+            get_operand_value(r, inst->operands[0], lhs);
 
-            auto zero_flag = is_zero(inst->size, value);
+            auto zero_flag = is_zero(inst->size, lhs);
             if (!zero_flag) {
-                get_operand_value(r, inst, 1, _registers.r[register_pc]);
+                get_operand_value(r, inst->operands[1], _registers.r[register_pc]);
             }
 
             _registers.set_flags(
                 zero_flag,
                 false,
                 false,
-                is_negative(value, inst->size));
+                is_negative(lhs, inst->size));
 
             NEXT
         }
@@ -2096,10 +1990,8 @@ namespace basecode::vm {
             register_value_alias_t value {};
             register_value_alias_t mask {};
 
-            get_operand_value(r, inst, 0, value);
-            get_operand_value(r, inst, 1, mask);
-
-            register_value_alias_t result {};
+            get_operand_value(r, inst->operands[0], value);
+            get_operand_value(r, inst->operands[1], mask);
 
             switch (inst->size) {
                 case op_sizes::byte: {
@@ -2123,7 +2015,7 @@ namespace basecode::vm {
 
             auto zero_flag = is_zero(inst->size, result);
             if (zero_flag) {
-                get_operand_value(r, inst, 2, _registers.r[register_pc]);
+                get_operand_value(r, inst->operands[2], _registers.r[register_pc]);
             }
 
             _registers.set_flags(
@@ -2140,10 +2032,8 @@ namespace basecode::vm {
             register_value_alias_t value {};
             register_value_alias_t mask {};
 
-            get_operand_value(r, inst, 0, value);
-            get_operand_value(r, inst, 1, mask);
-
-            register_value_alias_t result {};
+            get_operand_value(r, inst->operands[0], value);
+            get_operand_value(r, inst->operands[1], mask);
 
             switch (inst->size) {
                 case op_sizes::byte: {
@@ -2167,7 +2057,7 @@ namespace basecode::vm {
 
             auto zero_flag = is_zero(inst->size, result);
             if (!zero_flag) {
-                get_operand_value(r, inst, 2, _registers.r[register_pc]);
+                get_operand_value(r, inst->operands[2], _registers.r[register_pc]);
             }
 
             _registers.set_flags(
@@ -2381,7 +2271,6 @@ namespace basecode::vm {
         _setnbe:
         {
             // CF = 0 and ZF = 0
-            register_value_alias_t result {};
             auto zero_flag = _registers.flags(register_file_t::flags_t::zero);
             auto carry_flag = _registers.flags(register_file_t::flags_t::carry);
             result.b = !zero_flag && !carry_flag ? 1 : 0;
@@ -2396,7 +2285,6 @@ namespace basecode::vm {
             // CF = 1 or ZF = 1
             auto zero_flag = _registers.flags(register_file_t::flags_t::zero);
             auto carry_flag = _registers.flags(register_file_t::flags_t::carry);
-            register_value_alias_t result {};
             result.b = (zero_flag || carry_flag) ? 1 : 0;
             set_target_operand_value(r, inst->operands[0], inst->size, result);
 
@@ -2408,7 +2296,6 @@ namespace basecode::vm {
         _setnae:
         {
             // CF = 1
-            register_value_alias_t result {};
             result.b = _registers.flags(register_file_t::flags_t::carry) ? 1 : 0;
             set_target_operand_value(r, inst->operands[0], inst->size, result);
 
@@ -2420,7 +2307,6 @@ namespace basecode::vm {
         _setnc:
         {
             // CF = 0
-            register_value_alias_t result {};
             result.b = !_registers.flags(register_file_t::flags_t::carry) ? 1 : 0;
             set_target_operand_value(r, inst->operands[0], inst->size, result);
 
@@ -2434,7 +2320,6 @@ namespace basecode::vm {
             auto sf = _registers.flags(register_file_t::flags_t::negative);
             auto of = _registers.flags(register_file_t::flags_t::overflow);
             auto zf = _registers.flags(register_file_t::flags_t::zero);
-            register_value_alias_t result {};
             result.b = !zf && sf == of ? 1 : 0;
             set_target_operand_value(r, inst->operands[0], inst->size, result);
 
@@ -2447,7 +2332,6 @@ namespace basecode::vm {
             // SF != OF
             auto sf = _registers.flags(register_file_t::flags_t::negative);
             auto of = _registers.flags(register_file_t::flags_t::overflow);
-            register_value_alias_t result {};
             result.b = sf != of ? 1 : 0;
             set_target_operand_value(r, inst->operands[0], inst->size, result);
 
@@ -2460,7 +2344,6 @@ namespace basecode::vm {
             // SF = OF
             auto sf = _registers.flags(register_file_t::flags_t::negative);
             auto of = _registers.flags(register_file_t::flags_t::overflow);
-            register_value_alias_t result {};
             result.b = sf == of ? 1 : 0;
             set_target_operand_value(r, inst->operands[0], inst->size, result);
 
@@ -2474,7 +2357,6 @@ namespace basecode::vm {
             auto sf = _registers.flags(register_file_t::flags_t::negative);
             auto of = _registers.flags(register_file_t::flags_t::overflow);
             auto zf = _registers.flags(register_file_t::flags_t::zero);
-            register_value_alias_t result {};
             result.b = zf || sf != of ? 1 : 0;
             set_target_operand_value(r, inst->operands[0], inst->size, result);
 
@@ -2484,7 +2366,6 @@ namespace basecode::vm {
         _sets:
         {
             // SF = 1
-            register_value_alias_t result {};
             result.b = _registers.flags(register_file_t::flags_t::negative) ? 1 : 0;
             set_target_operand_value(r, inst->operands[0], inst->size, result);
 
@@ -2494,7 +2375,6 @@ namespace basecode::vm {
         _setns:
         {
             // SF = 0
-            register_value_alias_t result {};
             result.b = !_registers.flags(register_file_t::flags_t::negative) ? 1 : 0;
             set_target_operand_value(r, inst->operands[0], inst->size, result);
 
@@ -2504,7 +2384,6 @@ namespace basecode::vm {
         _seto:
         {
             // OF = 1
-            register_value_alias_t result {};
             result.b = _registers.flags(register_file_t::flags_t::overflow) ? 1 : 0;
             set_target_operand_value(r, inst->operands[0], inst->size, result);
 
@@ -2514,7 +2393,6 @@ namespace basecode::vm {
         _setno:
         {
             // OF = 0
-            register_value_alias_t result {};
             result.b = !_registers.flags(register_file_t::flags_t::overflow) ? 1 : 0;
             set_target_operand_value(r, inst->operands[0], inst->size, result);
 
@@ -2523,7 +2401,6 @@ namespace basecode::vm {
 
         _setz:
         {
-            register_value_alias_t result {};
             result.b = _registers.flags(register_file_t::flags_t::zero) ? 1 : 0;
             set_target_operand_value(r, inst->operands[0], inst->size, result);
 
@@ -2532,7 +2409,6 @@ namespace basecode::vm {
 
         _setnz:
         {
-            register_value_alias_t result {};
             result.b = !_registers.flags(register_file_t::flags_t::zero) ? 1 : 0;
             set_target_operand_value(r, inst->operands[0], inst->size, result);
 
@@ -2574,11 +2450,9 @@ namespace basecode::vm {
 
         _swi:
         {
-            register_value_alias_t index {};
+            get_operand_value(r, inst->operands[0], lhs);
 
-            get_operand_value(r, inst, 0, index);
-
-            size_t swi_offset = sizeof(uint64_t) * index.qw;
+            size_t swi_offset = sizeof(uint64_t) * lhs.qw;
             uint64_t swi_address = read(op_sizes::qword, swi_offset);
             if (swi_address != 0) {
                 // XXX: what state should we save and restore here?
@@ -2591,28 +2465,25 @@ namespace basecode::vm {
 
         _swap:
         {
-            register_value_alias_t value {};
-            get_operand_value(r, inst, 1, value);
-
-            register_value_alias_t result {};
+            get_operand_value(r, inst->operands[1], lhs);
 
             switch (inst->size) {
                 case op_sizes::byte: {
-                    uint8_t upper_nybble = common::get_upper_nybble(value.b);
-                    uint8_t lower_nybble = common::get_lower_nybble(value.b);
+                    uint8_t upper_nybble = common::get_upper_nybble(lhs.b);
+                    uint8_t lower_nybble = common::get_lower_nybble(lhs.b);
                     result.b = common::set_upper_nybble(result.b, lower_nybble);
                     result.b = common::set_lower_nybble(result.b, upper_nybble);
                     break;
                 }
                 case op_sizes::word:
-                    result.w = common::endian_swap_word(value.w);
+                    result.w = common::endian_swap_word(lhs.w);
                     break;
                 case op_sizes::dword:
-                    result.dw = common::endian_swap_dword(value.dw);
+                    result.dw = common::endian_swap_dword(lhs.dw);
                     break;
                 case op_sizes::qword:
                 default:
-                    result.qw = common::endian_swap_qword(value.qw);
+                    result.qw = common::endian_swap_qword(lhs.qw);
                     break;
             }
 
@@ -2629,24 +2500,21 @@ namespace basecode::vm {
 
         _trap:
         {
-            register_value_alias_t index {};
-            get_operand_value(r, inst, 0, index);
-            execute_trap(index.b);
+            get_operand_value(r, inst->operands[0], lhs);
+            execute_trap(lhs.b);
 
             NEXT
         }
 
         _ffi:
         {
-            register_value_alias_t address {};
-            get_operand_value(r, inst, 0, address);
+            get_operand_value(r, inst->operands[0], lhs);
 
-            register_value_alias_t signature_id {};
             if (inst->operands_count > 1) {
-                get_operand_value(r, inst, 1, signature_id);
+                get_operand_value(r, inst->operands[1], rhs);
             }
 
-            auto func = _ffi->find_function(address.qw);
+            auto func = _ffi->find_function(lhs.qw);
             if (func == nullptr) {
                 execute_trap(trap_invalid_ffi_call);
                 return false;
@@ -2657,7 +2525,7 @@ namespace basecode::vm {
 
             vm::function_value_list_t* arguments = nullptr;
             if (func->is_variadic()) {
-                auto it = func->call_site_arguments.find(static_cast<common::id_t>(signature_id.qw));
+                auto it = func->call_site_arguments.find(static_cast<common::id_t>(rhs.qw));
                 if (it == func->call_site_arguments.end()) {
                     execute_trap(trap_invalid_ffi_call);
                     return false;
@@ -2675,8 +2543,6 @@ namespace basecode::vm {
             auto result_value = _ffi->call(func);
             if (func->return_value.type != ffi_types_t::void_type) {
                 push(result_value);
-//                if (func->return_value.type == ffi_types_t::pointer_type)
-//                    _white_listed_addresses.insert(result_value);
             }
 
             _registers.set_flags(
@@ -2690,8 +2556,7 @@ namespace basecode::vm {
 
         _meta:
         {
-            register_value_alias_t meta_data_size {};
-            get_operand_value(r, inst, 0, meta_data_size);
+            get_operand_value(r, inst->operands[0], lhs);
             NEXT
         }
 
@@ -2713,9 +2578,6 @@ namespace basecode::vm {
     bool terp::bounds_check_address(
             common::result& r,
             const register_value_alias_t& address) {
-//        if (_white_listed_addresses.count(address.qw))
-//            return true;
-
         auto heap_bottom = _heap_address;
         auto heap_top = _heap_address + _heap_size;
 
@@ -2896,10 +2758,8 @@ namespace basecode::vm {
 
     void terp::get_operand_value(
             common::result& r,
-            const instruction_t* inst,
-            uint8_t operand_index,
+            const operand_encoding_t& operand,
             register_value_alias_t& value) const {
-        const auto& operand = inst->operands[operand_index];
         if (operand.is_reg()) {
             auto reg_index = register_index(
                 static_cast<registers_t>(operand.value.r),
@@ -2907,27 +2767,6 @@ namespace basecode::vm {
             value = _registers.r[reg_index];
         } else {
             value.qw = operand.value.u;
-            switch (operand.size) {
-                case op_sizes::byte: {
-                    value.b = static_cast<uint8_t>(operand.value.u);
-                    break;
-                }
-                case op_sizes::word: {
-                    value.w = static_cast<uint16_t>(operand.value.u);
-                    break;
-                }
-                case op_sizes::dword: {
-                    value.dw = static_cast<uint32_t>(operand.value.u);
-                    break;
-                }
-                case op_sizes::qword: {
-                    value.qw = operand.value.u;
-                    break;
-                }
-                default: {
-                    break;
-                }
-            }
         }
     }
 
@@ -2937,36 +2776,19 @@ namespace basecode::vm {
             uint8_t address_index,
             uint8_t offset_index,
             register_value_alias_t& address) {
-        get_operand_value(r, inst, address_index, address);
-
-//        auto is_white_listed = _white_listed_addresses.count(address.qw) > 0;
+        get_operand_value(r, inst->operands[address_index], address);
 
         if (inst->operands_count > 2) {
             register_value_alias_t offset {};
 
-            get_operand_value(r, inst, offset_index, offset);
+            get_operand_value(r, inst->operands[offset_index], offset);
 
             if (inst->operands[offset_index].is_negative()) {
                 address.qw -= offset.qw;
             } else {
                 address.qw += offset.qw;
             }
-
-//            if(inst.op == op_codes::move
-//            || inst.op == op_codes::moves
-//            || inst.op == op_codes::movez) {
-//                if (is_white_listed)
-//                    _white_listed_addresses.insert(address.qw);
-//            }
         }
-
-//        if (!is_white_listed
-//        && (inst.op == op_codes::load || inst.op == op_codes::store)) {
-//            if (!bounds_check_address(r, address)) {
-//                // XXX: how to handle?
-//                //return false;
-//            }
-//        }
     }
 
     void terp::set_target_operand_value(
@@ -2974,21 +2796,31 @@ namespace basecode::vm {
             const operand_encoding_t& operand,
             op_sizes size,
             const register_value_alias_t& value) {
-        if (operand.is_reg()) {
-            auto type = operand.is_integer() ?
-                        register_type_t::integer :
-                        register_type_t::floating_point;
-            auto reg_index = register_index(
-                static_cast<registers_t>(operand.value.r),
-                type);
-            register_set_zoned_value(
-                _registers.r[reg_index],
-                value.qw,
-                size);
-        } else {
-            r.error(
-                "B006",
-                "constant cannot be a target operand type.");
+        auto type = operand.is_integer() ?
+                    register_type_t::integer :
+                    register_type_t::floating_point;
+        auto reg_index = register_index(
+            static_cast<registers_t>(operand.value.r),
+            type);
+        auto& reg = _registers.r[reg_index];
+        switch (size) {
+            case op_sizes::byte: {
+                reg.b = value.b;
+                break;
+            }
+            case op_sizes::word: {
+                reg.w = value.w;
+                break;
+            }
+            case op_sizes::dword: {
+                reg.dw = value.dw;
+                break;
+            }
+            default:
+            case op_sizes::qword: {
+                reg.qw = value.qw;
+                break;
+            }
         }
     }
 
@@ -3034,13 +2866,13 @@ namespace basecode::vm {
             uint8_t operand_index,
             uint64_t inst_size,
             register_value_alias_t& address) {
-        get_operand_value(r, inst, operand_index, address);
+        get_operand_value(r, inst->operands[operand_index], address);
 
         if (inst->operands_count >= 2) {
             register_value_alias_t offset {};
 
             auto offset_index = static_cast<uint8_t>(operand_index + 1);
-            get_operand_value(r, inst, offset_index, offset);
+            get_operand_value(r, inst->operands[offset_index], offset);
 
             if (inst->operands[offset_index].is_negative()) {
                 address.qw -= offset.qw + inst_size;

@@ -30,6 +30,7 @@ namespace basecode::vm {
     struct icache_entry_t {
         size_t size = 0;
         instruction_t inst {};
+        const void* handler = nullptr;
     };
 
     class instruction_cache {
@@ -44,6 +45,7 @@ namespace basecode::vm {
 
     private:
         terp* _terp = nullptr;
+        const register_value_alias_t& _pc;
         boost::unordered_map<uint64_t, icache_entry_t> _cache {};
     };
 
@@ -217,8 +219,7 @@ namespace basecode::vm {
 
         void get_operand_value(
             common::result& r,
-            const instruction_t* inst,
-            uint8_t operand_index,
+            const operand_encoding_t& operand,
             register_value_alias_t& value) const;
 
         bool bounds_check_address(
@@ -261,7 +262,6 @@ namespace basecode::vm {
         allocator* _allocator = nullptr;
         meta_information_t _meta_information {};
         std::unordered_map<uint8_t, trap_callable> _traps {};
-        std::unordered_set<uint64_t> _white_listed_addresses {};
     };
 
 }

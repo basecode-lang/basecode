@@ -192,11 +192,6 @@ namespace basecode::vm {
         double   qwf;
     };
 
-    void register_set_zoned_value(
-        register_value_alias_t& reg,
-        uint64_t value,
-        op_sizes size);
-
     struct register_t {
         static register_t pc() {
             return register_t {
