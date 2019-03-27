@@ -655,6 +655,19 @@ namespace basecode::vm {
         make_block_entry(op);
     }
 
+    // meta variations
+    void basic_block::meta(
+            const instruction_operand_t& type,
+            const instruction_operand_t& size) {
+        instruction_t op;
+        op.operands_count = 2;
+        op.op = op_codes::meta;
+        op.size = op_sizes::word;
+        apply_operand(type, op, 0);
+        apply_operand(size, op, 1);
+        make_block_entry(op);
+    }
+
     // inc variations
     void basic_block::inc(const instruction_operand_t& target) {
         instruction_t op;

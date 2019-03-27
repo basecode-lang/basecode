@@ -105,7 +105,7 @@ namespace basecode::vm {
 
         void frame_offset(const std::string& name, int64_t offset);
 
-        // meta directives
+    // meta directives
     public:
         void meta_end();
 
@@ -147,6 +147,11 @@ namespace basecode::vm {
         void nop();
 
         void exit();
+
+        // meta
+        void meta(
+            const instruction_operand_t& type,
+            const instruction_operand_t& size);
 
         // clr
         void clr(

@@ -1904,8 +1904,18 @@ namespace basecode::compiler {
             }
         }
 
-        if (!block->entries().empty())
+        if (!block->entries().empty()) {
+            block->blank_line();
+            block->align(4);
+            block->meta(
+                vm::instruction_operand_t(
+                    static_cast<uint64_t>(0xf000),
+                    vm::op_sizes::word),
+                vm::instruction_operand_t(
+                    static_cast<uint64_t>(0x00),
+                    vm::op_sizes::word));
             assembler.blocks().emplace_back(block);
+        }
 
         return true;
     }

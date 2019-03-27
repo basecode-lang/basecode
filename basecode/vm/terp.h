@@ -27,30 +27,6 @@
 
 namespace basecode::vm {
 
-    struct icache_entry_t {
-        size_t size = 0;
-        instruction_t inst {};
-        const void* handler = nullptr;
-    };
-
-    class instruction_cache {
-    public:
-        explicit instruction_cache(terp* terp);
-
-        void reset();
-
-        icache_entry_t* fetch(common::result& r);
-
-        icache_entry_t* fetch_at(common::result& r, uint64_t address);
-
-    private:
-        terp* _terp = nullptr;
-        const register_value_alias_t& _pc;
-        boost::unordered_map<uint64_t, icache_entry_t> _cache {};
-    };
-
-    ///////////////////////////////////////////////////////////////////////////
-
     class terp {
     public:
         using trap_callable = std::function<void (terp*)>;
@@ -137,14 +113,6 @@ namespace basecode::vm {
         void register_trap(uint8_t index, const trap_callable& callable);
 
     private:
-        void set_flags(
-            op_sizes size,
-            const register_value_alias_t* result,
-            const register_value_alias_t* lhs,
-            const register_value_alias_t* rhs,
-            bool subtract = false,
-            const bool* carry_flag_override = nullptr);
-
         inline bool is_zero(
                 op_sizes size,
                 const register_value_alias_t& value) {
@@ -217,38 +185,13 @@ namespace basecode::vm {
             }
         }
 
-        void get_operand_value(
-            common::result& r,
-            operand_encoding_t& operand,
-            register_value_alias_t& value) const;
-
         bool bounds_check_address(
             common::result& r,
             const register_value_alias_t& address);
 
         void initialize_allocator();
 
-        void get_address_with_offset(
-            common::result& r,
-            instruction_t* inst,
-            uint8_t address_index,
-            uint8_t offset_index,
-            register_value_alias_t& address);
-
-        void set_target_operand_value(
-            common::result& r,
-            const operand_encoding_t& operand,
-            op_sizes size,
-            const register_value_alias_t& value);
-
         void execute_trap(uint8_t index);
-
-        void get_constant_address_or_pc_with_offset(
-            common::result& r,
-            instruction_t* inst,
-            uint8_t operand_index,
-            uint64_t inst_size,
-            register_value_alias_t& address);
 
     private:
         ffi* _ffi = nullptr;
@@ -256,7 +199,6 @@ namespace basecode::vm {
         size_t _heap_size = 0;
         size_t _stack_size = 0;
         uint8_t* _heap = nullptr;
-        instruction_cache _icache;
         uint64_t _heap_address = 0;
         register_file_t _registers {};
         allocator* _allocator = nullptr;

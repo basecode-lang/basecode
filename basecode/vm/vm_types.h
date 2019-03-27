@@ -615,7 +615,6 @@ namespace basecode::vm {
         operand_value_alias_t value {};
 
         fixup_t fixup[2];
-        register_value_alias_t* cached_value = nullptr;
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -651,6 +650,35 @@ namespace basecode::vm {
         uint16_t column_number;
         std::string symbol;
         std::string source_file;
+    };
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    struct dtt_slot_value_t {
+        op_sizes size;
+        bool is_range = false;
+        bool is_integer = false;
+        bool is_register = false;
+        bool is_negative = false;
+        union {
+            register_value_alias_t* r;
+            register_value_alias_t  d;
+        } data {.r = nullptr};
+    };
+
+    struct dtt_slot_t {
+        op_sizes size;
+        uint64_t address;
+        op_codes op_code;
+        size_t encoding_size = 0;
+        uint8_t values_count = 0;
+        dtt_slot_value_t values[4];
+        const void* handler = nullptr;
+        dtt_slot_t* branch_target = nullptr;
+    };
+
+    struct dtt_t {
+        std::vector<dtt_slot_t> slots {};
     };
 
     ///////////////////////////////////////////////////////////////////////////
