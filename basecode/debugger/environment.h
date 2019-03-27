@@ -92,4 +92,4 @@ namespace basecode::debugger {
         registers_window* _registers_window = nullptr;
     };
 
-};
+}

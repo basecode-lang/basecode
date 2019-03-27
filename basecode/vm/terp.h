@@ -60,7 +60,13 @@ namespace basecode::vm {
 
         virtual ~terp();
 
+        bool run(
+            common::result& r,
+            bool single_step = false);
+
         void reset();
+
+        void restart();
 
         uint64_t pop();
 
@@ -78,17 +84,11 @@ namespace basecode::vm {
 
         size_t stack_size() const;
 
-        bool run(common::result& r);
-
         void remove_trap(uint8_t index);
 
         bool initialize(common::result& r);
 
         void dump_state(uint8_t count = 16);
-
-        std::vector<uint64_t> jump_to_subroutine(
-            common::result& r,
-            uint64_t address);
 
         void swi(uint8_t index, uint64_t address);
 
@@ -113,10 +113,8 @@ namespace basecode::vm {
         void register_trap(uint8_t index, const trap_callable& callable);
 
     private:
-        inline bool is_zero(
-                op_sizes size,
-                const register_value_alias_t& value) {
-            switch (size) {
+        inline bool is_zero(const register_value_alias_t& value) {
+            switch (_vpc->size) {
                 case op_sizes::byte:
                     return value.b == 0;
                 case op_sizes::word:
@@ -130,11 +128,8 @@ namespace basecode::vm {
             }
         }
 
-        inline bool has_carry(
-                op_sizes size,
-                uint64_t lhs,
-                uint64_t rhs) {
-            switch (size) {
+        inline bool has_carry(uint64_t lhs, uint64_t rhs) {
+            switch (_vpc->size) {
                 case op_sizes::byte:
                     return lhs == UINT8_MAX && rhs > 0;
                 case op_sizes::word:
@@ -147,10 +142,8 @@ namespace basecode::vm {
             }
         }
 
-        inline bool is_negative(
-                op_sizes size,
-                const register_value_alias_t& value) {
-            switch (size) {
+        inline bool is_negative(const register_value_alias_t& value) {
+            switch (_vpc->size) {
                 case op_sizes::byte: {
                     return (value.b & mask_byte_negative) != 0;
                 }
@@ -167,11 +160,10 @@ namespace basecode::vm {
         }
 
         inline bool has_overflow(
-                op_sizes size,
                 const register_value_alias_t& lhs,
                 const register_value_alias_t& rhs,
                 const register_value_alias_t& result) {
-            switch (size) {
+            switch (_vpc->size) {
                 case op_sizes::byte:
                     return ((~(lhs.b ^ rhs.b)) & (lhs.b ^ result.b) & mask_byte_negative) != 0;
                 case op_sizes::word:
@@ -194,14 +186,17 @@ namespace basecode::vm {
         void execute_trap(uint8_t index);
 
     private:
+        dtt_t _thread {};
         ffi* _ffi = nullptr;
         bool _exited = false;
         size_t _heap_size = 0;
         size_t _stack_size = 0;
         uint8_t* _heap = nullptr;
+        dtt_slot_t* _vpc = nullptr;
         uint64_t _heap_address = 0;
         register_file_t _registers {};
         allocator* _allocator = nullptr;
+        dtt_slot_stack_t _call_stack {};
         meta_information_t _meta_information {};
         std::unordered_map<uint8_t, trap_callable> _traps {};
     };

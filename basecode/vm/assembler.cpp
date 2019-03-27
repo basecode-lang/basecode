@@ -91,11 +91,6 @@ namespace basecode::vm {
                         _locals.insert(std::make_pair(data->name, local));
                         break;
                     }
-                    case block_entry_type_t::frame_offset: {
-                        auto data = entry.data<frame_offset_t>();
-                        _frame_offsets.insert(std::make_pair(data->name, data->offset));
-                        break;
-                    }
                     case block_entry_type_t::instruction: {
                         auto inst = entry.data<instruction_t>();
 
@@ -163,6 +158,15 @@ namespace basecode::vm {
                         auto inst_size = inst->encode(r, entry.address());
                         if (inst_size == 0)
                             return false;
+                        break;
+                    }
+                    case block_entry_type_t::program_end: {
+                        _terp->heap_vector(heap_vectors_t::program_end, highest_address);
+                        break;
+                    }
+                    case block_entry_type_t::frame_offset: {
+                        auto data = entry.data<frame_offset_t>();
+                        _frame_offsets.insert(std::make_pair(data->name, data->offset));
                         break;
                     }
                     case block_entry_type_t::data_definition: {
@@ -504,6 +508,11 @@ namespace basecode::vm {
                     auto inst = entry.data<instruction_t>();
                     auto stream = inst->disassemble();
                     line << fmt::format("{}{}", indent_four_spaces, stream);
+                    break;
+                }
+                case block_entry_type_t::program_end: {
+                    type = listing_source_line_type_t::directive;
+                    line << ".program_end";
                     break;
                 }
                 case block_entry_type_t::data_definition: {

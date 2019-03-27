@@ -497,6 +497,10 @@ namespace basecode::vm {
                                 boost::get<int64_t>(_wip.params[1]));
                             break;
                         }
+                        case directive_type_t::program_end: {
+                            block->program_end();
+                            break;
+                        }
                     }
 
                     if (data_def.type != data_definition_type_t::none) {

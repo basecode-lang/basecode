@@ -45,6 +45,8 @@ namespace basecode::vm {
 
         void blank_line();
 
+        void program_end();
+
         void clear_entries();
 
         common::id_t id() const;

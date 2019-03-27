@@ -83,6 +83,10 @@ namespace basecode::vm {
                                                              _type(block_entry_type_t::comment) {
     }
 
+    block_entry_t::block_entry_t(const program_end_t& end) : _data(end),
+                                                             _type(block_entry_type_t::program_end) {
+    }
+
     block_entry_t::block_entry_t(const frame_offset_t& offset) : _data(offset),
                                                                  _type(block_entry_type_t::frame_offset) {
     }

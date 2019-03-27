@@ -1099,6 +1099,15 @@ namespace basecode::vm {
         make_block_entry(comment);
     }
 
+    void basic_block::program_end() {
+        if (_insertion_point != -1) {
+            _entries.insert(std::begin(_entries) + _insertion_point, block_entry_t(program_end_t()));
+            _insertion_point++;
+        } else {
+            _entries.push_back(block_entry_t(program_end_t()));
+        }
+    }
+
     void basic_block::blank_line() {
         if (_insertion_point != -1) {
             _entries.insert(std::begin(_entries) + _insertion_point, block_entry_t());

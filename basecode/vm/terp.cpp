@@ -21,12 +21,19 @@
 
 #define NEXT(next_vpc) {                    \
         lhs.qw = rhs.qw = result.qw = 0;    \
-        vpc = next_vpc;                     \
-        pc.qw = vpc->address;               \
-        goto *vpc->handler;                 \
+        _vpc = next_vpc;                    \
+        pc.qw = _vpc->address;              \
+        if (single_step) return true;       \
+        else goto *_vpc->handler;           \
+    }
+#define RESUME(next_vpc) {                  \
+        lhs.qw = rhs.qw = result.qw = 0;    \
+        _vpc = next_vpc;                    \
+        pc.qw = _vpc->address;              \
+        goto *_vpc->handler;                \
     }
 #define OPERAND(n, t) {             \
-        auto& v = vpc->values[n];   \
+        auto& v = _vpc->values[n];  \
         if (v.is_register) {        \
             t = *v.data.r;          \
         } else {                    \
@@ -37,7 +44,7 @@
         OPERAND(a, lhs)                         \
         OPERAND(o, rhs)                         \
         if (rhs.qw > 0) {                       \
-            if (vpc->values[o].is_negative) {   \
+            if (_vpc->values[o].is_negative) {  \
                 lhs.qw -= rhs.qw;               \
             } else {                            \
                 lhs.qw += rhs.qw;               \
@@ -45,27 +52,27 @@
             rhs.qw = 0;                         \
         }                                       \
     }
-#define TARGET(n, s) {                  \
-        auto t = vpc->values[n].data.r; \
-        switch (vpc->size) {            \
-            case op_sizes::byte: {      \
-                t->b = s.b;             \
-                break;                  \
-            }                           \
-            case op_sizes::word: {      \
-                t->w = s.w;             \
-                break;                  \
-            }                           \
-            case op_sizes::dword: {     \
-                t->dw = s.dw;           \
-                break;                  \
-            }                           \
-            default:                    \
-            case op_sizes::qword: {     \
-                t->qw = s.qw;           \
-                break;                  \
-            }                           \
-        }                               \
+#define TARGET(n, s) {                      \
+        auto t = _vpc->values[n].data.r;    \
+        switch (_vpc->size) {               \
+            case op_sizes::byte: {          \
+                t->b = s.b;                 \
+                break;                      \
+            }                               \
+            case op_sizes::word: {          \
+                t->w = s.w;                 \
+                break;                      \
+            }                               \
+            case op_sizes::dword: {         \
+                t->dw = s.dw;               \
+                break;                      \
+            }                               \
+            default:                        \
+            case op_sizes::qword: {         \
+                t->qw = s.qw;               \
+                break;                      \
+            }                               \
+        }                                   \
     }
 
 namespace basecode::vm {
@@ -493,6 +500,18 @@ namespace basecode::vm {
     }
 
     void terp::reset() {
+        heap_vector(heap_vectors_t::bss_start, 0);
+        heap_vector(heap_vectors_t::bss_length, 0);
+        heap_vector(heap_vectors_t::program_end, 0);
+
+        _allocator->reset();
+        _thread.loaded = false;
+        _thread.slots.clear();
+
+        restart();
+    }
+
+    void terp::restart() {
         _registers.r[register_pc].qw = heap_vector(heap_vectors_t::program_start);
         _registers.r[register_sp].qw = heap_vector(heap_vectors_t::top_of_stack);
         _registers.r[register_fp].qw = 0;
@@ -503,7 +522,13 @@ namespace basecode::vm {
             _registers.r[i].qw = 0;
         }
 
-        _allocator->reset();
+        if (_thread.loaded)
+            _vpc = &_thread.slots[0];
+        else
+            _vpc = nullptr;
+
+        while(!_call_stack.empty())
+            _call_stack.pop();
 
         _exited = false;
     }
@@ -570,7 +595,9 @@ namespace basecode::vm {
         fmt::print("\n");
     }
 
-    bool terp::run(common::result& r) {
+    bool terp::run(
+            common::result& r,
+            bool single_step) {
         const void* op_handlers[] = {
             &&_nop,
             &&_nop,
@@ -665,137 +692,136 @@ namespace basecode::vm {
             &&_exit
         };
 
-        dtt_t thread {};
-        instruction_t temp_inst;
-        boost::unordered_map<uint64_t, ssize_t> address_map {};
+        if (!_thread.loaded) {
+            instruction_t temp_inst;
+            boost::unordered_map<uint64_t, ssize_t> address_map{};
 
-        auto first_jmp = true;
-        std::stack<uint64_t> return_address {};
-        auto address = _registers.r[register_pc].qw;
-        auto program_end_address = heap_vector(heap_vectors_t::free_space_start);
+            auto address = heap_vector(heap_vectors_t::program_start);
+            auto program_end_address = heap_vector(heap_vectors_t::program_end);
 
-        while (address < program_end_address) {
-            if (address_map.count(address) > 0)
-                break;
+            while (address < program_end_address) {
+                address_map.insert(std::make_pair(
+                    address,
+                    _thread.slots.size()));
 
-            address_map.insert(std::make_pair(
-                address,
-                thread.slots.size()));
+                auto size = temp_inst.decode(r, address);
+                if (size == 0)
+                    return false;
 
-            auto size = temp_inst.decode(r, address);
-            if (size == 0)
-                return false;
+                //fmt::print("${:016X}: {}\n", address, temp_inst.disassemble());
 
-            //fmt::print("${:016X}: {}\n", address, temp_inst.disassemble());
+                dtt_slot_t slot{};
+                slot.address = address;
+                slot.encoding_size = size;
+                slot.size = temp_inst.size;
+                slot.op_code = temp_inst.op;
+                slot.branch_target = nullptr;
+                slot.values_count = temp_inst.operands_count;
+                slot.handler = op_handlers[static_cast<uint8_t>(temp_inst.op)];
 
-            dtt_slot_t slot {};
-            slot.address = address;
-            slot.encoding_size = size;
-            slot.size = temp_inst.size;
-            slot.op_code = temp_inst.op;
-            slot.branch_target = nullptr;
-            slot.values_count = temp_inst.operands_count;
-            slot.handler = op_handlers[static_cast<uint8_t>(temp_inst.op)];
+                address += size;
 
-            address += size;
+                for (auto i = 0; i < temp_inst.operands_count; i++) {
+                    auto& value = slot.values[i];
+                    const auto& operand = temp_inst.operands[i];
 
-            for (auto i = 0; i < temp_inst.operands_count; i++) {
-                auto& value = slot.values[i];
-                const auto& operand = temp_inst.operands[i];
+                    if (operand.is_reg()) {
+                        const auto type = operand.is_integer() ?
+                                          register_type_t::integer :
+                                          register_type_t::floating_point;
+                        auto index = register_index(
+                            static_cast<registers_t>(operand.value.r),
+                            type);
+                        value.is_register = true;
+                        if (operand.is_range())
+                            value.data.d.w = static_cast<uint16_t>(operand.value.u);
+                        else
+                            value.data.r = &_registers.r[index];
+                    } else {
+                        value.is_register = false;
+                        value.data.d.qw = operand.value.u;
+                    }
 
-                if (operand.is_reg()) {
-                    const auto type = operand.is_integer() ?
-                        register_type_t::integer :
-                        register_type_t::floating_point;
-                    auto index = register_index(
-                        static_cast<registers_t>(operand.value.r),
-                        type);
-                    value.is_register = true;
-                    value.data.r = &_registers.r[index];
-                } else {
-                    value.is_register = false;
-                    value.data.d.qw = operand.value.u;
+                    value.size = operand.size;
+                    value.is_range = operand.is_range();
+                    value.is_integer = operand.is_integer();
+                    value.is_negative = operand.is_negative();
                 }
 
-                value.size = operand.size;
-                value.is_range = operand.is_range();
-                value.is_integer = operand.is_integer();
-                value.is_negative = operand.is_negative();
+                _thread.slots.emplace_back(slot);
             }
 
-            thread.slots.emplace_back(slot);
+            auto index = 0;
+            for (auto& slot : _thread.slots) {
+                address = 0;
 
-            if (temp_inst.op == op_codes::exit)
-                break;
+                switch (slot.op_code) {
+                    case op_codes::bne:
+                    case op_codes::beq:
+                    case op_codes::bs:
+                    case op_codes::bo:
+                    case op_codes::bcc:
+                    case op_codes::bcs:
+                    case op_codes::ba:
+                    case op_codes::bae:
+                    case op_codes::bb:
+                    case op_codes::bbe:
+                    case op_codes::bg:
+                    case op_codes::bl:
+                    case op_codes::bge:
+                    case op_codes::ble:
+                    case op_codes::jmp:
+                    case op_codes::jsr: {
+                        address = slot.values[0].data.d.qw;
+                        break;
+                    }
+                    case op_codes::bz:
+                    case op_codes::bnz: {
+                        address = slot.values[1].data.d.qw;
+                        break;
+                    }
+                    case op_codes::tbz:
+                    case op_codes::tbnz: {
+                        address = slot.values[2].data.d.qw;
+                        break;
+                    }
+                    default:
+                        break;
+                }
 
-            if (temp_inst.op == op_codes::jmp && first_jmp) {
-                first_jmp = false;
-                address = slot.values[0].data.d.qw;
-            } else if (temp_inst.op == op_codes::jsr) {
-                return_address.push(address);
-                auto value = slot.values[0].data.d.qw;
-                if (address_map.count(value) == 0)
-                    address = value;
-            } else if (temp_inst.op == op_codes::rts) {
-                address = return_address.top();
-                return_address.pop();
+                if (address != 0) {
+                    auto it = address_map.find(address);
+                    if (it != std::end(address_map)) {
+                        slot.branch_target = &_thread.slots[it->second];
+                    }
+                }
+
+                index++;
             }
+
+            _thread.loaded = true;
+            _vpc = &_thread.slots[0];
         }
 
-        auto index = 0;
-        for (auto& slot : thread.slots) {
-            address = 0;
-
-            switch (slot.op_code) {
-                case op_codes::jmp:
-                case op_codes::jsr: {
-                    address = slot.values[0].data.d.qw;
-                    break;
-                }
-                case op_codes::bz:
-                case op_codes::bnz: {
-                    address = slot.values[1].data.d.qw;
-                    break;
-                }
-                case op_codes::rts: {
-                    slot.branch_target = &thread.slots[index + 1];
-                    goto _next;
-                }
-                default:
-                    break;
-            }
-
-            if (address != 0) {
-                auto it = address_map.find(address);
-                if (it != std::end(address_map)) {
-                    slot.branch_target = &thread.slots[it->second];
-                }
-            }
-
-        _next:
-            index++;
-        }
-
-        dtt_slot_t* vpc = nullptr;
+        op_sizes size;
         register_value_alias_t lhs {};
         register_value_alias_t rhs {};
         register_value_alias_t result {};
-        std::stack<dtt_slot_t*> call_stack {};
         auto& pc = _registers.r[register_pc];
 
         // N.B. this starts execution
-        NEXT(&thread.slots[0])
+        RESUME(_vpc)
         return false;
 
         _nop:
         {
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _alloc:
         {
             OPERAND(1, rhs)
-            rhs.qw *= op_size_in_bytes(vpc->size);
+            rhs.qw *= op_size_in_bytes(_vpc->size);
             lhs.qw = _allocator->alloc(rhs.qw);
             if (lhs.qw == 0) {
                 execute_trap(trap_out_of_memory);
@@ -806,8 +832,8 @@ namespace basecode::vm {
                 lhs.qw == 0,
                 false,
                 false,
-                is_negative(vpc->size, lhs));
-            NEXT(++vpc)
+                is_negative(lhs));
+            NEXT(++_vpc)
         }
 
         _free:
@@ -818,8 +844,8 @@ namespace basecode::vm {
                 freed_size == 0,
                 false,
                 false,
-                is_negative(vpc->size, rhs));
-            NEXT(++vpc)
+                is_negative(rhs));
+            NEXT(++_vpc)
         }
 
         _size:
@@ -831,34 +857,34 @@ namespace basecode::vm {
                 lhs.qw == 0,
                 false,
                 false,
-                is_negative(vpc->size, lhs));
-            NEXT(++vpc)
+                is_negative(lhs));
+            NEXT(++_vpc)
         }
 
         _load:
         {
             OPERAND_WITH_OFFSET(1, 2)
-            lhs.qw = read(vpc->size, lhs.qw);
+            lhs.qw = read(_vpc->size, lhs.qw);
             TARGET(0, lhs)
             _registers.set_flags(
-                is_zero(vpc->size, lhs),
+                is_zero(lhs),
                 false,
                 false,
-                is_negative(vpc->size, lhs));
-            NEXT(++vpc)
+                is_negative(lhs));
+            NEXT(++_vpc)
         }
 
         _store:
         {
             OPERAND_WITH_OFFSET(0, 2)
             OPERAND(1, rhs)
-            write(vpc->size, lhs.qw, rhs.qw);
+            write(_vpc->size, lhs.qw, rhs.qw);
             _registers.set_flags(
-                is_zero(vpc->size, rhs),
+                is_zero(rhs),
                 false,
                 false,
-                is_negative(vpc->size, rhs));
-            NEXT(++vpc)
+                is_negative(rhs));
+            NEXT(++_vpc)
         }
 
         _copy:
@@ -869,9 +895,9 @@ namespace basecode::vm {
             memcpy(
                 reinterpret_cast<void*>(lhs.qw),
                 reinterpret_cast<void*>(rhs.qw),
-                result.qw * op_size_in_bytes(vpc->size));
+                result.qw * op_size_in_bytes(_vpc->size));
             _registers.set_flags(false, false, false, false);
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _convert:
@@ -879,9 +905,9 @@ namespace basecode::vm {
             OPERAND(1, rhs)
 
             // XXX: how to handle NaN & Inf for integers
-            if (vpc->values[0].is_integer) {
-                if (!vpc->values[1].is_integer) {
-                    switch (vpc->size) {
+            if (_vpc->values[0].is_integer) {
+                if (!_vpc->values[1].is_integer) {
+                    switch (_vpc->size) {
                         case op_sizes::dword:
                             result.dw = static_cast<uint64_t>(rhs.dwf);
                             break;
@@ -894,8 +920,8 @@ namespace basecode::vm {
                     }
                 }
             } else {
-                if (vpc->values[1].is_integer) {
-                    switch (vpc->size) {
+                if (_vpc->values[1].is_integer) {
+                    switch (_vpc->size) {
                         case op_sizes::dword:
                             result.dwf = static_cast<float>(rhs.dw);
                             break;
@@ -907,7 +933,7 @@ namespace basecode::vm {
                             break;
                     }
                 } else {
-                    switch (vpc->size) {
+                    switch (_vpc->size) {
                         case op_sizes::dword:
                             result.dwf = static_cast<float>(rhs.qwf);
                             break;
@@ -925,12 +951,12 @@ namespace basecode::vm {
             TARGET(0, result)
 
             _registers.set_flags(
-                is_zero(vpc->size, result),
+                is_zero(result),
                 false,
                 false,
-                is_negative(vpc->size, result));
+                is_negative(result));
 
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _fill:
@@ -938,9 +964,9 @@ namespace basecode::vm {
             OPERAND(0, lhs)
             OPERAND(1, result)
             OPERAND(2, rhs)
-            rhs.qw *= op_size_in_bytes(vpc->size);
+            rhs.qw *= op_size_in_bytes(_vpc->size);
 
-            switch (vpc->size) {
+            switch (_vpc->size) {
                 case op_sizes::byte:
                     memset(
                         reinterpret_cast<void*>(lhs.qw),
@@ -966,19 +992,19 @@ namespace basecode::vm {
             }
 
             _registers.set_flags(
-                is_zero(vpc->size, result),
+                is_zero(result),
                 false,
                 false,
                 false);
 
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _clr:
         {
             TARGET(0, result)
             _registers.set_flags(true, false, false, false);
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _move:
@@ -986,37 +1012,37 @@ namespace basecode::vm {
             OPERAND_WITH_OFFSET(1, 2)
             TARGET(0, lhs)
             _registers.set_flags(
-                is_zero(vpc->size, lhs),
+                is_zero(lhs),
                 false,
                 false,
-                is_negative(vpc->size, lhs));
-            NEXT(++vpc)
+                is_negative(lhs));
+            NEXT(++_vpc)
         }
 
         _moves:
         {
             OPERAND_WITH_OFFSET(1, 2)
 
-            auto previous_size = static_cast<op_sizes>(static_cast<uint8_t>(vpc->size) - 1);
+            auto previous_size = static_cast<op_sizes>(static_cast<uint8_t>(_vpc->size) - 1);
             auto new_size = static_cast<uint32_t>(op_size_in_bytes(previous_size) * 8);
             lhs.qw = common::sign_extend(lhs.qw, new_size);
 
             TARGET(0, lhs)
 
             _registers.set_flags(
-                is_zero(vpc->size, lhs),
+                is_zero(lhs),
                 false,
                 false,
-                is_negative(vpc->size, lhs));
+                is_negative(lhs));
 
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _movez:
         {
             OPERAND_WITH_OFFSET(1, 2)
 
-            switch (vpc->size) {
+            switch (_vpc->size) {
                 case op_sizes::none:
                 case op_sizes::byte: {
                     break;
@@ -1038,12 +1064,12 @@ namespace basecode::vm {
             TARGET(0, lhs)
 
             _registers.set_flags(
-                is_zero(vpc->size, lhs),
+                is_zero(lhs),
                 false,
                 false,
-                is_negative(vpc->size, lhs));
+                is_negative(lhs));
 
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _push:
@@ -1051,19 +1077,19 @@ namespace basecode::vm {
             OPERAND(0, lhs)
             push(lhs.qw);
             _registers.set_flags(
-                is_zero(vpc->size, lhs),
+                is_zero(lhs),
                 false,
                 false,
-                is_negative(vpc->size, lhs));
-            NEXT(++vpc)
+                is_negative(lhs));
+            NEXT(++_vpc)
         }
 
         _pushm:
         {
             register_value_alias_t* alias = nullptr;
 
-            for (uint8_t i = 0; i < vpc->values_count; i++) {
-                const auto& value = vpc->values[i];
+            for (uint8_t i = 0; i < _vpc->values_count; i++) {
+                const auto& value = _vpc->values[i];
                 auto type = value.is_integer ?
                             register_type_t::integer :
                             register_type_t::floating_point;
@@ -1085,7 +1111,8 @@ namespace basecode::vm {
                         push(alias->qw);
                     }
                 } else if (value.is_register) {
-                    push(value.data.r->qw);
+                    alias = value.data.r;
+                    push(alias->qw);
                 }
             }
 
@@ -1093,9 +1120,9 @@ namespace basecode::vm {
                 alias->qw == 0,
                 false,
                 false,
-                is_negative(vpc->size, *alias));
+                is_negative(*alias));
 
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _pop:
@@ -1103,20 +1130,20 @@ namespace basecode::vm {
             result.qw = pop();
             TARGET(0, result)
             _registers.set_flags(
-                is_zero(vpc->size, result),
+                is_zero(result),
                 false,
                 false,
-                is_negative(vpc->size, result));
-            NEXT(++vpc)
+                is_negative(result));
+            NEXT(++_vpc)
         }
 
         _popm:
         {
             register_value_alias_t* alias = nullptr;
 
-            for (uint8_t i = 0; i < vpc->values_count; i++) {
-                const auto& value = vpc->values[i];
-                auto type = value.is_integer ?
+            for (uint8_t i = 0; i < _vpc->values_count; i++) {
+                const auto& value = _vpc->values[i];
+                const auto type = value.is_integer ?
                             register_type_t::integer :
                             register_type_t::floating_point;
 
@@ -1137,8 +1164,8 @@ namespace basecode::vm {
                         alias->qw = pop();
                     }
                 } else if (value.is_register) {
-                    value.data.r->qw = pop();
                     alias = value.data.r;
+                    alias->qw = pop();
                 }
             }
 
@@ -1146,9 +1173,9 @@ namespace basecode::vm {
                 alias->qw == 0,
                 false,
                 false,
-                is_negative(vpc->size, *alias));
+                is_negative(*alias));
 
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _dup:
@@ -1157,12 +1184,12 @@ namespace basecode::vm {
             push(result.qw);
 
             _registers.set_flags(
-                is_zero(vpc->size, result),
+                is_zero(result),
                 false,
                 false,
-                is_negative(vpc->size, result));
+                is_negative(result));
 
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _inc:
@@ -1170,8 +1197,8 @@ namespace basecode::vm {
             OPERAND(0, lhs)
             rhs.qw = 1;
 
-            if (vpc->values[0].is_integer) {
-                switch (vpc->size) {
+            if (_vpc->values[0].is_integer) {
+                switch (_vpc->size) {
                     case op_sizes::byte: {
                         result.b = lhs.b + rhs.b;
                         break;
@@ -1191,7 +1218,7 @@ namespace basecode::vm {
                     }
                 }
             } else {
-                if (vpc->size == op_sizes::dword)
+                if (_vpc->size == op_sizes::dword)
                     result.dwf = lhs.dwf + 1.0F;
                 else
                     result.qwf = lhs.qwf + 1.0;
@@ -1200,12 +1227,12 @@ namespace basecode::vm {
             TARGET(0, result)
 
             _registers.set_flags(
-                is_zero(vpc->size, result),
-                has_carry(vpc->size, lhs.qw, rhs.qw),
-                has_overflow(vpc->size, lhs, rhs, result),
-                is_negative(vpc->size, result));
+                is_zero(result),
+                has_carry(lhs.qw, rhs.qw),
+                has_overflow(lhs, rhs, result),
+                is_negative(result));
 
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _dec:
@@ -1213,8 +1240,8 @@ namespace basecode::vm {
             OPERAND(0, lhs)
             rhs.qw = 1;
 
-            if (vpc->values[0].is_integer) {
-                switch (vpc->size) {
+            if (_vpc->values[0].is_integer) {
+                switch (_vpc->size) {
                     case op_sizes::byte: {
                         result.b = lhs.b - rhs.b;
                         break;
@@ -1234,7 +1261,7 @@ namespace basecode::vm {
                     }
                 }
             } else {
-                if (vpc->size == op_sizes::dword)
+                if (_vpc->size == op_sizes::dword)
                     result.dwf = lhs.dwf - 1.0F;
                 else
                     result.qwf = lhs.qwf - 1.0;
@@ -1243,26 +1270,28 @@ namespace basecode::vm {
             TARGET(0, result)
 
             _registers.set_flags(
-                is_zero(vpc->size, result),
-                has_carry(vpc->size, lhs.qw, rhs.qw),
-                has_overflow(vpc->size, lhs, rhs, result),
-                is_negative(vpc->size, result),
+                is_zero(result),
+                has_carry(lhs.qw, rhs.qw),
+                has_overflow(lhs, rhs, result),
+                is_negative(result),
                 true);
 
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _add:
         {
-            const auto& value1 = vpc->values[1];
-            const auto& value2 = vpc->values[2];
+            size = _vpc->size;
+
+            const auto& value1 = _vpc->values[1];
+            const auto& value2 = _vpc->values[2];
 
             OPERAND(1, lhs)
             OPERAND(2, rhs)
 
             if (value1.is_integer
 	        &&  value2.is_integer) {
-                switch (vpc->size) {
+                switch (size) {
                     case op_sizes::byte: {
                         result.b = lhs.b + rhs.b;
                         break;
@@ -1282,7 +1311,7 @@ namespace basecode::vm {
                     }
                 }
             } else {
-                if (vpc->size == op_sizes::dword)
+                if (size == op_sizes::dword)
                     result.dwf = lhs.dwf + rhs.dwf;
                 else
                     result.qwf = lhs.qwf + rhs.qwf;
@@ -1291,18 +1320,20 @@ namespace basecode::vm {
             TARGET(0, result)
 
             _registers.set_flags(
-                is_zero(vpc->size, result),
-                has_carry(vpc->size, lhs.qw, rhs.qw),
-                has_overflow(vpc->size, lhs, rhs, result),
-                is_negative(vpc->size, result));
+                is_zero(result),
+                has_carry(lhs.qw, rhs.qw),
+                has_overflow(lhs, rhs, result),
+                is_negative(result));
 
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _sub:
         {
-            const auto& value1 = vpc->values[1];
-            const auto& value2 = vpc->values[2];
+            size = _vpc->size;
+
+            const auto& value1 = _vpc->values[1];
+            const auto& value2 = _vpc->values[2];
 
             OPERAND(1, lhs)
             OPERAND(2, rhs)
@@ -1311,7 +1342,7 @@ namespace basecode::vm {
 
             if (value1.is_integer
             &&  value2.is_integer) {
-                switch (vpc->size) {
+                switch (size) {
                     case op_sizes::byte:
                         carry_flag = lhs.b < rhs.b;
                         result.b = lhs.b - rhs.b;
@@ -1332,7 +1363,7 @@ namespace basecode::vm {
                         return false;
                 }
             } else {
-                if (vpc->size == op_sizes::dword)
+                if (size == op_sizes::dword)
                     result.dwf = lhs.dwf - rhs.dwf;
                 else
                     result.qwf = lhs.qwf - rhs.qwf;
@@ -1341,13 +1372,13 @@ namespace basecode::vm {
             TARGET(0, result)
 
             _registers.set_flags(
-                is_zero(vpc->size, result),
+                is_zero(result),
                 carry_flag,
-                !carry_flag && has_overflow(vpc->size, lhs, rhs, result),
-                is_negative(vpc->size, result),
+                !carry_flag && has_overflow(lhs, rhs, result),
+                is_negative(result),
                 true);
 
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _mul:
@@ -1355,9 +1386,9 @@ namespace basecode::vm {
             OPERAND(1, lhs)
             OPERAND(2, rhs)
 
-            if (vpc->values[1].is_integer
-            &&  vpc->values[2].is_integer) {
-                switch (vpc->size) {
+            if (_vpc->values[1].is_integer
+            &&  _vpc->values[2].is_integer) {
+                switch (_vpc->size) {
                     case op_sizes::byte: {
                         result.b = lhs.b * rhs.b;
                         break;
@@ -1377,7 +1408,7 @@ namespace basecode::vm {
                     }
                 }
             } else {
-                if (vpc->size == op_sizes::dword)
+                if (_vpc->size == op_sizes::dword)
                     result.dwf = lhs.dwf * rhs.dwf;
                 else
                     result.qwf = lhs.qwf * rhs.qwf;
@@ -1386,12 +1417,12 @@ namespace basecode::vm {
             TARGET(0, result)
 
             _registers.set_flags(
-                is_zero(vpc->size, result),
-                has_carry(vpc->size, lhs.qw, rhs.qw),
-                has_overflow(vpc->size, lhs, rhs, result),
-                is_negative(vpc->size, result));
+                is_zero(result),
+                has_carry(lhs.qw, rhs.qw),
+                has_overflow(lhs, rhs, result),
+                is_negative(result));
 
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _div:
@@ -1399,9 +1430,9 @@ namespace basecode::vm {
             OPERAND(1, lhs)
             OPERAND(2, rhs)
 
-            if (vpc->values[1].is_integer
-            &&  vpc->values[2].is_integer) {
-                switch (vpc->size) {
+            if (_vpc->values[1].is_integer
+            &&  _vpc->values[2].is_integer) {
+                switch (_vpc->size) {
                     case op_sizes::byte: {
                         if (rhs.b != 0)
                             result.b = lhs.b / rhs.b;
@@ -1425,7 +1456,7 @@ namespace basecode::vm {
                     }
                 }
             } else {
-                if (vpc->size == op_sizes::dword) {
+                if (_vpc->size == op_sizes::dword) {
                     if (rhs.dwf != 0) {
                         result.dwf = lhs.dwf / rhs.dwf;
                     }
@@ -1439,20 +1470,22 @@ namespace basecode::vm {
             TARGET(0, result)
 
             _registers.set_flags(
-                is_zero(vpc->size, result),
-                has_carry(vpc->size, lhs.qw, rhs.qw),
-                has_overflow(vpc->size, lhs, rhs, result),
-                is_negative(vpc->size, result));
+                is_zero(result),
+                has_carry(lhs.qw, rhs.qw),
+                has_overflow(lhs, rhs, result),
+                is_negative(result));
 
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _mod:
         {
+            size = _vpc->size;
+
             OPERAND(1, lhs)
             OPERAND(2, rhs)
 
-            switch (vpc->size) {
+            switch (size) {
                 case op_sizes::byte: {
                     if (lhs.b != 0 && rhs.b != 0)
                         result.b = lhs.b % rhs.b;
@@ -1479,20 +1512,20 @@ namespace basecode::vm {
             TARGET(0, result)
 
             _registers.set_flags(
-                is_zero(vpc->size, result),
+                is_zero(result),
                 false,
                 false,
-                is_negative(vpc->size, result));
+                is_negative(result));
 
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _neg:
         {
             OPERAND(1, lhs)
 
-            if (vpc->values[1].is_integer) {
-                switch (vpc->size) {
+            if (_vpc->values[1].is_integer) {
+                switch (_vpc->size) {
                     case op_sizes::byte: {
                         int8_t negated_result = -lhs.b;
                         result.b = static_cast<uint64_t>(negated_result);
@@ -1516,7 +1549,7 @@ namespace basecode::vm {
                     }
                 }
             } else {
-                if (vpc->size == op_sizes::dword)
+                if (_vpc->size == op_sizes::dword)
                     result.dwf = lhs.dwf * -1.0F;
                 else
                     result.qwf = lhs.qwf * -1.0;
@@ -1525,12 +1558,12 @@ namespace basecode::vm {
             TARGET(0, result)
 
             _registers.set_flags(
-                is_zero(vpc->size, result),
+                is_zero(result),
                 false,
                 false,
-                is_negative(vpc->size, result));
+                is_negative(result));
 
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _shr:
@@ -1538,7 +1571,7 @@ namespace basecode::vm {
             OPERAND(1, lhs)
             OPERAND(2, rhs)
 
-            switch (vpc->size) {
+            switch (_vpc->size) {
                 case op_sizes::byte: {
                     result.b = lhs.b >> rhs.b;
                     break;
@@ -1561,12 +1594,12 @@ namespace basecode::vm {
             TARGET(0, result)
 
             _registers.set_flags(
-                is_zero(vpc->size, result),
+                is_zero(result),
                 false,
                 false,
-                is_negative(vpc->size, result));
+                is_negative(result));
 
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _shl:
@@ -1574,7 +1607,7 @@ namespace basecode::vm {
             OPERAND(1, lhs)
             OPERAND(2, rhs)
 
-            switch (vpc->size) {
+            switch (_vpc->size) {
                 case op_sizes::byte: {
                     result.b = lhs.b << rhs.b;
                     break;
@@ -1597,12 +1630,12 @@ namespace basecode::vm {
             TARGET(0, result)
 
             _registers.set_flags(
-                is_zero(vpc->size, result),
+                is_zero(result),
                 false,
                 false,
-                is_negative(vpc->size, result));
+                is_negative(result));
 
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _ror:
@@ -1612,11 +1645,11 @@ namespace basecode::vm {
             result.qw = common::rotr(lhs.qw, rhs.b);
             TARGET(0, result)
             _registers.set_flags(
-                is_zero(vpc->size, result),
+                is_zero(result),
                 false,
                 false,
-                is_negative(vpc->size, result));
-            NEXT(++vpc)
+                is_negative(result));
+            NEXT(++_vpc)
         }
 
         _rol:
@@ -1626,11 +1659,11 @@ namespace basecode::vm {
             result.qw = common::rotl(lhs.qw, rhs.b);
             TARGET(0, result)
             _registers.set_flags(
-                is_zero(vpc->size, result),
+                is_zero(result),
                 false,
                 false,
-                is_negative(vpc->size, result));
-            NEXT(++vpc)
+                is_negative(result));
+            NEXT(++_vpc)
         }
 
         _pow:
@@ -1638,9 +1671,9 @@ namespace basecode::vm {
             OPERAND(1, lhs)
             OPERAND(2, rhs)
 
-            if (vpc->values[1].is_integer
-            &&  vpc->values[2].is_integer) {
-                switch (vpc->size) {
+            if (_vpc->values[1].is_integer
+            &&  _vpc->values[2].is_integer) {
+                switch (_vpc->size) {
                     case op_sizes::byte: {
                         result.b = common::power(lhs.b, rhs.b);
                         break;
@@ -1660,7 +1693,7 @@ namespace basecode::vm {
                     }
                 }
             } else {
-                if (vpc->size == op_sizes::dword) {
+                if (_vpc->size == op_sizes::dword) {
                     result.dwf = std::pow(lhs.dwf, rhs.dwf);
                 } else {
                     result.qwf = std::pow(lhs.qwf, rhs.qwf);
@@ -1670,12 +1703,12 @@ namespace basecode::vm {
             TARGET(0, result)
 
             _registers.set_flags(
-                is_zero(vpc->size, result),
+                is_zero(result),
                 false,
                 false,
-                is_negative(vpc->size, result));
+                is_negative(result));
 
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _and:
@@ -1683,7 +1716,7 @@ namespace basecode::vm {
             OPERAND(1, lhs)
             OPERAND(2, rhs)
 
-            switch (vpc->size) {
+            switch (_vpc->size) {
                 case op_sizes::byte: {
                     result.b = lhs.b & rhs.b;
                     break;
@@ -1706,12 +1739,12 @@ namespace basecode::vm {
             TARGET(0, result)
 
             _registers.set_flags(
-                is_zero(vpc->size, result),
+                is_zero(result),
                 false,
                 false,
-                is_negative(vpc->size, result));
+                is_negative(result));
 
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _or:
@@ -1719,7 +1752,7 @@ namespace basecode::vm {
             OPERAND(1, lhs)
             OPERAND(2, rhs)
 
-            switch (vpc->size) {
+            switch (_vpc->size) {
                 case op_sizes::byte: {
                     result.b = lhs.b | rhs.b;
                     break;
@@ -1742,12 +1775,12 @@ namespace basecode::vm {
             TARGET(0, result)
 
             _registers.set_flags(
-                is_zero(vpc->size, result),
+                is_zero(result),
                 false,
                 false,
-                is_negative(vpc->size, result));
+                is_negative(result));
 
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _xor:
@@ -1755,7 +1788,7 @@ namespace basecode::vm {
             OPERAND(1, lhs)
             OPERAND(2, rhs)
 
-            switch (vpc->size) {
+            switch (_vpc->size) {
                 case op_sizes::byte: {
                     result.b = lhs.b ^ rhs.b;
                     break;
@@ -1778,19 +1811,19 @@ namespace basecode::vm {
             TARGET(0, result)
 
             _registers.set_flags(
-                is_zero(vpc->size, result),
+                is_zero(result),
                 false,
                 false,
-                is_negative(vpc->size, result));
+                is_negative(result));
 
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _not:
         {
             OPERAND(1, result)
 
-            switch (vpc->size) {
+            switch (_vpc->size) {
                 case op_sizes::byte: {
                     result.b = ~result.b;
                     break;
@@ -1813,12 +1846,12 @@ namespace basecode::vm {
             TARGET(0, result)
 
             _registers.set_flags(
-                is_zero(vpc->size, result),
+                is_zero(result),
                 false,
                 false,
-                is_negative(vpc->size, result));
+                is_negative(result));
 
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _bis:
@@ -1826,7 +1859,7 @@ namespace basecode::vm {
             OPERAND(1, lhs)
             OPERAND(2, rhs)
 
-            switch (vpc->size) {
+            switch (_vpc->size) {
                 case op_sizes::byte: {
                     auto masked_value = static_cast<uint8_t>(1) << rhs.b;
                     result.b = lhs.b | masked_value;
@@ -1853,12 +1886,12 @@ namespace basecode::vm {
             TARGET(0, result)
 
             _registers.set_flags(
-                is_zero(vpc->size, result),
+                is_zero(result),
                 false,
                 false,
-                is_negative(vpc->size, result));
+                is_negative(result));
 
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _bic:
@@ -1866,7 +1899,7 @@ namespace basecode::vm {
             OPERAND(1, lhs)
             OPERAND(2, rhs)
 
-            switch (vpc->size) {
+            switch (_vpc->size) {
                 case op_sizes::byte: {
                     auto masked_value = ~(static_cast<uint8_t>(1) << rhs.b);
                     result.b = lhs.b & masked_value;
@@ -1893,12 +1926,12 @@ namespace basecode::vm {
             TARGET(0, result)
 
             _registers.set_flags(
-                is_zero(vpc->size, result),
+                is_zero(result),
                 false,
                 false,
-                is_negative(vpc->size, result));
+                is_negative(result));
 
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _test:
@@ -1906,7 +1939,7 @@ namespace basecode::vm {
             OPERAND(1, lhs)
             OPERAND(2, rhs)
 
-            switch (vpc->size) {
+            switch (_vpc->size) {
                 case op_sizes::byte: {
                     result.b = lhs.b & rhs.b;
                     break;
@@ -1929,22 +1962,24 @@ namespace basecode::vm {
             TARGET(0, result)
 
             _registers.set_flags(
-                is_zero(vpc->size, result),
+                is_zero(result),
                 false,
                 false,
-                is_negative(vpc->size, result));
+                is_negative(result));
 
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _cmp:
         {
+            size = _vpc->size;
+
             OPERAND(0, lhs)
             OPERAND(1, rhs)
 
             bool carry_flag = false;
 
-            switch (vpc->size) {
+            switch (size) {
                 case op_sizes::byte:
                     carry_flag = lhs.b < rhs.b;
                     result.b = lhs.b - rhs.b;
@@ -1966,53 +2001,52 @@ namespace basecode::vm {
             }
 
             _registers.set_flags(
-                is_zero(vpc->size, result),
+                is_zero(result),
                 carry_flag,
-                !carry_flag && has_overflow(vpc->size, lhs, rhs, result),
-                is_negative(vpc->size, result),
+                !carry_flag && has_overflow(lhs, rhs, result),
+                is_negative(result),
                 true);
 
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _bz:
         {
             OPERAND(0, lhs)
 
-            auto zero_flag = is_zero(vpc->size, lhs);
+            auto zero_flag = is_zero(lhs);
             _registers.set_flags(
                 zero_flag,
                 false,
                 false,
-                is_negative(vpc->size, lhs));
+                is_negative(lhs));
 
             if (zero_flag) {
                 OPERAND(1, pc)
-                NEXT(vpc->branch_target)
+                NEXT(_vpc->branch_target)
             }
 
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _bnz:
         {
-
             OPERAND(0, lhs)
 
-            auto zero_flag = is_zero(vpc->size, lhs);
+            auto zero_flag = is_zero(lhs);
 
             _registers.set_flags(
                 zero_flag,
                 false,
                 false,
-                is_negative(vpc->size, lhs));
+                is_negative(lhs));
 
             if (!zero_flag) {
                 OPERAND(1, pc)
-                NEXT(vpc->branch_target);
+                NEXT(_vpc->branch_target);
             }
 
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _tbz:
@@ -2020,7 +2054,7 @@ namespace basecode::vm {
             OPERAND(0, lhs)
             OPERAND(1, rhs)
 
-            switch (vpc->size) {
+            switch (_vpc->size) {
                 case op_sizes::byte: {
                     result.b = lhs.b & rhs.b;
                     break;
@@ -2040,19 +2074,19 @@ namespace basecode::vm {
                 }
             }
 
-            auto zero_flag = is_zero(vpc->size, result);
+            auto zero_flag = is_zero(result);
             _registers.set_flags(
                 zero_flag,
                 false,
                 false,
-                is_negative(vpc->size, result));
+                is_negative(result));
 
             if (zero_flag) {
                 OPERAND(2, pc)
-                NEXT(vpc->branch_target)
+                NEXT(_vpc->branch_target)
             }
 
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _tbnz:
@@ -2060,7 +2094,7 @@ namespace basecode::vm {
             OPERAND(0, lhs)
             OPERAND(1, rhs)
 
-            switch (vpc->size) {
+            switch (_vpc->size) {
                 case op_sizes::byte: {
                     result.b = lhs.b & rhs.b;
                     break;
@@ -2080,19 +2114,19 @@ namespace basecode::vm {
                 }
             }
 
-            auto zero_flag = is_zero(vpc->size, result);
+            auto zero_flag = is_zero(result);
             _registers.set_flags(
                 zero_flag,
                 false,
                 false,
-                is_negative(vpc->size, result));
+                is_negative(result));
 
             if (!zero_flag) {
                 OPERAND(2, pc)
-                NEXT(vpc->branch_target)
+                NEXT(_vpc->branch_target)
             }
 
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _bne:
@@ -2100,10 +2134,10 @@ namespace basecode::vm {
             // ZF = 0
             if (!_registers.flags(register_file_t::flags_t::zero)) {
                 OPERAND(0, pc)
-                NEXT(vpc->branch_target);
+                NEXT(_vpc->branch_target);
             }
 
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _beq:
@@ -2111,10 +2145,10 @@ namespace basecode::vm {
             // ZF = 1
             if (_registers.flags(register_file_t::flags_t::zero)) {
                 OPERAND(0, pc)
-                NEXT(vpc->branch_target);
+                NEXT(_vpc->branch_target);
             }
 
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _bs:
@@ -2122,10 +2156,10 @@ namespace basecode::vm {
             // SF = 1
             if (_registers.flags(register_file_t::flags_t::negative)) {
                 OPERAND(0, pc)
-                NEXT(vpc->branch_target);
+                NEXT(_vpc->branch_target);
             }
 
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _bo:
@@ -2133,10 +2167,10 @@ namespace basecode::vm {
             // OF = 1
             if (_registers.flags(register_file_t::flags_t::overflow)) {
                 OPERAND(0, pc)
-                NEXT(vpc->branch_target);
+                NEXT(_vpc->branch_target);
             }
 
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _bcc:
@@ -2144,10 +2178,10 @@ namespace basecode::vm {
             // CF = 0
             if (!_registers.flags(register_file_t::flags_t::carry)) {
                 OPERAND(0, pc)
-                NEXT(vpc->branch_target);
+                NEXT(_vpc->branch_target);
             }
 
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _bb:
@@ -2157,10 +2191,10 @@ namespace basecode::vm {
             // CF = 1
             if (_registers.flags(register_file_t::flags_t::carry)) {
                 OPERAND(0, pc)
-                NEXT(vpc->branch_target);
+                NEXT(_vpc->branch_target);
             }
 
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _ba:
@@ -2169,10 +2203,10 @@ namespace basecode::vm {
             if (!_registers.flags(register_file_t::flags_t::zero)
             &&  !_registers.flags(register_file_t::flags_t::carry)) {
                 OPERAND(0, pc)
-                NEXT(vpc->branch_target);
+                NEXT(_vpc->branch_target);
             }
 
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _bbe:
@@ -2181,10 +2215,10 @@ namespace basecode::vm {
             if (_registers.flags(register_file_t::flags_t::carry)
             ||  _registers.flags(register_file_t::flags_t::zero)) {
                 OPERAND(0, pc)
-                NEXT(vpc->branch_target);
+                NEXT(_vpc->branch_target);
             }
 
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _bg:
@@ -2196,10 +2230,10 @@ namespace basecode::vm {
 
             if (!zf && sf == of) {
                 OPERAND(0, pc)
-                NEXT(vpc->branch_target);
+                NEXT(_vpc->branch_target);
             }
 
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _bl:
@@ -2210,10 +2244,10 @@ namespace basecode::vm {
 
             if (sf != of) {
                 OPERAND(0, pc)
-                NEXT(vpc->branch_target);
+                NEXT(_vpc->branch_target);
             }
 
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _bge:
@@ -2224,10 +2258,10 @@ namespace basecode::vm {
 
             if (sf == of) {
                 OPERAND(0, pc)
-                NEXT(vpc->branch_target);
+                NEXT(_vpc->branch_target);
             }
 
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _ble:
@@ -2239,10 +2273,10 @@ namespace basecode::vm {
 
             if (zf || sf != of) {
                 OPERAND(0, pc)
-                NEXT(vpc->branch_target);
+                NEXT(_vpc->branch_target);
             }
 
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _seta:
@@ -2254,7 +2288,7 @@ namespace basecode::vm {
             result.b = !zero_flag && !carry_flag ? 1 : 0;
             TARGET(0, result)
 
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _setna:
@@ -2266,7 +2300,7 @@ namespace basecode::vm {
             result.b = (zero_flag || carry_flag) ? 1 : 0;
             TARGET(0, result)
 
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _setb:
@@ -2276,7 +2310,7 @@ namespace basecode::vm {
             // CF = 1
             result.b = _registers.flags(register_file_t::flags_t::carry) ? 1 : 0;
             TARGET(0, result)
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _setnb:
@@ -2286,7 +2320,7 @@ namespace basecode::vm {
             // CF = 0
             result.b = !_registers.flags(register_file_t::flags_t::carry) ? 1 : 0;
             TARGET(0, result)
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _setg:
@@ -2298,7 +2332,7 @@ namespace basecode::vm {
             auto zf = _registers.flags(register_file_t::flags_t::zero);
             result.b = !zf && sf == of ? 1 : 0;
             TARGET(0, result)
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _setl:
@@ -2309,7 +2343,7 @@ namespace basecode::vm {
             auto of = _registers.flags(register_file_t::flags_t::overflow);
             result.b = sf != of ? 1 : 0;
             TARGET(0, result)
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _setnl:
@@ -2320,7 +2354,7 @@ namespace basecode::vm {
             auto of = _registers.flags(register_file_t::flags_t::overflow);
             result.b = sf == of ? 1 : 0;
             TARGET(0, result)
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _setle:
@@ -2332,7 +2366,7 @@ namespace basecode::vm {
             auto zf = _registers.flags(register_file_t::flags_t::zero);
             result.b = zf || sf != of ? 1 : 0;
             TARGET(0, result)
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _sets:
@@ -2340,7 +2374,7 @@ namespace basecode::vm {
             // SF = 1
             result.b = _registers.flags(register_file_t::flags_t::negative) ? 1 : 0;
             TARGET(0, result)
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _setns:
@@ -2348,7 +2382,7 @@ namespace basecode::vm {
             // SF = 0
             result.b = !_registers.flags(register_file_t::flags_t::negative) ? 1 : 0;
             TARGET(0, result)
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _seto:
@@ -2356,7 +2390,7 @@ namespace basecode::vm {
             // OF = 1
             result.b = _registers.flags(register_file_t::flags_t::overflow) ? 1 : 0;
             TARGET(0, result)
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _setno:
@@ -2364,43 +2398,43 @@ namespace basecode::vm {
             // OF = 0
             result.b = !_registers.flags(register_file_t::flags_t::overflow) ? 1 : 0;
             TARGET(0, result)
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _setz:
         {
             result.b = _registers.flags(register_file_t::flags_t::zero) ? 1 : 0;
             TARGET(0, result)
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _setnz:
         {
             result.b = !_registers.flags(register_file_t::flags_t::zero) ? 1 : 0;
             TARGET(0, result)
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _jsr:
         {
-            push(pc.qw + vpc->encoding_size);
-//            call_stack.push(vpc + 1);
+            push(pc.qw + _vpc->encoding_size);
+            _call_stack.push(_vpc + 1);
             OPERAND(0, pc)
-            NEXT(vpc->branch_target)
+            NEXT(_vpc->branch_target)
         }
 
         _rts:
         {
             pc.qw = pop();
-//            auto branch_target = call_stack.top();
-//            call_stack.pop();
-            NEXT(vpc->branch_target)
+            auto branch_target = _call_stack.top();
+            _call_stack.pop();
+            NEXT(branch_target)
         }
 
         _jmp:
         {
             OPERAND(0, pc)
-            NEXT(vpc->branch_target)
+            NEXT(_vpc->branch_target)
         }
 
         _swi:
@@ -2412,14 +2446,14 @@ namespace basecode::vm {
                 push(pc.qw);
                 pc.qw = swi_address;
             }
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _swap:
         {
             OPERAND(1, lhs)
 
-            switch (vpc->size) {
+            switch (_vpc->size) {
                 case op_sizes::byte: {
                     uint8_t upper_nybble = common::get_upper_nybble(lhs.b);
                     uint8_t lower_nybble = common::get_lower_nybble(lhs.b);
@@ -2442,25 +2476,25 @@ namespace basecode::vm {
             TARGET(0, result)
 
             _registers.set_flags(
-                is_zero(vpc->size, result),
+                is_zero(result),
                 false,
                 false,
-                is_negative(vpc->size, result));
+                is_negative(result));
 
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _trap:
         {
             OPERAND(0, lhs)
             execute_trap(lhs.b);
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _ffi:
         {
             OPERAND(0, lhs)
-            if (vpc->values_count > 1)
+            if (_vpc->values_count > 1)
                 OPERAND(1, rhs);
 
             auto func = _ffi->find_function(lhs.qw);
@@ -2498,16 +2532,16 @@ namespace basecode::vm {
                 result.qw == 0,
                 false,
                 false,
-                is_negative(vpc->size, result));
+                is_negative(result));
 
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _meta:
         {
             OPERAND(0, lhs)
             OPERAND(1, rhs)
-            NEXT(++vpc)
+            NEXT(++_vpc)
         }
 
         _exit:
@@ -2594,30 +2628,6 @@ namespace basecode::vm {
         if (it == _traps.end())
             return;
         it->second(this);
-    }
-
-    std::vector<uint64_t> terp::jump_to_subroutine(
-            common::result& r,
-            uint64_t address) {
-        std::vector<uint64_t> return_values;
-
-        auto return_address = _registers.r[register_pc].qw;
-        push(return_address);
-        _registers.r[register_pc].qw = address;
-
-        while (!has_exited()) {
-            // XXX: need to introduce a terp_step_result_t
-            //auto result = step(r);
-            // XXX: did an RTS just execute?
-            //      does _registers.pc == return_address?  if so, we're done
-            //if (!result) {
-            //    break;
-            //}
-        }
-
-        // XXX: how do we handle multiple return values?
-        // XXX: pull return values from the stack
-        return return_values;
     }
 
     void terp::swi(uint8_t index, uint64_t address) {

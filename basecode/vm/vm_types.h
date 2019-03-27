@@ -678,8 +678,11 @@ namespace basecode::vm {
     };
 
     struct dtt_t {
+        bool loaded = false;
         std::vector<dtt_slot_t> slots {};
     };
+
+    using dtt_slot_stack_t = std::stack<dtt_slot_t*>;
 
     ///////////////////////////////////////////////////////////////////////////
 
@@ -778,6 +781,9 @@ namespace basecode::vm {
         std::string type {};
     };
 
+    struct program_end_t {
+    };
+
     enum class block_entry_type_t : uint8_t {
         section = 1,
         meta,
@@ -788,6 +794,7 @@ namespace basecode::vm {
         comment,
         blank_line,
         instruction,
+        program_end,
         frame_offset,
         data_definition,
     };
@@ -812,6 +819,8 @@ namespace basecode::vm {
         explicit block_entry_t(const comment_t& comment);
 
         explicit block_entry_t(const section_t& section);
+
+        explicit block_entry_t(const program_end_t& end);
 
         explicit block_entry_t(const frame_offset_t& offset);
 
@@ -1743,6 +1752,7 @@ namespace basecode::vm {
         block,
         end,
         frame_offset,
+        program_end,
         db,
         dw,
         dd,
@@ -1885,6 +1895,14 @@ namespace basecode::vm {
                     {directive_param_t::flags::string, true},
                     {directive_param_t::flags::number, true},
                 }
+            }
+        },
+        {
+            "PROGRAM_END",
+            directive_t{
+                op_sizes::none,
+                directive_type_t::program_end,
+                {}
             }
         },
         {
@@ -2075,6 +2093,7 @@ namespace basecode::vm {
         top_of_stack = 0,
         bottom_of_stack,
         program_start,
+        program_end,
         free_space_start,
         bss_start,
         bss_length,

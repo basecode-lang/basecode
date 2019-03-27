@@ -55,13 +55,11 @@ namespace basecode::compiler {
 
         bool emit_interned_string_table();
 
-        vm::basic_block* emit_bootstrap_block();
+        vm::basic_block* emit_start_block();
 
         std::string interned_string_data_label(common::id_t id);
 
         bool emit_end_block(const vm::basic_block_list_t& predecessors);
-
-        vm::basic_block* emit_start_block(const vm::basic_block_list_t& predecessors);
 
         vm::basic_block* emit_implicit_blocks(const vm::basic_block_list_t& predecessors);
 
