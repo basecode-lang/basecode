@@ -110,7 +110,6 @@ namespace basecode::compiler {
 
         if (!ref_stack.empty()) {
             result.base_ref = ref_stack.top();
-            result.base_label = result.base_ref->label_name();
             result.path += result.base_ref->symbol().name;
             ref_stack.pop();
 
@@ -123,12 +122,14 @@ namespace basecode::compiler {
                 auto ref = ref_stack.top();
                 ref_stack.pop();
 
-                result.path += fmt::format(
-                    ".{}",
-                    ref->symbol().name);
+                result.path += fmt::format(".{}", ref->symbol().name);
 
-                if (ref_stack.empty())
-                    result.field = ref->identifier()->field();
+                auto field = ref->identifier()->field();
+                if (field != nullptr) {
+                    result.fields.emplace_back(field);
+                    result.from_end += field->end_offset();
+                    result.from_start += field->start_offset();
+                }
             }
         }
 

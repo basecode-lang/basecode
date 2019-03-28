@@ -181,7 +181,7 @@ namespace basecode::compiler {
                     if (local->type == variable_type_t::local)
                         locals_size += local->size_in_bytes();
                 } else {
-                    offset = local->field_end_offset();
+                    offset = local->field_offset.from_start;
                 }
 
                 if (!local->flag(variable_t::flags_t::in_block)) {
@@ -334,7 +334,12 @@ namespace basecode::compiler {
 
         auto current_block = *basic_block;
 
+        vm::op_sizes op_size {};
         e->infer_type(_session, result.type_result);
+        if (result.type_result.inferred_type != nullptr
+        && !result.type_result.inferred_type->is_composite_type()) {
+            op_size = vm::op_size_for_byte_size(result.type_result.inferred_type->size_in_bytes());
+        }
 
         switch (e->element_type()) {
             case element_type_t::cast: {
@@ -1479,11 +1484,6 @@ namespace basecode::compiler {
             }
             case element_type_t::identifier: {
                 auto var = dynamic_cast<compiler::identifier*>(e);
-                auto op_size = vm::op_sizes::qword;
-                if (result.type_result.inferred_type != nullptr
-                &&  !result.type_result.inferred_type->is_composite_type()) {
-                    op_size = vm::op_size_for_byte_size(result.type_result.inferred_type->size_in_bytes());
-                }
                 auto named_ref = assembler.make_named_ref(
                     vm::assembler_named_ref_type_t::local,
                     var->label_name(),
@@ -1630,12 +1630,10 @@ namespace basecode::compiler {
                 if (!emit_element(basic_block, unary_op->rhs(), rhs_emit_result))
                     return false;
 
-                auto size = vm::op_size_for_byte_size(result.type_result.inferred_type->size_in_bytes());
-
                 auto result_operand = target_operand(
                     result,
                     result.type_result.inferred_type->number_class(),
-                    size);
+                    op_size);
 
                 switch (op_type) {
                     case operator_type_t::negate: {
@@ -1822,10 +1820,28 @@ namespace basecode::compiler {
             }
             case element_type_t::identifier_reference: {
                 auto var_ref = dynamic_cast<compiler::identifier_reference*>(e);
-                auto identifier = var_ref->identifier();
-                if (identifier != nullptr) {
-                    if (!emit_element(basic_block, identifier, result))
+                auto offset = var_ref->field_offset();
+                if (offset.base_ref != nullptr) {
+                    std::string label {};
+                    for (size_t i = 0; i < offset.fields.size(); i++) {
+                        if (i > 0) label += "_";
+                        label += offset.fields[i]->identifier()->label_name();
+                    }
+
+                    auto named_ref = assembler.make_named_ref(
+                        vm::assembler_named_ref_type_t::local,
+                        label,
+                        op_size);
+                    result.operands.emplace_back(named_ref);
+
+                    if (!_variables.use(current_block, named_ref, result.is_assign_target))
                         return false;
+                } else {
+                    auto identifier = var_ref->identifier();
+                    if (identifier != nullptr) {
+                        if (!emit_element(basic_block, identifier, result))
+                            return false;
+                    }
                 }
                 break;
             }

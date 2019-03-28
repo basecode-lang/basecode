@@ -157,8 +157,9 @@ namespace basecode::compiler {
 
     struct offset_result_t {
         std::string path {};
-        std::string base_label {};
-        compiler::field* field = nullptr;
+        uint64_t from_end = 0;
+        field_list_t fields {};
+        uint64_t from_start = 0;
         compiler::identifier_reference* base_ref = nullptr;
     };
 }

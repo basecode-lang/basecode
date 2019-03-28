@@ -89,14 +89,6 @@ namespace basecode::compiler {
             state &= ~f;
     }
 
-    uint64_t variable_t::field_end_offset() const {
-        return field_offset.field != nullptr ? field_offset.field->end_offset() : 0;
-    }
-
-    uint64_t variable_t::field_start_offset() const {
-        return field_offset.field != nullptr ? field_offset.field->start_offset() : 0;
-    }
-
     ///////////////////////////////////////////////////////////////////////////
 
     variable_map::variable_map(compiler::session& session) : _session(session) {
@@ -182,7 +174,7 @@ namespace basecode::compiler {
                         basic_block->store(
                             vm::instruction_operand_t(module_var_ref),
                             vm::instruction_operand_t(named_ref),
-                            vm::instruction_operand_t::offset(var->field_start_offset()));
+                            vm::instruction_operand_t::offset(var->field_offset.from_start));
                         break;
                     }
                     default: {
@@ -197,21 +189,29 @@ namespace basecode::compiler {
 
             switch (var->type) {
                 case variable_type_t::local: {
-                    if (var->field_offset.base_ref != nullptr
-                    && !var->field_offset.field->identifier()->type_ref()->type()->is_composite_type()) {
+                    if (var->field_offset.base_ref != nullptr) {
                         auto local_offset = assembler.make_named_ref(
                             vm::assembler_named_ref_type_t::offset,
                             var->field_offset.base_ref->label_name(),
                             vm::op_sizes::word);
                         basic_block->comment(
-                            fmt::format("spill: local({})", var->label),
+                            fmt::format("fill: local({})", var->label),
                             vm::comment_location_t::after_instruction);
-                        basic_block->load(
-                            vm::instruction_operand_t(named_ref),
-                            vm::instruction_operand_t::fp(),
-                            vm::instruction_operand_t(
-                                local_offset,
-                                var->field_end_offset()));
+                        if (var_type->is_composite_type()) {
+                            basic_block->move(
+                                vm::instruction_operand_t(named_ref),
+                                vm::instruction_operand_t::fp(),
+                                vm::instruction_operand_t(
+                                    local_offset,
+                                    var->field_offset.from_start));
+                        } else {
+                            basic_block->load(
+                                vm::instruction_operand_t(named_ref),
+                                vm::instruction_operand_t::fp(),
+                                vm::instruction_operand_t(
+                                    local_offset,
+                                    var->field_offset.from_start));
+                        }
                     }
                     break;
                 }
@@ -250,12 +250,12 @@ namespace basecode::compiler {
                         basic_block->move(
                             vm::instruction_operand_t(named_ref),
                             vm::instruction_operand_t(source_ref),
-                            vm::instruction_operand_t::offset(var->field_start_offset()));
+                            vm::instruction_operand_t::offset(var->field_offset.from_start));
                     } else {
                         basic_block->load(
                             vm::instruction_operand_t(named_ref),
                             vm::instruction_operand_t(source_ref),
-                            vm::instruction_operand_t::offset(var->field_start_offset()));
+                            vm::instruction_operand_t::offset(var->field_offset.from_start));
                     }
                     break;
                 }
@@ -342,7 +342,7 @@ namespace basecode::compiler {
                             vm::instruction_operand_t(lhs_named_ref->ref),
                             vm::instruction_operand_t(
                                 local_offset,
-                                var->field_end_offset()));
+                                var->field_offset.from_start));
                     }
                     break;
                 }
@@ -380,7 +380,7 @@ namespace basecode::compiler {
                     basic_block->store(
                         vm::instruction_operand_t(source_ref),
                         vm::instruction_operand_t(lhs_named_ref->ref),
-                        vm::instruction_operand_t::offset(var->field_start_offset()));
+                        vm::instruction_operand_t::offset(var->field_offset.from_start));
                     break;
                 }
                 default: {
@@ -433,7 +433,7 @@ namespace basecode::compiler {
                 basic_block->move(
                     temp_operand,
                     vm::instruction_operand_t(module_var_ref),
-                    vm::instruction_operand_t::offset(var->field_start_offset()));
+                    vm::instruction_operand_t::offset(var->field_offset.from_start));
                 break;
             }
             default: {
@@ -536,10 +536,10 @@ namespace basecode::compiler {
 
         vm::instruction_operand_list_t operands {};
 
-        for (const auto& list : working_groups.ints)
+        for (const auto& list : working_groups.floats)
             apply_variable_range(list, operands, true);
 
-        for (const auto& list : working_groups.floats)
+        for (const auto& list : working_groups.ints)
             apply_variable_range(list, operands, true);
 
         if (!operands.empty())
@@ -654,7 +654,6 @@ namespace basecode::compiler {
         auto& scope_manager = _session.scope_manager();
 
         int64_t offset = 0;
-        element_id_set_t processed {};
 
         return scope_manager.visit_child_blocks(
             _session.result(),
@@ -669,13 +668,8 @@ namespace basecode::compiler {
                         continue;
 
                     auto var = ref->identifier();
-                    if (var->is_constant()
-                    ||  processed.count(var->id()) > 0) {
-                        continue;
-                    }
-
                     auto type = var->type_ref()->type();
-                    if (type->is_proc_type())
+                    if (var->is_constant() || type->is_proc_type())
                         continue;
 
                     auto offset_result = ref->field_offset();
@@ -686,15 +680,26 @@ namespace basecode::compiler {
                         }
                     }
 
-                    processed.insert(var->id());
+                    std::string label {};
+                    if (!offset_result.fields.empty()) {
+                        for (size_t i = 0; i < offset_result.fields.size(); i++) {
+                            if (i > 0) label += "_";
+                            label += offset_result.fields[i]->identifier()->label_name();
+                        }
+                    } else {
+                        label = var->label_name();
+                    }
+
+                    if (_variables.count(label) > 0)
+                        continue;
 
                     if (var->field() == nullptr)
                         offset += -type->size_in_bytes();
 
                     variable_t var_info {};
+                    var_info.label = label;
                     var_info.identifier = var;
                     var_info.frame_offset = offset;
-                    var_info.label = var->label_name();
                     var_info.field_offset = offset_result;
                     var_info.type = variable_type_t::local;
                     if (var->is_initialized())
@@ -703,7 +708,7 @@ namespace basecode::compiler {
                         var_info.state = variable_t::flags_t::none;
                     var_info.number_class = type->number_class();
 
-                    _variables.insert(std::make_pair(var->label_name(), var_info));
+                    _variables.insert(std::make_pair(label, var_info));
                 }
 
                 return true;
@@ -763,8 +768,6 @@ namespace basecode::compiler {
             element_type_t::namespace_type,
         };
 
-        element_id_set_t processed {};
-
         return scope_manager.visit_child_blocks(
             _session.result(),
             [&](compiler::block* scope) {
@@ -776,12 +779,9 @@ namespace basecode::compiler {
 
                     auto var = ref->identifier();
                     auto type = var->type_ref()->type();
-                    if (type->is_type_one_of(excluded_types)
-                    ||  processed.count(var->id()) > 0) {
+                    if (type->is_type_one_of(excluded_types)) {
                         continue;
                     }
-
-                    processed.insert(var->id());
 
                     auto offset_result = ref->field_offset();
                     if (var->usage() == identifier_usage_t::stack
@@ -791,15 +791,28 @@ namespace basecode::compiler {
                         continue;
                     }
 
+                    std::string label {};
+                    if (!offset_result.fields.empty()) {
+                        for (size_t i = 0; i < offset_result.fields.size(); i++) {
+                            if (i > 0) label += "_";
+                            label += offset_result.fields[i]->identifier()->label_name();
+                        }
+                    } else {
+                        label = var->label_name();
+                    }
+
+                    if (_variables.count(label) > 0)
+                        continue;
+
                     variable_t var_info {};
+                    var_info.label = label;
                     var_info.identifier = var;
-                    var_info.label = var->label_name();
                     var_info.field_offset = offset_result;
                     var_info.type = variable_type_t::module;
                     var_info.state = variable_t::flags_t::none;
                     var_info.number_class = type->number_class();
 
-                    _variables.insert(std::make_pair(var->label_name(), var_info));
+                    _variables.insert(std::make_pair(label, var_info));
                 }
 
                 return true;
@@ -825,7 +838,7 @@ namespace basecode::compiler {
         var_info.type = variable_type_t::return_value;
         var_info.number_class = var->type_ref()->type()->number_class();
 
-        _variables.insert(std::make_pair(var->label_name(), var_info));
+        _variables.insert(std::make_pair(var_info.label, var_info));
 
         return true;
     }
@@ -848,7 +861,7 @@ namespace basecode::compiler {
             var_info.type = variable_type_t::parameter;
             var_info.number_class = var->type_ref()->type()->number_class();
 
-            _variables.insert(std::make_pair(var->label_name(), var_info));
+            _variables.insert(std::make_pair(var_info.label, var_info));
 
             offset += 8;
         }

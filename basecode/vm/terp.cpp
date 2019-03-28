@@ -725,27 +725,28 @@ namespace basecode::vm {
                     auto& value = slot.values[i];
                     const auto& operand = temp_inst.operands[i];
 
+                    value.size = operand.size;
                     if (operand.is_reg()) {
-                        const auto type = operand.is_integer() ?
-                                          register_type_t::integer :
-                                          register_type_t::floating_point;
-                        auto index = register_index(
-                            static_cast<registers_t>(operand.value.r),
-                            type);
                         value.is_register = true;
-                        if (operand.is_range())
+                        if (operand.is_range()) {
+                            value.is_range = true;
+                            value.is_integer = operand.is_integer();
                             value.data.d.w = static_cast<uint16_t>(operand.value.u);
-                        else
+                        } else {
+                            const auto type = operand.is_integer() ?
+                                              register_type_t::integer :
+                                              register_type_t::floating_point;
+                            auto index = register_index(
+                                static_cast<registers_t>(operand.value.r),
+                                type);
                             value.data.r = &_registers.r[index];
+                        }
                     } else {
                         value.is_register = false;
                         value.data.d.qw = operand.value.u;
+                        value.is_integer = operand.is_integer();
+                        value.is_negative = operand.is_negative();
                     }
-
-                    value.size = operand.size;
-                    value.is_range = operand.is_range();
-                    value.is_integer = operand.is_integer();
-                    value.is_negative = operand.is_negative();
                 }
 
                 _thread.slots.emplace_back(slot);
