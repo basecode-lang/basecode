@@ -51,6 +51,7 @@ namespace basecode::compiler {
             spilled     = 0b00000100,
             must_init   = 0b00001000,
             used        = 0b00010000,
+            in_block    = 0b00100000,
         };
 
         using flags_value_t = uint8_t;

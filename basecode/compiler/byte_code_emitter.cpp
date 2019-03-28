@@ -157,18 +157,20 @@ namespace basecode::compiler {
 
         uint64_t locals_size = 0;
         variable_list_t to_init {};
+        bool reset_temp_block = false;
         bool clear_stack_frame = false;
         auto frame_block = *basic_block;
         vm::basic_block* code_block = nullptr;
-        vm::basic_block* temp_vars_block = nullptr;
 
         if (!block->is_parent_type_one_of(excluded_parent_types)
         && !_in_stack_frame) {
-            //frame_block->frame_offset("local", -8);
-
             auto locals = _variables.variables();
             for (auto local : locals) {
+                if (local->type == variable_type_t::temporary)
+                    continue;
+
                 if (local->type == variable_type_t::local
+                ||  local->type == variable_type_t::module
                 ||  local->type == variable_type_t::parameter) {
                     to_init.emplace_back(local);
                 }
@@ -181,23 +183,29 @@ namespace basecode::compiler {
                 } else {
                     offset = local->field_offset.value;
                 }
-                frame_block->local(
-                    number_class_to_local_type(local->number_class),
-                    local->label,
-                    offset,
-                    variable_type_to_group(local->type));
+                if (!local->flag(variable_t::flags_t::in_block)) {
+                    frame_block->local(
+                        number_class_to_local_type(local->number_class),
+                        local->label,
+                        offset,
+                        variable_type_to_group(local->type));
+                    local->flag(variable_t::flags_t::in_block, true);
+                }
             }
             locals_size = common::align(locals_size, 8);
 
-            temp_vars_block = _blocks.make();
-            assembler.blocks().emplace_back(temp_vars_block);
-            frame_block->successors().emplace_back(temp_vars_block);
-            temp_vars_block->predecessors().emplace_back(frame_block);
+            if (_temps_block == nullptr) {
+                _temps_block = _blocks.make();
+                assembler.blocks().emplace_back(_temps_block);
+                frame_block->successors().emplace_back(_temps_block);
+                _temps_block->predecessors().emplace_back(frame_block);
+                reset_temp_block = true;
+            }
 
             code_block = _blocks.make();
             assembler.blocks().emplace_back(code_block);
-            code_block->predecessors().emplace_back(temp_vars_block);
-            temp_vars_block->successors().emplace_back(code_block);
+            code_block->predecessors().emplace_back(_temps_block);
+            _temps_block->successors().emplace_back(code_block);
 
             *basic_block = code_block;
         }
@@ -219,16 +227,20 @@ namespace basecode::compiler {
                         static_cast<uint64_t>(locals_size),
                         vm::op_sizes::dword));
             }
-
-            for (auto local : to_init) {
-                auto named_ref = assembler.make_named_ref(
-                    vm::assembler_named_ref_type_t::local,
-                    local->label,
-                    vm::op_size_for_byte_size(local->size_in_bytes()));
-                _variables.use(code_block, named_ref);
-            }
         }
+
+        for (auto local : to_init) {
+            auto named_ref = assembler.make_named_ref(
+                vm::assembler_named_ref_type_t::local,
+                local->label,
+                vm::op_size_for_byte_size(local->size_in_bytes()));
+            _variables.use(code_block, named_ref);
+        }
+
         defer({
+            if (reset_temp_block)
+                _temps_block = nullptr;
+
             if (clear_stack_frame) {
                 _in_stack_frame = false;
 
@@ -296,12 +308,15 @@ namespace basecode::compiler {
             working_stack.pop();
         }
 
-        if (temp_vars_block != nullptr) {
+        if (_temps_block != nullptr) {
             auto temp_locals = _variables.temps();
             for (auto temp : temp_locals) {
-                temp_vars_block->local(
-                    number_class_to_local_type(temp->number_class),
-                    temp->label);
+                if (!temp->flag(variable_t::flags_t::in_block)) {
+                    _temps_block->local(
+                        number_class_to_local_type(temp->number_class),
+                        temp->label);
+                    temp->flag(variable_t::flags_t::in_block, true);
+                }
             }
         }
 
@@ -843,6 +858,7 @@ namespace basecode::compiler {
                     if (!emit_element(basic_block, equals_op, equals_result))
                         return false;
 
+                    predicate_block = *basic_block;
                     predicate_block->bz(
                         equals_result.operands.back(),
                         vm::instruction_operand_t(assembler.make_named_ref(
@@ -860,6 +876,7 @@ namespace basecode::compiler {
                 true_block->label(labels.make(true_label_name, true_block));
                 if (!emit_element(basic_block, case_e->scope(), result))
                     return false;
+                true_block = *basic_block;
 
                 if (!is_default_case) {
                     if (flow_control->fallthrough) {
@@ -1051,6 +1068,7 @@ namespace basecode::compiler {
                 entry_block->label(labels.make(begin_label_name, entry_block));
                 if (!emit_element(basic_block, switch_e->scope(), result))
                     return false;
+                entry_block = *basic_block;
 
                 auto exit_block = _blocks.make();
                 assembler.blocks().emplace_back(exit_block);

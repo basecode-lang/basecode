@@ -118,6 +118,7 @@ namespace basecode::compiler {
         bool _in_stack_frame = false;
         bool _return_emitted = false;
         vm::basic_block_map _blocks {};
+        vm::basic_block* _temps_block = nullptr;
         vm::basic_block_stack_t _block_stack {};
         flow_control_stack_t _control_flow_stack {};
     };
