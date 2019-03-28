@@ -181,8 +181,9 @@ namespace basecode::compiler {
                     if (local->type == variable_type_t::local)
                         locals_size += local->size_in_bytes();
                 } else {
-                    offset = local->field_offset.value;
+                    offset = local->field_end_offset();
                 }
+
                 if (!local->flag(variable_t::flags_t::in_block)) {
                     frame_block->local(
                         number_class_to_local_type(local->number_class),
@@ -2303,7 +2304,7 @@ namespace basecode::compiler {
                     if (composite_type == nullptr)
                         return false;
 
-                    size_t size = 0;
+                    size_t offset = 0;
                     for (auto fld : composite_type->fields().as_list()) {
                         auto field_var = fld->identifier();
                         auto field_var_type = var->type_ref()->type();
@@ -2311,14 +2312,21 @@ namespace basecode::compiler {
                         if (ctype != nullptr)
                             ctype->calculate_size();
 
+                        if (offset < fld->start_offset()) {
+                            basic_block->comment(
+                                "padding",
+                                vm::comment_location_t::after_instruction);
+                            basic_block->reserve_byte(fld->start_offset() - offset);
+                        }
+
                         if (!emit_section_variable_data(basic_block, field_var))
                             return false;
 
-                        size += fld->size_in_bytes();
+                        offset = fld->end_offset();
                     }
                     auto padding_size = common::align(
                         var_type->size_in_bytes(),
-                        composite_type->alignment()) - size;
+                        composite_type->alignment()) - offset;
                     if (padding_size > 0) {
                         basic_block->comment(
                             "padding",

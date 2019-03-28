@@ -89,6 +89,14 @@ namespace basecode::compiler {
             state &= ~f;
     }
 
+    uint64_t variable_t::field_end_offset() const {
+        return field_offset.field != nullptr ? field_offset.field->end_offset() : 0;
+    }
+
+    uint64_t variable_t::field_start_offset() const {
+        return field_offset.field != nullptr ? field_offset.field->start_offset() : 0;
+    }
+
     ///////////////////////////////////////////////////////////////////////////
 
     variable_map::variable_map(compiler::session& session) : _session(session) {
@@ -174,7 +182,7 @@ namespace basecode::compiler {
                         basic_block->store(
                             vm::instruction_operand_t(module_var_ref),
                             vm::instruction_operand_t(named_ref),
-                            vm::instruction_operand_t::offset(var->field_offset.value));
+                            vm::instruction_operand_t::offset(var->field_start_offset()));
                         break;
                     }
                     default: {
@@ -189,7 +197,8 @@ namespace basecode::compiler {
 
             switch (var->type) {
                 case variable_type_t::local: {
-                    if (var->field_offset.base_ref != nullptr) {
+                    if (var->field_offset.base_ref != nullptr
+                    && !var->field_offset.field->identifier()->type_ref()->type()->is_composite_type()) {
                         auto local_offset = assembler.make_named_ref(
                             vm::assembler_named_ref_type_t::offset,
                             var->field_offset.base_ref->label_name(),
@@ -200,7 +209,9 @@ namespace basecode::compiler {
                         basic_block->load(
                             vm::instruction_operand_t(named_ref),
                             vm::instruction_operand_t::fp(),
-                            vm::instruction_operand_t(local_offset, var->field_offset.value));
+                            vm::instruction_operand_t(
+                                local_offset,
+                                var->field_end_offset()));
                     }
                     break;
                 }
@@ -239,12 +250,12 @@ namespace basecode::compiler {
                         basic_block->move(
                             vm::instruction_operand_t(named_ref),
                             vm::instruction_operand_t(source_ref),
-                            vm::instruction_operand_t::offset(var->field_offset.value));
+                            vm::instruction_operand_t::offset(var->field_start_offset()));
                     } else {
                         basic_block->load(
                             vm::instruction_operand_t(named_ref),
                             vm::instruction_operand_t(source_ref),
-                            vm::instruction_operand_t::offset(var->field_offset.value));
+                            vm::instruction_operand_t::offset(var->field_start_offset()));
                     }
                     break;
                 }
@@ -329,7 +340,9 @@ namespace basecode::compiler {
                         basic_block->store(
                             vm::instruction_operand_t::fp(),
                             vm::instruction_operand_t(lhs_named_ref->ref),
-                            vm::instruction_operand_t(local_offset, var->field_offset.value));
+                            vm::instruction_operand_t(
+                                local_offset,
+                                var->field_end_offset()));
                     }
                     break;
                 }
@@ -367,7 +380,7 @@ namespace basecode::compiler {
                     basic_block->store(
                         vm::instruction_operand_t(source_ref),
                         vm::instruction_operand_t(lhs_named_ref->ref),
-                        vm::instruction_operand_t::offset(var->field_offset.value));
+                        vm::instruction_operand_t::offset(var->field_start_offset()));
                     break;
                 }
                 default: {
@@ -420,7 +433,7 @@ namespace basecode::compiler {
                 basic_block->move(
                     temp_operand,
                     vm::instruction_operand_t(module_var_ref),
-                    vm::instruction_operand_t::offset(var->field_offset.value));
+                    vm::instruction_operand_t::offset(var->field_start_offset()));
                 break;
             }
             default: {

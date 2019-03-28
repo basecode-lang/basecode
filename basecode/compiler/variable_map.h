@@ -62,6 +62,10 @@ namespace basecode::compiler {
 
         void flag(flags_t f, bool value);
 
+        uint64_t field_end_offset() const;
+
+        uint64_t field_start_offset() const;
+
         std::string label {};
         flags_value_t state {};
         variable_type_t type {};

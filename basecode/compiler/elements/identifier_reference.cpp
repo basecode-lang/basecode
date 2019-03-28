@@ -127,11 +127,8 @@ namespace basecode::compiler {
                     ".{}",
                     ref->symbol().name);
 
-                if (ref_stack.empty()) {
-                    auto field = ref->identifier()->field();
-                    if (field != nullptr)
-                        result.value = field->end_offset();
-                }
+                if (ref_stack.empty())
+                    result.field = ref->identifier()->field();
             }
         }
 
