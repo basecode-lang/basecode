@@ -726,11 +726,13 @@ namespace basecode::vm {
                     const auto& operand = temp_inst.operands[i];
 
                     value.size = operand.size;
-                    if (operand.is_reg()) {
-                        value.is_register = true;
-                        if (operand.is_range()) {
-                            value.is_range = true;
-                            value.is_integer = operand.is_integer();
+                    value.is_range = operand.is_range();
+                    value.is_register = operand.is_reg();
+                    value.is_integer = operand.is_integer();
+                    value.is_negative = operand.is_negative();
+
+                    if (value.is_register) {
+                        if (value.is_range) {
                             value.data.d.w = static_cast<uint16_t>(operand.value.u);
                         } else {
                             const auto type = operand.is_integer() ?
@@ -742,10 +744,7 @@ namespace basecode::vm {
                             value.data.r = &_registers.r[index];
                         }
                     } else {
-                        value.is_register = false;
                         value.data.d.qw = operand.value.u;
-                        value.is_integer = operand.is_integer();
-                        value.is_negative = operand.is_negative();
                     }
                 }
 
