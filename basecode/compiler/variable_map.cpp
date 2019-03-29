@@ -289,7 +289,8 @@ namespace basecode::compiler {
             vm::basic_block* basic_block,
             emit_result_t& lhs,
             emit_result_t& rhs,
-            bool requires_copy) {
+            bool requires_copy,
+            bool array_subscript) {
         if (lhs.operands.empty())
             return false;
 
@@ -298,30 +299,37 @@ namespace basecode::compiler {
         if (var == nullptr)
             return false;
 
-        if (!var->flag(variable_t::flags_t::filled)) {
+        if (!var->flag(variable_t::flags_t::filled)
+        &&  var->type != variable_type_t::temporary) {
             // XXX: should probably include an error message
             return false;
         }
 
         auto& assembler = _session.assembler();
-
-        // N.B. if the rhs_result has a named_ref operand that
-        //      matches the lhs_result's named_ref operand, then
-        //      we'd emit a MOVE that has the same register for
-        //      both operands, so we can safely skip it.
         auto& rhs_operand = rhs.operands.back();
-        if (rhs_operand.type() == vm::instruction_operand_type_t::named_ref) {
-            auto rhs_named_ref = rhs_operand.data<vm::named_ref_with_offset_t>();
-            if (rhs_named_ref->ref->name == lhs_named_ref->ref->name)
-                return true;
-        }
 
-        rhs_operand.size(lhs_named_ref->ref->size);
-        if (requires_copy) {
+        if (array_subscript) {
+            rhs_operand.size(vm::op_size_for_byte_size(lhs.type_result.inferred_type->size_in_bytes()));
+            basic_block->store(
+                vm::instruction_operand_t(lhs_named_ref->ref),
+                rhs_operand,
+                vm::instruction_operand_t(static_cast<uint64_t>(4), vm::op_sizes::byte));
+        } else if (requires_copy) {
             basic_block->comment(
                 fmt::format("copy: {}({})", variable_type_name(var->type), var->label),
                 vm::comment_location_t::after_instruction);
         } else {
+            // N.B. if the rhs_result has a named_ref operand that
+            //      matches the lhs_result's named_ref operand, then
+            //      we'd emit a MOVE that has the same register for
+            //      both operands, so we can safely skip it.
+            if (rhs_operand.type() == vm::instruction_operand_type_t::named_ref) {
+                auto rhs_named_ref = rhs_operand.data<vm::named_ref_with_offset_t>();
+                if (rhs_named_ref->ref->name == lhs_named_ref->ref->name)
+                    return true;
+            }
+
+            rhs_operand.size(lhs_named_ref->ref->size);
             basic_block->comment(
                 fmt::format("assign: {}({})", variable_type_name(var->type), var->label),
                 vm::comment_location_t::after_instruction);

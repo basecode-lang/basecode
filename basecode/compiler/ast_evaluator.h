@@ -120,7 +120,8 @@ namespace basecode::compiler {
 
         compiler::type_literal* make_tuple_literal(
             const evaluator_context_t& context,
-            compiler::block* scope);
+            compiler::block* scope,
+            const compiler::type_reference_list_t& type_params);
 
         compiler::element* resolve_symbol_or_evaluate(
             const syntax::ast_node_t* node,

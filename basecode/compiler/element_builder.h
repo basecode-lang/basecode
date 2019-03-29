@@ -151,17 +151,19 @@ namespace basecode::compiler {
         type_literal* make_user_literal(
             compiler::block* parent_scope,
             compiler::type_reference* user_type,
+            const compiler::type_reference_list_t& type_params,
             compiler::argument_list* args);
 
         type_literal* make_map_literal(
             compiler::block* parent_scope,
             compiler::type* map_type,
+            const compiler::type_reference_list_t& type_params,
             compiler::argument_list* args);
 
         array_type* make_array_type(
             compiler::block* parent_scope,
             compiler::block* scope,
-            compiler::type_reference* entry_type,
+            const compiler::type_reference_list_t& type_params,
             const element_list_t& subscripts);
 
         expression* make_expression(
@@ -175,6 +177,7 @@ namespace basecode::compiler {
         type_literal* make_tuple_literal(
             compiler::block* parent_scope,
             compiler::type* tuple_type,
+            const compiler::type_reference_list_t& type_params,
             compiler::argument_list* args);
 
         tuple_type* make_tuple_type(
@@ -341,7 +344,9 @@ namespace basecode::compiler {
         type_literal* make_array_literal(
             compiler::block* parent_scope,
             compiler::type_reference* type_ref,
-            compiler::argument_list* args);
+            const compiler::type_reference_list_t& type_params,
+            compiler::argument_list* args,
+            const element_list_t& subscripts);
 
         type_reference* make_type_reference(
             compiler::block* parent_scope,

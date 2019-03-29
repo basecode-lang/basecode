@@ -111,7 +111,8 @@ namespace basecode::compiler {
             vm::basic_block* basic_block,
             emit_result_t& lhs,
             emit_result_t& rhs,
-            bool requires_copy = false);
+            bool requires_copy = false,
+            bool array_subscript = false);
 
         void reset();
 

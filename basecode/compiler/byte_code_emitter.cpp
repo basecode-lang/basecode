@@ -1728,8 +1728,66 @@ namespace basecode::compiler {
                         break;
                     }
                     case operator_type_t::subscript: {
-                        current_block->comment("XXX: implement subscript operator", 4);
-                        current_block->nop();
+                        emit_result_t lhs_result {};
+                        if (!emit_element(basic_block, binary_op->lhs(), lhs_result))
+                            return false;
+
+                        size_t size_in_bytes = 0;
+                        auto array_type = dynamic_cast<compiler::array_type*>(lhs_result.type_result.inferred_type);
+                        if (array_type != nullptr) {
+                            size_in_bytes = array_type->base_type_ref()->type()->size_in_bytes();
+                        }
+
+                        emit_result_t rhs_result {};
+                        if (!emit_element(basic_block, binary_op->rhs(), rhs_result))
+                            return false;
+
+                        current_block = *basic_block;
+
+                        auto temp = _variables.retain_temp();
+                        vm::instruction_operand_t target_operand(assembler.make_named_ref(
+                            vm::assembler_named_ref_type_t::local,
+                            temp->name(),
+                            vm::op_sizes::qword));
+                        result.temps.emplace_back(temp);
+                        result.operands.emplace_back(target_operand);
+
+                        auto offset_temp = _variables.retain_temp();
+                        result.temps.emplace_back(offset_temp);
+                        vm::instruction_operand_t offset_operand(assembler.make_named_ref(
+                            vm::assembler_named_ref_type_t::local,
+                            offset_temp->name(),
+                            vm::op_sizes::qword));
+
+                        current_block->mul(
+                            offset_operand,
+                            rhs_result.operands.back(),
+                            vm::instruction_operand_t(
+                                static_cast<uint64_t>(size_in_bytes),
+                                vm::op_sizes::byte));
+                        current_block->add(
+                            target_operand,
+                            lhs_result.operands.back(),
+                            offset_operand);
+
+                        if (!result.is_assign_target) {
+                            auto value_temp = _variables.retain_temp();
+                            vm::instruction_operand_t value_operand(assembler.make_named_ref(
+                                vm::assembler_named_ref_type_t::local,
+                                value_temp->name(),
+                                vm::op_size_for_byte_size(size_in_bytes)));
+                            result.temps.emplace_back(value_temp);
+                            result.operands.emplace_back(value_operand);
+                            current_block->load(
+                                value_operand,
+                                target_operand,
+                                vm::instruction_operand_t(
+                                    static_cast<uint64_t>(4),
+                                    vm::op_sizes::byte));
+                        }
+
+                        release_temps(lhs_result.temps);
+                        release_temps(rhs_result.temps);
                         break;
                     }
                     case operator_type_t::member_access: {
@@ -1738,13 +1796,19 @@ namespace basecode::compiler {
                         break;
                     }
                     case operator_type_t::assignment: {
+                        auto is_array_subscript = false;
+                        auto lhs_bin_op = dynamic_cast<compiler::binary_operator*>(binary_op->lhs());
+                        if (lhs_bin_op != nullptr) {
+                            is_array_subscript = lhs_bin_op->operator_type() == operator_type_t::subscript;
+                        }
+
                         emit_result_t lhs_result {};
                         lhs_result.is_assign_target = true;
                         if (!emit_element(basic_block, binary_op->lhs(), lhs_result))
                             return false;
 
                         emit_result_t rhs_result {};
-                        if (!lhs_result.operands.empty())
+                        if (!lhs_result.operands.empty() && !is_array_subscript)
                             rhs_result.operands.emplace_back(lhs_result.operands.front());
                         if (!emit_element(basic_block, binary_op->rhs(), rhs_result))
                             return false;
@@ -1776,8 +1840,14 @@ namespace basecode::compiler {
                             copy_required = lhs_is_composite && rhs_is_composite;
                         }
 
-                        if (!_variables.assign(current_block, lhs_result, rhs_result, copy_required))
+                        if (!_variables.assign(
+                                current_block,
+                                lhs_result,
+                                rhs_result,
+                                copy_required,
+                                is_array_subscript)) {
                             return false;
+                        }
 
                         release_temps(lhs_result.temps);
                         release_temps(rhs_result.temps);
@@ -2282,6 +2352,11 @@ namespace basecode::compiler {
                 break;
             }
             case element_type_t::array_type: {
+                auto array_type = dynamic_cast<compiler::array_type*>(var_type);
+                auto number_of_elements = array_type->number_of_elements();
+
+                basic_block->dwords({static_cast<uint32_t>(number_of_elements)});
+
                 if (!is_initialized) {
                     basic_block->reserve_byte(var_type->size_in_bytes());
                 } else {
@@ -2291,21 +2366,74 @@ namespace basecode::compiler {
                         if (expr != nullptr) {
                             auto type_literal = dynamic_cast<compiler::type_literal*>(expr);
                             if (type_literal != nullptr) {
-                                //auto type_param = type_literal->type_params().front()->type();
-                                //auto symbol_type = vm::integer_symbol_type_for_size(type_param->size_in_bytes());
+                                auto type_param = type_literal->type_params().front()->type();
+                                if (type_param->is_composite_type()) {
+                                    // XXX: recursively emit arrays
+                                } else {
+                                    auto symbol_type = vm::integer_symbol_type_for_size(type_param->size_in_bytes());
+                                    switch (symbol_type) {
+                                        case vm::symbol_type_t::unknown:
+                                            break;
+                                        case vm::symbol_type_t::u8:
+                                        case vm::symbol_type_t::bytes: {
+                                            std::vector<uint8_t> values{};
+                                            for (auto arg : type_literal->args()->elements()) {
+                                                infer_type_result_t type_result{};
+                                                if (!arg->infer_type(_session, type_result))
+                                                    return false;
 
-                                // XXX: need to revisit this.  data_value_variant_t needs
-                                //      to support all of the valid sizes to make dynamically
-                                //      building arrays of data like this easier.
-                                std::vector<vm::data_value_variant_t> values {};
-                                for (auto arg : type_literal->args()->elements()) {
-                                    uint64_t value;
-                                    if (arg->as_integer(value)) {
-                                        values.emplace_back(value);
+                                                uint64_t value;
+                                                if (arg->as_integer(value))
+                                                    values.emplace_back(static_cast<uint8_t>(value));
+                                            }
+                                            basic_block->bytes(values);
+                                        }
+                                        case vm::symbol_type_t::u16: {
+                                            std::vector<uint16_t> values{};
+                                            for (auto arg : type_literal->args()->elements()) {
+                                                infer_type_result_t type_result{};
+                                                if (!arg->infer_type(_session, type_result))
+                                                    return false;
+
+                                                uint64_t value;
+                                                if (arg->as_integer(value))
+                                                    values.emplace_back(static_cast<uint16_t>(value));
+                                            }
+                                            basic_block->words(values);
+                                            break;
+                                        }
+                                        case vm::symbol_type_t::f32:
+                                        case vm::symbol_type_t::u32: {
+                                            std::vector<uint32_t> values{};
+                                            for (auto arg : type_literal->args()->elements()) {
+                                                infer_type_result_t type_result{};
+                                                if (!arg->infer_type(_session, type_result))
+                                                    return false;
+
+                                                uint64_t value;
+                                                if (arg->as_integer(value))
+                                                    values.emplace_back(static_cast<uint32_t>(value));
+                                            }
+                                            basic_block->dwords(values);
+                                            break;
+                                        }
+                                        case vm::symbol_type_t::f64:
+                                        case vm::symbol_type_t::u64: {
+                                            std::vector<vm::data_value_variant_t> values{};
+                                            for (auto arg : type_literal->args()->elements()) {
+                                                infer_type_result_t type_result{};
+                                                if (!arg->infer_type(_session, type_result))
+                                                    return false;
+
+                                                uint64_t value;
+                                                if (arg->as_integer(value))
+                                                    values.emplace_back(value);
+                                            }
+                                            basic_block->qwords(values);
+                                            break;
+                                        }
                                     }
                                 }
-
-                                basic_block->qwords(values);
                             }
                         }
                     }

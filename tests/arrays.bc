@@ -7,14 +7,30 @@ c: [8][8]u8;
 ARRAY_SIZE :: 200;
 d: [ARRAY_SIZE]bool;
 
-b[0] := 2;
+g := array<u32>(1, 2, 3, 4, 5, 6, 7, 8);
 
-g := array<u32>(
-    1,
-    array<u32>(10, 20, 30),
-    3,
-    4,
-    5,
-    6,
-    7,
-    8);
+test :: proc() {
+    for i in range<u32>(0, 7) {
+        b[i] := cast<u16>(i * 2);
+    };
+
+    for i in range<u32>(0, 7) {
+        core::print("g[%d] := %d, b[%d] := %hhu\n", i, g[i], i, b[i]);
+    };
+};
+
+test2 :: proc() {
+    numbers: [32]u32;
+    bits: u32 := %0000_0000_0000_0000_0000_0000_0000_0001;
+
+    for i in range<u32>(0, 31) {
+        numbers[i] := bits;
+        bits := bits shl 1;
+    };
+
+    for i in range<u32>(0, 31) {
+        core::print("$%08X\n", numbers[i]);
+    };
+};
+
+#run test2();

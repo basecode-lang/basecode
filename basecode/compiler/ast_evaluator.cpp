@@ -1450,7 +1450,7 @@ namespace basecode::compiler {
             _session.scope_manager().current_scope(),
             operator_type_t::subscript,
             resolve_symbol_or_evaluate(context.node->lhs),
-            evaluate(context.node->rhs));
+            resolve_symbol_or_evaluate(context.node->rhs));
         return true;
     }
 
@@ -1711,9 +1711,11 @@ namespace basecode::compiler {
 
         auto type_params = builder.make_tagged_type_list_from_node(symbol_node);
 
+        // XXX: need to produce a correct type instead of passing nullptr here
         auto literal = builder.make_user_literal(
             scope_manager.current_scope(),
-            type_params[0],
+            nullptr,
+            type_params,
             args);
         literal->location(context.node->location);
         //literal->type_location(context.node->lhs->rhs->location);
@@ -1733,11 +1735,11 @@ namespace basecode::compiler {
         qualified_symbol_t proc_name {};
         builder.make_qualified_symbol(proc_name, symbol_node);
 
-        auto type_params = builder.make_tagged_type_list_from_node(symbol_node);
-
-        auto literal = make_tuple_literal(context, scope_manager.current_scope());
+        auto literal = make_tuple_literal(
+            context,
+            scope_manager.current_scope(),
+            builder.make_tagged_type_list_from_node(symbol_node));
         literal->location(context.node->location);
-        //literal->type_location(context.node->lhs->rhs->location);
         result.element = literal;
 
         return true;
@@ -1762,12 +1764,35 @@ namespace basecode::compiler {
 
         auto type_params = builder.make_tagged_type_list_from_node(symbol_node);
 
+        element_list_t subscripts {};
+        if (args != nullptr) {
+            subscripts.push_back(builder.make_integer(
+                scope_manager.current_scope(),
+                args->size()));
+        }
+
+        auto array_type = scope_manager.find_array_type(
+            type_params[0]->type(),
+            subscripts);
+        if (array_type == nullptr) {
+            array_type = builder.make_array_type(
+                scope_manager.current_scope(),
+                builder.make_block(scope_manager.current_scope()),
+                type_params,
+                subscripts);
+        }
+        auto type_ref = builder.make_type_reference(
+            scope_manager.current_scope(),
+            qualified_symbol_t(),
+            array_type);
+
         auto literal = builder.make_array_literal(
             scope_manager.current_scope(),
-            type_params[0],
-            args);
+            type_ref,
+            type_params,
+            args,
+            subscripts);
         literal->location(context.node->location);
-        //literal->type_location(context.node->lhs->rhs->location);
         result.element = literal;
 
         return true;
@@ -2184,7 +2209,7 @@ namespace basecode::compiler {
                         type = builder.make_array_type(
                             scope,
                             builder.make_block(scope),
-                            type_decl_ref,
+                            {type_decl_ref},
                             subscripts);
                     }
                     type_decl_ref = builder.make_type_reference(
@@ -2627,7 +2652,8 @@ namespace basecode::compiler {
 
     compiler::type_literal* ast_evaluator::make_tuple_literal(
             const evaluator_context_t& context,
-            compiler::block* scope) {
+            compiler::block* scope,
+            const compiler::type_reference_list_t& type_params) {
         auto& builder = _session.builder();
         auto& ast_builder = _session.ast_builder();
         auto& scope_manager = _session.scope_manager();
@@ -2690,6 +2716,7 @@ namespace basecode::compiler {
         return builder.make_tuple_literal(
             active_scope,
             tuple_type,
+            type_params,
             args);
     }
 

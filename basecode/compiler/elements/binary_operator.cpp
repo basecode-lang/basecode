@@ -47,7 +47,6 @@ namespace basecode::compiler {
             case operator_type_t::multiply:
             case operator_type_t::exponent:
             case operator_type_t::binary_or:
-            case operator_type_t::subscript:
             case operator_type_t::binary_and:
             case operator_type_t::binary_xor:
             case operator_type_t::shift_left:
@@ -71,6 +70,18 @@ namespace basecode::compiler {
                     result = lhs_type_result;
                 }
 
+                return true;
+            }
+            case operator_type_t::subscript: {
+                if (!_lhs->infer_type(session, result))
+                    return false;
+
+                auto array_type = dynamic_cast<compiler::array_type*>(result.inferred_type);
+                if (array_type == nullptr)
+                    return false;
+
+                result.inferred_type = array_type->base_type_ref()->type();
+                result.reference = array_type->base_type_ref();
                 return true;
             }
             case operator_type_t::assignment: {

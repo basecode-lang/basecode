@@ -54,17 +54,7 @@ namespace basecode::compiler {
     }
 
     void array_type::calculate_size() {
-        size_t size = 0;
-        for (auto s : _subscripts) {
-            uint64_t temp = 0;
-            if (s->as_integer(temp)) {
-                if (size == 0)
-                    size = temp;
-                else
-                    size *= temp;
-            }
-        }
-        size_in_bytes(size * _base_type_ref->type()->size_in_bytes());
+        size_in_bytes(number_of_elements() * _base_type_ref->type()->size_in_bytes());
     }
 
     bool array_type::on_apply_fold_result(
@@ -88,6 +78,20 @@ namespace basecode::compiler {
 
     bool array_type::is_array_type() const {
         return true;
+    }
+
+    size_t array_type::number_of_elements() const {
+        size_t count = 0;
+        for (auto s : _subscripts) {
+            uint64_t temp = 0;
+            if (s->as_integer(temp)) {
+                if (count == 0)
+                    count = temp;
+                else
+                    count *= temp;
+            }
+        }
+        return count;
     }
 
     int32_t array_type::find_index(common::id_t id) {

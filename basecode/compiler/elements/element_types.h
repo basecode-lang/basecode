@@ -726,15 +726,6 @@ namespace basecode::compiler {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    enum class type_literal_type_t : uint8_t {
-        array = 1,
-        tuple,
-        map,
-        user
-    };
-
-    ///////////////////////////////////////////////////////////////////////////
-
     static const constexpr uint16_t switch_expression = 1;
     static const constexpr uint16_t previous_element = 2;
     static const constexpr uint16_t next_element = 3;

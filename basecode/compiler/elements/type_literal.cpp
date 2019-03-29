@@ -19,32 +19,21 @@ namespace basecode::compiler {
     type_literal::type_literal(
             compiler::module* module,
             compiler::block* parent_scope,
-            type_literal_type_t type,
+            compiler::type_reference* type_ref,
             compiler::argument_list* args,
             const compiler::type_reference_list_t& type_params,
             const compiler::element_list_t& subscripts) : element(module, parent_scope, element_type_t::type_literal),
-                                                          _type(type),
                                                           _subscripts(subscripts),
                                                           _args(args),
+                                                          _type_ref(type_ref),
                                                           _type_params(type_params) {
     }
 
     bool type_literal::on_infer_type(
             compiler::session& session,
             infer_type_result_t& result) {
-        if (_type_params.empty())
-            return false;
-
-        switch (_type) {
-            case type_literal_type_t::map:
-            case type_literal_type_t::user:
-            case type_literal_type_t::tuple:
-            case type_literal_type_t::array: {
-                result.reference = _type_params[0];
-                result.inferred_type = _type_params[0]->type();
-                break;
-            }
-        }
+        result.reference = _type_ref;
+        result.inferred_type = _type_ref->type();
         return true;
     }
 
@@ -56,8 +45,8 @@ namespace basecode::compiler {
         return _args;
     }
 
-    type_literal_type_t type_literal::type() const {
-        return _type;
+    compiler::type_reference* type_literal::type_ref() const {
+        return _type_ref;
     }
 
     const compiler::element_list_t& type_literal::subscripts() const {

@@ -20,14 +20,14 @@ namespace basecode::compiler {
         type_literal(
             compiler::module* module,
             compiler::block* parent_scope,
-            type_literal_type_t type,
+            compiler::type_reference* type_ref,
             compiler::argument_list* args,
             const compiler::type_reference_list_t& type_params = {},
             const compiler::element_list_t& subscripts = {});
 
         compiler::argument_list* args();
 
-        type_literal_type_t type() const;
+        compiler::type_reference* type_ref() const;
 
         const compiler::element_list_t& subscripts() const;
 
@@ -41,9 +41,9 @@ namespace basecode::compiler {
         bool on_is_constant() const override;
 
     private:
-        type_literal_type_t _type;
         compiler::element_list_t _subscripts {};
         compiler::argument_list* _args = nullptr;
+        compiler::type_reference* _type_ref = nullptr;
         compiler::type_reference_list_t _type_params {};
     };
 

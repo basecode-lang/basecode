@@ -35,6 +35,8 @@ namespace basecode::compiler {
 
         void calculate_size() override;
 
+        size_t number_of_elements() const;
+
         int32_t find_index(common::id_t id);
 
         bool is_array_type() const override;

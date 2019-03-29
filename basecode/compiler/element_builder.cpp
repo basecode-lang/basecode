@@ -225,8 +225,9 @@ namespace basecode::compiler {
     type_literal* element_builder::make_map_literal(
             compiler::block* parent_scope,
             compiler::type* map_type,
+            const compiler::type_reference_list_t& type_params,
             compiler::argument_list* args) {
-        auto type_ref = make_type_reference(
+        auto map_type_ref = make_type_reference(
             parent_scope,
             map_type->name(),
             map_type);
@@ -234,13 +235,15 @@ namespace basecode::compiler {
         auto type_literal = new compiler::type_literal(
             _session.scope_manager().current_module(),
             parent_scope,
-            type_literal_type_t::map,
+            map_type_ref,
             args,
-            {type_ref});
+            type_params);
 
         _session.elements().add(type_literal);
-        type_ref->parent_element(type_literal);
+        map_type_ref->parent_element(type_literal);
         args->parent_element(type_literal);
+        for (auto type_ref : type_params)
+            type_ref->parent_element(type_literal);
 
         return type_literal;
     }
@@ -248,13 +251,14 @@ namespace basecode::compiler {
     type_literal* element_builder::make_user_literal(
             compiler::block* parent_scope,
             compiler::type_reference* user_type,
+            const compiler::type_reference_list_t& type_params,
             compiler::argument_list* args) {
         auto type_literal = new compiler::type_literal(
             _session.scope_manager().current_module(),
             parent_scope,
-            type_literal_type_t::user,
+            user_type,
             args,
-            {user_type});
+            type_params);
         _session.elements().add(type_literal);
 
         if (user_type != nullptr)
@@ -263,26 +267,32 @@ namespace basecode::compiler {
         if (args != nullptr)
             args->parent_element(type_literal);
 
+        for (auto type_ref : type_params)
+            type_ref->parent_element(type_literal);
+
         return type_literal;
     }
 
     array_type* element_builder::make_array_type(
             compiler::block* parent_scope,
             compiler::block* scope,
-            compiler::type_reference* entry_type,
+            const compiler::type_reference_list_t& type_params,
             const element_list_t& subscripts) {
         auto& scope_manager = _session.scope_manager();
 
+        // NOTE: for now, we only consider the first type parameter.
         auto type = new compiler::array_type(
             scope_manager.current_module(),
             parent_scope,
             scope,
-            entry_type,
+            type_params.front(),
             subscripts);
 
         scope->parent_element(type);
         for (auto s : subscripts)
             s->parent_element(type);
+
+        type_params.front()->parent_element(type);
 
         if (!type->initialize(_session))
             return nullptr;
@@ -505,8 +515,9 @@ namespace basecode::compiler {
     type_literal* element_builder::make_tuple_literal(
             compiler::block* parent_scope,
             compiler::type* tuple_type,
+            const compiler::type_reference_list_t& type_params,
             compiler::argument_list* args) {
-        auto type_ref = make_type_reference(
+        auto tuple_type_ref = make_type_reference(
             parent_scope,
             tuple_type->name(),
             tuple_type);
@@ -514,13 +525,16 @@ namespace basecode::compiler {
         auto type_literal = new compiler::type_literal(
             _session.scope_manager().current_module(),
             parent_scope,
-            type_literal_type_t::tuple,
+            tuple_type_ref,
             args,
-            {type_ref});
+            type_params);
 
         _session.elements().add(type_literal);
-        type_ref->parent_element(type_literal);
+
+        tuple_type_ref->parent_element(type_literal);
         args->parent_element(type_literal);
+        for (auto type_ref : type_params)
+            type_ref->parent_element(type_literal);
 
         return type_literal;
     }
@@ -1237,37 +1251,17 @@ namespace basecode::compiler {
     type_literal* element_builder::make_array_literal(
             compiler::block* parent_scope,
             compiler::type_reference* type_ref,
-            compiler::argument_list* args) {
+            const compiler::type_reference_list_t& type_params,
+            compiler::argument_list* args,
+            const element_list_t& subscripts) {
         auto& scope_manager = _session.scope_manager();
 
-        element_list_t subscripts {};
-        if (args != nullptr) {
-            subscripts.push_back(make_integer(
-                parent_scope,
-                args->size()));
-        }
-
-        auto array_type = scope_manager.find_array_type(
-            type_ref->type(),
-            subscripts);
-        if (array_type == nullptr) {
-            array_type = make_array_type(
-                parent_scope,
-                make_block(parent_scope),
-                type_ref,
-                subscripts);
-            type_ref = make_type_reference(
-                parent_scope,
-                qualified_symbol_t(),
-                array_type);
-        }
-
         auto type_literal = new compiler::type_literal(
-            _session.scope_manager().current_module(),
+            scope_manager.current_module(),
             parent_scope,
-            type_literal_type_t::array,
+            type_ref,
             args,
-            {type_ref},
+            type_params,
             subscripts);
         _session.elements().add(type_literal);
 
@@ -1276,6 +1270,9 @@ namespace basecode::compiler {
 
         if (args != nullptr)
             args->parent_element(type_literal);
+
+        for (auto type_param : type_params)
+            type_param->parent_element(type_literal);
 
         return type_literal;
     }
