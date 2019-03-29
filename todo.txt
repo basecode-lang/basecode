@@ -2,7 +2,6 @@ NOTES
 ------------------------
 Steps to reach feature complete for the bootstrap compiler:
 
-- fixed array type and subscript operator
 - type-baking for generics
 - type-promotion errors for procedure_call
 - multiple/named return parameters
@@ -50,7 +49,6 @@ QUESTIONS
 
 WORKING
 -------
-- NEW: fixed length arrays; subscript operator
 - NEW: length_of intrinsic for fixed arrays
 
 - BUG: multiple assignment code generation doesn't allow for value swaps.
@@ -277,3 +275,4 @@ DONE
 - FIX: byte_code_emitter::emit_block & begin_stack_frame refactoring
 - OBSOLETE: finish terp::jump_to_subroutine
 - FIX: type checking in family_type
+- NEW: fixed length arrays; subscript operator
