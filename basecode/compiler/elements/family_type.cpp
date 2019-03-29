@@ -29,6 +29,10 @@ namespace basecode::compiler {
         return true;
     }
 
+    bool family_type::is_family_type() const {
+        return true;
+    }
+
     bool family_type::on_type_check(compiler::type* other) {
         if (other == nullptr)
             return false;

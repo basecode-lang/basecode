@@ -50,37 +50,41 @@ QUESTIONS
 
 WORKING
 -------
+- NEW: fixed length arrays; subscript operator
+- NEW: length_of intrinsic for fixed arrays
+
+- BUG: multiple assignment code generation doesn't allow for value swaps.
+- BUG: redefining an identifier with another type doesn't give nice errors.
+- FIX: value-sink _ should cause an error if on rhs; should not create variables
+
+- NEW: convert multiple/named parameters in procedure return into a tuple
+
 - FIX: assembly_parser can't find locals or frame_offsets because they're now
         in different blocks.
 - FIX: composite binary op + assign has parser precedence issues. may need to
         programatically wrap the rhs in an expression_group.
 
 - FIX: variable_map::assign should handle copies for composite_type
+       copies should be made if composite_type is passed on the stack
 
 - NEW: use/def in compiler::block for variables
         should supplant byte_code_emitter::referenced_module_variables
 
+- NEW: variables that are a family_type need to record two things:
+        - which type within the family tree is "selected" based on it's value;
+        - the value itself
+
 - NEW: k-coloring for register allocation
-
-- NEW: fixed length arrays; subscript operator
-
-- NEW: length_of intrinsic for fixed arrays
-
-- NEW: convert multiple/named parameters in procedure return into a tuple
 
 TASKS
 -----
-- NEW: Enhance the built-in debugger to support source-level debugging in addition to byte-code.
+- NEW: enhance the built-in debugger to support
+        source-level debugging in addition to byte-code.
 
 - NEW: consolidate all errors into one class along with constants for quick lookup.
-- NEW: finish terp::jump_to_subroutine
 
 - NEW: implement procedure instance baking
 - NEW: struct/union instance baking
-
-- BUG: multiple assignment code generation doesn't allow for value swaps.
-- BUG: placeholder identifier "_" isn't working properly
-- BUG: redefining an identifier with another type doesn't give nice errors.
 
 - BUG: fix utf8 streaming issues in lexer/source_file
 - BUG: add missing errors
@@ -271,3 +275,5 @@ DONE
         if it's not a pointer for UFCS calls
 - FIX: address_of from variable_map
 - FIX: byte_code_emitter::emit_block & begin_stack_frame refactoring
+- OBSOLETE: finish terp::jump_to_subroutine
+- FIX: type checking in family_type

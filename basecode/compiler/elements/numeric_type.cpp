@@ -127,9 +127,8 @@ namespace basecode::compiler {
         if (id() == other_numeric_type->id())
             return true;
 
-        if (other_numeric_type->number_class() == number_class_t::floating_point
-        &&  _number_class == number_class_t::floating_point) {
-            return true;
+        if (other_numeric_type->number_class() == number_class_t::floating_point) {
+            return _number_class == number_class_t::floating_point;
         }
 
         if (is_signed() && other_numeric_type->is_signed()) {

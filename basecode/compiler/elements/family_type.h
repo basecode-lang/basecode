@@ -23,6 +23,8 @@ namespace basecode::compiler {
             compiler::symbol_element* symbol,
             compiler::type_reference_list_t types);
 
+        bool is_family_type() const override;
+
         const compiler::type_reference_list_t& types() const;
 
     protected:

@@ -83,6 +83,10 @@ namespace basecode::compiler {
         return false;
     }
 
+    bool type::is_family_type() const {
+        return false;
+    }
+
     bool type::is_pointer_type() const {
         return false;
     }

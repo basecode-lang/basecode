@@ -52,6 +52,8 @@ namespace basecode::compiler {
 
         number_class_t number_class() const;
 
+        virtual bool is_family_type() const;
+
         virtual bool is_unknown_type() const;
 
         virtual bool is_pointer_type() const;
