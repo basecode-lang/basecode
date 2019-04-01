@@ -1886,13 +1886,8 @@ namespace basecode::compiler {
             case element_type_t::identifier_reference: {
                 auto var_ref = dynamic_cast<compiler::identifier_reference*>(e);
                 auto offset = var_ref->field_offset();
-                if (offset.base_ref != nullptr) {
-                    std::string label {};
-                    for (size_t i = 0; i < offset.fields.size(); i++) {
-                        if (i > 0) label += "_";
-                        label += offset.fields[i]->identifier()->label_name();
-                    }
-
+                auto label = offset.label_name();
+                if (!label.empty()) {
                     auto named_ref = assembler.make_named_ref(
                         vm::assembler_named_ref_type_t::local,
                         label,

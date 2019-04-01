@@ -687,15 +687,9 @@ namespace basecode::compiler {
                         }
                     }
 
-                    std::string label {};
-                    if (!offset_result.fields.empty()) {
-                        for (size_t i = 0; i < offset_result.fields.size(); i++) {
-                            if (i > 0) label += "_";
-                            label += offset_result.fields[i]->identifier()->label_name();
-                        }
-                    } else {
+                    auto label = offset_result.label_name();
+                    if (label.empty())
                         label = var->label_name();
-                    }
 
                     if (_variables.count(label) > 0)
                         continue;
@@ -784,6 +778,16 @@ namespace basecode::compiler {
                     if (ref == nullptr)
                         continue;
 
+                    // XXX: this filters out the base variable for member access
+                    //      scenarios.  revisit this.
+                    if (ref->is_parent_type_one_of({element_type_t::binary_operator})) {
+                        auto bin_op = dynamic_cast<compiler::binary_operator*>(ref->parent_element());
+                        if (bin_op->operator_type() == operator_type_t::member_access
+                        &&  bin_op->lhs() == ref) {
+                            continue;
+                        }
+                    }
+
                     auto var = ref->identifier();
                     auto type = var->type_ref()->type();
                     if (type->is_type_one_of(excluded_types)) {
@@ -798,15 +802,9 @@ namespace basecode::compiler {
                         continue;
                     }
 
-                    std::string label {};
-                    if (!offset_result.fields.empty()) {
-                        for (size_t i = 0; i < offset_result.fields.size(); i++) {
-                            if (i > 0) label += "_";
-                            label += offset_result.fields[i]->identifier()->label_name();
-                        }
-                    } else {
+                    auto label = offset_result.label_name();
+                    if (label.empty())
                         label = var->label_name();
-                    }
 
                     if (_variables.count(label) > 0)
                         continue;

@@ -156,10 +156,13 @@ namespace basecode::compiler {
     using flow_control_stack_t = std::stack<flow_control_t>;
 
     struct offset_result_t {
+        std::string label_name() const;
+
         std::string path {};
         uint64_t from_end = 0;
         field_list_t fields {};
         uint64_t from_start = 0;
         compiler::identifier_reference* base_ref = nullptr;
     };
+
 }
