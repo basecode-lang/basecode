@@ -20,8 +20,7 @@ namespace basecode::common {
         uint32_t column = 0;
     };
 
-    class
-    source_location {
+    class source_location {
     public:
         const location_t& end() const;
 

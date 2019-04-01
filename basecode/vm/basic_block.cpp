@@ -213,7 +213,7 @@ namespace basecode::vm {
         });
     }
 
-    void basic_block::reserve_byte(size_t count) {
+    void basic_block::reserve_byte(uint32_t count) {
         make_block_entry(data_definition_t {
             .size = op_sizes::byte,
             .type = data_definition_type_t::uninitialized,
@@ -221,7 +221,7 @@ namespace basecode::vm {
         });
     }
 
-    void basic_block::reserve_word(size_t count) {
+    void basic_block::reserve_word(uint32_t count) {
         make_block_entry(data_definition_t {
             .size = op_sizes::word,
             .type = data_definition_type_t::uninitialized,
@@ -229,7 +229,7 @@ namespace basecode::vm {
         });
     }
 
-    void basic_block::reserve_dword(size_t count) {
+    void basic_block::reserve_dword(uint32_t count) {
         make_block_entry(data_definition_t {
             .size = op_sizes::dword,
             .type = data_definition_type_t::uninitialized,
@@ -237,7 +237,7 @@ namespace basecode::vm {
         });
     }
 
-    void basic_block::reserve_qword(size_t count) {
+    void basic_block::reserve_qword(uint32_t count) {
         make_block_entry(data_definition_t {
             .size = op_sizes::qword,
             .type = data_definition_type_t::uninitialized,
@@ -324,7 +324,41 @@ namespace basecode::vm {
         make_block_entry(def);
     }
 
-    void basic_block::qwords(const std::vector<data_value_variant_t>& values) {
+    void basic_block::values(const data_value_variant_list_t& list) {
+        std::unordered_map<data_value_variant_type_t, data_definition_t> defs {};
+        for (const auto& v : list) {
+            auto type = static_cast<data_value_variant_type_t>(v.which());
+
+            data_definition_t* def = nullptr;
+            auto it = defs.find(type);
+            if (it == std::end(defs)) {
+                op_sizes op_size;
+                switch (type) {
+                    case data_value_variant_type_t::u8: op_size = op_sizes::byte; break;
+                    case data_value_variant_type_t::u16:op_size = op_sizes::word; break;
+                    case data_value_variant_type_t::f32:
+                    case data_value_variant_type_t::u32:op_size = op_sizes::dword; break;
+                    case data_value_variant_type_t::f64:
+                    case data_value_variant_type_t::named_ref:
+                    case data_value_variant_type_t::u64:op_size = op_sizes::qword; break;
+                }
+                auto result = defs.insert(std::make_pair(type, data_definition_t {
+                    .size = op_size,
+                    .type = data_definition_type_t::initialized,
+                }));
+                def = &result.first->second;
+            } else {
+                def = &it->second;
+            }
+
+            def->values.emplace_back(v);
+        }
+
+        for (const auto& kvp : defs)
+            make_block_entry(kvp.second);
+    }
+
+    void basic_block::qwords(const data_value_variant_list_t& values) {
         data_definition_t def {
             .size = op_sizes::qword,
             .type = data_definition_type_t::initialized,

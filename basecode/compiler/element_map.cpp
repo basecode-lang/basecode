@@ -120,4 +120,4 @@ namespace basecode::compiler {
         return list;
     }
 
-};
+}

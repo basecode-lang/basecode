@@ -312,8 +312,7 @@ namespace basecode::compiler {
             rhs_operand.size(vm::op_size_for_byte_size(lhs.type_result.inferred_type->size_in_bytes()));
             basic_block->store(
                 vm::instruction_operand_t(lhs_named_ref->ref),
-                rhs_operand,
-                vm::instruction_operand_t(static_cast<uint64_t>(4), vm::op_sizes::byte));
+                rhs_operand);
         } else if (requires_copy) {
             basic_block->comment(
                 fmt::format("copy: {}({})", variable_type_name(var->type), var->label),
@@ -625,7 +624,7 @@ namespace basecode::compiler {
                 }
             }
 
-            auto has_initializers = var->is_initialized();
+            auto has_initializers = var->is_initialized() || var_type->is_array_type();
             auto is_constant = var->is_constant()
                 && var_type->element_type() != element_type_t::tuple_type;
 

@@ -29,11 +29,11 @@ namespace basecode::compiler {
             compiler::type_reference* base_type_ref,
             const element_list_t& subscripts);
 
+        size_t data_size() const;
+
         compiler::element* replace(
             size_t index,
             compiler::element* item);
-
-        void calculate_size() override;
 
         size_t number_of_elements() const;
 

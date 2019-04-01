@@ -76,12 +76,12 @@ namespace basecode::compiler {
                 if (!_lhs->infer_type(session, result))
                     return false;
 
-                auto array_type = dynamic_cast<compiler::array_type*>(result.inferred_type);
-                if (array_type == nullptr)
+                auto ptr_type = dynamic_cast<compiler::pointer_type*>(result.inferred_type);
+                if (ptr_type == nullptr)
                     return false;
 
-                result.inferred_type = array_type->base_type_ref()->type();
-                result.reference = array_type->base_type_ref();
+                result.inferred_type = ptr_type->base_type_ref()->type();
+                result.reference = ptr_type->base_type_ref();
                 return true;
             }
             case operator_type_t::assignment: {

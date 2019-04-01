@@ -124,13 +124,13 @@ namespace basecode::vm {
 
         void section(section_t type);
 
-        void reserve_byte(size_t count);
+        void reserve_byte(uint32_t count);
 
-        void reserve_word(size_t count);
+        void reserve_word(uint32_t count);
 
-        void reserve_dword(size_t count);
+        void reserve_dword(uint32_t count);
 
-        void reserve_qword(size_t count);
+        void reserve_qword(uint32_t count);
 
         void bytes(const std::vector<uint8_t>& values);
 
@@ -138,7 +138,9 @@ namespace basecode::vm {
 
         void dwords(const std::vector<uint32_t>& values);
 
-        void qwords(const std::vector<data_value_variant_t>& values);
+        void values(const data_value_variant_list_t& list);
+
+        void qwords(const data_value_variant_list_t& values);
 
     // instructions
     public:

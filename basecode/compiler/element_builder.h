@@ -106,7 +106,7 @@ namespace basecode::compiler {
         declaration* make_declaration(
             compiler::block* parent_scope,
             compiler::identifier* identifier,
-            compiler::binary_operator* assignment);
+            compiler::binary_operator* assignment = nullptr);
 
         module* make_module(
             compiler::block* parent_scope,

@@ -1446,11 +1446,32 @@ namespace basecode::compiler {
     bool ast_evaluator::subscript_operator(
             evaluator_context_t& context,
             evaluator_result_t& result) {
-        result.element = _session.builder().make_binary_operator(
-            _session.scope_manager().current_scope(),
+        auto& builder = _session.builder();
+        auto& scope_manager = _session.scope_manager();
+
+        auto lhs = resolve_symbol_or_evaluate(context.node->lhs);
+        auto rhs = resolve_symbol_or_evaluate(context.node->rhs);
+
+        auto member_access = builder.make_binary_operator(
+            scope_manager.current_scope(),
+            operator_type_t::member_access,
+            lhs,
+            builder.make_identifier_reference(
+                scope_manager.current_scope(),
+                qualified_symbol_t("data"),
+                nullptr));
+
+        result.element = builder.make_binary_operator(
+            scope_manager.current_scope(),
             operator_type_t::subscript,
-            resolve_symbol_or_evaluate(context.node->lhs),
-            resolve_symbol_or_evaluate(context.node->rhs));
+            member_access,
+            rhs);
+
+        common::source_location loc;
+        loc.start(lhs->location().start());
+        loc.end(rhs->location().end());
+        result.element->location(loc);
+
         return true;
     }
 

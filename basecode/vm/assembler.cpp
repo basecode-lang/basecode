@@ -175,17 +175,58 @@ namespace basecode::vm {
                             auto size_in_bytes = op_size_in_bytes(data_def->size);
                             auto offset = 0;
                             for (auto v : data_def->values) {
-                                if (v.which() != 0) {
-                                    auto label_ref = boost::get<assembler_named_ref_t*>(v);
-                                    r.error(
-                                        "A031",
-                                        fmt::format("unexpected assembler_named_ref_t*: {}", label_ref->name));
-                                    continue;
+                                auto type = static_cast<data_value_variant_type_t>(v.which());
+                                switch (type) {
+                                    case data_value_variant_type_t::u8: {
+                                        _terp->write(
+                                            data_def->size,
+                                            entry.address() + offset,
+                                            boost::get<uint8_t>(v));
+                                        break;
+                                    }
+                                    case data_value_variant_type_t::u16: {
+                                        _terp->write(
+                                            data_def->size,
+                                            entry.address() + offset,
+                                            boost::get<uint16_t>(v));
+                                        break;
+                                    }
+                                    case data_value_variant_type_t::u32: {
+                                        _terp->write(
+                                            data_def->size,
+                                            entry.address() + offset,
+                                            boost::get<uint32_t>(v));
+                                        break;
+                                    }
+                                    case data_value_variant_type_t::f32: {
+                                        _terp->write(
+                                            data_def->size,
+                                            entry.address() + offset,
+                                            static_cast<uint32_t>(boost::get<float>(v)));
+                                        break;
+                                    }
+                                    case data_value_variant_type_t::u64: {
+                                        _terp->write(
+                                            data_def->size,
+                                            entry.address() + offset,
+                                            boost::get<uint64_t>(v));
+                                        break;
+                                    }
+                                    case data_value_variant_type_t::f64: {
+                                        _terp->write(
+                                            data_def->size,
+                                            entry.address() + offset,
+                                            static_cast<uint64_t>(boost::get<double>(v)));
+                                        break;
+                                    }
+                                    default: {
+                                        auto label_ref = boost::get<assembler_named_ref_t*>(v);
+                                        r.error(
+                                            "A031",
+                                            fmt::format("unexpected assembler_named_ref_t*: {}", label_ref->name));
+                                        return false;
+                                    }
                                 }
-                                _terp->write(
-                                    data_def->size,
-                                    entry.address() + offset,
-                                    boost::get<uint64_t>(v));
                                 offset += size_in_bytes;
                             }
                         }
@@ -242,22 +283,28 @@ namespace basecode::vm {
                         if (data_def->type == data_definition_type_t::uninitialized)
                             break;
                         for (auto& value : data_def->values) {
-                            auto variant = value;
-                            if (variant.which() == 1) {
-                                auto named_ref = boost::get<assembler_named_ref_t*>(variant);
-                                if (named_ref != nullptr) {
-                                    switch (named_ref->type) {
-                                        case assembler_named_ref_type_t::label: {
-                                            auto label = labels.find(named_ref->name);
-                                            if (label != nullptr) {
-                                                value = label->address();
+                            auto type = static_cast<data_value_variant_type_t>(value.which());
+                            switch (type) {
+                                case data_value_variant_type_t::named_ref: {
+                                    auto named_ref = boost::get<assembler_named_ref_t*>(value);
+                                    if (named_ref != nullptr) {
+                                        switch (named_ref->type) {
+                                            case assembler_named_ref_type_t::label: {
+                                                auto label = labels.find(named_ref->name);
+                                                if (label != nullptr) {
+                                                    value = label->address();
+                                                }
+                                                break;
                                             }
-                                            break;
-                                        }
-                                        default: {
-                                            break;
+                                            default: {
+                                                break;
+                                            }
                                         }
                                     }
+                                    break;
+                                }
+                                default: {
+                                    break;
                                 }
                             }
                         }
@@ -375,7 +422,28 @@ namespace basecode::vm {
                             }
                             case data_definition_type_t::uninitialized: {
                                 for (auto v : data_def->values) {
-                                    auto size = size_in_bytes * boost::get<uint64_t>(v);
+                                    auto type = static_cast<data_value_variant_type_t>(v.which());
+                                    size_t value = 0;
+                                    switch (type) {
+                                        case data_value_variant_type_t::u8:
+                                            value = boost::get<uint8_t>(v);
+                                            break;
+                                        case data_value_variant_type_t::u16:
+                                            value = boost::get<uint16_t>(v);
+                                            break;
+                                        case data_value_variant_type_t::u32:
+                                            value = boost::get<uint32_t>(v);
+                                            break;
+                                        case data_value_variant_type_t::u64:
+                                            value = boost::get<uint64_t>(v);
+                                            break;
+                                        case data_value_variant_type_t::f32:
+                                        case data_value_variant_type_t::f64:
+                                        case data_value_variant_type_t::named_ref:
+                                            break;
+                                    }
+
+                                    auto size = size_in_bytes * value;
                                     offset += size;
                                     previous_section_size += size;
                                 }
@@ -578,10 +646,32 @@ namespace basecode::vm {
                         if (!items.empty())
                             items += ", ";
                         auto v = definition->values[item_index++];
-                        if (v.which() == 0)
-                            items += fmt::format(format_spec, boost::get<uint64_t>(v));
-                        else
-                            items += boost::get<assembler_named_ref_t*>(v)->name;
+
+                        auto value_type = static_cast<data_value_variant_type_t>(v.which());
+                        switch (value_type) {
+                            case data_value_variant_type_t::u8:
+                                items += fmt::format(format_spec, boost::get<uint8_t>(v));
+                                break;
+                            case data_value_variant_type_t::u16:
+                                items += fmt::format(format_spec, boost::get<uint16_t>(v));
+                                break;
+                            case data_value_variant_type_t::u32:
+                                items += fmt::format(format_spec, boost::get<uint32_t>(v));
+                                break;
+                            case data_value_variant_type_t::u64:
+                                items += fmt::format(format_spec, boost::get<uint64_t>(v));
+                                break;
+                            case data_value_variant_type_t::f32:
+                                items += fmt::format(format_spec, static_cast<uint32_t>(boost::get<float>(v)));
+                                break;
+                            case data_value_variant_type_t::f64:
+                                items += fmt::format(format_spec, static_cast<uint64_t>(boost::get<double>(v)));
+                                break;
+                            case data_value_variant_type_t::named_ref:
+                                items += boost::get<assembler_named_ref_t*>(v)->name;
+                                break;
+                        }
+
                         if ((item_index % 8) == 0) {
                             source_file->add_source_line(
                                 listing_source_line_type_t::data_definition,

@@ -9,14 +9,17 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <compiler/scope_manager.h>
 #include <compiler/element_builder.h>
 #include "block.h"
 #include "array_type.h"
 #include "identifier.h"
 #include "declaration.h"
+#include "nil_literal.h"
 #include "pointer_type.h"
 #include "symbol_element.h"
 #include "type_reference.h"
+#include "integer_literal.h"
 
 namespace basecode::compiler {
 
@@ -53,8 +56,8 @@ namespace basecode::compiler {
                                                 _base_type_ref(base_type_ref) {
     }
 
-    void array_type::calculate_size() {
-        size_in_bytes(number_of_elements() * _base_type_ref->type()->size_in_bytes());
+    size_t array_type::data_size() const {
+        return number_of_elements() * _base_type_ref->type()->size_in_bytes();
     }
 
     bool array_type::on_apply_fold_result(
@@ -128,14 +131,69 @@ namespace basecode::compiler {
 
     bool array_type::on_initialize(compiler::session& session) {
         auto& builder = session.builder();
+        auto& scope_manager = session.scope_manager();
 
         auto type_symbol = builder.make_symbol(
             parent_scope(),
             name_for_array(_base_type_ref->type(), _subscripts));
         symbol(type_symbol);
-        calculate_size();
-        alignment(_base_type_ref->type()->size_in_bytes());
         type_symbol->parent_element(this);
+
+        auto block_scope = scope();
+        auto& field_map = fields();
+
+        auto u32_type = scope_manager.find_type(qualified_symbol_t("u32"));
+        auto u32_type_ref = builder.make_type_reference(
+            block_scope,
+            u32_type->symbol()->qualified_symbol(),
+            u32_type);
+        u32_type_ref->parent_element(block_scope);
+
+        auto length_identifier = builder.make_identifier(
+            block_scope,
+            builder.make_symbol(block_scope, "length"),
+            builder.make_initializer(block_scope, builder.make_integer(block_scope, 0)));
+        length_identifier->type_ref(u32_type_ref);
+        length_identifier->parent_element(block_scope);
+        block_scope->identifiers().add(length_identifier);
+        auto length_field = builder.make_field(
+            this,
+            block_scope,
+            builder.make_declaration(block_scope, length_identifier),
+            0);
+        length_field->parent_element(this);
+        length_identifier->field(length_field);
+        field_map.add(length_field);
+
+        auto entry_ptr_type = builder.make_pointer_type(
+            block_scope,
+            qualified_symbol_t(),
+            _base_type_ref->type());
+        auto entry_ptr_type_ref = builder.make_type_reference(
+            block_scope,
+            entry_ptr_type->name(),
+            entry_ptr_type);
+        entry_ptr_type_ref->parent_element(block_scope);
+
+        auto data_identifier = builder.make_identifier(
+            block_scope,
+            builder.make_symbol(block_scope, "data"),
+            builder.make_initializer(block_scope, builder.nil_literal()));
+        data_identifier->type_ref(entry_ptr_type_ref);
+        data_identifier->parent_element(block_scope);
+        block_scope->identifiers().add(data_identifier);
+
+        auto data_field = builder.make_field(
+            this,
+            block_scope,
+            builder.make_declaration(block_scope, data_identifier),
+            4);
+        data_field->parent_element(this);
+        data_identifier->field(data_field);
+        field_map.add(data_field);
+
+        alignment(8);
+        calculate_size();
 
         return composite_type::on_initialize(session);
     }

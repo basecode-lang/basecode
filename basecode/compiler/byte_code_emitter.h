@@ -91,6 +91,10 @@ namespace basecode::compiler {
             compiler::binary_operator* binary_op,
             emit_result_t& result);
 
+        bool emit_section_type_literals(
+            vm::basic_block* basic_block,
+            const element_list_t& elements);
+
         bool emit_section_variable_data(
             vm::basic_block* basic_block,
             compiler::identifier* var);
@@ -99,6 +103,10 @@ namespace basecode::compiler {
             vm::basic_block** basic_block,
             compiler::binary_operator* binary_op,
             emit_result_t& result);
+
+        bool emit_section_variable_composite_type(
+            vm::basic_block* basic_block,
+            compiler::composite_type* composite_type);
 
         vm::instruction_operand_t* target_operand(
             emit_result_t& result,

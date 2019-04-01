@@ -83,5 +83,5 @@ namespace basecode::compiler {
         element_by_type_map_t _elements_by_type {};
     };
 
-};
+}
 

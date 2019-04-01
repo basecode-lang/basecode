@@ -726,18 +726,42 @@ namespace basecode::vm {
         uninitialized
     };
 
+    using data_value_variant_t = boost::variant<
+        uint8_t,
+        uint16_t,
+        uint32_t,
+        uint64_t,
+        float,
+        double,
+        assembler_named_ref_t*>;
+
+    using data_value_variant_list_t = std::vector<data_value_variant_t>;
+
+    enum class data_value_variant_type_t : uint8_t {
+        u8,
+        u16,
+        u32,
+        u64,
+        f32,
+        f64,
+        named_ref
+    };
+
+    struct data_definition_t {
+        op_sizes size;
+        data_definition_type_t type = data_definition_type_t::none;
+        std::vector<data_value_variant_t> values {};
+    };
+
+    using data_definition_list_t = std::vector<data_definition_t>;
+
     ///////////////////////////////////////////////////////////////////////////
 
     struct align_t {
         uint8_t size = 0;
     };
 
-    using data_value_variant_t = boost::variant<uint64_t, assembler_named_ref_t*>;
-    struct data_definition_t {
-        op_sizes size;
-        data_definition_type_t type = data_definition_type_t::none;
-        std::vector<data_value_variant_t> values {};
-    };
+    ///////////////////////////////////////////////////////////////////////////
 
     enum class comment_location_t : uint8_t {
         new_line,
@@ -750,9 +774,13 @@ namespace basecode::vm {
         comment_location_t location = comment_location_t::new_line;
     };
 
+    ///////////////////////////////////////////////////////////////////////////
+
     struct label_t {
         vm::label* instance = nullptr;
     };
+
+    ///////////////////////////////////////////////////////////////////////////
 
     enum class local_type_t {
         integer,
@@ -768,21 +796,31 @@ namespace basecode::vm {
 
     using local_list_t = std::vector<const local_t*>;
 
+    ///////////////////////////////////////////////////////////////////////////
+
     struct frame_offset_t {
         int64_t offset;
         std::string name {};
     };
 
+    ///////////////////////////////////////////////////////////////////////////
+
     struct meta_t {
         std::string label {};
     };
+
+    ///////////////////////////////////////////////////////////////////////////
 
     struct reset_t {
         std::string type {};
     };
 
+    ///////////////////////////////////////////////////////////////////////////
+
     struct program_end_t {
     };
+
+    ///////////////////////////////////////////////////////////////////////////
 
     enum class block_entry_type_t : uint8_t {
         section = 1,
