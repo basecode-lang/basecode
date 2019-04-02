@@ -21,10 +21,10 @@ namespace basecode::compiler {
         if (base_ref == nullptr)
             return {};
         auto label = base_ref->identifier()->label_name();
-        for (size_t i = 0; i < fields.size(); i++) {
+        for (const auto field : fields) {
             label += fmt::format(
                 "_{}",
-                fields[i]->identifier()->label_name());
+                field->identifier()->label_name());
         }
         return label;
     }
