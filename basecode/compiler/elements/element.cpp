@@ -100,6 +100,10 @@ namespace basecode::compiler {
         _non_owning = true;
     }
 
+    element_id_set_t& element::ids() {
+        return _ids;
+    }
+
     bool element::non_owning() const {
         return _non_owning;
     }

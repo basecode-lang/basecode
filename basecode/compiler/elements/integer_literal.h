@@ -26,6 +26,8 @@ namespace basecode::compiler {
 
         uint64_t value() const;
 
+        void value(uint64_t v);
+
     protected:
         bool on_infer_type(
             compiler::session& session,

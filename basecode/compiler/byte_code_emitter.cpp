@@ -1798,6 +1798,12 @@ namespace basecode::compiler {
                             size_in_bytes = ptr_type->base_type_ref()->type()->size_in_bytes();
                         }
 
+                        // XXX: the idea here is that we look up the "place holder" integer
+                        //      literals and change the value to match the correct subscript size.
+                        //const auto& ids = binary_op->rhs()->ids();
+                        //for (auto id : ids) {
+                        //}
+
                         emit_result_t rhs_result {};
                         if (!emit_element(basic_block, binary_op->rhs(), rhs_result))
                             return false;

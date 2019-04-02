@@ -50,6 +50,8 @@ namespace basecode::compiler {
             return dynamic_cast<T*>(_parent_element);
         }
 
+        element_id_set_t& ids();
+
         bool non_owning() const;
 
         bool is_constant() const;
@@ -188,6 +190,7 @@ namespace basecode::compiler {
     private:
         common::id_t _id;
         bool _non_owning = false;
+        element_id_set_t _ids {};
         comment_list_t _comments {};
         block* _parent_scope = nullptr;
         attribute_map_t _attributes {};

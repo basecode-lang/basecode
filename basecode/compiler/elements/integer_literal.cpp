@@ -33,6 +33,10 @@ namespace basecode::compiler {
         return true;
     }
 
+    void integer_literal::value(uint64_t v) {
+        _value = v;
+    }
+
     bool integer_literal::is_signed() const {
         return common::is_sign_bit_set(_value);
     }

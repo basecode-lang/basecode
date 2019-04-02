@@ -1448,8 +1448,32 @@ namespace basecode::compiler {
         auto& builder = _session.builder();
         auto& scope_manager = _session.scope_manager();
 
-        auto lhs = resolve_symbol_or_evaluate(context.node->lhs);
-        auto rhs = resolve_symbol_or_evaluate(context.node->rhs);
+        compiler::element* lhs = nullptr;
+        compiler::element* rhs = nullptr;
+        compiler::integer_literal* place_holder = nullptr;
+
+        element_list_t rhs_list {};
+        auto current_subscript = context.node;
+        while (current_subscript->type == syntax::ast_node_type_t::subscript_operator) {
+            rhs_list.emplace_back(resolve_symbol_or_evaluate(current_subscript->rhs));
+            current_subscript = current_subscript->lhs;
+        }
+        lhs = resolve_symbol_or_evaluate(current_subscript);
+
+        if (rhs_list.size() == 1) {
+            rhs = rhs_list.back();
+        } else {
+            place_holder = builder.make_integer(scope_manager.current_scope(), 0);
+            rhs = builder.make_binary_operator(
+                scope_manager.current_scope(),
+                operator_type_t::add,
+                rhs_list.front(),
+                builder.make_binary_operator(
+                    scope_manager.current_scope(),
+                    operator_type_t::multiply,
+                    rhs_list.back(),
+                    place_holder));
+        }
 
         auto member_access = builder.make_binary_operator(
             scope_manager.current_scope(),
@@ -1465,6 +1489,11 @@ namespace basecode::compiler {
             operator_type_t::subscript,
             member_access,
             rhs);
+
+        if (place_holder != nullptr) {
+            auto& ids = result.element->ids();
+            ids.insert(place_holder->id());
+        }
 
         common::source_location loc;
         loc.start(lhs->location().start());

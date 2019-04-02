@@ -1,0 +1,16 @@
+core :: module("core");
+
+c: [8][8]u8;
+
+test :: proc() {
+    core::print("length_of(c) := %d\n", length_of(c));
+    x := 0;
+    for i in range<u32>(0, 7) {
+        for j in range<u32>(0, 7) {
+            c[i][j] := x;
+            x +:= 1;
+        };
+    };
+};
+
+#run test();
