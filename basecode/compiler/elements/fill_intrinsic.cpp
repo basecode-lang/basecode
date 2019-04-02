@@ -29,8 +29,8 @@ namespace basecode::compiler {
                                                                             type_params) {
     }
 
-    std::string fill_intrinsic::name() const {
-        return "fill";
+    intrinsic_type_t fill_intrinsic::type() const {
+        return intrinsic_type_t::fill;
     }
 
 }

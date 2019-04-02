@@ -53,8 +53,8 @@ namespace basecode::compiler {
         return true;
     }
 
-    std::string range_intrinsic::name() const {
-        return "range";
+    intrinsic_type_t range_intrinsic::type() const {
+        return intrinsic_type_t::range;
     }
 
 }

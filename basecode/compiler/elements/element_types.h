@@ -157,6 +157,47 @@ namespace basecode::compiler {
         address_of,
     };
 
+    static inline std::unordered_map<intrinsic_type_t, std::string> s_intrinsic_type_names = {
+        {intrinsic_type_t::unknown,     "unknown"},
+        {intrinsic_type_t::free,        "free"},
+        {intrinsic_type_t::copy,        "copy"},
+        {intrinsic_type_t::fill,        "fill"},
+        {intrinsic_type_t::alloc,       "alloc"},
+        {intrinsic_type_t::range,       "range"},
+        {intrinsic_type_t::size_of,     "size_of"},
+        {intrinsic_type_t::type_of,     "type_of"},
+        {intrinsic_type_t::align_of,    "align_of"},
+        {intrinsic_type_t::length_of,   "length_of"},
+        {intrinsic_type_t::address_of,  "address_of"},
+    };
+
+    static inline std::unordered_map<std::string, intrinsic_type_t> s_intrinsic_named_types = {
+        {"unknown",     intrinsic_type_t::unknown},
+        {"free",        intrinsic_type_t::free},
+        {"copy",        intrinsic_type_t::copy},
+        {"fill",        intrinsic_type_t::fill},
+        {"alloc",       intrinsic_type_t::alloc},
+        {"range",       intrinsic_type_t::range},
+        {"size_of",     intrinsic_type_t::size_of},
+        {"type_of",     intrinsic_type_t::type_of},
+        {"align_of",    intrinsic_type_t::align_of},
+        {"length_of",   intrinsic_type_t::length_of},
+        {"address_of",  intrinsic_type_t::address_of},
+    };
+
+    static inline std::string intrinsic_type_to_name(intrinsic_type_t type) {
+        auto it = s_intrinsic_type_names.find(type);
+        if (it == std::end(s_intrinsic_type_names))
+            return "unknown";
+        return it->second;
+    }
+
+    static inline intrinsic_type_t intrinsic_type_from_name(const std::string& name) {
+        auto it = s_intrinsic_named_types.find(name);
+        if (it == std::end(s_intrinsic_named_types))
+            return intrinsic_type_t::unknown;
+        return it->second;
+    }
     ///////////////////////////////////////////////////////////////////////////
 
     enum class visitor_data_type_t {

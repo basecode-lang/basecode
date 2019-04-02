@@ -117,9 +117,9 @@ namespace basecode::compiler {
     bool address_of_intrinsic::can_fold() const {
         return is_constant_parameter();
     }
-
-    std::string address_of_intrinsic::name() const {
-        return "address_of";
+    
+    intrinsic_type_t address_of_intrinsic::type() const {
+        return intrinsic_type_t::address_of;
     }
 
     bool address_of_intrinsic::is_constant_parameter() const {

@@ -29,8 +29,8 @@ namespace basecode::compiler {
                                                                             type_params) {
     }
 
-    std::string copy_intrinsic::name() const {
-        return "copy";
+    intrinsic_type_t copy_intrinsic::type() const {
+        return intrinsic_type_t::copy;
     }
 
 }

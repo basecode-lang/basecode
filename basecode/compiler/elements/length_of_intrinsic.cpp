@@ -83,10 +83,6 @@ namespace basecode::compiler {
         return true;
     }
 
-    std::string length_of_intrinsic::name() const {
-        return "length_of";
-    }
-
     bool length_of_intrinsic::length_for_element(
             compiler::session& session,
             compiler::element* e,
@@ -138,6 +134,10 @@ namespace basecode::compiler {
 
     bool length_of_intrinsic::on_is_constant() const {
         return true;
+    }
+
+    intrinsic_type_t length_of_intrinsic::type() const {
+        return intrinsic_type_t::length_of;
     }
 
 }

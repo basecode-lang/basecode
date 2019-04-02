@@ -103,8 +103,8 @@ namespace basecode::compiler {
         return true;
     }
 
-    std::string type_of_intrinsic::name() const {
-        return "type_of";
+    intrinsic_type_t type_of_intrinsic::type() const {
+        return intrinsic_type_t::type_of;
     }
 
 }

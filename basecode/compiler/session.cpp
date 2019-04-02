@@ -896,7 +896,7 @@ namespace basecode::compiler {
                             "intrinsic_substitution",
                             _builder->make_string(
                                 _scope_manager->current_scope(),
-                                intrinsic->name())));
+                                intrinsic_type_to_name(intrinsic->type()))));
                         break;
                     }
                     default:

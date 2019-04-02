@@ -67,12 +67,12 @@ namespace basecode::compiler {
         return true;
     }
 
-    std::string align_of_intrinsic::name() const {
-        return "align_of";
-    }
-
     bool align_of_intrinsic::on_is_constant() const {
         return true;
+    }
+
+    intrinsic_type_t align_of_intrinsic::type() const {
+        return intrinsic_type_t::align_of;
     }
 
 }

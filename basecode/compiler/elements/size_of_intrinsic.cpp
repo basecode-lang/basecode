@@ -63,12 +63,12 @@ namespace basecode::compiler {
         return true;
     }
 
-    std::string size_of_intrinsic::name() const {
-        return "size_of";
-    }
-
     bool size_of_intrinsic::on_is_constant() const {
         return true;
+    }
+
+    intrinsic_type_t size_of_intrinsic::type() const {
+        return intrinsic_type_t::size_of;
     }
 
 }

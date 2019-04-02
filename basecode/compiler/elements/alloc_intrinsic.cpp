@@ -50,8 +50,8 @@ namespace basecode::compiler {
         return true;
     }
 
-    std::string alloc_intrinsic::name() const {
-        return "alloc";
+    intrinsic_type_t alloc_intrinsic::type() const {
+        return intrinsic_type_t::alloc;
     }
 
 }

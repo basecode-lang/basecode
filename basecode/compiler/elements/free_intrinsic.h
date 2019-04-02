@@ -24,7 +24,7 @@ namespace basecode::compiler {
             compiler::procedure_type* proc_type,
             const compiler::type_reference_list_t& type_params);
 
-        std::string name() const override;
+        intrinsic_type_t type() const override;
     };
 
 }

@@ -26,7 +26,7 @@ namespace basecode::compiler {
 
         bool can_fold() const override;
 
-        std::string name() const override;
+        intrinsic_type_t type() const override;
 
     protected:
         bool on_fold(

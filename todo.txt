@@ -49,8 +49,6 @@ QUESTIONS
 
 WORKING
 -------
-- NEW: length_of intrinsic for fixed arrays
-
 - BUG: multiple assignment code generation doesn't allow for value swaps.
 - BUG: redefining an identifier with another type doesn't give nice errors.
 - FIX: value-sink _ should cause an error if on rhs; should not create variables
@@ -276,3 +274,4 @@ DONE
 - OBSOLETE: finish terp::jump_to_subroutine
 - FIX: type checking in family_type
 - NEW: fixed length arrays; subscript operator
+- NEW: length_of intrinsic for fixed arrays

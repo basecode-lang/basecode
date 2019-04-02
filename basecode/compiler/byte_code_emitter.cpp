@@ -586,171 +586,177 @@ namespace basecode::compiler {
                 switch (for_expr->element_type()) {
                     case element_type_t::intrinsic: {
                         auto intrinsic = dynamic_cast<compiler::intrinsic*>(for_expr);
-                        if (intrinsic->name() == "range") {
-                            auto begin_label_ref = assembler.make_named_ref(
-                                vm::assembler_named_ref_type_t::label,
-                                entry_label_name);
-                            auto step_label_ref = assembler.make_named_ref(
-                                vm::assembler_named_ref_type_t::label,
-                                step_label_name);
-                            auto exit_label_ref = assembler.make_named_ref(
-                                vm::assembler_named_ref_type_t::label,
-                                exit_label_name);
+                        switch (intrinsic->type()) {
+                            case intrinsic_type_t::range: {
+                                auto begin_label_ref = assembler.make_named_ref(
+                                    vm::assembler_named_ref_type_t::label,
+                                    entry_label_name);
+                                auto step_label_ref = assembler.make_named_ref(
+                                    vm::assembler_named_ref_type_t::label,
+                                    step_label_name);
+                                auto exit_label_ref = assembler.make_named_ref(
+                                    vm::assembler_named_ref_type_t::label,
+                                    exit_label_name);
 
-                            flow_control_t flow_control {
-                                .exit_label = exit_label_ref,
-                                .continue_label = step_label_ref
-                            };
-                            push_flow_control(flow_control);
-                            defer(pop_flow_control());
+                                flow_control_t flow_control {
+                                    .exit_label = exit_label_ref,
+                                    .continue_label = step_label_ref
+                                };
+                                push_flow_control(flow_control);
+                                defer(pop_flow_control());
 
-                            auto range = dynamic_cast<compiler::range_intrinsic*>(intrinsic);
+                                auto range = dynamic_cast<compiler::range_intrinsic*>(intrinsic);
 
-                            auto start_arg = range->arguments()->param_by_name("start");
-                            auto induction_init = builder.make_binary_operator(
-                                for_e->parent_scope(),
-                                operator_type_t::assignment,
-                                for_e->induction_decl()->identifier(),
-                                start_arg);
-                            induction_init->make_non_owning();
-                            defer(_session.elements().remove(induction_init->id()));
+                                auto start_arg = range->arguments()->param_by_name("start");
+                                auto induction_init = builder.make_binary_operator(
+                                    for_e->parent_scope(),
+                                    operator_type_t::assignment,
+                                    for_e->induction_decl()->identifier(),
+                                    start_arg);
+                                induction_init->make_non_owning();
+                                defer(_session.elements().remove(induction_init->id()));
 
-                            auto init_block = _blocks.make();
-                            assembler.blocks().emplace_back(init_block);
-                            init_block->predecessors().emplace_back(current_block);
-                            current_block->successors().emplace_back(init_block);
+                                auto init_block = _blocks.make();
+                                assembler.blocks().emplace_back(init_block);
+                                init_block->predecessors().emplace_back(current_block);
+                                current_block->successors().emplace_back(init_block);
 
-                            *basic_block = init_block;
-                            if (!emit_element(basic_block, induction_init, result))
-                                return false;
+                                *basic_block = init_block;
+                                if (!emit_element(basic_block, induction_init, result))
+                                    return false;
 
-                            auto dir_arg = range->arguments()->param_by_name("dir");
-                            uint64_t dir_value;
-                            if (!dir_arg->as_integer(dir_value))
-                                return false;
+                                auto dir_arg = range->arguments()->param_by_name("dir");
+                                uint64_t dir_value;
+                                if (!dir_arg->as_integer(dir_value))
+                                    return false;
 
-                            auto kind_arg = range->arguments()->param_by_name("kind");
-                            uint64_t kind_value;
-                            if (!kind_arg->as_integer(kind_value))
-                                return false;
+                                auto kind_arg = range->arguments()->param_by_name("kind");
+                                uint64_t kind_value;
+                                if (!kind_arg->as_integer(kind_value))
+                                    return false;
 
-                            auto step_op_type = dir_value == 0 ?
-                                                operator_type_t::add :
-                                                operator_type_t::subtract;
-                            auto cmp_op_type = operator_type_t::less_than;
-                            switch (kind_value) {
-                                case 0: {
-                                    switch (dir_value) {
-                                        case 0:
-                                            cmp_op_type = operator_type_t::less_than_or_equal;
-                                            break;
-                                        case 1:
-                                            cmp_op_type = operator_type_t::greater_than_or_equal;
-                                            break;
-                                        default:
-                                            // XXX: error
-                                            break;
+                                auto step_op_type = dir_value == 0 ?
+                                                    operator_type_t::add :
+                                                    operator_type_t::subtract;
+                                auto cmp_op_type = operator_type_t::less_than;
+                                switch (kind_value) {
+                                    case 0: {
+                                        switch (dir_value) {
+                                            case 0:
+                                                cmp_op_type = operator_type_t::less_than_or_equal;
+                                                break;
+                                            case 1:
+                                                cmp_op_type = operator_type_t::greater_than_or_equal;
+                                                break;
+                                            default:
+                                                // XXX: error
+                                                break;
+                                        }
+                                        break;
                                     }
-                                    break;
-                                }
-                                case 1: {
-                                    switch (dir_value) {
-                                        case 0:
-                                            cmp_op_type = operator_type_t::less_than;
-                                            break;
-                                        case 1:
-                                            cmp_op_type = operator_type_t::greater_than;
-                                            break;
-                                        default:
-                                            // XXX: error
-                                            break;
+                                    case 1: {
+                                        switch (dir_value) {
+                                            case 0:
+                                                cmp_op_type = operator_type_t::less_than;
+                                                break;
+                                            case 1:
+                                                cmp_op_type = operator_type_t::greater_than;
+                                                break;
+                                            default:
+                                                // XXX: error
+                                                break;
+                                        }
+                                        break;
                                     }
-                                    break;
+                                    default: {
+                                        // XXX: error
+                                        break;
+                                    }
                                 }
-                                default: {
-                                    // XXX: error
-                                    break;
-                                }
+
+                                auto stop_arg = range->arguments()->param_by_name("stop");
+
+                                auto predicate_block = _blocks.make();
+                                assembler.blocks().emplace_back(predicate_block);
+                                predicate_block->predecessors().emplace_back(init_block);
+                                init_block->successors().emplace_back(predicate_block);
+
+                                predicate_block->label(labels.make(entry_label_name, predicate_block));
+                                auto comparison_op = builder.make_binary_operator(
+                                    for_e->parent_scope(),
+                                    cmp_op_type,
+                                    for_e->induction_decl()->identifier(),
+                                    stop_arg);
+                                comparison_op->make_non_owning();
+                                defer(_session.elements().remove(comparison_op->id()));
+
+                                *basic_block = predicate_block;
+
+                                emit_result_t cmp_result;
+                                if (!emit_element(basic_block, comparison_op, cmp_result))
+                                    return false;
+                                predicate_block->bz(
+                                    cmp_result.operands.back(),
+                                    vm::instruction_operand_t(exit_label_ref));
+                                release_temps(cmp_result.temps);
+                                predicate_block = *basic_block;
+
+                                auto body_block = _blocks.make();
+                                assembler.blocks().emplace_back(body_block);
+                                body_block->predecessors().emplace_back(predicate_block);
+                                *basic_block = body_block;
+
+                                body_block->label(labels.make(body_label_name, body_block));
+                                emit_result_t body_result;
+                                if (!emit_element(basic_block, for_e->body(), body_result))
+                                    return false;
+                                body_block = *basic_block;
+                                release_temps(body_result.temps);
+
+                                auto step_block = _blocks.make();
+                                assembler.blocks().emplace_back(step_block);
+                                step_block->predecessors().emplace_back(body_block);
+                                step_block->successors().emplace_back(predicate_block);
+                                body_block->successors().emplace_back(step_block);
+                                *basic_block = step_block;
+
+                                auto step_param = range->arguments()->param_by_name("step");
+                                auto induction_step = builder.make_binary_operator(
+                                    for_e->parent_scope(),
+                                    step_op_type,
+                                    for_e->induction_decl()->identifier(),
+                                    step_param);
+                                auto induction_assign = builder.make_binary_operator(
+                                    for_e->parent_scope(),
+                                    operator_type_t::assignment,
+                                    for_e->induction_decl()->identifier(),
+                                    induction_step);
+                                induction_step->make_non_owning();
+                                induction_assign->make_non_owning();
+                                defer({
+                                          _session.elements().remove(induction_assign->id());
+                                          _session.elements().remove(induction_step->id());
+                                      });
+
+                                step_block->label(labels.make(step_label_name, step_block));
+                                emit_result_t step_result;
+                                if (!emit_element(basic_block, induction_assign, step_result))
+                                    return false;
+                                step_block->jump_direct(vm::instruction_operand_t(begin_label_ref));
+                                release_temps(step_result.temps);
+
+                                auto exit_block = _blocks.make();
+                                assembler.blocks().emplace_back(exit_block);
+                                exit_block->predecessors().emplace_back(predicate_block);
+                                exit_block->label(labels.make(exit_label_name, exit_block));
+                                *basic_block = exit_block;
+
+                                predicate_block->add_successors({body_block, exit_block});
+                                break;
                             }
-
-                            auto stop_arg = range->arguments()->param_by_name("stop");
-
-                            auto predicate_block = _blocks.make();
-                            assembler.blocks().emplace_back(predicate_block);
-                            predicate_block->predecessors().emplace_back(init_block);
-                            init_block->successors().emplace_back(predicate_block);
-
-                            predicate_block->label(labels.make(entry_label_name, predicate_block));
-                            auto comparison_op = builder.make_binary_operator(
-                                for_e->parent_scope(),
-                                cmp_op_type,
-                                for_e->induction_decl()->identifier(),
-                                stop_arg);
-                            comparison_op->make_non_owning();
-                            defer(_session.elements().remove(comparison_op->id()));
-
-                            *basic_block = predicate_block;
-
-                            emit_result_t cmp_result;
-                            if (!emit_element(basic_block, comparison_op, cmp_result))
-                                return false;
-                            predicate_block->bz(
-                                cmp_result.operands.back(),
-                                vm::instruction_operand_t(exit_label_ref));
-                            release_temps(cmp_result.temps);
-                            predicate_block = *basic_block;
-
-                            auto body_block = _blocks.make();
-                            assembler.blocks().emplace_back(body_block);
-                            body_block->predecessors().emplace_back(predicate_block);
-                            *basic_block = body_block;
-
-                            body_block->label(labels.make(body_label_name, body_block));
-                            emit_result_t body_result;
-                            if (!emit_element(basic_block, for_e->body(), body_result))
-                                return false;
-                            body_block = *basic_block;
-                            release_temps(body_result.temps);
-
-                            auto step_block = _blocks.make();
-                            assembler.blocks().emplace_back(step_block);
-                            step_block->predecessors().emplace_back(body_block);
-                            step_block->successors().emplace_back(predicate_block);
-                            body_block->successors().emplace_back(step_block);
-                            *basic_block = step_block;
-
-                            auto step_param = range->arguments()->param_by_name("step");
-                            auto induction_step = builder.make_binary_operator(
-                                for_e->parent_scope(),
-                                step_op_type,
-                                for_e->induction_decl()->identifier(),
-                                step_param);
-                            auto induction_assign = builder.make_binary_operator(
-                                for_e->parent_scope(),
-                                operator_type_t::assignment,
-                                for_e->induction_decl()->identifier(),
-                                induction_step);
-                            induction_step->make_non_owning();
-                            induction_assign->make_non_owning();
-                            defer({
-                                _session.elements().remove(induction_assign->id());
-                                _session.elements().remove(induction_step->id());
-                            });
-
-                            step_block->label(labels.make(step_label_name, step_block));
-                            emit_result_t step_result;
-                            if (!emit_element(basic_block, induction_assign, step_result))
-                                return false;
-                            step_block->jump_direct(vm::instruction_operand_t(begin_label_ref));
-                            release_temps(step_result.temps);
-
-                            auto exit_block = _blocks.make();
-                            assembler.blocks().emplace_back(exit_block);
-                            exit_block->predecessors().emplace_back(predicate_block);
-                            exit_block->label(labels.make(exit_label_name, exit_block));
-                            *basic_block = exit_block;
-
-                            predicate_block->add_successors({body_block, exit_block});
+                            default: {
+                                break;
+                            }
                         }
                         break;
                     }
@@ -1089,95 +1095,122 @@ namespace basecode::compiler {
             }
             case element_type_t::intrinsic: {
                 auto intrinsic = dynamic_cast<compiler::intrinsic*>(e);
-                const auto& name = intrinsic->name();
+                const auto& args = intrinsic->arguments()->elements();
+                switch (intrinsic->type()) {
+                    case intrinsic_type_t::free: {
+                        auto arg = args[0];
 
-                auto args = intrinsic->arguments()->elements();
-                if (name == "address_of") {
-                    auto arg = args[0];
+                        emit_result_t arg_result {};
+                        if (!emit_element(basic_block, arg, arg_result))
+                            return false;
 
-                    emit_result_t arg_result {};
-                    if (!emit_element(basic_block, arg, arg_result))
-                        return false;
+                        current_block->free(arg_result.operands.back());
 
-                    auto result_operand = target_operand(result);
-                    if (!_variables.address_of(current_block, arg_result, *result_operand))
-                        return false;
-                } else if (name == "alloc") {
-                    auto arg = args[0];
+                        release_temps(arg_result.temps);
+                        break;
+                    }
+                    case intrinsic_type_t::copy: {
+                        auto dest_arg = args[0];
+                        auto src_arg = args[1];
+                        auto size_arg = args[2];
 
-                    emit_result_t arg_result {};
-                    if (!emit_element(basic_block, arg, arg_result))
-                        return false;
+                        emit_result_t dest_arg_result {};
+                        if (!emit_element(basic_block, dest_arg, dest_arg_result))
+                            return false;
 
-                    auto result_operand = target_operand(result);
-                    current_block->alloc(
-                        vm::op_sizes::byte,
-                        *result_operand,
-                        arg_result.operands.back());
+                        emit_result_t src_arg_result {};
+                        if (!emit_element(basic_block, src_arg, src_arg_result))
+                            return false;
 
-                    release_temps(arg_result.temps);
-                } else if (name == "free") {
-                    auto arg = args[0];
+                        emit_result_t size_arg_result {};
+                        if (!emit_element(basic_block, size_arg, size_arg_result))
+                            return false;
 
-                    emit_result_t arg_result {};
-                    if (!emit_element(basic_block, arg, arg_result))
-                        return false;
+                        current_block->copy(
+                            vm::op_sizes::byte,
+                            dest_arg_result.operands.back(),
+                            src_arg_result.operands.back(),
+                            size_arg_result.operands.back());
 
-                    current_block->free(arg_result.operands.back());
+                        release_temps(dest_arg_result.temps);
+                        release_temps(src_arg_result.temps);
+                        release_temps(size_arg_result.temps);
+                        break;
+                    }
+                    case intrinsic_type_t::fill: {
+                        auto dest_arg = args[0];
+                        auto value_arg = args[1];
+                        auto length_arg = args[2];
 
-                    release_temps(arg_result.temps);
-                } else if (name == "fill") {
-                    auto dest_arg = args[0];
-                    auto value_arg = args[1];
-                    auto length_arg = args[2];
+                        emit_result_t dest_arg_result {};
+                        if (!emit_element(basic_block, dest_arg, dest_arg_result))
+                            return false;
 
-                    emit_result_t dest_arg_result {};
-                    if (!emit_element(basic_block, dest_arg, dest_arg_result))
-                        return false;
+                        emit_result_t value_arg_result {};
+                        if (!emit_element(basic_block, value_arg, value_arg_result))
+                            return false;
 
-                    emit_result_t value_arg_result {};
-                    if (!emit_element(basic_block, value_arg, value_arg_result))
-                        return false;
+                        emit_result_t length_arg_result {};
+                        if (!emit_element(basic_block, length_arg, length_arg_result))
+                            return false;
 
-                    emit_result_t length_arg_result {};
-                    if (!emit_element(basic_block, length_arg, length_arg_result))
-                        return false;
+                        current_block->fill(
+                            vm::op_sizes::byte,
+                            dest_arg_result.operands.back(),
+                            value_arg_result.operands.back(),
+                            length_arg_result.operands.back());
 
-                    current_block->fill(
-                        vm::op_sizes::byte,
-                        dest_arg_result.operands.back(),
-                        value_arg_result.operands.back(),
-                        length_arg_result.operands.back());
+                        release_temps(dest_arg_result.temps);
+                        release_temps(value_arg_result.temps);
+                        release_temps(length_arg_result.temps);
+                        break;
+                    }
+                    case intrinsic_type_t::alloc: {
+                        auto arg = args[0];
 
-                    release_temps(dest_arg_result.temps);
-                    release_temps(value_arg_result.temps);
-                    release_temps(length_arg_result.temps);
-                } else if (name == "copy") {
-                    auto dest_arg = args[0];
-                    auto src_arg = args[1];
-                    auto size_arg = args[2];
+                        emit_result_t arg_result {};
+                        if (!emit_element(basic_block, arg, arg_result))
+                            return false;
 
-                    emit_result_t dest_arg_result {};
-                    if (!emit_element(basic_block, dest_arg, dest_arg_result))
-                        return false;
+                        auto result_operand = target_operand(result);
+                        current_block->alloc(
+                            vm::op_sizes::byte,
+                            *result_operand,
+                            arg_result.operands.back());
 
-                    emit_result_t src_arg_result {};
-                    if (!emit_element(basic_block, src_arg, src_arg_result))
-                        return false;
+                        release_temps(arg_result.temps);
+                        break;
+                    }
+                    case intrinsic_type_t::range: {
+                        break;
+                    }
+                    case intrinsic_type_t::size_of: {
+                        break;
+                    }
+                    case intrinsic_type_t::type_of: {
+                        break;
+                    }
+                    case intrinsic_type_t::align_of: {
+                        break;
+                    }
+                    case intrinsic_type_t::length_of: {
+                        break;
+                    }
+                    case intrinsic_type_t::address_of: {
+                        auto arg = args[0];
 
-                    emit_result_t size_arg_result {};
-                    if (!emit_element(basic_block, size_arg, size_arg_result))
-                        return false;
+                        emit_result_t arg_result {};
+                        if (!emit_element(basic_block, arg, arg_result))
+                            return false;
 
-                    current_block->copy(
-                        vm::op_sizes::byte,
-                        dest_arg_result.operands.back(),
-                        src_arg_result.operands.back(),
-                        size_arg_result.operands.back());
-
-                    release_temps(dest_arg_result.temps);
-                    release_temps(src_arg_result.temps);
-                    release_temps(size_arg_result.temps);
+                        auto result_operand = target_operand(result);
+                        if (!_variables.address_of(current_block, arg_result, *result_operand))
+                            return false;
+                        break;
+                    }
+                    default: {
+                        break;
+                    }
                 }
                 break;
             }

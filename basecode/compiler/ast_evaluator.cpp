@@ -1732,14 +1732,12 @@ namespace basecode::compiler {
 
         auto type_params = builder.make_tagged_type_list_from_node(symbol_node);
 
-        // XXX: need to produce a correct type instead of passing nullptr here
         auto literal = builder.make_user_literal(
             scope_manager.current_scope(),
-            nullptr,
+            type_params[0],
             type_params,
             args);
         literal->location(context.node->location);
-        //literal->type_location(context.node->lhs->rhs->location);
         result.element = literal;
 
         return true;

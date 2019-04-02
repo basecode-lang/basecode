@@ -28,11 +28,11 @@ namespace basecode::compiler {
         compiler::procedure_type*,
         const compiler::type_reference_list_t& type_params)>;
 
-    std::unordered_map<std::string, compiler::procedure_type*> s_proc_types {};
+    std::unordered_map<intrinsic_type_t, compiler::procedure_type*> s_proc_types {};
 
-    std::unordered_map<std::string, intrinsic_builder_callable> s_intrinsics = {
+    std::unordered_map<intrinsic_type_t, intrinsic_builder_callable> s_intrinsics = {
         {
-            "size_of",
+            intrinsic_type_t::size_of,
             [](compiler::element_builder& builder,
                     auto parent_scope,
                     auto args,
@@ -45,7 +45,7 @@ namespace basecode::compiler {
             }
         },
         {
-            "free",
+            intrinsic_type_t::free,
             [](compiler::element_builder& builder,
                     auto parent_scope,
                     auto args,
@@ -58,7 +58,7 @@ namespace basecode::compiler {
             }
         },
         {
-            "alloc",
+            intrinsic_type_t::alloc,
             [](compiler::element_builder& builder,
                     auto parent_scope,
                     auto args,
@@ -71,7 +71,7 @@ namespace basecode::compiler {
             }
         },
         {
-            "align_of",
+            intrinsic_type_t::align_of,
             [](compiler::element_builder& builder,
                     auto parent_scope,
                     auto args,
@@ -84,7 +84,7 @@ namespace basecode::compiler {
             }
         },
         {
-            "address_of",
+            intrinsic_type_t::address_of,
             [](compiler::element_builder& builder,
                     auto parent_scope,
                     auto args,
@@ -97,7 +97,7 @@ namespace basecode::compiler {
             }
         },
         {
-            "type_of",
+            intrinsic_type_t::type_of,
             [](compiler::element_builder& builder,
                     auto parent_scope,
                     auto args,
@@ -110,7 +110,7 @@ namespace basecode::compiler {
             }
         },
         {
-            "copy",
+            intrinsic_type_t::copy,
             [](compiler::element_builder& builder,
                     auto parent_scope,
                     auto args,
@@ -123,7 +123,7 @@ namespace basecode::compiler {
             }
         },
         {
-            "fill",
+            intrinsic_type_t::fill,
             [](compiler::element_builder& builder,
                     auto parent_scope,
                     auto args,
@@ -136,7 +136,7 @@ namespace basecode::compiler {
             }
         },
         {
-            "range",
+            intrinsic_type_t::range,
             [](compiler::element_builder& builder,
                    auto parent_scope,
                    auto args,
@@ -150,7 +150,7 @@ namespace basecode::compiler {
             }
         },
         {
-            "length_of",
+            intrinsic_type_t::length_of,
             [](compiler::element_builder& builder,
                    auto parent_scope,
                    auto args,
@@ -167,7 +167,10 @@ namespace basecode::compiler {
     bool intrinsic::register_intrinsic_procedure_type(
             const std::string& name,
             compiler::procedure_type* procedure_type) {
-        s_proc_types[name] = procedure_type;
+        auto type = intrinsic_type_from_name(name);
+        if (type == intrinsic_type_t::unknown)
+            return false;
+        s_proc_types[type] = procedure_type;
         return true;
     }
 
@@ -177,12 +180,16 @@ namespace basecode::compiler {
             compiler::argument_list* args,
             const qualified_symbol_t& symbol,
             const compiler::type_reference_list_t& type_params) {
-        auto it = s_intrinsics.find(symbol.name);
-        if (it == s_intrinsics.end())
+        auto type = intrinsic_type_from_name(symbol.name);
+        if (type == intrinsic_type_t::unknown)
             return nullptr;
 
-        auto proc_type_it = s_proc_types.find(symbol.name);
-        if (proc_type_it == s_proc_types.end()) {
+        auto it = s_intrinsics.find(type);
+        if (it == std::end(s_intrinsics))
+            return nullptr;
+
+        auto proc_type_it = s_proc_types.find(type);
+        if (proc_type_it == std::end(s_proc_types)) {
             // XXX: error
             return nullptr;
         }
@@ -212,8 +219,8 @@ namespace basecode::compiler {
         return false;
     }
 
-    std::string intrinsic::name() const {
-        return "intrinsic";
+    intrinsic_type_t intrinsic::type() const {
+        return intrinsic_type_t::unknown;
     }
 
     bool intrinsic::uniform_function_call() const {

@@ -29,8 +29,8 @@ namespace basecode::compiler {
                                                                             type_params) {
     }
 
-    std::string free_intrinsic::name() const {
-        return "free";
+    intrinsic_type_t free_intrinsic::type() const {
+        return intrinsic_type_t::free;
     }
 
 }

@@ -37,9 +37,9 @@ namespace basecode::compiler {
 
         virtual bool can_fold() const;
 
-        virtual std::string name() const;
-
         bool uniform_function_call() const;
+
+        virtual intrinsic_type_t type() const;
 
         void uniform_function_call(bool value);
 
