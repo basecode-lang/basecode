@@ -10,8 +10,8 @@ d: [ARRAY_SIZE]bool;
 g := array<u32>(1, 2, 3, 4, 5, 6, 7, 8);
 
 test :: proc() {
-//    core::print("length_of(b) := %d\n", length_of(b));
-//    core::print("length_of(g) := %d\n", length_of(g));
+    core::print("length_of(b) := %d\n", length_of(b));
+    core::print("length_of(g) := %d\n", length_of(g));
 
     for i in range<u32>(0, 7) {
         b[i] := cast<u16>(i * 2);

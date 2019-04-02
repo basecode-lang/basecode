@@ -105,6 +105,14 @@ namespace basecode::compiler {
         return -1;
     }
 
+    bool array_type::are_subscripts_constant() const {
+        for (auto e : _subscripts) {
+            if (!e->is_constant())
+                return false;
+        }
+        return true;
+    }
+
     const element_list_t& array_type::subscripts() const {
         return _subscripts;
     }

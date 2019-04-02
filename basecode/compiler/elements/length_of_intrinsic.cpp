@@ -13,10 +13,12 @@
 #include <compiler/scope_manager.h>
 #include <compiler/element_builder.h>
 #include "type.h"
+#include "block.h"
 #include "identifier.h"
 #include "array_type.h"
 #include "initializer.h"
 #include "pointer_type.h"
+#include "type_literal.h"
 #include "argument_list.h"
 #include "type_reference.h"
 #include "string_literal.h"
@@ -50,64 +52,7 @@ namespace basecode::compiler {
                 location());
             return false;
         }
-
-        auto arg = args[0];
-        switch (arg->element_type()) {
-            case element_type_t::identifier: {
-                auto identifier = dynamic_cast<compiler::identifier*>(arg);
-                return length_of_identifier(session, identifier, result);
-            }
-            case element_type_t::string_literal: {
-                auto string_literal = dynamic_cast<compiler::string_literal*>(arg);
-                result.element = session.builder().make_integer(
-                    parent_scope(),
-                    string_literal->value().size());
-                return true;
-            }
-            case element_type_t::identifier_reference: {
-                auto ref = dynamic_cast<compiler::identifier_reference*>(arg);
-                return length_of_identifier(session, ref->identifier(), result);
-            }
-            default: {
-                infer_type_result_t type_result {};
-                if (arg->infer_type(session, type_result)) {
-                    switch (type_result.inferred_type->element_type()) {
-                        case element_type_t::array_type: {
-                            // XXX: revisit after fixing array_type
-                            //auto array_type = dynamic_cast<compiler::array_type*>(type_result.inferred_type);
-                            result.element = session.builder().make_integer(
-                                parent_scope(),
-                                0);
-                            return true;
-                        }
-                        case element_type_t::pointer_type: {
-                            auto pointer_type = dynamic_cast<compiler::pointer_type*>(type_result.inferred_type);
-                            if (pointer_type->base_type_ref()->type()->element_type() == element_type_t::numeric_type) {
-                                // XXX: this isn't going to work, is it?
-                            }
-                            break;
-                        }
-                        default: {
-                            session.error(
-                                module(),
-                                "X000",
-                                "length_of supports string literals and fixed arrays.",
-                                location());
-                            break;
-                        }
-                    }
-                } else {
-                    session.error(
-                        module(),
-                        "X000",
-                        "length_of cannot infer argument type.",
-                        location());
-                }
-                break;
-            }
-        }
-
-        return false;
+        return length_for_element(session, args[0], result);
     }
 
     bool length_of_intrinsic::on_infer_type(
@@ -120,6 +65,21 @@ namespace basecode::compiler {
     }
 
     bool length_of_intrinsic::can_fold() const {
+        const auto& args = arguments()->elements();
+        if (args.empty() || args.size() > 1)
+            return false;
+
+        const auto arg = args[0];
+        if (arg->element_type() == element_type_t::identifier_reference) {
+            auto ref = dynamic_cast<compiler::identifier_reference*>(arg);
+            auto type = ref->identifier()->type_ref()->type();
+            if (type->is_array_type()) {
+                auto array_type = dynamic_cast<compiler::array_type*>(type);
+                if (!array_type->are_subscripts_constant())
+                    return false;
+            }
+        }
+
         return true;
     }
 
@@ -127,26 +87,53 @@ namespace basecode::compiler {
         return "length_of";
     }
 
-    bool length_of_intrinsic::length_of_identifier(
+    bool length_of_intrinsic::length_for_element(
             compiler::session& session,
-            compiler::identifier* identifier,
+            compiler::element* e,
             fold_result_t& result) {
-        if (identifier == nullptr)
-            return false;
+        switch (e->element_type()) {
+            case element_type_t::identifier: {
+                auto identifier = dynamic_cast<compiler::identifier*>(e);
+                auto init = identifier->initializer();
+                if (init != nullptr) {
+                    auto expr = init->expression();
+                    if (expr != nullptr)
+                        return length_for_element(session, expr, result);
+                }
 
-        auto init = identifier->initializer();
-        if (init != nullptr) {
-            auto expr = init->expression();
-            auto string_literal = dynamic_cast<compiler::string_literal*>(expr);
-            if (string_literal != nullptr) {
+                auto type = identifier->type_ref()->type();
+                if (type->is_array_type()) {
+                    auto array_type = dynamic_cast<compiler::array_type*>(type);
+                    result.element = session.builder().make_integer(
+                        parent_scope(),
+                        array_type->number_of_elements());
+                }
+
+                break;
+            }
+            case element_type_t::type_literal: {
+                auto literal = dynamic_cast<compiler::type_literal*>(e);
                 result.element = session.builder().make_integer(
                     parent_scope(),
-                    string_literal->value().size());
-                return true;
+                    literal->args()->size());
+                break;
+            }
+            case element_type_t::string_literal: {
+                auto literal = dynamic_cast<compiler::string_literal*>(e);
+                result.element = session.builder().make_integer(
+                    parent_scope(),
+                    literal->value().size());
+                break;
+            }
+            case element_type_t::identifier_reference: {
+                auto ref = dynamic_cast<compiler::identifier_reference*>(e);
+                return length_for_element(session, ref->identifier(), result);
+            }
+            default: {
+                break;
             }
         }
-
-        return false;
+        return true;
     }
 
     bool length_of_intrinsic::on_is_constant() const {

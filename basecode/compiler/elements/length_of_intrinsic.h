@@ -40,9 +40,9 @@ namespace basecode::compiler {
         bool on_is_constant() const override;
 
     private:
-        bool length_of_identifier(
+        bool length_for_element(
             compiler::session& session,
-            compiler::identifier* identifier,
+            compiler::element* e,
             fold_result_t& result);
     };
 

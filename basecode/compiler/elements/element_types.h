@@ -143,6 +143,22 @@ namespace basecode::compiler {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    enum class intrinsic_type_t : uint8_t {
+        unknown,
+        free,
+        copy,
+        fill,
+        alloc,
+        range,
+        size_of,
+        type_of,
+        align_of,
+        length_of,
+        address_of,
+    };
+
+    ///////////////////////////////////////////////////////////////////////////
+
     enum class visitor_data_type_t {
         none,
         type,

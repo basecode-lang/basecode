@@ -41,6 +41,8 @@ namespace basecode::compiler {
 
         bool is_array_type() const override;
 
+        bool are_subscripts_constant() const;
+
         const element_list_t& subscripts() const;
 
         compiler::type_reference* base_type_ref();
