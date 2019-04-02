@@ -267,7 +267,27 @@ namespace basecode::syntax {
                 token.location);
             return nullptr;
         }
+
         pairs_to_list(assignment_node->rhs, rhs);
+
+        // N.B. this supports the following syntax example:
+        //
+        // vector3 :: struct {
+        //    x, y, z: f32 := 1.0;
+        // };
+        //
+        // iff the lhs has more than 1 node and the rhs only has one node, is this
+        // scenario supported.
+        //
+        if (assignment_node->rhs->children.size() == 1
+        &&  assignment_node->lhs->children.size() > 1) {
+            const auto rhs_node = assignment_node->rhs->children[0];
+            for (size_t i = 0; i < assignment_node->lhs->children.size() - 1; i++) {
+                assignment_node
+                    ->rhs
+                    ->children.emplace_back(parser->ast_builder()->clone(rhs_node));
+            }
+        }
 
         collect_comments(r, parser, assignment_node->comments);
 

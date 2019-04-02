@@ -2804,7 +2804,8 @@ namespace basecode::compiler {
             vm::basic_block* basic_block,
             compiler::composite_type* composite_type) {
         size_t offset = 0;
-        for (auto fld : composite_type->fields().as_list()) {
+        const auto& fields = composite_type->fields().as_list();
+        for (auto fld : fields) {
             auto field_var = fld->identifier();
 
             if (offset < fld->start_offset()) {

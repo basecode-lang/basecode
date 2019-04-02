@@ -427,7 +427,8 @@ namespace basecode::compiler {
             if (type->type_parameters().size() == 1) {
                 auto names = type->type_parameters().name_list();
                 value_type_name = names[0];
-                value_type = dynamic_cast<compiler::numeric_type*>(type->type_parameters().find(value_type_name));
+                value_type = dynamic_cast<compiler::numeric_type*>(
+                    type->type_parameters().find(value_type_name));
             } else {
                 value_type = dynamic_cast<compiler::numeric_type*>(scope_manager
                     .find_type(qualified_symbol_t(value_type_name)));
@@ -500,13 +501,6 @@ namespace basecode::compiler {
                             0,
                             type->scope());
                         if (field_decl != nullptr) {
-                            if (is_enum) {
-                                auto value_expr = builder.make_integer(type->scope(), value++);
-                                field_decl->identifier()->initializer(builder.make_initializer(
-                                    type->scope(),
-                                    value_expr));
-                                field_decl->identifier()->symbol()->constant(true);
-                            }
                             auto new_field = builder.make_field(
                                 type,
                                 type->scope(),
@@ -528,15 +522,19 @@ namespace basecode::compiler {
                         expr_node,
                         list,
                         type->scope());
-                    if (success) {
-                        auto decl = dynamic_cast<compiler::declaration*>(list.front());
-                        auto new_field = builder.make_field(
+                    if (!success) {
+                        // XXX: error
+                        return false;
+                    }
+                    for (auto d : list) {
+                        auto decl = dynamic_cast<compiler::declaration*>(d);
+                        auto newField = builder.make_field(
                             type,
                             type->scope(),
                             decl,
                             offset);
-                        type->fields().add(new_field);
-                        decl->identifier()->field(new_field);
+                        type->fields().add(newField);
+                        decl->identifier()->field(newField);
                         if (is_enum) {
                             uint64_t init_value;
                             if (!decl->identifier()->as_integer(init_value)) {
@@ -560,7 +558,7 @@ namespace basecode::compiler {
                             value = ++init_value;
                             decl->identifier()->symbol()->constant(true);
                         }
-                        previous_field = new_field;
+                        previous_field = newField;
                     }
                     break;
                 }
@@ -2774,9 +2772,12 @@ namespace basecode::compiler {
         }
 
         auto get_type_ref = [&](const syntax::ast_node_t* node) {
-            if (node == nullptr
-            ||  node->type != syntax::ast_node_type_t::type_declaration)
+            if (result.type_ref != nullptr)
                 return;
+            if (node == nullptr
+            ||  node->type != syntax::ast_node_type_t::type_declaration) {
+                return;
+            }
             result.type_ref = dynamic_cast<compiler::type_reference*>(evaluate(node));
         };
 

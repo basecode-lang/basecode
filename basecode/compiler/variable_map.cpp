@@ -308,15 +308,62 @@ namespace basecode::compiler {
         auto& assembler = _session.assembler();
         auto& rhs_operand = rhs.operands.back();
 
+        basic_block->comment(
+            fmt::format("assign: {}({})", variable_type_name(var->type), var->label),
+            vm::comment_location_t::after_instruction);
+
         if (array_subscript) {
             rhs_operand.size(vm::op_size_for_byte_size(lhs.type_result.inferred_type->size_in_bytes()));
             basic_block->store(
                 vm::instruction_operand_t(lhs_named_ref->ref),
                 rhs_operand);
         } else if (requires_copy) {
-            basic_block->comment(
-                fmt::format("copy: {}({})", variable_type_name(var->type), var->label),
-                vm::comment_location_t::after_instruction);
+            auto rhs_named_ref = rhs.operands.back().data<vm::named_ref_with_offset_t>();
+            auto rhs_var = find(rhs_named_ref->ref->name);
+            if (rhs_var == nullptr)
+                return false;
+
+            // XXX: need to determine how to address rhs_var here.  it won't always
+            //      be a module variable.
+
+            auto rhs_label_name = rhs_var->field_offset.label_name();
+            if (rhs_label_name.empty())
+                rhs_label_name = rhs_var->label;
+
+            auto lhs_label_name = var->field_offset.label_name();
+            if (lhs_label_name.empty())
+                lhs_label_name = var->label;
+
+            switch (var->type) {
+                case variable_type_t::local:
+                case variable_type_t::parameter: {
+                    break;
+                }
+                case variable_type_t::module: {
+                    auto source_ref = assembler.make_named_ref(
+                        vm::assembler_named_ref_type_t::label,
+                        rhs_label_name);
+
+                    auto dest_ref = assembler.make_named_ref(
+                        vm::assembler_named_ref_type_t::label,
+                        lhs_label_name);
+
+                    basic_block->copy(
+                        vm::op_sizes::byte,
+                        vm::instruction_operand_t(dest_ref),
+                        vm::instruction_operand_t(source_ref),
+                        vm::instruction_operand_t(
+                            static_cast<uint64_t>(lhs.type_result.inferred_type->size_in_bytes()),
+                            vm::op_sizes::word));
+
+                    clear_filled(var);
+
+                    break;
+                }
+                default: {
+                    break;
+                }
+            }
         } else {
             // N.B. if the rhs_result has a named_ref operand that
             //      matches the lhs_result's named_ref operand, then
@@ -329,9 +376,6 @@ namespace basecode::compiler {
             }
 
             rhs_operand.size(lhs_named_ref->ref->size);
-            basic_block->comment(
-                fmt::format("assign: {}({})", variable_type_name(var->type), var->label),
-                vm::comment_location_t::after_instruction);
             basic_block->move(vm::instruction_operand_t(lhs_named_ref->ref), rhs_operand);
 
             switch (var->type) {
@@ -551,6 +595,19 @@ namespace basecode::compiler {
 
         if (!operands.empty())
             basic_block->popm(operands);
+    }
+
+    void variable_map::clear_filled(const variable_t* var) {
+        const auto& vars = variables();
+        const auto identifier = var->identifier;
+        for (auto v : vars) {
+            if (v->identifier == identifier) {
+                v->flag(variable_t::flags_t::filled, false);
+            } else if (v->field_offset.base_ref != nullptr
+                   &&  v->field_offset.base_ref->identifier() == identifier) {
+                v->flag(variable_t::flags_t::filled, false);
+            }
+        }
     }
 
     variable_t* variable_map::find(const std::string& name) {

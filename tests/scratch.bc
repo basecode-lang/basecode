@@ -1,24 +1,29 @@
 core :: module("core");
 
 vector3 :: struct {
-    x, y, z: f32;
+    x, y, z: f32 := 1.0;
 };
 
 #run {
-    a, b := 6, 7;
-    b, a := a, b;
+    core::print("before\n\n");
 
-    core::print("a, b := %d, %d\n", a, b);
+    one: vector3;
+    core::print("one.x := %f\n", one.x);
+    core::print("one.y := %f\n", one.y);
+    core::print("one.z := %f\n", one.z);
 
-    pos1: vector3;
-    with pos1 {
-        .x := 1.0;
-        .y := 1.0;
-        .z := 1.0;
-    };
-    //pos2 := pos1;
+    two: vector3;
+    core::print("\ntwo.x := %f\n", two.x);
+    core::print("two.y := %f\n", two.y);
+    core::print("two.z := %f\n", two.z);
 
-    core::print("pos1.x := %f\n", pos1.x);
-    core::print("pos1.y := %f\n", pos1.y);
-    core::print("pos1.z := %f\n", pos1.z);
+    one.x := -3.0;
+    one.y := -3.0;
+    one.z := -16.5;
+
+    core::print("after\n\n");
+    two := one;
+    core::print("two.x := %f\n", two.x);
+    core::print("two.y := %f\n", two.y);
+    core::print("two.z := %f\n", two.z);
 };

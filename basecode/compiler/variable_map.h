@@ -153,6 +153,8 @@ namespace basecode::compiler {
             vm::instruction_operand_list_t& operands,
             bool reverse);
 
+        void clear_filled(const variable_t* var);
+
         bool group_module_variables_into_sections();
 
         bool find_local_variables(compiler::block* block);
