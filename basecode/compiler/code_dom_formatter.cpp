@@ -318,7 +318,7 @@ namespace basecode::compiler {
                 return fmt::format(
                     "{}[shape=record,label=\"directive|{}\"{}];",
                     node_vertex_name,
-                    directive_element->name(),
+                    directive_type_to_name(directive_element->type()),
                     style);
             }
             case element_type_t::attribute: {

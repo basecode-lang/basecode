@@ -198,6 +198,64 @@ namespace basecode::compiler {
             return intrinsic_type_t::unknown;
         return it->second;
     }
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    enum class directive_type_t : uint32_t {
+        unknown,
+        run,
+        if_e,
+        eval,
+        type,
+        assert,
+        foreign,
+        assembly,
+        core_type,
+        intrinsic_e,
+    };
+
+    static inline std::unordered_map<directive_type_t, std::string> s_directive_type_names = {
+        {directive_type_t::unknown,     "unknown"},
+        {directive_type_t::run,         "run"},
+        {directive_type_t::if_e,        "if"},
+        {directive_type_t::eval,        "eval"},
+        {directive_type_t::type,        "type"},
+        {directive_type_t::assert,      "assert"},
+        {directive_type_t::foreign,     "foreign"},
+        {directive_type_t::assembly,    "assembly"},
+        {directive_type_t::core_type,   "core_type"},
+        {directive_type_t::intrinsic_e, "intrinsic"},
+    };
+
+    static inline std::unordered_map<std::string, directive_type_t> s_directive_named_types = {
+        {"unknown",     directive_type_t::unknown},
+        {"run",         directive_type_t::run},
+        {"if",          directive_type_t::if_e},
+        {"elif",        directive_type_t::if_e},
+        {"else",        directive_type_t::if_e},
+        {"eval",        directive_type_t::eval},
+        {"type",        directive_type_t::type},
+        {"assert",      directive_type_t::assert},
+        {"foreign",     directive_type_t::foreign},
+        {"assembly",    directive_type_t::assembly},
+        {"core_type",   directive_type_t::core_type},
+        {"intrinsic",   directive_type_t::intrinsic_e},
+    };
+
+    static inline std::string directive_type_to_name(directive_type_t type) {
+        auto it = s_directive_type_names.find(type);
+        if (it == std::end(s_directive_type_names))
+            return "unknown";
+        return it->second;
+    }
+
+    static inline directive_type_t directive_type_from_name(const std::string& name) {
+        auto it = s_directive_named_types.find(name);
+        if (it == std::end(s_directive_named_types))
+            return directive_type_t::unknown;
+        return it->second;
+    }
+
     ///////////////////////////////////////////////////////////////////////////
 
     enum class visitor_data_type_t {

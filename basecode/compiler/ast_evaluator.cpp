@@ -705,7 +705,8 @@ namespace basecode::compiler {
             }
 
             auto is_type = init_expr != nullptr && init_expr->is_type();
-            auto is_type_directive = init_expr != nullptr && init_expr->is_directive_named("type");
+            auto is_type_directive = init_expr != nullptr
+                && init_expr->is_directive_of_type(directive_type_t::type);
             if (is_type || is_type_directive) {
                 _session.error(
                     _session.scope_manager().current_module(),

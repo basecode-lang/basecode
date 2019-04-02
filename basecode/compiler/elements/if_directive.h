@@ -26,6 +26,8 @@ namespace basecode::compiler {
 
         compiler::element* true_body() const;
 
+        directive_type_t type() const override;
+
     protected:
         bool on_apply_fold_result(
             compiler::element* e,

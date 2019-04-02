@@ -1216,53 +1216,80 @@ namespace basecode::compiler {
             }
             case element_type_t::directive: {
                 auto directive = dynamic_cast<compiler::directive*>(e);
-                const std::string& name = directive->name();
-                if (name == "assembly") {
-                    auto assembly_directive = dynamic_cast<compiler::assembly_directive*>(directive);
-                    auto expr = assembly_directive->expression();
-                    auto raw_block = dynamic_cast<compiler::raw_block*>(expr);
-
-                    common::source_file source_file;
-                    if (!source_file.load(_session.result(), raw_block->value() + "\n"))
-                        return false;
-
-                    auto success = assembler.assemble_from_source(
-                        _session.result(),
-                        _session.labels(),
-                        source_file,
-                        current_block,
-                        expr->parent_scope());
-                    if (!success)
-                        return false;
-                } else if (name == "if") {
-                    auto if_directive = dynamic_cast<compiler::if_directive*>(directive);
-                    auto true_expr = if_directive->true_body();
-                    if (true_expr != nullptr) {
+                switch (directive->type()) {
+                    case directive_type_t::run: {
+                        auto run_directive = dynamic_cast<compiler::run_directive*>(directive);
                         current_block->comment(
-                            "directive: if/elif/else",
+                            "directive: run begin",
                             vm::comment_location_t::after_instruction);
-                        emit_result_t if_result {};
-                        if (!emit_element(basic_block, true_expr, if_result))
+                        current_block->meta_begin();
+
+                        emit_result_t run_result {};
+                        if (!emit_element(basic_block, run_directive->expression(), run_result))
                             return false;
-                        release_temps(if_result.temps);
+                        release_temps(run_result.temps);
+
+                        current_block = *basic_block;
+                        current_block->comment(
+                            "directive: run end",
+                            vm::comment_location_t::after_instruction);
+                        current_block->meta_end();
+                        break;
                     }
-                } else if (name == "run") {
-                    auto run_directive = dynamic_cast<compiler::run_directive*>(directive);
-                    current_block->comment(
-                        "directive: run begin",
-                        vm::comment_location_t::after_instruction);
-                    current_block->meta_begin();
+                    case directive_type_t::if_e: {
+                        auto if_directive = dynamic_cast<compiler::if_directive*>(directive);
+                        auto true_expr = if_directive->true_body();
+                        if (true_expr != nullptr) {
+                            current_block->comment(
+                                "directive: if/elif/else",
+                                vm::comment_location_t::after_instruction);
+                            emit_result_t if_result {};
+                            if (!emit_element(basic_block, true_expr, if_result))
+                                return false;
+                            release_temps(if_result.temps);
+                        }
+                        break;
+                    }
+                    case directive_type_t::eval: {
+                        break;
+                    }
+                    case directive_type_t::type: {
+                        break;
+                    }
+                    case directive_type_t::assert: {
+                        break;
+                    }
+                    case directive_type_t::foreign: {
+                        break;
+                    }
+                    case directive_type_t::assembly: {
+                        auto assembly_directive = dynamic_cast<compiler::assembly_directive*>(directive);
+                        auto expr = assembly_directive->expression();
+                        auto raw_block = dynamic_cast<compiler::raw_block*>(expr);
 
-                    emit_result_t run_result {};
-                    if (!emit_element(basic_block, run_directive->expression(), run_result))
-                        return false;
-                    release_temps(run_result.temps);
+                        common::source_file source_file;
+                        if (!source_file.load(_session.result(), raw_block->value() + "\n"))
+                            return false;
 
-                    current_block = *basic_block;
-                    current_block->comment(
-                        "directive: run end",
-                        vm::comment_location_t::after_instruction);
-                    current_block->meta_end();
+                        auto success = assembler.assemble_from_source(
+                            _session.result(),
+                            _session.labels(),
+                            source_file,
+                            current_block,
+                            expr->parent_scope());
+                        if (!success)
+                            return false;
+                        break;
+                    }
+                    case directive_type_t::core_type: {
+                        break;
+                    }
+                    case directive_type_t::intrinsic_e: {
+                        break;
+                    }
+                    default: {
+                        break;
+                    }
                 }
                 break;
             }

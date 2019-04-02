@@ -19,7 +19,7 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             compiler::element* lhs,
             compiler::element* rhs,
-            compiler::element* body) : directive(module, parent_scope, "if"),
+            compiler::element* body) : directive(module, parent_scope),
                                        _lhs(lhs),
                                        _rhs(rhs),
                                        _body(body) {
@@ -30,6 +30,10 @@ namespace basecode::compiler {
             const fold_result_t& fold_result) {
         _lhs = fold_result.element;
         return true;
+    }
+
+    directive_type_t if_directive::type() const {
+        return directive_type_t::if_e;
     }
 
     compiler::element* if_directive::true_body() const {

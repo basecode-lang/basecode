@@ -22,6 +22,8 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             compiler::element* expression);
 
+        directive_type_t type() const override;
+
     protected:
         void on_owned_elements(element_list_t& list) override;
 

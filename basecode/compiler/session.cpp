@@ -481,7 +481,9 @@ namespace basecode::compiler {
                 error(
                     directive_element->module(),
                     "P044",
-                    fmt::format("directive failed to execute: {}", directive_element->name()),
+                    fmt::format(
+                        "directive failed to execute: {}",
+                        directive_type_to_name(directive_element->type())),
                     directive_element->location());
                 return false;
             }

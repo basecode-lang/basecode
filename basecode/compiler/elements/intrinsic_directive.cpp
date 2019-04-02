@@ -24,8 +24,12 @@ namespace basecode::compiler {
     intrinsic_directive::intrinsic_directive(
             compiler::module* module,
             compiler::block* parent_scope,
-            compiler::element* expression) : directive(module, parent_scope, "intrinsic"),
+            compiler::element* expression) : directive(module, parent_scope),
                                              _expression(expression) {
+    }
+
+    directive_type_t intrinsic_directive::type() const {
+        return directive_type_t::intrinsic_e;
     }
 
     bool intrinsic_directive::on_evaluate(compiler::session& session) {

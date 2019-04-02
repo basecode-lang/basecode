@@ -30,7 +30,7 @@ namespace basecode::compiler {
     foreign_directive::foreign_directive(
             compiler::module* module,
             compiler::block* parent_scope,
-            compiler::element* expression) : directive(module, parent_scope, "foreign"),
+            compiler::element* expression) : directive(module, parent_scope),
                                              _expression(expression) {
     }
 
@@ -157,6 +157,10 @@ namespace basecode::compiler {
             library_name,
             proc_decl->identifier(),
             proc_type);
+    }
+
+    directive_type_t foreign_directive::type() const {
+        return directive_type_t::foreign;
     }
 
     void foreign_directive::on_owned_elements(element_list_t& list) {

@@ -17,7 +17,7 @@ namespace basecode::compiler {
     type_directive::type_directive(
             compiler::module* module,
             compiler::block* parent_scope,
-            compiler::element* expression) : directive(module, parent_scope, "type"),
+            compiler::element* expression) : directive(module, parent_scope),
                                              _expression(expression) {
     }
 
@@ -32,6 +32,10 @@ namespace basecode::compiler {
     bool type_directive::on_is_constant() const {
         return _expression != nullptr
             && _expression->element_type() == element_type_t::type_reference;
+    }
+
+    directive_type_t type_directive::type() const {
+        return directive_type_t::type;
     }
 
     void type_directive::on_owned_elements(element_list_t& list) {

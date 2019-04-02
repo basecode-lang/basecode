@@ -24,8 +24,12 @@ namespace basecode::compiler {
     core_type_directive::core_type_directive(
             compiler::module* module,
             compiler::block* parent_scope,
-            compiler::element* expression) : directive(module, parent_scope, "core_type"),
+            compiler::element* expression) : directive(module, parent_scope),
                                              _expression(expression) {
+    }
+
+    directive_type_t core_type_directive::type() const {
+        return directive_type_t::core_type;
     }
 
     bool core_type_directive::on_evaluate(compiler::session& session) {

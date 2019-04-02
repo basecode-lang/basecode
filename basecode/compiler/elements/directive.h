@@ -25,10 +25,9 @@ namespace basecode::compiler {
 
         directive(
             compiler::module* module,
-            compiler::block* parent_scope,
-            const std::string& name);
+            compiler::block* parent_scope);
 
-        std::string name() const;
+        virtual directive_type_t type() const;
 
         bool execute(compiler::session& session);
 
@@ -38,9 +37,6 @@ namespace basecode::compiler {
         virtual bool on_execute(compiler::session& session);
 
         virtual bool on_evaluate(compiler::session& session);
-
-    private:
-        std::string _name;
     };
 
 }

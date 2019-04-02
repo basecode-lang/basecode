@@ -7,6 +7,8 @@ core :: module("core");
     type_of_i: ^type := nil;
     type_of_i := type_of(i);
 
+    core::print("type_of_i.name := %s\n", type_of_i.name);
+
     //a := "something";
     //a := 1;
     //

@@ -275,9 +275,9 @@ namespace basecode::compiler {
         return on_as_identifier(value);
     }
 
-    bool element::is_directive_named(const std::string& name) const {
+    bool element::is_directive_of_type(directive_type_t type) const {
         return _element_type == element_type_t::directive
-               && dynamic_cast<const compiler::directive*>(this)->name() == name;
+               && dynamic_cast<const compiler::directive*>(this)->type() == type;
     }
 
     bool element::on_greater_than_or_equal(const element& other) const {

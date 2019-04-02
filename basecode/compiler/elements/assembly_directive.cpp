@@ -22,8 +22,12 @@ namespace basecode::compiler {
     assembly_directive::assembly_directive(
             compiler::module* module,
             compiler::block* parent_scope,
-            compiler::element* expression) : directive(module, parent_scope, "assembly"),
+            compiler::element* expression) : directive(module, parent_scope),
                                              _expression(expression) {
+    }
+
+    directive_type_t assembly_directive::type() const {
+        return directive_type_t::assembly;
     }
 
     compiler::element* assembly_directive::expression() const {

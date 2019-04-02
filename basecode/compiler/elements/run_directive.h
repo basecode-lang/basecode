@@ -24,6 +24,8 @@ namespace basecode::compiler {
 
         compiler::element* expression() const;
 
+        directive_type_t type() const override;
+
     protected:
         bool on_execute(compiler::session& session) override;
 

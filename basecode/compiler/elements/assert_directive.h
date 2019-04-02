@@ -22,6 +22,8 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             compiler::element* expression);
 
+        directive_type_t type() const override;
+
     protected:
         bool on_apply_fold_result(
             compiler::element* e,

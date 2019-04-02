@@ -128,7 +128,7 @@ namespace basecode::compiler {
 
         attribute* find_attribute(const std::string& name);
 
-        bool is_directive_named(const std::string& name) const;
+        bool is_directive_of_type(directive_type_t type) const;
 
         void location(const common::source_location& location);
 

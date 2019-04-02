@@ -17,7 +17,7 @@ namespace basecode::compiler {
     assert_directive::assert_directive(
             compiler::module* module,
             compiler::block* parent_scope,
-            compiler::element* expression) : directive(module, parent_scope, "assert"),
+            compiler::element* expression) : directive(module, parent_scope),
                                              _expression(expression) {
     }
 
@@ -26,6 +26,10 @@ namespace basecode::compiler {
             const fold_result_t& fold_result) {
         _expression = fold_result.element;
         return true;
+    }
+
+    directive_type_t assert_directive::type() const {
+        return directive_type_t::assert;
     }
 
     bool assert_directive::on_evaluate(compiler::session& session) {

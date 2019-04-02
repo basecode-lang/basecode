@@ -29,60 +29,78 @@ namespace basecode::compiler {
         if (params.empty())
             return nullptr;
 
-        if (name == "if"
-        ||  name == "elif"
-        ||  name == "else") {
-            compiler::element* lhs = nullptr;
-            if (!params.empty())
-                lhs = params[0];
-            compiler::element* rhs = nullptr;
-            if (params.size() > 1)
-                rhs = params[1];
-            compiler::element* body = nullptr;
-            if (params.size() > 2)
-                body = params[2];
-            auto instance = new if_directive(
-                module,
-                parent_scope,
-                lhs,
-                rhs,
-                body);
-            if (lhs != nullptr)
-                lhs->parent_element(instance);
-            if (rhs != nullptr)
-                rhs->parent_element(instance);
-            if (body != nullptr)
-                body->parent_element(instance);
-            return instance;
-        } else if (name == "run") {
-            auto instance = new run_directive(module, parent_scope, params[0]);
-            params[0]->parent_element(instance);
-            return instance;
-        } else if (name == "type") {
-            auto instance = new type_directive(module, parent_scope, params[0]);
-            params[0]->parent_element(instance);
-            return instance;
-        } else if (name == "core_type") {
-            auto instance = new core_type_directive(module, parent_scope, params[0]);
-            params[0]->parent_element(instance);
-            return instance;
-        } else if (name == "assert") {
-            auto instance = new assert_directive(module, parent_scope, params[0]);
-            params[0]->parent_element(instance);
-            return instance;
-        } else if (name == "assembly") {
-            auto instance = new assembly_directive(module, parent_scope, params[0]);
-            params[0]->parent_element(instance);
-            return instance;
-        } else if (name == "foreign") {
-            auto instance = new foreign_directive(module, parent_scope, params[0]);
-            params[0]->parent_element(instance);
-            return instance;
-        } else if (name == "intrinsic") {
-            auto instance = new intrinsic_directive(module, parent_scope, params[0]);
-            params[0]->parent_element(instance);
-            return instance;
+        auto type = directive_type_from_name(name);
+        if (type == directive_type_t::unknown)
+            return nullptr;
+
+        switch (type) {
+            case directive_type_t::run: {
+                auto instance = new run_directive(module, parent_scope, params[0]);
+                params[0]->parent_element(instance);
+                return instance;
+            }
+            case directive_type_t::if_e: {
+                compiler::element* lhs = nullptr;
+                if (!params.empty())
+                    lhs = params[0];
+                compiler::element* rhs = nullptr;
+                if (params.size() > 1)
+                    rhs = params[1];
+                compiler::element* body = nullptr;
+                if (params.size() > 2)
+                    body = params[2];
+                auto instance = new if_directive(
+                    module,
+                    parent_scope,
+                    lhs,
+                    rhs,
+                    body);
+                if (lhs != nullptr)
+                    lhs->parent_element(instance);
+                if (rhs != nullptr)
+                    rhs->parent_element(instance);
+                if (body != nullptr)
+                    body->parent_element(instance);
+                return instance;
+            }
+            case directive_type_t::eval: {
+                break;
+            }
+            case directive_type_t::type: {
+                auto instance = new type_directive(module, parent_scope, params[0]);
+                params[0]->parent_element(instance);
+                return instance;
+            }
+            case directive_type_t::assert: {
+                auto instance = new assert_directive(module, parent_scope, params[0]);
+                params[0]->parent_element(instance);
+                return instance;
+            }
+            case directive_type_t::foreign: {
+                auto instance = new foreign_directive(module, parent_scope, params[0]);
+                params[0]->parent_element(instance);
+                return instance;
+            }
+            case directive_type_t::assembly: {
+                auto instance = new assembly_directive(module, parent_scope, params[0]);
+                params[0]->parent_element(instance);
+                return instance;
+            }
+            case directive_type_t::core_type: {
+                auto instance = new core_type_directive(module, parent_scope, params[0]);
+                params[0]->parent_element(instance);
+                return instance;
+            }
+            case directive_type_t::intrinsic_e: {
+                auto instance = new intrinsic_directive(module, parent_scope, params[0]);
+                params[0]->parent_element(instance);
+                return instance;
+            }
+            default: {
+                break;
+            }
         }
+        
         return nullptr;
     }
 
@@ -90,13 +108,11 @@ namespace basecode::compiler {
 
     directive::directive(
             compiler::module* module,
-            compiler::block* parent_scope,
-            const std::string& name) : element(module, parent_scope, element_type_t::directive),
-                                       _name(name) {
+            compiler::block* parent_scope) : element(module, parent_scope, element_type_t::directive) {
     }
 
-    std::string directive::name() const {
-        return _name;
+    directive_type_t directive::type() const {
+        return directive_type_t::unknown;
     }
 
     bool directive::execute(compiler::session& session) {

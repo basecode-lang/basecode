@@ -17,8 +17,12 @@ namespace basecode::compiler {
     run_directive::run_directive(
             compiler::module* module,
             compiler::block* parent_scope,
-            compiler::element* expression) : directive(module, parent_scope, "run"),
+            compiler::element* expression) : directive(module, parent_scope),
                                              _expression(expression) {
+    }
+
+    directive_type_t run_directive::type() const {
+        return directive_type_t::run;
     }
 
     compiler::element* run_directive::expression() const {

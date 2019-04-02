@@ -610,7 +610,7 @@ namespace basecode::compiler {
                 switch (init->expression()->element_type()) {
                     case element_type_t::directive: {
                         auto directive = dynamic_cast<compiler::directive*>(init->expression());
-                        if (directive->name() == "type")
+                        if (directive->type() == directive_type_t::type)
                             continue;
                         break;
                     }
