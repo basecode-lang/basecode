@@ -788,7 +788,7 @@ namespace basecode::compiler {
         variable_t var_info {};
         var_info.number_class = number_class;
         var_info.type = variable_type_t::temporary;
-        var_info.label = fmt::format("temp{}", _temps.size() + 1);
+        var_info.label = fmt::format("t{}", _temps.size() + 1);
 
         temp_pool_entry_t entry {};
         entry.available = false;
