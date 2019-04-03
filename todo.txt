@@ -40,20 +40,114 @@ QUESTIONS
 TASKS
 -----
 PARSER:
+- FIX: type parameter constraints should now only be a
+       single type instead of a tuple
+- FIX: procedure multiple return types: named & unnamed
+        - NEW: convert multiple/named parameters in procedure return into a tuple
 - FIX: composite binary op + assign has parser precedence issues. may need to
-        programatically wrap the rhs in an expression_group.
-- NEW: convert multiple/named parameters in procedure return into a tuple
+       programatically wrap the rhs in an expression_group.
 - FIX: value-sink _ should cause an error if on rhs; should not create variables
 
 =======
 
 COMPILER:
+- NEW: @initializer/@finalizer linkages
+- NEW: operator overloading procedure linkages, e.g.
+        @binary_operator "+";
+        add_foos :: proc(lhs, rhs: foo): foo {
+            // XXX: do the add for "foo" type
+        };
+
+        @unary_operator "-";
+        negate_a_foo :: proc(lhs: foo): foo {
+            // XXX: do the negation for "foo" type
+        };
+
+        should these use pointers?
+- NEW: convert multiple/named parameters in procedure return into a tuple
 - FIX: assembly_parser can't find locals or frame_offsets because they're now
         in different blocks.
-- NEW: convert multiple/named parameters in procedure return into a tuple
 - NEW: variables that are a family_type need to record two things:
         - which type within the family tree is "selected" based on it's value;
         - the value itself
+- NEW: UFCS against a pointer-to-family-type does one of the following:
+        a) if, at compile time, we know the type of the variant, we use that type
+            to find the procedure match;
+        b) otherwise, we generate a dispatch stub for the family-type of the LHS
+            variable that implements a type-switch where the correct procedure
+            is invoked.
+
+        NOTES: there's no inheritance here.  the family-type unifies unrelated types
+                together based on programmer intention.  this proposal extends
+                UFCS to dynamically generate dispatch proxy procedures to emulate
+                dynamic dispatch commonly seen in object-oriented languages.
+        Example:
+
+        // create some data types
+        point :: struct {
+            x, y: f32 := 0;
+        };
+
+        circle :: struct {
+            name: string;
+            pos: point;
+            radius: f32 := 1.0;
+        };
+
+        rect :: struct {
+            name: string;
+            pos: point;
+            width, height: u32;
+        };
+
+        shape :: family(circle, rect);
+
+        // create overloaded procedures that "draw" each shape
+        draw :: proc(self: ^circle) {
+        };
+
+        draw :: proc(self: ^rect) {
+        };
+
+        // now, let's create some shapes
+
+        // a family type variable is a variant, holding the type and value
+        // of anything assigned to it.
+        a: shape := new<circle>(
+            name := "circle 1",     // NOTE: this assumes an assignment operator overload
+            pos := new<point>(x := 10.0, y:= 10.0),
+            radius := 13.0);
+        b: shape := new<rect>(
+            name := "rect 1",       // NOTE: this assumes an assignment operator overload
+            pos := new<point>(x := 20.0, y:= 20.0),
+            width := 10,
+            height := 10);
+
+        // UFCS follows rules to find the correct procedure.
+        a.draw(); // => __dispatch_draw_on_shapes__(address_of(a));
+                  // dispatch calls draw for circle
+
+        b.draw(); // => __dispatch_draw_on_shapes__(address_of(b));
+                  // dispatch calls draw for rect
+
+        // NOTE: most of the time, we won't know what the value of the variant is
+        //      at compile time.  in these cases, we need to generate a dispatch proxy.
+        //
+        // note, the return type would match the procedure we're dispatching for.
+        // draw has no return type, so the proxy matches.
+        //
+        __dispatch_draw_on_shapes__ :: proc(self: ^shape /* draw's parameters would be mirrored */) {
+            switch v {
+                case #type circle => {
+                    draw(address_of(self.circle));
+                };
+
+                case #type rect => {
+                    draw(address_of(self.rect));
+                };
+            }
+        };
+
 - FIX: value-sink _ should cause an error if on rhs; should not create variables
 - BUG: redefining an identifier with another type doesn't give nice errors.
 - NEW: implement procedure instance baking
@@ -63,6 +157,10 @@ COMPILER:
 =======
 
 VM:
+- ADD: MADD instruction, e.g.
+        MADD.W I0, 2, 2, 10
+
+        result -> I0 = 14
 - FIX: assembly_parser can't find locals or frame_offsets because they're now
         in different blocks.
 - NEW: enhance the built-in debugger to support
@@ -71,6 +169,15 @@ VM:
 =======
 
 EMITTER:
+- BUG: the new fixed-length array implementation that uses a structure, e.g.
+        sample_array :: struct<T> {
+            length: u32;
+            data: ^T;
+        };
+
+        isn't immediately compatible with the outside world.  the best fix (maybe) is
+        to place the buffer ahead of the struct itself and keep track of the
+        raw buffer address.
 - FIX: variable_map::assign should handle copies for composite_type
        copies should be made if composite_type is passed on the stack
 - NEW: variables that are a family_type need to record two things:

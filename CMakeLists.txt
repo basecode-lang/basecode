@@ -55,8 +55,8 @@ endif()
 add_library(boost-filesystem ${BOOST_FILESYSTEM_SOURCES})
 
 # utf8proc
-add_subdirectory(ext/utf8proc-2.2.0 EXCLUDE_FROM_ALL)
-include_directories(ext/utf8proc-2.2.0)
+add_subdirectory(ext/utf8proc-2.3.0 EXCLUDE_FROM_ALL)
+include_directories(ext/utf8proc-2.3.0)
 
 # ya_getopt
 include_directories(ext/ya_getopt-1.0.0)
