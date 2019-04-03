@@ -325,13 +325,13 @@ namespace basecode::vm {
                                     break;
                                 }
                                 case vm::assembly_symbol_type_t::assembler: {
-                                    auto local = block->local(symbol);
+                                    auto local = find_local(block, symbol);
                                     if (local == nullptr) {
                                         vm::assembly_symbol_result_t resolver_result{};
                                         if (resolver(type, _data, symbol, resolver_result)) {
                                             auto module_data = resolver_result.data<compiler_module_data_t>();
                                             symbol = *module_data->data<std::string>();
-                                            local = block->local(symbol);
+                                            local = find_local(block, symbol);
                                         }
                                     }
 
@@ -659,6 +659,27 @@ namespace basecode::vm {
         return true;
     }
 
+    const vm::local_t* assembly_parser::find_local(
+            vm::basic_block* block,
+            const std::string& symbol) {
+        basic_block_stack_t blocks {};
+        blocks.push(block);
+
+        while (!blocks.empty()) {
+            auto tos = blocks.top();
+            blocks.pop();
+
+            auto local = tos->local(symbol);
+            if (local != nullptr)
+                return local;
+
+            for (auto p : tos->predecessors())
+                blocks.push(p);
+        }
+
+        return nullptr;
+    }
+
     void assembly_parser::parse_comma_separated_tokens(
             common::result& r,
             common::rune_t& rune,
@@ -761,4 +782,4 @@ namespace basecode::vm {
         }
     }
 
-};
+}

@@ -5,13 +5,7 @@ core :: module("core");
     foo := foo * 2;
 
     #assembly {{
-        .ilocal foo_addr
-        .ilocal temp
-
-        move.qw foo_addr, module(foo)
-        load.w  temp, foo_addr
-        sub.w   temp, temp, #$0a
-        store.w foo_addr, temp
+        sub.w   foo, foo, #$0a
     }};
 
     foo := (foo - 16) shr 2;
@@ -55,12 +49,13 @@ core :: module("core");
     // alloc & free block of memory
     'allocate_memory:
     addr: ^u8 := alloc(size_of(u16) * 4096);
-    core::print("addr := $%08x\n", addr);
+    core::print("addr := $%016X\n", addr);
     free(addr);
 
     core::putc('H');
+    core::putc('\n');
 
     // N.B. be careful, this call blocks
-    //r := getc();
-    //putc(r);
+    //r := core::getc();
+    //core::putc(r);
 };

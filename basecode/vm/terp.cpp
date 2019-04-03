@@ -829,7 +829,13 @@ namespace basecode::vm {
                 execute_trap(trap_out_of_memory);
                 return false;
             }
-            TARGET(0, lhs)
+
+            // N.B. special case here because TARGET
+            //      scales the output value based on _vpc->size.
+            //      in this case, the result is *always* a qw (8-byte)
+            //      value, so we assign it directly here.
+            _vpc->values[0].data.r->qw = lhs.qw;
+
             _registers.set_flags(
                 lhs.qw == 0,
                 false,

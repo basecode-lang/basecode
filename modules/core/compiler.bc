@@ -18,12 +18,8 @@ public :: ns {
 
     putc :: proc(char: rune, f: u32 := 1) {
         #assembly {{
-            .ilocal     temp1
-
-            load.dw     temp1, f
-            push.dw     temp1
-            load.dw     temp1, char
-            push.dw     temp1
+            push.dw     char
+            push.dw     f
             trap.b      module(traps::putc)
         }};
     };
@@ -31,13 +27,9 @@ public :: ns {
     getc :: proc(f: u32 := 1): rune {
         result: rune;
         #assembly {{
-            .ilocal     temp1
-
-            load.dw     temp1, f
-            push.dw     temp1
+            push.dw     f
             trap.b      module(traps::getc)
-            pop.dw      temp1
-            store.dw    result, temp1
+            pop.dw      result
         }};
         return result;
     };

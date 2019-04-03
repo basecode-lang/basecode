@@ -157,14 +157,13 @@ COMPILER:
 =======
 
 VM:
-- FIX: assembly_parser can't find locals or frame_offsets because they're now
-        in different blocks.
 - NEW: enhance the built-in debugger to support
         source-level debugging in addition to byte-code.
 
 =======
 
 EMITTER:
+- BUG: #type/type_of isn't emitting correct bytecode. missing sizes.
 - BUG: the new fixed-length array implementation that uses a structure, e.g.
         sample_array :: struct<T> {
             length: u32;
@@ -383,6 +382,8 @@ DONE
         MADD.W I0, 2, 2, 10
 
         result -> I0 = 14
+- FIX: assembly_parser can't find locals or frame_offsets because they're now
+        in different blocks.
 
 ANSWERS
 -------

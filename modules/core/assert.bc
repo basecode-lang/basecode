@@ -13,11 +13,7 @@ public :: ns {
 
     exit   :: proc(level: s32) {
         #assembly {{
-            .ilocal     temp1
-            ; this is temporary until i fix how locals are stored for blocks
-            ; load.dw     temp1, fp, offset(level)
-            load.dw     temp1, fp, #$10
-            push.dw     temp1
+            push.dw     level
             jmp.qw      _end
         }};
     };

@@ -76,6 +76,10 @@ namespace basecode::vm {
             const std::string& param,
             uint64_t& value);
 
+        const vm::local_t* find_local(
+            vm::basic_block* block,
+            const std::string& symbol);
+
         void parse_comma_separated_tokens(
             common::result& r,
             common::rune_t& rune,
@@ -101,5 +105,5 @@ namespace basecode::vm {
         vm::assembler* _assembler = nullptr;
     };
 
-};
+}
 
