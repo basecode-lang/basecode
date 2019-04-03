@@ -455,6 +455,20 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    ast_node_t* yield_prefix_parser::parse(
+            common::result& r,
+            parser* parser,
+            token_t& token) {
+        auto yield_node = parser->ast_builder()->yield_node(token);
+        collect_comments(r, parser, yield_node->comments);
+        if (parser->peek(token_types_t::semi_colon))
+            return yield_node;
+        yield_node->lhs = parser->parse_expression(r);
+        return yield_node;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
     ast_node_t* defer_prefix_parser::parse(
             common::result& r,
             parser* parser,

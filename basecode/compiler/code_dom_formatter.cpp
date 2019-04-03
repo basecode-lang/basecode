@@ -705,6 +705,16 @@ namespace basecode::compiler {
                     node_vertex_name,
                     style);
             }
+            case element_type_t::yield: {
+                auto yield_e = dynamic_cast<yield*>(node);
+                auto style = ", fillcolor=yellow, style=\"filled\"";
+                add_primary_edge(yield_e, yield_e->expression());
+                return fmt::format(
+                    "{}[shape=record,label=\"yield\"{}];",
+                    node_vertex_name,
+                    style);
+                break;
+            }
             case element_type_t::intrinsic: {
                 auto element = dynamic_cast<intrinsic*>(node);
                 auto style = ", fillcolor=darkorchid1, style=\"filled\"";

@@ -31,6 +31,7 @@ namespace basecode::compiler {
     class field;
     class block;
     class label;
+    class yield;
     class import;
     class module;
     class element;
@@ -360,6 +361,7 @@ namespace basecode::compiler {
         block,
         field,
         defer,
+        yield,
         symbol,
         module,
         case_e,
@@ -431,6 +433,7 @@ namespace basecode::compiler {
         {element_type_t::field, "field"},
         {element_type_t::defer, "defer"},
         {element_type_t::case_e, "case"},
+        {element_type_t::yield, "yield"},
         {element_type_t::module, "module"},
         {element_type_t::symbol, "symbol"},
         {element_type_t::while_e, "while"},

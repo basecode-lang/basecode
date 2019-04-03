@@ -328,6 +328,18 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    class yield_prefix_parser : public prefix_parser {
+    public:
+        yield_prefix_parser() = default;
+
+        ast_node_t* parse(
+            common::result& r,
+            parser* parser,
+            token_t& token) override;
+    };
+
+    ///////////////////////////////////////////////////////////////////////////
+
     class union_prefix_parser : public prefix_parser {
     public:
         union_prefix_parser() = default;
@@ -695,6 +707,7 @@ namespace basecode::syntax {
         static inline union_prefix_parser s_union_prefix_parser {};
         static inline group_prefix_parser s_group_prefix_parser {};
         static inline label_prefix_parser s_label_prefix_parser {};
+        static inline yield_prefix_parser s_yield_prefix_parser {};
         static inline module_prefix_parser s_module_prefix_parser {};
         static inline struct_prefix_parser s_struct_prefix_parser {};
         static inline for_in_prefix_parser s_for_in_prefix_parser {};
@@ -733,6 +746,7 @@ namespace basecode::syntax {
             {token_types_t::left_paren,             &s_group_prefix_parser},
             {token_types_t::union_literal,          &s_union_prefix_parser},
             {token_types_t::defer_literal,          &s_defer_prefix_parser},
+            {token_types_t::yield_literal,          &s_yield_prefix_parser},
             {token_types_t::struct_literal,         &s_struct_prefix_parser},
             {token_types_t::for_literal,            &s_for_in_prefix_parser},
             {token_types_t::minus,                  &s_negate_prefix_parser},
@@ -877,4 +891,4 @@ namespace basecode::syntax {
         common::source_file* _source_file = nullptr;
     };
 
-};
+}

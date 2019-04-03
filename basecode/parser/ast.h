@@ -69,6 +69,7 @@ namespace basecode::syntax {
         from_expression,
         cast_expression,
         case_expression,
+        yield_expression,
         type_declaration,
         symbol_reference,
         return_statement,
@@ -144,6 +145,7 @@ namespace basecode::syntax {
         {ast_node_type_t::break_statement, "break_statement"},
         {ast_node_type_t::with_expression, "with_expression"},
         {ast_node_type_t::case_expression, "case_expression"},
+        {ast_node_type_t::yield_expression, "yield_expression"},
         {ast_node_type_t::type_declaration, "type_declaration"},
         {ast_node_type_t::defer_expression, "defer_expression"},
         {ast_node_type_t::union_expression, "union_expression"},
@@ -360,6 +362,8 @@ namespace basecode::syntax {
         ast_node_t* union_node(const token_t& token);
 
         ast_node_t* defer_node(const token_t& token);
+
+        ast_node_t* yield_node(const token_t& token);
 
         ast_node_t* family_node(const token_t& token);
 

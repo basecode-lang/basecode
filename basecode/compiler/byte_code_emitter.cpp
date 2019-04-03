@@ -800,6 +800,18 @@ namespace basecode::compiler {
                 }
                 break;
             }
+            case element_type_t::yield: {
+                // XXX: not complete; place holder
+                auto yield = dynamic_cast<compiler::yield*>(e);
+                auto expr = yield->expression();
+                if (expr != nullptr) {
+                    emit_result_t expr_result {};
+                    if (!emit_element(basic_block, expr, expr_result))
+                        return false;
+                    release_temps(expr_result.temps);
+                }
+                break;
+            }
             case element_type_t::module: {
                 auto module = dynamic_cast<compiler::module*>(e);
                 auto scope = module->scope();

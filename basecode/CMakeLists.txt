@@ -224,7 +224,7 @@ add_library(
     compiler/elements/address_of_intrinsic.cpp compiler/elements/address_of_intrinsic.h
     compiler/elements/identifier_reference.cpp compiler/elements/identifier_reference.h
     compiler/elements/uninitialized_literal.cpp compiler/elements/uninitialized_literal.h
-    compiler/elements/assembly_literal_label.cpp compiler/elements/assembly_literal_label.h)
+    compiler/elements/assembly_literal_label.cpp compiler/elements/assembly_literal_label.h compiler/elements/yield.cpp compiler/elements/yield.h)
 target_link_libraries(
     ${PROJECT_NAME}
     fmt-header-only

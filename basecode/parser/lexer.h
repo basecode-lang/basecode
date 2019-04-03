@@ -129,6 +129,8 @@ namespace basecode::syntax {
 
         bool union_literal(token_t& token);
 
+        bool yield_literal(token_t& token);
+
         bool module_literal(token_t& token);
 
         bool struct_literal(token_t& token);

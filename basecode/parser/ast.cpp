@@ -355,6 +355,10 @@ namespace basecode::syntax {
         return node;
     }
 
+    ast_node_t* ast_builder::yield_node(const token_t& token) {
+        return make_node(ast_node_type_t::yield_expression, &token);
+    }
+
     ast_node_t* ast_builder::defer_node(const token_t& token) {
         return make_node(ast_node_type_t::defer_expression, &token);
     }

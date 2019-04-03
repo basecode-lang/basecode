@@ -21,10 +21,17 @@ namespace basecode::compiler {
     element_builder::element_builder(compiler::session& session): _session(session) {
     }
 
-    program* element_builder::make_program() {
-        auto pgm = new compiler::program();
-        _session.elements().add(pgm);
-        return pgm;
+    yield* element_builder::make_yield(
+            compiler::block* parent_scope,
+            compiler::element* expression) {
+        auto yield_e = new compiler::yield(
+            _session.scope_manager().current_module(),
+            parent_scope,
+            expression);
+        _session.elements().add(yield_e);
+        if (expression != nullptr)
+            expression->parent_element(yield_e);
+        return yield_e;
     }
 
     import* element_builder::make_import(
@@ -47,6 +54,12 @@ namespace basecode::compiler {
             from_expr->parent_element(import_element);
 
         return import_element;
+    }
+
+    program* element_builder::make_program() {
+        auto pgm = new compiler::program();
+        _session.elements().add(pgm);
+        return pgm;
     }
 
     void element_builder::make_qualified_symbol(

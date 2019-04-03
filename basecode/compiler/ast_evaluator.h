@@ -201,6 +201,10 @@ namespace basecode::compiler {
             evaluator_context_t& context,
             evaluator_result_t& result);
 
+        bool yield_expression(
+            evaluator_context_t& context,
+            evaluator_result_t& result);
+
         bool break_expression(
             evaluator_context_t& context,
             evaluator_result_t& result);

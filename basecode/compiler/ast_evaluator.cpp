@@ -59,6 +59,7 @@ namespace basecode::compiler {
         {syntax::ast_node_type_t::while_statement,         std::bind(&ast_evaluator::while_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_type_t::type_declaration,        std::bind(&ast_evaluator::type_declaration, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_type_t::defer_expression,        std::bind(&ast_evaluator::defer_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::yield_expression,        std::bind(&ast_evaluator::yield_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_type_t::union_expression,        std::bind(&ast_evaluator::union_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_type_t::return_statement,        std::bind(&ast_evaluator::return_statement, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_type_t::symbol_reference,        std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
@@ -1963,6 +1964,20 @@ namespace basecode::compiler {
         scope_manager.current_scope()->defer_stack().push(defer_e);
 
         result.element = defer_e;
+
+        return true;
+    }
+
+    bool ast_evaluator::yield_expression(
+            evaluator_context_t& context,
+            evaluator_result_t& result) {
+        auto& builder = _session.builder();
+        auto& scope_manager = _session.scope_manager();
+
+        auto yield_e = builder.make_yield(
+            scope_manager.current_scope(),
+            evaluate(context.node->lhs));
+        result.element = yield_e;
 
         return true;
     }

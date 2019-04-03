@@ -401,6 +401,18 @@ namespace basecode::syntax {
         return false;
     }
 
+    bool lexer::yield_literal(token_t& token) {
+        if (match_literal("yield")) {
+            auto ch = read(false);
+            if (!isalnum(ch)) {
+                rewind_one_char();
+                token = s_yield_literal;
+                return true;
+            }
+        }
+        return false;
+    }
+
     bool lexer::union_literal(token_t& token) {
         if (match_literal("union")) {
             auto ch = read(false);

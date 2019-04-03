@@ -20,6 +20,10 @@ namespace basecode::compiler {
     public:
         explicit element_builder(compiler::session& session);
 
+        yield* make_yield(
+            compiler::block* parent_scope,
+            compiler::element* expression);
+
         program* make_program();
 
         case_element* make_case(

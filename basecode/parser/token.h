@@ -74,6 +74,7 @@ namespace basecode::syntax {
         while_literal,
         defer_literal,
         union_literal,
+        yield_literal,
         block_comment,
         module_literal,
         struct_literal,
@@ -160,6 +161,7 @@ namespace basecode::syntax {
         {token_types_t::greater_than,               "greater_than"},
         {token_types_t::enum_literal,               "enum_literal"},
         {token_types_t::true_literal,               "true_literal"},
+        {token_types_t::yield_literal,              "yield_literal"},
         {token_types_t::false_literal,              "false_literal"},
         {token_types_t::break_literal,              "break_literal"},
         {token_types_t::while_literal,              "while_literal"},
@@ -357,6 +359,11 @@ namespace basecode::syntax {
     static inline token_t s_block_comment = {
         .type = token_types_t::block_comment,
         .value = "/*"
+    };
+
+    static inline token_t s_yield_literal = {
+        .type = token_types_t::yield_literal,
+        .value = "yield"
     };
 
     static inline token_t s_colon_literal = {

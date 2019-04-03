@@ -17,6 +17,7 @@
 #include <compiler/elements/block.h>
 #include <compiler/elements/label.h>
 #include <compiler/elements/field.h>
+#include <compiler/elements/yield.h>
 #include <compiler/elements/import.h>
 #include <compiler/elements/module.h>
 #include <compiler/elements/comment.h>
