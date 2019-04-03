@@ -625,6 +625,7 @@ namespace basecode::vm {
             &&_mul,
             &&_div,
             &&_mod,
+            &&_madd,
             &&_neg,
             &&_shr,
             &&_shl,
@@ -806,6 +807,7 @@ namespace basecode::vm {
         op_sizes size;
         register_value_alias_t lhs {};
         register_value_alias_t rhs {};
+        register_value_alias_t extra {};
         register_value_alias_t result {};
         auto& pc = _registers.r[register_pc];
 
@@ -1515,6 +1517,51 @@ namespace basecode::vm {
                 is_zero(result),
                 false,
                 false,
+                is_negative(result));
+
+            NEXT(++_vpc)
+        }
+
+        _madd:
+        {
+            OPERAND(1, lhs)
+            OPERAND(2, rhs)
+            OPERAND(3, extra);
+
+            if (_vpc->values[1].is_integer
+            &&  _vpc->values[2].is_integer) {
+                switch (_vpc->size) {
+                    case op_sizes::byte: {
+                        result.b = lhs.b * rhs.b + extra.b;
+                        break;
+                    }
+                    case op_sizes::word: {
+                        result.w = lhs.w * rhs.w + extra.w;
+                        break;
+                    }
+                    case op_sizes::dword: {
+                        result.dw = lhs.dw * rhs.dw + extra.dw;
+                        break;
+                    }
+                    default:
+                    case op_sizes::qword: {
+                        result.qw = lhs.qw * rhs.qw + extra.qw;
+                        break;
+                    }
+                }
+            } else {
+                if (_vpc->size == op_sizes::dword)
+                    result.dwf = lhs.dwf * rhs.dwf + extra.dwf;
+                else
+                    result.qwf = lhs.qwf * rhs.qwf + extra.qwf;
+            }
+
+            TARGET(0, result)
+
+            _registers.set_flags(
+                is_zero(result),
+                has_carry(lhs.qw, rhs.qw),
+                has_overflow(lhs, rhs, result),
                 is_negative(result));
 
             NEXT(++_vpc)

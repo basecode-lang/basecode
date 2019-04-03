@@ -157,10 +157,6 @@ COMPILER:
 =======
 
 VM:
-- ADD: MADD instruction, e.g.
-        MADD.W I0, 2, 2, 10
-
-        result -> I0 = 14
 - FIX: assembly_parser can't find locals or frame_offsets because they're now
         in different blocks.
 - NEW: enhance the built-in debugger to support
@@ -383,6 +379,10 @@ DONE
 - NEW: fixed length arrays; subscript operator
 - NEW: length_of intrinsic for fixed arrays
 - ADD: yield statement
+- ADD: MADD instruction, e.g.
+        MADD.W I0, 2, 2, 10
+
+        result -> I0 = 14
 
 ANSWERS
 -------

@@ -1830,23 +1830,13 @@ namespace basecode::compiler {
                         result.temps.emplace_back(temp);
                         result.operands.emplace_back(target_operand);
 
-                        auto offset_temp = _variables.retain_temp();
-                        result.temps.emplace_back(offset_temp);
-                        vm::instruction_operand_t offset_operand(assembler.make_named_ref(
-                            vm::assembler_named_ref_type_t::local,
-                            offset_temp->name(),
-                            vm::op_sizes::qword));
-
-                        current_block->mul(
-                            offset_operand,
+                        current_block->madd(
+                            target_operand,
                             rhs_result.operands.back(),
                             vm::instruction_operand_t(
                                 static_cast<uint64_t>(size_in_bytes),
-                                vm::op_sizes::byte));
-                        current_block->add(
-                            target_operand,
-                            lhs_result.operands.back(),
-                            offset_operand);
+                                vm::op_sizes::byte),
+                            lhs_result.operands.back());
 
                         if (!result.is_assign_target) {
                             auto value_temp = _variables.retain_temp();

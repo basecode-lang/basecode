@@ -511,6 +511,23 @@ namespace basecode::vm {
         make_block_entry(op);
     }
 
+    // madd variations
+    void basic_block::madd(
+            const instruction_operand_t& dest,
+            const instruction_operand_t& multiplicand,
+            const instruction_operand_t& multiplier,
+            const instruction_operand_t& addened) {
+        instruction_t op;
+        op.size = dest.size();
+        op.op = op_codes::madd;
+        op.operands_count = 4;
+        apply_operand(dest, op, 0);
+        apply_operand(multiplicand, op, 1);
+        apply_operand(multiplier, op, 2);
+        apply_operand(addened, op, 3);
+        make_block_entry(op);
+    }
+
     // add variations
     void basic_block::add(
             const instruction_operand_t& dest,

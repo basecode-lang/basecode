@@ -348,6 +348,7 @@ namespace basecode::vm {
         mul,
         div,
         mod,
+        madd,
         neg,
         shr,
         shl,
@@ -441,6 +442,7 @@ namespace basecode::vm {
         {op_codes::mul,    "MUL"},
         {op_codes::div,    "DIV"},
         {op_codes::mod,    "MOD"},
+        {op_codes::madd,   "MADD"},
         {op_codes::neg,    "NEG"},
         {op_codes::shr,    "SHR"},
         {op_codes::shl,    "SHL"},
@@ -1415,6 +1417,18 @@ namespace basecode::vm {
                     {mnemonic_operand_t::flags::integer_register, true},
                     {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::immediate, true},
                     {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::immediate, true},
+                }
+            }
+        },
+        {
+            "MADD",
+            mnemonic_t{
+                op_codes::madd,
+                {
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::float_register, true},
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::float_register | mnemonic_operand_t::flags::immediate, true},
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::float_register | mnemonic_operand_t::flags::immediate, true},
+                    {mnemonic_operand_t::flags::integer_register | mnemonic_operand_t::flags::float_register | mnemonic_operand_t::flags::immediate, true},
                 }
             }
         },

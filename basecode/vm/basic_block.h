@@ -396,6 +396,13 @@ namespace basecode::vm {
             const instruction_operand_t& augend,
             const instruction_operand_t& addened);
 
+        // madd variations
+        void madd(
+            const instruction_operand_t& dest,
+            const instruction_operand_t& multiplicand,
+            const instruction_operand_t& multiplier,
+            const instruction_operand_t& addened);
+
         // sub variations
         void sub(
             const instruction_operand_t& dest,
