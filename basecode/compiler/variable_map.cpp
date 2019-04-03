@@ -348,12 +348,16 @@ namespace basecode::compiler {
                         vm::assembler_named_ref_type_t::label,
                         lhs_label_name);
 
+                    auto composite_type = dynamic_cast<compiler::composite_type*>(lhs.type_result.inferred_type);
+                    if (composite_type->size_in_bytes() == 0)
+                        composite_type->calculate_size();
+
                     basic_block->copy(
                         vm::op_sizes::byte,
                         vm::instruction_operand_t(dest_ref),
                         vm::instruction_operand_t(source_ref),
                         vm::instruction_operand_t(
-                            static_cast<uint64_t>(lhs.type_result.inferred_type->size_in_bytes()),
+                            static_cast<uint64_t>(composite_type->size_in_bytes()),
                             vm::op_sizes::word));
 
                     clear_filled(var);

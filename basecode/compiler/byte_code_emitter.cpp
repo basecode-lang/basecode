@@ -336,9 +336,13 @@ namespace basecode::compiler {
 
         vm::op_sizes op_size {};
         e->infer_type(_session, result.type_result);
-        if (result.type_result.inferred_type != nullptr
-        && !result.type_result.inferred_type->is_composite_type()) {
-            op_size = vm::op_size_for_byte_size(result.type_result.inferred_type->size_in_bytes());
+        if (result.type_result.inferred_type != nullptr) {
+            if (!result.type_result.inferred_type->is_composite_type()) {
+                op_size = vm::op_size_for_byte_size(
+                    result.type_result.inferred_type->size_in_bytes());
+            } else if (result.type_result.inferred_type->is_pointer_type()) {
+                op_size = vm::op_sizes::qword;
+            }
         }
 
         switch (e->element_type()) {
@@ -1735,10 +1739,17 @@ namespace basecode::compiler {
                         current_block->comment("unary_op: pointer deref", vm::comment_location_t::after_instruction);
                         auto is_composite_type = rhs_emit_result.type_result.inferred_type->is_composite_type();
                         if (is_composite_type) {
-                            current_block->move(
-                                *result_operand,
-                                rhs_emit_result.operands.front(),
-                                rhs_emit_result.operands.back());
+                            if (rhs_emit_result.operands.size() > 1) {
+                                current_block->move(
+                                    *result_operand,
+                                    rhs_emit_result.operands.front(),
+                                    rhs_emit_result.operands.back());
+                            } else {
+                                result.operands.emplace_back(rhs_emit_result.operands.back());
+//                                current_block->move(
+//                                    *result_operand,
+//                                    rhs_emit_result.operands.back());
+                            }
                         } else {
                             current_block->load(
                                 *result_operand,
