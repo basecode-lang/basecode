@@ -107,19 +107,9 @@ namespace basecode::compiler {
                                                 _number_class(number_class) {
     }
 
-    int64_t numeric_type::min() const {
-        return _min;
-    }
-
-    uint64_t numeric_type::max() const {
-        return _max;
-    }
-
-    bool numeric_type::is_signed() const {
-        return _is_signed;
-    }
-
-    bool numeric_type::on_type_check(compiler::type* other) {
+    bool numeric_type::on_type_check(
+            compiler::type* other,
+            const type_check_options_t& options) {
         auto other_numeric_type = dynamic_cast<compiler::numeric_type*>(other);
         if (other_numeric_type == nullptr)
             return false;
@@ -131,11 +121,25 @@ namespace basecode::compiler {
             return _number_class == number_class_t::floating_point;
         }
 
-        if (is_signed() && other_numeric_type->is_signed()) {
-            return other_numeric_type->size_in_bytes() < size_in_bytes();
-        }
+        if (other_numeric_type->is_signed() && !is_signed())
+            return false;
 
-        return other_numeric_type->size_in_bytes() <= size_in_bytes();
+        if (options.strict)
+            return other_numeric_type->size_in_bytes() == size_in_bytes();
+        else
+            return other_numeric_type->size_in_bytes() <= size_in_bytes();
+    }
+
+    int64_t numeric_type::min() const {
+        return _min;
+    }
+
+    uint64_t numeric_type::max() const {
+        return _max;
+    }
+
+    bool numeric_type::is_signed() const {
+        return _is_signed;
     }
 
     number_class_t numeric_type::on_number_class() const {

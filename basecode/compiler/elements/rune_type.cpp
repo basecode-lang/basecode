@@ -26,7 +26,9 @@ namespace basecode::compiler {
                                        nullptr) {
     }
 
-    bool rune_type::on_type_check(compiler::type* other) {
+    bool rune_type::on_type_check(
+            compiler::type* other,
+            const type_check_options_t& options) {
         return other != nullptr
                && other->element_type() == element_type_t::rune_type;
     }

@@ -25,14 +25,16 @@ namespace basecode::compiler {
                                     nullptr) {
     }
 
+    bool namespace_type::on_type_check(
+            compiler::type* other,
+            const type_check_options_t& options) {
+        return other != nullptr
+               && other->id() == id();
+    }
+
     bool namespace_type::on_initialize(compiler::session& session) {
         symbol(session.builder().make_symbol(parent_scope(), "namespace"));
         return true;
-    }
-
-    bool namespace_type::on_type_check(compiler::type* other) {
-        return other != nullptr
-            && other->symbol()->name() == symbol()->name();
     }
 
 }

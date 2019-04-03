@@ -63,9 +63,11 @@ namespace basecode::compiler {
             compiler::procedure_call* call);
 
     protected:
-        bool on_is_constant() const override;
+        bool on_type_check(
+            compiler::type* other,
+            const type_check_options_t& options) override;
 
-        bool on_type_check(compiler::type* other) override;
+        bool on_is_constant() const override;
 
         void on_owned_elements(element_list_t& list) override;
 

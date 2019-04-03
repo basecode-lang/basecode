@@ -56,6 +56,18 @@ namespace basecode::compiler {
                                                 _base_type_ref(base_type_ref) {
     }
 
+    bool array_type::on_type_check(
+            compiler::type* other,
+            const type_check_options_t& options) {
+        if (other == nullptr || !other->is_array_type())
+            return false;
+
+        auto other_array = dynamic_cast<compiler::array_type*>(other);
+        return _base_type_ref->type()->type_check(
+            other_array->base_type_ref()->type(),
+            options);
+    }
+
     size_t array_type::data_size() const {
         return number_of_elements() * _base_type_ref->type()->size_in_bytes();
     }
@@ -115,14 +127,6 @@ namespace basecode::compiler {
 
     const element_list_t& array_type::subscripts() const {
         return _subscripts;
-    }
-
-    bool array_type::on_type_check(compiler::type* other) {
-        if (other == nullptr || !other->is_array_type())
-            return false;
-
-        auto other_array = dynamic_cast<compiler::array_type*>(other);
-        return _base_type_ref->type()->type_check(other_array->base_type_ref()->type());
     }
 
     compiler::type_reference* array_type::base_type_ref() {

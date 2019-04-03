@@ -25,15 +25,9 @@ namespace basecode::compiler {
                                                      _types(std::move(types)) {
     }
 
-    bool family_type::on_is_constant() const {
-        return true;
-    }
-
-    bool family_type::is_family_type() const {
-        return true;
-    }
-
-    bool family_type::on_type_check(compiler::type* other) {
+    bool family_type::on_type_check(
+            compiler::type* other,
+            const type_check_options_t& options) {
         if (other == nullptr)
             return false;
 
@@ -41,11 +35,19 @@ namespace basecode::compiler {
             return true;
 
         for (auto ref : _types) {
-            if (ref->type()->type_check(other))
+            if (ref->type()->type_check(other, options))
                 return true;
         }
 
         return false;
+    }
+
+    bool family_type::on_is_constant() const {
+        return true;
+    }
+
+    bool family_type::is_family_type() const {
+        return true;
     }
 
     bool family_type::on_initialize(compiler::session& session) {

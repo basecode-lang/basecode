@@ -32,7 +32,9 @@ namespace basecode::compiler {
         const compiler::type_reference_list_t& constraints() const;
 
     protected:
-        bool on_type_check(compiler::type* other) override;
+        bool on_type_check(
+            compiler::type* other,
+            const type_check_options_t& options) override;
 
         bool on_initialize(compiler::session& session) override;
 

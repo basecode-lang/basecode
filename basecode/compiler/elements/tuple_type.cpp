@@ -27,6 +27,12 @@ namespace basecode::compiler {
                                                     element_type_t::tuple_type) {
     }
 
+    bool tuple_type::on_type_check(
+            compiler::type* other,
+            const type_check_options_t& options) {
+        return other != nullptr && other->id() == id();
+    }
+
     bool tuple_type::on_initialize(compiler::session& session) {
         return composite_type::on_initialize(session);
     }

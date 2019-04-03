@@ -861,4 +861,10 @@ namespace basecode::compiler {
         compiler::identifier_reference* ref = nullptr;
     };
 
+    ///////////////////////////////////////////////////////////////////////////
+
+    struct type_check_options_t {
+        bool strict = true;
+    };
+
 }

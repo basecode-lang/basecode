@@ -36,6 +36,12 @@ namespace basecode::compiler {
                                            _scope(scope) {
     }
 
+    bool composite_type::on_type_check(
+            compiler::type* other,
+            const type_check_options_t& options) {
+        return other != nullptr && other->id() == id();
+    }
+
     bool composite_type::is_enum() const {
         return _type == composite_types_t::enum_type;
     }
@@ -115,10 +121,6 @@ namespace basecode::compiler {
 
     number_class_t composite_type::on_number_class() const {
         return number_class_t::integer;
-    }
-
-    bool composite_type::on_type_check(compiler::type* other) {
-        return other != nullptr && other->id() == id();
     }
 
     bool composite_type::has_at_least_one_initializer() const {

@@ -37,19 +37,9 @@ namespace basecode::compiler {
                                                    _base_type_ref(base_type) {
     }
 
-    bool pointer_type::is_pointer_type() const {
-        return true;
-    }
-
-    bool pointer_type::is_unknown_type() const {
-        return _base_type_ref != nullptr && _base_type_ref->is_unknown_type();
-    }
-
-    bool pointer_type::is_composite_type() const {
-        return _base_type_ref->type()->is_composite_type();
-    }
-
-    bool pointer_type::on_type_check(compiler::type* other) {
+    bool pointer_type::on_type_check(
+            compiler::type* other,
+            const type_check_options_t& options) {
         if (other == nullptr)
             return false;
 
@@ -60,12 +50,28 @@ namespace basecode::compiler {
                     return true;
                 return _base_type_ref
                     ->type()
-                    ->type_check(other_pointer_type->_base_type_ref->type());
+                    ->type_check(other_pointer_type->_base_type_ref->type(), options);
+            }
+            case element_type_t::numeric_type: {
+                auto numeric_type = dynamic_cast<compiler::numeric_type*>(other);
+                return numeric_type->size_in_bytes() == 8;
             }
             default: {
-                return _base_type_ref->type()->type_check(other);
+                return false;
             }
         }
+    }
+
+    bool pointer_type::is_pointer_type() const {
+        return true;
+    }
+
+    bool pointer_type::is_unknown_type() const {
+        return _base_type_ref != nullptr && _base_type_ref->is_unknown_type();
+    }
+
+    bool pointer_type::is_composite_type() const {
+        return _base_type_ref->type()->is_composite_type();
     }
 
     number_class_t pointer_type::on_number_class() const {

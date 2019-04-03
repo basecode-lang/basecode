@@ -16,8 +16,10 @@
 #include "field.h"
 #include "element.h"
 #include "identifier.h"
+#include "family_type.h"
 #include "declaration.h"
 #include "initializer.h"
+#include "generic_type.h"
 #include "argument_pair.h"
 #include "argument_list.h"
 #include "procedure_call.h"
@@ -39,6 +41,16 @@ namespace basecode::compiler {
                                                       element_type_t::proc_type,
                                                       symbol),
                                                 _scope(scope) {
+    }
+
+    bool procedure_type::on_type_check(
+            compiler::type* other,
+            const type_check_options_t& options) {
+        if (other == nullptr)
+            return false;
+
+        // XXX: very temporary hack...
+        return other->element_type() == element_type_t::proc_type;
     }
 
     bool procedure_type::prepare_call_site(
@@ -171,13 +183,34 @@ namespace basecode::compiler {
                 }
 
                 auto type_ref = fld->identifier()->type_ref();
-                if (!type_ref->type()->type_check(type_result.inferred_type)) {
+                if (!type_ref->type()->type_check(type_result.inferred_type, {})) {
+                    std::string parameter_type {};
+                    auto fld_type = fld->identifier()->type_ref()->type();
+                    if (fld_type->element_type() == element_type_t::generic_type) {
+                        auto generic_type = dynamic_cast<compiler::generic_type*>(fld_type);
+                        auto constraint_type = generic_type->constraints().front()->type();
+                        if (constraint_type->is_family_type()) {
+                            parameter_type = "family(";
+                            auto family_type = dynamic_cast<compiler::family_type*>(constraint_type);
+                            const auto& types = family_type->types();
+                            for (size_t i = 0; i < types.size(); i++) {
+                                if (i > 0) parameter_type += ",";
+                                parameter_type += types[i]->name();
+                            }
+                            parameter_type += ")";
+                        } else {
+                            parameter_type = constraint_type->name();
+                        }
+                    } else {
+                        parameter_type = fld_type->name();
+                    }
                     result.messages.error(
                         "X000",
                         fmt::format(
-                            "type mismatch: cannot assign {} to parameter {}.",
+                            "type mismatch: cannot assign {} to parameter {}:{}.",
                             type_result.type_name(),
-                            fld->identifier()->symbol()->name()),
+                            fld->identifier()->symbol()->name(),
+                            parameter_type),
                         param->location());
                     return false;
                 }
@@ -291,14 +324,6 @@ namespace basecode::compiler {
         if (_instances.empty())
             return nullptr;
         return _instances.back();
-    }
-
-    bool procedure_type::on_type_check(compiler::type* other) {
-        if (other == nullptr)
-            return false;
-
-        // XXX: very temporary hack...
-        return other->element_type() == element_type_t::proc_type;
     }
 
     void procedure_type::on_owned_elements(element_list_t& list) {

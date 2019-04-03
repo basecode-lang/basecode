@@ -28,14 +28,16 @@ namespace basecode::compiler {
                                             element_type_t::module_type) {
     }
 
+    bool module_type::on_type_check(
+            compiler::type* other,
+            const type_check_options_t& options) {
+        return other != nullptr
+               && other->id() == id();
+    }
+
     bool module_type::on_initialize(compiler::session& session) {
         symbol(session.builder().make_symbol(parent_scope(), "module"));
         return true;
-    }
-
-    bool module_type::on_type_check(compiler::type* other) {
-        return other != nullptr
-            && other->symbol()->name() == symbol()->name();
     }
 
 }

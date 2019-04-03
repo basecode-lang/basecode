@@ -370,14 +370,13 @@ namespace basecode::compiler {
             if (known_type == nullptr
             &&  type_parameter_node->lhs != nullptr) {
                 compiler::type_reference_list_t constraints {};
-                for (auto symbol : type_parameter_node->lhs->rhs->children) {
-                    qualified_symbol_t qualified_symbol {};
-                    builder.make_qualified_symbol(qualified_symbol, symbol);
 
-                    auto type = scope_manager.find_type(qualified_symbol, scope);
-                    auto type_ref = builder.make_type_reference(scope, type->name(), type);
-                    constraints.push_back(type_ref);
-                }
+                qualified_symbol_t qualified_symbol {};
+                builder.make_qualified_symbol(qualified_symbol, type_parameter_node->lhs);
+
+                auto type = scope_manager.find_type(qualified_symbol, scope);
+                auto type_ref = builder.make_type_reference(scope, type->name(), type);
+                constraints.push_back(type_ref);
 
                 auto root_scope = _session.program().block();
                 auto constrained_generic_type = scope_manager.find_generic_type(

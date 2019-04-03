@@ -22,7 +22,9 @@ namespace basecode::compiler {
             compiler::block* parent_scope);
 
     protected:
-        bool on_type_check(compiler::type* other) override;
+        bool on_type_check(
+            compiler::type* other,
+            const type_check_options_t& options) override;
 
         number_class_t on_number_class() const override;
 

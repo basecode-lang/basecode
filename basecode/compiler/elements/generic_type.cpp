@@ -38,15 +38,9 @@ namespace basecode::compiler {
                                                                   _constraints(constraints) {
     }
 
-    bool generic_type::is_open() const {
-        return _constraints.empty();
-    }
-
-    bool generic_type::is_open_generic_type() const {
-        return is_open();
-    }
-
-    bool generic_type::on_type_check(compiler::type* other) {
+    bool generic_type::on_type_check(
+            compiler::type* other,
+            const type_check_options_t& options) {
         if (other != nullptr
         &&  other->element_type() == element_type_t::generic_type) {
             auto other_generic = dynamic_cast<compiler::generic_type*>(other);
@@ -72,11 +66,19 @@ namespace basecode::compiler {
             return true;
 
         for (auto constraint : _constraints) {
-            if (constraint->type() == other)
+            if (constraint->type()->type_check(other, options))
                 return true;
         }
 
         return false;
+    }
+
+    bool generic_type::is_open() const {
+        return _constraints.empty();
+    }
+
+    bool generic_type::is_open_generic_type() const {
+        return is_open();
     }
 
     bool generic_type::on_initialize(compiler::session& session) {

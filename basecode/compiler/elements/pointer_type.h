@@ -37,7 +37,9 @@ namespace basecode::compiler {
         std::string name(const std::string& alias = "") const override;
 
     protected:
-        bool on_type_check(compiler::type* other) override;
+        bool on_type_check(
+            compiler::type* other,
+            const type_check_options_t& options) override;
 
         number_class_t on_number_class() const override;
 

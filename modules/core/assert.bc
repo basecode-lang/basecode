@@ -23,7 +23,7 @@ public :: ns {
             return;
         };
         print("assertion failure: %s\n", message);
-        exit(1);
+        exit(cast<s32>(1));
     };
 
 };

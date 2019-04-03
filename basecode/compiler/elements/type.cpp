@@ -59,6 +59,18 @@ namespace basecode::compiler {
                                                 _symbol(symbol) {
     }
 
+    bool type::type_check(
+            compiler::type* other,
+            const type_check_options_t& options) {
+        return on_type_check(other, options);
+    }
+
+    bool type::on_type_check(
+            compiler::type* other,
+            const type_check_options_t& options) {
+        return false;
+    }
+
     bool type::packed() const {
         return _packed;
     }
@@ -173,20 +185,12 @@ namespace basecode::compiler {
         return vm::ffi_types_t::void_type;
     }
 
-    bool type::type_check(compiler::type* other) {
-        return on_type_check(other);
-    }
-
     number_class_t type::number_class() const {
         return on_number_class();
     }
 
     compiler::symbol_element* type::symbol() const {
         return _symbol;
-    }
-
-    bool type::on_type_check(compiler::type* other) {
-        return false;
     }
 
     bool type::initialize(compiler::session& session) {

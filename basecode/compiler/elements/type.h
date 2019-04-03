@@ -32,6 +32,10 @@ namespace basecode::compiler {
             element_type_t type,
             compiler::symbol_element* symbol);
 
+        bool type_check(
+            compiler::type* other,
+            const type_check_options_t& options);
+
         bool packed() const;
 
         void packed(bool value);
@@ -58,8 +62,6 @@ namespace basecode::compiler {
 
         virtual bool is_pointer_type() const;
 
-        bool type_check(compiler::type* other);
-
         virtual bool is_composite_type() const;
 
         compiler::symbol_element* symbol() const;
@@ -73,9 +75,11 @@ namespace basecode::compiler {
         virtual std::string name(const std::string& alias = "") const;
 
     protected:
-        void size_in_bytes(size_t value);
+        virtual bool on_type_check(
+            compiler::type* other,
+            const type_check_options_t& options);
 
-        virtual bool on_type_check(compiler::type* other);
+        void size_in_bytes(size_t value);
 
         virtual number_class_t on_number_class() const;
 

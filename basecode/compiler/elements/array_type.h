@@ -52,7 +52,9 @@ namespace basecode::compiler {
         std::string name(const std::string& alias = "") const override;
 
     protected:
-        bool on_type_check(compiler::type* other) override;
+        bool on_type_check(
+            compiler::type* other,
+            const type_check_options_t& options) override;
 
         bool on_apply_fold_result(
             compiler::element* e,

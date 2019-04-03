@@ -41,7 +41,7 @@ namespace basecode::syntax {
                 parser->consume();
                 type_parameter_node->lhs = parser->expect_expression(
                     r,
-                    ast_node_type_t::tuple_literal,
+                    ast_node_type_t::symbol,
                     precedence_t::variable);
                 if (r.is_failed())
                     return false;
