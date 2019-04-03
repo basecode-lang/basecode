@@ -32,6 +32,14 @@ namespace basecode::compiler {
         return true;
     }
 
+    void procedure_instance::mark_as_template() {
+        _is_template = true;
+    }
+
+    bool procedure_instance::is_template() const {
+        return _is_template;
+    }
+
     compiler::block* procedure_instance::scope() {
         return _scope;
     }

@@ -49,6 +49,7 @@ PARSER:
 =======
 
 COMPILER:
+- BUG: don't emit the template procedure_instance
 - NEW: @initializer/@finalizer linkages
 - NEW: operator overloading procedure linkages, e.g.
         @binary_operator "+";
@@ -63,8 +64,6 @@ COMPILER:
 
         should these use pointers?
 - NEW: convert multiple/named parameters in procedure return into a tuple
-- FIX: assembly_parser can't find locals or frame_offsets because they're now
-        in different blocks.
 - NEW: variables that are a family_type need to record two things:
         - which type within the family tree is "selected" based on it's value;
         - the value itself

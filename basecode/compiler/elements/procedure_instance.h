@@ -23,6 +23,10 @@ namespace basecode::compiler {
             compiler::procedure_type* procedure_type,
             compiler::block* scope);
 
+        void mark_as_template();
+
+        bool is_template() const;
+
         compiler::block* scope();
 
         compiler::procedure_type* procedure_type();
@@ -35,6 +39,7 @@ namespace basecode::compiler {
         void on_owned_elements(element_list_t& list) override;
 
     private:
+        bool _is_template = false;
         compiler::block* _scope = nullptr;
         compiler::procedure_type* _procedure_type = nullptr;
     };
