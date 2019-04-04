@@ -1342,7 +1342,7 @@ namespace basecode::compiler {
                     vm::instruction_operand_t* operand = nullptr;
                 };
 
-                std::vector<variable_t*> temp_vars {};
+                variable_set_t excluded_vars {};
                 std::vector<return_parameter_result_t> return_results {};
 
                 const auto& return_parameters = procedure_type->return_parameters();
@@ -1367,7 +1367,7 @@ namespace basecode::compiler {
                             return_result.operand = &result.operands[index];
                             auto named_ref = return_result.operand->data<vm::named_ref_with_offset_t>();
                             if (named_ref != nullptr)
-                                temp_vars.emplace_back(_variables.find(named_ref->ref->name));
+                                excluded_vars.insert(_variables.find(named_ref->ref->name));
                         } else {
                             vm::op_sizes size = vm::op_sizes::qword;
                             if (!field_type->is_composite_type())
@@ -1375,7 +1375,7 @@ namespace basecode::compiler {
 
                             auto temp = _variables.retain_temp(field_type->number_class());
                             result.temps.emplace_back(temp);
-                            temp_vars.emplace_back(temp->variable);
+                            excluded_vars.insert(temp->variable);
 
                             result.operands[index] = vm::instruction_operand_t(assembler.make_named_ref(
                                 vm::assembler_named_ref_type_t::local,
@@ -1391,8 +1391,7 @@ namespace basecode::compiler {
                     }
                 }
 
-                // FIXME!
-                auto grouped_variables = _variables.group_variables(nullptr);
+                auto grouped_variables = _variables.group_variables(excluded_vars);
 
                 auto prologue_block = _blocks.make();
                 assembler.blocks().emplace_back(prologue_block);

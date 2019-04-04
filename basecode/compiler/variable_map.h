@@ -83,6 +83,7 @@ namespace basecode::compiler {
 
     using variable_list_t = std::vector<variable_t*>;
     using variable_stack_t = std::stack<variable_t*>;
+    using variable_set_t = std::unordered_set<variable_t*>;
     using const_variable_list_t = std::vector<const variable_t*>;
     using variable_map_t = std::map<std::string, variable_t>;
     using temp_pool_entry_list_t = std::vector<temp_pool_entry_t*>;
@@ -141,7 +142,7 @@ namespace basecode::compiler {
 
         identifier_by_section_t& module_variables();
 
-        group_variable_result_t group_variables(variable_t* excluded);
+        group_variable_result_t group_variables(const variable_set_t& excluded);
 
         temp_pool_entry_t* retain_temp(number_class_t number_class = number_class_t::integer);
 

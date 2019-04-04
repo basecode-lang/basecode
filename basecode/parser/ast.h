@@ -57,6 +57,7 @@ namespace basecode::syntax {
         unary_operator,
         statement_body,
         type_parameter,
+        assignment_set,
         spread_operator,
         proc_expression,
         binary_operator,
@@ -127,6 +128,7 @@ namespace basecode::syntax {
         {ast_node_type_t::argument_list, "argument_list"},
         {ast_node_type_t::if_expression, "if_expression"},
         {ast_node_type_t::array_literal, "array_literal"},
+        {ast_node_type_t::assignment_set, "assignment_set"},
         {ast_node_type_t::type_parameter, "type_parameter"},
         {ast_node_type_t::parameter_list, "parameter_list"},
         {ast_node_type_t::statement_body, "statement_body"},
@@ -312,6 +314,8 @@ namespace basecode::syntax {
         ast_node_t* parameter_list_node();
 
         ast_node_t* statement_body_node();
+
+        ast_node_t* assignment_set_node();
 
         ast_node_t* type_declaration_node();
 

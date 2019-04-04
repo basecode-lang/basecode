@@ -841,7 +841,7 @@ namespace basecode::compiler {
         return &it.first->second;
     }
 
-    group_variable_result_t variable_map::group_variables(variable_t* excluded) {
+    group_variable_result_t variable_map::group_variables(const variable_set_t& excluded) {
         group_variable_result_t result {};
         result.ints.emplace_back();
         result.floats.emplace_back();
@@ -851,7 +851,7 @@ namespace basecode::compiler {
             auto list = var->number_class == number_class_t::integer ?
                 &result.ints :
                 &result.floats;
-            if (excluded != nullptr && var == excluded) {
+            if (excluded.count(const_cast<variable_t*>(var)) > 0) {
                 list->emplace_back();
                 continue;
             }

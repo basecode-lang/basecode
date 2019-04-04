@@ -17,6 +17,7 @@
 #include <parser/ast.h>
 #include <vm/vm_types.h>
 #include <unordered_map>
+#include <unordered_set>
 #include <common/rune.h>
 #include <common/result.h>
 #include <common/id_pool.h>

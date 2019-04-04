@@ -231,6 +231,13 @@ namespace basecode::syntax {
         return make_node(ast_node_type_t::argument_list);
     }
 
+    ast_node_t* ast_builder::assignment_set_node() {
+        auto node = make_node(ast_node_type_t::assignment_set);
+        node->lhs = assignment_target_list_node();
+        node->rhs = assignment_source_list_node();
+        return node;
+    }
+
     ast_node_t* ast_builder::statement_body_node() {
         return make_node(ast_node_type_t::statement_body);
     }

@@ -11,4 +11,4 @@ new_biased_vector3 :: proc(x, y, z: f32): vec: vector3, bias: f32 {
     bias := (x + y + z) / 3.14;
 };
 
-new_biased_vector3(3.6, 1.6, 2.33);
+vec, bias := new_biased_vector3(3.6, 1.6, 2.33);

@@ -252,6 +252,9 @@ namespace basecode::syntax {
             return nullptr;
         }
 
+        auto source_list = parser->ast_builder()->assignment_source_list_node();
+        auto target_list = parser->ast_builder()->assignment_target_list_node();
+
         pairs_to_list(assignment_node->lhs, lhs);
 
         collect_comments(r, parser, assignment_node->comments);
