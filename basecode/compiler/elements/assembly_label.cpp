@@ -47,7 +47,7 @@ namespace basecode::compiler {
                 base_type);
         }
 
-        result.inferred_type = type;
+        result.types.emplace_back(type);
         return true;
     }
 

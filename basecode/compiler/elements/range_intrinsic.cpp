@@ -44,8 +44,9 @@ namespace basecode::compiler {
         if (type_parameters().empty())
             return false;
 
-        result.reference = type_parameters().front();
-        result.inferred_type = type_parameters().front()->type();
+        auto type_ref = type_parameters().front();
+        result.types.emplace_back(type_ref->type(), type_ref);
+
         return true;
     }
 

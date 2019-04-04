@@ -356,25 +356,28 @@ namespace basecode::compiler {
                 continue;
             }
 
-            infer_type_result_t infer_type_result {};
-            if (!init->infer_type(*this, infer_type_result)) {
+            infer_type_result_t type_result {};
+            if (!init->infer_type(*this, type_result)) {
                 // XXX: error
                 return false;
             }
 
+            const auto& inferred = type_result.types.back();
+
             auto var_type = var->type_ref()->type();
-            if (!var_type->type_check(infer_type_result.inferred_type, init_check_options)) {
+            if (!var_type->type_check(inferred.type, init_check_options)) {
                 error(
                     init->module(),
                     "C051",
                     fmt::format(
                         "type mismatch: cannot assign {} to {}.",
-                        infer_type_result.type_name(),
+                        inferred.type_name(),
                         var->type_ref()->name()),
                     var->location());
             }
         }
 
+        // XXX: fix type checking for multiple assignment from multiple return values
         auto binary_ops = _elements->find_by_type<compiler::binary_operator>(element_type_t::binary_operator);
         for (auto binary_op : binary_ops) {
             if (binary_op->operator_type() != operator_type_t::assignment)
@@ -400,14 +403,17 @@ namespace basecode::compiler {
                 return false;
             }
 
-            if (!lhs_type_result.inferred_type->type_check(rhs_type_result.inferred_type, {})) {
+            const auto& lhs_inferred = lhs_type_result.types.back();
+            const auto& rhs_inferred = rhs_type_result.types.back();
+
+            if (!lhs_inferred.type->type_check(rhs_inferred.type, {})) {
                 error(
                     binary_op->module(),
                     "C051",
                     fmt::format(
                         "type mismatch: cannot assign {} to {}.",
-                        rhs_type_result.type_name(),
-                        lhs_type_result.type_name()),
+                        rhs_inferred.type_name(),
+                        lhs_inferred.type_name()),
                     binary_op->rhs()->location());
             }
         }
@@ -631,15 +637,16 @@ namespace basecode::compiler {
                 unknown_type = dynamic_cast<compiler::unknown_type*>(var->type_ref()->type());
             }
 
-            infer_type_result_t infer_type_result {};
+            infer_type_result_t type_result {};
 
             if (var->is_parent_type_one_of({element_type_t::binary_operator})) {
                 auto binary_operator = dynamic_cast<compiler::binary_operator*>(var->parent_element());
                 switch (binary_operator->operator_type()) {
                     case operator_type_t::assignment: {
-                        if (!binary_operator->rhs()->infer_type(*this, infer_type_result))
+                        if (!binary_operator->rhs()->infer_type(*this, type_result))
                             return false;
-                        var->type_ref(infer_type_result.reference);
+                        const auto& inferred = type_result.types.back();
+                        var->type_ref(inferred.ref);
                         break;
                     }
                     default: {
@@ -671,10 +678,11 @@ namespace basecode::compiler {
                         to_remove.insert(unknown_type->id());
                     }
                 } else {
-                    if (!expr->infer_type(*this, infer_type_result))
+                    if (!expr->infer_type(*this, type_result))
                         return false;
-                    if (infer_type_result.reference != nullptr)
-                        var->type_ref(infer_type_result.reference);
+                    const auto& inferred = type_result.types.back();
+                    if (inferred.ref != nullptr)
+                        var->type_ref(inferred.ref);
                     else {
                         if (!final)
                             remaining--;
@@ -750,7 +758,9 @@ namespace basecode::compiler {
                             unresolved_reference->symbol().location);
                         return false;
                     }
-                    if (!type_result.inferred_type->is_composite_type()) {
+
+                    const auto& inferred = type_result.types.back();
+                    if (!inferred.type->is_composite_type()) {
                         error(
                             unresolved_reference->module(),
                             "X000",
@@ -758,7 +768,7 @@ namespace basecode::compiler {
                             unresolved_reference->symbol().location);
                         return false;
                     }
-                    auto composite_type = dynamic_cast<compiler::composite_type*>(type_result.inferred_type);
+                    auto composite_type = dynamic_cast<compiler::composite_type*>(inferred.type);
                     type_scope = composite_type->scope();
                 }
             }

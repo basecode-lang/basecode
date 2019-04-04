@@ -182,8 +182,10 @@ namespace basecode::compiler {
                     return false;
                 }
 
+                const auto& inferred = type_result.types.back();
+
                 auto type_ref = fld->identifier()->type_ref();
-                if (!type_ref->type()->type_check(type_result.inferred_type, {})) {
+                if (!type_ref->type()->type_check(inferred.type, {})) {
                     std::string parameter_type {};
                     auto fld_type = fld->identifier()->type_ref()->type();
                     if (fld_type->element_type() == element_type_t::generic_type) {
@@ -208,7 +210,7 @@ namespace basecode::compiler {
                         "X000",
                         fmt::format(
                             "type mismatch: cannot assign {} to parameter {}:{}.",
-                            type_result.type_name(),
+                            inferred.type_name(),
                             fld->identifier()->symbol()->name(),
                             parameter_type),
                         param->location());

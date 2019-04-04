@@ -26,7 +26,7 @@ namespace basecode::compiler {
     bool assembly_literal_label::on_infer_type(
             compiler::session& session,
             infer_type_result_t& result) {
-        result.inferred_type = _type;
+        result.types.emplace_back(_type);
         return true;
     }
 

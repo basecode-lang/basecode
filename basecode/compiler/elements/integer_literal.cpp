@@ -27,9 +27,10 @@ namespace basecode::compiler {
     bool integer_literal::on_infer_type(
             compiler::session& session,
             infer_type_result_t& result) {
-        result.inferred_type = session
-            .scope_manager()
-            .find_type(qualified_symbol_t(numeric_type::narrow_to_value(_value)));
+        result.types.emplace_back(
+            session
+                .scope_manager()
+                .find_type(qualified_symbol_t(numeric_type::narrow_to_value(_value))));
         return true;
     }
 

@@ -32,8 +32,7 @@ namespace basecode::compiler {
     bool type_literal::on_infer_type(
             compiler::session& session,
             infer_type_result_t& result) {
-        result.reference = _type_ref;
-        result.inferred_type = _type_ref->type();
+        result.types.emplace_back(_type_ref->type(), _type_ref);
         return true;
     }
 

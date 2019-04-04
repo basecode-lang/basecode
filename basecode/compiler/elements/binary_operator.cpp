@@ -61,8 +61,11 @@ namespace basecode::compiler {
                 if (!_rhs->infer_type(session, rhs_type_result))
                     return false;
 
-                auto lhs_size_in_bytes = lhs_type_result.inferred_type->size_in_bytes();
-                auto rhs_size_in_bytes = rhs_type_result.inferred_type->size_in_bytes();
+                const auto& lhs_inferred = lhs_type_result.types.back();
+                const auto& rhs_inferred = rhs_type_result.types.back();
+
+                auto lhs_size_in_bytes = lhs_inferred.type->size_in_bytes();
+                auto rhs_size_in_bytes = rhs_inferred.type->size_in_bytes();
 
                 if (rhs_size_in_bytes > lhs_size_in_bytes) {
                     result = rhs_type_result;
@@ -73,19 +76,22 @@ namespace basecode::compiler {
                 return true;
             }
             case operator_type_t::subscript: {
-                if (!_lhs->infer_type(session, result))
+                infer_type_result_t type_result {};
+                if (!_lhs->infer_type(session, type_result))
                     return false;
 
-                auto ptr_type = dynamic_cast<compiler::pointer_type*>(result.inferred_type);
+                const auto& inferred = type_result.types.back();
+                auto ptr_type = dynamic_cast<compiler::pointer_type*>(inferred.type);
                 if (ptr_type == nullptr)
                     return false;
 
-                result.inferred_type = ptr_type->base_type_ref()->type();
-                result.reference = ptr_type->base_type_ref();
+                result.types.emplace_back(
+                    ptr_type->base_type_ref()->type(),
+                    ptr_type->base_type_ref());
                 return true;
             }
             case operator_type_t::assignment: {
-                return _lhs->infer_type(session, result);
+                return _rhs->infer_type(session, result);
             }
             case operator_type_t::member_access: {
                 return _rhs->infer_type(session, result);
@@ -98,9 +104,10 @@ namespace basecode::compiler {
             case operator_type_t::greater_than:
             case operator_type_t::less_than_or_equal:
             case operator_type_t::greater_than_or_equal: {
-                result.inferred_type = session
-                    .scope_manager()
-                    .find_type(qualified_symbol_t("bool"));
+                result.types.emplace_back(
+                    session
+                        .scope_manager()
+                        .find_type(qualified_symbol_t("bool")));
                 return true;
             }
             default:

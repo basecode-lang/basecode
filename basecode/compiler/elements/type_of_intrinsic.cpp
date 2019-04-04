@@ -58,7 +58,8 @@ namespace basecode::compiler {
                 location());
             return false;
         }
-        auto label_name = compiler::type::make_info_label_name(arg_type_result.inferred_type);
+        const auto& arg_inferred = arg_type_result.types.back();
+        auto label_name = compiler::type::make_info_label_name(arg_inferred.type);
 
         infer_type_result_t type_result {};
         if (!infer_type(session, type_result)) {
@@ -69,10 +70,10 @@ namespace basecode::compiler {
                 location());
             return false;
         }
-
+        const auto& inferred = type_result.types.back();
         result.element = session.builder().make_assembly_literal_label(
             parent_scope(),
-            type_result.inferred_type,
+            inferred.type,
             label_name,
             module());
         result.element->location(location());
@@ -94,7 +95,8 @@ namespace basecode::compiler {
                 qualified_symbol_t(),
                 base_type);
         }
-        result.inferred_type = type;
+
+        result.types.emplace_back(type);
 
         return true;
     }

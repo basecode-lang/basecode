@@ -840,13 +840,23 @@ namespace basecode::compiler {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    struct infer_type_result_t {
+    struct inferred_type_t {
         std::string type_name() const;
 
-        compiler::type* base_type() const;
+        explicit inferred_type_t(
+            compiler::type* t,
+            compiler::type_reference* r = nullptr) : type(t),
+                                                     ref(r) {
+        }
 
-        compiler::type* inferred_type = nullptr;
-        compiler::type_reference* reference = nullptr;
+        compiler::type* type = nullptr;
+        compiler::type_reference* ref = nullptr;
+    };
+
+    using inferred_type_list_t = std::vector<inferred_type_t>;
+
+    struct infer_type_result_t {
+        inferred_type_list_t types {};
     };
 
     ///////////////////////////////////////////////////////////////////////////

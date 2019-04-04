@@ -28,7 +28,7 @@ namespace basecode::compiler {
     bool procedure_instance::on_infer_type(
             compiler::session& session,
             infer_type_result_t& result) {
-        result.inferred_type = _procedure_type;
+        result.types.emplace_back(_procedure_type);
         return true;
     }
 

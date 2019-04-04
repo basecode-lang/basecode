@@ -53,10 +53,12 @@ namespace basecode::compiler {
             infer_type_result_t& result) {
         if (is_type()) {
             if (_element_type == element_type_t::type_reference) {
-                result.reference = dynamic_cast<compiler::type_reference*>(this);
-                result.inferred_type = result.reference->type();
+                auto ref = dynamic_cast<compiler::type_reference*>(this);
+                result.types.emplace_back(ref->type(), ref);
             } else {
-                result.inferred_type = dynamic_cast<compiler::type*>(this);
+                result.types.emplace_back(
+                    dynamic_cast<compiler::type*>(this),
+                    nullptr);
             }
             return true;
         }

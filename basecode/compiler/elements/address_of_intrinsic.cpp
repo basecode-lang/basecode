@@ -99,18 +99,19 @@ namespace basecode::compiler {
         if (!args[0]->infer_type(session, base_result))
             return false;
 
+        const auto& inferred = base_result.types.back();
         auto& builder = session.builder();
         auto& scope_manager = session.scope_manager();
 
-        auto type = scope_manager.find_pointer_type(base_result.inferred_type);
+        auto type = scope_manager.find_pointer_type(inferred.type);
         if (type == nullptr) {
             type = builder.make_pointer_type(
                 parent_scope(),
                 qualified_symbol_t(),
-                base_result.inferred_type);
+                inferred.type);
         }
 
-        result.inferred_type = type;
+        result.types.emplace_back(type);
         return true;
     }
 

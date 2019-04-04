@@ -259,22 +259,13 @@ namespace basecode::compiler {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    std::string infer_type_result_t::type_name() const {
-        if (reference != nullptr)
-            return reference->symbol().name;
-        return inferred_type->symbol()->name();
+    std::string inferred_type_t::type_name() const {
+        if (ref != nullptr)
+            return ref->symbol().name;
+        return type->symbol()->name();
     }
 
-    compiler::type* infer_type_result_t::base_type() const {
-        if (inferred_type == nullptr)
-            return nullptr;
-        if (inferred_type->is_pointer_type()) {
-            auto pointer_type = dynamic_cast<compiler::pointer_type*>(inferred_type);
-            return pointer_type->base_type_ref()->type();
-        } else {
-            return inferred_type;
-        }
-    }
+    ///////////////////////////////////////////////////////////////////////////
 
     qualified_symbol_t make_qualified_symbol(const std::string& symbol) {
         qualified_symbol_t qs {};

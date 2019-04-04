@@ -732,8 +732,8 @@ namespace basecode::compiler {
         }
 
         if (init_expr != nullptr && type_ref == nullptr) {
-            infer_type_result_t infer_type_result {};
-            if (!init_expr->infer_type(_session, infer_type_result)) {
+            infer_type_result_t type_result {};
+            if (!init_expr->infer_type(_session, type_result)) {
                 // XXX: need to refactor this code to recursively determine if there
                 //      are unresolved identifier_reference instances and flag them as
                 //      appropriate.
@@ -757,17 +757,23 @@ namespace basecode::compiler {
                 }
             }
 
-            if (infer_type_result.reference == nullptr) {
-                infer_type_result.reference = builder.make_type_reference(
+            auto index = source_index;
+            if (index > type_result.types.size() - 1)
+                index = type_result.types.size() - 1;
+            const auto& inferred = type_result.types[index];
+            auto new_type_ref = inferred.ref;
+
+            if (new_type_ref == nullptr) {
+                new_type_ref = builder.make_type_reference(
                     scope,
-                    infer_type_result.inferred_type->symbol()->qualified_symbol(),
-                    infer_type_result.inferred_type);
+                    inferred.type->symbol()->qualified_symbol(),
+                    inferred.type);
             }
 
-            new_identifier->type_ref(infer_type_result.reference);
-            new_identifier->inferred_type(infer_type_result.inferred_type != nullptr);
+            new_identifier->type_ref(new_type_ref);
+            new_identifier->inferred_type(inferred.type != nullptr);
 
-            if (infer_type_result.reference->is_unknown_type()) {
+            if (new_type_ref->is_unknown_type()) {
                 _session.scope_manager()
                     .identifiers_with_unknown_types()
                     .push_back(new_identifier);
@@ -1326,12 +1332,14 @@ namespace basecode::compiler {
             }
 
             compiler::block* type_scope = nullptr;
-            infer_type_result_t infer_type_result {};
-            if (lhs->infer_type(_session, infer_type_result)) {
-                if (infer_type_result.inferred_type->is_composite_type()) {
+            infer_type_result_t type_result {};
+            if (lhs->infer_type(_session, type_result)) {
+                const auto& inferred = type_result.types.back();
+
+                if (inferred.type->is_composite_type()) {
                     compiler::composite_type* composite_type = nullptr;
-                    if (infer_type_result.inferred_type->is_pointer_type()) {
-                        auto pointer_type = dynamic_cast<compiler::pointer_type*>(infer_type_result.inferred_type);
+                    if (inferred.type->is_pointer_type()) {
+                        auto pointer_type = dynamic_cast<compiler::pointer_type*>(inferred.type);
                         composite_type = dynamic_cast<compiler::composite_type*>(pointer_type->base_type_ref()->type());
                         if (is_member_access) {
                             auto location = lhs->location();
@@ -1342,7 +1350,7 @@ namespace basecode::compiler {
                             lhs->location(location);
                         }
                     } else {
-                        composite_type = dynamic_cast<compiler::composite_type*>(infer_type_result.inferred_type);
+                        composite_type = dynamic_cast<compiler::composite_type*>(inferred.type);
                     }
 
                     type_scope = composite_type->scope();
@@ -1562,10 +1570,14 @@ namespace basecode::compiler {
         if (is_ufcs) {
             const auto& elements = args->elements();
             auto self_arg = elements[0];
+
             infer_type_result_t type_result {};
             if (!self_arg->infer_type(_session, type_result))
                 return false;
-            if (!type_result.inferred_type->is_pointer_type()) {
+
+            const auto& inferred = type_result.types.back();
+
+            if (!inferred.type->is_pointer_type()) {
                 auto address_of_args = builder.make_argument_list(args->parent_scope());
                 address_of_args->add(self_arg);
                 self_arg->parent_element(address_of_args);
@@ -2327,12 +2339,14 @@ namespace basecode::compiler {
         } else {
             infer_type_result_t infer_type_result {};
             if (rhs->infer_type(_session, infer_type_result)) {
-                type_ref = infer_type_result.reference;
+                const auto& inferred = infer_type_result.types.back();
+
+                type_ref = inferred.ref;
                 if (type_ref == nullptr) {
                     type_ref = builder.make_type_reference(
                         scope_manager.current_scope(),
-                        infer_type_result.inferred_type->symbol()->qualified_symbol(),
-                        infer_type_result.inferred_type);
+                        inferred.type->symbol()->qualified_symbol(),
+                        inferred.type);
                 }
             } else {
                 // XXX: error
@@ -2720,11 +2734,12 @@ namespace basecode::compiler {
 
         auto predicate = resolve_symbol_or_evaluate(node, scope);
         if (predicate->element_type() != element_type_t::binary_operator) {
-            infer_type_result_t infer_type_result {};
-            if (!predicate->infer_type(_session, infer_type_result))
+            infer_type_result_t type_result {};
+            if (!predicate->infer_type(_session, type_result))
                 return nullptr;
 
-            if (infer_type_result.inferred_type->element_type() != element_type_t::bool_type) {
+            const auto& inferred = type_result.types.back();
+            if (inferred.type->element_type() != element_type_t::bool_type) {
                 _session.error(
                     _session.scope_manager().current_module(),
                     "P002",

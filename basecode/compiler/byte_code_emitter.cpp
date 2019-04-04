@@ -336,12 +336,15 @@ namespace basecode::compiler {
         auto current_block = *basic_block;
 
         vm::op_sizes op_size {};
+        inferred_type_t* inferred = nullptr;
+
         e->infer_type(_session, result.type_result);
-        if (result.type_result.inferred_type != nullptr) {
-            if (!result.type_result.inferred_type->is_composite_type()) {
-                op_size = vm::op_size_for_byte_size(
-                    result.type_result.inferred_type->size_in_bytes());
-            } else if (result.type_result.inferred_type->is_pointer_type()) {
+
+        if (!result.type_result.types.empty()) {
+            inferred = &result.type_result.types.back();
+            if (!inferred->type->is_composite_type()) {
+                op_size = vm::op_size_for_byte_size(inferred->type->size_in_bytes());
+            } else if (inferred->type->is_pointer_type()) {
                 op_size = vm::op_sizes::qword;
             }
         }
@@ -384,10 +387,12 @@ namespace basecode::compiler {
                 if (!emit_element(basic_block, expr, expr_result))
                     return false;
 
+                const auto& expr_inferred = expr_result.type_result.types.back();
+
                 cast_mode_t mode;
                 auto type_ref = cast->type();
-                auto source_number_class = expr_result.type_result.inferred_type->number_class();
-                auto source_size = expr_result.type_result.inferred_type->size_in_bytes();
+                auto source_number_class = expr_inferred.type->number_class();
+                auto source_size = expr_inferred.type->size_in_bytes();
                 auto target_number_class = type_ref->type()->number_class();
                 auto target_size = type_ref->type()->size_in_bytes();
 
@@ -397,7 +402,7 @@ namespace basecode::compiler {
                         "C073",
                         fmt::format(
                             "cannot cast from type: {}",
-                            expr_result.type_result.type_name()),
+                            expr_inferred.type_name()),
                         expr->location());
                     return false;
                 } else if (target_number_class == number_class_t::none) {
@@ -418,7 +423,7 @@ namespace basecode::compiler {
                     } else if (source_size > target_size) {
                         mode = cast_mode_t::integer_truncate;
                     } else {
-                        auto source_numeric_type = dynamic_cast<compiler::numeric_type*>(expr_result.type_result.inferred_type);
+                        auto source_numeric_type = dynamic_cast<compiler::numeric_type*>(expr_inferred.type);
                         if (source_numeric_type->is_signed()) {
                             mode = cast_mode_t::integer_sign_extend;
                         } else {
@@ -445,7 +450,7 @@ namespace basecode::compiler {
                 current_block->comment(
                     fmt::format(
                         "cast: {} -> {}",
-                        expr_result.type_result.type_name(),
+                        expr_inferred.type_name(),
                         type_ref->name()),
                     vm::comment_location_t::after_instruction);
 
@@ -1545,13 +1550,15 @@ namespace basecode::compiler {
                 if (!emit_element(basic_block, expr, expr_result))
                     return false;
 
-                if (expr_result.type_result.inferred_type->number_class() == number_class_t::none) {
+                const auto& expr_inferred = expr_result.type_result.types.back();
+
+                if (expr_inferred.type->number_class() == number_class_t::none) {
                     _session.error(
                         expr->module(),
                         "C073",
                         fmt::format(
                             "cannot transmute from type: {}",
-                            expr_result.type_result.type_name()),
+                            expr_inferred.type_name()),
                         expr->location());
                     return false;
                 } else if (type_ref->type()->number_class() == number_class_t::none) {
@@ -1730,7 +1737,7 @@ namespace basecode::compiler {
             }
             case element_type_t::integer_literal: {
                 auto integer_literal = dynamic_cast<compiler::integer_literal*>(e);
-                auto size = result.type_result.inferred_type->size_in_bytes();
+                auto size = inferred->type->size_in_bytes();
                 result.operands.emplace_back(vm::instruction_operand_t(
                     integer_literal->value(),
                     vm::op_size_for_byte_size(size)));
@@ -1773,7 +1780,7 @@ namespace basecode::compiler {
 
                 auto result_operand = target_operand(
                     result,
-                    result.type_result.inferred_type->number_class(),
+                    inferred->type->number_class(),
                     op_size);
 
                 switch (op_type) {
@@ -1802,7 +1809,8 @@ namespace basecode::compiler {
                     }
                     case operator_type_t::pointer_dereference: {
                         current_block->comment("unary_op: pointer deref", vm::comment_location_t::after_instruction);
-                        auto is_composite_type = rhs_emit_result.type_result.inferred_type->is_composite_type();
+                        const auto& rhs_inferred = rhs_emit_result.type_result.types.back();
+                        auto is_composite_type = rhs_inferred.type->is_composite_type();
                         if (is_composite_type) {
                             if (rhs_emit_result.operands.size() > 1) {
                                 current_block->move(
@@ -1880,8 +1888,10 @@ namespace basecode::compiler {
                         if (!emit_element(basic_block, binary_op->lhs(), lhs_result))
                             return false;
 
+                        const auto& lhs_inferred = lhs_result.type_result.types.back();
+
                         size_t size_in_bytes = 0;
-                        auto ptr_type = dynamic_cast<compiler::pointer_type*>(lhs_result.type_result.inferred_type);
+                        auto ptr_type = dynamic_cast<compiler::pointer_type*>(lhs_inferred.type);
                         if (ptr_type != nullptr) {
                             size_in_bytes = ptr_type->base_type_ref()->type()->size_in_bytes();
                         }
@@ -1953,11 +1963,14 @@ namespace basecode::compiler {
                             return false;
                         current_block = *basic_block;
 
-                        auto copy_required = false;
-                        auto lhs_is_composite = lhs_result.type_result.inferred_type->is_composite_type();
-                        auto rhs_is_composite = rhs_result.type_result.inferred_type->is_composite_type();
+                        const auto& lhs_inferred = lhs_result.type_result.types.back();
+                        const auto& rhs_inferred = rhs_result.type_result.types.back();
 
-                        if (!lhs_result.type_result.inferred_type->is_pointer_type()) {
+                        auto copy_required = false;
+                        auto lhs_is_composite = lhs_inferred.type->is_composite_type();
+                        auto rhs_is_composite = rhs_inferred.type->is_composite_type();
+
+                        if (!lhs_inferred.type->is_pointer_type()) {
                             if (lhs_is_composite && !rhs_is_composite) {
                                 _session.error(
                                     binary_op->module(),
@@ -2116,9 +2129,10 @@ namespace basecode::compiler {
                         return false;
 
                     auto current_block = *basic_block;
+                    const auto& arg_inferred = arg_result.type_result.types.back();
 
                     if (!arg_list->is_foreign_call()) {
-                        type = arg_result.type_result.inferred_type;
+                        type = arg_inferred.type;
                         switch (type->element_type()) {
                             case element_type_t::array_type:
                             case element_type_t::tuple_type:
@@ -2636,11 +2650,12 @@ namespace basecode::compiler {
             return false;
 
         auto current_block = *basic_block;
+        const auto& inferred = result.type_result.types.back();
 
         auto result_operand = target_operand(
             result,
-            result.type_result.inferred_type->number_class(),
-            vm::op_size_for_byte_size(result.type_result.inferred_type->size_in_bytes()));
+            inferred.type->number_class(),
+            vm::op_size_for_byte_size(inferred.type->size_in_bytes()));
 
         switch (binary_op->operator_type()) {
             case operator_type_t::add: {
@@ -2822,7 +2837,8 @@ namespace basecode::compiler {
             return false;
 
         auto current_block = *basic_block;
-        auto is_signed = lhs_result.type_result.inferred_type->is_signed();
+        const auto& lhs_inferred = lhs_result.type_result.types.back();
+        auto is_signed = lhs_inferred.type->is_signed();
 
         current_block->cmp(
             lhs_result.operands.back(),

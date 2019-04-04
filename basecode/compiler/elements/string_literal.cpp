@@ -191,7 +191,8 @@ namespace basecode::compiler {
                 qualified_symbol_t(),
                 base_type);
         }
-        result.inferred_type = type;
+
+        result.types.emplace_back(type);
 
         return true;
     }

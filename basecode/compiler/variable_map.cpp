@@ -346,13 +346,14 @@ namespace basecode::compiler {
 
         auto& assembler = _session.assembler();
         auto& rhs_operand = rhs.operands.back();
+        const auto& lhs_inferred = lhs.type_result.types.back();
 
         basic_block->comment(
             fmt::format("assign: {}({})", variable_type_name(var->type), var->label),
             vm::comment_location_t::after_instruction);
 
         if (array_subscript) {
-            rhs_operand.size(vm::op_size_for_byte_size(lhs.type_result.inferred_type->size_in_bytes()));
+            rhs_operand.size(vm::op_size_for_byte_size(lhs_inferred.type->size_in_bytes()));
             basic_block->store(
                 vm::instruction_operand_t(lhs_named_ref->ref),
                 rhs_operand);
@@ -388,7 +389,7 @@ namespace basecode::compiler {
                         vm::assembler_named_ref_type_t::label,
                         lhs_label_name);
 
-                    auto composite_type = dynamic_cast<compiler::composite_type*>(lhs.type_result.inferred_type);
+                    auto composite_type = dynamic_cast<compiler::composite_type*>(lhs_inferred.type);
                     if (composite_type->size_in_bytes() == 0)
                         composite_type->calculate_size();
 

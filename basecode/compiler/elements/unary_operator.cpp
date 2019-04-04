@@ -46,16 +46,19 @@ namespace basecode::compiler {
                 return _rhs->infer_type(session, result);
             }
             case operator_type_t::logical_not: {
-                result.inferred_type = scope_manager.find_type(qualified_symbol_t("bool"));
+                result.types.emplace_back(scope_manager.find_type(qualified_symbol_t("bool")));
                 return true;
             }
             case operator_type_t::pointer_dereference: {
-                if (!_rhs->infer_type(session, result))
+                infer_type_result_t type_result {};
+                if (!_rhs->infer_type(session, type_result))
                     return false;
-                if (result.inferred_type->is_pointer_type()) {
-                    auto pointer_type = dynamic_cast<compiler::pointer_type*>(result.inferred_type);
-                    result.reference = pointer_type->base_type_ref();
-                    result.inferred_type = pointer_type->base_type_ref()->type();
+                const auto& inferred = type_result.types.back();
+                if (inferred.type->is_pointer_type()) {
+                    auto pointer_type = dynamic_cast<compiler::pointer_type*>(inferred.type);
+                    result.types.emplace_back(
+                        pointer_type->base_type_ref()->type(),
+                        pointer_type->base_type_ref());
                     return true;
                 }
                 return false;

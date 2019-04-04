@@ -45,34 +45,25 @@ namespace basecode::compiler {
             compiler::session& session,
             infer_type_result_t& result) {
         auto type = procedure_type();
-        if (type != nullptr) {
-            // XXX: this is going to require a major refactoring to
-            //      the type inference system.  in this one case, we
-            //      need to be able to return an array of inferred types
-            //      in order.
-            const auto& return_parameters = type->return_parameters();
-            if (!return_parameters.empty()) {
-                // XXX: TEMPORARY
-                //
-                // need to revisit this!
-                const auto& fields = return_parameters.as_list();
 
-                auto return_identifier = fields.back()->identifier();
-                result.inferred_type = return_identifier->type_ref()->type();
-                result.reference = return_identifier->type_ref();
-                return true;
+        if (type != nullptr) {
+            const auto& return_parameters = type->return_parameters();
+            const auto& fields = return_parameters.as_list();
+            for (auto fld : fields) {
+                auto type_ref = fld->identifier()->type_ref();
+                result.types.emplace_back(type_ref->type(), type_ref);
             }
         } else {
-            result.inferred_type = session
-                .builder()
-                .make_unknown_type(
-                    parent_scope(),
-                    session.builder().make_symbol(parent_scope(), "---"),
-                    this);
-            return true;
+            result.types.emplace_back(
+                session
+                    .builder()
+                    .make_unknown_type(
+                        parent_scope(),
+                        session.builder().make_symbol(parent_scope(), "---"),
+                        this));
         }
 
-        return false;
+        return !result.types.empty();
     }
 
     bool procedure_call::is_foreign() const {
@@ -122,16 +113,12 @@ namespace basecode::compiler {
     }
 
     bool procedure_call::resolve_overloads(compiler::session& session) {
-        compiler::type* return_type = nullptr;
-
+        infer_type_result_t return_type_result{};
         if (is_parent_type_one_of({element_type_t::binary_operator})) {
             auto bin_op = dynamic_cast<compiler::binary_operator*>(parent_element());
             if (bin_op->operator_type() == operator_type_t::assignment) {
-                infer_type_result_t type_result{};
-                if (parent_element()->infer_type(session, type_result)) {
-                    if (!type_result.inferred_type->is_unknown_type())
-                        return_type = type_result.inferred_type;
-                }
+                if (!bin_op->infer_type(session, return_type_result))
+                    return false;
             }
         }
 
@@ -158,18 +145,27 @@ namespace basecode::compiler {
                     _uniform_function_call,
                     _arguments,
                     result)) {
-                if (return_type != nullptr) {
-                    // XXX: TEMPORARY!
+                if (!return_type_result.types.empty()) {
                     const auto& return_parameters = result.proc_type->return_parameters();
-                    if (!return_parameters.empty()) {
-                        // XXX: TEMPORARY!
-                        const auto& fields = return_parameters.as_list();
+                    const auto& fields = return_parameters.as_list();
 
-                        auto proc_return_type = fields.back()->identifier()->type_ref()->type();
-                        if (proc_return_type->id() == return_type->id()) {
-                            ++success_count;
-                            success_index = results.size();
+                    size_t index = 0;
+                    auto matches = return_type_result.types.size() == fields.size();
+                    if (matches) {
+                        for (auto fld : fields) {
+                            auto param_type = fld->identifier()->type_ref()->type();
+                            const auto& inferred = return_type_result.types[index];
+                            if (param_type->id() != inferred.type->id()) {
+                                matches = false;
+                                break;
+                            }
+                            ++index;
                         }
+                    }
+
+                    if (matches) {
+                        ++success_count;
+                        success_index = results.size();
                     }
                 } else {
                     ++success_count;

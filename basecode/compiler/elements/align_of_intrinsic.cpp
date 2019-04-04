@@ -44,11 +44,11 @@ namespace basecode::compiler {
             return false;
         }
 
-        infer_type_result_t infer_type_result {};
-        if (args[0]->infer_type(session, infer_type_result)) {
+        infer_type_result_t type_result {};
+        if (args[0]->infer_type(session, type_result)) {
             result.element = session.builder().make_integer(
                 parent_scope(),
-                infer_type_result.inferred_type->alignment());
+                type_result.types.back().type->alignment());
             return true;
         }
         return false;
@@ -57,9 +57,7 @@ namespace basecode::compiler {
     bool align_of_intrinsic::on_infer_type(
             compiler::session& session,
             infer_type_result_t& result) {
-        result.inferred_type = session
-            .scope_manager()
-            .find_type(qualified_symbol_t("u32"));
+        result.types.emplace_back(session.scope_manager().find_type(qualified_symbol_t("u32")));
         return true;
     }
 

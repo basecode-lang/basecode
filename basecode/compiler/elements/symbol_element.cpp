@@ -34,8 +34,9 @@ namespace basecode::compiler {
         auto vars = session.scope_manager().find_identifier(qualified_symbol());
         compiler::identifier* identifier = vars.empty() ? nullptr : vars.front();
         if (identifier != nullptr) {
-            result.inferred_type = identifier->type_ref()->type();
-            result.reference = identifier->type_ref();
+            result.types.emplace_back(
+                identifier->type_ref()->type(),
+                identifier->type_ref());
             return true;
         }
         return false;

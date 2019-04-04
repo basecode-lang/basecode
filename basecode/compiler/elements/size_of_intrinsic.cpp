@@ -42,9 +42,10 @@ namespace basecode::compiler {
 
         infer_type_result_t infer_type_result {};
         if (args[0]->infer_type(session, infer_type_result)) {
+            const auto& inferred = infer_type_result.types.back();
             result.element = session.builder().make_integer(
                 parent_scope(),
-                infer_type_result.inferred_type->size_in_bytes());
+                inferred.type->size_in_bytes());
             return true;
         }
         return false;
@@ -53,9 +54,10 @@ namespace basecode::compiler {
     bool size_of_intrinsic::on_infer_type(
             compiler::session& session,
             infer_type_result_t& result) {
-        result.inferred_type = session
-            .scope_manager()
-            .find_type(qualified_symbol_t("u32"));
+        result.types.emplace_back(
+            session
+                .scope_manager()
+                .find_type(qualified_symbol_t("u32")));
         return true;
     }
 
