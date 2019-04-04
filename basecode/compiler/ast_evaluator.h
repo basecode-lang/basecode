@@ -74,12 +74,6 @@ namespace basecode::compiler {
             const syntax::ast_node_t* type_parameters_node,
             type_map_t& type_parameters);
 
-        void add_procedure_type_return_field(
-            const evaluator_context_t& context,
-            compiler::procedure_type* proc_type,
-            compiler::block* block_scope,
-            const syntax::ast_node_t* return_type_node);
-
         bool add_procedure_type_parameter_fields(
             evaluator_context_t& context,
             compiler::procedure_type* proc_type,
@@ -135,6 +129,12 @@ namespace basecode::compiler {
             const syntax::ast_node_t* node,
             size_t source_index,
             compiler::block* parent_scope = nullptr);
+
+        void add_procedure_type_return_parameter_fields(
+            const evaluator_context_t& context,
+            compiler::procedure_type* proc_type,
+            compiler::block* block_scope,
+            const syntax::ast_node_t* return_parameter_list);
 
     private:
         bool nil(

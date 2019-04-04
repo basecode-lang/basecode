@@ -39,6 +39,15 @@ QUESTIONS
 
 TASKS
 -----
+LEXER:
+- PERF: refactor the lexer thusly:
+    1. add a bool tokenize(common::result& r) method that tokenizes the entire source_file
+       all in one go.  store the tokens in an internal vector.
+    2. the new tokenize method should use a direct-threaded-type model to process the file.
+    3. next and has_next both change to be based on the internal vector.
+
+=======
+
 PARSER:
 - FIX: procedure multiple return types: named & unnamed
         - NEW: convert multiple/named parameters in procedure return into a tuple
@@ -49,6 +58,10 @@ PARSER:
 =======
 
 COMPILER:
+- BUG: infer_type/infer_type_result_t is insufficent as-written:
+    1. need to extend infer_type_result_t to support 0:n inferred type results.  this is
+        particularly important for procedure_call with multiple return values.
+
 - BUG: don't emit the template procedure_instance
 - NEW: @initializer/@finalizer linkages
 - NEW: operator overloading procedure linkages, e.g.

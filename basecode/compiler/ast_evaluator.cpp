@@ -208,19 +208,28 @@ namespace basecode::compiler {
 
                     basic_block->has_stack_frame(true);
 
-                    auto return_type_field = proc_type->return_type();
-                    if (return_type_field != nullptr) {
-                        auto has_return = false;
+                    auto& return_parameters = proc_type->return_parameters();
+                    if (!return_parameters.empty()) {
+                        auto anon_count = count_anonymous_return_parameters(return_parameters);
+                        auto has_return = anon_count == 0;
+
                         scope_manager.visit_child_blocks(
                             _session.result(),
                             [&](compiler::block* scope) {
                                 for (auto stmt : scope->statements()) {
                                     auto return_e = dynamic_cast<compiler::return_element*>(stmt->expression());
                                     if (return_e != nullptr) {
-                                        const auto& list = return_e->expressions();
-                                        if (!list.empty())
-                                            return_e->field(return_type_field);
-                                        has_return = true;
+                                        return_e->parameters(&return_parameters);
+                                        if (anon_count != return_e->expressions().size()) {
+                                            _session.error(
+                                                scope_manager.current_module(),
+                                                "X000",
+                                                "return statement does not match procedure declaration.",
+                                                return_e->location());
+                                            has_return = false;
+                                        } else {
+                                            has_return = true;
+                                        }
                                     }
                                 }
                                 return true;
@@ -231,7 +240,7 @@ namespace basecode::compiler {
                             _session.error(
                                 scope_manager.current_module(),
                                 "X000",
-                                "procedure declares return type but has no return statement.",
+                                "procedure declares one or more anonymous return types but has no matching return statement.",
                                 proc_type->location());
                             return false;
                         }
@@ -1386,6 +1395,8 @@ namespace basecode::compiler {
             evaluator_context_t& context,
             evaluator_result_t& result) {
         auto return_element = _session.builder().make_return(_session.scope_manager().current_scope());
+        return_element->location(context.node->location);
+
         auto& expressions = return_element->expressions();
         for (auto arg_node : context.node->rhs->children) {
             auto arg = resolve_symbol_or_evaluate(arg_node);
@@ -2088,7 +2099,7 @@ namespace basecode::compiler {
             context.node->lhs->lhs,
             proc_type->type_parameters());
 
-        add_procedure_type_return_field(
+        add_procedure_type_return_parameter_fields(
             context,
             proc_type,
             block_scope,
@@ -2124,7 +2135,7 @@ namespace basecode::compiler {
             context.node->lhs->lhs,
             proc_type->type_parameters());
 
-        add_procedure_type_return_field(
+        add_procedure_type_return_parameter_fields(
             context,
             proc_type,
             block_scope,
@@ -2614,36 +2625,65 @@ namespace basecode::compiler {
         return true;
     }
 
-    void ast_evaluator::add_procedure_type_return_field(
+    void ast_evaluator::add_procedure_type_return_parameter_fields(
             const evaluator_context_t& context,
             compiler::procedure_type* proc_type,
             compiler::block* block_scope,
-            const syntax::ast_node_t* return_type_node) {
-        if (return_type_node == nullptr)
-            return;
+            const syntax::ast_node_t* return_parameter_list) {
         auto& builder = _session.builder();
-        auto return_identifier = builder.make_identifier(
-            block_scope,
-            builder.make_symbol(block_scope, "_retval"),
-            nullptr);
-        return_identifier->usage(identifier_usage_t::stack);
+        auto& scope_manager = _session.scope_manager();
+        auto& return_parameters = proc_type->return_parameters();
 
-        auto type_ref = dynamic_cast<compiler::type_reference*>(evaluate_in_scope(
-            return_type_node,
-            block_scope));
-        if (type_ref->is_unknown_type()) {
-            _session.scope_manager()
-                .identifiers_with_unknown_types()
-                .push_back(return_identifier);
+        size_t anonymous_index = 0;
+
+        for (auto node : return_parameter_list->children) {
+            switch (node->type) {
+                case syntax::ast_node_type_t::symbol: {
+                    auto param_decl = declare_identifier(
+                        context,
+                        node,
+                        block_scope);
+                    if (param_decl != nullptr) {
+                        auto param_field = builder.make_field(
+                            proc_type,
+                            block_scope,
+                            param_decl,
+                            0);
+                        return_parameters.add(param_field);
+                        param_field->identifier()->field(param_field);
+                    }
+                    break;
+                }
+                case syntax::ast_node_type_t::type_declaration: {
+                    auto name = fmt::format("_{}", anonymous_index++);
+                    auto param_identifier = builder.make_identifier(
+                        block_scope,
+                        builder.make_symbol(block_scope, name),
+                        nullptr);
+                    param_identifier->usage(identifier_usage_t::stack);
+                    auto type_ref = dynamic_cast<compiler::type_reference*>(evaluate_in_scope(
+                        node,
+                        block_scope));
+                    if (type_ref->is_unknown_type()) {
+                        scope_manager
+                            .identifiers_with_unknown_types()
+                            .push_back(param_identifier);
+                    }
+                    param_identifier->type_ref(type_ref);
+                    auto param_field = builder.make_field(
+                        proc_type,
+                        block_scope,
+                        builder.make_declaration(block_scope, param_identifier, nullptr),
+                        0);
+                    param_identifier->field(param_field);
+                    return_parameters.add(param_field);
+                    break;
+                }
+                default: {
+                    break;
+                }
+            }
         }
-        return_identifier->type_ref(type_ref);
-        auto return_field = builder.make_field(
-            proc_type,
-            block_scope,
-            builder.make_declaration(block_scope, return_identifier, nullptr),
-            0);
-        proc_type->return_type(return_field);
-        return_identifier->field(return_field);
     }
 
     compiler::declaration* ast_evaluator::declare_identifier(

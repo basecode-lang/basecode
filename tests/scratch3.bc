@@ -1,0 +1,14 @@
+//core :: module("core");
+
+vector3 :: struct {
+    x, y, z := 1.0;
+};
+
+new_biased_vector3 :: proc(x, y, z: f32): vec: vector3, bias: f32 {
+    vec.x := x;
+    vec.y := y;
+    vec.z := z;
+    bias := (x + y + z) / 3.14;
+};
+
+new_biased_vector3(3.6, 1.6, 2.33);

@@ -171,7 +171,8 @@ namespace basecode::compiler {
 
                 if (local->type == variable_type_t::local
                 ||  local->type == variable_type_t::module
-                ||  local->type == variable_type_t::parameter) {
+                ||  local->type == variable_type_t::parameter
+                ||  local->type == variable_type_t::return_parameter) {
                     to_init.emplace_back(local);
                 }
 
@@ -1038,26 +1039,36 @@ namespace basecode::compiler {
 
                 *basic_block = return_block;
 
-                auto return_type_field = return_e->field();
-                if (return_type_field != nullptr) {
-                    emit_result_t expr_result {};
-                    if (!emit_element(basic_block, return_e->expressions().front(), expr_result))
-                        return false;
-                    return_block = *basic_block;
+                auto return_parameters = return_e->parameters();
+                if (return_parameters != nullptr) {
+                    size_t index = 0;
+                    for (auto expr : return_e->expressions()) {
+                        const auto field_name = fmt::format("_{}", index++);
+                        auto fld = return_parameters->find_by_name(field_name);
+                        if (fld == nullptr) {
+                            // XXX: error
+                            return false;
+                        }
 
-                    auto named_ref = assembler.make_named_ref(
-                        vm::assembler_named_ref_type_t::local,
-                        return_type_field->declaration()->identifier()->label_name());
-                    emit_result_t lhs {};
-                    lhs.operands.push_back(vm::instruction_operand_t(named_ref));
+                        emit_result_t expr_result{};
+                        if (!emit_element(basic_block, expr, expr_result))
+                            return false;
+                        return_block = *basic_block;
 
-                    if (!_variables.use(return_block, named_ref))
-                        return false;
+                        auto named_ref = assembler.make_named_ref(
+                            vm::assembler_named_ref_type_t::local,
+                            fld->declaration()->identifier()->label_name());
+                        emit_result_t lhs{};
+                        lhs.operands.push_back(vm::instruction_operand_t(named_ref));
 
-                    if (!_variables.assign(return_block, lhs, expr_result))
-                        return false;
+                        if (!_variables.use(return_block, named_ref))
+                            return false;
 
-                    release_temps(expr_result.temps);
+                        if (!_variables.assign(return_block, lhs, expr_result))
+                            return false;
+
+                        release_temps(expr_result.temps);
+                    }
                 }
 
                 return_block->move(
@@ -1326,25 +1337,62 @@ namespace basecode::compiler {
                 auto label = proc_call->identifier()->label_name();
                 auto is_foreign = procedure_type->is_foreign();
 
-                variable_t* temp_var = nullptr;
-                compiler::type* return_type = nullptr;
-                vm::instruction_operand_t* result_operand = nullptr;
+                struct return_parameter_result_t {
+                    compiler::field* field = nullptr;
+                    vm::instruction_operand_t* operand = nullptr;
+                };
 
-                auto return_type_field = procedure_type->return_type();
-                if (return_type_field != nullptr) {
-                    return_type = return_type_field->identifier()->type_ref()->type();
-                    if (return_type != nullptr) {
-                        result_operand = target_operand(
-                            result,
-                            return_type->number_class(),
-                            vm::op_size_for_byte_size(return_type->size_in_bytes()));
-                        auto named_ref = result_operand->data<vm::named_ref_with_offset_t>();
-                        if (named_ref != nullptr)
-                            temp_var = _variables.find(named_ref->ref->name);
+                std::vector<variable_t*> temp_vars {};
+                std::vector<return_parameter_result_t> return_results {};
+
+                const auto& return_parameters = procedure_type->return_parameters();
+                const auto return_size = common::align(
+                    return_parameters.size_in_bytes(),
+                    8);
+                if (!return_parameters.empty()) {
+                    auto start_result_operands_size = result.operands.size();
+
+                    return_results.resize(return_parameters.size());
+                    result.operands.resize(return_parameters.size());
+
+                    size_t index = 0;
+                    const auto& fields = return_parameters.as_list();
+                    for (auto fld : fields) {
+                        auto field_type = fld->identifier()->type_ref()->type();
+
+                        return_parameter_result_t return_result {};
+                        return_result.field = fld;
+
+                        if (index < start_result_operands_size) {
+                            return_result.operand = &result.operands[index];
+                            auto named_ref = return_result.operand->data<vm::named_ref_with_offset_t>();
+                            if (named_ref != nullptr)
+                                temp_vars.emplace_back(_variables.find(named_ref->ref->name));
+                        } else {
+                            vm::op_sizes size = vm::op_sizes::qword;
+                            if (!field_type->is_composite_type())
+                                size = vm::op_size_for_byte_size(field_type->size_in_bytes());
+
+                            auto temp = _variables.retain_temp(field_type->number_class());
+                            result.temps.emplace_back(temp);
+                            temp_vars.emplace_back(temp->variable);
+
+                            result.operands[index] = vm::instruction_operand_t(assembler.make_named_ref(
+                                vm::assembler_named_ref_type_t::local,
+                                temp->name(),
+                                size));
+
+                            return_result.operand = &result.operands[index];
+                        }
+
+                        return_results[index] = return_result;
+
+                        index++;
                     }
                 }
 
-                auto grouped_variables = _variables.group_variables(temp_var);
+                // FIXME!
+                auto grouped_variables = _variables.group_variables(nullptr);
 
                 auto prologue_block = _blocks.make();
                 assembler.blocks().emplace_back(prologue_block);
@@ -1367,14 +1415,16 @@ namespace basecode::compiler {
                     release_temps(arg_list_result.temps);
                 }
 
-                if (!is_foreign && return_type != nullptr) {
+                if (!is_foreign && !return_parameters.empty()) {
                     prologue_block->comment(
                         "return slot",
                         vm::comment_location_t::after_instruction);
                     prologue_block->sub(
                         vm::instruction_operand_t::sp(),
                         vm::instruction_operand_t::sp(),
-                        vm::instruction_operand_t(static_cast<uint64_t>(8), vm::op_sizes::byte));
+                        vm::instruction_operand_t(
+                            static_cast<uint64_t>(return_size),
+                            vm::op_sizes::byte));
                 }
 
                 auto call_block = _blocks.make();
@@ -1444,10 +1494,24 @@ namespace basecode::compiler {
                     labels.make(fmt::format("{}_epilogue",proc_call->label_name()),
                     epilogue_block));
 
-                if (return_type != nullptr) {
-                    epilogue_block->pop(*result_operand);
-                } else {
-                    epilogue_block->nop();
+                if (!return_parameters.empty()) {
+                    uint64_t offset = return_parameters.size_in_bytes();
+
+                    for (const auto& return_result : return_results) {
+                        auto field_type = return_result.field->identifier()->type_ref()->type();
+                        if (field_type->is_composite_type()) {
+                            epilogue_block->move(
+                                *return_result.operand,
+                                vm::instruction_operand_t::sp(),
+                                vm::instruction_operand_t(offset, vm::op_sizes::word));
+                        } else {
+                            epilogue_block->load(
+                                *return_result.operand,
+                                vm::instruction_operand_t::sp(),
+                                vm::instruction_operand_t(offset, vm::op_sizes::word));
+                        }
+                        offset -= field_type->size_in_bytes();
+                    }
                 }
 
                 if (arg_list->allocated_size() > 0) {
@@ -1457,7 +1521,9 @@ namespace basecode::compiler {
                     epilogue_block->add(
                         vm::instruction_operand_t::sp(),
                         vm::instruction_operand_t::sp(),
-                        vm::instruction_operand_t(arg_list->allocated_size(), vm::op_sizes::word));
+                        vm::instruction_operand_t(
+                            arg_list->allocated_size() + return_size,
+                            vm::op_sizes::word));
                 }
 
                 if (!is_foreign)
@@ -2529,10 +2595,12 @@ namespace basecode::compiler {
         current_block->reset("local");
         current_block->reset("frame");
 
-        auto return_type = proc_type->return_type();
-        if (return_type != nullptr) {
+        const auto& return_parameters = proc_type->return_parameters();
+        if (!return_parameters.empty()) {
             current_block->frame_offset("return", 16);
-            current_block->frame_offset("parameter", 24);
+            current_block->frame_offset(
+                "parameter",
+                common::align(16 + return_parameters.size_in_bytes(), 8));
         } else {
             current_block->frame_offset("parameter", 16);
         }

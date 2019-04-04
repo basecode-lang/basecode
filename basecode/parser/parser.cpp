@@ -668,11 +668,31 @@ namespace basecode::syntax {
             token_t colon_token;
             parser->consume(colon_token);
 
-            proc_node->lhs->rhs = create_type_declaration_node(
-                r,
-                parser,
-                nullptr,
-                colon_token);
+            while (true) {
+                if (!parser->look_ahead(3))
+                    return nullptr;
+
+                token_t colon{};
+                if (!parser->token_at(1, colon))
+                    return nullptr;
+
+                if (colon.type == token_types_t::colon) {
+                    auto decl = parser->parse_expression(r, precedence_t::cast);
+                    proc_node->lhs->rhs->children.emplace_back(decl);
+                } else {
+                    auto type_decl = create_type_declaration_node(
+                        r,
+                        parser,
+                        nullptr,
+                        colon_token);
+                    proc_node->lhs->rhs->children.emplace_back(type_decl);
+                }
+
+                if (!parser->peek(token_types_t::comma))
+                    break;
+
+                parser->consume(); // eat the comma
+            }
         }
 
         while (parser->peek(token_types_t::attribute)) {
@@ -1620,6 +1640,13 @@ namespace basecode::syntax {
         }
 
         return _ast_builder.end_scope();
+    }
+
+    bool parser::token_at(size_t index, token_t& token) {
+        if (index > _tokens.size() - 1)
+            return false;
+        token = _tokens[index];
+        return true;
     }
 
     ast_node_t* parser::parse_statement(common::result& r) {

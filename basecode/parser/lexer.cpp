@@ -258,13 +258,6 @@ namespace basecode::syntax {
         _source_file->seek(pos - 1);
     }
 
-    void lexer::set_token_location(token_t& token) {
-        auto column = _source_file->column_by_index(_source_file->pos());
-        auto source_line = _source_file->line_by_index(_source_file->pos());
-        token.location.end(source_line->line, column);
-        token.location.start(source_line->line, column);
-    }
-
     bool lexer::next(token_t& token) {
         auto rune = read();
         defer({
@@ -316,6 +309,13 @@ namespace basecode::syntax {
 
     const common::result& lexer::result() const {
         return _result;
+    }
+
+    void lexer::set_token_location(token_t& token) {
+        auto column = _source_file->column_by_index(_source_file->pos());
+        auto source_line = _source_file->line_by_index(_source_file->pos());
+        token.location.end(source_line->line, column);
+        token.location.start(source_line->line, column);
     }
 
     common::rune_t lexer::read(bool skip_whitespace) {

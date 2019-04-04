@@ -658,6 +658,10 @@ namespace basecode::compiler {
     ///////////////////////////////////////////////////////////////////////////
 
     struct attribute_map_t {
+        inline bool empty() const {
+            return _attrs.empty();
+        }
+
         inline size_t size() const {
             return _attrs.size();
         }
@@ -679,9 +683,15 @@ namespace basecode::compiler {
     struct field_map_t {
         void add(field* value);
 
+        inline bool empty() const {
+            return _fields.empty();
+        }
+
         inline size_t size() const {
             return _fields.size();
         }
+
+        size_t size_in_bytes() const;
 
         field_list_t as_list() const;
 
@@ -695,6 +705,8 @@ namespace basecode::compiler {
         std::map<common::id_t, field*> _fields {};
     };
 
+    size_t count_anonymous_return_parameters(const field_map_t& fields);
+
     ///////////////////////////////////////////////////////////////////////////
 
     struct identifier_map_t {
@@ -702,11 +714,11 @@ namespace basecode::compiler {
 
         void add(identifier* value);
 
-        bool empty() const {
+        inline bool empty() const {
             return _identifiers.empty();
         }
 
-        size_t size() const {
+        inline size_t size() const {
             return _identifiers.size();
         }
 

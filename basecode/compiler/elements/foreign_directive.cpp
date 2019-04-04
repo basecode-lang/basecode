@@ -116,7 +116,12 @@ namespace basecode::compiler {
             signature.arguments.push_back(value);
         }
 
-        auto return_type_field = proc_type->return_type();
+        // XXX: TEMPORARY
+        //
+        // need to revisit this to clean it up
+        const auto& return_parameters = proc_type->return_parameters();
+        const auto& return_fields = return_parameters.as_list();
+        auto return_type_field = !return_fields.empty() ? return_fields.back() : nullptr;
         signature.return_value.type = return_type_field != nullptr ?
                                       return_type_field->identifier()->type_ref()->type()->to_ffi_type() :
                                       vm::ffi_types_t::void_type;

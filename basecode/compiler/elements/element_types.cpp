@@ -21,6 +21,7 @@
 #include "element_types.h"
 #include "symbol_element.h"
 #include "type_reference.h"
+#include "composite_type.h"
 #include "identifier_reference.h"
 
 namespace basecode::compiler {
@@ -71,6 +72,20 @@ namespace basecode::compiler {
         return _fields.erase(id) > 0;
     }
 
+    size_t field_map_t::size_in_bytes() const {
+        size_t size = 0;
+        for (const auto& kvp : _fields) {
+            auto type = kvp.second->identifier()->type_ref()->type();
+            if (type->size_in_bytes() == 0) {
+                auto composite_type = dynamic_cast<compiler::composite_type*>(type);
+                if (composite_type != nullptr)
+                    composite_type->calculate_size();
+            }
+            size += type->size_in_bytes();
+        }
+        return size;
+    }
+
     compiler::field* field_map_t::find(common::id_t id) {
         auto it = _fields.find(id);
         if (it != _fields.end())
@@ -84,6 +99,17 @@ namespace basecode::compiler {
                 return kvp.second;
         }
         return nullptr;
+    }
+
+    size_t count_anonymous_return_parameters(const field_map_t& fields) {
+        size_t count = 0;
+        const auto& list = fields.as_list();
+        for (auto fld : list) {
+            auto name = fld->identifier()->symbol()->name();
+            if (name[0] == '_')
+                count++;
+        }
+        return count;
     }
 
     ///////////////////////////////////////////////////////////////////////////

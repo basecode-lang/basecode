@@ -44,9 +44,7 @@ namespace basecode::compiler {
 
         type_map_t& type_parameters();
 
-        void return_type(field* value);
-
-        compiler::field* return_type();
+        field_map_t& return_parameters();
 
         uint64_t foreign_address() const;
 
@@ -79,10 +77,10 @@ namespace basecode::compiler {
         field_map_t _parameters {};
         uint64_t _foreign_address = 0;
         type_map_t _type_parameters {};
+        field_map_t _return_parameters {};
         compiler::block* _scope = nullptr;
-        compiler::field* _return_type = nullptr;
         procedure_instance_list_t _instances {};
     };
 
-};
+}
 

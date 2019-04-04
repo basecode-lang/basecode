@@ -287,10 +287,6 @@ namespace basecode::compiler {
         return _type_parameters;
     }
 
-    compiler::field* procedure_type::return_type() {
-        return _return_type;
-    }
-
     std::string procedure_type::label_name() const {
         auto parent_init = const_cast<procedure_type*>(this)->parent_element_as<compiler::initializer>();
         if (parent_init != nullptr) {
@@ -299,6 +295,10 @@ namespace basecode::compiler {
                 return parent_var->label_name();
         }
         return element::label_name();
+    }
+
+    field_map_t& procedure_type::return_parameters() {
+        return _return_parameters;
     }
 
     uint64_t procedure_type::foreign_address() const {
@@ -311,10 +311,6 @@ namespace basecode::compiler {
 
     procedure_instance_list_t& procedure_type::instances() {
         return _instances;
-    }
-
-    void procedure_type::return_type(compiler::field* value) {
-        _return_type = value;
     }
 
     compiler::procedure_instance* procedure_type::instance_for(
@@ -330,10 +326,10 @@ namespace basecode::compiler {
         if (_scope != nullptr)
             list.emplace_back(_scope);
 
-        if (_return_type != nullptr)
-            list.emplace_back(_return_type);
-
         for (auto element : _parameters.as_list())
+            list.emplace_back(element);
+
+        for (auto element : _return_parameters.as_list())
             list.emplace_back(element);
     }
 
@@ -341,4 +337,4 @@ namespace basecode::compiler {
         return true;
     }
 
-};
+}

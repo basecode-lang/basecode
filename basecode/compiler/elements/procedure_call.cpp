@@ -46,8 +46,18 @@ namespace basecode::compiler {
             infer_type_result_t& result) {
         auto type = procedure_type();
         if (type != nullptr) {
-            if (type->return_type() != nullptr) {
-                auto return_identifier = type->return_type()->identifier();
+            // XXX: this is going to require a major refactoring to
+            //      the type inference system.  in this one case, we
+            //      need to be able to return an array of inferred types
+            //      in order.
+            const auto& return_parameters = type->return_parameters();
+            if (!return_parameters.empty()) {
+                // XXX: TEMPORARY
+                //
+                // need to revisit this!
+                const auto& fields = return_parameters.as_list();
+
+                auto return_identifier = fields.back()->identifier();
                 result.inferred_type = return_identifier->type_ref()->type();
                 result.reference = return_identifier->type_ref();
                 return true;
@@ -149,9 +159,13 @@ namespace basecode::compiler {
                     _arguments,
                     result)) {
                 if (return_type != nullptr) {
-                    auto return_fld = result.proc_type->return_type();
-                    if (return_fld != nullptr) {
-                        auto proc_return_type = return_fld->identifier()->type_ref()->type();
+                    // XXX: TEMPORARY!
+                    const auto& return_parameters = result.proc_type->return_parameters();
+                    if (!return_parameters.empty()) {
+                        // XXX: TEMPORARY!
+                        const auto& fields = return_parameters.as_list();
+
+                        auto proc_return_type = fields.back()->identifier()->type_ref()->type();
                         if (proc_return_type->id() == return_type->id()) {
                             ++success_count;
                             success_index = results.size();

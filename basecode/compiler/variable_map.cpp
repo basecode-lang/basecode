@@ -133,52 +133,65 @@ namespace basecode::compiler {
                     }
                 }
 
-                auto op_size = vm::op_size_for_byte_size(var_type->size_in_bytes());
+                auto op_size = vm::op_sizes::qword;
+                if (!var_type->is_composite_type())
+                    op_size = vm::op_size_for_byte_size(var_type->size_in_bytes());
 
                 basic_block->comment(
                     fmt::format("init: {}({})", variable_type_name(var->type), var->label),
                     vm::comment_location_t::after_instruction);
-                basic_block->clr(vm::op_sizes::qword, vm::instruction_operand_t(named_ref));
-                basic_block->move(
-                    vm::instruction_operand_t(named_ref),
-                    vm::instruction_operand_t(default_value, op_size));
+                if (var_type->is_composite_type()) {
+                    auto offset_ref = assembler.make_named_ref(
+                        vm::assembler_named_ref_type_t::offset,
+                        var->label,
+                        vm::op_sizes::word);
+                    basic_block->move(
+                        vm::instruction_operand_t(named_ref),
+                        vm::instruction_operand_t::fp(),
+                        vm::instruction_operand_t(offset_ref));
+                } else {
+                    basic_block->clr(vm::op_sizes::qword, vm::instruction_operand_t(named_ref));
+                    basic_block->move(
+                        vm::instruction_operand_t(named_ref),
+                        vm::instruction_operand_t(default_value, op_size));
 
-                switch (var->type) {
-                    case variable_type_t::local: {
-                        break;
-                    }
-                    case variable_type_t::parameter: {
-                        break;
-                    }
-                    case variable_type_t::return_value: {
-                        auto local_offset_ref = assembler.make_named_ref(
-                            vm::assembler_named_ref_type_t::offset,
-                            var->label,
-                            vm::op_sizes::word);
-                        basic_block->comment(
-                            fmt::format("spill: return({})", var->label),
-                            vm::comment_location_t::after_instruction);
-                        basic_block->store(
-                            vm::instruction_operand_t::fp(),
-                            vm::instruction_operand_t(named_ref),
-                            vm::instruction_operand_t(local_offset_ref));
-                        break;
-                    }
-                    case variable_type_t::module: {
-                        auto module_var_ref = assembler.make_named_ref(
-                            vm::assembler_named_ref_type_t::label,
-                            var->label);
-                        basic_block->comment(
-                            fmt::format("spill: module({})", var->label),
-                            vm::comment_location_t::after_instruction);
-                        basic_block->store(
-                            vm::instruction_operand_t(module_var_ref),
-                            vm::instruction_operand_t(named_ref),
-                            vm::instruction_operand_t::offset(var->field_offset.from_start));
-                        break;
-                    }
-                    default: {
-                        break;
+                    switch (var->type) {
+                        case variable_type_t::local: {
+                            break;
+                        }
+                        case variable_type_t::parameter: {
+                            break;
+                        }
+                        case variable_type_t::return_parameter: {
+                            auto offset_ref = assembler.make_named_ref(
+                                vm::assembler_named_ref_type_t::offset,
+                                var->label,
+                                vm::op_sizes::word);
+                            basic_block->comment(
+                                fmt::format("spill: return({})", var->label),
+                                vm::comment_location_t::after_instruction);
+                            basic_block->store(
+                                vm::instruction_operand_t::fp(),
+                                vm::instruction_operand_t(named_ref),
+                                vm::instruction_operand_t(offset_ref));
+                            break;
+                        }
+                        case variable_type_t::module: {
+                            auto module_var_ref = assembler.make_named_ref(
+                                vm::assembler_named_ref_type_t::label,
+                                var->label);
+                            basic_block->comment(
+                                fmt::format("spill: module({})", var->label),
+                                vm::comment_location_t::after_instruction);
+                            basic_block->store(
+                                vm::instruction_operand_t(module_var_ref),
+                                vm::instruction_operand_t(named_ref),
+                                vm::instruction_operand_t::offset(var->field_offset.from_start));
+                            break;
+                        }
+                        default: {
+                            break;
+                        }
                     }
                 }
             }
@@ -215,8 +228,27 @@ namespace basecode::compiler {
                     }
                     break;
                 }
-                case variable_type_t::return_value: {
-                    // XXX: for return values, we don't default to filling from the stack
+                case variable_type_t::return_parameter: {
+                    if (var->field_offset.base_ref != nullptr) {
+                        auto offset_ref = assembler.make_named_ref(
+                            vm::assembler_named_ref_type_t::offset,
+                            var->label,
+                            vm::op_sizes::word);
+                        basic_block->comment(
+                            fmt::format("fill: return({})", var->label),
+                            vm::comment_location_t::after_instruction);
+                        if (var_type->is_composite_type()) {
+                            basic_block->move(
+                                vm::instruction_operand_t(named_ref),
+                                vm::instruction_operand_t::fp(),
+                                vm::instruction_operand_t(offset_ref));
+                        } else {
+                            basic_block->load(
+                                vm::instruction_operand_t(named_ref),
+                                vm::instruction_operand_t::fp(),
+                                vm::instruction_operand_t(offset_ref));
+                        }
+                    }
                     break;
                 }
                 case variable_type_t::parameter: {
@@ -227,10 +259,17 @@ namespace basecode::compiler {
                     basic_block->comment(
                         fmt::format("fill: parameter({})", var->label),
                         vm::comment_location_t::after_instruction);
-                    basic_block->load(
-                        vm::instruction_operand_t(named_ref),
-                        vm::instruction_operand_t::fp(),
-                        vm::instruction_operand_t(offset_ref));
+                    if (var_type->is_composite_type()) {
+                        basic_block->move(
+                            vm::instruction_operand_t(named_ref),
+                            vm::instruction_operand_t::fp(),
+                            vm::instruction_operand_t(offset_ref));
+                    } else {
+                        basic_block->load(
+                            vm::instruction_operand_t(named_ref),
+                            vm::instruction_operand_t::fp(),
+                            vm::instruction_operand_t(offset_ref));
+                    }
                     break;
                 }
                 case variable_type_t::module: {
@@ -273,13 +312,13 @@ namespace basecode::compiler {
             compiler::procedure_type* proc_type) {
         reset();
 
+        if (!find_return_variables(proc_type))
+            return false;
+
         if (!find_referenced_module_variables(block))
             return false;
 
         if (!find_local_variables(block))
-            return false;
-
-        if (!find_return_variables(proc_type))
             return false;
 
         return find_parameter_variables(proc_type);
@@ -336,7 +375,8 @@ namespace basecode::compiler {
 
             switch (var->type) {
                 case variable_type_t::local:
-                case variable_type_t::parameter: {
+                case variable_type_t::parameter:
+                case variable_type_t::return_parameter: {
                     break;
                 }
                 case variable_type_t::module: {
@@ -405,7 +445,7 @@ namespace basecode::compiler {
                     // XXX: for parameters, we don't default to spilling to the stack
                     break;
                 }
-                case variable_type_t::return_value: {
+                case variable_type_t::return_parameter: {
                     auto local_offset_ref = assembler.make_named_ref(
                         vm::assembler_named_ref_type_t::offset,
                         var->label,
@@ -470,7 +510,7 @@ namespace basecode::compiler {
         switch (var->type) {
             case variable_type_t::local:
             case variable_type_t::parameter:
-            case variable_type_t::return_value: {
+            case variable_type_t::return_parameter: {
                 auto local_offset_ref = assembler.make_named_ref(
                     vm::assembler_named_ref_type_t::offset,
                     var->label,
@@ -874,7 +914,14 @@ namespace basecode::compiler {
                     var_info.label = label;
                     var_info.identifier = var;
                     var_info.field_offset = offset_result;
-                    var_info.type = variable_type_t::module;
+
+                    if (is_related_to_type(&var_info, variable_type_t::return_parameter))
+                        var_info.type = variable_type_t::return_parameter;
+                    else if (is_related_to_type(&var_info, variable_type_t::parameter))
+                        var_info.type = variable_type_t::parameter;
+                    else
+                        var_info.type = variable_type_t::module;
+
                     var_info.state = variable_t::flags_t::none;
                     var_info.number_class = type->number_class();
 
@@ -890,21 +937,35 @@ namespace basecode::compiler {
         if (proc_type == nullptr || proc_type->is_foreign())
             return true;
 
-        auto return_type = proc_type->return_type();
-        if (return_type == nullptr)
+        const auto& return_parameters = proc_type->return_parameters();
+        if (return_parameters.empty())
             return true;
 
-        auto var = return_type->declaration()->identifier();
+        uint64_t offset = 0;
 
-        variable_t var_info {};
-        var_info.identifier = var;
-        var_info.frame_offset = 0;
-        var_info.label = var->label_name();
-        var_info.state = variable_t::flags_t::none;
-        var_info.type = variable_type_t::return_value;
-        var_info.number_class = var->type_ref()->type()->number_class();
+        const auto& fields = return_parameters.as_list();
+        for (auto fld : fields) {
+            auto var = fld->declaration()->identifier();
+            if (var->symbol()->name()[0] == '_')
+                continue;
 
-        _variables.insert(std::make_pair(var_info.label, var_info));
+            variable_t var_info{};
+            var_info.identifier = var;
+            var_info.frame_offset = offset;
+            var_info.label = var->label_name();
+
+            if (var->is_initialized())
+                var_info.state |= variable_t::flags_t::must_init;
+            else
+                var_info.state = variable_t::flags_t::none;
+
+            var_info.type = variable_type_t::return_parameter;
+            var_info.number_class = var->type_ref()->type()->number_class();
+
+            _variables.insert(std::make_pair(var_info.label, var_info));
+
+            offset += common::align(var->type_ref()->type()->size_in_bytes(), 8);
+        }
 
         return true;
     }
@@ -944,6 +1005,21 @@ namespace basecode::compiler {
             }
         }
         return nullptr;
+    }
+
+    bool variable_map::is_related_to_type(const variable_t* var, variable_type_t type) {
+        if (var->field_offset.base_ref == nullptr)
+            return false;
+
+        const auto& vars = variables();
+        for (auto v : vars) {
+            if (var->field_offset.base_ref->identifier() == v->identifier
+            &&  v->type == type) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
 }

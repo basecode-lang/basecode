@@ -198,6 +198,7 @@ namespace basecode::syntax {
     ast_node_t* ast_builder::proc_types_node() {
         auto node = make_node(ast_node_type_t::proc_types);
         node->lhs = type_parameter_list_node();
+        node->rhs = parameter_list_node();
         return node;
     }
 

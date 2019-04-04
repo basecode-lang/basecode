@@ -686,6 +686,8 @@ namespace basecode::syntax {
 
         ast_node_t* parse(common::result& r);
 
+        bool token_at(size_t index, token_t& token);
+
         bool expect(common::result& r, token_t& token);
 
     protected:

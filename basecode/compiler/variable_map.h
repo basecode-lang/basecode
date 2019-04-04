@@ -20,26 +20,26 @@ namespace basecode::compiler {
         parameter,
         module,
         local,
-        return_value
+        return_parameter
     };
 
     static inline std::string variable_type_name(variable_type_t type) {
         switch (type) {
-            case variable_type_t::local:        return "local";
-            case variable_type_t::module:       return "module";
-            case variable_type_t::return_value: return "return";
-            case variable_type_t::temporary:    return "temporary";
-            case variable_type_t::parameter:    return "parameter";
+            case variable_type_t::local:            return "local";
+            case variable_type_t::module:           return "module";
+            case variable_type_t::return_parameter: return "return";
+            case variable_type_t::temporary:        return "temporary";
+            case variable_type_t::parameter:        return "parameter";
         }
     }
 
     static inline std::string variable_type_to_group(variable_type_t type) {
         switch (type) {
             case variable_type_t::module:
-            case variable_type_t::temporary:    return "";
-            case variable_type_t::local:        return "local";
-            case variable_type_t::parameter:    return "parameter";
-            case variable_type_t::return_value: return "return";
+            case variable_type_t::temporary:        return "";
+            case variable_type_t::local:            return "local";
+            case variable_type_t::parameter:        return "parameter";
+            case variable_type_t::return_parameter: return "return";
         }
     }
 
@@ -166,6 +166,8 @@ namespace basecode::compiler {
         bool find_parameter_variables(compiler::procedure_type* proc_type);
 
         temp_pool_entry_t* find_available_temp(number_class_t number_class);
+
+        bool is_related_to_type(const variable_t* var, variable_type_t type);
 
     private:
         temp_pool_map_t _temps {};
