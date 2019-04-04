@@ -49,18 +49,18 @@ LEXER:
 =======
 
 PARSER:
+- BUG: fix assignment so that groups of lhs/rhs are together.
 - FIX: procedure multiple return types: named & unnamed
         - NEW: convert multiple/named parameters in procedure return into a tuple
 - FIX: composite binary op + assign has parser precedence issues. may need to
-       programatically wrap the rhs in an expression_group.
+       programmatically wrap the rhs in an expression_group.
 - FIX: value-sink _ should cause an error if on rhs; should not create variables
 
 =======
 
 COMPILER:
-- BUG: infer_type/infer_type_result_t is insufficent as-written:
-    1. need to extend infer_type_result_t to support 0:n inferred type results.  this is
-        particularly important for procedure_call with multiple return values.
+- BUG: fix assignment in ast_evaluator so it properly handles sets of multiple assignment/multiple return.
+- BUG: fix binary_operator type checking in session so it properly supports multiple assignment/multiple return
 
 - BUG: don't emit the template procedure_instance
 - NEW: @initializer/@finalizer linkages
@@ -396,6 +396,9 @@ DONE
 - BUG: #type/type_of isn't emitting correct bytecode. missing sizes.
 - FIX: type parameter constraints should now only be a
        single type instead of a tuple
+- BUG: infer_type/infer_type_result_t is insufficent as-written:
+    1. need to extend infer_type_result_t to support 0:n inferred type results.  this is
+        particularly important for procedure_call with multiple return values.
 
 ANSWERS
 -------
