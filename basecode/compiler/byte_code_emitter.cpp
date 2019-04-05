@@ -1063,12 +1063,12 @@ namespace basecode::compiler {
                         auto named_ref = assembler.make_named_ref(
                             vm::assembler_named_ref_type_t::local,
                             fld->declaration()->identifier()->label_name());
-                        emit_result_t lhs{};
-                        lhs.operands.push_back(vm::instruction_operand_t(named_ref));
 
                         if (!_variables.use(return_block, named_ref))
                             return false;
 
+                        emit_result_t lhs{};
+                        lhs.operands.push_back(vm::instruction_operand_t(named_ref));
                         if (!_variables.assign(return_block, lhs, expr_result))
                             return false;
 
@@ -1499,7 +1499,7 @@ namespace basecode::compiler {
                     epilogue_block));
 
                 if (!return_parameters.empty()) {
-                    uint64_t offset = return_parameters.size_in_bytes();
+                    uint64_t offset = 0;
 
                     for (const auto& return_result : return_results) {
                         auto field_type = return_result.field->identifier()->type_ref()->type();
@@ -1514,7 +1514,7 @@ namespace basecode::compiler {
                                 vm::instruction_operand_t::sp(),
                                 vm::instruction_operand_t(offset, vm::op_sizes::word));
                         }
-                        offset -= field_type->size_in_bytes();
+                        offset += field_type->size_in_bytes();
                     }
                 }
 

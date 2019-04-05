@@ -14,6 +14,7 @@
 #include <compiler/element_builder.h>
 #include "type.h"
 #include "argument_list.h"
+#include "symbol_element.h"
 #include "integer_literal.h"
 #include "size_of_intrinsic.h"
 
@@ -24,7 +25,12 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             compiler::argument_list* args,
             compiler::procedure_type* proc_type,
-            const compiler::type_reference_list_t& type_params) : intrinsic(module, parent_scope, args, proc_type, type_params) {
+            const compiler::type_reference_list_t& type_params) : intrinsic(
+                                                                        module,
+                                                                        parent_scope,
+                                                                        args,
+                                                                        proc_type,
+                                                                        type_params) {
     }
 
     bool size_of_intrinsic::on_fold(
@@ -40,12 +46,19 @@ namespace basecode::compiler {
             return false;
         }
 
+        auto& builder = session.builder();
+        auto u32_type = session.scope_manager().find_type(qualified_symbol_t("u32"));
+
         infer_type_result_t infer_type_result {};
         if (args[0]->infer_type(session, infer_type_result)) {
             const auto& inferred = infer_type_result.types.back();
-            result.element = session.builder().make_integer(
+            result.element = builder.make_integer(
                 parent_scope(),
-                inferred.type->size_in_bytes());
+                inferred.type->size_in_bytes(),
+                builder.make_type_reference(
+                    parent_scope(),
+                    u32_type->symbol()->qualified_symbol(),
+                    u32_type));
             return true;
         }
         return false;
@@ -54,10 +67,7 @@ namespace basecode::compiler {
     bool size_of_intrinsic::on_infer_type(
             compiler::session& session,
             infer_type_result_t& result) {
-        result.types.emplace_back(
-            session
-                .scope_manager()
-                .find_type(qualified_symbol_t("u32")));
+        result.types.emplace_back(session.scope_manager().find_type(qualified_symbol_t("u32")));
         return true;
     }
 

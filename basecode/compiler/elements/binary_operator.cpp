@@ -91,7 +91,23 @@ namespace basecode::compiler {
                 return true;
             }
             case operator_type_t::assignment: {
-                return _rhs->infer_type(session, result);
+                infer_type_result_t rhs_type_result{};
+                if (!_rhs->infer_type(session, rhs_type_result))
+                    return false;
+
+                const auto& rhs_inferred = rhs_type_result.types.back();
+                if (rhs_inferred.type->is_unknown_type()) {
+                    infer_type_result_t lhs_type_result{};
+                    if (!_lhs->infer_type(session, lhs_type_result))
+                        return false;
+
+                    const auto& lhs_inferred = lhs_type_result.types.back();
+                    result.types.emplace_back(lhs_inferred.type, lhs_inferred.ref);
+                } else {
+                    result.types.emplace_back(rhs_inferred.type, rhs_inferred.ref);
+                }
+
+                return true;
             }
             case operator_type_t::member_access: {
                 return _rhs->infer_type(session, result);

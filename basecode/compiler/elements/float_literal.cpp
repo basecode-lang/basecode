@@ -14,23 +14,30 @@
 #include "type.h"
 #include "numeric_type.h"
 #include "float_literal.h"
+#include "type_reference.h"
 
 namespace basecode::compiler {
 
     float_literal::float_literal(
             compiler::module* module,
             block* parent_scope,
-            double value) : element(module, parent_scope, element_type_t::float_literal),
-                            _value(value) {
+            double value,
+            compiler::type_reference* type_ref) : element(module, parent_scope, element_type_t::float_literal),
+                                                  _value(value),
+                                                  _type_ref(type_ref) {
     }
 
     bool float_literal::on_infer_type(
             compiler::session& session,
             infer_type_result_t& result) {
-        result.types.emplace_back(
-            session
-                .scope_manager()
-                .find_type(qualified_symbol_t(numeric_type::narrow_to_value(_value))));
+        if (_type_ref != nullptr) {
+            result.types.emplace_back(_type_ref->type(), _type_ref);
+        } else {
+            result.types.emplace_back(
+                session
+                    .scope_manager()
+                    .find_type(qualified_symbol_t(numeric_type::narrow_to_value(_value))));
+        }
         return true;
     }
 

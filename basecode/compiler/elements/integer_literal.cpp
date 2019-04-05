@@ -13,6 +13,7 @@
 #include <compiler/session.h>
 #include <compiler/scope_manager.h>
 #include "numeric_type.h"
+#include "type_reference.h"
 #include "integer_literal.h"
 
 namespace basecode::compiler {
@@ -20,17 +21,23 @@ namespace basecode::compiler {
     integer_literal::integer_literal(
             compiler::module* module,
             block* parent_scope,
-            uint64_t value) : element(module, parent_scope, element_type_t::integer_literal),
-                              _value(value) {
+            uint64_t value,
+            compiler::type_reference* type_ref) : element(module, parent_scope, element_type_t::integer_literal),
+                                                  _value(value),
+                                                  _type_ref(type_ref) {
     }
 
     bool integer_literal::on_infer_type(
             compiler::session& session,
             infer_type_result_t& result) {
-        result.types.emplace_back(
-            session
-                .scope_manager()
-                .find_type(qualified_symbol_t(numeric_type::narrow_to_value(_value))));
+        if (_type_ref != nullptr) {
+            result.types.emplace_back(_type_ref->type(), _type_ref);
+        } else {
+            result.types.emplace_back(
+                session
+                    .scope_manager()
+                    .find_type(qualified_symbol_t(numeric_type::narrow_to_value(_value))));
+        }
         return true;
     }
 

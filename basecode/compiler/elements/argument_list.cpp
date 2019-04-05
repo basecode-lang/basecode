@@ -85,12 +85,13 @@ namespace basecode::compiler {
             }
 
             infer_type_result_t type_result {};
-            const auto& inferred = type_result.types.back();
 
             if (!arg->infer_type(session, type_result))
                 return false;
 
             vm::function_value_t value {};
+
+            const auto& inferred = type_result.types.back();
             value.type = inferred.type->to_ffi_type();
             if (value.type == vm::ffi_types_t::struct_type) {
                 auto composite_type = dynamic_cast<compiler::composite_type*>(inferred.type);

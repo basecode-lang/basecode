@@ -14,6 +14,7 @@
 #include <compiler/element_builder.h>
 #include "type.h"
 #include "argument_list.h"
+#include "symbol_element.h"
 #include "integer_literal.h"
 #include "align_of_intrinsic.h"
 
@@ -44,11 +45,18 @@ namespace basecode::compiler {
             return false;
         }
 
+        auto& builder = session.builder();
+        auto u32_type = session.scope_manager().find_type(qualified_symbol_t("u32"));
+
         infer_type_result_t type_result {};
         if (args[0]->infer_type(session, type_result)) {
-            result.element = session.builder().make_integer(
+            result.element = builder.make_integer(
                 parent_scope(),
-                type_result.types.back().type->alignment());
+                type_result.types.back().type->alignment(),
+                builder.make_type_reference(
+                    parent_scope(),
+                    u32_type->symbol()->qualified_symbol(),
+                    u32_type));
             return true;
         }
         return false;

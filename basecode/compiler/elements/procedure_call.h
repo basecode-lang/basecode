@@ -60,5 +60,5 @@ namespace basecode::compiler {
         compiler::identifier_reference* _resolved_identifier_ref = nullptr;
     };
 
-};
+}
 

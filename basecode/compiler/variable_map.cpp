@@ -947,8 +947,6 @@ namespace basecode::compiler {
         const auto& fields = return_parameters.as_list();
         for (auto fld : fields) {
             auto var = fld->declaration()->identifier();
-            if (var->symbol()->name()[0] == '_')
-                continue;
 
             variable_t var_info{};
             var_info.identifier = var;

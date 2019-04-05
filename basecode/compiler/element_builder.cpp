@@ -795,12 +795,16 @@ namespace basecode::compiler {
 
     float_literal* element_builder::make_float(
             compiler::block* parent_scope,
-            double value) {
+            double value,
+            compiler::type_reference* type_ref) {
         auto literal = new compiler::float_literal(
             _session.scope_manager().current_module(),
             parent_scope,
-            value);
+            value,
+            type_ref);
         _session.elements().add(literal);
+        if (type_ref != nullptr)
+            type_ref->parent_element(literal);
         return literal;
     }
 
@@ -830,12 +834,16 @@ namespace basecode::compiler {
 
     integer_literal* element_builder::make_integer(
             compiler::block* parent_scope,
-            uint64_t value) {
+            uint64_t value,
+            compiler::type_reference* type_ref) {
         auto literal = new compiler::integer_literal(
             _session.scope_manager().current_module(),
             parent_scope,
-            value);
+            value,
+            type_ref);
         _session.elements().add(literal);
+        if (type_ref != nullptr)
+            type_ref->parent_element(literal);
         return literal;
     }
 

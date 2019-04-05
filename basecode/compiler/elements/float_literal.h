@@ -20,7 +20,8 @@ namespace basecode::compiler {
         float_literal(
             compiler::module* module,
             block* parent_scope,
-            double value);
+            double value,
+            compiler::type_reference* type_ref = nullptr);
 
         double value() const;
 
@@ -37,6 +38,7 @@ namespace basecode::compiler {
 
     private:
         double _value;
+        compiler::type_reference* _type_ref = nullptr;
     };
 
 }

@@ -19,6 +19,7 @@
 #include "initializer.h"
 #include "pointer_type.h"
 #include "type_literal.h"
+#include "symbol_element.h"
 #include "argument_list.h"
 #include "type_reference.h"
 #include "string_literal.h"
@@ -88,6 +89,11 @@ namespace basecode::compiler {
             compiler::session& session,
             compiler::element* e,
             fold_result_t& result) {
+        auto& builder = session.builder();
+        auto u32_type = session
+            .scope_manager()
+            .find_type(qualified_symbol_t("u32"));
+
         switch (e->element_type()) {
             case element_type_t::identifier: {
                 auto identifier = dynamic_cast<compiler::identifier*>(e);
@@ -101,25 +107,37 @@ namespace basecode::compiler {
                 auto type = identifier->type_ref()->type();
                 if (type->is_array_type()) {
                     auto array_type = dynamic_cast<compiler::array_type*>(type);
-                    result.element = session.builder().make_integer(
+                    result.element = builder.make_integer(
                         parent_scope(),
-                        array_type->number_of_elements());
+                        array_type->number_of_elements(),
+                        builder.make_type_reference(
+                            parent_scope(),
+                            u32_type->symbol()->qualified_symbol(),
+                            u32_type));
                 }
 
                 break;
             }
             case element_type_t::type_literal: {
                 auto literal = dynamic_cast<compiler::type_literal*>(e);
-                result.element = session.builder().make_integer(
+                result.element = builder.make_integer(
                     parent_scope(),
-                    literal->args()->size());
+                    literal->args()->size(),
+                    builder.make_type_reference(
+                        parent_scope(),
+                        u32_type->symbol()->qualified_symbol(),
+                        u32_type));
                 break;
             }
             case element_type_t::string_literal: {
                 auto literal = dynamic_cast<compiler::string_literal*>(e);
-                result.element = session.builder().make_integer(
+                result.element = builder.make_integer(
                     parent_scope(),
-                    literal->value().size());
+                    literal->value().size(),
+                    builder.make_type_reference(
+                        parent_scope(),
+                        u32_type->symbol()->qualified_symbol(),
+                        u32_type));
                 break;
             }
             case element_type_t::identifier_reference: {

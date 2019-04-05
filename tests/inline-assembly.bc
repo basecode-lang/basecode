@@ -13,10 +13,10 @@ core :: module("core");
     core::assert(foo == 57, "foo expected 57");
 
     j, k := cast<u16>(4), 8;
-    j, k := k, cast<u8>(j);
+    j, k := cast<u16>(k), cast<u8>(j);
 
     bar: u64;
-    bar := 512;
+    bar := cast<u64>(512);
 
     constant_fold_at_assignment := size_of(bar);
 
@@ -26,6 +26,8 @@ core :: module("core");
     'get_a_type:
     temp_type_info: ^type := type_of(temp);
     huh := temp_type_info^;
+
+    core::print("huh.name.data := %s\n", huh.name.data);
 
     core::print("address_of(temp) := $%08x\n\n", address_of(temp));
 
@@ -48,7 +50,7 @@ core :: module("core");
 
     // alloc & free block of memory
     'allocate_memory:
-    addr: ^u8 := alloc(size_of(u16) * 4096);
+    addr: ^u8 := alloc(cast<u64>(size_of(u16) * 4096));
     core::print("addr := $%016X\n", addr);
     free(addr);
 

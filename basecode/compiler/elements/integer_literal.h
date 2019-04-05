@@ -20,7 +20,8 @@ namespace basecode::compiler {
         integer_literal(
             compiler::module* module,
             block* parent_scope,
-            uint64_t value);
+            uint64_t value,
+            compiler::type_reference* type_ref = nullptr);
 
         bool is_signed() const;
 
@@ -57,6 +58,7 @@ namespace basecode::compiler {
 
     private:
         uint64_t _value;
+        compiler::type_reference* _type_ref = nullptr;
     };
 
 }

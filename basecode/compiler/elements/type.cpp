@@ -189,16 +189,16 @@ namespace basecode::compiler {
         return on_number_class();
     }
 
+    number_class_t type::on_number_class() const {
+        return number_class_t::none;
+    }
+
     compiler::symbol_element* type::symbol() const {
         return _symbol;
     }
 
     bool type::initialize(compiler::session& session) {
         return on_initialize(session);
-    }
-
-    number_class_t type::on_number_class() const {
-        return number_class_t::none;
     }
 
     void type::symbol(compiler::symbol_element* value) {

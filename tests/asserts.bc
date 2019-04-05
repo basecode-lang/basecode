@@ -31,7 +31,7 @@ fib :: proc(n: u64 := 10): u64 {
 };
 
 #run {
-    result := fib(20);
+    result := fib(cast<u64>(20));
     core::print("fib       := %llu\n", result);
     core::assert(result == 0, "fib expected 0");
 

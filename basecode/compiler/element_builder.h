@@ -137,7 +137,8 @@ namespace basecode::compiler {
 
         float_literal* make_float(
             compiler::block* parent_scope,
-            double value);
+            double value,
+            compiler::type_reference* type_ref = nullptr);
 
         identifier* make_identifier(
             compiler::block* parent_scope,
@@ -202,7 +203,8 @@ namespace basecode::compiler {
 
         integer_literal* make_integer(
             compiler::block* parent_scope,
-            uint64_t value);
+            uint64_t value,
+            compiler::type_reference* type_ref = nullptr);
 
         pointer_type* make_pointer_type(
             compiler::block* parent_scope,
