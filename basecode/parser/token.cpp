@@ -18,16 +18,16 @@ namespace basecode::syntax {
     }
 
     bool token_t::is_label() const {
-        return type == token_types_t::label;
+        return type == token_type_t::label;
     }
 
     bool token_t::is_boolean() const {
-        return type == token_types_t::true_literal
-               || type == token_types_t::false_literal;
+        return type == token_type_t::true_literal
+               || type == token_type_t::false_literal;
     }
 
     bool token_t::is_numeric() const {
-        return type == token_types_t::number_literal;
+        return type == token_type_t::number_literal;
     }
 
     bool token_t::is_signed() const {
@@ -42,11 +42,11 @@ namespace basecode::syntax {
     }
 
     bool token_t::is_line_comment() const {
-        return type == token_types_t::line_comment;
+        return type == token_type_t::line_comment;
     }
 
     bool token_t::is_block_comment() const {
-        return type == token_types_t::block_comment;
+        return type == token_type_t::block_comment;
     }
 
     conversion_result_t token_t::parse(double& out) const {

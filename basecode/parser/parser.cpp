@@ -26,7 +26,7 @@ namespace basecode::syntax {
             common::result& r,
             parser* parser,
             ast_node_t* type_parameter_list) {
-        if (!parser->peek(token_types_t::less_than))
+        if (!parser->peek(token_type_t::less_than))
             return true;
 
         parser->consume();
@@ -37,7 +37,7 @@ namespace basecode::syntax {
                 r,
                 precedence_t::variable);
 
-            if (parser->peek(token_types_t::colon)) {
+            if (parser->peek(token_type_t::colon)) {
                 parser->consume();
                 type_parameter_node->lhs = parser->expect_expression(
                     r,
@@ -49,14 +49,14 @@ namespace basecode::syntax {
 
             type_parameter_list->children.push_back(type_parameter_node);
 
-            if (!parser->peek(token_types_t::comma))
+            if (!parser->peek(token_type_t::comma))
                 break;
 
             parser->consume();
         }
 
         token_t greater_than;
-        greater_than.type = token_types_t::greater_than;
+        greater_than.type = token_type_t::greater_than;
         return parser->expect(r, greater_than);
     }
 
@@ -68,8 +68,8 @@ namespace basecode::syntax {
             ast_node_list& target) {
         size_t count = 0;
 
-        while (parser->peek(token_types_t::line_comment)
-            || parser->peek(token_types_t::block_comment)) {
+        while (parser->peek(token_type_t::line_comment)
+            || parser->peek(token_type_t::block_comment)) {
 
             token_t token;
             if (!parser->consume(token))
@@ -77,10 +77,10 @@ namespace basecode::syntax {
 
             ast_node_t* comment_node = nullptr;
             switch (token.type) {
-                case token_types_t::line_comment:
+                case token_type_t::line_comment:
                     comment_node = parser->ast_builder()->line_comment_node(token);
                     break;
-                case token_types_t::block_comment:
+                case token_type_t::block_comment:
                     comment_node = parser->ast_builder()->block_comment_node(token);
                     break;
                 default:
@@ -164,14 +164,14 @@ namespace basecode::syntax {
             ->module_expression_node(token);
 
         token_t left_paren;
-        left_paren.type = token_types_t::left_paren;
+        left_paren.type = token_type_t::left_paren;
         if (!parser->expect(r, left_paren))
             return nullptr;
 
         module_expression_node->rhs = parser->parse_expression(r);
 
         token_t right_paren;
-        right_paren.type = token_types_t::right_paren;
+        right_paren.type = token_type_t::right_paren;
         if (!parser->expect(r, right_paren))
             return nullptr;
 
@@ -188,7 +188,7 @@ namespace basecode::syntax {
             ast_node_t* lhs,
             token_t& token) {
         ast_node_t* symbol_node;
-        if (token.type == token_types_t::type_tagged_identifier)
+        if (token.type == token_type_t::type_tagged_identifier)
             symbol_node = parser->ast_builder()->type_tagged_symbol_node();
         else
             symbol_node = parser->ast_builder()->symbol_node();
@@ -199,7 +199,7 @@ namespace basecode::syntax {
                 ->ast_builder()
                 ->symbol_part_node(token);
             symbol_node->children.push_back(symbol_part_node);
-            if (!parser->peek(token_types_t::scope_operator)) {
+            if (!parser->peek(token_type_t::scope_operator)) {
                 symbol_node->location.end(token.location.end());
                 break;
             }
@@ -227,7 +227,7 @@ namespace basecode::syntax {
         node->lhs = parser->parse_expression(r);
 
         token_t right_paren_token;
-        right_paren_token.type = token_types_t::right_paren;
+        right_paren_token.type = token_type_t::right_paren;
         if (!parser->expect(r, right_paren_token))
             return nullptr;
 
@@ -307,17 +307,17 @@ namespace basecode::syntax {
             parser* parser,
             token_t& token) {
         auto decl_node = parser->ast_builder()->subscript_declaration_node();
-        if (!parser->peek(token_types_t::right_square_bracket)) {
+        if (!parser->peek(token_type_t::right_square_bracket)) {
             decl_node->lhs = parser->parse_expression(r);
         }
         token_t right_square_bracket;
-        right_square_bracket.type = token_types_t::right_square_bracket;
+        right_square_bracket.type = token_type_t::right_square_bracket;
         if (!parser->expect(r, right_square_bracket))
             return nullptr;
 
         auto current_decl_node = decl_node;
         while (true) {
-            if (parser->peek(token_types_t::semi_colon))
+            if (parser->peek(token_type_t::semi_colon))
                 break;
             auto node = parser->parse_expression(r, precedence_t::type);
             current_decl_node->rhs = node;
@@ -365,7 +365,7 @@ namespace basecode::syntax {
         node->location.start(token.location.start());
 
         token_t symbol_token;
-        symbol_token.type = token_types_t::identifier;
+        symbol_token.type = token_type_t::identifier;
         if (!parser->expect(r, symbol_token))
             return nullptr;
 
@@ -464,7 +464,7 @@ namespace basecode::syntax {
             token_t& token) {
         auto yield_node = parser->ast_builder()->yield_node(token);
         collect_comments(r, parser, yield_node->comments);
-        if (parser->peek(token_types_t::semi_colon))
+        if (parser->peek(token_type_t::semi_colon))
             return yield_node;
         yield_node->lhs = parser->parse_expression(r);
         return yield_node;
@@ -548,7 +548,7 @@ namespace basecode::syntax {
         collect_comments(r, parser, for_node->comments);
 
         token_t in_token;
-        in_token.type = token_types_t::in_literal;
+        in_token.type = token_type_t::in_literal;
         if (!parser->expect(r, in_token))
             return nullptr;
 
@@ -570,7 +570,7 @@ namespace basecode::syntax {
             parser* parser,
             token_t& token) {
         auto return_node = parser->ast_builder()->return_node(token);
-        if (parser->peek(token_types_t::semi_colon))
+        if (parser->peek(token_type_t::semi_colon))
             return return_node;
         pairs_to_list(return_node->rhs, parser->parse_expression(r));
         return return_node;
@@ -594,7 +594,7 @@ namespace basecode::syntax {
         while (true) {
             collect_comments(r, parser, current_branch->comments);
 
-            if (!parser->peek(token_types_t::else_if_literal))
+            if (!parser->peek(token_type_t::else_if_literal))
                 break;
             token_t else_if_token;
             parser->current(else_if_token);
@@ -612,7 +612,7 @@ namespace basecode::syntax {
             current_branch = current_branch->rhs;
         }
 
-        if (parser->peek(token_types_t::else_literal)) {
+        if (parser->peek(token_type_t::else_literal)) {
             token_t else_token;
             parser->current(else_token);
             parser->consume();
@@ -654,20 +654,20 @@ namespace basecode::syntax {
             return nullptr;
 
         token_t left_paren_token;
-        left_paren_token.type = token_types_t::left_paren;
+        left_paren_token.type = token_type_t::left_paren;
         if (!parser->expect(r, left_paren_token))
             return nullptr;
 
-        if (!parser->peek(token_types_t::right_paren)) {
+        if (!parser->peek(token_type_t::right_paren)) {
             pairs_to_list(proc_node->rhs, parser->parse_expression(r));
         }
 
         token_t right_paren_token;
-        right_paren_token.type = token_types_t::right_paren;
+        right_paren_token.type = token_type_t::right_paren;
         if (!parser->expect(r, right_paren_token))
             return nullptr;
 
-        if (parser->peek(token_types_t::colon)) {
+        if (parser->peek(token_type_t::colon)) {
             token_t colon_token;
             parser->consume(colon_token);
 
@@ -679,7 +679,7 @@ namespace basecode::syntax {
                 if (!parser->token_at(1, colon))
                     return nullptr;
 
-                if (colon.type == token_types_t::colon) {
+                if (colon.type == token_type_t::colon) {
                     auto decl = parser->parse_expression(r, precedence_t::cast);
                     proc_node->lhs->rhs->children.emplace_back(decl);
                 } else {
@@ -691,18 +691,18 @@ namespace basecode::syntax {
                     proc_node->lhs->rhs->children.emplace_back(type_decl);
                 }
 
-                if (!parser->peek(token_types_t::comma))
+                if (!parser->peek(token_type_t::comma))
                     break;
 
                 parser->consume(); // eat the comma
             }
         }
 
-        while (parser->peek(token_types_t::attribute)) {
+        while (parser->peek(token_type_t::attribute)) {
             proc_node->attributes.push_back(parser->parse_expression(r));
         }
 
-        if (!parser->peek(token_types_t::semi_colon)) {
+        if (!parser->peek(token_type_t::semi_colon)) {
             proc_node->children.push_back(parser->parse_expression(r));
         }
 
@@ -718,7 +718,7 @@ namespace basecode::syntax {
         auto lambda_node = parser->ast_builder()->lambda_expression_node(token);
 
         while (true) {
-            if (parser->peek(token_types_t::pipe)) {
+            if (parser->peek(token_type_t::pipe)) {
                 parser->consume();
                 break;
             }
@@ -728,7 +728,7 @@ namespace basecode::syntax {
                 precedence_t::variable);
             lambda_node->rhs->children.push_back(symbol_node);
 
-            if (parser->peek(token_types_t::colon)) {
+            if (parser->peek(token_type_t::colon)) {
                 token_t colon_token;
                 parser->consume(colon_token);
 
@@ -739,11 +739,11 @@ namespace basecode::syntax {
                     colon_token);
             }
 
-            if (parser->peek(token_types_t::comma))
+            if (parser->peek(token_type_t::comma))
                 parser->consume();
         }
 
-        if (parser->peek(token_types_t::colon)) {
+        if (parser->peek(token_type_t::colon)) {
             token_t colon_token;
             parser->consume(colon_token);
 
@@ -754,7 +754,7 @@ namespace basecode::syntax {
                 colon_token);
         }
 
-        while (parser->peek(token_types_t::attribute)) {
+        while (parser->peek(token_type_t::attribute)) {
             lambda_node->attributes.push_back(parser->parse_expression(r));
         }
 
@@ -809,10 +809,10 @@ namespace basecode::syntax {
         auto ast_builder = parser->ast_builder();
 
         switch (token.type) {
-            case token_types_t::question: {
+            case token_type_t::question: {
                 return ast_builder->uninitialized_literal_node(token);
             }
-            case token_types_t::import_literal: {
+            case token_type_t::import_literal: {
                 auto import_node = ast_builder->import_node(token);
                 import_node->lhs = parser->parse_expression(r);
                 if (import_node->lhs == nullptr) {
@@ -823,7 +823,7 @@ namespace basecode::syntax {
                         token.location);
                     return nullptr;
                 }
-                if (parser->peek(syntax::token_types_t::from_literal)) {
+                if (parser->peek(syntax::token_type_t::from_literal)) {
                     token_t from_token;
                     parser->current(from_token);
                     parser->consume();
@@ -840,28 +840,28 @@ namespace basecode::syntax {
 
                 return import_node;
             }
-            case token_types_t::break_literal: {
+            case token_type_t::break_literal: {
                 auto break_node = ast_builder->break_node(token);
-                if (parser->peek(syntax::token_types_t::label)) {
+                if (parser->peek(syntax::token_type_t::label)) {
                     break_node->lhs = parser->parse_expression(r);
                 }
                 return break_node;
             }
-            case token_types_t::continue_literal: {
+            case token_type_t::continue_literal: {
                 auto continue_node = ast_builder->continue_node(token);
-                if (parser->peek(syntax::token_types_t::label)) {
+                if (parser->peek(syntax::token_type_t::label)) {
                     continue_node->lhs = parser->parse_expression(r);
                 }
                 return continue_node;
             }
-            case token_types_t::nil_literal: {
+            case token_type_t::nil_literal: {
                 return ast_builder->nil_literal_node(token);
             }
-            case token_types_t::true_literal:
-            case token_types_t::false_literal: {
+            case token_type_t::true_literal:
+            case token_type_t::false_literal: {
                 return ast_builder->boolean_literal_node(token);
             }
-            case token_types_t::switch_literal: {
+            case token_type_t::switch_literal: {
                 auto switch_node = ast_builder->switch_node(token);
                 ast_builder->push_switch(switch_node);
                 defer(ast_builder->pop_switch());
@@ -869,7 +869,7 @@ namespace basecode::syntax {
                 switch_node->rhs = parser->parse_expression(r);
                 return switch_node;
             }
-            case token_types_t::case_literal: {
+            case token_type_t::case_literal: {
                 auto switch_node = ast_builder->current_switch();
                 if (switch_node == nullptr) {
                     parser->error(
@@ -882,19 +882,19 @@ namespace basecode::syntax {
                 auto case_node = ast_builder->case_node(token);
                 ast_builder->push_case(case_node);
                 defer(ast_builder->pop_case());
-                if (parser->peek(token_types_t::control_flow_operator)) {
+                if (parser->peek(token_type_t::control_flow_operator)) {
                     parser->consume();
                 } else {
                     case_node->lhs = parser->parse_expression(r);
                     token_t control_flow_op;
-                    control_flow_op.type = token_types_t::control_flow_operator;
+                    control_flow_op.type = token_type_t::control_flow_operator;
                     if (!parser->expect(r, control_flow_op))
                         return nullptr;
                 }
                 case_node->rhs = parser->parse_expression(r);
                 return case_node;
             }
-            case token_types_t::fallthrough_literal: {
+            case token_type_t::fallthrough_literal: {
                 auto case_node = ast_builder->current_case();
                 if (case_node == nullptr) {
                     parser->error(
@@ -976,11 +976,11 @@ namespace basecode::syntax {
                 token);
             symbol_node->lhs->children.push_back(type_node);
 
-            if (parser->peek(token_types_t::comma)) {
+            if (parser->peek(token_type_t::comma)) {
                 parser->consume();
             } else {
                 token_t greater_than;
-                greater_than.type = token_types_t::greater_than;
+                greater_than.type = token_type_t::greater_than;
                 if (!parser->expect(r, greater_than))
                     return nullptr;
                 symbol_node->lhs->location.end(greater_than.location.end());
@@ -1129,7 +1129,7 @@ namespace basecode::syntax {
             node->rhs->children.emplace_back(parser->ast_builder()->clone(receiver_node));
         }
 
-        if (!parser->peek(token_types_t::right_paren)) {
+        if (!parser->peek(token_type_t::right_paren)) {
             if (is_family_node) {
                 while (true) {
                     auto type_node = create_type_declaration_node(
@@ -1139,11 +1139,11 @@ namespace basecode::syntax {
                         token);
                     node->rhs->children.emplace_back(type_node);
 
-                    if (parser->peek(token_types_t::comma)) {
+                    if (parser->peek(token_type_t::comma)) {
                         parser->consume();
                     } else {
                         token_t right_paren;
-                        right_paren.type = token_types_t::right_paren;
+                        right_paren.type = token_type_t::right_paren;
                         if (!parser->expect(r, right_paren))
                             return nullptr;
                         node->lhs->location.end(right_paren.location.end());
@@ -1156,7 +1156,7 @@ namespace basecode::syntax {
                     parser->parse_expression(r));
 
                 token_t right_paren_token;
-                right_paren_token.type = token_types_t::right_paren;
+                right_paren_token.type = token_type_t::right_paren;
                 if (!parser->expect(r, right_paren_token))
                     return nullptr;
 
@@ -1164,7 +1164,7 @@ namespace basecode::syntax {
             }
         } else {
             token_t right_paren_token;
-            right_paren_token.type = token_types_t::right_paren;
+            right_paren_token.type = token_type_t::right_paren;
             if (!parser->expect(r, right_paren_token))
                 return nullptr;
 
@@ -1315,7 +1315,7 @@ namespace basecode::syntax {
         auto directive_node = parser->ast_builder()->directive_node(token);
         collect_comments(r, parser, directive_node->comments);
 
-        if (parser->peek(token_types_t::semi_colon)) {
+        if (parser->peek(token_type_t::semi_colon)) {
             return directive_node;
         }
         if (token.value == "type") {
@@ -1329,8 +1329,8 @@ namespace basecode::syntax {
             directive_node->children.push_back(parser->parse_expression(r));
 
             auto current_node = directive_node;
-            if (!parser->peek(token_types_t::semi_colon)) {
-                while (parser->peek(token_types_t::directive)) {
+            if (!parser->peek(token_type_t::semi_colon)) {
+                while (parser->peek(token_type_t::directive)) {
                     token_t directive_token;
                     parser->consume(directive_token);
 
@@ -1366,8 +1366,8 @@ namespace basecode::syntax {
             parser* parser,
             token_t& token) {
         auto attribute_node = parser->ast_builder()->attribute_node(token);
-        if (parser->peek(token_types_t::semi_colon)
-        ||  parser->peek(token_types_t::attribute)) {
+        if (parser->peek(token_type_t::semi_colon)
+        ||  parser->peek(token_type_t::attribute)) {
             return attribute_node;
         }
         attribute_node->lhs = parser->parse_expression(r);
@@ -1382,7 +1382,7 @@ namespace basecode::syntax {
             ast_node_t* lhs,
             token_t& token) {
         ast_node_t* subscript_node = parser->ast_builder()->subscript_operator_node();
-        if (parser->peek(token_types_t::right_square_bracket)) {
+        if (parser->peek(token_type_t::right_square_bracket)) {
             parser->error(
                 r,
                 "B027",
@@ -1395,7 +1395,7 @@ namespace basecode::syntax {
         subscript_node->rhs = parser->parse_expression(r);
 
         token_t right_bracket_token;
-        right_bracket_token.type = token_types_t::right_square_bracket;
+        right_bracket_token.type = token_type_t::right_square_bracket;
         if (!parser->expect(r, right_bracket_token))
             return nullptr;
 
@@ -1456,7 +1456,7 @@ namespace basecode::syntax {
         token = _tokens.front();
         _tokens.erase(_tokens.begin());
 
-        return token.type != token_types_t::end_of_file;
+        return token.type != token_type_t::end_of_file;
     }
 
     bool parser::current(token_t& token) {
@@ -1465,12 +1465,12 @@ namespace basecode::syntax {
 
         token = _tokens.front();
 
-        return token.type != token_types_t::end_of_file;
+        return token.type != token_type_t::end_of_file;
     }
 
-    bool parser::peek(token_types_t type) {
+    bool parser::peek(token_type_t type) {
         if (!look_ahead(0))
-            return type == token_types_t::end_of_file;
+            return type == token_type_t::end_of_file;
         auto& token = _tokens.front();
         return token.type == type;
     }
@@ -1612,10 +1612,10 @@ namespace basecode::syntax {
         scope->location.start(token.location.start());
 
         auto is_end_of_scope = [&]() -> bool {
-            if (peek(token_types_t::end_of_file))
+            if (peek(token_type_t::end_of_file))
                 return true;
 
-            if (peek(token_types_t::right_curly_brace)) {
+            if (peek(token_type_t::right_curly_brace)) {
                 token_t right_curly_brace;
                 current(right_curly_brace);
                 consume();
@@ -1638,7 +1638,7 @@ namespace basecode::syntax {
             scope->children.push_back(statement);
         }
 
-        while (peek(token_types_t::attribute)) {
+        while (peek(token_type_t::attribute)) {
             scope->attributes.push_back(parse_expression(r));
         }
 
@@ -1658,7 +1658,7 @@ namespace basecode::syntax {
         while (true) {
             collect_comments(r, this, statement_node->comments);
 
-            if (peek(token_types_t::right_curly_brace))
+            if (peek(token_type_t::right_curly_brace))
                 return statement_node;
 
             auto expr = parse_expression(r);
@@ -1666,7 +1666,7 @@ namespace basecode::syntax {
                 return statement_node;
 
             if (expr->is_attribute()) {
-                if (peek(token_types_t::semi_colon)) {
+                if (peek(token_type_t::semi_colon)) {
                     consume();
                     _ast_builder.current_scope()->attributes.push_back(expr);
                 } else {
@@ -1687,7 +1687,7 @@ namespace basecode::syntax {
         }
 
         token_t line_terminator_token;
-        line_terminator_token.type = token_types_t::semi_colon;
+        line_terminator_token.type = token_type_t::semi_colon;
         if (!expect(r, line_terminator_token)) {
             error(
                 r,
@@ -1700,14 +1700,14 @@ namespace basecode::syntax {
         return statement_node;
     }
 
-    infix_parser* parser::infix_parser_for(token_types_t type) {
+    infix_parser* parser::infix_parser_for(token_type_t type) {
         auto it = s_infix_parsers.find(type);
         if (it == s_infix_parsers.end())
             return nullptr;
         return it->second;
     }
 
-    prefix_parser* parser::prefix_parser_for(token_types_t type) {
+    prefix_parser* parser::prefix_parser_for(token_type_t type) {
         auto it = s_prefix_parsers.find(type);
         if (it == s_prefix_parsers.end())
             return nullptr;

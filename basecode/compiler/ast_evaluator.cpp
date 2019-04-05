@@ -2790,7 +2790,7 @@ namespace basecode::compiler {
 
             if (arg->type != syntax::ast_node_type_t::assignment) {
                 syntax::token_t field_name;
-                field_name.type = syntax::token_types_t::identifier;
+                field_name.type = syntax::token_type_t::identifier;
                 field_name.value = fmt::format("_{}", index);
 
                 auto field_symbol = ast_builder.symbol_node();

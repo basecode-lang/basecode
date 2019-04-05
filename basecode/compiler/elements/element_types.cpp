@@ -291,10 +291,4 @@ namespace basecode::compiler {
         return qs;
     }
 
-    compiler::type_reference* type_find_result_t::make_type_reference(
-            element_builder& builder,
-            compiler::block* parent_scope) {
-        return builder.make_type_reference(parent_scope, type_name, type);
-    }
-
 }

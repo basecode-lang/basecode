@@ -264,8 +264,8 @@ namespace basecode::syntax {
             _source_file->pop_mark();
             _has_next = rune != common::rune_eof
                 && rune != common::rune_invalid
-                && token.type != token_types_t::end_of_file
-                && token.type != token_types_t::invalid;
+                && token.type != token_type_t::end_of_file
+                && token.type != token_type_t::invalid;
         });
 
         if (rune == common::rune_invalid) {
@@ -549,7 +549,7 @@ namespace basecode::syntax {
             rewind_one_char();
             ch = read(false);
             if (ch == ':') {
-                token.type = token_types_t::label;
+                token.type = token_type_t::label;
                 token.value = identifier;
                 return true;
             }
@@ -665,7 +665,7 @@ namespace basecode::syntax {
             rewind_one_char();
             if (token.value.empty())
                 return false;
-            token.type = token_types_t::attribute;
+            token.type = token_type_t::attribute;
             return true;
         }
         return false;
@@ -677,7 +677,7 @@ namespace basecode::syntax {
             token.value = read_identifier();
             if (token.value.empty())
                 return false;
-            token.type = token_types_t::directive;
+            token.type = token_type_t::directive;
             return true;
         }
         return false;
@@ -860,7 +860,7 @@ namespace basecode::syntax {
         if (ch == '/') {
             ch = read(false);
             if (ch == '/') {
-                token.type = token_types_t::line_comment;
+                token.type = token_type_t::line_comment;
                 token.value = read_until('\n');
                 //rewind_one_char();
                 return true;
@@ -929,7 +929,7 @@ namespace basecode::syntax {
     bool lexer::string_literal(token_t& token) {
         auto ch = read();
         if (ch == '\"') {
-            token.type = token_types_t::string_literal;
+            token.type = token_type_t::string_literal;
             token.value = read_until('"');
             return true;
         }
@@ -962,7 +962,7 @@ namespace basecode::syntax {
 
     bool lexer::number_literal(token_t& token) {
         std::stringstream stream;
-        token.type = token_types_t::number_literal;
+        token.type = token_type_t::number_literal;
         token.number_type = number_types_t::integer;
 
         auto ch = read();
@@ -1018,7 +1018,7 @@ namespace basecode::syntax {
                         if (token.number_type != number_types_t::floating_point) {
                             token.number_type = number_types_t::floating_point;
                         } else {
-                            token.type = token_types_t::invalid;
+                            token.type = token_type_t::invalid;
                             token.number_type = number_types_t::none;
                             return false;
                         }
@@ -1070,7 +1070,7 @@ namespace basecode::syntax {
         while (true) {
             ch = read();
             if (ch == '|') {
-                token.type = token_types_t::lambda_literal;
+                token.type = token_type_t::lambda_literal;
                 return true;
             }
 
@@ -1115,7 +1115,7 @@ namespace basecode::syntax {
             auto ch = read(false);
             if (isalpha(ch) || ch == '_') {
                 rewind_one_char();
-                token.type = token_types_t::scope_operator;
+                token.type = token_type_t::scope_operator;
                 token.value = "::";
                 return true;
             }
@@ -1177,7 +1177,7 @@ namespace basecode::syntax {
         rewind_one_char();
 
         token.value = name;
-        token.type = token_types_t::identifier;
+        token.type = token_type_t::identifier;
 
         return true;
     }
@@ -1266,7 +1266,7 @@ namespace basecode::syntax {
                 token.value = value;
                 token.radix = radix;
                 token.number_type = number_type;
-                token.type = token_types_t::character_literal;
+                token.type = token_type_t::character_literal;
                 return true;
             }
         }
@@ -1527,7 +1527,7 @@ namespace basecode::syntax {
 
             if (is_tagged) {
                 token.value = name;
-                token.type = token_types_t::type_tagged_identifier;
+                token.type = token_type_t::type_tagged_identifier;
                 return true;
             }
         }

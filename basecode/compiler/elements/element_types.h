@@ -597,38 +597,38 @@ namespace basecode::compiler {
         return it->second;
     }
     
-    static inline std::unordered_map<syntax::token_types_t, operator_type_t> s_unary_operators = {
-        {syntax::token_types_t::minus, operator_type_t::negate},
-        {syntax::token_types_t::tilde, operator_type_t::binary_not},
-        {syntax::token_types_t::bang,  operator_type_t::logical_not},
-        {syntax::token_types_t::caret, operator_type_t::pointer_dereference},
+    static inline std::unordered_map<syntax::token_type_t, operator_type_t> s_unary_operators = {
+        {syntax::token_type_t::minus, operator_type_t::negate},
+        {syntax::token_type_t::tilde, operator_type_t::binary_not},
+        {syntax::token_type_t::bang,  operator_type_t::logical_not},
+        {syntax::token_type_t::caret, operator_type_t::pointer_dereference},
     };
 
-    static inline std::unordered_map<syntax::token_types_t, operator_type_t> s_binary_operators = {
-        {syntax::token_types_t::plus,               operator_type_t::add},
-        {syntax::token_types_t::minus,              operator_type_t::subtract},
-        {syntax::token_types_t::asterisk,           operator_type_t::multiply},
-        {syntax::token_types_t::slash,              operator_type_t::divide},
-        {syntax::token_types_t::percent,            operator_type_t::modulo},
-        {syntax::token_types_t::equals,             operator_type_t::equals},
-        {syntax::token_types_t::not_equals,         operator_type_t::not_equals},
-        {syntax::token_types_t::greater_than,       operator_type_t::greater_than},
-        {syntax::token_types_t::less_than,          operator_type_t::less_than},
-        {syntax::token_types_t::greater_than_equal, operator_type_t::greater_than_or_equal},
-        {syntax::token_types_t::less_than_equal,    operator_type_t::less_than_or_equal},
-        {syntax::token_types_t::not_equals,         operator_type_t::not_equals},
-        {syntax::token_types_t::logical_or,         operator_type_t::logical_or},
-        {syntax::token_types_t::logical_and,        operator_type_t::logical_and},
-        {syntax::token_types_t::pipe,               operator_type_t::binary_or},
-        {syntax::token_types_t::ampersand,          operator_type_t::binary_and},
-        {syntax::token_types_t::xor_literal,        operator_type_t::binary_xor},
-        {syntax::token_types_t::shl_literal,        operator_type_t::shift_left},
-        {syntax::token_types_t::shr_literal,        operator_type_t::shift_right},
-        {syntax::token_types_t::rol_literal,        operator_type_t::rotate_left},
-        {syntax::token_types_t::ror_literal,        operator_type_t::rotate_right},
-        {syntax::token_types_t::exponent,           operator_type_t::exponent},
-        {syntax::token_types_t::assignment,         operator_type_t::assignment},
-        {syntax::token_types_t::period,             operator_type_t::member_access},
+    static inline std::unordered_map<syntax::token_type_t, operator_type_t> s_binary_operators = {
+        {syntax::token_type_t::plus,               operator_type_t::add},
+        {syntax::token_type_t::minus,              operator_type_t::subtract},
+        {syntax::token_type_t::asterisk,           operator_type_t::multiply},
+        {syntax::token_type_t::slash,              operator_type_t::divide},
+        {syntax::token_type_t::percent,            operator_type_t::modulo},
+        {syntax::token_type_t::equals,             operator_type_t::equals},
+        {syntax::token_type_t::not_equals,         operator_type_t::not_equals},
+        {syntax::token_type_t::greater_than,       operator_type_t::greater_than},
+        {syntax::token_type_t::less_than,          operator_type_t::less_than},
+        {syntax::token_type_t::greater_than_equal, operator_type_t::greater_than_or_equal},
+        {syntax::token_type_t::less_than_equal,    operator_type_t::less_than_or_equal},
+        {syntax::token_type_t::not_equals,         operator_type_t::not_equals},
+        {syntax::token_type_t::logical_or,         operator_type_t::logical_or},
+        {syntax::token_type_t::logical_and,        operator_type_t::logical_and},
+        {syntax::token_type_t::pipe,               operator_type_t::binary_or},
+        {syntax::token_type_t::ampersand,          operator_type_t::binary_and},
+        {syntax::token_type_t::xor_literal,        operator_type_t::binary_xor},
+        {syntax::token_type_t::shl_literal,        operator_type_t::shift_left},
+        {syntax::token_type_t::shr_literal,        operator_type_t::shift_right},
+        {syntax::token_type_t::rol_literal,        operator_type_t::rotate_left},
+        {syntax::token_type_t::ror_literal,        operator_type_t::rotate_right},
+        {syntax::token_type_t::exponent,           operator_type_t::exponent},
+        {syntax::token_type_t::assignment,         operator_type_t::assignment},
+        {syntax::token_type_t::period,             operator_type_t::member_access},
     };
 
     static inline bool is_relational_operator(operator_type_t op) {
@@ -822,15 +822,6 @@ namespace basecode::compiler {
 
     class element_builder;
 
-    struct type_find_result_t {
-        compiler::type_reference* make_type_reference(
-            element_builder& builder,
-            compiler::block* parent_scope);
-
-        qualified_symbol_t type_name;
-        compiler::type* type = nullptr;
-    };
-
     ///////////////////////////////////////////////////////////////////////////
 
     struct fold_result_t {
@@ -857,12 +848,6 @@ namespace basecode::compiler {
 
     struct infer_type_result_t {
         inferred_type_list_t types {};
-    };
-
-    ///////////////////////////////////////////////////////////////////////////
-
-    enum register_tags_t : uint8_t {
-        tag_rel_expr_target = 1
     };
 
     ///////////////////////////////////////////////////////////////////////////

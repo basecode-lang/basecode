@@ -4,7 +4,6 @@ Steps to reach feature complete for the bootstrap compiler:
 
 - type-baking for generics
 - type-promotion errors for procedure_call
-- multiple/named return parameters
 - lambdas
 - consolidate errors/return errors from all appropriate locations
 
@@ -40,6 +39,7 @@ QUESTIONS
 TASKS
 -----
 LEXER:
+- ADD: _ as the value sink literal token
 - PERF: refactor the lexer thusly:
     1. add a bool tokenize(common::result& r) method that tokenizes the entire source_file
        all in one go.  store the tokens in an internal vector.
@@ -49,16 +49,17 @@ LEXER:
 =======
 
 PARSER:
+- ADD: value-sink _ parser
 - BUG: fix assignment so that groups of lhs/rhs are together.
-- FIX: procedure multiple return types: named & unnamed
-        - NEW: convert multiple/named parameters in procedure return into a tuple
 - FIX: composite binary op + assign has parser precedence issues. may need to
        programmatically wrap the rhs in an expression_group.
-- FIX: value-sink _ should cause an error if on rhs; should not create variables
 
 =======
 
 COMPILER:
+- FIX: value-sink _ should cause an error if on rhs; should not create variables
+- BUG: redefining an identifier with another type doesn't give nice errors.
+
 - BUG: fix assignment in ast_evaluator so it properly handles sets of multiple assignment/multiple return.
 - BUG: fix binary_operator type checking in session so it properly supports multiple assignment/multiple return
 
@@ -76,7 +77,6 @@ COMPILER:
         };
 
         should these use pointers?
-- NEW: convert multiple/named parameters in procedure return into a tuple
 - NEW: variables that are a family_type need to record two things:
         - which type within the family tree is "selected" based on it's value;
         - the value itself
@@ -158,8 +158,6 @@ COMPILER:
             }
         };
 
-- FIX: value-sink _ should cause an error if on rhs; should not create variables
-- BUG: redefining an identifier with another type doesn't give nice errors.
 - NEW: implement procedure instance baking
 - NEW: struct/union instance baking
 - REFACTOR: ast_evaluator::add_identifier_to_scope
@@ -173,6 +171,15 @@ VM:
 =======
 
 EMITTER:
+- BUG: multiple assignment code generation doesn't allow for value swaps.
+
+- FIX: copy semantics:
+    1. DONE: module-var to module-var
+    2. module-var to stack-var
+    3. stack-var to module-var
+    4. any var to parameter
+    5. return parameter to any var
+
 - BUG: the new fixed-length array implementation that uses a structure, e.g.
         sample_array :: struct<T> {
             length: u32;
@@ -182,15 +189,13 @@ EMITTER:
         isn't immediately compatible with the outside world.  the best fix (maybe) is
         to place the buffer ahead of the struct itself and keep track of the
         raw buffer address.
-- FIX: variable_map::assign should handle copies for composite_type
-       copies should be made if composite_type is passed on the stack
-- NEW: variables that are a family_type need to record two things:
-        - which type within the family tree is "selected" based on it's value;
-        - the value itself
 - NEW: use/def in compiler::block for variables
         should supplant byte_code_emitter::referenced_module_variables
 - NEW: k-coloring for register allocation
-- BUG: multiple assignment code generation doesn't allow for value swaps.
+
+- NEW: variables that are a family_type need to record two things:
+        - which type within the family tree is "selected" based on it's value;
+        - the value itself
 
 =======
 
@@ -399,6 +404,9 @@ DONE
 - BUG: infer_type/infer_type_result_t is insufficent as-written:
     1. need to extend infer_type_result_t to support 0:n inferred type results.  this is
         particularly important for procedure_call with multiple return values.
+- NEW: convert multiple/named parameters in procedure return into a tuple
+- FIX: procedure multiple return types: named & unnamed
+        - NEW: convert multiple/named parameters in procedure return into a tuple
 
 ANSWERS
 -------
