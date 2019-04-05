@@ -113,7 +113,8 @@ namespace basecode::compiler {
                         builder.make_type_reference(
                             parent_scope(),
                             u32_type->symbol()->qualified_symbol(),
-                            u32_type));
+                            u32_type,
+                            true));
                 }
 
                 break;
@@ -126,7 +127,8 @@ namespace basecode::compiler {
                     builder.make_type_reference(
                         parent_scope(),
                         u32_type->symbol()->qualified_symbol(),
-                        u32_type));
+                        u32_type,
+                        true));
                 break;
             }
             case element_type_t::string_literal: {
@@ -137,7 +139,8 @@ namespace basecode::compiler {
                     builder.make_type_reference(
                         parent_scope(),
                         u32_type->symbol()->qualified_symbol(),
-                        u32_type));
+                        u32_type,
+                        true));
                 break;
             }
             case element_type_t::identifier_reference: {

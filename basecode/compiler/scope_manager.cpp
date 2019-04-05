@@ -288,7 +288,8 @@ namespace basecode::compiler {
         auto type_ref = builder.make_type_reference(
             scope,
             type->symbol()->qualified_symbol(),
-            type);
+            type,
+            true);
         auto identifier = builder.make_identifier(
             scope,
             type->symbol(),

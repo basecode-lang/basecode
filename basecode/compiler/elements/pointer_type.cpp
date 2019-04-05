@@ -99,19 +99,6 @@ namespace basecode::compiler {
         return current->_base_type_ref;
     }
 
-    std::string pointer_type::name(const std::string& alias) const {
-        std::stringstream stream {};
-        if (!alias.empty()) {
-            if (alias.find('^') == std::string::npos)
-                stream << "^";
-            stream << alias;
-            return stream.str();
-        } else {
-            stream << "^" << _base_type_ref->name();
-            return stream.str();
-        }
-    }
-
     void pointer_type::base_type_ref(compiler::type_reference* value) {
         auto current = this;
         while (true) {

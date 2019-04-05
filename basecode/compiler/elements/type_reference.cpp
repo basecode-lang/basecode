@@ -48,10 +48,6 @@ namespace basecode::compiler {
         return _type;
     }
 
-    std::string type_reference::name() const {
-        return _type->name(_symbol.name);
-    }
-
     bool type_reference::is_proc_type() const {
         return _type != nullptr && _type->is_proc_type();
     }
@@ -74,6 +70,12 @@ namespace basecode::compiler {
             && _type->is_unknown_type();
     }
 
+    symbol_element* type_reference::symbol() const {
+        if (_type == nullptr)
+            return nullptr;
+        return _type->symbol();
+    }
+
     bool type_reference::is_composite_type() const {
         return _type != nullptr && _type->is_composite_type();
     }
@@ -82,11 +84,11 @@ namespace basecode::compiler {
         _type = value;
     }
 
-    const qualified_symbol_t& type_reference::symbol() const {
+    const qualified_symbol_t& type_reference::symbol_override() const {
         return _symbol;
     }
 
-    void type_reference::symbol(const qualified_symbol_t& value) {
+    void type_reference::symbol_override(const qualified_symbol_t& value) {
         _symbol = value;
     }
 

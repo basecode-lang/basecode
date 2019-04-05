@@ -209,10 +209,12 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             const qualified_symbol_t& type_name,
             compiler::type* base_type) {
+        auto base_type_ref = make_type_reference(parent_scope, type_name, base_type, true);
         auto type = new compiler::pointer_type(
             _session.scope_manager().current_module(),
             parent_scope,
-            make_type_reference(parent_scope, type_name, base_type));
+            base_type_ref);
+        base_type_ref->parent_element(type);
         if (!type->initialize(_session))
             return nullptr;
         parent_scope->types().add(type);
@@ -220,14 +222,17 @@ namespace basecode::compiler {
         auto symbol = make_symbol(parent_scope, type->symbol()->name());
         symbol->constant(true);
 
+        auto type_ref = make_type_reference(
+            parent_scope,
+            type_name,
+            type);
         auto identifier = make_identifier(
             parent_scope,
             symbol,
             nullptr);
-        identifier->type_ref(make_type_reference(
-            parent_scope,
-            type_name,
-            type));
+        identifier->type_ref(type_ref);
+        symbol->parent_element(identifier);
+        type_ref->parent_element(identifier);
         parent_scope->identifiers().add(identifier);
 
         _session.elements().add(type);
@@ -242,8 +247,9 @@ namespace basecode::compiler {
             compiler::argument_list* args) {
         auto map_type_ref = make_type_reference(
             parent_scope,
-            map_type->name(),
-            map_type);
+            map_type->symbol()->qualified_symbol(),
+            map_type,
+            true);
 
         auto type_literal = new compiler::type_literal(
             _session.scope_manager().current_module(),
@@ -532,8 +538,9 @@ namespace basecode::compiler {
             compiler::argument_list* args) {
         auto tuple_type_ref = make_type_reference(
             parent_scope,
-            tuple_type->name(),
-            tuple_type);
+            tuple_type->symbol()->qualified_symbol(),
+            tuple_type,
+            true);
 
         auto type_literal = new compiler::type_literal(
             _session.scope_manager().current_module(),
@@ -1008,18 +1015,9 @@ namespace basecode::compiler {
 
     type_reference* element_builder::make_type_reference(
             compiler::block* parent_scope,
-            const std::string& name,
-            compiler::type* type) {
-        return make_type_reference(
-            parent_scope,
-            qualified_symbol_t(name),
-            type);
-    }
-
-    type_reference* element_builder::make_type_reference(
-            compiler::block* parent_scope,
             const qualified_symbol_t& symbol,
-            compiler::type* type) {
+            compiler::type* type,
+            bool track_as_used) {
         auto& scope_manager = _session.scope_manager();
         auto reference = new compiler::type_reference(
             scope_manager.current_module(),
@@ -1027,8 +1025,11 @@ namespace basecode::compiler {
             symbol,
             type);
         _session.elements().add(reference);
-        _session.track_used_type(type);
         reference->location(symbol.location);
+
+        if (track_as_used)
+            _session.track_used_type(type);
+
         return reference;
     }
 

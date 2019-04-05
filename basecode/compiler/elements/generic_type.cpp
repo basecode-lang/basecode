@@ -13,6 +13,7 @@
 #include <compiler/element_builder.h>
 #include "generic_type.h"
 #include "type_reference.h"
+#include "symbol_element.h"
 
 namespace basecode::compiler {
 
@@ -21,7 +22,7 @@ namespace basecode::compiler {
         std::stringstream stream;
         stream << "__generic";
         for (auto c : constraints) {
-            stream << "_" << c->name();
+            stream << "_" << c->symbol()->name();
         }
         stream << "__";
         return stream.str();

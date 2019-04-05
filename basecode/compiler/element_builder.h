@@ -357,12 +357,8 @@ namespace basecode::compiler {
         type_reference* make_type_reference(
             compiler::block* parent_scope,
             const qualified_symbol_t& symbol,
-            compiler::type* type);
-
-        type_reference* make_type_reference(
-            compiler::block* parent_scope,
-            const std::string& name,
-            compiler::type* type);
+            compiler::type* type,
+            bool track_as_used = false);
 
         compiler::nil_literal* nil_literal();
 

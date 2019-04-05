@@ -316,7 +316,8 @@ namespace basecode::compiler {
         auto namespace_type_ref = builder.make_type_reference(
             parent_scope,
             namespace_type->symbol()->qualified_symbol(),
-            namespace_type);
+            namespace_type,
+            true);
 
         auto namespaces = symbol->namespaces();
         auto scope = parent_scope;
@@ -385,7 +386,11 @@ namespace basecode::compiler {
                 builder.make_qualified_symbol(qualified_symbol, type_parameter_node->lhs);
 
                 auto type = scope_manager.find_type(qualified_symbol, scope);
-                auto type_ref = builder.make_type_reference(scope, type->name(), type);
+                auto type_ref = builder.make_type_reference(
+                    scope,
+                    type->symbol()->qualified_symbol(),
+                    type,
+                    true);
                 constraints.push_back(type_ref);
 
                 auto root_scope = _session.program().block();
@@ -405,8 +410,9 @@ namespace basecode::compiler {
             auto type = known_type != nullptr ? known_type : generic_type;
             auto param_type_ref = builder.make_type_reference(
                 scope,
-                param_symbol->name(),
-                type);
+                param_symbol->qualified_symbol(),
+                type,
+                true);
             auto decl = add_identifier_to_scope(
                 context,
                 param_symbol,
@@ -455,7 +461,8 @@ namespace basecode::compiler {
             context.decl_type_ref = builder.make_type_reference(
                 type->scope(),
                 value_type->symbol()->qualified_symbol(),
-                value_type);
+                value_type,
+                true);
         }
 
         for (auto child : block->children) {
@@ -778,7 +785,8 @@ namespace basecode::compiler {
                 new_type_ref = builder.make_type_reference(
                     scope,
                     inferred.type->symbol()->qualified_symbol(),
-                    inferred.type);
+                    inferred.type,
+                    true);
             }
 
             new_identifier->type_ref(new_type_ref);
@@ -1916,7 +1924,8 @@ namespace basecode::compiler {
         auto type_ref = builder.make_type_reference(
             scope_manager.current_scope(),
             qualified_symbol_t(),
-            array_type);
+            array_type,
+            true);
 
         auto literal = builder.make_array_literal(
             scope_manager.current_scope(),
@@ -2218,8 +2227,9 @@ namespace basecode::compiler {
         auto open_generic_type = scope_manager.find_generic_type({});
         context.decl_type_ref = builder.make_type_reference(
             block_scope,
-            open_generic_type->name(),
-            open_generic_type);
+            open_generic_type->symbol()->qualified_symbol(),
+            open_generic_type,
+            true);
 
         if (!add_procedure_type_parameter_fields(
                 context,
@@ -2294,7 +2304,8 @@ namespace basecode::compiler {
                     type_decl_ref = builder.make_type_reference(
                         scope,
                         type->symbol()->qualified_symbol(),
-                        type);
+                        type,
+                        true);
                     break;
                 }
                 case syntax::ast_node_type_t::enum_expression:
@@ -2307,7 +2318,8 @@ namespace basecode::compiler {
                     type_decl_ref = builder.make_type_reference(
                         scope,
                         type->symbol()->qualified_symbol(),
-                        type);
+                        type,
+                        true);
                     break;
                 }
                 case syntax::ast_node_type_t::pointer_declaration: {
@@ -2323,7 +2335,8 @@ namespace basecode::compiler {
                     type_decl_ref = builder.make_type_reference(
                         scope,
                         qualified_symbol_t(),
-                        type);
+                        type,
+                        true);
                     break;
                 }
                 case syntax::ast_node_type_t::subscript_declaration: {
@@ -2361,7 +2374,8 @@ namespace basecode::compiler {
                     type_decl_ref = builder.make_type_reference(
                         scope,
                         qualified_symbol_t(),
-                        type);
+                        type,
+                        true);
                     break;
                 }
                 default: {
@@ -2408,7 +2422,8 @@ namespace basecode::compiler {
                     type_ref = builder.make_type_reference(
                         scope_manager.current_scope(),
                         inferred.type->symbol()->qualified_symbol(),
-                        inferred.type);
+                        inferred.type,
+                        true);
                 }
             } else {
                 // XXX: error

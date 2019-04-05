@@ -411,7 +411,7 @@ namespace basecode::compiler {
                         "C073",
                         fmt::format(
                             "cannot cast to type: {}",
-                            type_ref->symbol().name),
+                            type_ref->symbol_override().name),
                         cast->type_location());
                     return false;
                 }
@@ -451,7 +451,7 @@ namespace basecode::compiler {
                     fmt::format(
                         "cast: {} -> {}",
                         expr_inferred.type_name(),
-                        type_ref->name()),
+                        type_ref->symbol()->name()),
                     vm::comment_location_t::after_instruction);
 
                 auto result_operand = target_operand(
@@ -1567,7 +1567,7 @@ namespace basecode::compiler {
                         "C073",
                         fmt::format(
                             "cannot transmute to type: {}",
-                            type_ref->symbol().name),
+                            type_ref->symbol_override().name),
                         transmute->type_location());
                     return false;
                 }
@@ -1576,7 +1576,7 @@ namespace basecode::compiler {
                 auto target_size = type_ref->type()->size_in_bytes();
 
                 current_block->comment(
-                    fmt::format("transmute: ", type_ref->symbol().name),
+                    fmt::format("transmute: ", type_ref->symbol_override().name),
                     vm::comment_location_t::after_instruction);
 
                 auto result_operand = target_operand(
@@ -2079,7 +2079,7 @@ namespace basecode::compiler {
             compiler::type* type) {
         auto& assembler = _session.assembler();
 
-        auto type_name = type->name();
+        auto type_name = type->symbol()->name();
         auto type_name_len = static_cast<uint32_t>(type_name.length());
         auto label_name = type::make_info_label_name(type);
 
@@ -2197,7 +2197,7 @@ namespace basecode::compiler {
             type_info_block->string(
                 labels.make(compiler::type::make_literal_label_name(type), type_info_block),
                 labels.make(compiler::type::make_literal_data_label_name(type), type_info_block),
-                type->name());
+                type->symbol()->name());
         }
 
         type_info_block->align(8);
@@ -2541,7 +2541,7 @@ namespace basecode::compiler {
 
             basic_block->comment(fmt::format(
                 "identifier type: {}",
-                var->type_ref()->name()));
+                var->type_ref()->symbol()->name()));
             auto var_label = labels.make(var->label_name(), basic_block);
             basic_block->label(var_label);
 

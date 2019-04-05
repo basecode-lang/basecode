@@ -55,7 +55,7 @@ PARSER:
 =======
 
 COMPILER:
-- ADD: type_name_formatter that eases construction of unique type names.
+- ADD: type_name_builder that eases construction of unique type names.
 
 - BUG: redefining an identifier with another type doesn't give nice errors.
 

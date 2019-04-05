@@ -29,8 +29,6 @@ namespace basecode::compiler {
 
         compiler::type* type();
 
-        std::string name() const;
-
         bool is_proc_type() const;
 
         bool is_array_type() const;
@@ -41,11 +39,13 @@ namespace basecode::compiler {
 
         bool is_composite_type() const;
 
+        symbol_element* symbol() const;
+
         void type(compiler::type* value);
 
-        const qualified_symbol_t& symbol() const;
+        const qualified_symbol_t& symbol_override() const;
 
-        void symbol(const qualified_symbol_t& value);
+        void symbol_override(const qualified_symbol_t& value);
 
     protected:
         bool on_infer_type(

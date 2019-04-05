@@ -58,7 +58,8 @@ namespace basecode::compiler {
                 builder.make_type_reference(
                     parent_scope(),
                     u32_type->symbol()->qualified_symbol(),
-                    u32_type));
+                    u32_type,
+                    true));
             return true;
         }
         return false;

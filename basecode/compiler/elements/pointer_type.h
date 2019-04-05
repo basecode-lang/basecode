@@ -34,8 +34,6 @@ namespace basecode::compiler {
 
         void base_type_ref(compiler::type_reference* value);
 
-        std::string name(const std::string& alias = "") const override;
-
     protected:
         bool on_type_check(
             compiler::type* other,

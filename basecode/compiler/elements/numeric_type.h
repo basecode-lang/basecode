@@ -33,6 +33,8 @@ namespace basecode::compiler {
             compiler::session& session,
             compiler::block* parent_scope);
 
+        static std::vector<std::string> type_names();
+
         static std::string narrow_to_value(double value);
 
         static std::string narrow_to_value(uint64_t value);

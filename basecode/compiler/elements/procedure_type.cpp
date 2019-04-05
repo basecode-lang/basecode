@@ -197,14 +197,14 @@ namespace basecode::compiler {
                             const auto& types = family_type->types();
                             for (size_t i = 0; i < types.size(); i++) {
                                 if (i > 0) parameter_type += ",";
-                                parameter_type += types[i]->name();
+                                parameter_type += types[i]->symbol()->name();
                             }
                             parameter_type += ")";
                         } else {
-                            parameter_type = constraint_type->name();
+                            parameter_type = constraint_type->symbol()->name();
                         }
                     } else {
-                        parameter_type = fld_type->name();
+                        parameter_type = fld_type->symbol()->name();
                     }
                     result.messages.error(
                         "X000",

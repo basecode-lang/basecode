@@ -158,7 +158,8 @@ namespace basecode::compiler {
         auto u32_type_ref = builder.make_type_reference(
             block_scope,
             u32_type->symbol()->qualified_symbol(),
-            u32_type);
+            u32_type,
+            true);
         u32_type_ref->parent_element(block_scope);
 
         auto length_identifier = builder.make_identifier(
@@ -183,8 +184,9 @@ namespace basecode::compiler {
             _base_type_ref->type());
         auto entry_ptr_type_ref = builder.make_type_reference(
             block_scope,
-            entry_ptr_type->name(),
-            entry_ptr_type);
+            entry_ptr_type->symbol()->qualified_symbol(),
+            entry_ptr_type,
+            true);
         entry_ptr_type_ref->parent_element(block_scope);
 
         auto data_identifier = builder.make_identifier(
@@ -208,21 +210,6 @@ namespace basecode::compiler {
         calculate_size();
 
         return composite_type::on_initialize(session);
-    }
-
-    std::string array_type::name(const std::string& alias) const {
-        auto entry_type_name = !alias.empty() ? alias : _base_type_ref->name();
-        std::stringstream stream;
-
-        for (auto s : _subscripts) {
-            uint64_t size = 0;
-            if (s->as_integer(size)) {
-                stream << fmt::format("[{}]", size);
-            }
-        }
-
-        stream << entry_type_name;
-        return stream.str();
     }
 
     compiler::element* array_type::find_subscript(common::id_t id) {

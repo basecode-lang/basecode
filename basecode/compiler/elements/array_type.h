@@ -49,8 +49,6 @@ namespace basecode::compiler {
 
         compiler::element* find_subscript(common::id_t id);
 
-        std::string name(const std::string& alias = "") const override;
-
     protected:
         bool on_type_check(
             compiler::type* other,

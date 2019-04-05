@@ -214,10 +214,4 @@ namespace basecode::compiler {
         return true;
     }
 
-    std::string type::name(const std::string& alias) const {
-        if (!alias.empty())
-            return alias;
-        return _symbol != nullptr ? _symbol->name() : "unknown";
-    }
-
 }

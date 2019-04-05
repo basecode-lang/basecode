@@ -261,7 +261,7 @@ namespace basecode::compiler {
 
     std::string inferred_type_t::type_name() const {
         if (ref != nullptr)
-            return ref->symbol().name;
+            return ref->symbol_override().name;
         return type->symbol()->name();
     }
 

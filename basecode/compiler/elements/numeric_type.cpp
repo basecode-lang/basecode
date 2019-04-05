@@ -41,6 +41,13 @@ namespace basecode::compiler {
         }
     }
 
+    std::vector<std::string> numeric_type::type_names() {
+        std::vector<std::string> list {};
+        for (const auto& props : s_type_properties)
+            list.emplace_back(props.name);
+        return list;
+    }
+
     // float:  -3.4e+38  to 3.4e+38
     // double: -1.7e+308 to 1.7e+308
     std::string numeric_type::narrow_to_value(double value) {

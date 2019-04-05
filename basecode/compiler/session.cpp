@@ -372,7 +372,7 @@ namespace basecode::compiler {
                     fmt::format(
                         "type mismatch: cannot assign {} to {}.",
                         inferred.type_name(),
-                        var->type_ref()->name()),
+                        var->type_ref()->symbol()->name()),
                     var->location());
             }
         }
@@ -595,15 +595,19 @@ namespace basecode::compiler {
         auto parent_scope = _scope_manager->current_scope();
 
         compiler::numeric_type::make_types(*this, parent_scope);
+        for (const auto& type_name : compiler::numeric_type::type_names()) {
+            auto base_type = _scope_manager->find_type(qualified_symbol_t(type_name));
+            _builder->make_pointer_type(
+                parent_scope,
+                qualified_symbol_t(compiler::pointer_type::name_for_pointer(base_type)),
+                base_type);
+        }
         _scope_manager->add_type_to_scope(_builder->make_module_type(
             parent_scope,
             _builder->make_block(parent_scope)));
         _scope_manager->add_type_to_scope(_builder->make_namespace_type(parent_scope));
         _scope_manager->add_type_to_scope(_builder->make_bool_type(parent_scope));
         _scope_manager->add_type_to_scope(_builder->make_rune_type(parent_scope));
-        _scope_manager->add_type_to_scope(_builder->make_tuple_type(
-            parent_scope,
-            _builder->make_block(parent_scope)));
         _scope_manager->add_type_to_scope(_builder->make_generic_type(
             parent_scope,
             {}));
@@ -669,7 +673,8 @@ namespace basecode::compiler {
                         auto type_ref = _builder->make_type_reference(
                             type->parent_scope(),
                             qualified_symbol_t{},
-                            type);
+                            type,
+                            true);
                         if (is_pointer) {
                             pointer->base_type_ref(type_ref);
                         } else {

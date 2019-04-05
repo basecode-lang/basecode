@@ -130,7 +130,7 @@ namespace basecode::compiler {
                 return fmt::format(
                     "{}[shape=record,label=\"cast|{}\"{}];",
                     node_vertex_name,
-                    element->type()->symbol().name,
+                    element->type()->symbol_override().name,
                     style);
             }
             case element_type_t::case_e: {
@@ -182,7 +182,7 @@ namespace basecode::compiler {
                 return fmt::format(
                     "{}[shape=record,label=\"transmute|{}\"{}];",
                     node_vertex_name,
-                    element->type()->symbol().name,
+                    element->type()->symbol_override().name,
                     style);
             }
             case element_type_t::if_e: {
@@ -421,7 +421,7 @@ namespace basecode::compiler {
                 auto style = ", fillcolor=gainsboro, style=\"filled\"";
                 std::string base_type_name = "unknown";
                 if (element->base_type_ref() != nullptr)
-                    base_type_name = element->base_type_ref()->name();
+                    base_type_name = element->base_type_ref()->symbol()->name();
                 add_primary_edge(element, element->base_type_ref());
                 add_primary_edge(element, element->symbol());
                 return fmt::format(
@@ -435,7 +435,7 @@ namespace basecode::compiler {
                 auto style = ", fillcolor=gainsboro, style=\"filled\"";
                 std::string base_type_name = "unknown";
                 if (element->base_type_ref() != nullptr)
-                    base_type_name = element->base_type_ref()->name();
+                    base_type_name = element->base_type_ref()->symbol()->name();
                 add_primary_edge(element, element->base_type_ref());
                 for (auto fld : element->fields().as_list())
                     add_primary_edge(element, fld);
@@ -446,7 +446,7 @@ namespace basecode::compiler {
                 return fmt::format(
                     "{}[shape=record,label=\"array_type|{}|type: {}\"{}];",
                     node_vertex_name,
-                    element->name(),
+                    element->symbol()->name(),
                     base_type_name,
                     style);
             }
@@ -455,7 +455,7 @@ namespace basecode::compiler {
                 auto style = ", fillcolor=deepskyblue1, style=\"filled\"";
                 std::string type_name = "unknown";
                 if (identifier_element->type_ref() != nullptr)
-                    type_name = identifier_element->type_ref()->symbol().name;
+                    type_name = identifier_element->type_ref()->symbol_override().name;
                 auto details = fmt::format(
                     "identifier|{}|{{type: {} | inferred: {} | constant: {} }}",
                     identifier_element->symbol()->name(),

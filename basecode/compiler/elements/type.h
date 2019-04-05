@@ -72,8 +72,6 @@ namespace basecode::compiler {
 
         void symbol(compiler::symbol_element* value);
 
-        virtual std::string name(const std::string& alias = "") const;
-
     protected:
         virtual bool on_type_check(
             compiler::type* other,

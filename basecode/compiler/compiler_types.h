@@ -34,6 +34,7 @@ namespace basecode::compiler {
     class ast_evaluator;
     class scope_manager;
     class element_builder;
+    class type_name_builder;
     class string_intern_map;
     class byte_code_emitter;
     class code_dom_formatter;
