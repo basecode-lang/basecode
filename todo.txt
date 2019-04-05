@@ -55,10 +55,6 @@ PARSER:
 =======
 
 COMPILER:
-- BUG: type interface is failing in this case:
-        u64_max_u := %1111_1111_1111_1111_1111_1111_1111_1111_1111_1111_1111_1111_1111_1111_1111_1111;
-                     ^ type mismatch: cannot assign s8 to u64.
-
 - ADD: type_name_formatter that eases construction of unique type names.
 
 - BUG: redefining an identifier with another type doesn't give nice errors.
@@ -414,6 +410,9 @@ DONE
 - ADD (parser): value-sink _ parser
 - FIX (compiler): value-sink _ should cause an error if on rhs; should not create variables
 - BUG: integer_literal and float_literal should accept an override type that they return during inference.
+- BUG: type interface is failing in this case:
+        u64_max_u := %1111_1111_1111_1111_1111_1111_1111_1111_1111_1111_1111_1111_1111_1111_1111_1111;
+                     ^ type mismatch: cannot assign s8 to u64.
 
 ANSWERS
 -------

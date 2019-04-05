@@ -53,27 +53,18 @@ namespace basecode::compiler {
     }
 
     std::string numeric_type::narrow_to_value(uint64_t value) {
-        size_t start_index = 1;
-        size_t end_index = 5;
-        if (common::is_sign_bit_set(value)) {
-            end_index = 9;
-            start_index = 5;
-        }
-        int64_t signed_value = static_cast<int64_t>(value);
-        for (size_t i = start_index; i < end_index; i++) {
-            auto& props = s_type_properties[i];
-            if (props.is_signed) {
-                if (signed_value >= props.min
-                &&  signed_value <= static_cast<int64_t>(props.max)) {
+        auto is_signed = common::is_sign_bit_set(value);
+        for (size_t i = 1; i < 5; i++) {
+            const auto& props = s_type_properties[i];
+            if (value >= props.min && value <= props.max) {
+                if (!is_signed)
                     return props.name;
-                }
-            } else {
-                if (value >= static_cast<uint64_t>(props.min)
-                &&  value <= props.max) {
-                    return props.name;
+                else {
+                    return s_type_properties[i + 4].name;
                 }
             }
         }
+
         return "unknown";
     }
 
