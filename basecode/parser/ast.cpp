@@ -517,6 +517,10 @@ namespace basecode::syntax {
         return node;
     }
 
+    ast_node_t* ast_builder::value_sink_literal_node(const token_t& token) {
+        return make_node(ast_node_type_t::value_sink_literal, &token);
+    }
+
     ast_node_t* ast_builder::uninitialized_literal_node(const token_t& token) {
         return make_node(ast_node_type_t::uninitialized_literal, &token);
     }

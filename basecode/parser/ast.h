@@ -90,6 +90,7 @@ namespace basecode::syntax {
         subscript_operator,
         with_member_access,
         type_tagged_symbol,
+        value_sink_literal,
         pointer_declaration,
         type_parameter_list,
         constant_assignment,
@@ -166,6 +167,7 @@ namespace basecode::syntax {
         {ast_node_type_t::with_member_access, "with_member_access"},
         {ast_node_type_t::subscript_operator, "subscript_operator"},
         {ast_node_type_t::continue_statement, "continue_statement"},
+        {ast_node_type_t::value_sink_literal, "value_sink_literal"},
         {ast_node_type_t::type_tagged_symbol, "type_tagged_symbol"},
         {ast_node_type_t::pointer_declaration, "pointer_declaration"},
         {ast_node_type_t::type_parameter_list, "type_parameter_list"},
@@ -428,6 +430,8 @@ namespace basecode::syntax {
         ast_node_t* character_literal_node(const token_t& token);
 
         ast_node_t* module_expression_node(const token_t& token);
+
+        ast_node_t* value_sink_literal_node(const token_t& token);
 
         ast_node_t* uninitialized_literal_node(const token_t& token);
 

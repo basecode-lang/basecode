@@ -73,6 +73,7 @@ namespace basecode::compiler {
         {syntax::ast_node_type_t::character_literal,       std::bind(&ast_evaluator::character_literal, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_type_t::module_expression,       std::bind(&ast_evaluator::module_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_type_t::elseif_expression,       std::bind(&ast_evaluator::if_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::value_sink_literal,      std::bind(&ast_evaluator::value_sink_literal, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_type_t::subscript_operator,      std::bind(&ast_evaluator::subscript_operator, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_type_t::with_member_access,      std::bind(&ast_evaluator::with_member_access, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_type_t::continue_statement,      std::bind(&ast_evaluator::continue_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
@@ -662,6 +663,15 @@ namespace basecode::compiler {
         if (node != nullptr) {
             init_expr = evaluate_in_scope(source_node, scope);
             if (init_expr != nullptr) {
+                if (init_expr->element_type() == element_type_t::value_sink_literal) {
+                    _session.error(
+                        _session.scope_manager().current_module(),
+                        "X000",
+                        "value-sink cannot be used as rhs in an assignment.",
+                        source_node->location);
+                    return nullptr;
+                }
+
                 if (init_expr->element_type() == element_type_t::symbol) {
                     auto init_symbol = dynamic_cast<compiler::symbol_element*>(init_expr);
                     auto vars = scope_manager.find_identifier(
@@ -673,6 +683,7 @@ namespace basecode::compiler {
                         init_symbol->qualified_symbol(),
                         identifier);
                 }
+
                 if (init_expr->is_constant()) {
                     init = builder.make_initializer(scope, init_expr);
 
@@ -1214,6 +1225,13 @@ namespace basecode::compiler {
         return true;
     }
 
+    bool ast_evaluator::value_sink_literal(
+            evaluator_context_t& context,
+            evaluator_result_t& result) {
+        result.element = _session.builder().value_sink_literal();
+        return true;
+    }
+
     bool ast_evaluator::namespace_expression(
             evaluator_context_t& context,
             evaluator_result_t& result) {
@@ -1248,6 +1266,14 @@ namespace basecode::compiler {
                     auto lhs = evaluate(arg_node->lhs->children.front());
                     auto rhs = resolve_symbol_or_evaluate(arg_node->rhs->children.front());
                     if (lhs != nullptr && rhs != nullptr)
+                        if (rhs->element_type() == element_type_t::value_sink_literal) {
+                            _session.error(
+                                _session.scope_manager().current_module(),
+                                "X000",
+                                "value-sink cannot be used as a pair value.",
+                                arg_node->location);
+                            return false;
+                        }
                         arg = builder.make_argument_pair(
                             scope_manager.current_scope(),
                             lhs,
@@ -1256,6 +1282,15 @@ namespace basecode::compiler {
                 }
                 default: {
                     arg = resolve_symbol_or_evaluate(arg_node);
+                    if (arg != nullptr
+                    &&  arg->element_type() == element_type_t::value_sink_literal) {
+                        _session.error(
+                            _session.scope_manager().current_module(),
+                            "X000",
+                            "value-sink cannot be used as an argument value.",
+                            arg_node->location);
+                        return false;
+                    }
                     break;
                 }
             }
@@ -1283,10 +1318,19 @@ namespace basecode::compiler {
         auto it = s_unary_operators.find(context.node->token.type);
         if (it == s_unary_operators.end())
             return false;
+        auto rhs = resolve_symbol_or_evaluate(context.node->rhs);
+        if (rhs->element_type() == element_type_t::value_sink_literal) {
+            _session.error(
+                _session.scope_manager().current_module(),
+                "X000",
+                "value-sink cannot be used with a unary operator.",
+                context.node->rhs->location);
+            return false;
+        }
         result.element = _session.builder().make_unary_operator(
             _session.scope_manager().current_scope(),
             it->second,
-            resolve_symbol_or_evaluate(context.node->rhs));
+            rhs);
         return true;
     }
 
@@ -1360,6 +1404,24 @@ namespace basecode::compiler {
             rhs = resolve_symbol_or_evaluate(
                 context.node->rhs,
                 type_scope);
+        }
+
+        if (lhs->element_type() == element_type_t::value_sink_literal) {
+            _session.error(
+                _session.scope_manager().current_module(),
+                "X000",
+                "value-sink cannot be used within a binary operator.",
+                context.node->lhs->location);
+            return false;
+        }
+
+        if (rhs->element_type() == element_type_t::value_sink_literal) {
+            _session.error(
+                _session.scope_manager().current_module(),
+                "X000",
+                "value-sink cannot be used within a binary operator.",
+                context.node->rhs->location);
+            return false;
         }
 
         auto bin_op = builder.make_binary_operator(
@@ -2443,6 +2505,9 @@ namespace basecode::compiler {
                 return false;
             }
 
+            if (target_element->element_type() == element_type_t::value_sink_literal)
+                continue;
+
             if (target_element->element_type() == element_type_t::identifier_reference) {
                 // XXX: clean this up
                 //
@@ -2475,6 +2540,15 @@ namespace basecode::compiler {
                     scope);
                 if (rhs == nullptr)
                     return false;
+
+                if (rhs->element_type() == element_type_t::value_sink_literal) {
+                    _session.error(
+                        _session.scope_manager().current_module(),
+                        "X000",
+                        "value-sink cannot be used as rhs in an assignment.",
+                        source_list->children[i]->location);
+                    return false;
+                }
 
                 auto binary_op = builder.make_binary_operator(
                     scope_manager.current_scope(),
@@ -2733,7 +2807,8 @@ namespace basecode::compiler {
         auto& builder = _session.builder();
 
         auto predicate = resolve_symbol_or_evaluate(node, scope);
-        if (predicate->element_type() != element_type_t::binary_operator) {
+        auto bin_op = dynamic_cast<compiler::binary_operator*>(predicate);
+        if (bin_op == nullptr || !is_relational_operator(bin_op->operator_type())) {
             infer_type_result_t type_result {};
             if (!predicate->infer_type(_session, type_result))
                 return nullptr;

@@ -100,6 +100,7 @@ namespace basecode::compiler {
     class type_of_intrinsic;
     class character_literal;
     class foreign_directive;
+    class value_sink_literal;
     class align_of_intrinsic;
     class procedure_instance;
     class assembly_directive;
@@ -417,6 +418,7 @@ namespace basecode::compiler {
         label_reference,
         module_reference,
         character_literal,
+        value_sink_literal,
         unknown_identifier,
         identifier_reference,
         uninitialized_literal,
@@ -489,6 +491,7 @@ namespace basecode::compiler {
         {element_type_t::binary_operator, "binary_operator"},
         {element_type_t::module_reference, "module_reference"},
         {element_type_t::character_literal, "character_literal"},
+        {element_type_t::value_sink_literal, "value_sink_literal"},
         {element_type_t::unknown_identifier, "unknown_identifier"},
         {element_type_t::identifier_reference, "identifier_reference"},
         {element_type_t::uninitialized_literal, "uninitialized_literal"},

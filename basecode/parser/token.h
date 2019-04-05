@@ -93,6 +93,7 @@ namespace basecode::syntax {
         right_curly_brace,
         character_literal,
         namespace_literal,
+        value_sink_literal,
         key_value_operator,
         greater_than_equal,
         plus_equal_literal,
@@ -188,6 +189,7 @@ namespace basecode::syntax {
         {token_type_t::key_value_operator,         "key_value_operator"},
         {token_type_t::plus_equal_literal,         "plus_equal_literal"},
         {token_type_t::greater_than_equal,         "greater_than_equal"},
+        {token_type_t::value_sink_literal,         "value_sink_literal"},
         {token_type_t::fallthrough_literal,        "fallthrough_literal"},
         {token_type_t::minus_equal_literal,        "minus_equal_literal"},
         {token_type_t::constant_assignment,        "constant_assignment"},
@@ -536,6 +538,11 @@ namespace basecode::syntax {
         .value = "!="
     };
 
+    static inline token_t s_value_sink_literal = {
+        .type = token_type_t::value_sink_literal,
+        .value = "_"
+    };
+
     static inline token_t s_right_paren_literal = {
         .type = token_type_t::right_paren,
         .value = ")"
@@ -664,4 +671,4 @@ namespace basecode::syntax {
         }
     }
 
-};
+}

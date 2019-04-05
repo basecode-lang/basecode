@@ -302,6 +302,15 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    ast_node_t* value_sink_prefix_parser::parse(
+            common::result& r,
+            parser* parser,
+            token_t& token) {
+        return parser->ast_builder()->value_sink_literal_node(token);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
     ast_node_t* subscript_declaration_prefix_parser::parse(
             common::result& r,
             parser* parser,

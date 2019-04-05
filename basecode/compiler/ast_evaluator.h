@@ -245,6 +245,10 @@ namespace basecode::compiler {
             evaluator_context_t& context,
             evaluator_result_t& result);
 
+        bool value_sink_literal(
+            evaluator_context_t& context,
+            evaluator_result_t& result);
+
         bool namespace_expression(
             evaluator_context_t& context,
             evaluator_result_t& result);

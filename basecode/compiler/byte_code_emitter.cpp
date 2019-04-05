@@ -2037,6 +2037,7 @@ namespace basecode::compiler {
             case element_type_t::label_reference:
             case element_type_t::module_reference:
             case element_type_t::unknown_identifier:
+            case element_type_t::value_sink_literal:
             case element_type_t::uninitialized_literal: {
                 break;
             }

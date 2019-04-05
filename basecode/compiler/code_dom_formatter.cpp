@@ -762,6 +762,14 @@ namespace basecode::compiler {
                     node_vertex_name,
                     style);
             }
+            case element_type_t::value_sink_literal: {
+                auto style = ", fillcolor=pink, style=\"filled\"";
+                return fmt::format(
+                    "{}[shape=record,label=\"value_sink_literal\"{}];",
+                    node_vertex_name,
+                    style);
+                break;
+            }
             case element_type_t::uninitialized_literal: {
                 auto style = ", fillcolor=pink, style=\"filled\"";
                 return fmt::format(

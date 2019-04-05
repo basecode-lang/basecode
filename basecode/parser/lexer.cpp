@@ -182,6 +182,9 @@ namespace basecode::syntax {
         // xor literal
         {'x', std::bind(&lexer::xor_literal, std::placeholders::_1, std::placeholders::_2)},
 
+        // value sink literal
+        {'_', std::bind(&lexer::value_sink_literal, std::placeholders::_1, std::placeholders::_2)},
+
         // identifier
         {'_', std::bind(&lexer::identifier, std::placeholders::_1, std::placeholders::_2)},
         {'a', std::bind(&lexer::identifier, std::placeholders::_1, std::placeholders::_2)},
@@ -1384,6 +1387,19 @@ namespace basecode::syntax {
         return false;
     }
 
+    bool lexer::value_sink_literal(token_t& token) {
+        auto ch = read();
+        if (ch == '_') {
+            ch = read(false);
+            if (!isalnum(ch) && ch != '_') {
+                rewind_one_char();
+                token = s_value_sink_literal;
+                return true;
+            }
+        }
+        return false;
+    }
+
     bool lexer::plus_equal_operator(token_t& token) {
         if (match_literal("+:=")) {
             token = s_plus_equal_literal;
@@ -1628,4 +1644,4 @@ namespace basecode::syntax {
         return true;
     }
 
-};
+}

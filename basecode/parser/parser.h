@@ -232,6 +232,18 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    class value_sink_prefix_parser : public prefix_parser {
+    public:
+        value_sink_prefix_parser() = default;
+
+        ast_node_t* parse(
+            common::result& r,
+            parser* parser,
+            token_t& token) override;
+    };
+
+    ///////////////////////////////////////////////////////////////////////////
+
     class subscript_declaration_prefix_parser : public prefix_parser {
     public:
         subscript_declaration_prefix_parser() = default;
@@ -720,6 +732,7 @@ namespace basecode::syntax {
         static inline namespace_prefix_parser s_namespace_prefix_parser {};
         static inline attribute_prefix_parser s_attribute_prefix_parser {};
         static inline directive_prefix_parser s_directive_prefix_parser {};
+        static inline value_sink_prefix_parser s_value_sink_prefix_parser {};
         static inline while_prefix_parser s_while_statement_prefix_parser {};
         static inline basic_block_prefix_parser s_basic_block_prefix_parser {};
         static inline char_literal_prefix_parser s_char_literal_prefix_parser {};
@@ -761,6 +774,7 @@ namespace basecode::syntax {
             {token_type_t::attribute,              &s_attribute_prefix_parser},
             {token_type_t::directive,              &s_directive_prefix_parser},
             {token_type_t::tilde,                  &s_binary_not_prefix_parser},
+            {token_type_t::value_sink_literal,     &s_value_sink_prefix_parser},
             {token_type_t::left_curly_brace,       &s_basic_block_prefix_parser},
             {token_type_t::character_literal,      &s_char_literal_prefix_parser},
             {token_type_t::line_comment,           &s_line_comment_prefix_parser},

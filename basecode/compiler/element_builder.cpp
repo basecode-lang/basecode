@@ -1303,6 +1303,12 @@ namespace basecode::compiler {
         return fallthrough;
     }
 
+    compiler::value_sink_literal* element_builder::value_sink_literal() {
+        if (_value_sink_literal == nullptr)
+            _value_sink_literal = make_value_sink_literal(_session.program().block());
+        return _value_sink_literal;
+    }
+
     compiler::uninitialized_literal* element_builder::uninitialized_literal() {
         if (_uninitialized_literal == nullptr)
             _uninitialized_literal = make_uninitialized_literal(_session.program().block());
@@ -1360,6 +1366,14 @@ namespace basecode::compiler {
             parent_scope);
         _session.elements().add(nil_literal);
         return nil_literal;
+    }
+
+    compiler::value_sink_literal* element_builder::make_value_sink_literal(compiler::block* parent_scope) {
+        auto value_sink_literal = new compiler::value_sink_literal(
+            _session.scope_manager().current_module(),
+            parent_scope);
+        _session.elements().add(value_sink_literal);
+        return value_sink_literal;
     }
 
     compiler::uninitialized_literal* element_builder::make_uninitialized_literal(compiler::block* parent_scope) {

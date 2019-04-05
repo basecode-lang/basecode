@@ -135,6 +135,7 @@ add_library(
     compiler/scope_manager.cpp compiler/scope_manager.h
     compiler/ast_evaluator.cpp compiler/ast_evaluator.h
     compiler/elements/with.cpp compiler/elements/with.h
+    compiler/elements/yield.cpp compiler/elements/yield.h
     compiler/compiler_types.cpp compiler/compiler_types.h
     compiler/elements/field.cpp compiler/elements/field.h
     compiler/elements/block.cpp compiler/elements/block.h
@@ -215,6 +216,7 @@ add_library(
     compiler/elements/namespace_element.cpp compiler/elements/namespace_element.h
     compiler/elements/size_of_intrinsic.cpp compiler/elements/size_of_intrinsic.h
     compiler/elements/foreign_directive.cpp compiler/elements/foreign_directive.h
+    compiler/elements/value_sink_literal.cpp compiler/elements/value_sink_literal.h
     compiler/elements/assembly_directive.cpp compiler/elements/assembly_directive.h
     compiler/elements/align_of_intrinsic.cpp compiler/elements/align_of_intrinsic.h
     compiler/elements/procedure_instance.cpp compiler/elements/procedure_instance.h
@@ -224,7 +226,7 @@ add_library(
     compiler/elements/address_of_intrinsic.cpp compiler/elements/address_of_intrinsic.h
     compiler/elements/identifier_reference.cpp compiler/elements/identifier_reference.h
     compiler/elements/uninitialized_literal.cpp compiler/elements/uninitialized_literal.h
-    compiler/elements/assembly_literal_label.cpp compiler/elements/assembly_literal_label.h compiler/elements/yield.cpp compiler/elements/yield.h)
+    compiler/elements/assembly_literal_label.cpp compiler/elements/assembly_literal_label.h)
 target_link_libraries(
     ${PROJECT_NAME}
     fmt-header-only

@@ -387,6 +387,8 @@ namespace basecode::compiler {
             const syntax::ast_node_t* node,
             compiler::block* scope = nullptr);
 
+        compiler::value_sink_literal* value_sink_literal();
+
         type_reference_list_t make_tagged_type_list_from_node(
             const syntax::ast_node_t* node,
             compiler::block* scope = nullptr);
@@ -414,6 +416,8 @@ namespace basecode::compiler {
 
         compiler::nil_literal* make_nil(compiler::block* parent_scope);
 
+        compiler::value_sink_literal* make_value_sink_literal(compiler::block* parent_scope);
+
         compiler::uninitialized_literal* make_uninitialized_literal(compiler::block* parent_scope);
 
     private:
@@ -421,6 +425,7 @@ namespace basecode::compiler {
         compiler::nil_literal* _nil_literal = nullptr;
         compiler::boolean_literal* _true_literal = nullptr;
         compiler::boolean_literal* _false_literal = nullptr;
+        compiler::value_sink_literal* _value_sink_literal = nullptr;
         compiler::uninitialized_literal* _uninitialized_literal = nullptr;
     };
 

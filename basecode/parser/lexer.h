@@ -167,6 +167,8 @@ namespace basecode::syntax {
 
         bool character_literal(token_t& token);
 
+        bool value_sink_literal(token_t& token);
+
         bool less_than_operator(token_t& token);
 
         bool fallthrough_literal(token_t& token);
@@ -237,5 +239,5 @@ namespace basecode::syntax {
         common::source_file* _source_file = nullptr;
     };
 
-};
+}
 
