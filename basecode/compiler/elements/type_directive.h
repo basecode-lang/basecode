@@ -22,6 +22,8 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             compiler::element* expression);
 
+        compiler::element* expression() const;
+
         directive_type_t type() const override;
 
     protected:

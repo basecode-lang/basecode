@@ -22,6 +22,10 @@ namespace basecode::compiler {
     public:
         explicit scope_manager(compiler::session& session);
 
+        void add_type_to_scope(
+            compiler::type* type,
+            compiler::block* scope = nullptr);
+
         bool visit_child_blocks(
             common::result& r,
             const block_visitor_callable& callable,
@@ -72,8 +76,6 @@ namespace basecode::compiler {
         compiler::generic_type* find_generic_type(
             const type_reference_list_t& constraints,
             compiler::block* scope = nullptr) const;
-
-        void add_type_to_scope(compiler::type* type);
 
         identifier_list_t& identifiers_with_unknown_types();
 

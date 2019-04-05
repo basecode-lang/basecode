@@ -15,10 +15,14 @@ public :: ns {
         name: string;
     };
 
+    #core_type #type ^type;
+
     #core_type any :: struct {
         type: ^type;
         data: ^u0;
     };
+
+    #core_type #type ^any;
 
     #core_type string :: struct {
         length:     u32;
@@ -26,19 +30,23 @@ public :: ns {
         data:       ^u8;
     };
 
+    #core_type #type ^string;
+
     #core_type map :: struct<K, V> {
     };
+
+    #core_type #type ^map;
 
     #core_type map_iterator :: struct<K, V> {
         key:    K;
         value:  V;
     };
 
+    #core_type #type ^map_iterator;
+
     assign_string :: proc(str: ^string, lit: ^u8, len: u32) {
         str.length := len;
         str.capacity := next_power_of_two(len + 1);
-        // XXX: the compiler should issue an error about type promotion
-        //      if not exact match
         str.data := alloc(cast<u64>(str.capacity));
         fill(str.data, 0, cast<u64>(str.capacity));
         copy(str.data, lit, cast<u64>(len));

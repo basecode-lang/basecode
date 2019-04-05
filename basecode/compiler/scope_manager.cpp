@@ -19,6 +19,27 @@ namespace basecode::compiler {
     scope_manager::scope_manager(compiler::session& session) : _session(session) {
     }
 
+    void scope_manager::add_type_to_scope(
+            compiler::type* type,
+            compiler::block* scope) {
+        auto& builder = _session.builder();
+
+        auto block_scope = scope != nullptr ? scope : current_scope();
+        block_scope->types().add(type);
+
+        auto type_ref = builder.make_type_reference(
+            block_scope,
+            type->symbol()->qualified_symbol(),
+            type,
+            true);
+        auto identifier = builder.make_identifier(
+            block_scope,
+            type->symbol(),
+            builder.make_initializer(block_scope, type_ref));
+        identifier->type_ref(type_ref);
+        block_scope->identifiers().add(identifier);
+    }
+
     bool scope_manager::visit_child_blocks(
             common::result& r,
             const block_visitor_callable& callable,
@@ -277,25 +298,6 @@ namespace basecode::compiler {
         return dynamic_cast<compiler::generic_type*>(find_type(
             qualified_symbol_t(compiler::generic_type::name_for_generic_type(constraints)),
             scope));
-    }
-
-    void scope_manager::add_type_to_scope(compiler::type* type) {
-        auto& builder = _session.builder();
-
-        auto scope = current_scope();
-        scope->types().add(type);
-
-        auto type_ref = builder.make_type_reference(
-            scope,
-            type->symbol()->qualified_symbol(),
-            type,
-            true);
-        auto identifier = builder.make_identifier(
-            scope,
-            type->symbol(),
-            builder.make_initializer(scope, type_ref));
-        identifier->type_ref(type_ref);
-        scope->identifiers().add(identifier);
     }
 
     identifier_list_t& scope_manager::identifiers_with_unknown_types() {

@@ -38,6 +38,10 @@ namespace basecode::compiler {
         return directive_type_t::type;
     }
 
+    compiler::element* type_directive::expression() const {
+        return _expression;
+    }
+
     void type_directive::on_owned_elements(element_list_t& list) {
         list.emplace_back(_expression);
     }
