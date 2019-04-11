@@ -11,6 +11,7 @@
 
 #include <compiler/scope_manager.h>
 #include <compiler/element_builder.h>
+#include <compiler/type_name_builder.h>
 #include "block.h"
 #include "array_type.h"
 #include "identifier.h"
@@ -26,16 +27,18 @@ namespace basecode::compiler {
     std::string array_type::name_for_array(
             compiler::type* entry_type,
             const element_list_t& subscripts) {
-        std::stringstream stream;
-        stream << fmt::format("__array_{}", entry_type->symbol()->name());
+        type_name_builder builder {};
+        builder
+            .add_part("array")
+            .add_part(entry_type->symbol()->name());
+
         for (auto s : subscripts) {
             uint64_t size = 0;
-            if (s->as_integer(size)) {
-                stream << fmt::format("_S{}", size);
-            }
+            if (s->as_integer(size))
+                builder.add_part(fmt::format("S{}", size));
         }
-        stream << "__";
-        return stream.str();
+
+        return builder.format();
     }
 
     ///////////////////////////////////////////////////////////////////////////

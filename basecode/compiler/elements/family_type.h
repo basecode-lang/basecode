@@ -17,6 +17,8 @@ namespace basecode::compiler {
 
     class family_type : public compiler::type {
     public:
+        static std::string name_for_family();
+
         family_type(
             compiler::module* module,
             compiler::block* parent_scope,

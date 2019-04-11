@@ -55,8 +55,6 @@ PARSER:
 =======
 
 COMPILER:
-- ADD: type_name_builder that eases construction of unique type names.
-
 - BUG: redefining an identifier with another type doesn't give nice errors.
 
 - BUG: fix assignment in ast_evaluator so it properly handles sets of multiple assignment/multiple return.
@@ -413,6 +411,7 @@ DONE
 - BUG: type interface is failing in this case:
         u64_max_u := %1111_1111_1111_1111_1111_1111_1111_1111_1111_1111_1111_1111_1111_1111_1111_1111;
                      ^ type mismatch: cannot assign s8 to u64.
+- ADD: type_name_builder that eases construction of unique type names.
 
 ANSWERS
 -------

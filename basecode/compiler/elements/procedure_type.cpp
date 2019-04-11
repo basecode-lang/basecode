@@ -10,8 +10,10 @@
 // ----------------------------------------------------------------------------
 
 #include <common/bytes.h>
+#include <common/id_pool.h>
 #include <compiler/session.h>
 #include <compiler/element_builder.h>
+#include <compiler/type_name_builder.h>
 #include "block.h"
 #include "field.h"
 #include "element.h"
@@ -30,6 +32,16 @@
 #include "binary_operator.h"
 
 namespace basecode::compiler {
+
+    std::string procedure_type::name_for_procedure_type() {
+        type_name_builder builder {};
+        builder
+            .add_part("proc")
+            .add_part(common::id_pool::instance()->allocate());
+        return builder.format();
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
 
     procedure_type::procedure_type(
             compiler::module* module,

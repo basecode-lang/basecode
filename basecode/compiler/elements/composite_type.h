@@ -18,6 +18,12 @@ namespace basecode::compiler {
 
     class composite_type : public compiler::type {
     public:
+        static std::string name_for_enum();
+
+        static std::string name_for_union();
+
+        static std::string name_for_struct();
+
         composite_type(
             compiler::module* module,
             block* parent_scope,

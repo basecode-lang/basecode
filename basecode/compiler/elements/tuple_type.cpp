@@ -10,9 +10,20 @@
 // ----------------------------------------------------------------------------
 
 #include <compiler/session.h>
+#include <compiler/type_name_builder.h>
 #include "tuple_type.h"
 
 namespace basecode::compiler {
+
+    std::string tuple_type::name_for_tuple() {
+        type_name_builder builder {};
+        builder
+            .add_part("tuple")
+            .add_part(common::id_pool::instance()->allocate());
+        return builder.format();
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
 
     tuple_type::tuple_type(
             compiler::module* module,

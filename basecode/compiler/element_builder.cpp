@@ -150,12 +150,15 @@ namespace basecode::compiler {
     procedure_type* element_builder::make_procedure_type(
             compiler::block* parent_scope,
             compiler::block* block_scope) {
-        auto type_name = fmt::format("__proc_{}__", common::id_pool::instance()->allocate());
+        auto symbol = make_symbol(
+            parent_scope,
+            compiler::procedure_type::name_for_procedure_type());
         auto type = new compiler::procedure_type(
             _session.scope_manager().current_module(),
             parent_scope,
             block_scope,
-            make_symbol(parent_scope, type_name));
+            symbol);
+        symbol->parent_element(type);
         if (block_scope != nullptr)
             block_scope->parent_element(type);
         _session.elements().add(type);
@@ -562,10 +565,9 @@ namespace basecode::compiler {
     tuple_type* element_builder::make_tuple_type(
             compiler::block* parent_scope,
             compiler::block* scope) {
-        auto type_name = fmt::format(
-            "__tuple_{}__",
-            common::id_pool::instance()->allocate());
-        auto symbol = make_symbol(parent_scope, type_name);
+        auto symbol = make_symbol(
+            parent_scope,
+            compiler::tuple_type::name_for_tuple());
         auto type = new compiler::tuple_type(
             _session.scope_manager().current_module(),
             parent_scope,
@@ -579,10 +581,9 @@ namespace basecode::compiler {
     family_type* element_builder::make_family_type(
             compiler::block* parent_scope,
             const compiler::type_reference_list_t& types) {
-        auto type_name = fmt::format(
-            "__family_{}__",
-            common::id_pool::instance()->allocate());
-        auto symbol = make_symbol(parent_scope, type_name);
+        auto symbol = make_symbol(
+            parent_scope,
+            compiler::family_type::name_for_family());
         auto type = new compiler::family_type(
             _session.scope_manager().current_module(),
             parent_scope,
@@ -627,8 +628,9 @@ namespace basecode::compiler {
     composite_type* element_builder::make_union_type(
             compiler::block* parent_scope,
             compiler::block* scope) {
-        auto type_name = fmt::format("__union_{}__", common::id_pool::instance()->allocate());
-        auto symbol = make_symbol(parent_scope, type_name);
+        auto symbol = make_symbol(
+            parent_scope,
+            compiler::composite_type::name_for_struct());
         auto type = new compiler::composite_type(
             _session.scope_manager().current_module(),
             parent_scope,
@@ -644,8 +646,9 @@ namespace basecode::compiler {
     composite_type* element_builder::make_struct_type(
             compiler::block* parent_scope,
             compiler::block* scope) {
-        auto type_name = fmt::format("__struct_{}__", common::id_pool::instance()->allocate());
-        auto symbol = make_symbol(parent_scope, type_name);
+        auto symbol = make_symbol(
+            parent_scope,
+            compiler::composite_type::name_for_struct());
         auto type = new compiler::composite_type(
             _session.scope_manager().current_module(),
             parent_scope,
@@ -857,8 +860,9 @@ namespace basecode::compiler {
     composite_type* element_builder::make_enum_type(
             compiler::block* parent_scope,
             compiler::block* scope) {
-        auto type_name = fmt::format("__enum_{}__", common::id_pool::instance()->allocate());
-        auto symbol = make_symbol(parent_scope, type_name);
+        auto symbol = make_symbol(
+            parent_scope,
+            compiler::composite_type::name_for_enum());
         auto type = new compiler::composite_type(
             _session.scope_manager().current_module(),
             parent_scope,

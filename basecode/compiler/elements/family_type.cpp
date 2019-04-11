@@ -9,10 +9,21 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <compiler/type_name_builder.h>
 #include "family_type.h"
 #include "type_reference.h"
 
 namespace basecode::compiler {
+
+    std::string family_type::name_for_family() {
+        type_name_builder builder {};
+        builder
+            .add_part("family")
+            .add_part(common::id_pool::instance()->allocate());
+        return builder.format();
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
 
     family_type::family_type(
             compiler::module* module,

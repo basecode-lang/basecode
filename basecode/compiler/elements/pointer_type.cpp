@@ -11,6 +11,7 @@
 
 #include <compiler/session.h>
 #include <compiler/element_builder.h>
+#include <compiler/type_name_builder.h>
 #include "identifier.h"
 #include "initializer.h"
 #include "numeric_type.h"
@@ -21,7 +22,11 @@
 namespace basecode::compiler {
 
     std::string pointer_type::name_for_pointer(compiler::type* base_type) {
-        return fmt::format("__ptr_{}__", base_type->symbol()->name());
+        type_name_builder builder {};
+        builder
+            .add_part("ptr")
+            .add_part(base_type->symbol()->name());
+        return builder.format();
     }
 
     ///////////////////////////////////////////////////////////////////////////

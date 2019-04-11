@@ -10,6 +10,7 @@
 // ----------------------------------------------------------------------------
 
 #include <compiler/session.h>
+#include <compiler/type_name_builder.h>
 #include "type.h"
 #include "field.h"
 #include "identifier.h"
@@ -20,35 +21,27 @@
 namespace basecode::compiler {
 
     std::string type::make_info_label_name(compiler::type* type) {
-        std::stringstream stream;
-
-        auto type_name = type->symbol()->name();
-        stream << "_ti";
-        if (type_name[0] != '_')
-            stream << "_";
-        stream << type_name;
-
-        return stream.str();
+        type_name_builder builder {};
+        builder
+            .add_part("ti")
+            .add_part(type->symbol()->name());
+        return builder.format();
     }
 
     std::string type::make_literal_label_name(compiler::type* type) {
-        std::stringstream stream;
-
-        auto type_name = type->symbol()->name();
-        stream << "_ti_lit";
-        if (type_name[0] != '_')
-            stream << "_";
-        stream << type_name;
-
-        return stream.str();
+        type_name_builder builder {};
+        builder
+            .add_part("ti_lit")
+            .add_part(type->symbol()->name());
+        return builder.format();
     }
 
     std::string type::make_literal_data_label_name(compiler::type* type) {
-        auto label_name = make_literal_label_name(type);
-        if (label_name[label_name.length() - 1] != '_')
-            label_name += "_";
-        label_name += "data";
-        return label_name;
+        type_name_builder builder {};
+        builder
+            .add_part(make_literal_label_name(type))
+            .add_part("data");
+        return builder.format();
     }
 
     type::type(

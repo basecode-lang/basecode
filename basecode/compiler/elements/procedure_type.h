@@ -18,6 +18,8 @@ namespace basecode::compiler {
 
     class procedure_type : public compiler::type {
     public:
+        static std::string name_for_procedure_type();
+
         procedure_type(
             compiler::module* module,
             compiler::block* parent_scope,

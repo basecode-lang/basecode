@@ -11,6 +11,7 @@
 
 #include <common/bytes.h>
 #include <compiler/session.h>
+#include <compiler/type_name_builder.h>
 #include "field.h"
 #include "block.h"
 #include "identifier.h"
@@ -20,6 +21,32 @@
 #include "type_reference.h"
 
 namespace basecode::compiler {
+
+    std::string composite_type::name_for_enum() {
+        type_name_builder builder {};
+        builder
+            .add_part("enum")
+            .add_part(common::id_pool::instance()->allocate());
+        return builder.format();
+    }
+
+    std::string composite_type::name_for_union() {
+        type_name_builder builder {};
+        builder
+            .add_part("union")
+            .add_part(common::id_pool::instance()->allocate());
+        return builder.format();
+    }
+
+    std::string composite_type::name_for_struct() {
+        type_name_builder builder {};
+        builder
+            .add_part("struct")
+            .add_part(common::id_pool::instance()->allocate());
+        return builder.format();
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
 
     composite_type::composite_type(
             compiler::module* module,
