@@ -301,4 +301,4 @@ namespace basecode::common {
         return &it->second;
     }
 
-};
+}

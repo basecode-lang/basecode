@@ -114,5 +114,5 @@ namespace basecode::common {
             source_file_range_compare_t> _lines_by_index_range {};
     };
 
-};
+}
 
