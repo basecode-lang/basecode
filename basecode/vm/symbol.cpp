@@ -51,4 +51,4 @@ namespace basecode::vm {
         return _type;
     }
 
-};
+}

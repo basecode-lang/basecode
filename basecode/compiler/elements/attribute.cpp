@@ -16,7 +16,7 @@ namespace basecode::compiler {
     attribute::attribute(
             compiler::module* module,
             block* parent_scope,
-            const std::string& name,
+            const std::string_view& name,
             element* expr) : element(module, parent_scope, element_type_t::attribute),
                              _name(name),
                              _expr(expr) {
@@ -26,7 +26,7 @@ namespace basecode::compiler {
         return _expr;
     }
 
-    std::string attribute::name() const {
+    std::string_view attribute::name() const {
         return _name;
     }
 

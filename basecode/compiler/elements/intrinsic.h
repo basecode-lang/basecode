@@ -18,7 +18,7 @@ namespace basecode::compiler {
     class intrinsic  : public element {
     public:
         static bool register_intrinsic_procedure_type(
-            const std::string& name,
+            const std::string_view& name,
             compiler::procedure_type* procedure_type);
 
         static intrinsic* intrinsic_for_call(

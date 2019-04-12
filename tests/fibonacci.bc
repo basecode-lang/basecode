@@ -11,6 +11,8 @@
 
 core :: module("core");
 
+TITLE :: "fibonacci test program";
+
 #run {
     core::print("at the very top!\n");
     alpha::compiler::examples::test();
@@ -18,7 +20,7 @@ core :: module("core");
 
 alpha::compiler::config :: ns {
     fibonacci :: ns {
-        length_of_sequence :: 1000;
+        length_of_sequence: u64 :: 1000;
     };
 };
 
@@ -29,20 +31,17 @@ alpha::compiler::examples :: ns {
         count:  u32;
         max:    u16 := 32767;
         name:   string;
-        core::assign_string(
-            address_of(name),
-            "fibonacci test program",
-            22);
+        core::assign_string(address_of(name), TITLE, length_of(TITLE));
         core::print("name.length   := %d\n", name.length);
         core::print("name.capacity := %d\n", name.capacity);
         core::print("name.data     := %s\n", name.data);
 
-        foo: u32 := max * 4;
+        foo: u32 := cast<u32>(max * 4);
         boom := length_of_sequence;
 
         bar_rhs_is_constant: s16 := length_of_sequence * 4;
 
-        count := 1;
+        count := cast<u32>(1);
         is_this_true := count == (max == 256) && count == (max / 2);
 
         core::print("what the hell am i doing here?\n");
@@ -56,7 +55,7 @@ alpha::compiler::examples :: ns {
     };
 
     bar :: proc() {
-        core::print("bing := %d\n", bing(256));
+        core::print("bing := %d\n", bing(cast<u64>(256)));
 
         bing :: proc(z: u64): u64 {
             if z == 0 {
@@ -73,13 +72,7 @@ alpha::compiler::examples :: ns {
         if n == 0 || n == 1 {
             return n;
         } else {
-            // XXX: this doesn't work due to a bug
-            //      in the way the compiler is generating
-            //      variable access code. 2/22/2019 JDP
-            //return fib((n - 1) + fib(n - 2));
-
-            n := (n - 1) + fib(n - 2);
-            return n;
+            return fib((n - 1) + fib(n - 2));
         };
     };
 

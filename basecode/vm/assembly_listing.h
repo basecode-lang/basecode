@@ -38,5 +38,5 @@ namespace basecode::vm {
         std::unordered_map<std::string, listing_source_file_t> _source_files {};
     };
 
-};
+}
 

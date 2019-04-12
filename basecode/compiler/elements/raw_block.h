@@ -20,12 +20,12 @@ namespace basecode::compiler {
         raw_block(
             compiler::module* module,
             block* parent_scope,
-            const std::string& value);
+            const std::string_view& value);
 
-        std::string value() const;
+        std::string_view value() const;
 
     private:
-        std::string _value;
+        std::string_view _value;
     };
 
 }

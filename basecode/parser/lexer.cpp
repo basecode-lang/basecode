@@ -314,15 +314,6 @@ namespace basecode::syntax {
         }
     }
 
-    void lexer::add_end_of_file_token() {
-        auto token = s_end_of_file;
-        auto column = _source_file->column_by_index(_source_file->pos());
-        auto line = _source_file->line_by_index(_source_file->pos());
-        token.location.start(line->line, column);
-        token.location.end(line->line, column);
-        _tokens.emplace_back(token);
-    }
-
     common::rune_t lexer::read(
             common::result& r,
             bool skip_whitespace) {
@@ -338,26 +329,13 @@ namespace basecode::syntax {
         }
     }
 
-    std::string lexer::read_identifier(common::result& r) {
-        auto ch = read(r, false);
-        if (ch != '_' && !isalpha(ch)) {
-            return "";
-        }
-        std::stringstream stream;
-        // XXX: requires utf8 fix
-        stream << static_cast<char>(ch);
-        while (true) {
-            ch = read(r, false);
-            if (ch == ';') {
-                return stream.str();
-            }
-            if (ch == '_' || isalnum(ch)) {
-                // XXX: requires utf8 fix
-                stream << static_cast<char>(ch);
-                continue;
-            }
-            return stream.str();
-        }
+    void lexer::add_end_of_file_token() {
+        auto token = s_end_of_file;
+        auto column = _source_file->column_by_index(_source_file->pos());
+        auto line = _source_file->line_by_index(_source_file->pos());
+        token.location.start(line->line, column);
+        token.location.end(line->line, column);
+        _tokens.emplace_back(token);
     }
 
     bool lexer::enum_literal(common::result& r) {
@@ -615,7 +593,7 @@ namespace basecode::syntax {
             auto block_count = 1;
             auto token = s_raw_block;
 
-            std::stringstream stream;
+            auto start_pos = _source_file->pos();
             while (true) {
                 auto ch = read(r, false);
                 if (ch == common::rune_eof) {
@@ -630,7 +608,7 @@ namespace basecode::syntax {
                         continue;
                     } else {
                         rewind_one_char();
-                        ch = read(r, false);
+                        read(r, false);
                     }
                 } else if (ch == '}') {
                     ch = read(r, false);
@@ -641,14 +619,13 @@ namespace basecode::syntax {
                         continue;
                     } else {
                         rewind_one_char();
-                        ch = read(r, false);
+                        read(r, false);
                     }
                 }
-                // XXX: requires utf8 fix
-                stream << static_cast<char>(ch);
             }
 
-            token.value = stream.str();
+            auto end_pos = _source_file->pos();
+            token.value = _source_file->make_slice(start_pos, end_pos - start_pos);
             _tokens.emplace_back(token);
             return true;
         }
@@ -979,10 +956,9 @@ namespace basecode::syntax {
         token.type = token_type_t::number_literal;
         token.number_type = number_types_t::integer;
 
-        std::stringstream stream;
-
         auto ch = read(r);
         if (ch == '$') {
+            auto start_pos = _source_file->pos();
             token.radix = 16;
             while (true) {
                 ch = read(r, false);
@@ -990,11 +966,12 @@ namespace basecode::syntax {
                     continue;
                 if (!isxdigit(ch))
                     break;
-                // XXX: requires utf8 fix
-                stream << static_cast<char>(ch);
             }
+            auto end_pos = _source_file->pos() - 1;
+            token.value = _source_file->make_slice(start_pos, end_pos - start_pos);
         } else if (ch == '@') {
             const std::string valid = "012345678";
+            auto start_pos = _source_file->pos();
             token.radix = 8;
             while (true) {
                 ch = read(r, false);
@@ -1003,27 +980,27 @@ namespace basecode::syntax {
                 // XXX: requires utf8 fix
                 if (valid.find_first_of(static_cast<char>(ch)) == std::string::npos)
                     break;
-                // XXX: requires utf8 fix
-                stream << static_cast<char>(ch);
             }
+            auto end_pos = _source_file->pos() - 1;
+            token.value = _source_file->make_slice(start_pos, end_pos - start_pos);
         } else if (ch == '%') {
             token.radix = 2;
+            auto start_pos = _source_file->pos();
             while (true) {
                 ch = read(r, false);
                 if (ch == '_')
                     continue;
                 if (ch != '0' && ch != '1')
                     break;
-                // XXX: requires utf8 fix
-                stream << static_cast<char>(ch);
             }
+            auto end_pos = _source_file->pos() - 1;
+            token.value = _source_file->make_slice(start_pos, end_pos - start_pos);
         } else {
             const std::string valid = "0123456789_.";
+            auto start_pos = _source_file->pos() - 1;
 
-            if (ch == '-') {
-                stream << '-';
+            if (ch == '-')
                 ch = read(r, false);
-            }
 
             auto has_digits = false;
 
@@ -1034,13 +1011,10 @@ namespace basecode::syntax {
                         if (token.number_type != number_types_t::floating_point) {
                             token.number_type = number_types_t::floating_point;
                         } else {
-                            token.type = token_type_t::invalid;
-                            token.number_type = number_types_t::none;
+                            r.error("X000", "unexpected decimal in number.");
                             return false;
                         }
                     }
-                    // XXX: requires utf8 fix
-                    stream << static_cast<char>(ch);
                     has_digits = true;
                 }
                 ch = read(r, false);
@@ -1048,9 +1022,11 @@ namespace basecode::syntax {
 
             if (!has_digits)
                 return false;
+
+            auto end_pos = _source_file->pos() - 1;
+            token.value = _source_file->make_slice(start_pos, end_pos - start_pos);
         }
 
-        token.value = stream.str();
         if (token.value.empty())
             return false;
 
@@ -1185,6 +1161,28 @@ namespace basecode::syntax {
         return false;
     }
 
+    std::string_view lexer::read_identifier(common::result& r) {
+        auto start_pos = _source_file->pos();
+        size_t end_pos = 0;
+
+        auto ch = read(r, false);
+        if (ch != '_' && !isalpha(ch)) {
+            return ""sv;
+        }
+
+        while (true) {
+            ch = read(r, false);
+            if (ch == ';')
+                break;
+            if (ch == '_' || isalnum(ch))
+                continue;
+            break;
+        }
+
+        end_pos = _source_file->pos() - 1;
+        return _source_file->make_slice(start_pos, end_pos - start_pos);
+    }
+
     bool lexer::naked_identifier(common::result& r, bool add_token) {
         auto name = read_identifier(r);
 
@@ -1209,45 +1207,45 @@ namespace basecode::syntax {
 
         auto ch = read(r);
         if (ch == '\'') {
-            std::string value {};
+            std::string_view value {};
             ch = read(r, false);
             if (ch == '\\') {
                 ch = read(r, false);
                 switch (ch) {
                     case 'a': {
-                        value = (char)0x07;
+                        value = "\x07"sv;
                         break;
                     }
                     case 'b': {
-                        value = (char)0x08;
+                        value = "\x08"sv;
                         break;
                     }
                     case 'e': {
-                        value = (char)0x1b;
+                        value = "\x1b"sv;
                         break;
                     }
                     case 'n': {
-                        value = (char)0x0a;
+                        value = "\x0a"sv;
                         break;
                     }
                     case 'r': {
-                        value = (char)0x0d;
+                        value = "\x0d"sv;
                         break;
                     }
                     case 't': {
-                        value = (char)0x09;
+                        value = "\x09"sv;
                         break;
                     }
                     case 'v': {
-                        value = (char)0x0b;
+                        value = "\x0b"sv;
                         break;
                     }
                     case '\\': {
-                        value = "\\";
+                        value = R"(\)"sv;
                         break;
                     }
                     case '\'': {
-                        value = "'";
+                        value = "'"sv;
                         break;
                     }
                     case 'x': {
@@ -1280,7 +1278,7 @@ namespace basecode::syntax {
                     }
                 }
             } else {
-                value = static_cast<char>(ch);
+                value = _source_file->make_slice(_source_file->pos() - 1, 1);
             }
             ch = read(r, false);
             if (ch == '\'') {
@@ -1343,7 +1341,7 @@ namespace basecode::syntax {
             auto block_count = 1;
             auto token = s_block_comment;
 
-            std::stringstream stream;
+            auto start_pos = _source_file->pos();
             while (true) {
                 auto ch = read(r, false);
                 if (ch == common::rune_eof) {
@@ -1358,7 +1356,7 @@ namespace basecode::syntax {
                         continue;
                     } else {
                         rewind_one_char();
-                        ch = read(r, false);
+                        read(r, false);
                     }
                 } else if (ch == '*') {
                     ch = read(r, false);
@@ -1369,14 +1367,13 @@ namespace basecode::syntax {
                         continue;
                     } else {
                         rewind_one_char();
-                        ch = read(r, false);
+                        read(r, false);
                     }
                 }
-                // XXX: requires utf8 fix
-                stream << static_cast<char>(ch);
             }
 
-            token.value = stream.str();
+            auto end_pos = _source_file->pos();
+            token.value = _source_file->make_slice(start_pos, end_pos - start_pos);
             _tokens.emplace_back(token);
             return true;
         }
@@ -1626,16 +1623,15 @@ namespace basecode::syntax {
         return false;
     }
 
-    std::string lexer::read_until(common::result& r, char target_ch) {
-        std::stringstream stream;
+    std::string_view lexer::read_until(common::result& r, char target_ch) {
+        auto start_pos = _source_file->pos();
         while (true) {
             auto ch = read(r, false);
             if (ch == target_ch || ch == -1)
                 break;
-            // XXX: requires utf8 fix
-            stream << static_cast<char>(ch);
         }
-        return stream.str();
+        auto end_pos = _source_file->pos() - 1;
+        return _source_file->make_slice(start_pos, end_pos - start_pos);
     }
 
     bool lexer::match_literal(common::result& r, const std::string& literal) {
@@ -1649,33 +1645,35 @@ namespace basecode::syntax {
         return true;
     }
 
-    bool lexer::read_hex_digits(common::result& r, size_t length, std::string& value) {
+    bool lexer::read_hex_digits(common::result& r, size_t length, std::string_view& value) {
+        auto start_pos = _source_file->pos();
         while (length > 0) {
             auto ch = read(r, false);
             if (ch == '_')
                 continue;
             if (isxdigit(ch)) {
-                value += static_cast<char>(ch);
                 --length;
             } else {
                 return false;
             }
         }
+        value = _source_file->make_slice(start_pos, _source_file->pos() - start_pos);
         return true;
     }
 
-    bool lexer::read_dec_digits(common::result& r, size_t length, std::string& value) {
+    bool lexer::read_dec_digits(common::result& r, size_t length, std::string_view& value) {
+        auto start_pos = _source_file->pos();
         while (length > 0) {
             auto ch = read(r, false);
             if (ch == '_')
                 continue;
             if (isdigit(ch)) {
-                value += static_cast<char>(ch);
                 --length;
             } else {
                 return false;
             }
         }
+        value = _source_file->make_slice(start_pos, _source_file->pos() - start_pos);
         return true;
     }
 

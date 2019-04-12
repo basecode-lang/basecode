@@ -18,16 +18,16 @@ namespace basecode::compiler {
     label::label(
             compiler::module* module,
             block* parent_scope,
-            const std::string& name) : element(module, parent_scope, element_type_t::label),
-                                       _name(name) {
-    }
-
-    std::string label::name() const {
-        return _name;
+            const std::string_view& name) : element(module, parent_scope, element_type_t::label),
+                                            _name(name) {
     }
 
     bool label::on_is_constant() const {
         return true;
+    }
+
+    std::string_view label::name() const {
+        return _name;
     }
 
     std::string label::label_name() const {

@@ -20,9 +20,9 @@ namespace basecode::compiler {
         label(
             compiler::module* module,
             block* parent_scope,
-            const std::string& name);
+            const std::string_view& name);
 
-        std::string name() const;
+        std::string_view name() const;
 
         std::string label_name() const override;
 
@@ -30,7 +30,7 @@ namespace basecode::compiler {
         bool on_is_constant() const override;
 
     private:
-        std::string _name;
+        std::string_view _name;
     };
 
 }

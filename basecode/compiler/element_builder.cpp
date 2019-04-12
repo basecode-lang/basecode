@@ -66,8 +66,10 @@ namespace basecode::compiler {
             qualified_symbol_t& symbol,
             const syntax::ast_node_t* node) {
         if (!node->children.empty()) {
-            for (size_t i = 0; i < node->children.size() - 1; i++)
-                symbol.namespaces.push_back(node->children[i]->token.value);
+            for (size_t i = 0; i < node->children.size() - 1; i++) {
+                // XXX: fix this to use string_views
+                symbol.namespaces.push_back(std::string(node->children[i]->token.value));
+            }
         }
         symbol.name = node->children.back()->token.value;
         symbol.location = node->location;
@@ -198,7 +200,7 @@ namespace basecode::compiler {
 
     string_literal* element_builder::make_string(
             compiler::block* parent_scope,
-            const std::string& value) {
+            const std::string_view& value) {
         auto& scope_manager = _session.scope_manager();
         auto literal = new compiler::string_literal(
             scope_manager.current_module(),
@@ -719,7 +721,7 @@ namespace basecode::compiler {
 
     label* element_builder::make_label(
             compiler::block* parent_scope,
-            const std::string& name) {
+            const std::string_view& name) {
         auto label = new compiler::label(
             _session.scope_manager().current_module(),
             parent_scope,
@@ -951,7 +953,7 @@ namespace basecode::compiler {
     comment* element_builder::make_comment(
             compiler::block* parent_scope,
             comment_type_t type,
-            const std::string& value) {
+            const std::string_view& value) {
         auto comment = new compiler::comment(
             _session.scope_manager().current_module(),
             parent_scope,
@@ -963,7 +965,7 @@ namespace basecode::compiler {
 
     raw_block* element_builder::make_raw_block(
             compiler::block* parent_scope,
-            const std::string& value) {
+            const std::string_view& value) {
         auto raw_block = new compiler::raw_block(
             _session.scope_manager().current_module(),
             parent_scope,
@@ -974,7 +976,7 @@ namespace basecode::compiler {
 
     compiler::directive* element_builder::make_directive(
             compiler::block* parent_scope,
-            const std::string& name,
+            const std::string_view& name,
             const element_list_t& params) {
         auto directive = compiler::directive::directive_for_name(
             _session.scope_manager().current_module(),
@@ -988,7 +990,7 @@ namespace basecode::compiler {
 
     attribute* element_builder::make_attribute(
             compiler::block* parent_scope,
-            const std::string& name,
+            const std::string_view& name,
             element* expr) {
         auto attr = new compiler::attribute(
             _session.scope_manager().current_module(),

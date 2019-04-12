@@ -14,6 +14,7 @@
 #include <map>
 #include <stack>
 #include <cstdint>
+#include <string_view>
 #include <boost/filesystem.hpp>
 #include "rune.h"
 #include "result.h"
@@ -92,6 +93,8 @@ namespace basecode::common {
 
         std::string substring(size_t start, size_t end);
 
+        std::string_view make_slice(size_t offset, size_t length);
+
         const source_file_line_t* line_by_number(size_t line) const;
 
         const source_file_line_t* line_by_index(size_t index) const;
@@ -114,5 +117,5 @@ namespace basecode::common {
             source_file_range_compare_t> _lines_by_index_range {};
     };
 
-};
+}
 

@@ -34,6 +34,7 @@ namespace basecode::compiler {
             fold_result_t& result) {
         if (!is_constant() || _initializer == nullptr)
             return false;
+        result.type_ref = _type_ref;
         return _initializer->fold(session, result);
     }
 

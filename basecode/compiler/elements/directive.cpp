@@ -24,7 +24,7 @@ namespace basecode::compiler {
     directive* directive::directive_for_name(
             compiler::module* module,
             compiler::block* parent_scope,
-            const std::string& name,
+            const std::string_view& name,
             const element_list_t& params) {
         if (params.empty())
             return nullptr;

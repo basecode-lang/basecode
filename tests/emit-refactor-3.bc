@@ -13,7 +13,7 @@ test :: proc(): u32 {
     foo: u32;
     bar: u8 := 2;
 
-    foo := 3;
+    foo := cast<u32>(3);
     foo *:= cast<u32>(bar) + 4;
 
     ptr_to_foo := address_of(foo);
@@ -32,7 +32,7 @@ test :: proc(): u32 {
 
     core::print("flag := %d\n", flag);
 
-    pow_of_2: u32 := core::next_power_of_two(313);
+    pow_of_2: u32 := core::next_power_of_two(cast<u32>(313));
     core::print("\npow_of_2 := %d\n", pow_of_2);
 
     result := test();

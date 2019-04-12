@@ -49,5 +49,5 @@ namespace basecode::vm {
         } _value;
     };
 
-};
+}
 

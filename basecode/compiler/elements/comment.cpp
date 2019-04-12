@@ -17,17 +17,17 @@ namespace basecode::compiler {
             compiler::module* module,
             block* parent_scope,
             comment_type_t type,
-            const std::string& value) : element(module, parent_scope, element_type_t::comment),
-                                        _value(value),
-                                        _type(type) {
-    }
-
-    std::string comment::value() const {
-        return _value;
+            const std::string_view& value) : element(module, parent_scope, element_type_t::comment),
+                                             _type(type),
+                                             _value(value) {
     }
 
     comment_type_t comment::type() const {
         return _type;
+    }
+
+    std::string_view comment::value() const {
+        return _value;
     }
 
 }

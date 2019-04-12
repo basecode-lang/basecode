@@ -15,7 +15,7 @@ foo :: proc(a: u16): u16 {
 };
 
 foo :: proc(a: u32): u64 {
-    b: u64 := a * 10;
+    b: u64 := cast<u64>(a * 10);
     core::print("#3\n");
     return b;
 };
@@ -25,10 +25,10 @@ foo :: proc(a: u32): u64 {
         result: u8 := foo(16);
         core::print("result := %hhu\n", result);
     } #elif TEST_TYPE == 2 {
-        result: u16 := foo(16);
+        result: u16 := foo(cast<u16>(16));
         core::print("result := %hu\n", result);
     } #elif TEST_TYPE == 3 {
-        result: u64 := foo(16);
+        result: u64 := foo(cast<u32>(16));
         core::print("result := %llu\n", result);
     } #else {
         core::print("unknown TEST_TYPE\n");

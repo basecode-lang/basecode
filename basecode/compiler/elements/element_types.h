@@ -18,12 +18,15 @@
 #include <string>
 #include <memory>
 #include <utility>
+#include <string_view>
 #include <unordered_set>
 #include <unordered_map>
 #include <parser/token.h>
 #include <common/id_pool.h>
 
 namespace basecode::compiler {
+
+    using namespace std::literals;
 
     class cast;
     class type;
@@ -131,6 +134,7 @@ namespace basecode::compiler {
     using module_stack_t = std::stack<compiler::module*>;
     using procedure_call_set_t = std::set<procedure_call*>;
     using type_literal_list_t = std::vector<type_literal*>;
+    using string_view_list_t = std::vector<std::string_view>;
     using directive_map_t = std::map<std::string, directive*>;
     using type_reference_list_t = std::vector<type_reference*>;
     using procedure_type_list_t = std::vector<procedure_type*>;
@@ -159,42 +163,42 @@ namespace basecode::compiler {
         address_of,
     };
 
-    static inline std::unordered_map<intrinsic_type_t, std::string> s_intrinsic_type_names = {
-        {intrinsic_type_t::unknown,     "unknown"},
-        {intrinsic_type_t::free,        "free"},
-        {intrinsic_type_t::copy,        "copy"},
-        {intrinsic_type_t::fill,        "fill"},
-        {intrinsic_type_t::alloc,       "alloc"},
-        {intrinsic_type_t::range,       "range"},
-        {intrinsic_type_t::size_of,     "size_of"},
-        {intrinsic_type_t::type_of,     "type_of"},
-        {intrinsic_type_t::align_of,    "align_of"},
-        {intrinsic_type_t::length_of,   "length_of"},
-        {intrinsic_type_t::address_of,  "address_of"},
+    static inline std::unordered_map<intrinsic_type_t, std::string_view> s_intrinsic_type_names = {
+        {intrinsic_type_t::unknown,     "unknown"sv},
+        {intrinsic_type_t::free,        "free"sv},
+        {intrinsic_type_t::copy,        "copy"sv},
+        {intrinsic_type_t::fill,        "fill"sv},
+        {intrinsic_type_t::alloc,       "alloc"sv},
+        {intrinsic_type_t::range,       "range"sv},
+        {intrinsic_type_t::size_of,     "size_of"sv},
+        {intrinsic_type_t::type_of,     "type_of"sv},
+        {intrinsic_type_t::align_of,    "align_of"sv},
+        {intrinsic_type_t::length_of,   "length_of"sv},
+        {intrinsic_type_t::address_of,  "address_of"sv},
     };
 
-    static inline std::unordered_map<std::string, intrinsic_type_t> s_intrinsic_named_types = {
-        {"unknown",     intrinsic_type_t::unknown},
-        {"free",        intrinsic_type_t::free},
-        {"copy",        intrinsic_type_t::copy},
-        {"fill",        intrinsic_type_t::fill},
-        {"alloc",       intrinsic_type_t::alloc},
-        {"range",       intrinsic_type_t::range},
-        {"size_of",     intrinsic_type_t::size_of},
-        {"type_of",     intrinsic_type_t::type_of},
-        {"align_of",    intrinsic_type_t::align_of},
-        {"length_of",   intrinsic_type_t::length_of},
-        {"address_of",  intrinsic_type_t::address_of},
+    static inline std::unordered_map<std::string_view, intrinsic_type_t> s_intrinsic_named_types = {
+        {"unknown"sv,     intrinsic_type_t::unknown},
+        {"free"sv,        intrinsic_type_t::free},
+        {"copy"sv,        intrinsic_type_t::copy},
+        {"fill"sv,        intrinsic_type_t::fill},
+        {"alloc"sv,       intrinsic_type_t::alloc},
+        {"range"sv,       intrinsic_type_t::range},
+        {"size_of"sv,     intrinsic_type_t::size_of},
+        {"type_of"sv,     intrinsic_type_t::type_of},
+        {"align_of"sv,    intrinsic_type_t::align_of},
+        {"length_of"sv,   intrinsic_type_t::length_of},
+        {"address_of"sv,  intrinsic_type_t::address_of},
     };
 
-    static inline std::string intrinsic_type_to_name(intrinsic_type_t type) {
+    static inline std::string_view intrinsic_type_to_name(intrinsic_type_t type) {
         auto it = s_intrinsic_type_names.find(type);
         if (it == std::end(s_intrinsic_type_names))
-            return "unknown";
+            return "unknown"sv;
         return it->second;
     }
 
-    static inline intrinsic_type_t intrinsic_type_from_name(const std::string& name) {
+    static inline intrinsic_type_t intrinsic_type_from_name(const std::string_view& name) {
         auto it = s_intrinsic_named_types.find(name);
         if (it == std::end(s_intrinsic_named_types))
             return intrinsic_type_t::unknown;
@@ -216,42 +220,42 @@ namespace basecode::compiler {
         intrinsic_e,
     };
 
-    static inline std::unordered_map<directive_type_t, std::string> s_directive_type_names = {
-        {directive_type_t::unknown,     "unknown"},
-        {directive_type_t::run,         "run"},
-        {directive_type_t::if_e,        "if"},
-        {directive_type_t::eval,        "eval"},
-        {directive_type_t::type,        "type"},
-        {directive_type_t::assert,      "assert"},
-        {directive_type_t::foreign,     "foreign"},
-        {directive_type_t::assembly,    "assembly"},
-        {directive_type_t::core_type,   "core_type"},
-        {directive_type_t::intrinsic_e, "intrinsic"},
+    static inline std::unordered_map<directive_type_t, std::string_view> s_directive_type_names = {
+        {directive_type_t::unknown,     "unknown"sv},
+        {directive_type_t::run,         "run"sv},
+        {directive_type_t::if_e,        "if"sv},
+        {directive_type_t::eval,        "eval"sv},
+        {directive_type_t::type,        "type"sv},
+        {directive_type_t::assert,      "assert"sv},
+        {directive_type_t::foreign,     "foreign"sv},
+        {directive_type_t::assembly,    "assembly"sv},
+        {directive_type_t::core_type,   "core_type"sv},
+        {directive_type_t::intrinsic_e, "intrinsic"sv},
     };
 
-    static inline std::unordered_map<std::string, directive_type_t> s_directive_named_types = {
-        {"unknown",     directive_type_t::unknown},
-        {"run",         directive_type_t::run},
-        {"if",          directive_type_t::if_e},
-        {"elif",        directive_type_t::if_e},
-        {"else",        directive_type_t::if_e},
-        {"eval",        directive_type_t::eval},
-        {"type",        directive_type_t::type},
-        {"assert",      directive_type_t::assert},
-        {"foreign",     directive_type_t::foreign},
-        {"assembly",    directive_type_t::assembly},
-        {"core_type",   directive_type_t::core_type},
-        {"intrinsic",   directive_type_t::intrinsic_e},
+    static inline std::unordered_map<std::string_view, directive_type_t> s_directive_named_types = {
+        {"unknown"sv,     directive_type_t::unknown},
+        {"run"sv,         directive_type_t::run},
+        {"if"sv,          directive_type_t::if_e},
+        {"elif"sv,        directive_type_t::if_e},
+        {"else"sv,        directive_type_t::if_e},
+        {"eval"sv,        directive_type_t::eval},
+        {"type"sv,        directive_type_t::type},
+        {"assert"sv,      directive_type_t::assert},
+        {"foreign"sv,     directive_type_t::foreign},
+        {"assembly"sv,    directive_type_t::assembly},
+        {"core_type"sv,   directive_type_t::core_type},
+        {"intrinsic"sv,   directive_type_t::intrinsic_e},
     };
 
-    static inline std::string directive_type_to_name(directive_type_t type) {
+    static inline std::string_view directive_type_to_name(directive_type_t type) {
         auto it = s_directive_type_names.find(type);
         if (it == std::end(s_directive_type_names))
-            return "unknown";
+            return "unknown"sv;
         return it->second;
     }
 
-    static inline directive_type_t directive_type_from_name(const std::string& name) {
+    static inline directive_type_t directive_type_from_name(const std::string_view& name) {
         auto it = s_directive_named_types.find(name);
         if (it == std::end(s_directive_named_types))
             return directive_type_t::unknown;
@@ -337,16 +341,16 @@ namespace basecode::compiler {
         struct_type,
     };
 
-    static inline std::unordered_map<composite_types_t, std::string> s_composite_type_names = {
-        {composite_types_t::enum_type, "enum_type"},
-        {composite_types_t::union_type, "union_type"},
-        {composite_types_t::struct_type, "struct_type"},
+    static inline std::unordered_map<composite_types_t, std::string_view> s_composite_type_names = {
+        {composite_types_t::enum_type, "enum_type"sv},
+        {composite_types_t::union_type, "union_type"sv},
+        {composite_types_t::struct_type, "struct_type"sv},
     };
 
-    static inline std::string composite_type_name(composite_types_t type) {
+    static inline std::string_view composite_type_name(composite_types_t type) {
         auto it = s_composite_type_names.find(type);
         if (it == s_composite_type_names.end())
-            return "unknown_composite_type";
+            return "unknown_composite_type"sv;
         return it->second;
     }
 
@@ -425,83 +429,83 @@ namespace basecode::compiler {
         assembly_literal_label
     };
 
-    static inline std::unordered_map<element_type_t, std::string> s_element_type_names = {
-        {element_type_t::if_e, "if"},
-        {element_type_t::cast, "cast"},
-        {element_type_t::with, "with"},
-        {element_type_t::for_e, "for"},
-        {element_type_t::label, "label"},
-        {element_type_t::block, "block"},
-        {element_type_t::field, "field"},
-        {element_type_t::defer, "defer"},
-        {element_type_t::case_e, "case"},
-        {element_type_t::yield, "yield"},
-        {element_type_t::module, "module"},
-        {element_type_t::symbol, "symbol"},
-        {element_type_t::while_e, "while"},
-        {element_type_t::break_e, "break"},
-        {element_type_t::comment, "comment"},
-        {element_type_t::element, "element"},
-        {element_type_t::program, "program"},
-        {element_type_t::return_e, "return"},
-        {element_type_t::import_e, "import"},
-        {element_type_t::switch_e, "switch"},
-        {element_type_t::rune_type, "rune_type"},
-        {element_type_t::raw_block, "raw_block"},
-        {element_type_t::intrinsic, "intrinsic"},
-        {element_type_t::transmute, "transmute"},
-        {element_type_t::proc_type, "proc_type"},
-        {element_type_t::directive, "directive"},
-        {element_type_t::attribute, "attribute"},
-        {element_type_t::bool_type, "bool_type"},
-        {element_type_t::statement, "statement"},
-        {element_type_t::proc_call, "proc_call"},
-        {element_type_t::continue_e, "continue"},
-        {element_type_t::assignment, "assignment"},
-        {element_type_t::tuple_type, "tuple_type"},
-        {element_type_t::array_type, "array_type"},
-        {element_type_t::identifier, "identifier"},
-        {element_type_t::expression, "expression"},
-        {element_type_t::namespace_e, "namespace"},
-        {element_type_t::fallthrough, "fallthrough"},
-        {element_type_t::nil_literal, "nil_literal"},
-        {element_type_t::declaration, "declaration"},
-        {element_type_t::module_type, "module_type"},
-        {element_type_t::initializer, "initializer"},
-        {element_type_t::family_type, "family_type"},
-        {element_type_t::generic_type, "generic_type"},
-        {element_type_t::type_literal, "type_literal"},
-        {element_type_t::unknown_type, "unknown_type"},
-        {element_type_t::pointer_type, "pointer_type"},
-        {element_type_t::numeric_type, "numeric_type"},
-        {element_type_t::proc_instance, "proc_instance"},
-        {element_type_t::float_literal, "float_literal"},
-        {element_type_t::argument_list, "argument_list"},
-        {element_type_t::argument_pair, "argument_pair"},
-        {element_type_t::namespace_type, "namespace_type"},
-        {element_type_t::string_literal, "string_literal"},
-        {element_type_t::composite_type, "composite_type"},
-        {element_type_t::unary_operator, "unary_operator"},
-        {element_type_t::assembly_label, "assembly_label"},
-        {element_type_t::type_reference, "type_reference"},
-        {element_type_t::spread_operator, "spread_operator"},
-        {element_type_t::label_reference, "label_reference"},
-        {element_type_t::boolean_literal, "boolean_literal"},
-        {element_type_t::integer_literal, "integer_literal"},
-        {element_type_t::binary_operator, "binary_operator"},
-        {element_type_t::module_reference, "module_reference"},
-        {element_type_t::character_literal, "character_literal"},
-        {element_type_t::value_sink_literal, "value_sink_literal"},
-        {element_type_t::unknown_identifier, "unknown_identifier"},
-        {element_type_t::identifier_reference, "identifier_reference"},
-        {element_type_t::uninitialized_literal, "uninitialized_literal"},
-        {element_type_t::assembly_literal_label, "assembly_literal_label"},
+    static inline std::unordered_map<element_type_t, std::string_view> s_element_type_names = {
+        {element_type_t::if_e, "if"sv},
+        {element_type_t::cast, "cast"sv},
+        {element_type_t::with, "with"sv},
+        {element_type_t::for_e, "for"sv},
+        {element_type_t::label, "label"sv},
+        {element_type_t::block, "block"sv},
+        {element_type_t::field, "field"sv},
+        {element_type_t::defer, "defer"sv},
+        {element_type_t::case_e, "case"sv},
+        {element_type_t::yield, "yield"sv},
+        {element_type_t::module, "module"sv},
+        {element_type_t::symbol, "symbol"sv},
+        {element_type_t::while_e, "while"sv},
+        {element_type_t::break_e, "break"sv},
+        {element_type_t::comment, "comment"sv},
+        {element_type_t::element, "element"sv},
+        {element_type_t::program, "program"sv},
+        {element_type_t::return_e, "return"sv},
+        {element_type_t::import_e, "import"sv},
+        {element_type_t::switch_e, "switch"sv},
+        {element_type_t::rune_type, "rune_type"sv},
+        {element_type_t::raw_block, "raw_block"sv},
+        {element_type_t::intrinsic, "intrinsic"sv},
+        {element_type_t::transmute, "transmute"sv},
+        {element_type_t::proc_type, "proc_type"sv},
+        {element_type_t::directive, "directive"sv},
+        {element_type_t::attribute, "attribute"sv},
+        {element_type_t::bool_type, "bool_type"sv},
+        {element_type_t::statement, "statement"sv},
+        {element_type_t::proc_call, "proc_call"sv},
+        {element_type_t::continue_e, "continue"sv},
+        {element_type_t::assignment, "assignment"sv},
+        {element_type_t::tuple_type, "tuple_type"sv},
+        {element_type_t::array_type, "array_type"sv},
+        {element_type_t::identifier, "identifier"sv},
+        {element_type_t::expression, "expression"sv},
+        {element_type_t::namespace_e, "namespace"sv},
+        {element_type_t::fallthrough, "fallthrough"sv},
+        {element_type_t::nil_literal, "nil_literal"sv},
+        {element_type_t::declaration, "declaration"sv},
+        {element_type_t::module_type, "module_type"sv},
+        {element_type_t::initializer, "initializer"sv},
+        {element_type_t::family_type, "family_type"sv},
+        {element_type_t::generic_type, "generic_type"sv},
+        {element_type_t::type_literal, "type_literal"sv},
+        {element_type_t::unknown_type, "unknown_type"sv},
+        {element_type_t::pointer_type, "pointer_type"sv},
+        {element_type_t::numeric_type, "numeric_type"sv},
+        {element_type_t::proc_instance, "proc_instance"sv},
+        {element_type_t::float_literal, "float_literal"sv},
+        {element_type_t::argument_list, "argument_list"sv},
+        {element_type_t::argument_pair, "argument_pair"sv},
+        {element_type_t::namespace_type, "namespace_type"sv},
+        {element_type_t::string_literal, "string_literal"sv},
+        {element_type_t::composite_type, "composite_type"sv},
+        {element_type_t::unary_operator, "unary_operator"sv},
+        {element_type_t::assembly_label, "assembly_label"sv},
+        {element_type_t::type_reference, "type_reference"sv},
+        {element_type_t::spread_operator, "spread_operator"sv},
+        {element_type_t::label_reference, "label_reference"sv},
+        {element_type_t::boolean_literal, "boolean_literal"sv},
+        {element_type_t::integer_literal, "integer_literal"sv},
+        {element_type_t::binary_operator, "binary_operator"sv},
+        {element_type_t::module_reference, "module_reference"sv},
+        {element_type_t::character_literal, "character_literal"sv},
+        {element_type_t::value_sink_literal, "value_sink_literal"sv},
+        {element_type_t::unknown_identifier, "unknown_identifier"sv},
+        {element_type_t::identifier_reference, "identifier_reference"sv},
+        {element_type_t::uninitialized_literal, "uninitialized_literal"sv},
+        {element_type_t::assembly_literal_label, "assembly_literal_label"sv},
     };
 
-    static inline std::string element_type_name(element_type_t type) {
+    static inline std::string_view element_type_name(element_type_t type) {
         auto it = s_element_type_names.find(type);
         if (it == s_element_type_names.end()) {
-            return "";
+            return "unknown"sv;
         }
         return it->second;
     }
@@ -515,12 +519,12 @@ namespace basecode::compiler {
         block
     };
 
-    static inline std::string comment_type_name(comment_type_t type) {
+    static inline std::string_view comment_type_name(comment_type_t type) {
         switch (type) {
-            case comment_type_t::line:  return "line";
-            case comment_type_t::block: return "block";
+            case comment_type_t::line:  return "line"sv;
+            case comment_type_t::block: return "block"sv;
         }
-        return "unknown";
+        return "unknown"sv;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -561,42 +565,42 @@ namespace basecode::compiler {
         member_access,
     };
 
-    static inline std::unordered_map<operator_type_t, std::string> s_operator_type_names = {
-        {operator_type_t::unknown,               "unknown"},
-        {operator_type_t::negate,                "negate"},
-        {operator_type_t::binary_not,            "binary_not"},
-        {operator_type_t::logical_not,           "logical_not"},
-        {operator_type_t::subscript,             "subscript"},
-        {operator_type_t::pointer_dereference,   "pointer_deference"},
-        {operator_type_t::add,                   "add"},
-        {operator_type_t::subtract,              "subtract"},
-        {operator_type_t::multiply,              "multiply"},
-        {operator_type_t::divide,                "divide"},
-        {operator_type_t::modulo,                "modulo"},
-        {operator_type_t::equals,                "equals"},
-        {operator_type_t::not_equals,            "not_equals"},
-        {operator_type_t::greater_than,          "greater_than"},
-        {operator_type_t::less_than,             "less_than"},
-        {operator_type_t::greater_than_or_equal, "greater_than_or_equal"},
-        {operator_type_t::less_than_or_equal,    "less_than_or_equal"},
-        {operator_type_t::logical_or,            "logical_or"},
-        {operator_type_t::logical_and,           "logical_and"},
-        {operator_type_t::binary_or,             "binary_or"},
-        {operator_type_t::binary_and,            "binary_and"},
-        {operator_type_t::binary_xor,            "binary_xor"},
-        {operator_type_t::shift_right,           "shift_right"},
-        {operator_type_t::shift_left,            "shift_left"},
-        {operator_type_t::rotate_right,          "rotate_right"},
-        {operator_type_t::rotate_left,           "rotate_left"},
-        {operator_type_t::exponent,              "exponent"},
-        {operator_type_t::assignment,            "assignment"},
-        {operator_type_t::member_access,         "member_access"},
+    static inline std::unordered_map<operator_type_t, std::string_view> s_operator_type_names = {
+        {operator_type_t::unknown,               "unknown"sv},
+        {operator_type_t::negate,                "negate"sv},
+        {operator_type_t::binary_not,            "binary_not"sv},
+        {operator_type_t::logical_not,           "logical_not"sv},
+        {operator_type_t::subscript,             "subscript"sv},
+        {operator_type_t::pointer_dereference,   "pointer_deference"sv},
+        {operator_type_t::add,                   "add"sv},
+        {operator_type_t::subtract,              "subtract"sv},
+        {operator_type_t::multiply,              "multiply"sv},
+        {operator_type_t::divide,                "divide"sv},
+        {operator_type_t::modulo,                "modulo"sv},
+        {operator_type_t::equals,                "equals"sv},
+        {operator_type_t::not_equals,            "not_equals"sv},
+        {operator_type_t::greater_than,          "greater_than"sv},
+        {operator_type_t::less_than,             "less_than"sv},
+        {operator_type_t::greater_than_or_equal, "greater_than_or_equal"sv},
+        {operator_type_t::less_than_or_equal,    "less_than_or_equal"sv},
+        {operator_type_t::logical_or,            "logical_or"sv},
+        {operator_type_t::logical_and,           "logical_and"sv},
+        {operator_type_t::binary_or,             "binary_or"sv},
+        {operator_type_t::binary_and,            "binary_and"sv},
+        {operator_type_t::binary_xor,            "binary_xor"sv},
+        {operator_type_t::shift_right,           "shift_right"sv},
+        {operator_type_t::shift_left,            "shift_left"sv},
+        {operator_type_t::rotate_right,          "rotate_right"sv},
+        {operator_type_t::rotate_left,           "rotate_left"sv},
+        {operator_type_t::exponent,              "exponent"sv},
+        {operator_type_t::assignment,            "assignment"sv},
+        {operator_type_t::member_access,         "member_access"sv},
     };
 
-    static inline std::string operator_type_name(operator_type_t type) {
+    static inline std::string_view operator_type_name(operator_type_t type) {
         auto it = s_operator_type_names.find(type);
         if (it == s_operator_type_names.end())
-            return "";
+            return "unknown"sv;
         return it->second;
     }
     
@@ -675,10 +679,10 @@ namespace basecode::compiler {
 
         bool remove(const std::string& name);
 
-        compiler::attribute* find(const std::string& name) const;
+        compiler::attribute* find(const std::string_view& name) const;
 
     private:
-        std::unordered_map<std::string, attribute*> _attrs {};
+        std::unordered_map<std::string_view, attribute*> _attrs {};
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -830,6 +834,7 @@ namespace basecode::compiler {
     struct fold_result_t {
         bool allow_no_fold_attribute = true;
         compiler::element* element = nullptr;
+        compiler::type_reference* type_ref = nullptr;
     };
 
     ///////////////////////////////////////////////////////////////////////////

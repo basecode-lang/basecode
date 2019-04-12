@@ -22,12 +22,12 @@ namespace basecode::compiler {
         attribute(
             compiler::module* module,
             block* parent_scope,
-            const std::string& name,
+            const std::string_view& name,
             element* expr);
 
         element* expression();
 
-        std::string name() const;
+        std::string_view name() const;
 
     protected:
         bool on_as_bool(bool& value) const override;
@@ -41,7 +41,7 @@ namespace basecode::compiler {
         void on_owned_elements(element_list_t& list) override;
 
     private:
-        std::string _name;
+        std::string_view _name;
         element* _expr = nullptr;
     };
 

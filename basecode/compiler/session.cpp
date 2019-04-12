@@ -914,7 +914,7 @@ namespace basecode::compiler {
                         auto intrinsic = dynamic_cast<compiler::intrinsic*>(e);
                         fold_result.element->attributes().add(_builder->make_attribute(
                             _scope_manager->current_scope(),
-                            "intrinsic_substitution",
+                            "intrinsic_substitution"sv,
                             _builder->make_string(
                                 _scope_manager->current_scope(),
                                 intrinsic_type_to_name(intrinsic->type()))));

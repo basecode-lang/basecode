@@ -88,7 +88,7 @@ namespace basecode::syntax {
         }
 
         if (!node->token.value.empty() && details.empty()) {
-            std::string value = node->token.value;
+            auto value = std::string(node->token.value);
 
             if (value == "|")
                 value = "&#124;";
@@ -160,4 +160,4 @@ namespace basecode::syntax {
         return fmt::format("{}{}", node->name(), node->id);
     }
 
-};
+}

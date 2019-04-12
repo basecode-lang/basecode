@@ -287,6 +287,12 @@ namespace basecode::common {
         return value;
     }
 
+    std::string_view source_file::make_slice(size_t offset, size_t length) {
+        return std::string_view(
+            reinterpret_cast<const char*>(_buffer.data() + offset),
+            length);
+    }
+
     const source_file_line_t* source_file::line_by_number(size_t line) const {
         auto it = _lines_by_number.find(line);
         if (it == _lines_by_number.end())
@@ -301,4 +307,4 @@ namespace basecode::common {
         return &it->second;
     }
 
-};
+}

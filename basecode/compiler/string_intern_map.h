@@ -15,7 +15,7 @@
 
 namespace basecode::compiler {
 
-    using intern_string_map_t = std::unordered_map<std::string, common::id_t>;
+    using intern_string_map_t = std::unordered_map<std::string_view, common::id_t>;
     using element_to_intern_id_map_t = std::unordered_map<common::id_t, common::id_t>;
     using intern_id_to_view_map_t = std::unordered_map<common::id_t, std::string_view>;
 
@@ -49,5 +49,5 @@ namespace basecode::compiler {
         element_to_intern_id_map_t _element_to_intern_ids {};
     };
 
-};
+}
 

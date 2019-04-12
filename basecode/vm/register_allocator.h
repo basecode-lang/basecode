@@ -43,5 +43,5 @@ namespace basecode::vm {
         allocation_status_t _floats[64];
     };
 
-};
+}
 

@@ -25,7 +25,7 @@ foo := items^;
     // alloc & free block of memory
     'allocate_memory:
     addr: ^u8;
-    addr := alloc(size_of(u16) * 4096);
+    addr := alloc(cast<u64>(size_of(u16) * 4096));
     core::print("addr := $%08x\n", addr);
     free(addr);
 };

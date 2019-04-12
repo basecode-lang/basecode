@@ -16,6 +16,7 @@
 #include <string>
 #include <vector>
 #include <cstdint>
+#include <string_view>
 #include <unordered_map>
 #include <boost/any.hpp>
 #include <common/result.h>
@@ -28,6 +29,8 @@ typedef struct DCstruct_ DCstruct;
 typedef struct DCCallVM_ DCCallVM;
 
 namespace basecode::vm {
+
+    using namespace std::literals;
 
     class ffi;
     class terp;
@@ -57,17 +60,17 @@ namespace basecode::vm {
         qword
     };
 
-    static inline std::string op_size_format_spec(op_sizes size) {
+    static inline std::string_view op_size_format_spec(op_sizes size) {
         switch (size) {
             case op_sizes::byte:
-                return "#${:02X}";
+                return "#${:02X}"sv;
             case op_sizes::word:
-                return "#${:04X}";
+                return "#${:04X}"sv;
             case op_sizes::dword:
-                return "#${:08X}";
+                return "#${:08X}"sv;
             default:
             case op_sizes::qword:
-                return "#${:016X}";
+                return "#${:016X}"sv;
         }
     }
 
@@ -416,106 +419,106 @@ namespace basecode::vm {
         exit,
     };
 
-    inline static std::map<op_codes, std::string> s_op_code_names = {
-        {op_codes::nop,    "NOP"},
-        {op_codes::alloc,  "ALLOC"},
-        {op_codes::free,   "FREE"},
-        {op_codes::size,   "SIZE"},
-        {op_codes::load,   "LOAD"},
-        {op_codes::store,  "STORE"},
-        {op_codes::copy,   "COPY"},
-        {op_codes::convert,"CVRT"},
-        {op_codes::fill,   "FILL"},
-        {op_codes::clr,    "CLR"},
-        {op_codes::move,   "MOVE"},
-        {op_codes::moves,  "MOVES"},
-        {op_codes::movez,  "MOVEZ"},
-        {op_codes::push,   "PUSH"},
-        {op_codes::pushm,  "PUSHM"},
-        {op_codes::pop,    "POP"},
-        {op_codes::popm,   "POPM"},
-        {op_codes::dup,    "DUP"},
-        {op_codes::inc,    "INC"},
-        {op_codes::dec,    "DEC"},
-        {op_codes::add,    "ADD"},
-        {op_codes::sub,    "SUB"},
-        {op_codes::mul,    "MUL"},
-        {op_codes::div,    "DIV"},
-        {op_codes::mod,    "MOD"},
-        {op_codes::madd,   "MADD"},
-        {op_codes::neg,    "NEG"},
-        {op_codes::shr,    "SHR"},
-        {op_codes::shl,    "SHL"},
-        {op_codes::ror,    "ROR"},
-        {op_codes::rol,    "ROL"},
-        {op_codes::pow,    "POW"},
-        {op_codes::and_op, "AND"},
-        {op_codes::or_op,  "OR"},
-        {op_codes::xor_op, "XOR"},
-        {op_codes::not_op, "NOT"},
-        {op_codes::bis,    "BIS"},
-        {op_codes::bic,    "BIC"},
-        {op_codes::test,   "TEST"},
-        {op_codes::cmp,    "CMP"},
-        {op_codes::bz,     "BZ"},
-        {op_codes::bnz,    "BNZ"},
-        {op_codes::tbz,    "TBZ"},
-        {op_codes::tbnz,   "TBNZ"},
-        {op_codes::bne,    "BNE"},
-        {op_codes::beq,    "BEQ"},
-        {op_codes::bcc,    "BCC"},
-        {op_codes::bcs,    "BCS"},
-        {op_codes::bs,     "BS"},
-        {op_codes::bo,     "BO"},
-        {op_codes::ba,     "BA"},
-        {op_codes::bae,    "BAE"},
-        {op_codes::bb,     "BB"},
-        {op_codes::bbe,    "BBE"},
-        {op_codes::bg,     "BG"},
-        {op_codes::bge,    "BGE"},
-        {op_codes::bl,     "BL"},
-        {op_codes::ble,    "BLE"},
-        {op_codes::seta,   "SETA"},
-        {op_codes::setna,  "SETNA"},
-        {op_codes::setae,  "SETAE"},
-        {op_codes::setnae, "SETNAE"},
-        {op_codes::setb,   "SETB"},
-        {op_codes::setnb,  "SETNB"},
-        {op_codes::setbe,  "SETBE"},
-        {op_codes::setnbe, "SETNBE"},
-        {op_codes::setc,   "SETC"},
-        {op_codes::setnc,  "SETNC"},
-        {op_codes::setg,   "SETG"},
-        {op_codes::setng,  "SETNG"},
-        {op_codes::setge,  "SETGE"},
-        {op_codes::setnge, "SETNGE"},
-        {op_codes::setl,   "SETL"},
-        {op_codes::setnl,  "SETNL"},
-        {op_codes::setle,  "SETLE"},
-        {op_codes::setnle, "SETNLE"},
-        {op_codes::sets,   "SETS"},
-        {op_codes::setns,  "SETNS"},
-        {op_codes::seto,   "SETO"},
-        {op_codes::setno,  "SETNO"},
-        {op_codes::setz,   "SETZ"},
-        {op_codes::setnz,  "SETNZ"},
-        {op_codes::jsr,    "JSR"},
-        {op_codes::rts,    "RTS"},
-        {op_codes::jmp,    "JMP"},
-        {op_codes::swi,    "SWI"},
-        {op_codes::swap,   "SWAP"},
-        {op_codes::trap,   "TRAP"},
-        {op_codes::ffi,    "FFI"},
-        {op_codes::meta,   "META"},
-        {op_codes::exit,   "EXIT"},
+    inline static std::map<op_codes, std::string_view> s_op_code_names = {
+        {op_codes::nop,    "NOP"sv},
+        {op_codes::alloc,  "ALLOC"sv},
+        {op_codes::free,   "FREE"sv},
+        {op_codes::size,   "SIZE"sv},
+        {op_codes::load,   "LOAD"sv},
+        {op_codes::store,  "STORE"sv},
+        {op_codes::copy,   "COPY"sv},
+        {op_codes::convert,"CVRT"sv},
+        {op_codes::fill,   "FILL"sv},
+        {op_codes::clr,    "CLR"sv},
+        {op_codes::move,   "MOVE"sv},
+        {op_codes::moves,  "MOVES"sv},
+        {op_codes::movez,  "MOVEZ"sv},
+        {op_codes::push,   "PUSH"sv},
+        {op_codes::pushm,  "PUSHM"sv},
+        {op_codes::pop,    "POP"sv},
+        {op_codes::popm,   "POPM"sv},
+        {op_codes::dup,    "DUP"sv},
+        {op_codes::inc,    "INC"sv},
+        {op_codes::dec,    "DEC"sv},
+        {op_codes::add,    "ADD"sv},
+        {op_codes::sub,    "SUB"sv},
+        {op_codes::mul,    "MUL"sv},
+        {op_codes::div,    "DIV"sv},
+        {op_codes::mod,    "MOD"sv},
+        {op_codes::madd,   "MADD"sv},
+        {op_codes::neg,    "NEG"sv},
+        {op_codes::shr,    "SHR"sv},
+        {op_codes::shl,    "SHL"sv},
+        {op_codes::ror,    "ROR"sv},
+        {op_codes::rol,    "ROL"sv},
+        {op_codes::pow,    "POW"sv},
+        {op_codes::and_op, "AND"sv},
+        {op_codes::or_op,  "OR"sv},
+        {op_codes::xor_op, "XOR"sv},
+        {op_codes::not_op, "NOT"sv},
+        {op_codes::bis,    "BIS"sv},
+        {op_codes::bic,    "BIC"sv},
+        {op_codes::test,   "TEST"sv},
+        {op_codes::cmp,    "CMP"sv},
+        {op_codes::bz,     "BZ"sv},
+        {op_codes::bnz,    "BNZ"sv},
+        {op_codes::tbz,    "TBZ"sv},
+        {op_codes::tbnz,   "TBNZ"sv},
+        {op_codes::bne,    "BNE"sv},
+        {op_codes::beq,    "BEQ"sv},
+        {op_codes::bcc,    "BCC"sv},
+        {op_codes::bcs,    "BCS"sv},
+        {op_codes::bs,     "BS"sv},
+        {op_codes::bo,     "BO"sv},
+        {op_codes::ba,     "BA"sv},
+        {op_codes::bae,    "BAE"sv},
+        {op_codes::bb,     "BB"sv},
+        {op_codes::bbe,    "BBE"sv},
+        {op_codes::bg,     "BG"sv},
+        {op_codes::bge,    "BGE"sv},
+        {op_codes::bl,     "BL"sv},
+        {op_codes::ble,    "BLE"sv},
+        {op_codes::seta,   "SETA"sv},
+        {op_codes::setna,  "SETNA"sv},
+        {op_codes::setae,  "SETAE"sv},
+        {op_codes::setnae, "SETNAE"sv},
+        {op_codes::setb,   "SETB"sv},
+        {op_codes::setnb,  "SETNB"sv},
+        {op_codes::setbe,  "SETBE"sv},
+        {op_codes::setnbe, "SETNBE"sv},
+        {op_codes::setc,   "SETC"sv},
+        {op_codes::setnc,  "SETNC"sv},
+        {op_codes::setg,   "SETG"sv},
+        {op_codes::setng,  "SETNG"sv},
+        {op_codes::setge,  "SETGE"sv},
+        {op_codes::setnge, "SETNGE"sv},
+        {op_codes::setl,   "SETL"sv},
+        {op_codes::setnl,  "SETNL"sv},
+        {op_codes::setle,  "SETLE"sv},
+        {op_codes::setnle, "SETNLE"sv},
+        {op_codes::sets,   "SETS"sv},
+        {op_codes::setns,  "SETNS"sv},
+        {op_codes::seto,   "SETO"sv},
+        {op_codes::setno,  "SETNO"sv},
+        {op_codes::setz,   "SETZ"sv},
+        {op_codes::setnz,  "SETNZ"sv},
+        {op_codes::jsr,    "JSR"sv},
+        {op_codes::rts,    "RTS"sv},
+        {op_codes::jmp,    "JMP"sv},
+        {op_codes::swi,    "SWI"sv},
+        {op_codes::swap,   "SWAP"sv},
+        {op_codes::trap,   "TRAP"sv},
+        {op_codes::ffi,    "FFI"sv},
+        {op_codes::meta,   "META"sv},
+        {op_codes::exit,   "EXIT"sv},
     };
 
-    inline static std::string op_code_name(op_codes type) {
+    inline static std::string_view op_code_name(op_codes type) {
         const auto it = s_op_code_names.find(type);
         if (it != s_op_code_names.end()) {
             return it->second;
         }
-        return "";
+        return "BAD"sv;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -702,21 +705,21 @@ namespace basecode::vm {
         text
     };
 
-    inline static std::string section_name(section_t type) {
+    inline static std::string_view section_name(section_t type) {
         switch (type) {
-            case section_t::bss:    return "bss";
-            case section_t::ro_data:return "ro_data";
-            case section_t::data:   return "data";
-            case section_t::text:   return "text";
-            default:                return "unknown";
+            case section_t::bss:    return "bss"sv;
+            case section_t::ro_data:return "ro_data"sv;
+            case section_t::data:   return "data"sv;
+            case section_t::text:   return "text"sv;
+            default:                return "unknown"sv;
         }
     }
 
-    inline static section_t section_type(const std::string& name) {
-        if (name == "bss")      return section_t::bss;
-        if (name == "ro_data")  return section_t::ro_data;
-        if (name == "data")     return section_t::data;
-        if (name == "text")     return section_t::text;
+    inline static section_t section_type(const std::string_view& name) {
+        if (name == "bss"sv)      return section_t::bss;
+        if (name == "ro_data"sv)  return section_t::ro_data;
+        if (name == "data"sv)     return section_t::data;
+        if (name == "text"sv)     return section_t::text;
         return section_t::unknown;
     }
 
@@ -1060,21 +1063,21 @@ namespace basecode::vm {
         bytes
     };
 
-    static inline std::unordered_map<symbol_type_t, std::string> s_symbol_type_names = {
-        {symbol_type_t::unknown, "unknown"},
-        {symbol_type_t::u8,      "u8"},
-        {symbol_type_t::u16,     "u16"},
-        {symbol_type_t::u32,     "u32"},
-        {symbol_type_t::u64,     "u64"},
-        {symbol_type_t::f32,     "f32"},
-        {symbol_type_t::f64,     "f64"},
-        {symbol_type_t::bytes,   "bytes"},
+    static inline std::unordered_map<symbol_type_t, std::string_view> s_symbol_type_names = {
+        {symbol_type_t::unknown, "unknown"sv},
+        {symbol_type_t::u8,      "u8"sv},
+        {symbol_type_t::u16,     "u16"sv},
+        {symbol_type_t::u32,     "u32"sv},
+        {symbol_type_t::u64,     "u64"sv},
+        {symbol_type_t::f32,     "f32"sv},
+        {symbol_type_t::f64,     "f64"sv},
+        {symbol_type_t::bytes,   "bytes"sv},
     };
 
-    static inline std::string symbol_type_name(symbol_type_t type) {
+    static inline std::string_view symbol_type_name(symbol_type_t type) {
         auto it = s_symbol_type_names.find(type);
         if (it == s_symbol_type_names.end())
-            return "unknown";
+            return "unknown"sv;
         return it->second;
     }
 
@@ -1147,16 +1150,16 @@ namespace basecode::vm {
         std::vector<mnemonic_operand_t> operands {};
     };
 
-    inline static std::map<std::string, mnemonic_t> s_mnemonics = {
+    inline static std::map<std::string_view, mnemonic_t> s_mnemonics = {
         {
-            "NOP",
+            "NOP"sv,
             mnemonic_t{
                 op_codes::nop,
                 {}
             }
         },
         {
-            "ALLOC",
+            "ALLOC"sv,
             mnemonic_t{
                 op_codes::alloc,
                 {
@@ -1166,7 +1169,7 @@ namespace basecode::vm {
             }
         },
         {
-            "FREE",
+            "FREE"sv,
             mnemonic_t{
                 op_codes::free,
                 {
@@ -1175,7 +1178,7 @@ namespace basecode::vm {
             }
         },
         {
-            "SIZE",
+            "SIZE"sv,
             mnemonic_t{
                 op_codes::size,
                 {
@@ -1185,7 +1188,7 @@ namespace basecode::vm {
             }
         },
         {
-            "LOAD",
+            "LOAD"sv,
             mnemonic_t{
                 op_codes::load,
                 {
@@ -1196,7 +1199,7 @@ namespace basecode::vm {
             }
         },
         {
-            "STORE",
+            "STORE"sv,
             mnemonic_t{
                 op_codes::store,
                 {
@@ -1207,7 +1210,7 @@ namespace basecode::vm {
             }
         },
         {
-            "COPY",
+            "COPY"sv,
             mnemonic_t{
                 op_codes::copy,
                 {
@@ -1218,7 +1221,7 @@ namespace basecode::vm {
             }
         },
         {
-            "CVRT",
+            "CVRT"sv,
             mnemonic_t{
                 op_codes::convert,
                 {
@@ -1228,7 +1231,7 @@ namespace basecode::vm {
             }
         },
         {
-            "FILL",
+            "FILL"sv,
             mnemonic_t{
                 op_codes::fill,
                 {
@@ -1239,7 +1242,7 @@ namespace basecode::vm {
             }
         },
         {
-            "CLR",
+            "CLR"sv,
             mnemonic_t{
                 op_codes::clr,
                 {
@@ -1248,7 +1251,7 @@ namespace basecode::vm {
             }
         },
         {
-            "MOVE",
+            "MOVE"sv,
             mnemonic_t{
                 op_codes::move,
                 {
@@ -1259,7 +1262,7 @@ namespace basecode::vm {
             }
         },
         {
-            "MOVES",
+            "MOVES"sv,
             mnemonic_t{
                 op_codes::moves,
                 {
@@ -1270,7 +1273,7 @@ namespace basecode::vm {
             }
         },
         {
-            "MOVEZ",
+            "MOVEZ"sv,
             mnemonic_t{
                 op_codes::movez,
                 {
@@ -1281,7 +1284,7 @@ namespace basecode::vm {
             }
         },
         {
-            "PUSH",
+            "PUSH"sv,
             mnemonic_t{
                 op_codes::push,
                 {
@@ -1292,7 +1295,7 @@ namespace basecode::vm {
             }
         },
         {
-            "PUSHM",
+            "PUSHM"sv,
             mnemonic_t{
                 op_codes::pushm,
                 {
@@ -1304,7 +1307,7 @@ namespace basecode::vm {
             }
         },
         {
-            "POP",
+            "POP"sv,
             mnemonic_t{
                 op_codes::pop,
                 {
@@ -1313,7 +1316,7 @@ namespace basecode::vm {
             }
         },
         {
-            "POPM",
+            "POPM"sv,
             mnemonic_t{
                 op_codes::popm,
                 {
@@ -1325,14 +1328,14 @@ namespace basecode::vm {
             }
         },
         {
-            "DUP",
+            "DUP"sv,
             mnemonic_t{
                 op_codes::dup,
                 {}
             }
         },
         {
-            "INC",
+            "INC"sv,
             mnemonic_t{
                 op_codes::inc,
                 {
@@ -1341,7 +1344,7 @@ namespace basecode::vm {
             }
         },
         {
-            "DEC",
+            "DEC"sv,
             mnemonic_t{
                 op_codes::dec,
                 {
@@ -1350,7 +1353,7 @@ namespace basecode::vm {
             }
         },
         {
-            "ADD",
+            "ADD"sv,
             mnemonic_t{
                 op_codes::add,
                 {
@@ -1365,7 +1368,7 @@ namespace basecode::vm {
             }
         },
         {
-            "SUB",
+            "SUB"sv,
             mnemonic_t{
                 op_codes::sub,
                 {
@@ -1380,7 +1383,7 @@ namespace basecode::vm {
             }
         },
         {
-            "MUL",
+            "MUL"sv,
             mnemonic_t{
                 op_codes::mul,
                 {
@@ -1395,7 +1398,7 @@ namespace basecode::vm {
             }
         },
         {
-            "DIV",
+            "DIV"sv,
             mnemonic_t{
                 op_codes::div,
                 {
@@ -1410,7 +1413,7 @@ namespace basecode::vm {
             }
         },
         {
-            "MOD",
+            "MOD"sv,
             mnemonic_t{
                 op_codes::mod,
                 {
@@ -1421,7 +1424,7 @@ namespace basecode::vm {
             }
         },
         {
-            "MADD",
+            "MADD"sv,
             mnemonic_t{
                 op_codes::madd,
                 {
@@ -1433,7 +1436,7 @@ namespace basecode::vm {
             }
         },
         {
-            "NEG",
+            "NEG"sv,
             mnemonic_t{
                 op_codes::neg,
                 {
@@ -1443,7 +1446,7 @@ namespace basecode::vm {
             }
         },
         {
-            "SHR",
+            "SHR"sv,
             mnemonic_t{
                 op_codes::shr,
                 {
@@ -1454,7 +1457,7 @@ namespace basecode::vm {
             }
         },
         {
-            "SHL",
+            "SHL"sv,
             mnemonic_t{
                 op_codes::shl,
                 {
@@ -1465,7 +1468,7 @@ namespace basecode::vm {
             }
         },
         {
-            "ROR",
+            "ROR"sv,
             mnemonic_t{
                 op_codes::ror,
                 {
@@ -1476,7 +1479,7 @@ namespace basecode::vm {
             }
         },
         {
-            "ROL",
+            "ROL"sv,
             mnemonic_t{
                 op_codes::rol,
                 {
@@ -1487,7 +1490,7 @@ namespace basecode::vm {
             }
         },
         {
-            "POW",
+            "POW"sv,
             mnemonic_t{
                 op_codes::pow,
                 {
@@ -1498,7 +1501,7 @@ namespace basecode::vm {
             }
         },
         {
-            "AND",
+            "AND"sv,
             mnemonic_t{
                 op_codes::and_op,
                 {
@@ -1509,7 +1512,7 @@ namespace basecode::vm {
             }
         },
         {
-            "OR",
+            "OR"sv,
             mnemonic_t{
                 op_codes::or_op,
                 {
@@ -1520,7 +1523,7 @@ namespace basecode::vm {
             }
         },
         {
-            "XOR",
+            "XOR"sv,
             mnemonic_t{
                 op_codes::xor_op,
                 {
@@ -1531,7 +1534,7 @@ namespace basecode::vm {
             }
         },
         {
-            "NOT",
+            "NOT"sv,
             mnemonic_t{
                 op_codes::not_op,
                 {
@@ -1541,7 +1544,7 @@ namespace basecode::vm {
             }
         },
         {
-            "BIS",
+            "BIS"sv,
             mnemonic_t{
                 op_codes::bis,
                 {
@@ -1552,7 +1555,7 @@ namespace basecode::vm {
             }
         },
         {
-            "BIC",
+            "BIC"sv,
             mnemonic_t{
                 op_codes::bic,
                 {
@@ -1563,7 +1566,7 @@ namespace basecode::vm {
             }
         },
         {
-            "TEST",
+            "TEST"sv,
             mnemonic_t{
                 op_codes::test,
                 {
@@ -1573,7 +1576,7 @@ namespace basecode::vm {
             }
         },
         {
-            "CMP",
+            "CMP"sv,
             mnemonic_t{
                 op_codes::cmp,
                 {
@@ -1583,7 +1586,7 @@ namespace basecode::vm {
             }
         },
         {
-            "BZ",
+            "BZ"sv,
             mnemonic_t{
                 op_codes::bz,
                 {
@@ -1593,7 +1596,7 @@ namespace basecode::vm {
             }
         },
         {
-            "BNZ",
+            "BNZ"sv,
             mnemonic_t{
                 op_codes::bnz,
                 {
@@ -1603,7 +1606,7 @@ namespace basecode::vm {
             }
         },
         {
-            "TBZ",
+            "TBZ"sv,
             mnemonic_t{
                 op_codes::tbz,
                 {
@@ -1614,7 +1617,7 @@ namespace basecode::vm {
             }
         },
         {
-            "TBNZ",
+            "TBNZ"sv,
             mnemonic_t{
                 op_codes::tbnz,
                 {
@@ -1625,7 +1628,7 @@ namespace basecode::vm {
             }
         },
         {
-            "BNE",
+            "BNE"sv,
             mnemonic_t{
                 op_codes::bne,
                 {
@@ -1635,7 +1638,7 @@ namespace basecode::vm {
             }
         },
         {
-            "BEQ",
+            "BEQ"sv,
             mnemonic_t{
                 op_codes::beq,
                 {
@@ -1645,7 +1648,7 @@ namespace basecode::vm {
             }
         },
         {
-            "BG",
+            "BG"sv,
             mnemonic_t{
                 op_codes::bg,
                 {
@@ -1655,7 +1658,7 @@ namespace basecode::vm {
             }
         },
         {
-            "BGE",
+            "BGE"sv,
             mnemonic_t{
                 op_codes::bge,
                 {
@@ -1665,7 +1668,7 @@ namespace basecode::vm {
             }
         },
         {
-            "BL",
+            "BL"sv,
             mnemonic_t{
                 op_codes::bl,
                 {
@@ -1675,7 +1678,7 @@ namespace basecode::vm {
             }
         },
         {
-            "BLE",
+            "BLE"sv,
             mnemonic_t{
                 op_codes::ble,
                 {
@@ -1685,7 +1688,7 @@ namespace basecode::vm {
             }
         },
         {
-            "SETZ",
+            "SETZ"sv,
             mnemonic_t{
                 op_codes::setz,
                 {
@@ -1694,7 +1697,7 @@ namespace basecode::vm {
             }
         },
         {
-            "SETNZ",
+            "SETNZ"sv,
             mnemonic_t{
                 op_codes::setnz,
                 {
@@ -1703,7 +1706,7 @@ namespace basecode::vm {
             }
         },
         {
-            "JSR",
+            "JSR"sv,
             mnemonic_t{
                 op_codes::jsr,
                 {
@@ -1713,14 +1716,14 @@ namespace basecode::vm {
             }
         },
         {
-            "RTS",
+            "RTS"sv,
             mnemonic_t{
                 op_codes::rts,
                 {}
             }
         },
         {
-            "JMP",
+            "JMP"sv,
             mnemonic_t{
                 op_codes::jmp,
                 {
@@ -1730,7 +1733,7 @@ namespace basecode::vm {
             }
         },
         {
-            "SWI",
+            "SWI"sv,
             mnemonic_t{
                 op_codes::swi,
                 {
@@ -1739,7 +1742,7 @@ namespace basecode::vm {
             }
         },
         {
-            "SWAP",
+            "SWAP"sv,
             mnemonic_t{
                 op_codes::swap,
                 {
@@ -1749,7 +1752,7 @@ namespace basecode::vm {
             }
         },
         {
-            "TRAP",
+            "TRAP"sv,
             mnemonic_t{
                 op_codes::trap,
                 {
@@ -1758,7 +1761,7 @@ namespace basecode::vm {
             }
         },
         {
-            "FFI",
+            "FFI"sv,
             mnemonic_t{
                 op_codes::ffi,
                 {
@@ -1767,7 +1770,7 @@ namespace basecode::vm {
             }
         },
         {
-            "META",
+            "META"sv,
             mnemonic_t{
                 op_codes::meta,
                 {
@@ -1776,7 +1779,7 @@ namespace basecode::vm {
             }
         },
         {
-            "EXIT",
+            "EXIT"sv,
             mnemonic_t{
                 op_codes::exit,
                 {}
@@ -1784,7 +1787,7 @@ namespace basecode::vm {
         },
     };
 
-    inline static mnemonic_t* mnemonic(const std::string& code) {
+    inline static mnemonic_t* mnemonic(const std::string_view& code) {
         const auto it = s_mnemonics.find(code);
         if (it != s_mnemonics.end()) {
             return &it->second;
@@ -1859,9 +1862,9 @@ namespace basecode::vm {
         std::vector<directive_param_t> params {};
     };
 
-    inline static std::map<std::string, directive_t> s_directives = {
+    inline static std::map<std::string_view, directive_t> s_directives = {
         {
-            "END",
+            "END"sv,
             directive_t{
                 op_sizes::none,
                 directive_type_t::end,
@@ -1869,7 +1872,7 @@ namespace basecode::vm {
             }
         },
         {
-            "SECTION",
+            "SECTION"sv,
             directive_t{
                 op_sizes::none,
                 directive_type_t::section,
@@ -1879,7 +1882,7 @@ namespace basecode::vm {
             }
         },
         {
-            "ALIGN",
+            "ALIGN"sv,
             directive_t{
                 op_sizes::byte,
                 directive_type_t::align,
@@ -1889,7 +1892,7 @@ namespace basecode::vm {
             }
         },
         {
-            "META",
+            "META"sv,
             directive_t{
                 op_sizes::none,
                 directive_type_t::meta,
@@ -1899,7 +1902,7 @@ namespace basecode::vm {
             }
         },
         {
-            "BLOCK",
+            "BLOCK"sv,
             directive_t{
                 op_sizes::none,
                 directive_type_t::block,
@@ -1909,7 +1912,7 @@ namespace basecode::vm {
             }
         },
         {
-            "RESET",
+            "RESET"sv,
             directive_t{
                 op_sizes::none,
                 directive_type_t::reset,
@@ -1919,7 +1922,7 @@ namespace basecode::vm {
             }
         },
         {
-            "ILOCAL",
+            "ILOCAL"sv,
             directive_t{
                 op_sizes::none,
                 directive_type_t::ilocal,
@@ -1929,7 +1932,7 @@ namespace basecode::vm {
             }
         },
         {
-            "FLOCAL",
+            "FLOCAL"sv,
             directive_t{
                 op_sizes::none,
                 directive_type_t::flocal,
@@ -1939,7 +1942,7 @@ namespace basecode::vm {
             }
         },
         {
-            "FRAME",
+            "FRAME"sv,
             directive_t{
                 op_sizes::none,
                 directive_type_t::frame_offset,
@@ -1950,7 +1953,7 @@ namespace basecode::vm {
             }
         },
         {
-            "PROGRAM_END",
+            "PROGRAM_END"sv,
             directive_t{
                 op_sizes::none,
                 directive_type_t::program_end,
@@ -1958,7 +1961,7 @@ namespace basecode::vm {
             }
         },
         {
-            "DB",
+            "DB"sv,
             directive_t{
                 op_sizes::byte,
                 directive_type_t::db,
@@ -1968,7 +1971,7 @@ namespace basecode::vm {
             }
         },
         {
-            "DW",
+            "DW"sv,
             directive_t{
                 op_sizes::word,
                 directive_type_t::dw,
@@ -1978,7 +1981,7 @@ namespace basecode::vm {
             }
         },
         {
-            "DD",
+            "DD"sv,
             directive_t{
                 op_sizes::dword,
                 directive_type_t::dd,
@@ -1988,7 +1991,7 @@ namespace basecode::vm {
             }
         },
         {
-            "DQ",
+            "DQ"sv,
             directive_t{
                 op_sizes::qword,
                 directive_type_t::dq,
@@ -1998,7 +2001,7 @@ namespace basecode::vm {
             }
         },
         {
-            "RB",
+            "RB"sv,
             directive_t{
                 op_sizes::byte,
                 directive_type_t::rb,
@@ -2008,7 +2011,7 @@ namespace basecode::vm {
             }
         },
         {
-            "RW",
+            "RW"sv,
             directive_t{
                 op_sizes::word,
                 directive_type_t::rw,
@@ -2018,7 +2021,7 @@ namespace basecode::vm {
             }
         },
         {
-            "RD",
+            "RD"sv,
             directive_t{
                 op_sizes::dword,
                 directive_type_t::rd,
@@ -2028,7 +2031,7 @@ namespace basecode::vm {
             }
         },
         {
-            "RQ",
+            "RQ"sv,
             directive_t{
                 op_sizes::qword,
                 directive_type_t::rq,
@@ -2040,7 +2043,7 @@ namespace basecode::vm {
 
     };
 
-    inline static directive_t* directive(const std::string& code) {
+    inline static directive_t* directive(const std::string_view& code) {
         const auto it = s_directives.find(code);
         if (it != s_directives.end()) {
             return &it->second;

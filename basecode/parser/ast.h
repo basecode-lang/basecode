@@ -18,10 +18,13 @@
 #include <string>
 #include <cerrno>
 #include <functional>
+#include <string_view>
 #include <common/id_pool.h>
 #include "token.h"
 
 namespace basecode::syntax {
+
+    using namespace std::literals;
 
     struct ast_node_t;
 
@@ -105,88 +108,88 @@ namespace basecode::syntax {
         assignment_target_list,
     };
 
-    static inline std::unordered_map<ast_node_type_t, std::string> s_node_type_names = {
-        {ast_node_type_t::pair, "pair"},
-        {ast_node_type_t::label, "label"},
-        {ast_node_type_t::module, "module"},
-        {ast_node_type_t::symbol,  "symbol"},
-        {ast_node_type_t::raw_block, "raw_block"},
-        {ast_node_type_t::type_list, "type_list"},
-        {ast_node_type_t::proc_call, "proc_call"},
-        {ast_node_type_t::statement, "statement"},
-        {ast_node_type_t::attribute, "attribute"},
-        {ast_node_type_t::directive, "directive"},
-        {ast_node_type_t::assignment, "assignment"},
-        {ast_node_type_t::expression, "expression"},
-        {ast_node_type_t::proc_types, "proc_types"},
-        {ast_node_type_t::basic_block, "basic_block"},
-        {ast_node_type_t::symbol_part, "symbol_part"},
-        {ast_node_type_t::nil_literal, "nil_literal"},
-        {ast_node_type_t::new_literal, "new_literal"},
-        {ast_node_type_t::line_comment, "line_comment"},
-        {ast_node_type_t::tuple_literal, "tuple_literal"},
-        {ast_node_type_t::block_comment, "block_comment"},
-        {ast_node_type_t::argument_list, "argument_list"},
-        {ast_node_type_t::if_expression, "if_expression"},
-        {ast_node_type_t::array_literal, "array_literal"},
-        {ast_node_type_t::assignment_set, "assignment_set"},
-        {ast_node_type_t::type_parameter, "type_parameter"},
-        {ast_node_type_t::parameter_list, "parameter_list"},
-        {ast_node_type_t::statement_body, "statement_body"},
-        {ast_node_type_t::number_literal, "number_literal"},
-        {ast_node_type_t::string_literal, "string_literal"},
-        {ast_node_type_t::unary_operator, "unary_operator"},
-        {ast_node_type_t::cast_expression, "cast_expression"},
-        {ast_node_type_t::spread_operator, "spread_operator"},
-        {ast_node_type_t::from_expression, "from_expression"},
-        {ast_node_type_t::proc_expression, "proc_expression"},
-        {ast_node_type_t::enum_expression, "enum_expression"},
-        {ast_node_type_t::binary_operator, "binary_operator"},
-        {ast_node_type_t::boolean_literal, "boolean_literal"},
-        {ast_node_type_t::else_expression, "else_expression"},
-        {ast_node_type_t::while_statement, "while_statement"},
-        {ast_node_type_t::break_statement, "break_statement"},
-        {ast_node_type_t::with_expression, "with_expression"},
-        {ast_node_type_t::case_expression, "case_expression"},
-        {ast_node_type_t::yield_expression, "yield_expression"},
-        {ast_node_type_t::type_declaration, "type_declaration"},
-        {ast_node_type_t::defer_expression, "defer_expression"},
-        {ast_node_type_t::union_expression, "union_expression"},
-        {ast_node_type_t::return_statement, "return_statement"},
-        {ast_node_type_t::symbol_reference, "symbol_reference"},
-        {ast_node_type_t::for_in_statement, "for_in_statement"},
-        {ast_node_type_t::switch_expression, "switch_statement"},
-        {ast_node_type_t::family_expression, "family_expression"},
-        {ast_node_type_t::lambda_expression, "lambda_expression"},
-        {ast_node_type_t::import_expression, "import_expression"},
-        {ast_node_type_t::struct_expression, "struct_expression"},
-        {ast_node_type_t::character_literal, "character_literal"},
-        {ast_node_type_t::module_expression, "module_expression"},
-        {ast_node_type_t::proc_call_binding, "proc_call_binding"},
-        {ast_node_type_t::elseif_expression, "elseif_expression"},
-        {ast_node_type_t::with_member_access, "with_member_access"},
-        {ast_node_type_t::subscript_operator, "subscript_operator"},
-        {ast_node_type_t::continue_statement, "continue_statement"},
-        {ast_node_type_t::value_sink_literal, "value_sink_literal"},
-        {ast_node_type_t::type_tagged_symbol, "type_tagged_symbol"},
-        {ast_node_type_t::pointer_declaration, "pointer_declaration"},
-        {ast_node_type_t::type_parameter_list, "type_parameter_list"},
-        {ast_node_type_t::constant_assignment, "constant_assignment"},
-        {ast_node_type_t::transmute_expression, "transmute_expression"},
-        {ast_node_type_t::namespace_expression, "namespace_expression"},
-        {ast_node_type_t::return_argument_list, "return_argument_list"},
-        {ast_node_type_t::array_subscript_list, "array_subscript_list"},
-        {ast_node_type_t::uninitialized_literal, "uninitialized_literal"},
-        {ast_node_type_t::fallthrough_statement, "fallthrough_statement"},
-        {ast_node_type_t::subscript_declaration, "subscript_declaration"},
-        {ast_node_type_t::assignment_source_list, "assignment_source_list"},
-        {ast_node_type_t::assignment_target_list, "assignment_target_list"},
+    static inline std::unordered_map<ast_node_type_t, std::string_view> s_node_type_names = {
+        {ast_node_type_t::pair, "pair"sv},
+        {ast_node_type_t::label, "label"sv},
+        {ast_node_type_t::module, "module"sv},
+        {ast_node_type_t::symbol,  "symbol"sv},
+        {ast_node_type_t::raw_block, "raw_block"sv},
+        {ast_node_type_t::type_list, "type_list"sv},
+        {ast_node_type_t::proc_call, "proc_call"sv},
+        {ast_node_type_t::statement, "statement"sv},
+        {ast_node_type_t::attribute, "attribute"sv},
+        {ast_node_type_t::directive, "directive"sv},
+        {ast_node_type_t::assignment, "assignment"sv},
+        {ast_node_type_t::expression, "expression"sv},
+        {ast_node_type_t::proc_types, "proc_types"sv},
+        {ast_node_type_t::basic_block, "basic_block"sv},
+        {ast_node_type_t::symbol_part, "symbol_part"sv},
+        {ast_node_type_t::nil_literal, "nil_literal"sv},
+        {ast_node_type_t::new_literal, "new_literal"sv},
+        {ast_node_type_t::line_comment, "line_comment"sv},
+        {ast_node_type_t::tuple_literal, "tuple_literal"sv},
+        {ast_node_type_t::block_comment, "block_comment"sv},
+        {ast_node_type_t::argument_list, "argument_list"sv},
+        {ast_node_type_t::if_expression, "if_expression"sv},
+        {ast_node_type_t::array_literal, "array_literal"sv},
+        {ast_node_type_t::assignment_set, "assignment_set"sv},
+        {ast_node_type_t::type_parameter, "type_parameter"sv},
+        {ast_node_type_t::parameter_list, "parameter_list"sv},
+        {ast_node_type_t::statement_body, "statement_body"sv},
+        {ast_node_type_t::number_literal, "number_literal"sv},
+        {ast_node_type_t::string_literal, "string_literal"sv},
+        {ast_node_type_t::unary_operator, "unary_operator"sv},
+        {ast_node_type_t::cast_expression, "cast_expression"sv},
+        {ast_node_type_t::spread_operator, "spread_operator"sv},
+        {ast_node_type_t::from_expression, "from_expression"sv},
+        {ast_node_type_t::proc_expression, "proc_expression"sv},
+        {ast_node_type_t::enum_expression, "enum_expression"sv},
+        {ast_node_type_t::binary_operator, "binary_operator"sv},
+        {ast_node_type_t::boolean_literal, "boolean_literal"sv},
+        {ast_node_type_t::else_expression, "else_expression"sv},
+        {ast_node_type_t::while_statement, "while_statement"sv},
+        {ast_node_type_t::break_statement, "break_statement"sv},
+        {ast_node_type_t::with_expression, "with_expression"sv},
+        {ast_node_type_t::case_expression, "case_expression"sv},
+        {ast_node_type_t::yield_expression, "yield_expression"sv},
+        {ast_node_type_t::type_declaration, "type_declaration"sv},
+        {ast_node_type_t::defer_expression, "defer_expression"sv},
+        {ast_node_type_t::union_expression, "union_expression"sv},
+        {ast_node_type_t::return_statement, "return_statement"sv},
+        {ast_node_type_t::symbol_reference, "symbol_reference"sv},
+        {ast_node_type_t::for_in_statement, "for_in_statement"sv},
+        {ast_node_type_t::switch_expression, "switch_statement"sv},
+        {ast_node_type_t::family_expression, "family_expression"sv},
+        {ast_node_type_t::lambda_expression, "lambda_expression"sv},
+        {ast_node_type_t::import_expression, "import_expression"sv},
+        {ast_node_type_t::struct_expression, "struct_expression"sv},
+        {ast_node_type_t::character_literal, "character_literal"sv},
+        {ast_node_type_t::module_expression, "module_expression"sv},
+        {ast_node_type_t::proc_call_binding, "proc_call_binding"sv},
+        {ast_node_type_t::elseif_expression, "elseif_expression"sv},
+        {ast_node_type_t::with_member_access, "with_member_access"sv},
+        {ast_node_type_t::subscript_operator, "subscript_operator"sv},
+        {ast_node_type_t::continue_statement, "continue_statement"sv},
+        {ast_node_type_t::value_sink_literal, "value_sink_literal"sv},
+        {ast_node_type_t::type_tagged_symbol, "type_tagged_symbol"sv},
+        {ast_node_type_t::pointer_declaration, "pointer_declaration"sv},
+        {ast_node_type_t::type_parameter_list, "type_parameter_list"sv},
+        {ast_node_type_t::constant_assignment, "constant_assignment"sv},
+        {ast_node_type_t::transmute_expression, "transmute_expression"sv},
+        {ast_node_type_t::namespace_expression, "namespace_expression"sv},
+        {ast_node_type_t::return_argument_list, "return_argument_list"sv},
+        {ast_node_type_t::array_subscript_list, "array_subscript_list"sv},
+        {ast_node_type_t::uninitialized_literal, "uninitialized_literal"sv},
+        {ast_node_type_t::fallthrough_statement, "fallthrough_statement"sv},
+        {ast_node_type_t::subscript_declaration, "subscript_declaration"sv},
+        {ast_node_type_t::assignment_source_list, "assignment_source_list"sv},
+        {ast_node_type_t::assignment_target_list, "assignment_target_list"sv},
     };
 
-    static inline std::string ast_node_type_name(ast_node_type_t type) {
+    static inline std::string_view ast_node_type_name(ast_node_type_t type) {
         auto it = s_node_type_names.find(type);
         if (it == s_node_type_names.end())
-            return "unknown";
+            return "unknown"sv;
         return it->second;
     }
 
@@ -195,7 +198,7 @@ namespace basecode::syntax {
             return type == ast_node_type_t::label;
         }
 
-        std::string name() const {
+        std::string_view name() const {
             return ast_node_type_name(type);
         }
 

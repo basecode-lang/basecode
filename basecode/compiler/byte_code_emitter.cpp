@@ -1300,7 +1300,7 @@ namespace basecode::compiler {
                         auto raw_block = dynamic_cast<compiler::raw_block*>(expr);
 
                         common::source_file source_file;
-                        if (!source_file.load(_session.result(), raw_block->value() + "\n"))
+                        if (!source_file.load(_session.result(), std::string(raw_block->value()) + "\n"))
                             return false;
 
                         auto success = assembler.assemble_from_source(

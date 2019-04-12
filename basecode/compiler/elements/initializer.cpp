@@ -41,15 +41,21 @@ namespace basecode::compiler {
                 break;
             }
             case element_type_t::float_literal: {
+                auto float_literal = dynamic_cast<compiler::float_literal*>(_expr);
                 result.element = builder.make_float(
                     _expr->parent_scope(),
-                    dynamic_cast<compiler::float_literal*>(_expr)->value());
+                    float_literal->value(),
+                    result.type_ref);
+                result.element->location(float_literal->location());
                 break;
             }
             case element_type_t::integer_literal: {
+                auto integer_literal = dynamic_cast<compiler::integer_literal*>(_expr);
                 result.element = builder.make_integer(
                     _expr->parent_scope(),
-                    dynamic_cast<compiler::integer_literal*>(_expr)->value());
+                    integer_literal->value(),
+                    result.type_ref);
+                result.element->location(integer_literal->location());
                 break;
             }
             default: {

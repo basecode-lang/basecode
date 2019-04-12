@@ -8,7 +8,7 @@ core :: module("core");
     y: u32;
 
     @no_fold;
-    y := 2 ** 4;
+    y := cast<u32>(2 ** 4);
 
     core::print("y := %d\n", y);
 
@@ -18,4 +18,6 @@ core :: module("core");
 
     @no_fold;
     z := 2.0 ** 4.0;
+
+    core::print("z := %f\n", z);
 };

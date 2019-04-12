@@ -115,6 +115,7 @@ namespace basecode::compiler {
                             u32_type->symbol()->qualified_symbol(),
                             u32_type,
                             true));
+                    result.element->location(location());
                 }
 
                 break;
@@ -129,6 +130,7 @@ namespace basecode::compiler {
                         u32_type->symbol()->qualified_symbol(),
                         u32_type,
                         true));
+                result.element->location(location());
                 break;
             }
             case element_type_t::string_literal: {
@@ -141,6 +143,7 @@ namespace basecode::compiler {
                         u32_type->symbol()->qualified_symbol(),
                         u32_type,
                         true));
+                result.element->location(location());
                 break;
             }
             case element_type_t::identifier_reference: {

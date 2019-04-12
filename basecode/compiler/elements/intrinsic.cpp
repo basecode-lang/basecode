@@ -165,7 +165,7 @@ namespace basecode::compiler {
     };
 
     bool intrinsic::register_intrinsic_procedure_type(
-            const std::string& name,
+            const std::string_view& name,
             compiler::procedure_type* procedure_type) {
         auto type = intrinsic_type_from_name(name);
         if (type == intrinsic_type_t::unknown)

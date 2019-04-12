@@ -19,7 +19,7 @@
 namespace basecode::compiler {
 
     bool string_literal::escape(
-            const std::string& value,
+            const std::string_view& value,
             std::string& result) {
         auto read_hex_digits = [&](
                 size_t index,
@@ -173,8 +173,8 @@ namespace basecode::compiler {
     string_literal::string_literal(
             compiler::module* module,
             block* parent_scope,
-            const std::string& value) : element(module, parent_scope, element_type_t::string_literal),
-                                        _value(value) {
+            const std::string_view& value) : element(module, parent_scope, element_type_t::string_literal),
+                                             _value(value) {
     }
 
     bool string_literal::on_infer_type(
@@ -197,12 +197,12 @@ namespace basecode::compiler {
         return true;
     }
 
-    std::string string_literal::value() const {
-        return _value;
-    }
-
     bool string_literal::on_is_constant() const {
         return true;
+    }
+
+    std::string_view string_literal::value() const {
+        return _value;
     }
 
     bool string_literal::on_as_string(std::string& value) const {

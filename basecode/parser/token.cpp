@@ -9,6 +9,7 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <common/string_support.h>
 #include "token.h"
 
 namespace basecode::syntax {
@@ -34,10 +35,10 @@ namespace basecode::syntax {
         return !value.empty() && value[0] == '-';
     }
 
-    std::string token_t::name() const {
+    std::string_view token_t::name() const {
         auto it = s_type_to_name.find(type);
         if (it == s_type_to_name.end())
-            return "unknown";
+            return "unknown"sv;
         return it->second;
     }
 
@@ -50,7 +51,7 @@ namespace basecode::syntax {
     }
 
     conversion_result_t token_t::parse(double& out) const {
-        const char* s = value.c_str();
+        const char* s = common::remove_underscores(value).c_str();
         char* end;
         errno = 0;
         out = strtod(s, &end);
@@ -62,7 +63,7 @@ namespace basecode::syntax {
     }
 
     conversion_result_t token_t::parse(int64_t& out) const {
-        const char* s = value.c_str();
+        const char* s = common::remove_underscores(value).c_str();
         char* end;
         errno = 0;
         out = strtoll(s, &end, radix);
@@ -82,11 +83,11 @@ namespace basecode::syntax {
         const char* s = nullptr;
         std::string without_negative;
         if (value[0] == '-') {
-            without_negative = value.substr(1);
+            without_negative = common::remove_underscores(value.substr(1));
             s = without_negative.c_str();
         }
         else
-            s = value.c_str();
+            s = common::remove_underscores(value).c_str();
         char* end;
         errno = 0;
         out = strtoull(s, &end, radix);

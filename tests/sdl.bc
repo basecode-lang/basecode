@@ -1017,21 +1017,21 @@ SDL :: ns {
         refcount:   s32;
     };
 
-    INIT_TIMER          :: $00000001;
-    INIT_AUDIO          :: $00000010;
-    INIT_VIDEO          :: $00000020;
-    INIT_JOYSTICK       :: $00000200;
-    INIT_HAPTIC         :: $00001000;
-    INIT_GAMECONTROLLER :: $00002000;
-    INIT_EVENTS         :: $00004000;
-    INIT_NOPARACHUTE    :: $00100000;
-    INIT_EVERYTHING     :: INIT_TIMER
-                           | INIT_AUDIO
-                           | INIT_VIDEO
-                           | INIT_EVENTS
-                           | INIT_JOYSTICK
-                           | INIT_HAPTIC
-                           | INIT_GAMECONTROLLER;
+    INIT_TIMER:          u32 :: $00000001;
+    INIT_AUDIO:          u32 :: $00000010;
+    INIT_VIDEO:          u32 :: $00000020;
+    INIT_JOYSTICK:       u32 :: $00000200;
+    INIT_HAPTIC:         u32 :: $00001000;
+    INIT_GAMECONTROLLER: u32 :: $00002000;
+    INIT_EVENTS:         u32 :: $00004000;
+    INIT_NOPARACHUTE:    u32 :: $00100000;
+    INIT_EVERYTHING:     u32 :: INIT_TIMER
+                                   | INIT_AUDIO
+                                   | INIT_VIDEO
+                                   | INIT_EVENTS
+                                   | INIT_JOYSTICK
+                                   | INIT_HAPTIC
+                                   | INIT_GAMECONTROLLER;
 
     WINDOWPOS_UNDEFINED_MASK :: $1FFF0000;
     WINDOWPOS_UNDEFINED      :: WINDOWPOS_UNDEFINED_MASK;
@@ -1039,27 +1039,27 @@ SDL :: ns {
     WINDOWPOS_CENTERED_MASK  :: $2FFF0000;
     WINDOWPOS_CENTERED       :: WINDOWPOS_CENTERED_MASK;
 
-    FULLSCREEN         :: $00000001;
-    OPENGL             :: $00000002;
-    SHOWN              :: $00000004;
-    HIDDEN             :: $00000008;
-    BORDERLESS         :: $00000010;
-    RESIZABLE          :: $00000020;
-    MINIMIZED          :: $00000040;
-    MAXIMIZED          :: $00000080;
-    INPUT_GRABBED      :: $00000100;
-    INPUT_FOCUS        :: $00000200;
-    MOUSE_FOCUS        :: $00000400;
-    FULLSCREEN_DESKTOP :: FULLSCREEN | $00001000;
-    FOREIGN            :: $00000800;
-    ALLOW_HIGHDPI      :: $00002000;
-    MOUSE_CAPTURE      :: $00004000;
-    ALWAYS_ON_TOP      :: $00008000;
-    SKIP_TASKBAR       :: $00010000;
-    UTILITY            :: $00020000;
-    TOOLTIP            :: $00040000;
-    POPUP_MENU         :: $00080000;
-    VULKAN             :: $10000000;
+    FULLSCREEN:         u32  :: $00000001;
+    OPENGL:             u32  :: $00000002;
+    SHOWN:              u32  :: $00000004;
+    HIDDEN:             u32  :: $00000008;
+    BORDERLESS:         u32  :: $00000010;
+    RESIZABLE:          u32  :: $00000020;
+    MINIMIZED:          u32  :: $00000040;
+    MAXIMIZED:          u32  :: $00000080;
+    INPUT_GRABBED:      u32  :: $00000100;
+    INPUT_FOCUS:        u32  :: $00000200;
+    MOUSE_FOCUS:        u32  :: $00000400;
+    FULLSCREEN_DESKTOP: u32  :: FULLSCREEN | $00001000;
+    FOREIGN:            u32  :: $00000800;
+    ALLOW_HIGHDPI:      u32  :: $00002000;
+    MOUSE_CAPTURE:      u32  :: $00004000;
+    ALWAYS_ON_TOP:      u32  :: $00008000;
+    SKIP_TASKBAR:       u32  :: $00010000;
+    UTILITY:            u32  :: $00020000;
+    TOOLTIP:            u32  :: $00040000;
+    POPUP_MENU:         u32  :: $00080000;
+    VULKAN:             u32  :: $10000000;
 
     @library "SDL2";
     #foreign {
@@ -1086,8 +1086,8 @@ SDL :: ns {
         "Test Window", 
         SDL::WINDOWPOS_CENTERED,
         SDL::WINDOWPOS_CENTERED,
-        1280, 
-        1024, 
+        cast<s32>(1280),
+        cast<s32>(1024),
         SDL::SHOWN);
     core::assert(window != nil, "window not initialized!");
 
@@ -1101,7 +1101,7 @@ SDL :: ns {
     running := true;
     in_window := false;
 
-    delta: s8 := -1;
+    delta: s8 := cast<s8>(-1);
 
     color: SDL::Color;
     with color {

@@ -92,7 +92,7 @@ namespace basecode::compiler {
 
         label* make_label(
             compiler::block* parent_scope,
-            const std::string& name);
+            const std::string_view& name);
 
         if_element* make_if(
             compiler::block* parent_scope,
@@ -118,12 +118,12 @@ namespace basecode::compiler {
 
         raw_block* make_raw_block(
             compiler::block* parent_scope,
-            const std::string& value);
+            const std::string_view& value);
 
         comment* make_comment(
             compiler::block* parent_scope,
             comment_type_t type,
-            const std::string& value);
+            const std::string_view& value);
 
         statement* make_statement(
             compiler::block* parent_scope,
@@ -132,7 +132,7 @@ namespace basecode::compiler {
 
         attribute* make_attribute(
             compiler::block* parent_scope,
-            const std::string& name,
+            const std::string_view& name,
             element* expr);
 
         float_literal* make_float(
@@ -147,7 +147,7 @@ namespace basecode::compiler {
 
         string_literal* make_string(
             compiler::block* parent_scope,
-            const std::string& value);
+            const std::string_view& value);
 
         character_literal* make_character(
             compiler::block* parent_scope,
@@ -246,7 +246,7 @@ namespace basecode::compiler {
 
         compiler::directive* make_directive(
             compiler::block* parent_scope,
-            const std::string& name,
+            const std::string_view& name,
             const element_list_t& params);
 
         intrinsic* make_copy_intrinsic(

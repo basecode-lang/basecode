@@ -49,6 +49,7 @@ namespace basecode::compiler {
                 result.element = builder.make_integer(
                     scope_manager.current_scope(),
                     value);
+                result.element->location(location());
                 return true;
             }
         } else if (inferred.type->number_class() == number_class_t::floating_point) {
@@ -57,6 +58,7 @@ namespace basecode::compiler {
                 result.element = builder.make_float(
                     scope_manager.current_scope(),
                     float_value);
+                result.element->location(location());
                 return true;
             }
         }
@@ -66,6 +68,7 @@ namespace basecode::compiler {
             result.element = bool_value ?
                              builder.true_literal() :
                              builder.false_literal();
+            result.element->location(location());
             return true;
         }
 

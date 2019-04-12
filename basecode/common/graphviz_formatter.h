@@ -17,8 +17,8 @@ namespace basecode::common {
 
     class graphviz_formatter {
     public:
-        static std::string escape_chars(const std::string& value);
+        static std::string escape_chars(const std::string_view& value);
     };
 
-};
+}
 

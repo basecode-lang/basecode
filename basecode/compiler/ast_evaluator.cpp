@@ -474,13 +474,22 @@ namespace basecode::compiler {
             if (expr_node == nullptr)
                 continue;
 
-            if (is_enum && value > value_type->max()) {
-                _session.error(
-                    scope_manager.current_module(),
-                    "X000",
-                    fmt::format("enum field value exceeds range, type: {}.", value_type_name),
-                    expr_node->location);
-                return false;
+            if (is_enum) {
+                bool out_of_range = false;
+                if (value_type->is_signed()) {
+                    // XXX: fix!
+                    //out_of_range = static_cast<int64_t>(value) > value_type->max();
+                } else {
+                    out_of_range = value > value_type->max();
+                }
+                if (out_of_range) {
+                    _session.error(
+                        scope_manager.current_module(),
+                        "X000",
+                        fmt::format("enum field value exceeds range, type: {}.", value_type_name),
+                        expr_node->location);
+                    return false;
+                }
             }
 
             uint64_t offset = 0;
@@ -983,7 +992,7 @@ namespace basecode::compiler {
         if (context.node->lhs != nullptr) {
             label = builder.make_label_reference(
                 scope_manager.current_scope(),
-                context.node->lhs->token.value);
+                std::string(context.node->lhs->token.value));
         }
 
         result.element = builder.make_break(
@@ -1002,7 +1011,7 @@ namespace basecode::compiler {
         if (context.node->lhs != nullptr) {
             label = builder.make_label_reference(
                 scope_manager.current_scope(),
-                context.node->lhs->token.value);
+                std::string(context.node->lhs->token.value));
         }
 
         result.element = builder.make_continue(

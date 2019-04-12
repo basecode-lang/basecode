@@ -13,7 +13,7 @@
 
 namespace basecode::common {
 
-    std::string graphviz_formatter::escape_chars(const std::string& value) {
+    std::string graphviz_formatter::escape_chars(const std::string_view& value) {
         std::string buffer;
         for (const auto& c : value) {
             if (c == '\"') {
@@ -39,4 +39,4 @@ namespace basecode::common {
         return buffer;
     }
 
-};
+}

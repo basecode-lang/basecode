@@ -21,15 +21,15 @@ namespace basecode::compiler {
             compiler::module* module,
             block* parent_scope,
             comment_type_t type,
-            const std::string& value);
-
-        std::string value() const;
+            const std::string_view& value);
 
         comment_type_t type() const;
 
+        std::string_view value() const;
+
     private:
-        std::string _value;
         comment_type_t _type;
+        std::string_view _value;
     };
 
 }

@@ -219,18 +219,18 @@ namespace basecode::syntax {
         bool read_dec_digits(
             common::result& r,
             size_t length,
-            std::string& value);
+            std::string_view& value);
 
         bool read_hex_digits(
             common::result& r,
             size_t length,
-            std::string& value);
-
-        std::string read_until(
-            common::result& r,
-            char target_ch);
+            std::string_view& value);
 
         void rewind_one_char();
+
+        std::string_view read_until(
+            common::result& r,
+            char target_ch);
 
         void add_end_of_file_token();
 
@@ -238,7 +238,7 @@ namespace basecode::syntax {
 
         common::rune_t peek(common::result& r);
 
-        std::string read_identifier(common::result& r);
+        std::string_view read_identifier(common::result& r);
 
         bool naked_identifier(common::result& r, bool add_token = true);
 

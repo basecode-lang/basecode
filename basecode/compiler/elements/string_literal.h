@@ -18,15 +18,15 @@ namespace basecode::compiler {
     class string_literal : public element {
     public:
         static bool escape(
-            const std::string& value,
+            const std::string_view& value,
             std::string& result);
 
         string_literal(
             compiler::module* module,
             block* parent_scope,
-            const std::string& value);
+            const std::string_view& value);
 
-        std::string value() const;
+        std::string_view value() const;
 
     protected:
         bool on_infer_type(
@@ -38,7 +38,7 @@ namespace basecode::compiler {
         bool on_as_string(std::string& value) const override;
 
     private:
-        std::string _value;
+        std::string_view _value;
     };
 
 }

@@ -137,6 +137,13 @@ namespace basecode::common {
         return stream.str();
     }
 
+    std::string remove_underscores(const std::string_view& value) {
+        std::stringstream stream {};
+        for (const auto& c : value)
+            if (c != '_') stream << c;
+        return stream.str();
+    }
+
     std::pair<std::string, std::string> size_to_units(size_t size) {
         auto i = 0;
         const char* units[] = {"bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"};

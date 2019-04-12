@@ -58,6 +58,7 @@ namespace basecode::compiler {
                     u32_type->symbol()->qualified_symbol(),
                     u32_type,
                     true));
+            result.element->location(location());
             return true;
         }
         return false;

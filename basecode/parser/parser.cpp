@@ -252,8 +252,8 @@ namespace basecode::syntax {
             return nullptr;
         }
 
-        auto source_list = parser->ast_builder()->assignment_source_list_node();
-        auto target_list = parser->ast_builder()->assignment_target_list_node();
+        //auto source_list = parser->ast_builder()->assignment_source_list_node();
+        //auto target_list = parser->ast_builder()->assignment_target_list_node();
 
         pairs_to_list(assignment_node->lhs, lhs);
 
@@ -1597,7 +1597,7 @@ namespace basecode::syntax {
         if (!look_ahead(0))
             return false;
 
-        std::string expected_name = token.name();
+        auto expected_name = token.name();
         auto expected_type = token.type;
         token = _tokens.front();
         if (token.type != expected_type) {
