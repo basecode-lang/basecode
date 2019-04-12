@@ -24,7 +24,7 @@ namespace basecode::syntax {
 
     class lexer {
     public:
-        using lexer_case_callable = std::function<bool (lexer*, token_t&)>;
+        using lexer_case_callable = std::function<bool (lexer*, common::result&)>;
 
         explicit lexer(common::source_file* source_file);
 
@@ -32,210 +32,225 @@ namespace basecode::syntax {
 
         bool next(token_t& token);
 
-        const common::result& result() const;
+        bool tokenize(common::result& r);
 
     private:
-        bool plus(token_t& token);
+        bool plus(common::result& r);
 
-        bool bang(token_t& token);
+        bool bang(common::result& r);
 
-        bool minus(token_t& token);
+        bool minus(common::result& r);
 
-        bool comma(token_t& token);
+        bool comma(common::result& r);
 
-        bool slash(token_t& token);
+        bool slash(common::result& r);
 
-        bool caret(token_t& token);
+        bool caret(common::result& r);
 
-        bool tilde(token_t& token);
+        bool tilde(common::result& r);
 
-        bool colon(token_t& token);
+        bool colon(common::result& r);
 
-        bool label(token_t& token);
+        bool label(common::result& r);
 
-        bool period(token_t& token);
+        bool period(common::result& r);
 
-        bool spread(token_t& token);
+        bool spread(common::result& r);
 
-        bool percent(token_t& token);
+        bool percent(common::result& r);
 
-        bool asterisk(token_t& token);
+        bool asterisk(common::result& r);
 
-        bool question(token_t& token);
+        bool question(common::result& r);
 
-        bool exponent(token_t& token);
+        bool exponent(common::result& r);
 
-        bool attribute(token_t& token);
+        bool attribute(common::result& r);
 
-        bool directive(token_t& token);
+        bool directive(common::result& r);
 
-        bool raw_block(token_t& token);
+        bool raw_block(common::result& r);
 
-        bool in_literal(token_t& token);
+        bool in_literal(common::result& r);
 
-        bool if_literal(token_t& token);
+        bool if_literal(common::result& r);
 
-        bool left_paren(token_t& token);
+        bool left_paren(common::result& r);
 
-        bool identifier(token_t& token);
+        bool identifier(common::result& r);
 
-        bool assignment(token_t& token);
+        bool assignment(common::result& r);
 
-        bool ns_literal(token_t& token);
+        bool ns_literal(common::result& r);
 
-        bool xor_literal(token_t& token);
+        bool xor_literal(common::result& r);
 
-        bool shl_literal(token_t& token);
+        bool shl_literal(common::result& r);
 
-        bool shr_literal(token_t& token);
+        bool shr_literal(common::result& r);
 
-        bool rol_literal(token_t& token);
+        bool rol_literal(common::result& r);
 
-        bool ror_literal(token_t& token);
+        bool ror_literal(common::result& r);
 
-        bool for_literal(token_t& token);
+        bool for_literal(common::result& r);
 
-        bool right_paren(token_t& token);
+        bool right_paren(common::result& r);
 
-        bool nil_literal(token_t& token);
+        bool nil_literal(common::result& r);
 
-        bool case_literal(token_t& token);
+        bool case_literal(common::result& r);
 
-        bool proc_literal(token_t& token);
+        bool proc_literal(common::result& r);
 
-        bool enum_literal(token_t& token);
+        bool enum_literal(common::result& r);
 
-        bool else_literal(token_t& token);
+        bool else_literal(common::result& r);
 
-        bool line_comment(token_t& token);
+        bool line_comment(common::result& r);
 
-        bool pipe_literal(token_t& token);
+        bool pipe_literal(common::result& r);
 
-        bool true_literal(token_t& token);
+        bool true_literal(common::result& r);
 
-        bool with_literal(token_t& token);
+        bool with_literal(common::result& r);
 
-        bool from_literal(token_t& token);
+        bool from_literal(common::result& r);
 
-        bool block_comment(token_t& token);
+        bool block_comment(common::result& r);
 
-        bool false_literal(token_t& token);
+        bool false_literal(common::result& r);
 
-        bool defer_literal(token_t& token);
+        bool defer_literal(common::result& r);
 
-        bool break_literal(token_t& token);
+        bool break_literal(common::result& r);
 
-        bool while_literal(token_t& token);
+        bool while_literal(common::result& r);
 
-        bool union_literal(token_t& token);
+        bool union_literal(common::result& r);
 
-        bool yield_literal(token_t& token);
+        bool yield_literal(common::result& r);
 
-        bool module_literal(token_t& token);
+        bool module_literal(common::result& r);
 
-        bool struct_literal(token_t& token);
+        bool struct_literal(common::result& r);
 
-        bool return_literal(token_t& token);
+        bool return_literal(common::result& r);
 
-        bool number_literal(token_t& token);
+        bool number_literal(common::result& r);
 
-        bool scope_operator(token_t& token);
+        bool scope_operator(common::result& r);
 
-        bool string_literal(token_t& token);
+        bool string_literal(common::result& r);
 
-        bool import_literal(token_t& token);
+        bool import_literal(common::result& r);
 
-        bool lambda_literal(token_t& token);
+        bool lambda_literal(common::result& r);
 
-        bool switch_literal(token_t& token);
+        bool switch_literal(common::result& r);
 
-        bool line_terminator(token_t& token);
+        bool line_terminator(common::result& r);
 
-        bool equals_operator(token_t& token);
+        bool equals_operator(common::result& r);
 
-        bool else_if_literal(token_t& token);
+        bool else_if_literal(common::result& r);
 
-        bool naked_identifier(token_t& token);
+        bool left_curly_brace(common::result& r);
 
-        bool left_curly_brace(token_t& token);
+        bool continue_literal(common::result& r);
 
-        bool continue_literal(token_t& token);
+        bool right_curly_brace(common::result& r);
 
-        bool right_curly_brace(token_t& token);
+        bool ampersand_literal(common::result& r);
 
-        bool ampersand_literal(token_t& token);
+        bool character_literal(common::result& r);
 
-        bool character_literal(token_t& token);
+        bool value_sink_literal(common::result& r);
 
-        bool value_sink_literal(token_t& token);
+        bool less_than_operator(common::result& r);
 
-        bool less_than_operator(token_t& token);
+        bool fallthrough_literal(common::result& r);
 
-        bool fallthrough_literal(token_t& token);
+        bool not_equals_operator(common::result& r);
 
-        bool not_equals_operator(token_t& token);
+        bool left_square_bracket(common::result& r);
 
-        bool left_square_bracket(token_t& token);
+        bool logical_or_operator(common::result& r);
 
-        bool logical_or_operator(token_t& token);
+        bool constant_assignment(common::result& r);
 
-        bool constant_assignment(token_t& token);
+        bool plus_equal_operator(common::result& r);
 
-        bool plus_equal_operator(token_t& token);
+        bool logical_and_operator(common::result& r);
 
-        bool logical_and_operator(token_t& token);
+        bool right_square_bracket(common::result& r);
 
-        bool right_square_bracket(token_t& token);
+        bool minus_equal_operator(common::result& r);
 
-        bool minus_equal_operator(token_t& token);
+        bool divide_equal_operator(common::result& r);
 
-        bool divide_equal_operator(token_t& token);
+        bool greater_than_operator(common::result& r);
 
-        bool greater_than_operator(token_t& token);
+        bool control_flow_operator(common::result& r);
 
-        bool control_flow_operator(token_t& token);
+        bool modulus_equal_operator(common::result& r);
 
-        bool modulus_equal_operator(token_t& token);
+        bool multiply_equal_operator(common::result& r);
 
-        bool type_tagged_identifier(token_t& token);
+        bool less_than_equal_operator(common::result& r);
 
-        bool multiply_equal_operator(token_t& token);
+        bool binary_or_equal_operator(common::result& r);
 
-        bool less_than_equal_operator(token_t& token);
+        bool binary_not_equal_operator(common::result& r);
 
-        bool binary_or_equal_operator(token_t& token);
+        bool binary_and_equal_operator(common::result& r);
 
-        bool binary_not_equal_operator(token_t& token);
-
-        bool binary_and_equal_operator(token_t& token);
-
-        bool greater_than_equal_operator(token_t& token);
+        bool greater_than_equal_operator(common::result& r);
 
     private:
-        common::rune_t peek();
+        bool match_literal(
+            common::result& r,
+            const std::string& literal);
+
+        common::rune_t read(
+            common::result& r,
+            bool skip_whitespace = true);
+
+        bool read_dec_digits(
+            common::result& r,
+            size_t length,
+            std::string& value);
+
+        bool read_hex_digits(
+            common::result& r,
+            size_t length,
+            std::string& value);
+
+        std::string read_until(
+            common::result& r,
+            char target_ch);
 
         void rewind_one_char();
 
-        std::string read_identifier();
+        void add_end_of_file_token();
 
-        std::string read_until(char target_ch);
+        bool is_identifier(common::result& r);
 
-        void set_token_location(token_t& token);
+        common::rune_t peek(common::result& r);
 
-        bool match_literal(const std::string& literal);
+        std::string read_identifier(common::result& r);
 
-        common::rune_t read(bool skip_whitespace = true);
+        bool naked_identifier(common::result& r, bool add_token = true);
 
-        bool read_dec_digits(size_t length, std::string& value);
-
-        bool read_hex_digits(size_t length, std::string& value);
+        bool type_tagged_identifier(common::result& r, bool add_token = true);
 
     private:
         static std::multimap<common::rune_t, lexer_case_callable> s_cases;
 
         bool _has_next = true;
+        size_t _token_index = 0;
         uint32_t _paren_depth = 0;
-        common::result _result {};
+        std::vector<token_t> _tokens {};
         common::source_file* _source_file = nullptr;
     };
 

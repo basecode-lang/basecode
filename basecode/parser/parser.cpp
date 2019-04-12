@@ -1586,6 +1586,9 @@ namespace basecode::syntax {
     }
 
     ast_node_t* parser::parse(common::result& r) {
+        if (!_lexer.tokenize(r))
+            return nullptr;
+
         token_t empty_token {};
         return parse_scope(r, empty_token);
     }
