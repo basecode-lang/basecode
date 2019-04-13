@@ -28,9 +28,9 @@ namespace basecode::syntax {
 
     struct ast_node_t;
 
-    using ast_node_list = std::vector<ast_node_t*>;
+    using ast_node_list_t = std::vector<ast_node_t*>;
 
-    enum class ast_node_type_t {
+    enum class ast_node_type_t : uint32_t {
         pair,
         label,
         symbol,
@@ -198,42 +198,45 @@ namespace basecode::syntax {
             return type == ast_node_type_t::label;
         }
 
-        std::string_view name() const {
-            return ast_node_type_name(type);
-        }
-
         bool is_attribute() const {
             return type == ast_node_type_t::attribute;
         }
 
+        std::string_view name() const {
+            return ast_node_type_name(type);
+        }
+
         bool operator != (const ast_node_t& other) const {
-            return token.value != other.token.value;
+            if (token == nullptr || other.token == nullptr)
+                return false;
+            return token->value != other.token->value;
         }
 
         bool operator == (const ast_node_t& other) const {
-            return token.value == other.token.value;
+            if (token == nullptr || other.token == nullptr)
+                return false;
+            return token->value == other.token->value;
         }
 
         bool has_attribute(const std::string_view& name) const {
             if (attributes.empty())
                 return false;
             for (auto attr : attributes)
-                if (attr->token.value == name)
+                if (attr->token != nullptr && attr->token->value == name)
                     return true;
             return false;
         }
 
-        token_t token;
         common::id_t id;
         bool ufcs = false;
         ast_node_type_t type;
-        ast_node_list children;
-        ast_node_list labels {};
+        ast_node_list_t children;
+        ast_node_list_t labels {};
         ast_node_t* lhs = nullptr;
         ast_node_t* rhs = nullptr;
-        ast_node_list comments {};
-        ast_node_list attributes {};
-        ast_node_t* parent = nullptr;
+        ast_node_list_t comments {};
+        ast_node_list_t attributes {};
+        const token_t* token = nullptr;
         common::source_location location {};
     };
 
@@ -311,7 +314,7 @@ namespace basecode::syntax {
 
         ast_node_t* binary_operator_node(
             ast_node_t* lhs,
-            const token_t& token,
+            const token_t* token,
             ast_node_t* rhs);
 
         ast_node_t* type_parameter_node();
@@ -348,95 +351,95 @@ namespace basecode::syntax {
 
         ast_node_t* assignment_target_list_node();
 
-        ast_node_t* if_node(const token_t& token);
+        ast_node_t* if_node(const token_t* token);
 
-        ast_node_t* case_node(const token_t& token);
+        ast_node_t* case_node(const token_t* token);
 
-        ast_node_t* else_node(const token_t& token);
+        ast_node_t* else_node(const token_t* token);
 
-        ast_node_t* from_node(const token_t& token);
+        ast_node_t* from_node(const token_t* token);
 
-        ast_node_t* with_node(const token_t& token);
+        ast_node_t* with_node(const token_t* token);
 
-        ast_node_t* enum_node(const token_t& token);
+        ast_node_t* enum_node(const token_t* token);
 
-        ast_node_t* cast_node(const token_t& token);
+        ast_node_t* cast_node(const token_t* token);
 
-        ast_node_t* while_node(const token_t& token);
+        ast_node_t* while_node(const token_t* token);
 
-        ast_node_t* label_node(const token_t& token);
+        ast_node_t* label_node(const token_t* token);
 
-        ast_node_t* break_node(const token_t& token);
+        ast_node_t* break_node(const token_t* token);
 
-        ast_node_t* union_node(const token_t& token);
+        ast_node_t* union_node(const token_t* token);
 
-        ast_node_t* defer_node(const token_t& token);
+        ast_node_t* defer_node(const token_t* token);
 
-        ast_node_t* yield_node(const token_t& token);
+        ast_node_t* yield_node(const token_t* token);
 
-        ast_node_t* family_node(const token_t& token);
+        ast_node_t* family_node(const token_t* token);
 
-        ast_node_t* switch_node(const token_t& token);
+        ast_node_t* switch_node(const token_t* token);
 
-        ast_node_t* struct_node(const token_t& token);
+        ast_node_t* struct_node(const token_t* token);
 
-        ast_node_t* import_node(const token_t& token);
+        ast_node_t* import_node(const token_t* token);
 
-        ast_node_t* return_node(const token_t& token);
+        ast_node_t* return_node(const token_t* token);
 
-        ast_node_t* for_in_node(const token_t& token);
+        ast_node_t* for_in_node(const token_t* token);
 
-        ast_node_t* else_if_node(const token_t& token);
+        ast_node_t* else_if_node(const token_t* token);
 
-        ast_node_t* continue_node(const token_t& token);
+        ast_node_t* continue_node(const token_t* token);
 
-        ast_node_t* directive_node(const token_t& token);
+        ast_node_t* directive_node(const token_t* token);
 
-        ast_node_t* attribute_node(const token_t& token);
+        ast_node_t* attribute_node(const token_t* token);
 
-        ast_node_t* namespace_node(const token_t& token);
+        ast_node_t* namespace_node(const token_t* token);
 
-        ast_node_t* raw_block_node(const token_t& token);
+        ast_node_t* raw_block_node(const token_t* token);
 
-        ast_node_t* transmute_node(const token_t& token);
+        ast_node_t* transmute_node(const token_t* token);
 
-        ast_node_t* fallthrough_node(const token_t& token);
+        ast_node_t* fallthrough_node(const token_t* token);
 
-        ast_node_t* symbol_part_node(const token_t& token);
+        ast_node_t* symbol_part_node(const token_t* token);
 
-        ast_node_t* new_literal_node(const token_t& token);
+        ast_node_t* new_literal_node(const token_t* token);
 
-        ast_node_t* nil_literal_node(const token_t& token);
+        ast_node_t* nil_literal_node(const token_t* token);
 
-        ast_node_t* line_comment_node(const token_t& token);
+        ast_node_t* line_comment_node(const token_t* token);
 
-        ast_node_t* block_comment_node(const token_t& token);
+        ast_node_t* block_comment_node(const token_t* token);
 
-        ast_node_t* array_literal_node(const token_t& token);
+        ast_node_t* array_literal_node(const token_t* token);
 
-        ast_node_t* tuple_literal_node(const token_t& token);
+        ast_node_t* tuple_literal_node(const token_t* token);
 
-        ast_node_t* number_literal_node(const token_t& token);
+        ast_node_t* number_literal_node(const token_t* token);
 
-        ast_node_t* string_literal_node(const token_t& token);
+        ast_node_t* string_literal_node(const token_t* token);
 
-        ast_node_t* unary_operator_node(const token_t& token);
+        ast_node_t* unary_operator_node(const token_t* token);
 
-        ast_node_t* boolean_literal_node(const token_t& token);
+        ast_node_t* boolean_literal_node(const token_t* token);
 
-        ast_node_t* spread_operator_node(const token_t& token);
+        ast_node_t* spread_operator_node(const token_t* token);
 
-        ast_node_t* proc_expression_node(const token_t& token);
+        ast_node_t* proc_expression_node(const token_t* token);
 
-        ast_node_t* lambda_expression_node(const token_t& token);
+        ast_node_t* lambda_expression_node(const token_t* token);
 
-        ast_node_t* character_literal_node(const token_t& token);
+        ast_node_t* character_literal_node(const token_t* token);
 
-        ast_node_t* module_expression_node(const token_t& token);
+        ast_node_t* module_expression_node(const token_t* token);
 
-        ast_node_t* value_sink_literal_node(const token_t& token);
+        ast_node_t* value_sink_literal_node(const token_t* token);
 
-        ast_node_t* uninitialized_literal_node(const token_t& token);
+        ast_node_t* uninitialized_literal_node(const token_t* token);
 
     private:
         ast_node_t* make_node(ast_node_type_t type, const token_t* token = nullptr);

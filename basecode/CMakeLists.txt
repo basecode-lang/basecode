@@ -103,6 +103,7 @@ add_library(
     parser/lexer.cpp parser/lexer.h
     parser/token.cpp parser/token.h
     parser/parser.cpp parser/parser.h
+    parser/token_pool.cpp parser/token_pool.h
     parser/ast_formatter.cpp parser/ast_formatter.h
 
     vm/ffi.cpp vm/ffi.h
@@ -146,6 +147,7 @@ add_library(
     compiler/elements/comment.cpp compiler/elements/comment.h
     compiler/elements/element.cpp compiler/elements/element.h
     compiler/elements/program.cpp compiler/elements/program.h
+    compiler/type_name_builder.cpp compiler/type_name_builder.h
     compiler/byte_code_emitter.cpp compiler/byte_code_emitter.h
     compiler/string_intern_map.cpp compiler/string_intern_map.h
     compiler/elements/rune_type.cpp compiler/elements/rune_type.h
@@ -226,7 +228,7 @@ add_library(
     compiler/elements/address_of_intrinsic.cpp compiler/elements/address_of_intrinsic.h
     compiler/elements/identifier_reference.cpp compiler/elements/identifier_reference.h
     compiler/elements/uninitialized_literal.cpp compiler/elements/uninitialized_literal.h
-    compiler/elements/assembly_literal_label.cpp compiler/elements/assembly_literal_label.h compiler/type_name_builder.cpp compiler/type_name_builder.h)
+    compiler/elements/assembly_literal_label.cpp compiler/elements/assembly_literal_label.h)
 target_link_libraries(
     ${PROJECT_NAME}
     fmt-header-only

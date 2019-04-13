@@ -10,6 +10,7 @@
 // ----------------------------------------------------------------------------
 
 #include <compiler/session.h>
+#include <parser/token_pool.h>
 #include "elements.h"
 #include "element_map.h"
 #include "scope_manager.h"
@@ -124,7 +125,7 @@ namespace basecode::compiler {
         for (auto attribute : node->attributes) {
             context.attributes.add(builder.make_attribute(
                 scope_manager.current_scope(),
-                attribute->token.value,
+                attribute->token->value,
                 evaluate(attribute->lhs)));
         }
 
@@ -134,14 +135,14 @@ namespace basecode::compiler {
                     context.comments.emplace_back(builder.make_comment(
                         scope_manager.current_scope(),
                         comment_type_t::line,
-                        comment->token.value));
+                        comment->token->value));
                     break;
                 }
                 case syntax::ast_node_type_t::block_comment: {
                     context.comments.emplace_back(builder.make_comment(
                         scope_manager.current_scope(),
                         comment_type_t::block,
-                        comment->token.value));
+                        comment->token->value));
                     break;
                 }
                 default:
@@ -186,7 +187,7 @@ namespace basecode::compiler {
         for (auto& attr : node->attributes) {
             auto attribute = builder.make_attribute(
                 proc_type->scope(),
-                attr->token.value,
+                attr->token->value,
                 evaluate(attr->lhs));
             attribute->parent_element(proc_type);
             proc_type->attributes().add(attribute);
@@ -897,7 +898,7 @@ namespace basecode::compiler {
             evaluator_result_t& result) {
         result.element = _session.builder().make_raw_block(
             _session.scope_manager().current_scope(),
-            context.node->token.value);
+            context.node->token->value);
         return true;
     }
 
@@ -906,7 +907,7 @@ namespace basecode::compiler {
             evaluator_result_t& result) {
         result.element = _session.builder().make_attribute(
             _session.scope_manager().current_scope(),
-            context.node->token.value,
+            context.node->token->value,
             evaluate(context.node->lhs));
         result.element->location(context.node->location);
         return true;
@@ -950,13 +951,13 @@ namespace basecode::compiler {
 
         auto directive_element = builder.make_directive(
             scope_manager.current_scope(),
-            context.node->token.value,
+            context.node->token->value,
             params);
         if (directive_element == nullptr) {
             _session.error(
                 _session.scope_manager().current_module(),
                 "X000",
-                fmt::format("invalid compiler directive: {}", context.node->token.value),
+                fmt::format("invalid compiler directive: {}", context.node->token->value),
                 context.node->location);
             return false;
         }
@@ -992,7 +993,7 @@ namespace basecode::compiler {
         if (context.node->lhs != nullptr) {
             label = builder.make_label_reference(
                 scope_manager.current_scope(),
-                context.node->lhs->token.value);
+                context.node->lhs->token->value);
         }
 
         result.element = builder.make_break(
@@ -1011,7 +1012,7 @@ namespace basecode::compiler {
         if (context.node->lhs != nullptr) {
             label = builder.make_label_reference(
                 scope_manager.current_scope(),
-                context.node->lhs->token.value);
+                context.node->lhs->token->value);
         }
 
         result.element = builder.make_continue(
@@ -1111,7 +1112,7 @@ namespace basecode::compiler {
         result.element = _session.builder().make_comment(
             _session.scope_manager().current_scope(),
             comment_type_t::line,
-            context.node->token.value);
+            context.node->token->value);
         return true;
     }
 
@@ -1121,7 +1122,7 @@ namespace basecode::compiler {
         result.element = _session.builder().make_comment(
             _session.scope_manager().current_scope(),
             comment_type_t::block,
-            context.node->token.value);
+            context.node->token->value);
         return true;
     }
 
@@ -1130,7 +1131,7 @@ namespace basecode::compiler {
             evaluator_result_t& result) {
         result.element = _session.builder().make_string(
             _session.scope_manager().current_scope(),
-            context.node->token.value);
+            context.node->token->value);
         result.element->location(context.node->location);
         return true;
     }
@@ -1138,11 +1139,11 @@ namespace basecode::compiler {
     bool ast_evaluator::number_literal(
             evaluator_context_t& context,
             evaluator_result_t& result) {
-        switch (context.node->token.number_type) {
+        switch (context.node->token->number_type) {
             case syntax::number_types_t::integer: {
                 uint64_t value;
-                if (context.node->token.parse(value) == syntax::conversion_result_t::success) {
-                    if (context.node->token.is_signed()) {
+                if (context.node->token->parse(value) == syntax::conversion_result_t::success) {
+                    if (context.node->token->is_signed()) {
                         result.element = _session.builder().make_integer(
                             _session.scope_manager().current_scope(),
                             common::twos_complement(value));
@@ -1164,7 +1165,7 @@ namespace basecode::compiler {
             }
             case syntax::number_types_t::floating_point: {
                 double value;
-                if (context.node->token.parse(value) == syntax::conversion_result_t::success) {
+                if (context.node->token->parse(value) == syntax::conversion_result_t::success) {
                     result.element = _session.builder().make_float(
                         _session.scope_manager().current_scope(),
                         value);
@@ -1190,7 +1191,7 @@ namespace basecode::compiler {
             evaluator_context_t& context,
             evaluator_result_t& result) {
         auto& builder = _session.builder();
-        auto bool_value = context.node->token.as_bool();
+        auto bool_value = context.node->token->as_bool();
 
         result.element = bool_value ?
             builder.true_literal() :
@@ -1206,21 +1207,21 @@ namespace basecode::compiler {
 
         common::rune_t rune = common::rune_invalid;
 
-        if (context.node->token.number_type == syntax::number_types_t::integer) {
+        if (context.node->token->number_type == syntax::number_types_t::integer) {
             int64_t value;
-            if (context.node->token.parse(value) == syntax::conversion_result_t::success) {
+            if (context.node->token->parse(value) == syntax::conversion_result_t::success) {
                 rune = static_cast<common::rune_t>(value);
             } else {
                 _session.error(
                     _session.scope_manager().current_module(),
                     "X000",
-                    fmt::format("invalid unicode codepoint: {}", context.node->token.value),
+                    fmt::format("invalid unicode codepoint: {}", context.node->token->value),
                     context.node->location);
                 return false;
             }
         } else {
             std::vector<uint8_t> _buffer;
-            for (auto c : context.node->token.value)
+            for (auto c : context.node->token->value)
                 _buffer.push_back(c);
 
             if (!_buffer.empty()) {
@@ -1332,7 +1333,7 @@ namespace basecode::compiler {
     bool ast_evaluator::unary_operator(
             evaluator_context_t& context,
             evaluator_result_t& result) {
-        auto it = s_unary_operators.find(context.node->token.type);
+        auto it = s_unary_operators.find(context.node->token->type);
         if (it == s_unary_operators.end())
             return false;
         auto rhs = resolve_symbol_or_evaluate(context.node->rhs);
@@ -1367,7 +1368,7 @@ namespace basecode::compiler {
     bool ast_evaluator::binary_operator(
             evaluator_context_t& context,
             evaluator_result_t& result) {
-        auto it = s_binary_operators.find(context.node->token.type);
+        auto it = s_binary_operators.find(context.node->token->type);
         if (it == s_binary_operators.end())
             return false;
         auto scope = _session.scope_manager().current_scope();
@@ -1733,7 +1734,7 @@ namespace basecode::compiler {
         for (auto label : context.node->labels) {
             labels.push_back(builder.make_label(
                 scope_manager.current_scope(),
-                label->token.value));
+                label->token->value));
         }
 
         compiler::element* expr = nullptr;
@@ -2472,7 +2473,7 @@ namespace basecode::compiler {
             evaluator_result_t& result) {
         auto member_access_bin_op = _session.ast_builder().binary_operator_node(
             context.node->lhs,
-            syntax::s_period_literal,
+            syntax::token_pool::instance()->add(syntax::token_type_t::period, "."sv),
             context.node->rhs);
         context.node = member_access_bin_op;
         return binary_operator(context, result);
@@ -2637,7 +2638,7 @@ namespace basecode::compiler {
         };
 
         syntax::ast_node_t* current_type = nullptr;
-        syntax::ast_node_list type_nodes {};
+        syntax::ast_node_list_t type_nodes {};
         type_nodes.resize(parameters_node->children.size());
 
         size_t index = parameters_node->children.empty() ? 0 : parameters_node->children.size() - 1;
@@ -2889,12 +2890,11 @@ namespace basecode::compiler {
 
             if (arg->type != syntax::ast_node_type_t::assignment) {
                 auto it = _session.strings().insert(fmt::format("_{}", index));
-                syntax::token_t field_name;
-                field_name.type = syntax::token_type_t::identifier;
-                field_name.value = *it.first;
-
                 auto field_symbol = ast_builder.symbol_node();
-                field_symbol->children.push_back(ast_builder.symbol_part_node(field_name));
+                field_symbol->children.push_back(
+                    ast_builder.symbol_part_node(syntax::token_pool::instance()->add(
+                        syntax::token_type_t::identifier,
+                        *it.first)));
 
                 assignment_node = ast_builder.assignment_node();
                 assignment_node->lhs->children.push_back(field_symbol);

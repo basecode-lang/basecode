@@ -36,10 +36,7 @@ namespace basecode::syntax {
     }
 
     std::string_view token_t::name() const {
-        auto it = s_type_to_name.find(type);
-        if (it == s_type_to_name.end())
-            return "unknown"sv;
-        return it->second;
+        return token_type_to_name(type);
     }
 
     bool token_t::is_line_comment() const {

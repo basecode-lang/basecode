@@ -13,6 +13,7 @@
 #include <fmt/format.h>
 #include <common/defer.h>
 #include "lexer.h"
+#include "token_pool.h"
 
 namespace basecode::syntax {
 
@@ -182,6 +183,9 @@ namespace basecode::syntax {
         // xor literal
         {'x', std::bind(&lexer::xor_literal, std::placeholders::_1, std::placeholders::_2)},
 
+        // yield literal
+        {'y', std::bind(&lexer::yield_literal, std::placeholders::_1, std::placeholders::_2)},
+
         // value sink literal
         {'_', std::bind(&lexer::value_sink_literal, std::placeholders::_1, std::placeholders::_2)},
 
@@ -239,15 +243,17 @@ namespace basecode::syntax {
     lexer::lexer(common::source_file* source_file) : _source_file(source_file) {
     }
 
-    common::rune_t lexer::peek(common::result& r) {
-        while (!_source_file->eof()) {
-            auto ch = _source_file->next(r);
-            if (ch == common::rune_invalid)
-                return ch;
-            if (!isspace(ch))
-                return ch;
+    token_t* lexer::next() {
+        if (_tokens.empty())
+            return nullptr;
+
+        auto token = _tokens[_token_index];
+        if (_token_index < _tokens.size()) {
+            ++_token_index;
+            return token;
         }
-        return 0;
+
+        return nullptr;
     }
 
     bool lexer::has_next() const {
@@ -259,19 +265,6 @@ namespace basecode::syntax {
         if (pos == 0)
             return;
         _source_file->seek(pos - 1);
-    }
-
-    bool lexer::next(token_t& token) {
-        if (_tokens.empty())
-            return false;
-
-        token = _tokens[_token_index];
-        if (_token_index < _tokens.size()) {
-            ++_token_index;
-            return true;
-        }
-
-        return false;
     }
 
     bool lexer::tokenize(common::result& r) {
@@ -302,9 +295,9 @@ namespace basecode::syntax {
                     auto end_column = _source_file->column_by_index(_source_file->pos());
                     auto end_line = _source_file->line_by_index(_source_file->pos());
 
-                    auto& new_token = _tokens.back();
-                    new_token.location.start(start_line->line, start_column);
-                    new_token.location.end(end_line->line, end_column);
+                    auto new_token = _tokens.back();
+                    new_token->location.start(start_line->line, start_column);
+                    new_token->location.end(end_line->line, end_column);
                     break;
                 }
                 _source_file->restore_top_mark();
@@ -330,32 +323,49 @@ namespace basecode::syntax {
     }
 
     void lexer::add_end_of_file_token() {
-        auto token = s_end_of_file;
+        auto token = token_pool::instance()->add(token_type_t::end_of_file);
         auto column = _source_file->column_by_index(_source_file->pos());
         auto line = _source_file->line_by_index(_source_file->pos());
-        token.location.start(line->line, column);
-        token.location.end(line->line, column);
+        token->location.start(line->line, column);
+        token->location.end(line->line, column);
         _tokens.emplace_back(token);
     }
 
     bool lexer::enum_literal(common::result& r) {
-        if (match_literal(r, "enum")) {
+        auto value = match_literal(r, "enum"sv);
+        if (!value.empty()) {
             auto ch = read(r, false);
             if (!isalnum(ch)) {
                 rewind_one_char();
-                _tokens.emplace_back(s_enum_literal);
+                _tokens.emplace_back(token_pool::instance()->add(
+                    token_type_t::enum_literal,
+                    value));
                 return true;
             }
         }
         return false;
     }
 
+    common::rune_t lexer::peek(common::result& r) {
+        while (!_source_file->eof()) {
+            auto ch = _source_file->next(r);
+            if (ch == common::rune_invalid)
+                return ch;
+            if (!isspace(ch))
+                return ch;
+        }
+        return 0;
+    }
+
     bool lexer::break_literal(common::result& r) {
-        if (match_literal(r, "break")) {
+        auto value = match_literal(r, "break"sv);
+        if (!value.empty()) {
             auto ch = read(r, false);
             if (!isalnum(ch)) {
                 rewind_one_char();
-                _tokens.emplace_back(s_break_literal);
+                _tokens.emplace_back(token_pool::instance()->add(
+                    token_type_t::break_literal,
+                    value));
                 return true;
             }
         }
@@ -363,11 +373,14 @@ namespace basecode::syntax {
     }
 
     bool lexer::while_literal(common::result& r) {
-        if (match_literal(r, "while")) {
+        auto value = match_literal(r, "while"sv);
+        if (!value.empty()) {
             auto ch = read(r, false);
             if (!isalnum(ch)) {
                 rewind_one_char();
-                _tokens.emplace_back(s_while_literal);
+                _tokens.emplace_back(token_pool::instance()->add(
+                    token_type_t::while_literal,
+                    value));
                 return true;
             }
         }
@@ -375,11 +388,14 @@ namespace basecode::syntax {
     }
 
     bool lexer::struct_literal(common::result& r) {
-        if (match_literal(r, "struct")) {
+        auto value = match_literal(r, "struct"sv);
+        if (!value.empty()) {
             auto ch = read(r, false);
             if (!isalnum(ch)) {
                 rewind_one_char();
-                _tokens.emplace_back(s_struct_literal);
+                _tokens.emplace_back(token_pool::instance()->add(
+                    token_type_t::struct_literal,
+                    value));
                 return true;
             }
         }
@@ -387,11 +403,14 @@ namespace basecode::syntax {
     }
 
     bool lexer::yield_literal(common::result& r) {
-        if (match_literal(r, "yield")) {
+        auto value = match_literal(r, "yield"sv);
+        if (!value.empty()) {
             auto ch = read(r, false);
             if (!isalnum(ch)) {
                 rewind_one_char();
-                _tokens.emplace_back(s_yield_literal);
+                _tokens.emplace_back(token_pool::instance()->add(
+                    token_type_t::yield_literal,
+                    value));
                 return true;
             }
         }
@@ -399,11 +418,14 @@ namespace basecode::syntax {
     }
 
     bool lexer::union_literal(common::result& r) {
-        if (match_literal(r, "union")) {
+        auto value = match_literal(r, "union"sv);
+        if (!value.empty()) {
             auto ch = read(r, false);
             if (!isalnum(ch)) {
                 rewind_one_char();
-                _tokens.emplace_back(s_union_literal);
+                _tokens.emplace_back(token_pool::instance()->add(
+                    token_type_t::union_literal,
+                    value));
                 return true;
             }
         }
@@ -411,11 +433,14 @@ namespace basecode::syntax {
     }
 
     bool lexer::continue_literal(common::result& r) {
-        if (match_literal(r, "continue")) {
+        auto value = match_literal(r, "continue"sv);
+        if (!value.empty()) {
             auto ch = read(r, false);
             if (!isalnum(ch)) {
                 rewind_one_char();
-                _tokens.emplace_back(s_continue_literal);
+                _tokens.emplace_back(token_pool::instance()->add(
+                    token_type_t::continue_literal,
+                    value));
                 return true;
             }
         }
@@ -423,90 +448,120 @@ namespace basecode::syntax {
     }
 
     bool lexer::left_curly_brace(common::result& r) {
+        auto start_pos = _source_file->pos();
         auto ch = read(r);
         if (ch == '{') {
-            _tokens.emplace_back(s_left_curly_brace_literal);
+            _tokens.emplace_back(token_pool::instance()->add(
+                token_type_t::left_curly_brace,
+                _source_file->make_slice(start_pos, 1)));
             return true;
         }
         return false;
     }
 
     bool lexer::right_curly_brace(common::result& r) {
+        auto start_pos = _source_file->pos();
         auto ch = read(r);
         if (ch == '}') {
-            _tokens.emplace_back(s_right_curly_brace_literal);
+            _tokens.emplace_back(token_pool::instance()->add(
+                token_type_t::right_curly_brace,
+                _source_file->make_slice(start_pos, 1)));
             return true;
         }
         return false;
     }
 
     bool lexer::plus(common::result& r) {
+        auto start_pos = _source_file->pos();
         auto ch = read(r);
         if (ch == '+') {
-            _tokens.emplace_back(s_plus_literal);
+            _tokens.emplace_back(token_pool::instance()->add(
+                token_type_t::plus,
+                _source_file->make_slice(start_pos, 1)));
             return true;
         }
         return false;
     }
 
     bool lexer::bang(common::result& r) {
+        auto start_pos = _source_file->pos();
         auto ch = read(r);
         if (ch == '!') {
-            _tokens.emplace_back(s_bang_literal);
+            _tokens.emplace_back(token_pool::instance()->add(
+                token_type_t::bang,
+                _source_file->make_slice(start_pos, 1)));
             return true;
         }
         return false;
     }
 
     bool lexer::caret(common::result& r) {
+        auto start_pos = _source_file->pos();
         auto ch = read(r);
         if (ch == '^') {
-            _tokens.emplace_back(s_caret_literal);
+            _tokens.emplace_back(token_pool::instance()->add(
+                token_type_t::caret,
+                _source_file->make_slice(start_pos, 1)));
             return true;
         }
         return false;
     }
 
     bool lexer::tilde(common::result& r) {
+        auto start_pos = _source_file->pos();
         auto ch = read(r);
         if (ch == '~') {
-            _tokens.emplace_back(s_tilde_literal);
+            _tokens.emplace_back(token_pool::instance()->add(
+                token_type_t::tilde,
+                _source_file->make_slice(start_pos, 1)));
             return true;
         }
         return false;
     }
 
     bool lexer::colon(common::result& r) {
+        auto start_pos = _source_file->pos();
         auto ch = read(r);
         if (ch == ':') {
-            _tokens.emplace_back(s_colon_literal);
+            _tokens.emplace_back(token_pool::instance()->add(
+                token_type_t::colon,
+                _source_file->make_slice(start_pos, 1)));
             return true;
         }
         return false;
     }
 
     bool lexer::minus(common::result& r) {
+        auto start_pos = _source_file->pos();
         auto ch = read(r);
         if (ch == '-') {
-            _tokens.emplace_back(s_minus_literal);
+            _tokens.emplace_back(token_pool::instance()->add(
+                token_type_t::minus,
+                _source_file->make_slice(start_pos, 1)));
             return true;
         }
         return false;
     }
 
     bool lexer::comma(common::result& r) {
+        auto start_pos = _source_file->pos();
         auto ch = read(r);
         if (ch == ',') {
-            _tokens.emplace_back(s_comma_literal);
+            _tokens.emplace_back(token_pool::instance()->add(
+                token_type_t::comma,
+                _source_file->make_slice(start_pos, 1)));
             return true;
         }
         return false;
     }
 
     bool lexer::slash(common::result& r) {
+        auto start_pos = _source_file->pos();
         auto ch = read(r);
         if (ch == '/') {
-            _tokens.emplace_back(s_slash_literal);
+            _tokens.emplace_back(token_pool::instance()->add(
+                token_type_t::slash,
+                _source_file->make_slice(start_pos, 1)));
             return true;
         }
         return false;
@@ -516,16 +571,14 @@ namespace basecode::syntax {
         auto ch = read(r);
         if (ch == '\'') {
             auto identifier = read_identifier(r);
-            if (identifier.empty()) {
+            if (identifier.empty())
                 return false;
-            }
             rewind_one_char();
             ch = read(r, false);
             if (ch == ':') {
-                token_t token {};
-                token.type = token_type_t::label;
-                token.value = identifier;
-                _tokens.emplace_back(token);
+                _tokens.emplace_back(token_pool::instance()->add(
+                    token_type_t::label,
+                    identifier));
                 return true;
             }
         }
@@ -533,12 +586,15 @@ namespace basecode::syntax {
     }
 
     bool lexer::period(common::result& r) {
+        auto start_pos = _source_file->pos();
         auto ch = read(r);
         if (ch == '.') {
             ch = read(r, false);
             if (ch != '.') {
                 rewind_one_char();
-                _tokens.emplace_back(s_period_literal);
+                _tokens.emplace_back(token_pool::instance()->add(
+                    token_type_t::period,
+                    _source_file->make_slice(start_pos, 1)));
                 return true;
             }
         }
@@ -546,52 +602,67 @@ namespace basecode::syntax {
     }
 
     bool lexer::spread(common::result& r) {
-        if (match_literal(r, "...")) {
-            _tokens.emplace_back(s_spread_operator_literal);
+        auto value = match_literal(r, "..."sv);
+        if (!value.empty()) {
+            _tokens.emplace_back(token_pool::instance()->add(
+                token_type_t::spread_operator,
+                value));
             return true;
         }
         return false;
     }
 
     bool lexer::percent(common::result& r) {
+        auto start_pos = _source_file->pos();
         auto ch = read(r);
         if (ch == '%') {
-            _tokens.emplace_back(s_percent_literal);
+            _tokens.emplace_back(token_pool::instance()->add(
+                token_type_t::percent,
+                _source_file->make_slice(start_pos, 1)));
             return true;
         }
         return false;
     }
 
     bool lexer::question(common::result& r) {
+        auto start_pos = _source_file->pos();
         auto ch = read(r);
         if (ch == '?') {
-            _tokens.emplace_back(s_question_literal);
+            _tokens.emplace_back(token_pool::instance()->add(
+                token_type_t::question,
+                _source_file->make_slice(start_pos, 1)));
             return true;
         }
         return false;
     }
 
     bool lexer::asterisk(common::result& r) {
+        auto start_pos = _source_file->pos();
         auto ch = read(r);
         if (ch == '*') {
-            _tokens.emplace_back(s_asterisk_literal);
+            _tokens.emplace_back(token_pool::instance()->add(
+                token_type_t::asterisk,
+                _source_file->make_slice(start_pos, 1)));
             return true;
         }
         return false;
     }
 
     bool lexer::exponent(common::result& r) {
-        if (match_literal(r, "**")) {
-            _tokens.emplace_back(s_exponent_literal);
+        auto value = match_literal(r, "**"sv);
+        if (!value.empty()) {
+            _tokens.emplace_back(token_pool::instance()->add(
+                token_type_t::exponent,
+                value));
             return true;
         }
         return false;
     }
 
     bool lexer::raw_block(common::result& r) {
-        if (match_literal(r, "{{")) {
+        auto value = match_literal(r, "{{"sv);
+        if (!value.empty()) {
             auto block_count = 1;
-            auto token = s_raw_block;
 
             auto start_pos = _source_file->pos();
             while (true) {
@@ -625,8 +696,9 @@ namespace basecode::syntax {
             }
 
             auto end_pos = _source_file->pos();
-            token.value = _source_file->make_slice(start_pos, end_pos - start_pos);
-            _tokens.emplace_back(token);
+            _tokens.emplace_back(token_pool::instance()->add(
+                token_type_t::raw_block,
+                _source_file->make_slice(start_pos, end_pos - start_pos)));
             return true;
         }
         return false;
@@ -635,12 +707,12 @@ namespace basecode::syntax {
     bool lexer::attribute(common::result& r) {
         auto ch = read(r);
         if (ch == '@') {
-            token_t token {};
-            token.type = token_type_t::attribute;
-            token.value = read_identifier(r);
+            auto value = read_identifier(r);
             rewind_one_char();
-            if (!token.value.empty()) {
-                _tokens.emplace_back(token);
+            if (!value.empty()) {
+                _tokens.emplace_back(token_pool::instance()->add(
+                    token_type_t::attribute,
+                    value));
                 return true;
             }
         }
@@ -650,11 +722,11 @@ namespace basecode::syntax {
     bool lexer::directive(common::result& r) {
         auto ch = read(r);
         if (ch == '#') {
-            token_t token {};
-            token.type = token_type_t::directive;
-            token.value = read_identifier(r);
-            if (!token.value.empty()) {
-                _tokens.emplace_back(token);
+            auto value = read_identifier(r);
+            if (!value.empty()) {
+                _tokens.emplace_back(token_pool::instance()->add(
+                    token_type_t::directive,
+                    value));
                 return true;
             }
         }
@@ -680,31 +752,44 @@ namespace basecode::syntax {
     }
 
     bool lexer::assignment(common::result& r) {
-        if (match_literal(r, ":=")) {
-            _tokens.emplace_back(_paren_depth == 0 ?
-                s_assignment_literal :
-                s_key_value_operator);
+        auto value = match_literal(r, ":="sv);
+        if (!value.empty()) {
+            if (_paren_depth == 0) {
+                _tokens.emplace_back(token_pool::instance()->add(
+                    token_type_t::assignment,
+                    value));
+            } else {
+                _tokens.emplace_back(token_pool::instance()->add(
+                    token_type_t::key_value_operator,
+                    value));
+            }
             return true;
         }
         return false;
     }
 
     bool lexer::left_paren(common::result& r) {
+        auto start_pos = _source_file->pos();
         auto ch = read(r);
         if (ch == '(') {
             _paren_depth++;
-            _tokens.emplace_back(s_left_paren_literal);
+            _tokens.emplace_back(token_pool::instance()->add(
+                token_type_t::left_paren,
+                _source_file->make_slice(start_pos, 1)));
             return true;
         }
         return false;
     }
 
     bool lexer::in_literal(common::result& r) {
-        if (match_literal(r, "in")) {
+        auto value = match_literal(r, "in"sv);
+        if (!value.empty()) {
             auto ch = read(r, false);
             if (!isalnum(ch) && ch != '_') {
                 rewind_one_char();
-                _tokens.emplace_back(s_in_literal);
+                _tokens.emplace_back(token_pool::instance()->add(
+                    token_type_t::in_literal,
+                    value));
                 return true;
             }
         }
@@ -712,22 +797,28 @@ namespace basecode::syntax {
     }
 
     bool lexer::right_paren(common::result& r) {
+        auto start_pos = _source_file->pos();
         auto ch = read(r);
         if (ch == ')') {
             if (_paren_depth > 0)
                 _paren_depth--;
-            _tokens.emplace_back(s_right_paren_literal);
+            _tokens.emplace_back(token_pool::instance()->add(
+                token_type_t::right_paren,
+                _source_file->make_slice(start_pos, 1)));
             return true;
         }
         return false;
     }
 
     bool lexer::case_literal(common::result& r) {
-        if (match_literal(r, "case")) {
+        auto value = match_literal(r, "case"sv);
+        if (!value.empty()) {
             auto ch = read(r, false);
             if (isspace(ch)) {
                 rewind_one_char();
-                _tokens.emplace_back(s_case_literal);
+                _tokens.emplace_back(token_pool::instance()->add(
+                    token_type_t::case_literal,
+                    value));
                 return true;
             }
         }
@@ -735,11 +826,14 @@ namespace basecode::syntax {
     }
 
     bool lexer::proc_literal(common::result& r) {
-        if (match_literal(r, "proc")) {
+        auto value = match_literal(r, "proc"sv);
+        if (!value.empty()) {
             auto ch = read(r, false);
             if (!isalnum(ch)) {
                 rewind_one_char();
-                _tokens.emplace_back(s_proc_literal);
+                _tokens.emplace_back(token_pool::instance()->add(
+                    token_type_t::proc_literal,
+                    value));
                 return true;
             }
         }
@@ -747,11 +841,14 @@ namespace basecode::syntax {
     }
 
     bool lexer::ns_literal(common::result& r) {
-        if (match_literal(r, "ns")) {
+        auto value = match_literal(r, "ns"sv);
+        if (!value.empty()) {
             auto ch = read(r, false);
             if (!isalnum(ch)) {
                 rewind_one_char();
-                _tokens.emplace_back(s_namespace_literal);
+                _tokens.emplace_back(token_pool::instance()->add(
+                    token_type_t::namespace_literal,
+                    value));
                 return true;
             }
         }
@@ -759,11 +856,14 @@ namespace basecode::syntax {
     }
 
     bool lexer::if_literal(common::result& r) {
-        if (match_literal(r, "if")) {
+        auto value = match_literal(r, "if"sv);
+        if (!value.empty()) {
             auto ch = read(r, false);
             if (!isalnum(ch)) {
                 rewind_one_char();
-                _tokens.emplace_back(s_if_literal);
+                _tokens.emplace_back(token_pool::instance()->add(
+                    token_type_t::if_literal,
+                    value));
                 return true;
             }
         }
@@ -771,11 +871,14 @@ namespace basecode::syntax {
     }
 
     bool lexer::xor_literal(common::result& r) {
-        if (match_literal(r, "xor")) {
+        auto value = match_literal(r, "xor"sv);
+        if (!value.empty()) {
             auto ch = read(r, false);
             if (!isalnum(ch)) {
                 rewind_one_char();
-                _tokens.emplace_back(s_xor_literal);
+                _tokens.emplace_back(token_pool::instance()->add(
+                    token_type_t::xor_literal,
+                    value));
                 return true;
             }
         }
@@ -783,11 +886,14 @@ namespace basecode::syntax {
     }
 
     bool lexer::shl_literal(common::result& r) {
-        if (match_literal(r, "shl")) {
+        auto value = match_literal(r, "shl"sv);
+        if (!value.empty()) {
             auto ch = read(r, false);
             if (!isalnum(ch)) {
                 rewind_one_char();
-                _tokens.emplace_back(s_shl_literal);
+                _tokens.emplace_back(token_pool::instance()->add(
+                    token_type_t::shl_literal,
+                    value));
                 return true;
             }
         }
@@ -795,11 +901,14 @@ namespace basecode::syntax {
     }
 
     bool lexer::shr_literal(common::result& r) {
-        if (match_literal(r, "shr")) {
+        auto value = match_literal(r, "shr"sv);
+        if (!value.empty()) {
             auto ch = read(r, false);
             if (!isalnum(ch)) {
                 rewind_one_char();
-                _tokens.emplace_back(s_shr_literal);
+                _tokens.emplace_back(token_pool::instance()->add(
+                    token_type_t::shr_literal,
+                    value));
                 return true;
             }
         }
@@ -807,11 +916,14 @@ namespace basecode::syntax {
     }
 
     bool lexer::rol_literal(common::result& r) {
-        if (match_literal(r, "rol")) {
+        auto value = match_literal(r, "rol"sv);
+        if (!value.empty()) {
             auto ch = read(r, false);
             if (!isalnum(ch)) {
                 rewind_one_char();
-                _tokens.emplace_back(s_rol_literal);
+                _tokens.emplace_back(token_pool::instance()->add(
+                    token_type_t::rol_literal,
+                    value));
                 return true;
             }
         }
@@ -819,11 +931,14 @@ namespace basecode::syntax {
     }
 
     bool lexer::ror_literal(common::result& r) {
-        if (match_literal(r, "ror")) {
+        auto value = match_literal(r, "ror"sv);
+        if (!value.empty()) {
             auto ch = read(r, false);
             if (!isalnum(ch)) {
                 rewind_one_char();
-                _tokens.emplace_back(s_ror_literal);
+                _tokens.emplace_back(token_pool::instance()->add(
+                    token_type_t::ror_literal,
+                    value));
                 return true;
             }
         }
@@ -831,11 +946,14 @@ namespace basecode::syntax {
     }
 
     bool lexer::else_literal(common::result& r) {
-        if (match_literal(r, "else")) {
+        auto value = match_literal(r, "else"sv);
+        if (!value.empty()) {
             auto ch = read(r, false);
             if (!isalnum(ch)) {
                 rewind_one_char();
-                _tokens.emplace_back(s_else_literal);
+                _tokens.emplace_back(token_pool::instance()->add(
+                    token_type_t::else_literal,
+                    value));
                 return true;
             }
         }
@@ -847,10 +965,9 @@ namespace basecode::syntax {
         if (ch == '/') {
             ch = read(r, false);
             if (ch == '/') {
-                token_t token{};
-                token.type = token_type_t::line_comment;
-                token.value = read_until(r, '\n');
-                _tokens.emplace_back(token);
+                _tokens.emplace_back(token_pool::instance()->add(
+                    token_type_t::line_comment,
+                    read_until(r, '\n')));
                 return true;
             }
         }
@@ -858,11 +975,14 @@ namespace basecode::syntax {
     }
 
     bool lexer::for_literal(common::result& r) {
-        if (match_literal(r, "for")) {
+        auto value = match_literal(r, "for"sv);
+        if (!value.empty()) {
             auto ch = read(r, false);
             if (isspace(ch)) {
                 rewind_one_char();
-                _tokens.emplace_back(s_for_literal);
+                _tokens.emplace_back(token_pool::instance()->add(
+                    token_type_t::for_literal,
+                    value));
                 return true;
             }
         }
@@ -870,11 +990,14 @@ namespace basecode::syntax {
     }
 
     bool lexer::nil_literal(common::result& r) {
-        if (match_literal(r, "nil")) {
+        auto value = match_literal(r, "nil"sv);
+        if (!value.empty()) {
             auto ch = read(r, false);
             if (!isalnum(ch)) {
                 rewind_one_char();
-                _tokens.emplace_back(s_nil_literal);
+                _tokens.emplace_back(token_pool::instance()->add(
+                    token_type_t::nil_literal,
+                    value));
                 return true;
             }
         }
@@ -882,11 +1005,14 @@ namespace basecode::syntax {
     }
 
     bool lexer::with_literal(common::result& r) {
-        if (match_literal(r, "with")) {
+        auto value = match_literal(r, "with"sv);
+        if (!value.empty()) {
             auto ch = read(r, false);
             if (!isalnum(ch)) {
                 rewind_one_char();
-                _tokens.emplace_back(s_with_literal);
+                _tokens.emplace_back(token_pool::instance()->add(
+                    token_type_t::with_literal,
+                    value));
                 return true;
             }
         }
@@ -894,11 +1020,14 @@ namespace basecode::syntax {
     }
 
     bool lexer::true_literal(common::result& r) {
-        if (match_literal(r, "true")) {
+        auto value = match_literal(r, "true"sv);
+        if (!value.empty()) {
             auto ch = read(r, false);
             if (!isalnum(ch)) {
                 rewind_one_char();
-                _tokens.emplace_back(s_true_literal);
+                _tokens.emplace_back(token_pool::instance()->add(
+                    token_type_t::true_literal,
+                    value));
                 return true;
             }
         }
@@ -906,9 +1035,12 @@ namespace basecode::syntax {
     }
 
     bool lexer::pipe_literal(common::result& r) {
+        auto start_pos = _source_file->pos();
         auto ch = read(r);
         if (ch == '|') {
-            _tokens.emplace_back(s_pipe_literal);
+            _tokens.emplace_back(token_pool::instance()->add(
+                token_type_t::pipe,
+                _source_file->make_slice(start_pos, 1)));
             return true;
         }
         return false;
@@ -917,21 +1049,23 @@ namespace basecode::syntax {
     bool lexer::string_literal(common::result& r) {
         auto ch = read(r);
         if (ch == '\"') {
-            token_t token{};
-            token.type = token_type_t::string_literal;
-            token.value = read_until(r, '"');
-            _tokens.emplace_back(token);
+            _tokens.emplace_back(token_pool::instance()->add(
+                token_type_t::string_literal,
+                read_until(r, '"')));
             return true;
         }
         return false;
     }
 
     bool lexer::false_literal(common::result& r) {
-        if (match_literal(r, "false")) {
+        auto value = match_literal(r, "false"sv);
+        if (!value.empty()) {
             auto ch = read(r, false);
             if (!isalnum(ch)) {
                 rewind_one_char();
-                _tokens.emplace_back(s_false_literal);
+                _tokens.emplace_back(token_pool::instance()->add(
+                    token_type_t::false_literal,
+                    value));
                 return true;
             }
         }
@@ -939,11 +1073,14 @@ namespace basecode::syntax {
     }
 
     bool lexer::defer_literal(common::result& r) {
-        if (match_literal(r, "defer")) {
+        auto value = match_literal(r, "defer"sv);
+        if (!value.empty()) {
             auto ch = read(r, false);
             if (!isalnum(ch)) {
                 rewind_one_char();
-                _tokens.emplace_back(s_defer_literal);
+                _tokens.emplace_back(token_pool::instance()->add(
+                    token_type_t::defer_literal,
+                    value));
                 return true;
             }
         }
@@ -951,15 +1088,15 @@ namespace basecode::syntax {
     }
 
     bool lexer::number_literal(common::result& r) {
-        token_t token{};
-        token.radix = 10;
-        token.type = token_type_t::number_literal;
-        token.number_type = number_types_t::integer;
+        uint8_t radix = 10;
+        std::string_view value {};
+        number_types_t number_type = number_types_t::integer;
 
         auto ch = read(r);
         if (ch == '$') {
+            radix = 16;
+
             auto start_pos = _source_file->pos();
-            token.radix = 16;
             while (true) {
                 ch = read(r, false);
                 if (ch == '_')
@@ -968,11 +1105,12 @@ namespace basecode::syntax {
                     break;
             }
             auto end_pos = _source_file->pos() - 1;
-            token.value = _source_file->make_slice(start_pos, end_pos - start_pos);
+            value = _source_file->make_slice(start_pos, end_pos - start_pos);
         } else if (ch == '@') {
+            radix = 8;
+
             const std::string valid = "012345678";
             auto start_pos = _source_file->pos();
-            token.radix = 8;
             while (true) {
                 ch = read(r, false);
                 if (ch == '_')
@@ -982,9 +1120,10 @@ namespace basecode::syntax {
                     break;
             }
             auto end_pos = _source_file->pos() - 1;
-            token.value = _source_file->make_slice(start_pos, end_pos - start_pos);
+            value = _source_file->make_slice(start_pos, end_pos - start_pos);
         } else if (ch == '%') {
-            token.radix = 2;
+            radix = 2;
+
             auto start_pos = _source_file->pos();
             while (true) {
                 ch = read(r, false);
@@ -994,7 +1133,7 @@ namespace basecode::syntax {
                     break;
             }
             auto end_pos = _source_file->pos() - 1;
-            token.value = _source_file->make_slice(start_pos, end_pos - start_pos);
+            value = _source_file->make_slice(start_pos, end_pos - start_pos);
         } else {
             const std::string valid = "0123456789_.";
             auto start_pos = _source_file->pos() - 1;
@@ -1008,8 +1147,8 @@ namespace basecode::syntax {
             while (valid.find_first_of(static_cast<char>(ch)) != std::string::npos) {
                 if (ch != '_') {
                     if (ch == '.') {
-                        if (token.number_type != number_types_t::floating_point) {
-                            token.number_type = number_types_t::floating_point;
+                        if (number_type != number_types_t::floating_point) {
+                            number_type = number_types_t::floating_point;
                         } else {
                             r.error("X000", "unexpected decimal in number.");
                             return false;
@@ -1024,24 +1163,31 @@ namespace basecode::syntax {
                 return false;
 
             auto end_pos = _source_file->pos() - 1;
-            token.value = _source_file->make_slice(start_pos, end_pos - start_pos);
+            value = _source_file->make_slice(start_pos, end_pos - start_pos);
         }
 
-        if (token.value.empty())
+        if (value.empty())
             return false;
 
+        auto token = token_pool::instance()->add(token_type_t::number_literal, value);
+        token->radix = radix;
+        token->number_type = number_type;
         _tokens.emplace_back(token);
+
         rewind_one_char();
 
         return true;
     }
 
     bool lexer::switch_literal(common::result& r) {
-        if (match_literal(r, "switch")) {
+        auto value = match_literal(r, "switch"sv);
+        if (!value.empty()) {
             auto ch = read(r, false);
             if (isspace(ch)) {
                 rewind_one_char();
-                _tokens.emplace_back(s_switch_literal);
+                _tokens.emplace_back(token_pool::instance()->add(
+                    token_type_t::switch_literal,
+                    value));
                 return true;
             }
         }
@@ -1062,9 +1208,7 @@ namespace basecode::syntax {
         while (true) {
             ch = read(r);
             if (ch == '|') {
-                token_t token{};
-                token.type = token_type_t::lambda_literal;
-                _tokens.emplace_back(token);
+                _tokens.emplace_back(token_pool::instance()->add(token_type_t::lambda_literal));
                 return true;
             }
 
@@ -1093,11 +1237,14 @@ namespace basecode::syntax {
     }
 
     bool lexer::import_literal(common::result& r) {
-        if (match_literal(r, "import")) {
+        auto value = match_literal(r, "import"sv);
+        if (!value.empty()) {
             auto ch = read(r, false);
             if (!isalnum(ch)) {
                 rewind_one_char();
-                _tokens.emplace_back(s_import_literal);
+                _tokens.emplace_back(token_pool::instance()->add(
+                    token_type_t::import_literal,
+                    value));
                 return true;
             }
         }
@@ -1105,11 +1252,14 @@ namespace basecode::syntax {
     }
 
     bool lexer::scope_operator(common::result& r) {
-        if (match_literal(r, "::")) {
+        auto value = match_literal(r, "::"sv);
+        if (!value.empty()) {
             auto ch = read(r, false);
             if (isalpha(ch) || ch == '_') {
                 rewind_one_char();
-                _tokens.emplace_back(s_scope_operator_literal);
+                _tokens.emplace_back(token_pool::instance()->add(
+                    token_type_t::scope_operator,
+                    value));
                 return true;
             }
         }
@@ -1117,11 +1267,14 @@ namespace basecode::syntax {
     }
 
     bool lexer::return_literal(common::result& r) {
-        if (match_literal(r, "return")) {
+        auto value = match_literal(r, "return"sv);
+        if (!value.empty()) {
             auto ch = read(r, false);
             if (!isalnum(ch)) {
                 rewind_one_char();
-                _tokens.emplace_back(s_return_literal);
+                _tokens.emplace_back(token_pool::instance()->add(
+                    token_type_t::return_literal,
+                    value));
                 return true;
             }
         }
@@ -1129,32 +1282,37 @@ namespace basecode::syntax {
     }
 
     bool lexer::line_terminator(common::result& r) {
+        auto start_pos = _source_file->pos();
         auto ch = read(r);
         if (ch == ';') {
-            _tokens.emplace_back(s_semi_colon_literal);
+            _tokens.emplace_back(token_pool::instance()->add(
+                token_type_t::semi_colon,
+                _source_file->make_slice(start_pos, 1)));
             return true;
         }
         return false;
     }
 
     bool lexer::equals_operator(common::result& r) {
-        auto ch = read(r);
-        if (ch == '=') {
-            ch = read(r, false);
-            if (ch == '=') {
-                _tokens.emplace_back(s_equals_literal);
-                return true;
-            }
+        auto value = match_literal(r, "=="sv);
+        if (!value.empty()) {
+            _tokens.emplace_back(token_pool::instance()->add(
+                token_type_t::equals,
+                value));
+            return true;
         }
         return false;
     }
 
     bool lexer::else_if_literal(common::result& r) {
-        if (match_literal(r, "else if")) {
+        auto value = match_literal(r, "else if"sv);
+        if (!value.empty()) {
             auto ch = read(r, false);
             if (!isalnum(ch)) {
                 rewind_one_char();
-                _tokens.emplace_back(s_else_if_literal);
+                _tokens.emplace_back(token_pool::instance()->add(
+                    token_type_t::else_if_literal,
+                    value));
                 return true;
             }
         }
@@ -1174,7 +1332,7 @@ namespace basecode::syntax {
             ch = read(r, false);
             if (ch == ';')
                 break;
-            if (ch == '_' || isalnum(ch))
+            if (ch == '_' || ch == '-' || isalnum(ch))
                 continue;
             break;
         }
@@ -1192,10 +1350,9 @@ namespace basecode::syntax {
         rewind_one_char();
 
         if (add_token) {
-            token_t token{};
-            token.value = name;
-            token.type = token_type_t::identifier;
-            _tokens.emplace_back(token);
+            _tokens.emplace_back(token_pool::instance()->add(
+                token_type_t::identifier,
+                name));
         }
 
         return true;
@@ -1282,11 +1439,11 @@ namespace basecode::syntax {
             }
             ch = read(r, false);
             if (ch == '\'') {
-                token_t token{};
-                token.value = value;
-                token.radix = radix;
-                token.number_type = number_type;
-                token.type = token_type_t::character_literal;
+                auto token = token_pool::instance()->add(
+                    token_type_t::character_literal,
+                    value);
+                token->radix = radix;
+                token->number_type = number_type;
                 _tokens.emplace_back(token);
                 return true;
             }
@@ -1295,29 +1452,38 @@ namespace basecode::syntax {
     }
 
     bool lexer::ampersand_literal(common::result& r) {
+        auto start_pos = _source_file->pos();
         auto ch = read(r);
         if (ch == '&') {
-            _tokens.emplace_back(s_ampersand_literal);
+            _tokens.emplace_back(token_pool::instance()->add(
+                token_type_t::ampersand,
+                _source_file->make_slice(start_pos, 1)));
             return true;
         }
         return false;
     }
 
     bool lexer::less_than_operator(common::result& r) {
+        auto start_pos = _source_file->pos();
         auto ch = read(r);
         if (ch == '<') {
-            _tokens.emplace_back(s_less_than_literal);
+            _tokens.emplace_back(token_pool::instance()->add(
+                token_type_t::less_than,
+                _source_file->make_slice(start_pos, 1)));
             return true;
         }
         return false;
     }
 
     bool lexer::fallthrough_literal(common::result& r) {
-        if (match_literal(r, "fallthrough")) {
+        auto value = match_literal(r, "fallthrough"sv);
+        if (!value.empty()) {
             auto ch = read(r, false);
             if (!isalnum(ch)) {
                 rewind_one_char();
-                _tokens.emplace_back(s_fallthrough_literal);
+                _tokens.emplace_back(token_pool::instance()->add(
+                    token_type_t::fallthrough_literal,
+                    value));
                 return true;
             }
         }
@@ -1325,21 +1491,20 @@ namespace basecode::syntax {
     }
 
     bool lexer::logical_or_operator(common::result& r) {
-        auto ch = read(r);
-        if (ch == '|') {
-            ch = read(r, false);
-            if (ch == '|') {
-                _tokens.emplace_back(s_logical_or_literal);
-                return true;
-            }
+        auto value = match_literal(r, "||"sv);
+        if (!value.empty()) {
+            _tokens.emplace_back(token_pool::instance()->add(
+                token_type_t::logical_or,
+                value));
+            return true;
         }
         return false;
     }
 
     bool lexer::block_comment(common::result& r) {
-        if (match_literal(r, "/*")) {
+        auto value = match_literal(r, "/*"sv);
+        if (!value.empty()) {
             auto block_count = 1;
-            auto token = s_block_comment;
 
             auto start_pos = _source_file->pos();
             while (true) {
@@ -1373,19 +1538,23 @@ namespace basecode::syntax {
             }
 
             auto end_pos = _source_file->pos();
-            token.value = _source_file->make_slice(start_pos, end_pos - start_pos);
-            _tokens.emplace_back(token);
+            _tokens.emplace_back(token_pool::instance()->add(
+                token_type_t::block_comment,
+                _source_file->make_slice(start_pos, end_pos - start_pos)));
             return true;
         }
         return false;
     }
 
     bool lexer::from_literal(common::result& r) {
-        if (match_literal(r, "from")) {
+        auto value = match_literal(r, "from"sv);
+        if (!value.empty()) {
             auto ch = read(r, false);
             if (!isalnum(ch)) {
                 rewind_one_char();
-                _tokens.emplace_back(s_from_literal);
+                _tokens.emplace_back(token_pool::instance()->add(
+                    token_type_t::from_literal,
+                    value));
                 return true;
             }
         }
@@ -1393,11 +1562,14 @@ namespace basecode::syntax {
     }
 
     bool lexer::module_literal(common::result& r) {
-        if (match_literal(r, "module")) {
+        auto value = match_literal(r, "module"sv);
+        if (!value.empty()) {
             auto ch = read(r, false);
             if (!isalnum(ch)) {
                 rewind_one_char();
-                _tokens.emplace_back(s_module_literal);
+                _tokens.emplace_back(token_pool::instance()->add(
+                    token_type_t::module_literal,
+                    value));
                 return true;
             }
         }
@@ -1405,12 +1577,15 @@ namespace basecode::syntax {
     }
 
     bool lexer::value_sink_literal(common::result& r) {
+        auto start_pos = _source_file->pos();
         auto ch = read(r);
         if (ch == '_') {
             ch = read(r, false);
             if (!isalnum(ch) && ch != '_') {
                 rewind_one_char();
-                _tokens.emplace_back(s_value_sink_literal);
+                _tokens.emplace_back(token_pool::instance()->add(
+                    token_type_t::value_sink_literal,
+                    _source_file->make_slice(start_pos, 1)));
                 return true;
             }
         }
@@ -1418,19 +1593,25 @@ namespace basecode::syntax {
     }
 
     bool lexer::plus_equal_operator(common::result& r) {
-        if (match_literal(r, "+:=")) {
-            _tokens.emplace_back(s_plus_equal_literal);
+        auto value = match_literal(r, "+:="sv);
+        if (!value.empty()) {
+            _tokens.emplace_back(token_pool::instance()->add(
+                token_type_t::plus_equal_literal,
+                value));
             return true;
         }
         return false;
     }
 
     bool lexer::constant_assignment(common::result& r) {
-        if (match_literal(r, "::")) {
+        auto value = match_literal(r, "::"sv);
+        if (!value.empty()) {
             auto ch = read(r, false);
             if (isspace(ch)) {
                 rewind_one_char();
-                _tokens.emplace_back(s_constant_assignment_literal);
+                _tokens.emplace_back(token_pool::instance()->add(
+                    token_type_t::constant_assignment,
+                    value));
                 return true;
             }
         }
@@ -1438,83 +1619,102 @@ namespace basecode::syntax {
     }
 
     bool lexer::minus_equal_operator(common::result& r) {
-        if (match_literal(r, "-:=")) {
-            _tokens.emplace_back(s_minus_equal_literal);
+        auto value = match_literal(r, "-:="sv);
+        if (!value.empty()) {
+            _tokens.emplace_back(token_pool::instance()->add(
+                token_type_t::minus_equal_literal,
+                value));
             return true;
         }
         return false;
     }
 
     bool lexer::logical_and_operator(common::result& r) {
-        auto ch = read(r);
-        if (ch == '&') {
-            ch = read(r, false);
-            if (ch == '&') {
-                _tokens.emplace_back(s_logical_and_literal);
-                return true;
-            }
+        auto value = match_literal(r, "&&"sv);
+        if (!value.empty()) {
+            _tokens.emplace_back(token_pool::instance()->add(
+                token_type_t::logical_and,
+                value));
+            return true;
         }
         return false;
     }
 
     bool lexer::not_equals_operator(common::result& r) {
-        auto ch = read(r);
-        if (ch == '!') {
-            ch = read(r, false);
-            if (ch == '=') {
-                _tokens.emplace_back(s_not_equals_literal);
-                return true;
-            }
+        auto value = match_literal(r, "!="sv);
+        if (!value.empty()) {
+            _tokens.emplace_back(token_pool::instance()->add(
+                token_type_t::not_equals,
+                value));
+            return true;
         }
         return false;
     }
 
     bool lexer::left_square_bracket(common::result& r) {
+        auto start_pos = _source_file->pos();
         auto ch = read(r);
         if (ch == '[') {
-            _tokens.emplace_back(s_left_square_bracket_literal);
+            _tokens.emplace_back(token_pool::instance()->add(
+                token_type_t::left_square_bracket,
+                _source_file->make_slice(start_pos, 1)));
             return true;
         }
         return false;
     }
 
     bool lexer::right_square_bracket(common::result& r) {
+        auto start_pos = _source_file->pos();
         auto ch = read(r);
         if (ch == ']') {
-            _tokens.emplace_back(s_right_square_bracket_literal);
+            _tokens.emplace_back(token_pool::instance()->add(
+                token_type_t::right_square_bracket,
+                _source_file->make_slice(start_pos, 1)));
             return true;
         }
         return false;
     }
 
     bool lexer::divide_equal_operator(common::result& r) {
-        if (match_literal(r, "/:=")) {
-            _tokens.emplace_back(s_divide_equal_literal);
+        auto value = match_literal(r, "/:="sv);
+        if (!value.empty()) {
+            _tokens.emplace_back(token_pool::instance()->add(
+                token_type_t::divide_equal_literal,
+                value));
             return true;
         }
         return false;
     }
 
     bool lexer::greater_than_operator(common::result& r) {
+        auto start_pos = _source_file->pos();
         auto ch = read(r);
         if (ch == '>') {
-            _tokens.emplace_back(s_greater_than_literal);
+            _tokens.emplace_back(token_pool::instance()->add(
+                token_type_t::greater_than,
+                _source_file->make_slice(start_pos, 1)));
             return true;
         }
         return false;
     }
 
     bool lexer::control_flow_operator(common::result& r) {
-        if (match_literal(r, "=>")) {
-            _tokens.emplace_back(s_control_flow_operator);
+        auto value = match_literal(r, "=>"sv);
+        if (!value.empty()) {
+            _tokens.emplace_back(token_pool::instance()->add(
+                token_type_t::control_flow_operator,
+                value));
             return true;
         }
         return false;
     }
 
     bool lexer::modulus_equal_operator(common::result& r) {
-        if (match_literal(r, "%:=")) {
-            _tokens.emplace_back(s_modulus_equal_literal);
+        auto value = match_literal(r, "%:="sv);
+        if (!value.empty()) {
+            _tokens.emplace_back(token_pool::instance()->add(
+                token_type_t::modulus_equal_literal,
+                value));
             return true;
         }
         return false;
@@ -1559,10 +1759,9 @@ namespace basecode::syntax {
 
             if (is_tagged) {
                 if (add_token) {
-                    token_t token{};
-                    token.value = name;
-                    token.type = token_type_t::type_tagged_identifier;
-                    _tokens.emplace_back(token);
+                    _tokens.emplace_back(token_pool::instance()->add(
+                        token_type_t::type_tagged_identifier,
+                        name));
                 }
                 return true;
             }
@@ -1572,53 +1771,67 @@ namespace basecode::syntax {
     }
 
     bool lexer::multiply_equal_operator(common::result& r) {
-        if (match_literal(r, "*:=")) {
-            _tokens.emplace_back(s_multiply_equal_literal);
+        auto value = match_literal(r, "*:="sv);
+        if (!value.empty()) {
+            _tokens.emplace_back(token_pool::instance()->add(
+                token_type_t::multiply_equal_literal,
+                value));
             return true;
         }
         return false;
     }
 
     bool lexer::binary_or_equal_operator(common::result& r) {
-        if (match_literal(r, "|:=")) {
-            _tokens.emplace_back(s_binary_or_equal_literal);
+        auto value = match_literal(r, "|:="sv);
+        if (!value.empty()) {
+            _tokens.emplace_back(token_pool::instance()->add(
+                token_type_t::binary_or_equal_literal,
+                value));
             return true;
         }
         return false;
     }
 
     bool lexer::less_than_equal_operator(common::result& r) {
-        if (match_literal(r, "<=")) {
-            _tokens.emplace_back(s_less_than_equal_literal);
+        auto value = match_literal(r, "<="sv);
+        if (!value.empty()) {
+            _tokens.emplace_back(token_pool::instance()->add(
+                token_type_t::less_than_equal,
+                value));
             return true;
         }
         return false;
     }
 
     bool lexer::binary_not_equal_operator(common::result& r) {
-        if (match_literal(r, "~:=")) {
-            _tokens.emplace_back(s_binary_not_equal_literal);
+        auto value = match_literal(r, "~:="sv);
+        if (!value.empty()) {
+            _tokens.emplace_back(token_pool::instance()->add(
+                token_type_t::binary_not_equal_literal,
+                value));
             return true;
         }
         return false;
     }
 
     bool lexer::binary_and_equal_operator(common::result& r) {
-        if (match_literal(r, "&:=")) {
-            _tokens.emplace_back(s_binary_and_equal_literal);
+        auto value = match_literal(r, "&:="sv);
+        if (!value.empty()) {
+            _tokens.emplace_back(token_pool::instance()->add(
+                token_type_t::binary_and_equal_literal,
+                value));
             return true;
         }
         return false;
     }
 
     bool lexer::greater_than_equal_operator(common::result& r) {
-        auto ch = read(r);
-        if (ch == '>') {
-            ch = read(r, false);
-            if (ch == '=') {
-                _tokens.emplace_back(s_greater_than_equal_literal);
-                return true;
-            }
+        auto value = match_literal(r, ">="sv);
+        if (!value.empty()) {
+            _tokens.emplace_back(token_pool::instance()->add(
+                token_type_t::greater_than_equal,
+                value));
+            return true;
         }
         return false;
     }
@@ -1632,17 +1845,6 @@ namespace basecode::syntax {
         }
         auto end_pos = _source_file->pos() - 1;
         return _source_file->make_slice(start_pos, end_pos - start_pos);
-    }
-
-    bool lexer::match_literal(common::result& r, const std::string& literal) {
-        auto ch = read(r);
-        for (const auto& target_ch : literal) {
-            if (target_ch != ch)
-                return false;
-            ch = read(r, false);
-        }
-        rewind_one_char();
-        return true;
     }
 
     bool lexer::read_hex_digits(common::result& r, size_t length, std::string_view& value) {
@@ -1675,6 +1877,18 @@ namespace basecode::syntax {
         }
         value = _source_file->make_slice(start_pos, _source_file->pos() - start_pos);
         return true;
+    }
+
+    std::string_view lexer::match_literal(common::result& r, const std::string_view& literal) {
+        auto start_pos = _source_file->pos();
+        auto ch = read(r);
+        for (const auto& target_ch : literal) {
+            if (target_ch != ch)
+                return {};
+            ch = read(r, false);
+        }
+        rewind_one_char();
+        return _source_file->make_slice(start_pos, _source_file->pos() - start_pos);
     }
 
 }

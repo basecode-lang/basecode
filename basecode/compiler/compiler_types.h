@@ -14,11 +14,11 @@
 #include <chrono>
 #include <cstdint>
 #include <functional>
-#include <parser/ast.h>
 #include <vm/vm_types.h>
 #include <unordered_map>
 #include <unordered_set>
 #include <common/rune.h>
+#include <parser/parser.h>
 #include <common/result.h>
 #include <common/id_pool.h>
 #include <common/source_file.h>
@@ -43,6 +43,7 @@ namespace basecode::compiler {
     using source_file_stack_t = std::stack<common::source_file*>;
     using source_file_list_t = std::vector<common::source_file*>;
     using module_map_t = std::unordered_map<std::string, module*>;
+    using parser_map_t = std::unordered_map<std::string, syntax::parser>;
     using ast_map_t = std::unordered_map<std::string, syntax::ast_node_t*>;
     using source_file_map_t = std::unordered_map<common::id_t, common::source_file>;
     using address_register_map_t = std::unordered_map<common::id_t, vm::register_t>;

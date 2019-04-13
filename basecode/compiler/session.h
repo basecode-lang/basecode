@@ -160,6 +160,7 @@ namespace basecode::compiler {
         ast_map_t _asts {};
         common::result _result;
         vm::ffi* _ffi = nullptr;
+        parser_map_t _parsers{};
         module_map_t _modules {};
         string_set_t _strings {};
         vm::terp* _terp = nullptr;

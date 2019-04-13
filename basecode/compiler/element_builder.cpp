@@ -66,12 +66,11 @@ namespace basecode::compiler {
             qualified_symbol_t& symbol,
             const syntax::ast_node_t* node) {
         if (!node->children.empty()) {
-            for (size_t i = 0; i < node->children.size() - 1; i++) {
-                symbol.namespaces.push_back(node->children[i]->token.value);
-            }
+            for (size_t i = 0; i < node->children.size() - 1; i++)
+                symbol.namespaces.push_back(node->children[i]->token->value);
         }
         symbol.location = node->location;
-        symbol.name = node->children.back()->token.value;
+        symbol.name = node->children.back()->token->value;
         symbol.fully_qualified_name = make_fully_qualified_name(symbol);
     }
 

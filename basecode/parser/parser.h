@@ -63,7 +63,7 @@ namespace basecode::syntax {
             common::result& r,
             parser* parser,
             ast_node_t* lhs,
-            token_t& token) = 0;
+            token_t* token) = 0;
 
         virtual precedence_t precedence() const = 0;
     };
@@ -78,7 +78,7 @@ namespace basecode::syntax {
             common::result& r,
             parser* parser,
             ast_node_t* lhs,
-            token_t& token) override;
+            token_t* token) override;
 
         precedence_t precedence() const override;
     };
@@ -93,7 +93,7 @@ namespace basecode::syntax {
             common::result& r,
             parser* parser,
             ast_node_t* lhs,
-            token_t& token) override;
+            token_t* token) override;
 
         precedence_t precedence() const override;
     };
@@ -108,7 +108,7 @@ namespace basecode::syntax {
             common::result& r,
             parser* parser,
             ast_node_t* lhs,
-            token_t& token) override;
+            token_t* token) override;
 
         precedence_t precedence() const override;
     };
@@ -123,7 +123,7 @@ namespace basecode::syntax {
             common::result& r,
             parser* parser,
             ast_node_t* lhs,
-            token_t& token) override;
+            token_t* token) override;
 
         precedence_t precedence() const override;
     };
@@ -138,7 +138,7 @@ namespace basecode::syntax {
             common::result& r,
             parser* parser,
             ast_node_t* lhs,
-            token_t& token) override;
+            token_t* token) override;
 
         precedence_t precedence() const override;
     };
@@ -153,7 +153,7 @@ namespace basecode::syntax {
             common::result& r,
             parser* parser,
             ast_node_t* lhs,
-            token_t& token) override;
+            token_t* token) override;
 
         precedence_t precedence() const override;
     };
@@ -171,7 +171,7 @@ namespace basecode::syntax {
             common::result& r,
             parser* parser,
             ast_node_t* lhs,
-            token_t& token) override;
+            token_t* token) override;
 
         precedence_t precedence() const override;
 
@@ -191,7 +191,7 @@ namespace basecode::syntax {
             common::result& r,
             parser* parser,
             ast_node_t* lhs,
-            token_t& token) override;
+            token_t* token) override;
 
         void precedence(precedence_t value) {
             _precedence = value;
@@ -213,7 +213,7 @@ namespace basecode::syntax {
             common::result& r,
             parser* parser,
             ast_node_t* lhs,
-            token_t& token) override;
+            token_t* token) override;
 
         precedence_t precedence() const override;
     };
@@ -227,7 +227,7 @@ namespace basecode::syntax {
         virtual ast_node_t* parse(
             common::result& r,
             parser* parser,
-            token_t& token) = 0;
+            token_t* token) = 0;
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -239,7 +239,7 @@ namespace basecode::syntax {
         ast_node_t* parse(
             common::result& r,
             parser* parser,
-            token_t& token) override;
+            token_t* token) override;
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -251,7 +251,7 @@ namespace basecode::syntax {
         ast_node_t* parse(
             common::result& r,
             parser* parser,
-            token_t& token) override;
+            token_t* token) override;
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -263,7 +263,7 @@ namespace basecode::syntax {
         ast_node_t* parse(
             common::result& r,
             parser* parser,
-            token_t& token) override;
+            token_t* token) override;
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -275,7 +275,7 @@ namespace basecode::syntax {
         ast_node_t* parse(
             common::result& r,
             parser* parser,
-            token_t& token) override;
+            token_t* token) override;
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -287,7 +287,7 @@ namespace basecode::syntax {
         ast_node_t* parse(
             common::result& r,
             parser* parser,
-            token_t& token) override;
+            token_t* token) override;
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -299,7 +299,7 @@ namespace basecode::syntax {
         ast_node_t* parse(
             common::result& r,
             parser* parser,
-            token_t& token) override;
+            token_t* token) override;
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -311,7 +311,7 @@ namespace basecode::syntax {
         ast_node_t* parse(
             common::result& r,
             parser* parser,
-            token_t& token) override;
+            token_t* token) override;
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -323,7 +323,7 @@ namespace basecode::syntax {
         ast_node_t* parse(
             common::result& r,
             parser* parser,
-            token_t& token) override;
+            token_t* token) override;
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -335,7 +335,7 @@ namespace basecode::syntax {
         ast_node_t* parse(
             common::result& r,
             parser* parser,
-            token_t& token) override;
+            token_t* token) override;
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -347,7 +347,7 @@ namespace basecode::syntax {
         ast_node_t* parse(
             common::result& r,
             parser* parser,
-            token_t& token) override;
+            token_t* token) override;
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -359,7 +359,7 @@ namespace basecode::syntax {
         ast_node_t* parse(
             common::result& r,
             parser* parser,
-            token_t& token) override;
+            token_t* token) override;
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -371,7 +371,7 @@ namespace basecode::syntax {
         ast_node_t* parse(
             common::result& r,
             parser* parser,
-            token_t& token) override;
+            token_t* token) override;
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -383,7 +383,7 @@ namespace basecode::syntax {
         ast_node_t* parse(
             common::result& r,
             parser* parser,
-            token_t& token) override;
+            token_t* token) override;
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -395,7 +395,7 @@ namespace basecode::syntax {
         ast_node_t* parse(
             common::result& r,
             parser* parser,
-            token_t& token) override;
+            token_t* token) override;
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -407,7 +407,7 @@ namespace basecode::syntax {
         ast_node_t* parse(
             common::result& r,
             parser* parser,
-            token_t& token) override;
+            token_t* token) override;
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -419,7 +419,7 @@ namespace basecode::syntax {
         ast_node_t* parse(
             common::result& r,
             parser* parser,
-            token_t& token) override;
+            token_t* token) override;
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -431,7 +431,7 @@ namespace basecode::syntax {
         ast_node_t* parse(
             common::result& r,
             parser* parser,
-            token_t& token) override;
+            token_t* token) override;
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -443,7 +443,7 @@ namespace basecode::syntax {
         ast_node_t* parse(
             common::result& r,
             parser* parser,
-            token_t& token) override;
+            token_t* token) override;
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -455,7 +455,7 @@ namespace basecode::syntax {
         ast_node_t* parse(
             common::result& r,
             parser* parser,
-            token_t& token) override;
+            token_t* token) override;
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -467,7 +467,7 @@ namespace basecode::syntax {
         ast_node_t* parse(
             common::result& r,
             parser* parser,
-            token_t& token) override;
+            token_t* token) override;
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -479,7 +479,7 @@ namespace basecode::syntax {
         ast_node_t* parse(
             common::result& r,
             parser* parser,
-            token_t& token) override;
+            token_t* token) override;
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -491,7 +491,7 @@ namespace basecode::syntax {
         ast_node_t* parse(
             common::result& r,
             parser* parser,
-            token_t& token) override;
+            token_t* token) override;
 
     private:
         precedence_t _precedence;
@@ -506,7 +506,7 @@ namespace basecode::syntax {
         ast_node_t* parse(
             common::result& r,
             parser* parser,
-            token_t& token) override;
+            token_t* token) override;
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -518,7 +518,7 @@ namespace basecode::syntax {
         ast_node_t* parse(
             common::result& r,
             parser* parser,
-            token_t& token) override;
+            token_t* token) override;
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -530,7 +530,7 @@ namespace basecode::syntax {
         ast_node_t* parse(
             common::result& r,
             parser* parser,
-            token_t& token) override;
+            token_t* token) override;
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -542,7 +542,7 @@ namespace basecode::syntax {
         ast_node_t* parse(
             common::result& r,
             parser* parser,
-            token_t& token) override;
+            token_t* token) override;
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -554,7 +554,7 @@ namespace basecode::syntax {
         ast_node_t* parse(
             common::result& r,
             parser* parser,
-            token_t& token) override;
+            token_t* token) override;
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -566,7 +566,7 @@ namespace basecode::syntax {
         ast_node_t* parse(
             common::result& r,
             parser* parser,
-            token_t& token) override;
+            token_t* token) override;
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -578,7 +578,7 @@ namespace basecode::syntax {
         ast_node_t* parse(
             common::result& r,
             parser* parser,
-            token_t& token) override;
+            token_t* token) override;
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -590,7 +590,7 @@ namespace basecode::syntax {
         ast_node_t* parse(
             common::result& r,
             parser* parser,
-            token_t& token) override;
+            token_t* token) override;
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -602,7 +602,7 @@ namespace basecode::syntax {
         ast_node_t* parse(
             common::result& r,
             parser* parser,
-            token_t& token) override;
+            token_t* token) override;
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -614,7 +614,7 @@ namespace basecode::syntax {
         ast_node_t* parse(
             common::result& r,
             parser* parser,
-            token_t& token) override;
+            token_t* token) override;
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -626,7 +626,7 @@ namespace basecode::syntax {
         ast_node_t* parse(
             common::result& r,
             parser* parser,
-            token_t& token) override;
+            token_t* token) override;
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -638,7 +638,7 @@ namespace basecode::syntax {
         ast_node_t* parse(
             common::result& r,
             parser* parser,
-            token_t& token) override;
+            token_t* token) override;
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -650,7 +650,7 @@ namespace basecode::syntax {
         ast_node_t* parse(
             common::result& r,
             parser* parser,
-            token_t& token) override;
+            token_t* token) override;
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -667,23 +667,19 @@ namespace basecode::syntax {
             const std::string& message,
             const common::source_location& location);
 
-        bool consume();
-
         void write_ast_graph(
             const boost::filesystem::path& path,
             ast_node_t* program_node);
 
-        bool consume(token_t& token);
+        token_t* consume();
 
-        bool current(token_t& token);
+        token_t* current();
 
         bool peek(token_type_t type);
 
         bool look_ahead(size_t count);
 
-        ast_node_t* parse_scope(
-            common::result& r,
-            token_t& token);
+        token_t* token_at(size_t index);
 
         syntax::ast_builder* ast_builder();
 
@@ -698,9 +694,9 @@ namespace basecode::syntax {
 
         ast_node_t* parse(common::result& r);
 
-        bool token_at(size_t index, token_t& token);
+        token_t* expect(common::result& r, token_type_t type);
 
-        bool expect(common::result& r, token_t& token);
+        ast_node_t* parse_scope(common::result& r, token_t* token);
 
     protected:
         ast_node_t* parse_statement(common::result& r);
@@ -902,7 +898,7 @@ namespace basecode::syntax {
         };
 
         syntax::lexer _lexer;
-        std::vector<token_t> _tokens {};
+        std::vector<token_t*> _tokens {};
         syntax::ast_builder& _ast_builder;
         common::source_file* _source_file = nullptr;
     };

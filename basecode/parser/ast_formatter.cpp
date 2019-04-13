@@ -45,7 +45,7 @@ namespace basecode::syntax {
                 style = ", fillcolor=green, style=\"filled\"";
                 details = fmt::format(
                     "|{{ token: '{}' }}",
-                    common::graphviz_formatter::escape_chars(node->token.value));
+                    common::graphviz_formatter::escape_chars(node->token->value));
                 break;
             case ast_node_type_t::module:
                 style = ", fillcolor=cadetblue, style=\"filled\"";
@@ -87,8 +87,8 @@ namespace basecode::syntax {
                 break;
         }
 
-        if (!node->token.value.empty() && details.empty()) {
-            auto value = std::string(node->token.value);
+        if (!node->token->value.empty() && details.empty()) {
+            auto value = std::string(node->token->value);
 
             if (value == "|")
                 value = "&#124;";
@@ -99,8 +99,8 @@ namespace basecode::syntax {
                 "|{{ token: '{}' ",
                 common::graphviz_formatter::escape_chars(value));
 
-            if (node->token.is_numeric()) {
-                details += fmt::format("| radix: {}", node->token.radix);
+            if (node->token->is_numeric()) {
+                details += fmt::format("| radix: {}", node->token->radix);
             }
 
             details += "}";

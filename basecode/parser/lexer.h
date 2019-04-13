@@ -28,9 +28,9 @@ namespace basecode::syntax {
 
         explicit lexer(common::source_file* source_file);
 
-        bool has_next() const;
+        token_t* next();
 
-        bool next(token_t& token);
+        bool has_next() const;
 
         bool tokenize(common::result& r);
 
@@ -208,9 +208,9 @@ namespace basecode::syntax {
         bool greater_than_equal_operator(common::result& r);
 
     private:
-        bool match_literal(
+        std::string_view match_literal(
             common::result& r,
-            const std::string& literal);
+            const std::string_view& literal);
 
         common::rune_t read(
             common::result& r,
@@ -250,7 +250,7 @@ namespace basecode::syntax {
         bool _has_next = true;
         size_t _token_index = 0;
         uint32_t _paren_depth = 0;
-        std::vector<token_t> _tokens {};
+        std::vector<token_t*> _tokens {};
         common::source_file* _source_file = nullptr;
     };
 

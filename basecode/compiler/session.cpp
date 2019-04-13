@@ -1099,20 +1099,30 @@ namespace basecode::compiler {
         }
 
         _ast_builder->reset();
-        syntax::parser alpha_parser(source_file, *_ast_builder);
+        syntax::parser* alpha_parser = nullptr;
+        const auto& source_path = source_file->path().string();
+        auto it = _parsers.find(source_path);
+        if (it == std::end(_parsers)) {
+            auto result = _parsers.insert(std::make_pair(
+                source_path,
+                syntax::parser(source_file, *_ast_builder)));
+            alpha_parser = &result.first->second;
+        } else {
+            alpha_parser = &it->second;
+        }
 
-        auto module_node = alpha_parser.parse(_result);
+        auto module_node = alpha_parser->parse(_result);
         if (module_node != nullptr && !_result.is_failed()) {
             if (_options.output_ast_graphs) {
                 boost::filesystem::path ast_file_path(source_file->path().parent_path());
                 auto filename = source_file->path()
                     .filename()
-                    .replace_extension("")
+                    .replace_extension({})
                     .string();
                 filename += "-ast";
                 ast_file_path.append(filename);
                 ast_file_path.replace_extension(".dot");
-                alpha_parser.write_ast_graph(
+                alpha_parser->write_ast_graph(
                     ast_file_path,
                     module_node);
             }

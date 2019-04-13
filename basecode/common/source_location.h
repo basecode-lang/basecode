@@ -39,5 +39,5 @@ namespace basecode::common {
         location_t _start {};
     };
 
-};
+}
 
