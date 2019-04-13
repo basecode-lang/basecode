@@ -470,6 +470,10 @@ namespace basecode::compiler {
         return *_labels;
     }
 
+    string_set_t& session::strings() {
+        return _strings;
+    }
+
     common::result& session::result() {
         return _result;
     }
@@ -597,9 +601,10 @@ namespace basecode::compiler {
         compiler::numeric_type::make_types(*this, parent_scope);
         for (const auto& type_name : compiler::numeric_type::type_names()) {
             auto base_type = _scope_manager->find_type(qualified_symbol_t(type_name));
+            auto it = _strings.insert(compiler::pointer_type::name_for_pointer(base_type));
             _builder->make_pointer_type(
                 parent_scope,
-                qualified_symbol_t(compiler::pointer_type::name_for_pointer(base_type)),
+                qualified_symbol_t(*it.first),
                 base_type);
         }
         _scope_manager->add_type_to_scope(_builder->make_module_type(

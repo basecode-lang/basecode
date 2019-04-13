@@ -25,7 +25,7 @@ namespace basecode::compiler {
         type_name_builder builder {};
         builder
             .add_part("ptr")
-            .add_part(base_type->symbol()->name());
+            .add_part(std::string(base_type->symbol()->name()));
         return builder.format();
     }
 
@@ -84,9 +84,8 @@ namespace basecode::compiler {
     }
 
     bool pointer_type::on_initialize(compiler::session& session) {
-        auto type_symbol = session.builder().make_symbol(
-            parent_scope(),
-            name_for_pointer(_base_type_ref->type()));
+        auto it = session.strings().insert(name_for_pointer(_base_type_ref->type()));
+        auto type_symbol = session.builder().make_symbol(parent_scope(), *it.first);
         symbol(type_symbol);
         type_symbol->parent_element(this);
         alignment(sizeof(uint64_t));

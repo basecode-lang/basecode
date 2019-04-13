@@ -24,7 +24,7 @@ namespace basecode::compiler {
         type_name_builder builder {};
         builder
             .add_part("ti")
-            .add_part(type->symbol()->name());
+            .add_part(std::string(type->symbol()->name()));
         return builder.format();
     }
 
@@ -32,7 +32,7 @@ namespace basecode::compiler {
         type_name_builder builder {};
         builder
             .add_part("ti_lit")
-            .add_part(type->symbol()->name());
+            .add_part(std::string(type->symbol()->name()));
         return builder.format();
     }
 

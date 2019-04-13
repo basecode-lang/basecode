@@ -1713,7 +1713,7 @@ namespace basecode::compiler {
             case element_type_t::float_literal: {
                 auto float_literal = dynamic_cast<compiler::float_literal*>(e);
                 auto value = float_literal->value();
-                auto is_float = numeric_type::narrow_to_value(value) == "f32";
+                auto is_float = numeric_type::narrow_to_value(value) == "f32"sv;
                 if (is_float) {
                     auto temp_value = static_cast<float>(value);
                     result.operands.emplace_back(vm::instruction_operand_t(temp_value));

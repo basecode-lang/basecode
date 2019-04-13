@@ -230,7 +230,7 @@ namespace basecode::compiler {
 
         numeric_type* make_numeric_type(
             compiler::block* parent_scope,
-            const std::string& name,
+            const std::string_view& name,
             int64_t min,
             uint64_t max,
             bool is_signed,
@@ -339,8 +339,8 @@ namespace basecode::compiler {
 
         compiler::symbol_element* make_symbol(
             compiler::block* parent_scope,
-            const std::string& name,
-            const string_list_t& namespaces = {},
+            const std::string_view& name,
+            const string_view_list_t& namespaces = {},
             const type_reference_list_t& type_params = {});
 
         module_reference* make_module_reference(
@@ -364,7 +364,7 @@ namespace basecode::compiler {
 
         label_reference* make_label_reference(
             compiler::block* parent_scope,
-            const std::string& name);
+            const std::string_view& name);
 
         compiler::boolean_literal* true_literal();
 

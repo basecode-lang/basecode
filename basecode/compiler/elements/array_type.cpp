@@ -30,7 +30,7 @@ namespace basecode::compiler {
         type_name_builder builder {};
         builder
             .add_part("array")
-            .add_part(entry_type->symbol()->name());
+            .add_part(std::string(entry_type->symbol()->name()));
 
         for (auto s : subscripts) {
             uint64_t size = 0;
@@ -148,16 +148,15 @@ namespace basecode::compiler {
         auto& builder = session.builder();
         auto& scope_manager = session.scope_manager();
 
-        auto type_symbol = builder.make_symbol(
-            parent_scope(),
-            name_for_array(_base_type_ref->type(), _subscripts));
+        auto it = session.strings().insert(name_for_array(_base_type_ref->type(), _subscripts));
+        auto type_symbol = builder.make_symbol(parent_scope(), *it.first);
         symbol(type_symbol);
         type_symbol->parent_element(this);
 
         auto block_scope = scope();
         auto& field_map = fields();
 
-        auto u32_type = scope_manager.find_type(qualified_symbol_t("u32"));
+        auto u32_type = scope_manager.find_type(qualified_symbol_t("u32"sv));
         auto u32_type_ref = builder.make_type_reference(
             block_scope,
             u32_type->symbol()->qualified_symbol(),
@@ -167,7 +166,7 @@ namespace basecode::compiler {
 
         auto length_identifier = builder.make_identifier(
             block_scope,
-            builder.make_symbol(block_scope, "length"),
+            builder.make_symbol(block_scope, "length"sv),
             builder.make_initializer(block_scope, builder.make_integer(block_scope, 0)));
         length_identifier->type_ref(u32_type_ref);
         length_identifier->parent_element(block_scope);
@@ -194,7 +193,7 @@ namespace basecode::compiler {
 
         auto data_identifier = builder.make_identifier(
             block_scope,
-            builder.make_symbol(block_scope, "data"),
+            builder.make_symbol(block_scope, "data"sv),
             builder.make_initializer(block_scope, builder.nil_literal()));
         data_identifier->type_ref(entry_ptr_type_ref);
         data_identifier->parent_element(block_scope);

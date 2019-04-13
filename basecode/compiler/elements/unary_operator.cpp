@@ -46,7 +46,7 @@ namespace basecode::compiler {
                 return _rhs->infer_type(session, result);
             }
             case operator_type_t::logical_not: {
-                result.types.emplace_back(scope_manager.find_type(qualified_symbol_t("bool")));
+                result.types.emplace_back(scope_manager.find_type(qualified_symbol_t("bool"sv)));
                 return true;
             }
             case operator_type_t::pointer_dereference: {

@@ -248,7 +248,7 @@ namespace basecode::vm {
     void basic_block::string(
             vm::label* start_label,
             vm::label* data_label,
-            const std::string& value) {
+            const std::string_view& value) {
         if (start_label != nullptr)
             label(start_label);
         dwords({static_cast<uint32_t>(value.length())});

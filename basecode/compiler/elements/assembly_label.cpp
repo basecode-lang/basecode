@@ -37,7 +37,7 @@ namespace basecode::compiler {
         compiler::type* type = nullptr;
         auto base_type = _ref != nullptr ?
                          _ref->identifier()->type_ref()->type() :
-                         scope_manager.find_type(qualified_symbol_t("u0"));
+                         scope_manager.find_type(qualified_symbol_t("u0"sv));
 
         type = scope_manager.find_pointer_type(base_type);
         if (type == nullptr) {

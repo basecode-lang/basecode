@@ -20,8 +20,8 @@ namespace basecode::compiler {
     symbol_element::symbol_element(
             compiler::module* module,
             compiler::block* parent_scope,
-            const std::string& name,
-            const string_list_t& namespaces,
+            const std::string_view& name,
+            const string_view_list_t& namespaces,
             const type_reference_list_t& type_params) : element(module, parent_scope, element_type_t::symbol),
                                                         _name(name),
                                                         _namespaces(namespaces),
@@ -42,7 +42,7 @@ namespace basecode::compiler {
         return false;
     }
 
-    std::string symbol_element::name() const {
+    std::string_view symbol_element::name() const {
         return _name;
     }
 
@@ -62,13 +62,13 @@ namespace basecode::compiler {
         _fully_qualified_name = make_fully_qualified_name(this);
     }
 
-    std::string symbol_element::fully_qualified_name() {
+    std::string_view symbol_element::fully_qualified_name() {
         if (_fully_qualified_name.empty())
             cache_fully_qualified_name();
         return _fully_qualified_name;
     }
 
-    const string_list_t& symbol_element::namespaces() const {
+    const string_view_list_t& symbol_element::namespaces() const {
         return _namespaces;
     }
 

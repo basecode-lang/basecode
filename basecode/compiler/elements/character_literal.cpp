@@ -26,7 +26,7 @@ namespace basecode::compiler {
     bool character_literal::on_infer_type(
             compiler::session& session,
             infer_type_result_t& result) {
-        result.types.emplace_back(session.scope_manager().find_type(qualified_symbol_t("rune")));
+        result.types.emplace_back(session.scope_manager().find_type(qualified_symbol_t("rune"sv)));
         return true;
     }
 

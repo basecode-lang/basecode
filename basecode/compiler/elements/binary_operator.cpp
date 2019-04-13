@@ -123,7 +123,7 @@ namespace basecode::compiler {
                 result.types.emplace_back(
                     session
                         .scope_manager()
-                        .find_type(qualified_symbol_t("bool")));
+                        .find_type(qualified_symbol_t("bool"sv)));
                 return true;
             }
             default:

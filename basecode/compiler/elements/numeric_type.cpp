@@ -41,8 +41,8 @@ namespace basecode::compiler {
         }
     }
 
-    std::vector<std::string> numeric_type::type_names() {
-        std::vector<std::string> list {};
+    string_view_list_t numeric_type::type_names() {
+        string_view_list_t list {};
         for (const auto& props : s_type_properties)
             list.emplace_back(props.name);
         return list;
@@ -50,16 +50,16 @@ namespace basecode::compiler {
 
     // float:  -3.4e+38  to 3.4e+38
     // double: -1.7e+308 to 1.7e+308
-    std::string numeric_type::narrow_to_value(double value) {
+    std::string_view numeric_type::narrow_to_value(double value) {
         if (value < -3.4e+38 || value > 3.4e+38)
-            return "f64";
+            return "f64"sv;
         else if (value >= -3.4e+38 && value <= 3.4e+38)
-            return "f32";
+            return "f32"sv;
         else
-            return "unknown";
+            return "unknown"sv;
     }
 
-    std::string numeric_type::narrow_to_value(uint64_t value) {
+    std::string_view numeric_type::narrow_to_value(uint64_t value) {
         auto is_signed = common::is_sign_bit_set(value);
         for (size_t i = 1; i < 5; i++) {
             const auto& props = s_type_properties[i];
@@ -72,12 +72,12 @@ namespace basecode::compiler {
             }
         }
 
-        return "unknown";
+        return "unknown"sv;
     }
 
     numeric_type_properties_t* numeric_type::type_properties_for_value(uint64_t value) {
         auto type_name = numeric_type::narrow_to_value(value);
-        if (type_name == "unknown")
+        if (type_name == "unknown"sv)
             return nullptr;
         auto it = s_types_map.find(type_name);
         if (it == s_types_map.end())

@@ -32,7 +32,7 @@ namespace basecode::compiler {
         result.types.emplace_back(
             session
                 .scope_manager()
-                .find_type(qualified_symbol_t("namespace")));
+                .find_type(qualified_symbol_t("namespace"sv)));
         return true;
     }
 

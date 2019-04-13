@@ -67,12 +67,11 @@ namespace basecode::compiler {
             const syntax::ast_node_t* node) {
         if (!node->children.empty()) {
             for (size_t i = 0; i < node->children.size() - 1; i++) {
-                // XXX: fix this to use string_views
-                symbol.namespaces.push_back(std::string(node->children[i]->token.value));
+                symbol.namespaces.push_back(node->children[i]->token.value);
             }
         }
-        symbol.name = node->children.back()->token.value;
         symbol.location = node->location;
+        symbol.name = node->children.back()->token.value;
         symbol.fully_qualified_name = make_fully_qualified_name(symbol);
     }
 
@@ -152,9 +151,8 @@ namespace basecode::compiler {
     procedure_type* element_builder::make_procedure_type(
             compiler::block* parent_scope,
             compiler::block* block_scope) {
-        auto symbol = make_symbol(
-            parent_scope,
-            compiler::procedure_type::name_for_procedure_type());
+        auto it = _session.strings().insert(compiler::procedure_type::name_for_procedure_type());
+        auto symbol = make_symbol(parent_scope, *it.first);
         auto type = new compiler::procedure_type(
             _session.scope_manager().current_module(),
             parent_scope,
@@ -567,9 +565,8 @@ namespace basecode::compiler {
     tuple_type* element_builder::make_tuple_type(
             compiler::block* parent_scope,
             compiler::block* scope) {
-        auto symbol = make_symbol(
-            parent_scope,
-            compiler::tuple_type::name_for_tuple());
+        auto it = _session.strings().insert(compiler::tuple_type::name_for_tuple());
+        auto symbol = make_symbol(parent_scope, *it.first);
         auto type = new compiler::tuple_type(
             _session.scope_manager().current_module(),
             parent_scope,
@@ -583,9 +580,8 @@ namespace basecode::compiler {
     family_type* element_builder::make_family_type(
             compiler::block* parent_scope,
             const compiler::type_reference_list_t& types) {
-        auto symbol = make_symbol(
-            parent_scope,
-            compiler::family_type::name_for_family());
+        auto it = _session.strings().insert(compiler::family_type::name_for_family());
+        auto symbol = make_symbol(parent_scope, *it.first);
         auto type = new compiler::family_type(
             _session.scope_manager().current_module(),
             parent_scope,
@@ -630,9 +626,8 @@ namespace basecode::compiler {
     composite_type* element_builder::make_union_type(
             compiler::block* parent_scope,
             compiler::block* scope) {
-        auto symbol = make_symbol(
-            parent_scope,
-            compiler::composite_type::name_for_struct());
+        auto it = _session.strings().insert(compiler::composite_type::name_for_union());
+        auto symbol = make_symbol(parent_scope, *it.first);
         auto type = new compiler::composite_type(
             _session.scope_manager().current_module(),
             parent_scope,
@@ -648,9 +643,8 @@ namespace basecode::compiler {
     composite_type* element_builder::make_struct_type(
             compiler::block* parent_scope,
             compiler::block* scope) {
-        auto symbol = make_symbol(
-            parent_scope,
-            compiler::composite_type::name_for_struct());
+        auto it = _session.strings().insert(compiler::composite_type::name_for_struct());
+        auto symbol = make_symbol(parent_scope, *it.first);
         auto type = new compiler::composite_type(
             _session.scope_manager().current_module(),
             parent_scope,
@@ -775,8 +769,8 @@ namespace basecode::compiler {
     }
 
     label_reference* element_builder::make_label_reference(
-        compiler::block* parent_scope,
-        const std::string& name) {
+            compiler::block* parent_scope,
+            const std::string_view& name) {
         auto label_ref = new compiler::label_reference(
             _session.scope_manager().current_module(),
             parent_scope,
@@ -862,9 +856,8 @@ namespace basecode::compiler {
     composite_type* element_builder::make_enum_type(
             compiler::block* parent_scope,
             compiler::block* scope) {
-        auto symbol = make_symbol(
-            parent_scope,
-            compiler::composite_type::name_for_enum());
+        auto it = _session.strings().insert(compiler::composite_type::name_for_enum());
+        auto symbol = make_symbol(parent_scope, *it.first);
         auto type = new compiler::composite_type(
             _session.scope_manager().current_module(),
             parent_scope,
@@ -907,7 +900,7 @@ namespace basecode::compiler {
 
     numeric_type* element_builder::make_numeric_type(
             compiler::block* parent_scope,
-            const std::string& name,
+            const std::string_view& name,
             int64_t min,
             uint64_t max,
             bool is_signed,
@@ -1005,8 +998,8 @@ namespace basecode::compiler {
 
     compiler::symbol_element* element_builder::make_symbol(
             compiler::block* parent_scope,
-            const std::string& name,
-            const string_list_t& namespaces,
+            const std::string_view& name,
+            const string_view_list_t& namespaces,
             const type_reference_list_t& type_params) {
         auto symbol = new compiler::symbol_element(
             _session.scope_manager().current_module(),

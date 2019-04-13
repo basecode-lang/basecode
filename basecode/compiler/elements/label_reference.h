@@ -20,9 +20,9 @@ namespace basecode::compiler {
         label_reference(
             compiler::module* module,
             compiler::block* parent_scope,
-            const std::string& label);
+            const std::string_view& label);
 
-        std::string label() const;
+        std::string_view label() const;
 
     protected:
         bool on_fold(
@@ -32,7 +32,7 @@ namespace basecode::compiler {
         bool on_is_constant() const override;
 
     private:
-        std::string _label;
+        std::string_view _label;
     };
 
 }

@@ -26,7 +26,7 @@ namespace basecode::compiler {
     bool boolean_literal::on_infer_type(
             compiler::session& session,
             infer_type_result_t& result) {
-        result.types.emplace_back(session.scope_manager().find_type(qualified_symbol_t("bool")));
+        result.types.emplace_back(session.scope_manager().find_type(qualified_symbol_t("bool"sv)));
         return true;
     }
 

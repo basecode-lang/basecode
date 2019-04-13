@@ -214,7 +214,7 @@ namespace basecode::syntax {
             return token.value == other.token.value;
         }
 
-        bool has_attribute(const std::string& name) const {
+        bool has_attribute(const std::string_view& name) const {
             if (attributes.empty())
                 return false;
             for (auto attr : attributes)

@@ -321,8 +321,8 @@ namespace basecode::compiler {
 
         auto namespaces = symbol->namespaces();
         auto scope = parent_scope;
-        string_list_t temp_list {};
-        std::string namespace_name {};
+        string_view_list_t temp_list {};
+        std::string_view namespace_name {};
         for (const auto& name : namespaces) {
             if (!namespace_name.empty())
                 temp_list.push_back(namespace_name);
@@ -992,7 +992,7 @@ namespace basecode::compiler {
         if (context.node->lhs != nullptr) {
             label = builder.make_label_reference(
                 scope_manager.current_scope(),
-                std::string(context.node->lhs->token.value));
+                context.node->lhs->token.value);
         }
 
         result.element = builder.make_break(
@@ -1011,7 +1011,7 @@ namespace basecode::compiler {
         if (context.node->lhs != nullptr) {
             label = builder.make_label_reference(
                 scope_manager.current_scope(),
-                std::string(context.node->lhs->token.value));
+                context.node->lhs->token.value);
         }
 
         result.element = builder.make_continue(
@@ -1579,7 +1579,7 @@ namespace basecode::compiler {
             lhs,
             builder.make_identifier_reference(
                 scope_manager.current_scope(),
-                qualified_symbol_t("data"),
+                qualified_symbol_t("data"sv),
                 nullptr));
 
         result.element = builder.make_binary_operator(
@@ -1623,7 +1623,7 @@ namespace basecode::compiler {
 
         result.element = scope_manager.pop_scope();
 
-        if (context.node->has_attribute("parent_scope")) {
+        if (context.node->has_attribute("parent_scope"sv)) {
             auto current_scope = scope_manager.current_scope();
             for (auto identifier : active_scope->identifiers().as_list())
                 current_scope->identifiers().add(identifier);
@@ -1665,7 +1665,7 @@ namespace basecode::compiler {
                     _session,
                     args->parent_scope(),
                     address_of_args,
-                    qualified_symbol_t("address_of"),
+                    qualified_symbol_t("address_of"sv),
                     {});
                 args->replace(0, address_of_call);
                 address_of_call->parent_element(args);
@@ -2767,10 +2767,10 @@ namespace basecode::compiler {
                     break;
                 }
                 case syntax::ast_node_type_t::type_declaration: {
-                    auto name = fmt::format("_{}", anonymous_index++);
+                    auto it = _session.strings().insert(fmt::format("_{}", anonymous_index++));
                     auto param_identifier = builder.make_identifier(
                         block_scope,
-                        builder.make_symbol(block_scope, name),
+                        builder.make_symbol(block_scope, *it.first),
                         nullptr);
                     param_identifier->usage(identifier_usage_t::stack);
                     auto type_ref = dynamic_cast<compiler::type_reference*>(evaluate_in_scope(
@@ -2888,9 +2888,10 @@ namespace basecode::compiler {
             syntax::ast_node_t* assignment_node = nullptr;
 
             if (arg->type != syntax::ast_node_type_t::assignment) {
+                auto it = _session.strings().insert(fmt::format("_{}", index));
                 syntax::token_t field_name;
                 field_name.type = syntax::token_type_t::identifier;
-                field_name.value = fmt::format("_{}", index);
+                field_name.value = *it.first;
 
                 auto field_symbol = ast_builder.symbol_node();
                 field_symbol->children.push_back(ast_builder.symbol_part_node(field_name));

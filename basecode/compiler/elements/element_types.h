@@ -706,7 +706,7 @@ namespace basecode::compiler {
 
         compiler::field* find(common::id_t id);
 
-        compiler::field* find_by_name(const std::string& name);
+        compiler::field* find_by_name(const std::string_view& name);
 
     private:
         std::map<common::id_t, field*> _fields {};
@@ -731,12 +731,12 @@ namespace basecode::compiler {
 
         identifier_list_t as_list() const;
 
-        bool remove(const std::string& name);
+        bool remove(const std::string_view& name);
 
-        identifier_list_t find(const std::string& name);
+        identifier_list_t find(const std::string_view& name);
 
     private:
-        std::unordered_multimap<std::string, identifier*> _identifiers {};
+        std::unordered_multimap<std::string_view, identifier*> _identifiers {};
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -792,14 +792,14 @@ namespace basecode::compiler {
 
         void add(compiler::type* type);
 
-        string_list_t name_list() const;
+        string_view_list_t name_list() const;
 
-        bool remove(const std::string& name);
+        bool remove(const std::string_view& name);
 
-        compiler::type* find(const std::string& name);
+        compiler::type* find(const std::string_view& name);
 
     private:
-        std::unordered_map<std::string, type*> _types {};
+        std::unordered_map<std::string_view, type*> _types {};
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -807,19 +807,19 @@ namespace basecode::compiler {
     struct qualified_symbol_t {
         qualified_symbol_t() = default;
 
-        explicit qualified_symbol_t(std::string name) : name(std::move(name)) {
+        explicit qualified_symbol_t(std::string_view name) : name(name) {
         }
 
         bool is_qualified() const {
             return !namespaces.empty();
         }
-        std::string name {};
-        string_list_t namespaces {};
-        std::string fully_qualified_name {};
+        std::string_view name {};
+        string_view_list_t namespaces {};
         common::source_location location {};
+        std::string fully_qualified_name {};
     };
 
-    qualified_symbol_t make_qualified_symbol(const std::string& symbol);
+    qualified_symbol_t make_qualified_symbol(const std::string_view& symbol);
 
     std::string make_fully_qualified_name(const symbol_element* symbol);
 
@@ -840,7 +840,7 @@ namespace basecode::compiler {
     ///////////////////////////////////////////////////////////////////////////
 
     struct inferred_type_t {
-        std::string type_name() const;
+        std::string_view type_name() const;
 
         explicit inferred_type_t(
             compiler::type* t,

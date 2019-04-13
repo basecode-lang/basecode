@@ -87,7 +87,7 @@ namespace basecode::compiler {
         auto& builder = session.builder();
         auto& scope_manager = session.scope_manager();
 
-        auto base_type = scope_manager.find_type(qualified_symbol_t("type"));
+        auto base_type = scope_manager.find_type(qualified_symbol_t("type"sv));
         auto type = scope_manager.find_pointer_type(base_type);
         if (type == nullptr) {
             type = builder.make_pointer_type(

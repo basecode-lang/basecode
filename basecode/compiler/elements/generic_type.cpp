@@ -11,6 +11,7 @@
 
 #include <compiler/session.h>
 #include <compiler/element_builder.h>
+#include <compiler/type_name_builder.h>
 #include "generic_type.h"
 #include "type_reference.h"
 #include "symbol_element.h"
@@ -19,13 +20,11 @@ namespace basecode::compiler {
 
     std::string generic_type::name_for_generic_type(
             const type_reference_list_t& constraints) {
-        std::stringstream stream;
-        stream << "__generic";
-        for (auto c : constraints) {
-            stream << "_" << c->symbol()->name();
-        }
-        stream << "__";
-        return stream.str();
+        type_name_builder builder{};
+        builder.add_part("generic");
+        for (auto c : constraints)
+            builder.add_part(std::string(c->symbol()->name()));
+        return builder.format();
     }
 
     generic_type::generic_type(
@@ -83,9 +82,8 @@ namespace basecode::compiler {
     }
 
     bool generic_type::on_initialize(compiler::session& session) {
-        symbol(session.builder().make_symbol(
-            parent_scope(),
-            name_for_generic_type(_constraints)));
+        auto it = session.strings().insert(name_for_generic_type(_constraints));
+        symbol(session.builder().make_symbol(parent_scope(), *it.first));
         return true;
     }
 

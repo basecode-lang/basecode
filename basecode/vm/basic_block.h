@@ -118,7 +118,7 @@ namespace basecode::vm {
         void string(
             vm::label* start_label,
             vm::label* data_label,
-            const std::string& value);
+            const std::string_view& value);
 
         void align(uint8_t size);
 

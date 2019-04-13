@@ -105,7 +105,7 @@ namespace basecode::compiler {
     identifier_list_t scope_manager::find_identifier(
             const qualified_symbol_t& symbol,
             compiler::block* scope) const {
-        std::stack<std::string> parts {};
+        std::stack<std::string_view> parts {};
         parts.push(symbol.name);
         for (auto it = symbol.namespaces.rbegin();
                  it != symbol.namespaces.rend();
@@ -230,8 +230,9 @@ namespace basecode::compiler {
             compiler::type* entry_type,
             const element_list_t& subscripts,
             compiler::block* scope) const {
+        auto it = _session.strings().insert(compiler::array_type::name_for_array(entry_type, subscripts));
         return dynamic_cast<compiler::array_type*>(find_type(
-            qualified_symbol_t(compiler::array_type::name_for_array(entry_type, subscripts)),
+            qualified_symbol_t(*it.first),
             scope));
     }
 
@@ -287,16 +288,18 @@ namespace basecode::compiler {
     compiler::pointer_type* scope_manager::find_pointer_type(
             compiler::type* base_type,
             compiler::block* scope) const {
+        auto it = _session.strings().insert(compiler::pointer_type::name_for_pointer(base_type));
         return dynamic_cast<compiler::pointer_type*>(find_type(
-            qualified_symbol_t(compiler::pointer_type::name_for_pointer(base_type)),
+            qualified_symbol_t(*it.first),
             scope));
     }
 
     compiler::generic_type* scope_manager::find_generic_type(
             const type_reference_list_t& constraints,
             compiler::block* scope) const {
+        auto it = _session.strings().insert(compiler::generic_type::name_for_generic_type(constraints));
         return dynamic_cast<compiler::generic_type*>(find_type(
-            qualified_symbol_t(compiler::generic_type::name_for_generic_type(constraints)),
+            qualified_symbol_t(*it.first),
             scope));
     }
 
@@ -305,8 +308,7 @@ namespace basecode::compiler {
     }
 
     compiler::namespace_type* scope_manager::find_namespace_type() const {
-        return dynamic_cast<compiler::namespace_type*>(find_type(
-            qualified_symbol_t("namespace")));
+        return dynamic_cast<compiler::namespace_type*>(find_type(qualified_symbol_t("namespace"sv)));
     }
 
     bool scope_manager::within_local_scope(compiler::block* parent_scope) const {
@@ -336,4 +338,4 @@ namespace basecode::compiler {
                nullptr;
     }
 
-};
+}

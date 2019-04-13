@@ -95,4 +95,4 @@ namespace basecode::compiler {
         identifier_reference_list_t _unresolved_identifier_references {};
     };
 
-};
+}

@@ -93,7 +93,7 @@ namespace basecode::compiler {
         return nullptr;
     }
 
-    compiler::field* field_map_t::find_by_name(const std::string& name) {
+    compiler::field* field_map_t::find_by_name(const std::string_view& name) {
         for (const auto& kvp : _fields) {
             if (kvp.second->identifier()->symbol()->name() == name)
                 return kvp.second;
@@ -116,7 +116,7 @@ namespace basecode::compiler {
 
     void identifier_map_t::dump() {
         for (const auto& it : _identifiers) {
-            fmt::print("{0} := id({1})\n", it.first, it.second->id());
+            fmt::print("{} := id({})\n", it.first, it.second->id());
         }
     }
 
@@ -133,11 +133,11 @@ namespace basecode::compiler {
         return list;
     }
 
-    bool identifier_map_t::remove(const std::string& name) {
+    bool identifier_map_t::remove(const std::string_view& name) {
         return _identifiers.erase(name) > 0;
     }
 
-    identifier_list_t identifier_map_t::find(const std::string& name) {
+    identifier_list_t identifier_map_t::find(const std::string_view& name) {
         identifier_list_t list {};
         auto range = _identifiers.equal_range(name);
         for (auto it = range.first; it != range.second; ++it)
@@ -206,19 +206,19 @@ namespace basecode::compiler {
         _types.insert(std::make_pair(type->symbol()->name(), type));
     }
 
-    string_list_t type_map_t::name_list() const {
-        string_list_t names {};
+    string_view_list_t type_map_t::name_list() const {
+        string_view_list_t names {};
         for (const auto& it : _types) {
             names.push_back(it.first);
         }
         return names;
     }
 
-    bool type_map_t::remove(const std::string& name) {
+    bool type_map_t::remove(const std::string_view& name) {
         return _types.erase(name) > 0;
     }
 
-    compiler::type* type_map_t::find(const std::string& name) {
+    compiler::type* type_map_t::find(const std::string_view& name) {
         auto it = _types.find(name);
         if (it != _types.end())
             return it->second;
@@ -259,7 +259,7 @@ namespace basecode::compiler {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    std::string inferred_type_t::type_name() const {
+    std::string_view inferred_type_t::type_name() const {
         if (ref != nullptr)
             return ref->symbol_override().name;
         return type->symbol()->name();
@@ -267,25 +267,26 @@ namespace basecode::compiler {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    qualified_symbol_t make_qualified_symbol(const std::string& symbol) {
+    qualified_symbol_t make_qualified_symbol(const std::string_view& symbol) {
         qualified_symbol_t qs {};
 
+        size_t start_pos = 0;
         size_t index = 0;
-        std::stringstream stream;
         while (index < symbol.length()) {
-            const auto& c = symbol[index];
-            if (c == ':') {
+            if (symbol[index] == ':') {
                 ++index;
-                if (c == ':') {
-                    qs.namespaces.emplace_back(stream.str());
-                    stream.str("");
+                if (index < symbol.length() && symbol[index] == ':') {
+                    qs.namespaces.emplace_back(
+                        symbol.data() + start_pos,
+                        index - start_pos);
+                    start_pos = index;
                 }
-            } else {
-                stream << c;
             }
             ++index;
         }
-        qs.name = stream.str();
+        qs.name = std::string_view(
+            symbol.data() + start_pos,
+            index - start_pos);
         qs.fully_qualified_name = symbol;
 
         return qs;

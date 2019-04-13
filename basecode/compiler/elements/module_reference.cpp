@@ -29,7 +29,7 @@ namespace basecode::compiler {
         result.types.emplace_back(
             session
                 .scope_manager()
-                .find_type(qualified_symbol_t("module")));
+                .find_type(qualified_symbol_t("module"sv)));
         return true;
     }
 

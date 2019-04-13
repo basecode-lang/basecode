@@ -46,7 +46,7 @@ namespace basecode::compiler {
         }
 
         auto& builder = session.builder();
-        auto u32_type = session.scope_manager().find_type(qualified_symbol_t("u32"));
+        auto u32_type = session.scope_manager().find_type(qualified_symbol_t("u32"sv));
 
         infer_type_result_t type_result {};
         if (args[0]->infer_type(session, type_result)) {
@@ -67,7 +67,7 @@ namespace basecode::compiler {
     bool align_of_intrinsic::on_infer_type(
             compiler::session& session,
             infer_type_result_t& result) {
-        result.types.emplace_back(session.scope_manager().find_type(qualified_symbol_t("u32")));
+        result.types.emplace_back(session.scope_manager().find_type(qualified_symbol_t("u32"sv)));
         return true;
     }
 

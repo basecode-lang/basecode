@@ -20,23 +20,23 @@ namespace basecode::compiler {
         symbol_element(
             compiler::module* module,
             compiler::block* parent_scope,
-            const std::string& name,
-            const string_list_t& namespaces,
+            const std::string_view& name,
+            const string_view_list_t& namespaces,
             const type_reference_list_t& type_params);
-
-        std::string name() const;
 
         bool is_qualified() const;
 
         void constant(bool value);
 
+        std::string_view name() const;
+
         void cache_fully_qualified_name();
 
-        std::string fully_qualified_name();
-
-        const string_list_t& namespaces() const;
+        std::string_view fully_qualified_name();
 
         qualified_symbol_t qualified_symbol() const;
+
+        const string_view_list_t& namespaces() const;
 
         bool operator== (const symbol_element& other) const;
 
@@ -56,9 +56,9 @@ namespace basecode::compiler {
         void on_owned_elements(element_list_t& list) override;
 
     private:
-        std::string _name {};
+        std::string_view _name {};
         bool _is_constant = false;
-        string_list_t _namespaces {};
+        string_view_list_t _namespaces {};
         std::string _fully_qualified_name {};
         type_reference_list_t _type_parameters {};
     };

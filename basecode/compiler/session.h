@@ -63,6 +63,8 @@ namespace basecode::compiler {
 
         vm::label_map& labels();
 
+        string_set_t& strings();
+
         common::result& result();
 
         type_list_t used_types();
@@ -159,6 +161,7 @@ namespace basecode::compiler {
         common::result _result;
         vm::ffi* _ffi = nullptr;
         module_map_t _modules {};
+        string_set_t _strings {};
         vm::terp* _terp = nullptr;
         type_set_t _used_types {};
         path_list_t _source_files {};

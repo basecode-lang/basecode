@@ -62,7 +62,7 @@ namespace basecode::compiler {
         result.types.emplace_back(
             session
                 .scope_manager()
-                .find_type(qualified_symbol_t("u32")));
+                .find_type(qualified_symbol_t("u32"sv)));
         return true;
     }
 
@@ -92,7 +92,7 @@ namespace basecode::compiler {
         auto& builder = session.builder();
         auto u32_type = session
             .scope_manager()
-            .find_type(qualified_symbol_t("u32"));
+            .find_type(qualified_symbol_t("u32"sv));
 
         switch (e->element_type()) {
             case element_type_t::identifier: {

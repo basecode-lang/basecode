@@ -69,7 +69,7 @@ namespace basecode::compiler {
         }
         library->self_loaded(library_name == COMPILER_LIBRARY_NAME);
 
-        std::string symbol_name = identifier->symbol()->name();
+        std::string symbol_name = std::string(identifier->symbol()->name());
         auto alias_attribute = proc_type->find_attribute("alias");
         if (alias_attribute != nullptr) {
             if (!alias_attribute->as_string(symbol_name)) {
