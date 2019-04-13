@@ -39,11 +39,6 @@ QUESTIONS
 TASKS
 -----
 LEXER:
-- PERF: refactor the lexer thusly:
-    1. add a bool tokenize(common::result& r) method that tokenizes the entire source_file
-       all in one go.  store the tokens in an internal vector.
-    2. the new tokenize method should use a direct-threaded-type model to process the file.
-    3. next and has_next both change to be based on the internal vector.
 
 =======
 
@@ -55,6 +50,8 @@ PARSER:
 =======
 
 COMPILER:
+- BUG: integer type-narrowing isn't working properly for signed types (scratch3.bc)
+
 - BUG: redefining an identifier with another type doesn't give nice errors.
 
 - BUG: fix assignment in ast_evaluator so it properly handles sets of multiple assignment/multiple return.
@@ -412,6 +409,11 @@ DONE
         u64_max_u := %1111_1111_1111_1111_1111_1111_1111_1111_1111_1111_1111_1111_1111_1111_1111_1111;
                      ^ type mismatch: cannot assign s8 to u64.
 - ADD: type_name_builder that eases construction of unique type names.
+- PERF: refactor the lexer thusly:
+    1. add a bool tokenize(common::result& r) method that tokenizes the entire source_file
+       all in one go.  store the tokens in an internal vector.
+    2. the new tokenize method should use a direct-threaded-type model to process the file.
+    3. next and has_next both change to be based on the internal vector.
 
 ANSWERS
 -------
