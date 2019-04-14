@@ -38,20 +38,27 @@ QUESTIONS
 
 TASKS
 -----
+- clean up all XXX notes
+
 LEXER:
 
 =======
 
 PARSER:
 - BUG: fix assignment so that groups of lhs/rhs are together.
+- FIX: change push_back to emplace_back for pointers
 - FIX: composite binary op + assign has parser precedence issues. may need to
        programmatically wrap the rhs in an expression_group.
 
 =======
 
 COMPILER:
-- BUG: integer type-narrowing isn't working properly for signed types (scratch3.bc)
+- BUG: integer_literal shouldn't assume a value is signed just because the sign bit is high.
+        should pass in the signedness from the token.
+- BUG: assignment to a lhs that has a type shouldn't be strict for numeric_type checking.
+- BUG: rewrite numeric_type narrow_to_type for integers
 
+- BUG: session type resolution doesn't support family_type parameters
 - BUG: redefining an identifier with another type doesn't give nice errors.
 
 - BUG: fix assignment in ast_evaluator so it properly handles sets of multiple assignment/multiple return.
@@ -165,6 +172,8 @@ VM:
 =======
 
 EMITTER:
+- BUG: union data reservations aren't emitting properly
+
 - BUG: multiple assignment code generation doesn't allow for value swaps.
 
 - FIX: copy semantics:
@@ -414,6 +423,7 @@ DONE
        all in one go.  store the tokens in an internal vector.
     2. the new tokenize method should use a direct-threaded-type model to process the file.
     3. next and has_next both change to be based on the internal vector.
+- BUG: integer type-narrowing isn't working properly for signed types (scratch3.bc)
 
 ANSWERS
 -------
