@@ -13,6 +13,7 @@
 
 #include <unordered_map>
 #include <common/result.h>
+#include <common/memory_pool.h>
 #include "token.h"
 
 namespace basecode::syntax {
@@ -30,10 +31,11 @@ namespace basecode::syntax {
         token_t* add(token_type_t type, const std::string_view& value);
 
     private:
-        token_pool() = default;
+        token_pool();
 
     private:
-        std::unordered_map<common::id_t, token_t> _tokens {};
+        common::memory_pool<token_t> _storage;
+        std::unordered_map<common::id_t, token_t*> _tokens {};
     };
 
 }

@@ -16,11 +16,7 @@
 
 namespace basecode::syntax {
 
-    ast_builder::~ast_builder() {
-        reset();
-        for (const auto& kvp : _nodes)
-            delete kvp.second;
-        _nodes.clear();
+    ast_builder::ast_builder() : _storage(256) {
     }
 
     void ast_builder::reset() {
@@ -525,7 +521,7 @@ namespace basecode::syntax {
     }
 
     ast_node_t* ast_builder::make_node(ast_node_type_t type, const token_t* token) {
-        auto node = new ast_node_t;
+        auto node = _storage.alloc();
         node->id = common::id_pool::instance()->allocate();
         node->type = type;
         if (token != nullptr) {

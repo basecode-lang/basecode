@@ -20,6 +20,7 @@
 #include <functional>
 #include <string_view>
 #include <common/id_pool.h>
+#include <common/memory_pool.h>
 #include "token.h"
 
 namespace basecode::syntax {
@@ -30,7 +31,7 @@ namespace basecode::syntax {
 
     using ast_node_list_t = std::vector<ast_node_t*>;
 
-    enum class ast_node_type_t : uint32_t {
+    enum class ast_node_type_t : uint8_t {
         pair,
         label,
         symbol,
@@ -242,9 +243,7 @@ namespace basecode::syntax {
 
     class ast_builder {
     public:
-        ast_builder() = default;
-
-        ~ast_builder();
+        ast_builder();
 
         void reset();
 
@@ -449,6 +448,7 @@ namespace basecode::syntax {
         std::stack<ast_node_t*> _with_stack {};
         std::stack<ast_node_t*> _scope_stack {};
         std::stack<ast_node_t*> _switch_stack {};
+        common::memory_pool<ast_node_t> _storage;
         std::stack<ast_node_t*> _member_access_stack {};
         std::unordered_map<common::id_t, ast_node_t*> _nodes {};
     };

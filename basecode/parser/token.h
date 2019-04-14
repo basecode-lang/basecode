@@ -230,6 +230,22 @@ namespace basecode::syntax {
     };
 
     struct token_t {
+        token_t() = default;
+
+        token_t(
+            common::id_t id,
+            token_type_t type) : id(id),
+                                 type(type) {
+        }
+
+        token_t(
+            common::id_t id,
+            token_type_t type,
+            std::string_view value) : id(id),
+                                      value(value),
+                                      type(type) {
+        }
+
         bool as_bool() const;
 
         bool is_label() const;
