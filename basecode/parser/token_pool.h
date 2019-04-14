@@ -21,6 +21,8 @@ namespace basecode::syntax {
     public:
         static token_pool* instance();
 
+        token_pool(const token_pool&) = delete;
+
         token_t* find(common::id_t id);
 
         token_t* add(token_type_t type);
@@ -29,8 +31,6 @@ namespace basecode::syntax {
 
     private:
         token_pool() = default;
-
-        token_pool(const token_pool&) = delete;
 
     private:
         std::unordered_map<common::id_t, token_t> _tokens {};

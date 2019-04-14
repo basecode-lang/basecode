@@ -46,7 +46,6 @@ LEXER:
 
 PARSER:
 - BUG: fix assignment so that groups of lhs/rhs are together.
-- FIX: change push_back to emplace_back for pointers
 - FIX: composite binary op + assign has parser precedence issues. may need to
        programmatically wrap the rhs in an expression_group.
 
@@ -424,6 +423,7 @@ DONE
     2. the new tokenize method should use a direct-threaded-type model to process the file.
     3. next and has_next both change to be based on the internal vector.
 - BUG: integer type-narrowing isn't working properly for signed types (scratch3.bc)
+- FIX: change push_back to emplace_back for pointers
 
 ANSWERS
 -------

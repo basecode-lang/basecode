@@ -283,7 +283,7 @@ namespace basecode::syntax {
             for (size_t i = 0; i < assignment_node->lhs->children.size() - 1; i++) {
                 assignment_node
                     ->rhs
-                    ->children.emplace_back(parser->ast_builder()->clone(rhs_node));
+                    ->children.push_back(parser->ast_builder()->clone(rhs_node));
             }
         }
 
@@ -671,14 +671,14 @@ namespace basecode::syntax {
 
                 if (colon->type == token_type_t::colon) {
                     auto decl = parser->parse_expression(r, precedence_t::cast);
-                    proc_node->lhs->rhs->children.emplace_back(decl);
+                    proc_node->lhs->rhs->children.push_back(decl);
                 } else {
                     auto type_decl = create_type_declaration_node(
                         r,
                         parser,
                         nullptr,
                         colon_token);
-                    proc_node->lhs->rhs->children.emplace_back(type_decl);
+                    proc_node->lhs->rhs->children.push_back(type_decl);
                 }
 
                 if (!parser->peek(token_type_t::comma))
@@ -1106,7 +1106,7 @@ namespace basecode::syntax {
         auto receiver_node = parser->ast_builder()->current_member_access();
         if (receiver_node != nullptr) {
             node->ufcs = true;
-            node->rhs->children.emplace_back(parser->ast_builder()->clone(receiver_node));
+            node->rhs->children.push_back(parser->ast_builder()->clone(receiver_node));
         }
 
         if (!parser->peek(token_type_t::right_paren)) {
@@ -1117,7 +1117,7 @@ namespace basecode::syntax {
                         parser,
                         nullptr,
                         token);
-                    node->rhs->children.emplace_back(type_node);
+                    node->rhs->children.push_back(type_node);
 
                     if (parser->peek(token_type_t::comma)) {
                         parser->consume();
@@ -1452,7 +1452,7 @@ namespace basecode::syntax {
         while (count >= _tokens.size() && _lexer.has_next()) {
             auto token = _lexer.next();
             if (token != nullptr)
-                _tokens.emplace_back(token);
+                _tokens.push_back(token);
         }
         return !_tokens.empty();
     }
