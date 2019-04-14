@@ -21,9 +21,12 @@ namespace basecode::compiler {
             compiler::module* module,
             block* parent_scope,
             uint64_t value,
-            compiler::type_reference* type_ref = nullptr);
+            compiler::type_reference* type_ref = nullptr,
+            bool is_signed = false);
 
         bool is_signed() const;
+
+        bool is_sign_bit_high() const;
 
         uint64_t value() const;
 
@@ -58,6 +61,7 @@ namespace basecode::compiler {
 
     private:
         uint64_t _value;
+        bool _is_signed = false;
         compiler::type_reference* _type_ref = nullptr;
     };
 

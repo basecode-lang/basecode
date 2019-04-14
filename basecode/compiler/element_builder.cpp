@@ -840,12 +840,14 @@ namespace basecode::compiler {
     integer_literal* element_builder::make_integer(
             compiler::block* parent_scope,
             uint64_t value,
-            compiler::type_reference* type_ref) {
+            compiler::type_reference* type_ref,
+            bool is_signed) {
         auto literal = new compiler::integer_literal(
             _session.scope_manager().current_module(),
             parent_scope,
             value,
-            type_ref);
+            type_ref,
+            is_signed);
         _session.elements().add(literal);
         if (type_ref != nullptr)
             type_ref->parent_element(literal);

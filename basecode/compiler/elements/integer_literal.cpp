@@ -22,9 +22,11 @@ namespace basecode::compiler {
             compiler::module* module,
             block* parent_scope,
             uint64_t value,
-            compiler::type_reference* type_ref) : element(module, parent_scope, element_type_t::integer_literal),
-                                                  _value(value),
-                                                  _type_ref(type_ref) {
+            compiler::type_reference* type_ref,
+            bool is_signed) : element(module, parent_scope, element_type_t::integer_literal),
+                              _value(value),
+                              _is_signed(is_signed),
+                              _type_ref(type_ref) {
     }
 
     bool integer_literal::on_infer_type(
@@ -46,7 +48,7 @@ namespace basecode::compiler {
     }
 
     bool integer_literal::is_signed() const {
-        return common::is_sign_bit_set(_value);
+        return _is_signed;
     }
 
     uint64_t integer_literal::value() const {
@@ -55,6 +57,10 @@ namespace basecode::compiler {
 
     bool integer_literal::on_is_constant() const {
         return true;
+    }
+
+    bool integer_literal::is_sign_bit_high() const {
+        return common::is_sign_bit_set(_value);
     }
 
     bool integer_literal::on_as_integer(uint64_t& value) const {

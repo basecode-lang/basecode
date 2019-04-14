@@ -52,8 +52,6 @@ PARSER:
 =======
 
 COMPILER:
-- BUG: integer_literal shouldn't assume a value is signed just because the sign bit is high.
-        should pass in the signedness from the token.
 - BUG: assignment to a lhs that has a type shouldn't be strict for numeric_type checking.
 - BUG: rewrite numeric_type narrow_to_type for integers
 
@@ -424,6 +422,8 @@ DONE
     3. next and has_next both change to be based on the internal vector.
 - BUG: integer type-narrowing isn't working properly for signed types (scratch3.bc)
 - FIX: change push_back to emplace_back for pointers
+- BUG: integer_literal shouldn't assume a value is signed just because the sign bit is high.
+        should pass in the signedness from the token.
 
 ANSWERS
 -------

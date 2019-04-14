@@ -882,4 +882,20 @@ namespace basecode::compiler {
         bool strict = true;
     };
 
+    ///////////////////////////////////////////////////////////////////////////
+
+    union native_integer_t {
+        int8_t sb;
+        uint8_t b;
+
+        int16_t sw;
+        uint16_t w;
+
+        int32_t sdw;
+        uint32_t dw;
+
+        int64_t sqw;
+        uint64_t qw;
+    };
+
 }

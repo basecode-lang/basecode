@@ -204,7 +204,8 @@ namespace basecode::compiler {
         integer_literal* make_integer(
             compiler::block* parent_scope,
             uint64_t value,
-            compiler::type_reference* type_ref = nullptr);
+            compiler::type_reference* type_ref = nullptr,
+            bool is_signed = false);
 
         pointer_type* make_pointer_type(
             compiler::block* parent_scope,
