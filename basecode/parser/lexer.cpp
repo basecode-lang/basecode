@@ -1089,10 +1089,16 @@ namespace basecode::syntax {
 
     bool lexer::number_literal(common::result& r) {
         uint8_t radix = 10;
+        bool is_signed = false;
         std::string_view value {};
         number_types_t number_type = number_types_t::integer;
 
         auto ch = read(r);
+        if (ch == '-') {
+            ch = read(r, false);
+            is_signed = true;
+        }
+
         if (ch == '$') {
             radix = 16;
 
@@ -1138,9 +1144,6 @@ namespace basecode::syntax {
             const std::string valid = "0123456789_.";
             auto start_pos = _source_file->pos() - 1;
 
-            if (ch == '-')
-                ch = read(r, false);
-
             auto has_digits = false;
 
             // XXX: requires utf8 fix
@@ -1171,6 +1174,7 @@ namespace basecode::syntax {
 
         auto token = token_pool::instance()->add(token_type_t::number_literal, value);
         token->radix = radix;
+        token->is_signed = is_signed;
         token->number_type = number_type;
         _tokens.emplace_back(token);
 

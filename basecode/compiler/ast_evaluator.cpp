@@ -759,6 +759,26 @@ namespace basecode::compiler {
             }
         }
 
+        auto existing_identifiers = scope->identifiers().find(symbol->name());
+        if (!existing_identifiers.empty()) {
+            auto invalid_redefinition = false;
+            for (auto identifier : existing_identifiers) {
+                if (!identifier->type_ref()->is_proc_type()) {
+                    invalid_redefinition = true;
+                    break;
+                }
+            }
+
+            if (invalid_redefinition) {
+                _session.error(
+                    _session.scope_manager().current_module(),
+                    "X000",
+                    fmt::format("redefinition of existing identifier: {}", symbol->fully_qualified_name()),
+                    symbol->location());
+                return nullptr;
+            }
+        }
+
         auto new_identifier = builder.make_identifier(scope, symbol, init);
         if (init_expr != nullptr) {
             // XXX: why?
@@ -1150,7 +1170,7 @@ namespace basecode::compiler {
             case syntax::number_types_t::integer: {
                 uint64_t value;
                 if (context.node->token->parse(value) == syntax::conversion_result_t::success) {
-                    if (context.node->token->is_signed()) {
+                    if (context.node->token->is_signed) {
                         result.element = _session.builder().make_integer(
                             _session.scope_manager().current_scope(),
                             common::twos_complement(value),
@@ -2551,28 +2571,28 @@ namespace basecode::compiler {
                 continue;
 
             if (target_element->element_type() == element_type_t::identifier_reference) {
-                // XXX: clean this up
-                //
-                auto identifier_ref = dynamic_cast<compiler::identifier_reference*>(target_element);
-                if (identifier_ref->resolved()
-                &&  !identifier_ref->identifier()->type_ref()->is_proc_type()) {
-                    // XXX: it makes sense that we only want to check for reassignment here
-                    //      if it's constant AND we're adding something to the same scope
-                    if (identifier_ref->is_constant()) {
-                        auto current_scope = scope != nullptr ? scope : scope_manager.current_scope();
-                        if (current_scope->id() == identifier_ref->parent_scope()->id()) {
-                            _session.error(
-                                _session.scope_manager().current_module(),
-                                "P028",
-                                "constant variables cannot be modified.",
-                                target_symbol->location);
-                            return false;
-                        } else {
-                            is_binary_op = false;
-                        }
-                    }
-                } else {
+                if (target_symbol->rhs != nullptr) {
                     is_binary_op = false;
+                } else {
+                    auto identifier_ref = dynamic_cast<compiler::identifier_reference*>(target_element);
+                    if (identifier_ref->resolved()
+                        && !identifier_ref->identifier()->type_ref()->is_proc_type()) {
+                        if (identifier_ref->is_constant()) {
+                            auto current_scope = scope != nullptr ? scope : scope_manager.current_scope();
+                            if (current_scope->id() == identifier_ref->parent_scope()->id()) {
+                                _session.error(
+                                    _session.scope_manager().current_module(),
+                                    "P028",
+                                    "constant variables cannot be modified.",
+                                    target_symbol->location);
+                                return false;
+                            } else {
+                                is_binary_op = false;
+                            }
+                        }
+                    } else {
+                        is_binary_op = false;
+                    }
                 }
             }
 

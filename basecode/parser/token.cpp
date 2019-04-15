@@ -31,10 +31,6 @@ namespace basecode::syntax {
         return type == token_type_t::number_literal;
     }
 
-    bool token_t::is_signed() const {
-        return !value.empty() && value[0] == '-';
-    }
-
     std::string_view token_t::name() const {
         return token_type_to_name(type);
     }
@@ -71,20 +67,14 @@ namespace basecode::syntax {
             return conversion_result_t::underflow;
         if (*s == '\0' || *end != '\0')
             return conversion_result_t::inconvertible;
+        if (is_signed) out = -out;
         return conversion_result_t::success;
     }
 
     conversion_result_t token_t::parse(uint64_t& out) const {
         if (value.empty())
             return conversion_result_t::inconvertible;
-        const char* s = nullptr;
-        std::string without_negative;
-        if (value[0] == '-') {
-            without_negative = common::remove_underscores(value.substr(1));
-            s = without_negative.c_str();
-        }
-        else
-            s = common::remove_underscores(value).c_str();
+        const char* s = common::remove_underscores(value).c_str();
         char* end;
         errno = 0;
         out = strtoull(s, &end, radix);

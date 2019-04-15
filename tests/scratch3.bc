@@ -1,9 +1,3 @@
-//core :: module("core");
+core :: module("core");
 
-//a: s8 := -1;
-
-a: s8;
-a := 1;
-
-a: u32 := 99999999;
-a := 65537;
+temp: s32 := -332;

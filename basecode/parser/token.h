@@ -250,8 +250,6 @@ namespace basecode::syntax {
 
         bool is_label() const;
 
-        bool is_signed() const;
-
         bool is_boolean() const;
 
         bool is_numeric() const;
@@ -270,6 +268,7 @@ namespace basecode::syntax {
 
         common::id_t id {};
         uint8_t radix = 10;
+        bool is_signed = false;
         std::string_view value {};
         common::source_location location {};
         token_type_t type = token_type_t::invalid;

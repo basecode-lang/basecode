@@ -3,7 +3,6 @@ NOTES
 Steps to reach feature complete for the bootstrap compiler:
 
 - type-baking for generics
-- type-promotion errors for procedure_call
 - lambdas
 - consolidate errors/return errors from all appropriate locations
 
@@ -53,8 +52,6 @@ PARSER:
 
 COMPILER:
 - BUG: session type resolution doesn't support family_type parameters
-- BUG: redefining an identifier isn't being handled at all.
-        need to check for this scenario and issue an error.
 
 - BUG: fix assignment in ast_evaluator so it properly handles sets of multiple assignment/multiple return.
 - BUG: fix binary_operator type checking in session so it properly supports multiple assignment/multiple return
@@ -424,6 +421,9 @@ DONE
         should pass in the signedness from the token.
 - BUG: assignment to a lhs that has a type shouldn't be strict for numeric_type checking.
 - BUG: rewrite numeric_type narrow_to_type for integers
+- BUG: redefining an identifier isn't being handled at all.
+        need to check for this scenario and issue an error.
+- FIX: type-promotion errors for procedure_call
 
 ANSWERS
 -------
