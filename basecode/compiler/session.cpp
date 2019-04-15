@@ -341,8 +341,8 @@ namespace basecode::compiler {
             return false;
         }
 
-        type_check_options_t init_check_options {};
-        init_check_options.strict = false;
+        type_check_options_t type_check_options {};
+        type_check_options.strict = false;
 
         auto identifiers = _elements->find_by_type<compiler::identifier>(element_type_t::identifier);
         for (auto var : identifiers) {
@@ -365,7 +365,7 @@ namespace basecode::compiler {
             const auto& inferred = type_result.types.back();
 
             auto var_type = var->type_ref()->type();
-            if (!var_type->type_check(inferred.type, init_check_options)) {
+            if (!var_type->type_check(inferred.type, type_check_options)) {
                 error(
                     init->module(),
                     "C051",
@@ -406,7 +406,10 @@ namespace basecode::compiler {
             const auto& lhs_inferred = lhs_type_result.types.back();
             const auto& rhs_inferred = rhs_type_result.types.back();
 
-            if (!lhs_inferred.type->type_check(rhs_inferred.type, {})) {
+            type_check_options.strict =
+                !(binary_op->rhs()->element_type() == element_type_t::integer_literal
+                    || binary_op->rhs()->element_type() == element_type_t::float_literal);
+            if (!lhs_inferred.type->type_check(rhs_inferred.type, type_check_options)) {
                 error(
                     binary_op->module(),
                     "C051",

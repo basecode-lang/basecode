@@ -52,9 +52,6 @@ PARSER:
 =======
 
 COMPILER:
-- BUG: assignment to a lhs that has a type shouldn't be strict for numeric_type checking.
-- BUG: rewrite numeric_type narrow_to_type for integers
-
 - BUG: session type resolution doesn't support family_type parameters
 - BUG: redefining an identifier isn't being handled at all.
         need to check for this scenario and issue an error.
@@ -425,6 +422,8 @@ DONE
 - FIX: change push_back to emplace_back for pointers
 - BUG: integer_literal shouldn't assume a value is signed just because the sign bit is high.
         should pass in the signedness from the token.
+- BUG: assignment to a lhs that has a type shouldn't be strict for numeric_type checking.
+- BUG: rewrite numeric_type narrow_to_type for integers
 
 ANSWERS
 -------

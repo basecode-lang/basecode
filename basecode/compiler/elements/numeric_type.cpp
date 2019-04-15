@@ -59,19 +59,23 @@ namespace basecode::compiler {
             return "unknown"sv;
     }
 
-    std::string_view numeric_type::narrow_to_value(uint64_t value) {
-        auto is_signed = common::is_sign_bit_set(value);
-        for (size_t i = 1; i < 5; i++) {
-            const auto& props = s_type_properties[i];
-            if (value >= props.min && value <= props.max) {
-                if (!is_signed)
+    std::string_view numeric_type::narrow_to_value(uint64_t value, bool is_signed) {
+        if (is_signed) {
+            native_integer_t native_value {};
+            native_value.qw = value;
+            for (size_t i = 5; i < 9; i++) {
+                const auto& props = s_type_properties[i];
+                const auto signed_max = static_cast<int64_t>(props.max);
+                if (native_value.sqw >= props.min && native_value.sqw <= signed_max)
                     return props.name;
-                else {
-                    return s_type_properties[i + 4].name;
-                }
+            }
+        } else {
+            for (size_t i = 1; i < 5; i++) {
+                const auto& props = s_type_properties[i];
+                if (value >= props.min && value <= props.max)
+                    return props.name;
             }
         }
-
         return "unknown"sv;
     }
 

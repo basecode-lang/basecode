@@ -1153,7 +1153,9 @@ namespace basecode::compiler {
                     if (context.node->token->is_signed()) {
                         result.element = _session.builder().make_integer(
                             _session.scope_manager().current_scope(),
-                            common::twos_complement(value));
+                            common::twos_complement(value),
+                            nullptr,
+                            true);
                     } else {
                         result.element = _session.builder().make_integer(
                             _session.scope_manager().current_scope(),

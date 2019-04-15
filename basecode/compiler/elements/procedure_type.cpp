@@ -180,6 +180,7 @@ namespace basecode::compiler {
         }
 
         index = 0;
+        type_check_options_t type_check_options {};
         for (auto fld : field_list) {
             auto param = result.arguments[index];
             if (param != nullptr) {
@@ -197,7 +198,10 @@ namespace basecode::compiler {
                 const auto& inferred = type_result.types.back();
 
                 auto type_ref = fld->identifier()->type_ref();
-                if (!type_ref->type()->type_check(inferred.type, {})) {
+                type_check_options.strict =
+                    !(param->element_type() == element_type_t::integer_literal
+                        || param->element_type() == element_type_t::float_literal);
+                if (!type_ref->type()->type_check(inferred.type, type_check_options)) {
                     std::string parameter_type {};
                     auto fld_type = fld->identifier()->type_ref()->type();
                     if (fld_type->element_type() == element_type_t::generic_type) {

@@ -38,7 +38,9 @@ namespace basecode::compiler {
             result.types.emplace_back(
                 session
                     .scope_manager()
-                    .find_type(qualified_symbol_t(numeric_type::narrow_to_value(_value))));
+                    .find_type(qualified_symbol_t(numeric_type::narrow_to_value(
+                        _value,
+                        _is_signed))));
         }
         return true;
     }
