@@ -122,31 +122,35 @@ namespace basecode::compiler {
         context.node = node;
         context.scope = scope_manager.current_scope();
 
-        for (auto attribute : node->attributes) {
-            context.attributes.add(builder.make_attribute(
-                scope_manager.current_scope(),
-                attribute->token->value,
-                evaluate(attribute->lhs)));
-        }
+        if (node->has_data()) {
+            auto data = const_cast<syntax::ast_node_t*>(node)->get_data(&_session.ast_builder());
 
-        for (auto comment : node->comments) {
-            switch (comment->type) {
-                case syntax::ast_node_type_t::line_comment: {
-                    context.comments.emplace_back(builder.make_comment(
-                        scope_manager.current_scope(),
-                        comment_type_t::line,
-                        comment->token->value));
-                    break;
+            for (auto attribute : data->attributes) {
+                context.attributes.add(builder.make_attribute(
+                    scope_manager.current_scope(),
+                    attribute->token->value,
+                    evaluate(attribute->lhs)));
+            }
+
+            for (auto comment : data->comments) {
+                switch (comment->type) {
+                    case syntax::ast_node_type_t::line_comment: {
+                        context.comments.emplace_back(builder.make_comment(
+                            scope_manager.current_scope(),
+                            comment_type_t::line,
+                            comment->token->value));
+                        break;
+                    }
+                    case syntax::ast_node_type_t::block_comment: {
+                        context.comments.emplace_back(builder.make_comment(
+                            scope_manager.current_scope(),
+                            comment_type_t::block,
+                            comment->token->value));
+                        break;
+                    }
+                    default:
+                        break;
                 }
-                case syntax::ast_node_type_t::block_comment: {
-                    context.comments.emplace_back(builder.make_comment(
-                        scope_manager.current_scope(),
-                        comment_type_t::block,
-                        comment->token->value));
-                    break;
-                }
-                default:
-                    break;
             }
         }
 
@@ -184,13 +188,16 @@ namespace basecode::compiler {
         if (node->children.empty())
             return true;
 
-        for (auto& attr : node->attributes) {
-            auto attribute = builder.make_attribute(
-                proc_type->scope(),
-                attr->token->value,
-                evaluate(attr->lhs));
-            attribute->parent_element(proc_type);
-            proc_type->attributes().add(attribute);
+        if (node->has_data()) {
+            auto data = const_cast<syntax::ast_node_t*>(node)->get_data(&_session.ast_builder());
+            for (auto& attr : data->attributes) {
+                auto attribute = builder.make_attribute(
+                    proc_type->scope(),
+                    attr->token->value,
+                    evaluate(attr->lhs));
+                attribute->parent_element(proc_type);
+                proc_type->attributes().add(attribute);
+            }
         }
 
         for (auto child_node : node->children) {
@@ -1624,7 +1631,7 @@ namespace basecode::compiler {
 
         result.element = scope_manager.pop_scope();
 
-        if (context.node->has_attribute("parent_scope"sv)) {
+        if (context.node->has_attribute(&_session.ast_builder(), "parent_scope"sv)) {
             auto current_scope = scope_manager.current_scope();
             for (auto identifier : active_scope->identifiers().as_list())
                 current_scope->identifiers().add(identifier);
@@ -1639,7 +1646,12 @@ namespace basecode::compiler {
         auto& builder = _session.builder();
         auto& scope_manager = _session.scope_manager();
 
-        auto is_ufcs = context.node->ufcs;
+        auto is_ufcs = false;
+
+        if (context.node->has_data()) {
+            auto data = const_cast<syntax::ast_node_t*>(context.node)->get_data(&_session.ast_builder());
+            is_ufcs = data->is_uniform_function_call;
+        }
 
         compiler::argument_list* args = nullptr;
         auto argument_list = evaluate(context.node->rhs);
@@ -1731,10 +1743,13 @@ namespace basecode::compiler {
 
         label_list_t labels {};
 
-        for (auto label : context.node->labels) {
-            labels.push_back(builder.make_label(
-                scope_manager.current_scope(),
-                label->token->value));
+        if (context.node->has_data()) {
+            auto data = const_cast<syntax::ast_node_t*>(context.node)->get_data(&_session.ast_builder());
+            for (auto label : data->labels) {
+                labels.push_back(builder.make_label(
+                    scope_manager.current_scope(),
+                    label->token->value));
+            }
         }
 
         compiler::element* expr = nullptr;

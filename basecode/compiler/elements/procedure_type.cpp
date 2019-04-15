@@ -87,7 +87,7 @@ namespace basecode::compiler {
         if (uniform_function_call) {
             auto first_param = field_list.front();
             auto type = first_param->identifier()->type_ref()->type();
-            if (!type->is_pointer_type() && !type->is_open_generic_type()) {
+            if (!type->is_pointer_type()) {
                 result.messages.error(
                     "X000",
                     "procedures used in uniform function calls must declare the first parameter as a pointer.",

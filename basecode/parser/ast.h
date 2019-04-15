@@ -194,9 +194,23 @@ namespace basecode::syntax {
         return it->second;
     }
 
+    class ast_builder;
+
+    struct ast_node_data_t {
+        common::id_t id;
+        ast_node_list_t labels {};
+        ast_node_list_t comments {};
+        ast_node_list_t attributes {};
+        bool is_uniform_function_call = false;
+    };
+
     struct ast_node_t {
         bool is_label() const {
             return type == ast_node_type_t::label;
+        }
+
+        bool has_data() const {
+            return data_id != 0;
         }
 
         bool is_attribute() const {
@@ -206,6 +220,8 @@ namespace basecode::syntax {
         std::string_view name() const {
             return ast_node_type_name(type);
         }
+
+        ast_node_data_t* get_data(ast_builder* builder);
 
         bool operator != (const ast_node_t& other) const {
             if (token == nullptr || other.token == nullptr)
@@ -219,24 +235,14 @@ namespace basecode::syntax {
             return token->value == other.token->value;
         }
 
-        bool has_attribute(const std::string_view& name) const {
-            if (attributes.empty())
-                return false;
-            for (auto attr : attributes)
-                if (attr->token != nullptr && attr->token->value == name)
-                    return true;
-            return false;
-        }
+        bool has_attribute(ast_builder* builder, const std::string_view& name) const;
 
         common::id_t id;
-        bool ufcs = false;
+        common::id_t data_id;
         ast_node_type_t type;
         ast_node_list_t children;
-        ast_node_list_t labels {};
         ast_node_t* lhs = nullptr;
         ast_node_t* rhs = nullptr;
-        ast_node_list_t comments {};
-        ast_node_list_t attributes {};
         const token_t* token = nullptr;
         common::source_location location {};
     };
@@ -247,7 +253,18 @@ namespace basecode::syntax {
 
         void reset();
 
+        //
+        ast_node_data_t* make_node_data();
+
+        //
+        ast_node_t* find_node(common::id_t id);
+
+        ast_node_data_t* find_data(common::id_t id);
+
+        //
         ast_node_t* clone(const ast_node_t* other);
+
+        ast_node_data_t* clone_data(common::id_t id);
 
         // with stack
         ast_node_t* pop_with();
@@ -448,9 +465,11 @@ namespace basecode::syntax {
         std::stack<ast_node_t*> _with_stack {};
         std::stack<ast_node_t*> _scope_stack {};
         std::stack<ast_node_t*> _switch_stack {};
-        common::memory_pool<ast_node_t> _storage;
+        common::memory_pool<ast_node_t> _node_storage;
         std::stack<ast_node_t*> _member_access_stack {};
+        common::memory_pool<ast_node_data_t> _data_storage;
         std::unordered_map<common::id_t, ast_node_t*> _nodes {};
+        std::unordered_map<common::id_t, ast_node_data_t*> _datas {};
     };
 
 }

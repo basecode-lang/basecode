@@ -105,9 +105,10 @@ namespace basecode::compiler {
 
         auto type = scope_manager.find_pointer_type(inferred.type);
         if (type == nullptr) {
+            auto it = session.strings().insert(compiler::pointer_type::name_for_pointer(inferred.type));
             type = builder.make_pointer_type(
                 parent_scope(),
-                qualified_symbol_t(),
+                qualified_symbol_t(*it.first),
                 inferred.type);
         }
 

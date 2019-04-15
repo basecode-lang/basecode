@@ -16,7 +16,35 @@
 
 namespace basecode::syntax {
 
-    ast_builder::ast_builder() : _storage(256) {
+    ast_node_data_t* ast_node_t::get_data(ast_builder* builder) {
+        ast_node_data_t* data = nullptr;
+        if (data_id == 0) {
+            data = builder->make_node_data();
+            data_id = data->id;
+        } else {
+            data = builder->find_data(data_id);
+        }
+        return data;
+    }
+
+    bool ast_node_t::has_attribute(ast_builder* builder, const std::string_view& name) const {
+        if (!has_data())
+            return false;
+        auto data = builder->find_data(data_id);
+        if (data == nullptr)
+            return false;
+        if (data->attributes.empty())
+            return false;
+        for (auto attr : data->attributes)
+            if (attr->token != nullptr && attr->token->value == name)
+                return true;
+        return false;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    ast_builder::ast_builder() : _node_storage(256),
+                                 _data_storage(256) {
     }
 
     void ast_builder::reset() {
@@ -32,24 +60,57 @@ namespace basecode::syntax {
             _member_access_stack.pop();
     }
 
+    //
+    ast_node_t* ast_builder::find_node(common::id_t id) {
+        auto it = _nodes.find(id);
+        if (it == std::end(_nodes))
+            return nullptr;
+        return it->second;
+    }
+
+    ast_node_data_t* ast_builder::find_data(common::id_t id) {
+        auto it = _datas.find(id);
+        if (it == std::end(_datas))
+            return nullptr;
+        return it->second;
+    }
+
+    //
     ast_node_t* ast_builder::clone(const ast_node_t* other) {
         if (other == nullptr)
             return nullptr;
 
         auto node = make_node(other->type, other->token);
-        node->ufcs = other->ufcs;
         node->lhs = clone(other->lhs);
         node->rhs = clone(other->rhs);
         node->location = other->location;
         for (auto child : other->children)
             node->children.emplace_back(clone(child));
-        for (auto label : other->labels)
-            node->labels.emplace_back(clone(label));
-        for (auto comment : other->comments)
-            node->comments.emplace_back(clone(comment));
-        for (auto attr : other->attributes)
-            node->attributes.emplace_back(clone(attr));
+
+        auto data = clone_data(other->data_id);
+        if (data != nullptr)
+            node->data_id = data->id;
+
         return node;
+    }
+
+    ast_node_data_t* ast_builder::clone_data(common::id_t id) {
+        if (id == 0)
+            return nullptr;
+
+        auto other = find_data(id);
+        if (other == nullptr)
+            return nullptr;
+
+        auto data = make_node_data();
+        data->is_uniform_function_call = other->is_uniform_function_call;
+        for (auto label : other->labels)
+            data->labels.emplace_back(clone(label));
+        for (auto comment : other->comments)
+            data->comments.emplace_back(clone(comment));
+        for (auto attr : other->attributes)
+            data->attributes.emplace_back(clone(attr));
+        return data;
     }
 
     // with stack
@@ -520,8 +581,15 @@ namespace basecode::syntax {
         return make_node(ast_node_type_t::uninitialized_literal, token);
     }
 
+    ast_node_data_t* ast_builder::make_node_data() {
+        auto data = _data_storage.alloc();
+        data->id = common::id_pool::instance()->allocate();
+        _datas.insert(std::make_pair(data->id, data));
+        return data;
+    }
+
     ast_node_t* ast_builder::make_node(ast_node_type_t type, const token_t* token) {
-        auto node = _storage.alloc();
+        auto node = _node_storage.alloc();
         node->id = common::id_pool::instance()->allocate();
         node->type = type;
         if (token != nullptr) {

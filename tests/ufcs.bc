@@ -40,7 +40,6 @@ get_player_pos :: proc(p: ^player): ^vector3 {
     HELLO_WORLD :: "hello world\n";
     HELLO_WORLD.core::print();
 
-    // and intrinsics!
-    ptr_j := j.address_of();
+    ptr_j := address_of(j);
     "ptr_j := %016X\n".core::print(ptr_j);
 };

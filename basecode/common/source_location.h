@@ -16,8 +16,8 @@
 namespace basecode::common {
 
     struct location_t {
-        uint32_t line = 0;
-        uint32_t column = 0;
+        uint16_t line = 0;
+        uint16_t column = 0;
     };
 
     class source_location {

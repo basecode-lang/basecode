@@ -64,7 +64,15 @@ namespace basecode::syntax {
     static size_t collect_comments(
             common::result& r,
             parser* parser,
-            ast_node_list_t& target) {
+            ast_node_t* node) {
+        ast_node_data_t* data = nullptr;
+        if (parser->peek(token_type_t::line_comment)
+        ||  parser->peek(token_type_t::block_comment)) {
+            data = node->get_data(parser->ast_builder());
+        } else {
+            return 0;
+        }
+
         size_t count = 0;
 
         while (parser->peek(token_type_t::line_comment)
@@ -87,7 +95,7 @@ namespace basecode::syntax {
             }
 
             if (comment_node != nullptr)
-                target.push_back(comment_node);
+                data->comments.push_back(comment_node);
 
             ++count;
         }
@@ -105,12 +113,12 @@ namespace basecode::syntax {
         auto node = parser->ast_builder()->type_declaration_node();
         node->location.start(token->location.start());
 
-        collect_comments(r, parser, node->comments);
+        collect_comments(r, parser, node);
 
         node->lhs = parser->parse_expression(r, precedence_t::type);
         node->location.end(node->lhs->location.end());
 
-        collect_comments(r, parser, node->comments);
+        collect_comments(r, parser, node);
 
         if (lhs != nullptr) {
             lhs->rhs = node;
@@ -252,7 +260,7 @@ namespace basecode::syntax {
 
         pairs_to_list(assignment_node->lhs, lhs);
 
-        collect_comments(r, parser, assignment_node->comments);
+        collect_comments(r, parser, assignment_node);
 
         auto rhs = parser->parse_expression(
             r,
@@ -287,7 +295,7 @@ namespace basecode::syntax {
             }
         }
 
-        collect_comments(r, parser, assignment_node->comments);
+        collect_comments(r, parser, assignment_node);
 
         assignment_node->location.start(lhs->location.start());
         assignment_node->location.end(rhs->location.end());
@@ -414,10 +422,10 @@ namespace basecode::syntax {
             token_t* token) {
         auto while_node = parser->ast_builder()->while_node(token);
 
-        collect_comments(r, parser, while_node->comments);
+        collect_comments(r, parser, while_node);
         while_node->lhs = parser->parse_expression(r);
 
-        collect_comments(r, parser, while_node->comments);
+        collect_comments(r, parser, while_node);
         while_node->rhs = parser->parse_expression(r);
 
         return while_node;
@@ -434,7 +442,7 @@ namespace basecode::syntax {
 
         auto with_node = ast_builder->with_node(token);
 
-        collect_comments(r, parser, with_node->comments);
+        collect_comments(r, parser, with_node);
 
         auto lhs = parser->parse_expression(r);
         if (lhs->type == ast_node_type_t::with_member_access
@@ -449,7 +457,7 @@ namespace basecode::syntax {
 
         parser->ast_builder()->push_with(with_node);
 
-        collect_comments(r, parser, with_node->comments);
+        collect_comments(r, parser, with_node);
         with_node->rhs = parser->parse_expression(r);
 
         parser->ast_builder()->pop_with();
@@ -464,7 +472,7 @@ namespace basecode::syntax {
             parser* parser,
             token_t* token) {
         auto yield_node = parser->ast_builder()->yield_node(token);
-        collect_comments(r, parser, yield_node->comments);
+        collect_comments(r, parser, yield_node);
         if (parser->peek(token_type_t::semi_colon))
             return yield_node;
         yield_node->lhs = parser->parse_expression(r);
@@ -478,7 +486,7 @@ namespace basecode::syntax {
             parser* parser,
             token_t* token) {
         auto defer_node = parser->ast_builder()->defer_node(token);
-        collect_comments(r, parser, defer_node->comments);
+        collect_comments(r, parser, defer_node);
         defer_node->lhs = parser->parse_expression(r);
         return defer_node;
     }
@@ -492,7 +500,7 @@ namespace basecode::syntax {
         auto union_node = parser->ast_builder()->union_node(token);
         if (!create_type_parameter_nodes(r, parser, union_node->lhs))
             return nullptr;
-        collect_comments(r, parser, union_node->comments);
+        collect_comments(r, parser, union_node);
         union_node->rhs = parser->parse_expression(r);
         return union_node;
     }
@@ -517,7 +525,7 @@ namespace basecode::syntax {
         auto struct_node = parser->ast_builder()->struct_node(token);
         if (!create_type_parameter_nodes(r, parser, struct_node->lhs))
             return nullptr;
-        collect_comments(r, parser, struct_node->comments);
+        collect_comments(r, parser, struct_node);
         struct_node->rhs = parser->parse_expression(r);
         return struct_node;
     }
@@ -531,7 +539,7 @@ namespace basecode::syntax {
         auto enum_node = parser->ast_builder()->enum_node(token);
         if (!create_type_parameter_nodes(r, parser, enum_node->lhs))
             return nullptr;
-        collect_comments(r, parser, enum_node->comments);
+        collect_comments(r, parser, enum_node);
         enum_node->rhs = parser->parse_expression(r);
         return enum_node;
     }
@@ -544,18 +552,18 @@ namespace basecode::syntax {
             token_t* token) {
         auto for_node = parser->ast_builder()->for_in_node(token);
 
-        collect_comments(r, parser, for_node->comments);
+        collect_comments(r, parser, for_node);
         for_node->lhs = parser->parse_expression(r);
-        collect_comments(r, parser, for_node->comments);
+        collect_comments(r, parser, for_node);
 
         if (!parser->expect(r, token_type_t::in_literal))
             return nullptr;
 
-        collect_comments(r, parser, for_node->comments);
+        collect_comments(r, parser, for_node);
         for_node->rhs = parser->parse_expression(
             r,
             precedence_t::variable);
-        collect_comments(r, parser, for_node->comments);
+        collect_comments(r, parser, for_node);
 
         for_node->children.push_back(parser->parse_expression(r));
 
@@ -582,27 +590,27 @@ namespace basecode::syntax {
             parser* parser,
             token_t* token) {
         auto if_node = parser->ast_builder()->if_node(token);
-        collect_comments(r, parser, if_node->comments);
+        collect_comments(r, parser, if_node);
 
         if_node->lhs = parser->parse_expression(r);
-        collect_comments(r, parser, if_node->comments);
+        collect_comments(r, parser, if_node);
 
         if_node->children.push_back(parser->parse_expression(r));
 
         auto current_branch = if_node;
         while (true) {
-            collect_comments(r, parser, current_branch->comments);
+            collect_comments(r, parser, current_branch);
 
             if (!parser->peek(token_type_t::else_if_literal))
                 break;
             auto else_if_token = parser->consume();
 
             current_branch->rhs = parser->ast_builder()->else_if_node(else_if_token);
-            collect_comments(r, parser, current_branch->rhs->comments);
+            collect_comments(r, parser, current_branch->rhs);
 
             current_branch->rhs->lhs = parser->parse_expression(r);
 
-            collect_comments(r, parser, current_branch->rhs->comments);
+            collect_comments(r, parser, current_branch->rhs);
 
             current_branch->rhs->children.push_back(parser->parse_expression(r));
 
@@ -613,7 +621,7 @@ namespace basecode::syntax {
             auto else_token = parser->consume();
 
             current_branch->rhs = parser->ast_builder()->else_node(else_token);
-            collect_comments(r, parser, current_branch->rhs->comments);
+            collect_comments(r, parser, current_branch->rhs);
 
             current_branch->rhs->children.push_back(parser->parse_expression(r));
         }
@@ -621,9 +629,7 @@ namespace basecode::syntax {
         collect_comments(
             r,
             parser,
-            current_branch->rhs != nullptr ?
-                current_branch->rhs->comments :
-                current_branch->comments);
+            current_branch->rhs != nullptr ? current_branch->rhs : current_branch);
 
         return if_node;
     }
@@ -688,8 +694,11 @@ namespace basecode::syntax {
             }
         }
 
+        ast_node_data_t* proc_data = nullptr;
+        if (parser->peek(token_type_t::attribute))
+            proc_data = proc_node->get_data(parser->ast_builder());
         while (parser->peek(token_type_t::attribute)) {
-            proc_node->attributes.push_back(parser->parse_expression(r));
+            proc_data->attributes.push_back(parser->parse_expression(r));
         }
 
         if (!parser->peek(token_type_t::semi_colon)) {
@@ -738,8 +747,11 @@ namespace basecode::syntax {
                 parser->consume());
         }
 
+        ast_node_data_t* lambda_data = nullptr;
+        if (parser->peek(token_type_t::attribute))
+            lambda_data = lambda_node->get_data(parser->ast_builder());
         while (parser->peek(token_type_t::attribute)) {
-            lambda_node->attributes.push_back(parser->parse_expression(r));
+            lambda_data->attributes.push_back(parser->parse_expression(r));
         }
 
         lambda_node->children.push_back(parser->parse_expression(r));
@@ -1007,7 +1019,7 @@ namespace basecode::syntax {
 
         pairs_to_list(assignment_node->lhs, lhs);
 
-        collect_comments(r, parser, assignment_node->comments);
+        collect_comments(r, parser, assignment_node);
 
         auto rhs = parser->parse_expression(
             r,
@@ -1025,7 +1037,7 @@ namespace basecode::syntax {
         assignment_node->location.start(lhs->location.start());
         assignment_node->location.end(assignment_node->rhs->location.end());
 
-        collect_comments(r, parser, assignment_node->comments);
+        collect_comments(r, parser, assignment_node);
 
         return assignment_node;
     }
@@ -1044,8 +1056,7 @@ namespace basecode::syntax {
         auto pair_node = parser->ast_builder()->pair_node();
         pair_node->location.start(lhs->location.start());
 
-        ast_node_list_t comments {};
-        collect_comments(r, parser, comments);
+        collect_comments(r, parser, lhs);
 
         pair_node->lhs = lhs;
         pair_node->rhs = parser->parse_expression(
@@ -1056,11 +1067,13 @@ namespace basecode::syntax {
         else
             pair_node->location.end(lhs->location.end());
 
-        if (lhs->type != ast_node_type_t::pair) {
-            lhs->comments = comments;
-        } else {
-            if (pair_node->rhs != nullptr)
-                pair_node->rhs->comments = comments;
+        if (lhs->type == ast_node_type_t::pair) {
+            if (pair_node->rhs != nullptr) {
+                auto lhs_data = lhs->get_data(parser->ast_builder());
+                auto rhs_data = pair_node->rhs->get_data(parser->ast_builder());
+                rhs_data->comments = lhs_data->comments;
+                lhs_data->comments.clear();
+            }
         }
 
         return pair_node;
@@ -1105,8 +1118,10 @@ namespace basecode::syntax {
 
         auto receiver_node = parser->ast_builder()->current_member_access();
         if (receiver_node != nullptr) {
-            node->ufcs = true;
             node->rhs->children.push_back(parser->ast_builder()->clone(receiver_node));
+
+            auto node_data = node->get_data(parser->ast_builder());
+            node_data->is_uniform_function_call = true;
         }
 
         if (!parser->peek(token_type_t::right_paren)) {
@@ -1297,7 +1312,7 @@ namespace basecode::syntax {
             parser* parser,
             token_t* token) {
         auto directive_node = parser->ast_builder()->directive_node(token);
-        collect_comments(r, parser, directive_node->comments);
+        collect_comments(r, parser, directive_node);
 
         if (parser->peek(token_type_t::semi_colon)) {
             return directive_node;
@@ -1317,7 +1332,7 @@ namespace basecode::syntax {
                 while (parser->peek(token_type_t::directive)) {
                     auto directive_token = parser->consume();
 
-                    collect_comments(r, parser, directive_node->comments);
+                    collect_comments(r, parser, directive_node);
 
                     if (directive_token->value == "elif"sv) {
                         auto elif_node = parser->ast_builder()->directive_node(directive_token);
@@ -1337,7 +1352,7 @@ namespace basecode::syntax {
             directive_node->lhs = parser->parse_expression(r);
         }
 
-        collect_comments(r, parser, directive_node->comments);
+        collect_comments(r, parser, directive_node);
 
         return directive_node;
     }
@@ -1613,16 +1628,23 @@ namespace basecode::syntax {
             auto statement = parse_statement(r);
             if (r.is_failed())
                 return nullptr;
-            if (!scope->attributes.empty()) {
-                for (const auto& attr_node : scope->attributes)
-                    statement->attributes.push_back(attr_node);
-                scope->attributes.clear();
+            if (scope->has_data()) {
+                auto scope_data = scope->get_data(ast_builder());
+                if (!scope_data->attributes.empty()) {
+                    auto statement_data = statement->get_data(ast_builder());
+                    for (const auto& attr_node : scope_data->attributes)
+                        statement_data->attributes.push_back(attr_node);
+                    scope_data->attributes.clear();
+                }
             }
             scope->children.push_back(statement);
         }
 
+        ast_node_data_t* scope_data = nullptr;
+        if (peek(token_type_t::attribute))
+            scope_data = scope->get_data(ast_builder());
         while (peek(token_type_t::attribute)) {
-            scope->attributes.push_back(parse_expression(r));
+            scope_data->attributes.push_back(parse_expression(r));
         }
 
         return _ast_builder.end_scope();
@@ -1630,9 +1652,10 @@ namespace basecode::syntax {
 
     ast_node_t* parser::parse_statement(common::result& r) {
         auto statement_node = _ast_builder.statement_node();
+        ast_node_data_t* statement_data = nullptr;
 
         while (true) {
-            collect_comments(r, this, statement_node->comments);
+            collect_comments(r, this, statement_node);
 
             if (peek(token_type_t::right_curly_brace))
                 return statement_node;
@@ -1644,15 +1667,20 @@ namespace basecode::syntax {
             if (expr->is_attribute()) {
                 if (peek(token_type_t::semi_colon)) {
                     consume();
-                    _ast_builder.current_scope()->attributes.push_back(expr);
+                    auto scope_data = _ast_builder.current_scope()->get_data(&_ast_builder);
+                    scope_data->attributes.push_back(expr);
                 } else {
-                    statement_node->attributes.push_back(expr);
+                    if (statement_data == nullptr)
+                        statement_data = statement_node->get_data(&_ast_builder);
+                    statement_data->attributes.push_back(expr);
                 }
                 continue;
             }
 
             if (expr->is_label()) {
-                statement_node->labels.push_back(expr);
+                if (statement_data == nullptr)
+                    statement_data = statement_node->get_data(&_ast_builder);
+                statement_data->labels.push_back(expr);
                 continue;
             }
 
