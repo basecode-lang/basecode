@@ -56,7 +56,8 @@ COMPILER:
 - BUG: rewrite numeric_type narrow_to_type for integers
 
 - BUG: session type resolution doesn't support family_type parameters
-- BUG: redefining an identifier with another type doesn't give nice errors.
+- BUG: redefining an identifier isn't being handled at all.
+        need to check for this scenario and issue an error.
 
 - BUG: fix assignment in ast_evaluator so it properly handles sets of multiple assignment/multiple return.
 - BUG: fix binary_operator type checking in session so it properly supports multiple assignment/multiple return
