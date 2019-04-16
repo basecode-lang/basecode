@@ -212,9 +212,9 @@ namespace basecode::compiler {
         _arguments->is_foreign_call(matched_result.proc_type->is_foreign());
 
         _resolved_identifier_ref = matched_result.ref;
-        _resolved_proc_type = matched_result.proc_type;
+        _resolved_proc_type = matched_result.proc_type->instance_for(session, this);
 
-        return true;
+        return _resolved_proc_type != nullptr;
     }
 
     const compiler::type_reference_list_t& procedure_call::type_parameters() const {

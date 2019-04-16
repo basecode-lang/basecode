@@ -2265,7 +2265,7 @@ namespace basecode::compiler {
         }
 
         procedure_call_set_t proc_call_set {};
-        procedure_type_set_t proc_instance_set {};
+        procedure_type_set_t proc_type_set {};
 
         auto root_edges = find_root_edges(edges);
         for (const auto& edge : root_edges) {
@@ -2274,9 +2274,8 @@ namespace basecode::compiler {
 
         for (auto proc_call : proc_call_set) {
             auto proc_type = proc_call->procedure_type();
-            auto instance = proc_type->instance_for(_session, proc_call);
-            if (instance != nullptr) {
-                proc_instance_set.insert(instance);
+            if (proc_type != nullptr) {
+                proc_type_set.insert(proc_type);
             } else {
                 _session.error(
                     proc_call->module(),
@@ -2290,7 +2289,7 @@ namespace basecode::compiler {
             return false;
 
         auto& assembler = _session.assembler();
-        for (auto instance : proc_instance_set) {
+        for (auto instance : proc_type_set) {
             auto basic_block = _blocks.make();
             assembler.blocks().emplace_back(basic_block);
             basic_block->pre_blank_lines(1);

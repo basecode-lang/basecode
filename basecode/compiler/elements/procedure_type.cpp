@@ -341,18 +341,14 @@ namespace basecode::compiler {
         if (!is_template())
             return this;
 
-        auto& builder = session.builder();
-
-        type_map_t types {};
+        std::unordered_map<std::string_view, compiler::type*> types {};
         const auto& name_list = _type_parameters.name_list();
         const auto& call_type_params = call->type_parameters();
         if (call_type_params.size() == name_list.size()) {
             size_t index = 0;
             for (auto type_param : name_list) {
                 auto type_ref = call_type_params[index++];
-                types.add(
-                    builder.make_symbol(type_ref->parent_scope(), type_param),
-                    type_ref->type());
+                types.insert(std::make_pair(type_param, type_ref->type()));
             }
         } else {
             const auto& args = call->arguments()->elements();
@@ -386,11 +382,11 @@ namespace basecode::compiler {
                 if (!arg->infer_type(session, type_result))
                     return nullptr;
 
-                types.add(
-                    builder.make_symbol(_header_scope, name),
-                    type_result.types.front().type);
+                types.insert(std::make_pair(name, type_result.types.front().type));
             }
         }
+
+        // need to recursively clone the procedure_type
 
         return nullptr;
     }

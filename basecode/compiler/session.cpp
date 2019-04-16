@@ -314,20 +314,20 @@ namespace basecode::compiler {
             [&]() {
                 auto proc_calls = _elements->find_by_type<compiler::procedure_call>(element_type_t::proc_call);
                 for (auto proc_call : proc_calls) {
-                    if (!proc_call->resolve_overloads(*this))
+                    if (!proc_call->resolve_overloads(*this)) {
+                        error(
+                            proc_call->module(),
+                            "X000",
+                            "unable to prepare procedure call site.",
+                            proc_call->location());
                         return false;
+                    }
                 }
                 return true;
             },
             false);
-        if (!success) {
-            error(
-                nullptr,
-                "X000",
-                "unable to prepare procedure call sites.",
-                _program->location());
+        if (!success)
             return false;
-        }
 
         success = time_task(
             "compiler: resolve unknown types (phase 3)",
