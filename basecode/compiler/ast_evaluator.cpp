@@ -178,100 +178,6 @@ namespace basecode::compiler {
         return nullptr;
     }
 
-    bool ast_evaluator::add_procedure_instance(
-            const evaluator_context_t& context,
-            compiler::procedure_type* proc_type,
-            const syntax::ast_node_t* node) {
-        auto& builder = _session.builder();
-        auto& scope_manager = _session.scope_manager();
-
-        if (node->children.empty())
-            return true;
-
-        if (node->has_data()) {
-            auto data = const_cast<syntax::ast_node_t*>(node)->get_data(&_session.ast_builder());
-            for (auto& attr : data->attributes) {
-                auto attribute = builder.make_attribute(
-                    proc_type->scope(),
-                    attr->token->value,
-                    evaluate(attr->lhs));
-                attribute->parent_element(proc_type);
-                proc_type->attributes().add(attribute);
-            }
-        }
-
-        for (auto child_node : node->children) {
-            switch (child_node->type) {
-                case syntax::ast_node_type_t::basic_block: {
-                    auto basic_block = dynamic_cast<compiler::block*>(evaluate_in_scope(
-                        child_node,
-                        proc_type->scope()));
-                    if (basic_block == nullptr) {
-                        _session.error(
-                            scope_manager.current_module(),
-                            "X000",
-                            "unable to evaluate procedure instance block.",
-                            child_node->location);
-                        return false;
-                    }
-
-                    basic_block->has_stack_frame(true);
-
-                    auto& return_parameters = proc_type->return_parameters();
-                    if (!return_parameters.empty()) {
-                        auto anon_count = count_anonymous_return_parameters(return_parameters);
-                        auto has_return = anon_count == 0;
-
-                        scope_manager.visit_child_blocks(
-                            _session.result(),
-                            [&](compiler::block* scope) {
-                                for (auto stmt : scope->statements()) {
-                                    auto return_e = dynamic_cast<compiler::return_element*>(stmt->expression());
-                                    if (return_e != nullptr) {
-                                        return_e->parameters(&return_parameters);
-                                        if (anon_count != return_e->expressions().size()) {
-                                            _session.error(
-                                                scope_manager.current_module(),
-                                                "X000",
-                                                "return statement does not match procedure declaration.",
-                                                return_e->location());
-                                            has_return = false;
-                                        } else {
-                                            has_return = true;
-                                        }
-                                    }
-                                }
-                                return true;
-                            },
-                            basic_block);
-
-                        if (!has_return) {
-                            _session.error(
-                                scope_manager.current_module(),
-                                "X000",
-                                "procedure declares one or more anonymous return types but has no matching return statement.",
-                                proc_type->location());
-                            return false;
-                        }
-
-                        proc_type->has_return(true);
-                    }
-
-                    auto instance = builder.make_procedure_instance(
-                        proc_type->scope(),
-                        proc_type,
-                        basic_block);
-                    instance->parent_element(proc_type);
-                    proc_type->add_default_instance(instance);
-                }
-                default:
-                    break;
-            }
-        }
-
-        return true;
-    }
-
     void ast_evaluator::add_expression_to_scope(
             compiler::block* scope,
             compiler::element* expr) {
@@ -853,16 +759,6 @@ namespace basecode::compiler {
         }
 
         scope->identifiers().add(new_identifier);
-
-        if (init != nullptr
-        &&  init->expression()->element_type() == element_type_t::proc_type) {
-            if (!add_procedure_instance(
-                    context,
-                    dynamic_cast<procedure_type*>(init->expression()),
-                    source_node)) {
-                return nullptr;
-            }
-        }
 
         compiler::binary_operator* assign_bin_op = nullptr;
 
@@ -2218,29 +2114,106 @@ namespace basecode::compiler {
         auto& scope_manager = _session.scope_manager();
 
         auto active_scope = scope_manager.current_scope();
-        auto block_scope = builder.make_block(active_scope);
-        auto proc_type = builder.make_procedure_type(active_scope, block_scope);
+        auto header_scope = builder.make_block(active_scope);
+        auto proc_type = builder.make_procedure_type(active_scope, header_scope);
         proc_type->location(context.node->location);
         active_scope->types().add(proc_type);
 
         add_type_parameters(
             context,
-            block_scope,
+            header_scope,
             context.node->lhs->lhs,
             proc_type->type_parameters());
 
         add_procedure_type_return_parameter_fields(
             context,
             proc_type,
-            block_scope,
+            header_scope,
             context.node->lhs->rhs);
 
         if (!add_procedure_type_parameter_fields(
                 context,
                 proc_type,
-                block_scope,
+                header_scope,
                 context.node->rhs)) {
             return false;
+        }
+
+        if (context.node->has_data()) {
+            auto data = const_cast<syntax::ast_node_t*>(context.node)->get_data(&_session.ast_builder());
+            for (auto& attr : data->attributes) {
+                auto attribute = builder.make_attribute(
+                    proc_type->header_scope(),
+                    attr->token->value,
+                    evaluate(attr->lhs));
+                attribute->parent_element(proc_type);
+                proc_type->attributes().add(attribute);
+            }
+        }
+
+        for (auto child_node : context.node->children) {
+            switch (child_node->type) {
+                case syntax::ast_node_type_t::basic_block: {
+                    auto basic_block = dynamic_cast<compiler::block*>(evaluate_in_scope(
+                        child_node,
+                        proc_type->header_scope()));
+                    if (basic_block == nullptr) {
+                        _session.error(
+                            scope_manager.current_module(),
+                            "X000",
+                            "unable to evaluate procedure body.",
+                            child_node->location);
+                        return false;
+                    }
+
+                    basic_block->has_stack_frame(true);
+
+                    auto& return_parameters = proc_type->return_parameters();
+                    if (!return_parameters.empty()) {
+                        auto anon_count = count_anonymous_return_parameters(return_parameters);
+                        auto has_return = anon_count == 0;
+
+                        scope_manager.visit_child_blocks(
+                            _session.result(),
+                            [&](compiler::block* scope) {
+                                for (auto stmt : scope->statements()) {
+                                    auto return_e = dynamic_cast<compiler::return_element*>(stmt->expression());
+                                    if (return_e != nullptr) {
+                                        return_e->parameters(&return_parameters);
+                                        if (anon_count != return_e->expressions().size()) {
+                                            _session.error(
+                                                scope_manager.current_module(),
+                                                "X000",
+                                                "return statement does not match procedure declaration.",
+                                                return_e->location());
+                                            has_return = false;
+                                        } else {
+                                            has_return = true;
+                                        }
+                                    }
+                                }
+                                return true;
+                            },
+                            basic_block);
+
+                        if (!has_return) {
+                            _session.error(
+                                scope_manager.current_module(),
+                                "X000",
+                                "procedure declares one or more anonymous return types but has no matching return statement.",
+                                proc_type->location());
+                            return false;
+                        }
+
+                        proc_type->has_return(true);
+                    }
+
+                    proc_type->body_scope(basic_block);
+                    basic_block->parent_element(proc_type);
+                }
+                default:
+                    break;
+            }
         }
 
         result.element = proc_type;

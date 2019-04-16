@@ -2029,7 +2029,6 @@ namespace basecode::compiler {
             case element_type_t::pointer_type:
             case element_type_t::generic_type:
             case element_type_t::argument_pair:
-            case element_type_t::proc_instance:
             case element_type_t::namespace_type:
             case element_type_t::composite_type:
             case element_type_t::type_reference:
@@ -2266,7 +2265,7 @@ namespace basecode::compiler {
         }
 
         procedure_call_set_t proc_call_set {};
-        procedure_instance_set_t proc_instance_set {};
+        procedure_type_set_t proc_instance_set {};
 
         auto root_edges = find_root_edges(edges);
         for (const auto& edge : root_edges) {
@@ -2582,22 +2581,21 @@ namespace basecode::compiler {
 
     bool byte_code_emitter::emit_procedure_instance(
             vm::basic_block** basic_block,
-            compiler::procedure_instance* proc_instance) {
-        auto procedure_type = proc_instance->procedure_type();
-        if (procedure_type->is_foreign())
+            compiler::procedure_type* proc_type) {
+        if (proc_type->is_foreign())
             return true;
 
-        auto scope_block = proc_instance->scope();
+        auto scope_block = proc_type->body_scope();
 
-        _variables.build(scope_block, procedure_type);
+        _variables.build(scope_block, proc_type);
 
-        if (!emit_procedure_prologue(basic_block, procedure_type))
+        if (!emit_procedure_prologue(basic_block, proc_type))
             return false;
 
         if (!emit_block(basic_block, scope_block))
             return false;
 
-        return emit_procedure_epilogue(basic_block, procedure_type);
+        return emit_procedure_epilogue(basic_block, proc_type);
     }
 
     bool byte_code_emitter::emit_procedure_prologue(

@@ -23,7 +23,7 @@ namespace basecode::compiler {
         procedure_type(
             compiler::module* module,
             compiler::block* parent_scope,
-            compiler::block* scope,
+            compiler::block* header_scope,
             compiler::symbol_element* symbol);
 
         bool prepare_call_site(
@@ -36,7 +36,7 @@ namespace basecode::compiler {
 
         bool is_foreign() const;
 
-        compiler::block* scope();
+        bool is_template() const;
 
         field_map_t& parameters();
 
@@ -46,6 +46,10 @@ namespace basecode::compiler {
 
         type_map_t& type_parameters();
 
+        compiler::block* body_scope();
+
+        compiler::block* header_scope();
+
         field_map_t& return_parameters();
 
         uint64_t foreign_address() const;
@@ -54,13 +58,13 @@ namespace basecode::compiler {
 
         void foreign_address(uint64_t value);
 
-        std::string label_name() const override;
-
-        compiler::procedure_instance* instance_for(
+        compiler::procedure_type* instance_for(
             compiler::session& session,
             compiler::procedure_call* call);
 
-        void add_default_instance(compiler::procedure_instance* instance);
+        void body_scope(compiler::block* value);
+
+        std::string label_name() const override;
 
     protected:
         bool on_type_check(
@@ -80,8 +84,9 @@ namespace basecode::compiler {
         uint64_t _foreign_address = 0;
         type_map_t _type_parameters {};
         field_map_t _return_parameters {};
-        compiler::block* _scope = nullptr;
-        procedure_instance_map_t _instances {};
+        procedure_type_map_t* _instances {};
+        compiler::block* _body_scope = nullptr;
+        compiler::block* _header_scope = nullptr;
     };
 
 }

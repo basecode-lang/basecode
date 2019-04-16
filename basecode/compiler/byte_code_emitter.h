@@ -80,7 +80,7 @@ namespace basecode::compiler {
 
         bool emit_procedure_instance(
             vm::basic_block** basic_block,
-            compiler::procedure_instance* proc_instance);
+            compiler::procedure_type* proc_type);
 
         bool emit_procedure_prologue(
             vm::basic_block** basic_block,

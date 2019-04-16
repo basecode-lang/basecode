@@ -30,7 +30,6 @@
 #include "type_reference.h"
 #include "integer_literal.h"
 #include "binary_operator.h"
-#include "procedure_instance.h"
 
 namespace basecode::compiler {
 
@@ -47,13 +46,13 @@ namespace basecode::compiler {
     procedure_type::procedure_type(
             compiler::module* module,
             compiler::block* parent_scope,
-            compiler::block* scope,
+            compiler::block* header_scope,
             compiler::symbol_element* symbol) : compiler::type(
                                                       module,
                                                       parent_scope,
                                                       element_type_t::proc_type,
                                                       symbol),
-                                                _scope(scope) {
+                                                _header_scope(header_scope) {
     }
 
     bool procedure_type::on_type_check(
@@ -278,8 +277,8 @@ namespace basecode::compiler {
         return _is_foreign;
     }
 
-    compiler::block* procedure_type::scope() {
-        return _scope;
+    bool procedure_type::is_template() const {
+        return !_type_parameters.empty();
     }
 
     field_map_t& procedure_type::parameters() {
@@ -306,6 +305,14 @@ namespace basecode::compiler {
         return _type_parameters;
     }
 
+    compiler::block* procedure_type::body_scope() {
+        return _body_scope;
+    }
+
+    compiler::block* procedure_type::header_scope() {
+        return _header_scope;
+    }
+
     std::string procedure_type::label_name() const {
         auto parent_init = const_cast<procedure_type*>(this)->parent_element_as<compiler::initializer>();
         if (parent_init != nullptr) {
@@ -328,15 +335,11 @@ namespace basecode::compiler {
         _foreign_address = value;
     }
 
-    compiler::procedure_instance* procedure_type::instance_for(
+    compiler::procedure_type* procedure_type::instance_for(
             compiler::session& session,
             compiler::procedure_call* call) {
-        if (_instances.empty())
-            return nullptr;
-
-        auto default_instance = _instances["default"sv];
-        if (default_instance == nullptr)
-            return nullptr;
+        if (!is_template())
+            return this;
 
         auto& builder = session.builder();
 
@@ -355,7 +358,7 @@ namespace basecode::compiler {
             const auto& args = call->arguments()->elements();
             const auto& fields = _parameters.as_list();
             for (const auto& name : name_list) {
-                auto vars = _scope->identifiers().find(name);
+                auto vars = _header_scope->identifiers().find(name);
                 if (vars.empty()) {
                     // XXX: error
                     return nullptr;
@@ -384,27 +387,24 @@ namespace basecode::compiler {
                     return nullptr;
 
                 types.add(
-                    builder.make_symbol(_scope, name),
+                    builder.make_symbol(_header_scope, name),
                     type_result.types.front().type);
             }
         }
 
-        if (default_instance->is_template()) {
-            if (types.empty())
-                return nullptr;
+        return nullptr;
+    }
 
-            auto matched_instance = default_instance->bake_for_types(session, types);
-            if (matched_instance == nullptr)
-                return nullptr;
-            return matched_instance;
-        }
-
-        return default_instance;
+    void procedure_type::body_scope(compiler::block* value) {
+        _body_scope = value;
     }
 
     void procedure_type::on_owned_elements(element_list_t& list) {
-        if (_scope != nullptr)
-            list.emplace_back(_scope);
+        if (_body_scope != nullptr)
+            list.emplace_back(_body_scope);
+
+        if (_header_scope != nullptr)
+            list.emplace_back(_header_scope);
 
         for (auto element : _parameters.as_list())
             list.emplace_back(element);
@@ -415,12 +415,6 @@ namespace basecode::compiler {
 
     bool procedure_type::on_initialize(compiler::session& session) {
         return true;
-    }
-
-    void procedure_type::add_default_instance(compiler::procedure_instance* instance) {
-        if (_type_parameters.size() > 0)
-            instance->mark_as_template();
-        _instances["default"sv] = instance;
     }
 
 }

@@ -222,7 +222,6 @@ add_library(
     compiler/elements/value_sink_literal.cpp compiler/elements/value_sink_literal.h
     compiler/elements/assembly_directive.cpp compiler/elements/assembly_directive.h
     compiler/elements/align_of_intrinsic.cpp compiler/elements/align_of_intrinsic.h
-    compiler/elements/procedure_instance.cpp compiler/elements/procedure_instance.h
     compiler/elements/intrinsic_directive.cpp compiler/elements/intrinsic_directive.h
     compiler/elements/core_type_directive.cpp compiler/elements/core_type_directive.h
     compiler/elements/length_of_intrinsic.cpp compiler/elements/length_of_intrinsic.h

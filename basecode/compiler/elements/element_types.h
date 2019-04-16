@@ -105,7 +105,6 @@ namespace basecode::compiler {
     class foreign_directive;
     class value_sink_literal;
     class align_of_intrinsic;
-    class procedure_instance;
     class assembly_directive;
     class length_of_intrinsic;
     class intrinsic_directive;
@@ -134,17 +133,16 @@ namespace basecode::compiler {
     using module_stack_t = std::stack<compiler::module*>;
     using procedure_call_set_t = std::set<procedure_call*>;
     using type_literal_list_t = std::vector<type_literal*>;
+    using procedure_type_set_t = std::set<procedure_type*>;
     using string_view_list_t = std::vector<std::string_view>;
     using directive_map_t = std::map<std::string, directive*>;
     using type_reference_list_t = std::vector<type_reference*>;
     using procedure_type_list_t = std::vector<procedure_type*>;
     using const_attribute_list_t = std::vector<const attribute*>;
-    using procedure_instance_set_t = std::set<procedure_instance*>;
-    using procedure_instance_list_t = std::vector<procedure_instance*>;
     using binary_operator_stack_t = std::stack<compiler::binary_operator*>;
     using identifier_reference_stack_t = std::stack<compiler::identifier_reference*>;
     using identifier_reference_list_t = std::vector<compiler::identifier_reference*>;
-    using procedure_instance_map_t = std::unordered_map<std::string_view, procedure_instance*>;
+    using procedure_type_map_t = std::unordered_map<std::string_view, procedure_type*>;
 
     using element_id_set_t = std::unordered_set<common::id_t>;
 
@@ -408,7 +406,6 @@ namespace basecode::compiler {
         generic_type,
         argument_pair,
         argument_list,
-        proc_instance,
         float_literal,
         assembly_label,
         string_literal,
@@ -479,7 +476,6 @@ namespace basecode::compiler {
         {element_type_t::unknown_type, "unknown_type"sv},
         {element_type_t::pointer_type, "pointer_type"sv},
         {element_type_t::numeric_type, "numeric_type"sv},
-        {element_type_t::proc_instance, "proc_instance"sv},
         {element_type_t::float_literal, "float_literal"sv},
         {element_type_t::argument_list, "argument_list"sv},
         {element_type_t::argument_pair, "argument_pair"sv},

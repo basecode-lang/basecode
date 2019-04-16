@@ -149,17 +149,17 @@ namespace basecode::compiler {
 
     procedure_type* element_builder::make_procedure_type(
             compiler::block* parent_scope,
-            compiler::block* block_scope) {
+            compiler::block* header_scope) {
         auto it = _session.strings().insert(compiler::procedure_type::name_for_procedure_type());
         auto symbol = make_symbol(parent_scope, *it.first);
         auto type = new compiler::procedure_type(
             _session.scope_manager().current_module(),
             parent_scope,
-            block_scope,
+            header_scope,
             symbol);
         symbol->parent_element(type);
-        if (block_scope != nullptr)
-            block_scope->parent_element(type);
+        if (header_scope != nullptr)
+            header_scope->parent_element(type);
         _session.elements().add(type);
         return type;
     }
@@ -516,21 +516,6 @@ namespace basecode::compiler {
         if (expr != nullptr)
             expr->parent_element(transmute);
         return transmute;
-    }
-
-    procedure_instance* element_builder::make_procedure_instance(
-            compiler::block* parent_scope,
-            compiler::procedure_type* procedure_type,
-            compiler::block* scope) {
-        auto instance = new compiler::procedure_instance(
-            _session.scope_manager().current_module(),
-            parent_scope,
-            procedure_type,
-            scope);
-        if (scope != nullptr)
-            scope->parent_element(instance);
-        _session.elements().add(instance);
-        return instance;
     }
 
     type_literal* element_builder::make_tuple_literal(

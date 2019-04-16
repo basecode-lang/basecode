@@ -314,7 +314,7 @@ namespace basecode::compiler {
 
         procedure_type* make_procedure_type(
             compiler::block* parent_scope,
-            compiler::block* block_scope);
+            compiler::block* header_scope);
 
         assembly_literal_label* make_assembly_literal_label(
             compiler::block* parent_scope,
@@ -370,11 +370,6 @@ namespace basecode::compiler {
         compiler::boolean_literal* true_literal();
 
         compiler::boolean_literal* false_literal();
-
-        procedure_instance* make_procedure_instance(
-            compiler::block* parent_scope,
-            compiler::procedure_type* procedure_type,
-            compiler::block* scope);
 
         identifier_reference* make_identifier_reference(
             compiler::block* parent_scope,

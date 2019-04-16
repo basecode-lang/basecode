@@ -299,7 +299,8 @@ namespace basecode::compiler {
             case element_type_t::proc_type: {
                 auto element = dynamic_cast<procedure_type*>(node);
                 auto style = ", fillcolor=gainsboro, style=\"filled\"";
-                add_primary_edge(element, element->scope());
+                add_primary_edge(element, element->header_scope());
+                add_primary_edge(element, element->body_scope());
                 add_primary_edge(element, element->symbol());
                 return fmt::format(
                     "{}[shape=record,label=\"proc_type|{}|foreign: {}\"{}];",
@@ -516,16 +517,6 @@ namespace basecode::compiler {
                     "{}[shape=record,label=\"numeric_type|{}\"{}];",
                     node_vertex_name,
                     element->symbol()->name(),
-                    style);
-            }
-            case element_type_t::proc_instance: {
-                auto element = dynamic_cast<procedure_instance*>(node);
-                auto style = ", fillcolor=gainsboro, style=\"filled\"";
-                add_primary_edge(element, element->procedure_type());
-                add_primary_edge(element, element->scope());
-                return fmt::format(
-                    "{}[shape=record,label=\"proc_instance\"{}];",
-                    node_vertex_name,
                     style);
             }
             case element_type_t::float_literal: {
