@@ -45,18 +45,51 @@ LEXER:
 
 PARSER:
 - BUG: fix assignment so that groups of lhs/rhs are together.
+    NOTES:
+
+    Example 1:
+
+    a, b := 6, 5;
+
+    The parser should couple a with 6 and b with 5.
+
+    Example 2:
+
+    a, b, c := 14;
+
+    The parser should couple a with 14, b with 14, and c with 14.
+
+    Error 1:
+
+    a, b, c := 5, 14;
+
+    Example 3:
+
+    a, b, c := some_proc(16, 5);
+
+    This should become something (maybe) like this:
+
+    _temp_ := some_proc(16, 5); where _temp_ is some kind of view on on the return stack
+    a := _temp_._0;
+    b := _temp_._1;
+    c := _temp_._2;
+
 - FIX: composite binary op + assign has parser precedence issues. may need to
        programmatically wrap the rhs in an expression_group.
 
 =======
 
 COMPILER:
+- NEW: implement procedure instance baking
+- NEW: struct/union instance baking
+- REFACTOR: ast_evaluator::add_identifier_to_scope
+
 - BUG: session type resolution doesn't support family_type parameters
 
 - BUG: fix assignment in ast_evaluator so it properly handles sets of multiple assignment/multiple return.
+    *** see notes in the parser section
 - BUG: fix binary_operator type checking in session so it properly supports multiple assignment/multiple return
 
-- BUG: don't emit the template procedure_instance
 - NEW: @initializer/@finalizer linkages
 - NEW: operator overloading procedure linkages, e.g.
         @binary_operator "+";
@@ -140,7 +173,7 @@ COMPILER:
         // draw has no return type, so the proxy matches.
         //
         __dispatch_draw_on_shapes__ :: proc(self: ^shape /* draw's parameters would be mirrored */) {
-            switch v {
+            switch self {
                 case #type circle => {
                     draw(address_of(self.circle));
                 };
@@ -150,10 +183,6 @@ COMPILER:
                 };
             }
         };
-
-- NEW: implement procedure instance baking
-- NEW: struct/union instance baking
-- REFACTOR: ast_evaluator::add_identifier_to_scope
 
 =======
 
@@ -424,6 +453,7 @@ DONE
 - BUG: redefining an identifier isn't being handled at all.
         need to check for this scenario and issue an error.
 - FIX: type-promotion errors for procedure_call
+- BUG: don't emit the template procedure_instance
 
 ANSWERS
 -------

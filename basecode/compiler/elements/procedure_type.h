@@ -54,13 +54,13 @@ namespace basecode::compiler {
 
         void foreign_address(uint64_t value);
 
-        procedure_instance_list_t& instances();
-
         std::string label_name() const override;
 
         compiler::procedure_instance* instance_for(
             compiler::session& session,
             compiler::procedure_call* call);
+
+        void add_default_instance(compiler::procedure_instance* instance);
 
     protected:
         bool on_type_check(
@@ -81,7 +81,7 @@ namespace basecode::compiler {
         type_map_t _type_parameters {};
         field_map_t _return_parameters {};
         compiler::block* _scope = nullptr;
-        procedure_instance_list_t _instances {};
+        procedure_instance_map_t _instances {};
     };
 
 }

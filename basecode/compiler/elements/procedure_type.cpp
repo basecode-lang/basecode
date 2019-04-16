@@ -30,6 +30,7 @@
 #include "type_reference.h"
 #include "integer_literal.h"
 #include "binary_operator.h"
+#include "procedure_instance.h"
 
 namespace basecode::compiler {
 
@@ -327,17 +328,78 @@ namespace basecode::compiler {
         _foreign_address = value;
     }
 
-    procedure_instance_list_t& procedure_type::instances() {
-        return _instances;
-    }
-
     compiler::procedure_instance* procedure_type::instance_for(
             compiler::session& session,
             compiler::procedure_call* call) {
-        // XXX: this is not complete.  for testing only
         if (_instances.empty())
             return nullptr;
-        return _instances.back();
+
+        auto default_instance = _instances["default"sv];
+        if (default_instance == nullptr)
+            return nullptr;
+
+        auto& builder = session.builder();
+
+        type_map_t types {};
+        const auto& name_list = _type_parameters.name_list();
+        const auto& call_type_params = call->type_parameters();
+        if (call_type_params.size() == name_list.size()) {
+            size_t index = 0;
+            for (auto type_param : name_list) {
+                auto type_ref = call_type_params[index++];
+                types.add(
+                    builder.make_symbol(type_ref->parent_scope(), type_param),
+                    type_ref->type());
+            }
+        } else {
+            const auto& args = call->arguments()->elements();
+            const auto& fields = _parameters.as_list();
+            for (const auto& name : name_list) {
+                auto vars = _scope->identifiers().find(name);
+                if (vars.empty()) {
+                    // XXX: error
+                    return nullptr;
+                }
+
+                size_t field_index = 0;
+                auto type_identifier = vars.front();
+                auto type_id = type_identifier->type_ref()->type()->id();
+                compiler::field* matching_field = nullptr;
+                for (auto fld : fields) {
+                    if (fld->identifier()->type_ref()->type()->id() == type_id) {
+                        matching_field = fld;
+                        break;
+                    }
+                    ++field_index;
+                }
+
+                if (matching_field == nullptr) {
+                    // XXX: error
+                    return nullptr;
+                }
+
+                auto arg = args[field_index];
+                infer_type_result_t type_result{};
+                if (!arg->infer_type(session, type_result))
+                    return nullptr;
+
+                types.add(
+                    builder.make_symbol(_scope, name),
+                    type_result.types.front().type);
+            }
+        }
+
+        if (default_instance->is_template()) {
+            if (types.empty())
+                return nullptr;
+
+            auto matched_instance = default_instance->bake_for_types(session, types);
+            if (matched_instance == nullptr)
+                return nullptr;
+            return matched_instance;
+        }
+
+        return default_instance;
     }
 
     void procedure_type::on_owned_elements(element_list_t& list) {
@@ -353,6 +415,12 @@ namespace basecode::compiler {
 
     bool procedure_type::on_initialize(compiler::session& session) {
         return true;
+    }
+
+    void procedure_type::add_default_instance(compiler::procedure_instance* instance) {
+        if (_type_parameters.size() > 0)
+            instance->mark_as_template();
+        _instances["default"sv] = instance;
     }
 
 }

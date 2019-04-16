@@ -144,6 +144,7 @@ namespace basecode::compiler {
     using binary_operator_stack_t = std::stack<compiler::binary_operator*>;
     using identifier_reference_stack_t = std::stack<compiler::identifier_reference*>;
     using identifier_reference_list_t = std::vector<compiler::identifier_reference*>;
+    using procedure_instance_map_t = std::unordered_map<std::string_view, procedure_instance*>;
 
     using element_id_set_t = std::unordered_set<common::id_t>;
 
@@ -783,6 +784,10 @@ namespace basecode::compiler {
         void add(
             compiler::symbol_element* symbol,
             compiler::type* type);
+
+        bool empty() const {
+            return _types.empty();
+        }
 
         size_t size() const {
             return _types.size();

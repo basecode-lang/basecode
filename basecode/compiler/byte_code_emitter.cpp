@@ -2276,8 +2276,15 @@ namespace basecode::compiler {
         for (auto proc_call : proc_call_set) {
             auto proc_type = proc_call->procedure_type();
             auto instance = proc_type->instance_for(_session, proc_call);
-            if (instance != nullptr)
+            if (instance != nullptr) {
                 proc_instance_set.insert(instance);
+            } else {
+                _session.error(
+                    proc_call->module(),
+                    "X000",
+                    "no valid procedure instance for call site.",
+                    proc_call->location());
+            }
         }
 
         if (_session.result().is_failed())

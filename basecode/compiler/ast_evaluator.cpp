@@ -262,7 +262,7 @@ namespace basecode::compiler {
                         proc_type,
                         basic_block);
                     instance->parent_element(proc_type);
-                    proc_type->instances().push_back(instance);
+                    proc_type->add_default_instance(instance);
                 }
                 default:
                     break;

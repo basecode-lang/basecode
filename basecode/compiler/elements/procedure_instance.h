@@ -31,6 +31,10 @@ namespace basecode::compiler {
 
         compiler::procedure_type* procedure_type();
 
+        compiler::procedure_instance*  bake_for_types(
+            compiler::session& session,
+            const type_map_t& types);
+
     protected:
         bool on_infer_type(
             compiler::session& session,

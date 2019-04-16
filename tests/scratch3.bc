@@ -1,3 +1,11 @@
 core :: module("core");
 
-temp: s32 := -332;
+signed_integer     :: family(s8, s16, s32, s64);
+unsigned_integer   :: family(u8, u16, u32, u64);
+integer            :: family(signed_integer, unsigned_integer);
+
+adder :: proc<T:integer>(lhs: T, rhs: T): T {
+    return lhs + rhs;
+};
+
+core::print("5 + 5 := %d\n", adder(5, 5));

@@ -48,6 +48,12 @@ namespace basecode::compiler {
         return _procedure_type;
     }
 
+    compiler::procedure_instance* procedure_instance::bake_for_types(
+        compiler::session& session,
+        const type_map_t& types) {
+        return nullptr;
+    }
+
     void procedure_instance::on_owned_elements(element_list_t& list) {
         if (_scope != nullptr)
             list.emplace_back(_scope);
