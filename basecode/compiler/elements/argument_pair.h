@@ -42,6 +42,8 @@ namespace basecode::compiler {
 
         void on_owned_elements(element_list_t& list) override;
 
+        compiler::element* on_clone(compiler::session& session) override;
+
     private:
         compiler::element* _lhs = nullptr;
         compiler::element* _rhs = nullptr;

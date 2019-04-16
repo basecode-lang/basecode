@@ -47,6 +47,8 @@ namespace basecode::compiler {
 
         bool on_less_than(const compiler::element& other) const override;
 
+        compiler::element* on_clone(compiler::session& session) override;
+
         bool on_not_equals(const compiler::element& other) const override;
 
         uint64_t on_subtract(const compiler::element& other) const override;

@@ -130,6 +130,8 @@ namespace basecode::compiler {
 
         attribute* find_attribute(const std::string& name);
 
+        compiler::element* clone(compiler::session& session);
+
         bool is_directive_of_type(directive_type_t type) const;
 
         void location(const common::source_location& location);
@@ -182,6 +184,8 @@ namespace basecode::compiler {
         virtual bool on_greater_than(const element& other) const;
 
         virtual bool on_less_than_or_equal(const element& other) const;
+
+        virtual compiler::element* on_clone(compiler::session& session);
 
         virtual bool on_greater_than_or_equal(const element& other) const;
 

@@ -2063,10 +2063,11 @@ namespace basecode::compiler {
                 break;
             }
             case element_type_t::assembly_literal_label: {
+                /// XXX: fix!  make_named_ref should accept a string_view
                 auto label = dynamic_cast<compiler::assembly_literal_label*>(e);
                 result.operands.emplace_back(vm::instruction_operand_t(assembler.make_named_ref(
                     vm::assembler_named_ref_type_t::label,
-                    label->name())));
+                    std::string(label->name()))));
                 break;
             }
         }

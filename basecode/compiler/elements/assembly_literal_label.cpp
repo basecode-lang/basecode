@@ -10,6 +10,7 @@
 // ----------------------------------------------------------------------------
 
 #include <compiler/session.h>
+#include <compiler/element_builder.h>
 #include "assembly_literal_label.h"
 
 namespace basecode::compiler {
@@ -18,9 +19,9 @@ namespace basecode::compiler {
         compiler::module* module,
         compiler::block* parent_scope,
         compiler::type* type,
-        const std::string& name) : element(module, parent_scope, element_type_t::assembly_literal_label),
-                                   _name(name),
-                                   _type(type) {
+        const std::string_view& name) : element(module, parent_scope, element_type_t::assembly_literal_label),
+                                        _name(name),
+                                        _type(type) {
     }
 
     bool assembly_literal_label::on_infer_type(
@@ -30,16 +31,24 @@ namespace basecode::compiler {
         return true;
     }
 
-    std::string assembly_literal_label::name() const {
-        return _name;
-    }
-
     bool assembly_literal_label::on_is_constant() const {
         return true;
     }
 
     compiler::type* assembly_literal_label::type() const {
         return _type;
+    }
+
+    std::string_view assembly_literal_label::name() const {
+        return _name;
+    }
+
+    compiler::element* assembly_literal_label::on_clone(compiler::session& session) {
+        return session.builder().make_assembly_literal_label(
+            parent_scope(),
+            _type,
+            _name,
+            module());
     }
 
 }

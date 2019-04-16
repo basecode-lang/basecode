@@ -36,6 +36,8 @@ namespace basecode::compiler {
 
         bool on_as_float(double& value) const override;
 
+        compiler::element* on_clone(compiler::session& session) override;
+
     private:
         double _value;
         compiler::type_reference* _type_ref = nullptr;

@@ -269,6 +269,12 @@ namespace basecode::compiler {
         return nullptr;
     }
 
+    compiler::element* element::clone(compiler::session& session) {
+        if (is_singleton())
+            return this;
+        return on_clone(session);
+    }
+
     bool element::on_less_than_or_equal(const element& other) const {
         return false;
     }
@@ -284,6 +290,10 @@ namespace basecode::compiler {
     bool element::is_directive_of_type(directive_type_t type) const {
         return _element_type == element_type_t::directive
                && dynamic_cast<const compiler::directive*>(this)->type() == type;
+    }
+
+    compiler::element* element::on_clone(compiler::session& session) {
+        return nullptr;
     }
 
     bool element::on_greater_than_or_equal(const element& other) const {

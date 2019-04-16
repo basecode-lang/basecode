@@ -11,6 +11,7 @@
 
 #include <compiler/session.h>
 #include <compiler/scope_manager.h>
+#include <compiler/element_builder.h>
 #include "type.h"
 #include "numeric_type.h"
 #include "float_literal.h"
@@ -56,6 +57,12 @@ namespace basecode::compiler {
     bool float_literal::on_as_float(double& value) const {
         value = _value;
         return true;
+    }
+
+    compiler::element* float_literal::on_clone(compiler::session& session) {
+        return session
+            .builder()
+            .make_float(parent_scope(), _value, _type_ref);
     }
 
 }

@@ -24,19 +24,17 @@ namespace basecode::compiler {
     directive* directive::directive_for_name(
             compiler::module* module,
             compiler::block* parent_scope,
-            const std::string_view& name,
+            directive_type_t type,
+            const common::source_location& location,
             const element_list_t& params) {
         if (params.empty())
-            return nullptr;
-
-        auto type = directive_type_from_name(name);
-        if (type == directive_type_t::unknown)
             return nullptr;
 
         switch (type) {
             case directive_type_t::run: {
                 auto instance = new run_directive(module, parent_scope, params[0]);
                 params[0]->parent_element(instance);
+                instance->location(location);
                 return instance;
             }
             case directive_type_t::if_e: {
@@ -61,6 +59,7 @@ namespace basecode::compiler {
                     rhs->parent_element(instance);
                 if (body != nullptr)
                     body->parent_element(instance);
+                instance->location(location);
                 return instance;
             }
             case directive_type_t::eval: {
@@ -69,31 +68,37 @@ namespace basecode::compiler {
             case directive_type_t::type: {
                 auto instance = new type_directive(module, parent_scope, params[0]);
                 params[0]->parent_element(instance);
+                instance->location(location);
                 return instance;
             }
             case directive_type_t::assert: {
                 auto instance = new assert_directive(module, parent_scope, params[0]);
                 params[0]->parent_element(instance);
+                instance->location(location);
                 return instance;
             }
             case directive_type_t::foreign: {
                 auto instance = new foreign_directive(module, parent_scope, params[0]);
                 params[0]->parent_element(instance);
+                instance->location(location);
                 return instance;
             }
             case directive_type_t::assembly: {
                 auto instance = new assembly_directive(module, parent_scope, params[0]);
                 params[0]->parent_element(instance);
+                instance->location(location);
                 return instance;
             }
             case directive_type_t::core_type: {
                 auto instance = new core_type_directive(module, parent_scope, params[0]);
                 params[0]->parent_element(instance);
+                instance->location(location);
                 return instance;
             }
             case directive_type_t::intrinsic_e: {
                 auto instance = new intrinsic_directive(module, parent_scope, params[0]);
                 params[0]->parent_element(instance);
+                instance->location(location);
                 return instance;
             }
             default: {

@@ -247,7 +247,8 @@ namespace basecode::compiler {
 
         compiler::directive* make_directive(
             compiler::block* parent_scope,
-            const std::string_view& name,
+            directive_type_t type,
+            const common::source_location& location,
             const element_list_t& params);
 
         intrinsic* make_copy_intrinsic(
@@ -319,7 +320,7 @@ namespace basecode::compiler {
         assembly_literal_label* make_assembly_literal_label(
             compiler::block* parent_scope,
             compiler::type* type,
-            const std::string& name,
+            const std::string_view& name,
             compiler::module* module = nullptr);
 
         assembly_label* make_assembly_label(

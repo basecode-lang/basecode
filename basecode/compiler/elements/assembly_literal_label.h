@@ -21,11 +21,11 @@ namespace basecode::compiler {
             compiler::module* module,
             compiler::block* parent_scope,
             compiler::type* type,
-            const std::string& name);
-
-        std::string name() const;
+            const std::string_view& name);
 
         compiler::type* type() const;
+
+        std::string_view name() const;
 
     protected:
         bool on_infer_type(
@@ -34,8 +34,10 @@ namespace basecode::compiler {
 
         bool on_is_constant() const override;
 
+        compiler::element* on_clone(compiler::session& session) override;
+
     private:
-        std::string _name;
+        std::string_view _name;
         compiler::type* _type = nullptr;
     };
 

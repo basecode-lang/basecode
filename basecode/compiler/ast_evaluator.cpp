@@ -874,7 +874,8 @@ namespace basecode::compiler {
 
         auto directive_element = builder.make_directive(
             scope_manager.current_scope(),
-            context.node->token->value,
+            directive_type_from_name(context.node->token->value),
+            context.node->token->location,
             params);
         if (directive_element == nullptr) {
             _session.error(
@@ -1596,7 +1597,8 @@ namespace basecode::compiler {
                     _session,
                     args->parent_scope(),
                     address_of_args,
-                    qualified_symbol_t("address_of"sv),
+                    intrinsic_type_t::address_of,
+                    self_arg->location(),
                     {});
                 args->replace(0, address_of_call);
                 address_of_call->parent_element(args);
@@ -1614,7 +1616,8 @@ namespace basecode::compiler {
             _session,
             scope_manager.current_scope(),
             args,
-            proc_name,
+            intrinsic_type_from_name(proc_name.name),
+            proc_name.location,
             type_params);
         if (intrinsic != nullptr) {
             intrinsic->uniform_function_call(is_ufcs);

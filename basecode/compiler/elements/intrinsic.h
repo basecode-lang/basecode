@@ -25,7 +25,8 @@ namespace basecode::compiler {
             compiler::session& session,
             compiler::block* parent_scope,
             compiler::argument_list* args,
-            const qualified_symbol_t& symbol,
+            intrinsic_type_t type,
+            const common::source_location& location,
             const compiler::type_reference_list_t& type_params);
 
         intrinsic(
@@ -51,6 +52,8 @@ namespace basecode::compiler {
 
     protected:
         void on_owned_elements(element_list_t& list) override;
+
+        compiler::element* on_clone(compiler::session& session) override;
 
     private:
         bool _uniform_function_call = false;

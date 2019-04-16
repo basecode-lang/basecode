@@ -178,12 +178,9 @@ namespace basecode::compiler {
             compiler::session& session,
             compiler::block* parent_scope,
             compiler::argument_list* args,
-            const qualified_symbol_t& symbol,
+            intrinsic_type_t type,
+            const common::source_location& location,
             const compiler::type_reference_list_t& type_params) {
-        auto type = intrinsic_type_from_name(symbol.name);
-        if (type == intrinsic_type_t::unknown)
-            return nullptr;
-
         auto it = s_intrinsics.find(type);
         if (it == std::end(s_intrinsics))
             return nullptr;
@@ -200,7 +197,7 @@ namespace basecode::compiler {
             args,
             proc_type_it->second,
             type_params);
-        intrinsic_element->location(symbol.location);
+        intrinsic_element->location(location);
         return intrinsic_element;
     }
 
@@ -245,6 +242,18 @@ namespace basecode::compiler {
 
         for (auto type_param : _type_parameters)
             list.emplace_back(type_param);
+    }
+
+    compiler::element* intrinsic::on_clone(compiler::session& session) {
+        auto intrinsic = intrinsic::intrinsic_for_call(
+            session,
+            parent_scope(),
+            dynamic_cast<compiler::argument_list*>(_arguments->clone(session)),
+            type(),
+            location(),
+            _type_parameters);
+        intrinsic->_uniform_function_call = _uniform_function_call;
+        return intrinsic;
     }
 
     const compiler::type_reference_list_t& intrinsic::type_parameters() const {

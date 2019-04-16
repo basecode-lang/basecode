@@ -9,8 +9,8 @@
 //
 // ----------------------------------------------------------------------------
 
-#include <vm/assembler.h>
 #include <compiler/session.h>
+#include <compiler/element_builder.h>
 #include "argument_pair.h"
 
 namespace basecode::compiler {
@@ -56,6 +56,13 @@ namespace basecode::compiler {
     void argument_pair::on_owned_elements(element_list_t& list) {
         list.emplace_back(_lhs);
         list.emplace_back(_rhs);
+    }
+
+    compiler::element* argument_pair::on_clone(compiler::session& session) {
+        return session.builder().make_argument_pair(
+            parent_scope(),
+            _lhs->clone(session),
+            _rhs->clone(session));
     }
 
 }

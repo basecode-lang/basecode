@@ -59,7 +59,9 @@ namespace basecode::compiler {
             return false;
         }
         const auto& arg_inferred = arg_type_result.types.back();
-        auto label_name = compiler::type::make_info_label_name(arg_inferred.type);
+        auto label_name = session
+            .strings()
+            .insert(compiler::type::make_info_label_name(arg_inferred.type));
 
         infer_type_result_t type_result {};
         if (!infer_type(session, type_result)) {
@@ -74,7 +76,7 @@ namespace basecode::compiler {
         result.element = session.builder().make_assembly_literal_label(
             parent_scope(),
             inferred.type,
-            label_name,
+            *label_name.first,
             module());
         result.element->location(location());
 

@@ -20,7 +20,8 @@ namespace basecode::compiler {
         static directive* directive_for_name(
             compiler::module* module,
             compiler::block* parent_scope,
-            const std::string_view& name,
+            directive_type_t type,
+            const common::source_location& location,
             const element_list_t& params);
 
         directive(

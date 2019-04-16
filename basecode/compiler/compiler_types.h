@@ -51,6 +51,16 @@ namespace basecode::compiler {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    element_list_t clone(
+        compiler::session& session,
+        const element_list_t& list);
+
+    type_reference_list_t clone(
+        compiler::session& session,
+        const type_reference_list_t& list);
+
+    ///////////////////////////////////////////////////////////////////////////
+
     enum class number_class_t {
         none,
         integer,

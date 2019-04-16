@@ -13,9 +13,30 @@
 #include "compiler_types.h"
 #include "elements/field.h"
 #include "elements/identifier.h"
+#include "elements/type_reference.h"
 #include "elements/identifier_reference.h"
 
 namespace basecode::compiler {
+
+    element_list_t clone(
+            compiler::session& session,
+            const element_list_t& list) {
+        element_list_t copy {};
+        for (auto e : list)
+            copy.push_back(e->clone(session));
+        return copy;
+    }
+
+    type_reference_list_t clone(
+            compiler::session& session,
+            const type_reference_list_t& list) {
+        type_reference_list_t copy {};
+        for (auto e : list)
+            copy.push_back(dynamic_cast<compiler::type_reference*>(e->clone(session)));
+        return copy;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
 
     std::string offset_result_t::label_name() const {
         if (base_ref == nullptr)

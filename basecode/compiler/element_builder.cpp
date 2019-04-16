@@ -740,7 +740,7 @@ namespace basecode::compiler {
     assembly_literal_label* element_builder::make_assembly_literal_label(
             compiler::block* parent_scope,
             compiler::type* type,
-            const std::string& name,
+            const std::string_view& name,
             module* module) {
         auto label = new compiler::assembly_literal_label(
             module != nullptr ? module : _session.scope_manager().current_module(),
@@ -955,12 +955,14 @@ namespace basecode::compiler {
 
     compiler::directive* element_builder::make_directive(
             compiler::block* parent_scope,
-            const std::string_view& name,
+            directive_type_t type,
+            const common::source_location& location,
             const element_list_t& params) {
         auto directive = compiler::directive::directive_for_name(
             _session.scope_manager().current_module(),
             parent_scope,
-            name,
+            type,
+            location,
             params);
         if (directive != nullptr)
             _session.elements().add(directive);

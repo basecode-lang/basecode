@@ -59,4 +59,11 @@ namespace basecode::compiler {
         return _ref;
     }
 
+    compiler::element* assembly_label::on_clone(compiler::session& session) {
+        return session.builder().make_assembly_label(
+            parent_scope(),
+            dynamic_cast<compiler::identifier_reference*>(_ref->clone(session)),
+            module());
+    }
+
 }
