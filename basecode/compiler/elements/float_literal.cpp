@@ -50,6 +50,14 @@ namespace basecode::compiler {
         return _value < 0;
     }
 
+    compiler::element* float_literal::on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) {
+        return session
+            .builder()
+            .make_float(new_scope, _value, _type_ref);
+    }
+
     bool float_literal::on_is_constant() const {
         return true;
     }
@@ -57,12 +65,6 @@ namespace basecode::compiler {
     bool float_literal::on_as_float(double& value) const {
         value = _value;
         return true;
-    }
-
-    compiler::element* float_literal::on_clone(compiler::session& session) {
-        return session
-            .builder()
-            .make_float(parent_scope(), _value, _type_ref);
     }
 
 }

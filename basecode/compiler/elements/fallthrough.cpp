@@ -10,6 +10,7 @@
 // ----------------------------------------------------------------------------
 
 #include <compiler/session.h>
+#include <compiler/element_builder.h>
 #include "label.h"
 #include "fallthrough.h"
 
@@ -24,6 +25,14 @@ namespace basecode::compiler {
 
     compiler::label* fallthrough::label() {
         return _label;
+    }
+
+    compiler::element* fallthrough::on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) {
+        return session.builder().make_fallthrough(
+            new_scope,
+            _label != nullptr ? _label->clone<compiler::label>(session, new_scope) : nullptr);
     }
 
     void fallthrough::on_owned_elements(element_list_t& list) {

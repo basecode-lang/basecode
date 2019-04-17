@@ -31,6 +31,16 @@ namespace basecode::compiler {
         return true;
     }
 
+    compiler::element* assembly_literal_label::on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) {
+        return session.builder().make_assembly_literal_label(
+            new_scope,
+            _type,
+            _name,
+            module());
+    }
+
     bool assembly_literal_label::on_is_constant() const {
         return true;
     }
@@ -41,14 +51,6 @@ namespace basecode::compiler {
 
     std::string_view assembly_literal_label::name() const {
         return _name;
-    }
-
-    compiler::element* assembly_literal_label::on_clone(compiler::session& session) {
-        return session.builder().make_assembly_literal_label(
-            parent_scope(),
-            _type,
-            _name,
-            module());
     }
 
 }

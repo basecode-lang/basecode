@@ -32,11 +32,13 @@ namespace basecode::compiler {
             compiler::session& session,
             infer_type_result_t& result) override;
 
+        compiler::element* on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) override;
+
         bool on_is_constant() const override;
 
         bool on_as_float(double& value) const override;
-
-        compiler::element* on_clone(compiler::session& session) override;
 
     private:
         double _value;

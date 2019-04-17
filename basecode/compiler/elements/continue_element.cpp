@@ -10,6 +10,7 @@
 // ----------------------------------------------------------------------------
 
 #include <compiler/session.h>
+#include <compiler/element_builder.h>
 #include "label.h"
 #include "continue_element.h"
 
@@ -31,6 +32,14 @@ namespace basecode::compiler {
 
     compiler::element* continue_element::label() {
         return _label;
+    }
+
+    compiler::element* continue_element::on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) {
+        return session.builder().make_continue(
+            new_scope,
+            _label != nullptr ? _label->clone<compiler::element>(session, new_scope) : nullptr);
     }
 
     void continue_element::on_owned_elements(element_list_t& list) {

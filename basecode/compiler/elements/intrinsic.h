@@ -51,9 +51,11 @@ namespace basecode::compiler {
         const compiler::type_reference_list_t& type_parameters() const;
 
     protected:
-        void on_owned_elements(element_list_t& list) override;
+        compiler::element* on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) override;
 
-        compiler::element* on_clone(compiler::session& session) override;
+        void on_owned_elements(element_list_t& list) override;
 
     private:
         bool _uniform_function_call = false;

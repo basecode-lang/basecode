@@ -53,10 +53,12 @@ namespace basecode::compiler {
 
     element_list_t clone(
         compiler::session& session,
+        compiler::block* new_scope,
         const element_list_t& list);
 
     type_reference_list_t clone(
         compiler::session& session,
+        compiler::block* new_scope,
         const type_reference_list_t& list);
 
     ///////////////////////////////////////////////////////////////////////////

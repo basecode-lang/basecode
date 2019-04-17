@@ -9,25 +9,36 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <compiler/session.h>
+#include <compiler/element_builder.h>
 #include "attribute.h"
 
 namespace basecode::compiler {
 
     attribute::attribute(
             compiler::module* module,
-            block* parent_scope,
+            compiler::block* parent_scope,
             const std::string_view& name,
-            element* expr) : element(module, parent_scope, element_type_t::attribute),
-                             _name(name),
-                             _expr(expr) {
+            compiler::element* expr) : element(module, parent_scope, element_type_t::attribute),
+                                       _name(name),
+                                       _expr(expr) {
     }
 
-    element* attribute::expression() {
-        return _expr;
+    compiler::element* attribute::on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) {
+        return session.builder().make_attribute(
+            new_scope,
+            _name,
+            _expr != nullptr ? _expr->clone<compiler::element>(session, new_scope) : nullptr);
     }
 
     std::string_view attribute::name() const {
         return _name;
+    }
+
+    compiler::element* attribute::expression() {
+        return _expr;
     }
 
     bool attribute::on_as_bool(bool& value) const {

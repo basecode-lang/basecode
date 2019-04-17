@@ -11,6 +11,7 @@
 
 #include <compiler/session.h>
 #include <compiler/element_map.h>
+#include <compiler/element_builder.h>
 #include "label.h"
 #include "label_reference.h"
 
@@ -34,6 +35,12 @@ namespace basecode::compiler {
             }
         }
         return false;
+    }
+
+    compiler::element* label_reference::on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) {
+        return session.builder().make_label_reference(new_scope, _label);
     }
 
     bool label_reference::on_is_constant() const {

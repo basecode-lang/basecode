@@ -29,6 +29,10 @@ namespace basecode::compiler {
             compiler::element* e,
             const fold_result_t& fold_result) override;
 
+        compiler::element* on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) override;
+
         void on_owned_elements(element_list_t& list) override;
 
     private:

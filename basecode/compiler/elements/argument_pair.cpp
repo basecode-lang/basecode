@@ -45,6 +45,15 @@ namespace basecode::compiler {
         return true;
     }
 
+    compiler::element* argument_pair::on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) {
+        return session.builder().make_argument_pair(
+            new_scope,
+            _lhs->clone<compiler::element>(session, new_scope),
+            _rhs->clone<compiler::element>(session, new_scope));
+    }
+
     bool argument_pair::on_is_constant() const {
         return true;
     }
@@ -56,13 +65,6 @@ namespace basecode::compiler {
     void argument_pair::on_owned_elements(element_list_t& list) {
         list.emplace_back(_lhs);
         list.emplace_back(_rhs);
-    }
-
-    compiler::element* argument_pair::on_clone(compiler::session& session) {
-        return session.builder().make_argument_pair(
-            parent_scope(),
-            _lhs->clone(session),
-            _rhs->clone(session));
     }
 
 }

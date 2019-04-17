@@ -30,6 +30,12 @@ namespace basecode::compiler {
         return true;
     }
 
+    compiler::element* character_literal::on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) {
+        return session.builder().make_character(new_scope, _rune);
+    }
+
     bool character_literal::on_is_constant() const {
         return true;
     }

@@ -166,7 +166,7 @@ namespace basecode::compiler {
 
     statement* element_builder::make_statement(
             compiler::block* parent_scope,
-            label_list_t labels,
+            const label_list_t& labels,
             element* expr) {
         auto statement = new compiler::statement(
             _session.scope_manager().current_module(),

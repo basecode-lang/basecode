@@ -58,6 +58,14 @@ namespace basecode::compiler {
         return _value;
     }
 
+    compiler::element* integer_literal::on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) {
+        return session
+            .builder()
+            .make_integer(new_scope, _value, _type_ref, _is_signed);
+    }
+
     bool integer_literal::on_is_constant() const {
         return true;
     }
@@ -79,12 +87,6 @@ namespace basecode::compiler {
     uint64_t integer_literal::on_add(const compiler::element& other) const {
         auto other_int = dynamic_cast<const compiler::integer_literal*>(&other);
         return _value + other_int->_value;
-    }
-
-    compiler::element* integer_literal::on_clone(compiler::session& session) {
-        return session
-            .builder()
-            .make_integer(parent_scope(), _value, _type_ref, _is_signed);
     }
 
     bool integer_literal::on_less_than(const compiler::element& other) const {

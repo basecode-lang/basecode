@@ -9,6 +9,8 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <compiler/session.h>
+#include <compiler/element_builder.h>
 #include "assignment.h"
 
 namespace basecode::compiler {
@@ -16,6 +18,14 @@ namespace basecode::compiler {
     assignment::assignment(
             compiler::module* module,
             compiler::block* parent_scope) : element(module, parent_scope, element_type_t::assignment) {
+    }
+
+    compiler::element* assignment::on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) {
+        auto copy = session.builder().make_assignment(new_scope);
+        copy->_expressions = compiler::clone(session, new_scope, _expressions);
+        return copy;
     }
 
     element_list_t& assignment::expressions() {

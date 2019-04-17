@@ -29,9 +29,11 @@ namespace basecode::compiler {
             compiler::session& session,
             infer_type_result_t& result) override;
 
-        bool on_is_constant() const override;
+        compiler::element* on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) override;
 
-        compiler::element* on_clone(compiler::session& session) override;
+        bool on_is_constant() const override;
 
     private:
         compiler::identifier_reference* _ref = nullptr;

@@ -9,6 +9,8 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <compiler/session.h>
+#include <compiler/element_builder.h>
 #include "comment.h"
 
 namespace basecode::compiler {
@@ -20,6 +22,12 @@ namespace basecode::compiler {
             const std::string_view& value) : element(module, parent_scope, element_type_t::comment),
                                              _type(type),
                                              _value(value) {
+    }
+
+    compiler::element* comment::on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) {
+        return session.builder().make_comment(new_scope, _type, _value);
     }
 
     comment_type_t comment::type() const {

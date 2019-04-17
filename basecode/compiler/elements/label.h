@@ -27,6 +27,10 @@ namespace basecode::compiler {
         std::string label_name() const override;
 
     protected:
+        compiler::element* on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) override;
+
         bool on_is_constant() const override;
 
     private:

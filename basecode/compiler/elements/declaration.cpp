@@ -9,6 +9,8 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <compiler/session.h>
+#include <compiler/element_builder.h>
 #include "identifier.h"
 #include "declaration.h"
 #include "binary_operator.h"
@@ -22,6 +24,17 @@ namespace basecode::compiler {
         compiler::binary_operator* assignment) : element(module, parent_scope, element_type_t::declaration),
                                                  _identifier(identifier),
                                                  _assignment(assignment) {
+    }
+
+    compiler::element* declaration::on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) {
+        return session.builder().make_declaration(
+            new_scope,
+            _identifier->clone<compiler::identifier>(session, new_scope),
+            _assignment != nullptr ?
+                _assignment->clone<compiler::binary_operator>(session, new_scope) :
+                nullptr);
     }
 
     compiler::identifier* declaration::identifier() {

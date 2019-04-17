@@ -10,6 +10,7 @@
 // ----------------------------------------------------------------------------
 
 #include <compiler/session.h>
+#include <compiler/element_builder.h>
 #include "label.h"
 #include "break_element.h"
 
@@ -27,6 +28,14 @@ namespace basecode::compiler {
             const fold_result_t& fold_result) {
         _label = fold_result.element;
         return true;
+    }
+
+    compiler::element* break_element::on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) {
+        return session.builder().make_break(
+            new_scope,
+            _label != nullptr ? _label->clone<compiler::element>(session, new_scope) : nullptr);
     }
 
     compiler::element* break_element::label() {

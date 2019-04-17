@@ -21,15 +21,19 @@ namespace basecode::compiler {
     public:
         attribute(
             compiler::module* module,
-            block* parent_scope,
+            compiler::block* parent_scope,
             const std::string_view& name,
-            element* expr);
-
-        element* expression();
+            compiler::element* expr);
 
         std::string_view name() const;
 
+        compiler::element* expression();
+
     protected:
+        compiler::element* on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) override;
+
         bool on_as_bool(bool& value) const override;
 
         bool on_as_float(double& value) const override;
@@ -42,7 +46,7 @@ namespace basecode::compiler {
 
     private:
         std::string_view _name;
-        element* _expr = nullptr;
+        compiler::element* _expr = nullptr;
     };
 
 }

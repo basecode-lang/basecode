@@ -110,6 +110,17 @@ namespace basecode::compiler {
         return true;
     }
 
+    compiler::element* argument_list::on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) {
+        auto copy = session.builder().make_argument_list(new_scope);
+        copy->_allocated_size = _allocated_size;
+        copy->_argument_index = _argument_index;
+        copy->_is_foreign_call = _is_foreign_call;
+        copy->_elements = compiler::clone(session, new_scope, _elements);
+        return copy;
+    }
+
     void argument_list::remove(common::id_t id) {
         auto item = find(id);
         if (item == nullptr)
@@ -190,15 +201,6 @@ namespace basecode::compiler {
 
     void argument_list::argument_index(const argument_index_map_t& value) {
         _argument_index = value;
-    }
-
-    compiler::element* argument_list::on_clone(compiler::session& session) {
-        auto copy = session.builder().make_argument_list(parent_scope());
-        copy->_allocated_size = _allocated_size;
-        copy->_argument_index = _argument_index;
-        copy->_is_foreign_call = _is_foreign_call;
-        copy->_elements = compiler::clone(session, _elements);
-        return copy;
     }
 
     compiler::element* argument_list::param_by_name(const std::string& name) {

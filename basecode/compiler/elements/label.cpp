@@ -9,8 +9,8 @@
 //
 // ----------------------------------------------------------------------------
 
-#include <vm/assembler.h>
 #include <compiler/session.h>
+#include <compiler/element_builder.h>
 #include "label.h"
 
 namespace basecode::compiler {
@@ -20,6 +20,12 @@ namespace basecode::compiler {
             block* parent_scope,
             const std::string_view& name) : element(module, parent_scope, element_type_t::label),
                                             _name(name) {
+    }
+
+    compiler::element* label::on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) {
+        return session.builder().make_label(new_scope, _name);
     }
 
     bool label::on_is_constant() const {

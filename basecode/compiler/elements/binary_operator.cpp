@@ -159,6 +159,16 @@ namespace basecode::compiler {
         return _rhs;
     }
 
+    compiler::element* binary_operator::on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) {
+        return session.builder().make_binary_operator(
+            new_scope,
+            operator_type(),
+            _lhs->clone<compiler::element>(session, new_scope),
+            _rhs->clone<compiler::element>(session, new_scope));
+    }
+
     bool binary_operator::on_is_constant() const {
         return (_lhs != nullptr && _lhs->is_constant())
             && (_rhs != nullptr && _rhs->is_constant());

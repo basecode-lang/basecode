@@ -20,19 +20,21 @@ namespace basecode::compiler {
 
     element_list_t clone(
             compiler::session& session,
+            compiler::block* new_scope,
             const element_list_t& list) {
         element_list_t copy {};
         for (auto e : list)
-            copy.push_back(e->clone(session));
+            copy.push_back(e->clone<compiler::element>(session, new_scope));
         return copy;
     }
 
     type_reference_list_t clone(
             compiler::session& session,
+            compiler::block* new_scope,
             const type_reference_list_t& list) {
         type_reference_list_t copy {};
         for (auto e : list)
-            copy.push_back(dynamic_cast<compiler::type_reference*>(e->clone(session)));
+            copy.push_back(e->clone<compiler::type_reference>(session, new_scope));
         return copy;
     }
 

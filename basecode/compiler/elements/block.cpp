@@ -13,6 +13,7 @@
 #include <vm/assembler.h>
 #include <common/defer.h>
 #include <compiler/session.h>
+#include <compiler/element_builder.h>
 #include "block.h"
 #include "import.h"
 #include "statement.h"
@@ -38,6 +39,15 @@ namespace basecode::compiler {
 
     import_list_t& block::imports() {
         return _imports;
+    }
+
+    compiler::element* block::on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) {
+        auto copy = session.builder().make_block(new_scope);
+        copy->_has_stack_frame = _has_stack_frame;
+
+        return copy;
     }
 
     bool block::has_statements() const {

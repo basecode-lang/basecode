@@ -35,6 +35,10 @@ namespace basecode::compiler {
             compiler::element* e,
             const fold_result_t& fold_result) override;
 
+        compiler::element* on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) override;
+
         bool on_is_constant() const override;
 
         bool on_as_bool(bool& value) const override;

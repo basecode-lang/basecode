@@ -51,19 +51,21 @@ namespace basecode::compiler {
         return true;
     }
 
+    compiler::element* assembly_label::on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) {
+        return session.builder().make_assembly_label(
+            new_scope,
+            _ref->clone<compiler::identifier_reference>(session, new_scope),
+            module());
+    }
+
     bool assembly_label::on_is_constant() const {
         return true;
     }
 
     compiler::identifier_reference* assembly_label::reference() {
         return _ref;
-    }
-
-    compiler::element* assembly_label::on_clone(compiler::session& session) {
-        return session.builder().make_assembly_label(
-            parent_scope(),
-            dynamic_cast<compiler::identifier_reference*>(_ref->clone(session)),
-            module());
     }
 
 }

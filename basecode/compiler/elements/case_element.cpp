@@ -10,6 +10,7 @@
 // ----------------------------------------------------------------------------
 
 #include <compiler/session.h>
+#include <compiler/element_builder.h>
 #include "label.h"
 #include "block.h"
 #include "statement.h"
@@ -36,6 +37,15 @@ namespace basecode::compiler {
             const fold_result_t& fold_result) {
         _expr = fold_result.element;
         return true;
+    }
+
+    compiler::element* case_element::on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) {
+        return session.builder().make_case(
+            new_scope,
+            _scope->clone<compiler::block>(session, new_scope),
+            _expr != nullptr ? _expr->clone<compiler::element>(session, new_scope) : nullptr);
     }
 
     compiler::element* case_element::expression() {

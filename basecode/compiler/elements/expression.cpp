@@ -9,6 +9,8 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <compiler/session.h>
+#include <compiler/element_builder.h>
 #include "expression.h"
 
 namespace basecode::compiler {
@@ -37,6 +39,14 @@ namespace basecode::compiler {
 
     compiler::element* expression::root() {
         return _root;
+    }
+
+    compiler::element* expression::on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) {
+        return session.builder().make_expression(
+            new_scope,
+            _root != nullptr ? _root->clone<compiler::element>(session, new_scope) : nullptr);
     }
 
     bool expression::on_is_constant() const {

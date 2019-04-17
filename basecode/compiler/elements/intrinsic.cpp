@@ -216,6 +216,20 @@ namespace basecode::compiler {
         return false;
     }
 
+    compiler::element* intrinsic::on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) {
+        auto intrinsic = intrinsic::intrinsic_for_call(
+            session,
+            new_scope,
+            _arguments->clone<compiler::argument_list>(session, new_scope),
+            type(),
+            location(),
+            _type_parameters);
+        intrinsic->_uniform_function_call = _uniform_function_call;
+        return intrinsic;
+    }
+
     intrinsic_type_t intrinsic::type() const {
         return intrinsic_type_t::unknown;
     }
@@ -242,18 +256,6 @@ namespace basecode::compiler {
 
         for (auto type_param : _type_parameters)
             list.emplace_back(type_param);
-    }
-
-    compiler::element* intrinsic::on_clone(compiler::session& session) {
-        auto intrinsic = intrinsic::intrinsic_for_call(
-            session,
-            parent_scope(),
-            dynamic_cast<compiler::argument_list*>(_arguments->clone(session)),
-            type(),
-            location(),
-            _type_parameters);
-        intrinsic->_uniform_function_call = _uniform_function_call;
-        return intrinsic;
     }
 
     const compiler::type_reference_list_t& intrinsic::type_parameters() const {

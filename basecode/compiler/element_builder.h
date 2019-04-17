@@ -127,7 +127,7 @@ namespace basecode::compiler {
 
         statement* make_statement(
             compiler::block* parent_scope,
-            label_list_t labels,
+            const label_list_t& labels,
             element* expr);
 
         attribute* make_attribute(
