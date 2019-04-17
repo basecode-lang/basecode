@@ -91,7 +91,7 @@ namespace basecode::compiler {
 
     compiler::block* scope_manager::push_new_block() {
         auto parent_scope = current_scope();
-        auto scope_block = _session.builder().make_block(parent_scope);
+        auto scope_block = _session.builder().make_block(current_module(), parent_scope);
 
         if (parent_scope != nullptr) {
             scope_block->parent_element(parent_scope);

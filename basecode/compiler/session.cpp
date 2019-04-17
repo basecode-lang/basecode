@@ -612,7 +612,7 @@ namespace basecode::compiler {
         }
         _scope_manager->add_type_to_scope(_builder->make_module_type(
             parent_scope,
-            _builder->make_block(parent_scope)));
+            _builder->make_block(parent_scope->module(), parent_scope)));
         _scope_manager->add_type_to_scope(_builder->make_namespace_type(parent_scope));
         _scope_manager->add_type_to_scope(_builder->make_bool_type(parent_scope));
         _scope_manager->add_type_to_scope(_builder->make_rune_type(parent_scope));

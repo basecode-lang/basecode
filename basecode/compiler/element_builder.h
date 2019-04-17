@@ -31,6 +31,10 @@ namespace basecode::compiler {
             compiler::block* scope,
             compiler::element* expr);
 
+        compiler::block* make_block(
+            compiler::module* module,
+            compiler::block* parent_scope);
+
         switch_element* make_switch(
             compiler::block* parent_scope,
             compiler::block* scope,
@@ -317,16 +321,9 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             compiler::block* header_scope);
 
-        assembly_literal_label* make_assembly_literal_label(
-            compiler::block* parent_scope,
-            compiler::type* type,
-            const std::string_view& name,
-            compiler::module* module = nullptr);
-
         assembly_label* make_assembly_label(
             compiler::block* parent_scope,
-            compiler::identifier_reference* ref,
-            compiler::module* module = nullptr);
+            compiler::identifier_reference* ref);
 
         argument_pair* make_argument_pair(
             compiler::block* parent_scope,
@@ -384,6 +381,11 @@ namespace basecode::compiler {
 
         compiler::value_sink_literal* value_sink_literal();
 
+        assembly_literal_label* make_assembly_literal_label(
+            compiler::block* parent_scope,
+            compiler::type* type,
+            const std::string_view& name);
+
         type_reference_list_t make_tagged_type_list_from_node(
             const syntax::ast_node_t* node,
             compiler::block* scope = nullptr);
@@ -393,8 +395,6 @@ namespace basecode::compiler {
         bool_type* make_bool_type(compiler::block* parent_scope);
 
         rune_type* make_rune_type(compiler::block* parent_scope);
-
-        compiler::block* make_block(compiler::block* parent_scope);
 
         return_element* make_return(compiler::block* parent_scope);
 

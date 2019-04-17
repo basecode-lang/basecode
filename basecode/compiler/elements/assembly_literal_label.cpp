@@ -37,8 +37,7 @@ namespace basecode::compiler {
         return session.builder().make_assembly_literal_label(
             new_scope,
             _type,
-            _name,
-            module());
+            _name);
     }
 
     bool assembly_literal_label::on_is_constant() const {

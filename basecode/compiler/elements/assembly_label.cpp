@@ -56,8 +56,7 @@ namespace basecode::compiler {
             compiler::block* new_scope) {
         return session.builder().make_assembly_label(
             new_scope,
-            _ref->clone<compiler::identifier_reference>(session, new_scope),
-            module());
+            _ref->clone<compiler::identifier_reference>(session, new_scope));
     }
 
     bool assembly_label::on_is_constant() const {

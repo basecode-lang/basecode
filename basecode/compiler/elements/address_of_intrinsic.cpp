@@ -77,10 +77,7 @@ namespace basecode::compiler {
             }
         }
 
-        result.element = session.builder().make_assembly_label(
-            parent_scope(),
-            ref,
-            module());
+        result.element = session.builder().make_assembly_label(parent_scope(), ref);
         result.element->location(location());
 
         arguments()->clear();
