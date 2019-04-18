@@ -186,11 +186,12 @@ namespace basecode::compiler {
                 }
 
                 if (!local->flag(variable_t::flags_t::in_block)) {
+                    // XXX: fix this method to accept a string_view instead of string
                     frame_block->local(
                         number_class_to_local_type(local->number_class),
                         local->label,
                         offset,
-                        variable_type_to_group(local->type));
+                        std::string(variable_type_to_group(local->type)));
                     local->flag(variable_t::flags_t::in_block, true);
                 }
             }
@@ -515,6 +516,7 @@ namespace basecode::compiler {
                 emit_result_t predicate_result {};
                 if (!emit_element(basic_block, if_e->predicate(), predicate_result))
                     return false;
+                predicate_block = *basic_block;
                 predicate_block->bz(
                     predicate_result.operands.back(),
                     vm::instruction_operand_t(assembler.make_named_ref(
@@ -1637,8 +1639,14 @@ namespace basecode::compiler {
                     var->label_name(),
                     op_size);
                 result.operands.emplace_back(named_ref);
-                if (!_variables.use(current_block, named_ref, result.is_assign_target))
+                if (!_variables.use(current_block, named_ref, result.is_assign_target)) {
+                    _session.error(
+                        var->module(),
+                        "X000",
+                        fmt::format("variable map missing identifier: {}", var->symbol()->name()),
+                        var->location());
                     return false;
+                }
                 break;
             }
             case element_type_t::expression: {
@@ -2648,20 +2656,27 @@ namespace basecode::compiler {
             compiler::binary_operator* binary_op,
             emit_result_t& result) {
         emit_result_t lhs_result {};
+        if (!result.operands.empty())
+            lhs_result.target_size = result.operands.front().size();
         if (!emit_element(basic_block, binary_op->lhs(), lhs_result))
             return false;
 
         emit_result_t rhs_result {};
+        if (!result.operands.empty())
+            rhs_result.target_size = result.operands.front().size();
         if (!emit_element(basic_block, binary_op->rhs(), rhs_result))
             return false;
 
         auto current_block = *basic_block;
         const auto& inferred = result.type_result.types.back();
 
+        const auto target_size = result.target_size != vm::op_sizes::none ?
+            result.target_size :
+            vm::op_size_for_byte_size(inferred.type->size_in_bytes());
         auto result_operand = target_operand(
             result,
             inferred.type->number_class(),
-            vm::op_size_for_byte_size(inferred.type->size_in_bytes()));
+            target_size);
 
         switch (binary_op->operator_type()) {
             case operator_type_t::add: {

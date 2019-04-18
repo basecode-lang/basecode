@@ -801,6 +801,11 @@ namespace basecode::vm {
             }
 
             _thread.loaded = true;
+            if (_thread.slots.empty()) {
+                r.warning("X000", "no bytecode was found in heap.");
+                return true;
+            }
+
             _vpc = &_thread.slots[0];
         }
 

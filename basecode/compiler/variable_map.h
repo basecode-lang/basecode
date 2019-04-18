@@ -15,6 +15,8 @@
 
 namespace basecode::compiler {
 
+    using namespace std::literals;
+
     enum class variable_type_t : uint8_t {
         temporary,
         parameter,
@@ -23,24 +25,26 @@ namespace basecode::compiler {
         return_parameter
     };
 
-    static inline std::string variable_type_name(variable_type_t type) {
+    static inline std::string_view variable_type_name(variable_type_t type) {
         switch (type) {
-            case variable_type_t::local:            return "local";
-            case variable_type_t::module:           return "module";
-            case variable_type_t::return_parameter: return "return";
-            case variable_type_t::temporary:        return "temporary";
-            case variable_type_t::parameter:        return "parameter";
+            case variable_type_t::local:            return "local"sv;
+            case variable_type_t::module:           return "module"sv;
+            case variable_type_t::return_parameter: return "return"sv;
+            case variable_type_t::temporary:        return "temporary"sv;
+            case variable_type_t::parameter:        return "parameter"sv;
         }
+        return ""sv;
     }
 
-    static inline std::string variable_type_to_group(variable_type_t type) {
+    static inline std::string_view variable_type_to_group(variable_type_t type) {
         switch (type) {
             case variable_type_t::module:
-            case variable_type_t::temporary:        return "";
-            case variable_type_t::local:            return "local";
-            case variable_type_t::parameter:        return "parameter";
-            case variable_type_t::return_parameter: return "return";
+            case variable_type_t::temporary:        return ""sv;
+            case variable_type_t::local:            return "local"sv;
+            case variable_type_t::parameter:        return "parameter"sv;
+            case variable_type_t::return_parameter: return "return"sv;
         }
+        return ""sv;
     }
 
     struct variable_t {

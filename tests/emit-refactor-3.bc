@@ -3,7 +3,7 @@ core :: module("core");
 fib :: proc(n: u32 := 10): u32 {
     core::print("n := %d\n", n);
     if n < 2 {
-        return n;
+        return 1;
     } else {
         return fib((n - 1) + fib(n - 2));
     };
@@ -13,8 +13,8 @@ test :: proc(): u32 {
     foo: u32;
     bar: u8 := 2;
 
-    foo := cast<u32>(3);
-    foo *:= cast<u32>(bar) + 4;
+    foo := 3;
+    foo *:= bar + 4;
 
     ptr_to_foo := address_of(foo);
 
@@ -32,7 +32,7 @@ test :: proc(): u32 {
 
     core::print("flag := %d\n", flag);
 
-    pow_of_2: u32 := core::next_power_of_two(cast<u32>(313));
+    pow_of_2: u32 := core::next_power_of_two(313);
     core::print("\npow_of_2 := %d\n", pow_of_2);
 
     result := test();
@@ -40,6 +40,6 @@ test :: proc(): u32 {
     core::print("\nresult := %d\n", result);
 
     f := fib();
-    core::assert(f == 0, "expected f == 0");
+    core::assert(f == 1, "expected f == 1");
     core::print("\nf := %d\n", f);
 };

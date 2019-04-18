@@ -72,7 +72,7 @@ namespace basecode::compiler {
         } else {
             for (size_t i = 1; i < 5; i++) {
                 const auto& props = s_type_properties[i];
-                if (value >= props.min && value <= props.max)
+                if (value <= props.max)
                     return props.name;
             }
         }

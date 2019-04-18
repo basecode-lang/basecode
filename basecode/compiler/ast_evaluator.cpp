@@ -1213,7 +1213,7 @@ namespace basecode::compiler {
                 case syntax::ast_node_type_t::assignment: {
                     auto lhs = evaluate(arg_node->lhs->children.front());
                     auto rhs = resolve_symbol_or_evaluate(arg_node->rhs->children.front());
-                    if (lhs != nullptr && rhs != nullptr)
+                    if (lhs != nullptr && rhs != nullptr) {
                         if (rhs->element_type() == element_type_t::value_sink_literal) {
                             _session.error(
                                 _session.scope_manager().current_module(),
@@ -1226,6 +1226,7 @@ namespace basecode::compiler {
                             scope_manager.current_scope(),
                             lhs,
                             rhs);
+                    }
                     break;
                 }
                 default: {

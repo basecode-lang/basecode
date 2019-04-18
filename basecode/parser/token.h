@@ -13,6 +13,7 @@
 
 #include <string>
 #include <cerrno>
+#include <vector>
 #include <climits>
 #include <string_view>
 #include <unordered_map>

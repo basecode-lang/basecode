@@ -767,10 +767,8 @@ namespace basecode::compiler {
         return scope_manager.visit_child_blocks(
             _session.result(),
             [&](compiler::block* scope) {
-                if (scope->is_parent_type_one_of({element_type_t::proc_type}))
-                    return true;
-
-                for (auto ref_id : scope->references().as_list()) {
+                const auto& refs = scope->references().as_list();
+                for (auto ref_id : refs) {
                     auto e = _session.elements().find(ref_id);
                     auto ref = dynamic_cast<compiler::identifier_reference*>(e);
                     if (ref == nullptr)

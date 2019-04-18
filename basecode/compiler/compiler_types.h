@@ -14,6 +14,7 @@
 #include <chrono>
 #include <cstdint>
 #include <functional>
+#include <string_view>
 #include <vm/vm_types.h>
 #include <unordered_map>
 #include <unordered_set>
@@ -94,6 +95,7 @@ namespace basecode::compiler {
                 return vm::local_type_t::floating_point;
             }
         }
+        return vm::local_type_t::integer;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -171,6 +173,7 @@ namespace basecode::compiler {
         infer_type_result_t type_result {};
         std::vector<temp_pool_entry_t*> temps {};
         vm::instruction_operand_list_t operands {};
+        vm::op_sizes target_size = vm::op_sizes::none;
     };
 
     using flow_control_value_map_t = std::unordered_map<uint16_t, boost::any>;
