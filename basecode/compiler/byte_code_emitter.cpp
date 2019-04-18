@@ -1038,6 +1038,7 @@ namespace basecode::compiler {
             }
             case element_type_t::return_e: {
                 auto return_e = dynamic_cast<compiler::return_element*>(e);
+                auto proc_type = return_e->find_parent_of_type<compiler::procedure_type>(element_type_t::proc_type);
 
                 auto return_block = _blocks.make();
                 assembler.blocks().emplace_back(return_block);
@@ -1046,12 +1047,12 @@ namespace basecode::compiler {
 
                 *basic_block = return_block;
 
-                auto return_parameters = return_e->parameters();
-                if (return_parameters != nullptr) {
+                auto return_parameters = proc_type->return_parameters();
+                if (!return_parameters.empty()) {
                     size_t index = 0;
                     for (auto expr : return_e->expressions()) {
                         const auto field_name = fmt::format("_{}", index++);
-                        auto fld = return_parameters->find_by_name(field_name);
+                        auto fld = return_parameters.find_by_name(field_name);
                         if (fld == nullptr) {
                             // XXX: error
                             return false;

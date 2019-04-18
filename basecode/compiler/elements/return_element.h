@@ -21,11 +21,7 @@ namespace basecode::compiler {
             compiler::module* module,
             block* parent_scope);
 
-        field_map_t* parameters();
-
         element_list_t& expressions();
-
-        void parameters(field_map_t* value);
 
     protected:
         bool on_apply_fold_result(
@@ -40,7 +36,6 @@ namespace basecode::compiler {
 
     private:
         element_list_t _expressions {};
-        field_map_t* _parameters = nullptr;
     };
 
 }

@@ -31,26 +31,16 @@ namespace basecode::compiler {
         return true;
     }
 
-    field_map_t* return_element::parameters() {
-        return _parameters;
-    }
-
     compiler::element* return_element::on_clone(
             compiler::session& session,
             compiler::block* new_scope) {
         auto copy = session.builder().make_return(new_scope);
-        // XXX: fix this, not sure it's really correct
-        copy->_parameters = _parameters;
         copy->_expressions = compiler::clone(session, new_scope, _expressions);
         return copy;
     }
 
     element_list_t& return_element::expressions() {
         return _expressions;
-    }
-
-    void return_element::parameters(field_map_t* value) {
-        _parameters = value;
     }
 
     void return_element::on_owned_elements(element_list_t& list) {

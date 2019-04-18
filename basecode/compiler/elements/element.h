@@ -102,6 +102,17 @@ namespace basecode::compiler {
 
         void owned_elements(element_list_t& list);
 
+        template <typename T>
+        T* find_parent_of_type(element_type_t type) {
+            static_assert(
+                std::is_base_of<compiler::element, T>::value,
+                "T must be a subclass of compiler::element");
+            auto current = parent_element();
+            while (current != nullptr && current->element_type() != type)
+                current = current->parent_element();
+            return dynamic_cast<T*>(current);
+        }
+
         bool operator> (const element& other) const {
             return on_greater_than(other);
         }

@@ -2197,7 +2197,6 @@ namespace basecode::compiler {
                                 for (auto stmt : scope->statements()) {
                                     auto return_e = dynamic_cast<compiler::return_element*>(stmt->expression());
                                     if (return_e != nullptr) {
-                                        return_e->parameters(&return_parameters);
                                         if (anon_count != return_e->expressions().size()) {
                                             _session.error(
                                                 scope_manager.current_module(),
