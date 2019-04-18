@@ -49,9 +49,9 @@ namespace basecode::compiler {
         void finalize();
 
         bool time_task(
+            session_task_category_t category,
             const std::string& name,
-            const session_task_callable_t& callable,
-            bool include_in_total = true);
+            const session_task_callable_t& callable);
 
         vm::terp& terp();
 
@@ -80,6 +80,8 @@ namespace basecode::compiler {
         compiler::program& program();
 
         void disassemble(FILE* file);
+
+        session_task_t* current_task();
 
         syntax::ast_builder& ast_builder();
 
@@ -172,6 +174,7 @@ namespace basecode::compiler {
         vm::label_map* _labels = nullptr;
         element_builder* _builder = nullptr;
         vm::assembler* _assembler = nullptr;
+        session_task_stack_t _task_stack {};
         compiler::program* _program = nullptr;
         ast_evaluator* _ast_evaluator = nullptr;
         source_file_stack_t _source_file_stack {};

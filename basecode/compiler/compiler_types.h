@@ -136,15 +136,56 @@ namespace basecode::compiler {
         session_compile_callback compile_callback;
     };
 
-    using session_task_callable_t = std::function<bool ()>;
+    ///////////////////////////////////////////////////////////////////////////
 
-    struct session_task_t {
-        std::string name;
-        bool include_in_total;
-        std::chrono::microseconds elapsed;
+    enum class session_task_category_t : uint8_t {
+        parser,
+        general,
+        compiler,
+        assembler,
+        evaluator,
+        virtual_machine,
+        byte_code_emitter,
+        native_code_emitter,
     };
 
+    static inline std::unordered_map<session_task_category_t, std::string_view> s_task_categories = {
+        {session_task_category_t::parser,               "parser     "sv},
+        {session_task_category_t::general,              "general    "sv},
+        {session_task_category_t::compiler,             "compiler   "sv},
+        {session_task_category_t::assembler,            "assembler  "sv},
+        {session_task_category_t::evaluator,            "evaluator  "sv},
+        {session_task_category_t::virtual_machine,      "interpreter"sv},
+        {session_task_category_t::byte_code_emitter,    "byte code  "sv},
+        {session_task_category_t::native_code_emitter,  "native code"sv},
+    };
+
+    static inline std::string_view session_task_category_to_name(session_task_category_t category) {
+        auto it = s_task_categories.find(category);
+        if (it == std::end(s_task_categories))
+            return "general"sv;
+        return it->second;
+    }
+
+    struct session_task_t;
+
     using session_task_list_t = std::vector<session_task_t>;
+    using session_task_stack_t = std::stack<session_task_t*>;
+
+    struct session_task_t {
+        session_task_t(
+                const std::string& name,
+                session_task_category_t category) : name(name),
+                                                    category(category) {
+        }
+
+        std::string name;
+        session_task_list_t subtasks {};
+        std::chrono::microseconds elapsed;
+        session_task_category_t category {};
+    };
+
+    using session_task_callable_t = std::function<bool (session_task_t*)>;
 
     ///////////////////////////////////////////////////////////////////////////
 

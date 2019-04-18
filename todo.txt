@@ -80,8 +80,6 @@ PARSER:
 =======
 
 COMPILER:
-- BUG: the return_element holds a pointer to the field_map_t from its enclosing scope.  should
-        remove this pointer because it will complicate cloning.
 
 - NEW: implement procedure instance baking
 - NEW: struct/union instance baking
@@ -457,6 +455,8 @@ DONE
         need to check for this scenario and issue an error.
 - FIX: type-promotion errors for procedure_call
 - BUG: don't emit the template procedure_instance
+- BUG: the return_element holds a pointer to the field_map_t from its enclosing scope.  should
+        remove this pointer because it will complicate cloning.
 
 ANSWERS
 -------

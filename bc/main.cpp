@@ -22,8 +22,14 @@
 #include <unordered_map>
 #include <basecode/compiler.h>
 
+namespace compiler = basecode::compiler;
+namespace common = basecode::common;
+namespace vm = basecode::vm;
+namespace fs = boost::filesystem;
+
 static constexpr size_t heap_size = (1024 * 1024) * 32;
 static constexpr size_t stack_size = (1024 * 1024) * 8;
+static size_t time_pad_width = 0;
 
 static void pad_to(
         std::string& str,
@@ -68,13 +74,41 @@ static void usage() {
         "file [-- option ...]\n");
 }
 
+static size_t format_session_task(
+        const compiler::session_task_t* task,
+        size_t indent,
+        std::stringstream& stream) {
+    auto elapsed = task->elapsed.count();
+    auto time_color = !task->subtasks.empty() ?
+        common::term_colors_t::light_gray :
+        common::term_colors_t::blue;
+    std::string indent_spaces(indent, ' ');
+    stream
+        << std::left
+        << std::setw(14)
+        << common::colorizer::colorize(
+            fmt::format("[{}] ", compiler::session_task_category_to_name(task->category)),
+            common::term_colors_t::cyan);
+    stream
+        << std::left
+        << std::setw(66)
+        << common::colorizer::colorize(
+            fmt::format("{}{}", indent_spaces, task->name),
+            common::term_colors_t::green);
+    auto elapsed_str = common::colorizer::colorize(
+        std::to_string(elapsed),
+        time_color);
+    pad_to(elapsed_str, time_pad_width);
+    stream << elapsed_str << "\n";
+
+    for (const auto& subtask : task->subtasks)
+        format_session_task(&subtask, indent + 2, stream);
+
+    return elapsed;
+}
+
 int main(int argc, char** argv) {
     using namespace std::chrono;
-
-    namespace compiler = basecode::compiler;
-    namespace common = basecode::common;
-    namespace vm = basecode::vm;
-    namespace fs = boost::filesystem;
 
     auto is_redirected = !isatty(fileno(stdout));
 
@@ -181,6 +215,8 @@ int main(int argc, char** argv) {
         return 1;
     }
 
+    time_pad_width = common::g_color_enabled ? 24 : 12;
+
     std::vector<std::string> meta_options {};
 
     while (ya_optind < argc) {
@@ -245,35 +281,20 @@ int main(int argc, char** argv) {
         compilation_session.finalize();
 
         size_t total_time = 0;
-        const auto time_pad_width = common::g_color_enabled ? 24 : 12;
 
         std::stringstream stream;
         stream << common::colorizer::colorize(
             "\ncompiler task time breakdown (in μs):\n",
             common::term_colors_t::cyan);
         for (const compiler::session_task_t& task : compilation_session.tasks()) {
-            auto elapsed = task.elapsed.count();
-            auto time_color = common::term_colors_t::blue;
-            if (task.include_in_total) {
-                total_time += elapsed;
-                time_color = common::term_colors_t::light_gray;
-            }
-            stream << std::left
-                << std::setw(60)
-                << common::colorizer::colorize(
-                        task.name,
-                        common::term_colors_t::green);
-            auto elapsed_str = common::colorizer::colorize(
-                std::to_string(elapsed),
-                time_color);
-            pad_to(elapsed_str, time_pad_width);
-            stream << elapsed_str << "\n";
+            total_time += format_session_task(&task, 0, stream);
         }
 
+        std::string indent_spaces(14, ' ');
         stream << std::left
-             << std::setw(60)
+             << std::setw(80)
              << common::colorizer::colorize(
-                     "total execution time",
+                     fmt::format("{}total execution time", indent_spaces),
                      common::term_colors_t::yellow);
 
         auto total = common::colorizer::colorize(

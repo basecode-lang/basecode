@@ -103,8 +103,9 @@ namespace basecode::compiler {
         auto& listing = _assembler->listing();
 
         time_task(
-            "assembler: preparation",
-            [&]() {
+            session_task_category_t::assembler,
+            "preparation",
+            [&](session_task_t* task) {
                 auto listing_name = _source_files
                     .front()
                     .filename()
@@ -115,23 +116,26 @@ namespace basecode::compiler {
             });
 
         time_task(
-            "compiler: preparation",
-            [&]() {
+            session_task_category_t::compiler,
+            "preparation",
+            [&](session_task_t* task) {
                 _program->block(_scope_manager->push_new_block());
                 _program->block()->parent_element(_program);
                 return true;
             });
 
         time_task(
-            "compiler: core types",
-            [&]() {
+            session_task_category_t::compiler,
+            "core types",
+            [&](session_task_t* task) {
                 initialize_core_types();
                 return true;
             });
 
         auto success = time_task(
-            "compiler: generate model",
-            [&]() {
+            session_task_category_t::compiler,
+            "generate model",
+            [&](session_task_t* task) {
                 for (const auto& file : source_files()) {
                     auto module = compile_module(add_source_file(file));
                     if (module == nullptr)
@@ -143,55 +147,63 @@ namespace basecode::compiler {
             return false;
 
         success = time_task(
-            "compiler: resolve unknown types (phase 1)",
-            [&]() { return resolve_unknown_types(false); });
+            session_task_category_t::compiler,
+            "resolve unknown types (phase 1)",
+            [&](session_task_t* task) { return resolve_unknown_types(false); });
         if (!success)
             return false;
 
         success = time_task(
-            "compiler: resolve unknown identifiers",
-            [&]() {
+            session_task_category_t::compiler,
+            "resolve unknown identifiers",
+            [&](session_task_t* task) {
                 return resolve_unknown_identifiers();
             });
         if (!success)
             return false;
 
         success = time_task(
-            "compiler: resolve unknown types (phase 2)",
-            [&]() { return resolve_unknown_types(false); });
+            session_task_category_t::compiler,
+            "resolve unknown types (phase 2)",
+            [&](session_task_t* task) { return resolve_unknown_types(false); });
         if (!success)
             return false;
 
         success = time_task(
-            "compiler: constant expression folding",
-            [&]() { return fold_constant_expressions(); });
+            session_task_category_t::compiler,
+            "constant expression folding",
+            [&](session_task_t* task) { return fold_constant_expressions(); });
         if (!success)
             return false;
 
         success = time_task(
-            "compiler: type check",
-            [&]() { return type_check(); });
+            session_task_category_t::compiler,
+            "type check",
+            [&](session_task_t* task) { return type_check(); });
         if (!success)
             return false;
 
         if (!_result.is_failed()) {
             time_task(
-                "compiler: generate byte-code",
-                [&]() {
+                session_task_category_t::byte_code_emitter,
+                "generate byte-code",
+                [&](session_task_t* task) {
                     _emitter->emit();
                     return true;
                 });
 
             success = time_task(
-                "assembler: encode byte-code",
-                [&]() {
+                session_task_category_t::assembler,
+                "encode byte-code",
+                [&](session_task_t* task) {
                     return _assembler->assemble(_result, *_labels);
                 });
 
             if (_options.verbose) {
                 time_task(
-                    "assembler: listing file",
-                    [&]() {
+                    session_task_category_t::assembler,
+                    "listing file",
+                    [&](session_task_t* task) {
                         disassemble(stdout);
                         fmt::print("\n");
                         return true;
@@ -200,8 +212,9 @@ namespace basecode::compiler {
 
             if (success) {
                 success = time_task(
-                    "compiler: execute directives",
-                    [&]() { return execute_directives(); });
+                    session_task_category_t::compiler,
+                    "execute directives",
+                    [&](session_task_t* task) { return execute_directives(); });
                 if (success) {
                     if (_options.debugger) {
 #if DEBUGGER_ENABLED
@@ -218,8 +231,9 @@ namespace basecode::compiler {
                     } else {
                         if (_run) {
                             success = time_task(
-                                "compiler: execute byte-code",
-                                [&]() { return run(); });
+                                session_task_category_t::virtual_machine,
+                                "execute byte-code",
+                                [&](session_task_t* task) { return run(); });
                             if (!success)
                                 return false;
                         }
@@ -232,21 +246,26 @@ namespace basecode::compiler {
     }
 
     bool session::time_task(
+            session_task_category_t category,
             const std::string& name,
-            const session_task_callable_t& callable,
-            bool include_in_total) {
-        auto insert_at = _tasks.size();
+            const session_task_callable_t& callable) {
+        auto parent_task = current_task();
 
-        session_task_t task;
-        task.name = name;
-        task.include_in_total = include_in_total;
+        session_task_t* task = nullptr;
+        if (parent_task != nullptr) {
+            task = &parent_task->subtasks.emplace_back(name, category);
+        } else {
+            task = &_tasks.emplace_back(name, category);
+        }
+
+        _task_stack.push(task);
+        defer(_task_stack.pop());
 
         auto start = std::chrono::high_resolution_clock::now();
-        auto success = callable();
+        auto success = callable(task);
         auto end = std::chrono::high_resolution_clock::now();
 
-        task.elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-        _tasks.insert(_tasks.begin() + insert_at, task);
+        task->elapsed = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
 
         return success;
     }
@@ -268,8 +287,9 @@ namespace basecode::compiler {
         try {
             if (!_options.dom_graph_file.empty()) {
                 time_task(
-                    "compiler: write code DOM",
-                    [&]() {
+                    session_task_category_t::compiler,
+                    "write code dom graph file",
+                    [&](session_task_t* task) {
                         write_code_dom_graph(_options.dom_graph_file);
                         return true;
                     });
@@ -285,8 +305,9 @@ namespace basecode::compiler {
         bool success;
 
         success = time_task(
-            " - instrinsic call sites",
-            [&]() {
+            session_task_category_t::compiler,
+            "intrinsic call sites",
+            [&](session_task_t* task) {
                 auto intrinsics = _elements->find_by_type<compiler::intrinsic>(element_type_t::intrinsic);
                 for (auto intrinsic : intrinsics) {
                     auto args = intrinsic->arguments();
@@ -304,14 +325,14 @@ namespace basecode::compiler {
                     args->argument_index(result.index);
                 }
                 return true;
-            },
-            false);
+            });
         if (!success)
             return false;
 
         success = time_task(
-            " - procedure call sites",
-            [&]() {
+            session_task_category_t::compiler,
+            "procedure call sites",
+            [&](session_task_t* task) {
                 auto proc_calls = _elements->find_by_type<compiler::procedure_call>(element_type_t::proc_call);
                 for (auto proc_call : proc_calls) {
                     if (!proc_call->resolve_overloads(*this)) {
@@ -324,14 +345,14 @@ namespace basecode::compiler {
                     }
                 }
                 return true;
-            },
-            false);
+            });
         if (!success)
             return false;
 
         success = time_task(
-            "compiler: resolve unknown types (phase 3)",
-            [&]() { return resolve_unknown_types(true); });
+            session_task_category_t::compiler,
+            "resolve unknown types (phase 3)",
+            [&](session_task_t* task) { return resolve_unknown_types(true); });
         if (!success) {
             error(
                 nullptr,
@@ -426,6 +447,8 @@ namespace basecode::compiler {
 
     bool session::initialize() {
         api::g_session = this;
+
+        _tasks.reserve(256);
 
         _program = _builder->make_program(nullptr, nullptr);
 
@@ -738,6 +761,12 @@ namespace basecode::compiler {
             fmt::print(file, "\n");
             _assembler->listing().write(file);
         }
+    }
+
+    session_task_t* session::current_task() {
+        if (_task_stack.empty())
+            return nullptr;
+        return _task_stack.top();
     }
 
     bool session::fold_constant_expressions() {
@@ -1058,34 +1087,42 @@ namespace basecode::compiler {
 
         compiler::module* module = nullptr;
         auto success = time_task(
-            fmt::format(" - parse: {}", source_file->path().filename().string()),
-            [&]() {
-                auto module_node = parse(source_file);
-                if (module_node != nullptr) {
-                    return time_task(
-                        " - compile",
-                        [&]() {
-                            module = dynamic_cast<compiler::module*>(_ast_evaluator->evaluate(module_node));
-                            if (module != nullptr) {
-                                module->source_file(source_file);
-                                auto current_module = _scope_manager->current_module();
-                                if (current_module == nullptr) {
-                                    module->is_root(true);
-                                    _program->module(module);
-                                    module->parent_element(_program);
-                                } else {
-                                    module->parent_element(current_module);
-                                }
-                                if (!_ast_evaluator->compile_module(module_node, module))
-                                    return false;
+            session_task_category_t::compiler,
+            source_file->path().filename().string(),
+            [&](session_task_t* module_task) {
+                syntax::ast_node_t* module_node = nullptr;
+
+                auto parse_success = time_task(
+                    session_task_category_t::parser,
+                    "source -> ast",
+                    [&](session_task_t* parse_task) {
+                        module_node = parse(source_file);
+                        return module_node != nullptr;
+                    });
+                if (!parse_success)
+                    return false;
+
+                return time_task(
+                    session_task_category_t::evaluator,
+                    "ast -> code dom",
+                    [&](session_task_t* compile_task) {
+                        module = dynamic_cast<compiler::module*>(_ast_evaluator->evaluate(module_node));
+                        if (module != nullptr) {
+                            module->source_file(source_file);
+                            auto current_module = _scope_manager->current_module();
+                            if (current_module == nullptr) {
+                                module->is_root(true);
+                                _program->module(module);
+                                module->parent_element(_program);
+                            } else {
+                                module->parent_element(current_module);
                             }
-                            return true;
-                        },
-                        false);
-                }
-                return false;
-            },
-            false);
+                            if (!_ast_evaluator->compile_module(module_node, module))
+                                return false;
+                        }
+                        return true;
+                    });
+            });
 
         if (!success)
             return nullptr;
