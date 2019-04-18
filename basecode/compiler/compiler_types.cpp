@@ -12,11 +12,22 @@
 #include <fmt/format.h>
 #include "compiler_types.h"
 #include "elements/field.h"
+#include "elements/label.h"
 #include "elements/identifier.h"
 #include "elements/type_reference.h"
 #include "elements/identifier_reference.h"
 
 namespace basecode::compiler {
+
+    field_map_t clone(
+            compiler::session& session,
+            compiler::block* new_scope,
+            const field_map_t& fields) {
+        field_map_t map {};
+        for (const auto& fld : fields.as_list())
+            map.add(fld->clone<compiler::field>(session, new_scope));
+        return map;
+    }
 
     element_list_t clone(
             compiler::session& session,
@@ -28,6 +39,16 @@ namespace basecode::compiler {
         return copy;
     }
 
+    label_list_t clone(
+            compiler::session& session,
+            compiler::block* new_scope,
+            const label_list_t& list) {
+        label_list_t copy {};
+        for (auto e : list)
+            copy.push_back(e->clone<compiler::label>(session, new_scope));
+        return copy;
+    }
+
     type_reference_list_t clone(
             compiler::session& session,
             compiler::block* new_scope,
@@ -35,6 +56,16 @@ namespace basecode::compiler {
         type_reference_list_t copy {};
         for (auto e : list)
             copy.push_back(e->clone<compiler::type_reference>(session, new_scope));
+        return copy;
+    }
+
+    identifier_reference_list_t clone(
+            compiler::session& session,
+            compiler::block* new_scope,
+            const identifier_reference_list_t& list) {
+        identifier_reference_list_t copy {};
+        for (auto e : list)
+            copy.push_back(e->clone<compiler::identifier_reference>(session, new_scope));
         return copy;
     }
 

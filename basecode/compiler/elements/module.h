@@ -34,6 +34,10 @@ namespace basecode::compiler {
         void source_file(common::source_file* source_file);
 
     protected:
+        compiler::element* on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) override;
+
         void on_owned_elements(element_list_t& list) override;
 
     private:

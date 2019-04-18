@@ -10,6 +10,7 @@
 // ----------------------------------------------------------------------------
 
 #include <compiler/session.h>
+#include <compiler/element_builder.h>
 #include "type.h"
 #include "field.h"
 #include "identifier.h"
@@ -73,6 +74,16 @@ namespace basecode::compiler {
 
     bool identifier_reference::resolved() const {
         return _identifier != nullptr;
+    }
+
+    compiler::element* identifier_reference::on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) {
+        return session.builder().make_identifier_reference(
+            new_scope,
+            _symbol,
+            _identifier,
+            true);
     }
 
     bool identifier_reference::on_is_constant() const {

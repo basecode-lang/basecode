@@ -80,6 +80,9 @@ PARSER:
 =======
 
 COMPILER:
+- BUG: the return_element holds a pointer to the field_map_t from its enclosing scope.  should
+        remove this pointer because it will complicate cloning.
+
 - NEW: implement procedure instance baking
 - NEW: struct/union instance baking
 - REFACTOR: ast_evaluator::add_identifier_to_scope

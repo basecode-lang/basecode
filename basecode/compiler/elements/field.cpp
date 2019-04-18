@@ -10,6 +10,8 @@
 // ----------------------------------------------------------------------------
 
 #include <common/bytes.h>
+#include <compiler/session.h>
+#include <compiler/element_builder.h>
 #include "type.h"
 #include "field.h"
 #include "identifier.h"
@@ -38,6 +40,18 @@ namespace basecode::compiler {
 
     bool field::is_variadic() const {
         return _is_variadic;
+    }
+
+    compiler::element* field::on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) {
+        return session.builder().make_field(
+            new_scope,
+            dynamic_cast<compiler::type*>(parent_element()),
+            _declaration->clone<compiler::declaration>(session, new_scope),
+            _offset,
+            _padding,
+            _is_variadic);
     }
 
     uint64_t field::alignment() const {

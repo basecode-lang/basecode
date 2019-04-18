@@ -54,6 +54,10 @@ namespace basecode::compiler {
 
         bool on_is_constant() const override;
 
+        compiler::element* on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) override;
+
     private:
         qualified_symbol_t _symbol;
         compiler::type* _type = nullptr;

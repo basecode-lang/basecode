@@ -10,6 +10,7 @@
 // ----------------------------------------------------------------------------
 
 #include <compiler/session.h>
+#include <compiler/element_builder.h>
 #include "type.h"
 #include "transmute.h"
 #include "symbol_element.h"
@@ -38,6 +39,15 @@ namespace basecode::compiler {
             const fold_result_t& fold_result) {
         _expression = fold_result.element;
         return true;
+    }
+
+    compiler::element* transmute::on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) {
+        return session.builder().make_transmute(
+            new_scope,
+            _type_ref->clone<compiler::type_reference>(session, new_scope),
+            _expression->clone<compiler::element>(session, new_scope));
     }
 
     compiler::element* transmute::expression() {

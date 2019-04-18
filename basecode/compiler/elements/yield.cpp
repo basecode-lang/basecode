@@ -10,6 +10,7 @@
 // ----------------------------------------------------------------------------
 
 #include <compiler/session.h>
+#include <compiler/element_builder.h>
 #include "yield.h"
 
 namespace basecode::compiler {
@@ -19,6 +20,16 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             compiler::element* expression) : element(module, parent_scope, element_type_t::yield),
                                              _expression(expression) {
+    }
+
+    compiler::element* yield::on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) {
+        return session.builder().make_yield(
+            new_scope,
+            _expression != nullptr ?
+                _expression->clone<compiler::element>(session, new_scope) :
+                nullptr);
     }
 
     compiler::element* yield::expression() {

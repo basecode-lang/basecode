@@ -9,6 +9,8 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <compiler/session.h>
+#include <compiler/element_builder.h>
 #include "raw_block.h"
 
 namespace basecode::compiler {
@@ -18,6 +20,12 @@ namespace basecode::compiler {
             block* parent_scope,
             const std::string_view& value) : element(module, parent_scope, element_type_t::raw_block),
                                              _value(value) {
+    }
+
+    compiler::element* raw_block::on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) {
+        return session.builder().make_raw_block(new_scope, _value);
     }
 
     std::string_view raw_block::value() const {

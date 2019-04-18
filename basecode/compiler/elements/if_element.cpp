@@ -9,8 +9,8 @@
 //
 // ----------------------------------------------------------------------------
 
-#include <fmt/format.h>
 #include <compiler/session.h>
+#include <compiler/element_builder.h>
 #include "if_element.h"
 
 namespace basecode::compiler {
@@ -37,6 +37,19 @@ namespace basecode::compiler {
             const fold_result_t& fold_result) {
         _predicate = fold_result.element;
         return true;
+    }
+
+    compiler::element* if_element::on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) {
+        return session.builder().make_if(
+            new_scope,
+            _predicate->clone<compiler::element>(session, new_scope),
+            _true_branch->clone<compiler::element>(session, new_scope),
+            _false_branch != nullptr ?
+                _false_branch->clone<compiler::element>(session, new_scope) :
+                nullptr,
+            _is_else_if);
     }
 
     compiler::element* if_element::predicate() {

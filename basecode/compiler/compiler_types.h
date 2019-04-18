@@ -51,6 +51,16 @@ namespace basecode::compiler {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    field_map_t clone(
+        compiler::session& session,
+        compiler::block* new_scope,
+        const field_map_t& fields);
+
+    label_list_t clone(
+        compiler::session& session,
+        compiler::block* new_scope,
+        const label_list_t& list);
+
     element_list_t clone(
         compiler::session& session,
         compiler::block* new_scope,
@@ -60,6 +70,11 @@ namespace basecode::compiler {
         compiler::session& session,
         compiler::block* new_scope,
         const type_reference_list_t& list);
+
+    identifier_reference_list_t clone(
+        compiler::session& session,
+        compiler::block* new_scope,
+        const identifier_reference_list_t& list);
 
     ///////////////////////////////////////////////////////////////////////////
 

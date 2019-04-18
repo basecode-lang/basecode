@@ -10,6 +10,7 @@
 // ----------------------------------------------------------------------------
 
 #include <compiler/session.h>
+#include <compiler/element_builder.h>
 #include "label.h"
 #include "block.h"
 #include "switch_element.h"
@@ -27,6 +28,15 @@ namespace basecode::compiler {
 
     compiler::block* switch_element::scope() {
         return _scope;
+    }
+
+    compiler::element* switch_element::on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) {
+        return session.builder().make_switch(
+            new_scope,
+            _scope->clone<compiler::block>(session, new_scope),
+            _expr->clone<compiler::element>(session, new_scope));
     }
 
     compiler::element* switch_element::expression() {

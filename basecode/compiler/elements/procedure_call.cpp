@@ -72,6 +72,20 @@ namespace basecode::compiler {
         return _arguments->is_foreign_call();
     }
 
+    compiler::element* procedure_call::on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) {
+        auto copy = session.builder().make_procedure_call(
+            new_scope,
+            _arguments->clone<compiler::argument_list>(session, new_scope),
+            compiler::clone(session, new_scope, _type_parameters),
+            compiler::clone(session, new_scope, _references));
+        copy->_resolved_proc_type = _resolved_proc_type;
+        copy->_uniform_function_call = _uniform_function_call;
+        copy->_resolved_identifier_ref = _resolved_identifier_ref;
+        return copy;
+    }
+
     bool procedure_call::uniform_function_call() const {
         return _uniform_function_call;
     }

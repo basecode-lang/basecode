@@ -10,6 +10,7 @@
 // ----------------------------------------------------------------------------
 
 #include <compiler/session.h>
+#include <compiler/element_builder.h>
 #include "block.h"
 #include "while_element.h"
 #include "binary_operator.h"
@@ -34,6 +35,15 @@ namespace basecode::compiler {
             const fold_result_t& fold_result) {
         _predicate = fold_result.element;
         return true;
+    }
+
+    compiler::element* while_element::on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) {
+        return session.builder().make_while(
+            new_scope,
+            _predicate->clone<compiler::binary_operator>(session, new_scope),
+            _body != nullptr ? _body->clone<compiler::block>(session, new_scope) : nullptr);
     }
 
     compiler::element* while_element::predicate() {

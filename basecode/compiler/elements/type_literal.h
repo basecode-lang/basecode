@@ -40,6 +40,10 @@ namespace basecode::compiler {
 
         bool on_is_constant() const override;
 
+        compiler::element* on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) override;
+
     private:
         compiler::element_list_t _subscripts {};
         compiler::argument_list* _args = nullptr;

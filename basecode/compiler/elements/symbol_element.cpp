@@ -11,6 +11,7 @@
 
 #include <compiler/session.h>
 #include <compiler/scope_manager.h>
+#include <compiler/element_builder.h>
 #include "identifier.h"
 #include "symbol_element.h"
 #include "type_reference.h"
@@ -42,10 +43,6 @@ namespace basecode::compiler {
         return false;
     }
 
-    std::string_view symbol_element::name() const {
-        return _name;
-    }
-
     void symbol_element::constant(bool value) {
         _is_constant = value;
     }
@@ -54,8 +51,22 @@ namespace basecode::compiler {
         return !_namespaces.empty();
     }
 
+    compiler::element* symbol_element::on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) {
+        return session.builder().make_symbol(
+            new_scope,
+            _name,
+            _namespaces,
+            compiler::clone(session, new_scope, _type_parameters));
+    }
+
     bool symbol_element::on_is_constant() const {
         return _is_constant;
+    }
+
+    std::string_view symbol_element::name() const {
+        return _name;
     }
 
     void symbol_element::cache_fully_qualified_name() {
@@ -66,10 +77,6 @@ namespace basecode::compiler {
         if (_fully_qualified_name.empty())
             cache_fully_qualified_name();
         return _fully_qualified_name;
-    }
-
-    const string_view_list_t& symbol_element::namespaces() const {
-        return _namespaces;
     }
 
     bool symbol_element::on_as_string(std::string& value) const {
@@ -89,6 +96,10 @@ namespace basecode::compiler {
     void symbol_element::on_owned_elements(element_list_t& list) {
         for (auto type_param : _type_parameters)
             list.emplace_back(type_param);
+    }
+
+    const string_view_list_t& symbol_element::namespaces() const {
+        return _namespaces;
     }
 
     bool symbol_element::operator==(const symbol_element& other) const {

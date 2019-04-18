@@ -24,7 +24,9 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             compiler::element* expression);
 
-        program* make_program();
+        program* make_program(
+            compiler::module* module,
+            compiler::block* parent_scope);
 
         case_element* make_case(
             compiler::block* parent_scope,
@@ -87,8 +89,8 @@ namespace basecode::compiler {
             element* expr);
 
         field* make_field(
-            compiler::type* type,
             compiler::block* parent_scope,
+            compiler::type* type,
             compiler::declaration* declaration,
             uint64_t offset,
             uint8_t padding = 0,

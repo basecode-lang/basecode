@@ -197,6 +197,12 @@ namespace basecode::compiler {
         return true;
     }
 
+    compiler::element* string_literal::on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) {
+        return session.builder().make_string(new_scope, _value);
+    }
+
     bool string_literal::on_is_constant() const {
         return true;
     }

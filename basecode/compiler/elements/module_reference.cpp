@@ -33,6 +33,16 @@ namespace basecode::compiler {
         return true;
     }
 
+    compiler::element* module_reference::on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) {
+        auto copy = session.builder().make_module_reference(
+            new_scope,
+            _expression->clone<compiler::element>(session, new_scope));
+        copy->_reference = _reference;
+        return copy;
+    }
+
     bool module_reference::on_is_constant() const {
         return true;
     }

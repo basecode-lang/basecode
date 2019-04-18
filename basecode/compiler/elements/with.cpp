@@ -10,6 +10,7 @@
 // ----------------------------------------------------------------------------
 
 #include <compiler/session.h>
+#include <compiler/element_builder.h>
 #include "with.h"
 #include "type.h"
 #include "block.h"
@@ -33,6 +34,15 @@ namespace basecode::compiler {
 
     compiler::element* with::expr() {
         return _expr;
+    }
+
+    compiler::element* with::on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) {
+        return session.builder().make_with(
+            new_scope,
+            _expr->clone<compiler::element>(session, new_scope),
+            _body->clone<compiler::block>(session, new_scope));
     }
 
     void with::on_owned_elements(element_list_t& list) {

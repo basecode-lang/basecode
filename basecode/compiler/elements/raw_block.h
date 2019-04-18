@@ -24,6 +24,11 @@ namespace basecode::compiler {
 
         std::string_view value() const;
 
+    protected:
+        compiler::element* on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) override;
+
     private:
         std::string_view _value;
     };

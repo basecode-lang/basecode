@@ -42,6 +42,7 @@ namespace basecode::compiler {
             parent_scope,
             scope);
         _session.elements().add(module_element);
+        scope->module(module_element);
         scope->parent_element(module_element);
         return module_element;
     }
@@ -68,8 +69,10 @@ namespace basecode::compiler {
         return import_element;
     }
 
-    program* element_builder::make_program() {
-        auto pgm = new compiler::program();
+    program* element_builder::make_program(
+            compiler::module* module,
+            compiler::block* parent_scope) {
+        auto pgm = new compiler::program(module, parent_scope);
         _session.elements().add(pgm);
         return pgm;
     }
@@ -651,8 +654,8 @@ namespace basecode::compiler {
     }
 
     field* element_builder::make_field(
-            compiler::type* type,
             compiler::block* parent_scope,
+            compiler::type* type,
             compiler::declaration* declaration,
             uint64_t offset,
             uint8_t padding,

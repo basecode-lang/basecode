@@ -9,6 +9,8 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <compiler/session.h>
+#include <compiler/element_builder.h>
 #include "block.h"
 #include "module.h"
 
@@ -31,6 +33,16 @@ namespace basecode::compiler {
 
     compiler::block* module::scope() {
         return _scope;
+    }
+
+    compiler::element* module::on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) {
+        auto copy = session.builder().make_module(
+            new_scope,
+            _scope->clone<compiler::block>(session, new_scope));
+        copy->_source_file = _source_file;
+        return copy;
     }
 
     common::source_file* module::source_file() const {

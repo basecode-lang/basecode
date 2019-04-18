@@ -444,8 +444,8 @@ namespace basecode::compiler {
                             type->scope());
                         if (field_decl != nullptr) {
                             auto new_field = builder.make_field(
-                                type,
                                 type->scope(),
+                                type,
                                 field_decl,
                                 offset);
                             type->fields().add(new_field);
@@ -471,8 +471,8 @@ namespace basecode::compiler {
                     for (auto d : list) {
                         auto decl = dynamic_cast<compiler::declaration*>(d);
                         auto newField = builder.make_field(
-                            type,
                             type->scope(),
+                            type,
                             decl,
                             offset);
                         type->fields().add(newField);
@@ -518,8 +518,8 @@ namespace basecode::compiler {
                             field_decl->identifier()->symbol()->constant(true);
                         }
                         auto new_field = builder.make_field(
-                            type,
                             type->scope(),
+                            type,
                             field_decl,
                             offset);
                         type->fields().add(new_field);
@@ -2658,8 +2658,8 @@ namespace basecode::compiler {
         auto add_param_decl = [&](compiler::declaration* param_decl, bool is_variadic) {
             param_decl->identifier()->usage(identifier_usage_t::stack);
             param_field = builder.make_field(
-                proc_type,
                 block_scope,
+                proc_type,
                 param_decl,
                 param_field != nullptr ? param_field->end_offset() : 0,
                 0,
@@ -2789,8 +2789,8 @@ namespace basecode::compiler {
                         block_scope);
                     if (param_decl != nullptr) {
                         auto param_field = builder.make_field(
-                            proc_type,
                             block_scope,
+                            proc_type,
                             param_decl,
                             0);
                         return_parameters.add(param_field);
@@ -2815,8 +2815,8 @@ namespace basecode::compiler {
                     }
                     param_identifier->type_ref(type_ref);
                     auto param_field = builder.make_field(
-                        proc_type,
                         block_scope,
+                        proc_type,
                         builder.make_declaration(block_scope, param_identifier, nullptr),
                         0);
                     param_identifier->field(param_field);
@@ -2947,8 +2947,8 @@ namespace basecode::compiler {
                 args->add(argument);
 
                 auto new_field = builder.make_field(
-                    tuple_type,
                     type_scope,
+                    tuple_type,
                     argument,
                     previous_field != nullptr ? previous_field->end_offset() : 0);
                 tuple_type->fields().add(new_field);

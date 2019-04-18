@@ -35,6 +35,10 @@ namespace basecode::compiler {
 
         bool on_is_constant() const override;
 
+        compiler::element* on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) override;
+
         bool on_as_string(std::string& value) const override;
 
     private:

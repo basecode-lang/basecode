@@ -42,6 +42,10 @@ namespace basecode::compiler {
         return true;
     }
 
+    bool nil_literal::is_singleton() const {
+        return true;
+    }
+
     bool nil_literal::on_is_constant() const {
         return true;
     }

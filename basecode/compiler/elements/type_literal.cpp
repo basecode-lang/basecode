@@ -10,8 +10,10 @@
 // ----------------------------------------------------------------------------
 
 #include <compiler/session.h>
+#include <compiler/element_builder.h>
 #include "array_type.h"
 #include "type_literal.h"
+#include "argument_list.h"
 #include "type_reference.h"
 
 namespace basecode::compiler {
@@ -34,6 +36,25 @@ namespace basecode::compiler {
             infer_type_result_t& result) {
         result.types.emplace_back(_type_ref->type(), _type_ref);
         return true;
+    }
+
+    compiler::element* type_literal::on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) {
+        if (_type_ref->type()->is_array_type()) {
+            return session.builder().make_array_literal(
+                new_scope,
+                _type_ref->clone<compiler::type_reference>(session, new_scope),
+                compiler::clone(session, new_scope, _type_params),
+                _args->clone<compiler::argument_list>(session, new_scope),
+                compiler::clone(session, new_scope, _subscripts));
+        } else {
+            return session.builder().make_user_literal(
+                new_scope,
+                _type_ref->clone<compiler::type_reference>(session, new_scope),
+                compiler::clone(session, new_scope, _type_params),
+                _args->clone<compiler::argument_list>(session, new_scope));
+        }
     }
 
     bool type_literal::on_is_constant() const {

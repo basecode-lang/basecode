@@ -172,8 +172,8 @@ namespace basecode::compiler {
         length_identifier->parent_element(block_scope);
         block_scope->identifiers().add(length_identifier);
         auto length_field = builder.make_field(
-            this,
             block_scope,
+            this,
             builder.make_declaration(block_scope, length_identifier),
             0);
         length_field->parent_element(this);
@@ -200,8 +200,8 @@ namespace basecode::compiler {
         block_scope->identifiers().add(data_identifier);
 
         auto data_field = builder.make_field(
-            this,
             block_scope,
+            this,
             builder.make_declaration(block_scope, data_identifier),
             4);
         data_field->parent_element(this);

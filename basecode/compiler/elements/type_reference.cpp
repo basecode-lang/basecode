@@ -9,6 +9,8 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <compiler/session.h>
+#include <compiler/element_builder.h>
 #include "type.h"
 #include "numeric_type.h"
 #include "type_reference.h"
@@ -50,6 +52,15 @@ namespace basecode::compiler {
 
     bool type_reference::is_proc_type() const {
         return _type != nullptr && _type->is_proc_type();
+    }
+
+    compiler::element* type_reference::on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) {
+        return session.builder().make_type_reference(
+            new_scope,
+            _symbol,
+            _type);
     }
 
     bool type_reference::is_array_type() const {

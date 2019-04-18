@@ -22,11 +22,18 @@ namespace basecode::compiler {
 
     class program : public element {
     public:
-        program();
+        program(
+            compiler::module* module,
+            compiler::block* parent_scope);
 
         compiler::block* block();
 
         void block(compiler::block* value);
+
+    protected:
+        compiler::element* on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) override;
 
     private:
         compiler::block* _block = nullptr;

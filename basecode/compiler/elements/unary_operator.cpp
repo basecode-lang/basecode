@@ -80,6 +80,15 @@ namespace basecode::compiler {
         return true;
     }
 
+    compiler::element* unary_operator::on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) {
+        return session.builder().make_unary_operator(
+            new_scope,
+            operator_type(),
+            _rhs->clone<compiler::element>(session, new_scope));
+    }
+
     bool unary_operator::on_is_constant() const {
         return _rhs != nullptr && _rhs->is_constant();
     }

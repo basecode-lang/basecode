@@ -87,6 +87,14 @@ namespace basecode::compiler {
         return true;
     }
 
+    compiler::element* initializer::on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) {
+        return session.builder().make_initializer(
+            new_scope,
+            _expr != nullptr ? _expr->clone<compiler::element>(session, new_scope) : nullptr);
+    }
+
     bool initializer::on_is_constant() const {
         if (_expr == nullptr)
             return false;

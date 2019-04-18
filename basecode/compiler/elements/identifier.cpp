@@ -10,6 +10,7 @@
 // ----------------------------------------------------------------------------
 
 #include <compiler/session.h>
+#include <compiler/element_builder.h>
 #include "type.h"
 #include "identifier.h"
 #include "initializer.h"
@@ -47,6 +48,17 @@ namespace basecode::compiler {
 
     compiler::field* identifier::field() {
         return _field;
+    }
+
+    compiler::element* identifier::on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) {
+        return session.builder().make_identifier(
+            new_scope,
+            _symbol->clone<compiler::symbol_element>(session, new_scope),
+            _initializer != nullptr ?
+                _initializer->clone<compiler::initializer>(session, new_scope) :
+                nullptr);
     }
 
     bool identifier::inferred_type() const {

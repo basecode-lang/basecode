@@ -427,7 +427,7 @@ namespace basecode::compiler {
     bool session::initialize() {
         api::g_session = this;
 
-        _program = _builder->make_program();
+        _program = _builder->make_program(nullptr, nullptr);
 
         _ffi->initialize(_result);
         _terp->initialize(_result);

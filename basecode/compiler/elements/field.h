@@ -48,6 +48,10 @@ namespace basecode::compiler {
         compiler::declaration* declaration();
 
     protected:
+        compiler::element* on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) override;
+
         void on_owned_elements(element_list_t& list) override;
 
         bool on_as_identifier(compiler::identifier*& value) const override;

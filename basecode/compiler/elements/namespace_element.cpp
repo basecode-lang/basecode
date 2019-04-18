@@ -56,6 +56,14 @@ namespace basecode::compiler {
         return name;
     }
 
+    compiler::element* namespace_element::on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) {
+        return session.builder().make_namespace(
+            new_scope,
+            _expression->clone<compiler::element>(session, new_scope));
+    }
+
     bool namespace_element::on_is_constant() const {
         return true;
     }

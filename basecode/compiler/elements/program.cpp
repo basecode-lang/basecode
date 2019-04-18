@@ -9,21 +9,28 @@
 //
 // ----------------------------------------------------------------------------
 
-#include <vm/terp.h>
-#include <fmt/format.h>
-#include <vm/assembler.h>
-#include <common/defer.h>
-#include <common/bytes.h>
 #include <compiler/session.h>
-#include <compiler/elements.h>
+#include <compiler/element_builder.h>
+#include "block.h"
+#include "program.h"
 
 namespace basecode::compiler {
 
-    program::program() : element(nullptr, nullptr, element_type_t::program) {
+    program::program(
+        compiler::module* module,
+        compiler::block* parent_scope) : element(module, parent_scope, element_type_t::program) {
     }
 
     compiler::block* program::block() {
         return _block;
+    }
+
+    compiler::element* program::on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) {
+        auto copy = session.builder().make_program(new_scope->module(), new_scope);
+        copy->_block = _block->clone<compiler::block>(session, new_scope);
+        return copy;
     }
 
     void program::block(compiler::block* value) {

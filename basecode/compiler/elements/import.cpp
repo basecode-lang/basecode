@@ -9,7 +9,10 @@
 //
 // ----------------------------------------------------------------------------
 
+#include <compiler/session.h>
+#include <compiler/element_builder.h>
 #include "import.h"
+#include "module_reference.h"
 
 namespace basecode::compiler {
 
@@ -22,6 +25,16 @@ namespace basecode::compiler {
                                                            _expression(expr),
                                                            _from_expression(from_expr),
                                                            _imported_module(imported_module) {
+    }
+
+    compiler::element* import::on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) {
+        return session.builder().make_import(
+            new_scope,
+            _expression->clone<compiler::element>(session, new_scope),
+            _from_expression->clone<compiler::element>(session, new_scope),
+            _imported_module->clone<compiler::module_reference>(session, new_scope));
     }
 
     compiler::element* import::expression() {

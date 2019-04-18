@@ -10,6 +10,7 @@
 // ----------------------------------------------------------------------------
 
 #include <compiler/session.h>
+#include <compiler/element_builder.h>
 #include "spread_operator.h"
 
 namespace basecode::compiler {
@@ -29,6 +30,14 @@ namespace basecode::compiler {
 
     compiler::element* spread_operator::expr() {
         return _expr;
+    }
+
+    compiler::element* spread_operator::on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) {
+        return session.builder().make_spread_operator(
+            new_scope,
+            _expr->clone<compiler::element>(session, new_scope));
     }
 
     void spread_operator::on_owned_elements(element_list_t& list) {

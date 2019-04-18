@@ -21,9 +21,7 @@ namespace basecode::compiler {
             compiler::module* module,
             block* parent_scope);
 
-        bool is_singleton() const override {
-            return true;
-        }
+        bool is_singleton() const override;
 
     protected:
         bool on_infer_type(

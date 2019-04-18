@@ -10,6 +10,7 @@
 // ----------------------------------------------------------------------------
 
 #include <compiler/session.h>
+#include <compiler/element_builder.h>
 #include "type.h"
 #include "block.h"
 #include "intrinsic.h"
@@ -37,6 +38,16 @@ namespace basecode::compiler {
 
     compiler::block* for_element::body() {
         return _body;
+    }
+
+    compiler::element* for_element::on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) {
+        return session.builder().make_for(
+            new_scope,
+            _induction_decl->clone<compiler::declaration>(session, new_scope),
+            _expression->clone<compiler::element>(session, new_scope),
+            _body->clone<compiler::block>(session, new_scope));
     }
 
     compiler::element* for_element::expression() {

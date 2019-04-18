@@ -33,6 +33,10 @@ namespace basecode::compiler {
             compiler::session& session,
             infer_type_result_t& result) override;
 
+        compiler::element* on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) override;
+
         bool on_is_constant() const override;
 
         void on_owned_elements(element_list_t& list) override;

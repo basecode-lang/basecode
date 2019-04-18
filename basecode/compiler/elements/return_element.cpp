@@ -10,6 +10,7 @@
 // ----------------------------------------------------------------------------
 
 #include <compiler/session.h>
+#include <compiler/element_builder.h>
 #include "block.h"
 #include "return_element.h"
 
@@ -32,6 +33,16 @@ namespace basecode::compiler {
 
     field_map_t* return_element::parameters() {
         return _parameters;
+    }
+
+    compiler::element* return_element::on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) {
+        auto copy = session.builder().make_return(new_scope);
+        // XXX: fix this, not sure it's really correct
+        copy->_parameters = _parameters;
+        copy->_expressions = compiler::clone(session, new_scope, _expressions);
+        return copy;
     }
 
     element_list_t& return_element::expressions() {

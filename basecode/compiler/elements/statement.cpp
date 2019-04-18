@@ -10,6 +10,7 @@
 // ----------------------------------------------------------------------------
 
 #include <compiler/session.h>
+#include <compiler/element_builder.h>
 #include "label.h"
 #include "statement.h"
 
@@ -31,6 +32,15 @@ namespace basecode::compiler {
             const fold_result_t& fold_result) {
         _expression = fold_result.element;
         return true;
+    }
+
+    compiler::element* statement::on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) {
+        return session.builder().make_statement(
+            new_scope,
+            compiler::clone(session, new_scope, _labels),
+            _expression != nullptr ? _expression->clone<compiler::element>(session, new_scope) : nullptr);
     }
 
     compiler::element* statement::expression() {
