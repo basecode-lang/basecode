@@ -861,6 +861,14 @@ namespace basecode::compiler {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    struct extract_unknown_type_result_t {
+        bool is_pointer = false;
+        compiler::pointer_type* pointer = nullptr;
+        compiler::unknown_type* unknown = nullptr;
+    };
+
+    ///////////////////////////////////////////////////////////////////////////
+
     static const constexpr uint16_t switch_expression = 1;
     static const constexpr uint16_t previous_element = 2;
     static const constexpr uint16_t next_element = 3;

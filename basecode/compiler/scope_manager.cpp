@@ -303,8 +303,8 @@ namespace basecode::compiler {
             scope));
     }
 
-    identifier_list_t& scope_manager::identifiers_with_unknown_types() {
-        return _identifiers_with_unknown_types;
+    element_list_t& scope_manager::elements_with_unknown_types() {
+        return _elements_with_unknown_types;
     }
 
     compiler::namespace_type* scope_manager::find_namespace_type() const {

@@ -13,6 +13,8 @@
 #include <compiler/element_builder.h>
 #include "type.h"
 #include "numeric_type.h"
+#include "pointer_type.h"
+#include "unknown_type.h"
 #include "type_reference.h"
 
 namespace basecode::compiler {
@@ -101,6 +103,17 @@ namespace basecode::compiler {
 
     void type_reference::symbol_override(const qualified_symbol_t& value) {
         _symbol = value;
+    }
+
+    bool type_reference::extract_unknown_type(extract_unknown_type_result_t& result) {
+        if (is_pointer_type()) {
+            result.is_pointer = true;
+            result.pointer = dynamic_cast<compiler::pointer_type*>(_type);
+            result.unknown = dynamic_cast<compiler::unknown_type*>(result.pointer->base_type_ref()->type());
+        } else {
+            result.unknown = dynamic_cast<compiler::unknown_type*>(_type);
+        }
+        return result.unknown != nullptr;
     }
 
 }

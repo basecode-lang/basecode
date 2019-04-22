@@ -47,6 +47,8 @@ namespace basecode::compiler {
 
         void symbol_override(const qualified_symbol_t& value);
 
+        bool extract_unknown_type(extract_unknown_type_result_t& result);
+
     protected:
         bool on_infer_type(
             compiler::session& session,

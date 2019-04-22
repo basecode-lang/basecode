@@ -715,7 +715,7 @@ namespace basecode::compiler {
 
             if (new_type_ref->is_unknown_type()) {
                 _session.scope_manager()
-                    .identifiers_with_unknown_types()
+                    .elements_with_unknown_types()
                     .push_back(new_identifier);
             }
         } else {
@@ -731,7 +731,7 @@ namespace basecode::compiler {
             new_identifier->type_ref(type_ref);
             if (type_ref->is_unknown_type()) {
                 _session.scope_manager()
-                    .identifiers_with_unknown_types()
+                    .elements_with_unknown_types()
                     .push_back(new_identifier);
             }
         }
@@ -1939,8 +1939,9 @@ namespace basecode::compiler {
                 type_node,
                 scope_manager.current_scope()));
             if (type_ref->is_unknown_type()) {
-                // XXX: need to extend session support this
-                //      scenario.
+                scope_manager
+                    .elements_with_unknown_types()
+                    .push_back(type_ref);
             }
             types.emplace_back(type_ref);
         }
@@ -2776,7 +2777,7 @@ namespace basecode::compiler {
                         block_scope));
                     if (type_ref->is_unknown_type()) {
                         scope_manager
-                            .identifiers_with_unknown_types()
+                            .elements_with_unknown_types()
                             .push_back(param_identifier);
                     }
                     param_identifier->type_ref(type_ref);

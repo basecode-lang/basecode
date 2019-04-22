@@ -85,8 +85,6 @@ COMPILER:
 - NEW: struct/union instance baking
 - REFACTOR: ast_evaluator::add_identifier_to_scope
 
-- BUG: session type resolution doesn't support family_type parameters
-
 - BUG: fix assignment in ast_evaluator so it properly handles sets of multiple assignment/multiple return.
     *** see notes in the parser section
 - BUG: fix binary_operator type checking in session so it properly supports multiple assignment/multiple return
@@ -457,6 +455,7 @@ DONE
 - BUG: don't emit the template procedure_instance
 - BUG: the return_element holds a pointer to the field_map_t from its enclosing scope.  should
         remove this pointer because it will complicate cloning.
+- BUG: session type resolution doesn't support family_type parameters
 
 ANSWERS
 -------

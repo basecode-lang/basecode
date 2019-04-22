@@ -77,7 +77,7 @@ namespace basecode::compiler {
             const type_reference_list_t& constraints,
             compiler::block* scope = nullptr) const;
 
-        identifier_list_t& identifiers_with_unknown_types();
+        element_list_t& elements_with_unknown_types();
 
         compiler::namespace_type* find_namespace_type() const;
 
@@ -91,7 +91,7 @@ namespace basecode::compiler {
         compiler::session& _session;
         block_stack_t _scope_stack {};
         module_stack_t _module_stack {};
-        identifier_list_t _identifiers_with_unknown_types {};
+        element_list_t _elements_with_unknown_types {};
         identifier_reference_list_t _unresolved_identifier_references {};
     };
 
