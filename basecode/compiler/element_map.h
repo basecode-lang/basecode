@@ -14,6 +14,7 @@
 #include <string>
 #include <unordered_map>
 #include <common/id_pool.h>
+#include <common/memory_pool.h>
 #include "elements/element_types.h"
 
 namespace basecode::compiler {
@@ -45,6 +46,8 @@ namespace basecode::compiler {
 
         element_by_id_map_t::const_iterator begin() const;
 
+        element_by_id_map_t::const_iterator cbegin() const;
+
         template <typename T>
         std::vector<T*> find_by_type(element_type_t type) {
             std::vector<T*> list {};
@@ -68,8 +71,6 @@ namespace basecode::compiler {
             }
             return list;
         };
-
-        element_by_id_map_t::const_iterator cbegin() const;
 
         const_attribute_list_t attribute_by_name(const std::string& name) const;
 
