@@ -67,12 +67,4 @@ namespace basecode::compiler {
             list.emplace_back(_expression);
     }
 
-    const common::source_location& transmute::type_location() const {
-        return _type_location;
-    }
-
-    void transmute::type_location(const common::source_location& loc) {
-        _type_location = loc;
-    }
-
 }

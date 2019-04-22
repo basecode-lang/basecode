@@ -10,6 +10,7 @@
 // ----------------------------------------------------------------------------
 
 #include <compiler/session.h>
+#include <compiler/element_builder.h>
 #include "type_directive.h"
 
 namespace basecode::compiler {
@@ -27,6 +28,18 @@ namespace basecode::compiler {
         if (_expression == nullptr)
             return false;
         return _expression->infer_type(session, result);
+    }
+
+    compiler::element* type_directive::on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) {
+        auto expr = _expression != nullptr ?
+            _expression->clone<compiler::element>(session, new_scope) :
+            nullptr;
+        auto directive = session
+            .builder()
+            .make_directive(new_scope, type(), location(), {expr});
+        return directive;
     }
 
     bool type_directive::on_is_constant() const {

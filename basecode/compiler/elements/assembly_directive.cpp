@@ -10,6 +10,7 @@
 // ----------------------------------------------------------------------------
 
 #include <compiler/session.h>
+#include <compiler/element_builder.h>
 #include "type.h"
 #include "block.h"
 #include "label.h"
@@ -24,6 +25,18 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             compiler::element* expression) : directive(module, parent_scope),
                                              _expression(expression) {
+    }
+
+    compiler::element* assembly_directive::on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) {
+        auto expr = _expression != nullptr ?
+                    _expression->clone<compiler::element>(session, new_scope) :
+                    nullptr;
+        auto directive = session
+            .builder()
+            .make_directive(new_scope, type(), location(), {expr});
+        return directive;
     }
 
     directive_type_t assembly_directive::type() const {

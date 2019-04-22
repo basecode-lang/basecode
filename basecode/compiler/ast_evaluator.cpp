@@ -1742,13 +1742,11 @@ namespace basecode::compiler {
 
         auto type_params = builder.make_tagged_type_list_from_node(symbol_node);
 
-        // XXX: should cast accept an argument_list?
         auto cast_element = builder.make_cast(
             scope_manager.current_scope(),
             type_params[0],
             args->elements().front());
         cast_element->location(context.node->location);
-        cast_element->type_location(context.node->lhs->rhs->location);
         result.element = cast_element;
 
         return true;
@@ -1773,13 +1771,11 @@ namespace basecode::compiler {
 
         auto type_params = builder.make_tagged_type_list_from_node(symbol_node);
 
-        // XXX: like cast, should transmute support argument_list directly?
         auto transmute_element = builder.make_transmute(
             scope_manager.current_scope(),
             type_params[0],
             args->elements().front());
         transmute_element->location(context.node->location);
-        transmute_element->type_location(context.node->lhs->rhs->location);
         result.element = transmute_element;
 
         return true;

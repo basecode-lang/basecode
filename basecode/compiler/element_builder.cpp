@@ -1086,7 +1086,7 @@ namespace basecode::compiler {
             directive_type_t type,
             const common::source_location& location,
             const element_list_t& params) {
-        auto directive = compiler::directive::directive_for_name(
+        auto directive = compiler::directive::directive_for_type(
             parent_scope->module(),
             parent_scope,
             type,

@@ -27,6 +27,10 @@ namespace basecode::compiler {
         directive_type_t type() const override;
 
     protected:
+        compiler::element* on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) override;
+
         void on_owned_elements(element_list_t& list) override;
 
         bool on_evaluate(compiler::session& session) override;

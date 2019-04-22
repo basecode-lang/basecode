@@ -413,7 +413,7 @@ namespace basecode::compiler {
                         fmt::format(
                             "cannot cast to type: {}",
                             type_ref->symbol_override().name),
-                        cast->type_location());
+                        cast->type()->location());
                     return false;
                 }
 
@@ -1571,7 +1571,7 @@ namespace basecode::compiler {
                         fmt::format(
                             "cannot transmute to type: {}",
                             type_ref->symbol_override().name),
-                        transmute->type_location());
+                        transmute->type()->location());
                     return false;
                 }
 

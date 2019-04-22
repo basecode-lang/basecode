@@ -10,6 +10,8 @@
 // ----------------------------------------------------------------------------
 
 #include <compiler/session.h>
+#include <compiler/element_builder.h>
+#include "block.h"
 #include "if_directive.h"
 
 namespace basecode::compiler {
@@ -30,6 +32,19 @@ namespace basecode::compiler {
             const fold_result_t& fold_result) {
         _lhs = fold_result.element;
         return true;
+    }
+
+    compiler::element* if_directive::on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) {
+        auto lhs = _lhs != nullptr ? _lhs->clone<compiler::element>(session, new_scope) : nullptr;
+        auto rhs = _rhs != nullptr ? _rhs->clone<compiler::element>(session, new_scope) : nullptr;
+        auto body = _body != nullptr ? _body->clone<compiler::element>(session, new_scope) : nullptr;
+        auto directive = dynamic_cast<compiler::if_directive*>(session
+            .builder()
+            .make_directive(new_scope, type(), location(), {lhs, rhs, body}));
+        directive->_true_body = _true_body;
+        return directive;
     }
 
     directive_type_t if_directive::type() const {

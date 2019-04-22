@@ -21,7 +21,7 @@
 
 namespace basecode::compiler {
 
-    directive* directive::directive_for_name(
+    directive* directive::directive_for_type(
             compiler::module* module,
             compiler::block* parent_scope,
             directive_type_t type,

@@ -29,10 +29,6 @@ namespace basecode::compiler {
 
         void expression(compiler::element* value);
 
-        [[deprecated]] const common::source_location& type_location() const;
-
-        [[deprecated]] void type_location(const common::source_location& loc);
-
     protected:
         bool on_infer_type(
             compiler::session& session,
@@ -50,7 +46,6 @@ namespace basecode::compiler {
 
     private:
         compiler::element* _expression = nullptr;
-        common::source_location _type_location {};
         compiler::type_reference* _type_ref = nullptr;
     };
 

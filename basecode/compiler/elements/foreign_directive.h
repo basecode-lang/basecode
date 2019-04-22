@@ -41,6 +41,10 @@ namespace basecode::compiler {
             compiler::identifier* identifier,
             compiler::procedure_type* proc_type);
 
+        compiler::element* on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) override;
+
     private:
         compiler::element* _expression = nullptr;
     };

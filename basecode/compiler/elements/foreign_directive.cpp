@@ -12,6 +12,7 @@
 #include <vm/ffi.h>
 #include <configure.h>
 #include <compiler/session.h>
+#include <compiler/element_builder.h>
 #include "block.h"
 #include "attribute.h"
 #include "statement.h"
@@ -162,6 +163,18 @@ namespace basecode::compiler {
             library_name,
             proc_decl->identifier(),
             proc_type);
+    }
+
+    compiler::element* foreign_directive::on_clone(
+            compiler::session& session,
+            compiler::block* new_scope) {
+        auto expr = _expression != nullptr ?
+                    _expression->clone<compiler::element>(session, new_scope) :
+                    nullptr;
+        auto directive = session
+            .builder()
+            .make_directive(new_scope, type(), location(), {expr});
+        return directive;
     }
 
     directive_type_t foreign_directive::type() const {
