@@ -24,23 +24,14 @@ namespace basecode::vm {
             listing_source_line_type_t type,
             uint64_t address,
             const std::string& source) {
-        lines.push_back(listing_source_line_t {
-            .address = address,
-            .source = source,
-            .type = type
-        });
+        lines.emplace_back(type, address, source);
     }
 
     void listing_source_file_t::add_blank_lines(
             uint64_t address,
             uint16_t count) {
-        for (uint16_t i = 0; i < count; i++) {
-            lines.push_back(listing_source_line_t {
-                .address = address,
-                .source = "",
-                .type = listing_source_line_type_t::blank
-            });
-        }
+        for (uint16_t i = 0; i < count; i++)
+            lines.emplace_back(listing_source_line_type_t::blank, address, "");
     }
 
     ///////////////////////////////////////////////////////////////////////////

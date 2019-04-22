@@ -471,4 +471,4 @@ namespace basecode::vm {
         std::map<std::string, size_t> _locals {};
     };
 
-};
+}

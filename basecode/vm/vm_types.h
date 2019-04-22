@@ -1031,6 +1031,14 @@ namespace basecode::vm {
     };
 
     struct listing_source_line_t {
+        listing_source_line_t(
+                listing_source_line_type_t type,
+                uint64_t address,
+                const std::string& source) : address(address),
+                                             source(source),
+                                             type(type) {
+        }
+
         uint64_t address = 0;
         std::string source {};
         listing_source_line_type_t type;
