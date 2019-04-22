@@ -2,7 +2,6 @@ NOTES
 ------------------------
 Steps to reach feature complete for the bootstrap compiler:
 
-- type-baking for generics
 - lambdas
 - consolidate errors/return errors from all appropriate locations
 
@@ -38,6 +37,12 @@ QUESTIONS
 TASKS
 -----
 - clean up all XXX notes
+- NEW: consolidate all errors into one class along with constants for quick lookup.
+- BUG: fix utf8 streaming issues in lexer/source_file
+- BUG: add missing errors
+- BUG: fix location for elements
+- BUG: lambda procedure type checking
+- BUG: type parameter propagation
 
 LEXER:
 
@@ -221,14 +226,6 @@ EMITTER:
         - the value itself
 
 =======
-
-OTHER:
-- NEW: consolidate all errors into one class along with constants for quick lookup.
-- BUG: fix utf8 streaming issues in lexer/source_file
-- BUG: add missing errors
-- BUG: fix location for elements
-- BUG: lambda procedure type checking
-- BUG: type parameter propagation
 
 DONE
 ----
