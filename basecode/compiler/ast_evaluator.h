@@ -60,10 +60,6 @@ namespace basecode::compiler {
         compiler::element* evaluate(const syntax::ast_node_t* node);
 
     private:
-        static void add_expression_to_scope(
-            compiler::block* scope,
-            compiler::element* expr);
-
         void pairs_to_symbols_and_type(
             const syntax::ast_node_t* root,
             symbol_list_and_type_t& result);

@@ -10,16 +10,17 @@
 // ----------------------------------------------------------------------------
 
 #include <fmt/format.h>
-#include <vm/assembler.h>
 #include <common/defer.h>
 #include <compiler/session.h>
 #include <compiler/element_builder.h>
 #include "block.h"
 #include "import.h"
+#include "attribute.h"
 #include "statement.h"
 #include "identifier.h"
 #include "assignment.h"
 #include "declaration.h"
+#include "defer_element.h"
 
 namespace basecode::compiler {
 
@@ -140,6 +141,34 @@ namespace basecode::compiler {
 
         for (auto element : _imports)
             list.emplace_back(element);
+    }
+
+    void block::add_expression_to_scope(compiler::element* e) {
+        switch (e->element_type()) {
+            case element_type_t::defer: {
+                _defer_stack.push(dynamic_cast<compiler::defer_element*>(e));
+                break;
+            }
+            case element_type_t::import_e: {
+                _imports.emplace_back(dynamic_cast<compiler::import*>(e));
+                break;
+            }
+            case element_type_t::attribute: {
+                auto& attrs = attributes();
+                attrs.add(dynamic_cast<compiler::attribute*>(e));
+                break;
+            }
+            case element_type_t::statement: {
+                auto statement = dynamic_cast<compiler::statement*>(e);
+                _statements.emplace_back(statement);
+                auto expr = statement->expression();
+                if (expr != nullptr)
+                    add_expression_to_scope(expr);
+                break;
+            }
+            default:
+                break;
+        }
     }
 
 }

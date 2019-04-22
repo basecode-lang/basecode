@@ -44,6 +44,8 @@ namespace basecode::compiler {
 
         void has_stack_frame(bool value);
 
+        void add_expression_to_scope(compiler::element* e);
+
     protected:
         compiler::element* on_clone(
             compiler::session& session,

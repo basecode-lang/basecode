@@ -178,30 +178,6 @@ namespace basecode::compiler {
         return nullptr;
     }
 
-    void ast_evaluator::add_expression_to_scope(
-            compiler::block* scope,
-            compiler::element* expr) {
-        switch (expr->element_type()) {
-            case element_type_t::import_e: {
-                auto import = dynamic_cast<compiler::import*>(expr);
-                scope->imports().emplace_back(import);
-                break;
-            }
-            case element_type_t::attribute: {
-                auto attribute = dynamic_cast<compiler::attribute*>(expr);
-                scope->attributes().add(attribute);
-                break;
-            }
-            case element_type_t::statement: {
-                auto statement = dynamic_cast<compiler::statement*>(expr);
-                scope->statements().emplace_back(statement);
-                break;
-            }
-            default:
-                break;
-        }
-    }
-
     compiler::element* ast_evaluator::evaluate_in_scope(
             const syntax::ast_node_t* node,
             compiler::block* scope) {
@@ -1460,14 +1436,11 @@ namespace basecode::compiler {
             }
         }
 
-        auto import = builder.make_import(
+        result.element = builder.make_import(
             scope_manager.current_scope(),
             symbol_ref,
             from_ref,
             mod_ref);
-        add_expression_to_scope(scope_manager.current_scope(), import);
-
-        result.element = import;
 
         return true;
     }
@@ -1549,7 +1522,7 @@ namespace basecode::compiler {
                     current_node->location);
                 return false;
             }
-            add_expression_to_scope(active_scope, expr);
+            active_scope->add_expression_to_scope(expr);
             expr->parent_element(active_scope);
         }
 
@@ -2002,12 +1975,9 @@ namespace basecode::compiler {
         auto& builder = _session.builder();
         auto& scope_manager = _session.scope_manager();
 
-        auto defer_e = builder.make_defer(
+        result.element = builder.make_defer(
             scope_manager.current_scope(),
             evaluate(context.node->lhs));
-        scope_manager.current_scope()->defer_stack().push(defer_e);
-
-        result.element = defer_e;
 
         return true;
     }
@@ -2983,7 +2953,7 @@ namespace basecode::compiler {
             auto expr = evaluate(child);
             if (expr == nullptr)
                 return false;
-            add_expression_to_scope(module_scope, expr);
+            module_scope->add_expression_to_scope(expr);
             expr->parent_element(module);
         }
 
