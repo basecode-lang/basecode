@@ -9,19 +9,33 @@
 //
 // ----------------------------------------------------------------------------
 
-#include <sstream>
-#include <fmt/format.h>
-#include "colorizer.h"
+#include "term_stream_builder.h"
 
 namespace basecode::common {
 
-    bool g_color_enabled = true;
+    std::string color_code(term_colors_t fg_color, term_colors_t bg_color) {
+        return fmt::format("\033[1;{};{}m", (uint32_t) fg_color, ((uint32_t) bg_color) + 10);
+    }
 
-    std::string colorizer::colorize(
+    ///////////////////////////////////////////////////////////////////////////
+
+    term_stream::~term_stream() {
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    term_stream_builder::term_stream_builder(bool enabled) : _enabled(enabled) {
+    }
+
+    bool term_stream_builder::enabled() const {
+        return _enabled;
+    }
+
+    std::string term_stream_builder::colorize(
             const std::string& text,
             term_colors_t fg_color,
             term_colors_t bg_color) {
-        if (!g_color_enabled)
+        if (!_enabled)
             return text;
         return fmt::format(
             "{}{}{}",
@@ -30,13 +44,13 @@ namespace basecode::common {
             color_code_reset());
     }
 
-    std::string colorizer::colorize_range(
+    std::string term_stream_builder::colorize_range(
             const std::string& text,
             size_t begin,
             size_t end,
             term_colors_t fg_color,
             term_colors_t bg_color) {
-        if (!g_color_enabled)
+        if (!_enabled)
             return text;
         std::stringstream colored_source;
         for (size_t j = 0; j < text.length(); j++) {
@@ -56,20 +70,11 @@ namespace basecode::common {
         return colored_source.str();
     }
 
-    constexpr const char* colorizer::color_code_reset() {
-        return "\033[0m";
-    }
-
-    std::string colorizer::color_code_fg(term_colors_t color) {
-        return fmt::format("\033[38;5;{}m", (uint32_t) color);
-    }
-
-    std::string colorizer::color_code_bg(term_colors_t color) {
-        return fmt::format("\033[48;5;{}m", (uint32_t) color);
-    }
-
-    std::string colorizer::color_code(term_colors_t fg_color, term_colors_t bg_color) {
-        return fmt::format("\033[1;{};{}m", (uint32_t) fg_color, ((uint32_t) bg_color) + 10);
+    term_stream_unique_ptr term_stream_builder::use_stream(std::stringstream& stream) const {
+        if (_enabled)
+            return term_stream_unique_ptr(new ansi_stream(stream));
+        else
+            return term_stream_unique_ptr(new ascii_stream(stream));
     }
 
 }

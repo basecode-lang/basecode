@@ -27,16 +27,22 @@ namespace common = basecode::common;
 namespace vm = basecode::vm;
 namespace fs = boost::filesystem;
 
+using namespace std::literals;
+
 static constexpr size_t heap_size = (1024 * 1024) * 32;
 static constexpr size_t stack_size = (1024 * 1024) * 8;
-static size_t time_pad_width = 0;
 
-static void pad_to(
-        std::string& str,
+static std::string pad_to(
+        const std::string& str,
         const size_t num,
         const char padding = ' ') {
-    if (num > str.size())
-        str.insert(str.begin(), num - str.size(), padding);
+    if (num > str.size()) {
+        auto padded = str;
+        padded.insert(padded.begin(), num - padded.size(), padding);
+        return padded;
+    } else {
+        return str;
+    }
 }
 
 static void print_results(const basecode::common::result& r) {
@@ -77,29 +83,21 @@ static void usage() {
 static size_t format_session_task(
         const compiler::session_task_t* task,
         size_t indent,
-        std::stringstream& stream) {
+        common::term_stream* stream) {
     auto elapsed = task->elapsed.count();
     auto time_color = !task->subtasks.empty() ?
         common::term_colors_t::light_gray :
         common::term_colors_t::blue;
     std::string indent_spaces(indent, ' ');
+
     stream
-        << std::left
-        << std::setw(14)
-        << common::colorizer::colorize(
-            fmt::format("[{}] ", compiler::session_task_category_to_name(task->category)),
-            common::term_colors_t::cyan);
-    stream
-        << std::left
-        << std::setw(66)
-        << common::colorizer::colorize(
-            fmt::format("{}{}", indent_spaces, task->name),
-            common::term_colors_t::green);
-    auto elapsed_str = common::colorizer::colorize(
-        std::to_string(elapsed),
-        time_color);
-    pad_to(elapsed_str, time_pad_width);
-    stream << elapsed_str << "\n";
+        ->color(common::term_colors_t::default_color, common::term_colors_t::cyan)
+        ->append(fmt::format("[{}] ", compiler::session_task_category_to_name(task->category)), 14)
+        ->color(common::term_colors_t::default_color, common::term_colors_t::green)
+        ->append(fmt::format("{}{}", indent_spaces, task->name), 54)
+        ->color(common::term_colors_t::default_color, time_color)
+        ->append(pad_to(std::to_string(elapsed), 12))
+        ->append("\n"sv);
 
     for (const auto& subtask : task->subtasks)
         format_session_task(&subtask, indent + 2, stream);
@@ -107,12 +105,37 @@ static size_t format_session_task(
     return elapsed;
 }
 
+static void output_results(
+        compiler::session& session,
+        common::term_stream* term_stream) {
+    const auto& r = session.result();
+    if (r.is_failed())
+        print_results(r);
+    session.finalize();
+
+    size_t total_time = 0;
+
+    term_stream
+        ->color(common::term_colors_t::default_color, common::term_colors_t::cyan)
+        ->append("\ncompiler task time breakdown (in μs):\n"sv);
+
+    for (const compiler::session_task_t& task : session.tasks())
+        total_time += format_session_task(&task, 0, term_stream);
+
+    term_stream
+        ->color(common::term_colors_t::default_color, common::term_colors_t::yellow)
+        ->append(""sv, 14)
+        ->append("total execution time"sv, 54)
+        ->append(pad_to(std::to_string(total_time), 12))
+        ->append("\n\n"sv);
+
+    fmt::print(term_stream->format());
+}
+
 int main(int argc, char** argv) {
     using namespace std::chrono;
 
-    auto is_redirected = !isatty(fileno(stdout));
-
-    common::g_color_enabled = !is_redirected;
+    const auto is_redirected = !isatty(fileno(stdout));
 
     int opt = -1;
     bool debugger = false;
@@ -120,6 +143,7 @@ int main(int argc, char** argv) {
     bool verbose_flag = false;
     bool output_ast_graphs = false;
     fs::path code_dom_graph_file_name;
+    bool color_enabled = !is_redirected;
     std::vector<fs::path> module_paths {};
     std::vector<fs::path> source_files {};
     std::unordered_map<std::string, std::string> definitions {};
@@ -169,7 +193,7 @@ int main(int argc, char** argv) {
                         code_dom_graph_file_name = ya_optarg;
                         break;
                     case 4:
-                        common::g_color_enabled = false;
+                        color_enabled = false;
                         break;
                     case 5:
                         debugger = true;
@@ -215,14 +239,13 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    time_pad_width = common::g_color_enabled ? 24 : 12;
-
     std::vector<std::string> meta_options {};
 
     while (ya_optind < argc) {
         meta_options.emplace_back(argv[ya_optind++]);
     }
 
+    common::term_stream_builder term_builder(color_enabled);
     vm::default_allocator allocator {};
     compiler::session_options_t session_options {
         .verbose = verbose_flag,
@@ -236,7 +259,7 @@ int main(int argc, char** argv) {
         .module_paths = module_paths,
         .dom_graph_file = code_dom_graph_file_name,
         .definitions = definitions,
-        .compile_callback = [](
+        .compile_callback = [&term_builder](
                 compiler::session_compile_phase_t phase,
                 compiler::session_module_type_t module_type,
                 const fs::path& source_file) {
@@ -255,9 +278,7 @@ int main(int argc, char** argv) {
                     }
                     fmt::print(
                         "{} {}{}\n",
-                        common::colorizer::colorize(
-                            label,
-                            common::term_colors_t::cyan),
+                        term_builder.colorize(label, common::term_colors_t::cyan),
                         module_path,
                         file_name);
                     break;
@@ -268,6 +289,7 @@ int main(int argc, char** argv) {
                 }
             }
         },
+        .term_builder = &term_builder,
     };
 
     compiler::session compilation_session(
@@ -275,35 +297,9 @@ int main(int argc, char** argv) {
         source_files);
 
     defer({
-        const auto& r = compilation_session.result();
-        if (r.is_failed())
-            print_results(r);
-        compilation_session.finalize();
-
-        size_t total_time = 0;
-
         std::stringstream stream;
-        stream << common::colorizer::colorize(
-            "\ncompiler task time breakdown (in μs):\n",
-            common::term_colors_t::cyan);
-        for (const compiler::session_task_t& task : compilation_session.tasks()) {
-            total_time += format_session_task(&task, 0, stream);
-        }
-
-        std::string indent_spaces(14, ' ');
-        stream << std::left
-             << std::setw(80)
-             << common::colorizer::colorize(
-                     fmt::format("{}total execution time", indent_spaces),
-                     common::term_colors_t::yellow);
-
-        auto total = common::colorizer::colorize(
-            std::to_string(total_time),
-            common::term_colors_t::yellow);
-        pad_to(total, time_pad_width);
-        stream << total << "\n\n";
-
-        fmt::print(stream.str());
+        auto term_stream = term_builder.use_stream(stream);
+        output_results(compilation_session, term_stream.get());
     });
 
     if (!compilation_session.initialize())

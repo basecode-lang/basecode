@@ -15,8 +15,8 @@
 #include <iterator>
 #include <fmt/format.h>
 #include "id_pool.h"
-#include "colorizer.h"
 #include "source_file.h"
+#include "term_stream_builder.h"
 
 namespace basecode::common {
 
@@ -28,6 +28,7 @@ namespace basecode::common {
 
     void source_file::error(
             common::result& r,
+            common::term_stream_builder* term_builder,
             const std::string& code,
             const std::string& message,
             const common::source_location& location) {
@@ -35,7 +36,7 @@ namespace basecode::common {
 
         const auto number_of_lines = static_cast<int32_t>(_lines_by_number.size());
         const auto target_line = static_cast<int32_t>(location.start().line);
-        const auto message_indicator = common::colorizer::colorize(
+        const auto message_indicator = term_builder->colorize(
             "^ " + message,
             common::term_colors_t::red);
 
@@ -56,12 +57,13 @@ namespace basecode::common {
                 source_line->end);
             if (i == target_line) {
                 stream << fmt::format("{:04d}: ", i + 1)
-                       << common::colorizer::colorize_range(
-                           source_text,
-                           location.start().column,
-                           location.end().column,
-                           common::term_colors_t::yellow,
-                           common::term_colors_t::blue) << "\n"
+                       << term_builder->colorize_range(
+                            source_text,
+                            location.start().column,
+                            location.end().column,
+                            common::term_colors_t::yellow,
+                            common::term_colors_t::blue)
+                       << "\n"
                        << fmt::format("{}{}",
                               std::string(6 + location.start().column, ' '),
                               message_indicator);

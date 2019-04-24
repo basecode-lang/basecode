@@ -22,6 +22,8 @@
 
 namespace basecode::common {
 
+    class term_stream_builder;
+
     using source_file_range_t = std::pair<size_t, size_t>;
 
     struct source_file_range_compare_t {
@@ -53,6 +55,7 @@ namespace basecode::common {
 
         void error(
             common::result& r,
+            common::term_stream_builder* term_builder,
             const std::string& code,
             const std::string& message,
             const common::source_location& location);

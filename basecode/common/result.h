@@ -105,4 +105,4 @@ namespace basecode::common {
         result_message_list _messages {};
     };
 
-};
+}

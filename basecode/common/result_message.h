@@ -72,4 +72,4 @@ namespace basecode::common {
 
     using result_message_list = std::vector <result_message>;
 
-};
+}

@@ -92,13 +92,13 @@ add_library(
     common/result_message.h
     common/rune.cpp common/rune.h
     common/id_pool.cpp common/id_pool.h
-    common/colorizer.cpp common/colorizer.h
     common/source_file.cpp common/source_file.h
     common/memory_pool.cpp common/memory_pool.h
     common/hex_formatter.cpp common/hex_formatter.h
     common/string_support.cpp common/string_support.h
     common/source_location.cpp common/source_location.h
     common/graphviz_formatter.cpp common/graphviz_formatter.h
+    common/term_stream_builder.cpp common/term_stream_builder.h
 
     parser/ast.cpp parser/ast.h
     parser/lexer.cpp parser/lexer.h

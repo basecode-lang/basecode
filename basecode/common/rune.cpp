@@ -181,4 +181,4 @@ namespace basecode::common {
         return cp;
     }
 
-};
+}

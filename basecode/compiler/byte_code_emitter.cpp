@@ -1309,6 +1309,7 @@ namespace basecode::compiler {
                         auto success = assembler.assemble_from_source(
                             _session.result(),
                             _session.labels(),
+                            _session.options().term_builder,
                             source_file,
                             current_block,
                             expr->parent_scope());

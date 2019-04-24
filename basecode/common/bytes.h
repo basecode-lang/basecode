@@ -160,4 +160,4 @@ namespace basecode::common {
         return res;
     }
 
-};
+}

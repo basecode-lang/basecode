@@ -20,5 +20,5 @@ namespace basecode::common {
             size_t size);
     };
 
-};
+}
 

@@ -80,4 +80,4 @@ namespace basecode::common {
 
     codepoint_t utf8_decode(char* str, size_t length);
 
-};
+}

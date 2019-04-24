@@ -34,6 +34,7 @@ namespace basecode::vm {
         bool assemble_from_source(
             common::result& r,
             label_map& labels,
+            common::term_stream_builder* term_builder,
             common::source_file& source_file,
             vm::basic_block* block,
             void* data);

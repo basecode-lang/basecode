@@ -24,6 +24,7 @@
 #include <common/id_pool.h>
 #include <common/source_file.h>
 #include <boost/filesystem.hpp>
+#include <common/term_stream_builder.h>
 #include "elements/element_types.h"
 
 namespace basecode::compiler {
@@ -134,6 +135,7 @@ namespace basecode::compiler {
         boost::filesystem::path dom_graph_file;
         session_definition_map_t definitions {};
         session_compile_callback compile_callback;
+        common::term_stream_builder* term_builder = nullptr;
     };
 
     ///////////////////////////////////////////////////////////////////////////

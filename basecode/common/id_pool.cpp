@@ -107,4 +107,4 @@ namespace basecode::common {
         return 0;
     }
 
-};
+}

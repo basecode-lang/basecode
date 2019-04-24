@@ -54,4 +54,4 @@ namespace basecode::common {
     #define _DEFER_3(x)    _DEFER_2(x, __COUNTER__)
     #define defer(code)    auto _DEFER_3(_defer_) = basecode::common::__defer_func([&]()->void{code;})
 
-};
+}

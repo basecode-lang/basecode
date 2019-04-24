@@ -59,5 +59,5 @@ namespace basecode::common {
         id_set _pool;
     };
 
-};
+}
 

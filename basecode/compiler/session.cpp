@@ -88,7 +88,7 @@ namespace basecode::compiler {
         if (module != nullptr) {
             auto file = module->source_file();
             if (file != nullptr) {
-                file->error(_result, code, message, location);
+                file->error(_result, _options.term_builder, code, message, location);
                 return;
             }
         }
@@ -1195,7 +1195,7 @@ namespace basecode::compiler {
         if (it == std::end(_parsers)) {
             auto result = _parsers.insert(std::make_pair(
                 source_path,
-                syntax::parser(source_file, *_ast_builder)));
+                syntax::parser(_options.term_builder, source_file, *_ast_builder)));
             alpha_parser = &result.first->second;
         } else {
             alpha_parser = &it->second;

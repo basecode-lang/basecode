@@ -1405,10 +1405,12 @@ namespace basecode::syntax {
     ///////////////////////////////////////////////////////////////////////////
 
     parser::parser(
+        common::term_stream_builder* term_builder,
         common::source_file* source_file,
         syntax::ast_builder& builder) : _lexer(source_file),
                                         _ast_builder(builder),
-                                        _source_file(source_file) {
+                                        _source_file(source_file),
+                                        _term_builder(term_builder) {
     }
 
     void parser::error(
@@ -1416,7 +1418,7 @@ namespace basecode::syntax {
             const std::string& code,
             const std::string& message,
             const common::source_location& location) {
-        _source_file->error(r, code, message, location);
+        _source_file->error(r, _term_builder, code, message, location);
     }
 
     void parser::write_ast_graph(

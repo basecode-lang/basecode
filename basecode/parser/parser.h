@@ -658,6 +658,7 @@ namespace basecode::syntax {
     class parser {
     public:
         parser(
+            common::term_stream_builder* term_builder,
             common::source_file* source_file,
             syntax::ast_builder& builder);
 
@@ -901,6 +902,7 @@ namespace basecode::syntax {
         std::vector<token_t*> _tokens {};
         syntax::ast_builder& _ast_builder;
         common::source_file* _source_file = nullptr;
+        common::term_stream_builder* _term_builder = nullptr;
     };
 
 }

@@ -323,10 +323,11 @@ namespace basecode::vm {
     bool assembler::assemble_from_source(
             common::result& r,
             label_map& labels,
+            common::term_stream_builder* term_builder,
             common::source_file& source_file,
             vm::basic_block* block,
             void* data) {
-        vm::assembly_parser parser(this, &labels, source_file, data);
+        vm::assembly_parser parser(this, &labels, term_builder, source_file, data);
         return parser.parse(r, block);
     }
 

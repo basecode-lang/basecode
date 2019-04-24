@@ -12,6 +12,7 @@
 #include <parser/token.h>
 #include <common/defer.h>
 #include <common/string_support.h>
+#include <common/term_stream_builder.h>
 #include "assembler.h"
 #include "basic_block.h"
 #include "assembly_parser.h"
@@ -21,11 +22,13 @@ namespace basecode::vm {
     assembly_parser::assembly_parser(
             vm::assembler* assembler,
             vm::label_map* labels,
+            common::term_stream_builder* term_builder,
             common::source_file& source_file,
             void* data) : _data(data),
                           _labels(labels),
                           _source_file(source_file),
-                          _assembler(assembler) {
+                          _assembler(assembler),
+                          _term_builder(term_builder) {
     }
 
     bool assembly_parser::parse(
@@ -165,6 +168,7 @@ namespace basecode::vm {
                     if (_wip.instance.m == nullptr) {
                         _source_file.error(
                             r,
+                            _term_builder,
                             "A003",
                             "unknown mnemonic.",
                             make_location(end_pos));
@@ -193,6 +197,7 @@ namespace basecode::vm {
                     if (commas_found < required_operand_count - 1) {
                         _source_file.error(
                             r,
+                            _term_builder,
                             "A004",
                             fmt::format(
                                 "mnemonic '{}' requires '{}' operands.",
@@ -364,6 +369,7 @@ namespace basecode::vm {
                     if (!_wip.is_valid) {
                         _source_file.error(
                             r,
+                            _term_builder,
                             "A005",
                             "invalid instruction encoding.",
                             make_location(_source_file.pos()));
@@ -389,6 +395,7 @@ namespace basecode::vm {
                     if (!_wip.is_valid) {
                         _source_file.error(
                             r,
+                            _term_builder,
                             "A005",
                             "invalid directive encoding.",
                             make_location(_source_file.pos()));
@@ -418,6 +425,7 @@ namespace basecode::vm {
                             if (local != nullptr) {
                                 _source_file.error(
                                     r,
+                                    _term_builder,
                                     "X000",
                                     fmt::format("ilocal already exists: {}", symbol),
                                     make_location(_source_file.pos()));
@@ -432,6 +440,7 @@ namespace basecode::vm {
                             if (local != nullptr) {
                                 _source_file.error(
                                     r,
+                                    _term_builder,
                                     "X000",
                                     fmt::format("flocal already exists: {}", symbol),
                                     make_location(_source_file.pos()));
@@ -532,6 +541,7 @@ namespace basecode::vm {
                     if (_wip.instance.d == nullptr) {
                         _source_file.error(
                             r,
+                            _term_builder,
                             "A003",
                             "unknown directive.",
                             make_location(end_pos));
@@ -577,6 +587,7 @@ namespace basecode::vm {
                                         if (param_char_idx >= param.length()) {
                                             _source_file.error(
                                                 r,
+                                                _term_builder,
                                                 "A005",
                                                 "invalid string param value, did you forget the closing '?",
                                                 make_location(_source_file.pos()));
@@ -591,6 +602,7 @@ namespace basecode::vm {
                                 } else {
                                     _source_file.error(
                                         r,
+                                        _term_builder,
                                         "A005",
                                         "invalid string param value, did you forget the leading '?",
                                         make_location(_source_file.pos()));
@@ -601,6 +613,7 @@ namespace basecode::vm {
                             } else {
                                 _source_file.error(
                                     r,
+                                    _term_builder,
                                     "A005",
                                     "unknown param type.",
                                     make_location(_source_file.pos()));
@@ -642,6 +655,7 @@ namespace basecode::vm {
             if (number.parse(value) != syntax::conversion_result_t::success) {
                 _source_file.error(
                     r,
+                    _term_builder,
                     "A005",
                     "invalid numeric param value, did you forget the #?",
                     make_location(_source_file.pos()));
@@ -650,6 +664,7 @@ namespace basecode::vm {
         } else {
             _source_file.error(
                 r,
+                _term_builder,
                 "A005",
                 "invalid numeric param value, did you forget the #?",
                 make_location(_source_file.pos()));
