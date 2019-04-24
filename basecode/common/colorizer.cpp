@@ -24,9 +24,8 @@ namespace basecode::common {
         if (!g_color_enabled)
             return text;
         return fmt::format(
-            "{}{}{}{}",
-            color_code(make_bg_color(bg_color)),
-            color_code(fg_color),
+            "{}{}{}",
+            color_code(fg_color, bg_color),
             text,
             color_code_reset());
     }
@@ -42,18 +41,12 @@ namespace basecode::common {
         std::stringstream colored_source;
         for (size_t j = 0; j < text.length(); j++) {
             if (begin == end && j == begin) {
-                colored_source << fmt::format(
-                    "{}{}",
-                    color_code(make_bg_color(bg_color)),
-                    color_code(fg_color));
+                colored_source << color_code(fg_color, bg_color);
                 colored_source << text[j];
                 colored_source << color_code_reset();
             } else {
                 if (j == begin) {
-                    colored_source << fmt::format(
-                        "{}{}",
-                        color_code(make_bg_color(bg_color)),
-                        color_code(fg_color));
+                    colored_source << color_code(fg_color, bg_color);
                 } else if (j == end) {
                     colored_source << color_code_reset();
                 }
@@ -67,12 +60,16 @@ namespace basecode::common {
         return "\033[0m";
     }
 
-    std::string colorizer::color_code(term_colors_t color) {
-        return fmt::format("\033[1;{}m", (uint32_t) color);
+    std::string colorizer::color_code_fg(term_colors_t color) {
+        return fmt::format("\033[38;5;{}m", (uint32_t) color);
     }
 
-    constexpr term_colors_t colorizer::make_bg_color(term_colors_t color) {
-        return static_cast<term_colors_t>(static_cast<uint8_t>(color) + 10);
+    std::string colorizer::color_code_bg(term_colors_t color) {
+        return fmt::format("\033[48;5;{}m", (uint32_t) color);
     }
 
-};
+    std::string colorizer::color_code(term_colors_t fg_color, term_colors_t bg_color) {
+        return fmt::format("\033[1;{};{}m", (uint32_t) fg_color, ((uint32_t) bg_color) + 10);
+    }
+
+}

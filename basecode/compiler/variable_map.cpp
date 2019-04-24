@@ -324,6 +324,38 @@ namespace basecode::compiler {
         return find_parameter_variables(proc_type);
     }
 
+    bool variable_map::deref(
+            vm::basic_block* basic_block,
+            emit_result_t& arg_result,
+            vm::instruction_operand_t& temp_operand) {
+        auto named_ref = arg_result.operands.front().data<vm::named_ref_with_offset_t>();
+
+        auto var = find(named_ref->ref->name);
+        if (var == nullptr)
+            return false;
+
+        auto& assembler = _session.assembler();
+        basic_block->comment(
+            fmt::format("deref: {}({})", variable_type_name(var->type), var->label),
+            vm::comment_location_t::after_instruction);
+
+        switch (var->type) {
+            case variable_type_t::local:
+            case variable_type_t::parameter:
+            case variable_type_t::return_parameter: {
+                break;
+            }
+            case variable_type_t::module: {
+                break;
+            }
+            default: {
+                break;
+            }
+        }
+
+        return true;
+    }
+
     bool variable_map::assign(
             vm::basic_block* basic_block,
             emit_result_t& lhs,
@@ -808,6 +840,8 @@ namespace basecode::compiler {
                     else
                         var_info.state = variable_t::flags_t::none;
                     var_info.number_class = type->number_class();
+                    if (type->is_pointer_type())
+                        var_info.flag(variable_t::flags_t::pointer, true);
 
                     _variables.insert(std::make_pair(label, var_info));
                 }
@@ -923,6 +957,8 @@ namespace basecode::compiler {
 
                     var_info.state = variable_t::flags_t::none;
                     var_info.number_class = type->number_class();
+                    if (type->is_pointer_type())
+                        var_info.flag(variable_t::flags_t::pointer, true);
 
                     _variables.insert(std::make_pair(label, var_info));
                 }
@@ -984,6 +1020,8 @@ namespace basecode::compiler {
             var_info.state = variable_t::flags_t::none;
             var_info.type = variable_type_t::parameter;
             var_info.number_class = var->type_ref()->type()->number_class();
+            if (var->type_ref()->is_pointer_type())
+                var_info.flag(variable_t::flags_t::pointer, true);
 
             _variables.insert(std::make_pair(var_info.label, var_info));
 

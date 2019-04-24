@@ -36,7 +36,8 @@ QUESTIONS
 
 TASKS
 -----
-- clean up all XXX notes
+- FIX: clean up all XXX notes
+- NEW: mfence, lfence, prefetch, rdtsc, rdtscp, cpuid, atomic_XXX, cas
 - NEW: consolidate all errors into one class along with constants for quick lookup.
 - BUG: fix utf8 streaming issues in lexer/source_file
 - BUG: add missing errors

@@ -71,6 +71,8 @@ namespace basecode::syntax {
 
         bool raw_block(common::result& r);
 
+        bool back_slash(common::result& r);
+
         bool in_literal(common::result& r);
 
         bool if_literal(common::result& r);

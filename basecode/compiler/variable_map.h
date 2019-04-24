@@ -56,6 +56,7 @@ namespace basecode::compiler {
             must_init   = 0b00001000,
             used        = 0b00010000,
             in_block    = 0b00100000,
+            pointer     = 0b01000000,
         };
 
         using flags_value_t = uint8_t;
@@ -111,6 +112,11 @@ namespace basecode::compiler {
         bool build(
             compiler::block* block,
             compiler::procedure_type* proc_type = nullptr);
+
+        bool deref(
+            vm::basic_block* basic_block,
+            emit_result_t& arg_result,
+            vm::instruction_operand_t& temp_operand);
 
         bool assign(
             vm::basic_block* basic_block,

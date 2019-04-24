@@ -11,6 +11,7 @@
 
 #include <fstream>
 #include <sstream>
+#include <utility>
 #include <iterator>
 #include <fmt/format.h>
 #include "id_pool.h"
@@ -21,11 +22,8 @@ namespace basecode::common {
 
     source_file::source_file(
             common::id_t id,
-            const boost::filesystem::path& path) : _id(id),
-                                                   _path(path) {
-    }
-
-    source_file::~source_file() {
+            boost::filesystem::path path) : _id(id),
+                                            _path(std::move(path)) {
     }
 
     void source_file::error(

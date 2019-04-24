@@ -25,7 +25,9 @@ namespace basecode::common {
         magenta,
         cyan,
         light_gray,
-        dark_gray,
+        default_color = 39,
+
+        dark_gray = 90,
         light_red,
         light_green,
         light_yellow,
@@ -43,21 +45,23 @@ namespace basecode::common {
         static std::string colorize(
             const std::string& text,
             term_colors_t fg_color,
-            term_colors_t bg_color = term_colors_t::black);
+            term_colors_t bg_color = term_colors_t::default_color);
 
         static std::string colorize_range(
             const std::string& text,
             size_t begin,
             size_t end,
             term_colors_t fg_color,
-            term_colors_t bg_color = term_colors_t::black);
+            term_colors_t bg_color = term_colors_t::default_color);
 
         static constexpr const char* color_code_reset();
 
-        static std::string color_code(term_colors_t color);
+        static std::string color_code_fg(term_colors_t color);
 
-        static constexpr term_colors_t make_bg_color(term_colors_t color);
+        static std::string color_code_bg(term_colors_t color);
+
+        static std::string color_code(term_colors_t fg_color, term_colors_t bg_color);
     };
 
-};
+}
 

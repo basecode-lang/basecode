@@ -28,6 +28,9 @@ namespace basecode::syntax {
         {'+', std::bind(&lexer::plus_equal_operator, std::placeholders::_1, std::placeholders::_2)},
         {'+', std::bind(&lexer::plus, std::placeholders::_1, std::placeholders::_2)},
 
+        // back slash
+        {'\\', std::bind(&lexer::back_slash, std::placeholders::_1, std::placeholders::_2)},
+
         // /:=, block comment, line comment, slash
         {'/', std::bind(&lexer::divide_equal_operator, std::placeholders::_1, std::placeholders::_2)},
         {'/', std::bind(&lexer::block_comment, std::placeholders::_1, std::placeholders::_2)},
@@ -729,6 +732,17 @@ namespace basecode::syntax {
                     value));
                 return true;
             }
+        }
+        return false;
+    }
+
+    bool lexer::back_slash(common::result& r) {
+        auto value = match_literal(r, "\\"sv);
+        if (!value.empty()) {
+            _tokens.emplace_back(token_pool::instance()->add(
+                token_type_t::back_slash,
+                value));
+            return true;
         }
         return false;
     }

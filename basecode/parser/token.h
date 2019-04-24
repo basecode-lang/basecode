@@ -24,7 +24,7 @@ namespace basecode::syntax {
 
     using namespace std::literals;
 
-    enum class token_type_t {
+    enum class token_type_t : uint8_t {
         invalid,
         plus,
         bang,
@@ -55,6 +55,7 @@ namespace basecode::syntax {
         identifier,
         assignment,
         logical_or,
+        back_slash,
         logical_and,
         right_paren,
         for_literal,
@@ -145,6 +146,7 @@ namespace basecode::syntax {
         {token_type_t::assignment,                 "assignment"sv},
         {token_type_t::left_paren,                 "left_paren"sv},
         {token_type_t::logical_or,                 "logical_or"sv},
+        {token_type_t::back_slash,                 "back_slash"sv},
         {token_type_t::semi_colon,                 "semi_colon"sv},
         {token_type_t::in_literal,                 "in_literal"sv},
         {token_type_t::if_literal,                 "if_literal"sv},
@@ -224,7 +226,7 @@ namespace basecode::syntax {
         inconvertible
     };
 
-    enum class number_types_t {
+    enum class number_types_t : uint8_t {
         none,
         integer,
         floating_point,

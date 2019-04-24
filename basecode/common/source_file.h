@@ -45,9 +45,7 @@ namespace basecode::common {
 
         source_file(
             id_t id,
-            const boost::filesystem::path& path);
-
-        ~source_file();
+            boost::filesystem::path path);
 
         bool load(
             common::result& r,

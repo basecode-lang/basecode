@@ -1818,25 +1818,8 @@ namespace basecode::compiler {
                     }
                     case operator_type_t::pointer_dereference: {
                         current_block->comment("unary_op: pointer deref", vm::comment_location_t::after_instruction);
-                        const auto& rhs_inferred = rhs_emit_result.type_result.types.back();
-                        auto is_composite_type = rhs_inferred.type->is_composite_type();
-                        if (is_composite_type) {
-                            if (rhs_emit_result.operands.size() > 1) {
-                                current_block->move(
-                                    *result_operand,
-                                    rhs_emit_result.operands.front(),
-                                    rhs_emit_result.operands.back());
-                            } else {
-                                result.operands.emplace_back(rhs_emit_result.operands.back());
-//                                current_block->move(
-//                                    *result_operand,
-//                                    rhs_emit_result.operands.back());
-                            }
-                        } else {
-                            current_block->load(
-                                *result_operand,
-                                rhs_emit_result.operands.back());
-                        }
+                        if (!_variables.deref(current_block, rhs_emit_result, *result_operand))
+                            return false;
                         break;
                     }
                     default:

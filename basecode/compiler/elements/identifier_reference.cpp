@@ -15,6 +15,7 @@
 #include "field.h"
 #include "identifier.h"
 #include "initializer.h"
+#include "unary_operator.h"
 #include "symbol_element.h"
 #include "type_reference.h"
 #include "composite_type.h"
@@ -28,6 +29,12 @@ namespace basecode::compiler {
             binary_operator_stack_t& bin_op_stack,
             identifier_reference_stack_t& ref_stack) {
         switch (e->element_type()) {
+            case element_type_t::unary_operator: {
+                auto unary_op = dynamic_cast<compiler::unary_operator*>(e);
+                if (unary_op->operator_type() == operator_type_t::pointer_dereference)
+                    ref_stack.push(dynamic_cast<compiler::identifier_reference*>(unary_op->rhs()));
+                break;
+            }
             case element_type_t::binary_operator: {
                 auto bin_op = dynamic_cast<compiler::binary_operator*>(e);
                 if (bin_op->operator_type() == operator_type_t::member_access)
