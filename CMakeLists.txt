@@ -7,6 +7,36 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
+# configure ccache if available
+find_program(CCACHE_FOUND ccache)
+if(CCACHE_FOUND)
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
+    message(STATUS "${PROJECT_NAME} using ccache.")
+endif(CCACHE_FOUND)
+
+if (UNIX AND NOT APPLE)
+    set(CMAKE_CXX_FLAGS "-fPIC")
+endif()
+
+set(DL_LIBRARY "")
+
+if ("${CMAKE_SYSTEM_NAME}" MATCHES "FreeBSD")
+    add_definitions(-D__USE_ISOC99)
+elseif ("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
+    set(DL_LIBRARY "dl")
+endif()
+
+if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-unused-private-field -Wno-unknown-pragmas -Wno-inconsistent-missing-override" CACHE STRING "compile flags" FORCE)
+    message(STATUS "${PROJECT_NAME} using clang flags: ${CMAKE_CXX_FLAGS}")
+elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++2a -Wall -Wno-unknown-pragmas -Wno-parentheses" CACHE STRING "compile flags" FORCE)
+    message(STATUS "${PROJECT_NAME} using gcc flags: ${CMAKE_CXX_FLAGS}")
+else ()
+    message(FATAL_ERROR "${PROJECT_NAME} unknown compiler: ${CMAKE_CXX_COMPILER_ID}")
+endif()
+
 # enhance unit test discovery
 enable_testing()
 set_property(GLOBAL PROPERTY UNIT_TEST_TARGETS "")
@@ -36,14 +66,14 @@ add_library(boost-system ext/boost-1.67.0/libs/system/src/error_code.cpp)
 
 # boost filesystem library
 set(
-    BOOST_FILESYSTEM_SOURCES
-    ext/boost-1.67.0/libs/filesystem/src/codecvt_error_category.cpp
-    ext/boost-1.67.0/libs/filesystem/src/operations.cpp
-    ext/boost-1.67.0/libs/filesystem/src/path.cpp
-    ext/boost-1.67.0/libs/filesystem/src/path_traits.cpp
-    ext/boost-1.67.0/libs/filesystem/src/portability.cpp
-    ext/boost-1.67.0/libs/filesystem/src/unique_path.cpp
-    ext/boost-1.67.0/libs/filesystem/src/utf8_codecvt_facet.cpp
+        BOOST_FILESYSTEM_SOURCES
+        ext/boost-1.67.0/libs/filesystem/src/codecvt_error_category.cpp
+        ext/boost-1.67.0/libs/filesystem/src/operations.cpp
+        ext/boost-1.67.0/libs/filesystem/src/path.cpp
+        ext/boost-1.67.0/libs/filesystem/src/path_traits.cpp
+        ext/boost-1.67.0/libs/filesystem/src/portability.cpp
+        ext/boost-1.67.0/libs/filesystem/src/unique_path.cpp
+        ext/boost-1.67.0/libs/filesystem/src/utf8_codecvt_facet.cpp
 )
 if (WIN32)
     set(
@@ -71,6 +101,61 @@ if (CURSES_FOUND)
     include_directories(${CURSES_INCLUDE_DIRS})
 endif()
 
+# gnu bfd library
+include_directories(ext/bfd-2.32.0)
+include_directories(ext/bfd-2.32.0/include)
+
+add_definitions(-DBINDIR="/usr/local/bin" -DDEBUGDIR="/usr/local/lib/debug")
+
+set(
+        BFD_SOURCES
+        ext/bfd-2.32.0/archive.c
+        ext/bfd-2.32.0/archive64.c
+        ext/bfd-2.32.0/archures.c
+        ext/bfd-2.32.0/bfd.c
+        ext/bfd-2.32.0/bfdio.c
+        ext/bfd-2.32.0/binary.c
+        ext/bfd-2.32.0/cache.c
+        ext/bfd-2.32.0/coff-bfd.c
+        ext/bfd-2.32.0/compress.c
+        ext/bfd-2.32.0/corefile.c
+        ext/bfd-2.32.0/cpu-i386.c
+        ext/bfd-2.32.0/cpu-plugin.c
+        ext/bfd-2.32.0/cpu-powerpc.c
+        ext/bfd-2.32.0/cpu-rs6000.c
+        ext/bfd-2.32.0/dwarf2.c
+        ext/bfd-2.32.0/elf-properties.c
+        ext/bfd-2.32.0/format.c
+        ext/bfd-2.32.0/hash.c
+        ext/bfd-2.32.0/ihex.c
+        ext/bfd-2.32.0/init.c
+        ext/bfd-2.32.0/libbfd.c
+        ext/bfd-2.32.0/linker.c
+        ext/bfd-2.32.0/mach-o-i386.c
+        ext/bfd-2.32.0/mach-o-x86-64.c
+        ext/bfd-2.32.0/mach-o.c
+        ext/bfd-2.32.0/merge.c
+        ext/bfd-2.32.0/opncls.c
+        ext/bfd-2.32.0/pef.c
+        ext/bfd-2.32.0/plugin.c
+        ext/bfd-2.32.0/reloc.c
+        ext/bfd-2.32.0/section.c
+        ext/bfd-2.32.0/simple.c
+        ext/bfd-2.32.0/srec.c
+        ext/bfd-2.32.0/stab-syms.c
+        ext/bfd-2.32.0/stabs.c
+        ext/bfd-2.32.0/syms.c
+        ext/bfd-2.32.0/targets.c
+        ext/bfd-2.32.0/tekhex.c
+        ext/bfd-2.32.0/verilog.c
+        ext/bfd-2.32.0/xsym.c
+)
+if (WIN32)
+    set(BFD_SOURCES ${BFD_SOURCES} ext/bfd-2.32.0/bfdwin.c)
+endif ()
+
+add_library(bfd ${BFD_SOURCES})
+
 # projects
 add_subdirectory(basecode)
 add_subdirectory(bc)
@@ -87,7 +172,7 @@ add_custom_command(
         WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
 
 # custom post bulid steps
-add_custom_target(basecode-configured DEPENDS dummy-target basecode bc)
+add_custom_target(basecode-configured DEPENDS dummy-target bc)
 add_dependencies(basecode-configured all-unit-tests)
 add_custom_command(
         TARGET basecode-configured

@@ -1,0 +1,175 @@
+2019-04-26  Andrew Bennett  <andrew.bennett@imgtec.com>
+	    Faraz Shahbazker  <fshahbazker@wavecomp.com>
+
+	* opcode/mips.h (M_LLWP_AB, M_LLDP_AB): New enum values.
+	(M_SCWP_AB, M_SCDP_AB): Likewise.
+
+2019-04-25  Maciej W. Rozycki  <macro@linux-mips.org>
+
+	* opcode/mips.h: Update comment for MIPS32 CODE20 operand.
+
+2019-04-15  Sudakshina Das  <sudi.das@arm.com>
+
+	* elf/arm.h (START_RELOC_NUMBERS): New entry for R_ARM_THM_BF12.
+
+2019-04-15  Sudakshina Das  <sudi.das@arm.com>
+
+	* elf/arm.h (START_RELOC_NUMBERS): New entry for R_ARM_THM_BF18.
+
+2019-04-15  Sudakshina Das  <sudi.das@arm.com>
+
+	* elf/arm.h (START_RELOC_NUMBERS): New entry for R_ARM_THM_BF16.
+
+2019-04-15  Thomas Preud'homme  <thomas.preudhomme@arm.com>
+
+	* elf/arm.h (TAG_CPU_ARCH_V8_1M_MAIN): new macro.
+	(MAX_TAG_CPU_ARCH): Set value to above macro.
+	* opcode/arm.h (ARM_EXT2_V8_1M_MAIN): New macro.
+	(ARM_AEXT_V8_1M_MAIN): Likewise.
+	(ARM_AEXT2_V8_1M_MAIN): Likewise.
+	(ARM_ARCH_V8_1M_MAIN): Likewise.
+
+2019-04-11  Sudakshina Das  <sudi.das@arm.com>
+
+	* opcode/aarch64.h (enum aarch64_opnd): Add AARCH64_OPND_Rt_SP.
+
+2019-04-08  H.J. Lu  <hongjiu.lu@intel.com>
+
+	* elf/common.h (GNU_PROPERTY_X86_ISA_1_AVX512_BF16): New.
+
+2019-04-07  Alan Modra  <amodra@gmail.com>
+
+	Merge from gcc.
+	2019-04-03  Vineet Gupta  <vgupta@synopsys.com>
+	PR89877
+	* longlong.h [__arc__] (add_ssaaaa): Add cc clobber.
+	(sub_ddmmss): Likewise.
+
+2019-04-06  H.J. Lu  <hongjiu.lu@intel.com>
+
+	* bfdlink.h (bfd_link_info): Remove x86-specific linker options.
+
+2019-04-01  Andre Vieira  <andre.simoesdiasvieira@arm.com>
+
+	* opcode/arm.h (FPU_NEON_ARMV8_1): New.
+	(FPU_ARCH_NEON_VFP_ARMV8_1): Use FPU_NEON_ARMV8_1.
+	(FPU_ARCH_CRYPTO_NEON_VFP_ARMV8_1): Likewise.
+	(FPU_ARCH_DOTPROD_NEON_VFP_ARMV8): Likewise.
+	(FPU_ARCH_NEON_VFP_ARMV8_2_FP16): New.
+	(FPU_ARCH_NEON_VFP_ARMV8_2_FP16FML): New.
+	(FPU_ARCH_NEON_VFP_ARMV8_4_FP16FML): New.
+	(FPU_ARCH_CRYPTO_NEON_VFP_ARMV8_4): New.
+
+2019-03-28  Alan Modra  <amodra@gmail.com>
+
+	PR 24390
+	* opcode/ppc.h (PPC_OPERAND_CR_REG): Comment.
+
+2019-03-25  Tamar Christina  <tamar.christina@arm.com>
+
+	* dis-asm.h (struct disassemble_info): Add stop_offset.
+
+2019-03-13  Sudakshina Das  <sudi.das@arm.com>
+
+	* elf/aarch64.h (DT_AARCH64_PAC_PLT): New.
+
+2019-03-13  Sudakshina Das  <sudi.das@arm.com>
+	    Szabolcs Nagy  <szabolcs.nagy@arm.com>
+
+	* elf/aarch64.h (DT_AARCH64_BTI_PLT): New.
+
+2019-03-13  Sudakshina Das  <sudi.das@arm.com>
+
+	* elf/common.h (GNU_PROPERTY_AARCH64_FEATURE_1_AND): New.
+	(GNU_PROPERTY_AARCH64_FEATURE_1_BTI): New.
+	(GNU_PROPERTY_AARCH64_FEATURE_1_PAC): New.
+
+2019-02-20  Alan Hayward  <alan.hayward@arm.com>
+
+	* elf/common.h (NT_ARM_PAC_MASK): Add define.
+
+2019-02-15  Saagar Jha  <saagar@saagarjha.com>
+
+	* mach-o/loader.h: Use new OS names in comments.
+
+2019-02-11  Philippe Waroquiers  <philippe.waroquiers@skynet.be>
+
+	* splay-tree.h (splay_tree_delete_key_fn): Update comment.
+	(splay_tree_delete_value_fn): Likewise.
+
+2019-01-31  Andreas Krebbel  <krebbel@linux.ibm.com>
+
+	* opcode/s390.h (enum s390_opcode_cpu_val): Add
+	S390_OPCODE_ARCH13.
+
+2019-01-25  Sudakshina Das  <sudi.das@arm.com>
+	    Ramana Radhakrishnan  <ramana.radhakrishnan@arm.com>
+
+	* opcode/aarch64.h (enum aarch64_opnd): Remove
+	AARCH64_OPND_ADDR_SIMPLE_2.
+	(enum aarch64_insn_class): Remove ldstgv_indexed.
+
+2019-01-22  Tom Tromey  <tom@tromey.com>
+
+	* coff/ecoff.h: Include coff/sym.h.
+
+2018-06-24  Nick Clifton  <nickc@redhat.com>
+
+	2.32 branch created.
+
+2019-01-16  Kito Cheng  <kito@andestech.com>
+
+	* elf/riscv.h (SHT_RISCV_ATTRIBUTES): Define.
+	(Tag_RISCV_arch): Likewise.
+	(Tag_RISCV_priv_spec): Likewise.
+	(Tag_RISCV_priv_spec_minor): Likewise.
+	(Tag_RISCV_priv_spec_revision): Likewise.
+	(Tag_RISCV_unaligned_access): Likewise.
+	(Tag_RISCV_stack_align): Likewise.
+
+2019-01-14  Pavel I. Kryukov  <kryukov@frtk.ru>
+
+	* dis-asm.h: include <string.h>
+
+2019-01-10  Nick Clifton  <nickc@redhat.com>
+
+	* Merge from GCC:
+	2018-12-22  Jason Merrill  <jason@redhat.com>
+
+	* demangle.h: Remove support for ancient GNU (pre-3.0), Lucid,
+	ARM, HP, and EDG demangling styles.
+
+2019-01-09  Sandra Loosemore  <sandra@codesourcery.com>
+
+	Merge from GCC:
+	PR other/16615
+
+	* libiberty.h: Mechanically replace "can not" with "cannot".
+	* plugin-api.h: Likewise.
+
+2018-12-25  Yoshinori Sato <ysato@users.sourceforge.jp>
+
+	* elf/rx.h (EF_RX_CPU_MASK): Update new bits.
+	(E_FLAG_RX_V3): New RXv3 type.
+	* opcode/rx.h (RX_Size): Add double size.
+	(RX_Operand_Type): Add double FPU registers.
+	(RX_Opcode_ID): Add new instuctions.
+
+2019-01-01  Alan Modra  <amodra@gmail.com>
+
+	Update year range in copyright notice of all files.
+
+For older changes see ChangeLog-2018
+
+Copyright (C) 2019 Free Software Foundation, Inc.
+
+Copying and distribution of this file, with or without modification,
+are permitted in any medium without royalty provided the copyright
+notice and this notice are preserved.
+
+Local Variables:
+mode: change-log
+left-margin: 8
+fill-column: 74
+version-control: never
+End:

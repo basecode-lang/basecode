@@ -1,0 +1,3987 @@
+This is bfd.info, produced by makeinfo version 4.8 from bfd.texi.
+
+INFO-DIR-SECTION Software development
+START-INFO-DIR-ENTRY
+* Bfd: (bfd).                   The Binary File Descriptor library.
+END-INFO-DIR-ENTRY
+
+   This file documents the BFD library.
+
+   Copyright (C) 1991-2019 Free Software Foundation, Inc.
+
+   Permission is granted to copy, distribute and/or modify this document
+under the terms of the GNU Free Documentation License, Version 1.3 or
+any later version published by the Free Software Foundation; with the
+Invariant Sections being "GNU General Public License" and "Funding Free
+Software", the Front-Cover texts being (a) (see below), and with the
+Back-Cover Texts being (b) (see below).  A copy of the license is
+included in the section entitled "GNU Free Documentation License".
+
+   (a) The FSF's Front-Cover Text is:
+
+   A GNU Manual
+
+   (b) The FSF's Back-Cover Text is:
+
+   You have freedom to copy and modify this GNU Manual, like GNU
+software.  Copies published by the Free Software Foundation raise
+funds for GNU development.
+
+
+File: bfd.info,  Node: Architectures,  Next: Opening and Closing,  Prev: Targets,  Up: BFD front end
+
+2.13 Architectures
+==================
+
+BFD keeps one atom in a BFD describing the architecture of the data
+attached to the BFD: a pointer to a `bfd_arch_info_type'.
+
+   Pointers to structures can be requested independently of a BFD so
+that an architecture's information can be interrogated without access
+to an open BFD.
+
+   The architecture information is provided by each architecture
+package.  The set of default architectures is selected by the macro
+`SELECT_ARCHITECTURES'.  This is normally set up in the
+`config/TARGET.mt' file of your choice.  If the name is not defined,
+then all the architectures supported are included.
+
+   When BFD starts up, all the architectures are called with an
+initialize method.  It is up to the architecture back end to insert as
+many items into the list of architectures as it wants to; generally
+this would be one for each machine and one for the default case (an
+item with a machine field of 0).
+
+   BFD's idea of an architecture is implemented in `archures.c'.
+
+2.13.1 bfd_architecture
+-----------------------
+
+*Description*
+This enum gives the object file's CPU architecture, in a global
+sense--i.e., what processor family does it belong to?  Another field
+indicates which processor within the family is in use.  The machine
+gives a number which distinguishes different versions of the
+architecture, containing, for example, 68020 for Motorola 68020.
+     enum bfd_architecture
+     {
+       bfd_arch_unknown,   /* File arch not known.  */
+       bfd_arch_obscure,   /* Arch known, not one of these.  */
+       bfd_arch_m68k,      /* Motorola 68xxx.  */
+     #define bfd_mach_m68000                1
+     #define bfd_mach_m68008                2
+     #define bfd_mach_m68010                3
+     #define bfd_mach_m68020                4
+     #define bfd_mach_m68030                5
+     #define bfd_mach_m68040                6
+     #define bfd_mach_m68060                7
+     #define bfd_mach_cpu32                 8
+     #define bfd_mach_fido                  9
+     #define bfd_mach_mcf_isa_a_nodiv       10
+     #define bfd_mach_mcf_isa_a             11
+     #define bfd_mach_mcf_isa_a_mac         12
+     #define bfd_mach_mcf_isa_a_emac        13
+     #define bfd_mach_mcf_isa_aplus         14
+     #define bfd_mach_mcf_isa_aplus_mac     15
+     #define bfd_mach_mcf_isa_aplus_emac    16
+     #define bfd_mach_mcf_isa_b_nousp       17
+     #define bfd_mach_mcf_isa_b_nousp_mac   18
+     #define bfd_mach_mcf_isa_b_nousp_emac  19
+     #define bfd_mach_mcf_isa_b             20
+     #define bfd_mach_mcf_isa_b_mac         21
+     #define bfd_mach_mcf_isa_b_emac        22
+     #define bfd_mach_mcf_isa_b_float       23
+     #define bfd_mach_mcf_isa_b_float_mac   24
+     #define bfd_mach_mcf_isa_b_float_emac  25
+     #define bfd_mach_mcf_isa_c             26
+     #define bfd_mach_mcf_isa_c_mac         27
+     #define bfd_mach_mcf_isa_c_emac        28
+     #define bfd_mach_mcf_isa_c_nodiv       29
+     #define bfd_mach_mcf_isa_c_nodiv_mac   30
+     #define bfd_mach_mcf_isa_c_nodiv_emac  31
+       bfd_arch_vax,       /* DEC Vax.  */
+
+       bfd_arch_or1k,      /* OpenRISC 1000.  */
+     #define bfd_mach_or1k          1
+     #define bfd_mach_or1knd        2
+
+       bfd_arch_sparc,     /* SPARC.  */
+     #define bfd_mach_sparc                 1
+     /* The difference between v8plus and v9 is that v9 is a true 64 bit env.  */
+     #define bfd_mach_sparc_sparclet        2
+     #define bfd_mach_sparc_sparclite       3
+     #define bfd_mach_sparc_v8plus          4
+     #define bfd_mach_sparc_v8plusa         5 /* with ultrasparc add'ns.  */
+     #define bfd_mach_sparc_sparclite_le    6
+     #define bfd_mach_sparc_v9              7
+     #define bfd_mach_sparc_v9a             8 /* with ultrasparc add'ns.  */
+     #define bfd_mach_sparc_v8plusb         9 /* with cheetah add'ns.  */
+     #define bfd_mach_sparc_v9b             10 /* with cheetah add'ns.  */
+     #define bfd_mach_sparc_v8plusc         11 /* with UA2005 and T1 add'ns.  */
+     #define bfd_mach_sparc_v9c             12 /* with UA2005 and T1 add'ns.  */
+     #define bfd_mach_sparc_v8plusd         13 /* with UA2007 and T3 add'ns.  */
+     #define bfd_mach_sparc_v9d             14 /* with UA2007 and T3 add'ns.  */
+     #define bfd_mach_sparc_v8pluse         15 /* with OSA2001 and T4 add'ns (no IMA).  */
+     #define bfd_mach_sparc_v9e             16 /* with OSA2001 and T4 add'ns (no IMA).  */
+     #define bfd_mach_sparc_v8plusv         17 /* with OSA2011 and T4 and IMA and FJMAU add'ns.  */
+     #define bfd_mach_sparc_v9v             18 /* with OSA2011 and T4 and IMA and FJMAU add'ns.  */
+     #define bfd_mach_sparc_v8plusm         19 /* with OSA2015 and M7 add'ns.  */
+     #define bfd_mach_sparc_v9m             20 /* with OSA2015 and M7 add'ns.  */
+     #define bfd_mach_sparc_v8plusm8        21 /* with OSA2017 and M8 add'ns.  */
+     #define bfd_mach_sparc_v9m8            22 /* with OSA2017 and M8 add'ns.  */
+     /* Nonzero if MACH has the v9 instruction set.  */
+     #define bfd_mach_sparc_v9_p(mach) \
+       ((mach) >= bfd_mach_sparc_v8plus && (mach) <= bfd_mach_sparc_v9m8 \
+        && (mach) != bfd_mach_sparc_sparclite_le)
+     /* Nonzero if MACH is a 64 bit sparc architecture.  */
+     #define bfd_mach_sparc_64bit_p(mach) \
+       ((mach) >= bfd_mach_sparc_v9 \
+        && (mach) != bfd_mach_sparc_v8plusb \
+        && (mach) != bfd_mach_sparc_v8plusc \
+        && (mach) != bfd_mach_sparc_v8plusd \
+        && (mach) != bfd_mach_sparc_v8pluse \
+        && (mach) != bfd_mach_sparc_v8plusv \
+        && (mach) != bfd_mach_sparc_v8plusm \
+        && (mach) != bfd_mach_sparc_v8plusm8)
+       bfd_arch_spu,       /* PowerPC SPU.  */
+     #define bfd_mach_spu           256
+       bfd_arch_mips,      /* MIPS Rxxxx.  */
+     #define bfd_mach_mips3000              3000
+     #define bfd_mach_mips3900              3900
+     #define bfd_mach_mips4000              4000
+     #define bfd_mach_mips4010              4010
+     #define bfd_mach_mips4100              4100
+     #define bfd_mach_mips4111              4111
+     #define bfd_mach_mips4120              4120
+     #define bfd_mach_mips4300              4300
+     #define bfd_mach_mips4400              4400
+     #define bfd_mach_mips4600              4600
+     #define bfd_mach_mips4650              4650
+     #define bfd_mach_mips5000              5000
+     #define bfd_mach_mips5400              5400
+     #define bfd_mach_mips5500              5500
+     #define bfd_mach_mips5900              5900
+     #define bfd_mach_mips6000              6000
+     #define bfd_mach_mips7000              7000
+     #define bfd_mach_mips8000              8000
+     #define bfd_mach_mips9000              9000
+     #define bfd_mach_mips10000             10000
+     #define bfd_mach_mips12000             12000
+     #define bfd_mach_mips14000             14000
+     #define bfd_mach_mips16000             16000
+     #define bfd_mach_mips16                16
+     #define bfd_mach_mips5                 5
+     #define bfd_mach_mips_loongson_2e      3001
+     #define bfd_mach_mips_loongson_2f      3002
+     #define bfd_mach_mips_gs464            3003
+     #define bfd_mach_mips_gs464e           3004
+     #define bfd_mach_mips_gs264e           3005
+     #define bfd_mach_mips_sb1              12310201 /* octal 'SB', 01.  */
+     #define bfd_mach_mips_octeon           6501
+     #define bfd_mach_mips_octeonp          6601
+     #define bfd_mach_mips_octeon2          6502
+     #define bfd_mach_mips_octeon3          6503
+     #define bfd_mach_mips_xlr              887682   /* decimal 'XLR'.  */
+     #define bfd_mach_mips_interaptiv_mr2   736550   /* decimal 'IA2'.  */
+     #define bfd_mach_mipsisa32             32
+     #define bfd_mach_mipsisa32r2           33
+     #define bfd_mach_mipsisa32r3           34
+     #define bfd_mach_mipsisa32r5           36
+     #define bfd_mach_mipsisa32r6           37
+     #define bfd_mach_mipsisa64             64
+     #define bfd_mach_mipsisa64r2           65
+     #define bfd_mach_mipsisa64r3           66
+     #define bfd_mach_mipsisa64r5           68
+     #define bfd_mach_mipsisa64r6           69
+     #define bfd_mach_mips_micromips        96
+       bfd_arch_i386,      /* Intel 386.  */
+     #define bfd_mach_i386_intel_syntax     (1 << 0)
+     #define bfd_mach_i386_i8086            (1 << 1)
+     #define bfd_mach_i386_i386             (1 << 2)
+     #define bfd_mach_x86_64                (1 << 3)
+     #define bfd_mach_x64_32                (1 << 4)
+     #define bfd_mach_i386_i386_intel_syntax (bfd_mach_i386_i386 | bfd_mach_i386_intel_syntax)
+     #define bfd_mach_x86_64_intel_syntax   (bfd_mach_x86_64 | bfd_mach_i386_intel_syntax)
+     #define bfd_mach_x64_32_intel_syntax   (bfd_mach_x64_32 | bfd_mach_i386_intel_syntax)
+       bfd_arch_l1om,      /* Intel L1OM.  */
+     #define bfd_mach_l1om                  (1 << 5)
+     #define bfd_mach_l1om_intel_syntax     (bfd_mach_l1om | bfd_mach_i386_intel_syntax)
+       bfd_arch_k1om,      /* Intel K1OM.  */
+     #define bfd_mach_k1om                  (1 << 6)
+     #define bfd_mach_k1om_intel_syntax     (bfd_mach_k1om | bfd_mach_i386_intel_syntax)
+     #define bfd_mach_i386_nacl             (1 << 7)
+     #define bfd_mach_i386_i386_nacl        (bfd_mach_i386_i386 | bfd_mach_i386_nacl)
+     #define bfd_mach_x86_64_nacl           (bfd_mach_x86_64 | bfd_mach_i386_nacl)
+     #define bfd_mach_x64_32_nacl           (bfd_mach_x64_32 | bfd_mach_i386_nacl)
+       bfd_arch_iamcu,     /* Intel MCU.  */
+     #define bfd_mach_iamcu                 (1 << 8)
+     #define bfd_mach_i386_iamcu            (bfd_mach_i386_i386 | bfd_mach_iamcu)
+     #define bfd_mach_i386_iamcu_intel_syntax (bfd_mach_i386_iamcu | bfd_mach_i386_intel_syntax)
+       bfd_arch_romp,      /* IBM ROMP PC/RT.  */
+       bfd_arch_convex,    /* Convex.  */
+       bfd_arch_m98k,      /* Motorola 98xxx.  */
+       bfd_arch_pyramid,   /* Pyramid Technology.  */
+       bfd_arch_h8300,     /* Renesas H8/300 (formerly Hitachi H8/300).  */
+     #define bfd_mach_h8300         1
+     #define bfd_mach_h8300h        2
+     #define bfd_mach_h8300s        3
+     #define bfd_mach_h8300hn       4
+     #define bfd_mach_h8300sn       5
+     #define bfd_mach_h8300sx       6
+     #define bfd_mach_h8300sxn      7
+       bfd_arch_pdp11,     /* DEC PDP-11.  */
+       bfd_arch_plugin,
+       bfd_arch_powerpc,   /* PowerPC.  */
+     #define bfd_mach_ppc           32
+     #define bfd_mach_ppc64         64
+     #define bfd_mach_ppc_403       403
+     #define bfd_mach_ppc_403gc     4030
+     #define bfd_mach_ppc_405       405
+     #define bfd_mach_ppc_505       505
+     #define bfd_mach_ppc_601       601
+     #define bfd_mach_ppc_602       602
+     #define bfd_mach_ppc_603       603
+     #define bfd_mach_ppc_ec603e    6031
+     #define bfd_mach_ppc_604       604
+     #define bfd_mach_ppc_620       620
+     #define bfd_mach_ppc_630       630
+     #define bfd_mach_ppc_750       750
+     #define bfd_mach_ppc_860       860
+     #define bfd_mach_ppc_a35       35
+     #define bfd_mach_ppc_rs64ii    642
+     #define bfd_mach_ppc_rs64iii   643
+     #define bfd_mach_ppc_7400      7400
+     #define bfd_mach_ppc_e500      500
+     #define bfd_mach_ppc_e500mc    5001
+     #define bfd_mach_ppc_e500mc64  5005
+     #define bfd_mach_ppc_e5500     5006
+     #define bfd_mach_ppc_e6500     5007
+     #define bfd_mach_ppc_titan     83
+     #define bfd_mach_ppc_vle       84
+       bfd_arch_rs6000,    /* IBM RS/6000.  */
+     #define bfd_mach_rs6k          6000
+     #define bfd_mach_rs6k_rs1      6001
+     #define bfd_mach_rs6k_rsc      6003
+     #define bfd_mach_rs6k_rs2      6002
+       bfd_arch_hppa,      /* HP PA RISC.  */
+     #define bfd_mach_hppa10        10
+     #define bfd_mach_hppa11        11
+     #define bfd_mach_hppa20        20
+     #define bfd_mach_hppa20w       25
+       bfd_arch_d10v,      /* Mitsubishi D10V.  */
+     #define bfd_mach_d10v          1
+     #define bfd_mach_d10v_ts2      2
+     #define bfd_mach_d10v_ts3      3
+       bfd_arch_d30v,      /* Mitsubishi D30V.  */
+       bfd_arch_dlx,       /* DLX.  */
+       bfd_arch_m68hc11,   /* Motorola 68HC11.  */
+       bfd_arch_m68hc12,   /* Motorola 68HC12.  */
+     #define bfd_mach_m6812_default 0
+     #define bfd_mach_m6812         1
+     #define bfd_mach_m6812s        2
+       bfd_arch_m9s12x,    /* Freescale S12X.  */
+       bfd_arch_m9s12xg,   /* Freescale XGATE.  */
+       bfd_arch_s12z,    /* Freescale S12Z.  */
+     #define bfd_mach_s12z_default 0
+       bfd_arch_z8k,       /* Zilog Z8000.  */
+     #define bfd_mach_z8001         1
+     #define bfd_mach_z8002         2
+       bfd_arch_sh,        /* Renesas / SuperH SH (formerly Hitachi SH).  */
+     #define bfd_mach_sh                            1
+     #define bfd_mach_sh2                           0x20
+     #define bfd_mach_sh_dsp                        0x2d
+     #define bfd_mach_sh2a                          0x2a
+     #define bfd_mach_sh2a_nofpu                    0x2b
+     #define bfd_mach_sh2a_nofpu_or_sh4_nommu_nofpu 0x2a1
+     #define bfd_mach_sh2a_nofpu_or_sh3_nommu       0x2a2
+     #define bfd_mach_sh2a_or_sh4                   0x2a3
+     #define bfd_mach_sh2a_or_sh3e                  0x2a4
+     #define bfd_mach_sh2e                          0x2e
+     #define bfd_mach_sh3                           0x30
+     #define bfd_mach_sh3_nommu                     0x31
+     #define bfd_mach_sh3_dsp                       0x3d
+     #define bfd_mach_sh3e                          0x3e
+     #define bfd_mach_sh4                           0x40
+     #define bfd_mach_sh4_nofpu                     0x41
+     #define bfd_mach_sh4_nommu_nofpu               0x42
+     #define bfd_mach_sh4a                          0x4a
+     #define bfd_mach_sh4a_nofpu                    0x4b
+     #define bfd_mach_sh4al_dsp                     0x4d
+       bfd_arch_alpha,     /* Dec Alpha.  */
+     #define bfd_mach_alpha_ev4     0x10
+     #define bfd_mach_alpha_ev5     0x20
+     #define bfd_mach_alpha_ev6     0x30
+       bfd_arch_arm,       /* Advanced Risc Machines ARM.  */
+     #define bfd_mach_arm_unknown   0
+     #define bfd_mach_arm_2         1
+     #define bfd_mach_arm_2a        2
+     #define bfd_mach_arm_3         3
+     #define bfd_mach_arm_3M        4
+     #define bfd_mach_arm_4         5
+     #define bfd_mach_arm_4T        6
+     #define bfd_mach_arm_5         7
+     #define bfd_mach_arm_5T        8
+     #define bfd_mach_arm_5TE       9
+     #define bfd_mach_arm_XScale    10
+     #define bfd_mach_arm_ep9312    11
+     #define bfd_mach_arm_iWMMXt    12
+     #define bfd_mach_arm_iWMMXt2   13
+     #define bfd_mach_arm_5TEJ      14
+     #define bfd_mach_arm_6         15
+     #define bfd_mach_arm_6KZ       16
+     #define bfd_mach_arm_6T2       17
+     #define bfd_mach_arm_6K        18
+     #define bfd_mach_arm_7         19
+     #define bfd_mach_arm_6M        20
+     #define bfd_mach_arm_6SM       21
+     #define bfd_mach_arm_7EM       22
+     #define bfd_mach_arm_8         23
+     #define bfd_mach_arm_8R        24
+     #define bfd_mach_arm_8M_BASE   25
+     #define bfd_mach_arm_8M_MAIN   26
+     #define bfd_mach_arm_8_1M_MAIN 27
+       bfd_arch_nds32,     /* Andes NDS32.  */
+     #define bfd_mach_n1            1
+     #define bfd_mach_n1h           2
+     #define bfd_mach_n1h_v2        3
+     #define bfd_mach_n1h_v3        4
+     #define bfd_mach_n1h_v3m       5
+       bfd_arch_ns32k,     /* National Semiconductors ns32000.  */
+       bfd_arch_tic30,     /* Texas Instruments TMS320C30.  */
+       bfd_arch_tic4x,     /* Texas Instruments TMS320C3X/4X.  */
+     #define bfd_mach_tic3x         30
+     #define bfd_mach_tic4x         40
+       bfd_arch_tic54x,    /* Texas Instruments TMS320C54X.  */
+       bfd_arch_tic6x,     /* Texas Instruments TMS320C6X.  */
+       bfd_arch_tic80,     /* TI TMS320c80 (MVP).  */
+       bfd_arch_v850,      /* NEC V850.  */
+       bfd_arch_v850_rh850,/* NEC V850 (using RH850 ABI).  */
+     #define bfd_mach_v850          1
+     #define bfd_mach_v850e         'E'
+     #define bfd_mach_v850e1        '1'
+     #define bfd_mach_v850e2        0x4532
+     #define bfd_mach_v850e2v3      0x45325633
+     #define bfd_mach_v850e3v5      0x45335635 /* ('E'|'3'|'V'|'5').  */
+       bfd_arch_arc,       /* ARC Cores.  */
+     #define bfd_mach_arc_a4        0
+     #define bfd_mach_arc_a5        1
+     #define bfd_mach_arc_arc600    2
+     #define bfd_mach_arc_arc601    4
+     #define bfd_mach_arc_arc700    3
+     #define bfd_mach_arc_arcv2     5
+      bfd_arch_m32c,       /* Renesas M16C/M32C.  */
+     #define bfd_mach_m16c          0x75
+     #define bfd_mach_m32c          0x78
+       bfd_arch_m32r,      /* Renesas M32R (formerly Mitsubishi M32R/D).  */
+     #define bfd_mach_m32r          1 /* For backwards compatibility.  */
+     #define bfd_mach_m32rx         'x'
+     #define bfd_mach_m32r2         '2'
+       bfd_arch_mn10200,   /* Matsushita MN10200.  */
+       bfd_arch_mn10300,   /* Matsushita MN10300.  */
+     #define bfd_mach_mn10300       300
+     #define bfd_mach_am33          330
+     #define bfd_mach_am33_2        332
+       bfd_arch_fr30,
+     #define bfd_mach_fr30          0x46523330
+       bfd_arch_frv,
+     #define bfd_mach_frv           1
+     #define bfd_mach_frvsimple     2
+     #define bfd_mach_fr300         300
+     #define bfd_mach_fr400         400
+     #define bfd_mach_fr450         450
+     #define bfd_mach_frvtomcat     499     /* fr500 prototype.  */
+     #define bfd_mach_fr500         500
+     #define bfd_mach_fr550         550
+       bfd_arch_moxie,     /* The moxie processor.  */
+     #define bfd_mach_moxie         1
+       bfd_arch_ft32,      /* The ft32 processor.  */
+     #define bfd_mach_ft32          1
+     #define bfd_mach_ft32b         2
+       bfd_arch_mcore,
+       bfd_arch_mep,
+     #define bfd_mach_mep           1
+     #define bfd_mach_mep_h1        0x6831
+     #define bfd_mach_mep_c5        0x6335
+       bfd_arch_metag,
+     #define bfd_mach_metag         1
+       bfd_arch_ia64,      /* HP/Intel ia64.  */
+     #define bfd_mach_ia64_elf64    64
+     #define bfd_mach_ia64_elf32    32
+       bfd_arch_ip2k,      /* Ubicom IP2K microcontrollers. */
+     #define bfd_mach_ip2022        1
+     #define bfd_mach_ip2022ext     2
+      bfd_arch_iq2000,     /* Vitesse IQ2000.  */
+     #define bfd_mach_iq2000        1
+     #define bfd_mach_iq10          2
+       bfd_arch_epiphany,  /* Adapteva EPIPHANY.  */
+     #define bfd_mach_epiphany16    1
+     #define bfd_mach_epiphany32    2
+       bfd_arch_mt,
+     #define bfd_mach_ms1           1
+     #define bfd_mach_mrisc2        2
+     #define bfd_mach_ms2           3
+       bfd_arch_pj,
+       bfd_arch_avr,       /* Atmel AVR microcontrollers.  */
+     #define bfd_mach_avr1          1
+     #define bfd_mach_avr2          2
+     #define bfd_mach_avr25         25
+     #define bfd_mach_avr3          3
+     #define bfd_mach_avr31         31
+     #define bfd_mach_avr35         35
+     #define bfd_mach_avr4          4
+     #define bfd_mach_avr5          5
+     #define bfd_mach_avr51         51
+     #define bfd_mach_avr6          6
+     #define bfd_mach_avrtiny       100
+     #define bfd_mach_avrxmega1     101
+     #define bfd_mach_avrxmega2     102
+     #define bfd_mach_avrxmega3     103
+     #define bfd_mach_avrxmega4     104
+     #define bfd_mach_avrxmega5     105
+     #define bfd_mach_avrxmega6     106
+     #define bfd_mach_avrxmega7     107
+       bfd_arch_bfin,      /* ADI Blackfin.  */
+     #define bfd_mach_bfin          1
+       bfd_arch_cr16,      /* National Semiconductor CompactRISC (ie CR16).  */
+     #define bfd_mach_cr16          1
+       bfd_arch_cr16c,     /* National Semiconductor CompactRISC.  */
+     #define bfd_mach_cr16c         1
+       bfd_arch_crx,       /*  National Semiconductor CRX.  */
+     #define bfd_mach_crx           1
+       bfd_arch_cris,      /* Axis CRIS.  */
+     #define bfd_mach_cris_v0_v10   255
+     #define bfd_mach_cris_v32      32
+     #define bfd_mach_cris_v10_v32  1032
+       bfd_arch_riscv,
+     #define bfd_mach_riscv32       132
+     #define bfd_mach_riscv64       164
+       bfd_arch_rl78,
+     #define bfd_mach_rl78          0x75
+       bfd_arch_rx,        /* Renesas RX.  */
+     #define bfd_mach_rx            0x75
+     #define bfd_mach_rx_v2         0x76
+     #define bfd_mach_rx_v3         0x77
+       bfd_arch_s390,      /* IBM s390.  */
+     #define bfd_mach_s390_31       31
+     #define bfd_mach_s390_64       64
+       bfd_arch_score,     /* Sunplus score.  */
+     #define bfd_mach_score3        3
+     #define bfd_mach_score7        7
+       bfd_arch_mmix,      /* Donald Knuth's educational processor.  */
+       bfd_arch_xstormy16,
+     #define bfd_mach_xstormy16     1
+       bfd_arch_msp430,    /* Texas Instruments MSP430 architecture.  */
+     #define bfd_mach_msp11         11
+     #define bfd_mach_msp110        110
+     #define bfd_mach_msp12         12
+     #define bfd_mach_msp13         13
+     #define bfd_mach_msp14         14
+     #define bfd_mach_msp15         15
+     #define bfd_mach_msp16         16
+     #define bfd_mach_msp20         20
+     #define bfd_mach_msp21         21
+     #define bfd_mach_msp22         22
+     #define bfd_mach_msp23         23
+     #define bfd_mach_msp24         24
+     #define bfd_mach_msp26         26
+     #define bfd_mach_msp31         31
+     #define bfd_mach_msp32         32
+     #define bfd_mach_msp33         33
+     #define bfd_mach_msp41         41
+     #define bfd_mach_msp42         42
+     #define bfd_mach_msp43         43
+     #define bfd_mach_msp44         44
+     #define bfd_mach_msp430x       45
+     #define bfd_mach_msp46         46
+     #define bfd_mach_msp47         47
+     #define bfd_mach_msp54         54
+       bfd_arch_xc16x,     /* Infineon's XC16X Series.  */
+     #define bfd_mach_xc16x         1
+     #define bfd_mach_xc16xl        2
+     #define bfd_mach_xc16xs        3
+       bfd_arch_xgate,     /* Freescale XGATE.  */
+     #define bfd_mach_xgate         1
+       bfd_arch_xtensa,    /* Tensilica's Xtensa cores.  */
+     #define bfd_mach_xtensa        1
+       bfd_arch_z80,
+     #define bfd_mach_z80strict     1 /* No undocumented opcodes.  */
+     #define bfd_mach_z80           3 /* With ixl, ixh, iyl, and iyh.  */
+     #define bfd_mach_z80full       7 /* All undocumented instructions.  */
+     #define bfd_mach_r800          11 /* R800: successor with multiplication.  */
+       bfd_arch_lm32,      /* Lattice Mico32.  */
+     #define bfd_mach_lm32          1
+       bfd_arch_microblaze,/* Xilinx MicroBlaze.  */
+       bfd_arch_tilepro,   /* Tilera TILEPro.  */
+       bfd_arch_tilegx,    /* Tilera TILE-Gx.  */
+     #define bfd_mach_tilepro       1
+     #define bfd_mach_tilegx        1
+     #define bfd_mach_tilegx32      2
+       bfd_arch_aarch64,   /* AArch64.  */
+     #define bfd_mach_aarch64 0
+     #define bfd_mach_aarch64_ilp32 32
+       bfd_arch_nios2,     /* Nios II.  */
+     #define bfd_mach_nios2         0
+     #define bfd_mach_nios2r1       1
+     #define bfd_mach_nios2r2       2
+       bfd_arch_visium,    /* Visium.  */
+     #define bfd_mach_visium        1
+       bfd_arch_wasm32,    /* WebAssembly.  */
+     #define bfd_mach_wasm32        1
+       bfd_arch_pru,       /* PRU.  */
+     #define bfd_mach_pru           0
+       bfd_arch_nfp,       /* Netronome Flow Processor */
+     #define bfd_mach_nfp3200       0x3200
+     #define bfd_mach_nfp6000       0x6000
+       bfd_arch_csky,      /* C-SKY.  */
+     #define bfd_mach_ck_unknown    0
+     #define bfd_mach_ck510         1
+     #define bfd_mach_ck610         2
+     #define bfd_mach_ck801         3
+     #define bfd_mach_ck802         4
+     #define bfd_mach_ck803         5
+     #define bfd_mach_ck807         6
+     #define bfd_mach_ck810         7
+       bfd_arch_last
+       };
+
+2.13.2 bfd_arch_info
+--------------------
+
+*Description*
+This structure contains information on architectures for use within BFD.
+
+     typedef struct bfd_arch_info
+     {
+       int bits_per_word;
+       int bits_per_address;
+       int bits_per_byte;
+       enum bfd_architecture arch;
+       unsigned long mach;
+       const char *arch_name;
+       const char *printable_name;
+       unsigned int section_align_power;
+       /* TRUE if this is the default machine for the architecture.
+          The default arch should be the first entry for an arch so that
+          all the entries for that arch can be accessed via `next'.  */
+       bfd_boolean the_default;
+       const struct bfd_arch_info * (*compatible) (const struct bfd_arch_info *,
+                                                   const struct bfd_arch_info *);
+
+       bfd_boolean (*scan) (const struct bfd_arch_info *, const char *);
+
+       /* Allocate via bfd_malloc and return a fill buffer of size COUNT.  If
+          IS_BIGENDIAN is TRUE, the order of bytes is big endian.  If CODE is
+          TRUE, the buffer contains code.  */
+       void *(*fill) (bfd_size_type count, bfd_boolean is_bigendian,
+                      bfd_boolean code);
+
+       const struct bfd_arch_info *next;
+     }
+     bfd_arch_info_type;
+
+2.13.2.1 `bfd_printable_name'
+.............................
+
+*Synopsis*
+     const char *bfd_printable_name (bfd *abfd);
+   *Description*
+Return a printable string representing the architecture and machine
+from the pointer to the architecture info structure.
+
+2.13.2.2 `bfd_scan_arch'
+........................
+
+*Synopsis*
+     const bfd_arch_info_type *bfd_scan_arch (const char *string);
+   *Description*
+Figure out if BFD supports any cpu which could be described with the
+name STRING.  Return a pointer to an `arch_info' structure if a machine
+is found, otherwise NULL.
+
+2.13.2.3 `bfd_arch_list'
+........................
+
+*Synopsis*
+     const char **bfd_arch_list (void);
+   *Description*
+Return a freshly malloced NULL-terminated vector of the names of all
+the valid BFD architectures.  Do not modify the names.
+
+2.13.2.4 `bfd_arch_get_compatible'
+..................................
+
+*Synopsis*
+     const bfd_arch_info_type *bfd_arch_get_compatible
+        (const bfd *abfd, const bfd *bbfd, bfd_boolean accept_unknowns);
+   *Description*
+Determine whether two BFDs' architectures and machine types are
+compatible.  Calculates the lowest common denominator between the two
+architectures and machine types implied by the BFDs and returns a
+pointer to an `arch_info' structure describing the compatible machine.
+
+2.13.2.5 `bfd_default_arch_struct'
+..................................
+
+*Description*
+The `bfd_default_arch_struct' is an item of `bfd_arch_info_type' which
+has been initialized to a fairly generic state.  A BFD starts life by
+pointing to this structure, until the correct back end has determined
+the real architecture of the file.
+     extern const bfd_arch_info_type bfd_default_arch_struct;
+
+2.13.2.6 `bfd_set_arch_info'
+............................
+
+*Synopsis*
+     void bfd_set_arch_info (bfd *abfd, const bfd_arch_info_type *arg);
+   *Description*
+Set the architecture info of ABFD to ARG.
+
+2.13.2.7 `bfd_default_set_arch_mach'
+....................................
+
+*Synopsis*
+     bfd_boolean bfd_default_set_arch_mach
+        (bfd *abfd, enum bfd_architecture arch, unsigned long mach);
+   *Description*
+Set the architecture and machine type in BFD ABFD to ARCH and MACH.
+Find the correct pointer to a structure and insert it into the
+`arch_info' pointer.
+
+2.13.2.8 `bfd_get_arch'
+.......................
+
+*Synopsis*
+     enum bfd_architecture bfd_get_arch (bfd *abfd);
+   *Description*
+Return the enumerated type which describes the BFD ABFD's architecture.
+
+2.13.2.9 `bfd_get_mach'
+.......................
+
+*Synopsis*
+     unsigned long bfd_get_mach (bfd *abfd);
+   *Description*
+Return the long type which describes the BFD ABFD's machine.
+
+2.13.2.10 `bfd_arch_bits_per_byte'
+..................................
+
+*Synopsis*
+     unsigned int bfd_arch_bits_per_byte (bfd *abfd);
+   *Description*
+Return the number of bits in one of the BFD ABFD's architecture's bytes.
+
+2.13.2.11 `bfd_arch_bits_per_address'
+.....................................
+
+*Synopsis*
+     unsigned int bfd_arch_bits_per_address (bfd *abfd);
+   *Description*
+Return the number of bits in one of the BFD ABFD's architecture's
+addresses.
+
+2.13.2.12 `bfd_default_compatible'
+..................................
+
+*Synopsis*
+     const bfd_arch_info_type *bfd_default_compatible
+        (const bfd_arch_info_type *a, const bfd_arch_info_type *b);
+   *Description*
+The default function for testing for compatibility.
+
+2.13.2.13 `bfd_default_scan'
+............................
+
+*Synopsis*
+     bfd_boolean bfd_default_scan
+        (const struct bfd_arch_info *info, const char *string);
+   *Description*
+The default function for working out whether this is an architecture
+hit and a machine hit.
+
+2.13.2.14 `bfd_get_arch_info'
+.............................
+
+*Synopsis*
+     const bfd_arch_info_type *bfd_get_arch_info (bfd *abfd);
+   *Description*
+Return the architecture info struct in ABFD.
+
+2.13.2.15 `bfd_lookup_arch'
+...........................
+
+*Synopsis*
+     const bfd_arch_info_type *bfd_lookup_arch
+        (enum bfd_architecture arch, unsigned long machine);
+   *Description*
+Look for the architecture info structure which matches the arguments
+ARCH and MACHINE. A machine of 0 matches the machine/architecture
+structure which marks itself as the default.
+
+2.13.2.16 `bfd_printable_arch_mach'
+...................................
+
+*Synopsis*
+     const char *bfd_printable_arch_mach
+        (enum bfd_architecture arch, unsigned long machine);
+   *Description*
+Return a printable string representing the architecture and machine
+type.
+
+   This routine is depreciated.
+
+2.13.2.17 `bfd_octets_per_byte'
+...............................
+
+*Synopsis*
+     unsigned int bfd_octets_per_byte (bfd *abfd);
+   *Description*
+Return the number of octets (8-bit quantities) per target byte (minimum
+addressable unit).  In most cases, this will be one, but some DSP
+targets have 16, 32, or even 48 bits per byte.
+
+2.13.2.18 `bfd_arch_mach_octets_per_byte'
+.........................................
+
+*Synopsis*
+     unsigned int bfd_arch_mach_octets_per_byte
+        (enum bfd_architecture arch, unsigned long machine);
+   *Description*
+See bfd_octets_per_byte.
+
+   This routine is provided for those cases where a bfd * is not
+available
+
+2.13.2.19 `bfd_arch_default_fill'
+.................................
+
+*Synopsis*
+     void *bfd_arch_default_fill (bfd_size_type count,
+         bfd_boolean is_bigendian,
+         bfd_boolean code);
+   *Description*
+Allocate via bfd_malloc and return a fill buffer of size COUNT.  If
+IS_BIGENDIAN is TRUE, the order of bytes is big endian.  If CODE is
+TRUE, the buffer contains code.
+
+
+File: bfd.info,  Node: Opening and Closing,  Next: Internal,  Prev: Architectures,  Up: BFD front end
+
+     /* Set to N to open the next N BFDs using an alternate id space.  */
+     extern unsigned int bfd_use_reserved_id;
+
+2.14 Opening and closing BFDs
+=============================
+
+2.14.1 Functions for opening and closing
+----------------------------------------
+
+2.14.1.1 `bfd_fopen'
+....................
+
+*Synopsis*
+     bfd *bfd_fopen (const char *filename, const char *target,
+         const char *mode, int fd);
+   *Description*
+Open the file FILENAME with the target TARGET.  Return a pointer to the
+created BFD.  If FD is not -1, then `fdopen' is used to open the file;
+otherwise, `fopen' is used.  MODE is passed directly to `fopen' or
+`fdopen'.
+
+   Calls `bfd_find_target', so TARGET is interpreted as by that
+function.
+
+   The new BFD is marked as cacheable iff FD is -1.
+
+   If `NULL' is returned then an error has occured.   Possible errors
+are `bfd_error_no_memory', `bfd_error_invalid_target' or `system_call'
+error.
+
+   On error, FD is always closed.
+
+   A copy of the FILENAME argument is stored in the newly created BFD.
+It can be accessed via the bfd_get_filename() macro.
+
+2.14.1.2 `bfd_openr'
+....................
+
+*Synopsis*
+     bfd *bfd_openr (const char *filename, const char *target);
+   *Description*
+Open the file FILENAME (using `fopen') with the target TARGET.  Return
+a pointer to the created BFD.
+
+   Calls `bfd_find_target', so TARGET is interpreted as by that
+function.
+
+   If `NULL' is returned then an error has occured.   Possible errors
+are `bfd_error_no_memory', `bfd_error_invalid_target' or `system_call'
+error.
+
+   A copy of the FILENAME argument is stored in the newly created BFD.
+It can be accessed via the bfd_get_filename() macro.
+
+2.14.1.3 `bfd_fdopenr'
+......................
+
+*Synopsis*
+     bfd *bfd_fdopenr (const char *filename, const char *target, int fd);
+   *Description*
+`bfd_fdopenr' is to `bfd_fopenr' much like `fdopen' is to `fopen'.  It
+opens a BFD on a file already described by the FD supplied.
+
+   When the file is later `bfd_close'd, the file descriptor will be
+closed.  If the caller desires that this file descriptor be cached by
+BFD (opened as needed, closed as needed to free descriptors for other
+opens), with the supplied FD used as an initial file descriptor (but
+subject to closure at any time), call bfd_set_cacheable(bfd, 1) on the
+returned BFD.  The default is to assume no caching; the file descriptor
+will remain open until `bfd_close', and will not be affected by BFD
+operations on other files.
+
+   Possible errors are `bfd_error_no_memory',
+`bfd_error_invalid_target' and `bfd_error_system_call'.
+
+   On error, FD is closed.
+
+   A copy of the FILENAME argument is stored in the newly created BFD.
+It can be accessed via the bfd_get_filename() macro.
+
+2.14.1.4 `bfd_openstreamr'
+..........................
+
+*Synopsis*
+     bfd *bfd_openstreamr (const char * filename, const char * target,
+         void * stream);
+   *Description*
+Open a BFD for read access on an existing stdio stream.  When the BFD
+is passed to `bfd_close', the stream will be closed.
+
+   A copy of the FILENAME argument is stored in the newly created BFD.
+It can be accessed via the bfd_get_filename() macro.
+
+2.14.1.5 `bfd_openr_iovec'
+..........................
+
+*Synopsis*
+     bfd *bfd_openr_iovec (const char *filename, const char *target,
+         void *(*open_func) (struct bfd *nbfd,
+         void *open_closure),
+         void *open_closure,
+         file_ptr (*pread_func) (struct bfd *nbfd,
+         void *stream,
+         void *buf,
+         file_ptr nbytes,
+         file_ptr offset),
+         int (*close_func) (struct bfd *nbfd,
+         void *stream),
+         int (*stat_func) (struct bfd *abfd,
+         void *stream,
+         struct stat *sb));
+   *Description*
+Create and return a BFD backed by a read-only STREAM.  The STREAM is
+created using OPEN_FUNC, accessed using PREAD_FUNC and destroyed using
+CLOSE_FUNC.
+
+   Calls `bfd_find_target', so TARGET is interpreted as by that
+function.
+
+   Calls OPEN_FUNC (which can call `bfd_zalloc' and `bfd_get_filename')
+to obtain the read-only stream backing the BFD.  OPEN_FUNC either
+succeeds returning the non-`NULL' STREAM, or fails returning `NULL'
+(setting `bfd_error').
+
+   Calls PREAD_FUNC to request NBYTES of data from STREAM starting at
+OFFSET (e.g., via a call to `bfd_read').  PREAD_FUNC either succeeds
+returning the number of bytes read (which can be less than NBYTES when
+end-of-file), or fails returning -1 (setting `bfd_error').
+
+   Calls CLOSE_FUNC when the BFD is later closed using `bfd_close'.
+CLOSE_FUNC either succeeds returning 0, or fails returning -1 (setting
+`bfd_error').
+
+   Calls STAT_FUNC to fill in a stat structure for bfd_stat,
+bfd_get_size, and bfd_get_mtime calls.  STAT_FUNC returns 0 on success,
+or returns -1 on failure (setting `bfd_error').
+
+   If `bfd_openr_iovec' returns `NULL' then an error has occurred.
+Possible errors are `bfd_error_no_memory', `bfd_error_invalid_target'
+and `bfd_error_system_call'.
+
+   A copy of the FILENAME argument is stored in the newly created BFD.
+It can be accessed via the bfd_get_filename() macro.
+
+2.14.1.6 `bfd_openw'
+....................
+
+*Synopsis*
+     bfd *bfd_openw (const char *filename, const char *target);
+   *Description*
+Create a BFD, associated with file FILENAME, using the file format
+TARGET, and return a pointer to it.
+
+   Possible errors are `bfd_error_system_call', `bfd_error_no_memory',
+`bfd_error_invalid_target'.
+
+   A copy of the FILENAME argument is stored in the newly created BFD.
+It can be accessed via the bfd_get_filename() macro.
+
+2.14.1.7 `bfd_close'
+....................
+
+*Synopsis*
+     bfd_boolean bfd_close (bfd *abfd);
+   *Description*
+Close a BFD. If the BFD was open for writing, then pending operations
+are completed and the file written out and closed.  If the created file
+is executable, then `chmod' is called to mark it as such.
+
+   All memory attached to the BFD is released.
+
+   The file descriptor associated with the BFD is closed (even if it
+was passed in to BFD by `bfd_fdopenr').
+
+   *Returns*
+`TRUE' is returned if all is ok, otherwise `FALSE'.
+
+2.14.1.8 `bfd_close_all_done'
+.............................
+
+*Synopsis*
+     bfd_boolean bfd_close_all_done (bfd *);
+   *Description*
+Close a BFD.  Differs from `bfd_close' since it does not complete any
+pending operations.  This routine would be used if the application had
+just used BFD for swapping and didn't want to use any of the writing
+code.
+
+   If the created file is executable, then `chmod' is called to mark it
+as such.
+
+   All memory attached to the BFD is released.
+
+   *Returns*
+`TRUE' is returned if all is ok, otherwise `FALSE'.
+
+2.14.1.9 `bfd_create'
+.....................
+
+*Synopsis*
+     bfd *bfd_create (const char *filename, bfd *templ);
+   *Description*
+Create a new BFD in the manner of `bfd_openw', but without opening a
+file. The new BFD takes the target from the target used by TEMPL. The
+format is always set to `bfd_object'.
+
+   A copy of the FILENAME argument is stored in the newly created BFD.
+It can be accessed via the bfd_get_filename() macro.
+
+2.14.1.10 `bfd_make_writable'
+.............................
+
+*Synopsis*
+     bfd_boolean bfd_make_writable (bfd *abfd);
+   *Description*
+Takes a BFD as created by `bfd_create' and converts it into one like as
+returned by `bfd_openw'.  It does this by converting the BFD to
+BFD_IN_MEMORY.  It's assumed that you will call `bfd_make_readable' on
+this bfd later.
+
+   *Returns*
+`TRUE' is returned if all is ok, otherwise `FALSE'.
+
+2.14.1.11 `bfd_make_readable'
+.............................
+
+*Synopsis*
+     bfd_boolean bfd_make_readable (bfd *abfd);
+   *Description*
+Takes a BFD as created by `bfd_create' and `bfd_make_writable' and
+converts it into one like as returned by `bfd_openr'.  It does this by
+writing the contents out to the memory buffer, then reversing the
+direction.
+
+   *Returns*
+`TRUE' is returned if all is ok, otherwise `FALSE'.
+
+2.14.1.12 `bfd_alloc'
+.....................
+
+*Synopsis*
+     void *bfd_alloc (bfd *abfd, bfd_size_type wanted);
+   *Description*
+Allocate a block of WANTED bytes of memory attached to `abfd' and
+return a pointer to it.
+
+2.14.1.13 `bfd_alloc2'
+......................
+
+*Synopsis*
+     void *bfd_alloc2 (bfd *abfd, bfd_size_type nmemb, bfd_size_type size);
+   *Description*
+Allocate a block of NMEMB elements of SIZE bytes each of memory
+attached to `abfd' and return a pointer to it.
+
+2.14.1.14 `bfd_zalloc'
+......................
+
+*Synopsis*
+     void *bfd_zalloc (bfd *abfd, bfd_size_type wanted);
+   *Description*
+Allocate a block of WANTED bytes of zeroed memory attached to `abfd'
+and return a pointer to it.
+
+2.14.1.15 `bfd_zalloc2'
+.......................
+
+*Synopsis*
+     void *bfd_zalloc2 (bfd *abfd, bfd_size_type nmemb, bfd_size_type size);
+   *Description*
+Allocate a block of NMEMB elements of SIZE bytes each of zeroed memory
+attached to `abfd' and return a pointer to it.
+
+2.14.1.16 `bfd_calc_gnu_debuglink_crc32'
+........................................
+
+*Synopsis*
+     unsigned long bfd_calc_gnu_debuglink_crc32
+        (unsigned long crc, const unsigned char *buf, bfd_size_type len);
+   *Description*
+Computes a CRC value as used in the .gnu_debuglink section.  Advances
+the previously computed CRC value by computing and adding in the crc32
+for LEN bytes of BUF.
+
+   *Returns*
+Return the updated CRC32 value.
+
+2.14.1.17 `bfd_get_debug_link_info_1'
+.....................................
+
+*Synopsis*
+     char *bfd_get_debug_link_info_1 (bfd *abfd, void *crc32_out);
+   *Description*
+Extracts the filename and CRC32 value for any separate debug
+information file associated with ABFD.
+
+   The CRC32_OUT parameter is an untyped pointer because this routine
+is used as a `get_func_type' function, but it is expected to be an
+unsigned long pointer.
+
+   *Returns*
+The filename of the associated debug information file, or NULL if there
+is no such file.  If the filename was found then the contents of
+CRC32_OUT are updated to hold the corresponding CRC32 value for the
+file.
+
+   The returned filename is allocated with `malloc'; freeing it is the
+responsibility of the caller.
+
+2.14.1.18 `bfd_get_debug_link_info'
+...................................
+
+*Synopsis*
+     char *bfd_get_debug_link_info (bfd *abfd, unsigned long *crc32_out);
+   *Description*
+Extracts the filename and CRC32 value for any separate debug
+information file associated with ABFD.
+
+   *Returns*
+The filename of the associated debug information file, or NULL if there
+is no such file.  If the filename was found then the contents of
+CRC32_OUT are updated to hold the corresponding CRC32 value for the
+file.
+
+   The returned filename is allocated with `malloc'; freeing it is the
+responsibility of the caller.
+
+2.14.1.19 `bfd_get_alt_debug_link_info'
+.......................................
+
+*Synopsis*
+     char *bfd_get_alt_debug_link_info (bfd * abfd,
+         bfd_size_type *buildid_len,
+         bfd_byte **buildid_out);
+   *Description*
+Fetch the filename and BuildID value for any alternate debuginfo
+associated with ABFD.  Return NULL if no such info found, otherwise
+return filename and update BUILDID_LEN and BUILDID_OUT.  The returned
+filename and build_id are allocated with `malloc'; freeing them is the
+responsibility of the caller.
+
+2.14.1.20 `separate_debug_file_exists'
+......................................
+
+*Synopsis*
+     bfd_boolean separate_debug_file_exists
+        (char *name, void *crc32_p);
+   *Description*
+Checks to see if NAME is a file and if its contents match CRC32, which
+is a pointer to an `unsigned long' containing a CRC32.
+
+   The CRC32_P parameter is an untyped pointer because this routine is
+used as a `check_func_type' function.
+
+2.14.1.21 `separate_alt_debug_file_exists'
+..........................................
+
+*Synopsis*
+     bfd_boolean separate_alt_debug_file_exists
+        (char *name, void *unused);
+   *Description*
+Checks to see if NAME is a file.
+
+2.14.1.22 `find_separate_debug_file'
+....................................
+
+*Synopsis*
+     char *find_separate_debug_file
+        (bfd *abfd, const char *dir, bfd_boolean include_dirs,
+         get_func_type get, check_func_type check, void *data);
+   *Description*
+Searches for a debug information file corresponding to ABFD.
+
+   The name of the separate debug info file is returned by the GET
+function.  This function scans various fixed locations in the
+filesystem, including the file tree rooted at DIR.  If the INCLUDE_DIRS
+parameter is true then the directory components of ABFD's filename will
+be included in the searched locations.
+
+   DATA is passed unmodified to the GET and CHECK functions.  It is
+generally used to implement build-id-like matching in the callback
+functions.
+
+   *Returns*
+Returns the filename of the first file to be found which receives a
+TRUE result from the CHECK function.  Returns NULL if no valid file
+could be found.
+
+2.14.1.23 `bfd_follow_gnu_debuglink'
+....................................
+
+*Synopsis*
+     char *bfd_follow_gnu_debuglink (bfd *abfd, const char *dir);
+   *Description*
+Takes a BFD and searches it for a .gnu_debuglink section.  If this
+section is found, it examines the section for the name and checksum of
+a '.debug' file containing auxiliary debugging information.  It then
+searches the filesystem for this .debug file in some standard
+locations, including the directory tree rooted at DIR, and if found
+returns the full filename.
+
+   If DIR is NULL, the search will take place starting at the current
+directory.
+
+   *Returns*
+`NULL' on any errors or failure to locate the .debug file, otherwise a
+pointer to a heap-allocated string containing the filename.  The caller
+is responsible for freeing this string.
+
+2.14.1.24 `bfd_follow_gnu_debugaltlink'
+.......................................
+
+*Synopsis*
+     char *bfd_follow_gnu_debugaltlink (bfd *abfd, const char *dir);
+   *Description*
+Takes a BFD and searches it for a .gnu_debugaltlink section.  If this
+section is found, it examines the section for the name of a file
+containing auxiliary debugging information.  It then searches the
+filesystem for this file in a set of standard locations, including the
+directory tree rooted at DIR, and if found returns the full filename.
+
+   If DIR is NULL, the search will take place starting at the current
+directory.
+
+   *Returns*
+`NULL' on any errors or failure to locate the debug file, otherwise a
+pointer to a heap-allocated string containing the filename.  The caller
+is responsible for freeing this string.
+
+2.14.1.25 `bfd_create_gnu_debuglink_section'
+............................................
+
+*Synopsis*
+     struct bfd_section *bfd_create_gnu_debuglink_section
+        (bfd *abfd, const char *filename);
+   *Description*
+Takes a BFD and adds a .gnu_debuglink section to it.  The section is
+sized to be big enough to contain a link to the specified FILENAME.
+
+   *Returns*
+A pointer to the new section is returned if all is ok.  Otherwise
+`NULL' is returned and bfd_error is set.
+
+2.14.1.26 `bfd_fill_in_gnu_debuglink_section'
+.............................................
+
+*Synopsis*
+     bfd_boolean bfd_fill_in_gnu_debuglink_section
+        (bfd *abfd, struct bfd_section *sect, const char *filename);
+   *Description*
+Takes a BFD and containing a .gnu_debuglink section SECT and fills in
+the contents of the section to contain a link to the specified
+FILENAME.  The filename should be relative to the current directory.
+
+   *Returns*
+`TRUE' is returned if all is ok.  Otherwise `FALSE' is returned and
+bfd_error is set.
+
+2.14.1.27 `get_build_id'
+........................
+
+*Synopsis*
+     struct bfd_build_id * get_build_id (bfd *abfd);
+   *Description*
+Finds the build-id associated with ABFD.  If the build-id is extracted
+from the note section then a build-id structure is built for it, using
+memory allocated to ABFD, and this is then attached to the ABFD.
+
+   *Returns*
+Returns a pointer to the build-id structure if a build-id could be
+found.  If no build-id is found NULL is returned and error code is set.
+
+2.14.1.28 `get_build_id_name'
+.............................
+
+*Synopsis*
+     char * get_build_id_name (bfd *abfd, void *build_id_out_p)
+   *Description*
+Searches ABFD for a build-id, and then constructs a pathname from it.
+The path is computed as .build-id/NN/NN+NN.debug where NNNN+NN is the
+build-id value as a hexadecimal string.
+
+   *Returns*
+Returns the constructed filename or NULL upon error.  It is the
+caller's responsibility to free the memory used to hold the filename.
+If a filename is returned then the BUILD_ID_OUT_P parameter (which
+points to a `struct bfd_build_id' pointer) is set to a pointer to the
+build_id structure.
+
+2.14.1.29 `check_build_id_file'
+...............................
+
+*Synopsis*
+     bfd_boolean check_build_id_file (char *name, void *buildid_p);
+   *Description*
+Checks to see if NAME is a readable file and if its build-id matches
+BUILDID.
+
+   *Returns*
+Returns TRUE if the file exists, is readable, and contains a build-id
+which matches the build-id pointed at by BUILD_ID_P (which is really a
+`struct bfd_build_id **').
+
+2.14.1.30 `bfd_follow_build_id_debuglink'
+.........................................
+
+*Synopsis*
+     char *bfd_follow_build_id_debuglink (bfd *abfd, const char *dir);
+   *Description*
+Takes ABFD and searches it for a .note.gnu.build-id section.  If this
+section is found, it extracts the value of the NT_GNU_BUILD_ID note,
+which should be a hexadecimal value NNNN+NN (for 32+ hex digits).  It
+then searches the filesystem for a file named .BUILD-ID/NN/NN+NN.DEBUG
+in a set of standard locations, including the directory tree rooted at
+DIR.  The filename of the first matching file to be found is returned.
+A matching file should contain a .note.gnu.build-id section with the
+same NNNN+NN note as ABFD, although this check is currently not
+implemented.
+
+   If DIR is NULL, the search will take place starting at the current
+directory.
+
+   *Returns*
+`NULL' on any errors or failure to locate the debug file, otherwise a
+pointer to a heap-allocated string containing the filename.  The caller
+is responsible for freeing this string.
+
+
+File: bfd.info,  Node: Internal,  Next: File Caching,  Prev: Opening and Closing,  Up: BFD front end
+
+2.15 Implementation details
+===========================
+
+2.15.1 Internal functions
+-------------------------
+
+*Description*
+These routines are used within BFD.  They are not intended for export,
+but are documented here for completeness.
+
+2.15.1.1 `bfd_write_bigendian_4byte_int'
+........................................
+
+*Synopsis*
+     bfd_boolean bfd_write_bigendian_4byte_int (bfd *, unsigned int);
+   *Description*
+Write a 4 byte integer I to the output BFD ABFD, in big endian order
+regardless of what else is going on.  This is useful in archives.
+
+2.15.1.2 `bfd_put_size'
+.......................
+
+2.15.1.3 `bfd_get_size'
+.......................
+
+*Description*
+These macros as used for reading and writing raw data in sections; each
+access (except for bytes) is vectored through the target format of the
+BFD and mangled accordingly. The mangling performs any necessary endian
+translations and removes alignment restrictions.  Note that types
+accepted and returned by these macros are identical so they can be
+swapped around in macros--for example, `libaout.h' defines `GET_WORD'
+to either `bfd_get_32' or `bfd_get_64'.
+
+   In the put routines, VAL must be a `bfd_vma'.  If we are on a system
+without prototypes, the caller is responsible for making sure that is
+true, with a cast if necessary.  We don't cast them in the macro
+definitions because that would prevent `lint' or `gcc -Wall' from
+detecting sins such as passing a pointer.  To detect calling these with
+less than a `bfd_vma', use `gcc -Wconversion' on a host with 64 bit
+`bfd_vma''s.
+
+     /* Byte swapping macros for user section data.  */
+
+     #define bfd_put_8(abfd, val, ptr) \
+       ((void) (*((unsigned char *) (ptr)) = (val) & 0xff))
+     #define bfd_put_signed_8 \
+       bfd_put_8
+     #define bfd_get_8(abfd, ptr) \
+       (*(const unsigned char *) (ptr) & 0xff)
+     #define bfd_get_signed_8(abfd, ptr) \
+       (((*(const unsigned char *) (ptr) & 0xff) ^ 0x80) - 0x80)
+
+     #define bfd_put_16(abfd, val, ptr) \
+       BFD_SEND (abfd, bfd_putx16, ((val),(ptr)))
+     #define bfd_put_signed_16 \
+       bfd_put_16
+     #define bfd_get_16(abfd, ptr) \
+       BFD_SEND (abfd, bfd_getx16, (ptr))
+     #define bfd_get_signed_16(abfd, ptr) \
+       BFD_SEND (abfd, bfd_getx_signed_16, (ptr))
+
+     #define bfd_put_24(abfd, val, ptr) \
+       do                                   \
+         if (bfd_big_endian (abfd))         \
+           bfd_putb24 ((val), (ptr));       \
+         else                               \
+           bfd_putl24 ((val), (ptr));       \
+       while (0)
+
+     bfd_vma bfd_getb24 (const void *p);
+     bfd_vma bfd_getl24 (const void *p);
+
+     #define bfd_get_24(abfd, ptr) \
+       (bfd_big_endian (abfd) ? bfd_getb24 (ptr) : bfd_getl24 (ptr))
+
+     #define bfd_put_32(abfd, val, ptr) \
+       BFD_SEND (abfd, bfd_putx32, ((val),(ptr)))
+     #define bfd_put_signed_32 \
+       bfd_put_32
+     #define bfd_get_32(abfd, ptr) \
+       BFD_SEND (abfd, bfd_getx32, (ptr))
+     #define bfd_get_signed_32(abfd, ptr) \
+       BFD_SEND (abfd, bfd_getx_signed_32, (ptr))
+
+     #define bfd_put_64(abfd, val, ptr) \
+       BFD_SEND (abfd, bfd_putx64, ((val), (ptr)))
+     #define bfd_put_signed_64 \
+       bfd_put_64
+     #define bfd_get_64(abfd, ptr) \
+       BFD_SEND (abfd, bfd_getx64, (ptr))
+     #define bfd_get_signed_64(abfd, ptr) \
+       BFD_SEND (abfd, bfd_getx_signed_64, (ptr))
+
+     #define bfd_get(bits, abfd, ptr)                       \
+       ((bits) == 8 ? (bfd_vma) bfd_get_8 (abfd, ptr)       \
+        : (bits) == 16 ? bfd_get_16 (abfd, ptr)             \
+        : (bits) == 32 ? bfd_get_32 (abfd, ptr)             \
+        : (bits) == 64 ? bfd_get_64 (abfd, ptr)             \
+        : (abort (), (bfd_vma) - 1))
+
+     #define bfd_put(bits, abfd, val, ptr)                  \
+       ((bits) == 8 ? bfd_put_8  (abfd, val, ptr)           \
+        : (bits) == 16 ? bfd_put_16 (abfd, val, ptr)        \
+        : (bits) == 32 ? bfd_put_32 (abfd, val, ptr)        \
+        : (bits) == 64 ? bfd_put_64 (abfd, val, ptr)        \
+        : (abort (), (void) 0))
+
+2.15.1.4 `bfd_h_put_size'
+.........................
+
+*Description*
+These macros have the same function as their `bfd_get_x' brethren,
+except that they are used for removing information for the header
+records of object files. Believe it or not, some object files keep
+their header records in big endian order and their data in little
+endian order.
+
+     /* Byte swapping macros for file header data.  */
+
+     #define bfd_h_put_8(abfd, val, ptr) \
+       bfd_put_8 (abfd, val, ptr)
+     #define bfd_h_put_signed_8(abfd, val, ptr) \
+       bfd_put_8 (abfd, val, ptr)
+     #define bfd_h_get_8(abfd, ptr) \
+       bfd_get_8 (abfd, ptr)
+     #define bfd_h_get_signed_8(abfd, ptr) \
+       bfd_get_signed_8 (abfd, ptr)
+
+     #define bfd_h_put_16(abfd, val, ptr) \
+       BFD_SEND (abfd, bfd_h_putx16, (val, ptr))
+     #define bfd_h_put_signed_16 \
+       bfd_h_put_16
+     #define bfd_h_get_16(abfd, ptr) \
+       BFD_SEND (abfd, bfd_h_getx16, (ptr))
+     #define bfd_h_get_signed_16(abfd, ptr) \
+       BFD_SEND (abfd, bfd_h_getx_signed_16, (ptr))
+
+     #define bfd_h_put_32(abfd, val, ptr) \
+       BFD_SEND (abfd, bfd_h_putx32, (val, ptr))
+     #define bfd_h_put_signed_32 \
+       bfd_h_put_32
+     #define bfd_h_get_32(abfd, ptr) \
+       BFD_SEND (abfd, bfd_h_getx32, (ptr))
+     #define bfd_h_get_signed_32(abfd, ptr) \
+       BFD_SEND (abfd, bfd_h_getx_signed_32, (ptr))
+
+     #define bfd_h_put_64(abfd, val, ptr) \
+       BFD_SEND (abfd, bfd_h_putx64, (val, ptr))
+     #define bfd_h_put_signed_64 \
+       bfd_h_put_64
+     #define bfd_h_get_64(abfd, ptr) \
+       BFD_SEND (abfd, bfd_h_getx64, (ptr))
+     #define bfd_h_get_signed_64(abfd, ptr) \
+       BFD_SEND (abfd, bfd_h_getx_signed_64, (ptr))
+
+     /* Aliases for the above, which should eventually go away.  */
+
+     #define H_PUT_64  bfd_h_put_64
+     #define H_PUT_32  bfd_h_put_32
+     #define H_PUT_16  bfd_h_put_16
+     #define H_PUT_8   bfd_h_put_8
+     #define H_PUT_S64 bfd_h_put_signed_64
+     #define H_PUT_S32 bfd_h_put_signed_32
+     #define H_PUT_S16 bfd_h_put_signed_16
+     #define H_PUT_S8  bfd_h_put_signed_8
+     #define H_GET_64  bfd_h_get_64
+     #define H_GET_32  bfd_h_get_32
+     #define H_GET_16  bfd_h_get_16
+     #define H_GET_8   bfd_h_get_8
+     #define H_GET_S64 bfd_h_get_signed_64
+     #define H_GET_S32 bfd_h_get_signed_32
+     #define H_GET_S16 bfd_h_get_signed_16
+     #define H_GET_S8  bfd_h_get_signed_8
+
+2.15.1.5 `bfd_log2'
+...................
+
+*Synopsis*
+     unsigned int bfd_log2 (bfd_vma x);
+   *Description*
+Return the log base 2 of the value supplied, rounded up.  E.g., an X of
+1025 returns 11.  A X of 0 returns 0.
+
+
+File: bfd.info,  Node: File Caching,  Next: Linker Functions,  Prev: Internal,  Up: BFD front end
+
+2.16 File caching
+=================
+
+The file caching mechanism is embedded within BFD and allows the
+application to open as many BFDs as it wants without regard to the
+underlying operating system's file descriptor limit (often as low as 20
+open files).  The module in `cache.c' maintains a least recently used
+list of `bfd_cache_max_open' files, and exports the name
+`bfd_cache_lookup', which runs around and makes sure that the required
+BFD is open. If not, then it chooses a file to close, closes it and
+opens the one wanted, returning its file handle.
+
+2.16.1 Caching functions
+------------------------
+
+2.16.1.1 `bfd_cache_init'
+.........................
+
+*Synopsis*
+     bfd_boolean bfd_cache_init (bfd *abfd);
+   *Description*
+Add a newly opened BFD to the cache.
+
+2.16.1.2 `bfd_cache_close'
+..........................
+
+*Synopsis*
+     bfd_boolean bfd_cache_close (bfd *abfd);
+   *Description*
+Remove the BFD ABFD from the cache. If the attached file is open, then
+close it too.
+
+   *Returns*
+`FALSE' is returned if closing the file fails, `TRUE' is returned if
+all is well.
+
+2.16.1.3 `bfd_cache_close_all'
+..............................
+
+*Synopsis*
+     bfd_boolean bfd_cache_close_all (void);
+   *Description*
+Remove all BFDs from the cache. If the attached file is open, then
+close it too.
+
+   *Returns*
+`FALSE' is returned if closing one of the file fails, `TRUE' is
+returned if all is well.
+
+2.16.1.4 `bfd_open_file'
+........................
+
+*Synopsis*
+     FILE* bfd_open_file (bfd *abfd);
+   *Description*
+Call the OS to open a file for ABFD.  Return the `FILE *' (possibly
+`NULL') that results from this operation.  Set up the BFD so that
+future accesses know the file is open. If the `FILE *' returned is
+`NULL', then it won't have been put in the cache, so it won't have to
+be removed from it.
+
+
+File: bfd.info,  Node: Linker Functions,  Next: Hash Tables,  Prev: File Caching,  Up: BFD front end
+
+2.17 Linker Functions
+=====================
+
+The linker uses three special entry points in the BFD target vector.
+It is not necessary to write special routines for these entry points
+when creating a new BFD back end, since generic versions are provided.
+However, writing them can speed up linking and make it use
+significantly less runtime memory.
+
+   The first routine creates a hash table used by the other routines.
+The second routine adds the symbols from an object file to the hash
+table.  The third routine takes all the object files and links them
+together to create the output file.  These routines are designed so
+that the linker proper does not need to know anything about the symbols
+in the object files that it is linking.  The linker merely arranges the
+sections as directed by the linker script and lets BFD handle the
+details of symbols and relocs.
+
+   The second routine and third routines are passed a pointer to a
+`struct bfd_link_info' structure (defined in `bfdlink.h') which holds
+information relevant to the link, including the linker hash table
+(which was created by the first routine) and a set of callback
+functions to the linker proper.
+
+   The generic linker routines are in `linker.c', and use the header
+file `genlink.h'.  As of this writing, the only back ends which have
+implemented versions of these routines are a.out (in `aoutx.h') and
+ECOFF (in `ecoff.c').  The a.out routines are used as examples
+throughout this section.
+
+* Menu:
+
+* Creating a Linker Hash Table::
+* Adding Symbols to the Hash Table::
+* Performing the Final Link::
+
+
+File: bfd.info,  Node: Creating a Linker Hash Table,  Next: Adding Symbols to the Hash Table,  Prev: Linker Functions,  Up: Linker Functions
+
+2.17.1 Creating a linker hash table
+-----------------------------------
+
+The linker routines must create a hash table, which must be derived
+from `struct bfd_link_hash_table' described in `bfdlink.c'.  *Note Hash
+Tables::, for information on how to create a derived hash table.  This
+entry point is called using the target vector of the linker output file.
+
+   The `_bfd_link_hash_table_create' entry point must allocate and
+initialize an instance of the desired hash table.  If the back end does
+not require any additional information to be stored with the entries in
+the hash table, the entry point may simply create a `struct
+bfd_link_hash_table'.  Most likely, however, some additional
+information will be needed.
+
+   For example, with each entry in the hash table the a.out linker
+keeps the index the symbol has in the final output file (this index
+number is used so that when doing a relocatable link the symbol index
+used in the output file can be quickly filled in when copying over a
+reloc).  The a.out linker code defines the required structures and
+functions for a hash table derived from `struct bfd_link_hash_table'.
+The a.out linker hash table is created by the function
+`NAME(aout,link_hash_table_create)'; it simply allocates space for the
+hash table, initializes it, and returns a pointer to it.
+
+   When writing the linker routines for a new back end, you will
+generally not know exactly which fields will be required until you have
+finished.  You should simply create a new hash table which defines no
+additional fields, and then simply add fields as they become necessary.
+
+
+File: bfd.info,  Node: Adding Symbols to the Hash Table,  Next: Performing the Final Link,  Prev: Creating a Linker Hash Table,  Up: Linker Functions
+
+2.17.2 Adding symbols to the hash table
+---------------------------------------
+
+The linker proper will call the `_bfd_link_add_symbols' entry point for
+each object file or archive which is to be linked (typically these are
+the files named on the command line, but some may also come from the
+linker script).  The entry point is responsible for examining the file.
+For an object file, BFD must add any relevant symbol information to
+the hash table.  For an archive, BFD must determine which elements of
+the archive should be used and adding them to the link.
+
+   The a.out version of this entry point is
+`NAME(aout,link_add_symbols)'.
+
+* Menu:
+
+* Differing file formats::
+* Adding symbols from an object file::
+* Adding symbols from an archive::
+
+
+File: bfd.info,  Node: Differing file formats,  Next: Adding symbols from an object file,  Prev: Adding Symbols to the Hash Table,  Up: Adding Symbols to the Hash Table
+
+2.17.2.1 Differing file formats
+...............................
+
+Normally all the files involved in a link will be of the same format,
+but it is also possible to link together different format object files,
+and the back end must support that.  The `_bfd_link_add_symbols' entry
+point is called via the target vector of the file to be added.  This
+has an important consequence: the function may not assume that the hash
+table is the type created by the corresponding
+`_bfd_link_hash_table_create' vector.  All the `_bfd_link_add_symbols'
+function can assume about the hash table is that it is derived from
+`struct bfd_link_hash_table'.
+
+   Sometimes the `_bfd_link_add_symbols' function must store some
+information in the hash table entry to be used by the `_bfd_final_link'
+function.  In such a case the output bfd xvec must be checked to make
+sure that the hash table was created by an object file of the same
+format.
+
+   The `_bfd_final_link' routine must be prepared to handle a hash
+entry without any extra information added by the
+`_bfd_link_add_symbols' function.  A hash entry without extra
+information will also occur when the linker script directs the linker
+to create a symbol.  Note that, regardless of how a hash table entry is
+added, all the fields will be initialized to some sort of null value by
+the hash table entry initialization function.
+
+   See `ecoff_link_add_externals' for an example of how to check the
+output bfd before saving information (in this case, the ECOFF external
+symbol debugging information) in a hash table entry.
+
+
+File: bfd.info,  Node: Adding symbols from an object file,  Next: Adding symbols from an archive,  Prev: Differing file formats,  Up: Adding Symbols to the Hash Table
+
+2.17.2.2 Adding symbols from an object file
+...........................................
+
+When the `_bfd_link_add_symbols' routine is passed an object file, it
+must add all externally visible symbols in that object file to the hash
+table.  The actual work of adding the symbol to the hash table is
+normally handled by the function `_bfd_generic_link_add_one_symbol'.
+The `_bfd_link_add_symbols' routine is responsible for reading all the
+symbols from the object file and passing the correct information to
+`_bfd_generic_link_add_one_symbol'.
+
+   The `_bfd_link_add_symbols' routine should not use
+`bfd_canonicalize_symtab' to read the symbols.  The point of providing
+this routine is to avoid the overhead of converting the symbols into
+generic `asymbol' structures.
+
+   `_bfd_generic_link_add_one_symbol' handles the details of combining
+common symbols, warning about multiple definitions, and so forth.  It
+takes arguments which describe the symbol to add, notably symbol flags,
+a section, and an offset.  The symbol flags include such things as
+`BSF_WEAK' or `BSF_INDIRECT'.  The section is a section in the object
+file, or something like `bfd_und_section_ptr' for an undefined symbol
+or `bfd_com_section_ptr' for a common symbol.
+
+   If the `_bfd_final_link' routine is also going to need to read the
+symbol information, the `_bfd_link_add_symbols' routine should save it
+somewhere attached to the object file BFD.  However, the information
+should only be saved if the `keep_memory' field of the `info' argument
+is TRUE, so that the `-no-keep-memory' linker switch is effective.
+
+   The a.out function which adds symbols from an object file is
+`aout_link_add_object_symbols', and most of the interesting work is in
+`aout_link_add_symbols'.  The latter saves pointers to the hash tables
+entries created by `_bfd_generic_link_add_one_symbol' indexed by symbol
+number, so that the `_bfd_final_link' routine does not have to call the
+hash table lookup routine to locate the entry.
+
+
+File: bfd.info,  Node: Adding symbols from an archive,  Prev: Adding symbols from an object file,  Up: Adding Symbols to the Hash Table
+
+2.17.2.3 Adding symbols from an archive
+.......................................
+
+When the `_bfd_link_add_symbols' routine is passed an archive, it must
+look through the symbols defined by the archive and decide which
+elements of the archive should be included in the link.  For each such
+element it must call the `add_archive_element' linker callback, and it
+must add the symbols from the object file to the linker hash table.
+(The callback may in fact indicate that a replacement BFD should be
+used, in which case the symbols from that BFD should be added to the
+linker hash table instead.)
+
+   In most cases the work of looking through the symbols in the archive
+should be done by the `_bfd_generic_link_add_archive_symbols' function.
+`_bfd_generic_link_add_archive_symbols' is passed a function to call to
+make the final decision about adding an archive element to the link and
+to do the actual work of adding the symbols to the linker hash table.
+If the element is to be included, the `add_archive_element' linker
+callback routine must be called with the element as an argument, and
+the element's symbols must be added to the linker hash table just as
+though the element had itself been passed to the
+`_bfd_link_add_symbols' function.
+
+   When the a.out `_bfd_link_add_symbols' function receives an archive,
+it calls `_bfd_generic_link_add_archive_symbols' passing
+`aout_link_check_archive_element' as the function argument.
+`aout_link_check_archive_element' calls `aout_link_check_ar_symbols'.
+If the latter decides to add the element (an element is only added if
+it provides a real, non-common, definition for a previously undefined
+or common symbol) it calls the `add_archive_element' callback and then
+`aout_link_check_archive_element' calls `aout_link_add_symbols' to
+actually add the symbols to the linker hash table - possibly those of a
+substitute BFD, if the `add_archive_element' callback avails itself of
+that option.
+
+   The ECOFF back end is unusual in that it does not normally call
+`_bfd_generic_link_add_archive_symbols', because ECOFF archives already
+contain a hash table of symbols.  The ECOFF back end searches the
+archive itself to avoid the overhead of creating a new hash table.
+
+
+File: bfd.info,  Node: Performing the Final Link,  Prev: Adding Symbols to the Hash Table,  Up: Linker Functions
+
+2.17.3 Performing the final link
+--------------------------------
+
+When all the input files have been processed, the linker calls the
+`_bfd_final_link' entry point of the output BFD.  This routine is
+responsible for producing the final output file, which has several
+aspects.  It must relocate the contents of the input sections and copy
+the data into the output sections.  It must build an output symbol
+table including any local symbols from the input files and the global
+symbols from the hash table.  When producing relocatable output, it must
+modify the input relocs and write them into the output file.  There may
+also be object format dependent work to be done.
+
+   The linker will also call the `write_object_contents' entry point
+when the BFD is closed.  The two entry points must work together in
+order to produce the correct output file.
+
+   The details of how this works are inevitably dependent upon the
+specific object file format.  The a.out `_bfd_final_link' routine is
+`NAME(aout,final_link)'.
+
+* Menu:
+
+* Information provided by the linker::
+* Relocating the section contents::
+* Writing the symbol table::
+
+
+File: bfd.info,  Node: Information provided by the linker,  Next: Relocating the section contents,  Prev: Performing the Final Link,  Up: Performing the Final Link
+
+2.17.3.1 Information provided by the linker
+...........................................
+
+Before the linker calls the `_bfd_final_link' entry point, it sets up
+some data structures for the function to use.
+
+   The `input_bfds' field of the `bfd_link_info' structure will point
+to a list of all the input files included in the link.  These files are
+linked through the `link.next' field of the `bfd' structure.
+
+   Each section in the output file will have a list of `link_order'
+structures attached to the `map_head.link_order' field (the
+`link_order' structure is defined in `bfdlink.h').  These structures
+describe how to create the contents of the output section in terms of
+the contents of various input sections, fill constants, and,
+eventually, other types of information.  They also describe relocs that
+must be created by the BFD backend, but do not correspond to any input
+file; this is used to support -Ur, which builds constructors while
+generating a relocatable object file.
+
+
+File: bfd.info,  Node: Relocating the section contents,  Next: Writing the symbol table,  Prev: Information provided by the linker,  Up: Performing the Final Link
+
+2.17.3.2 Relocating the section contents
+........................................
+
+The `_bfd_final_link' function should look through the `link_order'
+structures attached to each section of the output file.  Each
+`link_order' structure should either be handled specially, or it should
+be passed to the function `_bfd_default_link_order' which will do the
+right thing (`_bfd_default_link_order' is defined in `linker.c').
+
+   For efficiency, a `link_order' of type `bfd_indirect_link_order'
+whose associated section belongs to a BFD of the same format as the
+output BFD must be handled specially.  This type of `link_order'
+describes part of an output section in terms of a section belonging to
+one of the input files.  The `_bfd_final_link' function should read the
+contents of the section and any associated relocs, apply the relocs to
+the section contents, and write out the modified section contents.  If
+performing a relocatable link, the relocs themselves must also be
+modified and written out.
+
+   The functions `_bfd_relocate_contents' and
+`_bfd_final_link_relocate' provide some general support for performing
+the actual relocations, notably overflow checking.  Their arguments
+include information about the symbol the relocation is against and a
+`reloc_howto_type' argument which describes the relocation to perform.
+These functions are defined in `reloc.c'.
+
+   The a.out function which handles reading, relocating, and writing
+section contents is `aout_link_input_section'.  The actual relocation
+is done in `aout_link_input_section_std' and
+`aout_link_input_section_ext'.
+
+
+File: bfd.info,  Node: Writing the symbol table,  Prev: Relocating the section contents,  Up: Performing the Final Link
+
+2.17.3.3 Writing the symbol table
+.................................
+
+The `_bfd_final_link' function must gather all the symbols in the input
+files and write them out.  It must also write out all the symbols in
+the global hash table.  This must be controlled by the `strip' and
+`discard' fields of the `bfd_link_info' structure.
+
+   The local symbols of the input files will not have been entered into
+the linker hash table.  The `_bfd_final_link' routine must consider
+each input file and include the symbols in the output file.  It may be
+convenient to do this when looking through the `link_order' structures,
+or it may be done by stepping through the `input_bfds' list.
+
+   The `_bfd_final_link' routine must also traverse the global hash
+table to gather all the externally visible symbols.  It is possible
+that most of the externally visible symbols may be written out when
+considering the symbols of each input file, but it is still necessary
+to traverse the hash table since the linker script may have defined
+some symbols that are not in any of the input files.
+
+   The `strip' field of the `bfd_link_info' structure controls which
+symbols are written out.  The possible values are listed in
+`bfdlink.h'.  If the value is `strip_some', then the `keep_hash' field
+of the `bfd_link_info' structure is a hash table of symbols to keep;
+each symbol should be looked up in this hash table, and only symbols
+which are present should be included in the output file.
+
+   If the `strip' field of the `bfd_link_info' structure permits local
+symbols to be written out, the `discard' field is used to further
+controls which local symbols are included in the output file.  If the
+value is `discard_l', then all local symbols which begin with a certain
+prefix are discarded; this is controlled by the
+`bfd_is_local_label_name' entry point.
+
+   The a.out backend handles symbols by calling
+`aout_link_write_symbols' on each input BFD and then traversing the
+global hash table with the function `aout_link_write_other_symbol'.  It
+builds a string table while writing out the symbols, which is written
+to the output file at the end of `NAME(aout,final_link)'.
+
+2.17.3.4 `bfd_link_split_section'
+.................................
+
+*Synopsis*
+     bfd_boolean bfd_link_split_section (bfd *abfd, asection *sec);
+   *Description*
+Return nonzero if SEC should be split during a reloceatable or final
+link.
+     #define bfd_link_split_section(abfd, sec) \
+            BFD_SEND (abfd, _bfd_link_split_section, (abfd, sec))
+
+2.17.3.5 `bfd_section_already_linked'
+.....................................
+
+*Synopsis*
+     bfd_boolean bfd_section_already_linked (bfd *abfd,
+         asection *sec,
+         struct bfd_link_info *info);
+   *Description*
+Check if DATA has been already linked during a reloceatable or final
+link.  Return TRUE if it has.
+     #define bfd_section_already_linked(abfd, sec, info) \
+            BFD_SEND (abfd, _section_already_linked, (abfd, sec, info))
+
+2.17.3.6 `bfd_generic_define_common_symbol'
+...........................................
+
+*Synopsis*
+     bfd_boolean bfd_generic_define_common_symbol
+        (bfd *output_bfd, struct bfd_link_info *info,
+         struct bfd_link_hash_entry *h);
+   *Description*
+Convert common symbol H into a defined symbol.  Return TRUE on success
+and FALSE on failure.
+     #define bfd_define_common_symbol(output_bfd, info, h) \
+            BFD_SEND (output_bfd, _bfd_define_common_symbol, (output_bfd, info, h))
+
+2.17.3.7 `_bfd_generic_link_hide_symbol'
+........................................
+
+*Synopsis*
+     void _bfd_generic_link_hide_symbol
+        (bfd *output_bfd, struct bfd_link_info *info,
+         struct bfd_link_hash_entry *h);
+   *Description*
+Hide symbol H.  This is an internal function.  It should not be called
+from outside the BFD library.
+     #define bfd_link_hide_symbol(output_bfd, info, h) \
+            BFD_SEND (output_bfd, _bfd_link_hide_symbol, (output_bfd, info, h))
+
+2.17.3.8 `bfd_generic_define_start_stop'
+........................................
+
+*Synopsis*
+     struct bfd_link_hash_entry *bfd_generic_define_start_stop
+        (struct bfd_link_info *info,
+         const char *symbol, asection *sec);
+   *Description*
+Define a __start, __stop, .startof. or .sizeof. symbol.  Return the
+symbol or NULL if no such undefined symbol exists.
+     #define bfd_define_start_stop(output_bfd, info, symbol, sec) \
+            BFD_SEND (output_bfd, _bfd_define_start_stop, (info, symbol, sec))
+
+2.17.3.9 `bfd_find_version_for_sym'
+...................................
+
+*Synopsis*
+     struct bfd_elf_version_tree * bfd_find_version_for_sym
+        (struct bfd_elf_version_tree *verdefs,
+         const char *sym_name, bfd_boolean *hide);
+   *Description*
+Search an elf version script tree for symbol versioning info and export
+/ don't-export status for a given symbol.  Return non-NULL on success
+and NULL on failure; also sets the output `hide' boolean parameter.
+
+2.17.3.10 `bfd_hide_sym_by_version'
+...................................
+
+*Synopsis*
+     bfd_boolean bfd_hide_sym_by_version
+        (struct bfd_elf_version_tree *verdefs, const char *sym_name);
+   *Description*
+Search an elf version script tree for symbol versioning info for a
+given symbol.  Return TRUE if the symbol is hidden.
+
+2.17.3.11 `bfd_link_check_relocs'
+.................................
+
+*Synopsis*
+     bfd_boolean bfd_link_check_relocs
+        (bfd *abfd, struct bfd_link_info *info);
+   *Description*
+Checks the relocs in ABFD for validity.  Does not execute the relocs.
+Return TRUE if everything is OK, FALSE otherwise.  This is the external
+entry point to this code.
+
+2.17.3.12 `_bfd_generic_link_check_relocs'
+..........................................
+
+*Synopsis*
+     bfd_boolean _bfd_generic_link_check_relocs
+        (bfd *abfd, struct bfd_link_info *info);
+   *Description*
+Stub function for targets that do not implement reloc checking.  Return
+TRUE.  This is an internal function.  It should not be called from
+outside the BFD library.
+
+2.17.3.13 `bfd_merge_private_bfd_data'
+......................................
+
+*Synopsis*
+     bfd_boolean bfd_merge_private_bfd_data
+        (bfd *ibfd, struct bfd_link_info *info);
+   *Description*
+Merge private BFD information from the BFD IBFD to the the output file
+BFD when linking.  Return `TRUE' on success, `FALSE' on error.
+Possible error returns are:
+
+   * `bfd_error_no_memory' - Not enough memory exists to create private
+     data for OBFD.
+
+     #define bfd_merge_private_bfd_data(ibfd, info) \
+            BFD_SEND ((info)->output_bfd, _bfd_merge_private_bfd_data, \
+                      (ibfd, info))
+
+2.17.3.14 `_bfd_generic_verify_endian_match'
+............................................
+
+*Synopsis*
+     bfd_boolean _bfd_generic_verify_endian_match
+        (bfd *ibfd, struct bfd_link_info *info);
+   *Description*
+Can be used from / for bfd_merge_private_bfd_data to check that
+endianness matches between input and output file.  Returns TRUE for a
+match, otherwise returns FALSE and emits an error.
+
+
+File: bfd.info,  Node: Hash Tables,  Prev: Linker Functions,  Up: BFD front end
+
+2.18 Hash Tables
+================
+
+BFD provides a simple set of hash table functions.  Routines are
+provided to initialize a hash table, to free a hash table, to look up a
+string in a hash table and optionally create an entry for it, and to
+traverse a hash table.  There is currently no routine to delete an
+string from a hash table.
+
+   The basic hash table does not permit any data to be stored with a
+string.  However, a hash table is designed to present a base class from
+which other types of hash tables may be derived.  These derived types
+may store additional information with the string.  Hash tables were
+implemented in this way, rather than simply providing a data pointer in
+a hash table entry, because they were designed for use by the linker
+back ends.  The linker may create thousands of hash table entries, and
+the overhead of allocating private data and storing and following
+pointers becomes noticeable.
+
+   The basic hash table code is in `hash.c'.
+
+* Menu:
+
+* Creating and Freeing a Hash Table::
+* Looking Up or Entering a String::
+* Traversing a Hash Table::
+* Deriving a New Hash Table Type::
+
+
+File: bfd.info,  Node: Creating and Freeing a Hash Table,  Next: Looking Up or Entering a String,  Prev: Hash Tables,  Up: Hash Tables
+
+2.18.1 Creating and freeing a hash table
+----------------------------------------
+
+To create a hash table, create an instance of a `struct bfd_hash_table'
+(defined in `bfd.h') and call `bfd_hash_table_init' (if you know
+approximately how many entries you will need, the function
+`bfd_hash_table_init_n', which takes a SIZE argument, may be used).
+`bfd_hash_table_init' returns `FALSE' if some sort of error occurs.
+
+   The function `bfd_hash_table_init' take as an argument a function to
+use to create new entries.  For a basic hash table, use the function
+`bfd_hash_newfunc'.  *Note Deriving a New Hash Table Type::, for why
+you would want to use a different value for this argument.
+
+   `bfd_hash_table_init' will create an objalloc which will be used to
+allocate new entries.  You may allocate memory on this objalloc using
+`bfd_hash_allocate'.
+
+   Use `bfd_hash_table_free' to free up all the memory that has been
+allocated for a hash table.  This will not free up the `struct
+bfd_hash_table' itself, which you must provide.
+
+   Use `bfd_hash_set_default_size' to set the default size of hash
+table to use.
+
+
+File: bfd.info,  Node: Looking Up or Entering a String,  Next: Traversing a Hash Table,  Prev: Creating and Freeing a Hash Table,  Up: Hash Tables
+
+2.18.2 Looking up or entering a string
+--------------------------------------
+
+The function `bfd_hash_lookup' is used both to look up a string in the
+hash table and to create a new entry.
+
+   If the CREATE argument is `FALSE', `bfd_hash_lookup' will look up a
+string.  If the string is found, it will returns a pointer to a `struct
+bfd_hash_entry'.  If the string is not found in the table
+`bfd_hash_lookup' will return `NULL'.  You should not modify any of the
+fields in the returns `struct bfd_hash_entry'.
+
+   If the CREATE argument is `TRUE', the string will be entered into
+the hash table if it is not already there.  Either way a pointer to a
+`struct bfd_hash_entry' will be returned, either to the existing
+structure or to a newly created one.  In this case, a `NULL' return
+means that an error occurred.
+
+   If the CREATE argument is `TRUE', and a new entry is created, the
+COPY argument is used to decide whether to copy the string onto the
+hash table objalloc or not.  If COPY is passed as `FALSE', you must be
+careful not to deallocate or modify the string as long as the hash table
+exists.
+
+
+File: bfd.info,  Node: Traversing a Hash Table,  Next: Deriving a New Hash Table Type,  Prev: Looking Up or Entering a String,  Up: Hash Tables
+
+2.18.3 Traversing a hash table
+------------------------------
+
+The function `bfd_hash_traverse' may be used to traverse a hash table,
+calling a function on each element.  The traversal is done in a random
+order.
+
+   `bfd_hash_traverse' takes as arguments a function and a generic
+`void *' pointer.  The function is called with a hash table entry (a
+`struct bfd_hash_entry *') and the generic pointer passed to
+`bfd_hash_traverse'.  The function must return a `boolean' value, which
+indicates whether to continue traversing the hash table.  If the
+function returns `FALSE', `bfd_hash_traverse' will stop the traversal
+and return immediately.
+
+
+File: bfd.info,  Node: Deriving a New Hash Table Type,  Prev: Traversing a Hash Table,  Up: Hash Tables
+
+2.18.4 Deriving a new hash table type
+-------------------------------------
+
+Many uses of hash tables want to store additional information which
+each entry in the hash table.  Some also find it convenient to store
+additional information with the hash table itself.  This may be done
+using a derived hash table.
+
+   Since C is not an object oriented language, creating a derived hash
+table requires sticking together some boilerplate routines with a few
+differences specific to the type of hash table you want to create.
+
+   An example of a derived hash table is the linker hash table.  The
+structures for this are defined in `bfdlink.h'.  The functions are in
+`linker.c'.
+
+   You may also derive a hash table from an already derived hash table.
+For example, the a.out linker backend code uses a hash table derived
+from the linker hash table.
+
+* Menu:
+
+* Define the Derived Structures::
+* Write the Derived Creation Routine::
+* Write Other Derived Routines::
+
+
+File: bfd.info,  Node: Define the Derived Structures,  Next: Write the Derived Creation Routine,  Prev: Deriving a New Hash Table Type,  Up: Deriving a New Hash Table Type
+
+2.18.4.1 Define the derived structures
+......................................
+
+You must define a structure for an entry in the hash table, and a
+structure for the hash table itself.
+
+   The first field in the structure for an entry in the hash table must
+be of the type used for an entry in the hash table you are deriving
+from.  If you are deriving from a basic hash table this is `struct
+bfd_hash_entry', which is defined in `bfd.h'.  The first field in the
+structure for the hash table itself must be of the type of the hash
+table you are deriving from itself.  If you are deriving from a basic
+hash table, this is `struct bfd_hash_table'.
+
+   For example, the linker hash table defines `struct
+bfd_link_hash_entry' (in `bfdlink.h').  The first field, `root', is of
+type `struct bfd_hash_entry'.  Similarly, the first field in `struct
+bfd_link_hash_table', `table', is of type `struct bfd_hash_table'.
+
+
+File: bfd.info,  Node: Write the Derived Creation Routine,  Next: Write Other Derived Routines,  Prev: Define the Derived Structures,  Up: Deriving a New Hash Table Type
+
+2.18.4.2 Write the derived creation routine
+...........................................
+
+You must write a routine which will create and initialize an entry in
+the hash table.  This routine is passed as the function argument to
+`bfd_hash_table_init'.
+
+   In order to permit other hash tables to be derived from the hash
+table you are creating, this routine must be written in a standard way.
+
+   The first argument to the creation routine is a pointer to a hash
+table entry.  This may be `NULL', in which case the routine should
+allocate the right amount of space.  Otherwise the space has already
+been allocated by a hash table type derived from this one.
+
+   After allocating space, the creation routine must call the creation
+routine of the hash table type it is derived from, passing in a pointer
+to the space it just allocated.  This will initialize any fields used
+by the base hash table.
+
+   Finally the creation routine must initialize any local fields for
+the new hash table type.
+
+   Here is a boilerplate example of a creation routine.  FUNCTION_NAME
+is the name of the routine.  ENTRY_TYPE is the type of an entry in the
+hash table you are creating.  BASE_NEWFUNC is the name of the creation
+routine of the hash table type your hash table is derived from.
+
+     struct bfd_hash_entry *
+     FUNCTION_NAME (struct bfd_hash_entry *entry,
+                          struct bfd_hash_table *table,
+                          const char *string)
+     {
+       struct ENTRY_TYPE *ret = (ENTRY_TYPE *) entry;
+
+      /* Allocate the structure if it has not already been allocated by a
+         derived class.  */
+       if (ret == NULL)
+         {
+           ret = bfd_hash_allocate (table, sizeof (* ret));
+           if (ret == NULL)
+             return NULL;
+         }
+
+      /* Call the allocation method of the base class.  */
+       ret = ((ENTRY_TYPE *)
+              BASE_NEWFUNC ((struct bfd_hash_entry *) ret, table, string));
+
+      /* Initialize the local fields here.  */
+
+       return (struct bfd_hash_entry *) ret;
+     }
+   *Description*
+The creation routine for the linker hash table, which is in `linker.c',
+looks just like this example.  FUNCTION_NAME is
+`_bfd_link_hash_newfunc'.  ENTRY_TYPE is `struct bfd_link_hash_entry'.
+BASE_NEWFUNC is `bfd_hash_newfunc', the creation routine for a basic
+hash table.
+
+   `_bfd_link_hash_newfunc' also initializes the local fields in a
+linker hash table entry: `type', `written' and `next'.
+
+
+File: bfd.info,  Node: Write Other Derived Routines,  Prev: Write the Derived Creation Routine,  Up: Deriving a New Hash Table Type
+
+2.18.4.3 Write other derived routines
+.....................................
+
+You will want to write other routines for your new hash table, as well.
+
+   You will want an initialization routine which calls the
+initialization routine of the hash table you are deriving from and
+initializes any other local fields.  For the linker hash table, this is
+`_bfd_link_hash_table_init' in `linker.c'.
+
+   You will want a lookup routine which calls the lookup routine of the
+hash table you are deriving from and casts the result.  The linker hash
+table uses `bfd_link_hash_lookup' in `linker.c' (this actually takes an
+additional argument which it uses to decide how to return the looked up
+value).
+
+   You may want a traversal routine.  This should just call the
+traversal routine of the hash table you are deriving from with
+appropriate casts.  The linker hash table uses `bfd_link_hash_traverse'
+in `linker.c'.
+
+   These routines may simply be defined as macros.  For example, the
+a.out backend linker hash table, which is derived from the linker hash
+table, uses macros for the lookup and traversal routines.  These are
+`aout_link_hash_lookup' and `aout_link_hash_traverse' in aoutx.h.
+
+
+File: bfd.info,  Node: BFD back ends,  Next: GNU Free Documentation License,  Prev: BFD front end,  Up: Top
+
+3 BFD back ends
+***************
+
+* Menu:
+
+* What to Put Where::
+* aout ::	a.out backends
+* coff ::	coff backends
+* elf  ::	elf backends
+* mmo  ::	mmo backend
+
+
+File: bfd.info,  Node: What to Put Where,  Next: aout,  Prev: BFD back ends,  Up: BFD back ends
+
+3.1 What to Put Where
+=====================
+
+All of BFD lives in one directory.
+
+
+File: bfd.info,  Node: aout,  Next: coff,  Prev: What to Put Where,  Up: BFD back ends
+
+3.2 a.out backends
+==================
+
+*Description*
+BFD supports a number of different flavours of a.out format, though the
+major differences are only the sizes of the structures on disk, and the
+shape of the relocation information.
+
+   The support is split into a basic support file `aoutx.h' and other
+files which derive functions from the base. One derivation file is
+`aoutf1.h' (for a.out flavour 1), and adds to the basic a.out functions
+support for sun3, sun4, and 386 a.out files, to create a target jump
+vector for a specific target.
+
+   This information is further split out into more specific files for
+each machine, including `sunos.c' for sun3 and sun4, and `demo64.c' for
+a demonstration of a 64 bit a.out format.
+
+   The base file `aoutx.h' defines general mechanisms for reading and
+writing records to and from disk and various other methods which BFD
+requires. It is included by `aout32.c' and `aout64.c' to form the names
+`aout_32_swap_exec_header_in', `aout_64_swap_exec_header_in', etc.
+
+   As an example, this is what goes on to make the back end for a sun4,
+from `aout32.c':
+
+            #define ARCH_SIZE 32
+            #include "aoutx.h"
+
+   Which exports names:
+
+            ...
+            aout_32_canonicalize_reloc
+            aout_32_find_nearest_line
+            aout_32_get_lineno
+            aout_32_get_reloc_upper_bound
+            ...
+
+   from `sunos.c':
+
+            #define TARGET_NAME "a.out-sunos-big"
+            #define VECNAME    sparc_aout_sunos_be_vec
+            #include "aoutf1.h"
+
+   requires all the names from `aout32.c', and produces the jump vector
+
+            sparc_aout_sunos_be_vec
+
+   The file `host-aout.c' is a special case.  It is for a large set of
+hosts that use "more or less standard" a.out files, and for which
+cross-debugging is not interesting.  It uses the standard 32-bit a.out
+support routines, but determines the file offsets and addresses of the
+text, data, and BSS sections, the machine architecture and machine
+type, and the entry point address, in a host-dependent manner.  Once
+these values have been determined, generic code is used to handle the
+object file.
+
+   When porting it to run on a new system, you must supply:
+
+             HOST_PAGE_SIZE
+             HOST_SEGMENT_SIZE
+             HOST_MACHINE_ARCH       (optional)
+             HOST_MACHINE_MACHINE    (optional)
+             HOST_TEXT_START_ADDR
+             HOST_STACK_END_ADDR
+
+   in the file `../include/sys/h-XXX.h' (for your host).  These values,
+plus the structures and macros defined in `a.out.h' on your host
+system, will produce a BFD target that will access ordinary a.out files
+on your host. To configure a new machine to use `host-aout.c', specify:
+
+            TDEFAULTS = -DDEFAULT_VECTOR=host_aout_big_vec
+            TDEPFILES= host-aout.o trad-core.o
+
+   in the `config/XXX.mt' file, and modify `configure.ac' to use the
+`XXX.mt' file (by setting "`bfd_target=XXX'") when your configuration
+is selected.
+
+3.2.1 Relocations
+-----------------
+
+*Description*
+The file `aoutx.h' provides for both the _standard_ and _extended_
+forms of a.out relocation records.
+
+   The standard records contain only an address, a symbol index, and a
+type field.  The extended records also have a full integer for an
+addend.
+
+3.2.2 Internal entry points
+---------------------------
+
+*Description*
+`aoutx.h' exports several routines for accessing the contents of an
+a.out file, which are gathered and exported in turn by various format
+specific files (eg sunos.c).
+
+3.2.2.1 `aout_SIZE_swap_exec_header_in'
+.......................................
+
+*Synopsis*
+     void aout_SIZE_swap_exec_header_in,
+        (bfd *abfd,
+         struct external_exec *bytes,
+         struct internal_exec *execp);
+   *Description*
+Swap the information in an executable header RAW_BYTES taken from a raw
+byte stream memory image into the internal exec header structure EXECP.
+
+3.2.2.2 `aout_SIZE_swap_exec_header_out'
+........................................
+
+*Synopsis*
+     void aout_SIZE_swap_exec_header_out
+        (bfd *abfd,
+         struct internal_exec *execp,
+         struct external_exec *raw_bytes);
+   *Description*
+Swap the information in an internal exec header structure EXECP into
+the buffer RAW_BYTES ready for writing to disk.
+
+3.2.2.3 `aout_SIZE_some_aout_object_p'
+......................................
+
+*Synopsis*
+     const bfd_target *aout_SIZE_some_aout_object_p
+        (bfd *abfd,
+         struct internal_exec *execp,
+         const bfd_target *(*callback_to_real_object_p) (bfd *));
+   *Description*
+Some a.out variant thinks that the file open in ABFD checking is an
+a.out file.  Do some more checking, and set up for access if it really
+is.  Call back to the calling environment's "finish up" function just
+before returning, to handle any last-minute setup.
+
+3.2.2.4 `aout_SIZE_mkobject'
+............................
+
+*Synopsis*
+     bfd_boolean aout_SIZE_mkobject, (bfd *abfd);
+   *Description*
+Initialize BFD ABFD for use with a.out files.
+
+3.2.2.5 `aout_SIZE_machine_type'
+................................
+
+*Synopsis*
+     enum machine_type  aout_SIZE_machine_type
+        (enum bfd_architecture arch,
+         unsigned long machine,
+         bfd_boolean *unknown);
+   *Description*
+Keep track of machine architecture and machine type for a.out's. Return
+the `machine_type' for a particular architecture and machine, or
+`M_UNKNOWN' if that exact architecture and machine can't be represented
+in a.out format.
+
+   If the architecture is understood, machine type 0 (default) is
+always understood.
+
+3.2.2.6 `aout_SIZE_set_arch_mach'
+.................................
+
+*Synopsis*
+     bfd_boolean aout_SIZE_set_arch_mach,
+        (bfd *,
+         enum bfd_architecture arch,
+         unsigned long machine);
+   *Description*
+Set the architecture and the machine of the BFD ABFD to the values ARCH
+and MACHINE.  Verify that ABFD's format can support the architecture
+required.
+
+3.2.2.7 `aout_SIZE_new_section_hook'
+....................................
+
+*Synopsis*
+     bfd_boolean aout_SIZE_new_section_hook,
+        (bfd *abfd,
+         asection *newsect);
+   *Description*
+Called by the BFD in response to a `bfd_make_section' request.
+
+
+File: bfd.info,  Node: coff,  Next: elf,  Prev: aout,  Up: BFD back ends
+
+3.3 coff backends
+=================
+
+BFD supports a number of different flavours of coff format.  The major
+differences between formats are the sizes and alignments of fields in
+structures on disk, and the occasional extra field.
+
+   Coff in all its varieties is implemented with a few common files and
+a number of implementation specific files. For example, the i386 coff
+format is implemented in the file `coff-i386.c'.  This file `#include's
+`coff/i386.h' which defines the external structure of the coff format
+for the i386, and `coff/internal.h' which defines the internal
+structure. `coff-i386.c' also defines the relocations used by the i386
+coff format *Note Relocations::.
+
+3.3.1 Porting to a new version of coff
+--------------------------------------
+
+The recommended method is to select from the existing implementations
+the version of coff which is most like the one you want to use.  For
+example, we'll say that i386 coff is the one you select, and that your
+coff flavour is called foo.  Copy `i386coff.c' to `foocoff.c', copy
+`../include/coff/i386.h' to `../include/coff/foo.h', and add the lines
+to `targets.c' and `Makefile.in' so that your new back end is used.
+Alter the shapes of the structures in `../include/coff/foo.h' so that
+they match what you need. You will probably also have to add `#ifdef's
+to the code in `coff/internal.h' and `coffcode.h' if your version of
+coff is too wild.
+
+   You can verify that your new BFD backend works quite simply by
+building `objdump' from the `binutils' directory, and making sure that
+its version of what's going on and your host system's idea (assuming it
+has the pretty standard coff dump utility, usually called `att-dump' or
+just `dump') are the same.  Then clean up your code, and send what
+you've done to Cygnus. Then your stuff will be in the next release, and
+you won't have to keep integrating it.
+
+3.3.2 How the coff backend works
+--------------------------------
+
+3.3.2.1 File layout
+...................
+
+The Coff backend is split into generic routines that are applicable to
+any Coff target and routines that are specific to a particular target.
+The target-specific routines are further split into ones which are
+basically the same for all Coff targets except that they use the
+external symbol format or use different values for certain constants.
+
+   The generic routines are in `coffgen.c'.  These routines work for
+any Coff target.  They use some hooks into the target specific code;
+the hooks are in a `bfd_coff_backend_data' structure, one of which
+exists for each target.
+
+   The essentially similar target-specific routines are in
+`coffcode.h'.  This header file includes executable C code.  The
+various Coff targets first include the appropriate Coff header file,
+make any special defines that are needed, and then include `coffcode.h'.
+
+   Some of the Coff targets then also have additional routines in the
+target source file itself.
+
+3.3.2.2 Coff long section names
+...............................
+
+In the standard Coff object format, section names are limited to the
+eight bytes available in the `s_name' field of the `SCNHDR' section
+header structure.  The format requires the field to be NUL-padded, but
+not necessarily NUL-terminated, so the longest section names permitted
+are a full eight characters.
+
+   The Microsoft PE variants of the Coff object file format add an
+extension to support the use of long section names.  This extension is
+defined in section 4 of the Microsoft PE/COFF specification (rev 8.1).
+If a section name is too long to fit into the section header's `s_name'
+field, it is instead placed into the string table, and the `s_name'
+field is filled with a slash ("/") followed by the ASCII decimal
+representation of the offset of the full name relative to the string
+table base.
+
+   Note that this implies that the extension can only be used in object
+files, as executables do not contain a string table.  The standard
+specifies that long section names from objects emitted into executable
+images are to be truncated.
+
+   However, as a GNU extension, BFD can generate executable images that
+contain a string table and long section names.  This would appear to be
+technically valid, as the standard only says that Coff debugging
+information is deprecated, not forbidden, and in practice it works,
+although some tools that parse PE files expecting the MS standard
+format may become confused; `PEview' is one known example.
+
+   The functionality is supported in BFD by code implemented under the
+control of the macro `COFF_LONG_SECTION_NAMES'.  If not defined, the
+format does not support long section names in any way.  If defined, it
+is used to initialise a flag, `_bfd_coff_long_section_names', and a
+hook function pointer, `_bfd_coff_set_long_section_names', in the Coff
+backend data structure.  The flag controls the generation of long
+section names in output BFDs at runtime; if it is false, as it will be
+by default when generating an executable image, long section names are
+truncated; if true, the long section names extension is employed.  The
+hook points to a function that allows the value of the flag to be
+altered at runtime, on formats that support long section names at all;
+on other formats it points to a stub that returns an error indication.
+
+   With input BFDs, the flag is set according to whether any long
+section names are detected while reading the section headers.  For a
+completely new BFD, the flag is set to the default for the target
+format.  This information can be used by a client of the BFD library
+when deciding what output format to generate, and means that a BFD that
+is opened for read and subsequently converted to a writeable BFD and
+modified in-place will retain whatever format it had on input.
+
+   If `COFF_LONG_SECTION_NAMES' is simply defined (blank), or is
+defined to the value "1", then long section names are enabled by
+default; if it is defined to the value zero, they are disabled by
+default (but still accepted in input BFDs).  The header `coffcode.h'
+defines a macro, `COFF_DEFAULT_LONG_SECTION_NAMES', which is used in
+the backends to initialise the backend data structure fields
+appropriately; see the comments for further detail.
+
+3.3.2.3 Bit twiddling
+.....................
+
+Each flavour of coff supported in BFD has its own header file
+describing the external layout of the structures. There is also an
+internal description of the coff layout, in `coff/internal.h'. A major
+function of the coff backend is swapping the bytes and twiddling the
+bits to translate the external form of the structures into the normal
+internal form. This is all performed in the `bfd_swap'_thing_direction
+routines. Some elements are different sizes between different versions
+of coff; it is the duty of the coff version specific include file to
+override the definitions of various packing routines in `coffcode.h'.
+E.g., the size of line number entry in coff is sometimes 16 bits, and
+sometimes 32 bits. `#define'ing `PUT_LNSZ_LNNO' and `GET_LNSZ_LNNO'
+will select the correct one. No doubt, some day someone will find a
+version of coff which has a varying field size not catered to at the
+moment. To port BFD, that person will have to add more `#defines'.
+Three of the bit twiddling routines are exported to `gdb';
+`coff_swap_aux_in', `coff_swap_sym_in' and `coff_swap_lineno_in'. `GDB'
+reads the symbol table on its own, but uses BFD to fix things up.  More
+of the bit twiddlers are exported for `gas'; `coff_swap_aux_out',
+`coff_swap_sym_out', `coff_swap_lineno_out', `coff_swap_reloc_out',
+`coff_swap_filehdr_out', `coff_swap_aouthdr_out',
+`coff_swap_scnhdr_out'. `Gas' currently keeps track of all the symbol
+table and reloc drudgery itself, thereby saving the internal BFD
+overhead, but uses BFD to swap things on the way out, making cross
+ports much safer.  Doing so also allows BFD (and thus the linker) to
+use the same header files as `gas', which makes one avenue to disaster
+disappear.
+
+3.3.2.4 Symbol reading
+......................
+
+The simple canonical form for symbols used by BFD is not rich enough to
+keep all the information available in a coff symbol table. The back end
+gets around this problem by keeping the original symbol table around,
+"behind the scenes".
+
+   When a symbol table is requested (through a call to
+`bfd_canonicalize_symtab'), a request gets through to
+`coff_get_normalized_symtab'. This reads the symbol table from the coff
+file and swaps all the structures inside into the internal form. It
+also fixes up all the pointers in the table (represented in the file by
+offsets from the first symbol in the table) into physical pointers to
+elements in the new internal table. This involves some work since the
+meanings of fields change depending upon context: a field that is a
+pointer to another structure in the symbol table at one moment may be
+the size in bytes of a structure at the next.  Another pass is made
+over the table. All symbols which mark file names (`C_FILE' symbols)
+are modified so that the internal string points to the value in the
+auxent (the real filename) rather than the normal text associated with
+the symbol (`".file"').
+
+   At this time the symbol names are moved around. Coff stores all
+symbols less than nine characters long physically within the symbol
+table; longer strings are kept at the end of the file in the string
+table. This pass moves all strings into memory and replaces them with
+pointers to the strings.
+
+   The symbol table is massaged once again, this time to create the
+canonical table used by the BFD application. Each symbol is inspected
+in turn, and a decision made (using the `sclass' field) about the
+various flags to set in the `asymbol'.  *Note Symbols::. The generated
+canonical table shares strings with the hidden internal symbol table.
+
+   Any linenumbers are read from the coff file too, and attached to the
+symbols which own the functions the linenumbers belong to.
+
+3.3.2.5 Symbol writing
+......................
+
+Writing a symbol to a coff file which didn't come from a coff file will
+lose any debugging information. The `asymbol' structure remembers the
+BFD from which the symbol was taken, and on output the back end makes
+sure that the same destination target as source target is present.
+
+   When the symbols have come from a coff file then all the debugging
+information is preserved.
+
+   Symbol tables are provided for writing to the back end in a vector
+of pointers to pointers. This allows applications like the linker to
+accumulate and output large symbol tables without having to do too much
+byte copying.
+
+   This function runs through the provided symbol table and patches
+each symbol marked as a file place holder (`C_FILE') to point to the
+next file place holder in the list. It also marks each `offset' field
+in the list with the offset from the first symbol of the current symbol.
+
+   Another function of this procedure is to turn the canonical value
+form of BFD into the form used by coff. Internally, BFD expects symbol
+values to be offsets from a section base; so a symbol physically at
+0x120, but in a section starting at 0x100, would have the value 0x20.
+Coff expects symbols to contain their final value, so symbols have
+their values changed at this point to reflect their sum with their
+owning section.  This transformation uses the `output_section' field of
+the `asymbol''s `asection' *Note Sections::.
+
+   * `coff_mangle_symbols'
+   This routine runs though the provided symbol table and uses the
+offsets generated by the previous pass and the pointers generated when
+the symbol table was read in to create the structured hierarchy
+required by coff. It changes each pointer to a symbol into the index
+into the symbol table of the asymbol.
+
+   * `coff_write_symbols'
+   This routine runs through the symbol table and patches up the
+symbols from their internal form into the coff way, calls the bit
+twiddlers, and writes out the table to the file.
+
+3.3.2.6 `coff_symbol_type'
+..........................
+
+*Description*
+The hidden information for an `asymbol' is described in a
+`combined_entry_type':
+
+
+     typedef struct coff_ptr_struct
+     {
+       /* Remembers the offset from the first symbol in the file for
+          this symbol. Generated by coff_renumber_symbols.  */
+       unsigned int offset;
+
+       /* Should the value of this symbol be renumbered.  Used for
+          XCOFF C_BSTAT symbols.  Set by coff_slurp_symbol_table.  */
+       unsigned int fix_value : 1;
+
+       /* Should the tag field of this symbol be renumbered.
+          Created by coff_pointerize_aux.  */
+       unsigned int fix_tag : 1;
+
+       /* Should the endidx field of this symbol be renumbered.
+          Created by coff_pointerize_aux.  */
+       unsigned int fix_end : 1;
+
+       /* Should the x_csect.x_scnlen field be renumbered.
+          Created by coff_pointerize_aux.  */
+       unsigned int fix_scnlen : 1;
+
+       /* Fix up an XCOFF C_BINCL/C_EINCL symbol.  The value is the
+          index into the line number entries.  Set by coff_slurp_symbol_table.  */
+       unsigned int fix_line : 1;
+
+       /* The container for the symbol structure as read and translated
+          from the file.  */
+       union
+       {
+         union internal_auxent auxent;
+         struct internal_syment syment;
+       } u;
+
+      /* Selector for the union above.  */
+      bfd_boolean is_sym;
+     } combined_entry_type;
+
+
+     /* Each canonical asymbol really looks like this: */
+
+     typedef struct coff_symbol_struct
+     {
+       /* The actual symbol which the rest of BFD works with */
+       asymbol symbol;
+
+       /* A pointer to the hidden information for this symbol */
+       combined_entry_type *native;
+
+       /* A pointer to the linenumber information for this symbol */
+       struct lineno_cache_entry *lineno;
+
+       /* Have the line numbers been relocated yet ? */
+       bfd_boolean done_lineno;
+     } coff_symbol_type;
+   
+3.3.2.7 `bfd_coff_backend_data'
+...............................
+
+     /* COFF symbol classifications.  */
+
+     enum coff_symbol_classification
+     {
+       /* Global symbol.  */
+       COFF_SYMBOL_GLOBAL,
+       /* Common symbol.  */
+       COFF_SYMBOL_COMMON,
+       /* Undefined symbol.  */
+       COFF_SYMBOL_UNDEFINED,
+       /* Local symbol.  */
+       COFF_SYMBOL_LOCAL,
+       /* PE section symbol.  */
+       COFF_SYMBOL_PE_SECTION
+     };
+
+     typedef asection * (*coff_gc_mark_hook_fn)
+       (asection *, struct bfd_link_info *, struct internal_reloc *,
+        struct coff_link_hash_entry *, struct internal_syment *);
+Special entry points for gdb to swap in coff symbol table parts:
+     typedef struct
+     {
+       void (*_bfd_coff_swap_aux_in)
+         (bfd *, void *, int, int, int, int, void *);
+
+       void (*_bfd_coff_swap_sym_in)
+         (bfd *, void *, void *);
+
+       void (*_bfd_coff_swap_lineno_in)
+         (bfd *, void *, void *);
+
+       unsigned int (*_bfd_coff_swap_aux_out)
+         (bfd *, void *, int, int, int, int, void *);
+
+       unsigned int (*_bfd_coff_swap_sym_out)
+         (bfd *, void *, void *);
+
+       unsigned int (*_bfd_coff_swap_lineno_out)
+         (bfd *, void *, void *);
+
+       unsigned int (*_bfd_coff_swap_reloc_out)
+         (bfd *, void *, void *);
+
+       unsigned int (*_bfd_coff_swap_filehdr_out)
+         (bfd *, void *, void *);
+
+       unsigned int (*_bfd_coff_swap_aouthdr_out)
+         (bfd *, void *, void *);
+
+       unsigned int (*_bfd_coff_swap_scnhdr_out)
+         (bfd *, void *, void *);
+
+       unsigned int _bfd_filhsz;
+       unsigned int _bfd_aoutsz;
+       unsigned int _bfd_scnhsz;
+       unsigned int _bfd_symesz;
+       unsigned int _bfd_auxesz;
+       unsigned int _bfd_relsz;
+       unsigned int _bfd_linesz;
+       unsigned int _bfd_filnmlen;
+       bfd_boolean _bfd_coff_long_filenames;
+
+       bfd_boolean _bfd_coff_long_section_names;
+       bfd_boolean (*_bfd_coff_set_long_section_names)
+         (bfd *, int);
+
+       unsigned int _bfd_coff_default_section_alignment_power;
+       bfd_boolean _bfd_coff_force_symnames_in_strings;
+       unsigned int _bfd_coff_debug_string_prefix_length;
+       unsigned int _bfd_coff_max_nscns;
+
+       void (*_bfd_coff_swap_filehdr_in)
+         (bfd *, void *, void *);
+
+       void (*_bfd_coff_swap_aouthdr_in)
+         (bfd *, void *, void *);
+
+       void (*_bfd_coff_swap_scnhdr_in)
+         (bfd *, void *, void *);
+
+       void (*_bfd_coff_swap_reloc_in)
+         (bfd *abfd, void *, void *);
+
+       bfd_boolean (*_bfd_coff_bad_format_hook)
+         (bfd *, void *);
+
+       bfd_boolean (*_bfd_coff_set_arch_mach_hook)
+         (bfd *, void *);
+
+       void * (*_bfd_coff_mkobject_hook)
+         (bfd *, void *, void *);
+
+       bfd_boolean (*_bfd_styp_to_sec_flags_hook)
+         (bfd *, void *, const char *, asection *, flagword *);
+
+       void (*_bfd_set_alignment_hook)
+         (bfd *, asection *, void *);
+
+       bfd_boolean (*_bfd_coff_slurp_symbol_table)
+         (bfd *);
+
+       bfd_boolean (*_bfd_coff_symname_in_debug)
+         (bfd *, struct internal_syment *);
+
+       bfd_boolean (*_bfd_coff_pointerize_aux_hook)
+         (bfd *, combined_entry_type *, combined_entry_type *,
+          unsigned int, combined_entry_type *);
+
+       bfd_boolean (*_bfd_coff_print_aux)
+         (bfd *, FILE *, combined_entry_type *, combined_entry_type *,
+          combined_entry_type *, unsigned int);
+
+       void (*_bfd_coff_reloc16_extra_cases)
+         (bfd *, struct bfd_link_info *, struct bfd_link_order *, arelent *,
+          bfd_byte *, unsigned int *, unsigned int *);
+
+       int (*_bfd_coff_reloc16_estimate)
+         (bfd *, asection *, arelent *, unsigned int,
+          struct bfd_link_info *);
+
+       enum coff_symbol_classification (*_bfd_coff_classify_symbol)
+         (bfd *, struct internal_syment *);
+
+       bfd_boolean (*_bfd_coff_compute_section_file_positions)
+         (bfd *);
+
+       bfd_boolean (*_bfd_coff_start_final_link)
+         (bfd *, struct bfd_link_info *);
+
+       bfd_boolean (*_bfd_coff_relocate_section)
+         (bfd *, struct bfd_link_info *, bfd *, asection *, bfd_byte *,
+          struct internal_reloc *, struct internal_syment *, asection **);
+
+       reloc_howto_type *(*_bfd_coff_rtype_to_howto)
+         (bfd *, asection *, struct internal_reloc *,
+          struct coff_link_hash_entry *, struct internal_syment *, bfd_vma *);
+
+       bfd_boolean (*_bfd_coff_adjust_symndx)
+         (bfd *, struct bfd_link_info *, bfd *, asection *,
+          struct internal_reloc *, bfd_boolean *);
+
+       bfd_boolean (*_bfd_coff_link_add_one_symbol)
+         (struct bfd_link_info *, bfd *, const char *, flagword,
+          asection *, bfd_vma, const char *, bfd_boolean, bfd_boolean,
+          struct bfd_link_hash_entry **);
+
+       bfd_boolean (*_bfd_coff_link_output_has_begun)
+         (bfd *, struct coff_final_link_info *);
+
+       bfd_boolean (*_bfd_coff_final_link_postscript)
+         (bfd *, struct coff_final_link_info *);
+
+       bfd_boolean (*_bfd_coff_print_pdata)
+         (bfd *, void *);
+
+     } bfd_coff_backend_data;
+
+     #define coff_backend_info(abfd) \
+       ((bfd_coff_backend_data *) (abfd)->xvec->backend_data)
+
+     #define bfd_coff_swap_aux_in(a,e,t,c,ind,num,i) \
+       ((coff_backend_info (a)->_bfd_coff_swap_aux_in) (a,e,t,c,ind,num,i))
+
+     #define bfd_coff_swap_sym_in(a,e,i) \
+       ((coff_backend_info (a)->_bfd_coff_swap_sym_in) (a,e,i))
+
+     #define bfd_coff_swap_lineno_in(a,e,i) \
+       ((coff_backend_info ( a)->_bfd_coff_swap_lineno_in) (a,e,i))
+
+     #define bfd_coff_swap_reloc_out(abfd, i, o) \
+       ((coff_backend_info (abfd)->_bfd_coff_swap_reloc_out) (abfd, i, o))
+
+     #define bfd_coff_swap_lineno_out(abfd, i, o) \
+       ((coff_backend_info (abfd)->_bfd_coff_swap_lineno_out) (abfd, i, o))
+
+     #define bfd_coff_swap_aux_out(a,i,t,c,ind,num,o) \
+       ((coff_backend_info (a)->_bfd_coff_swap_aux_out) (a,i,t,c,ind,num,o))
+
+     #define bfd_coff_swap_sym_out(abfd, i,o) \
+       ((coff_backend_info (abfd)->_bfd_coff_swap_sym_out) (abfd, i, o))
+
+     #define bfd_coff_swap_scnhdr_out(abfd, i,o) \
+       ((coff_backend_info (abfd)->_bfd_coff_swap_scnhdr_out) (abfd, i, o))
+
+     #define bfd_coff_swap_filehdr_out(abfd, i,o) \
+       ((coff_backend_info (abfd)->_bfd_coff_swap_filehdr_out) (abfd, i, o))
+
+     #define bfd_coff_swap_aouthdr_out(abfd, i,o) \
+       ((coff_backend_info (abfd)->_bfd_coff_swap_aouthdr_out) (abfd, i, o))
+
+     #define bfd_coff_filhsz(abfd) (coff_backend_info (abfd)->_bfd_filhsz)
+     #define bfd_coff_aoutsz(abfd) (coff_backend_info (abfd)->_bfd_aoutsz)
+     #define bfd_coff_scnhsz(abfd) (coff_backend_info (abfd)->_bfd_scnhsz)
+     #define bfd_coff_symesz(abfd) (coff_backend_info (abfd)->_bfd_symesz)
+     #define bfd_coff_auxesz(abfd) (coff_backend_info (abfd)->_bfd_auxesz)
+     #define bfd_coff_relsz(abfd)  (coff_backend_info (abfd)->_bfd_relsz)
+     #define bfd_coff_linesz(abfd) (coff_backend_info (abfd)->_bfd_linesz)
+     #define bfd_coff_filnmlen(abfd) (coff_backend_info (abfd)->_bfd_filnmlen)
+     #define bfd_coff_long_filenames(abfd) \
+       (coff_backend_info (abfd)->_bfd_coff_long_filenames)
+     #define bfd_coff_long_section_names(abfd) \
+       (coff_backend_info (abfd)->_bfd_coff_long_section_names)
+     #define bfd_coff_set_long_section_names(abfd, enable) \
+       ((coff_backend_info (abfd)->_bfd_coff_set_long_section_names) (abfd, enable))
+     #define bfd_coff_default_section_alignment_power(abfd) \
+       (coff_backend_info (abfd)->_bfd_coff_default_section_alignment_power)
+     #define bfd_coff_max_nscns(abfd) \
+       (coff_backend_info (abfd)->_bfd_coff_max_nscns)
+
+     #define bfd_coff_swap_filehdr_in(abfd, i,o) \
+       ((coff_backend_info (abfd)->_bfd_coff_swap_filehdr_in) (abfd, i, o))
+
+     #define bfd_coff_swap_aouthdr_in(abfd, i,o) \
+       ((coff_backend_info (abfd)->_bfd_coff_swap_aouthdr_in) (abfd, i, o))
+
+     #define bfd_coff_swap_scnhdr_in(abfd, i,o) \
+       ((coff_backend_info (abfd)->_bfd_coff_swap_scnhdr_in) (abfd, i, o))
+
+     #define bfd_coff_swap_reloc_in(abfd, i, o) \
+       ((coff_backend_info (abfd)->_bfd_coff_swap_reloc_in) (abfd, i, o))
+
+     #define bfd_coff_bad_format_hook(abfd, filehdr) \
+       ((coff_backend_info (abfd)->_bfd_coff_bad_format_hook) (abfd, filehdr))
+
+     #define bfd_coff_set_arch_mach_hook(abfd, filehdr)\
+       ((coff_backend_info (abfd)->_bfd_coff_set_arch_mach_hook) (abfd, filehdr))
+     #define bfd_coff_mkobject_hook(abfd, filehdr, aouthdr)\
+       ((coff_backend_info (abfd)->_bfd_coff_mkobject_hook)\
+        (abfd, filehdr, aouthdr))
+
+     #define bfd_coff_styp_to_sec_flags_hook(abfd, scnhdr, name, section, flags_ptr)\
+       ((coff_backend_info (abfd)->_bfd_styp_to_sec_flags_hook)\
+        (abfd, scnhdr, name, section, flags_ptr))
+
+     #define bfd_coff_set_alignment_hook(abfd, sec, scnhdr)\
+       ((coff_backend_info (abfd)->_bfd_set_alignment_hook) (abfd, sec, scnhdr))
+
+     #define bfd_coff_slurp_symbol_table(abfd)\
+       ((coff_backend_info (abfd)->_bfd_coff_slurp_symbol_table) (abfd))
+
+     #define bfd_coff_symname_in_debug(abfd, sym)\
+       ((coff_backend_info (abfd)->_bfd_coff_symname_in_debug) (abfd, sym))
+
+     #define bfd_coff_force_symnames_in_strings(abfd)\
+       (coff_backend_info (abfd)->_bfd_coff_force_symnames_in_strings)
+
+     #define bfd_coff_debug_string_prefix_length(abfd)\
+       (coff_backend_info (abfd)->_bfd_coff_debug_string_prefix_length)
+
+     #define bfd_coff_print_aux(abfd, file, base, symbol, aux, indaux)\
+       ((coff_backend_info (abfd)->_bfd_coff_print_aux)\
+        (abfd, file, base, symbol, aux, indaux))
+
+     #define bfd_coff_reloc16_extra_cases(abfd, link_info, link_order,\
+                                          reloc, data, src_ptr, dst_ptr)\
+       ((coff_backend_info (abfd)->_bfd_coff_reloc16_extra_cases)\
+        (abfd, link_info, link_order, reloc, data, src_ptr, dst_ptr))
+
+     #define bfd_coff_reloc16_estimate(abfd, section, reloc, shrink, link_info)\
+       ((coff_backend_info (abfd)->_bfd_coff_reloc16_estimate)\
+        (abfd, section, reloc, shrink, link_info))
+
+     #define bfd_coff_classify_symbol(abfd, sym)\
+       ((coff_backend_info (abfd)->_bfd_coff_classify_symbol)\
+        (abfd, sym))
+
+     #define bfd_coff_compute_section_file_positions(abfd)\
+       ((coff_backend_info (abfd)->_bfd_coff_compute_section_file_positions)\
+        (abfd))
+
+     #define bfd_coff_start_final_link(obfd, info)\
+       ((coff_backend_info (obfd)->_bfd_coff_start_final_link)\
+        (obfd, info))
+     #define bfd_coff_relocate_section(obfd,info,ibfd,o,con,rel,isyms,secs)\
+       ((coff_backend_info (ibfd)->_bfd_coff_relocate_section)\
+        (obfd, info, ibfd, o, con, rel, isyms, secs))
+     #define bfd_coff_rtype_to_howto(abfd, sec, rel, h, sym, addendp)\
+       ((coff_backend_info (abfd)->_bfd_coff_rtype_to_howto)\
+        (abfd, sec, rel, h, sym, addendp))
+     #define bfd_coff_adjust_symndx(obfd, info, ibfd, sec, rel, adjustedp)\
+       ((coff_backend_info (abfd)->_bfd_coff_adjust_symndx)\
+        (obfd, info, ibfd, sec, rel, adjustedp))
+     #define bfd_coff_link_add_one_symbol(info, abfd, name, flags, section,\
+                                          value, string, cp, coll, hashp)\
+       ((coff_backend_info (abfd)->_bfd_coff_link_add_one_symbol)\
+        (info, abfd, name, flags, section, value, string, cp, coll, hashp))
+
+     #define bfd_coff_link_output_has_begun(a,p) \
+       ((coff_backend_info (a)->_bfd_coff_link_output_has_begun) (a, p))
+     #define bfd_coff_final_link_postscript(a,p) \
+       ((coff_backend_info (a)->_bfd_coff_final_link_postscript) (a, p))
+
+     #define bfd_coff_have_print_pdata(a) \
+       (coff_backend_info (a)->_bfd_coff_print_pdata)
+     #define bfd_coff_print_pdata(a,p) \
+       ((coff_backend_info (a)->_bfd_coff_print_pdata) (a, p))
+
+     /* Macro: Returns true if the bfd is a PE executable as opposed to a
+        PE object file.  */
+     #define bfd_pei_p(abfd) \
+       (CONST_STRNEQ ((abfd)->xvec->name, "pei-"))
+
+3.3.2.8 Writing relocations
+...........................
+
+To write relocations, the back end steps though the canonical
+relocation table and create an `internal_reloc'. The symbol index to
+use is removed from the `offset' field in the symbol table supplied.
+The address comes directly from the sum of the section base address and
+the relocation offset; the type is dug directly from the howto field.
+Then the `internal_reloc' is swapped into the shape of an
+`external_reloc' and written out to disk.
+
+3.3.2.9 Reading linenumbers
+...........................
+
+Creating the linenumber table is done by reading in the entire coff
+linenumber table, and creating another table for internal use.
+
+   A coff linenumber table is structured so that each function is
+marked as having a line number of 0. Each line within the function is
+an offset from the first line in the function. The base of the line
+number information for the table is stored in the symbol associated
+with the function.
+
+   Note: The PE format uses line number 0 for a flag indicating a new
+source file.
+
+   The information is copied from the external to the internal table,
+and each symbol which marks a function is marked by pointing its...
+
+   How does this work ?
+
+3.3.2.10 Reading relocations
+............................
+
+Coff relocations are easily transformed into the internal BFD form
+(`arelent').
+
+   Reading a coff relocation table is done in the following stages:
+
+   * Read the entire coff relocation table into memory.
+
+   * Process each relocation in turn; first swap it from the external
+     to the internal form.
+
+   * Turn the symbol referenced in the relocation's symbol index into a
+     pointer into the canonical symbol table.  This table is the same
+     as the one returned by a call to `bfd_canonicalize_symtab'. The
+     back end will call that routine and save the result if a
+     canonicalization hasn't been done.
+
+   * The reloc index is turned into a pointer to a howto structure, in
+     a back end specific way. For instance, the 386 uses the `r_type'
+     to directly produce an index into a howto table vector.
+
+
+File: bfd.info,  Node: elf,  Next: mmo,  Prev: coff,  Up: BFD back ends
+
+3.4 ELF backends
+================
+
+BFD support for ELF formats is being worked on.  Currently, the best
+supported back ends are for sparc and i386 (running svr4 or Solaris 2).
+
+   Documentation of the internals of the support code still needs to be
+written.  The code is changing quickly enough that we haven't bothered
+yet.
+
+
+File: bfd.info,  Node: mmo,  Prev: elf,  Up: BFD back ends
+
+3.5 mmo backend
+===============
+
+The mmo object format is used exclusively together with Professor
+Donald E. Knuth's educational 64-bit processor MMIX.  The simulator
+`mmix' which is available at `http://mmix.cs.hm.edu/src/index.html'
+understands this format.  That package also includes a combined
+assembler and linker called `mmixal'.  The mmo format has no advantages
+feature-wise compared to e.g. ELF.  It is a simple non-relocatable
+object format with no support for archives or debugging information,
+except for symbol value information and line numbers (which is not yet
+implemented in BFD).  See `http://mmix.cs.hm.edu/' for more information
+about MMIX.  The ELF format is used for intermediate object files in
+the BFD implementation.
+
+* Menu:
+
+* File layout::
+* Symbol-table::
+* mmo section mapping::
+
+
+File: bfd.info,  Node: File layout,  Next: Symbol-table,  Prev: mmo,  Up: mmo
+
+3.5.1 File layout
+-----------------
+
+The mmo file contents is not partitioned into named sections as with
+e.g. ELF.  Memory areas is formed by specifying the location of the
+data that follows.  Only the memory area `0x0000...00' to `0x01ff...ff'
+is executable, so it is used for code (and constants) and the area
+`0x2000...00' to `0x20ff...ff' is used for writable data.  *Note mmo
+section mapping::.
+
+   There is provision for specifying "special data" of 65536 different
+types.  We use type 80 (decimal), arbitrarily chosen the same as the
+ELF `e_machine' number for MMIX, filling it with section information
+normally found in ELF objects. *Note mmo section mapping::.
+
+   Contents is entered as 32-bit words, xor:ed over previous contents,
+always zero-initialized.  A word that starts with the byte `0x98' forms
+a command called a `lopcode', where the next byte distinguished between
+the thirteen lopcodes.  The two remaining bytes, called the `Y' and `Z'
+fields, or the `YZ' field (a 16-bit big-endian number), are used for
+various purposes different for each lopcode.  As documented in
+`http://mmix.cs.hm.edu/doc/mmixal.pdf', the lopcodes are:
+
+`lop_quote'
+     0x98000001.  The next word is contents, regardless of whether it
+     starts with 0x98 or not.
+
+`lop_loc'
+     0x9801YYZZ, where `Z' is 1 or 2.  This is a location directive,
+     setting the location for the next data to the next 32-bit word
+     (for Z = 1) or 64-bit word (for Z = 2), plus Y * 2^56.  Normally
+     `Y' is 0 for the text segment and 2 for the data segment.  Beware
+     that the low bits of non- tetrabyte-aligned values are silently
+     discarded when being automatically incremented and when storing
+     contents (in contrast to e.g. its use as current location when
+     followed by lop_fixo et al before the next possibly-quoted
+     tetrabyte contents).
+
+`lop_skip'
+     0x9802YYZZ.  Increase the current location by `YZ' bytes.
+
+`lop_fixo'
+     0x9803YYZZ, where `Z' is 1 or 2.  Store the current location as 64
+     bits into the location pointed to by the next 32-bit (Z = 1) or
+     64-bit (Z = 2) word, plus Y * 2^56.
+
+`lop_fixr'
+     0x9804YYZZ.  `YZ' is stored into the current location plus 2 - 4 *
+     YZ.
+
+`lop_fixrx'
+     0x980500ZZ.  `Z' is 16 or 24.  A value `L' derived from the
+     following 32-bit word are used in a manner similar to `YZ' in
+     lop_fixr: it is xor:ed into the current location minus 4 * L.  The
+     first byte of the word is 0 or 1.  If it is 1, then L = (LOWEST 24
+     BITS OF WORD) - 2^Z, if 0, then L = (LOWEST 24 BITS OF WORD).
+
+`lop_file'
+     0x9806YYZZ.  `Y' is the file number, `Z' is count of 32-bit words.
+     Set the file number to `Y' and the line counter to 0.  The next Z
+     * 4 bytes contain the file name, padded with zeros if the count is
+     not a multiple of four.  The same `Y' may occur multiple times,
+     but `Z' must be 0 for all but the first occurrence.
+
+`lop_line'
+     0x9807YYZZ.  `YZ' is the line number.  Together with lop_file, it
+     forms the source location for the next 32-bit word.  Note that for
+     each non-lopcode 32-bit word, line numbers are assumed incremented
+     by one.
+
+`lop_spec'
+     0x9808YYZZ.  `YZ' is the type number.  Data until the next lopcode
+     other than lop_quote forms special data of type `YZ'.  *Note mmo
+     section mapping::.
+
+     Other types than 80, (or type 80 with a content that does not
+     parse) is stored in sections named `.MMIX.spec_data.N' where N is
+     the `YZ'-type.  The flags for such a sections say not to allocate
+     or load the data.  The vma is 0.  Contents of multiple occurrences
+     of special data N is concatenated to the data of the previous
+     lop_spec Ns.  The location in data or code at which the lop_spec
+     occurred is lost.
+
+`lop_pre'
+     0x980901ZZ.  The first lopcode in a file.  The `Z' field forms the
+     length of header information in 32-bit words, where the first word
+     tells the time in seconds since `00:00:00 GMT Jan 1 1970'.
+
+`lop_post'
+     0x980a00ZZ.  Z > 32.  This lopcode follows after all
+     content-generating lopcodes in a program.  The `Z' field denotes
+     the value of `rG' at the beginning of the program.  The following
+     256 - Z big-endian 64-bit words are loaded into global registers
+     `$G' ... `$255'.
+
+`lop_stab'
+     0x980b0000.  The next-to-last lopcode in a program.  Must follow
+     immediately after the lop_post lopcode and its data.  After this
+     lopcode follows all symbols in a compressed format (*note
+     Symbol-table::).
+
+`lop_end'
+     0x980cYYZZ.  The last lopcode in a program.  It must follow the
+     lop_stab lopcode and its data.  The `YZ' field contains the number
+     of 32-bit words of symbol table information after the preceding
+     lop_stab lopcode.
+
+   Note that the lopcode "fixups"; `lop_fixr', `lop_fixrx' and
+`lop_fixo' are not generated by BFD, but are handled.  They are
+generated by `mmixal'.
+
+   This trivial one-label, one-instruction file:
+
+      :Main TRAP 1,2,3
+
+   can be represented this way in mmo:
+
+      0x98090101 - lop_pre, one 32-bit word with timestamp.
+      <timestamp>
+      0x98010002 - lop_loc, text segment, using a 64-bit address.
+                   Note that mmixal does not emit this for the file above.
+      0x00000000 - Address, high 32 bits.
+      0x00000000 - Address, low 32 bits.
+      0x98060002 - lop_file, 2 32-bit words for file-name.
+      0x74657374 - "test"
+      0x2e730000 - ".s\0\0"
+      0x98070001 - lop_line, line 1.
+      0x00010203 - TRAP 1,2,3
+      0x980a00ff - lop_post, setting $255 to 0.
+      0x00000000
+      0x00000000
+      0x980b0000 - lop_stab for ":Main" = 0, serial 1.
+      0x203a4040   *Note Symbol-table::.
+      0x10404020
+      0x4d206120
+      0x69016e00
+      0x81000000
+      0x980c0005 - lop_end; symbol table contained five 32-bit words.
+
+
+File: bfd.info,  Node: Symbol-table,  Next: mmo section mapping,  Prev: File layout,  Up: mmo
+
+3.5.2 Symbol table format
+-------------------------
+
+From mmixal.w (or really, the generated mmixal.tex) in the MMIXware
+package which also contains the `mmix' simulator: "Symbols are stored
+and retrieved by means of a `ternary search trie', following ideas of
+Bentley and Sedgewick. (See ACM-SIAM Symp. on Discrete Algorithms `8'
+(1997), 360-369; R.Sedgewick, `Algorithms in C' (Reading, Mass.
+Addison-Wesley, 1998), `15.4'.)  Each trie node stores a character, and
+there are branches to subtries for the cases where a given character is
+less than, equal to, or greater than the character in the trie.  There
+also is a pointer to a symbol table entry if a symbol ends at the
+current node."
+
+   So it's a tree encoded as a stream of bytes.  The stream of bytes
+acts on a single virtual global symbol, adding and removing characters
+and signalling complete symbol points.  Here, we read the stream and
+create symbols at the completion points.
+
+   First, there's a control byte `m'.  If any of the listed bits in `m'
+is nonzero, we execute what stands at the right, in the listed order:
+
+      (MMO3_LEFT)
+      0x40 - Traverse left trie.
+             (Read a new command byte and recurse.)
+
+      (MMO3_SYMBITS)
+      0x2f - Read the next byte as a character and store it in the
+             current character position; increment character position.
+             Test the bits of `m':
+
+             (MMO3_WCHAR)
+             0x80 - The character is 16-bit (so read another byte,
+                    merge into current character.
+
+             (MMO3_TYPEBITS)
+             0xf  - We have a complete symbol; parse the type, value
+                    and serial number and do what should be done
+                    with a symbol.  The type and length information
+                    is in j = (m & 0xf).
+
+                    (MMO3_REGQUAL_BITS)
+                    j == 0xf: A register variable.  The following
+                              byte tells which register.
+                    j <= 8:   An absolute symbol.  Read j bytes as the
+                              big-endian number the symbol equals.
+                              A j = 2 with two zero bytes denotes an
+                              unknown symbol.
+                    j > 8:    As with j <= 8, but add (0x20 << 56)
+                              to the value in the following j - 8
+                              bytes.
+
+                    Then comes the serial number, as a variant of
+                    uleb128, but better named ubeb128:
+                    Read bytes and shift the previous value left 7
+                    (multiply by 128).  Add in the new byte, repeat
+                    until a byte has bit 7 set.  The serial number
+                    is the computed value minus 128.
+
+             (MMO3_MIDDLE)
+             0x20 - Traverse middle trie.  (Read a new command byte
+                    and recurse.)  Decrement character position.
+
+      (MMO3_RIGHT)
+      0x10 - Traverse right trie.  (Read a new command byte and
+             recurse.)
+
+   Let's look again at the `lop_stab' for the trivial file (*note File
+layout::).
+
+      0x980b0000 - lop_stab for ":Main" = 0, serial 1.
+      0x203a4040
+      0x10404020
+      0x4d206120
+      0x69016e00
+      0x81000000
+
+   This forms the trivial trie (note that the path between ":" and "M"
+is redundant):
+
+      203a     ":"
+      40       /
+      40      /
+      10      \
+      40      /
+      40     /
+      204d  "M"
+      2061  "a"
+      2069  "i"
+      016e  "n" is the last character in a full symbol, and
+            with a value represented in one byte.
+      00    The value is 0.
+      81    The serial number is 1.
+
+
+File: bfd.info,  Node: mmo section mapping,  Prev: Symbol-table,  Up: mmo
+
+3.5.3 mmo section mapping
+-------------------------
+
+The implementation in BFD uses special data type 80 (decimal) to
+encapsulate and describe named sections, containing e.g. debug
+information.  If needed, any datum in the encapsulation will be quoted
+using lop_quote.  First comes a 32-bit word holding the number of
+32-bit words containing the zero-terminated zero-padded segment name.
+After the name there's a 32-bit word holding flags describing the
+section type.  Then comes a 64-bit big-endian word with the section
+length (in bytes), then another with the section start address.
+Depending on the type of section, the contents might follow,
+zero-padded to 32-bit boundary.  For a loadable section (such as data
+or code), the contents might follow at some later point, not
+necessarily immediately, as a lop_loc with the same start address as in
+the section description, followed by the contents.  This in effect
+forms a descriptor that must be emitted before the actual contents.
+Sections described this way must not overlap.
+
+   For areas that don't have such descriptors, synthetic sections are
+formed by BFD.  Consecutive contents in the two memory areas
+`0x0000...00' to `0x01ff...ff' and `0x2000...00' to `0x20ff...ff' are
+entered in sections named `.text' and `.data' respectively.  If an area
+is not otherwise described, but would together with a neighboring lower
+area be less than `0x40000000' bytes long, it is joined with the lower
+area and the gap is zero-filled.  For other cases, a new section is
+formed, named `.MMIX.sec.N'.  Here, N is a number, a running count
+through the mmo file, starting at 0.
+
+   A loadable section specified as:
+
+      .section secname,"ax"
+      TETRA 1,2,3,4,-1,-2009
+      BYTE 80
+
+   and linked to address `0x4', is represented by the sequence:
+
+      0x98080050 - lop_spec 80
+      0x00000002 - two 32-bit words for the section name
+      0x7365636e - "secn"
+      0x616d6500 - "ame\0"
+      0x00000033 - flags CODE, READONLY, LOAD, ALLOC
+      0x00000000 - high 32 bits of section length
+      0x0000001c - section length is 28 bytes; 6 * 4 + 1 + alignment to 32 bits
+      0x00000000 - high 32 bits of section address
+      0x00000004 - section address is 4
+      0x98010002 - 64 bits with address of following data
+      0x00000000 - high 32 bits of address
+      0x00000004 - low 32 bits: data starts at address 4
+      0x00000001 - 1
+      0x00000002 - 2
+      0x00000003 - 3
+      0x00000004 - 4
+      0xffffffff - -1
+      0xfffff827 - -2009
+      0x50000000 - 80 as a byte, padded with zeros.
+
+   Note that the lop_spec wrapping does not include the section
+contents.  Compare this to a non-loaded section specified as:
+
+      .section thirdsec
+      TETRA 200001,100002
+      BYTE 38,40
+
+   This, when linked to address `0x200000000000001c', is represented by:
+
+      0x98080050 - lop_spec 80
+      0x00000002 - two 32-bit words for the section name
+      0x7365636e - "thir"
+      0x616d6500 - "dsec"
+      0x00000010 - flag READONLY
+      0x00000000 - high 32 bits of section length
+      0x0000000c - section length is 12 bytes; 2 * 4 + 2 + alignment to 32 bits
+      0x20000000 - high 32 bits of address
+      0x0000001c - low 32 bits of address 0x200000000000001c
+      0x00030d41 - 200001
+      0x000186a2 - 100002
+      0x26280000 - 38, 40 as bytes, padded with zeros
+
+   For the latter example, the section contents must not be loaded in
+memory, and is therefore specified as part of the special data.  The
+address is usually unimportant but might provide information for e.g.
+the DWARF 2 debugging format.
+
+
+File: bfd.info,  Node: GNU Free Documentation License,  Next: BFD Index,  Prev: BFD back ends,  Up: Top
+
+                     Version 1.3, 3 November 2008
+
+     Copyright (C) 2000, 2001, 2002, 2007, 2008 Free Software Foundation, Inc.
+     `http://fsf.org/'
+
+     Everyone is permitted to copy and distribute verbatim copies
+     of this license document, but changing it is not allowed.
+
+  0. PREAMBLE
+
+     The purpose of this License is to make a manual, textbook, or other
+     functional and useful document "free" in the sense of freedom: to
+     assure everyone the effective freedom to copy and redistribute it,
+     with or without modifying it, either commercially or
+     noncommercially.  Secondarily, this License preserves for the
+     author and publisher a way to get credit for their work, while not
+     being considered responsible for modifications made by others.
+
+     This License is a kind of "copyleft", which means that derivative
+     works of the document must themselves be free in the same sense.
+     It complements the GNU General Public License, which is a copyleft
+     license designed for free software.
+
+     We have designed this License in order to use it for manuals for
+     free software, because free software needs free documentation: a
+     free program should come with manuals providing the same freedoms
+     that the software does.  But this License is not limited to
+     software manuals; it can be used for any textual work, regardless
+     of subject matter or whether it is published as a printed book.
+     We recommend this License principally for works whose purpose is
+     instruction or reference.
+
+  1. APPLICABILITY AND DEFINITIONS
+
+     This License applies to any manual or other work, in any medium,
+     that contains a notice placed by the copyright holder saying it
+     can be distributed under the terms of this License.  Such a notice
+     grants a world-wide, royalty-free license, unlimited in duration,
+     to use that work under the conditions stated herein.  The
+     "Document", below, refers to any such manual or work.  Any member
+     of the public is a licensee, and is addressed as "you".  You
+     accept the license if you copy, modify or distribute the work in a
+     way requiring permission under copyright law.
+
+     A "Modified Version" of the Document means any work containing the
+     Document or a portion of it, either copied verbatim, or with
+     modifications and/or translated into another language.
+
+     A "Secondary Section" is a named appendix or a front-matter section
+     of the Document that deals exclusively with the relationship of the
+     publishers or authors of the Document to the Document's overall
+     subject (or to related matters) and contains nothing that could
+     fall directly within that overall subject.  (Thus, if the Document
+     is in part a textbook of mathematics, a Secondary Section may not
+     explain any mathematics.)  The relationship could be a matter of
+     historical connection with the subject or with related matters, or
+     of legal, commercial, philosophical, ethical or political position
+     regarding them.
+
+     The "Invariant Sections" are certain Secondary Sections whose
+     titles are designated, as being those of Invariant Sections, in
+     the notice that says that the Document is released under this
+     License.  If a section does not fit the above definition of
+     Secondary then it is not allowed to be designated as Invariant.
+     The Document may contain zero Invariant Sections.  If the Document
+     does not identify any Invariant Sections then there are none.
+
+     The "Cover Texts" are certain short passages of text that are
+     listed, as Front-Cover Texts or Back-Cover Texts, in the notice
+     that says that the Document is released under this License.  A
+     Front-Cover Text may be at most 5 words, and a Back-Cover Text may
+     be at most 25 words.
+
+     A "Transparent" copy of the Document means a machine-readable copy,
+     represented in a format whose specification is available to the
+     general public, that is suitable for revising the document
+     straightforwardly with generic text editors or (for images
+     composed of pixels) generic paint programs or (for drawings) some
+     widely available drawing editor, and that is suitable for input to
+     text formatters or for automatic translation to a variety of
+     formats suitable for input to text formatters.  A copy made in an
+     otherwise Transparent file format whose markup, or absence of
+     markup, has been arranged to thwart or discourage subsequent
+     modification by readers is not Transparent.  An image format is
+     not Transparent if used for any substantial amount of text.  A
+     copy that is not "Transparent" is called "Opaque".
+
+     Examples of suitable formats for Transparent copies include plain
+     ASCII without markup, Texinfo input format, LaTeX input format,
+     SGML or XML using a publicly available DTD, and
+     standard-conforming simple HTML, PostScript or PDF designed for
+     human modification.  Examples of transparent image formats include
+     PNG, XCF and JPG.  Opaque formats include proprietary formats that
+     can be read and edited only by proprietary word processors, SGML or
+     XML for which the DTD and/or processing tools are not generally
+     available, and the machine-generated HTML, PostScript or PDF
+     produced by some word processors for output purposes only.
+
+     The "Title Page" means, for a printed book, the title page itself,
+     plus such following pages as are needed to hold, legibly, the
+     material this License requires to appear in the title page.  For
+     works in formats which do not have any title page as such, "Title
+     Page" means the text near the most prominent appearance of the
+     work's title, preceding the beginning of the body of the text.
+
+     The "publisher" means any person or entity that distributes copies
+     of the Document to the public.
+
+     A section "Entitled XYZ" means a named subunit of the Document
+     whose title either is precisely XYZ or contains XYZ in parentheses
+     following text that translates XYZ in another language.  (Here XYZ
+     stands for a specific section name mentioned below, such as
+     "Acknowledgements", "Dedications", "Endorsements", or "History".)
+     To "Preserve the Title" of such a section when you modify the
+     Document means that it remains a section "Entitled XYZ" according
+     to this definition.
+
+     The Document may include Warranty Disclaimers next to the notice
+     which states that this License applies to the Document.  These
+     Warranty Disclaimers are considered to be included by reference in
+     this License, but only as regards disclaiming warranties: any other
+     implication that these Warranty Disclaimers may have is void and
+     has no effect on the meaning of this License.
+
+  2. VERBATIM COPYING
+
+     You may copy and distribute the Document in any medium, either
+     commercially or noncommercially, provided that this License, the
+     copyright notices, and the license notice saying this License
+     applies to the Document are reproduced in all copies, and that you
+     add no other conditions whatsoever to those of this License.  You
+     may not use technical measures to obstruct or control the reading
+     or further copying of the copies you make or distribute.  However,
+     you may accept compensation in exchange for copies.  If you
+     distribute a large enough number of copies you must also follow
+     the conditions in section 3.
+
+     You may also lend copies, under the same conditions stated above,
+     and you may publicly display copies.
+
+  3. COPYING IN QUANTITY
+
+     If you publish printed copies (or copies in media that commonly
+     have printed covers) of the Document, numbering more than 100, and
+     the Document's license notice requires Cover Texts, you must
+     enclose the copies in covers that carry, clearly and legibly, all
+     these Cover Texts: Front-Cover Texts on the front cover, and
+     Back-Cover Texts on the back cover.  Both covers must also clearly
+     and legibly identify you as the publisher of these copies.  The
+     front cover must present the full title with all words of the
+     title equally prominent and visible.  You may add other material
+     on the covers in addition.  Copying with changes limited to the
+     covers, as long as they preserve the title of the Document and
+     satisfy these conditions, can be treated as verbatim copying in
+     other respects.
+
+     If the required texts for either cover are too voluminous to fit
+     legibly, you should put the first ones listed (as many as fit
+     reasonably) on the actual cover, and continue the rest onto
+     adjacent pages.
+
+     If you publish or distribute Opaque copies of the Document
+     numbering more than 100, you must either include a
+     machine-readable Transparent copy along with each Opaque copy, or
+     state in or with each Opaque copy a computer-network location from
+     which the general network-using public has access to download
+     using public-standard network protocols a complete Transparent
+     copy of the Document, free of added material.  If you use the
+     latter option, you must take reasonably prudent steps, when you
+     begin distribution of Opaque copies in quantity, to ensure that
+     this Transparent copy will remain thus accessible at the stated
+     location until at least one year after the last time you
+     distribute an Opaque copy (directly or through your agents or
+     retailers) of that edition to the public.
+
+     It is requested, but not required, that you contact the authors of
+     the Document well before redistributing any large number of
+     copies, to give them a chance to provide you with an updated
+     version of the Document.
+
+  4. MODIFICATIONS
+
+     You may copy and distribute a Modified Version of the Document
+     under the conditions of sections 2 and 3 above, provided that you
+     release the Modified Version under precisely this License, with
+     the Modified Version filling the role of the Document, thus
+     licensing distribution and modification of the Modified Version to
+     whoever possesses a copy of it.  In addition, you must do these
+     things in the Modified Version:
+
+       A. Use in the Title Page (and on the covers, if any) a title
+          distinct from that of the Document, and from those of
+          previous versions (which should, if there were any, be listed
+          in the History section of the Document).  You may use the
+          same title as a previous version if the original publisher of
+          that version gives permission.
+
+       B. List on the Title Page, as authors, one or more persons or
+          entities responsible for authorship of the modifications in
+          the Modified Version, together with at least five of the
+          principal authors of the Document (all of its principal
+          authors, if it has fewer than five), unless they release you
+          from this requirement.
+
+       C. State on the Title page the name of the publisher of the
+          Modified Version, as the publisher.
+
+       D. Preserve all the copyright notices of the Document.
+
+       E. Add an appropriate copyright notice for your modifications
+          adjacent to the other copyright notices.
+
+       F. Include, immediately after the copyright notices, a license
+          notice giving the public permission to use the Modified
+          Version under the terms of this License, in the form shown in
+          the Addendum below.
+
+       G. Preserve in that license notice the full lists of Invariant
+          Sections and required Cover Texts given in the Document's
+          license notice.
+
+       H. Include an unaltered copy of this License.
+
+       I. Preserve the section Entitled "History", Preserve its Title,
+          and add to it an item stating at least the title, year, new
+          authors, and publisher of the Modified Version as given on
+          the Title Page.  If there is no section Entitled "History" in
+          the Document, create one stating the title, year, authors,
+          and publisher of the Document as given on its Title Page,
+          then add an item describing the Modified Version as stated in
+          the previous sentence.
+
+       J. Preserve the network location, if any, given in the Document
+          for public access to a Transparent copy of the Document, and
+          likewise the network locations given in the Document for
+          previous versions it was based on.  These may be placed in
+          the "History" section.  You may omit a network location for a
+          work that was published at least four years before the
+          Document itself, or if the original publisher of the version
+          it refers to gives permission.
+
+       K. For any section Entitled "Acknowledgements" or "Dedications",
+          Preserve the Title of the section, and preserve in the
+          section all the substance and tone of each of the contributor
+          acknowledgements and/or dedications given therein.
+
+       L. Preserve all the Invariant Sections of the Document,
+          unaltered in their text and in their titles.  Section numbers
+          or the equivalent are not considered part of the section
+          titles.
+
+       M. Delete any section Entitled "Endorsements".  Such a section
+          may not be included in the Modified Version.
+
+       N. Do not retitle any existing section to be Entitled
+          "Endorsements" or to conflict in title with any Invariant
+          Section.
+
+       O. Preserve any Warranty Disclaimers.
+
+     If the Modified Version includes new front-matter sections or
+     appendices that qualify as Secondary Sections and contain no
+     material copied from the Document, you may at your option
+     designate some or all of these sections as invariant.  To do this,
+     add their titles to the list of Invariant Sections in the Modified
+     Version's license notice.  These titles must be distinct from any
+     other section titles.
+
+     You may add a section Entitled "Endorsements", provided it contains
+     nothing but endorsements of your Modified Version by various
+     parties--for example, statements of peer review or that the text
+     has been approved by an organization as the authoritative
+     definition of a standard.
+
+     You may add a passage of up to five words as a Front-Cover Text,
+     and a passage of up to 25 words as a Back-Cover Text, to the end
+     of the list of Cover Texts in the Modified Version.  Only one
+     passage of Front-Cover Text and one of Back-Cover Text may be
+     added by (or through arrangements made by) any one entity.  If the
+     Document already includes a cover text for the same cover,
+     previously added by you or by arrangement made by the same entity
+     you are acting on behalf of, you may not add another; but you may
+     replace the old one, on explicit permission from the previous
+     publisher that added the old one.
+
+     The author(s) and publisher(s) of the Document do not by this
+     License give permission to use their names for publicity for or to
+     assert or imply endorsement of any Modified Version.
+
+  5. COMBINING DOCUMENTS
+
+     You may combine the Document with other documents released under
+     this License, under the terms defined in section 4 above for
+     modified versions, provided that you include in the combination
+     all of the Invariant Sections of all of the original documents,
+     unmodified, and list them all as Invariant Sections of your
+     combined work in its license notice, and that you preserve all
+     their Warranty Disclaimers.
+
+     The combined work need only contain one copy of this License, and
+     multiple identical Invariant Sections may be replaced with a single
+     copy.  If there are multiple Invariant Sections with the same name
+     but different contents, make the title of each such section unique
+     by adding at the end of it, in parentheses, the name of the
+     original author or publisher of that section if known, or else a
+     unique number.  Make the same adjustment to the section titles in
+     the list of Invariant Sections in the license notice of the
+     combined work.
+
+     In the combination, you must combine any sections Entitled
+     "History" in the various original documents, forming one section
+     Entitled "History"; likewise combine any sections Entitled
+     "Acknowledgements", and any sections Entitled "Dedications".  You
+     must delete all sections Entitled "Endorsements."
+
+  6. COLLECTIONS OF DOCUMENTS
+
+     You may make a collection consisting of the Document and other
+     documents released under this License, and replace the individual
+     copies of this License in the various documents with a single copy
+     that is included in the collection, provided that you follow the
+     rules of this License for verbatim copying of each of the
+     documents in all other respects.
+
+     You may extract a single document from such a collection, and
+     distribute it individually under this License, provided you insert
+     a copy of this License into the extracted document, and follow
+     this License in all other respects regarding verbatim copying of
+     that document.
+
+  7. AGGREGATION WITH INDEPENDENT WORKS
+
+     A compilation of the Document or its derivatives with other
+     separate and independent documents or works, in or on a volume of
+     a storage or distribution medium, is called an "aggregate" if the
+     copyright resulting from the compilation is not used to limit the
+     legal rights of the compilation's users beyond what the individual
+     works permit.  When the Document is included in an aggregate, this
+     License does not apply to the other works in the aggregate which
+     are not themselves derivative works of the Document.
+
+     If the Cover Text requirement of section 3 is applicable to these
+     copies of the Document, then if the Document is less than one half
+     of the entire aggregate, the Document's Cover Texts may be placed
+     on covers that bracket the Document within the aggregate, or the
+     electronic equivalent of covers if the Document is in electronic
+     form.  Otherwise they must appear on printed covers that bracket
+     the whole aggregate.
+
+  8. TRANSLATION
+
+     Translation is considered a kind of modification, so you may
+     distribute translations of the Document under the terms of section
+     4.  Replacing Invariant Sections with translations requires special
+     permission from their copyright holders, but you may include
+     translations of some or all Invariant Sections in addition to the
+     original versions of these Invariant Sections.  You may include a
+     translation of this License, and all the license notices in the
+     Document, and any Warranty Disclaimers, provided that you also
+     include the original English version of this License and the
+     original versions of those notices and disclaimers.  In case of a
+     disagreement between the translation and the original version of
+     this License or a notice or disclaimer, the original version will
+     prevail.
+
+     If a section in the Document is Entitled "Acknowledgements",
+     "Dedications", or "History", the requirement (section 4) to
+     Preserve its Title (section 1) will typically require changing the
+     actual title.
+
+  9. TERMINATION
+
+     You may not copy, modify, sublicense, or distribute the Document
+     except as expressly provided under this License.  Any attempt
+     otherwise to copy, modify, sublicense, or distribute it is void,
+     and will automatically terminate your rights under this License.
+
+     However, if you cease all violation of this License, then your
+     license from a particular copyright holder is reinstated (a)
+     provisionally, unless and until the copyright holder explicitly
+     and finally terminates your license, and (b) permanently, if the
+     copyright holder fails to notify you of the violation by some
+     reasonable means prior to 60 days after the cessation.
+
+     Moreover, your license from a particular copyright holder is
+     reinstated permanently if the copyright holder notifies you of the
+     violation by some reasonable means, this is the first time you have
+     received notice of violation of this License (for any work) from
+     that copyright holder, and you cure the violation prior to 30 days
+     after your receipt of the notice.
+
+     Termination of your rights under this section does not terminate
+     the licenses of parties who have received copies or rights from
+     you under this License.  If your rights have been terminated and
+     not permanently reinstated, receipt of a copy of some or all of
+     the same material does not give you any rights to use it.
+
+ 10. FUTURE REVISIONS OF THIS LICENSE
+
+     The Free Software Foundation may publish new, revised versions of
+     the GNU Free Documentation License from time to time.  Such new
+     versions will be similar in spirit to the present version, but may
+     differ in detail to address new problems or concerns.  See
+     `http://www.gnu.org/copyleft/'.
+
+     Each version of the License is given a distinguishing version
+     number.  If the Document specifies that a particular numbered
+     version of this License "or any later version" applies to it, you
+     have the option of following the terms and conditions either of
+     that specified version or of any later version that has been
+     published (not as a draft) by the Free Software Foundation.  If
+     the Document does not specify a version number of this License,
+     you may choose any version ever published (not as a draft) by the
+     Free Software Foundation.  If the Document specifies that a proxy
+     can decide which future versions of this License can be used, that
+     proxy's public statement of acceptance of a version permanently
+     authorizes you to choose that version for the Document.
+
+ 11. RELICENSING
+
+     "Massive Multiauthor Collaboration Site" (or "MMC Site") means any
+     World Wide Web server that publishes copyrightable works and also
+     provides prominent facilities for anybody to edit those works.  A
+     public wiki that anybody can edit is an example of such a server.
+     A "Massive Multiauthor Collaboration" (or "MMC") contained in the
+     site means any set of copyrightable works thus published on the MMC
+     site.
+
+     "CC-BY-SA" means the Creative Commons Attribution-Share Alike 3.0
+     license published by Creative Commons Corporation, a not-for-profit
+     corporation with a principal place of business in San Francisco,
+     California, as well as future copyleft versions of that license
+     published by that same organization.
+
+     "Incorporate" means to publish or republish a Document, in whole or
+     in part, as part of another Document.
+
+     An MMC is "eligible for relicensing" if it is licensed under this
+     License, and if all works that were first published under this
+     License somewhere other than this MMC, and subsequently
+     incorporated in whole or in part into the MMC, (1) had no cover
+     texts or invariant sections, and (2) were thus incorporated prior
+     to November 1, 2008.
+
+     The operator of an MMC Site may republish an MMC contained in the
+     site under CC-BY-SA on the same site at any time before August 1,
+     2009, provided the MMC is eligible for relicensing.
+
+
+ADDENDUM: How to use this License for your documents
+====================================================
+
+To use this License in a document you have written, include a copy of
+the License in the document and put the following copyright and license
+notices just after the title page:
+
+       Copyright (C)  YEAR  YOUR NAME.
+       Permission is granted to copy, distribute and/or modify this document
+       under the terms of the GNU Free Documentation License, Version 1.3
+       or any later version published by the Free Software Foundation;
+       with no Invariant Sections, no Front-Cover Texts, and no Back-Cover
+       Texts.  A copy of the license is included in the section entitled ``GNU
+       Free Documentation License''.
+
+   If you have Invariant Sections, Front-Cover Texts and Back-Cover
+Texts, replace the "with...Texts." line with this:
+
+         with the Invariant Sections being LIST THEIR TITLES, with
+         the Front-Cover Texts being LIST, and with the Back-Cover Texts
+         being LIST.
+
+   If you have Invariant Sections without Cover Texts, or some other
+combination of the three, merge those two alternatives to suit the
+situation.
+
+   If your document contains nontrivial examples of program code, we
+recommend releasing these examples in parallel under your choice of
+free software license, such as the GNU General Public License, to
+permit their use in free software.
+
