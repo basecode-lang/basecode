@@ -1,32 +1,5 @@
 NOTES
-------------------------
-Steps to reach feature complete for the bootstrap compiler:
-
-- lambdas
-- consolidate errors/return errors from all appropriate locations
-
-After these tasks are complete (most are covered below) then the assembler should be enhanced to
-support variable directives and label operators.
-
-Refactor session:
-    - need to introduce a general job system (not necessarily multi-threaded)
-    - the work that session does should be broken into jobs
-    - jobs can depend on other jobs
-    - session should track "versions" of the code DOM:
-        - associated assembler constructs ("units"/"sections" and their instruction_blocks)
-        - source representation
-        - changes to debugger to support "compile type" debugging so we can see the
-            different versions as the meta-program makes changes and "runtime" where
-            things are now fixed and we're doing classical debugging.
-
-Compiler:
-    - Expose structures and API for meta-programming
-    - Add an event callback system where the Basecode meta-program can pass a pointer to a procedure
-      and receive callbacks when the compiler does something, e.g. parse a statement, translate a statement
-      to the compiler DOM, etc.
-    - Need to track changes to the DOM (set of pointers to element) and when a meta-program phase finishes
-      the compiler needs to version the DOM by regenerating new code.  This cycle repeats until
-      no more meta-programs need to run.
+---------
 
 IDEAS
 ---------
@@ -50,6 +23,7 @@ LEXER:
 =======
 
 PARSER:
+
 - BUG: fix assignment so that groups of lhs/rhs are together.
     NOTES:
 
@@ -86,6 +60,27 @@ PARSER:
 =======
 
 COMPILER:
+
+- NEW: job system integrated with session
+    * jobs can depend on other jobs
+    * multi-threading
+
+- NEW: session should track "versions" of the code DOM:
+    * associated assembler constructs ("units"/"sections" and their instruction_blocks)
+    * source representation
+    * changes to debugger to support "compile type" debugging so we can see the
+       different versions as the meta-program makes changes and "runtime" where
+       things are now fixed and we're doing classical debugging.
+
+- NEW: Expose structures and API for meta-programming
+
+- NEW: Add an event callback system where the Basecode meta-program can pass a pointer to a procedure
+     and receive callbacks when the compiler does something, e.g. parse a statement, translate a statement
+     to the compiler DOM, etc.
+
+- NEW: Need to track changes to the DOM (set of pointers to element) and when a meta-program phase finishes
+     the compiler needs to version the DOM by regenerating new code.  This cycle repeats until
+     no more meta-programs need to run.
 
 - NEW: implement procedure instance baking
 - NEW: struct/union instance baking
@@ -192,12 +187,14 @@ COMPILER:
 =======
 
 VM:
+
 - NEW: enhance the built-in debugger to support
         source-level debugging in addition to byte-code.
 
 =======
 
 EMITTER:
+
 - BUG: union data reservations aren't emitting properly
 
 - BUG: multiple assignment code generation doesn't allow for value swaps.
@@ -225,6 +222,13 @@ EMITTER:
 - NEW: variables that are a family_type need to record two things:
         - which type within the family tree is "selected" based on it's value;
         - the value itself
+
+=======
+
+NATIVE:
+
+- NEW: implement framework for native cross-compilation from basecode byte-code
+- NEW: expose command line flags for specifying native targets
 
 =======
 
