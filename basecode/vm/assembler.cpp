@@ -484,6 +484,31 @@ namespace basecode::vm {
             listing_source_line_type_t::directive,
             start_address,
             fmt::format(".block {}", block->id()));
+        std::string preds{};
+        const auto& pred_list = block->predecessors();
+        for (size_t i = 0; i < pred_list.size(); i++) {
+            if (i > 0) preds += ",";
+            preds += fmt::format("{}", pred_list[i]->id());
+        }
+        if (!preds.empty()) {
+            source_file->add_source_line(
+                listing_source_line_type_t::directive,
+                start_address,
+                fmt::format("{}.preds {}", indent_four_spaces, preds));
+        }
+
+        std::string succs{};
+        const auto& succ_list = block->successors();
+        for (size_t i = 0; i < succ_list.size(); i++) {
+            if (i > 0) succs += ",";
+            succs += fmt::format("{}", succ_list[i]->id());
+        }
+        if (!succs.empty()) {
+            source_file->add_source_line(
+                listing_source_line_type_t::directive,
+                start_address,
+                fmt::format("{}.succs {}", indent_four_spaces, succs));
+        }
 
         for (auto& entry : block->entries()) {
             std::stringstream line {};

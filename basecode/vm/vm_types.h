@@ -691,7 +691,7 @@ namespace basecode::vm {
 
     ///////////////////////////////////////////////////////////////////////////
 
-    enum class basic_block_type_t {
+    enum class basic_block_type_t : uint8_t {
         none,
     };
 

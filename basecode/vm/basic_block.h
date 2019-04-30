@@ -20,11 +20,11 @@
 
 namespace basecode::vm {
 
-    class basic_block {
+    class basic_block final {
     public:
         explicit basic_block(basic_block_type_t type);
 
-        virtual ~basic_block();
+        ~basic_block();
 
     // block support
     public:
