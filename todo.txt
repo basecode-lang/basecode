@@ -6,11 +6,13 @@ IDEAS
 
 QUESTIONS
 ---------
+- MAYBE: add an export statement for symbol exporting?
 
 TASKS
 -----
 - FIX: clean up all XXX notes
-- NEW: mfence, lfence, prefetch, rdtsc, rdtscp, cpuid, atomic_XXX, cas
+- NEW: cmps, ud, in/out, cli, sti, mfence, lfence, sfence, prefetch, rdtsc, rdtscp, cpuid
+- NEW: atomic: adc, add, sub, sbc, and, or, xor, shl, shr, rol, ror, cas
 - NEW: consolidate all errors into one class along with constants for quick lookup.
 - BUG: fix utf8 streaming issues in lexer/source_file
 - BUG: add missing errors
@@ -23,6 +25,8 @@ LEXER:
 =======
 
 PARSER:
+
+- NEW: support: import {decl};
 
 - BUG: fix assignment so that groups of lhs/rhs are together.
     NOTES:
@@ -82,8 +86,31 @@ COMPILER:
      the compiler needs to version the DOM by regenerating new code.  This cycle repeats until
      no more meta-programs need to run.
 
+- NEW: import declaration, e.g.:
+    entity :: struct {
+        id: u32;
+    };
+
+    player :: struct {
+        import e: ^entity; // or import e: entity; for an embedded scenario
+    };
+
+    using import here causes the fields of the type of the decl, e.g. entity, to be hoisted
+    into the scope for the struct, for example:
+
+    pe: entity;
+    pe.id := 1;
+
+    p: player;
+    p.e := address_of(pe);
+    core::print("id = {p.id}\n"); // the compiler translates this to p.e.id for us
+
+    of course, this requires us to introduce logic to check for shadowing of field names.
+
 - NEW: implement procedure instance baking
+
 - NEW: struct/union instance baking
+
 - REFACTOR: ast_evaluator::add_identifier_to_scope
 
 - BUG: fix assignment in ast_evaluator so it properly handles sets of multiple assignment/multiple return.
