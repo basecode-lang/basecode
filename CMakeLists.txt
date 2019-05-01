@@ -37,19 +37,14 @@ else ()
     message(FATAL_ERROR "${PROJECT_NAME} unknown compiler: ${CMAKE_CXX_COMPILER_ID}")
 endif()
 
-# enhance unit test discovery
-enable_testing()
-set_property(GLOBAL PROPERTY UNIT_TEST_TARGETS "")
-
-macro(add_unit_test target test_name args)
-    set_property(GLOBAL PROPERTY UNIT_TEST_TARGETS ${UNIT_TEST_TARGETS} ${CMAKE_CURRENT_BINARY_DIR}/${target})
-    add_test(NAME ${test_name} COMMAND ${CMAKE_CURRENT_BINARY_DIR}/${target} ${args})
-endmacro(add_unit_test)
-
 # dummy target used for file copies
 add_custom_target(dummy-target ALL DEPENDS custom-output)
 add_custom_command(OUTPUT custom-output COMMAND ${CMAKE_COMMAND} -E echo DEPENDS always-rebuild)
 add_custom_command(OUTPUT always-rebuild COMMAND ${CMAKE_COMMAND} -E echo)
+
+# zlib
+add_subdirectory(ext/zlib-1.2.11 EXCLUDE_FROM_ALL)
+include_directories(ext/zlib-1.2.11)
 
 # libfmt
 add_subdirectory(ext/fmt-5.3.0 EXCLUDE_FROM_ALL)
@@ -155,25 +150,14 @@ if (WIN32)
 endif ()
 
 add_library(bfd ${BFD_SOURCES})
+target_link_libraries(bfd zlibstatic)
 
 # projects
 add_subdirectory(basecode)
 add_subdirectory(bc)
 
-# all_unit_tests target
-get_property(test_targets GLOBAL PROPERTY UNIT_TEST_TARGETS)
-message(STATUS "UNIT_TEST_TARGETS=${test_targets}")
-add_custom_target(all-unit-tests ALL DEPENDS ${test_targets})
-add_custom_command(
-        TARGET all-unit-tests
-        COMMENT "Execute all unit tests"
-        POST_BUILD
-        COMMAND ctest -C $<CONFIGURATION> --output-on-failure
-        WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
-
 # custom post bulid steps
 add_custom_target(basecode-configured DEPENDS dummy-target bc)
-add_dependencies(basecode-configured all-unit-tests)
 add_custom_command(
         TARGET basecode-configured
         COMMAND ${CMAKE_COMMAND} -E echo "copy_directory: ${PROJECT_SOURCE_DIR}/tests"
