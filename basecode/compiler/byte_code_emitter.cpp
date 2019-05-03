@@ -711,6 +711,7 @@ namespace basecode::compiler {
                                     cmp_result.operands.back(),
                                     vm::instruction_operand_t(exit_label_ref));
                                 release_temps(cmp_result.temps);
+                                auto original_predicate_block = predicate_block;
                                 predicate_block = *basic_block;
 
                                 auto body_block = _blocks.make();
@@ -759,11 +760,11 @@ namespace basecode::compiler {
 
                                 auto exit_block = _blocks.make();
                                 assembler.blocks().emplace_back(exit_block);
-                                exit_block->predecessors().emplace_back(predicate_block);
+                                exit_block->predecessors().emplace_back(original_predicate_block);
                                 exit_block->label(labels.make(exit_label_name, exit_block));
                                 *basic_block = exit_block;
 
-                                predicate_block->add_successors({body_block, exit_block});
+                                original_predicate_block->add_successors({body_block, exit_block});
                                 break;
                             }
                             default: {
@@ -1012,13 +1013,14 @@ namespace basecode::compiler {
                 predicate_block->bz(
                     predicate_result.operands.back(),
                     vm::instruction_operand_t(exit_label_ref));
+                auto original_predicate_block = predicate_block;
                 release_temps(predicate_result.temps);
                 predicate_block = *basic_block;
 
                 auto body_block = _blocks.make();
                 assembler.blocks().emplace_back(body_block);
-                body_block->predecessors().emplace_back(predicate_block);
-                body_block->successors().emplace_back(predicate_block);
+                body_block->predecessors().emplace_back(original_predicate_block);
+                body_block->successors().emplace_back(original_predicate_block);
                 *basic_block = body_block;
 
                 body_block->label(labels.make(body_label_name, body_block));
@@ -1029,12 +1031,12 @@ namespace basecode::compiler {
 
                 auto exit_block = _blocks.make();
                 assembler.blocks().emplace_back(exit_block);
-                exit_block->predecessors().emplace_back(predicate_block);
+                exit_block->predecessors().emplace_back(original_predicate_block);
 
                 exit_block->label(labels.make(exit_label_name, exit_block));
                 exit_block->nop();
 
-                predicate_block->add_successors({body_block, exit_block});
+                original_predicate_block->add_successors({body_block, exit_block});
 
                 *basic_block = exit_block;
                 break;
