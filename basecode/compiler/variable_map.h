@@ -104,10 +104,23 @@ namespace basecode::compiler {
     public:
         explicit variable_map(compiler::session& session);
 
-        bool use(
+        bool init(
             vm::basic_block* basic_block,
-            vm::assembler_named_ref_t* named_ref,
-            bool is_assign_target = false);
+            vm::assembler_named_ref_t* named_ref);
+
+        bool fill(
+            vm::basic_block* basic_block,
+            vm::assembler_named_ref_t* named_ref);
+
+        bool copy(
+            vm::basic_block* basic_block,
+            emit_result_t& lhs,
+            emit_result_t& rhs);
+
+        bool spill(
+            vm::basic_block* basic_block,
+            emit_result_t& lhs,
+            emit_result_t& rhs);
 
         bool build(
             compiler::block* block,
@@ -126,6 +139,11 @@ namespace basecode::compiler {
             bool array_subscript = false);
 
         void reset();
+
+        bool activate(
+            vm::basic_block* basic_block,
+            vm::assembler_named_ref_t* named_ref,
+            bool is_assign_target = false);
 
         bool address_of(
             vm::basic_block* basic_block,

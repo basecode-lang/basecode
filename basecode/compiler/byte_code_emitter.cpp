@@ -237,7 +237,7 @@ namespace basecode::compiler {
                 vm::assembler_named_ref_type_t::local,
                 local->label,
                 vm::op_size_for_byte_size(local->size_in_bytes()));
-            _variables.use(code_block, named_ref);
+            _variables.activate(code_block, named_ref);
         }
 
         defer({
@@ -1067,7 +1067,7 @@ namespace basecode::compiler {
                             vm::assembler_named_ref_type_t::local,
                             fld->declaration()->identifier()->label_name());
 
-                        if (!_variables.use(return_block, named_ref))
+                        if (!_variables.activate(return_block, named_ref))
                             return false;
 
                         emit_result_t lhs{};
@@ -1641,7 +1641,7 @@ namespace basecode::compiler {
                     var->label_name(),
                     op_size);
                 result.operands.emplace_back(named_ref);
-                if (!_variables.use(current_block, named_ref, result.is_assign_target)) {
+                if (!_variables.activate(current_block, named_ref, result.is_assign_target)) {
                     _session.error(
                         var->module(),
                         "X000",
@@ -2046,7 +2046,7 @@ namespace basecode::compiler {
                         op_size);
                     result.operands.emplace_back(named_ref);
 
-                    if (!_variables.use(current_block, named_ref, result.is_assign_target))
+                    if (!_variables.activate(current_block, named_ref, result.is_assign_target))
                         return false;
                 } else {
                     auto identifier = var_ref->identifier();
