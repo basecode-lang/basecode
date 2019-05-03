@@ -53,6 +53,10 @@ namespace basecode::compiler {
 
         void intern_string_literals();
 
+        bool fill_referenced_identifiers(
+            vm::basic_block* basic_block,
+            compiler::element* e);
+
         bool emit_interned_string_table();
 
         vm::basic_block* emit_start_block();

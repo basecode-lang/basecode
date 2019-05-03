@@ -1001,6 +1001,9 @@ namespace basecode::compiler {
                 predicate_block->predecessors().emplace_back(current_block);
                 *basic_block = predicate_block;
 
+                if (!fill_referenced_identifiers(predicate_block, while_e->predicate()))
+                    return false;
+
                 predicate_block->label(labels.make(entry_label_name, predicate_block));
 
                 emit_result_t predicate_result {};
@@ -2764,6 +2767,38 @@ namespace basecode::compiler {
         release_temps(lhs_result.temps);
         release_temps(rhs_result.temps);
 
+        return true;
+    }
+
+    bool byte_code_emitter::fill_referenced_identifiers(
+            vm::basic_block* basic_block,
+            compiler::element* e) {
+        auto& assembler = _session.assembler();
+        switch (e->element_type()) {
+            case element_type_t::binary_operator: {
+                auto bin_op = dynamic_cast<compiler::binary_operator*>(e);
+                if (bin_op->lhs()->element_type() == element_type_t::identifier_reference) {
+                    auto var = dynamic_cast<compiler::identifier_reference*>(bin_op->lhs());
+                    auto named_ref = assembler.make_named_ref(
+                        vm::assembler_named_ref_type_t::local,
+                        var->identifier()->label_name());
+                    if (!_variables.fill(basic_block, named_ref))
+                        return false;
+                }
+                if (bin_op->rhs()->element_type() == element_type_t::identifier_reference) {
+                    auto var = dynamic_cast<compiler::identifier_reference*>(bin_op->rhs());
+                    auto named_ref = assembler.make_named_ref(
+                        vm::assembler_named_ref_type_t::local,
+                        var->identifier()->label_name());
+                    if (!_variables.fill(basic_block, named_ref))
+                        return false;
+                }
+                break;
+            }
+            default: {
+                break;
+            }
+        }
         return true;
     }
 

@@ -113,6 +113,9 @@ static void output_results(
         print_results(r);
     session.finalize();
 
+    if (!session.options().verbose)
+        return;
+
     size_t total_time = 0;
 
     term_stream

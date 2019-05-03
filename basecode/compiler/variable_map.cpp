@@ -212,8 +212,8 @@ namespace basecode::compiler {
 
                 vm::assembler_named_ref_t* source_ref = nullptr;
                 if (var->field_offset.base_ref != nullptr
-                    &&  (var->field_offset.base_ref->identifier()->type_ref()->is_composite_type()
-                         || var->field_offset.base_ref->identifier()->type_ref()->is_pointer_type())) {
+                &&  (var->field_offset.base_ref->identifier()->type_ref()->is_composite_type()
+                     || var->field_offset.base_ref->identifier()->type_ref()->is_pointer_type())) {
                     source_ref = assembler.make_named_ref(
                         vm::assembler_named_ref_type_t::local,
                         label_name);
@@ -223,10 +223,18 @@ namespace basecode::compiler {
                         label_name);
                 }
 
-                basic_block->move(
-                    vm::instruction_operand_t(named_ref),
-                    vm::instruction_operand_t(source_ref),
-                    vm::instruction_operand_t::offset(var->field_offset.from_start));
+                if (var_type->is_composite_type()) {
+                    basic_block->move(
+                        vm::instruction_operand_t(named_ref),
+                        vm::instruction_operand_t(source_ref),
+                        vm::instruction_operand_t::offset(var->field_offset.from_start));
+                } else {
+                    basic_block->load(
+                        vm::instruction_operand_t(named_ref),
+                        vm::instruction_operand_t(source_ref),
+                        vm::instruction_operand_t::offset(var->field_offset.from_start));
+                }
+                var->flag(variable_t::flags_t::filled, true);
                 break;
             }
             default: {
@@ -341,8 +349,8 @@ namespace basecode::compiler {
 
                 vm::assembler_named_ref_t* source_ref = nullptr;
                 if (var->field_offset.base_ref != nullptr
-                    &&  (var->field_offset.base_ref->identifier()->type_ref()->is_composite_type()
-                         || var->field_offset.base_ref->identifier()->type_ref()->is_pointer_type())) {
+                &&  (var->field_offset.base_ref->identifier()->type_ref()->is_composite_type()
+                     || var->field_offset.base_ref->identifier()->type_ref()->is_pointer_type())) {
                     source_ref = assembler.make_named_ref(
                         vm::assembler_named_ref_type_t::local,
                         label_name);
@@ -1111,16 +1119,6 @@ namespace basecode::compiler {
                     if (ref == nullptr)
                         continue;
 
-                    // XXX: this filters out the base variable for member access
-                    //      scenarios.  revisit this.
-                    if (ref->is_parent_type_one_of({element_type_t::binary_operator})) {
-                        auto bin_op = dynamic_cast<compiler::binary_operator*>(ref->parent_element());
-                        if (bin_op->operator_type() == operator_type_t::member_access
-                        &&  bin_op->lhs() == ref) {
-                            continue;
-                        }
-                    }
-
                     auto var = ref->identifier();
                     auto type = var->type_ref()->type();
                     if (type->is_type_one_of(excluded_types)) {
@@ -1157,11 +1155,10 @@ namespace basecode::compiler {
                     var_info.state = variable_t::flags_t::none;
                     var_info.number_class = type->number_class();
 
+                    var_info.flag(variable_t::flags_t::must_init, true);
+
                     if (type->is_pointer_type())
                         var_info.flag(variable_t::flags_t::pointer, true);
-
-                    if (type->is_composite_type() || type->is_pointer_type())
-                        var_info.flag(variable_t::flags_t::must_init, true);
 
                     _variables.insert(std::make_pair(label, var_info));
                 }
