@@ -116,7 +116,7 @@ namespace basecode::compiler {
         bool deref(
             vm::basic_block* basic_block,
             emit_result_t& arg_result,
-            vm::instruction_operand_t& temp_operand);
+            emit_result_t& result);
 
         bool assign(
             vm::basic_block* basic_block,

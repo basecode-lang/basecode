@@ -23,7 +23,12 @@ namespace basecode::compiler {
 
         bool emit();
 
-    // control flow stack
+        bool emit_element(
+            vm::basic_block** basic_block,
+            compiler::element* e,
+            emit_result_t& result);
+
+        // control flow stack
     private:
         void pop_flow_control();
 
@@ -32,11 +37,6 @@ namespace basecode::compiler {
         void push_flow_control(const flow_control_t& control_flow);
 
     private:
-        bool emit_element(
-            vm::basic_block** basic_block,
-            compiler::element* e,
-            emit_result_t& result);
-
         bool emit_type_info(
             vm::basic_block* block,
             compiler::type* type);

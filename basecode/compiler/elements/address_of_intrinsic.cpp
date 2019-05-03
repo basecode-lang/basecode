@@ -116,7 +116,11 @@ namespace basecode::compiler {
     bool address_of_intrinsic::can_fold() const {
         return is_constant_parameter();
     }
-    
+
+    bool address_of_intrinsic::on_is_constant() const {
+        return is_constant_parameter();
+    }
+
     intrinsic_type_t address_of_intrinsic::type() const {
         return intrinsic_type_t::address_of;
     }

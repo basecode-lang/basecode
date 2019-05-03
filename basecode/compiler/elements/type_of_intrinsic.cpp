@@ -106,6 +106,10 @@ namespace basecode::compiler {
         return true;
     }
 
+    bool type_of_intrinsic::on_is_constant() const {
+        return true;
+    }
+
     intrinsic_type_t type_of_intrinsic::type() const {
         return intrinsic_type_t::type_of;
     }

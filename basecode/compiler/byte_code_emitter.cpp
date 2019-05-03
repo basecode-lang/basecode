@@ -1818,8 +1818,7 @@ namespace basecode::compiler {
                         break;
                     }
                     case operator_type_t::pointer_dereference: {
-                        current_block->comment("unary_op: pointer deref", vm::comment_location_t::after_instruction);
-                        if (!_variables.deref(current_block, rhs_emit_result, *result_operand))
+                        if (!_variables.deref(current_block, rhs_emit_result, result))
                             return false;
                         break;
                     }
@@ -1950,10 +1949,13 @@ namespace basecode::compiler {
                             return false;
 
                         emit_result_t rhs_result {};
-                        if (!lhs_result.operands.empty() && !is_array_subscript)
+                        if (!lhs_result.operands.empty() && !is_array_subscript) {
                             rhs_result.operands.emplace_back(lhs_result.operands.front());
+                        }
+
                         if (!emit_element(basic_block, binary_op->rhs(), rhs_result))
                             return false;
+
                         current_block = *basic_block;
 
                         const auto& lhs_inferred = lhs_result.type_result.types.back();

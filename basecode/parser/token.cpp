@@ -52,6 +52,7 @@ namespace basecode::syntax {
             return conversion_result_t::overflow;
         if (*s == '\0' || *end != '\0')
             return conversion_result_t::inconvertible;
+        if (is_signed) out = -out;
         return conversion_result_t::success;
     }
 

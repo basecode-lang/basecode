@@ -446,13 +446,13 @@ namespace basecode::compiler {
                     }
                     for (auto d : list) {
                         auto decl = dynamic_cast<compiler::declaration*>(d);
-                        auto newField = builder.make_field(
+                        auto new_field = builder.make_field(
                             type->scope(),
                             type,
                             decl,
                             offset);
-                        type->fields().add(newField);
-                        decl->identifier()->field(newField);
+                        type->fields().add(new_field);
+                        decl->identifier()->field(new_field);
                         if (is_enum) {
                             uint64_t init_value;
                             if (!decl->identifier()->as_integer(init_value)) {
@@ -476,7 +476,8 @@ namespace basecode::compiler {
                             value = ++init_value;
                             decl->identifier()->symbol()->constant(true);
                         }
-                        previous_field = newField;
+                        previous_field = new_field;
+                        offset = previous_field->end_offset();
                     }
                     break;
                 }

@@ -37,6 +37,8 @@ namespace basecode::compiler {
             compiler::session& session,
             infer_type_result_t& result) override;
 
+        bool on_is_constant() const override;
+
     private:
         bool is_constant_parameter() const;
     };

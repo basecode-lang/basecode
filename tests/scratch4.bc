@@ -1,0 +1,31 @@
+core :: module("core");
+
+vector3 :: struct {
+    x, y, z: f32 := 1.0;
+};
+
+test :: proc() {
+    // storage
+    a: vector3;
+
+    // ptr
+    p: ^vector3 := address_of(a);
+    p.x := -3.5;
+    p.y := 2.5;
+    p.z := -16.1542;
+
+    core::print("p.x := %f\n", p.x);
+    core::print("p.y := %f\n", p.y);
+    core::print("p.z := %f\n", p.z);
+
+    foo := p^;
+
+    core::print("foo.x := %f\n", foo.x);
+    core::print("foo.y := %f\n", foo.y);
+    core::print("foo.z := %f\n", foo.z);
+
+    text := "this is a test!";
+    core::print("first char := %c\n", text^);
+};
+
+#run test();
