@@ -4,6 +4,11 @@ vector3 :: struct {
     x, y, z: f32 := 1.0;
 };
 
+player :: struct {
+    pos: ^vector3;
+    dir: ^vector3;
+};
+
 test :: proc() {
     // storage
     a: vector3;
@@ -28,4 +33,22 @@ test :: proc() {
     core::print("first char := %c\n", text^);
 };
 
-#run test();
+test1 :: proc() {
+    p: player;
+    p.pos := alloc(size_of(vector3));
+    p.dir := alloc(size_of(vector3));
+
+    defer free(p.pos);
+    defer free(p.dir);
+
+    p_ptr: ^player := address_of(p);
+    p_ptr.pos.x := -3.5;
+    p_ptr.pos.y := -4.5;
+    p_ptr.pos.z := -5.5;
+
+    core::print("p_ptr.pos.x := %f\n", p_ptr.pos.x);
+    core::print("p_ptr.pos.y := %f\n", p_ptr.pos.y);
+    core::print("p_ptr.pos.z := %f\n", p_ptr.pos.z);
+};
+
+#run test1();

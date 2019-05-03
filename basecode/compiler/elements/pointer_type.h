@@ -28,11 +28,11 @@ namespace basecode::compiler {
 
         bool is_unknown_type() const override;
 
-        bool is_composite_type() const override;
-
         compiler::type_reference* base_type_ref() const;
 
         void base_type_ref(compiler::type_reference* value);
+
+        bool is_pointer_type_with_composite_base() const override;
 
     protected:
         bool on_type_check(

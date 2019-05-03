@@ -75,10 +75,6 @@ namespace basecode::compiler {
         return _base_type_ref != nullptr && _base_type_ref->is_unknown_type();
     }
 
-    bool pointer_type::is_composite_type() const {
-        return _base_type_ref->type()->is_composite_type();
-    }
-
     number_class_t pointer_type::on_number_class() const {
         return number_class_t::integer;
     }
@@ -101,6 +97,10 @@ namespace basecode::compiler {
             current = dynamic_cast<compiler::pointer_type*>(current->_base_type_ref->type());
         }
         return current->_base_type_ref;
+    }
+
+    bool pointer_type::is_pointer_type_with_composite_base() const {
+        return _base_type_ref->type()->is_composite_type();
     }
 
     void pointer_type::base_type_ref(compiler::type_reference* value) {

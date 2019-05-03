@@ -121,7 +121,7 @@ namespace basecode::compiler {
                 var->flag(variable_t::flags_t::initialized, true);
 
                 auto op_size = vm::op_sizes::qword;
-                if (!var_type->is_composite_type())
+                if (!var_type->is_composite_type() && !var_type->is_pointer_type())
                     op_size = vm::op_size_for_byte_size(var_type->size_in_bytes());
 
                 basic_block->comment(
@@ -129,7 +129,7 @@ namespace basecode::compiler {
                     vm::comment_location_t::after_instruction);
                 switch (var->type) {
                     case variable_type_t::local: {
-                        if (var_type->is_composite_type() && !var_type->is_pointer_type()) {
+                        if (var_type->is_composite_type()) {
                             auto offset_ref = assembler.make_named_ref(
                                 vm::assembler_named_ref_type_t::offset,
                                 var->label,
@@ -138,6 +138,16 @@ namespace basecode::compiler {
                                 vm::instruction_operand_t(named_ref),
                                 vm::instruction_operand_t::fp(),
                                 vm::instruction_operand_t(offset_ref));
+                        } else if (var_type->is_pointer_type()
+                               && var->field_offset.base_ref != nullptr) {
+                            auto source_ref = assembler.make_named_ref(
+                                vm::assembler_named_ref_type_t::local,
+                                var->field_offset.base_ref->label_name());
+
+                            basic_block->move(
+                                vm::instruction_operand_t(named_ref),
+                                vm::instruction_operand_t(source_ref),
+                                vm::instruction_operand_t::offset(var->field_offset.from_start));
                         } else {
                             uint64_t default_value = var_type->element_type() == element_type_t::rune_type ?
                                                      common::rune_invalid :
@@ -184,7 +194,7 @@ namespace basecode::compiler {
                             vm::assembler_named_ref_type_t::offset,
                             var->label,
                             vm::op_sizes::word);
-                        if (var_type->is_composite_type() && !var_type->is_pointer_type()) {
+                        if (var_type->is_composite_type()) {
                             basic_block->move(
                                 vm::instruction_operand_t(named_ref),
                                 vm::instruction_operand_t::fp(),
@@ -211,7 +221,8 @@ namespace basecode::compiler {
 
                         vm::assembler_named_ref_t* source_ref = nullptr;
                         if (var->field_offset.base_ref != nullptr
-                        &&  var->field_offset.base_ref->identifier()->type_ref()->is_composite_type()) {
+                        &&  (var->field_offset.base_ref->identifier()->type_ref()->is_composite_type()
+                            || var->field_offset.base_ref->identifier()->type_ref()->is_pointer_type())) {
                             source_ref = assembler.make_named_ref(
                                 vm::assembler_named_ref_type_t::local,
                                 label_name);
@@ -249,7 +260,7 @@ namespace basecode::compiler {
                         basic_block->comment(
                             fmt::format("fill: local({})", var->label),
                             vm::comment_location_t::after_instruction);
-                        if (var_type->is_composite_type() && !var_type->is_pointer_type()) {
+                        if (var_type->is_composite_type()) {
                             basic_block->move(
                                 vm::instruction_operand_t(named_ref),
                                 vm::instruction_operand_t::fp(),
@@ -288,7 +299,7 @@ namespace basecode::compiler {
                         basic_block->comment(
                             fmt::format("fill: return({})", var->label),
                             vm::comment_location_t::after_instruction);
-                        if (var_type->is_composite_type() && !var_type->is_pointer_type()) {
+                        if (var_type->is_composite_type()) {
                             basic_block->move(
                                 vm::instruction_operand_t(named_ref),
                                 vm::instruction_operand_t::fp(),
@@ -310,7 +321,7 @@ namespace basecode::compiler {
                     basic_block->comment(
                         fmt::format("fill: parameter({})", var->label),
                         vm::comment_location_t::after_instruction);
-                    if (var_type->is_composite_type() && !var_type->is_pointer_type()) {
+                    if (var_type->is_composite_type()) {
                         basic_block->move(
                             vm::instruction_operand_t(named_ref),
                             vm::instruction_operand_t::fp(),
@@ -333,7 +344,8 @@ namespace basecode::compiler {
 
                     vm::assembler_named_ref_t* source_ref = nullptr;
                     if (var->field_offset.base_ref != nullptr
-                    &&  var->field_offset.base_ref->identifier()->type_ref()->is_composite_type()) {
+                    &&  (var->field_offset.base_ref->identifier()->type_ref()->is_composite_type()
+                        || var->field_offset.base_ref->identifier()->type_ref()->is_pointer_type())) {
                         source_ref = assembler.make_named_ref(
                             vm::assembler_named_ref_type_t::local,
                             label_name);
@@ -346,7 +358,7 @@ namespace basecode::compiler {
                     basic_block->comment(
                         fmt::format("fill: module({})", var->label),
                         vm::comment_location_t::after_instruction);
-                    if (var_type->is_composite_type() && !var_type->is_pointer_type()) {
+                    if (var_type->is_composite_type()) {
                         basic_block->move(
                             vm::instruction_operand_t(named_ref),
                             vm::instruction_operand_t(source_ref),
@@ -408,7 +420,8 @@ namespace basecode::compiler {
         basic_block->comment(
             fmt::format("deref: {}({})", variable_type_name(var->type), var->label),
             vm::comment_location_t::after_instruction);
-        if (var_type->is_composite_type()) {
+        if (var_type->is_composite_type()
+        ||  var_type->is_pointer_type_with_composite_base()) {
             result.operands.push_back(arg_result.operands.front());
         } else {
             auto& temp_operand = result.operands.back();
@@ -947,8 +960,11 @@ namespace basecode::compiler {
                     var_info.state = variable_t::flags_t::none;
                     var_info.number_class = type->number_class();
 
-                    if (var->is_initialized() || var->type_ref()->is_composite_type())
+                    if (var->is_initialized()
+                    ||  var->type_ref()->is_composite_type()
+                    ||  var->type_ref()->is_pointer_type()) {
                         var_info.state |= variable_t::flags_t::must_init;
+                    }
 
                     if (type->is_pointer_type())
                         var_info.flag(variable_t::flags_t::pointer, true);
@@ -1067,9 +1083,11 @@ namespace basecode::compiler {
 
                     var_info.state = variable_t::flags_t::none;
                     var_info.number_class = type->number_class();
+
                     if (type->is_pointer_type())
                         var_info.flag(variable_t::flags_t::pointer, true);
-                    if (type->is_composite_type())
+
+                    if (type->is_composite_type() || type->is_pointer_type())
                         var_info.flag(variable_t::flags_t::must_init, true);
 
                     _variables.insert(std::make_pair(label, var_info));

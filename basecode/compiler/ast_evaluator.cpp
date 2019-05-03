@@ -1282,8 +1282,6 @@ namespace basecode::compiler {
         auto scope = _session.scope_manager().current_scope();
         auto& builder = _session.builder();
 
-        auto is_member_access = it->second == operator_type_t::member_access;
-
         compiler::element* lhs = nullptr;
         compiler::element* rhs = nullptr;
 
@@ -1305,24 +1303,15 @@ namespace basecode::compiler {
             infer_type_result_t type_result {};
             if (lhs->infer_type(_session, type_result)) {
                 const auto& inferred = type_result.types.back();
-
-                if (inferred.type->is_composite_type()) {
-                    compiler::composite_type* composite_type = nullptr;
-                    if (inferred.type->is_pointer_type()) {
-                        auto pointer_type = dynamic_cast<compiler::pointer_type*>(inferred.type);
-                        composite_type = dynamic_cast<compiler::composite_type*>(pointer_type->base_type_ref()->type());
-                        if (is_member_access) {
-                            auto location = lhs->location();
-                            lhs = builder.make_unary_operator(
-                                scope,
-                                operator_type_t::pointer_dereference,
-                                lhs);
-                            lhs->location(location);
-                        }
-                    } else {
-                        composite_type = dynamic_cast<compiler::composite_type*>(inferred.type);
+                if (inferred.type->is_pointer_type()) {
+                    auto pointer_type = dynamic_cast<compiler::pointer_type*>(inferred.type);
+                    auto base_type = pointer_type->base_type_ref()->type();
+                    if (base_type->is_composite_type()) {
+                        auto composite_type = dynamic_cast<compiler::composite_type*>(base_type);
+                        type_scope = composite_type->scope();
                     }
-
+                } else if (inferred.type->is_composite_type()) {
+                    auto composite_type = dynamic_cast<compiler::composite_type*>(inferred.type);
                     type_scope = composite_type->scope();
                 }
             }

@@ -207,4 +207,8 @@ namespace basecode::compiler {
         return true;
     }
 
+    bool type::is_pointer_type_with_composite_base() const {
+        return false;
+    }
+
 }

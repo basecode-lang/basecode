@@ -72,6 +72,8 @@ namespace basecode::compiler {
 
         void symbol(compiler::symbol_element* value);
 
+        virtual bool is_pointer_type_with_composite_base() const;
+
     protected:
         virtual bool on_type_check(
             compiler::type* other,
