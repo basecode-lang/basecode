@@ -62,6 +62,7 @@ add_library(
         common/source_file.cpp common/source_file.h
         common/memory_pool.cpp common/memory_pool.h
         common/hex_formatter.cpp common/hex_formatter.h
+        common/directed_graph.cpp common/directed_graph.h
         common/string_support.cpp common/string_support.h
         common/source_location.cpp common/source_location.h
         common/graphviz_formatter.cpp common/graphviz_formatter.h
