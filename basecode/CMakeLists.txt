@@ -148,6 +148,7 @@ add_library(
         compiler/elements/pointer_type.cpp compiler/elements/pointer_type.h
         compiler/elements/case_element.cpp compiler/elements/case_element.h
         compiler/elements/if_directive.cpp compiler/elements/if_directive.h
+        compiler/elements/language_type.cpp compiler/elements/language_type.h
         compiler/elements/operator_base.cpp compiler/elements/operator_base.h
         compiler/elements/float_literal.cpp compiler/elements/float_literal.h
         compiler/elements/element_types.cpp compiler/elements/element_types.h
@@ -190,6 +191,7 @@ add_library(
         compiler/elements/value_sink_literal.cpp compiler/elements/value_sink_literal.h
         compiler/elements/assembly_directive.cpp compiler/elements/assembly_directive.h
         compiler/elements/align_of_intrinsic.cpp compiler/elements/align_of_intrinsic.h
+        compiler/elements/language_directive.cpp compiler/elements/language_directive.h
         compiler/elements/intrinsic_directive.cpp compiler/elements/intrinsic_directive.h
         compiler/elements/core_type_directive.cpp compiler/elements/core_type_directive.h
         compiler/elements/length_of_intrinsic.cpp compiler/elements/length_of_intrinsic.h

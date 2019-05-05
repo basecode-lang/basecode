@@ -95,6 +95,7 @@ namespace basecode::syntax {
         with_member_access,
         type_tagged_symbol,
         value_sink_literal,
+        language_expression,
         pointer_declaration,
         type_parameter_list,
         constant_assignment,
@@ -173,6 +174,7 @@ namespace basecode::syntax {
         {ast_node_type_t::continue_statement, "continue_statement"sv},
         {ast_node_type_t::value_sink_literal, "value_sink_literal"sv},
         {ast_node_type_t::type_tagged_symbol, "type_tagged_symbol"sv},
+        {ast_node_type_t::language_expression, "language_expression"sv},
         {ast_node_type_t::pointer_declaration, "pointer_declaration"sv},
         {ast_node_type_t::type_parameter_list, "type_parameter_list"sv},
         {ast_node_type_t::constant_assignment, "constant_assignment"sv},
@@ -454,6 +456,8 @@ namespace basecode::syntax {
         ast_node_t* module_expression_node(const token_t* token);
 
         ast_node_t* value_sink_literal_node(const token_t* token);
+
+        ast_node_t* language_expression_node(const token_t* token);
 
         ast_node_t* uninitialized_literal_node(const token_t* token);
 

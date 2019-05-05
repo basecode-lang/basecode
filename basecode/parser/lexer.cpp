@@ -133,6 +133,9 @@ namespace basecode::syntax {
         {'n', std::bind(&lexer::nil_literal, std::placeholders::_1, std::placeholders::_2)},
         {'n', std::bind(&lexer::ns_literal, std::placeholders::_1, std::placeholders::_2)},
 
+        // language literals
+        {'l', std::bind(&lexer::language_literal, std::placeholders::_1, std::placeholders::_2)},
+
         // module literals
         {'m', std::bind(&lexer::module_literal, std::placeholders::_1, std::placeholders::_2)},
 
@@ -443,6 +446,21 @@ namespace basecode::syntax {
                 rewind_one_char();
                 _tokens.emplace_back(token_pool::instance()->add(
                     token_type_t::continue_literal,
+                    value));
+                return true;
+            }
+        }
+        return false;
+    }
+
+    bool lexer::language_literal(common::result& r) {
+        auto value = match_literal(r, "language"sv);
+        if (!value.empty()) {
+            auto ch = read(r, false);
+            if (!isalnum(ch)) {
+                rewind_one_char();
+                _tokens.emplace_back(token_pool::instance()->add(
+                    token_type_t::language_literal,
                     value));
                 return true;
             }

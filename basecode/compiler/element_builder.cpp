@@ -586,6 +586,24 @@ namespace basecode::compiler {
         return type;
     }
 
+    language_type* element_builder::make_language_type(
+            compiler::block* parent_scope,
+            compiler::block* scope) {
+        auto it = _session.strings().insert(compiler::language_type::name_for_language());
+        auto symbol = make_symbol(parent_scope, *it.first);
+        auto type = new compiler::language_type(
+            parent_scope->module(),
+            parent_scope,
+            scope,
+            nullptr, // XXX: fix this!
+            nullptr, // XXX: fix this!
+            symbol);
+        symbol->parent_element(type);
+        scope->parent_element(type);
+        _session.elements().add(type);
+        return type;
+    }
+
     procedure_call* element_builder::make_procedure_call(
             compiler::block* parent_scope,
             compiler::argument_list* args,

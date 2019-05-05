@@ -57,6 +57,7 @@
 #include <compiler/elements/argument_list.h>
 #include <compiler/elements/float_literal.h>
 #include <compiler/elements/argument_pair.h>
+#include <compiler/elements/language_type.h>
 #include <compiler/elements/type_directive.h>
 #include <compiler/elements/switch_element.h>
 #include <compiler/elements/copy_intrinsic.h>
@@ -91,6 +92,7 @@
 #include <compiler/elements/align_of_intrinsic.h>
 #include <compiler/elements/value_sink_literal.h>
 #include <compiler/elements/assembly_directive.h>
+#include <compiler/elements/language_directive.h>
 #include <compiler/elements/length_of_intrinsic.h>
 #include <compiler/elements/core_type_directive.h>
 #include <compiler/elements/intrinsic_directive.h>

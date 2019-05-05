@@ -247,6 +247,10 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             compiler::block* scope);
 
+        language_type* make_language_type(
+            compiler::block* parent_scope,
+            compiler::block* scope);
+
         namespace_element* make_namespace(
             compiler::block* parent_scope,
             element* expr);

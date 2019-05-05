@@ -76,6 +76,7 @@ namespace basecode::compiler {
     class argument_list;
     class while_element;
     class argument_pair;
+    class language_type;
     class type_directive;
     class switch_element;
     class type_reference;
@@ -106,6 +107,7 @@ namespace basecode::compiler {
     class value_sink_literal;
     class align_of_intrinsic;
     class assembly_directive;
+    class language_directive;
     class length_of_intrinsic;
     class intrinsic_directive;
     class core_type_directive;
@@ -215,6 +217,7 @@ namespace basecode::compiler {
         assert,
         foreign,
         assembly,
+        language,
         core_type,
         intrinsic_e,
     };
@@ -228,6 +231,7 @@ namespace basecode::compiler {
         {directive_type_t::assert,      "assert"sv},
         {directive_type_t::foreign,     "foreign"sv},
         {directive_type_t::assembly,    "assembly"sv},
+        {directive_type_t::language,    "language"sv},
         {directive_type_t::core_type,   "core_type"sv},
         {directive_type_t::intrinsic_e, "intrinsic"sv},
     };
@@ -407,6 +411,7 @@ namespace basecode::compiler {
         argument_pair,
         argument_list,
         float_literal,
+        language_type,
         assembly_label,
         string_literal,
         composite_type,
@@ -476,6 +481,7 @@ namespace basecode::compiler {
         {element_type_t::unknown_type, "unknown_type"sv},
         {element_type_t::pointer_type, "pointer_type"sv},
         {element_type_t::numeric_type, "numeric_type"sv},
+        {element_type_t::language_type, "language_type"sv},
         {element_type_t::float_literal, "float_literal"sv},
         {element_type_t::argument_list, "argument_list"sv},
         {element_type_t::argument_pair, "argument_pair"sv},

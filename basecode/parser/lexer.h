@@ -161,6 +161,8 @@ namespace basecode::syntax {
 
         bool continue_literal(common::result& r);
 
+        bool language_literal(common::result& r);
+
         bool right_curly_brace(common::result& r);
 
         bool ampersand_literal(common::result& r);

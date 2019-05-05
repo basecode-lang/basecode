@@ -2029,6 +2029,7 @@ namespace basecode::compiler {
             case element_type_t::pointer_type:
             case element_type_t::generic_type:
             case element_type_t::argument_pair:
+            case element_type_t::language_type:
             case element_type_t::namespace_type:
             case element_type_t::composite_type:
             case element_type_t::type_reference:

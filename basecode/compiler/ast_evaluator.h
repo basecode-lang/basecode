@@ -336,6 +336,10 @@ namespace basecode::compiler {
             evaluator_context_t& context,
             evaluator_result_t& result);
 
+        bool language_expression(
+            evaluator_context_t& context,
+            evaluator_result_t& result);
+
         bool transmute_expression(
             evaluator_context_t& context,
             evaluator_result_t& result);

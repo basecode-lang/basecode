@@ -1,0 +1,20 @@
+core :: module("core");
+
+datalog :: language {
+    grammar :: {{
+    }};
+
+    translator :: {{
+    }};
+};
+
+// XXX: this would return an array of tuple
+results := #language datalog {{
+    parent(bill, mary).
+    parent(mary, john).
+
+    ancestor(X, Y) :- parent(X, Y).
+    ancestor(X, Y) :- parent(X, Z), ancestor(Z, Y).
+
+    ancestor(bill, X)?.
+}};

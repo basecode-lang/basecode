@@ -16,6 +16,7 @@
 #include "assert_directive.h"
 #include "foreign_directive.h"
 #include "assembly_directive.h"
+#include "language_directive.h"
 #include "core_type_directive.h"
 #include "intrinsic_directive.h"
 
@@ -86,6 +87,13 @@ namespace basecode::compiler {
             case directive_type_t::assembly: {
                 auto instance = new assembly_directive(module, parent_scope, params[0]);
                 params[0]->parent_element(instance);
+                instance->location(location);
+                return instance;
+            }
+            case directive_type_t::language: {
+                auto instance = new language_directive(module, parent_scope, params[0], params[1]);
+                params[0]->parent_element(instance);
+                params[1]->parent_element(instance);
                 instance->location(location);
                 return instance;
             }

@@ -744,6 +744,18 @@ namespace basecode::compiler {
                     element->symbol()->name(),
                     style);
             }
+            case element_type_t::language_type: {
+                auto element = dynamic_cast<language_type*>(node);
+                auto style = ", fillcolor=gainsboro, style=\"filled\"";
+                add_primary_edge(element, element->symbol());
+                add_primary_edge(element, element->grammar());
+                add_primary_edge(element, element->translator());
+                return fmt::format(
+                    "{}[shape=record,label=\"language_type|{}\"{}];",
+                    node_vertex_name,
+                    element->symbol()->name(),
+                    style);
+            }
             case element_type_t::assembly_label: {
                 auto element = dynamic_cast<assembly_label*>(node);
                 auto style = ", fillcolor=pink, style=\"filled\"";

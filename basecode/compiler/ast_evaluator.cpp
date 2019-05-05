@@ -80,6 +80,7 @@ namespace basecode::compiler {
         {syntax::ast_node_type_t::continue_statement,      std::bind(&ast_evaluator::continue_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_type_t::type_tagged_symbol,      std::bind(&ast_evaluator::symbol, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_type_t::constant_assignment,     std::bind(&ast_evaluator::assignment, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
+        {syntax::ast_node_type_t::language_expression,     std::bind(&ast_evaluator::language_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_type_t::transmute_expression,    std::bind(&ast_evaluator::transmute_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_type_t::namespace_expression,    std::bind(&ast_evaluator::namespace_expression, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
         {syntax::ast_node_type_t::return_argument_list,    std::bind(&ast_evaluator::noop, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)},
@@ -1715,6 +1716,42 @@ namespace basecode::compiler {
         return true;
     }
 
+    bool ast_evaluator::language_expression(
+            evaluator_context_t& context,
+            evaluator_result_t& result) {
+        auto& builder = _session.builder();
+        auto& scope_manager = _session.scope_manager();
+
+        auto active_scope = scope_manager.current_scope();
+        auto lang_scope = builder.make_block(
+            scope_manager.current_module(),
+            active_scope);
+
+        auto lang_type = builder.make_language_type(
+            active_scope,
+            lang_scope);
+        active_scope->types().add(lang_type);
+
+        add_type_parameters(
+            context,
+            lang_scope,
+            context.node->lhs,
+            lang_type->type_parameters());
+
+        auto success = add_composite_type_fields(
+            context,
+            lang_type,
+            context.node->rhs);
+        if (!success)
+            return false;
+
+        if (!lang_type->initialize(_session))
+            return false;
+
+        result.element = lang_type;
+        return true;
+    }
+
     bool ast_evaluator::transmute_expression(
             evaluator_context_t& context,
             evaluator_result_t& result) {
@@ -2527,7 +2564,7 @@ namespace basecode::compiler {
                 } else {
                     auto identifier_ref = dynamic_cast<compiler::identifier_reference*>(target_element);
                     if (identifier_ref->resolved()
-                        && !identifier_ref->identifier()->type_ref()->is_proc_type()) {
+                    && !identifier_ref->identifier()->type_ref()->is_proc_type()) {
                         if (identifier_ref->is_constant()) {
                             auto current_scope = scope != nullptr ? scope : scope_manager.current_scope();
                             if (current_scope->id() == identifier_ref->parent_scope()->id()) {

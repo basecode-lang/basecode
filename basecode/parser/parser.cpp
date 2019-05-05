@@ -314,6 +314,20 @@ namespace basecode::syntax {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    ast_node_t* language_expression_prefix_parser::parse(
+            common::result& r,
+            parser* parser,
+            token_t* token) {
+        auto language_node = parser->ast_builder()->language_expression_node(token);
+        if (!create_type_parameter_nodes(r, parser, language_node->lhs))
+            return nullptr;
+        collect_comments(r, parser, language_node);
+        language_node->rhs = parser->parse_expression(r);
+        return language_node;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
     ast_node_t* subscript_declaration_prefix_parser::parse(
             common::result& r,
             parser* parser,
@@ -1314,9 +1328,9 @@ namespace basecode::syntax {
         auto directive_node = parser->ast_builder()->directive_node(token);
         collect_comments(r, parser, directive_node);
 
-        if (parser->peek(token_type_t::semi_colon)) {
+        if (parser->peek(token_type_t::semi_colon))
             return directive_node;
-        }
+
         if (token->value == "type"sv) {
             directive_node->lhs = create_type_declaration_node(
                 r,
@@ -1348,6 +1362,9 @@ namespace basecode::syntax {
                     }
                 }
             }
+        } else if (token->value == "language"sv) {
+            directive_node->lhs = parser->parse_expression(r);
+            directive_node->children.push_back(parser->parse_expression(r));
         } else {
             directive_node->lhs = parser->parse_expression(r);
         }

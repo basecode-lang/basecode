@@ -577,6 +577,12 @@ namespace basecode::syntax {
         return make_node(ast_node_type_t::value_sink_literal, token);
     }
 
+    ast_node_t* ast_builder::language_expression_node(const token_t* token) {
+        auto node = make_node(ast_node_type_t::language_expression, token);
+        node->lhs = type_parameter_list_node();
+        return node;
+    }
+
     ast_node_t* ast_builder::uninitialized_literal_node(const token_t* token) {
         return make_node(ast_node_type_t::uninitialized_literal, token);
     }
