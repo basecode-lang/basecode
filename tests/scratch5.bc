@@ -1,0 +1,24 @@
+core :: module("core");
+
+vector3 :: struct {
+    x, y, z: f32;
+};
+
+entity :: struct {
+    id: u32;
+};
+
+frog :: struct {
+    import base: ^entity;
+    pos: vector3;
+    dir: vector3;
+};
+
+duck :: struct {
+    import base: ^entity;
+    pos: vector3;
+    dir: vector3;
+};
+
+d: duck;
+f: frog;

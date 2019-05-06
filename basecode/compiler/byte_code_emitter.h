@@ -122,7 +122,7 @@ namespace basecode::compiler {
             compiler::binary_operator* binary_op,
             emit_result_t& result);
 
-        void release_temps(std::vector<temp_pool_entry_t*> temps);
+        void release_temps(const temp_pool_entry_list_t& temps);
 
     private:
         variable_map _variables;

@@ -44,7 +44,6 @@ namespace basecode::vm {
             if (rune == common::rune_eof)
                 break;
 
-
         retry:
             switch (_state) {
                 case assembly_parser_state_t::start: {
@@ -417,6 +416,16 @@ namespace basecode::vm {
                         }
                         case directive_type_t::reset: {
                             block->reset(boost::get<std::string>(_wip.params.front()));
+                            break;
+                        }
+                        case directive_type_t::preds: {
+                            // XXX: the inline assembler is currently bound to one block
+                            //      need to determine how to best handle these directives.
+                            break;
+                        }
+                        case directive_type_t::succs: {
+                            // XXX: the inline assembler is currently bound to one block
+                            //      need to determine how to best handle these directives.
                             break;
                         }
                         case directive_type_t::ilocal: {

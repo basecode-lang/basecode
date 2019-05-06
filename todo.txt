@@ -3,6 +3,7 @@ NOTES
 
 IDEAS
 ---------
+- "bake" procedures based on selected parameters to eliminate static conditional branches
 
 QUESTIONS
 ---------
@@ -25,8 +26,6 @@ LEXER:
 =======
 
 PARSER:
-
-- NEW: support: import {decl};
 
 - BUG: fix assignment so that groups of lhs/rhs are together.
     NOTES:
@@ -215,6 +214,8 @@ COMPILER:
 
 VM:
 
+- NEW: thread support
+- NEW: callback support
 - NEW: enhance the built-in debugger to support
         source-level debugging in addition to byte-code.
 
@@ -225,13 +226,6 @@ EMITTER:
 - BUG: union data reservations aren't emitting properly
 
 - BUG: multiple assignment code generation doesn't allow for value swaps.
-
-- FIX: copy semantics:
-    1. DONE: module-var to module-var
-    2. module-var to stack-var
-    3. stack-var to module-var
-    4. any var to parameter
-    5. return parameter to any var
 
 - BUG: the new fixed-length array implementation that uses a structure, e.g.
         sample_array :: struct<T> {
@@ -485,6 +479,13 @@ DONE
 - BUG: the return_element holds a pointer to the field_map_t from its enclosing scope.  should
         remove this pointer because it will complicate cloning.
 - BUG: session type resolution doesn't support family_type parameters
+- NEW(PARSER): support: import {decl};
+- FIX(EMITTER): copy semantics:
+    1. module-var to module-var
+    2. module-var to stack-var
+    3. stack-var to module-var
+    4. any var to parameter
+    5. return parameter to any var
 
 ANSWERS
 -------

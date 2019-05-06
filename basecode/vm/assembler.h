@@ -25,11 +25,11 @@ namespace basecode::vm {
             vm::terp* terp,
             vm::register_allocator* allocator);
 
-        void disassemble();
-
         bool assemble(
             common::result& r,
             const label_map& labels);
+
+        void disassemble();
 
         bool assemble_from_source(
             common::result& r,
@@ -44,8 +44,6 @@ namespace basecode::vm {
         vm::basic_block_list_t& blocks();
 
         bool initialize(common::result& r);
-
-        void disassemble(basic_block* block);
 
         assembler_named_ref_t* find_named_ref(
             const std::string& name,
@@ -67,6 +65,10 @@ namespace basecode::vm {
         const vm::assembler_local_t* local(const std::string& name) const;
 
     private:
+        void disassemble(
+            basic_block* block,
+            uint64_t& address);
+
         bool resolve_labels(
             common::result& r,
             const label_map& labels);

@@ -1,0 +1,12 @@
+core :: module("core");
+
+HELLO_WORLD :: "hello world";
+
+#run {
+    text: string;
+    core::assign_string(address_of(text), HELLO_WORLD, length_of(HELLO_WORLD));
+
+    core::print("text.length    := %d\n", text.length);
+    core::print("text.capacity  := %d\n", text.capacity);
+    core::print("text.data      := %s\n", text.data);
+};

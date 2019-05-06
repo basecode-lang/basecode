@@ -72,23 +72,23 @@ namespace basecode::vm {
             vm::basic_block* block);
 
     private:
+        static const vm::local_t* find_local(
+            vm::basic_block* block,
+            const std::string& symbol);
+
+        static vm::assembly_symbol_type_t symbol_type(
+            const std::string& operand,
+            std::string& symbol);
+
         bool parse_immediate_number(
             common::result& r,
             const std::string& param,
             uint64_t& value);
 
-        const vm::local_t* find_local(
-            vm::basic_block* block,
-            const std::string& symbol);
-
         void parse_comma_separated_tokens(
             common::result& r,
             common::rune_t& rune,
             std::vector<std::string>& operand_strings);
-
-        vm::assembly_symbol_type_t symbol_type(
-            const std::string& operand,
-            std::string& symbol);
 
         common::source_location make_location(size_t end_pos);
 

@@ -245,229 +245,11 @@ namespace basecode::vm {
         return !r.is_failed();
     }
 
-    void assembler::disassemble() {
-        for (auto block : _blocks)
-            disassemble(block);
-    }
-
-    bool assembler::resolve_labels(
-            common::result& r,
-            const label_map& labels) {
-        for (auto block : _blocks) {
-            for (auto& entry : block->entries()) {
-                switch (entry.type()) {
-                    case block_entry_type_t::instruction: {
-                        auto inst = entry.data<instruction_t>();
-                        for (size_t i = 0; i < inst->operands_count; i++) {
-                            auto& operand = inst->operands[i];
-                            if (operand.fixup[0].named_ref == nullptr)
-                                continue;
-
-                            switch (operand.fixup[0].named_ref->type) {
-                                case assembler_named_ref_type_t::label: {
-                                    auto label = labels.find(operand.fixup[0].named_ref->name);
-                                    if (label != nullptr) {
-                                        operand.value.u = label->address();
-                                    }
-                                    break;
-                                }
-                                default: {
-                                    break;
-                                }
-                            }
-                        }
-                        break;
-                    }
-                    case block_entry_type_t::data_definition: {
-                        auto data_def = entry.data<data_definition_t>();
-                        if (data_def->type == data_definition_type_t::uninitialized)
-                            break;
-                        for (auto& value : data_def->values) {
-                            auto type = static_cast<data_value_variant_type_t>(value.which());
-                            switch (type) {
-                                case data_value_variant_type_t::named_ref: {
-                                    auto named_ref = boost::get<assembler_named_ref_t*>(value);
-                                    if (named_ref != nullptr) {
-                                        switch (named_ref->type) {
-                                            case assembler_named_ref_type_t::label: {
-                                                auto label = labels.find(named_ref->name);
-                                                if (label != nullptr) {
-                                                    value = label->address();
-                                                }
-                                                break;
-                                            }
-                                            default: {
-                                                break;
-                                            }
-                                        }
-                                    }
-                                    break;
-                                }
-                                default: {
-                                    break;
-                                }
-                            }
-                        }
-                        break;
-                    }
-                    default: {
-                        break;
-                    }
-                }
-            }
-        }
-
-        return !r.is_failed();
-    }
-
-    bool assembler::assemble_from_source(
-            common::result& r,
-            label_map& labels,
-            common::term_stream_builder* term_builder,
-            common::source_file& source_file,
-            vm::basic_block* block,
-            void* data) {
-        vm::assembly_parser parser(this, &labels, term_builder, source_file, data);
-        return parser.parse(r, block);
-    }
-
-    vm::assembly_listing& assembler::listing() {
-        return _listing;
-    }
-
-    vm::basic_block_list_t& assembler::blocks() {
-        return _blocks;
-    }
-
-    bool assembler::initialize(common::result& r) {
-        _location_counter = _terp->heap_vector(heap_vectors_t::program_start);
-        return true;
-    }
-
-    assembler_named_ref_t* assembler::find_named_ref(
-            const std::string& name,
-            vm::assembler_named_ref_type_t type) {
-        auto key = fmt::format("{}{}", name, static_cast<uint8_t>(type));
-        auto it = _named_refs.find(key);
-        if (it != _named_refs.end()) {
-            return &it->second;
-        }
-        return nullptr;
-    }
-
-    assembler_named_ref_t* assembler::make_named_ref(
-            assembler_named_ref_type_t type,
-            const std::string& name,
-            vm::op_sizes size) {
-        auto key = fmt::format("{}{}", name, static_cast<uint8_t>(type));
-        auto it = _named_refs.find(key);
-        if (it != _named_refs.end()) {
-            auto ref = &it->second;
-            ref->size = size;
-            return ref;
-        }
-
-        auto insert_pair = _named_refs.insert(std::make_pair(
-            key,
-            assembler_named_ref_t {
-                .name = name,
-                .size = size,
-                .type = type
-            }));
-        return &insert_pair.first->second;
-    }
-
-    bool assembler::apply_addresses(common::result& r) {
-        size_t offset = 0;
-        size_t previous_section_size = 0;
-        uint64_t previous_section_addr = 0;
-        auto previous_section = section_t::unknown;
-
-        for (auto block : _blocks) {
-            for (auto& entry : block->entries()) {
-                entry.address(_location_counter + offset);
-                switch (entry.type()) {
-                    case block_entry_type_t::align: {
-                        auto alignment = entry.data<align_t>();
-                        offset = common::align(offset, alignment->size);
-                        entry.address(_location_counter + offset);
-                        break;
-                    }
-                    case block_entry_type_t::section: {
-                        auto section_type = *entry.data<section_t>();
-                        if (section_type != previous_section) {
-                            if (previous_section == section_t::bss) {
-                                _terp->heap_vector(heap_vectors_t::bss_start, previous_section_addr);
-                                _terp->heap_vector(heap_vectors_t::bss_length, previous_section_size);
-                            }
-                            previous_section = section_type;
-                            previous_section_size = 0;
-                            previous_section_addr = entry.address();
-                        }
-                        break;
-                    }
-                    case block_entry_type_t::instruction: {
-                        auto inst = entry.data<instruction_t>();
-                        offset += inst->encoding_size();
-                        break;
-                    }
-                    case block_entry_type_t::data_definition: {
-                        auto data_def = entry.data<data_definition_t>();
-                        auto size_in_bytes = op_size_in_bytes(data_def->size);
-                        switch (data_def->type) {
-                            case data_definition_type_t::initialized: {
-                                auto size = size_in_bytes * data_def->values.size();
-                                offset += size;
-                                previous_section_size += size;
-                                break;
-                            }
-                            case data_definition_type_t::uninitialized: {
-                                for (auto v : data_def->values) {
-                                    auto type = static_cast<data_value_variant_type_t>(v.which());
-                                    size_t value = 0;
-                                    switch (type) {
-                                        case data_value_variant_type_t::u8:
-                                            value = boost::get<uint8_t>(v);
-                                            break;
-                                        case data_value_variant_type_t::u16:
-                                            value = boost::get<uint16_t>(v);
-                                            break;
-                                        case data_value_variant_type_t::u32:
-                                            value = boost::get<uint32_t>(v);
-                                            break;
-                                        case data_value_variant_type_t::u64:
-                                            value = boost::get<uint64_t>(v);
-                                            break;
-                                        case data_value_variant_type_t::f32:
-                                        case data_value_variant_type_t::f64:
-                                        case data_value_variant_type_t::named_ref:
-                                            break;
-                                    }
-
-                                    auto size = size_in_bytes * value;
-                                    offset += size;
-                                    previous_section_size += size;
-                                }
-                                break;
-                            }
-                            default: {
-                                break;
-                            }
-                        }
-                        break;
-                    }
-                    default: {
-                        break;
-                    }
-                }
-            }
-        }
-        return !r.is_failed();
-    }
-
-    void assembler::disassemble(basic_block* block) {
+    void assembler::disassemble(
+            basic_block* block,
+            uint64_t& address) {
         auto source_file = _listing.current_source_file();
-        if (source_file == nullptr || block->entries().empty())
+        if (source_file == nullptr)
             return;
 
         std::stack<vm::comment_t> post_inst_comments {};
@@ -475,14 +257,13 @@ namespace basecode::vm {
         size_t last_indent = 0;
         auto indent_four_spaces = std::string(4, ' ');
 
-        auto start_address = block->entries().front().address();
         auto pre_blank_lines = block->pre_blank_lines();
         if (pre_blank_lines > 0)
-            source_file->add_blank_lines(start_address, pre_blank_lines);
+            source_file->add_blank_lines(address, pre_blank_lines);
 
         source_file->add_source_line(
             listing_source_line_type_t::directive,
-            start_address,
+            address,
             fmt::format(".block {}", block->id()));
         std::string preds{};
         const auto& pred_list = block->predecessors();
@@ -493,7 +274,7 @@ namespace basecode::vm {
         if (!preds.empty()) {
             source_file->add_source_line(
                 listing_source_line_type_t::directive,
-                start_address,
+                address,
                 fmt::format("{}.preds {}", indent_four_spaces, preds));
         }
 
@@ -506,11 +287,13 @@ namespace basecode::vm {
         if (!succs.empty()) {
             source_file->add_source_line(
                 listing_source_line_type_t::directive,
-                start_address,
+                address,
                 fmt::format("{}.succs {}", indent_four_spaces, succs));
         }
 
         for (auto& entry : block->entries()) {
+            address = entry.address();
+
             std::stringstream line {};
             listing_source_line_type_t type;
 
@@ -734,7 +517,7 @@ namespace basecode::vm {
 
             source_file->add_source_line(
                 type,
-                entry.address(),
+                address,
                 line.str());
 
             while (!post_inst_comments.empty()) {
@@ -745,20 +528,243 @@ namespace basecode::vm {
                 post_inst_comments.pop();
                 source_file->add_source_line(
                     listing_source_line_type_t::comment,
-                    entry.address(),
+                    address,
                     temp.str());
             }
         }
 
-        auto final_address = block->entries().back().address();
         source_file->add_source_line(
             listing_source_line_type_t::directive,
-            final_address,
+            address,
             ".end");
 
         auto post_blank_lines = block->post_blank_lines();
         if (post_blank_lines > 0)
-            source_file->add_blank_lines(final_address, post_blank_lines);
+            source_file->add_blank_lines(address, post_blank_lines);
+    }
+
+    void assembler::disassemble() {
+        uint64_t address = 0;
+        for (auto block : _blocks) {
+            if (!block->entries().empty())
+                address = block->entries().front().address();
+            disassemble(block, address);
+        }
+    }
+
+    bool assembler::resolve_labels(
+            common::result& r,
+            const label_map& labels) {
+        for (auto block : _blocks) {
+            for (auto& entry : block->entries()) {
+                switch (entry.type()) {
+                    case block_entry_type_t::instruction: {
+                        auto inst = entry.data<instruction_t>();
+                        for (size_t i = 0; i < inst->operands_count; i++) {
+                            auto& operand = inst->operands[i];
+                            if (operand.fixup[0].named_ref == nullptr)
+                                continue;
+
+                            switch (operand.fixup[0].named_ref->type) {
+                                case assembler_named_ref_type_t::label: {
+                                    auto label = labels.find(operand.fixup[0].named_ref->name);
+                                    if (label != nullptr) {
+                                        operand.value.u = label->address();
+                                    }
+                                    break;
+                                }
+                                default: {
+                                    break;
+                                }
+                            }
+                        }
+                        break;
+                    }
+                    case block_entry_type_t::data_definition: {
+                        auto data_def = entry.data<data_definition_t>();
+                        if (data_def->type == data_definition_type_t::uninitialized)
+                            break;
+                        for (auto& value : data_def->values) {
+                            auto type = static_cast<data_value_variant_type_t>(value.which());
+                            switch (type) {
+                                case data_value_variant_type_t::named_ref: {
+                                    auto named_ref = boost::get<assembler_named_ref_t*>(value);
+                                    if (named_ref != nullptr) {
+                                        switch (named_ref->type) {
+                                            case assembler_named_ref_type_t::label: {
+                                                auto label = labels.find(named_ref->name);
+                                                if (label != nullptr) {
+                                                    value = label->address();
+                                                }
+                                                break;
+                                            }
+                                            default: {
+                                                break;
+                                            }
+                                        }
+                                    }
+                                    break;
+                                }
+                                default: {
+                                    break;
+                                }
+                            }
+                        }
+                        break;
+                    }
+                    default: {
+                        break;
+                    }
+                }
+            }
+        }
+
+        return !r.is_failed();
+    }
+
+    bool assembler::assemble_from_source(
+            common::result& r,
+            label_map& labels,
+            common::term_stream_builder* term_builder,
+            common::source_file& source_file,
+            vm::basic_block* block,
+            void* data) {
+        vm::assembly_parser parser(this, &labels, term_builder, source_file, data);
+        return parser.parse(r, block);
+    }
+
+    vm::assembly_listing& assembler::listing() {
+        return _listing;
+    }
+
+    vm::basic_block_list_t& assembler::blocks() {
+        return _blocks;
+    }
+
+    bool assembler::initialize(common::result& r) {
+        _location_counter = _terp->heap_vector(heap_vectors_t::program_start);
+        return true;
+    }
+
+    assembler_named_ref_t* assembler::find_named_ref(
+            const std::string& name,
+            vm::assembler_named_ref_type_t type) {
+        auto key = fmt::format("{}{}", name, static_cast<uint8_t>(type));
+        auto it = _named_refs.find(key);
+        if (it != _named_refs.end()) {
+            return &it->second;
+        }
+        return nullptr;
+    }
+
+    assembler_named_ref_t* assembler::make_named_ref(
+            assembler_named_ref_type_t type,
+            const std::string& name,
+            vm::op_sizes size) {
+        auto key = fmt::format("{}{}", name, static_cast<uint8_t>(type));
+        auto it = _named_refs.find(key);
+        if (it != _named_refs.end()) {
+            auto ref = &it->second;
+            ref->size = size;
+            return ref;
+        }
+
+        auto insert_pair = _named_refs.insert(std::make_pair(
+            key,
+            assembler_named_ref_t {
+                .name = name,
+                .size = size,
+                .type = type
+            }));
+        return &insert_pair.first->second;
+    }
+
+    bool assembler::apply_addresses(common::result& r) {
+        size_t offset = 0;
+        size_t previous_section_size = 0;
+        uint64_t previous_section_addr = 0;
+        auto previous_section = section_t::unknown;
+
+        for (auto block : _blocks) {
+            for (auto& entry : block->entries()) {
+                entry.address(_location_counter + offset);
+                switch (entry.type()) {
+                    case block_entry_type_t::align: {
+                        auto alignment = entry.data<align_t>();
+                        offset = common::align(offset, alignment->size);
+                        entry.address(_location_counter + offset);
+                        break;
+                    }
+                    case block_entry_type_t::section: {
+                        auto section_type = *entry.data<section_t>();
+                        if (section_type != previous_section) {
+                            if (previous_section == section_t::bss) {
+                                _terp->heap_vector(heap_vectors_t::bss_start, previous_section_addr);
+                                _terp->heap_vector(heap_vectors_t::bss_length, previous_section_size);
+                            }
+                            previous_section = section_type;
+                            previous_section_size = 0;
+                            previous_section_addr = entry.address();
+                        }
+                        break;
+                    }
+                    case block_entry_type_t::instruction: {
+                        auto inst = entry.data<instruction_t>();
+                        offset += inst->encoding_size();
+                        break;
+                    }
+                    case block_entry_type_t::data_definition: {
+                        auto data_def = entry.data<data_definition_t>();
+                        auto size_in_bytes = op_size_in_bytes(data_def->size);
+                        switch (data_def->type) {
+                            case data_definition_type_t::initialized: {
+                                auto size = size_in_bytes * data_def->values.size();
+                                offset += size;
+                                previous_section_size += size;
+                                break;
+                            }
+                            case data_definition_type_t::uninitialized: {
+                                for (auto v : data_def->values) {
+                                    auto type = static_cast<data_value_variant_type_t>(v.which());
+                                    size_t value = 0;
+                                    switch (type) {
+                                        case data_value_variant_type_t::u8:
+                                            value = boost::get<uint8_t>(v);
+                                            break;
+                                        case data_value_variant_type_t::u16:
+                                            value = boost::get<uint16_t>(v);
+                                            break;
+                                        case data_value_variant_type_t::u32:
+                                            value = boost::get<uint32_t>(v);
+                                            break;
+                                        case data_value_variant_type_t::u64:
+                                            value = boost::get<uint64_t>(v);
+                                            break;
+                                        case data_value_variant_type_t::f32:
+                                        case data_value_variant_type_t::f64:
+                                        case data_value_variant_type_t::named_ref:
+                                            break;
+                                    }
+
+                                    auto size = size_in_bytes * value;
+                                    offset += size;
+                                    previous_section_size += size;
+                                }
+                                break;
+                            }
+                            default: {
+                                break;
+                            }
+                        }
+                        break;
+                    }
+                    default: {
+                        break;
+                    }
+                }
+            }
+        }
+        return !r.is_failed();
     }
 
     bool assembler::has_local(const std::string& name) const {

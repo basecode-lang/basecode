@@ -829,7 +829,7 @@ namespace basecode::syntax {
                     parser->error(
                         r,
                         "P019",
-                        "import expects namespace",
+                        "import expects namespace or identifier reference",
                         token->location);
                     return nullptr;
                 }

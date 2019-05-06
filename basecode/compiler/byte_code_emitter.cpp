@@ -24,6 +24,7 @@
 
 namespace basecode::compiler {
 
+    // XXX: refactor this to use the common::directed_graph
     struct proc_call_edge_t {
         compiler::element* site = nullptr;
         compiler::procedure_call* call = nullptr;
@@ -141,10 +142,7 @@ namespace basecode::compiler {
         if (!emit_interned_string_table())
             return false;
 
-        if (!emit_section_tables())
-            return false;
-
-        return true;
+        return emit_section_tables();
     }
 
     bool byte_code_emitter::emit_block(
@@ -3066,7 +3064,7 @@ namespace basecode::compiler {
         return fmt::format("_intern_str_lit_{}_data", intern_id);
     }
 
-    void byte_code_emitter::release_temps(std::vector<temp_pool_entry_t*> temps) {
+    void byte_code_emitter::release_temps(const temp_pool_entry_list_t& temps) {
         for (auto t : temps)
             _variables.release_temp(t);
     }

@@ -506,6 +506,15 @@ namespace basecode::compiler {
                     }
                     break;
                 }
+                case syntax::ast_node_type_t::import_expression: {
+                    // XXX: feature description...
+
+                    // the goal here is to import the fields from the type of the
+                    // declaration in the import.  then those fields are duplicated
+                    // inside this scope and they alias the actual declared field.
+                    //
+                    break;
+                }
                 default: {
                     return false;
                 }

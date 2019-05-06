@@ -1814,6 +1814,8 @@ namespace basecode::vm {
         flocal,
         block,
         end,
+        preds,
+        succs,
         frame_offset,
         program_end,
         db,
@@ -1946,6 +1948,26 @@ namespace basecode::vm {
                 directive_type_t::flocal,
                 {
                     {directive_param_t::flags::symbol, true},
+                }
+            }
+        },
+        {
+            "PREDS"sv,
+            directive_t{
+                op_sizes::none,
+                directive_type_t::preds,
+                {
+                    {directive_param_t::flags::number|directive_param_t::flags::repeating, true},
+                }
+            }
+        },
+        {
+            "SUCCS"sv,
+            directive_t{
+                op_sizes::none,
+                directive_type_t::succs,
+                {
+                    {directive_param_t::flags::number|directive_param_t::flags::repeating, true},
                 }
             }
         },
