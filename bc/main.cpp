@@ -76,7 +76,8 @@ static void usage() {
         "[--no-color] "
         "[-G] "
         "[-M{{path}} ...] "
-        "[-H{{filename}}|--code_dom={{filename}}] "
+        "[-H{{filename}}|--code-dom={{filename}}] "
+        "[-C{{filename}}|--cfg={{filename}}] "
         "file [-- option ...]\n");
 }
 
@@ -144,6 +145,7 @@ int main(int argc, char** argv) {
     bool debugger = false;
     bool help_flag = false;
     bool verbose_flag = false;
+    fs::path cfg_graph_file_name;
     bool output_ast_graphs = false;
     fs::path code_dom_graph_file_name;
     bool color_enabled = !is_redirected;
@@ -155,9 +157,10 @@ int main(int argc, char** argv) {
         {"help",    ya_no_argument,       nullptr, 0  },
         {"verbose", ya_no_argument,       nullptr, 0  },
         {"ast",     ya_no_argument,       0,       'G'},
-        {"code_dom",ya_required_argument, 0,       'H'},
+        {"code-dom",ya_required_argument, 0,       'H'},
         {"no-color",ya_no_argument,       0,       0  },
         {"debugger",ya_no_argument,       0,       0  },
+        {"cfg",     ya_required_argument, 0,       'C'},
         {0,         0,                    0,       0  },
     };
 
@@ -166,7 +169,7 @@ int main(int argc, char** argv) {
         opt = ya_getopt_long(
             argc,
             argv,
-            "?vGM:H:D:",
+            "?vGM:H:D:C:",
             long_options,
             &option_index);
         if (opt == -1) {
@@ -201,6 +204,9 @@ int main(int argc, char** argv) {
                     case 5:
                         debugger = true;
                         break;
+                    case 6:
+                        cfg_graph_file_name = ya_optarg;
+                        break;
                     default:
                         abort();
                 }
@@ -220,6 +226,9 @@ int main(int argc, char** argv) {
                 break;
             case 'H':
                 code_dom_graph_file_name = ya_optarg;
+                break;
+            case 'C':
+                cfg_graph_file_name = ya_optarg;
                 break;
             case 'D': {
                 auto parts = common::string_to_list(ya_optarg, '=');
@@ -261,6 +270,7 @@ int main(int argc, char** argv) {
         .meta_options = meta_options,
         .module_paths = module_paths,
         .dom_graph_file = code_dom_graph_file_name,
+        .cfg_graph_file = cfg_graph_file_name,
         .definitions = definitions,
         .compile_callback = [&term_builder](
                 compiler::session_compile_phase_t phase,

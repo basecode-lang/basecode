@@ -36,6 +36,13 @@ namespace basecode::vm {
         return _blocks.erase(id) > 0;
     }
 
+    basic_block_list_t basic_block_map::as_list() const {
+        basic_block_list_t list{};
+        for (const auto& kvp : _blocks)
+            list.push_back(kvp.second);
+        return list;
+    }
+
     basic_block* basic_block_map::find(common::id_t id) const {
         auto it = _blocks.find(id);
         if (it == std::end(_blocks))

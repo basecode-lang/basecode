@@ -835,4 +835,4 @@ namespace basecode::compiler {
             node->id());
     }
 
-};
+}

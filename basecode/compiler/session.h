@@ -155,6 +155,8 @@ namespace basecode::compiler {
 
         bool fold_elements_of_type(element_type_t type);
 
+        void write_cfg_graph(const boost::filesystem::path& path);
+
         void write_code_dom_graph(const boost::filesystem::path& path);
 
     private:

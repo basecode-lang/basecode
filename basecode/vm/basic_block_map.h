@@ -29,6 +29,8 @@ namespace basecode::vm {
 
         bool remove(common::id_t id);
 
+        basic_block_list_t as_list() const;
+
         basic_block* find(common::id_t id) const;
 
     private:

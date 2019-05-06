@@ -19,34 +19,39 @@
 
 namespace basecode::compiler {
 
-    class code_dom_formatter {
+    class cfg_formatter {
     public:
-        code_dom_formatter(
-            const compiler::session& session,
+        cfg_formatter(
+            compiler::session& session,
             FILE* output_file);
 
         void format(const std::string& title);
 
     private:
-        void add_primary_edge(
-            element* parent,
-            element* child,
+        void add_vertex(
+            vm::assembler& assembler,
+            vm::basic_block* block,
+            uint64_t address);
+
+        void add_successor(
+            vm::basic_block* from,
+            vm::basic_block* to,
             const std::string& label = "");
 
-        void add_secondary_edge(
-            element* parent,
-            element* child,
+        void add_predecessor(
+            vm::basic_block* from,
+            vm::basic_block* to,
             const std::string& label = "");
 
-        std::string format_node(element* node);
+        std::string html_escape(const std::string& html);
 
-        std::string get_vertex_name(element* node) const;
+        std::string get_vertex_name(vm::basic_block* block) const;
 
     private:
         FILE* _file = nullptr;
+        compiler::session& _session;
         std::set<std::string> _edges {};
         std::set<std::string> _nodes {};
-        const compiler::session& _session;
     };
 
 }

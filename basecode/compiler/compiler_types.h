@@ -133,6 +133,7 @@ namespace basecode::compiler {
         session_meta_options_t meta_options {};
         session_module_paths_t module_paths {};
         boost::filesystem::path dom_graph_file;
+        boost::filesystem::path cfg_graph_file;
         session_definition_map_t definitions {};
         session_compile_callback compile_callback;
         common::term_stream_builder* term_builder = nullptr;

@@ -24,6 +24,7 @@
 #include "element_map.h"
 #include "ast_evaluator.h"
 #include "scope_manager.h"
+#include "cfg_formatter.h"
 #include "element_builder.h"
 #include "string_intern_map.h"
 #include "byte_code_emitter.h"
@@ -291,6 +292,16 @@ namespace basecode::compiler {
                     "write code dom graph file",
                     [&](session_task_t* task) {
                         write_code_dom_graph(_options.dom_graph_file);
+                        return true;
+                    });
+            }
+
+            if (!_options.cfg_graph_file.empty()) {
+                time_task(
+                    session_task_category_t::compiler,
+                    "write cfg graph file",
+                    [&](session_task_t* task) {
+                        write_cfg_graph(_options.cfg_graph_file);
                         return true;
                     });
             }
@@ -1088,6 +1099,20 @@ namespace basecode::compiler {
 
     void session::push_source_file(common::source_file* source_file) {
         _source_file_stack.push(source_file);
+    }
+
+    void session::write_cfg_graph(const boost::filesystem::path& path) {
+        FILE* output_file = nullptr;
+        if (!path.empty()) {
+            output_file = fopen(path.string().c_str(), "wt");
+        }
+        defer({
+            if (output_file != nullptr)
+                fclose(output_file);
+        });
+
+        compiler::cfg_formatter formatter(*this, output_file);
+        formatter.format(fmt::format("Control Flow Graph: {}", path.string()));
     }
 
     common::id_t session::intern_string(compiler::string_literal* literal) {

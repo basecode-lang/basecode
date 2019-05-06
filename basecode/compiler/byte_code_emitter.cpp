@@ -2772,6 +2772,10 @@ namespace basecode::compiler {
         return true;
     }
 
+    vm::basic_block_map& byte_code_emitter::blocks() {
+        return _blocks;
+    }
+
     bool byte_code_emitter::fill_referenced_identifiers(
             vm::basic_block* basic_block,
             compiler::element* e) {

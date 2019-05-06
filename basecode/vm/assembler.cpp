@@ -246,12 +246,9 @@ namespace basecode::vm {
     }
 
     void assembler::disassemble(
+            listing_source_file_t* source_file,
             basic_block* block,
             uint64_t& address) {
-        auto source_file = _listing.current_source_file();
-        if (source_file == nullptr)
-            return;
-
         std::stack<vm::comment_t> post_inst_comments {};
 
         size_t last_indent = 0;
@@ -555,10 +552,13 @@ namespace basecode::vm {
 
     void assembler::disassemble() {
         uint64_t address = 0;
+        auto source_file = _listing.current_source_file();
+        if (source_file == nullptr)
+            return;
         for (auto block : _blocks) {
             if (!block->entries().empty())
                 address = block->entries().front().address();
-            disassemble(block, address);
+            disassemble(source_file, block, address);
         }
     }
 

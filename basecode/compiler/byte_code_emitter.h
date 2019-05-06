@@ -28,7 +28,9 @@ namespace basecode::compiler {
             compiler::element* e,
             emit_result_t& result);
 
-        // control flow stack
+        vm::basic_block_map& blocks();
+
+    // control flow stack
     private:
         void pop_flow_control();
 

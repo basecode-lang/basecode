@@ -29,6 +29,11 @@ namespace basecode::vm {
             common::result& r,
             const label_map& labels);
 
+        void disassemble(
+            listing_source_file_t* source_file,
+            basic_block* block,
+            uint64_t& address);
+
         void disassemble();
 
         bool assemble_from_source(
@@ -65,10 +70,6 @@ namespace basecode::vm {
         const vm::assembler_local_t* local(const std::string& name) const;
 
     private:
-        void disassemble(
-            basic_block* block,
-            uint64_t& address);
-
         bool resolve_labels(
             common::result& r,
             const label_map& labels);
