@@ -44,13 +44,13 @@ namespace basecode::compiler {
         return _rune;
     }
 
-    bool character_literal::on_as_integer(uint64_t& value) const {
-        value = static_cast<uint64_t>(_rune);
+    bool character_literal::on_as_rune(common::rune_t& value) const {
+        value = _rune;
         return true;
     }
 
-    bool character_literal::on_as_rune(common::rune_t& value) const {
-        value = _rune;
+    bool character_literal::on_as_integer(integer_result_t& result) const {
+        result.value = static_cast<uint64_t>(_rune);
         return true;
     }
 

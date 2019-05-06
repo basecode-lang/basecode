@@ -43,7 +43,7 @@ namespace basecode::compiler {
 
         bool on_is_constant() const override;
 
-        bool on_as_integer(uint64_t& value) const override;
+        bool on_as_integer(integer_result_t& result) const override;
 
         bool on_equals(const compiler::element& other) const override;
 

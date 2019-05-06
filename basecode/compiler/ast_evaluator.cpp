@@ -455,7 +455,7 @@ namespace basecode::compiler {
                         type->fields().add(new_field);
                         decl->identifier()->field(new_field);
                         if (is_enum) {
-                            uint64_t init_value;
+                            integer_result_t init_value;
                             if (!decl->identifier()->as_integer(init_value)) {
                                 _session.error(
                                     scope_manager.current_module(),
@@ -465,7 +465,7 @@ namespace basecode::compiler {
                                 return false;
                             }
 
-                            if (init_value < value) {
+                            if (init_value.value < value) {
                                 _session.error(
                                     scope_manager.current_module(),
                                     "X000",
@@ -474,7 +474,7 @@ namespace basecode::compiler {
                                 return false;
                             }
 
-                            value = ++init_value;
+                            value = ++init_value.value;
                             decl->identifier()->symbol()->constant(true);
                         }
                         previous_field = new_field;

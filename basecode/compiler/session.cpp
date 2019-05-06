@@ -571,9 +571,9 @@ namespace basecode::compiler {
                                 auto number_class = var->type_ref()->type()->number_class();
 
                                 if (number_class == number_class_t::integer) {
-                                    uint64_t value;
-                                    if (var->as_integer(value)) {
-                                        result.data(vm::compiler_module_data_t(value));
+                                    integer_result_t int_result;
+                                    if (var->as_integer(int_result)) {
+                                        result.data(vm::compiler_module_data_t(int_result.value));
                                     }
                                 } else {
                                     double value;

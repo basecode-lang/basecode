@@ -131,12 +131,6 @@ namespace basecode::compiler {
         return _symbol;
     }
 
-    bool identifier::on_as_integer(uint64_t& value) const {
-        if (_initializer == nullptr)
-            return false;
-        return _initializer->as_integer(value);
-    }
-
     bool identifier::on_as_string(std::string& value) const {
         if (_initializer == nullptr)
             return false;
@@ -158,6 +152,12 @@ namespace basecode::compiler {
 
     void identifier::initializer(compiler::initializer* value) {
         _initializer = value;
+    }
+
+    bool identifier::on_as_integer(integer_result_t& result) const {
+        if (_initializer == nullptr)
+            return false;
+        return _initializer->as_integer(result);
     }
 
     bool identifier::on_as_identifier(compiler::identifier*& value) const {

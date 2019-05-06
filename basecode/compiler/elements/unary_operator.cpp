@@ -131,19 +131,20 @@ namespace basecode::compiler {
         return true;
     }
 
-    bool unary_operator::on_as_integer(uint64_t& value) const {
-        value = 0;
-
-        uint64_t rhs_value;
-        if (!_rhs->as_integer(rhs_value))
+    bool unary_operator::on_as_integer(integer_result_t& result) const {
+        integer_result_t int_result;
+        if (!_rhs->as_integer(int_result))
             return false;
 
-        auto numeric_type_props = numeric_type::type_properties_for_value(rhs_value);
+        result.is_signed = int_result.is_signed;
+        auto numeric_type_props = numeric_type::type_properties_for_value(
+            int_result.value,
+            int_result.is_signed);
         if (numeric_type_props == nullptr)
             return false;
 
         vm::register_value_alias_t alias {};
-        alias.qw = rhs_value;
+        alias.qw = int_result.value;
 
         auto size = vm::op_size_for_byte_size(numeric_type_props->size_in_bytes);
 
@@ -152,22 +153,22 @@ namespace basecode::compiler {
                 switch (size) {
                     case vm::op_sizes::byte: {
                         auto temp = static_cast<uint8_t>(-alias.b);
-                        value = temp;
+                        result.value = temp;
                         break;
                     }
                     case vm::op_sizes::word: {
                         auto temp = static_cast<uint16_t>(-alias.w);
-                        value = temp;
+                        result.value = temp;
                         break;
                     }
                     case vm::op_sizes::dword: {
                         auto temp = static_cast<uint32_t>(-alias.dw);
-                        value = temp;
+                        result.value = temp;
                         break;
                     }
                     default:
                     case vm::op_sizes::qword: {
-                        value = static_cast<uint64_t>(-alias.qw);
+                        result.value = static_cast<uint64_t>(-alias.qw);
                         break;
                     }
                 }
@@ -177,22 +178,22 @@ namespace basecode::compiler {
                 switch (size) {
                     case vm::op_sizes::byte: {
                         auto temp = static_cast<uint8_t>(~alias.b);
-                        value = temp;
+                        result.value = temp;
                         break;
                     }
                     case vm::op_sizes::word: {
                         auto temp = static_cast<uint16_t>(~alias.w);
-                        value = temp;
+                        result.value = temp;
                         break;
                     }
                     case vm::op_sizes::dword: {
                         auto temp = static_cast<uint32_t>(~alias.dw);
-                        value = temp;
+                        result.value = temp;
                         break;
                     }
                     default:
                     case vm::op_sizes::qword: {
-                        value = ~alias.qw;
+                        result.value = ~alias.qw;
                         break;
                     }
                 }

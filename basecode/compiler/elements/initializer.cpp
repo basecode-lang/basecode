@@ -117,12 +117,6 @@ namespace basecode::compiler {
         return _expr->as_float(value);
     }
 
-    bool initializer::on_as_integer(uint64_t& value) const {
-        if (_expr == nullptr)
-            return false;
-        return _expr->as_integer(value);
-    }
-
     void initializer::expression(compiler::element* value) {
         _expr = value;
     }
@@ -148,6 +142,12 @@ namespace basecode::compiler {
         if (_expr == nullptr)
             return false;
         return _expr->as_rune(value);
+    }
+
+    bool initializer::on_as_integer(integer_result_t& result) const {
+        if (_expr == nullptr)
+            return false;
+        return _expr->as_integer(result);
     }
 
 }

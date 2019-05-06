@@ -168,12 +168,6 @@ namespace basecode::compiler {
         return _symbol;
     }
 
-    bool identifier_reference::on_as_integer(uint64_t& value) const {
-        if (_identifier == nullptr)
-            return false;
-        return _identifier->as_integer(value);
-    }
-
     bool identifier_reference::on_equals(const element& other) const {
         if (!_identifier->is_constant())
             return false;
@@ -186,10 +180,10 @@ namespace basecode::compiler {
                 return lhs_value == rhs_value;
             }
             case element_type_t::integer_literal: {
-                uint64_t lhs_value, rhs_value;
-                if (!as_integer(lhs_value)) return false;
-                if (!other.as_integer(rhs_value)) return false;
-                return lhs_value == rhs_value;
+                integer_result_t lhs, rhs;
+                if (!as_integer(lhs)) return false;
+                if (!other.as_integer(rhs)) return false;
+                return lhs.value == rhs.value;
             }
             case element_type_t::boolean_literal: {
                 bool lhs_value, rhs_value;
@@ -233,10 +227,10 @@ namespace basecode::compiler {
                 return lhs_value < rhs_value;
             }
             case element_type_t::integer_literal: {
-                uint64_t lhs_value, rhs_value;
-                if (!as_integer(lhs_value)) return false;
-                if (!other.as_integer(rhs_value)) return false;
-                return lhs_value < rhs_value;
+                integer_result_t lhs, rhs;
+                if (!as_integer(lhs)) return false;
+                if (!other.as_integer(rhs)) return false;
+                return lhs.value < rhs.value;
             }
             default: {
                 break;
@@ -262,10 +256,10 @@ namespace basecode::compiler {
                 return lhs_value > rhs_value;
             }
             case element_type_t::integer_literal: {
-                uint64_t lhs_value, rhs_value;
-                if (!as_integer(lhs_value)) return false;
-                if (!other.as_integer(rhs_value)) return false;
-                return lhs_value > rhs_value;
+                integer_result_t lhs, rhs;
+                if (!as_integer(lhs)) return false;
+                if (!other.as_integer(rhs)) return false;
+                return lhs.value > rhs.value;
             }
             default: {
                 break;
@@ -273,6 +267,12 @@ namespace basecode::compiler {
         }
 
         return false;
+    }
+
+    bool identifier_reference::on_as_integer(integer_result_t& result) const {
+        if (_identifier == nullptr)
+            return false;
+        return _identifier->as_integer(result);
     }
 
     bool identifier_reference::on_less_than_or_equal(const element& other) const {

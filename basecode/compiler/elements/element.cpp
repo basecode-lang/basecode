@@ -201,20 +201,12 @@ namespace basecode::compiler {
         return false;
     }
 
-    bool element::as_integer(uint64_t& value) const {
-        return on_as_integer(value);
-    }
-
     bool element::as_string(std::string& value) const {
         return on_as_string(value);
     }
 
     bool element::as_rune(common::rune_t& value) const {
         return on_as_rune(value);
-    }
-
-    bool element::on_as_integer(uint64_t& value) const {
-        return false;
     }
 
     void element::owned_elements(element_list_t& list) {
@@ -252,6 +244,10 @@ namespace basecode::compiler {
         return _location;
     }
 
+    bool element::as_integer(integer_result_t& result) const {
+        return on_as_integer(result);
+    }
+
     uint64_t element::on_subtract(const element& other) const {
         return 0;
     }
@@ -261,6 +257,10 @@ namespace basecode::compiler {
     }
 
     bool element::on_greater_than(const element& other) const {
+        return false;
+    }
+
+    bool element::on_as_integer(integer_result_t& result) const {
         return false;
     }
 

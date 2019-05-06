@@ -87,7 +87,7 @@ namespace basecode::syntax {
                 break;
         }
 
-        if (!node->token->value.empty() && details.empty()) {
+        if (node->token != nullptr && !node->token->value.empty() && details.empty()) {
             auto value = std::string(node->token->value);
 
             if (value == "|")

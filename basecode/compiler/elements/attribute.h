@@ -38,11 +38,11 @@ namespace basecode::compiler {
 
         bool on_as_float(double& value) const override;
 
-        bool on_as_integer(uint64_t& value) const override;
-
         bool on_as_string(std::string& value) const override;
 
         void on_owned_elements(element_list_t& list) override;
+
+        bool on_as_integer(integer_result_t& result) const override;
 
     private:
         std::string_view _name;

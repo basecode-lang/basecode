@@ -71,15 +71,15 @@ namespace basecode::compiler {
         return _root->as_float(value);
     }
 
-    bool expression::on_as_integer(uint64_t& value) const {
-        if (_root == nullptr)
-            return false;
-        return _root->as_integer(value);
-    }
-
     void expression::on_owned_elements(element_list_t& list) {
         if (_root != nullptr)
             list.emplace_back(_root);
+    }
+
+    bool expression::on_as_integer(integer_result_t& result) const {
+        if (_root == nullptr)
+            return false;
+        return _root->as_integer(result);
     }
 
 }

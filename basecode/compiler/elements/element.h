@@ -94,8 +94,6 @@ namespace basecode::compiler {
 
         virtual std::string label_name() const;
 
-        bool as_integer(uint64_t& value) const;
-
         bool as_string(std::string& value) const;
 
         bool as_rune(common::rune_t& value) const;
@@ -136,6 +134,8 @@ namespace basecode::compiler {
         bool operator<= (const element& other) const {
             return on_less_than_or_equal(other);
         }
+
+        bool as_integer(integer_result_t& result) const;
 
         const common::source_location& location() const;
 
@@ -186,8 +186,6 @@ namespace basecode::compiler {
 
         virtual bool on_as_float(double& value) const;
 
-        virtual bool on_as_integer(uint64_t& value) const;
-
         virtual bool on_equals(const element& other) const;
 
         virtual bool on_as_string(std::string& value) const;
@@ -207,6 +205,8 @@ namespace basecode::compiler {
         virtual uint64_t on_multiply(const element& other) const;
 
         virtual bool on_greater_than(const element& other) const;
+
+        virtual bool on_as_integer(integer_result_t& result) const;
 
         virtual bool on_less_than_or_equal(const element& other) const;
 

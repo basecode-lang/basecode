@@ -268,8 +268,13 @@ namespace basecode::vm {
         std::string preds{};
         const auto& pred_list = block->predecessors();
         for (size_t i = 0; i < pred_list.size(); i++) {
+            auto pred = pred_list[i];
+            if (pred == nullptr) {
+                fmt::print("invalid predecessor in block {}\n", block->id());
+                continue;
+            }
             if (i > 0) preds += ",";
-            preds += fmt::format("{}", pred_list[i]->id());
+            preds += fmt::format("{}", pred->id());
         }
         if (!preds.empty()) {
             source_file->add_source_line(
@@ -281,8 +286,13 @@ namespace basecode::vm {
         std::string succs{};
         const auto& succ_list = block->successors();
         for (size_t i = 0; i < succ_list.size(); i++) {
+            auto succ = succ_list[i];
+            if (succ == nullptr) {
+                fmt::print("invalid successor in block {}\n", block->id());
+                continue;
+            }
             if (i > 0) succs += ",";
-            succs += fmt::format("{}", succ_list[i]->id());
+            succs += fmt::format("{}", succ->id());
         }
         if (!succs.empty()) {
             source_file->add_source_line(

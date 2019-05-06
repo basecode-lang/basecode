@@ -33,9 +33,9 @@ namespace basecode::compiler {
             .add_part(std::string(entry_type->symbol()->name()));
 
         for (auto s : subscripts) {
-            uint64_t size = 0;
+            integer_result_t size;
             if (s->as_integer(size))
-                builder.add_part(fmt::format("S{}", size));
+                builder.add_part(fmt::format("S{}", size.value));
         }
 
         return builder.format();
@@ -101,12 +101,12 @@ namespace basecode::compiler {
     size_t array_type::number_of_elements() const {
         size_t count = 0;
         for (auto s : _subscripts) {
-            uint64_t temp = 0;
+            integer_result_t temp;
             if (s->as_integer(temp)) {
                 if (count == 0)
-                    count = temp;
+                    count = temp.value;
                 else
-                    count *= temp;
+                    count *= temp.value;
             }
         }
         return count;

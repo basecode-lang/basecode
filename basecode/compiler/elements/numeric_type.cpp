@@ -59,6 +59,18 @@ namespace basecode::compiler {
             return "unknown"sv;
     }
 
+    numeric_type_properties_t* numeric_type::type_properties_for_value(
+            uint64_t value,
+            bool is_signed) {
+        auto type_name = numeric_type::narrow_to_value(value, is_signed);
+        if (type_name == "unknown"sv)
+            return nullptr;
+        auto it = s_types_map.find(type_name);
+        if (it == s_types_map.end())
+            return nullptr;
+        return it->second;
+    }
+
     std::string_view numeric_type::narrow_to_value(uint64_t value, bool is_signed) {
         if (is_signed) {
             native_integer_t native_value {};
@@ -77,16 +89,6 @@ namespace basecode::compiler {
             }
         }
         return "unknown"sv;
-    }
-
-    numeric_type_properties_t* numeric_type::type_properties_for_value(uint64_t value) {
-        auto type_name = numeric_type::narrow_to_value(value);
-        if (type_name == "unknown"sv)
-            return nullptr;
-        auto it = s_types_map.find(type_name);
-        if (it == s_types_map.end())
-            return nullptr;
-        return it->second;
     }
 
     ///////////////////////////////////////////////////////////////////////////

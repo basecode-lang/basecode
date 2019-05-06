@@ -74,8 +74,9 @@ namespace basecode::compiler {
         return common::is_sign_bit_set(_value);
     }
 
-    bool integer_literal::on_as_integer(uint64_t& value) const {
-        value = _value;
+    bool integer_literal::on_as_integer(integer_result_t& result) const {
+        result.value = _value;
+        result.is_signed = _is_signed;
         return true;
     }
 

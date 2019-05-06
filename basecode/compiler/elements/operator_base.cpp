@@ -44,11 +44,11 @@ namespace basecode::compiler {
         const auto& inferred = type_result.types.back();
 
         if (inferred.type->number_class() == number_class_t::integer) {
-            uint64_t value;
-            if (as_integer(value)) {
+            integer_result_t int_result;
+            if (as_integer(int_result)) {
                 result.element = builder.make_integer(
                     scope_manager.current_scope(),
-                    value);
+                    int_result.value);
                 result.element->location(location());
                 return true;
             }

@@ -40,9 +40,11 @@ namespace basecode::compiler {
 
         static std::string_view narrow_to_value(double value);
 
-        static std::string_view narrow_to_value(uint64_t value, bool is_signed);
+        static numeric_type_properties_t* type_properties_for_value(
+            uint64_t value,
+            bool is_signed);
 
-        static numeric_type_properties_t* type_properties_for_value(uint64_t value);
+        static std::string_view narrow_to_value(uint64_t value, bool is_signed);
 
         numeric_type(
             compiler::module* module,

@@ -267,80 +267,79 @@ namespace basecode::compiler {
         return true;
     }
 
-    bool binary_operator::on_as_integer(uint64_t& value) const {
-        uint64_t lhs_value, rhs_value;
-        if (!_rhs->as_integer(rhs_value)) return false;
+    bool binary_operator::on_as_integer(integer_result_t& result) const {
+        integer_result_t lhs, rhs;
+        if (!_rhs->as_integer(rhs)) return false;
 
         if (operator_type() == operator_type_t::member_access) {
             if (_lhs->element_type() == element_type_t::identifier_reference) {
                 auto ref = dynamic_cast<compiler::identifier_reference*>(_lhs);
                 auto composite_type = dynamic_cast<compiler::composite_type*>(ref->identifier()->type_ref()->type());
                 if (composite_type->is_enum()) {
-                    value = rhs_value;
+                    result = rhs;
                     return true;
                 }
             }
             return false;
         }
 
-        if (!_lhs->as_integer(lhs_value)) return false;
-        value = 0;
+        if (!_lhs->as_integer(lhs)) return false;
 
         switch (operator_type()) {
             case operator_type_t::add: {
-                value = lhs_value + rhs_value;
+                result.value = lhs.value + rhs.value;
                 break;
             }
             case operator_type_t::divide: {
-                value = lhs_value / rhs_value;
+                result.value = lhs.value / rhs.value;
                 break;
             }
             case operator_type_t::modulo: {
-                value = lhs_value % rhs_value;
+                result.value = lhs.value % rhs.value;
                 break;
             }
             case operator_type_t::subtract: {
-                value = lhs_value - rhs_value;
+                result.value = lhs.value - rhs.value;
                 break;
             }
             case operator_type_t::exponent: {
-                value = common::power(lhs_value, rhs_value);
+                result.value = common::power(lhs.value, rhs.value);
                 break;
             }
             case operator_type_t::multiply: {
-                value = lhs_value * rhs_value;
+                result.value = lhs.value * rhs.value;
                 break;
             }
             case operator_type_t::binary_or: {
-                value = lhs_value | rhs_value;
+                result.value = lhs.value | rhs.value;
                 break;
             }
             case operator_type_t::binary_and: {
-                value = lhs_value & rhs_value;
+                result.value = lhs.value & rhs.value;
                 break;
             }
             case operator_type_t::binary_xor: {
-                value = lhs_value ^ rhs_value;
+                result.value = lhs.value ^ rhs.value;
                 break;
             }
             case operator_type_t::shift_left: {
-                value = lhs_value << rhs_value;
+                result.value = lhs.value << rhs.value;
                 break;
             }
             case operator_type_t::shift_right: {
-                value = lhs_value >> rhs_value;
+                result.value = lhs.value >> rhs.value;
                 break;
             }
             case operator_type_t::rotate_left: {
-                value = common::rotl(
-                    lhs_value,
-                    static_cast<uint8_t>(rhs_value));
+                result.value = common::rotl(
+                    lhs.value,
+                    static_cast<uint8_t>(rhs.value));
                 break;
             }
             case operator_type_t::rotate_right: {
-                value = common::rotr(
-                    lhs_value,
-                    static_cast<uint8_t>(rhs_value));
+                result.value = common::rotr(
+                    lhs.value,
+                    static_cast<uint8_t>(rhs.value));
                 break;
             }
             default: return false;

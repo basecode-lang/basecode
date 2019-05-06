@@ -899,6 +899,11 @@ namespace basecode::compiler {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    struct integer_result_t {
+        uint64_t value{};
+        bool is_signed{};
+    };
+
     union native_integer_t {
         int8_t sb;
         uint8_t b;

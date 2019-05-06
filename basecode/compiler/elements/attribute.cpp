@@ -53,12 +53,6 @@ namespace basecode::compiler {
         return _expr->as_float(value);
     }
 
-    bool attribute::on_as_integer(uint64_t& value) const {
-        if (_expr == nullptr)
-            return false;
-        return _expr->as_integer(value);
-    }
-
     bool attribute::on_as_string(std::string& value) const {
         if (_expr == nullptr)
             return false;
@@ -68,6 +62,12 @@ namespace basecode::compiler {
     void attribute::on_owned_elements(element_list_t& list) {
         if (_expr != nullptr)
             list.emplace_back(_expr);
+    }
+
+    bool attribute::on_as_integer(integer_result_t& result) const {
+        if (_expr == nullptr)
+            return false;
+        return _expr->as_integer(result);
     }
 
 }

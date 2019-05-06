@@ -636,22 +636,22 @@ namespace basecode::compiler {
                                     return false;
 
                                 auto dir_arg = range->arguments()->param_by_name("dir");
-                                uint64_t dir_value;
-                                if (!dir_arg->as_integer(dir_value))
+                                integer_result_t dir_int_result;
+                                if (!dir_arg->as_integer(dir_int_result))
                                     return false;
 
                                 auto kind_arg = range->arguments()->param_by_name("kind");
-                                uint64_t kind_value;
-                                if (!kind_arg->as_integer(kind_value))
+                                integer_result_t kind_int_result;
+                                if (!kind_arg->as_integer(kind_int_result))
                                     return false;
 
-                                auto step_op_type = dir_value == 0 ?
+                                auto step_op_type = dir_int_result.value == 0 ?
                                                     operator_type_t::add :
                                                     operator_type_t::subtract;
                                 auto cmp_op_type = operator_type_t::less_than;
-                                switch (kind_value) {
+                                switch (kind_int_result.value) {
                                     case 0: {
-                                        switch (dir_value) {
+                                        switch (dir_int_result.value) {
                                             case 0:
                                                 cmp_op_type = operator_type_t::less_than_or_equal;
                                                 break;
@@ -665,7 +665,7 @@ namespace basecode::compiler {
                                         break;
                                     }
                                     case 1: {
-                                        switch (dir_value) {
+                                        switch (dir_int_result.value) {
                                             case 0:
                                                 cmp_op_type = operator_type_t::less_than;
                                                 break;
@@ -2344,28 +2344,28 @@ namespace basecode::compiler {
                     if (!arg->infer_type(_session, type_result))
                         return false;
 
-                    uint64_t value;
-                    if (arg->as_integer(value)) {
+                    integer_result_t int_result;
+                    if (arg->as_integer(int_result)) {
                         switch (symbol_type) {
                             case vm::symbol_type_t::unknown:
                                 break;
                             case vm::symbol_type_t::u8:
                             case vm::symbol_type_t::bytes: {
-                                values.emplace_back(static_cast<uint8_t>(value));
+                                values.emplace_back(static_cast<uint8_t>(int_result.value));
                                 break;
                             }
                             case vm::symbol_type_t::u16: {
-                                values.emplace_back(static_cast<uint16_t>(value));
+                                values.emplace_back(static_cast<uint16_t>(int_result.value));
                                 break;
                             }
                             case vm::symbol_type_t::f32:
                             case vm::symbol_type_t::u32: {
-                                values.emplace_back(static_cast<uint32_t>(value));
+                                values.emplace_back(static_cast<uint32_t>(int_result.value));
                                 break;
                             }
                             case vm::symbol_type_t::f64:
                             case vm::symbol_type_t::u64: {
-                                values.emplace_back(value);
+                                values.emplace_back(int_result.value);
                                 break;
                             }
                         }
@@ -2443,11 +2443,11 @@ namespace basecode::compiler {
                 break;
             }
             case element_type_t::numeric_type: {
-                uint64_t value = 0;
+                integer_result_t int_result;
                 auto symbol_type = vm::integer_symbol_type_for_size(var_type->size_in_bytes());
 
                 if (var_type->number_class() == number_class_t::integer) {
-                    var->as_integer(value);
+                    var->as_integer(int_result);
                 } else {
                     double temp = 0;
                     if (var->as_float(temp)) {
@@ -2456,7 +2456,8 @@ namespace basecode::compiler {
                             alias.dwf = static_cast<float>(temp);
                         else
                             alias.qwf = temp;
-                        value = alias.qw;
+                        int_result.value = alias.qw;
+                        int_result.is_signed = temp < 0;
                     }
                 }
 
@@ -2465,27 +2466,27 @@ namespace basecode::compiler {
                         if (!is_initialized)
                             basic_block->reserve_byte(1);
                         else
-                            basic_block->bytes({static_cast<uint8_t>(value)});
+                            basic_block->bytes({static_cast<uint8_t>(int_result.value)});
                         break;
                     case vm::symbol_type_t::u16:
                         if (!is_initialized)
                             basic_block->reserve_word(1);
                         else
-                            basic_block->words({static_cast<uint16_t>(value)});
+                            basic_block->words({static_cast<uint16_t>(int_result.value)});
                         break;
                     case vm::symbol_type_t::f32:
                     case vm::symbol_type_t::u32:
                         if (!is_initialized)
                             basic_block->reserve_dword(1);
                         else
-                            basic_block->dwords({static_cast<uint32_t>(value)});
+                            basic_block->dwords({static_cast<uint32_t>(int_result.value)});
                         break;
                     case vm::symbol_type_t::f64:
                     case vm::symbol_type_t::u64:
                         if (!is_initialized)
                             basic_block->reserve_qword(1);
                         else
-                            basic_block->qwords({value});
+                            basic_block->qwords({int_result.value});
                         break;
                     case vm::symbol_type_t::bytes:
                         break;
