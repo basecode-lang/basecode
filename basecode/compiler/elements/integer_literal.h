@@ -26,11 +26,11 @@ namespace basecode::compiler {
 
         bool is_signed() const;
 
-        bool is_sign_bit_high() const;
-
         uint64_t value() const;
 
         void value(uint64_t v);
+
+        bool is_sign_bit_high() const;
 
     protected:
         bool on_infer_type(

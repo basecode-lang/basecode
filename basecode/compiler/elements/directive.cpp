@@ -14,6 +14,7 @@
 #include "run_directive.h"
 #include "type_directive.h"
 #include "assert_directive.h"
+#include "inline_directive.h"
 #include "foreign_directive.h"
 #include "assembly_directive.h"
 #include "language_directive.h"
@@ -78,6 +79,12 @@ namespace basecode::compiler {
                 instance->location(location);
                 return instance;
             }
+            case directive_type_t::inline_e: {
+                auto instance = new inline_directive(module, parent_scope, params[0]);
+                params[0]->parent_element(instance);
+                instance->location(location);
+                return instance;
+            }
             case directive_type_t::foreign: {
                 auto instance = new foreign_directive(module, parent_scope, params[0]);
                 params[0]->parent_element(instance);
@@ -96,6 +103,9 @@ namespace basecode::compiler {
                 params[1]->parent_element(instance);
                 instance->location(location);
                 return instance;
+            }
+            case directive_type_t::coroutine: {
+                break;
             }
             case directive_type_t::core_type: {
                 auto instance = new core_type_directive(module, parent_scope, params[0]);
@@ -122,6 +132,10 @@ namespace basecode::compiler {
     directive::directive(
             compiler::module* module,
             compiler::block* parent_scope) : element(module, parent_scope, element_type_t::directive) {
+    }
+
+    bool directive::is_valid_data() const {
+        return true;
     }
 
     directive_type_t directive::type() const {

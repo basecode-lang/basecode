@@ -66,6 +66,12 @@ namespace basecode::compiler {
         return !result.types.empty();
     }
 
+    bool procedure_call::is_inline() const {
+        if (_arguments == nullptr)
+            return false;
+        return _arguments->is_inline();
+    }
+
     bool procedure_call::is_foreign() const {
         if (_arguments == nullptr)
             return false;
@@ -223,6 +229,7 @@ namespace basecode::compiler {
 
         _arguments->elements(matched_result.arguments);
         _arguments->argument_index(matched_result.index);
+        _arguments->is_inline(matched_result.proc_type->is_inline());
         _arguments->is_foreign_call(matched_result.proc_type->is_foreign());
 
         _resolved_identifier_ref = matched_result.ref;

@@ -131,6 +131,10 @@ namespace basecode::compiler {
             emit_result_t& arg_result,
             emit_result_t& result);
 
+        bool append(
+            compiler::block* block,
+            compiler::procedure_type* proc_type);
+
         bool assign(
             vm::basic_block* basic_block,
             emit_result_t& lhs,

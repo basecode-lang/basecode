@@ -479,11 +479,16 @@ namespace basecode::compiler {
         if (var == nullptr)
             return false;
 
+        if (var->flag(variable_t::flags_t::spilled))
+            return true;
+
         if (!var->flag(variable_t::flags_t::filled)
         &&  var->type != variable_type_t::temporary) {
             // XXX: should probably include an error message
             return false;
         }
+
+        var->flag(variable_t::flags_t::spilled, true);
 
         auto& assembler = _session.assembler();
         auto& rhs_operand = rhs.operands.back();
@@ -537,17 +542,26 @@ namespace basecode::compiler {
                 break;
             }
             case variable_type_t::parameter: {
-                basic_block->comment(
-                    fmt::format("spill: parameter({})", var->label),
-                    vm::comment_location_t::after_instruction);
-                if (var->flag(variable_t::flags_t::pointer)) {
-                    auto local_ref = assembler.make_named_ref(
-                        vm::assembler_named_ref_type_t::local,
-                        var->field_offset.base_ref->label_name());
-                    basic_block->store(
-                        vm::instruction_operand_t(local_ref),
-                        vm::instruction_operand_t(lhs_named_ref->ref),
-                        vm::instruction_operand_t(var->field_offset.from_start, vm::op_sizes::word));
+                // XXX: this is wrong; fix!!
+                if (var->field_offset.base_ref != nullptr) {
+                    std::string label_name{};
+                    if (var->field_offset.base_ref != nullptr) {
+                        label_name = var->field_offset.base_ref->label_name();
+                    } else {
+                        label_name = var->label;
+                    }
+                    basic_block->comment(
+                        fmt::format("spill: parameter({})", var->label),
+                        vm::comment_location_t::after_instruction);
+                    if (var->flag(variable_t::flags_t::pointer)) {
+                        auto local_ref = assembler.make_named_ref(
+                            vm::assembler_named_ref_type_t::local,
+                            label_name);
+                        basic_block->store(
+                            vm::instruction_operand_t(local_ref),
+                            vm::instruction_operand_t(lhs_named_ref->ref),
+                            vm::instruction_operand_t(var->field_offset.from_start, vm::op_sizes::word));
+                    }
                 }
                 break;
             }
@@ -619,6 +633,18 @@ namespace basecode::compiler {
         return find_parameter_variables(proc_type);
     }
 
+    bool variable_map::append(
+            compiler::block* block,
+            compiler::procedure_type* proc_type) {
+        if (!find_return_variables(proc_type))
+            return false;
+
+        if (!find_local_variables(block))
+            return false;
+
+        return find_parameter_variables(proc_type);
+    }
+
     bool variable_map::deref(
             vm::basic_block* basic_block,
             emit_result_t& arg_result,
@@ -676,6 +702,8 @@ namespace basecode::compiler {
             // XXX: should probably include an error message
             return false;
         }
+
+        var->flag(variable_t::flags_t::spilled, false);
 
         basic_block->comment(
             fmt::format("assign: {}({})", variable_type_name(var->type), var->label),
@@ -947,7 +975,7 @@ namespace basecode::compiler {
                 switch (init->expression()->element_type()) {
                     case element_type_t::directive: {
                         auto directive = dynamic_cast<compiler::directive*>(init->expression());
-                        if (directive->type() == directive_type_t::type)
+                        if (!directive->is_valid_data())
                             continue;
                         break;
                     }

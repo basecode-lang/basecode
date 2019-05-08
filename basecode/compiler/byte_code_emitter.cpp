@@ -24,6 +24,11 @@
 
 namespace basecode::compiler {
 
+    struct return_parameter_result_t {
+        compiler::field* field = nullptr;
+        vm::instruction_operand_t* operand = nullptr;
+    };
+
     // XXX: refactor this to use the common::directed_graph
     struct proc_call_edge_t {
         compiler::element* site = nullptr;
@@ -287,35 +292,15 @@ namespace basecode::compiler {
                 continue;
             }
 
-            auto flow_control = current_flow_control();
-            if (flow_control != nullptr) {
-                compiler::element* prev = nullptr;
-                compiler::element* next = nullptr;
-
-                if (index > 0)
-                    prev = statements[index - 1];
-                if (index < statements.size() - 1)
-                    next = statements[index + 1];
-
-                auto& values_map = flow_control->values;
-                values_map[next_element] = next;
-                values_map[previous_element] = prev;
-            }
+            apply_flow_control(statements, index);
 
             emit_result_t stmt_result;
             if (!emit_element(basic_block, stmt, stmt_result))
                 return false;
         }
 
-        auto working_stack = block->defer_stack();
-        while (!working_stack.empty()) {
-            auto deferred = working_stack.top();
-
-            emit_result_t defer_result {};
-            if (!emit_element(basic_block, deferred, defer_result))
-                return false;
-            working_stack.pop();
-        }
+        if (!apply_defer_stack(basic_block, block))
+            return false;
 
         if (_temps_block != nullptr) {
             auto temp_locals = _variables.temps();
@@ -520,6 +505,9 @@ namespace basecode::compiler {
                 predicate_block->add_predecessors({current_block});
                 *basic_block = predicate_block;
 
+                if (!fill_referenced_identifiers(predicate_block, if_e->predicate()))
+                    return false;
+
                 predicate_block->label(labels.make(begin_label_name, predicate_block));
                 emit_result_t predicate_result {};
                 if (!emit_element(basic_block, if_e->predicate(), predicate_result))
@@ -703,6 +691,9 @@ namespace basecode::compiler {
                                 auto predicate_block = make_block();
                                 predicate_block->predecessors().emplace_back(init_block);
                                 init_block->successors().emplace_back(predicate_block);
+
+                                if (!fill_referenced_identifiers(predicate_block, stop_arg))
+                                    return false;
 
                                 predicate_block->label(labels.make(entry_label_name, predicate_block));
                                 auto comparison_op = builder.make_binary_operator(
@@ -1084,7 +1075,8 @@ namespace basecode::compiler {
                     vm::instruction_operand_t::sp(),
                     vm::instruction_operand_t::fp());
                 return_block->pop(vm::instruction_operand_t::fp());
-                return_block->rts();
+                if (!result.omit_rts)
+                    return_block->rts();
 
                 _return_emitted = true;
                 break;
@@ -1345,197 +1337,218 @@ namespace basecode::compiler {
                 auto procedure_type = proc_call->procedure_type();
                 auto label = proc_call->identifier()->label_name();
                 auto is_foreign = procedure_type->is_foreign();
+                auto is_inline = procedure_type->is_inline();
 
-                struct return_parameter_result_t {
-                    compiler::field* field = nullptr;
-                    vm::instruction_operand_t* operand = nullptr;
-                };
+                if (is_inline) {
+                    auto inline_block = make_block();
+                    inline_block->label(
+                        labels.make(fmt::format("{}_inline", proc_call->label_name()),
+                                    inline_block));
+                    inline_block->add_predecessors({current_block});
+                    current_block->add_successors({inline_block});
+                    *basic_block = inline_block;
 
-                variable_set_t excluded_vars {};
-                std::vector<return_parameter_result_t> return_results {};
-
-                const auto& return_parameters = procedure_type->return_parameters();
-                const auto return_size = common::align(
-                    return_parameters.size_in_bytes(),
-                    8);
-                if (!return_parameters.empty()) {
-                    auto start_result_operands_size = result.operands.size();
-
-                    return_results.resize(return_parameters.size());
-                    result.operands.resize(return_parameters.size());
-
-                    size_t index = 0;
-                    const auto& fields = return_parameters.as_list();
-                    for (auto fld : fields) {
-                        auto field_type = fld->identifier()->type_ref()->type();
-
-                        return_parameter_result_t return_result {};
-                        return_result.field = fld;
-
-                        if (index < start_result_operands_size) {
-                            return_result.operand = &result.operands[index];
-                            auto named_ref = return_result.operand->data<vm::named_ref_with_offset_t>();
-                            if (named_ref != nullptr)
-                                excluded_vars.insert(_variables.find(named_ref->ref->name));
-                        } else {
-                            vm::op_sizes size = vm::op_sizes::qword;
-                            if (!field_type->is_composite_type())
-                                size = vm::op_size_for_byte_size(field_type->size_in_bytes());
-
-                            auto temp = _variables.retain_temp(field_type->number_class());
-                            result.temps.emplace_back(temp);
-                            excluded_vars.insert(temp->variable);
-
-                            result.operands[index] = vm::instruction_operand_t(assembler.make_named_ref(
-                                vm::assembler_named_ref_type_t::local,
-                                temp->name(),
-                                size));
-
-                            return_result.operand = &result.operands[index];
-                        }
-
-                        return_results[index] = return_result;
-
-                        index++;
-                    }
-                }
-
-                auto grouped_variables = _variables.group_variables(excluded_vars);
-
-                auto prologue_block = make_block();
-                prologue_block->label(
-                    labels.make(fmt::format("{}_prologue",proc_call->label_name()),
-                                prologue_block));
-                prologue_block->add_predecessors({current_block});
-                current_block->add_successors({prologue_block});
-
-                if (!is_foreign)
-                    _variables.save_locals_to_stack(prologue_block, grouped_variables);
-
-                vm::basic_block* ending_prologue_block = nullptr;
-                auto arg_list = proc_call->arguments();
-                if (arg_list != nullptr) {
-                    *basic_block = prologue_block;
-                    emit_result_t arg_list_result {};
-                    if (!emit_element(basic_block, arg_list, arg_list_result))
-                        return false;
-                    ending_prologue_block = *basic_block;
-                    release_temps(arg_list_result.temps);
-                } else {
-                    ending_prologue_block = prologue_block;
-                }
-
-                if (!is_foreign && !return_parameters.empty()) {
-                    ending_prologue_block->comment(
-                        "return slot",
-                        vm::comment_location_t::after_instruction);
-                    ending_prologue_block->sub(
-                        vm::instruction_operand_t::sp(),
-                        vm::instruction_operand_t::sp(),
-                        vm::instruction_operand_t(
-                            static_cast<uint64_t>(return_size),
-                            vm::op_sizes::byte));
-                }
-
-                auto call_block = make_block();
-                call_block->label(
-                    labels.make(fmt::format("{}_invoke",proc_call->label_name()),
-                                call_block));
-                call_block->add_predecessors({ending_prologue_block});
-                ending_prologue_block->add_successors({call_block});
-                *basic_block = call_block;
-
-                if (is_foreign) {
-                    auto& ffi = _session.ffi();
-
-                    auto func = ffi.find_function(procedure_type->foreign_address());
-                    if (func == nullptr) {
-                        _session.error(
-                            proc_call->module(),
-                            "X000",
-                            fmt::format(
-                                "unable to find foreign function by address: {}",
-                                procedure_type->foreign_address()),
-                            proc_call->location());
-                        return false;
-                    }
-
-                    call_block->comment(
-                        fmt::format("call: {}", label),
-                        vm::comment_location_t::after_instruction);
-
-                    vm::instruction_operand_t address_operand(procedure_type->foreign_address());
-
-                    if (func->is_variadic()) {
-                        vm::function_value_list_t args {};
-                        if (!arg_list->as_ffi_arguments(_session, args))
+                    emit_result_t arg_list_result{};
+                    auto arg_list = proc_call->arguments();
+                    if (arg_list != nullptr) {
+                        if (!emit_element(basic_block, arg_list, arg_list_result))
                             return false;
-
-                        auto signature_id = common::id_pool::instance()->allocate();
-                        func->call_site_arguments.insert(std::make_pair(signature_id, args));
-
-                        call_block->call_foreign(
-                            address_operand,
-                            vm::instruction_operand_t(
-                                static_cast<uint64_t>(signature_id),
-                                vm::op_sizes::dword));
-                    } else {
-                        call_block->call_foreign(address_operand);
+                        release_temps(arg_list_result.temps);
                     }
+
+                    emit_result_t inline_result{};
+                    inline_result.operands = arg_list_result.operands;
+                    if (!emit_inline_procedure_instance(basic_block, procedure_type, inline_result))
+                        return false;
+
+                    result.operands = inline_result.operands;
                 } else {
-                    call_block->comment(
-                        fmt::format("call: {}", label),
-                        vm::comment_location_t::after_instruction);
-                    call_block->call(vm::instruction_operand_t(assembler.make_named_ref(
-                        vm::assembler_named_ref_type_t::label,
-                        label)));
-                    labels.add_cfg_edge(call_block, label);
-                }
+                    variable_set_t excluded_vars{};
+                    std::vector<return_parameter_result_t> return_results{};
 
-                auto epilogue_block = make_block();
-                epilogue_block->label(
-                    labels.make(fmt::format("{}_epilogue",proc_call->label_name()),
-                                epilogue_block));
-                epilogue_block->add_predecessors({call_block});
-                call_block->add_successors({epilogue_block});
-                *basic_block = epilogue_block;
+                    const auto& return_parameters = procedure_type->return_parameters();
+                    const auto return_size = common::align(
+                        return_parameters.size_in_bytes(),
+                        8);
+                    if (!return_parameters.empty()) {
+                        auto start_result_operands_size = result.operands.size();
 
-                if (!return_parameters.empty()) {
-                    uint64_t offset = 0;
+                        return_results.resize(return_parameters.size());
+                        result.operands.resize(return_parameters.size());
 
-                    for (const auto& return_result : return_results) {
-                        auto field_type = return_result.field->identifier()->type_ref()->type();
-                        if (field_type->is_composite_type()) {
-                            epilogue_block->move(
-                                *return_result.operand,
-                                vm::instruction_operand_t::sp(),
-                                vm::instruction_operand_t(offset, vm::op_sizes::word));
-                        } else {
-                            epilogue_block->load(
-                                *return_result.operand,
-                                vm::instruction_operand_t::sp(),
-                                vm::instruction_operand_t(offset, vm::op_sizes::word));
+                        size_t index = 0;
+                        const auto& fields = return_parameters.as_list();
+                        for (auto fld : fields) {
+                            auto field_type = fld->identifier()->type_ref()->type();
+
+                            return_parameter_result_t return_result{};
+                            return_result.field = fld;
+
+                            if (index < start_result_operands_size) {
+                                return_result.operand = &result.operands[index];
+                                auto named_ref = return_result.operand->data<vm::named_ref_with_offset_t>();
+                                if (named_ref != nullptr)
+                                    excluded_vars.insert(_variables.find(named_ref->ref->name));
+                            } else {
+                                vm::op_sizes size = vm::op_sizes::qword;
+                                if (!field_type->is_composite_type())
+                                    size = vm::op_size_for_byte_size(field_type->size_in_bytes());
+
+                                auto temp = _variables.retain_temp(field_type->number_class());
+                                result.temps.emplace_back(temp);
+                                excluded_vars.insert(temp->variable);
+
+                                result.operands[index] = vm::instruction_operand_t(assembler.make_named_ref(
+                                    vm::assembler_named_ref_type_t::local,
+                                    temp->name(),
+                                    size));
+
+                                return_result.operand = &result.operands[index];
+                            }
+
+                            return_results[index] = return_result;
+
+                            index++;
                         }
-                        offset += field_type->size_in_bytes();
                     }
+
+                    auto grouped_variables = _variables.group_variables(excluded_vars);
+
+                    auto prologue_block = make_block();
+                    prologue_block->label(
+                        labels.make(fmt::format("{}_prologue", proc_call->label_name()),
+                                    prologue_block));
+                    prologue_block->add_predecessors({current_block});
+                    current_block->add_successors({prologue_block});
+
+                    if (!is_foreign)
+                        _variables.save_locals_to_stack(prologue_block, grouped_variables);
+
+                    vm::basic_block* ending_prologue_block = nullptr;
+                    auto arg_list = proc_call->arguments();
+                    if (arg_list != nullptr) {
+                        *basic_block = prologue_block;
+                        emit_result_t arg_list_result{};
+                        if (!emit_element(basic_block, arg_list, arg_list_result))
+                            return false;
+                        ending_prologue_block = *basic_block;
+                        release_temps(arg_list_result.temps);
+                    } else {
+                        ending_prologue_block = prologue_block;
+                    }
+
+                    if (!is_foreign && !return_parameters.empty()) {
+                        ending_prologue_block->comment(
+                            "return slot",
+                            vm::comment_location_t::after_instruction);
+                        ending_prologue_block->sub(
+                            vm::instruction_operand_t::sp(),
+                            vm::instruction_operand_t::sp(),
+                            vm::instruction_operand_t(
+                                static_cast<uint64_t>(return_size),
+                                vm::op_sizes::byte));
+                    }
+
+                    auto call_block = make_block();
+                    call_block->label(
+                        labels.make(fmt::format("{}_invoke", proc_call->label_name()),
+                                    call_block));
+                    call_block->add_predecessors({ending_prologue_block});
+                    ending_prologue_block->add_successors({call_block});
+                    *basic_block = call_block;
+
+                    if (is_foreign) {
+                        auto& ffi = _session.ffi();
+
+                        auto func = ffi.find_function(procedure_type->foreign_address());
+                        if (func == nullptr) {
+                            _session.error(
+                                proc_call->module(),
+                                "X000",
+                                fmt::format(
+                                    "unable to find foreign function by address: {}",
+                                    procedure_type->foreign_address()),
+                                proc_call->location());
+                            return false;
+                        }
+
+                        call_block->comment(
+                            fmt::format("call: {}", label),
+                            vm::comment_location_t::after_instruction);
+
+                        vm::instruction_operand_t address_operand(procedure_type->foreign_address());
+
+                        if (func->is_variadic()) {
+                            vm::function_value_list_t args{};
+                            if (!arg_list->as_ffi_arguments(_session, args))
+                                return false;
+
+                            auto signature_id = common::id_pool::instance()->allocate();
+                            func->call_site_arguments.insert(std::make_pair(signature_id, args));
+
+                            call_block->call_foreign(
+                                address_operand,
+                                vm::instruction_operand_t(
+                                    static_cast<uint64_t>(signature_id),
+                                    vm::op_sizes::dword));
+                        } else {
+                            call_block->call_foreign(address_operand);
+                        }
+                    } else {
+                        call_block->comment(
+                            fmt::format("call: {}", label),
+                            vm::comment_location_t::after_instruction);
+                        call_block->call(vm::instruction_operand_t(assembler.make_named_ref(
+                            vm::assembler_named_ref_type_t::label,
+                            label)));
+                        labels.add_cfg_edge(call_block, label);
+                    }
+
+                    auto epilogue_block = make_block();
+                    epilogue_block->label(
+                        labels.make(fmt::format("{}_epilogue", proc_call->label_name()),
+                                    epilogue_block));
+                    epilogue_block->add_predecessors({call_block});
+                    call_block->add_successors({epilogue_block});
+                    *basic_block = epilogue_block;
+
+                    if (!return_parameters.empty()) {
+                        uint64_t offset = 0;
+
+                        for (const auto& return_result : return_results) {
+                            auto field_type = return_result.field->identifier()->type_ref()->type();
+                            if (field_type->is_composite_type()) {
+                                epilogue_block->move(
+                                    *return_result.operand,
+                                    vm::instruction_operand_t::sp(),
+                                    vm::instruction_operand_t(offset, vm::op_sizes::word));
+                            } else {
+                                epilogue_block->load(
+                                    *return_result.operand,
+                                    vm::instruction_operand_t::sp(),
+                                    vm::instruction_operand_t(offset, vm::op_sizes::word));
+                            }
+                            offset += field_type->size_in_bytes();
+                        }
+                    }
+
+                    if (arg_list->allocated_size() > 0) {
+                        epilogue_block->comment(
+                            "free stack space",
+                            vm::comment_location_t::after_instruction);
+                        epilogue_block->add(
+                            vm::instruction_operand_t::sp(),
+                            vm::instruction_operand_t::sp(),
+                            vm::instruction_operand_t(
+                                arg_list->allocated_size() + return_size,
+                                vm::op_sizes::word));
+                    }
+
+                    if (!is_foreign)
+                        _variables.restore_locals_from_stack(epilogue_block, grouped_variables);
+
+                    *basic_block = epilogue_block;
                 }
-
-                if (arg_list->allocated_size() > 0) {
-                    epilogue_block->comment(
-                        "free stack space",
-                        vm::comment_location_t::after_instruction);
-                    epilogue_block->add(
-                        vm::instruction_operand_t::sp(),
-                        vm::instruction_operand_t::sp(),
-                        vm::instruction_operand_t(
-                            arg_list->allocated_size() + return_size,
-                            vm::op_sizes::word));
-                }
-
-                if (!is_foreign)
-                    _variables.restore_locals_from_stack(epilogue_block, grouped_variables);
-
-                *basic_block = epilogue_block;
                 break;
             }
             case element_type_t::transmute: {
@@ -1756,7 +1769,7 @@ namespace basecode::compiler {
             }
             case element_type_t::argument_list: {
                 auto arg_list = dynamic_cast<compiler::argument_list*>(e);
-                if (!emit_arguments(basic_block, arg_list, arg_list->elements()))
+                if (!emit_arguments(basic_block, arg_list, arg_list->elements(), result))
                     return false;
                 break;
             }
@@ -2096,7 +2109,8 @@ namespace basecode::compiler {
     bool byte_code_emitter::emit_arguments(
             vm::basic_block** basic_block,
             compiler::argument_list* arg_list,
-            const compiler::element_list_t& elements) {
+            const compiler::element_list_t& elements,
+            emit_result_t& result) {
         for (auto it = elements.rbegin(); it != elements.rend(); ++it) {
             compiler::type* type = nullptr;
 
@@ -2104,7 +2118,7 @@ namespace basecode::compiler {
             switch (arg->element_type()) {
                 case element_type_t::argument_list: {
                     auto list = dynamic_cast<compiler::argument_list*>(arg);
-                    if (!emit_arguments(basic_block, list, list->elements()))
+                    if (!emit_arguments(basic_block, list, list->elements(), result))
                         return false;
                     break;
                 }
@@ -2132,31 +2146,37 @@ namespace basecode::compiler {
 
                     if (!arg_list->is_foreign_call()) {
                         type = arg_inferred.type;
-                        switch (type->element_type()) {
-                            case element_type_t::array_type:
-                            case element_type_t::tuple_type:
-                            case element_type_t::composite_type: {
-                                auto size = static_cast<uint64_t>(common::align(
-                                    type->size_in_bytes(),
-                                    8));
-                                current_block->sub(
-                                    vm::instruction_operand_t::sp(),
-                                    vm::instruction_operand_t::sp(),
-                                    vm::instruction_operand_t(size, vm::op_sizes::word));
-                                current_block->copy(
-                                    vm::op_sizes::byte,
-                                    vm::instruction_operand_t::sp(),
-                                    arg_result.operands.back(),
-                                    vm::instruction_operand_t(size, vm::op_sizes::word));
-                                break;
+                        if (!arg_list->is_inline()) {
+                            switch (type->element_type()) {
+                                case element_type_t::array_type:
+                                case element_type_t::tuple_type:
+                                case element_type_t::composite_type: {
+                                    auto size = static_cast<uint64_t>(common::align(
+                                        type->size_in_bytes(),
+                                        8));
+                                    current_block->sub(
+                                        vm::instruction_operand_t::sp(),
+                                        vm::instruction_operand_t::sp(),
+                                        vm::instruction_operand_t(size, vm::op_sizes::word));
+                                    current_block->copy(
+                                        vm::op_sizes::byte,
+                                        vm::instruction_operand_t::sp(),
+                                        arg_result.operands.back(),
+                                        vm::instruction_operand_t(size, vm::op_sizes::word));
+                                    break;
+                                }
+                                default: {
+                                    current_block->push(arg_result.operands.back());
+                                    break;
+                                }
                             }
-                            default: {
-                                current_block->push(arg_result.operands.back());
-                                break;
-                            }
+                        } else {
+                            for (const auto& operand : arg_result.operands)
+                                result.operands.push_back(operand);
                         }
                     } else {
-                        current_block->push(arg_result.operands.back());
+                        if (!arg_result.operands.empty())
+                            current_block->push(arg_result.operands.back());
                     }
 
                     release_temps(arg_result.temps);
@@ -2166,7 +2186,7 @@ namespace basecode::compiler {
                     break;
             }
 
-            if (type != nullptr) {
+            if (type != nullptr && !arg_list->is_inline()) {
                 auto size = static_cast<uint64_t>(common::align(
                     type->size_in_bytes(),
                     8));
@@ -2250,7 +2270,7 @@ namespace basecode::compiler {
             .elements()
             .find_by_type<compiler::procedure_call>(element_type_t::proc_call);
         for (auto proc_call : proc_calls) {
-            if (proc_call->is_foreign())
+            if (proc_call->is_foreign() || proc_call->is_inline())
                 continue;
 
             auto call_site = find_call_site(proc_call);
@@ -2550,7 +2570,7 @@ namespace basecode::compiler {
     bool byte_code_emitter::emit_procedure_epilogue(
             vm::basic_block** basic_block,
             compiler::procedure_type* proc_type) {
-        if (proc_type->is_foreign())
+        if (proc_type->is_foreign() || proc_type->is_inline())
             return true;
 
         if (!proc_type->has_return()) {
@@ -2571,7 +2591,7 @@ namespace basecode::compiler {
     bool byte_code_emitter::emit_procedure_instance(
             vm::basic_block** basic_block,
             compiler::procedure_type* proc_type) {
-        if (proc_type->is_foreign())
+        if (proc_type->is_foreign() || proc_type->is_inline())
             return true;
 
         auto scope_block = proc_type->body_scope();
@@ -2590,7 +2610,7 @@ namespace basecode::compiler {
     bool byte_code_emitter::emit_procedure_prologue(
             vm::basic_block** basic_block,
             compiler::procedure_type* proc_type) {
-        if (proc_type->is_foreign())
+        if (proc_type->is_foreign() || proc_type->is_inline())
             return true;
 
         auto current_block = *basic_block;
@@ -2770,24 +2790,30 @@ namespace basecode::compiler {
             compiler::element* e) {
         auto& assembler = _session.assembler();
         switch (e->element_type()) {
+            case element_type_t::if_e: {
+                auto if_e = dynamic_cast<compiler::if_element*>(e);
+                return fill_referenced_identifiers(basic_block, if_e->predicate());
+            }
+            case element_type_t::unary_operator: {
+                auto unary_op = dynamic_cast<compiler::unary_operator*>(e);
+                return fill_referenced_identifiers(basic_block, unary_op->rhs());
+            }
             case element_type_t::binary_operator: {
                 auto bin_op = dynamic_cast<compiler::binary_operator*>(e);
-                if (bin_op->lhs()->element_type() == element_type_t::identifier_reference) {
-                    auto var = dynamic_cast<compiler::identifier_reference*>(bin_op->lhs());
-                    auto named_ref = assembler.make_named_ref(
-                        vm::assembler_named_ref_type_t::local,
-                        var->identifier()->label_name());
-                    if (!_variables.fill(basic_block, named_ref))
-                        return false;
-                }
-                if (bin_op->rhs()->element_type() == element_type_t::identifier_reference) {
-                    auto var = dynamic_cast<compiler::identifier_reference*>(bin_op->rhs());
-                    auto named_ref = assembler.make_named_ref(
-                        vm::assembler_named_ref_type_t::local,
-                        var->identifier()->label_name());
-                    if (!_variables.fill(basic_block, named_ref))
-                        return false;
-                }
+                if (!fill_referenced_identifiers(basic_block, bin_op->lhs()))
+                    return false;
+                if (!fill_referenced_identifiers(basic_block, bin_op->rhs()))
+                    return false;
+                break;
+            }
+            case element_type_t::identifier_reference: {
+                auto var = dynamic_cast<compiler::identifier_reference*>(e);
+                auto named_ref = assembler.make_named_ref(
+                    vm::assembler_named_ref_type_t::local,
+                    var->identifier()->label_name(),
+                    vm::op_size_for_byte_size(var->identifier()->type_ref()->type()->size_in_bytes()));
+                if (!_variables.fill(basic_block, named_ref))
+                    return false;
                 break;
             }
             default: {
@@ -2850,6 +2876,175 @@ namespace basecode::compiler {
             vm::instruction_operand_t::sp());
 
         return start_block;
+    }
+
+    bool byte_code_emitter::emit_inline_procedure_instance(
+            vm::basic_block** basic_block,
+            compiler::procedure_type* proc_type,
+            emit_result_t& result) {
+        bool reset_temp_block = false;
+        auto current_block = *basic_block;
+        auto& assembler = _session.assembler();
+        auto scope_block = proc_type->body_scope();
+
+        _variables.append(scope_block, proc_type);
+
+        defer({
+            if (reset_temp_block) {
+                _temps_block = nullptr;
+                reset_temp_block = false;
+            }
+        });
+
+        if (_temps_block == nullptr) {
+            _temps_block = make_block();
+            current_block->add_successors({_temps_block});
+            _temps_block->add_predecessors({current_block});
+            reset_temp_block = true;
+        }
+
+        auto code_block = make_block();
+        if (reset_temp_block) {
+            code_block->add_predecessors({_temps_block});
+            _temps_block->add_successors({code_block});
+        } else {
+            code_block->add_predecessors({current_block});
+            current_block->add_successors({code_block});
+        }
+
+        current_block = code_block;
+
+        variable_list_t parameters {};
+        auto locals = _variables.variables();
+        for (auto local : locals) {
+            if (local->type == variable_type_t::temporary
+            ||  local->flag(variable_t::flags_t::in_block)) {
+                continue;
+            }
+
+            current_block->local(
+                number_class_to_local_type(local->number_class),
+                local->label);
+
+            local->flag(variable_t::flags_t::filled, true);
+            local->flag(variable_t::flags_t::spilled, true);
+            local->flag(variable_t::flags_t::in_block, true);
+            local->flag(variable_t::flags_t::must_init, false);
+            local->flag(variable_t::flags_t::initialized, true);
+
+            if (local->type == variable_type_t::parameter) {
+                parameters.push_back(local);
+            }
+        }
+
+        size_t rhs_index = result.operands.size() - 1;
+        for (auto param : parameters) {
+            emit_result_t lhs_temp{};
+            lhs_temp.operands.emplace_back(assembler.make_named_ref(
+                vm::assembler_named_ref_type_t::local,
+                param->label,
+                vm::op_size_for_byte_size(param->size_in_bytes())));
+
+            emit_result_t rhs_temp{};
+            rhs_temp.operands.push_back(result.operands[rhs_index]);
+
+            if (!_variables.assign(current_block, lhs_temp, rhs_temp))
+                return false;
+
+            --rhs_index;
+        }
+
+        result.operands.clear();
+        auto& return_parameters = proc_type->return_parameters();
+        if (!return_parameters.empty()) {
+            const auto& fields = return_parameters.as_list();
+            for (auto fld : fields) {
+                auto field_type = fld->identifier()->type_ref()->type();
+
+                vm::op_sizes size = vm::op_sizes::qword;
+                if (!field_type->is_composite_type())
+                    size = vm::op_size_for_byte_size(field_type->size_in_bytes());
+
+                result.operands.emplace_back(assembler.make_named_ref(
+                    vm::assembler_named_ref_type_t::local,
+                    fld->declaration()->identifier()->label_name(),
+                    size));
+            }
+        }
+
+        *basic_block = current_block;
+
+        const auto& statements = scope_block->statements();
+        for (size_t index = 0; index < statements.size(); ++index) {
+            auto stmt = statements[index];
+
+            for (auto label : stmt->labels()) {
+                emit_result_t label_result {};
+                if (!emit_element(basic_block, label, label_result))
+                    return false;
+            }
+
+            auto expr = stmt->expression();
+            if (expr == nullptr) continue;
+            if (expr->element_type() == element_type_t::defer) continue;
+
+            apply_flow_control(statements, index);
+
+            switch (expr->element_type()) {
+                case element_type_t::return_e: {
+                    auto return_e = dynamic_cast<compiler::return_element*>(expr);
+
+                    size_t fld_index = 0;
+                    for (auto return_expr : return_e->expressions()) {
+                        const auto field_name = fmt::format("_{}", fld_index++);
+                        auto fld = return_parameters.find_by_name(field_name);
+                        if (fld == nullptr) {
+                            // XXX: error
+                            return false;
+                        }
+
+                        auto named_ref = assembler.make_named_ref(
+                            vm::assembler_named_ref_type_t::local,
+                            fld->declaration()->identifier()->label_name());
+
+                        emit_result_t expr_result{};
+                        expr_result.is_assign_target = true;
+                        expr_result.operands.emplace_back(named_ref);
+                        if (!emit_element(basic_block, return_expr, expr_result))
+                            return false;
+
+                        if (expr_result.operands.size() > 1) {
+                            (*basic_block)->move(
+                                expr_result.operands.front(),
+                                expr_result.operands.back());
+                        }
+
+                        release_temps(expr_result.temps);
+                    }
+                    break;
+                }
+                default: {
+                    emit_result_t stmt_result;
+                    if (!emit_element(basic_block, stmt, stmt_result))
+                        return false;
+                    break;
+                }
+            }
+        }
+
+        if (_temps_block != nullptr) {
+            auto temp_locals = _variables.temps();
+            for (auto temp : temp_locals) {
+                if (!temp->flag(variable_t::flags_t::in_block)) {
+                    _temps_block->local(
+                        number_class_to_local_type(temp->number_class),
+                        temp->label);
+                    temp->flag(variable_t::flags_t::in_block, true);
+                }
+            }
+        }
+
+        return true;
     }
 
     bool byte_code_emitter::emit_simple_relational_operator(
@@ -3062,6 +3257,24 @@ namespace basecode::compiler {
         return true;
     }
 
+    void byte_code_emitter::apply_flow_control(const statement_list_t& statements, size_t index) {
+        auto flow_control = current_flow_control();
+        if (flow_control == nullptr)
+            return;
+
+        compiler::element* prev = nullptr;
+        compiler::element* next = nullptr;
+
+        if (index > 0)
+            prev = statements[index - 1];
+        if (index < statements.size() - 1)
+            next = statements[index + 1];
+
+        auto& values_map = flow_control->values;
+        values_map[next_element] = next;
+        values_map[previous_element] = prev;
+    }
+
     vm::basic_block* byte_code_emitter::emit_implicit_blocks(const vm::basic_block_list_t& predecessors) {
         auto& labels = _session.labels();
 
@@ -3134,6 +3347,20 @@ namespace basecode::compiler {
         }
 
         return ending_blocks.empty() ? nullptr : ending_blocks.back();
+    }
+
+    bool byte_code_emitter::apply_defer_stack(vm::basic_block** basic_block, compiler::block* block) {
+        auto working_stack = block->defer_stack();
+        while (!working_stack.empty()) {
+            auto deferred = working_stack.top();
+
+            emit_result_t defer_result {};
+            if (!emit_element(basic_block, deferred, defer_result))
+                return false;
+
+            working_stack.pop();
+        }
+        return true;
     }
 
 }

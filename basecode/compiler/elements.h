@@ -81,6 +81,7 @@
 #include <compiler/elements/boolean_literal.h>
 #include <compiler/elements/binary_operator.h>
 #include <compiler/elements/integer_literal.h>
+#include <compiler/elements/inline_directive.h>
 #include <compiler/elements/assert_directive.h>
 #include <compiler/elements/continue_element.h>
 #include <compiler/elements/module_reference.h>

@@ -223,6 +223,8 @@ VM:
 
 EMITTER:
 
+- BUG: i broke short-circuited logical expressions during cfg refactoring
+
 - BUG: not properly sign-extending to the return-type.  note the downcast to s8.
         the expected behavior here is that the compiler generates a MOVES.DW for
         the result of the ADD instruction if the result size is < than the return type.
@@ -502,6 +504,8 @@ DONE
     3. stack-var to module-var
     4. any var to parameter
     5. return parameter to any var
+- NEW: added #inline compiler directive
+- NEW: implemented very hacky, initial version of procedure inlining
 
 ANSWERS
 -------

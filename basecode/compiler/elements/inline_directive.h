@@ -15,20 +15,24 @@
 
 namespace basecode::compiler {
 
-    class type_directive : public directive {
+    class inline_directive : public directive {
     public:
-        type_directive(
+        inline_directive(
             compiler::module* module,
             compiler::block* parent_scope,
             compiler::element* expression);
 
-        bool is_valid_data() const override;
+        compiler::element* expression();
 
-        compiler::element* expression() const;
+        bool is_valid_data() const override;
 
         directive_type_t type() const override;
 
     protected:
+        bool on_fold(
+            compiler::session& session,
+            fold_result_t& result) override;
+
         bool on_infer_type(
             compiler::session& session,
             infer_type_result_t& result) override;
@@ -39,7 +43,7 @@ namespace basecode::compiler {
             compiler::session& session,
             compiler::block* new_scope) override;
 
-        void on_owned_elements(element_list_t& list) override;
+        bool on_evaluate(compiler::session& session) override;
 
     private:
         compiler::element* _expression = nullptr;

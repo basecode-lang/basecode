@@ -53,6 +53,10 @@ namespace basecode::compiler {
         return recurse_ffi_arguments(session, _elements, args);
     }
 
+    bool argument_list::is_inline() const {
+        return _is_inline;
+    }
+
     bool argument_list::on_apply_fold_result(
             compiler::element* e,
             const fold_result_t& fold_result) {
@@ -114,11 +118,16 @@ namespace basecode::compiler {
             compiler::session& session,
             compiler::block* new_scope) {
         auto copy = session.builder().make_argument_list(new_scope);
+        copy->_is_inline = _is_inline;
         copy->_allocated_size = _allocated_size;
         copy->_argument_index = _argument_index;
         copy->_is_foreign_call = _is_foreign_call;
         copy->_elements = compiler::clone(session, new_scope, _elements);
         return copy;
+    }
+
+    void argument_list::is_inline(bool value) {
+        _is_inline = value;
     }
 
     void argument_list::remove(common::id_t id) {

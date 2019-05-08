@@ -126,6 +126,8 @@ namespace basecode::compiler {
             compiler::block* block_scope,
             const syntax::ast_node_t* return_parameter_list);
 
+        void apply_directives(evaluator_result_t& result);
+
     private:
         bool nil(
             evaluator_context_t& context,

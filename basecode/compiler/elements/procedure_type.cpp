@@ -17,6 +17,7 @@
 #include "block.h"
 #include "field.h"
 #include "element.h"
+#include "directive.h"
 #include "identifier.h"
 #include "family_type.h"
 #include "declaration.h"
@@ -63,6 +64,10 @@ namespace basecode::compiler {
 
         // XXX: very temporary hack...
         return other->element_type() == element_type_t::proc_type;
+    }
+
+    bool procedure_type::is_co() const {
+        return _is_co;
     }
 
     bool procedure_type::prepare_call_site(
@@ -121,6 +126,8 @@ namespace basecode::compiler {
                 } else {
                     variadic_args = builder.make_argument_list(args->parent_scope());
                     variadic_args->parent_element(args);
+                    variadic_args->is_inline(_is_inline);
+                    variadic_args->is_foreign_call(_is_foreign);
                     temp[index] = variadic_args;
                 }
             }
@@ -269,6 +276,14 @@ namespace basecode::compiler {
         return true;
     }
 
+    void procedure_type::is_co(bool value) {
+        _is_co = value;
+    }
+
+    bool procedure_type::is_inline() const {
+        return _is_inline;
+    }
+
     bool procedure_type::has_return() const {
         return _has_return;
     }
@@ -287,6 +302,10 @@ namespace basecode::compiler {
 
     bool procedure_type::is_proc_type() const {
         return true;
+    }
+
+    void procedure_type::is_inline(bool value) {
+        _is_inline = value;
     }
 
     void procedure_type::is_foreign(bool value) {
@@ -314,7 +333,8 @@ namespace basecode::compiler {
     }
 
     std::string procedure_type::label_name() const {
-        auto parent_init = const_cast<procedure_type*>(this)->parent_element_as<compiler::initializer>();
+        auto parent_init = const_cast<procedure_type*>(this)
+            ->find_parent_of_type<compiler::initializer>(element_type_t::initializer);
         if (parent_init != nullptr) {
             auto parent_var = parent_init->parent_element_as<compiler::identifier>();
             if (parent_var != nullptr)

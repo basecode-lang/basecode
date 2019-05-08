@@ -29,6 +29,10 @@ namespace basecode::compiler {
             compiler::session& session,
             vm::function_value_list_t& args) const;
 
+        bool is_inline() const;
+
+        void is_inline(bool value);
+
         compiler::element* replace(
             size_t index,
             compiler::element* item);
@@ -79,6 +83,7 @@ namespace basecode::compiler {
             vm::function_value_list_t& args) const;
 
     private:
+        bool _is_inline = false;
         uint64_t _allocated_size = 0;
         bool _is_foreign_call = false;
         compiler::element_list_t _elements {};

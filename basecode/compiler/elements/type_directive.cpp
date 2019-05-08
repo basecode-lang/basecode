@@ -30,6 +30,10 @@ namespace basecode::compiler {
         return _expression->infer_type(session, result);
     }
 
+    bool type_directive::is_valid_data() const {
+        return false;
+    }
+
     compiler::element* type_directive::on_clone(
             compiler::session& session,
             compiler::block* new_scope) {

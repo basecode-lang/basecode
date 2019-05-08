@@ -161,17 +161,7 @@ namespace basecode::compiler {
             if (it->second(this, context, result)) {
                 context.apply_attributes(result.element);
                 context.apply_comments(result.element);
-
-                if (result.element->element_type() == element_type_t::statement) {
-                    auto stmt = dynamic_cast<compiler::statement*>(result.element);
-                    auto expr = stmt->expression();
-                    if (expr != nullptr
-                    &&  expr->element_type() == element_type_t::directive) {
-                        auto directive_element = dynamic_cast<compiler::directive*>(expr);
-                        directive_element->evaluate(_session);
-                    }
-                }
-
+                apply_directives(result);
                 return result.element;
             }
         }
@@ -696,16 +686,10 @@ namespace basecode::compiler {
                 }
             }
 
-            if (add_node.source_index > type_result.types.size() - 1) {
-                _session.error(
-                    scope_manager.current_module(),
-                    "X000",
-                    fmt::format("source_index is out-of-bounds: {}", add_node.source_index),
-                    new_identifier->symbol()->location());
-                return nullptr;
-            }
-
-            const auto& inferred = type_result.types[add_node.source_index];
+            auto clamped_index = add_node.source_index;
+            if (clamped_index > type_result.types.size() - 1)
+                clamped_index = type_result.types.size() - 1;
+            const auto& inferred = type_result.types[clamped_index];
             auto new_type_ref = inferred.ref;
 
             if (new_type_ref == nullptr) {
@@ -778,6 +762,51 @@ namespace basecode::compiler {
         }
 
         return builder.make_declaration(scope, new_identifier, assign_bin_op);
+    }
+
+    void ast_evaluator::apply_directives(evaluator_result_t& result) {
+        if (!(result.element->element_type() == element_type_t::statement))
+            return;
+
+        auto stmt = dynamic_cast<compiler::statement*>(result.element);
+        auto expr = stmt->expression();
+        if (expr != nullptr) {
+            switch (expr->element_type()) {
+                case element_type_t::directive: {
+                    auto directive_element = dynamic_cast<compiler::directive*>(expr);
+                    directive_element->evaluate(_session);
+                    break;
+                }
+                case element_type_t::assignment: {
+                    auto assignment = dynamic_cast<compiler::assignment*>(expr);
+                    for (auto assign_expr : assignment->expressions()) {
+                        switch (assign_expr->element_type()) {
+                            case element_type_t::declaration: {
+                                auto decl = dynamic_cast<compiler::declaration*>(assign_expr);
+                                auto init = decl->identifier()->initializer();
+                                if (init != nullptr) {
+                                    auto init_expr = init->expression();
+                                    if (init_expr != nullptr) {
+                                        if (init_expr->element_type() == element_type_t::directive) {
+                                            auto directive_element = dynamic_cast<compiler::directive*>(init_expr);
+                                            directive_element->evaluate(_session);
+                                        }
+                                    }
+                                }
+                                break;
+                            }
+                            default: {
+                                break;
+                            }
+                        }
+                    }
+                    break;
+                }
+                default: {
+                    break;
+                }
+            }
+        }
     }
 
     bool ast_evaluator::nil(

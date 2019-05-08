@@ -81,7 +81,8 @@ namespace basecode::compiler {
         bool emit_arguments(
             vm::basic_block** basic_block,
             compiler::argument_list* arg_list,
-            const compiler::element_list_t& elements);
+            const compiler::element_list_t& elements,
+            emit_result_t& result);
 
         bool emit_procedure_epilogue(
             vm::basic_block** basic_block,
@@ -108,6 +109,11 @@ namespace basecode::compiler {
             vm::basic_block* basic_block,
             compiler::identifier* var);
 
+        bool emit_inline_procedure_instance(
+            vm::basic_block** basic_block,
+            compiler::procedure_type* proc_type,
+            emit_result_t& result);
+
         bool emit_simple_relational_operator(
             vm::basic_block** basic_block,
             compiler::binary_operator* binary_op,
@@ -128,6 +134,10 @@ namespace basecode::compiler {
             emit_result_t& result);
 
         void release_temps(const temp_pool_entry_list_t& temps);
+
+        void apply_flow_control(const statement_list_t& statements, size_t index);
+
+        bool apply_defer_stack(vm::basic_block** basic_block, compiler::block* block);
 
     private:
         variable_map _variables;

@@ -24,6 +24,8 @@ namespace basecode::compiler {
             compiler::type_reference_list_t type_params,
             compiler::identifier_reference_list_t identifier_references);
 
+        bool is_inline() const;
+
         bool is_foreign() const;
 
         bool uniform_function_call() const;

@@ -99,6 +99,7 @@ namespace basecode::compiler {
     class alloc_intrinsic;
     class continue_element;
     class module_reference;
+    class inline_directive;
     class size_of_intrinsic;
     class namespace_element;
     class type_of_intrinsic;
@@ -219,7 +220,9 @@ namespace basecode::compiler {
         foreign,
         assembly,
         language,
+        inline_e,
         core_type,
+        coroutine,
         intrinsic_e,
     };
 
@@ -230,9 +233,11 @@ namespace basecode::compiler {
         {directive_type_t::eval,        "eval"sv},
         {directive_type_t::type,        "type"sv},
         {directive_type_t::assert,      "assert"sv},
+        {directive_type_t::inline_e,    "inline"sv},
         {directive_type_t::foreign,     "foreign"sv},
         {directive_type_t::assembly,    "assembly"sv},
         {directive_type_t::language,    "language"sv},
+        {directive_type_t::coroutine,   "coroutine"sv},
         {directive_type_t::core_type,   "core_type"sv},
         {directive_type_t::intrinsic_e, "intrinsic"sv},
     };
@@ -246,8 +251,11 @@ namespace basecode::compiler {
         {"eval"sv,        directive_type_t::eval},
         {"type"sv,        directive_type_t::type},
         {"assert"sv,      directive_type_t::assert},
+        {"inline"sv,      directive_type_t::inline_e},
         {"foreign"sv,     directive_type_t::foreign},
         {"assembly"sv,    directive_type_t::assembly},
+        {"language"sv,    directive_type_t::language},
+        {"coroutine"sv,   directive_type_t::coroutine},
         {"core_type"sv,   directive_type_t::core_type},
         {"intrinsic"sv,   directive_type_t::intrinsic_e},
     };

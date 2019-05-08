@@ -28,6 +28,8 @@ namespace basecode::compiler {
             compiler::module* module,
             compiler::block* parent_scope);
 
+        virtual bool is_valid_data() const;
+
         virtual directive_type_t type() const;
 
         bool execute(compiler::session& session);

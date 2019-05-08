@@ -1,11 +1,29 @@
-//core :: module("core");
+core :: module("core");
 
-test :: proc(a, b: s32): s32, s32 {
-    return a*b, a/b;
+_alloc :: #inline proc(size: u64): ptr: ^u0 {
+    #assembly {{
+        alloc.b ptr, size
+    }};
+};
+
+_free :: #inline proc(ptr: ^u0) {
+    #assembly {{
+        free.qw ptr
+    }};
 };
 
 #run {
-    product, dividend := test(32, 16);
-    //core::print("product := %d\n", product);
-    //core::print("dividend := %d\n", dividend);
+    mem := _alloc(64);
+    core::print("mem := $%016llX\n", mem);
+    _free(mem);
 };
+
+//test :: proc(a, b: s32): s32, s32 {
+//    return a*b, a/b;
+//};
+//
+//#run {
+//    product, dividend := test(32, 16);
+//    core::print("product := %d\n", product);
+//    core::print("dividend := %d\n", dividend);
+//};

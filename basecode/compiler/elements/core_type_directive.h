@@ -15,7 +15,7 @@
 
 namespace basecode::compiler {
 
-    class core_type_directive  : public directive {
+    class core_type_directive : public directive {
     public:
         core_type_directive(
             compiler::module* module,

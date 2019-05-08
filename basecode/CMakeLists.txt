@@ -184,6 +184,7 @@ add_library(
         compiler/elements/assert_directive.cpp compiler/elements/assert_directive.h
         compiler/elements/continue_element.cpp compiler/elements/continue_element.h
         compiler/elements/module_reference.cpp compiler/elements/module_reference.h
+        compiler/elements/inline_directive.cpp compiler/elements/inline_directive.h
         compiler/elements/character_literal.cpp compiler/elements/character_literal.h
         compiler/elements/type_of_intrinsic.cpp compiler/elements/type_of_intrinsic.h
         compiler/elements/namespace_element.cpp compiler/elements/namespace_element.h

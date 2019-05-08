@@ -32,6 +32,12 @@ namespace basecode::compiler {
             compiler::argument_list* args,
             compiler::prepare_call_site_result_t& result) const;
 
+        bool is_co() const;
+
+        bool is_inline() const;
+
+        void is_co(bool value);
+
         bool has_return() const;
 
         bool is_foreign() const;
@@ -39,6 +45,8 @@ namespace basecode::compiler {
         bool is_template() const;
 
         field_map_t& parameters();
+
+        void is_inline(bool value);
 
         void is_foreign(bool value);
 
@@ -78,6 +86,8 @@ namespace basecode::compiler {
         bool on_initialize(compiler::session& session) override;
 
     private:
+        bool _is_co = false;
+        bool _is_inline = false;
         bool _has_return = false;
         bool _is_foreign = false;
         field_map_t _parameters {};
