@@ -1,0 +1,9 @@
+core :: module("core");
+
+#run {
+    f: u16 := 1;
+
+    while f < 100 {
+        f +:= 1;
+    };
+};

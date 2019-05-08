@@ -136,6 +136,10 @@ namespace basecode::compiler {
         if (!emit_procedure_types())
             return false;
 
+        auto end_block = make_block();
+        end_block->pre_blank_lines(1);
+        end_block->program_end();
+
         if (!emit_type_table())
             return false;
 
@@ -196,17 +200,20 @@ namespace basecode::compiler {
             locals_size = common::align(locals_size, 8);
 
             if (_temps_block == nullptr) {
-                _temps_block = _blocks.make();
-                assembler.blocks().emplace_back(_temps_block);
-                frame_block->successors().emplace_back(_temps_block);
-                _temps_block->predecessors().emplace_back(frame_block);
+                _temps_block = make_block();
+                frame_block->add_successors({_temps_block});
+                _temps_block->add_predecessors({frame_block});
                 reset_temp_block = true;
             }
 
-            code_block = _blocks.make();
-            assembler.blocks().emplace_back(code_block);
-            code_block->predecessors().emplace_back(_temps_block);
-            _temps_block->successors().emplace_back(code_block);
+            code_block = make_block();
+            if (reset_temp_block) {
+                code_block->add_predecessors({_temps_block});
+                _temps_block->add_successors({code_block});
+            } else {
+                code_block->add_predecessors({frame_block});
+                frame_block->add_successors({code_block});
+            }
 
             *basic_block = code_block;
         }
@@ -247,9 +254,9 @@ namespace basecode::compiler {
 
                 auto current_block = *basic_block;
 
-                auto exit_block = _blocks.make();
-                assembler.blocks().emplace_back(exit_block);
-                exit_block->predecessors().emplace_back(current_block);
+                auto exit_block = make_block();
+                current_block->add_successors({exit_block});
+                exit_block->add_predecessors({current_block});
 
                 if (!current_block->is_current_instruction(vm::op_codes::rts)
                 && !_return_emitted) {
@@ -259,6 +266,7 @@ namespace basecode::compiler {
                     exit_block->pop(vm::instruction_operand_t::fp());
                 }
 
+                *basic_block = exit_block;
                 _return_emitted = false;
             }
         });
@@ -501,41 +509,44 @@ namespace basecode::compiler {
                 auto false_label_name = fmt::format("{}_false", if_e->label_name());
                 auto end_label_name = fmt::format("{}_exit", if_e->label_name());
 
+                auto false_branch = if_e->false_branch();
+
                 // XXX: revisit
                 target_operand(result);
 
-                auto predicate_block = _blocks.make();
-                assembler.blocks().emplace_back(predicate_block);
-                predicate_block->predecessors().emplace_back(current_block);
-                current_block->successors().emplace_back(predicate_block);
+                auto predicate_block = make_block();
+                current_block->add_successors({predicate_block});
+                predicate_block->add_predecessors({current_block});
                 *basic_block = predicate_block;
 
                 predicate_block->label(labels.make(begin_label_name, predicate_block));
                 emit_result_t predicate_result {};
                 if (!emit_element(basic_block, if_e->predicate(), predicate_result))
                     return false;
-                predicate_block = *basic_block;
+//                auto ending_predicate_block = *basic_block;
                 predicate_block->bz(
                     predicate_result.operands.back(),
                     vm::instruction_operand_t(assembler.make_named_ref(
                         vm::assembler_named_ref_type_t::label,
-                        false_label_name)));
+                        false_branch != nullptr ? false_label_name : end_label_name)));
                 release_temps(predicate_result.temps);
 
-                auto true_block = _blocks.make();
-                assembler.blocks().emplace_back(true_block);
-                true_block->predecessors().emplace_back(predicate_block);
-                *basic_block = true_block;
-
+                auto true_block = make_block();
                 true_block->label(labels.make(true_label_name, true_block));
+                true_block->add_predecessors({predicate_block});
+                predicate_block->add_successors({true_block});
+
+                *basic_block = true_block;
                 emit_result_t true_result {};
                 if (!emit_element(basic_block, if_e->true_branch(), true_result))
                     return false;
-                true_block = *basic_block;
+
+                auto ending_true_block = *basic_block;
 
                 if (!true_block->is_current_instruction(vm::op_codes::jmp)
-                &&  !true_block->is_current_instruction(vm::op_codes::rts)) {
-                    true_block->jump_direct(vm::instruction_operand_t(
+                &&  !true_block->is_current_instruction(vm::op_codes::rts)
+                &&  false_branch != nullptr) {
+                    ending_true_block->jump_direct(vm::instruction_operand_t(
                         assembler.make_named_ref(
                             vm::assembler_named_ref_type_t::label,
                             end_label_name)));
@@ -543,32 +554,35 @@ namespace basecode::compiler {
 
                 release_temps(true_result.temps);
 
-                auto false_block = _blocks.make();
-                assembler.blocks().emplace_back(false_block);
-                false_block->predecessors().emplace_back(predicate_block);
-                *basic_block = false_block;
-
-                false_block->label(labels.make(false_label_name, false_block));
-                auto false_branch = if_e->false_branch();
+                vm::basic_block* false_block = nullptr;
+                vm::basic_block* ending_false_block = nullptr;
                 if (false_branch != nullptr) {
+                    false_block = make_block();
+                    false_block->label(labels.make(false_label_name, false_block));
+                    predicate_block->add_successors({false_block});
+                    false_block->add_predecessors({predicate_block});
+                    *basic_block = false_block;
+
                     emit_result_t false_result {};
                     if (!emit_element(basic_block, false_branch, false_result))
                         return false;
-                    false_block = *basic_block;
+
+                    ending_false_block = *basic_block;
+
                     release_temps(false_result.temps);
-                } else {
-                    false_block->nop();
                 }
 
-                predicate_block->add_successors({true_block, false_block});
-
-                auto exit_block = _blocks.make();
-                assembler.blocks().emplace_back(exit_block);
-                exit_block->add_predecessors({true_block, false_block});
+                auto exit_block = make_block();
                 exit_block->label(labels.make(end_label_name, exit_block));
-
-                true_block->successors().emplace_back(exit_block);
-                false_block->successors().emplace_back(exit_block);
+                exit_block->add_predecessors({ending_true_block});
+                ending_true_block->add_successors({exit_block});
+                if (false_block != nullptr) {
+                    exit_block->add_predecessors({ending_false_block});
+                    ending_false_block->add_successors({exit_block});
+                } else {
+                    exit_block->add_predecessors({predicate_block});
+                    predicate_block->add_successors({exit_block});
+                }
 
                 *basic_block = exit_block;
 
@@ -626,8 +640,7 @@ namespace basecode::compiler {
                                 induction_init->make_non_owning();
                                 defer(_session.elements().remove(induction_init->id()));
 
-                                auto init_block = _blocks.make();
-                                assembler.blocks().emplace_back(init_block);
+                                auto init_block = make_block();
                                 init_block->predecessors().emplace_back(current_block);
                                 current_block->successors().emplace_back(init_block);
 
@@ -686,8 +699,7 @@ namespace basecode::compiler {
 
                                 auto stop_arg = range->arguments()->param_by_name("stop");
 
-                                auto predicate_block = _blocks.make();
-                                assembler.blocks().emplace_back(predicate_block);
+                                auto predicate_block = make_block();
                                 predicate_block->predecessors().emplace_back(init_block);
                                 init_block->successors().emplace_back(predicate_block);
 
@@ -712,23 +724,23 @@ namespace basecode::compiler {
                                 auto original_predicate_block = predicate_block;
                                 predicate_block = *basic_block;
 
-                                auto body_block = _blocks.make();
-                                assembler.blocks().emplace_back(body_block);
-                                body_block->predecessors().emplace_back(predicate_block);
+                                auto body_block = make_block();
+                                predicate_block->add_successors({body_block});
+                                body_block->add_predecessors({predicate_block});
                                 *basic_block = body_block;
 
                                 body_block->label(labels.make(body_label_name, body_block));
                                 emit_result_t body_result;
                                 if (!emit_element(basic_block, for_e->body(), body_result))
                                     return false;
+                                auto original_body_block = body_block;
                                 body_block = *basic_block;
                                 release_temps(body_result.temps);
 
-                                auto step_block = _blocks.make();
-                                assembler.blocks().emplace_back(step_block);
-                                step_block->predecessors().emplace_back(body_block);
-                                step_block->successors().emplace_back(predicate_block);
-                                body_block->successors().emplace_back(step_block);
+                                auto step_block = make_block();
+                                step_block->add_predecessors({original_body_block});
+                                step_block->add_successors({original_predicate_block});
+                                body_block->add_successors({step_block});
                                 *basic_block = step_block;
 
                                 auto step_param = range->arguments()->param_by_name("step");
@@ -745,9 +757,9 @@ namespace basecode::compiler {
                                 induction_step->make_non_owning();
                                 induction_assign->make_non_owning();
                                 defer({
-                                          _session.elements().remove(induction_assign->id());
-                                          _session.elements().remove(induction_step->id());
-                                      });
+                                    _session.elements().remove(induction_assign->id());
+                                    _session.elements().remove(induction_step->id());
+                                });
 
                                 step_block->label(labels.make(step_label_name, step_block));
                                 emit_result_t step_result;
@@ -756,13 +768,12 @@ namespace basecode::compiler {
                                 step_block->jump_direct(vm::instruction_operand_t(begin_label_ref));
                                 release_temps(step_result.temps);
 
-                                auto exit_block = _blocks.make();
-                                assembler.blocks().emplace_back(exit_block);
+                                auto exit_block = make_block();
                                 exit_block->predecessors().emplace_back(original_predicate_block);
                                 exit_block->label(labels.make(exit_label_name, exit_block));
                                 *basic_block = exit_block;
 
-                                original_predicate_block->add_successors({body_block, exit_block});
+                                original_predicate_block->add_successors({exit_block});
                                 break;
                             }
                             default: {
@@ -846,6 +857,7 @@ namespace basecode::compiler {
                 }
 
                 vm::basic_block* predicate_block = nullptr;
+                vm::basic_block* ending_predicate_block = nullptr;
                 flow_control->fallthrough = false;
 
                 auto is_default_case = case_e->expression() == nullptr;
@@ -875,25 +887,22 @@ namespace basecode::compiler {
                     equals_op->make_non_owning();
                     defer(_session.elements().remove(equals_op->id()));
 
-                    predicate_block = _blocks.make();
-                    assembler.blocks().emplace_back(predicate_block);
+                    predicate_block = make_block();
 
                     if (flow_control->predecessor != nullptr) {
-                        flow_control->predecessor->successors().emplace_back(predicate_block);
-                        predicate_block->predecessors().emplace_back(flow_control->predecessor);
+                        flow_control->predecessor->add_successors({predicate_block});
+                        predicate_block->add_predecessors({flow_control->predecessor});
                     } else {
-                        predicate_block->predecessors().emplace_back(current_block);
+                        predicate_block->add_predecessors({current_block});
+                        current_block->add_successors({predicate_block});
                     }
-
-                    flow_control->predecessor = predicate_block;
 
                     *basic_block = predicate_block;
 
                     emit_result_t equals_result {};
                     if (!emit_element(basic_block, equals_op, equals_result))
                         return false;
-
-                    predicate_block = *basic_block;
+                    ending_predicate_block = *basic_block;
                     predicate_block->bz(
                         equals_result.operands.back(),
                         vm::instruction_operand_t(assembler.make_named_ref(
@@ -903,38 +912,35 @@ namespace basecode::compiler {
                     release_temps(equals_result.temps);
                 }
 
-                auto true_block = _blocks.make();
-                assembler.blocks().emplace_back(true_block);
-                true_block->add_predecessors({*basic_block});
-                *basic_block = true_block;
-
+                auto true_block = make_block();
                 true_block->label(labels.make(true_label_name, true_block));
+                //true_block->add_predecessors({predicate_block});
+                true_block->add_predecessors({ending_predicate_block});
+                *basic_block = true_block;
                 if (!emit_element(basic_block, case_e->scope(), result))
                     return false;
-                true_block = *basic_block;
+
+                auto ending_true_block = *basic_block;
 
                 if (!is_default_case) {
                     if (flow_control->fallthrough) {
-                        true_block->jump_direct(vm::instruction_operand_t(fallthrough_label));
-                        labels.add_cfg_edge(true_block, fallthrough_label->name);
+                        ending_true_block->jump_direct(vm::instruction_operand_t(fallthrough_label));
+                        labels.add_cfg_edge(ending_true_block, fallthrough_label->name);
                     } else {
-                        true_block->jump_direct(vm::instruction_operand_t(flow_control->exit_label));
+                        ending_true_block->jump_direct(vm::instruction_operand_t(flow_control->exit_label));
+                        labels.add_cfg_edge(ending_true_block, flow_control->exit_label->name);
                     }
                 }
 
-                auto exit_block = _blocks.make();
-                assembler.blocks().emplace_back(exit_block);
+                auto exit_block = make_block();
                 exit_block->label(labels.make(false_label_name, exit_block));
 
-                true_block->add_predecessors({predicate_block});
-                true_block->add_successors({exit_block});
-
-                exit_block->add_predecessors({predicate_block});
-
                 if (predicate_block != nullptr) {
+                    exit_block->add_predecessors({predicate_block});
                     predicate_block->add_successors({true_block, exit_block});
                 }
 
+                flow_control->predecessor = exit_block;
                 *basic_block = exit_block;
                 break;
             }
@@ -963,8 +969,7 @@ namespace basecode::compiler {
                     label_name = label_ref->name;
                 }
 
-                auto exit_block = _blocks.make();
-                assembler.blocks().emplace_back(exit_block);
+                auto exit_block = make_block();
                 exit_block->predecessors().emplace_back(current_block);
 
                 exit_block->comment(
@@ -995,46 +1000,38 @@ namespace basecode::compiler {
                 });
                 defer(pop_flow_control());
 
-                auto predicate_block = _blocks.make();
-                assembler.blocks().emplace_back(predicate_block);
-                predicate_block->predecessors().emplace_back(current_block);
-                *basic_block = predicate_block;
+                auto predicate_block = make_block();
+                predicate_block->label(labels.make(entry_label_name, predicate_block));
+                current_block->add_successors({predicate_block});
+                predicate_block->add_predecessors({current_block});
 
                 if (!fill_referenced_identifiers(predicate_block, while_e->predicate()))
                     return false;
 
-                predicate_block->label(labels.make(entry_label_name, predicate_block));
-
+                *basic_block = predicate_block;
                 emit_result_t predicate_result {};
                 if (!emit_element(basic_block, while_e->predicate(), predicate_result))
                     return false;
                 predicate_block->bz(
                     predicate_result.operands.back(),
                     vm::instruction_operand_t(exit_label_ref));
-                auto original_predicate_block = predicate_block;
                 release_temps(predicate_result.temps);
-                predicate_block = *basic_block;
 
-                auto body_block = _blocks.make();
-                assembler.blocks().emplace_back(body_block);
-                body_block->predecessors().emplace_back(original_predicate_block);
-                body_block->successors().emplace_back(original_predicate_block);
-                *basic_block = body_block;
-
+                auto body_block = make_block();
                 body_block->label(labels.make(body_label_name, body_block));
+                body_block->add_predecessors({predicate_block});
+
+                *basic_block = body_block;
                 if (!emit_element(basic_block, while_e->body(), result))
                     return false;
-                body_block = *basic_block;
-                body_block->jump_direct(vm::instruction_operand_t(entry_label_ref));
+                auto ending_body_block = *basic_block;
+                ending_body_block->jump_direct(vm::instruction_operand_t(entry_label_ref));
+                ending_body_block->add_successors({predicate_block});
 
-                auto exit_block = _blocks.make();
-                assembler.blocks().emplace_back(exit_block);
-                exit_block->predecessors().emplace_back(original_predicate_block);
-
+                auto exit_block = make_block();
                 exit_block->label(labels.make(exit_label_name, exit_block));
-                exit_block->nop();
-
-                original_predicate_block->add_successors({body_block, exit_block});
+                exit_block->add_predecessors({predicate_block});
+                predicate_block->add_successors({body_block, exit_block});
 
                 *basic_block = exit_block;
                 break;
@@ -1043,8 +1040,7 @@ namespace basecode::compiler {
                 auto return_e = dynamic_cast<compiler::return_element*>(e);
                 auto proc_type = return_e->find_parent_of_type<compiler::procedure_type>(element_type_t::proc_type);
 
-                auto return_block = _blocks.make();
-                assembler.blocks().emplace_back(return_block);
+                auto return_block = make_block();
                 return_block->predecessors().emplace_back(current_block);
                 current_block->successors().emplace_back(return_block);
 
@@ -1109,20 +1105,19 @@ namespace basecode::compiler {
                 push_flow_control(flow_control);
                 defer(pop_flow_control());
 
-                auto entry_block = _blocks.make();
-                assembler.blocks().emplace_back(entry_block);
-                current_block->successors().emplace_back(entry_block);
-                entry_block->predecessors().emplace_back(current_block);
+                auto entry_block = make_block();
+                current_block->add_successors({entry_block});
+                entry_block->add_predecessors({current_block});
                 *basic_block = entry_block;
 
                 entry_block->label(labels.make(begin_label_name, entry_block));
                 if (!emit_element(basic_block, switch_e->scope(), result))
                     return false;
-                entry_block = *basic_block;
 
-                auto exit_block = _blocks.make();
-                assembler.blocks().emplace_back(exit_block);
-                exit_block->predecessors().emplace_back(entry_block);
+                auto ending_entry_block = *basic_block;
+
+                auto exit_block = make_block();
+                exit_block->add_predecessors({ending_entry_block});
 
                 exit_block->label(labels.make(exit_label_name, exit_block));
                 exit_block->nop();
@@ -1405,8 +1400,7 @@ namespace basecode::compiler {
 
                 auto grouped_variables = _variables.group_variables(excluded_vars);
 
-                auto prologue_block = _blocks.make();
-                assembler.blocks().emplace_back(prologue_block);
+                auto prologue_block = make_block();
                 prologue_block->predecessors().emplace_back(current_block);
                 current_block->successors().emplace_back(prologue_block);
                 *basic_block = prologue_block;
@@ -1438,8 +1432,7 @@ namespace basecode::compiler {
                             vm::op_sizes::byte));
                 }
 
-                auto call_block = _blocks.make();
-                assembler.blocks().emplace_back(call_block);
+                auto call_block = make_block();
                 call_block->predecessors().emplace_back(prologue_block);
                 prologue_block->successors().emplace_back(call_block);
                 *basic_block = call_block;
@@ -1495,8 +1488,7 @@ namespace basecode::compiler {
                     labels.add_cfg_edge(call_block, label);
                 }
 
-                auto epilogue_block = _blocks.make();
-                assembler.blocks().emplace_back(epilogue_block);
+                auto epilogue_block = make_block();
                 epilogue_block->predecessors().emplace_back(call_block);
                 call_block->successors().emplace_back(epilogue_block);
                 *basic_block = epilogue_block;
@@ -1540,8 +1532,7 @@ namespace basecode::compiler {
                 if (!is_foreign)
                     _variables.restore_locals_from_stack(epilogue_block, grouped_variables);
 
-                auto next_block = _blocks.make();
-                assembler.blocks().emplace_back(next_block);
+                auto next_block = make_block();
                 next_block->predecessors().emplace_back(epilogue_block);
                 epilogue_block->successors().emplace_back(next_block);
 
@@ -1624,8 +1615,7 @@ namespace basecode::compiler {
                     label_name = label_ref->name;
                 }
 
-                auto exit_block = _blocks.make();
-                assembler.blocks().emplace_back(exit_block);
+                auto exit_block = make_block();
                 exit_block->predecessors().emplace_back(current_block);
 
                 exit_block->comment(
@@ -2180,11 +2170,8 @@ namespace basecode::compiler {
 
     bool byte_code_emitter::emit_type_table() {
         auto& labels = _session.labels();
-        auto& assembler = _session.assembler();
 
-        auto type_info_block = _blocks.make();
-        assembler.blocks().emplace_back(type_info_block);
-
+        auto type_info_block = make_block();
         type_info_block->pre_blank_lines(1);
         type_info_block->section(vm::section_t::ro_data);
         type_info_block->align(16);
@@ -2288,19 +2275,12 @@ namespace basecode::compiler {
         if (_session.result().is_failed())
             return false;
 
-        auto& assembler = _session.assembler();
         for (auto instance : proc_type_set) {
-            auto basic_block = _blocks.make();
-            assembler.blocks().emplace_back(basic_block);
+            auto basic_block = make_block();
             basic_block->pre_blank_lines(1);
             if (!emit_procedure_instance(&basic_block, instance))
                 return false;
         }
-
-        auto end_block = _blocks.make();
-        assembler.blocks().emplace_back(end_block);
-        end_block->pre_blank_lines(1);
-        end_block->program_end();
 
         return true;
     }
@@ -2565,11 +2545,11 @@ namespace basecode::compiler {
             return true;
 
         if (!proc_type->has_return()) {
-            auto& assembler = _session.assembler();
+            auto current_block = *basic_block;
 
-            auto return_block = _blocks.make();
-            assembler.blocks().emplace_back(return_block);
-            return_block->predecessors().emplace_back(*basic_block);
+            auto return_block = make_block();
+            current_block->add_successors({return_block});
+            return_block->add_predecessors({current_block});
 
             return_block->rts();
 
@@ -2808,11 +2788,16 @@ namespace basecode::compiler {
         return true;
     }
 
+    vm::basic_block* byte_code_emitter::make_block() {
+        auto block = _blocks.make();
+        _session.assembler().blocks().push_back(block);
+        return block;
+    }
+
     bool byte_code_emitter::emit_interned_string_table() {
         auto& labels = _session.labels();
-        auto& assembler = _session.assembler();
 
-        auto block = _blocks.make();
+        auto block = make_block();
         block->pre_blank_lines(1);
         block->comment("interned string literals", 0);
         block->section(vm::section_t::ro_data);
@@ -2841,26 +2826,19 @@ namespace basecode::compiler {
                 escaped);
         }
 
-        assembler.blocks().emplace_back(block);
-
         return true;
     }
 
     vm::basic_block* byte_code_emitter::emit_start_block() {
         auto& labels = _session.labels();
-        auto& assembler = _session.assembler();
 
-        auto start_block = _blocks.make();
-
+        auto start_block = make_block();
         start_block->section(vm::section_t::text);
         start_block->align(vm::instruction_t::alignment);
         start_block->label(labels.make("_start", start_block));
-
         start_block->move(
             vm::instruction_operand_t::fp(),
             vm::instruction_operand_t::sp());
-
-        assembler.blocks().emplace_back(start_block);
 
         return start_block;
     }
@@ -2869,9 +2847,6 @@ namespace basecode::compiler {
             vm::basic_block** basic_block,
             compiler::binary_operator* binary_op,
             emit_result_t& result) {
-        auto& labels = _session.labels();
-        auto& assembler = _session.assembler();
-
         auto result_operand = target_operand(
             result,
             number_class_t::integer,
@@ -2937,16 +2912,6 @@ namespace basecode::compiler {
 
         release_temps(lhs_result.temps);
         release_temps(rhs_result.temps);
-
-        auto exit_block = _blocks.make();
-        assembler.blocks().emplace_back(exit_block);
-        exit_block->predecessors().emplace_back(current_block);
-        current_block->successors().emplace_back(exit_block);
-
-        auto exit_label_name = fmt::format("{}_exit", binary_op->label_name());
-        exit_block->label(labels.make(exit_label_name, current_block));
-
-        *basic_block = exit_block;
 
         return true;
     }
@@ -3032,10 +2997,9 @@ namespace basecode::compiler {
             }
         }
 
-        auto rhs_block = _blocks.make();
-        assembler.blocks().emplace_back(rhs_block);
-        rhs_block->predecessors().emplace_back(current_block);
-        current_block->successors().emplace_back(rhs_block);
+        auto rhs_block = make_block();
+        rhs_block->add_predecessors({current_block});
+        current_block->add_successors({rhs_block});
 
         auto rhs_label_name = fmt::format("{}_rhs", binary_op->label_name());
         rhs_block->label(labels.make(rhs_label_name, current_block));
@@ -3051,12 +3015,11 @@ namespace basecode::compiler {
         release_temps(lhs_result.temps);
         release_temps(rhs_result.temps);
 
-        auto exit_block = _blocks.make();
-        assembler.blocks().emplace_back(exit_block);
-        exit_block->predecessors().emplace_back(current_block);
-        current_block->successors().emplace_back(exit_block);
+        auto exit_block = make_block();
+        rhs_block->add_successors({exit_block});
+        exit_block->add_predecessors({rhs_block});
 
-        exit_block->label(labels.make(exit_label_name, current_block));
+        exit_block->label(labels.make(exit_label_name, exit_block));
 
         *basic_block = exit_block;
 
@@ -3076,9 +3039,8 @@ namespace basecode::compiler {
 
     bool byte_code_emitter::emit_end_block(const vm::basic_block_list_t& predecessors) {
         auto& labels = _session.labels();
-        auto& assembler = _session.assembler();
 
-        auto end_block = _blocks.make();
+        auto end_block = make_block();
         for (auto p : predecessors)
             p->add_successors({end_block});
         end_block->add_predecessors(predecessors);
@@ -3088,14 +3050,11 @@ namespace basecode::compiler {
         end_block->label(labels.make("_end", end_block));
         end_block->exit();
 
-        assembler.blocks().emplace_back(end_block);
-
         return true;
     }
 
     vm::basic_block* byte_code_emitter::emit_implicit_blocks(const vm::basic_block_list_t& predecessors) {
         auto& labels = _session.labels();
-        auto& assembler = _session.assembler();
 
         block_list_t implicit_blocks {};
         auto module_refs = _session
@@ -3109,17 +3068,16 @@ namespace basecode::compiler {
         }
         implicit_blocks.emplace_back(_session.program().module()->scope());
 
-        vm::basic_block_list_t basic_blocks {};
+        vm::basic_block_list_t starting_blocks {};
+        vm::basic_block_list_t ending_blocks {};
 
         for (auto block : implicit_blocks) {
             if (!block->has_statements())
                 continue;
 
-            auto implicit_block = _blocks.make();
-            basic_blocks.emplace_back(implicit_block);
-            assembler.blocks().emplace_back(implicit_block);
-
+            auto implicit_block = make_block();
             implicit_block->pre_blank_lines(1);
+            starting_blocks.push_back(implicit_block);
 
             auto parent_element = block->parent_element();
             switch (parent_element->element_type()) {
@@ -3148,22 +3106,25 @@ namespace basecode::compiler {
             implicit_block->reset("local");
             implicit_block->reset("frame");
 
-            if (!emit_block(&implicit_block, block))
+            vm::basic_block** temp_block = &implicit_block;
+            if (!emit_block(temp_block, block))
                 return nullptr;
+
+            ending_blocks.push_back(*temp_block);
         }
 
-        for (size_t i = 0; i < basic_blocks.size(); i++) {
-            if (i == 0) {
-                basic_blocks[0]->add_predecessors(predecessors);
-                for (auto p : predecessors)
-                    p->add_successors({basic_blocks[0]});
-                continue;
+        if (!starting_blocks.empty()) {
+            starting_blocks[0]->add_predecessors(predecessors);
+            for (auto p : predecessors)
+                p->add_successors({starting_blocks[0]});
+
+            for (size_t i = 1; i < starting_blocks.size(); i++) {
+                starting_blocks[i]->add_predecessors({starting_blocks[i - 1]});
+                starting_blocks[i - 1]->add_successors({starting_blocks[i]});
             }
-            basic_blocks[i]->add_predecessors({basic_blocks[i - 1]});
-            basic_blocks[i - 1]->add_successors({basic_blocks[i]});
         }
 
-        return basic_blocks.empty() ? nullptr : basic_blocks.back();
+        return ending_blocks.empty() ? nullptr : ending_blocks.back();
     }
 
 }

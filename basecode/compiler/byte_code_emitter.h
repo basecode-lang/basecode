@@ -39,6 +39,9 @@ namespace basecode::compiler {
         void push_flow_control(const flow_control_t& control_flow);
 
     private:
+        vm::basic_block* make_block();
+
+    private:
         bool emit_type_info(
             vm::basic_block* block,
             compiler::type* type);
