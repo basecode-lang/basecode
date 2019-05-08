@@ -189,6 +189,7 @@ add_library(
         compiler/elements/namespace_element.cpp compiler/elements/namespace_element.h
         compiler/elements/size_of_intrinsic.cpp compiler/elements/size_of_intrinsic.h
         compiler/elements/foreign_directive.cpp compiler/elements/foreign_directive.h
+        compiler/elements/assignment_target.cpp compiler/elements/assignment_target.h
         compiler/elements/value_sink_literal.cpp compiler/elements/value_sink_literal.h
         compiler/elements/assembly_directive.cpp compiler/elements/assembly_directive.h
         compiler/elements/align_of_intrinsic.cpp compiler/elements/align_of_intrinsic.h

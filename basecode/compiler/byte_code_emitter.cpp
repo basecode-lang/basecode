@@ -393,6 +393,7 @@ namespace basecode::compiler {
                 emit_result_t expr_result {};
                 if (!emit_element(basic_block, expr, expr_result))
                     return false;
+                current_block = *basic_block;
 
                 const auto& expr_inferred = expr_result.type_result.types.back();
 
@@ -970,7 +971,8 @@ namespace basecode::compiler {
                 }
 
                 auto exit_block = make_block();
-                exit_block->predecessors().emplace_back(current_block);
+                current_block->add_successors({exit_block});
+                exit_block->add_predecessors({current_block});
 
                 exit_block->comment(
                     fmt::format("break: {}", label_name),
@@ -1401,30 +1403,33 @@ namespace basecode::compiler {
                 auto grouped_variables = _variables.group_variables(excluded_vars);
 
                 auto prologue_block = make_block();
-                prologue_block->predecessors().emplace_back(current_block);
-                current_block->successors().emplace_back(prologue_block);
-                *basic_block = prologue_block;
-
                 prologue_block->label(
                     labels.make(fmt::format("{}_prologue",proc_call->label_name()),
-                    prologue_block));
+                                prologue_block));
+                prologue_block->add_predecessors({current_block});
+                current_block->add_successors({prologue_block});
+
                 if (!is_foreign)
                     _variables.save_locals_to_stack(prologue_block, grouped_variables);
 
+                vm::basic_block* ending_prologue_block = nullptr;
                 auto arg_list = proc_call->arguments();
                 if (arg_list != nullptr) {
+                    *basic_block = prologue_block;
                     emit_result_t arg_list_result {};
                     if (!emit_element(basic_block, arg_list, arg_list_result))
                         return false;
-                    prologue_block = *basic_block;
+                    ending_prologue_block = *basic_block;
                     release_temps(arg_list_result.temps);
+                } else {
+                    ending_prologue_block = prologue_block;
                 }
 
                 if (!is_foreign && !return_parameters.empty()) {
-                    prologue_block->comment(
+                    ending_prologue_block->comment(
                         "return slot",
                         vm::comment_location_t::after_instruction);
-                    prologue_block->sub(
+                    ending_prologue_block->sub(
                         vm::instruction_operand_t::sp(),
                         vm::instruction_operand_t::sp(),
                         vm::instruction_operand_t(
@@ -1433,13 +1438,12 @@ namespace basecode::compiler {
                 }
 
                 auto call_block = make_block();
-                call_block->predecessors().emplace_back(prologue_block);
-                prologue_block->successors().emplace_back(call_block);
-                *basic_block = call_block;
-
                 call_block->label(
                     labels.make(fmt::format("{}_invoke",proc_call->label_name()),
-                    call_block));
+                                call_block));
+                call_block->add_predecessors({ending_prologue_block});
+                ending_prologue_block->add_successors({call_block});
+                *basic_block = call_block;
 
                 if (is_foreign) {
                     auto& ffi = _session.ffi();
@@ -1489,13 +1493,12 @@ namespace basecode::compiler {
                 }
 
                 auto epilogue_block = make_block();
-                epilogue_block->predecessors().emplace_back(call_block);
-                call_block->successors().emplace_back(epilogue_block);
-                *basic_block = epilogue_block;
-
                 epilogue_block->label(
                     labels.make(fmt::format("{}_epilogue",proc_call->label_name()),
-                    epilogue_block));
+                                epilogue_block));
+                epilogue_block->add_predecessors({call_block});
+                call_block->add_successors({epilogue_block});
+                *basic_block = epilogue_block;
 
                 if (!return_parameters.empty()) {
                     uint64_t offset = 0;
@@ -1532,11 +1535,7 @@ namespace basecode::compiler {
                 if (!is_foreign)
                     _variables.restore_locals_from_stack(epilogue_block, grouped_variables);
 
-                auto next_block = make_block();
-                next_block->predecessors().emplace_back(epilogue_block);
-                epilogue_block->successors().emplace_back(next_block);
-
-                *basic_block = next_block;
+                *basic_block = epilogue_block;
                 break;
             }
             case element_type_t::transmute: {
@@ -1547,6 +1546,7 @@ namespace basecode::compiler {
                 emit_result_t expr_result {};
                 if (!emit_element(basic_block, expr, expr_result))
                     return false;
+                current_block = *basic_block;
 
                 const auto& expr_inferred = expr_result.type_result.types.back();
 
@@ -1616,7 +1616,8 @@ namespace basecode::compiler {
                 }
 
                 auto exit_block = make_block();
-                exit_block->predecessors().emplace_back(current_block);
+                current_block->add_successors({exit_block});
+                exit_block->add_predecessors({current_block});
 
                 exit_block->comment(
                     fmt::format("continue: {}", label_name),
@@ -2027,6 +2028,14 @@ namespace basecode::compiler {
             case element_type_t::unknown_identifier:
             case element_type_t::value_sink_literal:
             case element_type_t::uninitialized_literal: {
+                break;
+            }
+            case element_type_t::assignment_target: {
+                auto target = dynamic_cast<compiler::assignment_target*>(e);
+                for (auto ref : target->refs()) {
+                    if (!emit_element(basic_block, ref, result))
+                        return false;
+                }
                 break;
             }
             case element_type_t::identifier_reference: {

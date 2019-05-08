@@ -20,9 +20,25 @@ namespace basecode::compiler {
     public:
         explicit element_builder(compiler::session& session);
 
+        cast* make_cast(
+            compiler::block* parent_scope,
+            compiler::type_reference* type,
+            element* expr);
+
+        with* make_with(
+            compiler::block* parent_scope,
+            compiler::element* expr,
+            compiler::block* body);
+
         yield* make_yield(
             compiler::block* parent_scope,
             compiler::element* expression);
+
+        for_element* make_for(
+            compiler::block* parent_scope,
+            compiler::declaration* induction_decl,
+            compiler::element* expression,
+            compiler::block* body);
 
         program* make_program(
             compiler::module* module,
@@ -46,10 +62,6 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             compiler::label* label);
 
-        spread_operator* make_spread_operator(
-            compiler::block* parent_scope,
-            compiler::element* expr);
-
         defer_element* make_defer(
             compiler::block* parent_scope,
             compiler::element* expression);
@@ -66,22 +78,6 @@ namespace basecode::compiler {
             compiler::block* parent_scope,
             compiler::binary_operator* predicate,
             compiler::block* body);
-
-        with* make_with(
-            compiler::block* parent_scope,
-            compiler::element* expr,
-            compiler::block* body);
-
-        for_element* make_for(
-            compiler::block* parent_scope,
-            compiler::declaration* induction_decl,
-            compiler::element* expression,
-            compiler::block* body);
-
-        cast* make_cast(
-            compiler::block* parent_scope,
-            compiler::type_reference* type,
-            element* expr);
 
         transmute* make_transmute(
             compiler::block* parent_scope,
@@ -318,6 +314,10 @@ namespace basecode::compiler {
             const compiler::type_reference_list_t& type_params,
             const compiler::identifier_reference_list_t& references);
 
+        spread_operator* make_spread_operator(
+            compiler::block* parent_scope,
+            compiler::element* expr);
+
         unary_operator* make_unary_operator(
             compiler::block* parent_scope,
             operator_type_t type,
@@ -386,6 +386,10 @@ namespace basecode::compiler {
             compiler::block* scope = nullptr);
 
         compiler::value_sink_literal* value_sink_literal();
+
+        compiler::assignment_target* make_assignment_target(
+            compiler::block* parent_scope,
+            const identifier_reference_list_t& refs);
 
         assembly_literal_label* make_assembly_literal_label(
             compiler::block* parent_scope,

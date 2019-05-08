@@ -223,6 +223,22 @@ VM:
 
 EMITTER:
 
+- BUG: not properly sign-extending to the return-type.  note the downcast to s8.
+        the expected behavior here is that the compiler generates a MOVES.DW for
+        the result of the ADD instruction if the result size is < than the return type.
+
+        test :: proc(a, b: s32): s32 {
+            return a + b;
+        };
+
+        #run {
+            // this returns 256
+            core::print("test = %d\n", test(6, -6));
+
+            // this returns 0 as expected
+            core::print("test = %d\n", cast<s8>(test(6, -6)));
+        };
+
 - BUG: union data reservations aren't emitting properly
 
 - BUG: multiple assignment code generation doesn't allow for value swaps.

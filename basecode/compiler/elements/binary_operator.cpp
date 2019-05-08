@@ -95,16 +95,18 @@ namespace basecode::compiler {
                 if (!_rhs->infer_type(session, rhs_type_result))
                     return false;
 
-                const auto& rhs_inferred = rhs_type_result.types.back();
-                if (rhs_inferred.type->is_unknown_type()) {
-                    infer_type_result_t lhs_type_result{};
-                    if (!_lhs->infer_type(session, lhs_type_result))
-                        return false;
+                infer_type_result_t lhs_type_result{};
+                if (!_lhs->infer_type(session, lhs_type_result))
+                    return false;
 
-                    const auto& lhs_inferred = lhs_type_result.types.back();
-                    result.types.emplace_back(lhs_inferred.type, lhs_inferred.ref);
-                } else {
-                    result.types.emplace_back(rhs_inferred.type, rhs_inferred.ref);
+                size_t index = 0;
+                for (const auto& rhs_type : rhs_type_result.types) {
+                    if (rhs_type.type->is_unknown_type()) {
+                        result.types.push_back(lhs_type_result.types[index]);
+                    } else {
+                        result.types.push_back(rhs_type);
+                    }
+                    ++index;
                 }
 
                 return true;

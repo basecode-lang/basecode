@@ -85,13 +85,20 @@ namespace basecode::compiler {
         assembler.disassemble(&listing_file, block, address);
 
         std::string byte_code;
-        for (const auto& line : listing_file.lines)
+        for (const auto& line : listing_file.lines) {
+            if (line.type == vm::listing_source_line_type_t::blank)
+                continue;
             byte_code += fmt::format(R"({}<BR ALIGN="LEFT"/>)", html_escape(line.source));
+        }
 
         std::string html;
-        html = R"(<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0">)";
-        html += fmt::format("<TR><TD><B>basic_block</B></TD><TD><B>{}</B></TD></TR>", block->id());
-        html += fmt::format(R"(<TR><TD ALIGN="LEFT" VALIGN="TOP" COLSPAN="2"><FONT FACE="Menlo" POINT-SIZE="12">{}</FONT></TD></TR>)", byte_code);
+        html = R"(<TABLE BORDER="0" CELLBORDER="1" CELLSPACING="0" CELLPADDING="8">)";
+        html += fmt::format(
+            "<TR><TD><B>basic_block</B></TD><TD><B>{}</B></TD></TR>",
+            block->id());
+        html += fmt::format(
+            R"(<TR><TD ALIGN="LEFT" VALIGN="TOP" COLSPAN="2"><FONT FACE="Menlo" POINT-SIZE="12">{}</FONT></TD></TR>)",
+            byte_code);
         html += "</TABLE>";
 
         _nodes.insert(fmt::format(

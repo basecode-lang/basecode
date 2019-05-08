@@ -117,8 +117,7 @@ namespace basecode::compiler {
             const evaluator_context_t& context,
             compiler::symbol_element* symbol,
             compiler::type_reference* type_ref,
-            const syntax::ast_node_t* node,
-            size_t source_index,
+            const add_identifier_node_t& add_node,
             compiler::block* parent_scope = nullptr);
 
         void add_procedure_type_return_parameter_fields(

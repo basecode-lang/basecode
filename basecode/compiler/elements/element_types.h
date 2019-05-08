@@ -104,6 +104,7 @@ namespace basecode::compiler {
     class type_of_intrinsic;
     class character_literal;
     class foreign_directive;
+    class assignment_target;
     class value_sink_literal;
     class align_of_intrinsic;
     class assembly_directive;
@@ -424,6 +425,7 @@ namespace basecode::compiler {
         spread_operator,
         label_reference,
         module_reference,
+        assignment_target,
         character_literal,
         value_sink_literal,
         unknown_identifier,
@@ -497,6 +499,7 @@ namespace basecode::compiler {
         {element_type_t::integer_literal, "integer_literal"sv},
         {element_type_t::binary_operator, "binary_operator"sv},
         {element_type_t::module_reference, "module_reference"sv},
+        {element_type_t::assignment_target, "assignment_target"sv},
         {element_type_t::character_literal, "character_literal"sv},
         {element_type_t::value_sink_literal, "value_sink_literal"sv},
         {element_type_t::unknown_identifier, "unknown_identifier"sv},
@@ -916,6 +919,14 @@ namespace basecode::compiler {
 
         int64_t sqw;
         uint64_t qw;
+    };
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    struct add_identifier_node_t {
+        size_t source_index{};
+        const syntax::ast_node_t* node = nullptr;
+        const syntax::ast_node_t* source_node = nullptr;
     };
 
 }

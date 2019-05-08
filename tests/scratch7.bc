@@ -1,9 +1,11 @@
-core :: module("core");
+//core :: module("core");
+
+test :: proc(a, b: s32): s32, s32 {
+    return a*b, a/b;
+};
 
 #run {
-    f: u16 := 1;
-
-    while f < 100 {
-        f +:= 1;
-    };
+    product, dividend := test(32, 16);
+    //core::print("product := %d\n", product);
+    //core::print("dividend := %d\n", dividend);
 };

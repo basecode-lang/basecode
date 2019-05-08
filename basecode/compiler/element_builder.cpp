@@ -1281,6 +1281,17 @@ namespace basecode::compiler {
         return reference;
     }
 
+    compiler::assignment_target* element_builder::make_assignment_target(
+            compiler::block* parent_scope,
+            const identifier_reference_list_t& refs) {
+        auto target = new compiler::assignment_target(
+            parent_scope->module(),
+            parent_scope,
+            refs);
+        _session.elements().add(target);
+        return target;
+    }
+
     assembly_literal_label* element_builder::make_assembly_literal_label(
             compiler::block* parent_scope,
             compiler::type* type,

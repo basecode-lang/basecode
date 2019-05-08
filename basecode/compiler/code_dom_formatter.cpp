@@ -344,6 +344,16 @@ namespace basecode::compiler {
                     node_vertex_name,
                     style);
             }
+            case element_type_t::assignment_target: {
+                auto target = dynamic_cast<assignment_target*>(node);
+                auto style = ", fillcolor=azure, style=\"filled\"";
+                for (auto ref : target->refs())
+                    add_primary_edge(target, ref);
+                return fmt::format(
+                    "{}[shape=record,label=\"assignment_target\"{}];",
+                    node_vertex_name,
+                    style);
+            }
             case element_type_t::argument_pair: {
                 auto arg_pair = dynamic_cast<argument_pair*>(node);
                 auto style = ", fillcolor=azure, style=\"filled\"";

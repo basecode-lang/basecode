@@ -310,8 +310,7 @@ namespace basecode::compiler {
                 context,
                 param_symbol,
                 param_type_ref,
-                nullptr,
-                0,
+                add_identifier_node_t{},
                 scope);
             decl->identifier()->symbol()->constant(true);
             type_parameters.add(param_symbol, type);
@@ -416,8 +415,7 @@ namespace basecode::compiler {
                             context,
                             dynamic_cast<compiler::symbol_element*>(symbol),
                             result.type_ref,
-                            nullptr,
-                            0,
+                            add_identifier_node_t{},
                             type->scope());
                         if (field_decl != nullptr) {
                             auto new_field = builder.make_field(
@@ -560,8 +558,7 @@ namespace basecode::compiler {
             const evaluator_context_t& context,
             compiler::symbol_element* symbol,
             compiler::type_reference* type_ref,
-            const syntax::ast_node_t* node,
-            size_t source_index,
+            const add_identifier_node_t& add_node,
             compiler::block* parent_scope) {
         auto& builder = _session.builder();
         auto& scope_manager = _session.scope_manager();
@@ -570,24 +567,19 @@ namespace basecode::compiler {
             scope_manager.current_module()->scope() :
             parent_scope != nullptr ? parent_scope : scope_manager.current_scope();
 
-        scope = add_namespaces_to_scope(context, node, symbol, scope);
-
-        syntax::ast_node_t* source_node = nullptr;
-        if (node != nullptr) {
-            source_node = node->rhs->children[source_index];
-        }
+        scope = add_namespaces_to_scope(context, add_node.node, symbol, scope);
 
         auto init_expr = (compiler::element*) nullptr;
         auto init = (compiler::initializer*) nullptr;
-        if (node != nullptr) {
-            init_expr = evaluate_in_scope(source_node, scope);
+        if (add_node.node != nullptr) {
+            init_expr = evaluate_in_scope(add_node.source_node, scope);
             if (init_expr != nullptr) {
                 if (init_expr->element_type() == element_type_t::value_sink_literal) {
                     _session.error(
-                        _session.scope_manager().current_module(),
+                        scope_manager.current_module(),
                         "X000",
                         "value-sink cannot be used as rhs in an assignment.",
-                        source_node->location);
+                        add_node.source_node->location);
                     return nullptr;
                 }
 
@@ -623,10 +615,10 @@ namespace basecode::compiler {
                 && init_expr->element_type() == element_type_t::module_reference;
             if (is_module) {
                 _session.error(
-                    _session.scope_manager().current_module(),
+                    scope_manager.current_module(),
                     "P029",
                     "constant assignment (::) is required for module references.",
-                    node->location);
+                    add_node.node->location);
                 return nullptr;
             }
 
@@ -634,10 +626,10 @@ namespace basecode::compiler {
                 && init_expr->element_type() == element_type_t::namespace_e;
             if (is_ns) {
                 _session.error(
-                    _session.scope_manager().current_module(),
+                    scope_manager.current_module(),
                     "P029",
                     "constant assignment (::) is required for namespaces.",
-                    node->location);
+                    add_node.node->location);
                 return nullptr;
             }
 
@@ -646,10 +638,10 @@ namespace basecode::compiler {
                 && init_expr->is_directive_of_type(directive_type_t::type);
             if (is_type || is_type_directive) {
                 _session.error(
-                    _session.scope_manager().current_module(),
+                    scope_manager.current_module(),
                     "P029",
                     "constant assignment (::) is required for types.",
-                    node->location);
+                    add_node.node->location);
                 return nullptr;
             }
         }
@@ -666,7 +658,7 @@ namespace basecode::compiler {
 
             if (invalid_redefinition) {
                 _session.error(
-                    _session.scope_manager().current_module(),
+                    scope_manager.current_module(),
                     "X000",
                     fmt::format("redefinition of existing identifier: {}", symbol->fully_qualified_name()),
                     symbol->location());
@@ -676,7 +668,6 @@ namespace basecode::compiler {
 
         auto new_identifier = builder.make_identifier(scope, symbol, init);
         if (init_expr != nullptr) {
-            // XXX: why?
             if (init == nullptr)
                 init_expr->parent_element(new_identifier);
         }
@@ -684,9 +675,7 @@ namespace basecode::compiler {
         if (init_expr != nullptr && type_ref == nullptr) {
             infer_type_result_t type_result {};
             if (!init_expr->infer_type(_session, type_result)) {
-                // XXX: need to refactor this code to recursively determine if there
-                //      are unresolved identifier_reference instances and flag them as
-                //      appropriate.
+                // XXX: should this be done here?
                 if (init_expr->element_type() == element_type_t::identifier_reference) {
                     auto ref = dynamic_cast<compiler::identifier_reference*>(init_expr);
                     if (!ref->resolved()) {
@@ -707,10 +696,16 @@ namespace basecode::compiler {
                 }
             }
 
-            auto index = source_index;
-            if (index > type_result.types.size() - 1)
-                index = type_result.types.size() - 1;
-            const auto& inferred = type_result.types[index];
+            if (add_node.source_index > type_result.types.size() - 1) {
+                _session.error(
+                    scope_manager.current_module(),
+                    "X000",
+                    fmt::format("source_index is out-of-bounds: {}", add_node.source_index),
+                    new_identifier->symbol()->location());
+                return nullptr;
+            }
+
+            const auto& inferred = type_result.types[add_node.source_index];
             auto new_type_ref = inferred.ref;
 
             if (new_type_ref == nullptr) {
@@ -725,7 +720,7 @@ namespace basecode::compiler {
             new_identifier->inferred_type(inferred.type != nullptr);
 
             if (new_type_ref->is_unknown_type()) {
-                _session.scope_manager()
+                scope_manager
                     .elements_with_unknown_types()
                     .push_back(new_identifier);
             }
@@ -741,7 +736,7 @@ namespace basecode::compiler {
 
             new_identifier->type_ref(type_ref);
             if (type_ref->is_unknown_type()) {
-                _session.scope_manager()
+                scope_manager
                     .elements_with_unknown_types()
                     .push_back(new_identifier);
             }
@@ -1678,8 +1673,7 @@ namespace basecode::compiler {
                         context,
                         dynamic_cast<compiler::symbol_element*>(expr),
                         type_ref,
-                        nullptr,
-                        0);
+                        add_identifier_node_t{});
                     break;
                 }
                 default: {
@@ -2482,8 +2476,7 @@ namespace basecode::compiler {
             context,
             dynamic_cast<compiler::symbol_element*>(lhs),
             type_ref,
-            nullptr,
-            0,
+            add_identifier_node_t{},
             for_scope);
 
         auto block = evaluate_in_scope(
@@ -2537,16 +2530,18 @@ namespace basecode::compiler {
 
         const bool is_constant_assignment = node->type == syntax::ast_node_type_t::constant_assignment;
 
-        if (target_list->children.size() != source_list->children.size()) {
-            _session.error(
-                _session.scope_manager().current_module(),
-                "P027",
-                "the number of left-hand-side targets must match"
-                " the number of right-hand-side expressions.",
-                source_list->location);
-            return false;
-        }
+//        if (target_list->children.size() != source_list->children.size()) {
+//            _session.error(
+//                scope_manager.current_module(),
+//                "P027",
+//                "the number of left-hand-side targets must match"
+//                " the number of right-hand-side expressions.",
+//                source_list->location);
+//            return false;
+//        }
 
+        size_t source_index = 0;
+        compiler::element* rhs = nullptr;
         for (size_t i = 0; i < target_list->children.size(); i++) {
             auto target_symbol = target_list->children[i];
 
@@ -2557,7 +2552,7 @@ namespace basecode::compiler {
                 false);
             if (target_element == nullptr) {
                 _session.error(
-                    _session.scope_manager().current_module(),
+                    scope_manager.current_module(),
                     "X000",
                     "unable to evaluate target element.",
                     target_symbol->location);
@@ -2578,7 +2573,7 @@ namespace basecode::compiler {
                             auto current_scope = scope != nullptr ? scope : scope_manager.current_scope();
                             if (current_scope->id() == identifier_ref->parent_scope()->id()) {
                                 _session.error(
-                                    _session.scope_manager().current_module(),
+                                    scope_manager.current_module(),
                                     "P028",
                                     "constant variables cannot be modified.",
                                     target_symbol->location);
@@ -2594,19 +2589,21 @@ namespace basecode::compiler {
             }
 
             if (is_binary_op) {
-                auto rhs = resolve_symbol_or_evaluate(
-                    source_list->children[i],
-                    scope);
-                if (rhs == nullptr)
-                    return false;
+                if (rhs == nullptr) {
+                    rhs = resolve_symbol_or_evaluate(
+                        source_list->children[source_index],
+                        scope);
+                    if (rhs == nullptr)
+                        return false;
 
-                if (rhs->element_type() == element_type_t::value_sink_literal) {
-                    _session.error(
-                        _session.scope_manager().current_module(),
-                        "X000",
-                        "value-sink cannot be used as rhs in an assignment.",
-                        source_list->children[i]->location);
-                    return false;
+                    if (rhs->element_type() == element_type_t::value_sink_literal) {
+                        _session.error(
+                            scope_manager.current_module(),
+                            "X000",
+                            "value-sink cannot be used as rhs in an assignment.",
+                            source_list->children[source_index]->location);
+                        return false;
+                    }
                 }
 
                 auto binary_op = builder.make_binary_operator(
@@ -2634,13 +2631,21 @@ namespace basecode::compiler {
                     context,
                     symbol,
                     type_ref,
-                    node,
-                    i,
+                    add_identifier_node_t{
+                        .source_index = source_index,
+                        .node = node,
+                        .source_node = source_list->children[source_index]
+                    },
                     scope);
                 if (decl == nullptr)
                     return false;
 
                 expressions.emplace_back(decl);
+            }
+
+            if (source_index < source_list->children.size() - 1) {
+                ++source_index;
+                rhs = nullptr;
             }
         }
 
@@ -2854,8 +2859,7 @@ namespace basecode::compiler {
             context,
             identifier,
             type_ref,
-            nullptr,
-            0,
+            add_identifier_node_t{},
             scope);
     }
 

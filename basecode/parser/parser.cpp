@@ -288,10 +288,12 @@ namespace basecode::syntax {
         if (assignment_node->rhs->children.size() == 1
         &&  assignment_node->lhs->children.size() > 1) {
             const auto rhs_node = assignment_node->rhs->children[0];
-            for (size_t i = 0; i < assignment_node->lhs->children.size() - 1; i++) {
-                assignment_node
-                    ->rhs
-                    ->children.push_back(parser->ast_builder()->clone(rhs_node));
+            if (rhs_node->type != ast_node_type_t::proc_call) {
+                for (size_t i = 0; i < assignment_node->lhs->children.size() - 1; i++) {
+                    assignment_node
+                        ->rhs
+                        ->children.push_back(parser->ast_builder()->clone(rhs_node));
+                }
             }
         }
 

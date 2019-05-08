@@ -89,6 +89,7 @@
 #include <compiler/elements/character_literal.h>
 #include <compiler/elements/namespace_element.h>
 #include <compiler/elements/size_of_intrinsic.h>
+#include <compiler/elements/assignment_target.h>
 #include <compiler/elements/align_of_intrinsic.h>
 #include <compiler/elements/value_sink_literal.h>
 #include <compiler/elements/assembly_directive.h>

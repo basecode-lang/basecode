@@ -28,6 +28,8 @@ namespace basecode::compiler {
         void format(const std::string& title);
 
     private:
+        static std::string html_escape(const std::string& html);
+
         void add_vertex(
             vm::assembler& assembler,
             vm::basic_block* block,
@@ -42,8 +44,6 @@ namespace basecode::compiler {
             vm::basic_block* from,
             vm::basic_block* to,
             const std::string& label = "");
-
-        std::string html_escape(const std::string& html);
 
         std::string get_vertex_name(vm::basic_block* block) const;
 
