@@ -1,0 +1,22 @@
+core :: module("core");
+
+Slice :: struct {
+    data: ^u0;
+    len: u32;
+};
+
+test :: proc(size: u32) {
+    buffer := alloc(4096);
+    defer free(buffer);
+
+    make_slice :: proc(start: u32, len: u32): slice: ^Slice {
+        slice := alloc(size_of(Slice));
+        slice.data := buffer + start;
+        slice.len := len;
+    };
+
+    DATA :: "this is a simple string that i'm putting in the large buffer";
+    copy(buffer, DATA, length_of(DATA));
+
+    first_word_slice := make_slice(0, 4);
+};

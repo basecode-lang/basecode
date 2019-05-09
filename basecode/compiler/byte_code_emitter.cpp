@@ -512,8 +512,11 @@ namespace basecode::compiler {
                 emit_result_t predicate_result {};
                 if (!emit_element(basic_block, if_e->predicate(), predicate_result))
                     return false;
-//                auto ending_predicate_block = *basic_block;
-                predicate_block->bz(
+                auto branch_block = predicate_block;
+                if (predicate_result.use_new_block) {
+                    branch_block = *basic_block;
+                }
+                branch_block->bz(
                     predicate_result.operands.back(),
                     vm::instruction_operand_t(assembler.make_named_ref(
                         vm::assembler_named_ref_type_t::label,
@@ -1075,8 +1078,7 @@ namespace basecode::compiler {
                     vm::instruction_operand_t::sp(),
                     vm::instruction_operand_t::fp());
                 return_block->pop(vm::instruction_operand_t::fp());
-                if (!result.omit_rts)
-                    return_block->rts();
+                return_block->rts();
 
                 _return_emitted = true;
                 break;
@@ -3220,12 +3222,13 @@ namespace basecode::compiler {
         release_temps(rhs_result.temps);
 
         auto exit_block = make_block();
-        rhs_block->add_successors({exit_block});
-        exit_block->add_predecessors({rhs_block});
-
         exit_block->label(labels.make(exit_label_name, exit_block));
 
+        current_block->add_successors({exit_block});
+        exit_block->add_predecessors({current_block});
+
         *basic_block = exit_block;
+        result.use_new_block = true;
 
         return true;
     }

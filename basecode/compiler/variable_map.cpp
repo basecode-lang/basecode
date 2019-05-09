@@ -70,6 +70,22 @@ namespace basecode::compiler {
     //
     //
 
+    // state machine rules
+    // ------------------------------------------------------------------------
+    //
+    // all variables start off life in the spilled state.  if a variable is
+    // activated, then it is filled.  if it requires initialization, that is
+    // performed.  in some cases, the act of filling is equivalent to initialization
+    // and only one of these is emitted.
+    //
+    // spilled -+--> filled
+    //          |
+    //          +--> may need init
+    //
+    // if a block has exceeded the register limitation, then it cannot be
+    // filled. read and write to variables works regardless of spilled/filled state.
+    //
+
     ///////////////////////////////////////////////////////////////////////////
 
     size_t variable_t::size_in_bytes() const {
@@ -93,6 +109,13 @@ namespace basecode::compiler {
     ///////////////////////////////////////////////////////////////////////////
 
     variable_map::variable_map(compiler::session& session) : _session(session) {
+    }
+
+    bool variable_map::read(
+            vm::basic_block* basic_block,
+            vm::assembler_named_ref_t* named_ref,
+            emit_result_t& result) {
+        return true;
     }
 
     bool variable_map::init(
@@ -624,7 +647,7 @@ namespace basecode::compiler {
         if (!find_return_variables(proc_type))
             return false;
 
-        if (!find_referenced_module_variables(block))
+        if (!find_module_variables(block))
             return false;
 
         if (!find_local_variables(block))
@@ -680,6 +703,13 @@ namespace basecode::compiler {
                 vm::instruction_operand_t::offset(var->field_offset.from_start));
         }
 
+        return true;
+    }
+
+    bool variable_map::write(
+            vm::basic_block* basic_block,
+            vm::assembler_named_ref_t* named_ref,
+            vm::instruction_operand_t& operand) {
         return true;
     }
 
@@ -753,6 +783,12 @@ namespace basecode::compiler {
             return fill(basic_block, named_ref);
         }
 
+        return true;
+    }
+
+    bool variable_map::deactivate(
+            vm::basic_block* basic_block,
+            vm::assembler_named_ref_type_t* named_ref) {
         return true;
     }
 
@@ -903,6 +939,10 @@ namespace basecode::compiler {
 
         if (!operands.empty())
             basic_block->popm(operands);
+    }
+
+    variable_map_config_t& variable_map::config() {
+        return _config;
     }
 
     void variable_map::clear_filled(const variable_t* var) {
@@ -1086,50 +1126,7 @@ namespace basecode::compiler {
             block);
     }
 
-    temp_pool_entry_t* variable_map::retain_temp(number_class_t number_class) {
-        auto temp = find_available_temp(number_class);
-        if (temp != nullptr) {
-            temp->available = false;
-            return temp;
-        }
-
-        variable_t var_info {};
-        var_info.number_class = number_class;
-        var_info.type = variable_type_t::temporary;
-        var_info.label = fmt::format("t{}", _temps.size() + 1);
-
-        temp_pool_entry_t entry {};
-        entry.available = false;
-        entry.id = common::id_pool::instance()->allocate();
-
-        auto vit = _variables.insert(std::make_pair(var_info.label, var_info));
-        entry.variable = &vit.first->second;
-
-        auto it = _temps.insert(std::make_pair(entry.id, entry));
-        return &it.first->second;
-    }
-
-    group_variable_result_t variable_map::group_variables(const variable_set_t& excluded) {
-        group_variable_result_t result {};
-        result.ints.emplace_back();
-        result.floats.emplace_back();
-
-        for (const auto& kvp : _variables) {
-            auto var = &kvp.second;
-            auto list = var->number_class == number_class_t::integer ?
-                &result.ints :
-                &result.floats;
-            if (excluded.count(const_cast<variable_t*>(var)) > 0) {
-                list->emplace_back();
-                continue;
-            }
-            list->back().emplace_back(var);
-        }
-
-        return result;
-    }
-
-    bool variable_map::find_referenced_module_variables(compiler::block* block) {
+    bool variable_map::find_module_variables(compiler::block* block) {
         auto& scope_manager = _session.scope_manager();
 
         const element_type_set_t excluded_types = {
@@ -1194,6 +1191,29 @@ namespace basecode::compiler {
                 return true;
             },
             block);
+    }
+
+    temp_pool_entry_t* variable_map::retain_temp(number_class_t number_class) {
+        auto temp = find_available_temp(number_class);
+        if (temp != nullptr) {
+            temp->available = false;
+            return temp;
+        }
+
+        variable_t var_info {};
+        var_info.number_class = number_class;
+        var_info.type = variable_type_t::temporary;
+        var_info.label = fmt::format("t{}", _temps.size() + 1);
+
+        temp_pool_entry_t entry {};
+        entry.available = false;
+        entry.id = common::id_pool::instance()->allocate();
+
+        auto vit = _variables.insert(std::make_pair(var_info.label, var_info));
+        entry.variable = &vit.first->second;
+
+        auto it = _temps.insert(std::make_pair(entry.id, entry));
+        return &it.first->second;
     }
 
     bool variable_map::find_return_variables(compiler::procedure_type* proc_type) {
@@ -1285,6 +1305,26 @@ namespace basecode::compiler {
         }
 
         return false;
+    }
+
+    group_variable_result_t variable_map::group_variables(const variable_set_t& excluded) {
+        group_variable_result_t result {};
+        result.ints.emplace_back();
+        result.floats.emplace_back();
+
+        for (const auto& kvp : _variables) {
+            auto var = &kvp.second;
+            auto list = var->number_class == number_class_t::integer ?
+                        &result.ints :
+                        &result.floats;
+            if (excluded.count(const_cast<variable_t*>(var)) > 0) {
+                list->emplace_back();
+                continue;
+            }
+            list->back().emplace_back(var);
+        }
+
+        return result;
     }
 
 }

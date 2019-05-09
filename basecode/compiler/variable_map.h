@@ -100,9 +100,29 @@ namespace basecode::compiler {
         grouped_variable_list_t floats {};
     };
 
+    struct variable_map_config_t {
+        uint16_t max_float_registers = 32;
+        uint16_t max_integer_registers = 32;
+    };
+
     class variable_map {
     public:
         explicit variable_map(compiler::session& session);
+
+    public:
+        bool build(
+            compiler::block* block,
+            compiler::procedure_type* proc_type = nullptr);
+
+        bool append(
+            compiler::block* block,
+            compiler::procedure_type* proc_type);
+
+    public:
+        bool read(
+            vm::basic_block* basic_block,
+            vm::assembler_named_ref_t* named_ref,
+            emit_result_t& result);
 
         bool init(
             vm::basic_block* basic_block,
@@ -122,18 +142,15 @@ namespace basecode::compiler {
             emit_result_t& lhs,
             emit_result_t& rhs);
 
-        bool build(
-            compiler::block* block,
-            compiler::procedure_type* proc_type = nullptr);
-
         bool deref(
             vm::basic_block* basic_block,
             emit_result_t& arg_result,
             emit_result_t& result);
 
-        bool append(
-            compiler::block* block,
-            compiler::procedure_type* proc_type);
+        bool write(
+            vm::basic_block* basic_block,
+            vm::assembler_named_ref_t* named_ref,
+            vm::instruction_operand_t& operand);
 
         bool assign(
             vm::basic_block* basic_block,
@@ -148,6 +165,10 @@ namespace basecode::compiler {
             vm::basic_block* basic_block,
             vm::assembler_named_ref_t* named_ref,
             bool is_assign_target = false);
+
+        bool deactivate(
+            vm::basic_block* basic_block,
+            vm::assembler_named_ref_type_t* named_ref);
 
         bool address_of(
             vm::basic_block* basic_block,
@@ -167,6 +188,8 @@ namespace basecode::compiler {
         void restore_locals_from_stack(
             vm::basic_block* basic_block,
             const group_variable_result_t& groups);
+
+        variable_map_config_t& config();
 
         variable_t* find(const std::string& name);
 
@@ -192,7 +215,7 @@ namespace basecode::compiler {
 
         bool find_local_variables(compiler::block* block);
 
-        bool find_referenced_module_variables(compiler::block* block);
+        bool find_module_variables(compiler::block* block);
 
         bool find_return_variables(compiler::procedure_type* proc_type);
 
@@ -206,6 +229,7 @@ namespace basecode::compiler {
         temp_pool_map_t _temps {};
         compiler::session& _session;
         variable_map_t _variables {};
+        variable_map_config_t _config {};
         identifier_by_section_t _module_variables {};
     };
 

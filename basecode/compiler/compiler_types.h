@@ -213,7 +213,7 @@ namespace basecode::compiler {
     struct temp_pool_entry_t;
 
     struct emit_result_t {
-        bool omit_rts = false;
+        bool use_new_block = false;
         bool is_assign_target = false;
         infer_type_result_t type_result {};
         std::vector<temp_pool_entry_t*> temps {};
