@@ -131,15 +131,15 @@ namespace basecode::compiler {
         state &= ~flags_t::modified;
     }
 
-    void variable_t::transition_to_excluded() {
-        state |= flags_t::excluded;
-    }
-
     size_t variable_t::size_in_bytes() const {
         auto var = identifier;
         if (var != nullptr)
             return var->type_ref()->type()->size_in_bytes();
         return 0;
+    }
+
+    void variable_t::transition_to_excluded() {
+        state |= flags_t::excluded;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -331,7 +331,6 @@ namespace basecode::compiler {
         if (!prepare_fill_target_pair(var_info, target_pair))
             return false;
 
-//        auto& assembler = _session.assembler();
         auto current_block = *basic_block;
 
         rhs_operand.size(target_pair.dest->size);
@@ -350,8 +349,15 @@ namespace basecode::compiler {
             return false;
 
         auto label_name = get_variable_name(var, offset_result);
-        if (_variables.count(label_name) > 0)
-            return true;
+        auto existing_var_info = find_variable(label_name);
+        if (existing_var_info != nullptr) {
+            if (!existing_var_info->is_live()) {
+                existing_var_info->transition_to_live();
+                existing_var_info->transition_to_spilled();
+            }
+            vm::instruction_operand_t result{};
+            return read(basic_block, var, result, offset_result);
+        }
 
         size_t offset = 0;
         auto var_type = variable_type_t::module;
@@ -452,6 +458,8 @@ namespace basecode::compiler {
         if (var_info->temp != nullptr)
             release_temp(var_info->temp);
 
+        var_info->transition_to_killed();
+
         return true;
     }
 
@@ -468,17 +476,22 @@ namespace basecode::compiler {
         for (auto& kvp : _variables) {
             if (kvp.second.type == variable_type_t::temporary)
                 continue;
-            auto& var = kvp.second;
-            if (var.identifier->parent_scope() == scope
-            ||  var.type == variable_type_t::return_parameter) {
-                if (!deactivate(basic_block, var.identifier, var.field_offset)) {
-                    _session.error(
-                        var.identifier->module(),
-                        "X000",
-                        fmt::format("variable deactivate failed: {}", kvp.first),
-                        var.identifier->location());
-                    return false;
-                }
+
+            const auto& var = kvp.second;
+            const auto matching_scope = var.identifier->parent_scope() == scope;
+            const auto is_procedure_scoped = var.type == variable_type_t::local
+                || var.type == variable_type_t::parameter;
+
+            if (is_procedure_scoped && !matching_scope)
+                continue;
+
+            if (!deactivate(basic_block, var.identifier, var.field_offset)) {
+                _session.error(
+                    var.identifier->module(),
+                    "X000",
+                    fmt::format("variable deactivate failed: {}", kvp.first),
+                    var.identifier->location());
+                return false;
             }
         }
         return true;
@@ -606,14 +619,12 @@ namespace basecode::compiler {
                 vm::assembler_named_ref_type_t::local,
                 var_info->temp->name(),
                 var_info->op_size);
-
-            return true;
+        } else {
+            target_pair.dest = assembler.make_named_ref(
+                vm::assembler_named_ref_type_t::local,
+                var_info->label,
+                var_info->op_size);
         }
-
-        target_pair.dest = assembler.make_named_ref(
-            vm::assembler_named_ref_type_t::local,
-            var_info->label,
-            var_info->op_size);
 
         target_pair.offset = assembler.make_named_ref(
             vm::assembler_named_ref_type_t::offset,
@@ -642,14 +653,12 @@ namespace basecode::compiler {
                 vm::assembler_named_ref_type_t::local,
                 var_info->temp->name(),
                 var_info->op_size);
-
-            return true;
+        } else {
+            target_pair.src = assembler.make_named_ref(
+                vm::assembler_named_ref_type_t::local,
+                var_info->label,
+                var_info->op_size);
         }
-
-        target_pair.src = assembler.make_named_ref(
-            vm::assembler_named_ref_type_t::local,
-            var_info->label,
-            var_info->op_size);
 
         target_pair.offset = assembler.make_named_ref(
             vm::assembler_named_ref_type_t::offset,
@@ -767,7 +776,7 @@ namespace basecode::compiler {
     }
 
     bool variable_context::should_variable_spill(const variable_t* var_info) const {
-        if (!var_info->is_filled() && !var_info->is_modified())
+        if (!var_info->is_modified())
             return false;
 
         switch (var_info->type) {

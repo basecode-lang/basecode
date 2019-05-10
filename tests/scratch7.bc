@@ -1,18 +1,17 @@
 core :: module("core");
 
-doubler :: proc(v: s32): result: s32 {
-    foo: s32;
+foo: s32 := 6;
 
+doubler :: proc(v: s32): result: s32 {
     if v < 4 {
-        result := 0;
+        result := foo;
         return;
     };
 
-    foo := v * 2;
-    result := foo;
+    result := (v * 2) + foo;
 };
 
-core::print("doubled! %d\n", doubler(4));
+#run core::print("doubled! %d\n", doubler(4));
 
 //_alloc :: #inline proc(size: u64): ptr: ^u0 {
 //    #assembly {{

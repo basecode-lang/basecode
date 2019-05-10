@@ -182,7 +182,7 @@ namespace basecode::vm {
                     if (operand.is_negative())
                         operands_stream << "-";
 
-                    auto operand_format_spec = op_size_format_spec(operand.size);
+                    std::string operand_format_spec(op_size_format_spec(operand.size));
                     switch (operand.size) {
                         case op_sizes::byte:
                             operands_stream << fmt::format(operand_format_spec, alias.b);
