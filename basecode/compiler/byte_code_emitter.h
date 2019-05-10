@@ -38,6 +38,14 @@ namespace basecode::compiler {
 
         void push_flow_control(const flow_control_t& control_flow);
 
+    // variable context stack
+    private:
+        void pop_variable_context();
+
+        variable_context* current_variable_context();
+
+        void push_variable_context(variable_context* context);
+
     private:
         vm::basic_block* make_block();
 
@@ -59,7 +67,7 @@ namespace basecode::compiler {
         void intern_string_literals();
 
         bool fill_referenced_identifiers(
-            vm::basic_block* basic_block,
+            vm::basic_block** basic_block,
             compiler::element* e);
 
         bool emit_interned_string_table();
@@ -133,8 +141,6 @@ namespace basecode::compiler {
             compiler::binary_operator* binary_op,
             emit_result_t& result);
 
-        void release_temps(const temp_pool_entry_list_t& temps);
-
         void apply_flow_control(const statement_list_t& statements, size_t index);
 
         bool apply_defer_stack(vm::basic_block** basic_block, compiler::block* block);
@@ -145,9 +151,9 @@ namespace basecode::compiler {
         bool _in_stack_frame = false;
         bool _return_emitted = false;
         vm::basic_block_map _blocks {};
-        vm::basic_block* _temps_block = nullptr;
         vm::basic_block_stack_t _block_stack {};
         flow_control_stack_t _control_flow_stack {};
+        variable_context_stack_t _variable_context_stack {};
     };
 
 }

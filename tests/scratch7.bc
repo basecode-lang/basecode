@@ -12,11 +12,9 @@ _free :: #inline proc(ptr: ^u0) {
     }};
 };
 
-#run {
-    mem := _alloc(64);
-    core::print("mem := $%016llX\n", mem);
-    _free(mem);
-};
+mem := _alloc(64);
+core::print("mem := $%016llX\n", mem);
+_free(mem);
 
 //test :: proc(a, b: s32): s32, s32 {
 //    return a*b, a/b;

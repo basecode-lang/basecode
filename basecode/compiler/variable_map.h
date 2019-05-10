@@ -47,6 +47,8 @@ namespace basecode::compiler {
         return ""sv;
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+
     struct variable_t {
         enum flags_t : uint8_t {
             none        = 0b00000000,
@@ -105,79 +107,50 @@ namespace basecode::compiler {
         uint16_t max_integer_registers = 32;
     };
 
-    class variable_map {
+    ///////////////////////////////////////////////////////////////////////////
+
+    class variable_context {
     public:
-        explicit variable_map(compiler::session& session);
+        variable_context(
+            compiler::session& session,
+            common::id_t id,
+            vm::basic_block* locals_block);
 
-    public:
-        bool build(
-            compiler::block* block,
-            compiler::procedure_type* proc_type = nullptr);
-
-        bool append(
-            compiler::block* block,
-            compiler::procedure_type* proc_type);
-
-    public:
-        bool read(
-            vm::basic_block* basic_block,
-            vm::assembler_named_ref_t* named_ref,
-            emit_result_t& result);
-
-        bool init(
-            vm::basic_block* basic_block,
-            vm::assembler_named_ref_t* named_ref);
-
-        bool fill(
-            vm::basic_block* basic_block,
-            vm::assembler_named_ref_t* named_ref);
-
-        bool copy(
-            vm::basic_block* basic_block,
-            emit_result_t& lhs,
-            emit_result_t& rhs);
-
-        bool spill(
-            vm::basic_block* basic_block,
-            emit_result_t& lhs,
-            emit_result_t& rhs);
-
-        bool deref(
-            vm::basic_block* basic_block,
-            emit_result_t& arg_result,
-            emit_result_t& result);
-
-        bool write(
-            vm::basic_block* basic_block,
-            vm::assembler_named_ref_t* named_ref,
-            vm::instruction_operand_t& operand);
-
-        bool assign(
-            vm::basic_block* basic_block,
-            emit_result_t& lhs,
-            emit_result_t& rhs,
-            bool requires_copy = false,
-            bool array_subscript = false);
-
-        void reset();
-
-        bool activate(
-            vm::basic_block* basic_block,
-            vm::assembler_named_ref_t* named_ref,
-            bool is_assign_target = false);
-
-        bool deactivate(
-            vm::basic_block* basic_block,
-            vm::assembler_named_ref_type_t* named_ref);
-
-        bool address_of(
-            vm::basic_block* basic_block,
-            emit_result_t& arg_result,
-            vm::instruction_operand_t& temp_operand);
-
-        bool initialize();
+        common::id_t id() const;
 
         variable_list_t temps();
+
+        bool read(
+            vm::basic_block** basic_block,
+            compiler::identifier* identifier,
+            vm::instruction_operand_t& result);
+
+        bool deref(
+            vm::basic_block** basic_block,
+            vm::instruction_operand_t& expr,
+            vm::instruction_operand_t& result);
+
+        bool assign(
+            vm::basic_block** basic_block,
+            vm::instruction_operand_t& lhs,
+            vm::instruction_operand_t& rhs);
+
+        bool activate(
+            vm::basic_block** basic_block,
+            compiler::identifier* identifier);
+
+        bool deactivate(
+            vm::basic_block** basic_block,
+            compiler::identifier* identifier);
+
+        bool address_of(
+            vm::basic_block** basic_block,
+            vm::instruction_operand_t& expr,
+            vm::instruction_operand_t& result);
+
+        bool deactivate_scope(
+            vm::basic_block** basic_block,
+            compiler::block* scope);
 
         void save_locals_to_stack(
             vm::basic_block* basic_block,
@@ -189,47 +162,66 @@ namespace basecode::compiler {
             vm::basic_block* basic_block,
             const group_variable_result_t& groups);
 
-        variable_map_config_t& config();
-
-        variable_t* find(const std::string& name);
+        void add_scope(compiler::block* scope);
 
         void release_temp(temp_pool_entry_t* entry);
 
-        identifier_by_section_t& module_variables();
+        variable_t* find_variable(const std::string& name);
+
+        void release_temps(const temp_pool_entry_list_t& temps);
+
+        temp_pool_entry_t* find_temp(number_class_t number_class);
 
         group_variable_result_t group_variables(const variable_set_t& excluded);
 
         temp_pool_entry_t* retain_temp(number_class_t number_class = number_class_t::integer);
 
     private:
-        void create_sections();
-
         void apply_variable_range(
             const const_variable_list_t& list,
             vm::instruction_operand_list_t& operands,
             bool reverse);
 
-        void clear_filled(const variable_t* var);
-
-        bool group_module_variables_into_sections();
-
-        bool find_local_variables(compiler::block* block);
-
-        bool find_module_variables(compiler::block* block);
-
-        bool find_return_variables(compiler::procedure_type* proc_type);
-
-        bool find_parameter_variables(compiler::procedure_type* proc_type);
-
-        temp_pool_entry_t* find_available_temp(number_class_t number_class);
-
         bool is_related_to_type(const variable_t* var, variable_type_t type);
 
     private:
-        temp_pool_map_t _temps {};
+        common::id_t _id{};
+        temp_pool_map_t _temps{};
+        variable_map_t _variables{};
         compiler::session& _session;
-        variable_map_t _variables {};
-        variable_map_config_t _config {};
+        variable_map_config_t _config{};
+        compiler::block_list_t _scope_blocks{};
+        vm::basic_block* _locals_block = nullptr;
+    };
+
+    using variable_context_stack_t = std::stack<variable_context*>;
+    using variable_context_map_t = std::unordered_map<common::id_t, variable_context>;
+
+    ///////////////////////////////////////////////////////////////////////////
+
+    class variable_map {
+    public:
+        explicit variable_map(compiler::session& session);
+
+    public:
+        void reset();
+
+        bool initialize();
+
+        identifier_by_section_t& module_variables();
+
+        variable_context* find_context(common::id_t id);
+
+        variable_context* make_context(vm::basic_block* locals_block);
+
+    private:
+        void create_sections();
+
+        bool group_module_variables_into_sections();
+
+    private:
+        compiler::session& _session;
+        variable_context_map_t _contexts{};
         identifier_by_section_t _module_variables {};
     };
 
