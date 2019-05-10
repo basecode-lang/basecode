@@ -1,20 +1,34 @@
 core :: module("core");
 
-_alloc :: #inline proc(size: u64): ptr: ^u0 {
-    #assembly {{
-        alloc.b ptr, size
-    }};
+doubler :: proc(v: s32): result: s32 {
+    foo: s32;
+
+    if v < 4 {
+        result := 0;
+        return;
+    };
+
+    foo := v * 2;
+    result := foo;
 };
 
-_free :: #inline proc(ptr: ^u0) {
-    #assembly {{
-        free.qw ptr
-    }};
-};
+core::print("doubled! %d\n", doubler(4));
 
-mem := _alloc(64);
-core::print("mem := $%016llX\n", mem);
-_free(mem);
+//_alloc :: #inline proc(size: u64): ptr: ^u0 {
+//    #assembly {{
+//        alloc.b ptr, size
+//    }};
+//};
+//
+//_free :: #inline proc(ptr: ^u0) {
+//    #assembly {{
+//        free.qw ptr
+//    }};
+//};
+//
+//mem := _alloc(64);
+//core::print("mem := $%016llX\n", mem);
+//_free(mem);
 
 //test :: proc(a, b: s32): s32, s32 {
 //    return a*b, a/b;

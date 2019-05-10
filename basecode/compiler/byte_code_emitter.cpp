@@ -175,7 +175,6 @@ namespace basecode::compiler {
     bool byte_code_emitter::emit_block(
             vm::basic_block** basic_block,
             compiler::block* block) {
-        auto& assembler = _session.assembler();
         auto var_context = current_variable_context();
         const auto excluded_parent_types = element_type_set_t{
             element_type_t::directive,
@@ -183,66 +182,15 @@ namespace basecode::compiler {
 
         var_context->add_scope(block);
 
-        uint64_t locals_size = 0;
         variable_list_t to_init {};
-//        bool reset_temp_block = false;
         bool clear_stack_frame = false;
         auto frame_block = *basic_block;
         vm::basic_block* code_block = nullptr;
 
-//        if (!block->is_parent_type_one_of(excluded_parent_types)
-//        && !_in_stack_frame) {
-//            auto locals = _variables.variables();
-//            for (auto local : locals) {
-//                if (local->type == variable_type_t::temporary)
-//                    continue;
-//
-//                if (local->type == variable_type_t::local
-//                ||  local->type == variable_type_t::module
-//                ||  local->type == variable_type_t::parameter
-//                ||  local->type == variable_type_t::return_parameter) {
-//                    to_init.emplace_back(local);
-//                }
-//
-//                int64_t offset = 0;
-//                if (local->field_offset.base_ref == nullptr) {
-//                    offset = local->frame_offset;
-//                    if (local->type == variable_type_t::local)
-//                        locals_size += local->size_in_bytes();
-//                } else {
-//                    offset = local->field_offset.from_start;
-//                }
-//
-//                if (!local->flag(variable_t::flags_t::in_block)) {
-//                    // XXX: fix this method to accept a string_view instead of string
-//                    frame_block->local(
-//                        number_class_to_local_type(local->number_class),
-//                        local->label,
-//                        offset,
-//                        std::string(variable_type_to_group(local->type)));
-//                    local->flag(variable_t::flags_t::in_block, true);
-//                }
-//            }
-//            locals_size = common::align(locals_size, 8);
-//
-//            if (_temps_block == nullptr) {
-//                _temps_block = make_block();
-//                frame_block->add_successors({_temps_block});
-//                _temps_block->add_predecessors({frame_block});
-//                reset_temp_block = true;
-//            }
-//
-            code_block = make_block();
-//            if (reset_temp_block) {
-//                code_block->add_predecessors({_temps_block});
-//                _temps_block->add_successors({code_block});
-//            } else {
-                code_block->add_predecessors({frame_block});
-                frame_block->add_successors({code_block});
-//            }
-//
-            *basic_block = code_block;
-//        }
+        code_block = make_block();
+        code_block->add_predecessors({frame_block});
+        frame_block->add_successors({code_block});
+        *basic_block = code_block;
 
         if (block->has_stack_frame()
         && !_in_stack_frame) {
@@ -253,47 +201,39 @@ namespace basecode::compiler {
             code_block->move(
                 vm::instruction_operand_t::fp(),
                 vm::instruction_operand_t::sp());
-            if (locals_size > 0) {
-                code_block->sub(
-                    vm::instruction_operand_t::sp(),
-                    vm::instruction_operand_t::sp(),
-                    vm::instruction_operand_t(
-                        static_cast<uint64_t>(locals_size),
-                        vm::op_sizes::dword));
-            }
         }
 
-//        for (auto local : to_init) {
-//            auto named_ref = assembler.make_named_ref(
-//                vm::assembler_named_ref_type_t::local,
-//                local->label,
-//                vm::op_size_for_byte_size(local->size_in_bytes()));
-//            _variables.activate(code_block, named_ref);
-//        }
-
         defer({
-//            if (reset_temp_block)
-//                _temps_block = nullptr;
+            if (!clear_stack_frame)
+                return;
 
-            if (clear_stack_frame) {
-                _in_stack_frame = false;
+            _in_stack_frame = false;
 
-                auto current_block = *basic_block;
+            auto locals_size = var_context->locals_size();
+            if (locals_size > 0) {
+              code_block->sub(
+                  vm::instruction_operand_t::sp(),
+                  vm::instruction_operand_t::sp(),
+                  vm::instruction_operand_t(
+                      static_cast<uint64_t>(locals_size),
+                      vm::op_sizes::dword));
+            }
 
-                auto exit_block = make_block();
-                current_block->add_successors({exit_block});
-                exit_block->add_predecessors({current_block});
+            auto current_block = *basic_block;
 
-                if (!current_block->is_current_instruction(vm::op_codes::rts)
-                && !_return_emitted) {
-                    exit_block->move(
-                        vm::instruction_operand_t::sp(),
-                        vm::instruction_operand_t::fp());
-                    exit_block->pop(vm::instruction_operand_t::fp());
-                }
+            auto exit_block = make_block();
+            current_block->add_successors({exit_block});
+            exit_block->add_predecessors({current_block});
+            _return_stack.push(exit_block);
 
-                *basic_block = exit_block;
-                _return_emitted = false;
+            while (!_return_stack.empty()) {
+                auto return_block = _return_stack.top();
+                _return_stack.pop();
+                return_block->move(
+                    vm::instruction_operand_t::sp(),
+                    vm::instruction_operand_t::fp());
+                return_block->pop(vm::instruction_operand_t::fp());
+                return_block->rts();
             }
         });
 
@@ -323,22 +263,7 @@ namespace basecode::compiler {
         if (!apply_defer_stack(basic_block, block))
             return false;
 
-//        if (_temps_block != nullptr) {
-//            auto temp_locals = _variables.temps();
-//            for (auto temp : temp_locals) {
-//                if (!temp->flag(variable_t::flags_t::in_block)) {
-//                    _temps_block->local(
-//                        number_class_to_local_type(temp->number_class),
-//                        temp->label);
-//                    temp->flag(variable_t::flags_t::in_block, true);
-//                }
-//            }
-//        }
-
-        if (!var_context->deactivate_scope(basic_block, block))
-            return false;
-
-        return true;
+        return var_context->deactivate_scope(basic_block, block);
     }
 
     bool byte_code_emitter::emit_element(
@@ -1064,12 +989,6 @@ namespace basecode::compiler {
                 auto return_e = dynamic_cast<compiler::return_element*>(e);
                 auto proc_type = return_e->find_parent_of_type<compiler::procedure_type>(element_type_t::proc_type);
 
-                auto return_block = make_block();
-                return_block->predecessors().emplace_back(current_block);
-                current_block->successors().emplace_back(return_block);
-
-                *basic_block = return_block;
-
                 auto return_parameters = proc_type->return_parameters();
                 if (!return_parameters.empty()) {
                     size_t index = 0;
@@ -1081,33 +1000,31 @@ namespace basecode::compiler {
                             return false;
                         }
 
+                        auto identifier = fld->declaration()->identifier();
+
                         emit_result_t expr_result{};
                         if (!emit_element(basic_block, expr, expr_result))
                             return false;
-                        //return_block = *basic_block;
 
-                        if (!var_context->activate(basic_block, fld->declaration()->identifier()))
+                        if (!var_context->activate(basic_block, identifier, {}))
                             return false;
 
                         emit_result_t lhs{};
+                        if (!identifier->infer_type(_session, lhs.type_result))
+                            return false;
+
                         lhs.operands.emplace_back(assembler.make_named_ref(
                             vm::assembler_named_ref_type_t::local,
-                            fld->declaration()->identifier()->label_name()));
+                            identifier->label_name()));
 
-                        if (!var_context->assign(basic_block, lhs.operands.back(), expr_result.operands.back()))
+                        if (!var_context->assign(basic_block, identifier, lhs, expr_result))
                             return false;
 
                         var_context->release_temps(expr_result.temps);
                     }
                 }
 
-                return_block->move(
-                    vm::instruction_operand_t::sp(),
-                    vm::instruction_operand_t::fp());
-                return_block->pop(vm::instruction_operand_t::fp());
-                return_block->rts();
-
-                _return_emitted = true;
+                _return_stack.push(current_block);
                 break;
             }
             case element_type_t::switch_e: {
@@ -1260,7 +1177,7 @@ namespace basecode::compiler {
                             return false;
 
                         auto result_operand = target_operand(result);
-                        if (!var_context->address_of(basic_block, arg_result.operands.back(), *result_operand))
+                        if (!var_context->address_of(basic_block, arg_result, *result_operand))
                             return false;
                         break;
                     }
@@ -1676,14 +1593,6 @@ namespace basecode::compiler {
                     vm::assembler_named_ref_type_t::local,
                     var->label_name(),
                     op_size));
-                if (!var_context->activate(basic_block, var)) {
-                    _session.error(
-                        var->module(),
-                        "X000",
-                        fmt::format("variable map missing identifier: {}", var->symbol()->name()),
-                        var->location());
-                    return false;
-                }
                 break;
             }
             case element_type_t::expression: {
@@ -1853,7 +1762,7 @@ namespace basecode::compiler {
                         break;
                     }
                     case operator_type_t::pointer_dereference: {
-                        if (!var_context->deref(basic_block, rhs_emit_result.operands.back(), *result_operand))
+                        if (!var_context->deref(basic_block, rhs_emit_result, *result_operand))
                             return false;
                         break;
                     }
@@ -1991,7 +1900,7 @@ namespace basecode::compiler {
                         if (!emit_element(basic_block, binary_op->rhs(), rhs_result))
                             return false;
 
-                        if (!var_context->assign(basic_block, lhs_result.operands.back(), rhs_result.operands.back()))
+                        if (!var_context->assign(basic_block, binary_op->rhs(), lhs_result, rhs_result))
                             return false;
 
                         var_context->release_temps(lhs_result.temps);
@@ -2044,6 +1953,9 @@ namespace basecode::compiler {
             }
             case element_type_t::identifier_reference: {
                 auto var_ref = dynamic_cast<compiler::identifier_reference*>(e);
+                if (!var_context->activate(basic_block, var_ref))
+                    return false;
+
                 auto offset = var_ref->field_offset();
                 auto label = offset.label_name();
                 if (!label.empty()) {
@@ -2051,8 +1963,6 @@ namespace basecode::compiler {
                         vm::assembler_named_ref_type_t::local,
                         label,
                         op_size));
-                    if (!var_context->activate(basic_block, var_ref->identifier()))
-                        return false;
                 } else {
                     auto identifier = var_ref->identifier();
                     if (identifier != nullptr) {
@@ -2564,17 +2474,7 @@ namespace basecode::compiler {
         if (proc_type->is_foreign() || proc_type->is_inline())
             return true;
 
-        if (!proc_type->has_return()) {
-            auto current_block = *basic_block;
-
-            auto return_block = make_block();
-            current_block->add_successors({return_block});
-            return_block->add_predecessors({current_block});
-
-            return_block->rts();
-
-            *basic_block = return_block;
-        }
+        pop_variable_context();
 
         return true;
     }
@@ -2622,6 +2522,8 @@ namespace basecode::compiler {
             current_block->frame_offset("parameter", 16);
         }
 
+        push_variable_context(_variables.make_context(current_block));
+
         return true;
     }
 
@@ -2631,9 +2533,9 @@ namespace basecode::compiler {
             .find_by_type<compiler::string_literal>(element_type_t::string_literal);
         for (auto literal : literals) {
             if (literal->is_parent_type_one_of({
-                                                   element_type_t::attribute,
-                                                   element_type_t::directive,
-                                                   element_type_t::module_reference})) {
+                    element_type_t::attribute,
+                    element_type_t::directive,
+                    element_type_t::module_reference})) {
                 continue;
             }
 
@@ -2800,9 +2702,11 @@ namespace basecode::compiler {
                 auto var_context = current_variable_context();
                 auto var = dynamic_cast<compiler::identifier_reference*>(e);
 
-                vm::instruction_operand_t target{};
-                if (!var_context->read(basic_block, var->identifier(), target))
+                if (!var_context->activate(basic_block, var))
                     return false;
+//                vm::instruction_operand_t target{};
+//                if (!var_context->read(basic_block, var, target))
+//                    return false;
 
                 break;
             }
@@ -2863,20 +2767,23 @@ namespace basecode::compiler {
         start_block->label(labels.make("_start", start_block));
         start_block->reset("local");
         start_block->reset("frame");
-        start_block->move(
-            vm::instruction_operand_t::fp(),
-            vm::instruction_operand_t::sp());
 
         push_variable_context(_variables.make_context(start_block));
 
-        return start_block;
+        auto stack_init_block = make_block();
+        stack_init_block->add_predecessors({start_block});
+        start_block->add_successors({stack_init_block});
+        stack_init_block->move(
+            vm::instruction_operand_t::fp(),
+            vm::instruction_operand_t::sp());
+
+        return stack_init_block;
     }
 
     bool byte_code_emitter::emit_inline_procedure_instance(
             vm::basic_block** basic_block,
             compiler::procedure_type* proc_type,
             emit_result_t& result) {
-//        bool reset_temp_block = false;
         auto current_block = *basic_block;
         auto& assembler = _session.assembler();
         auto scope_block = proc_type->body_scope();
@@ -2884,88 +2791,13 @@ namespace basecode::compiler {
         auto var_context = current_variable_context();
         var_context->add_scope(scope_block);
 
-//        defer({
-//            if (reset_temp_block) {
-//                _temps_block = nullptr;
-//                reset_temp_block = false;
-//            }
-//        });
-//
-//        if (_temps_block == nullptr) {
-//            _temps_block = make_block();
-//            current_block->add_successors({_temps_block});
-//            _temps_block->add_predecessors({current_block});
-//            reset_temp_block = true;
-//        }
-//
         auto code_block = make_block();
-//        if (reset_temp_block) {
-//            code_block->add_predecessors({_temps_block});
-//            _temps_block->add_successors({code_block});
-//        } else {
-            code_block->add_predecessors({current_block});
-            current_block->add_successors({code_block});
-//        }
+        code_block->add_predecessors({current_block});
+        current_block->add_successors({code_block});
 
         current_block = code_block;
 
-//        variable_list_t parameters {};
-//        auto locals = _variables.variables();
-//        for (auto local : locals) {
-//            if (local->type == variable_type_t::temporary
-//            ||  local->flag(variable_t::flags_t::in_block)) {
-//                continue;
-//            }
-//
-//            current_block->local(
-//                number_class_to_local_type(local->number_class),
-//                local->label);
-//
-//            local->flag(variable_t::flags_t::filled, true);
-//            local->flag(variable_t::flags_t::spilled, true);
-//            local->flag(variable_t::flags_t::in_block, true);
-//            local->flag(variable_t::flags_t::must_init, false);
-//            local->flag(variable_t::flags_t::initialized, true);
-//
-//            if (local->type == variable_type_t::parameter) {
-//                parameters.push_back(local);
-//            }
-//        }
-//
-//        size_t rhs_index = result.operands.size() - 1;
-//        for (auto param : parameters) {
-//            emit_result_t lhs_temp{};
-//            lhs_temp.operands.emplace_back(assembler.make_named_ref(
-//                vm::assembler_named_ref_type_t::local,
-//                param->label,
-//                vm::op_size_for_byte_size(param->size_in_bytes())));
-//
-//            emit_result_t rhs_temp{};
-//            rhs_temp.operands.push_back(result.operands[rhs_index]);
-//
-//            if (!_variables.assign(current_block, lhs_temp, rhs_temp))
-//                return false;
-//
-//            --rhs_index;
-//        }
-//
-//        result.operands.clear();
         auto& return_parameters = proc_type->return_parameters();
-//        if (!return_parameters.empty()) {
-//            const auto& fields = return_parameters.as_list();
-//            for (auto fld : fields) {
-//                auto field_type = fld->identifier()->type_ref()->type();
-//
-//                vm::op_sizes size = vm::op_sizes::qword;
-//                if (!field_type->is_composite_type())
-//                    size = vm::op_size_for_byte_size(field_type->size_in_bytes());
-//
-//                result.operands.emplace_back(assembler.make_named_ref(
-//                    vm::assembler_named_ref_type_t::local,
-//                    fld->declaration()->identifier()->label_name(),
-//                    size));
-//            }
-//        }
 
         *basic_block = current_block;
 
@@ -3026,18 +2858,6 @@ namespace basecode::compiler {
                 }
             }
         }
-
-//        if (_temps_block != nullptr) {
-//            auto temp_locals = _variables.temps();
-//            for (auto temp : temp_locals) {
-//                if (!temp->flag(variable_t::flags_t::in_block)) {
-//                    _temps_block->local(
-//                        number_class_to_local_type(temp->number_class),
-//                        temp->label);
-//                    temp->flag(variable_t::flags_t::in_block, true);
-//                }
-//            }
-//        }
 
         return true;
     }

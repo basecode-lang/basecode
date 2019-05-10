@@ -34,12 +34,20 @@ namespace basecode::compiler {
                                _declaration(decl) {
     }
 
+    field_tag_t field::tag() const {
+        return _tag;
+    }
+
     uint8_t field::padding() const {
         return _padding;
     }
 
     bool field::is_variadic() const {
         return _is_variadic;
+    }
+
+    void field::tag(field_tag_t tag) {
+        _tag = tag;
     }
 
     compiler::element* field::on_clone(

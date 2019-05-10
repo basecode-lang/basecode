@@ -47,27 +47,56 @@ namespace basecode::compiler {
         return ""sv;
     }
 
+    static inline vm::assembler_named_ref_type_t variable_type_to_named_ref_type(variable_type_t type) {
+        switch (type) {
+            case variable_type_t::module:           return vm::assembler_named_ref_type_t::label;
+            case variable_type_t::local:
+            case variable_type_t::temporary:
+            case variable_type_t::parameter:
+            case variable_type_t::return_parameter: return vm::assembler_named_ref_type_t::local;
+        }
+    }
+
     ///////////////////////////////////////////////////////////////////////////
 
-    struct variable_t {
-        enum flags_t : uint8_t {
-            none        = 0b00000000,
-            initialized = 0b00000001,
-            filled      = 0b00000010,
-            spilled     = 0b00000100,
-            must_init   = 0b00001000,
-            used        = 0b00010000,
-            in_block    = 0b00100000,
-            pointer     = 0b01000000,
-        };
+    struct temp_pool_entry_t;
 
+    struct variable_t {
         using flags_value_t = uint8_t;
 
-        bool flag(flags_t f) const;
+        enum flags_t : uint8_t {
+            none        = 0b00000000,
+            live        = 0b00000001,
+            filled      = 0b00000010,
+            spilled     = 0b00000100,
+            excluded    = 0b00001000,
+            modified    = 0b00010000,
+            initialize  = 0b00100000,
+        };
+
+        bool is_live() const;
+
+        void mark_modified();
+
+        bool is_filled() const;
+
+        bool is_spilled() const;
+
+        bool is_excluded() const;
+
+        bool is_modified() const;
+
+        void transition_to_live();
+
+        void transition_to_killed();
+
+        void transition_to_filled();
 
         size_t size_in_bytes() const;
 
-        void flag(flags_t f, bool value);
+        void transition_to_spilled();
+
+        void transition_to_excluded();
 
         std::string label {};
         flags_value_t state {};
@@ -75,6 +104,8 @@ namespace basecode::compiler {
         int64_t frame_offset = 0;
         number_class_t number_class {};
         offset_result_t field_offset {};
+        temp_pool_entry_t* temp = nullptr;
+        vm::op_sizes op_size = vm::op_sizes::qword;
         compiler::identifier* identifier = nullptr;
     };
 
@@ -103,8 +134,17 @@ namespace basecode::compiler {
     };
 
     struct variable_map_config_t {
-        uint16_t max_float_registers = 32;
-        uint16_t max_integer_registers = 32;
+        uint16_t max_register_count[2] = {32, 32};
+    };
+
+    struct fill_target_pair_t {
+        vm::assembler_named_ref_t* dest = nullptr;
+        vm::assembler_named_ref_t* offset = nullptr;
+    };
+
+    struct spill_target_pair_t {
+        vm::assembler_named_ref_t* src = nullptr;
+        vm::assembler_named_ref_t* offset = nullptr;
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -122,35 +162,50 @@ namespace basecode::compiler {
 
         bool read(
             vm::basic_block** basic_block,
-            compiler::identifier* identifier,
+            compiler::identifier_reference* ref,
             vm::instruction_operand_t& result);
+
+        bool read(
+            vm::basic_block** basic_block,
+            compiler::identifier* var,
+            vm::instruction_operand_t& result,
+            const compiler::offset_result_t& offset_result);
 
         bool deref(
             vm::basic_block** basic_block,
-            vm::instruction_operand_t& expr,
+            emit_result_t& expr,
             vm::instruction_operand_t& result);
 
         bool assign(
             vm::basic_block** basic_block,
-            vm::instruction_operand_t& lhs,
-            vm::instruction_operand_t& rhs);
+            compiler::element* element,
+            emit_result_t& lhs,
+            emit_result_t& rhs);
 
         bool activate(
             vm::basic_block** basic_block,
-            compiler::identifier* identifier);
+            compiler::identifier* var,
+            const offset_result_t& offset_result);
+
+        bool activate(
+            vm::basic_block** basic_block,
+            compiler::identifier_reference* ref);
 
         bool deactivate(
             vm::basic_block** basic_block,
-            compiler::identifier* identifier);
+            compiler::identifier* var,
+            const offset_result_t& offset_result);
 
         bool address_of(
             vm::basic_block** basic_block,
-            vm::instruction_operand_t& expr,
+            emit_result_t& expr,
             vm::instruction_operand_t& result);
 
         bool deactivate_scope(
             vm::basic_block** basic_block,
             compiler::block* scope);
+
+        size_t locals_size() const;
 
         void save_locals_to_stack(
             vm::basic_block* basic_block,
@@ -177,18 +232,49 @@ namespace basecode::compiler {
         temp_pool_entry_t* retain_temp(number_class_t number_class = number_class_t::integer);
 
     private:
+        static std::string get_variable_name(
+            compiler::identifier* var,
+            const offset_result_t& offset_result);
+
+    private:
+        bool fill(
+            vm::basic_block** basic_block,
+            variable_t* var_info,
+            vm::instruction_operand_t& result);
+
+        bool spill(
+            vm::basic_block** basic_block,
+            variable_t* var_info);
+
         void apply_variable_range(
             const const_variable_list_t& list,
             vm::instruction_operand_list_t& operands,
             bool reverse);
 
+        bool prepare_fill_target_pair(
+            variable_t* var_info,
+            fill_target_pair_t& target_pair);
+
+        bool prepare_spill_target_pair(
+            variable_t* var_info,
+            spill_target_pair_t& target_pair);
+
+        bool use_frame_pointer(const variable_t* var_info) const;
+
+        bool should_variable_fill(const variable_t* var_info) const;
+
+        bool should_variable_spill(const variable_t* var_info) const;
+
         bool is_related_to_type(const variable_t* var, variable_type_t type);
 
     private:
         common::id_t _id{};
+        size_t _local_offset = 0;
         temp_pool_map_t _temps{};
+        size_t _return_offset = 0;
         variable_map_t _variables{};
         compiler::session& _session;
+        size_t _parameter_offset = 0;
         variable_map_config_t _config{};
         compiler::block_list_t _scope_blocks{};
         vm::basic_block* _locals_block = nullptr;

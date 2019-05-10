@@ -29,9 +29,13 @@ namespace basecode::compiler {
             uint8_t padding = 0,
             bool is_variadic = false);
 
+        field_tag_t tag() const;
+
         uint8_t padding() const;
 
         bool is_variadic() const;
+
+        void tag(field_tag_t tag);
 
         uint64_t alignment() const;
 
@@ -57,6 +61,7 @@ namespace basecode::compiler {
         bool on_as_identifier(compiler::identifier*& value) const override;
 
     private:
+        field_tag_t _tag{};
         uint8_t _padding = 0;
         uint64_t _offset = 0;
         bool _is_variadic = false;

@@ -2702,6 +2702,7 @@ namespace basecode::compiler {
                 0,
                 is_variadic);
             parameter_map.add(param_field);
+            param_field->tag(field_tag_t::parameter);
             param_decl->identifier()->field(param_field);
         };
 
@@ -2830,8 +2831,10 @@ namespace basecode::compiler {
                             proc_type,
                             param_decl,
                             0);
+                        param_field->tag(field_tag_t::return_parameter);
                         return_parameters.add(param_field);
                         param_field->identifier()->field(param_field);
+                        param_field->identifier()->usage(identifier_usage_t::stack);
                     }
                     break;
                 }
@@ -2856,7 +2859,9 @@ namespace basecode::compiler {
                         proc_type,
                         builder.make_declaration(block_scope, param_identifier, nullptr),
                         0);
+                    param_field->tag(field_tag_t::return_parameter);
                     param_identifier->field(param_field);
+                    param_identifier->usage(identifier_usage_t::stack);
                     return_parameters.add(param_field);
                     break;
                 }

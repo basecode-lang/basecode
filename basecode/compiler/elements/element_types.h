@@ -701,6 +701,12 @@ namespace basecode::compiler {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    enum class field_tag_t : uint8_t {
+        none,
+        parameter,
+        return_parameter,
+    };
+
     struct field_map_t {
         void add(field* value);
 
