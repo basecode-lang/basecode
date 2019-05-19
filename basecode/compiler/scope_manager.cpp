@@ -312,9 +312,15 @@ namespace basecode::compiler {
     }
 
     bool scope_manager::within_local_scope(compiler::block* parent_scope) const {
-        auto block_scope = parent_scope == nullptr ? current_scope() : parent_scope;
+        const element_type_set_t parent_types = {
+            element_type_t::proc_type,
+            element_type_t::block
+        };
+        auto block_scope = parent_scope == nullptr ?
+            current_scope() :
+            parent_scope;
         while (block_scope != nullptr) {
-            if (block_scope->has_stack_frame())
+            if (block_scope->is_parent_type_one_of(parent_types))
                 return true;
             block_scope = block_scope->parent_scope();
         }

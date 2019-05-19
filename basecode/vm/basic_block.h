@@ -22,6 +22,8 @@ namespace basecode::vm {
 
     class basic_block final {
     public:
+        using insertion_point_scope_callback_t = std::function<void (basic_block*)>;
+
         explicit basic_block(basic_block_type_t type);
 
         ~basic_block();
@@ -50,6 +52,10 @@ namespace basecode::vm {
         void clear_entries();
 
         common::id_t id() const;
+
+        void apply_insertion_point(
+            ssize_t temp_point,
+            const insertion_point_scope_callback_t& callback);
 
         void label(vm::label* value);
 

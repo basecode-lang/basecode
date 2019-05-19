@@ -130,10 +130,10 @@ namespace basecode::compiler {
         if (args.empty() || args.size() > 1)
             return false;
 
+        // XXX: STACK FRAME check was here, do we still need that?
         auto arg = args[0];
         return arg != nullptr
-            && arg->element_type() == element_type_t::identifier_reference
-            && !arg->parent_scope()->has_stack_frame();
+            && arg->element_type() == element_type_t::identifier_reference;
     }
 
 }

@@ -136,6 +136,42 @@ namespace basecode::compiler {
 
     ///////////////////////////////////////////////////////////////////////////
 
+    void byte_code_emitter::push_edit_point(
+            edit_point_type_t type,
+            vm::basic_block* block,
+            ssize_t insert_point) {
+        edit_point_stack_t* stack = nullptr;
+        auto it = _edit_points.find(type);
+        if (it == std::end(_edit_points)) {
+            auto result = _edit_points.insert(std::make_pair(
+                type,
+                edit_point_stack_t{}));
+            stack = &result.first->second;
+        } else {
+            stack = &it->second;
+        }
+        stack->push(edit_point_t{block, insert_point});
+    }
+
+    void byte_code_emitter::pop_edit_point(edit_point_type_t type) {
+        auto it = _edit_points.find(type);
+        if (it == std::end(_edit_points))
+            return;
+        auto& stack = it->second;
+        if (!stack.empty())
+            stack.pop();
+    }
+
+    edit_point_t* byte_code_emitter::current_edit_point(edit_point_type_t type) {
+        auto it = _edit_points.find(type);
+        if (it == std::end(_edit_points))
+            return nullptr;
+        auto& stack = it->second;
+        return stack.empty() ? nullptr : &stack.top();
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
     bool byte_code_emitter::emit() {
         _variables.initialize();
 
@@ -192,16 +228,20 @@ namespace basecode::compiler {
         frame_block->add_successors({code_block});
         *basic_block = code_block;
 
-        if (block->has_stack_frame()
-        && !_in_stack_frame) {
-            _in_stack_frame = true;
-            clear_stack_frame = true;
-
-            code_block->push(vm::instruction_operand_t::fp());
-            code_block->move(
-                vm::instruction_operand_t::fp(),
-                vm::instruction_operand_t::sp());
-        }
+//        if (block->has_stack_frame()
+//        && !_in_stack_frame) {
+//            _in_stack_frame = true;
+//            clear_stack_frame = true;
+//
+//            code_block->push(vm::instruction_operand_t::fp());
+//            code_block->move(
+//                vm::instruction_operand_t::fp(),
+//                vm::instruction_operand_t::sp());
+//            push_edit_point(
+//                edit_point_type_t::stack_allocation,
+//                code_block,
+//                code_block->insertion_point());
+//        }
 
         defer({
             if (!clear_stack_frame)
@@ -211,29 +251,57 @@ namespace basecode::compiler {
 
             auto locals_size = var_context->locals_size();
             if (locals_size > 0) {
-              code_block->sub(
-                  vm::instruction_operand_t::sp(),
-                  vm::instruction_operand_t::sp(),
-                  vm::instruction_operand_t(
-                      static_cast<uint64_t>(locals_size),
-                      vm::op_sizes::dword));
+              auto edit_point = current_edit_point(edit_point_type_t::stack_allocation);
+              if (edit_point == nullptr) {
+                  _session.error(
+                      block->module(),
+                      "X000",
+                      "expected a 'stack_allocation' edit point on the stack.",
+                      block->location());
+                  return;
+              }
+
+              edit_point->block->apply_insertion_point(
+                  edit_point->insertion_point,
+                  [&locals_size](vm::basic_block* bb) {
+                      bb->sub(
+                          vm::instruction_operand_t::sp(),
+                          vm::instruction_operand_t::sp(),
+                          vm::instruction_operand_t(
+                              static_cast<uint64_t>(locals_size),
+                              vm::op_sizes::dword));
+                  });
+
+              pop_edit_point(edit_point_type_t::stack_allocation);
             }
 
             auto current_block = *basic_block;
 
             auto exit_block = make_block();
+            push_edit_point(
+                edit_point_type_t::return_sequence,
+                exit_block,
+                exit_block->insertion_point());
+
             current_block->add_successors({exit_block});
             exit_block->add_predecessors({current_block});
-            _return_stack.push(exit_block);
 
-            while (!_return_stack.empty()) {
-                auto return_block = _return_stack.top();
-                _return_stack.pop();
-                return_block->move(
-                    vm::instruction_operand_t::sp(),
-                    vm::instruction_operand_t::fp());
-                return_block->pop(vm::instruction_operand_t::fp());
-                return_block->rts();
+            while (true) {
+                auto edit_point = current_edit_point(edit_point_type_t::return_sequence);
+                if (edit_point == nullptr)
+                    break;
+
+                edit_point->block->apply_insertion_point(
+                        edit_point->insertion_point,
+                        [&](vm::basic_block* bb) {
+                    bb->move(
+                          vm::instruction_operand_t::sp(),
+                          vm::instruction_operand_t::fp());
+                    bb->pop(vm::instruction_operand_t::fp());
+                    bb->rts();
+                });
+
+                pop_edit_point(edit_point_type_t::return_sequence);
             }
         });
 
@@ -1024,7 +1092,10 @@ namespace basecode::compiler {
                     }
                 }
 
-                _return_stack.push(current_block);
+                push_edit_point(
+                    edit_point_type_t::return_sequence,
+                    current_block,
+                    current_block->insertion_point());
                 break;
             }
             case element_type_t::switch_e: {
@@ -2680,7 +2751,7 @@ namespace basecode::compiler {
     bool byte_code_emitter::fill_referenced_identifiers(
             vm::basic_block** basic_block,
             compiler::element* e) {
-        auto& assembler = _session.assembler();
+//        auto& assembler = _session.assembler();
         switch (e->element_type()) {
             case element_type_t::if_e: {
                 auto if_e = dynamic_cast<compiler::if_element*>(e);

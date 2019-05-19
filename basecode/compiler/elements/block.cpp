@@ -46,7 +46,6 @@ namespace basecode::compiler {
             compiler::session& session,
             compiler::block* new_scope) {
         auto copy = session.builder().make_block(new_scope->module(), new_scope);
-        copy->_has_stack_frame = _has_stack_frame;
 
         return copy;
     }
@@ -100,10 +99,6 @@ namespace basecode::compiler {
         return _defer_stack;
     }
 
-    bool block::has_stack_frame() const {
-        return _has_stack_frame;
-    }
-
     reference_map_t& block::references() {
         return _references;
     }
@@ -114,16 +109,6 @@ namespace basecode::compiler {
 
     identifier_map_t& block::identifiers() {
         return _identifiers;
-    }
-
-    void block::has_stack_frame(bool value) {
-        if (_has_stack_frame != value) {
-            _has_stack_frame = value;
-            for (auto var : _identifiers.as_list())
-                var->usage(value ? identifier_usage_t::stack : identifier_usage_t::heap);
-            for (auto child_block : _blocks)
-                child_block->has_stack_frame(value);
-        }
     }
 
     void block::on_owned_elements(element_list_t& list) {

@@ -34,15 +34,11 @@ namespace basecode::compiler {
 
         defer_stack_t& defer_stack();
 
-        bool has_stack_frame() const;
-
         reference_map_t& references();
 
         statement_list_t& statements();
 
         identifier_map_t& identifiers();
-
-        void has_stack_frame(bool value);
 
         void add_expression_to_scope(compiler::element* e);
 
@@ -57,7 +53,6 @@ namespace basecode::compiler {
         type_map_t _types {};
         block_list_t _blocks {};
         import_list_t _imports {};
-        bool _has_stack_frame = false;
         defer_stack_t _defer_stack {};
         reference_map_t _references {};
         statement_list_t _statements {};

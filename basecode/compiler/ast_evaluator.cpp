@@ -1682,11 +1682,6 @@ namespace basecode::compiler {
                 return false;
 
             switch (expr->element_type()) {
-                case element_type_t::block: {
-                    auto block = dynamic_cast<compiler::block*>(expr);
-                    block->has_stack_frame(true);
-                    break;
-                }
                 case element_type_t::symbol: {
                     auto e = evaluate(context.node->rhs->rhs);
                     auto type_ref = dynamic_cast<compiler::type_reference*>(e);
@@ -2210,8 +2205,6 @@ namespace basecode::compiler {
                         return false;
                     }
 
-                    basic_block->has_stack_frame(true);
-
                     auto& return_parameters = proc_type->return_parameters();
                     if (!return_parameters.empty()) {
                         auto anon_count = count_anonymous_return_parameters(return_parameters);
@@ -2519,7 +2512,6 @@ namespace basecode::compiler {
             rhs,
             body);
         for_scope->parent_element(result.element);
-        for_scope->has_stack_frame(true);
 
         return true;
     }
@@ -2693,7 +2685,6 @@ namespace basecode::compiler {
         auto& parameter_map = proc_type->parameters();
 
         auto add_param_decl = [&](compiler::declaration* param_decl, bool is_variadic) {
-            param_decl->identifier()->usage(identifier_usage_t::stack);
             param_field = builder.make_field(
                 block_scope,
                 proc_type,
@@ -2834,7 +2825,6 @@ namespace basecode::compiler {
                         param_field->tag(field_tag_t::return_parameter);
                         return_parameters.add(param_field);
                         param_field->identifier()->field(param_field);
-                        param_field->identifier()->usage(identifier_usage_t::stack);
                     }
                     break;
                 }
@@ -2844,7 +2834,6 @@ namespace basecode::compiler {
                         block_scope,
                         builder.make_symbol(block_scope, *it.first),
                         nullptr);
-                    param_identifier->usage(identifier_usage_t::stack);
                     auto type_ref = dynamic_cast<compiler::type_reference*>(evaluate_in_scope(
                         node,
                         block_scope));
@@ -2861,7 +2850,6 @@ namespace basecode::compiler {
                         0);
                     param_field->tag(field_tag_t::return_parameter);
                     param_identifier->field(param_field);
-                    param_identifier->usage(identifier_usage_t::stack);
                     return_parameters.add(param_field);
                     break;
                 }

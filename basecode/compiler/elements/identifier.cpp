@@ -91,10 +91,6 @@ namespace basecode::compiler {
         _inferred_type = value;
     }
 
-    identifier_usage_t identifier::usage() const {
-        return _usage;
-    }
-
     void identifier::field(compiler::field* value) {
         _field = value;
     }
@@ -103,10 +99,6 @@ namespace basecode::compiler {
         if (_initializer == nullptr)
             return false;
         return _initializer->as_bool(value);
-    }
-
-    void identifier::usage(identifier_usage_t value) {
-        _usage = value;
     }
 
     compiler::initializer* identifier::initializer() {

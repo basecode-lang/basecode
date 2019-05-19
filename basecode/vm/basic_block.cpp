@@ -170,6 +170,15 @@ namespace basecode::vm {
         return _id;
     }
 
+    void basic_block::apply_insertion_point(
+            ssize_t temp_point,
+            const basic_block::insertion_point_scope_callback_t& callback) {
+        const auto current_insertion_point = insertion_point();
+        insertion_point(temp_point);
+        callback(this);
+        insertion_point(current_insertion_point);
+    }
+
     // copy & fill
     void basic_block::copy(
             op_sizes inst_size,

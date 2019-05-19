@@ -1,17 +1,32 @@
 core :: module("core");
 
-foo: s32 := 6;
+foo: s32;
 
-doubler :: proc(v: s32): result: s32 {
-    if v < 4 {
-        result := foo;
-        return;
-    };
-
-    result := (v * 2) + foo;
+foo := 2 * 6;
+{
+    bar: s32;
+    bar := foo * 10;
+    core::print("bar := %lld\n", bar);
 };
 
-#run core::print("doubled! %d\n", doubler(4));
+core::print("foo := %d\n", foo);
+
+//vector3 :: struct {
+//    x, y, z: f32 := 1.0;
+//};
+//
+//test :: proc() {
+//    v: vector3;
+//    v.x := 4.0;
+//    v.y := -5.0;
+//    v.z := -16.455;
+//
+//    core::print("v.x := %f\n", v.x);
+//    core::print("v.y := %f\n", v.y);
+//    core::print("v.z := %f\n", v.z);
+//};
+//
+//#run test();
 
 //_alloc :: #inline proc(size: u64): ptr: ^u0 {
 //    #assembly {{

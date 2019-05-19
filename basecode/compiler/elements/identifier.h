@@ -32,13 +32,9 @@ namespace basecode::compiler {
 
         void inferred_type(bool value);
 
-        identifier_usage_t usage() const;
-
         void field(compiler::field* value);
 
         compiler::type_reference* type_ref();
-
-        void usage(identifier_usage_t value);
 
         compiler::initializer* initializer();
 
@@ -85,7 +81,6 @@ namespace basecode::compiler {
         compiler::symbol_element* _symbol;
         compiler::initializer* _initializer;
         compiler::type_reference* _type_ref = nullptr;
-        identifier_usage_t _usage = identifier_usage_t::heap;
     };
 
 }

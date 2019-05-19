@@ -17,6 +17,22 @@
 
 namespace basecode::compiler {
 
+    enum class edit_point_type_t {
+        general,
+        return_sequence,
+        stack_allocation
+    };
+
+    struct edit_point_t {
+        vm::basic_block* block = nullptr;
+        ssize_t insertion_point = -1;
+    };
+
+    using edit_point_stack_t = std::stack<edit_point_t>;
+    using edit_point_map_t = std::unordered_map<edit_point_type_t, edit_point_stack_t>;
+
+    ///////////////////////////////////////////////////////////////////////////
+
     class byte_code_emitter {
     public:
         explicit byte_code_emitter(compiler::session& session);
@@ -37,6 +53,17 @@ namespace basecode::compiler {
         flow_control_t* current_flow_control();
 
         void push_flow_control(const flow_control_t& control_flow);
+
+    // edit point stack
+    private:
+        void push_edit_point(
+            edit_point_type_t type,
+            vm::basic_block* block,
+            ssize_t insert_point);
+
+        void pop_edit_point(edit_point_type_t type);
+
+        edit_point_t* current_edit_point(edit_point_type_t type);
 
     // variable context stack
     private:
@@ -150,7 +177,7 @@ namespace basecode::compiler {
         compiler::session& _session;
         bool _in_stack_frame = false;
         vm::basic_block_map _blocks {};
-        vm::basic_block_stack_t _return_stack{};
+        edit_point_map_t _edit_points{};
         vm::basic_block_stack_t _block_stack {};
         flow_control_stack_t _control_flow_stack {};
         variable_context_stack_t _variable_context_stack {};

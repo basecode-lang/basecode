@@ -197,8 +197,12 @@ namespace basecode::compiler {
         if (var_info->is_filled())
             return true;
 
+        const auto field_offset = use_frame_pointer(var_info) ?
+            var_info->field_offset.from_start :
+            var_info->field_offset.from_end;
+
         const auto offset_operand = target_pair.offset != nullptr ?
-            vm::instruction_operand_t(target_pair.offset) :
+            vm::instruction_operand_t(target_pair.offset, field_offset) :
             vm::instruction_operand_t::empty();
 
         const auto source_operand = use_frame_pointer(var_info) ?
@@ -232,7 +236,7 @@ namespace basecode::compiler {
         if (!prepare_spill_target_pair(var_info, target_pair))
             return false;
 
-        auto var_type = var_info->identifier->type_ref()->type();
+//        auto var_type = var_info->identifier->type_ref()->type();
 
         const auto source_operand = vm::instruction_operand_t(target_pair.src);
 
@@ -361,33 +365,33 @@ namespace basecode::compiler {
 
         size_t offset = 0;
         auto var_type = variable_type_t::module;
-        if (var->usage() == identifier_usage_t::stack) {
-            auto tag = field_tag_t::none;
-            if (var->field() != nullptr)
-                tag = var->field()->tag();
+        auto tag = field_tag_t::none;
+        if (var->field() != nullptr)
+            tag = var->field()->tag();
 
-            switch (tag) {
-                case field_tag_t::none: {
-                    var_type = variable_type_t::local;
-                    _local_offset += -type->size_in_bytes();
-                    offset = _local_offset;
-                    break;
-                }
-                case field_tag_t::parameter: {
-                    var_type = variable_type_t::parameter;
-                    offset = _parameter_offset;
-                    _parameter_offset += common::align(type->size_in_bytes(), 8);
-                    break;
-                }
-                case field_tag_t::return_parameter: {
-                    var_type = variable_type_t::return_parameter;
-                    offset = _return_offset;
-                    _return_offset += common::align(type->size_in_bytes(), 8);
-                    break;
-                }
-                default: {
-                    break;
-                }
+        switch (tag) {
+            case field_tag_t::none: {
+                var_type = variable_type_t::local;
+                _local_offset += -type->size_in_bytes();
+                offset = _local_offset;
+                if (offset_result.base_ref != nullptr)
+                    offset += offset_result.from_start;
+                break;
+            }
+            case field_tag_t::parameter: {
+                var_type = variable_type_t::parameter;
+                offset = _parameter_offset;
+                _parameter_offset += common::align(type->size_in_bytes(), 8);
+                break;
+            }
+            case field_tag_t::return_parameter: {
+                var_type = variable_type_t::return_parameter;
+                offset = _return_offset;
+                _return_offset += common::align(type->size_in_bytes(), 8);
+                break;
+            }
+            default: {
+                break;
             }
         }
 
@@ -626,10 +630,12 @@ namespace basecode::compiler {
                 var_info->op_size);
         }
 
-        target_pair.offset = assembler.make_named_ref(
-            vm::assembler_named_ref_type_t::offset,
-            var_info->label,
-            vm::op_sizes::word);
+        if (var_info->field_offset.base_ref != nullptr) {
+            target_pair.offset = assembler.make_named_ref(
+                vm::assembler_named_ref_type_t::offset,
+                var_info->label,
+                vm::op_sizes::word);
+        }
 
         return true;
     }
