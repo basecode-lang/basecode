@@ -1,0 +1,4 @@
+[submodule "ext/foundation"]
+	path = ext/foundation
+	url = https://github.com/basecode-lang/foundation.git
+	branch = feature/libobjfmt
